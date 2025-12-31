@@ -1,0 +1,22 @@
+"""AUTO-GENERATED - DO NOT EDIT
+
+This file was automatically generated from SysML model.
+Manual modifications will be overwritten on regeneration.
+
+Source: {{ source_file }}
+Hash: {{ source_hash }}
+Generated: {{ generation_timestamp }}
+"""
+
+from pydantic import BaseModel, Field
+
+
+class {{ class_name }}(BaseModel):
+    """{{ doc_comment }}"""
+
+{% for attr in attributes %}
+    {{ attr.name }}: {{ attr.python_type }} = Field(description="{{ attr.description }}")
+{% endfor %}
+
+    model_config = {"frozen": True, "extra": "forbid"}
+

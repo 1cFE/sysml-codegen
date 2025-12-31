@@ -1,0 +1,82 @@
+"""AUTO-GENERATED - DO NOT EDIT
+
+This file was automatically generated from SysML model.
+Manual modifications will be overwritten on regeneration.
+
+MANUAL IMPLEMENTATION REQUIRED in handwritten companion file.
+"""
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from simkit.core.base import ModuleBase, ModuleResult
+
+
+class {{ module_name }}Input(BaseModel):
+    """Input model for {{ module_name }}."""
+{% for attr in input_attributes %}
+    {{ attr.name }}: {{ attr.python_type }} = Field(description="{{ attr.description }}")
+{% endfor %}
+
+
+class {{ module_name }}Output(BaseModel):
+    """Output model for {{ module_name }}."""
+{% for attr in output_attributes %}
+    {{ attr.name }}: {{ attr.python_type }} = Field(description="{{ attr.description }}")
+{% endfor %}
+
+
+class {{ module_name }}(ModuleBase[{{ module_name }}Input, {{ module_name }}Output]):
+    """{{ doc_comment if doc_comment else 'Generated from SysML calculation definition.' }}
+
+    SysML Source: {{ source_file }}
+{% if calc_expressions %}
+
+    Calculation Specification:
+{% for expr in calc_expressions %}
+    {{ expr }}
+{% endfor %}
+{% else %}
+
+    Note: No explicit calculation expressions found in SysML model.
+    Refer to SysML source file or implement based on domain knowledge.
+{% endif %}
+
+    IMPLEMENTATION: See {{ impl_module_path }} for manual implementation.
+    """
+
+    name: str = "{{ module_name }}"
+    version: str = "v0.1"
+
+    def validate_and_fill_default(self, inputs: dict[str, Any]) -> {{ module_name }}Input:
+        """Validate inputs and fill defaults.
+
+        Args:
+            inputs: Dictionary of input values
+
+        Returns:
+            Validated input model
+        """
+        return {{ module_name }}Input(**inputs)
+
+    def run(self, inputs: dict[str, Any]) -> ModuleResult[{{ module_name }}Output]:
+        """Execute calculation.
+
+        Args:
+            inputs: Dictionary of input values
+
+        Returns:
+            Module result with output data
+        """
+        # Validate inputs
+        validated_inputs = self.validate_and_fill_default(inputs)
+
+        # Import handwritten implementation
+        from {{ impl_import_path }} import {{ impl_function_name }}
+
+        # Execute implementation
+        output_data = {{ impl_function_name }}(validated_inputs)
+
+        # Wrap in ModuleResult
+        return ModuleResult(data=output_data)
+

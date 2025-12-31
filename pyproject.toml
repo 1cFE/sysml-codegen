@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sysml-codegen"
+version = "0.1.0"
+description = "SysML v2 to Python code generation framework"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+    { name = "Reid", email = "reid@example.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+]
+dependencies = [
+    "agentic-mbse>=0.1.0",
+    "jinja2>=3.0",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+sysml-codegen = "sysml_codegen.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sysml_codegen"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+select = ["E", "F", "W", "I", "N", "UP"]
+
+[tool.uv.sources]
+agentic-mbse = { path = "../agentic-mbse", editable = true }

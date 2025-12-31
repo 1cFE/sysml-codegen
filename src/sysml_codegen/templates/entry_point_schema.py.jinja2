@@ -1,0 +1,17 @@
+from pydantic import BaseModel, Field
+
+
+class {{ class_name }}(BaseModel):
+    """{{ doc_comment }}
+
+    SysML Sources: {{ sysml_sources|join(', ') }}
+    """
+{% for field in fields %}
+{% if field.default is none %}
+    {{ field.name }}: {{ field.type }} = Field(description="{{ field.description }}")
+{% else %}
+    {{ field.name }}: {{ field.type }} = Field(default={{ field.default }}, description="{{ field.description }}")
+{% endif %}
+{% endfor %}
+
+    model_config = {"frozen": True, "extra": "forbid"}

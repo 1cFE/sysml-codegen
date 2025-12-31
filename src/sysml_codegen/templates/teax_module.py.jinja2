@@ -1,0 +1,123 @@
+"""{{ class_name }} Module Wrapper
+
+{{ doc_comment }}
+
+SysML Source: {{ sysml_source }}
+
+GAP: Code generator does NOT implement calc logic - only wrapper structure.
+Handwritten implementation required in handwritten/{{ impl_import_path.replace('.', '/') }}.py
+"""
+
+from pydantic import BaseModel, Field, RootModel
+from simkit.core.base import ModuleBase, ModuleResult
+
+from {{ package_name }}.primitives import {{ primitive_imports|join(', ') }}
+{% if is_multioutput %}
+from {{ package_name }}.schemas.{{ schema_name }} import {{ output_class_name }}
+{% endif %}
+
+
+class {{ input_class_name }}(BaseModel):
+    """Input model for {{ class_name }}.
+
+    Attributes:
+{% for input in input_attributes %}
+        {{ input.name }}: {{ input.description }}
+{% endfor %}
+    """
+{% for input in input_attributes %}
+    {{ input.name }}: {{ input.type_hint }} = Field(..., description="{{ input.description }}")
+{% endfor %}
+
+
+{% if is_multioutput %}
+class {{ class_name }}(ModuleBase[{{ input_class_name }}, {{ output_class_name }}]):
+{% else %}
+class {{ class_name }}(ModuleBase[{{ input_class_name }}, Float]):
+{% endif %}
+    """{{ doc_comment }}
+
+    SysML Source: {{ sysml_source }}
+
+    Calculation Specification:
+{% for expr in calc_expressions %}
+        {{ expr }}
+{% endfor %}
+
+    IMPLEMENTATION: See {{ package_name }}.handwritten.{{ impl_import_path }}
+    for manual implementation.
+{% if is_multioutput %}
+
+    NOTE: Uses MultiOutput pattern for type-safe multi-output support.
+    TEAx automatically extracts {% for output in output_attributes %}{{ output.name }}{% if not loop.last %}, {% endif %}{% endfor %} fields to separate channels.
+{% else %}
+
+    NOTE: Single-output module - returns Float directly (no MultiOutput needed).
+{% endif %}
+    """
+
+    name: str = "{{ class_name }}"
+    version: str = "v0.1"
+
+    def validate_and_fill_default(
+        self, {% for input in input_attributes %}{{ input.name }}: {{ input.type_hint }}{% if not loop.last %}, {% endif %}{% endfor %}
+    ) -> {{ input_class_name }}:
+        """Validate inputs and fill defaults.
+
+        Args:
+{% for input in input_attributes %}
+            {{ input.name }}: {{ input.description }}
+{% endfor %}
+
+        Returns:
+            Validated input model
+        """
+        return {{ input_class_name }}({% for input in input_attributes %}{{ input.name }}={{ input.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+
+    def run(
+        self, {% for input in input_attributes %}{{ input.name }}: {{ input.type_hint }}{% if not loop.last %}, {% endif %}{% endfor %}
+    ) -> ModuleResult[{% if is_multioutput %}{{ output_class_name }}{% else %}Float{% endif %}]:
+        """Execute calculation.
+
+        Args:
+{% for input in input_attributes %}
+            {{ input.name }}: {{ input.description }}
+{% endfor %}
+
+        Returns:
+{% if is_multioutput %}
+            Module result with {{ output_class_name }} ({% for output in output_attributes %}{{ output.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+{% else %}
+            Module result with Float (single-output mode)
+{% endif %}
+        """
+        # Validate inputs
+        validated_inputs = self.validate_and_fill_default({% for input in input_attributes %}{{ input.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+
+        # Import handwritten implementation
+        from {{ package_name }}.handwritten.{{ impl_import_path }} import (
+            run_{{ handler_name }},
+        )
+
+        # Execute implementation - returns {% if is_multioutput %}tuple of values{% else %}single value{% endif %}
+
+{% if is_multioutput %}
+{{ '        ' }}{% for output in output_attributes %}{{ output.name }}{% if not loop.last %}, {% endif %}{% endfor %} = run_{{ handler_name }}(validated_inputs)
+
+
+        # Return MultiOutput container (TEAx auto-extracts to channels)
+        # MultiOutput fields use plain float (not RootModel[float])
+        return ModuleResult(
+            data={{ output_class_name }}(
+{% for output in output_attributes %}
+                {{ output.name }}={{ output.name }},
+{% endfor %}
+            )
+        )
+{% else %}
+        {{ output_attributes[0].name }} = run_{{ handler_name }}(validated_inputs)
+
+        # Single output - return Float directly (RootModel[float])
+        # TEAx assigns entire return value to the one channel declared in YAML
+        return ModuleResult(data=Float({{ output_attributes[0].name }}))
+{% endif %}

@@ -1,0 +1,49 @@
+# Generated Pipeline Configuration for {{ package_name }}
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for {{ package_name }}"
+  output_folder: "{{ package_name }}_results"
+
+modules:
+{% if entry_points %}
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+{% for entry in entry_points %}
+      {{ entry.name }}: {{ entry.type }} {{ entry.source }}
+{% endfor %}
+
+{% endif %}
+
+{% for module in modules %}
+  # {{ module.name }}
+  {{ module.instance_name }}:
+    module_type: {{ module.type }}
+{% if module.inputs %}
+    inputs:
+{% for input in module.inputs %}
+      {{ input.name }}: {{ input.type }} {{ input.source }}
+{% endfor %}
+{% endif %}
+{% if module.outputs %}
+    outputs:
+{% for output in module.outputs %}
+      {{ output.name }}: {{ output.type }} {{ output.channel }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+{% if exit_points %}
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+{% for exit in exit_points %}
+      {{ exit.name }}: {{ exit.type }} {{ exit.name }}.json
+{% endfor %}
+{% endif %}

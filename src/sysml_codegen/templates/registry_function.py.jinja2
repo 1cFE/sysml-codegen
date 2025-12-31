@@ -1,0 +1,47 @@
+{% for import_line in imports %}
+{{ import_line }}
+{% endfor %}
+
+{# NEW: Parameter group schema imports #}
+{% if schema_imports %}
+{% for import_line in schema_imports %}
+{{ import_line }}
+{% endfor %}
+{% endif %}
+
+
+def {{ function_name }}() -> PipelineModuleRegistry:
+    """Create registry for all modules using auto-introspection.
+
+    Pure auto-registration pattern:
+    - All modules (single-output and multi-output) use create_registry()
+    - TEAx introspection handles RootModel[T] and BaseModel fields correctly
+
+    ADR-003: Uses module_type_override to register modules with namespaced
+    module types (e.g., "fusionphysics_powerbalance.AlphaNeutronSplitModule")
+    while keeping Python class names unchanged (e.g., "AlphaNeutronSplitModule").
+    """
+    return create_registry(
+        [
+{%- for module in all_modules %}
+            {{ module.class_name }},
+{%- endfor %}
+        ],
+        module_type_override={
+{%- for module in all_modules %}
+            {{ module.class_name }}: "{{ module.module_type }}",
+{%- endfor %}
+        },
+    )
+
+
+{# NEW: Custom schema types for TEAx registration #}
+{% if parameter_groups %}
+# Custom schema types for TEAx pipeline registration
+# Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
+CUSTOM_SCHEMA_TYPES = [
+{%- for schema_name in parameter_groups %}
+    {{ schema_name }}{{ "," if not loop.last else "" }}
+{%- endfor %}
+]
+{% endif %}

@@ -1,0 +1,17 @@
+from pydantic import Field
+from simkit.config.schema import MultiOutput
+{%- if primitive_types %}
+from {{ package_name }}.primitives import {{ primitive_types|join(', ') }}
+{%- endif %}
+
+
+class {{ class_name }}(MultiOutput):
+    """{{ doc_comment }}
+    """
+{% for field in fields %}
+{% if field.default %}
+    {{ field.name }}: {{ field.type }} = Field(default={{ field.default }}, description="{{ field.description }}")
+{% else %}
+    {{ field.name }}: {{ field.type }} = Field(description="{{ field.description }}")
+{% endif %}
+{% endfor %}

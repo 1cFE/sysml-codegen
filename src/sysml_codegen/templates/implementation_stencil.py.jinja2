@@ -1,0 +1,18 @@
+from {{ package_name }}.modules.{{ module_import_path }} import {{ input_class_name }}
+
+
+def {{ function_name }}(inputs: {{ input_class_name }}) -> {{ return_type }}:
+    """{{ docstring }}
+
+    Implementation Pattern:
+        # Extract input fields from the validated Input model:
+{% for param in input_params %}
+        {{ param.name }} = inputs.{{ param.name }}
+{% endfor %}
+        # Perform calculation using extracted values
+        # Return result(s)
+    """
+    raise NotImplementedError(
+        "Manual implementation required for {{ calc_name }}. "
+        "See SysML source: {{ sysml_source }}"
+    )
