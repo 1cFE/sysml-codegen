@@ -48,7 +48,8 @@ def test_cli_help_shows_parameters():
     from sysml_codegen.cli import main
 
     help_text = ""
-    with patch.object(sys, "argv", ["sysml-codegen", "--help"]):
+    # Check generate subcommand help (options are in generate --help, not top-level)
+    with patch.object(sys, "argv", ["sysml-codegen", "generate", "--help"]):
         try:
             with redirect_stdout(io.StringIO()) as f:
                 main()
@@ -56,7 +57,7 @@ def test_cli_help_shows_parameters():
             pass  # --help causes SystemExit(0)
         help_text = f.getvalue()
 
-    # Check for parameterized options
+    # Check for parameterized options in generate subcommand
     assert "--package-name" in help_text, "CLI should have --package-name option"
     assert "--schema-class" in help_text, "CLI should have --schema-class option"
     assert "--pipeline-name" in help_text, "CLI should have --pipeline-name option"
@@ -142,3 +143,80 @@ def test_imports_work_across_layers():
 
     # All imports successful
     assert True
+
+
+class TestInstallCommands:
+    """Tests for install-commands CLI subcommand."""
+
+    def test_list_shows_teax_completion(self, capsys):
+        """--list shows teax-completion.md command."""
+        from sysml_codegen.cli import cmd_install_commands
+
+        class MockArgs:
+            list = True
+            directory = "."
+            force = False
+
+        result = cmd_install_commands(MockArgs())
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "teax-completion.md" in captured.out
+
+    def test_installs_to_directory(self, tmp_path):
+        """Installs teax-completion.md to .claude/commands/."""
+        from sysml_codegen.cli import cmd_install_commands
+
+        class MockArgs:
+            list = False
+            directory = str(tmp_path)
+            force = False
+
+        result = cmd_install_commands(MockArgs())
+
+        assert result == 0
+        commands_dir = tmp_path / ".claude" / "commands"
+        assert commands_dir.exists()
+        assert (commands_dir / "teax-completion.md").exists()
+
+    def test_skips_existing_without_force(self, tmp_path, capsys):
+        """Skips existing file without --force."""
+        from sysml_codegen.cli import cmd_install_commands
+
+        # Create existing file
+        commands_dir = tmp_path / ".claude" / "commands"
+        commands_dir.mkdir(parents=True)
+        existing = commands_dir / "teax-completion.md"
+        existing.write_text("existing content")
+
+        class MockArgs:
+            list = False
+            directory = str(tmp_path)
+            force = False
+
+        result = cmd_install_commands(MockArgs())
+
+        assert result == 0
+        assert existing.read_text() == "existing content"
+        captured = capsys.readouterr()
+        assert "Skipping" in captured.out
+
+    def test_overwrites_with_force(self, tmp_path):
+        """Overwrites existing file with --force."""
+        from sysml_codegen.cli import cmd_install_commands
+
+        # Create existing file
+        commands_dir = tmp_path / ".claude" / "commands"
+        commands_dir.mkdir(parents=True)
+        existing = commands_dir / "teax-completion.md"
+        existing.write_text("old content")
+
+        class MockArgs:
+            list = False
+            directory = str(tmp_path)
+            force = True
+
+        result = cmd_install_commands(MockArgs())
+
+        assert result == 0
+        assert existing.read_text() != "old content"

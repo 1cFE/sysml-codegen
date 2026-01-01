@@ -4,12 +4,14 @@ CRITICAL CHANGES:
 - Parameterized all hardcoded values
 - Removed CATF-specific references
 - Package name is now a CLI argument
+- Added install-commands subcommand for TEAx completion helper
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +26,23 @@ from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 
 logger = logging.getLogger(__name__)
+
+# Commands available for installation
+CODEGEN_COMMANDS = [
+    "teax-completion.md",
+]
+
+
+def get_commands_dir() -> Path:
+    """Get path to bundled commands directory.
+
+    Path calculation:
+    - __file__ = sysml-codegen/src/sysml_codegen/cli/__init__.py
+    - parent.parent.parent.parent = sysml-codegen/
+    - result = sysml-codegen/claude/commands/
+    """
+    package_root = Path(__file__).parent.parent.parent.parent
+    return package_root / "claude" / "commands"
 
 
 @dataclass
@@ -40,64 +59,8 @@ class GenerationConfig:
     smart_regen: bool = False
 
 
-def main() -> None:
-    """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate Python code from SysML v2 models"
-    )
-    parser.add_argument(
-        "--models", "-m",
-        type=Path,
-        required=True,
-        help="Path to SysML model directory or file"
-    )
-    parser.add_argument(
-        "--output", "-o",
-        type=Path,
-        required=True,
-        help="Output directory for generated code"
-    )
-    parser.add_argument(
-        "--package-name",
-        type=str,
-        default="generated_code",
-        help="Python package name for generated code (default: generated_code)"
-    )
-    parser.add_argument(
-        "--schema-class",
-        type=str,
-        default="Params",
-        help="Name for the main schema class (default: Params)"
-    )
-    parser.add_argument(
-        "--pipeline-name",
-        type=str,
-        default="pipeline",
-        help="Name for the pipeline configuration (default: pipeline)"
-    )
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Overwrite existing files"
-    )
-    parser.add_argument(
-        "--preserve-handwritten",
-        action="store_true",
-        help="Preserve handwritten implementations during regeneration"
-    )
-    parser.add_argument(
-        "--smart-regen",
-        action="store_true",
-        help="Smart regeneration with signature comparison"
-    )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose logging"
-    )
-
-    args = parser.parse_args()
-
+def cmd_generate(args: argparse.Namespace) -> int:
+    """Run the code generation command."""
     # Configure logging
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
@@ -108,7 +71,7 @@ def main() -> None:
         logger.debug(f"agentic-mbse version: {agentic_mbse.__version__}")
     except ImportError:
         logger.error("agentic-mbse is not installed. Please install it first.")
-        sys.exit(1)
+        return 1
 
     config = GenerationConfig(
         models_path=args.models,
@@ -122,7 +85,138 @@ def main() -> None:
     )
 
     success = run_codegen(config)
-    sys.exit(0 if success else 1)
+    return 0 if success else 1
+
+
+def cmd_install_commands(args: argparse.Namespace) -> int:
+    """Install teax-completion helper command to a project."""
+    if args.list:
+        print("Available codegen helper commands:")
+        for cmd in CODEGEN_COMMANDS:
+            print(f"  - {cmd}")
+        return 0
+
+    target_dir = Path(args.directory).resolve()
+    if not target_dir.is_dir():
+        print(f"Error: {target_dir} is not a directory", file=sys.stderr)
+        return 1
+
+    commands_dir = target_dir / ".claude" / "commands"
+    commands_dir.mkdir(parents=True, exist_ok=True)
+
+    source_dir = get_commands_dir()
+    copied = 0
+    for cmd in CODEGEN_COMMANDS:
+        src = source_dir / cmd
+        dst = commands_dir / cmd
+        if dst.exists() and not args.force:
+            print(f"Skipping {cmd} (exists, use --force to overwrite)")
+            continue
+        if src.exists():
+            shutil.copy(src, dst)
+            print(f"Installed {cmd}")
+            copied += 1
+        else:
+            print(f"Warning: {cmd} not found in package", file=sys.stderr)
+
+    print(f"Installed {copied} command(s) to {commands_dir}")
+    return 0
+
+
+def main() -> None:
+    """Main CLI entry point."""
+    parser = argparse.ArgumentParser(
+        description="SysML v2 code generation tools"
+    )
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Generate subcommand
+    gen_parser = subparsers.add_parser(
+        "generate",
+        help="Generate Python code from SysML v2 models"
+    )
+    gen_parser.add_argument(
+        "--models", "-m",
+        type=Path,
+        required=True,
+        help="Path to SysML model directory or file"
+    )
+    gen_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        required=True,
+        help="Output directory for generated code"
+    )
+    gen_parser.add_argument(
+        "--package-name",
+        type=str,
+        default="generated_code",
+        help="Python package name for generated code (default: generated_code)"
+    )
+    gen_parser.add_argument(
+        "--schema-class",
+        type=str,
+        default="Params",
+        help="Name for the main schema class (default: Params)"
+    )
+    gen_parser.add_argument(
+        "--pipeline-name",
+        type=str,
+        default="pipeline",
+        help="Name for the pipeline configuration (default: pipeline)"
+    )
+    gen_parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing files"
+    )
+    gen_parser.add_argument(
+        "--preserve-handwritten",
+        action="store_true",
+        help="Preserve handwritten implementations during regeneration"
+    )
+    gen_parser.add_argument(
+        "--smart-regen",
+        action="store_true",
+        help="Smart regeneration with signature comparison"
+    )
+    gen_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose logging"
+    )
+    gen_parser.set_defaults(func=cmd_generate)
+
+    # Install-commands subcommand
+    install_parser = subparsers.add_parser(
+        "install-commands",
+        help="Install teax-completion helper command"
+    )
+    install_parser.add_argument(
+        "directory",
+        nargs="?",
+        default=".",
+        help="Target directory (default: current directory)"
+    )
+    install_parser.add_argument(
+        "--list",
+        action="store_true",
+        help="List available commands without installing"
+    )
+    install_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing files"
+    )
+    install_parser.set_defaults(func=cmd_install_commands)
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    sys.exit(args.func(args))
 
 
 def run_codegen(config: GenerationConfig) -> bool:
@@ -187,4 +281,11 @@ def run_codegen(config: GenerationConfig) -> bool:
     return True
 
 
-__all__ = ["main", "run_codegen", "GenerationConfig"]
+__all__ = [
+    "main",
+    "run_codegen",
+    "GenerationConfig",
+    "cmd_generate",
+    "cmd_install_commands",
+    "CODEGEN_COMMANDS",
+]
