@@ -15,15 +15,15 @@ import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
-from sysml_codegen.analysis.parameter_groups import (
-    ParameterGroupDeriver,
-    extract_design_attributes,
-)
-from sysml_codegen.extraction.extractor import SysMLDataExtractor
-from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
-from sysml_codegen.resolution.graph_builder import build_computation_graph
+import jinja2
+
+if TYPE_CHECKING:
+    from sysml_codegen.generation import PipelineContext
+
+# Note: Heavy imports moved inside run_codegen to avoid loading generation
+# module at CLI import time. This keeps CLI startup fast.
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,372 @@ class GenerationConfig:
     overwrite: bool = False
     preserve_handwritten: bool = False
     smart_regen: bool = False
+
+
+def _clear_output_directory(config: GenerationConfig) -> None:
+    """Clear existing output directory before regeneration.
+
+    Respects preserve_handwritten flag to keep handwritten/ directory intact.
+    """
+    if not config.output_path.exists():
+        return
+
+    for item in config.output_path.iterdir():
+        # Skip handwritten directory if preserve flag is set
+        if config.preserve_handwritten and item.name == "handwritten":
+            logger.debug("Preserving handwritten/ directory")
+            continue
+
+        if item.is_dir():
+            shutil.rmtree(item)
+        else:
+            item.unlink()
+
+    logger.debug(f"Cleared output directory: {config.output_path}")
+
+
+def _setup_output_directories(config: GenerationConfig) -> None:
+    """Create output directory structure."""
+    dirs = [
+        config.output_path,
+        config.output_path / "schemas",
+        config.output_path / "modules",
+        config.output_path / "handwritten",
+        config.output_path / "pipelines",
+        config.output_path / "inputs",
+        config.output_path / "tests",
+    ]
+    for d in dirs:
+        d.mkdir(parents=True, exist_ok=True)
+
+
+def _generate_primitives(config: GenerationConfig) -> None:
+    """Generate primitives.py with RootModel wrappers."""
+    content = '''"""Pydantic RootModel wrappers for primitive types."""
+from pydantic import RootModel
+
+Float = RootModel[float]
+Int = RootModel[int]
+String = RootModel[str]
+Bool = RootModel[bool]
+
+__all__ = ["Float", "Int", "String", "Bool"]
+'''
+    output_path = config.output_path / "primitives.py"
+    output_path.write_text(content)
+    logger.debug(f"Generated primitives: {output_path}")
+
+
+def _get_template_env() -> jinja2.Environment:
+    """Set up Jinja2 environment with package templates."""
+    # Use __file__ to find templates relative to package
+    template_dir = Path(__file__).parent.parent / "templates"
+    return jinja2.Environment(
+        loader=jinja2.FileSystemLoader(str(template_dir)),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+
+
+def _generate_schemas(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate Pydantic schemas using multioutput helper."""
+    from sysml_codegen.generation import generate_multioutput_model, should_use_multioutput
+
+    schemas_dir = config.output_path / "schemas"
+
+    # Copy reference schema template
+    ref_schema = Path(__file__).parent.parent / "templates" / "schemas_ref.py"
+    if ref_schema.exists():
+        # Name it based on config (e.g., fusion_schemas.py -> {package}_schemas.py)
+        dest = config.output_path / f"{config.package_name}_schemas.py"
+        shutil.copy(ref_schema, dest)
+        logger.debug(f"Copied reference schema to {dest}")
+
+    # Generate multi-output schemas
+    multioutput_count = 0
+    for calc_def in ctx.calc_defs:
+        if should_use_multioutput(calc_def):
+            output_path = schemas_dir / f"{calc_def.name.lower()}_output.py"
+            code = generate_multioutput_model(
+                calc_def,
+                template_env,
+                output_path,
+                package_name=config.package_name,
+            )
+            if code:
+                output_path.write_text(code)
+                multioutput_count += 1
+                logger.debug(f"Generated schema: {output_path.name}")
+
+    logger.info(f"Generated {multioutput_count} multi-output schemas")
+
+
+def _generate_modules(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate TEAx module wrappers (ADR-003 namespacing)."""
+    from sysml_codegen.generation import generate_teax_module
+    from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
+
+    modules_dir = config.output_path / "modules"
+    created_namespaces: set[str] = set()
+    module_count = 0
+
+    for calc_def in ctx.calc_defs:
+        # Skip calc_defs without outputs (can't generate meaningful module)
+        if not calc_def.output_attributes:
+            logger.debug(f"Skipping {calc_def.name}: no output attributes")
+            continue
+
+        # ADR-003: Derive nested path from qualified name
+        sqn = SysMLQualifiedName(calc_def.qualified_name)
+        python_path = PythonModulePath.from_sysml(sqn)
+
+        # Create namespace subdirectory if needed
+        if python_path.directory:
+            namespace_dir = modules_dir / python_path.directory
+            namespace_dir.mkdir(parents=True, exist_ok=True)
+
+            if python_path.directory not in created_namespaces:
+                init_file = namespace_dir / "__init__.py"
+                if not init_file.exists():
+                    init_file.write_text('"""Namespace package for generated modules."""\n')
+                created_namespaces.add(python_path.directory)
+
+        output_path = modules_dir / python_path.full_path
+        code = generate_teax_module(
+            calc_def,
+            template_env,
+            output_path,
+            config.package_name,
+        )
+        if code:
+            output_path.write_text(code)
+            module_count += 1
+            logger.debug(f"Generated module: {output_path}")
+
+    logger.info(f"Generated {module_count} TEAx module wrappers")
+
+
+def _generate_stencils(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate implementation stencils (ADR-003 namespacing)."""
+    from sysml_codegen.generation import (
+        backup_implementation,
+        generate_implementation_stencil,
+        should_regenerate_stencil,
+    )
+    from sysml_codegen.resolution.identifier_types import (
+        PythonModulePath,
+        SysMLQualifiedName,
+    )
+
+    handwritten_dir = config.output_path / "handwritten"
+    backup_dir = handwritten_dir / "backup"
+    created_namespaces: set[str] = set()
+
+    stats = {"new": 0, "preserved": 0, "regenerated": 0}
+
+    for calc_def in ctx.calc_defs:
+        # Skip calc_defs without outputs (nothing to implement)
+        if not calc_def.output_attributes:
+            continue
+
+        sqn = SysMLQualifiedName(calc_def.qualified_name)
+        python_path = PythonModulePath.from_sysml(sqn)
+
+        # Create namespace subdirectory if needed
+        if python_path.directory:
+            namespace_dir = handwritten_dir / python_path.directory
+            namespace_dir.mkdir(parents=True, exist_ok=True)
+
+            if python_path.directory not in created_namespaces:
+                init_file = namespace_dir / "__init__.py"
+                if not init_file.exists():
+                    init_file.write_text('"""Handwritten implementations."""\n')
+                created_namespaces.add(python_path.directory)
+
+            output_path = namespace_dir / f"{python_path.filename}_impl.py"
+        else:
+            output_path = handwritten_dir / f"{python_path.filename}_impl.py"
+
+        # Smart regeneration logic
+        if config.smart_regen and output_path.exists():
+            should_regen, reason = should_regenerate_stencil(calc_def, output_path)
+            if should_regen:
+                backup_implementation(output_path, backup_dir)
+                code = generate_implementation_stencil(
+                    calc_def, template_env, output_path, config.package_name
+                )
+                if code:
+                    output_path.write_text(code)
+                stats["regenerated"] += 1
+                logger.debug(f"Regenerated stencil ({reason}): {output_path.name}")
+            else:
+                stats["preserved"] += 1
+                logger.debug(f"Preserved stencil ({reason}): {output_path.name}")
+        elif config.preserve_handwritten and output_path.exists():
+            stats["preserved"] += 1
+            logger.debug(f"Preserved existing stencil: {output_path.name}")
+        else:
+            code = generate_implementation_stencil(
+                calc_def, template_env, output_path, config.package_name
+            )
+            if code:
+                output_path.write_text(code)
+            stats["new"] += 1
+
+    if config.smart_regen:
+        logger.info(
+            f"Stencils - New: {stats['new']}, "
+            f"Preserved: {stats['preserved']}, "
+            f"Regenerated: {stats['regenerated']}"
+        )
+    else:
+        logger.info(f"Generated {stats['new']} implementation stencils")
+
+
+def _generate_pipeline(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate pipeline YAML from computation graph."""
+    from sysml_codegen.generation import generate_pipeline_yaml
+
+    pipelines_dir = config.output_path / "pipelines"
+    output_path = pipelines_dir / f"{config.pipeline_name}.yaml"
+
+    yaml_content = generate_pipeline_yaml(
+        graph=ctx.computation_graph,
+        package_name=config.package_name,
+        template_env=template_env,
+    )
+    if yaml_content:
+        output_path.write_text(yaml_content)
+        logger.debug(f"Generated pipeline: {output_path}")
+
+    logger.info(f"Generated pipeline configuration: {config.pipeline_name}.yaml")
+
+
+def _generate_registry(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate registry function in __init__.py."""
+    from sysml_codegen.generation import generate_registry_function
+
+    output_path = config.output_path / "__init__.py"
+
+    # Filter calc_defs to only those with outputs (matching module generation)
+    calc_defs_with_outputs = [
+        cd for cd in ctx.calc_defs if cd.output_attributes
+    ]
+
+    code = generate_registry_function(
+        calc_defs=calc_defs_with_outputs,
+        package_name=config.package_name,
+        template_env=template_env,
+        output_path=output_path,
+        entry_point_groups=ctx.computation_graph.entry_point_groups,
+    )
+    if code:
+        output_path.write_text(code)
+        logger.debug(f"Generated registry: {output_path}")
+
+    logger.info(f"Generated module registry with {len(calc_defs_with_outputs)} modules")
+
+
+def _generate_entry_points(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate entry point parameter group schemas and JSON templates."""
+    from sysml_codegen.generation import (
+        generate_all_derived_jsons_from_graph,
+        generate_all_derived_schemas_from_graph,
+    )
+
+    entry_point_groups = ctx.computation_graph.entry_point_groups
+
+    if entry_point_groups:
+        schema_files = generate_all_derived_schemas_from_graph(
+            entry_point_groups,
+            template_env,
+            config.output_path,
+        )
+        logger.info(f"Generated {len(schema_files)} parameter group schemas")
+
+        json_files = generate_all_derived_jsons_from_graph(
+            entry_point_groups,
+            config.output_path,
+        )
+        logger.info(f"Generated {len(json_files)} JSON input templates")
+    else:
+        logger.info("No entry point groups to generate")
+
+
+def _generate_backlog(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+) -> None:
+    """Generate implementation backlog report."""
+    from sysml_codegen.generation import generate_backlog_report
+
+    output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
+
+    # Filter to calc_defs with outputs (matching module generation)
+    calc_defs_with_outputs = [
+        cd for cd in ctx.calc_defs if cd.output_attributes
+    ]
+
+    markdown = generate_backlog_report(
+        calc_defs_with_outputs,
+        output_path,
+        config.package_name,
+    )
+    if markdown:
+        output_path.write_text(markdown)
+        logger.info(f"Generated implementation backlog: {output_path.name}")
+
+
+def _generate_tests(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate runnable test file for implementations."""
+    from sysml_codegen.generation import generate_test_implementations
+
+    tests_dir = config.output_path / "tests"
+    tests_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = tests_dir / "test_implementations_runnable.py"
+
+    # Filter to calc_defs with outputs (matching module generation)
+    calc_defs_with_outputs = [
+        cd for cd in ctx.calc_defs if cd.output_attributes
+    ]
+
+    content = generate_test_implementations(
+        calc_defs=calc_defs_with_outputs,
+        package_name=config.package_name,
+        template_env=template_env,
+        output_path=output_path,
+    )
+    output_path.write_text(content)
+    logger.info(f"Generated runnable tests: {output_path.name}")
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
@@ -228,57 +594,79 @@ def run_codegen(config: GenerationConfig) -> bool:
     Returns:
         True if generation succeeded, False otherwise.
     """
+    from sysml_codegen.generation import (
+        CodeGenerationError,
+        SysMLParsingError,
+        build_pipeline_context,
+    )
+
     logger.info(f"Generating code from {config.models_path}")
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
-    # Step 1: Parse SysML models
-    extractor = SysMLDataExtractor([config.models_path])
-    if not extractor.load_models():
-        logger.error("Failed to load SysML models")
+    try:
+        # Step 1: Build pipeline context (7-step initialization)
+        logger.info("Building pipeline context...")
+        ctx = build_pipeline_context([config.models_path])
+        logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
+        logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
+
+        # Step 2: Clear and setup output directories
+        if config.overwrite:
+            logger.info("Clearing existing output directory...")
+            _clear_output_directory(config)
+
+        logger.info("Creating output directory structure...")
+        _setup_output_directories(config)
+
+        # Step 3: Generate primitives.py (required for module imports)
+        _generate_primitives(config)
+
+        # Step 4: Setup Jinja2 template environment
+        template_env = _get_template_env()
+
+        # Step 5: Generate schemas
+        logger.info("Generating schemas...")
+        _generate_schemas(ctx, config, template_env)
+
+        # Step 6: Generate modules and stencils
+        logger.info("Generating TEAx module wrappers...")
+        _generate_modules(ctx, config, template_env)
+
+        logger.info("Generating implementation stencils...")
+        _generate_stencils(ctx, config, template_env)
+
+        # Step 7: Generate pipeline and registry
+        logger.info("Generating pipeline configuration...")
+        _generate_pipeline(ctx, config, template_env)
+
+        logger.info("Generating module registry...")
+        _generate_registry(ctx, config, template_env)
+
+        # Step 8: Generate entry points and extras
+        logger.info("Generating entry point schemas and JSON templates...")
+        _generate_entry_points(ctx, config, template_env)
+
+        logger.info("Generating implementation backlog...")
+        _generate_backlog(ctx, config)
+
+        logger.info("Generating runnable tests...")
+        _generate_tests(ctx, config, template_env)
+
+        logger.info("Code generation complete")
+        return True
+
+    except SysMLParsingError as e:
+        logger.error(f"SysML parsing failed: {e}")
         return False
-
-    # Step 2: Extract calculation definitions
-    calc_defs = extractor.extract_calculation_definitions()
-    logger.info(f"Extracted {len(calc_defs)} calculation definitions")
-
-    # Step 3: Extract calculation usages
-    usages, report = extract_calculation_usages(
-        extractor.model,
-        known_calc_defs={cd.name for cd in calc_defs},
-        calc_defs=calc_defs,
-    )
-    logger.info(f"Extracted {len(usages)} calculation usages")
-
-    # Step 4: Extract design attributes
-    design_attrs = extract_design_attributes(extractor.model)
-
-    # Step 5: Run dependency backtracking
-    backtracker = DependencyBacktracker(usages, calc_defs, design_attrs)
-    result = backtracker.find_required_modules([], include_all=True)
-
-    # Step 6: Build computation graph
-    group_deriver = ParameterGroupDeriver(design_attrs, usages, calc_defs)
-    graph = build_computation_graph(result, calc_defs, design_attrs, group_deriver)
-
-    # Step 7: Generate code
-    # TODO: Implement code generation using templates
-    # This requires:
-    # - Template loading from sysml_codegen.templates
-    # - Module generation via sysml_codegen.generation.modules
-    # - Pipeline generation via sysml_codegen.generation.pipeline
-    # - Registry generation via sysml_codegen.generation.registry
-    #
-    # The implementation should:
-    # - Parameterize package_name in all template contexts
-    # - Parameterize schema_class_name (was: "FusionParams")
-    # - Parameterize pipeline_name (was: "catf_fusion")
-    # - Use config.output_path instead of hardcoded paths
-    # - Run mypy/ruff on generated code if available
-
-    logger.info(f"Computation graph built with {len(graph.modules)} modules")
-    logger.info("Code generation complete (stub - full generation TODO)")
-    return True
+    except CodeGenerationError as e:
+        logger.error(f"Code generation failed: {e}")
+        return False
+    except Exception as e:
+        import traceback
+        logger.error(f"Unexpected error: {e}")
+        logger.debug(traceback.format_exc())
+        return False
 
 
 __all__ = [

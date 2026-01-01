@@ -220,3 +220,127 @@ class TestInstallCommands:
 
         assert result == 0
         assert existing.read_text() != "old content"
+
+
+class TestRunCodegenPhases:
+    """Tests for run_codegen implementation phases."""
+
+    def test_creates_output_directory_structure(self, tmp_path: Path, sample_model_path: Path):
+        """Verify run_codegen creates expected directory structure (Phase 1)."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=sample_model_path,
+            output_path=output,
+            package_name="test_pkg",
+        )
+
+        # Should at least create directories even if generation partially fails
+        run_codegen(config)
+
+        assert output.exists(), "Output directory should exist"
+        assert (output / "schemas").exists(), "schemas/ directory should exist"
+        assert (output / "modules").exists(), "modules/ directory should exist"
+        assert (output / "handwritten").exists(), "handwritten/ directory should exist"
+        assert (output / "pipelines").exists(), "pipelines/ directory should exist"
+        assert (output / "inputs").exists(), "inputs/ directory should exist"
+        assert (output / "tests").exists(), "tests/ directory should exist"
+
+        # Check primitives.py is generated (CRITICAL - modules depend on this)
+        primitives = output / "primitives.py"
+        assert primitives.exists(), "primitives.py should exist"
+        content = primitives.read_text()
+        assert "Float = RootModel[float]" in content, "primitives should define Float"
+
+    def test_generates_schemas(self, tmp_path: Path, sample_model_path: Path):
+        """Verify schema files are generated (Phase 2)."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=sample_model_path,
+            output_path=output,
+            package_name="test_pkg",
+        )
+
+        run_codegen(config)
+
+        schemas_dir = output / "schemas"
+        # Should have at least the reference schema or multi-output schemas
+        ref_schema = output / "test_pkg_schemas.py"
+        multioutput_schemas = list(schemas_dir.glob("*_output.py"))
+
+        # Either reference schema exists OR multi-output schemas exist
+        assert ref_schema.exists() or len(multioutput_schemas) > 0, \
+            "Should generate reference schema or multi-output schemas"
+
+    def test_generates_modules_and_stencils(self, tmp_path: Path, sample_model_path: Path):
+        """Verify module wrappers and stencils are generated (Phase 3)."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=sample_model_path,
+            output_path=output,
+            package_name="test_pkg",
+        )
+
+        run_codegen(config)
+
+        modules_dir = output / "modules"
+        handwritten_dir = output / "handwritten"
+
+        # Should have generated module files
+        module_files = list(modules_dir.rglob("*.py"))
+        stencil_files = list(handwritten_dir.rglob("*_impl.py"))
+
+        assert len(module_files) > 0, "Should generate module wrappers"
+        assert len(stencil_files) > 0, "Should generate implementation stencils"
+
+    def test_generates_pipeline_and_registry(self, tmp_path: Path, sample_model_path: Path):
+        """Verify pipeline YAML and registry are generated (Phase 4)."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=sample_model_path,
+            output_path=output,
+            package_name="test_pkg",
+            pipeline_name="test_pipeline",
+        )
+
+        run_codegen(config)
+
+        # Check pipeline
+        pipelines_dir = output / "pipelines"
+        yaml_files = list(pipelines_dir.glob("*.yaml"))
+        assert len(yaml_files) > 0, "Should generate pipeline YAML"
+
+        # Check registry
+        init_file = output / "__init__.py"
+        assert init_file.exists(), "Should generate __init__.py registry"
+        content = init_file.read_text()
+        assert "create_" in content, "Registry should have creation function"
+
+    def test_generates_entry_points_and_extras(self, tmp_path: Path, sample_model_path: Path):
+        """Verify entry points, JSON templates, and extras are generated (Phase 5)."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=sample_model_path,
+            output_path=output,
+            package_name="test_pkg",
+        )
+
+        run_codegen(config)
+
+        # Check backlog
+        backlog = output / "IMPLEMENTATION_BACKLOG.md"
+        assert backlog.exists(), "Should generate implementation backlog"
+
+        # Check tests
+        tests_dir = output / "tests"
+        test_files = list(tests_dir.glob("test_*.py"))
+        assert len(test_files) > 0, "Should generate test files"
