@@ -57,6 +57,7 @@ class GenerationConfig:
     overwrite: bool = False
     preserve_handwritten: bool = False
     smart_regen: bool = False
+    design_path_filter: str = ""
 
 
 def _clear_output_directory(config: GenerationConfig) -> None:
@@ -133,14 +134,6 @@ def _generate_schemas(
     from sysml_codegen.generation import generate_multioutput_model, should_use_multioutput
 
     schemas_dir = config.output_path / "schemas"
-
-    # Copy reference schema template
-    ref_schema = Path(__file__).parent.parent / "templates" / "schemas_ref.py"
-    if ref_schema.exists():
-        # Name it based on config (e.g., fusion_schemas.py -> {package}_schemas.py)
-        dest = config.output_path / f"{config.package_name}_schemas.py"
-        shutil.copy(ref_schema, dest)
-        logger.debug(f"Copied reference schema to {dest}")
 
     # Generate multi-output schemas
     multioutput_count = 0
@@ -321,6 +314,7 @@ def _generate_registry(
 ) -> None:
     """Generate registry function in __init__.py."""
     from sysml_codegen.generation import generate_registry_function
+    from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
     output_path = config.output_path / "__init__.py"
 
@@ -329,12 +323,15 @@ def _generate_registry(
         cd for cd in ctx.calc_defs if cd.output_attributes
     ]
 
+    exit_point_types = _collect_exit_point_primitive_types(ctx.computation_graph.modules)
+
     code = generate_registry_function(
         calc_defs=calc_defs_with_outputs,
         package_name=config.package_name,
         template_env=template_env,
         output_path=output_path,
         entry_point_groups=ctx.computation_graph.entry_point_groups,
+        exit_point_primitive_types=exit_point_types,
     )
     if code:
         output_path.write_text(code)
@@ -448,6 +445,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         overwrite=args.overwrite,
         preserve_handwritten=args.preserve_handwritten,
         smart_regen=args.smart_regen,
+        design_path_filter=args.design_path_filter,
     )
 
     success = run_codegen(config)
@@ -551,6 +549,12 @@ def main() -> None:
         action="store_true",
         help="Enable verbose logging"
     )
+    gen_parser.add_argument(
+        "--design-path-filter",
+        type=str,
+        default="",
+        help="Substring filter for design file paths (default: accept all files)"
+    )
     gen_parser.set_defaults(func=cmd_generate)
 
     # Install-commands subcommand
@@ -607,7 +611,10 @@ def run_codegen(config: GenerationConfig) -> bool:
     try:
         # Step 1: Build pipeline context (7-step initialization)
         logger.info("Building pipeline context...")
-        ctx = build_pipeline_context([config.models_path])
+        ctx = build_pipeline_context(
+            [config.models_path],
+            design_path_filter=config.design_path_filter,
+        )
         logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
         logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
 

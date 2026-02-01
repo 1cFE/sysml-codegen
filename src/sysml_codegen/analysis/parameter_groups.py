@@ -86,7 +86,7 @@ class DerivedParameterGroup:
 
 def extract_design_attributes(
     model: Any,
-    design_path_filter: str = "models/designs",
+    design_path_filter: str = "",
 ) -> dict[Path, list[DesignAttributeData]]:
     """Extract all attributes with default values from DESIGN files only.
 
@@ -184,9 +184,11 @@ def _extract_default_value(expr: Any) -> str | None:
             return chain_path
 
     elif SysideAdapter.is_instance(expr, "OperatorExpression"):
-        # CRITICAL: Import from agentic-mbse
-        result = evaluate_true_static_expression(expr)
-        return str(result)
+        try:
+            result = evaluate_true_static_expression(expr)
+            return str(result)
+        except Exception:
+            return None
 
     if hasattr(expr, "__str__"):
         try:

@@ -266,14 +266,15 @@ class TestRunCodegenPhases:
 
         run_codegen(config)
 
-        schemas_dir = output / "schemas"
-        # Should have at least the reference schema or multi-output schemas
+        # FR-10/AC-5: No static FusionParams schema should be generated
         ref_schema = output / "test_pkg_schemas.py"
-        multioutput_schemas = list(schemas_dir.glob("*_output.py"))
+        assert not ref_schema.exists(), (
+            "Static FusionParams schema should NOT be generated"
+        )
 
-        # Either reference schema exists OR multi-output schemas exist
-        assert ref_schema.exists() or len(multioutput_schemas) > 0, \
-            "Should generate reference schema or multi-output schemas"
+        # Multi-output schemas may or may not exist depending on model
+        schemas_dir = output / "schemas"
+        assert schemas_dir.exists(), "schemas/ directory should exist"
 
     def test_generates_modules_and_stencils(self, tmp_path: Path, sample_model_path: Path):
         """Verify module wrappers and stencils are generated (Phase 3)."""
@@ -344,3 +345,141 @@ class TestRunCodegenPhases:
         tests_dir = output / "tests"
         test_files = list(tests_dir.glob("test_*.py"))
         assert len(test_files) > 0, "Should generate test files"
+
+
+class TestCodegenRuntimeGapFixes:
+    """Integration tests verifying all three runtime gap fixes.
+
+    These tests run full codegen on the chain spike model and verify
+    the output is correct without manual intervention.
+    """
+
+    def test_design_params_json_populated(self, tmp_path: Path, chain_spike_model_path: Path):
+        """AC-1: design_params.json should contain correct default values."""
+        import json
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=chain_spike_model_path,
+            output_path=output,
+            package_name="chain_spike",
+        )
+
+        success = run_codegen(config)
+        assert success, "Codegen should succeed on chain spike model"
+
+        # Find JSON files in inputs/
+        json_files = list((output / "inputs").glob("*.json"))
+        assert len(json_files) > 0, "Should generate at least one JSON input file"
+
+        # Collect all populated numeric values across JSON files
+        all_numeric_values: dict[str, float] = {}
+        for jf in json_files:
+            data = json.loads(jf.read_text())
+            for key, value in data.items():
+                assert isinstance(value, (int, float)), (
+                    f"JSON value for '{key}' should be numeric, got {type(value)}"
+                )
+                all_numeric_values[key] = value
+
+        assert len(all_numeric_values) >= 3, (
+            f"Expected >= 3 populated numeric entries across JSON files, got {len(all_numeric_values)}: "
+            f"{all_numeric_values}"
+        )
+
+        # Verify the chain spike model's known defaults are present
+        expected_defaults = {"length": 10.0, "width": 5.0, "rate": 12.0}
+        for name, expected_val in expected_defaults.items():
+            matching = {k: v for k, v in all_numeric_values.items() if name in k.lower()}
+            assert matching, f"Expected a JSON entry containing '{name}' in its key"
+            for k, v in matching.items():
+                assert v == expected_val, (
+                    f"Expected '{k}' to be {expected_val}, got {v}"
+                )
+
+    def test_custom_schema_types_includes_exit_point_types(
+        self, tmp_path: Path, chain_spike_model_path: Path
+    ):
+        """AC-3: Generated __init__.py should include Float in CUSTOM_SCHEMA_TYPES."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=chain_spike_model_path,
+            output_path=output,
+            package_name="chain_spike",
+        )
+
+        success = run_codegen(config)
+        assert success, "Codegen should succeed on chain spike model"
+
+        init_content = (output / "__init__.py").read_text()
+        assert "CUSTOM_SCHEMA_TYPES" in init_content, (
+            "Generated __init__.py should have CUSTOM_SCHEMA_TYPES"
+        )
+        assert "Float" in init_content, (
+            "CUSTOM_SCHEMA_TYPES should include Float for RootModel[float] exit points"
+        )
+        assert "from chain_spike.primitives import" in init_content, (
+            "Should import Float from primitives"
+        )
+
+    def test_no_fusion_params_schema(self, tmp_path: Path, chain_spike_model_path: Path):
+        """AC-5/AC-6: No FusionParams schema should exist in generated output."""
+        from sysml_codegen.cli import run_codegen, GenerationConfig
+
+        output = tmp_path / "generated"
+        config = GenerationConfig(
+            models_path=chain_spike_model_path,
+            output_path=output,
+            package_name="chain_spike",
+        )
+
+        success = run_codegen(config)
+        assert success, "Codegen should succeed"
+
+        # No {package}_schemas.py file should exist
+        schemas_file = output / "chain_spike_schemas.py"
+        assert not schemas_file.exists(), (
+            "Static FusionParams schema should not be generated"
+        )
+
+        # Double-check: no FusionParams anywhere in generated code
+        for py_file in output.rglob("*.py"):
+            content = py_file.read_text()
+            assert "FusionParams" not in content, (
+                f"FusionParams found in {py_file.name} — static template was not removed"
+            )
+
+    def test_design_path_filter_cli_flag(self):
+        """FR-4: CLI should expose --design-path-filter flag."""
+        import io
+        import sys
+        from contextlib import redirect_stdout
+        from unittest.mock import patch
+        from sysml_codegen.cli import main
+
+        help_text = ""
+        with patch.object(sys, "argv", ["sysml-codegen", "generate", "--help"]):
+            try:
+                with redirect_stdout(io.StringIO()) as f:
+                    main()
+            except SystemExit:
+                pass
+            help_text = f.getvalue()
+
+        assert "--design-path-filter" in help_text, (
+            "CLI should have --design-path-filter option"
+        )
+
+    def test_generation_config_has_design_path_filter(self):
+        """FR-4: GenerationConfig should have design_path_filter field."""
+        from sysml_codegen.cli import GenerationConfig
+
+        config = GenerationConfig(
+            models_path=Path("/tmp/models"),
+            output_path=Path("/tmp/output"),
+        )
+        assert hasattr(config, "design_path_filter")
+        assert config.design_path_filter == ""

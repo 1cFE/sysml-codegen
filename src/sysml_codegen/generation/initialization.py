@@ -83,6 +83,7 @@ def build_pipeline_context(
     model_paths: list[Path],
     targets: list[str] | None = None,
     include_all: bool = True,
+    design_path_filter: str = "",
 ) -> PipelineContext:
     """Build complete pipeline context from SysML models.
 
@@ -137,7 +138,7 @@ def build_pipeline_context(
     )
 
     # Step 4: Extract design attributes for group derivation
-    design_attrs = extract_design_attributes(extractor.model)
+    design_attrs = extract_design_attributes(extractor.model, design_path_filter=design_path_filter)
 
     # Step 5: Create parameter group deriver
     group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
