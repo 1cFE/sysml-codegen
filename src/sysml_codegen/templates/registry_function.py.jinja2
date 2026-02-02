@@ -2,11 +2,16 @@
 {{ import_line }}
 {% endfor %}
 
-{# NEW: Parameter group schema imports #}
+{# Parameter group schema imports #}
 {% if schema_imports %}
 {% for import_line in schema_imports %}
 {{ import_line }}
 {% endfor %}
+{% endif %}
+
+{# Primitive type imports for exit point registration #}
+{% if exit_point_types %}
+from {{ package_name }}.primitives import {{ exit_point_types | join(", ") }}
 {% endif %}
 
 
@@ -35,13 +40,15 @@ def {{ function_name }}() -> PipelineModuleRegistry:
     )
 
 
-{# NEW: Custom schema types for TEAx registration #}
-{% if parameter_groups %}
+{% if parameter_groups or exit_point_types %}
 # Custom schema types for TEAx pipeline registration
 # Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
 CUSTOM_SCHEMA_TYPES = [
 {%- for schema_name in parameter_groups %}
-    {{ schema_name }}{{ "," if not loop.last else "" }}
+    {{ schema_name }},
+{%- endfor %}
+{%- for type_name in exit_point_types %}
+    {{ type_name }},
 {%- endfor %}
 ]
 {% endif %}

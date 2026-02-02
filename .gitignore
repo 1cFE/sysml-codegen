@@ -89,7 +89,6 @@ cython_debug/
 *.swp
 *.swo
 *~
-.project
 .pydevproject
 .settings/
 

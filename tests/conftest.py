@@ -30,6 +30,12 @@ def sample_model_path(fixtures_path: Path) -> Path:
 
 
 @pytest.fixture
+def chain_spike_model_path(fixtures_path: Path) -> Path:
+    """Return path to chain spike SysML model directory."""
+    return fixtures_path / "chain_spike_model"
+
+
+@pytest.fixture
 def expected_outputs_path(fixtures_path: Path) -> Path:
     """Return path to expected outputs directory."""
     return fixtures_path / "expected_outputs"

@@ -27,12 +27,40 @@ if TYPE_CHECKING:
     from sysml_codegen.resolution.models import ParameterGroup as ModelParameterGroup
 
 
+def _collect_exit_point_primitive_types(
+    modules: list,
+) -> list[str]:
+    """Collect unique primitive wrapper type names needed for exit points.
+
+    For single-output modules (field_name="root"), returns the wrapper type
+    name from primitives.py (e.g., "Float" for python_type="float").
+
+    Multi-output modules use BaseModel schemas which are already registered
+    via entry_point_groups or schema generation.
+    """
+    type_map = {
+        "float": "Float",
+        "int": "Int",
+        "str": "String",
+        "bool": "Bool",
+    }
+    types = set()
+    for module in modules:
+        for out in module.outputs:
+            if out.field_name == "root":
+                wrapper = type_map.get(out.python_type)
+                if wrapper:
+                    types.add(wrapper)
+    return sorted(types)
+
+
 def generate_registry_function(
     calc_defs: list[CalculationDefinitionData],
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
     entry_point_groups: "list[ModelParameterGroup]",
+    exit_point_primitive_types: list[str] | None = None,
 ) -> str:
     """Generate registry creation function.
 
@@ -62,6 +90,8 @@ def generate_registry_function(
         "imports": _generate_import_statements(calc_defs, package_name),
         "schema_imports": schema_imports,
         "parameter_groups": group_names,
+        "package_name": package_name,
+        "exit_point_types": exit_point_primitive_types or [],
     }
 
     template = template_env.get_template("registry_function.py.jinja2")
@@ -207,5 +237,6 @@ def _generate_schema_imports_from_entry_points(
 
 
 __all__ = [
+    "_collect_exit_point_primitive_types",
     "generate_registry_function",
 ]
