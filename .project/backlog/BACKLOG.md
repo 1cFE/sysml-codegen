@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: [DATE]
+**Last Updated**: 2026-02-03
 
 ---
 
@@ -25,19 +25,22 @@ Prioritized list of epics and features.
 
 ## P1 - High Priority
 
-### [EPIC-001] [Epic Name]
+### [EXPR-CODEGEN] Expression-Aware Code Generation
 
 **Priority**: P1
-**Effort**: [X days]
-**Status**: Ready
+**Effort**: ~8-10 days
+**Status**: Draft
 
-Brief description of the epic and why it's important.
+Transform codegen from generating `NotImplementedError` stubs to generating executable calculation code for CalcDefs whose math is fully expressed in SysML. Eliminates the manual `_impl.py` authoring bottleneck for the majority of generated modules.
 
 **Items**:
-- [ ] Item 1: [Name] ([X days])
-- [ ] Item 2: [Name] ([X days])
+- [ ] Item 1: Spike -- AST Extraction & Reference Resolution (1 day)
+- [ ] Item 2: Spike -- Expression Compilation & Classification (1 day)
+- [ ] Item 3: Expression Compiler Module (1.5 days)
+- [ ] Item 4: Pipeline Integration -- CalcDef Expression Compilation (2 days)
+- [ ] Item 5: End-to-End Validation on Real Models (1 day)
 
-**File**: `epic_[name].md`
+**File**: `epic_expression_aware_codegen.md`
 
 ---
 
