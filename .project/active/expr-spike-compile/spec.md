@@ -22,11 +22,11 @@ If compiled expressions don't match handwritten ground truth, or if the classifi
 
 ### Success Criteria
 
-- [ ] All compiled expressions pass `ast.parse()` (syntactically valid Python)
-- [ ] For CalcDefs with existing handwritten impls, compiled output matches within `1e-10`
-- [ ] Zero false positives: nothing classified `FULLY_COMPILABLE` produces wrong results
-- [ ] Classifier boundaries documented: which CalcDefs compile, which don't, why
-- [ ] Python operator mapping validated against all 5 operators found in Item 1
+- [x] All compiled expressions pass `ast.parse()` (syntactically valid Python)
+- [x] For CalcDefs with existing handwritten impls, compiled output matches within `1e-10`
+- [x] Zero false positives: nothing classified `FULLY_COMPILABLE` produces wrong results
+- [x] Classifier boundaries documented: which CalcDefs compile, which don't, why
+- [x] Python operator mapping validated against all 5 operators found in Item 1
 
 ### Priority
 
@@ -240,25 +240,25 @@ The fallback strategy ensures reproducibility without requiring external files.
 ## Acceptance Criteria
 
 ### Core Functionality
-- [ ] `scripts/spike_compile_expressions.py` exists and runs without errors on all model suites
-- [ ] `scripts/spike_classify_compilability.py` exists and runs without errors on all model suites
-- [ ] Q3 output includes: per-CalcDef per-output table with compiled expression, `ast.parse()` result, numerical match
-- [ ] Q3 output includes: full function body generation for multi-output CalcDefs (intermediates + return)
-- [ ] Q3 output includes: operator mapping validation table (all 5 operators)
-- [ ] Q4 output includes: per-CalcDef classification table with verdict and reason
-- [ ] Q4 output includes: cross-reference against Q3 results (zero false positives confirmed)
-- [ ] Q4 output includes: summary statistics (counts per verdict, false positive rate)
+- [x] `scripts/spike_compile_expressions.py` exists and runs without errors on all model suites
+- [x] `scripts/spike_classify_compilability.py` exists and runs without errors on all model suites
+- [x] Q3 output includes: per-CalcDef per-output table with compiled expression, `ast.parse()` result, numerical match
+- [x] Q3 output includes: full function body generation for multi-output CalcDefs (intermediates + return)
+- [x] Q3 output includes: operator mapping validation table (all 5 operators)
+- [x] Q4 output includes: per-CalcDef classification table with verdict and reason
+- [x] Q4 output includes: cross-reference against Q3 results (zero false positives confirmed)
+- [x] Q4 output includes: summary statistics (counts per verdict, false positive rate)
 
 ### Deliverables
-- [ ] `scripts/spike_compile_expressions.py`
-- [ ] `scripts/spike_classify_compilability.py`
-- [ ] `.project/active/expr-spike-compile/report.md` (accuracy report + operator map + go/no-go)
+- [x] `scripts/spike_compile_expressions.py`
+- [x] `scripts/spike_classify_compilability.py`
+- [x] `.project/active/expr-spike-compile/report.md` (accuracy report + operator map + go/no-go)
 
 ### Quality & Integration
-- [ ] No existing tests broken
-- [ ] Scripts are self-contained (no pipeline code modifications)
-- [ ] Report contains quantitative evidence for every claim
-- [ ] Undeclared intermediate handling strategy documented (for the 3 CATF refs)
+- [x] No existing tests broken
+- [x] Scripts are self-contained (no pipeline code modifications)
+- [x] Report contains quantitative evidence for every claim
+- [x] Undeclared intermediate handling strategy documented (for the 3 CATF refs)
 
 ---
 

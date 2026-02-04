@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import ast
 import sys
+import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -296,57 +297,62 @@ def run_suite(
     classifications: list[CalcDefClassification] = []
     q3_results: dict[str, dict] = {}
 
+    GROUND_TRUTH_SUITES = {"solar_battery_model"}
+
     for raw_elem in raw_elems:
         name = sanitize_name(raw_elem.name)
         calc_def = calc_def_by_name.get(name)
         if calc_def is None:
             continue
 
-        # Q4: classify
-        cls = classify_calc_def(calc_def, raw_elem, adapter, label)
-        classifications.append(cls)
+        try:
+            # Q4: classify
+            cls = classify_calc_def(calc_def, raw_elem, adapter, label)
+            classifications.append(cls)
 
-        # Q3: compile (for cross-reference)
-        body, exec_order, output_results, undeclared = compile_calc_def_body(
-            calc_def, raw_elem, adapter,
-        )
-        body_valid = body is not None
-        if body_valid:
-            import textwrap
-            func_code = f"def run(inputs):\n{textwrap.indent(body, '    ')}"
-            try:
-                ast.parse(func_code)
-            except SyntaxError:
-                body_valid = False
+            # Q3: compile (for cross-reference)
+            body, exec_order, output_results, undeclared = compile_calc_def_body(
+                calc_def, raw_elem, adapter,
+            )
+            body_valid = body is not None
+            if body_valid:
+                func_code = f"def run(inputs):\n{textwrap.indent(body, '    ')}"
+                try:
+                    ast.parse(func_code)
+                except SyntaxError:
+                    body_valid = False
 
-        all_ast_pass = all(o.ast_valid for o in output_results)
+            all_ast_pass = all(o.ast_valid for o in output_results)
 
-        # Ground truth comparison for solar_battery
-        ground_truth_match: bool | None = None  # None = no ground truth available
-        if label == "solar_battery_model" and body is not None and exec_order is not None and HANDWRITTEN_IMPL_DIR.exists():
-            impl_name = name.lower() + "_impl.py"
-            impl_path = HANDWRITTEN_IMPL_DIR / impl_name
-            if impl_path.exists():
-                input_dict = generate_test_inputs(calc_def)
-                # Only use declared output names for return value comparison
-                output_names_ordered = [n for n in exec_order if n in {a.name for a in calc_def.output_attributes}]
-                cr = compare_compiled_vs_handwritten(
-                    calc_def, body, impl_path, input_dict, output_names_ordered,
-                )
-                if cr.status == "MATCH":
-                    ground_truth_match = True
-                elif cr.status == "MISMATCH":
-                    ground_truth_match = False
-                # STUB/EXCLUDED/ERROR -> None (no ground truth available)
+            # Ground truth comparison (when handwritten impls exist)
+            ground_truth_match: bool | None = None  # None = no ground truth available
+            if label in GROUND_TRUTH_SUITES and body is not None and exec_order is not None and HANDWRITTEN_IMPL_DIR.exists():
+                impl_name = name.lower() + "_impl.py"
+                impl_path = HANDWRITTEN_IMPL_DIR / impl_name
+                if impl_path.exists():
+                    input_dict = generate_test_inputs(calc_def)
+                    # Only use declared output names for return value comparison
+                    output_names_ordered = [n for n in exec_order if n in {a.name for a in calc_def.output_attributes}]
+                    cr = compare_compiled_vs_handwritten(
+                        calc_def, body, impl_path, input_dict, output_names_ordered,
+                    )
+                    if cr.status == "MATCH":
+                        ground_truth_match = True
+                    elif cr.status == "MISMATCH":
+                        ground_truth_match = False
+                    # STUB/EXCLUDED/ERROR -> None (no ground truth available)
 
-        key = f"{label}::{name}"
-        q3_results[key] = {
-            "body_valid": body_valid,
-            "all_ast_pass": all_ast_pass,
-            "output_count": len(output_results),
-            "valid_count": sum(1 for o in output_results if o.ast_valid),
-            "ground_truth_match": ground_truth_match,
-        }
+            key = f"{label}::{name}"
+            q3_results[key] = {
+                "body_valid": body_valid,
+                "all_ast_pass": all_ast_pass,
+                "output_count": len(output_results),
+                "valid_count": sum(1 for o in output_results if o.ast_valid),
+                "ground_truth_match": ground_truth_match,
+            }
+        except Exception as e:
+            print(f"  ERROR processing {name}: {e}", file=sys.stderr)
+            continue
 
     return classifications, q3_results
 

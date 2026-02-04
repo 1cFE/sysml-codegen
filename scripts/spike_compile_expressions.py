@@ -379,17 +379,8 @@ def build_dependency_graph(
 
 def topological_sort(dep_graph: dict[str, set[str]]) -> list[str] | None:
     """Kahn's algorithm. Returns sorted list or None if circular."""
+    # in_degree[node] = number of deps that ARE in the graph
     in_degree: dict[str, int] = {node: 0 for node in dep_graph}
-    for node, deps in dep_graph.items():
-        for dep in deps:
-            if dep in in_degree:
-                in_degree[node] = in_degree.get(node, 0)  # ensure exists
-            # dep might not be in dep_graph (undeclared intermediate)
-            # For topological sort purposes, skip deps not in graph
-            pass
-
-    # Recompute: in_degree[node] = number of deps that ARE in the graph
-    in_degree = {node: 0 for node in dep_graph}
     for node, deps in dep_graph.items():
         for dep in deps:
             if dep in dep_graph:
@@ -637,11 +628,13 @@ def compare_compiled_vs_handwritten(
     compiled_outputs: dict[str, float] = {}
     try:
         exec_globals: dict[str, Any] = {"inputs": inputs_ns}
-        # Execute all assignment lines (skip the return line)
-        assignment_lines = [
-            line for line in compiled_body.split("\n")
-            if not line.strip().startswith("return")
-        ]
+        # Execute all assignment lines (skip the return statement)
+        assignment_lines = []
+        for line in compiled_body.split("\n"):
+            stripped = line.strip()
+            if stripped == "" or stripped.startswith("return ") or stripped.startswith("return("):
+                continue
+            assignment_lines.append(line)
         exec("\n".join(assignment_lines), exec_globals)
         for name in output_names_ordered:
             compiled_outputs[name] = exec_globals[name]
@@ -821,8 +814,9 @@ def run_suite(
             f"{valid_str:<10} {notes_str:<30}"
         )
 
-    # Phase 3: Ground truth comparison (solar_battery only)
-    if do_comparison and label == "solar_battery_model" and HANDWRITTEN_IMPL_DIR.exists():
+    # Phase 3: Ground truth comparison (when handwritten impls exist)
+    GROUND_TRUTH_SUITES = {"solar_battery_model"}
+    if do_comparison and label in GROUND_TRUTH_SUITES and HANDWRITTEN_IMPL_DIR.exists():
         print(f"\n--- Ground Truth Comparison (Phase 3) ---")
         print(f"Handwritten impls dir: {HANDWRITTEN_IMPL_DIR}")
         print(f"{'CalcDef':<30} {'Status':<12} {'MaxRelErr':<15} {'Notes':<50}")

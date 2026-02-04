@@ -1,7 +1,7 @@
 # Epic: Expression-Aware Code Generation
 
 **Epic ID**: EXPR-CODEGEN
-**Status**: Draft
+**Status**: In Progress (Items 1-2 complete, Item 3 next)
 **Priority**: P1
 **Created**: 2026-02-03
 **Estimated Effort**: ~8.5-10.5 days
@@ -382,5 +382,5 @@ The following issues from the design review are resolved by specific items:
 
 ---
 
-**Last Updated**: 2026-02-03
+**Last Updated**: 2026-02-04
 **Next Action**: Begin Item 3 -- create `.project/active/expr-compiler-module/spec.md` and design the expression compiler module

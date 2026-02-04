@@ -2,7 +2,7 @@
 
 **Status:** Complete
 **Created:** 2026-02-03
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
 
 ## Source Documents
 - **Spec:** `.project/active/expr-spike-compile/spec.md`
@@ -494,6 +494,20 @@ Handwritten impls at: `/home/reid/1cfe/fusion-tea/generated/solar_battery/handwr
    - Added limitations section documenting Pattern B has zero runtime ground truth
    - Noted 37/42 FULLY_COMPILABLE are syntax-validated only
    - Updated undeclared intermediates section to document full code emission requirement for Item 3
+
+### Post-Audit: Code Cleanup
+**Completed:** 2026-02-04
+**Changes:**
+1. **Dead code removal in `topological_sort()`**: Removed lines 382-389 in `spike_compile_expressions.py` -- first in_degree computation loop was a no-op immediately overwritten by lines 391-396.
+2. **Fragile return-line filtering fix**: In `compare_compiled_vs_handwritten()`, replaced `startswith("return")` with precise `startswith("return ")` / `startswith("return(")` check to avoid matching variable names like `return_value`.
+3. **Per-CalcDef exception handling**: Added try-except in `spike_classify_compilability.py` `run_suite()` so a single CalcDef failure doesn't crash the entire suite.
+4. **Inline import cleanup**: Moved `import textwrap` from inline in `run_suite()` body to module-level imports in `spike_classify_compilability.py`.
+5. **Hard-coded suite label extraction**: Replaced `label == "solar_battery_model"` with `GROUND_TRUTH_SUITES` set in both scripts for maintainability.
+
+**Verification:** All 42 existing tests pass. Both spike scripts produce identical results to pre-fix behavior (42 FULLY_COMPILABLE, 2 PARTIALLY_COMPILABLE, 0 false positives, 5/5 ground truth MATCH at 0.00e+00).
+
+**Issues:** None
+**Deviations:** None -- purely cleanup, no behavioral changes.
 
 ---
 
