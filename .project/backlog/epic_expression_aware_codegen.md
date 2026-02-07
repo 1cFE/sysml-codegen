@@ -1,7 +1,7 @@
 # Epic: Expression-Aware Code Generation
 
 **Epic ID**: EXPR-CODEGEN
-**Status**: In Progress (Items 1-2 complete, Item 3 next)
+**Status**: In Progress (Items 1-3 complete, Item 4 next)
 **Priority**: P1
 **Created**: 2026-02-03
 **Estimated Effort**: ~8.5-10.5 days
@@ -104,8 +104,9 @@ Key findings:
 
 ---
 
-### Item 3: Expression Compiler Module
+### Item 3: Expression Compiler Module ✅
 
+**Status**: Complete
 **Type**: Implementation
 **Effort**: 1.5 days (spec 2h, design 2h, plan 1h, execute 6-8h)
 **Dependencies**: Item 2 (needs validated compilation logic and operator mapping)
@@ -382,5 +383,5 @@ The following issues from the design review are resolved by specific items:
 
 ---
 
-**Last Updated**: 2026-02-04
-**Next Action**: Begin Item 3 -- create `.project/active/expr-compiler-module/spec.md` and design the expression compiler module
+**Last Updated**: 2026-02-06
+**Next Action**: Begin Item 4 -- Pipeline Integration (wire expression compiler into extraction→resolution→generation pipeline)

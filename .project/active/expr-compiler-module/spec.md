@@ -1,6 +1,6 @@
 # Spec: Expression Compiler Module
 
-**Status:** Draft
+**Status:** Complete
 **Owner:** Reid Westwood
 **Created:** 2026-02-03 02:48 UTC
 **Complexity:** MEDIUM
@@ -110,7 +110,7 @@ Additionally, shared AST-to-text logic is consolidated from `constraint_extracto
    - `node_type: ExpressionNodeType`
    - `operator: str | None` -- for `BINARY_OP` / `UNARY_OP`
    - `left: ExpressionAST | None`, `right: ExpressionAST | None` -- `right` is None for unary
-   - `value: float | int | str | None` -- for `LITERAL`
+   - `value: float | int | None` -- for `LITERAL` (syside emits `float` for `LiteralRational`, `int` for `LiteralInteger`; string literals do not appear in CalcDef output expressions)
    - `input_name: str | None` -- for `INPUT_REF`
    - `intermediate_name: str | None` -- for `INTERMEDIATE_REF`
    - `raw_text: str | None`, `reason: str | None` -- for `UNSUPPORTED`

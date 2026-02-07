@@ -160,7 +160,10 @@ def extract_feature_chain_name(expr_node: Any) -> str
 - Move the 5 items from `constraint_extractor.py` verbatim
 - Drop leading underscores since they're now public module functions
 - `constraint_extractor.py` imports them with the original `_` prefix for backward compatibility within that file: `from .expression_utils import reconstruct_expression as _reconstruct_expression`, etc.
-- The `KEYWORDS` constant stays in `constraint_extractor.py` (only used by `_extract_referenced_variables` which is constraint-specific regex logic, not AST-based)
+- The `KEYWORDS` constant (line 53-54) stays in `constraint_extractor.py` — it is only used by `_extract_referenced_variables` (constraint-specific regex logic, not AST-based) and has no relation to the AST-to-text functions being extracted. **Implementation checklist for this refactor:**
+  1. Remove `OPERATOR_MAP` and the four functions from `constraint_extractor.py`
+  2. Verify `KEYWORDS` remains defined in `constraint_extractor.py` (it sits between the removed `OPERATOR_MAP` and `_reconstruct_expression`, so ensure it isn't accidentally deleted)
+  3. Verify `_extract_referenced_variables` (which uses `KEYWORDS`) still works — run `uv run pytest tests/` to confirm no regressions
 
 ### Component 2: `extraction/expression_compiler.py`
 
@@ -213,12 +216,36 @@ class ExpressionAST:
     operator: str | None = None          # BINARY_OP / UNARY_OP: "+", "-", "*", "/", "**"
     left: "ExpressionAST | None" = None  # BINARY_OP / UNARY_OP: left operand
     right: "ExpressionAST | None" = None # BINARY_OP: right operand (None for UNARY_OP)
-    value: float | int | str | None = None       # LITERAL
+    value: float | int | None = None              # LITERAL (syside emits float for LiteralRational, int for LiteralInteger)
     input_name: str | None = None        # INPUT_REF: "wattage"
     intermediate_name: str | None = None # INTERMEDIATE_REF: "material_cost"
     raw_text: str | None = None          # UNSUPPORTED: best-effort text
     reason: str | None = None            # UNSUPPORTED: why unsupported
+
+    # Factory classmethods for safe construction and test ergonomics.
+    # Each validates that the required fields for the node type are set,
+    # preventing silent bugs like BINARY_OP with operator=None.
+
+    @classmethod
+    def binary(cls, operator: str, left: "ExpressionAST", right: "ExpressionAST") -> "ExpressionAST": ...
+
+    @classmethod
+    def unary(cls, operator: str, operand: "ExpressionAST") -> "ExpressionAST": ...
+
+    @classmethod
+    def literal(cls, value: float | int) -> "ExpressionAST": ...
+
+    @classmethod
+    def input_ref(cls, name: str) -> "ExpressionAST": ...
+
+    @classmethod
+    def intermediate_ref(cls, name: str) -> "ExpressionAST": ...
+
+    @classmethod
+    def unsupported(cls, raw_text: str, reason: str) -> "ExpressionAST": ...
 ```
+
+Factory classmethods set `node_type` automatically and ensure required fields are populated. Tests and `build_expression_ast` use factories exclusively — direct construction is discouraged. No `__post_init__` validation to avoid overhead on the hot path; the factories are the enforcement boundary.
 
 **`CompilationResult`** — per-output result:
 
@@ -229,8 +256,8 @@ class CompilationResult:
     output_name: str
     compilability: Compilability
     python_expression: str | None = None
-    input_refs: list[str] = field(default_factory=list)
-    intermediate_refs: list[str] = field(default_factory=list)
+    input_refs: list[str] = field(default_factory=list)       # unique, order-preserving
+    intermediate_refs: list[str] = field(default_factory=list) # unique, order-preserving
     unsupported_reason: str | None = None
     is_undeclared_intermediate: bool = False  # True if this is a discovered member, not a declared output
 ```
@@ -285,6 +312,7 @@ Converts a raw syside AST node into the clean `ExpressionAST` IR. This is the fu
      - If operator not in `PYTHON_OPERATOR_MAP`: `UNSUPPORTED` node
   3. For `FeatureReferenceExpression`:
      - Extract name via `expression_utils.extract_feature_reference_name()` (the expression compiler does NOT define its own feature reference name extraction — it delegates to the shared utility, consolidating the spike script's `_extract_feature_ref_name` which is NOT carried forward)
+     - **Sanitize the extracted name** via `_sanitize_name(name)` before lookup. This is a local helper (strip quotes, replace spaces with underscores) matching the extractor's `_sanitize_name` behavior. Required because `CalculationDefinitionData` attribute names are sanitized during extraction, but syside `referent.name` values may contain raw formatting. The spike script's `_extract_feature_ref_name` included this sanitization inline; the production design separates it into an explicit step after shared utility extraction. Without this, name-set lookups (`name in input_names`) could fail for names with quotes or spaces, causing valid input refs to be classified as `UNSUPPORTED`.
      - If name in `input_names`: `INPUT_REF` node
      - If name in `output_names`: `INTERMEDIATE_REF` node (declared output used as intermediate)
      - If name in `all_member_names`: `INTERMEDIATE_REF` node (undeclared intermediate)
@@ -304,6 +332,8 @@ Converts `ExpressionAST` to Python expression string. Pure recursive descent on 
 - `INTERMEDIATE_REF`: `intermediate_name` (bare)
 - `UNSUPPORTED`: raises `CompilationError` (a simple Exception subclass)
 
+After producing a Python expression string, `compile_expression` validates it with `ast.parse(expr, mode="eval")` as a debug assertion. This mirrors the spike scripts' validation pattern and catches malformed output (e.g., unbalanced parentheses) at the source rather than downstream. The assertion uses `mode="eval"` since the output is a single expression, not a statement. On failure, raises `CompilationError` with the parse error details.
+
 **`CompilationError`** — simple exception for unsupported nodes encountered during compilation:
 
 ```python
@@ -312,14 +342,37 @@ class CompilationError(Exception):
     pass
 ```
 
+**`_sanitize_name(name: str) -> str`** — private helper for reference name normalization:
+
+```python
+def _sanitize_name(name: str) -> str:
+    """Normalize a syside referent name to match extractor conventions.
+
+    Strips surrounding quotes and replaces spaces with underscores.
+    Mirrors extractor._sanitize_name() to ensure feature reference names
+    from syside AST nodes match the sanitized attribute names stored in
+    CalculationDefinitionData.input_attributes / output_attributes.
+    """
+    if not name:
+        return ""
+    name = name.strip("'\"")
+    name = name.replace(" ", "_")
+    return name
+```
+
+Called in `build_expression_ast` step 3, after `extract_feature_reference_name()` and before name-set lookups. This bridges the gap between raw syside referent names and the sanitized names in `CalculationDefinitionData`. The spike script's `_extract_feature_ref_name()` included sanitization inline; the production design separates it into an explicit, testable step.
+
 **`classify_compilability(output_results: list[CompilationResult]) -> Compilability`**:
 
-Worst-case aggregation over a list of `CompilationResult` objects:
+Worst-case aggregation over a list of `CompilationResult` objects. Defensively asserts that no result carries `UNKNOWN` (which is a `PipelineModule` construction sentinel, never a compiler output):
 
 ```python
 def classify_compilability(output_results: list[CompilationResult]) -> Compilability:
     if not output_results:
         return Compilability.MANUAL_REQUIRED
+    assert all(
+        r.compilability != Compilability.UNKNOWN for r in output_results
+    ), "UNKNOWN is a PipelineModule sentinel, not a valid compilation result"
     if all(r.compilability == Compilability.FULLY_COMPILABLE for r in output_results):
         return Compilability.FULLY_COMPILABLE
     if any(r.compilability == Compilability.MANUAL_REQUIRED for r in output_results):
@@ -349,7 +402,42 @@ The orchestrator. Takes a `CalculationDefinitionData`, a dict of output-name →
      - Get syside AST from `expression_asts` (declared outputs) or `member_expressions` (undeclared intermediates)
      - If no AST: create `CompilationResult` with `MANUAL_REQUIRED`
      - Otherwise: call `build_expression_ast()` then `compile_expression()`, handle `CompilationError`
-     - Record `input_refs` and `intermediate_refs` on the result
+     - Collect `input_refs` and `intermediate_refs` via `_collect_refs(ast)`:
+
+**`_collect_refs(ast: ExpressionAST) -> tuple[list[str], list[str]]`** — private recursive helper:
+
+```python
+def _collect_refs(ast: ExpressionAST) -> tuple[list[str], list[str]]:
+    """Walk an ExpressionAST and collect all referenced names.
+
+    Returns:
+        (input_refs, intermediate_refs) — both deduplicated, order-preserving.
+        Order follows left-to-right tree traversal (pre-order).
+    """
+    input_refs: list[str] = []
+    intermediate_refs: list[str] = []
+    seen_inputs: set[str] = set()
+    seen_intermediates: set[str] = set()
+
+    def _walk(node: ExpressionAST) -> None:
+        if node.node_type == ExpressionNodeType.INPUT_REF:
+            if node.input_name and node.input_name not in seen_inputs:
+                seen_inputs.add(node.input_name)
+                input_refs.append(node.input_name)
+        elif node.node_type == ExpressionNodeType.INTERMEDIATE_REF:
+            if node.intermediate_name and node.intermediate_name not in seen_intermediates:
+                seen_intermediates.add(node.intermediate_name)
+                intermediate_refs.append(node.intermediate_name)
+        if node.left:
+            _walk(node.left)
+        if node.right:
+            _walk(node.right)
+
+    _walk(ast)
+    return input_refs, intermediate_refs
+```
+
+This reuses the classification already performed during AST construction (step 2's `extract_feature_refs()` classifies refs, but the authoritative source is the AST itself since `build_expression_ast` may reclassify unknown refs as `UNSUPPORTED`).
      - Mark `is_undeclared_intermediate` for non-declared outputs
   6. Compute `overall_compilability` via `classify_compilability()`
   7. Return `CalcDefCompilationResult`
@@ -415,7 +503,23 @@ class TestCompileExpression:
     # Over-parenthesization: nested ops produce correct nesting
 
 class TestCompileCalcDef:
-    """Tests for compile_calc_def() orchestrator."""
+    """Tests for compile_calc_def() orchestrator.
+
+    Test isolation strategy: compile_calc_def() internally calls
+    extract_feature_refs() from agentic-mbse to build the dependency graph.
+    extract_feature_refs() traverses syside AST nodes using
+    SysideAdapter.is_instance() and accesses .operands, .referent, etc.
+    Rather than building structurally complete mock nodes that satisfy both
+    build_expression_ast AND extract_feature_refs traversal, tests ALSO
+    monkeypatch extract_feature_refs to return pre-computed ExpressionRef
+    lists. This keeps tests truly isolated from agentic-mbse internals.
+
+    The mock_extract_feature_refs fixture returns ExpressionRef-like objects
+    based on a test-provided mapping (output_name → list of ref names).
+    Combined with mock_syside_adapter, this gives full control over both
+    dependency graph construction and AST compilation without any real
+    syside node traversal.
+    """
     # Pattern B: multi-step intermediate with topological ordering
     # Pattern E: pi as repeated literal
     # Edge 1: unresolved reference → UNSUPPORTED, verdict escalation
@@ -431,12 +535,39 @@ class TestCompileCalcDef:
     # Undeclared intermediates excluded from return, included in execution_order
     # Overall compilability is worst-case
 
+class TestCompileCalcDefEdge6:
+    """Tests for EXPOSE-with-operators (Edge 6).
+
+    An expression that has operators is a computed value, not a passthrough.
+    The compiler should handle it as a normal expression and produce
+    FULLY_COMPILABLE, not misclassify it as a passthrough or MANUAL_REQUIRED.
+    """
+    # Expression with operators (e.g., `a * 2.0`) compiles normally → FULLY_COMPILABLE
+    # Verifies operator presence doesn't trigger passthrough classification
+
+class TestSanitizeName:
+    """Tests for _sanitize_name() reference normalization."""
+    # Strips single quotes: "'foo'" → "foo"
+    # Strips double quotes: '"foo"' → "foo"
+    # Replaces spaces: "my var" → "my_var"
+    # Empty string → ""
+    # Already clean name → unchanged
+
+class TestCollectRefs:
+    """Tests for _collect_refs() AST traversal."""
+    # Single INPUT_REF → ([name], [])
+    # Single INTERMEDIATE_REF → ([], [name])
+    # Mixed tree → both lists populated, order-preserving
+    # Duplicate refs deduplicated: (a + a) → [a] not [a, a]
+    # Nested binary ops: correct left-to-right pre-order
+
 class TestClassifyCompilability:
     """Tests for classify_compilability() aggregation."""
     # All FULLY → FULLY
     # Mix of FULLY + MANUAL → MANUAL
     # Mix of FULLY + PARTIAL → PARTIAL
     # Empty list → MANUAL
+    # UNKNOWN in results → assertion error (defensive guard)
 ```
 
 **Mock syside nodes for `TestBuildExpressionAST`:** Since `build_expression_ast` takes raw syside nodes and uses `SysideAdapter.is_instance()`, the tests need lightweight mocks. The approach follows the spike scripts' duck-typing:
@@ -483,6 +614,34 @@ def mock_syside_adapter(monkeypatch):
     )
 ```
 
+**Mock for `extract_feature_refs` (used by `TestCompileCalcDef`):**
+
+`compile_calc_def()` calls `extract_feature_refs()` from `agentic_mbse.sysml.expression` to build the dependency graph. This function traverses syside AST nodes internally, accessing `.operands`, `.referent`, `.memberships`, etc. Rather than building structurally complete mock nodes that satisfy both `build_expression_ast` AND `extract_feature_refs` traversal, `TestCompileCalcDef` tests ALSO monkeypatch `extract_feature_refs` to return pre-computed ref lists.
+
+```python
+@pytest.fixture
+def mock_extract_feature_refs(monkeypatch):
+    """Monkeypatch extract_feature_refs to return pre-computed refs.
+
+    Usage in tests: set ref_map[id(mock_ast_node)] = ["ref_name_1", "ref_name_2"]
+    before calling compile_calc_def. The mock returns ExpressionRef-like objects
+    with .name attributes matching the provided names.
+    """
+    ref_map: dict[int, list[str]] = {}
+
+    def mock_efr(expr, ignore_std_lib=True):
+        names = ref_map.get(id(expr), [])
+        return [SimpleNamespace(name=n, qualified_name=n, element=None) for n in names]
+
+    monkeypatch.setattr(
+        "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
+        mock_efr,
+    )
+    return ref_map  # test populates this before calling compile_calc_def
+```
+
+This gives `TestCompileCalcDef` full control over both dependency graph construction (via `mock_extract_feature_refs`) and AST compilation (via `mock_syside_adapter`), without any real syside node traversal. `TestBuildExpressionAST` only needs `mock_syside_adapter` since it tests the syside→IR path directly without the orchestrator.
+
 ---
 
 ## Potential Risks
@@ -490,7 +649,7 @@ def mock_syside_adapter(monkeypatch):
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | `constraint_extractor.py` refactor breaks existing functionality | Medium | Pure move+import refactor, no logic change. Full test suite run before/after. No dedicated constraint_extractor tests exist, but extraction is exercised by integration tests. |
-| Mock syside nodes don't faithfully represent real syside behavior | Low | Mocks are based on actual syside patterns observed in spike scripts across 4 model suites (102 outputs). `build_expression_ast` only accesses `.operator`, `.operands`, `.referent.name`, `.value`, and `.memberships` — all validated by spike Item 1. |
+| Mock syside nodes don't faithfully represent real syside behavior | Low | Mocks are based on actual syside patterns observed in spike scripts across 4 model suites (102 outputs). `build_expression_ast` only accesses `.operator`, `.operands`, `.referent.name`, `.value`, and `.memberships` — all validated by spike Item 1. `TestCompileCalcDef` additionally mocks `extract_feature_refs` to return pre-computed ref lists, avoiding deep traversal coupling with agentic-mbse internals. |
 | `ExpressionAST` binary tree doesn't accommodate future n-ary operators (e.g., ternary `if/else`) | Low | `SelectExpression` is explicitly out of scope. If added later, a new `ExpressionNodeType.TERNARY` or `CONDITIONAL` can be added with a `condition` field. The dataclass is easily extensible. |
 | Undeclared intermediate discovery misses members in edge cases | Low | Spike Item 2 validated discovery via `owned_members` across all 4 model suites. The 3 CATF CalcDefs with undeclared intermediates (MagnetCryogenicLoad, VacuumPumpPower, CryoPumpRefrigeration) all compiled correctly. |
 | `compile_calc_def` signature takes raw syside data alongside structured `CalculationDefinitionData` | Low | This is a deliberate design choice for Item 3 (standalone module). In Item 4, the pipeline integration will add `output_expression_asts` to `CalculationDefinitionData`, simplifying the call site. For now, the separate parameters make the module testable without pipeline changes. |
