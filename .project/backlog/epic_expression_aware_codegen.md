@@ -1,7 +1,7 @@
 # Epic: Expression-Aware Code Generation
 
 **Epic ID**: EXPR-CODEGEN
-**Status**: Complete (Items 1-5 done; 1 codegen bug identified for follow-up)
+**Status**: Complete (Items 1-5 + Item 4.1 bug fix done)
 **Priority**: P1
 **Created**: 2026-02-03
 **Estimated Effort**: ~8.5-10.5 days
@@ -36,16 +36,16 @@ Transform codegen from generating `NotImplementedError` stubs to generating **ex
 
 ## Success Criteria
 
-- [ ] Codegen on chain_spike model produces `_impl.py` files with actual code for all 3 CalcDefs
-- [ ] Codegen on solar_battery model auto-implements >=10 of 15 CalcDefs
-- [ ] Auto-implemented code produces outputs matching handwritten implementations within `1e-10` tolerance
-- [ ] Non-compilable CalcDefs still get proper `NotImplementedError` stubs
-- [ ] All existing tests pass with zero regressions
-- [ ] `Compilability` enum and `ExpressionNodeType` enum defined (not bare strings); `UNKNOWN` value included as default-before-compilation state
-- [ ] Expression reconstruction consolidated: `extractor._extract_expression_text()` no longer called for CalcDef compilation; Python code generation uses `expression_compiler` exclusively; shared AST-to-text logic extracted into `expression_utils.py`
-- [ ] Compilation runs as explicit Step 6.5 in `build_pipeline_context()`, between backtracking (Step 6) and graph building (Step 7)
-- [ ] `compiled_expressions` carried on `CalcDefCompilationResult` via `PipelineContext`, NOT on `PipelineModule`
-- [ ] `OperatorExpression` fallthrough in `usage_extractor._extract_single_binding()` fixed to classify as `BindingType.EXPRESSION`
+- [x] Codegen on chain_spike model produces `_impl.py` files with actual code for all 3 CalcDefs
+- [x] Codegen on solar_battery model auto-implements >=10 of 15 CalcDefs (actual: 15/15)
+- [x] Auto-implemented code produces outputs matching handwritten implementations within `1e-10` tolerance (5/5 after Item 4.1 fix)
+- [x] Non-compilable CalcDefs still get proper `NotImplementedError` stubs
+- [x] All existing tests pass with zero regressions (167 total, 0 xfail)
+- [x] `Compilability` enum and `ExpressionNodeType` enum defined (not bare strings); `UNKNOWN` value included as default-before-compilation state
+- [x] Expression reconstruction consolidated: `extractor._extract_expression_text()` no longer called for CalcDef compilation; Python code generation uses `expression_compiler` exclusively; shared AST-to-text logic extracted into `expression_utils.py`
+- [x] Compilation runs as explicit Step 6.5 in `build_pipeline_context()`, between backtracking (Step 6) and graph building (Step 7)
+- [x] `compiled_expressions` carried on `CalcDefCompilationResult` via `PipelineContext`, NOT on `PipelineModule`
+- [x] `OperatorExpression` fallthrough in `usage_extractor._extract_single_binding()` fixed to classify as `BindingType.EXPRESSION`
 
 ---
 
@@ -279,6 +279,28 @@ Key findings:
 
 ---
 
+### Item 4.1: Fix Auto-Impl Template Multi-Output Cross-References ✅
+
+**Status**: Complete
+**Type**: Bug Fix
+**Effort**: ~0.5 day
+**Dependencies**: Item 5 (bug discovered during E2E validation)
+
+**Objective**: Fix `_build_auto_impl_context()` in `stencils.py` so that declared outputs referenced by later declared outputs are emitted as local variable assignments before the return tuple, eliminating NameError at runtime.
+
+**Result**: Fixed. Detection uses `CompilationResult.intermediate_refs` intersected with declared output names — no string parsing. When cross-refs detected, ALL declared outputs promoted to local variable assignments in topological order; return tuple references names only. 6 synthetic unit tests added (full cascade, partial cascade, independent regression, single-output regression, mixed undeclared+declared, diamond DAG). 2 xfail E2E tests converted to pass. 167 total tests, 0 xfail, 0 failures.
+
+**Success Criteria**:
+- [x] 2 xfail E2E tests converted to pass (EngineeringQFactor, AnnualizedFinancialCalc)
+- [x] All 167 tests pass with 0 xfail, 0 failures
+- [x] MagnetCryogenicLoad (undeclared intermediates) continues to work
+- [x] Single-output CalcDefs unaffected
+
+**Spec**: [`.project/active/auto-impl-output-crossref-fix/spec.md`](.project/active/auto-impl-output-crossref-fix/spec.md)
+**Plan**: [`.project/active/auto-impl-output-crossref-fix/plan.md`](.project/active/auto-impl-output-crossref-fix/plan.md)
+
+---
+
 ## Dependencies
 
 **External**:
@@ -297,6 +319,7 @@ Item 1: Spike -- AST Extraction (no dependencies)
         └─> Item 3: Expression Compiler Module (needs validated logic)
               └─> Item 4: Pipeline Integration (needs compiler module)
                     └─> Item 5: E2E Validation (needs integrated pipeline)
+                          └─> Item 4.1: Fix Auto-Impl Multi-Output Cross-Refs (bug from Item 5)
 ```
 
 All items are sequential. Each spike gates the next item: if a spike reveals a fundamental assumption is wrong, subsequent items are re-scoped or cancelled before investing in implementation.
@@ -371,5 +394,5 @@ The following issues from the design review are resolved by specific items:
 
 ---
 
-**Last Updated**: 2026-02-06
-**Next Action**: Begin Item 4 -- Pipeline Integration (wire expression compiler into extraction→resolution→generation pipeline)
+**Last Updated**: 2026-02-08
+**Next Action**: Epic 2 -- Attribute Expression Capture (Phase 2 from research report)

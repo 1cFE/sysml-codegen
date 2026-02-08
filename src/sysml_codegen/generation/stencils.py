@@ -166,27 +166,53 @@ def _build_auto_impl_context(
         and single_output_expression.
     """
     output_attr_order = [attr.name for attr in calc_def.output_attributes]
+    output_attr_set = set(output_attr_order)
     result_map = {r.output_name: r for r in compilation_result.output_results}
 
-    # Undeclared intermediates in topological order (for local assignments)
-    execution_steps = []
-    for name in compilation_result.execution_order:
-        r = result_map.get(name)
-        if r and r.python_expression and r.is_undeclared_intermediate:
-            execution_steps.append({
-                "name": r.output_name,
-                "expression": r.python_expression,
-            })
+    # Detect declared output cross-references: any declared output's
+    # intermediate_refs includes another declared output name.
+    has_output_crossrefs = any(
+        set(result_map[name].intermediate_refs) & output_attr_set
+        for name in output_attr_order
+        if name in result_map and result_map[name].intermediate_refs
+    )
 
-    # Declared output expressions in output_attributes order (for return tuple)
+    execution_steps = []
     output_expressions = []
-    for name in output_attr_order:
-        r = result_map.get(name)
-        if r and r.python_expression:
-            output_expressions.append({
-                "name": r.output_name,
-                "expression": r.python_expression,
-            })
+
+    if has_output_crossrefs:
+        # All entries in execution_order become local variable assignments
+        # (both undeclared intermediates AND declared outputs, in topo order)
+        for name in compilation_result.execution_order:
+            r = result_map.get(name)
+            if r and r.python_expression:
+                execution_steps.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+        # Return tuple references declared outputs by name only
+        for name in output_attr_order:
+            if name in result_map:
+                output_expressions.append({
+                    "name": name,
+                    "expression": name,
+                })
+    else:
+        # No cross-refs: undeclared intermediates as steps, declared inlined
+        for name in compilation_result.execution_order:
+            r = result_map.get(name)
+            if r and r.python_expression and r.is_undeclared_intermediate:
+                execution_steps.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+        for name in output_attr_order:
+            r = result_map.get(name)
+            if r and r.python_expression:
+                output_expressions.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
 
     return {
         "execution_steps": execution_steps,

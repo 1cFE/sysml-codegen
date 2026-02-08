@@ -364,3 +364,279 @@ def test_auto_impl_multi_output():
     assert "return (" in code
     assert "(inputs.x * 2)," in code
     assert "(inputs.x + 1)," in code
+
+
+# --- Multi-output cross-reference tests (Item 4.1 fix) ---
+
+
+class TestAutoImplOutputCrossRefs:
+    """Tests for multi-output CalcDefs with declared output cross-references.
+
+    Covers Item 4.1 fix: declared outputs that reference other declared outputs
+    must be emitted as local variable assignments, not inlined in return tuple.
+    """
+
+    def test_full_cascade_3_outputs(self):
+        """A->B->C: all outputs in a dependency chain become local vars."""
+        env = _get_template_env()
+        calc_def = _make_calc_def(
+            name="CascadeCalc", qualified_name="CascadeCalc",
+            num_inputs=2, num_outputs=3,
+        )
+        result = CalcDefCompilationResult(
+            calc_def_name="CascadeCalc",
+            overall_compilability=Compilability.FULLY_COMPILABLE,
+            output_results=[
+                CompilationResult(
+                    output_name="out0",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x0 + inputs.x1)",
+                    input_refs=["x0", "x1"],
+                ),
+                CompilationResult(
+                    output_name="out1",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out0 * 2)",
+                    intermediate_refs=["out0"],
+                ),
+                CompilationResult(
+                    output_name="out2",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out1 - inputs.x0)",
+                    input_refs=["x0"],
+                    intermediate_refs=["out1"],
+                ),
+            ],
+            execution_order=["out0", "out1", "out2"],
+        )
+
+        code = generate_implementation(
+            calc_def, env, Path("out.py"), "test_pkg",
+            compilation_result=result,
+        )
+        ast.parse(code)
+        # All outputs assigned as local vars
+        assert "out0 = (inputs.x0 + inputs.x1)" in code
+        assert "out1 = (out0 * 2)" in code
+        assert "out2 = (out1 - inputs.x0)" in code
+        # Return tuple uses names, not inlined expressions
+        assert "return (" in code
+        assert "(inputs.x0 + inputs.x1)," not in code
+
+    def test_partial_cascade_some_crossrefs(self):
+        """A standalone, B refs A, C standalone: all become local vars when any cross-ref."""
+        env = _get_template_env()
+        calc_def = _make_calc_def(
+            name="PartialCalc", qualified_name="PartialCalc",
+            num_inputs=2, num_outputs=3,
+        )
+        result = CalcDefCompilationResult(
+            calc_def_name="PartialCalc",
+            overall_compilability=Compilability.FULLY_COMPILABLE,
+            output_results=[
+                CompilationResult(
+                    output_name="out0",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x0 * 2)",
+                    input_refs=["x0"],
+                ),
+                CompilationResult(
+                    output_name="out1",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out0 + inputs.x1)",
+                    input_refs=["x1"],
+                    intermediate_refs=["out0"],
+                ),
+                CompilationResult(
+                    output_name="out2",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x1 * 3)",
+                    input_refs=["x1"],
+                ),
+            ],
+            execution_order=["out0", "out1", "out2"],
+        )
+
+        code = generate_implementation(
+            calc_def, env, Path("out.py"), "test_pkg",
+            compilation_result=result,
+        )
+        ast.parse(code)
+        # ALL outputs assigned as local vars (even standalone out2)
+        assert "out0 = (inputs.x0 * 2)" in code
+        assert "out1 = (out0 + inputs.x1)" in code
+        assert "out2 = (inputs.x1 * 3)" in code
+        assert "return (" in code
+        # Inlined expressions should NOT appear in return tuple
+        assert "(inputs.x0 * 2)," not in code
+
+    def test_independent_multi_output_no_crossrefs(self):
+        """Two independent outputs: inline in return tuple (regression guard)."""
+        env = _get_template_env()
+        calc_def = _make_calc_def(
+            name="IndependentCalc", qualified_name="IndependentCalc",
+            num_inputs=2, num_outputs=2,
+        )
+        result = CalcDefCompilationResult(
+            calc_def_name="IndependentCalc",
+            overall_compilability=Compilability.FULLY_COMPILABLE,
+            output_results=[
+                CompilationResult(
+                    output_name="out0",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x0 * 2)",
+                    input_refs=["x0"],
+                ),
+                CompilationResult(
+                    output_name="out1",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x1 + 1)",
+                    input_refs=["x1"],
+                ),
+            ],
+            execution_order=["out0", "out1"],
+        )
+
+        code = generate_implementation(
+            calc_def, env, Path("out.py"), "test_pkg",
+            compilation_result=result,
+        )
+        ast.parse(code)
+        # Outputs inlined in return tuple (no local var assignments)
+        assert "return (" in code
+        assert "(inputs.x0 * 2)," in code
+        assert "(inputs.x1 + 1)," in code
+        # Should NOT have local var assignments for outputs
+        # (use " = (" to avoid matching docstring examples like ">>> out0, out1 = run_...")
+        assert "out0 = (" not in code
+        assert "out1 = (" not in code
+
+    def test_single_output_regression(self):
+        """Single output: inline return, not local var (regression guard)."""
+        env = _get_template_env()
+        calc_def = _make_calc_def(
+            name="SimpleCalc", qualified_name="SimpleCalc",
+            num_inputs=1, num_outputs=1,
+        )
+        result = CalcDefCompilationResult(
+            calc_def_name="SimpleCalc",
+            overall_compilability=Compilability.FULLY_COMPILABLE,
+            output_results=[
+                CompilationResult(
+                    output_name="result",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x * 2)",
+                    input_refs=["x"],
+                ),
+            ],
+            execution_order=["result"],
+        )
+
+        code = generate_implementation(
+            calc_def, env, Path("out.py"), "test_pkg",
+            compilation_result=result,
+        )
+        ast.parse(code)
+        assert "return (inputs.x * 2)" in code
+        # " = (" avoids matching docstring example ">>> result = run_simplecalc(inputs)"
+        assert "result = (" not in code
+
+    def test_mixed_undeclared_intermediates_and_crossrefs(self):
+        """Undeclared intermediate + declared cross-refs coexist."""
+        env = _get_template_env()
+        calc_def = _make_calc_def(
+            name="MixedCalc", qualified_name="MixedCalc",
+            num_inputs=1, num_outputs=2,
+        )
+        result = CalcDefCompilationResult(
+            calc_def_name="MixedCalc",
+            overall_compilability=Compilability.FULLY_COMPILABLE,
+            output_results=[
+                CompilationResult(
+                    output_name="temp",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x + 1)",
+                    input_refs=["x"],
+                    is_undeclared_intermediate=True,
+                ),
+                CompilationResult(
+                    output_name="out0",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(temp * 2)",
+                    intermediate_refs=["temp"],
+                ),
+                CompilationResult(
+                    output_name="out1",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out0 + 3)",
+                    intermediate_refs=["out0"],
+                ),
+            ],
+            execution_order=["temp", "out0", "out1"],
+        )
+
+        code = generate_implementation(
+            calc_def, env, Path("out.py"), "test_pkg",
+            compilation_result=result,
+        )
+        ast.parse(code)
+        # Undeclared intermediate as local var
+        assert "temp = (inputs.x + 1)" in code
+        # Declared outputs promoted to local vars due to cross-ref
+        assert "out0 = (temp * 2)" in code
+        assert "out1 = (out0 + 3)" in code
+        # Return tuple uses names
+        assert "return (" in code
+        assert "(temp * 2)," not in code
+
+    def test_diamond_pattern_4_outputs(self):
+        """Diamond: A standalone, B and C ref A, D refs B and C."""
+        env = _get_template_env()
+        calc_def = _make_calc_def(
+            name="DiamondCalc", qualified_name="DiamondCalc",
+            num_inputs=1, num_outputs=4,
+        )
+        result = CalcDefCompilationResult(
+            calc_def_name="DiamondCalc",
+            overall_compilability=Compilability.FULLY_COMPILABLE,
+            output_results=[
+                CompilationResult(
+                    output_name="out0",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(inputs.x * 2)",
+                    input_refs=["x"],
+                ),
+                CompilationResult(
+                    output_name="out1",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out0 + 1)",
+                    intermediate_refs=["out0"],
+                ),
+                CompilationResult(
+                    output_name="out2",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out0 - 1)",
+                    intermediate_refs=["out0"],
+                ),
+                CompilationResult(
+                    output_name="out3",
+                    compilability=Compilability.FULLY_COMPILABLE,
+                    python_expression="(out1 * out2)",
+                    intermediate_refs=["out1", "out2"],
+                ),
+            ],
+            execution_order=["out0", "out1", "out2", "out3"],
+        )
+
+        code = generate_implementation(
+            calc_def, env, Path("out.py"), "test_pkg",
+            compilation_result=result,
+        )
+        ast.parse(code)
+        # All outputs assigned as local vars in topological order
+        assert "out0 = (inputs.x * 2)" in code
+        assert "out1 = (out0 + 1)" in code
+        assert "out2 = (out0 - 1)" in code
+        assert "out3 = (out1 * out2)" in code
+        assert "return (" in code
+        assert "(inputs.x * 2)," not in code

@@ -26,7 +26,11 @@ def {{ function_name }}(inputs: {{ input_class_name }}) -> {{ return_type }}:
 {% else %}
     return (
 {% for output in output_expressions %}
+{% if output.expression == output.name %}
+        {{ output.expression }},
+{% else %}
         {{ output.expression }},  # {{ output.name }}
+{% endif %}
 {% endfor %}
     )
 {% endif %}

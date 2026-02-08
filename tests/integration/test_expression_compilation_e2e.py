@@ -42,16 +42,9 @@ SOLAR_BATTERY_GROUND_TRUTH = [
     ("annualizedfuelcalc", "annualizedfuelcalc_impl.py",
      {"fuel_unit_cost": 10.0, "fuel_consumption": 50.0},
      ["annual_fuel_cost"]),
-    pytest.param(
-        "annualizedfinancialcalc", "annualizedfinancialcalc_impl.py",
-        {"total_capex": 1000.0, "discount_rate": 0.05, "plant_lifetime": 25.0},
-        ["capital_recovery_factor", "annualized_capital_cost"],
-        marks=pytest.mark.xfail(
-            reason="Codegen bug: multi-output declared outputs inlined "
-                   "in return tuple without local variable assignment",
-            raises=NameError,
-        ),
-    ),
+    ("annualizedfinancialcalc", "annualizedfinancialcalc_impl.py",
+     {"total_capex": 1000.0, "discount_rate": 0.05, "plant_lifetime": 25.0},
+     ["capital_recovery_factor", "annualized_capital_cost"]),
     ("lcoecalc", "lcoecalc_impl.py",
      {"annualized_capital_cost": 100.0, "annual_om_cost": 20.0,
       "annual_fuel_cost": 5.0, "yearly_inflation": 0.025,
@@ -271,12 +264,6 @@ class TestCATFMFEValidation:
         assert "PlasmaConfinement" in backlog
         assert "TritiumBreedingRatio" in backlog
 
-    @pytest.mark.xfail(
-        reason="Codegen bug: declared output-to-output references inlined "
-               "in return tuple without local variable assignment. "
-               "q_eng and f_recirculating are used but never assigned.",
-        raises=NameError,
-    )
     def test_pattern_b_engineering_q_factor(self, catf_mfe_output: Path):
         # Hand-computed from SysML expressions (performance_metrics.sysml:140):
         # q_eng = p_electric_gross / p_auxiliary_total = 1500.0 / 200.0 = 7.5
