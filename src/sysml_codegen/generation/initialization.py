@@ -166,6 +166,10 @@ def build_pipeline_context(
     )
 
     # Step 6.5: Compile expressions and classify compilability
+    logger.info(
+        "Step 6.5: Compiling expressions for %d calculation definitions",
+        len(calc_defs),
+    )
     compilation_results: dict[str, CalcDefCompilationResult] = {}
     for calc_def in calc_defs:
         if calc_def.output_expression_asts:
@@ -177,6 +181,11 @@ def build_pipeline_context(
                     member_expressions=calc_def.member_expressions or None,
                 )
                 compilation_results[calc_def.name] = result_comp
+                logger.info(
+                    "  Compiled '%s': %s",
+                    calc_def.name,
+                    result_comp.overall_compilability.value,
+                )
             except Exception:
                 logger.warning(
                     "Expression compilation failed for '%s', "
@@ -184,6 +193,19 @@ def build_pipeline_context(
                     calc_def.name,
                     exc_info=True,
                 )
+
+    skipped = len(calc_defs) - len(compilation_results)
+    compilability_counts: dict[str, int] = {}
+    for result in compilation_results.values():
+        key = result.overall_compilability.value
+        compilability_counts[key] = compilability_counts.get(key, 0) + 1
+    breakdown = ", ".join(f"{v} {k}" for k, v in sorted(compilability_counts.items()))
+    logger.info(
+        "Step 6.5 complete: %d compiled (%s), %d skipped (no expressions)",
+        len(compilation_results),
+        breakdown or "none",
+        skipped,
+    )
 
     # Step 7: Build ComputationGraph (single source of truth)
     computation_graph = build_computation_graph(

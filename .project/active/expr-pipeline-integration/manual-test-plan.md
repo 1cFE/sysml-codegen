@@ -370,12 +370,14 @@ Since chain_spike has no malformed expressions, this test is a **negative confir
 
 ## Results Checklist
 
+**Executed:** 2026-02-07 | **Prerequisite:** 131/131 automated tests pass | **Overall: 5/7 PASS**
+
 | # | Test | Pass/Fail | Notes |
 |---|------|-----------|-------|
-| 1 | Auto-impl file generation (chain_spike) | | |
-| 2 | Stub files for non-compilable CalcDefs | | |
-| 3 | Backlog report excludes FULLY_COMPILABLE | | |
-| 4 | Preservation: hand-edit preserved (same signature) | | |
-| 5 | Preservation: backup + regen (changed signature) | | |
-| 6 | Verbose logging of Step 6.5 | | |
-| 7 | Graceful degradation on compilation error | | |
+| 1 | Auto-impl file generation (chain_spike) | **PASS** | 3 `_impl.py` files generated; all have `AUTO_IMPLEMENTED = True`; no `NotImplementedError`; all valid Python (`ast.parse` OK); AreaCalc spot-check: correct `run_areacalc(inputs: AreaCalcInput) -> float` signature, `return (inputs.length * inputs.width)` |
+| 2 | Stub files for non-compilable CalcDefs | **PASS** | SimpleCalc: `AUTO_IMPLEMENTED = True`, `return (inputs.x * 2)`. ManualCalc: `raise NotImplementedError(...)`, no `AUTO_IMPLEMENTED`. No cross-contamination. |
+| 3 | Backlog report excludes FULLY_COMPILABLE | **PASS** | chain_spike: "0 functions to implement", empty table. Mixed model: "1 functions to implement", lists ManualCalc only. SimpleCalc correctly excluded. |
+| 4 | Preservation: hand-edit preserved (same signature) | **PASS** | All 3 stencils logged `Preserved stencil (Signature unchanged)`. `Stencils - New: 0, Preserved: 3, Regenerated: 0`. Hand-edit comment `# Hand-edited by engineer` retained at line 1. No `backup/` directory created. |
+| 5 | Preservation: backup + regen (changed signature) | **FAIL** | **BUG:** `FunctionSignature.matches()` only compares input type *name* (`AreaCalcInput`), not actual *fields*. Adding `scale` input doesn't change the type name, so stencil is incorrectly preserved. Module wrapper was correctly regenerated with `scale`, but impl file still has old 2-input expression. `input_fields` data is extracted by `generate_expected_signature()` but never compared. See `signature_extractor.py`. |
+| 6 | Verbose logging of Step 6.5 | **FAIL** | **GAP:** No logging on success path in `initialization.py` Step 6.5 (line ~168). Only the `except` branch has `logger.warning()`. Zero output about compilation when all CalcDefs compile cleanly. Missing: step start, per-CalcDef results, compilability classification. |
+| 7 | Graceful degradation on compilation error | **PASS** | No `ERROR` or `WARNING` messages in clean run. Unit test `test_edge5_feature_chain_returns_manual` confirms graceful fallback to `MANUAL_REQUIRED` for unsupported expression types (FeatureChainExpression). |

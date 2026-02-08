@@ -58,7 +58,7 @@ def should_regenerate_stencil(
     if existing_sig.matches(expected_sig):
         return False, "Signature unchanged"
     else:
-        return True, "Signature changed (return type or input type differs)"
+        return True, "Signature changed (interface differs)"
 
 
 def backup_implementation(
