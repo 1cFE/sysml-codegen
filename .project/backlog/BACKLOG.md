@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-02-03
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -25,22 +25,21 @@ Prioritized list of epics and features.
 
 ## P1 - High Priority
 
-### [EXPR-CODEGEN] Expression-Aware Code Generation
+### [ATTR-EXPR] Attribute Expression Capture
 
 **Priority**: P1
-**Effort**: ~8-10 days
+**Effort**: ~6-8 days
 **Status**: Draft
 
-Transform codegen from generating `NotImplementedError` stubs to generating executable calculation code for CalcDefs whose math is fully expressed in SysML. Eliminates the manual `_impl.py` authoring bottleneck for the majority of generated modules.
+Enable attribute-level expressions (`attribute volume = pi * r^2 * h`) to generate pipeline modules automatically, eliminating the CalcDef+CalcUsage ceremony for simple formulas. Builds on Phase 1 expression compiler.
 
 **Items**:
-- [ ] Item 1: Spike -- AST Extraction & Reference Resolution (1 day)
-- [ ] Item 2: Spike -- Expression Compilation & Classification (1 day)
-- [ ] Item 3: Expression Compiler Module (1.5 days)
-- [ ] Item 4: Pipeline Integration -- CalcDef Expression Compilation (2 days)
-- [ ] Item 5: End-to-End Validation on Real Models (1 day)
+- [ ] Item 1: Spike -- Attribute Expression AST Discovery & Architecture Evaluation (1 day)
+- [ ] Item 2: Computed Attribute Extraction & Data Models (1.5 days)
+- [ ] Item 3: Pipeline Integration -- Computed Attribute Modules (2-2.5 days)
+- [ ] Item 4: E2E Validation on Real Models (1 day)
 
-**File**: `epic_expression_aware_codegen.md`
+**File**: `epic_attribute_expression_capture.md`
 
 ---
 
@@ -60,11 +59,12 @@ Transform codegen from generating `NotImplementedError` stubs to generating exec
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
-| [None yet] | - | - | - |
+| [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
 
 ---
 
 ## Ideas / Future Considerations
 
-- [Idea 1]
-- [Idea 2]
+- Phase 3: Hierarchy, multiplicity, aggregation (native nested CalcUsage-in-PartDef patterns)
+- InvocationExpression / function call support (sqrt, min, max whitelist)
+- SelectExpression / if-then-else support (piecewise functions)
