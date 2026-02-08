@@ -36,6 +36,18 @@ def chain_spike_model_path(fixtures_path: Path) -> Path:
 
 
 @pytest.fixture
+def solar_battery_model_path(fixtures_path: Path) -> Path:
+    """Return path to solar battery SysML model directory."""
+    return fixtures_path / "solar_battery_model"
+
+
+@pytest.fixture
+def catf_mfe_model_path(fixtures_path: Path) -> Path:
+    """Return path to CATF MFE SysML model directory."""
+    return fixtures_path / "catf_mfe_model"
+
+
+@pytest.fixture
 def expected_outputs_path(fixtures_path: Path) -> Path:
     """Return path to expected outputs directory."""
     return fixtures_path / "expected_outputs"
