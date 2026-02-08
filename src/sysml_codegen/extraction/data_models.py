@@ -133,3 +133,15 @@ class CalculationDefinitionData:
     source_file: Path
     source_line: int = 0
     source_hash: str = ""
+
+    # Raw syside AST nodes for each output attribute's expression.
+    # Key: sanitized output attribute name. Value: raw syside AST node.
+    output_expression_asts: dict[str, Any] = field(default_factory=dict)
+
+    # All owned_member names from the raw CalcDef element.
+    # Needed by expression compiler for undeclared intermediate resolution.
+    all_member_names: set[str] = field(default_factory=set)
+
+    # Raw syside AST nodes for non-input/non-output members.
+    # Key: sanitized member name. Value: raw syside AST node.
+    member_expressions: dict[str, Any] = field(default_factory=dict)

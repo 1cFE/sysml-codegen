@@ -51,6 +51,7 @@ def build_computation_graph(
     calc_defs: list,
     design_attrs: dict[Path, list[DesignAttributeData]],
     group_deriver: ParameterGroupDeriver,
+    compilation_results: dict | None = None,
 ) -> ComputationGraph:
     """Build the complete computation graph from backtracking result.
 
@@ -62,6 +63,8 @@ def build_computation_graph(
         calc_defs: All calculation definitions
         design_attrs: Design attributes by file
         group_deriver: Existing ParameterGroupDeriver for entry point grouping
+        compilation_results: Expression compilation results keyed by calc_def.name.
+            If provided, sets each module's compilability field.
 
     Returns:
         ComputationGraph ready for YAML and JSON generation
@@ -112,6 +115,11 @@ def build_computation_graph(
             execution_order=idx,
             binding_resolutions=result.binding_resolutions,
         )
+
+        # Set compilability from compilation results
+        if compilation_results and usage.calc_def_name in compilation_results:
+            module.compilability = compilation_results[usage.calc_def_name].overall_compilability
+
         modules.append(module)
 
     # Step 6: Early validation - verify all channel references resolve

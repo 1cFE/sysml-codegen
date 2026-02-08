@@ -211,7 +211,7 @@ def _generate_stencils(
     """Generate implementation stencils (ADR-003 namespacing)."""
     from sysml_codegen.generation import (
         backup_implementation,
-        generate_implementation_stencil,
+        generate_implementation,
         should_regenerate_stencil,
     )
     from sysml_codegen.resolution.identifier_types import (
@@ -248,13 +248,17 @@ def _generate_stencils(
         else:
             output_path = handwritten_dir / f"{python_path.filename}_impl.py"
 
+        # Look up compilation result (may be None if no ASTs)
+        compilation_result = ctx.compilation_results.get(calc_def.name)
+
         # Smart regeneration logic
         if config.smart_regen and output_path.exists():
             should_regen, reason = should_regenerate_stencil(calc_def, output_path)
             if should_regen:
                 backup_implementation(output_path, backup_dir)
-                code = generate_implementation_stencil(
-                    calc_def, template_env, output_path, config.package_name
+                code = generate_implementation(
+                    calc_def, template_env, output_path, config.package_name,
+                    compilation_result=compilation_result,
                 )
                 if code:
                     output_path.write_text(code)
@@ -267,8 +271,9 @@ def _generate_stencils(
             stats["preserved"] += 1
             logger.debug(f"Preserved existing stencil: {output_path.name}")
         else:
-            code = generate_implementation_stencil(
-                calc_def, template_env, output_path, config.package_name
+            code = generate_implementation(
+                calc_def, template_env, output_path, config.package_name,
+                compilation_result=compilation_result,
             )
             if code:
                 output_path.write_text(code)
@@ -388,6 +393,7 @@ def _generate_backlog(
         calc_defs_with_outputs,
         output_path,
         config.package_name,
+        compilation_results=ctx.compilation_results,
     )
     if markdown:
         output_path.write_text(markdown)

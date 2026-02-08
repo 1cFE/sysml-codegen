@@ -3,10 +3,14 @@
 Generates handwritten implementation function stubs that preserve SysML
 calc expressions and source file:line references for traceability.
 
-Usage:
-    from sysml_codegen.generation.stencils import generate_implementation_stencil
+Provides unified dispatch between auto-implementation (for FULLY_COMPILABLE
+CalcDefs) and NotImplementedError stub templates.
 
-    code = generate_implementation_stencil(calc_def, template_env, output_path)
+Usage:
+    from sysml_codegen.generation.stencils import generate_implementation
+
+    code = generate_implementation(calc_def, template_env, output_path,
+                                   compilation_result=result)
 """
 
 from pathlib import Path
@@ -15,6 +19,10 @@ import jinja2
 
 # UPDATED: Import from sysml_codegen package
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
+from sysml_codegen.extraction.expression_compiler import (
+    CalcDefCompilationResult,
+    Compilability,
+)
 from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 
 
@@ -82,24 +90,21 @@ def _build_stub_docstring(calc_def: CalculationDefinitionData) -> str:
     return "\n".join(lines)
 
 
-def generate_implementation_stencil(
+def _build_stencil_context(
     calc_def: CalculationDefinitionData,
-    template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",
-) -> str:
-    """Generate implementation stencil for calc def.
+) -> dict:
+    """Build shared template context for both stub and auto-impl templates.
 
     Args:
         calc_def: Calculation definition to implement
-        template_env: Jinja2 environment
         output_path: Where to write handwritten/ file (for future use)
-        package_name: Package name for imports (parameterized)
+        package_name: Package name for imports
 
     Returns:
-        Generated Python code
+        Dict of template variables shared between stub and auto-impl templates.
     """
-    # Extract output attributes
     output_attrs = calc_def.output_attributes
 
     # Determine return type
@@ -125,8 +130,7 @@ def generate_implementation_stencil(
     python_path = PythonModulePath.from_sysml(sqn)
     module_import_path = python_path.import_path
 
-    # Prepare template context
-    context = {
+    return {
         "function_name": f"run_{calc_def.name.lower()}",
         "calc_name": calc_def.name,
         "sysml_source": f"{calc_def.source_file}:{calc_def.source_line}",
@@ -140,6 +144,125 @@ def generate_implementation_stencil(
         "module_import_path": module_import_path,
         "package_name": package_name,
     }
+
+
+def _build_auto_impl_context(
+    compilation_result: CalcDefCompilationResult,
+    calc_def: CalculationDefinitionData,
+) -> dict:
+    """Build auto-implementation specific template context.
+
+    Separates undeclared intermediates (for local variable assignments)
+    from declared outputs (for the return statement), preserving
+    topological order for intermediates and output_attributes order
+    for the return tuple.
+
+    Args:
+        compilation_result: Compilation result from Step 6.5
+        calc_def: Calculation definition
+
+    Returns:
+        Dict with execution_steps, output_expressions, output_count,
+        and single_output_expression.
+    """
+    output_attr_order = [attr.name for attr in calc_def.output_attributes]
+    result_map = {r.output_name: r for r in compilation_result.output_results}
+
+    # Undeclared intermediates in topological order (for local assignments)
+    execution_steps = []
+    for name in compilation_result.execution_order:
+        r = result_map.get(name)
+        if r and r.python_expression and r.is_undeclared_intermediate:
+            execution_steps.append({
+                "name": r.output_name,
+                "expression": r.python_expression,
+            })
+
+    # Declared output expressions in output_attributes order (for return tuple)
+    output_expressions = []
+    for name in output_attr_order:
+        r = result_map.get(name)
+        if r and r.python_expression:
+            output_expressions.append({
+                "name": r.output_name,
+                "expression": r.python_expression,
+            })
+
+    return {
+        "execution_steps": execution_steps,
+        "output_expressions": output_expressions,
+        "output_count": len(output_expressions),
+        "single_output_expression": (
+            output_expressions[0]["expression"]
+            if len(output_expressions) == 1
+            else None
+        ),
+    }
+
+
+def generate_implementation(
+    calc_def: CalculationDefinitionData,
+    template_env: jinja2.Environment,
+    output_path: Path,
+    package_name: str = "generated_code",
+    compilation_result: CalcDefCompilationResult | None = None,
+) -> str:
+    """Generate implementation file for a CalcDef.
+
+    Dispatches to auto-implementation template for FULLY_COMPILABLE CalcDefs,
+    or to NotImplementedError stub template for all others.
+
+    Args:
+        calc_def: Calculation definition to implement
+        template_env: Jinja2 environment
+        output_path: Where to write handwritten/ file
+        package_name: Package name for imports
+        compilation_result: Compilation result from Step 6.5, or None
+
+    Returns:
+        Generated Python code
+    """
+    is_auto_impl = (
+        compilation_result is not None
+        and compilation_result.overall_compilability == Compilability.FULLY_COMPILABLE
+    )
+
+    context = _build_stencil_context(calc_def, output_path, package_name)
+
+    if is_auto_impl:
+        assert compilation_result is not None  # guaranteed by is_auto_impl check
+        context.update(_build_auto_impl_context(compilation_result, calc_def))
+        template = template_env.get_template("auto_implementation.py.jinja2")
+    else:
+        template = template_env.get_template("implementation_stencil.py.jinja2")
+
+    code = template.render(**context)
+    if not code.endswith('\n'):
+        code += '\n'
+    return code
+
+
+def generate_implementation_stencil(
+    calc_def: CalculationDefinitionData,
+    template_env: jinja2.Environment,
+    output_path: Path,
+    package_name: str = "generated_code",
+) -> str:
+    """Generate implementation stencil for calc def (stub with NotImplementedError).
+
+    Preserved for backward compatibility. Equivalent to calling
+    generate_implementation() with compilation_result=None.
+
+    Args:
+        calc_def: Calculation definition to implement
+        template_env: Jinja2 environment
+        output_path: Where to write handwritten/ file (for future use)
+        package_name: Package name for imports (parameterized)
+
+    Returns:
+        Generated Python code
+    """
+    context = _build_stencil_context(calc_def, output_path, package_name)
 
     template = template_env.get_template("implementation_stencil.py.jinja2")
     code = template.render(**context)
@@ -189,13 +312,18 @@ def generate_backlog_report(
     calc_defs: list[CalculationDefinitionData],
     output_path: Path,
     package_name: str = "generated_code",
+    compilation_results: dict[str, CalcDefCompilationResult] | None = None,
 ) -> str:
     """Generate markdown report of implementation backlog.
+
+    Auto-implemented CalcDefs (FULLY_COMPILABLE) are excluded from the
+    backlog since they don't require manual implementation.
 
     Args:
         calc_defs: All calculation definitions
         output_path: Where to write IMPLEMENTATION_BACKLOG.md (for future)
         package_name: Package name (parameterized)
+        compilation_results: Compilation results keyed by calc_def.name
 
     Returns:
         Generated markdown string with stage-based checklist
@@ -203,6 +331,12 @@ def generate_backlog_report(
     # Build items with proper source paths
     items = []
     for calc_def in calc_defs:
+        # Skip auto-implemented CalcDefs
+        if compilation_results and calc_def.name in compilation_results:
+            cr = compilation_results[calc_def.name]
+            if cr.overall_compilability == Compilability.FULLY_COMPILABLE:
+                continue
+
         complexity = _estimate_complexity(calc_def)
 
         # Get full relative path from project root
@@ -376,5 +510,6 @@ def _estimate_complexity(calc_def: CalculationDefinitionData) -> str:
 
 __all__ = [
     "generate_backlog_report",
+    "generate_implementation",
     "generate_implementation_stencil",
 ]

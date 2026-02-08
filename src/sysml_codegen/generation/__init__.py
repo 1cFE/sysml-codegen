@@ -55,6 +55,7 @@ from sysml_codegen.generation.schemas import (
 )
 from sysml_codegen.generation.stencils import (
     generate_backlog_report,
+    generate_implementation,
     generate_implementation_stencil,
 )
 from sysml_codegen.generation.test_gen import (
@@ -96,6 +97,7 @@ __all__ = [
     "should_use_multioutput",
     # stencils
     "generate_backlog_report",
+    "generate_implementation",
     "generate_implementation_stencil",
     # test_gen
     "generate_test_implementations",

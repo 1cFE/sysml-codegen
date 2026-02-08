@@ -65,6 +65,9 @@ class BindingInfo:
     source_attribute_elem: object | None = None
     literal_value: float | int | str | bool | None = None
 
+    # Raw AST node for EXPRESSION bindings (Phase 2 will use this)
+    expression_ast: Any = None
+
     @property
     def source_instance_name(self) -> str | None:
         """Get name of source instance element if available."""
@@ -322,6 +325,15 @@ def _extract_single_binding(
             is_cross_file=False,
             raw_expression=f"LiteralExpression -> {literal_value}",
             literal_value=literal_value,
+        )
+
+    elif SysideAdapter.is_instance(expr, "OperatorExpression"):
+        return BindingInfo(
+            param_name=param_name,
+            source_path=None,
+            binding_type=BindingType.EXPRESSION,
+            raw_expression=f"OperatorExpression: {type(expr).__name__}",
+            expression_ast=expr,
         )
 
     return BindingInfo(

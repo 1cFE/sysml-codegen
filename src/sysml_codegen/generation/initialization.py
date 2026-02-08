@@ -6,7 +6,8 @@ previously duplicated across multiple scripts, ensuring consistent
 behavior and reducing maintenance burden.
 """
 
-from dataclasses import dataclass
+import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -21,9 +22,15 @@ from sysml_codegen.analysis.parameter_groups import (
     extract_design_attributes,
 )
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
+from sysml_codegen.extraction.expression_compiler import (
+    CalcDefCompilationResult,
+    compile_calc_def,
+)
 from sysml_codegen.extraction.usage_extractor import CalcUsageData, extract_calculation_usages
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import ComputationGraph
+
+logger = logging.getLogger(__name__)
 
 
 class SysMLParsingError(Exception):
@@ -77,6 +84,10 @@ class PipelineContext:
     backtracker: DependencyBacktracker
     backtracking_result: BacktrackingResult
     computation_graph: ComputationGraph
+
+    # Expression compilation results keyed by calc_def.name.
+    # Contains per-output CompilationResult with Python expression strings.
+    compilation_results: dict[str, CalcDefCompilationResult] = field(default_factory=dict)
 
 
 def build_pipeline_context(
@@ -154,12 +165,33 @@ def build_pipeline_context(
         include_all=include_all,
     )
 
+    # Step 6.5: Compile expressions and classify compilability
+    compilation_results: dict[str, CalcDefCompilationResult] = {}
+    for calc_def in calc_defs:
+        if calc_def.output_expression_asts:
+            try:
+                result_comp = compile_calc_def(
+                    calc_def=calc_def,
+                    expression_asts=calc_def.output_expression_asts,
+                    all_member_names=calc_def.all_member_names or None,
+                    member_expressions=calc_def.member_expressions or None,
+                )
+                compilation_results[calc_def.name] = result_comp
+            except Exception:
+                logger.warning(
+                    "Expression compilation failed for '%s', "
+                    "falling back to UNKNOWN compilability",
+                    calc_def.name,
+                    exc_info=True,
+                )
+
     # Step 7: Build ComputationGraph (single source of truth)
     computation_graph = build_computation_graph(
         result=backtracking_result,
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        compilation_results=compilation_results,
     )
 
     return PipelineContext(
@@ -171,6 +203,7 @@ def build_pipeline_context(
         backtracker=backtracker,
         backtracking_result=backtracking_result,
         computation_graph=computation_graph,
+        compilation_results=compilation_results,
     )
 
 

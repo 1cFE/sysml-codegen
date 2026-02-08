@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 # Import shared types from core for re-export (backward compatibility)
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
+from sysml_codegen.extraction.expression_compiler import Compilability
 
 
 class EntryPointType(str, Enum):
@@ -163,6 +164,7 @@ class PipelineModule(BaseModel):
     inputs: list[ModuleInput]
     outputs: list[ModuleOutput]
     execution_order: int
+    compilability: Compilability = Compilability.UNKNOWN
 
 
 class ComputationGraph(BaseModel):

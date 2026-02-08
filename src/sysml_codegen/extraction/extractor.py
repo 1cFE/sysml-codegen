@@ -20,6 +20,7 @@ from sysml_codegen.extraction.data_models import (
     ConstraintInfo,
     PartDefinitionData,
 )
+from sysml_codegen.extraction.expression_utils import reconstruct_expression
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -136,29 +137,62 @@ class SysMLDataExtractor:
         doc_comment = self._extract_calc_documentation(elem)
 
         # Extract attributes - separate into input and output based on direction
+        # Also capture AST data for expression compilation
         input_attributes = []
         output_attributes = []
+        input_names: set[str] = set()
+        output_names: set[str] = set()
+        all_member_names: set[str] = set()
+        output_expression_asts: dict[str, Any] = {}
+        member_expressions: dict[str, Any] = {}
+        calc_expressions: list[str] = []
 
         for member in elem.owned_members:
-            if self.adapter.is_instance(member, "AttributeUsage"):
-                attr_info = self._extract_attribute(member)
-                if attr_info:
-                    is_input, is_output = self._get_direction(member)
-                    if is_output:
-                        output_attributes.append(attr_info)
-                    elif is_input:
-                        input_attributes.append(attr_info)
+            if not self.adapter.is_instance(member, "AttributeUsage"):
+                continue
 
-        # Extract calc expressions from attribute bindings
-        calc_expressions = []
+            attr_info = self._extract_attribute(member)
+            member_name = self._sanitize_name(member.name)
+            if member_name:
+                all_member_names.add(member_name)
+
+            is_input, is_output = self._get_direction(member)
+
+            if attr_info:
+                if is_output:
+                    output_attributes.append(attr_info)
+                    output_names.add(member_name)
+                elif is_input:
+                    input_attributes.append(attr_info)
+                    input_names.add(member_name)
+
+            # Capture ASTs and expression text
+            if hasattr(member, "feature_value_expression") and member.feature_value_expression:
+                expr = member.feature_value_expression
+
+                # Store raw AST for output attributes
+                if is_output and member_name:
+                    output_expression_asts[member_name] = expr
+
+                # Reconstruct expression text for calc_expressions
+                expr_text = reconstruct_expression(expr)
+                if expr_text and not expr_text.startswith("<"):
+                    calc_expressions.append(f"{member_name} = {expr_text}")
+                elif expr_text and expr_text.startswith("<"):
+                    logger.debug(
+                        "Filtered repr-like expression for %s.%s: %s",
+                        name, member_name, expr_text[:80],
+                    )
+
+        # Second pass: capture member_expressions for non-input/non-output members
         for member in elem.owned_members:
-            if self.adapter.is_instance(member, "AttributeUsage"):
-                if hasattr(member, "feature_value_expression") and member.feature_value_expression:
-                    expr = member.feature_value_expression
-                    expr_text = self._extract_expression_text(expr)
-                    if expr_text and expr_text != "???":
-                        attr_name = self._sanitize_name(member.name)
-                        calc_expressions.append(f"{attr_name} = {expr_text}")
+            if not self.adapter.is_instance(member, "AttributeUsage"):
+                continue
+            member_name = self._sanitize_name(member.name)
+            if not member_name or member_name in input_names or member_name in output_names:
+                continue
+            if hasattr(member, "feature_value_expression") and member.feature_value_expression:
+                member_expressions[member_name] = member.feature_value_expression
 
         # Always append doc comment as additional context
         if doc_comment:
@@ -175,7 +209,7 @@ class SysMLDataExtractor:
 
         source_hash = self._compute_file_hash(source_file) if source_file.exists() else ""
         qualified_name = str(getattr(elem, 'qualified_name', None) or name)
-        references = []
+        references: list[str] = []
 
         return CalculationDefinitionData(
             name=name,
@@ -188,6 +222,9 @@ class SysMLDataExtractor:
             source_file=source_file,
             source_line=source_line,
             source_hash=source_hash,
+            output_expression_asts=output_expression_asts,
+            all_member_names=all_member_names,
+            member_expressions=member_expressions,
         )
 
     def _get_direction(self, member) -> tuple[bool, bool]:
@@ -608,30 +645,6 @@ class SysMLDataExtractor:
                             docs.append(body)
 
         return "\n".join(docs) if docs else ""
-
-    def _extract_expression_text(self, expr) -> str:
-        """Extract calculation expression text from SysML expression."""
-        if self.adapter.is_instance(expr, "OperatorExpression"):
-            op = expr.operator
-            operands = list(expr.operands)
-
-            if len(operands) == 2:
-                left = self._extract_expression_text(operands[0])
-                right = self._extract_expression_text(operands[1])
-                return f"{left} {op} {right}"
-            elif len(operands) == 1:
-                operand = self._extract_expression_text(operands[0])
-                return f"{op}{operand}"
-
-        elif self.adapter.is_instance(expr, "FeatureReferenceExpression"):
-            for membership in expr.memberships:
-                if type(membership).__name__ == "Membership":
-                    if hasattr(membership, "member_element"):
-                        elem = membership.member_element
-                        if elem and hasattr(elem, "name") and elem.name:
-                            return elem.name
-
-        return "???"
 
     def _report_diagnostics(self, diagnostics: Iterable) -> None:
         """Report diagnostics to console."""

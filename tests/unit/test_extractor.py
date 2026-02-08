@@ -97,3 +97,80 @@ def test_calculation_definition_data_structure():
     assert "qualified_name" in params
     assert "input_attributes" in params
     assert "output_attributes" in params
+
+
+def test_extract_expression_text_deleted():
+    """_extract_expression_text is fully removed (DD-3: dead code removal)."""
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+    extractor = SysMLDataExtractor([])
+    assert not hasattr(extractor, "_extract_expression_text"), (
+        "_extract_expression_text should be deleted after replacement "
+        "with expression_utils.reconstruct_expression"
+    )
+
+
+def test_extractor_imports_reconstruct_expression():
+    """extractor.py uses expression_utils.reconstruct_expression for calc_expressions."""
+    source = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "extraction" / "extractor.py"
+    content = source.read_text()
+    assert "from sysml_codegen.extraction.expression_utils import reconstruct_expression" in content
+
+
+def test_operator_expression_classified_as_expression():
+    """OperatorExpression binding -> BindingType.EXPRESSION, not UNBOUND."""
+    from unittest.mock import MagicMock, patch
+
+    from agentic_mbse.sysml.types import BindingType
+    from sysml_codegen.extraction.usage_extractor import _extract_single_binding
+
+    usage_elem = MagicMock()
+    param_elem = MagicMock()
+    mock_expr = MagicMock()
+    param_elem.feature_value_expression = mock_expr
+
+    # SysideAdapter.is_instance should return True only for OperatorExpression
+    def mock_is_instance(obj, type_name):
+        if obj is mock_expr and type_name == "OperatorExpression":
+            return True
+        return False
+
+    with patch(
+        "sysml_codegen.extraction.usage_extractor.SysideAdapter.is_instance",
+        side_effect=mock_is_instance,
+    ), patch(
+        "sysml_codegen.extraction.usage_extractor._is_literal_expression",
+        return_value=False,
+    ):
+        result = _extract_single_binding(usage_elem, param_elem, "test_param")
+
+    assert result.binding_type == BindingType.EXPRESSION
+    assert result.param_name == "test_param"
+
+
+def test_operator_expression_stores_ast():
+    """OperatorExpression binding stores raw AST on BindingInfo."""
+    from unittest.mock import MagicMock, patch
+
+    from sysml_codegen.extraction.usage_extractor import _extract_single_binding
+
+    usage_elem = MagicMock()
+    param_elem = MagicMock()
+    mock_expr = MagicMock()
+    param_elem.feature_value_expression = mock_expr
+
+    def mock_is_instance(obj, type_name):
+        if obj is mock_expr and type_name == "OperatorExpression":
+            return True
+        return False
+
+    with patch(
+        "sysml_codegen.extraction.usage_extractor.SysideAdapter.is_instance",
+        side_effect=mock_is_instance,
+    ), patch(
+        "sysml_codegen.extraction.usage_extractor._is_literal_expression",
+        return_value=False,
+    ):
+        result = _extract_single_binding(usage_elem, param_elem, "test_param")
+
+    assert result.expression_ast is mock_expr
