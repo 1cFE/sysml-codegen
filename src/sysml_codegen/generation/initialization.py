@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-# UPDATED: Import from sysml_codegen package
+from agentic_mbse.sysml.syside_adapter import SysideAdapter
+
 from sysml_codegen.analysis.dependency_backtracker import (
     BacktrackingResult,
     DependencyBacktracker,
@@ -21,7 +22,12 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
-from sysml_codegen.extraction.data_models import CalculationDefinitionData
+from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
+from sysml_codegen.extraction.data_models import (
+    CalculationDefinitionData,
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+)
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
     compile_calc_def,
@@ -89,6 +95,106 @@ class PipelineContext:
     # Contains per-output CompilationResult with Python expression strings.
     compilation_results: dict[str, CalcDefCompilationResult] = field(default_factory=dict)
 
+    # Computed attributes extracted from PartDef/PartUsage elements (Step 4.5).
+    computed_attributes: list[ComputedAttributeData] = field(default_factory=list)
+
+
+def _remove_formula_from_design_attrs(
+    computed_attrs: list[ComputedAttributeData],
+    design_attrs: dict[Path, list[DesignAttributeData]],
+) -> int:
+    """Remove FORMULA computed attributes from design_attrs in-place.
+
+    FORMULA attributes must be removed before ParameterGroupDeriver to prevent
+    false entry points. The QN format built here must match what
+    build_element_qualified_name() produces for DesignAttributeData.qualified_name.
+
+    Args:
+        computed_attrs: All computed attributes (only FORMULA classification filtered).
+        design_attrs: Design attributes dict to modify in-place.
+
+    Returns:
+        Count of removed attributes.
+    """
+    formula_qns: set[str] = set()
+    for ca in computed_attrs:
+        if ca.classification == ComputedAttributeClassification.FORMULA:
+            part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+            formula_qns.add(f"{part_qn_python}__{ca.python_name}")
+
+    if not formula_qns:
+        return 0
+
+    removed = 0
+    for path in design_attrs:
+        original_len = len(design_attrs[path])
+        design_attrs[path] = [
+            a for a in design_attrs[path]
+            if a.qualified_name not in formula_qns
+        ]
+        removed += original_len - len(design_attrs[path])
+
+    return removed
+
+
+def _extract_and_filter_computed_attributes(
+    model: Any,
+    calc_usages: list[CalcUsageData],
+    design_attrs: dict[Path, list[DesignAttributeData]],
+) -> list[ComputedAttributeData]:
+    """Step 4.5: Extract computed attributes and remove FORMULAs from design_attrs.
+
+    Iterates PartDefinition and PartUsage elements from the model, calls
+    extract_computed_attributes() for each, then removes FORMULA-classified
+    attributes from design_attrs to prevent false entry points.
+
+    Args:
+        model: Parsed SysIDE model (from extractor.model).
+        calc_usages: Pipeline's calc usages (reserved for future use).
+        design_attrs: Design attributes dict, modified in-place to remove FORMULAs.
+
+    Returns:
+        All extracted computed attributes (all classifications).
+    """
+    from sysml_codegen.extraction.computed_attribute_extractor import (
+        extract_computed_attributes,
+    )
+
+    all_computed_attrs: list[ComputedAttributeData] = []
+
+    # Iterate PartDefinition and PartUsage elements
+    part_elements = list(SysideAdapter.elements_of_type(model, "PartDefinition"))
+    part_elements.extend(SysideAdapter.elements_of_type(model, "PartUsage"))
+
+    for part_elem in part_elements:
+        # Build calc_usage_names for this part from its owned members
+        calc_usage_names = {
+            m.name for m in part_elem.owned_members
+            if SysideAdapter.is_instance(m, "CalculationUsage")
+        }
+
+        computed = extract_computed_attributes(None, part_elem, calc_usage_names)
+        all_computed_attrs.extend(computed)
+
+    # Remove FORMULA attributes from design_attrs
+    removed_count = _remove_formula_from_design_attrs(all_computed_attrs, design_attrs)
+
+    # Log summary
+    by_classification: dict[str, int] = {}
+    for ca in all_computed_attrs:
+        key = ca.classification.value
+        by_classification[key] = by_classification.get(key, 0) + 1
+
+    breakdown = ", ".join(f"{v} {k}" for k, v in sorted(by_classification.items()))
+    logger.info(
+        "Step 4.5: Extracted %d computed attributes (%s), removed %d FORMULA from design_attrs",
+        len(all_computed_attrs),
+        breakdown or "none",
+        removed_count,
+    )
+
+    return all_computed_attrs
+
 
 def build_pipeline_context(
     model_paths: list[Path],
@@ -151,7 +257,12 @@ def build_pipeline_context(
     # Step 4: Extract design attributes for group derivation
     design_attrs = extract_design_attributes(extractor.model, design_path_filter=design_path_filter)
 
-    # Step 5: Create parameter group deriver
+    # Step 4.5: Extract computed attributes and remove FORMULAs from design_attrs
+    computed_attrs = _extract_and_filter_computed_attributes(
+        extractor.model, calc_usages, design_attrs
+    )
+
+    # Step 5: Create parameter group deriver (uses filtered design_attrs)
     group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
 
     # Step 6: Create backtracker and run
@@ -159,6 +270,7 @@ def build_pipeline_context(
         calc_usages,
         calc_defs,
         design_attributes=design_attrs,
+        computed_attributes=computed_attrs,
     )
     backtracking_result = backtracker.find_required_modules(
         targets or [],
@@ -214,6 +326,7 @@ def build_pipeline_context(
         design_attrs=design_attrs,
         group_deriver=group_deriver,
         compilation_results=compilation_results,
+        computed_attributes=computed_attrs,
     )
 
     return PipelineContext(
@@ -226,6 +339,7 @@ def build_pipeline_context(
         backtracking_result=backtracking_result,
         computation_graph=computation_graph,
         compilation_results=compilation_results,
+        computed_attributes=computed_attrs,
     )
 
 
@@ -233,5 +347,6 @@ __all__ = [
     "CodeGenerationError",
     "PipelineContext",
     "SysMLParsingError",
+    "_remove_formula_from_design_attrs",
     "build_pipeline_context",
 ]

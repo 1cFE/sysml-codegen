@@ -24,7 +24,12 @@ from pydantic import BaseModel, Field
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, PhantomDetector
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
-from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
+from sysml_codegen.extraction.data_models import (
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+)
+from sysml_codegen.extraction.expression_compiler import Compilability
 
 if TYPE_CHECKING:
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
@@ -110,6 +115,7 @@ class DependencyBacktracker:
         all_usages: list[CalcUsageData],
         calc_defs: list,
         design_attributes: dict[Path, list[DesignAttributeData]] | None = None,
+        computed_attributes: list | None = None,
     ):
         """Initialize with all available usages, calc definitions, and design attributes.
 
@@ -117,10 +123,26 @@ class DependencyBacktracker:
             all_usages: All CalcUsageData from usage_extractor
             calc_defs: All CalculationDefinitionData from model
             design_attributes: Design attributes by file (for transitive binding resolution)
+            computed_attributes: Computed attributes from Step 4.5 (used in Phase 2)
         """
         self.all_usages = all_usages
         self.calc_defs = calc_defs
         self._design_attributes = design_attributes or {}
+        self._computed_attributes = computed_attributes or []
+
+        # Build FORMULA computed attribute lookup index for binding resolution.
+        # Only FULLY_COMPILABLE FORMULAs are indexed -- MANUAL_REQUIRED won't get
+        # synthetic modules in the graph builder, so bindings to them must fall
+        # through to normal resolution.
+        # Two key patterns per FORMULA attr: "part.attr" (dotted) and "attr" (bare).
+        self._computed_attr_index: dict[str, ComputedAttributeData] = {}
+        for ca in self._computed_attributes:
+            if ca.classification != ComputedAttributeClassification.FORMULA:
+                continue
+            if ca.compilability != Compilability.FULLY_COMPILABLE:
+                continue
+            self._computed_attr_index[f"{ca.owning_part_name}.{ca.python_name}"] = ca
+            self._computed_attr_index[ca.python_name] = ca
 
         # Build lookup tables
         self._calc_def_by_name: dict[str, object] = {c.name: c for c in calc_defs}
@@ -371,6 +393,25 @@ class DependencyBacktracker:
                 continue
 
             if binding.source_path:
+                # Check computed attribute resolution first (before normal resolution)
+                ca = self._computed_attr_index.get(binding.source_path)
+                if ca is None and "." in binding.source_path:
+                    bare = binding.source_path.split(".")[-1]
+                    ca = self._computed_attr_index.get(bare)
+
+                if ca is not None:
+                    channel = self._build_computed_attr_channel(ca)
+                    self._binding_resolutions[mapping_key] = BindingResolution(
+                        resolution_type=BindingResolutionType.MODULE_OUTPUT,
+                        qualified_name=channel,
+                        source_path=binding.source_path,
+                        is_transitive=False,
+                    )
+                    self._trace_log.append(
+                        f"    {param_name} -> COMPUTED_ATTR ({channel})"
+                    )
+                    continue  # No recursive tracing -- graph builder creates the module
+
                 source_usage = self._resolve_binding_to_usage(binding.source_path)
 
                 if source_usage:
@@ -482,6 +523,12 @@ class DependencyBacktracker:
             self._binding_to_entry_point[mapping_key] = qualified_param_name
 
         return dependencies
+
+    def _build_computed_attr_channel(self, ca: ComputedAttributeData) -> str:
+        """Build output channel name for a FORMULA computed attribute's synthetic module."""
+        part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+        module_eqn = f"{part_qn_python}__{ca.python_name}"
+        return get_channel_name(module_eqn, ca.python_name)
 
     def _resolve_to_design_attribute(
         self,

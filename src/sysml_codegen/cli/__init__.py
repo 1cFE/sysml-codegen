@@ -203,6 +203,198 @@ def _generate_modules(
     logger.info(f"Generated {module_count} TEAx module wrappers")
 
 
+def _generate_computed_attr_modules(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate TEAx module wrappers for FORMULA computed attributes."""
+    import re
+
+    from sysml_codegen.core.identifier_types import (
+        PythonModulePath,
+        SysMLQualifiedName,
+        derive_module_type,
+    )
+    from sysml_codegen.core.qualified_names import get_module_name, sysml_to_python_qualified_name
+    from sysml_codegen.extraction.data_models import ComputedAttributeClassification
+    from sysml_codegen.extraction.expression_compiler import Compilability
+
+    modules_dir = config.output_path / "modules"
+    module_count = 0
+
+    for ca in ctx.computed_attributes:
+        if (
+            ca.classification != ComputedAttributeClassification.FORMULA
+            or ca.compilability != Compilability.FULLY_COMPILABLE
+        ):
+            continue
+
+        sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+        sqn = SysMLQualifiedName(sysml_qn)
+        python_path = PythonModulePath.from_sysml(sqn)
+        module_eqn = sysml_to_python_qualified_name(sysml_qn)
+
+        # Create namespace subdirectory
+        if python_path.directory:
+            namespace_dir = modules_dir / python_path.directory
+            namespace_dir.mkdir(parents=True, exist_ok=True)
+            init_file = namespace_dir / "__init__.py"
+            if not init_file.exists():
+                init_file.write_text('"""Namespace package for generated modules."""\n')
+
+        # Extract input names from compiled expression
+        if ca.compiled_expression is None:
+            raise ValueError(
+                f"FORMULA attr {ca.name} has no compiled_expression "
+                f"(compilability={ca.compilability})"
+            )
+        raw_inputs = re.findall(r"inputs\.(\w+)", ca.compiled_expression)
+        seen: set[str] = set()
+        input_names: list[str] = []
+        for name in raw_inputs:
+            if name not in seen:
+                seen.add(name)
+                input_names.append(name)
+
+        module_type_full = derive_module_type(sysml_qn)
+        class_name = module_type_full.split(".")[-1]
+        input_class_name = class_name.replace("Module", "Input")
+
+        input_attributes = [
+            {"name": n, "type_hint": "Float", "description": f"Input {n}"}
+            for n in input_names
+        ]
+
+        # Derive primitive imports from input types (matching modules.py pattern)
+        primitive_types = set()
+        for attr in input_attributes:
+            if attr["type_hint"] in ("Float", "Int", "String", "Bool"):
+                primitive_types.add(attr["type_hint"])
+        primitive_types.add("Float")  # Output is always Float for computed attrs
+        primitive_imports = sorted(primitive_types)
+
+        context = {
+            "class_name": class_name,
+            "input_class_name": input_class_name,
+            "output_class_name": None,
+            "schema_name": None,
+            "handler_name": get_module_name(module_eqn),
+            "impl_import_path": python_path.impl_import_path,
+            "doc_comment": (
+                f"Computed attribute module.\n\n"
+                f"SysML Expression: {ca.expression_text}"
+            ),
+            "package_name": config.package_name,
+            "is_multioutput": False,
+            "input_attributes": input_attributes,
+            "output_attributes": [
+                {"name": ca.python_name, "description": f"Computed {ca.name}"},
+            ],
+            "calc_expressions": [ca.expression_text],
+            "sysml_source": f"{ca.source_file}:{ca.source_line}",
+            "primitive_imports": primitive_imports,
+        }
+
+        template = template_env.get_template("teax_module.py.jinja2")
+        code = template.render(**context)
+        if not code.endswith('\n'):
+            code += '\n'
+
+        output_path = modules_dir / python_path.full_path
+        output_path.write_text(code)
+        module_count += 1
+        logger.debug(f"Generated computed attr module: {output_path}")
+
+    if module_count:
+        logger.info(f"Generated {module_count} computed attribute module wrappers")
+
+
+def _generate_computed_attr_stencils(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+    template_env: jinja2.Environment,
+) -> None:
+    """Generate auto-implementation files for FORMULA computed attributes."""
+    from sysml_codegen.core.identifier_types import (
+        PythonModulePath,
+        SysMLQualifiedName,
+        derive_module_type,
+    )
+    from sysml_codegen.core.qualified_names import get_module_name, sysml_to_python_qualified_name
+    from sysml_codegen.extraction.data_models import ComputedAttributeClassification
+    from sysml_codegen.extraction.expression_compiler import Compilability
+
+    handwritten_dir = config.output_path / "handwritten"
+    impl_count = 0
+
+    for ca in ctx.computed_attributes:
+        if (
+            ca.classification != ComputedAttributeClassification.FORMULA
+            or ca.compilability != Compilability.FULLY_COMPILABLE
+        ):
+            continue
+
+        sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+        sqn = SysMLQualifiedName(sysml_qn)
+        python_path = PythonModulePath.from_sysml(sqn)
+        module_eqn = sysml_to_python_qualified_name(sysml_qn)
+        module_type_full = derive_module_type(sysml_qn)
+        class_name = module_type_full.split(".")[-1]
+        input_class_name = class_name.replace("Module", "Input")
+
+        # Create namespace subdirectory
+        if python_path.directory:
+            namespace_dir = handwritten_dir / python_path.directory
+            namespace_dir.mkdir(parents=True, exist_ok=True)
+            init_file = namespace_dir / "__init__.py"
+            if not init_file.exists():
+                init_file.write_text('"""Handwritten implementations."""\n')
+            output_path = namespace_dir / f"{python_path.filename}_impl.py"
+        else:
+            output_path = handwritten_dir / f"{python_path.filename}_impl.py"
+
+        if ca.compiled_expression is None:
+            raise ValueError(
+                f"FORMULA attr {ca.name} has no compiled_expression "
+                f"(compilability={ca.compilability})"
+            )
+        context = {
+            "function_name": f"run_{get_module_name(module_eqn)}",
+            "calc_name": module_eqn,
+            "input_class_name": input_class_name,
+            "return_type": "float",
+            "execution_steps": [],
+            "output_expressions": [
+                {"name": ca.python_name, "expression": ca.compiled_expression},
+            ],
+            "output_count": 1,
+            "single_output_expression": ca.compiled_expression,
+            "module_import_path": python_path.import_path,
+            "package_name": config.package_name,
+            "sysml_source": f"{ca.source_file}:{ca.source_line}",
+            "sysml_expressions": [ca.expression_text],
+            "docstring": (
+                f"Execute {ca.name} computed attribute.\n\n"
+                f"SysML Expression: {ca.expression_text}"
+            ),
+        }
+
+        template = template_env.get_template("auto_implementation.py.jinja2")
+        code = template.render(**context)
+        if not code.endswith('\n'):
+            code += '\n'
+
+        output_path.write_text(code)
+        impl_count += 1
+        logger.debug(f"Generated computed attr auto-impl: {output_path}")
+
+    if impl_count:
+        logger.info(
+            f"Generated {impl_count} computed attribute auto-implementations"
+        )
+
+
 def _generate_stencils(
     ctx: PipelineContext,
     config: GenerationConfig,
@@ -337,6 +529,7 @@ def _generate_registry(
         output_path=output_path,
         entry_point_groups=ctx.computation_graph.entry_point_groups,
         exit_point_primitive_types=exit_point_types,
+        computed_attributes=ctx.computed_attributes,
     )
     if code:
         output_path.write_text(code)
@@ -394,6 +587,7 @@ def _generate_backlog(
         output_path,
         config.package_name,
         compilation_results=ctx.compilation_results,
+        computed_attributes=ctx.computed_attributes,
     )
     if markdown:
         output_path.write_text(markdown)
@@ -646,8 +840,16 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.info("Generating TEAx module wrappers...")
         _generate_modules(ctx, config, template_env)
 
+        if ctx.computed_attributes:
+            logger.info("Generating computed attribute module wrappers...")
+            _generate_computed_attr_modules(ctx, config, template_env)
+
         logger.info("Generating implementation stencils...")
         _generate_stencils(ctx, config, template_env)
+
+        if ctx.computed_attributes:
+            logger.info("Generating computed attribute auto-implementations...")
+            _generate_computed_attr_stencils(ctx, config, template_env)
 
         # Step 7: Generate pipeline and registry
         logger.info("Generating pipeline configuration...")

@@ -165,6 +165,7 @@ class PipelineModule(BaseModel):
     outputs: list[ModuleOutput]
     execution_order: int
     compilability: Compilability = Compilability.UNKNOWN
+    is_computed_attribute: bool = False
 
 
 class ComputationGraph(BaseModel):

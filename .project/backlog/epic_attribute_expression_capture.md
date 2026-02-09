@@ -1,7 +1,7 @@
 # Epic: Attribute Expression Capture
 
 **Epic ID**: ATTR-EXPR
-**Status**: Active (Items 1-2 complete, Items 3-5 ready)
+**Status**: Active (Items 1-3 complete, Items 4-5 ready)
 **Priority**: P1
 **Created**: 2026-02-08
 **Estimated Effort**: ~6.5-8.5 days (Item 1 complete; ~5.5-7.5 remaining)
@@ -202,7 +202,7 @@ Key decisions are captured in `.project/concepts/attr-expr-architectural-decisio
 
 ### Item 3: Pipeline Integration -- Computed Attribute Modules
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Integration
 **Effort**: ~2-2.5 days (spec 2h, design 3h, plan 2h, execute 9-12h)
 **Dependencies**: Item 2 (extraction module must be built and tested)
@@ -277,18 +277,18 @@ Key decisions are captured in `.project/concepts/attr-expr-architectural-decisio
 - Inline expressions in module wrappers (future optimization)
 
 **Success Criteria**:
-- [ ] Step 4.5 integrated into `build_pipeline_context()`
-- [ ] FORMULA attributes removed from design_attributes before Step 5
-- [ ] Backtracker resolves CalcUsage→FORMULA bindings as MODULE_OUTPUT
-- [ ] Graph builder generates PipelineModule for each FORMULA computed attribute
-- [ ] Computed attribute modules have correct inputs wired from resolution map
-- [ ] Topological ordering correct for chains (A→B→C all computed)
-- [ ] EXPOSE_PURE behavior documented (already handled by backtracker OR alias added)
-- [ ] Pipeline YAML includes computed attribute modules in correct order
-- [ ] `IMPLEMENTATION_BACKLOG.md` shows computed attribute modules as auto-implemented
-- [ ] Module registry includes computed attribute modules
-- [ ] All existing tests pass with zero regressions (167+ baseline)
-- [ ] Integration tests for: simple FORMULA, chain, FORMULA→EXPOSE_PURE input wiring
+- [x] Step 4.5 integrated into `build_pipeline_context()`
+- [x] FORMULA attributes removed from design_attributes before Step 5
+- [x] Backtracker resolves CalcUsage→FORMULA bindings as MODULE_OUTPUT
+- [x] Graph builder generates PipelineModule for each FORMULA computed attribute
+- [x] Computed attribute modules have correct inputs wired from resolution map
+- [x] Topological ordering correct for chains (A→B→C all computed)
+- [x] EXPOSE_PURE behavior documented (already handled by backtracker OR alias added)
+- [x] Pipeline YAML includes computed attribute modules in correct order
+- [x] `IMPLEMENTATION_BACKLOG.md` shows computed attribute modules as auto-implemented
+- [x] Module registry includes computed attribute modules
+- [x] All existing tests pass with zero regressions (264 tests passing after hardening)
+- [x] Integration tests for: simple FORMULA, chain, FORMULA→EXPOSE_PURE input wiring
 
 **Deliverables**:
 - Modified: `src/sysml_codegen/generation/initialization.py` (Step 4.5, PipelineContext)
@@ -513,7 +513,7 @@ This epic implements **Phase 2** from the research report's phased roadmap:
 |------|--------|--------------|------|--------|
 | Item 1: Spike -- AST Discovery & Architecture | 1 day | None | Go/no-go on AST availability | **Complete (GO)** |
 | Item 2: Extraction & Data Models | ~1 day | Item 1 | Unit tests pass, mypy passes | **Complete** |
-| Item 3: Pipeline Integration | ~2-2.5 days | Item 2 | Existing tests pass + solar_battery computed attribute works | Not Started |
+| Item 3: Pipeline Integration | ~2-2.5 days | Item 2 | Existing tests pass + solar_battery computed attribute works | **Complete** |
 | Item 4: E2E Validation | ~1 day | Item 3 | Full validation pass on real models | Not Started |
 | Item 5: Documentation & ADRs | ~0.5-1 day | Item 4 | ADRs drafted, epic closed | Not Started |
 
@@ -540,5 +540,5 @@ This epic implements **Phase 2** from the research report's phased roadmap:
 
 ---
 
-**Last Updated**: 2026-02-08
-**Next Action**: Execute Item 3 -- pipeline integration (computed attribute modules)
+**Last Updated**: 2026-02-09
+**Next Action**: Execute Item 4 -- E2E validation on real models

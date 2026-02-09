@@ -18,7 +18,11 @@ from pathlib import Path
 import jinja2
 
 # UPDATED: Import from sysml_codegen package
-from sysml_codegen.extraction.data_models import CalculationDefinitionData
+from sysml_codegen.extraction.data_models import (
+    CalculationDefinitionData,
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+)
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
     Compilability,
@@ -339,17 +343,21 @@ def generate_backlog_report(
     output_path: Path,
     package_name: str = "generated_code",
     compilation_results: dict[str, CalcDefCompilationResult] | None = None,
+    computed_attributes: list[ComputedAttributeData] | None = None,
 ) -> str:
     """Generate markdown report of implementation backlog.
 
     Auto-implemented CalcDefs (FULLY_COMPILABLE) are excluded from the
     backlog since they don't require manual implementation.
+    FORMULA+FULLY_COMPILABLE computed attributes are also excluded
+    (auto-implemented) and shown in a summary line.
 
     Args:
         calc_defs: All calculation definitions
         output_path: Where to write IMPLEMENTATION_BACKLOG.md (for future)
         package_name: Package name (parameterized)
         compilation_results: Compilation results keyed by calc_def.name
+        computed_attributes: Computed attributes from Step 4.5
 
     Returns:
         Generated markdown string with stage-based checklist
@@ -426,6 +434,20 @@ def generate_backlog_report(
             f"| [ ] | {item['module']} | `{item['function']}` | "
             f"`{item['source']}` | {item['complexity']} |"
         )
+
+    # Add computed attribute auto-implementation summary
+    if computed_attributes:
+        auto_count = sum(
+            1 for ca in computed_attributes
+            if ca.classification == ComputedAttributeClassification.FORMULA
+            and ca.compilability == Compilability.FULLY_COMPILABLE
+        )
+        if auto_count > 0:
+            lines.extend([
+                "",
+                f"**{auto_count} computed attribute module(s) auto-implemented** "
+                "(not included in manual count above).",
+            ])
 
     lines.extend(
         [

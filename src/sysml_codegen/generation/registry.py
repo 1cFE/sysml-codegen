@@ -10,13 +10,20 @@ Usage:
     code = generate_registry_function(calc_defs, "package_name", template_env, output_path)
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import jinja2
 
 # UPDATED: Import from sysml_codegen package
-from sysml_codegen.extraction.data_models import CalculationDefinitionData
+from sysml_codegen.extraction.data_models import (
+    CalculationDefinitionData,
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+)
+from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.resolution.identifier_types import (
     PythonModulePath,
     SysMLQualifiedName,
@@ -59,8 +66,9 @@ def generate_registry_function(
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
-    entry_point_groups: "list[ModelParameterGroup]",
+    entry_point_groups: list[ModelParameterGroup],
     exit_point_primitive_types: list[str] | None = None,
+    computed_attributes: list[ComputedAttributeData] | None = None,
 ) -> str:
     """Generate registry creation function.
 
@@ -70,6 +78,8 @@ def generate_registry_function(
         template_env: Jinja2 environment
         output_path: Where to write __init__.py or registry.py (future use)
         entry_point_groups: List of ParameterGroup from ComputationGraph.entry_point_groups.
+        exit_point_primitive_types: Primitive types needed for exit point registration.
+        computed_attributes: Computed attributes to include in registry.
 
     Returns:
         Generated Python code
@@ -78,16 +88,40 @@ def generate_registry_function(
     schema_imports = _generate_schema_imports_from_entry_points(package_name, entry_point_groups)
     group_names = [g.class_name for g in entry_point_groups]
 
+    all_modules = [
+        {
+            "class_name": f"{calc.name}Module",  # Python class name (unchanged)
+            "module_type": derive_module_type(calc.qualified_name),  # Namespaced registry key
+        }
+        for calc in calc_defs
+    ]
+
+    imports = _generate_import_statements(calc_defs, package_name)
+
+    # Add computed attribute modules
+    if computed_attributes:
+        for ca in computed_attributes:
+            if (
+                ca.classification == ComputedAttributeClassification.FORMULA
+                and ca.compilability == Compilability.FULLY_COMPILABLE
+            ):
+                sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+                sqn = SysMLQualifiedName(sysml_qn)
+                python_path = PythonModulePath.from_sysml(sqn)
+                module_type_full = derive_module_type(sysml_qn)
+                class_name = module_type_full.split(".")[-1]
+
+                all_modules.append({
+                    "class_name": class_name,
+                    "module_type": module_type_full,
+                })
+                import_module = f"{package_name}.modules.{python_path.import_path}"
+                imports.append(f"from {import_module} import {class_name}")
+
     context = {
         "function_name": f"create_{package_name}_registry",
-        "all_modules": [
-            {
-                "class_name": f"{calc.name}Module",  # Python class name (unchanged)
-                "module_type": derive_module_type(calc.qualified_name),  # Namespaced registry key
-            }
-            for calc in calc_defs
-        ],
-        "imports": _generate_import_statements(calc_defs, package_name),
+        "all_modules": all_modules,
+        "imports": imports,
         "schema_imports": schema_imports,
         "parameter_groups": group_names,
         "package_name": package_name,

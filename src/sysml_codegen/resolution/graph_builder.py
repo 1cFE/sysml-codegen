@@ -11,17 +11,33 @@ KEY DESIGN DECISIONS:
 """
 
 import logging
+import re
+from collections import deque
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 # UPDATED: Import from sysml_codegen package structure
-from sysml_codegen.analysis.dependency_backtracker import BacktrackingResult
+from sysml_codegen.analysis.dependency_backtracker import (
+    BacktrackingResult,
+    CircularDependencyError,
+)
 from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
 )
 from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
-from sysml_codegen.core.qualified_names import get_channel_name, get_module_name
+from sysml_codegen.core.qualified_names import (
+    get_channel_name,
+    get_module_name,
+    sysml_to_python_qualified_name,
+)
+from sysml_codegen.extraction.data_models import (
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+)
+from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -52,6 +68,7 @@ def build_computation_graph(
     design_attrs: dict[Path, list[DesignAttributeData]],
     group_deriver: ParameterGroupDeriver,
     compilation_results: dict | None = None,
+    computed_attributes: list[ComputedAttributeData] | None = None,
 ) -> ComputationGraph:
     """Build the complete computation graph from backtracking result.
 
@@ -65,6 +82,8 @@ def build_computation_graph(
         group_deriver: Existing ParameterGroupDeriver for entry point grouping
         compilation_results: Expression compilation results keyed by calc_def.name.
             If provided, sets each module's compilability field.
+        computed_attributes: Computed attributes from Step 4.5. FORMULA+FULLY_COMPILABLE
+            attrs produce synthetic PipelineModule objects alongside CalcUsage modules.
 
     Returns:
         ComputationGraph ready for YAML and JSON generation
@@ -77,7 +96,19 @@ def build_computation_graph(
     # Uses backtracker's already-resolved bindings, just maps to channel names
     output_catalog = _build_output_catalog(result.required_usages, calc_def_map)
 
-    # Step 3: Classify entry points with full context
+    # Step 2.5: Extend output catalog with computed attribute outputs
+    if computed_attributes:
+        _extend_output_catalog_with_computed_attrs(output_catalog, computed_attributes)
+
+    # Step 3: Build attribute resolution map (for FORMULA module input wiring)
+    calc_usage_names = {u.instance_name for u in result.required_usages}
+    attr_resolution_map: dict[str, dict[str, AttributeResolution]] = {}
+    if computed_attributes:
+        attr_resolution_map = _build_attribute_resolution_map(
+            computed_attributes, design_attrs, output_catalog, calc_usage_names
+        )
+
+    # Step 4: Classify entry points with full context
     entry_points = _classify_entry_points(
         result.entry_points,
         result.entry_point_sources,
@@ -87,7 +118,7 @@ def build_computation_graph(
         group_deriver,
     )
 
-    # Step 4: Group entry points using EXISTING ParameterGroupDeriver
+    # Step 5: Group entry points using EXISTING ParameterGroupDeriver
     # This reuses the deriver's sophisticated grouping logic
     param_groups = _group_entry_points_via_deriver(
         entry_points=entry_points,
@@ -96,7 +127,7 @@ def build_computation_graph(
         calc_defs=calc_defs,
     )
 
-    # Step 5: Build pipeline modules from required_usages (already sorted!)
+    # Step 6: Build CalcUsage pipeline modules from required_usages
     modules = []
     for idx, usage in enumerate(result.required_usages):
         calc_def = calc_def_map.get(usage.calc_def_name)
@@ -122,7 +153,23 @@ def build_computation_graph(
 
         modules.append(module)
 
-    # Step 6: Early validation - verify all channel references resolve
+    # Step 6.5: Build computed attribute modules
+    if computed_attributes:
+        for ca in computed_attributes:
+            if (
+                ca.classification == ComputedAttributeClassification.FORMULA
+                and ca.compilability == Compilability.FULLY_COMPILABLE
+            ):
+                module = _build_computed_attr_module(
+                    ca, attr_resolution_map, entry_points,
+                    param_groups, design_attrs, group_deriver,
+                )
+                modules.append(module)
+
+    # Step 7: Unified topological sort across ALL modules
+    modules = _unified_topological_sort(modules)
+
+    # Step 8: Early validation - verify all channel references resolve
     # This catches transitive binding resolution bugs before TEAx validation
     _validate_channel_references(modules)
 
@@ -428,6 +475,344 @@ def _validate_channel_references(modules: list[PipelineModule]) -> None:
                     )
 
 
+class AttributeResolutionKind(str, Enum):
+    """Classification of how an attribute reference should be wired."""
+
+    FORMULA = "formula"
+    EXPOSE_ALIAS = "expose_alias"
+    LITERAL = "literal"
+
+
+@dataclass
+class AttributeResolution:
+    """How an attribute reference in a FORMULA expression should be wired."""
+
+    kind: AttributeResolutionKind
+    channel_name: str | None = None  # For formula and expose_alias
+
+
+def _extend_output_catalog_with_computed_attrs(
+    output_catalog: dict[str, tuple[str, str, str]],
+    computed_attributes: list[ComputedAttributeData],
+) -> None:
+    """Extend the output catalog with computed attribute module outputs.
+
+    Must be called BEFORE _build_pipeline_module() so CalcUsage modules
+    that reference computed attribute outputs can validate their channels.
+
+    Args:
+        output_catalog: Mutable catalog to extend in-place
+        computed_attributes: All computed attributes from Step 4.5
+    """
+    for ca in computed_attributes:
+        if (
+            ca.classification != ComputedAttributeClassification.FORMULA
+            or ca.compilability != Compilability.FULLY_COMPILABLE
+        ):
+            continue
+
+        sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+        module_eqn = sysml_to_python_qualified_name(sysml_qn)
+        module_type = derive_module_type(sysml_qn)
+        channel_name = get_channel_name(module_eqn, ca.python_name)
+
+        # Key: "part_name.attr_name" for binding resolution
+        key = f"{ca.owning_part_name}.{ca.python_name}"
+        output_catalog[key] = (module_type, channel_name, "root")
+
+
+def _resolve_expose_pure(
+    ca: ComputedAttributeData,
+    calc_usage_names: set[str],
+    output_catalog: dict[str, tuple[str, str, str]],
+) -> str | None:
+    """Resolve an EXPOSE_PURE attribute to its upstream calc output channel.
+
+    An EXPOSE_PURE attribute like ``p_alpha_out = alpha_split.p_alpha`` has
+    references containing both the calc usage instance name and the calc output
+    attribute name. This function separates them and looks up the output catalog.
+
+    Returns:
+        channel_name if resolved, None if the catalog key is not found.
+    """
+    instance_name: str | None = None
+    output_attr_name: str | None = None
+
+    for ref in ca.references:
+        if ref.name in calc_usage_names:
+            instance_name = ref.name
+        else:
+            output_attr_name = ref.name
+
+    if instance_name is None or output_attr_name is None:
+        logger.warning(
+            "EXPOSE_PURE %s: could not identify instance/output from refs %s",
+            ca.name, [r.name for r in ca.references],
+        )
+        return None
+
+    catalog_key = f"{instance_name}.{output_attr_name}"
+    entry = output_catalog.get(catalog_key)
+    if entry is None:
+        logger.warning(
+            "EXPOSE_PURE %s: catalog key '%s' not found. Available: %s",
+            ca.name, catalog_key, list(output_catalog.keys()),
+        )
+        return None
+
+    _, channel_name, _ = entry
+    return channel_name
+
+
+def _build_attribute_resolution_map(
+    computed_attrs: list[ComputedAttributeData],
+    design_attrs: dict[Path, list[DesignAttributeData]],
+    output_catalog: dict[str, tuple[str, str, str]],
+    calc_usage_names: set[str],
+) -> dict[str, dict[str, AttributeResolution]]:
+    """Build per-part map: owning_part_name -> {attr_name -> AttributeResolution}.
+
+    This map tells the graph builder how to wire each FORMULA module input.
+
+    Resolution logic per attribute:
+    - FORMULA computed attr -> kind="formula", channel from synthetic module
+    - EXPOSE_PURE computed attr -> kind="expose_alias", channel from upstream calc
+    - Not found -> kind="literal" (conservative: becomes entry point)
+
+    Args:
+        computed_attrs: All computed attributes from Step 4.5
+        design_attrs: Design attributes indexed by file
+        output_catalog: Output channel catalog (includes computed attr outputs)
+        calc_usage_names: CalcUsage instance names for EXPOSE_PURE resolution
+    """
+    result: dict[str, dict[str, AttributeResolution]] = {}
+
+    for ca in computed_attrs:
+        part_name = ca.owning_part_name
+        if part_name not in result:
+            result[part_name] = {}
+
+        if (
+            ca.classification == ComputedAttributeClassification.FORMULA
+            and ca.compilability == Compilability.FULLY_COMPILABLE
+        ):
+            # FORMULA -> wire to synthetic module output channel
+            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+            module_eqn = sysml_to_python_qualified_name(sysml_qn)
+            channel_name = get_channel_name(module_eqn, ca.python_name)
+            result[part_name][ca.python_name] = AttributeResolution(
+                kind=AttributeResolutionKind.FORMULA, channel_name=channel_name,
+            )
+
+        elif ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
+            # EXPOSE_PURE -> resolve through alias to upstream calc output
+            channel = _resolve_expose_pure(ca, calc_usage_names, output_catalog)
+            if channel is not None:
+                result[part_name][ca.python_name] = AttributeResolution(
+                    kind=AttributeResolutionKind.EXPOSE_ALIAS, channel_name=channel,
+                )
+            else:
+                # Fallback: treat as literal (entry point)
+                result[part_name][ca.python_name] = AttributeResolution(
+                    kind=AttributeResolutionKind.LITERAL,
+                )
+
+    return result
+
+
+def _build_computed_attr_module(
+    ca: ComputedAttributeData,
+    resolution_map: dict[str, dict[str, AttributeResolution]],
+    entry_points: dict[str, EntryPoint],
+    param_groups: list[ParameterGroup],
+    design_attrs: dict[Path, list[DesignAttributeData]],
+    group_deriver: ParameterGroupDeriver,
+) -> PipelineModule:
+    """Build a PipelineModule from a FORMULA ComputedAttributeData.
+
+    Args:
+        ca: The FORMULA computed attribute (must be FULLY_COMPILABLE)
+        resolution_map: Per-part attribute resolution map
+        entry_points: Mutable dict -- new entry points may be added
+        param_groups: Existing parameter groups
+        design_attrs: Design attributes for default value lookup
+        group_deriver: For classifying new entry points
+    """
+    # Naming per ADR-003
+    sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+    module_eqn = sysml_to_python_qualified_name(sysml_qn)
+    module_name = get_module_name(module_eqn)
+    module_type = derive_module_type(sysml_qn)
+
+    # Extract input names from compiled expression, deduplicate preserving order
+    # compiled_expression is guaranteed non-None for FULLY_COMPILABLE FORMULA attrs
+    if ca.compiled_expression is None:
+        raise ValueError(
+            f"FORMULA attr {ca.name} has no compiled_expression "
+            f"(compilability={ca.compilability})"
+        )
+    raw_inputs = re.findall(r"inputs\.(\w+)", ca.compiled_expression)
+    seen: set[str] = set()
+    input_names: list[str] = []
+    for name in raw_inputs:
+        if name not in seen:
+            seen.add(name)
+            input_names.append(name)
+
+    # Build per-part resolution lookup
+    part_resolutions = resolution_map.get(ca.owning_part_name, {})
+
+    # Build design attr index for default value lookup
+    design_attr_by_qname: dict[str, DesignAttributeData] = {}
+    for attrs in design_attrs.values():
+        for attr in attrs:
+            if attr.qualified_name:
+                design_attr_by_qname[attr.qualified_name] = attr
+
+    part_eqn = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+
+    # Build inputs
+    inputs: list[ModuleInput] = []
+    for input_name in input_names:
+        attr_res = part_resolutions.get(input_name)
+
+        _wirable = (AttributeResolutionKind.FORMULA, AttributeResolutionKind.EXPOSE_ALIAS)
+        if attr_res and attr_res.kind in _wirable and attr_res.channel_name:
+            # Wire to upstream module output
+            source = InputSource(
+                source_type="module_output",
+                producer_channel=attr_res.channel_name,
+            )
+        else:
+            # Create/reuse entry point (literal or unresolved)
+            ep_qname = f"{part_eqn}__{input_name}"
+
+            if ep_qname not in entry_points:
+                # Look up default value from design attrs
+                default_value: float | None = None
+                da = design_attr_by_qname.get(ep_qname)
+                if da and da.default_value:
+                    try:
+                        default_value = float(da.default_value)
+                    except (ValueError, TypeError):
+                        pass
+
+                param_group = group_deriver.classify(ep_qname) if group_deriver else None
+
+                entry_points[ep_qname] = EntryPoint(
+                    qualified_name=ep_qname,
+                    simple_name=input_name,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=default_value,
+                    param_group=param_group,
+                )
+
+            ep = entry_points[ep_qname]
+            source = InputSource(
+                source_type="entry_point",
+                param_group=ep.param_group,
+                qualified_name=ep_qname,
+            )
+
+        inputs.append(
+            ModuleInput(
+                param_name=input_name,
+                python_type="float",
+                source=source,
+            )
+        )
+
+    # Build single output
+    output = ModuleOutput(
+        field_name="root",
+        python_type="float",
+        channel_name=get_channel_name(module_eqn, ca.python_name),
+    )
+
+    return PipelineModule(
+        name=module_name,
+        module_type=module_type,
+        inputs=inputs,
+        outputs=[output],
+        execution_order=0,  # Assigned during unified toposort
+        compilability=Compilability.FULLY_COMPILABLE,
+        is_computed_attribute=True,
+    )
+
+
+def _unified_topological_sort(modules: list[PipelineModule]) -> list[PipelineModule]:
+    """Sort all modules by their inter-module dependencies using Kahn's algorithm.
+
+    Replaces the assumption that backtracker pre-sort is sufficient once
+    computed attribute modules are interleaved with CalcUsage modules.
+
+    Args:
+        modules: All modules (CalcUsage + computed attribute)
+
+    Returns:
+        Modules sorted in dependency order with execution_order reassigned
+    """
+    if not modules:
+        return modules
+
+    # Build channel -> module_name lookup
+    channel_to_module: dict[str, str] = {}
+    for m in modules:
+        for out in m.outputs:
+            channel_to_module[out.channel_name] = m.name
+
+    # Build adjacency list: module_name -> [dependency module names]
+    graph: dict[str, list[str]] = {m.name: [] for m in modules}
+    in_degree: dict[str, int] = {m.name: 0 for m in modules}
+
+    for m in modules:
+        for inp in m.inputs:
+            if inp.source.source_type == "module_output" and inp.source.producer_channel:
+                dep_module = channel_to_module.get(inp.source.producer_channel)
+                if dep_module and dep_module != m.name:
+                    if dep_module not in graph[m.name]:
+                        graph[m.name].append(dep_module)
+                        in_degree[m.name] += 1
+
+    # Note: graph[m.name] lists dependencies (predecessors), not successors.
+    # For Kahn's we need: for each dependency edge A->B (A must come before B),
+    # track successors: which modules depend on each module.
+    successors: dict[str, list[str]] = {m.name: [] for m in modules}
+    for m_name, deps in graph.items():
+        for dep in deps:
+            successors[dep].append(m_name)
+
+    # Kahn's algorithm
+    queue: deque[str] = deque()
+    for m_name, degree in in_degree.items():
+        if degree == 0:
+            queue.append(m_name)
+
+    sorted_names: list[str] = []
+    while queue:
+        current = queue.popleft()
+        sorted_names.append(current)
+        for successor in successors[current]:
+            in_degree[successor] -= 1
+            if in_degree[successor] == 0:
+                queue.append(successor)
+
+    if len(sorted_names) != len(modules):
+        # Identify the modules involved in the cycle
+        cycle_modules = [m.name for m in modules if m.name not in sorted_names]
+        raise CircularDependencyError(
+            f"Circular dependency detected among modules: {cycle_modules}. "
+            f"Sorted {len(sorted_names)} of {len(modules)} modules."
+        )
+
+    # Reassign execution_order
+    name_to_order = {name: i for i, name in enumerate(sorted_names)}
+    for m in modules:
+        m.execution_order = name_to_order[m.name]
+
+    return sorted(modules, key=lambda m: m.execution_order)
+
+
 def _build_pipeline_module(
     usage: CalcUsageData,
     calc_def,
@@ -548,6 +933,13 @@ def _build_pipeline_module(
 
 
 __all__ = [
+    "AttributeResolution",
+    "AttributeResolutionKind",
     "MissingCalcDefError",
+    "_build_attribute_resolution_map",
+    "_build_computed_attr_module",
+    "_extend_output_catalog_with_computed_attrs",
+    "_resolve_expose_pure",
+    "_unified_topological_sort",
     "build_computation_graph",
 ]
