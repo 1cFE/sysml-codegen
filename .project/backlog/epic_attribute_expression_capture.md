@@ -1,7 +1,7 @@
 # Epic: Attribute Expression Capture
 
 **Epic ID**: ATTR-EXPR
-**Status**: Active (Items 1-4 complete, Item 5 ready)
+**Status**: Complete
 **Priority**: P1
 **Created**: 2026-02-08
 **Estimated Effort**: ~6.5-8.5 days (Item 1 complete; ~5.5-7.5 remaining)
@@ -339,7 +339,7 @@ Key decisions are captured in `.project/concepts/attr-expr-architectural-decisio
 
 ### Item 5: Documentation -- ADRs and Epic Closure
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Documentation
 **Effort**: ~0.5-1 day (draft 3-4h, review 1-2h)
 **Dependencies**: Item 4 (must be validated before documenting decisions)
@@ -489,22 +489,28 @@ This epic implements **Phase 2** from the research report's phased roadmap:
 
 ## Lessons Learned (Post-Completion)
 
-*Fill in after epic is complete*
-
 **What Went Well**:
-- Item 1 spike de-risked the entire epic. The v2 probe with a purpose-built fixture answered every open question with concrete data.
-- TBD (Items 2-5)
+- Item 1 spike de-risked the entire epic. The v2 probe with a purpose-built fixture (14 FORMULA + 3 chain + 4 EXPOSE patterns) answered every open question with concrete data.
+- Phase 1 expression compiler reused with zero changes -- the CalcDef-agnostic design paid off exactly as predicted.
+- Option C (direct graph integration) was cleaner than the original Option A (synthetic CalcDef+CalcUsage) recommendation. The spike data made the right choice obvious.
+- Test suite grew from 167 (Phase 1 baseline) to 285 with zero regressions across all 5 items.
+- Chain handling was a non-issue -- the compiler's chain-blindness turned out to be a feature. Each computed attribute compiles independently; the graph builder handles ordering.
+- Hardening pass in Item 3 caught edge cases (Step 4/4.5 overlap, FORMULA removal from design_attributes) before E2E validation.
+- Purpose-built probe fixture provided comprehensive coverage across all classification categories, chains, and EXPOSE interactions.
 
 **What Could Improve**:
-- TBD
+- Concept doc was drafted late in Item 1; would have been clearer to formalize architectural decisions before starting Item 2 implementation.
+- ADR migration from monorepo was deferred too long -- should have been done during the repo split. Item 5 had to create `docs/architecture/` from scratch and copy ADR-001/002/003.
 
 **Surprises**:
-- Chain handling is a non-issue for the compiler (biggest simplification)
-- `reconstruct_expression()` loses parentheses -- AST is the only correct path
-- MIXED classification never occurs naturally; EXPOSE_PURE/EXPOSE_COMPUTED split is more precise
-- TBD (Items 2-5)
+- Chain handling is a non-issue for the compiler (biggest simplification). `cost = area * rate` compiles to `(inputs.area * inputs.rate)` whether `area` is literal or computed.
+- `reconstruct_expression()` loses parentheses -- AST compilation is the only correct path for expression semantics.
+- MIXED classification never occurs naturally across 540 attributes; EXPOSE_PURE/EXPOSE_COMPUTED split is more precise.
+- EXPOSE_PURE backtracker transitive resolution already worked -- zero code needed for CalcUsage->EXPOSE bindings.
+- Step 4/4.5 overlap was a real risk -- removing FORMULA attributes from design_attributes dict before ParameterGroupDeriver was essential to prevent false entry points.
+- Module naming collision between CalcUsage and AttributeUsage names is prevented by SysML namespace rules (assumption held across all test models).
 
 ---
 
 **Last Updated**: 2026-02-09
-**Next Action**: Execute Item 5 -- Documentation, ADRs, and epic closure
+**Next Action**: Epic complete. No further action required.

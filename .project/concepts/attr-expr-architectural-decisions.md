@@ -1,11 +1,13 @@
 # Concept: Attribute Expression Architectural Decisions
 
-**Status**: Draft (pre-ADR)
+**Status**: Superseded by ADR-004 and ADR-005
 **Date**: 2026-02-08
 **Authors**: Reid + Claude
 **Epic**: ATTR-EXPR (Phase 2)
 **Prerequisite**: EXPR-CODEGEN (Phase 1) complete; ATTR-EXPR Item 1 spike complete (GO)
 **Related**: `expression-aware-codegen.md` (Phase 1 concept), ADR-001, ADR-002, ADR-003
+
+> **Note**: The architectural decisions in this document have been formalized as ADR-004 (Computed Attribute Pipeline Integration) and ADR-005 (Computed Attribute Classification) in `docs/architecture/`. This document is retained as historical context.
 
 ---
 

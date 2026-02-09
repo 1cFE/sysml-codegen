@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-02-08
+**Last Updated**: 2026-02-09
 
 ---
 
@@ -25,21 +25,7 @@ Prioritized list of epics and features.
 
 ## P1 - High Priority
 
-### [ATTR-EXPR] Attribute Expression Capture
-
-**Priority**: P1
-**Effort**: ~6-8 days
-**Status**: Draft
-
-Enable attribute-level expressions (`attribute volume = pi * r^2 * h`) to generate pipeline modules automatically, eliminating the CalcDef+CalcUsage ceremony for simple formulas. Builds on Phase 1 expression compiler.
-
-**Items**:
-- [ ] Item 1: Spike -- Attribute Expression AST Discovery & Architecture Evaluation (1 day)
-- [ ] Item 2: Computed Attribute Extraction & Data Models (1.5 days)
-- [ ] Item 3: Pipeline Integration -- Computed Attribute Modules (2-2.5 days)
-- [ ] Item 4: E2E Validation on Real Models (1 day)
-
-**File**: `epic_attribute_expression_capture.md`
+*No epics yet*
 
 ---
 
@@ -59,6 +45,7 @@ Enable attribute-level expressions (`attribute volume = pi * r^2 * h`) to genera
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
+| [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
 | [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
 
 ---
@@ -68,3 +55,4 @@ Enable attribute-level expressions (`attribute volume = pi * r^2 * h`) to genera
 - Phase 3: Hierarchy, multiplicity, aggregation (native nested CalcUsage-in-PartDef patterns)
 - InvocationExpression / function call support (sqrt, min, max whitelist)
 - SelectExpression / if-then-else support (piecewise functions)
+- EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
