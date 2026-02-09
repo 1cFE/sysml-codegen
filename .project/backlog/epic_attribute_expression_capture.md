@@ -1,7 +1,7 @@
 # Epic: Attribute Expression Capture
 
 **Epic ID**: ATTR-EXPR
-**Status**: Active (Items 1-3 complete, Items 4-5 ready)
+**Status**: Active (Items 1-4 complete, Item 5 ready)
 **Priority**: P1
 **Created**: 2026-02-08
 **Estimated Effort**: ~6.5-8.5 days (Item 1 complete; ~5.5-7.5 remaining)
@@ -305,69 +305,35 @@ Key decisions are captured in `.project/concepts/attr-expr-architectural-decisio
 
 ### Item 4: E2E Validation on Real Models
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Testing
 **Effort**: ~1 day (spec 0.5h, design 1h, plan 0.5h, execute 4-5h)
 **Dependencies**: Item 3 (pipeline integration must be complete)
 
 **Objective**: Validate that computed attribute pipeline modules produce correct, executable outputs on real SysML models, and that the full pipeline remains correct end-to-end including all Phase 1 CalcDef auto-implementations.
 
-**Scope**:
+**Results Summary** (from `.project/active/attr-expr-e2e/report.md`):
 
-1. **Solar_battery validation** (primary real-model proof point):
-   - `p_net_kw = p_net_mw * 1000.0` generates a synthetic pipeline module `solar_battery_plant__p_net_kw`
-   - Module is auto-implemented with correct expression (`inputs.p_net_mw * 1000.0`)
-   - Downstream CalcUsage `annualized_om` binding `in p_net_kw = p_net_kw` resolves as MODULE_OUTPUT from synthetic module (not ENTRY_POINT)
-   - Full pipeline produces correct outputs matching existing results
-
-2. **Spike probe fixture validation** (`tests/fixtures/attr_expr_probe/`):
-   - Reuse the existing probe fixture (14 FORMULA + 3 chain + 4 EXPOSE + 2 CalcUsages) as the primary E2E validation fixture. Do NOT create a new fixture.
-   - Extend with numerical ground-truth assertions (exact values, no tolerance needed):
-
-     | Attribute | Expression | Expected Value |
-     |-----------|-----------|----------------|
-     | area | 10.0 * 5.0 | 50.0 |
-     | volume | 10.0 * 5.0 * 3.0 | 150.0 |
-     | cost | 50.0 * 12.0 | 600.0 |
-     | marked_up_cost | 600.0 * 1.15 | 690.0 |
-     | cost_density | 600.0 / 150.0 | 4.0 |
-     | q_scientific | 2600.0 / 50.0 | 52.0 |
-     | perimeter | 2.0 * 10.0 + 2.0 * 5.0 | 30.0 |
-     | minor_radius | (4.2 + 4.4) / 2.0 - 3.0 | 1.3 |
-     | p_alpha | 2600.0 * 3.52 / 17.58 | ~520.36... |
-
-   - Verify chain resolution: `cost` depends on `area`, `marked_up_cost` depends on `cost`, `cost_density` depends on both `cost` and `volume`
-   - Verify EXPOSE_PURE attributes classified but no modules generated for them
-   - Verify EXPOSE_COMPUTED attributes classified but deferred (no module, no error)
-
-3. **Phase 1 regression validation**:
-   - Re-run all Phase 1 E2E tests (solar_battery CalcDef validation, CATF CalcDef validation)
-   - Verify all 167+ existing tests still pass with zero xfail
-   - Verify auto-implemented CalcDef modules unchanged (Phase 1 output not affected by Phase 2)
-
-4. **Backlog accuracy**:
-   - `IMPLEMENTATION_BACKLOG.md` correctly lists computed attribute modules as auto-implemented
-   - Manual-required count unchanged from Phase 1 (only genuinely manual CalcDefs remain)
-   - New computed attribute modules shown with "0 functions to implement"
-
-**Out of Scope**:
-- Performance benchmarking
-- Phase 3 patterns (hierarchy/multiplicity/aggregation)
-- EXPOSE_COMPUTED validation (deferred)
+- **21 new E2E tests**, all passing. Full suite: 285 passed, 0 failures, 0 xfail.
+- **Probe fixture**: All 9 FORMULA ground-truth values correct within 1e-10 tolerance. Chain resolution (cost→area, marked_up_cost→cost, cost_density→cost+volume) produces correct values. EXPOSE_PURE and EXPOSE_COMPUTED classified correctly with no spurious modules. Backlog reports "0 functions to implement".
+- **Solar_battery**: `p_net_kw` synthetic module generates with `AUTO_IMPLEMENTED = True`, produces `8.0` from `p_net_mw=0.008`. Pipeline YAML confirms `annualized_om.p_net_kw` sourced from computed attribute module output (MODULE_OUTPUT, not ENTRY_POINT). Downstream chain validated: `annual_om_cost = 20.0 * 8.0 = 160.0`. Total impl count: 16 (15 CalcDefs + 1 computed attr).
+- **Phase 1 regression**: chain_spike (3 impls, all auto), CATF MFE (21 impls, no false-positive computed attribute extraction). Zero regressions.
 
 **Success Criteria**:
-- [ ] Solar_battery `p_net_kw` synthetic module generates correct output
-- [ ] Solar_battery downstream wiring correct (`AnnualizedOMCalc` receives `p_net_kw` from computed attribute module, not as entry point)
-- [ ] Probe fixture: all FORMULA computed attributes produce correct numerical values
-- [ ] Probe fixture: chain patterns (cost→area, marked_up_cost→cost, cost_density→cost+volume) resolve and execute correctly
-- [ ] All existing tests pass (167+ total, 0 xfail, 0 failures)
-- [ ] New E2E integration tests added and passing
-- [ ] Validation report documents per-pattern results with pass/fail and numerical accuracy
+- [x] Solar_battery `p_net_kw` synthetic module generates correct output
+- [x] Solar_battery downstream wiring correct (`AnnualizedOMCalc` receives `p_net_kw` from computed attribute module, not as entry point)
+- [x] Probe fixture: all FORMULA computed attributes produce correct numerical values
+- [x] Probe fixture: chain patterns (cost→area, marked_up_cost→cost, cost_density→cost+volume) resolve and execute correctly
+- [x] All existing tests pass (285 total, 0 xfail, 0 failures)
+- [x] New E2E integration tests added and passing (21 tests)
+- [x] Validation report documents per-pattern results with pass/fail and numerical accuracy
 
 **Deliverables**:
-- New or extended: `tests/integration/test_computed_attributes_e2e.py`
-- Modified (if needed): `tests/fixtures/attr_expr_probe/` (add ground truth data)
+- New: `tests/integration/test_computed_attributes_e2e.py` (21 tests across 3 test classes)
 - `.project/active/attr-expr-e2e/report.md` (per-pattern results table)
+- `.project/active/attr-expr-e2e/spec.md`
+- `.project/active/attr-expr-e2e/design.md`
+- `.project/active/attr-expr-e2e/plan.md`
 
 ---
 
@@ -514,7 +480,7 @@ This epic implements **Phase 2** from the research report's phased roadmap:
 | Item 1: Spike -- AST Discovery & Architecture | 1 day | None | Go/no-go on AST availability | **Complete (GO)** |
 | Item 2: Extraction & Data Models | ~1 day | Item 1 | Unit tests pass, mypy passes | **Complete** |
 | Item 3: Pipeline Integration | ~2-2.5 days | Item 2 | Existing tests pass + solar_battery computed attribute works | **Complete** |
-| Item 4: E2E Validation | ~1 day | Item 3 | Full validation pass on real models | Not Started |
+| Item 4: E2E Validation | ~1 day | Item 3 | Full validation pass on real models | **Complete** |
 | Item 5: Documentation & ADRs | ~0.5-1 day | Item 4 | ADRs drafted, epic closed | Not Started |
 
 **Critical path**: Items 2-5 are sequential. Item 1's GO gate has been passed.
@@ -541,4 +507,4 @@ This epic implements **Phase 2** from the research report's phased roadmap:
 ---
 
 **Last Updated**: 2026-02-09
-**Next Action**: Execute Item 4 -- E2E validation on real models
+**Next Action**: Execute Item 5 -- Documentation, ADRs, and epic closure
