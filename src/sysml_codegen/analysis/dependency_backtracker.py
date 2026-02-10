@@ -116,6 +116,7 @@ class DependencyBacktracker:
         calc_defs: list,
         design_attributes: dict[Path, list[DesignAttributeData]] | None = None,
         computed_attributes: list | None = None,
+        aggregation_data: list | None = None,
     ):
         """Initialize with all available usages, calc definitions, and design attributes.
 
@@ -124,6 +125,7 @@ class DependencyBacktracker:
             calc_defs: All CalculationDefinitionData from model
             design_attributes: Design attributes by file (for transitive binding resolution)
             computed_attributes: Computed attributes from Step 4.5 (used in Phase 2)
+            aggregation_data: ScopedAggregationData list from Step 4.7 (hierarchy pipeline)
         """
         self.all_usages = all_usages
         self.calc_defs = calc_defs
@@ -147,6 +149,38 @@ class DependencyBacktracker:
             if ca.owning_part_qualified_name:
                 sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
                 self._computed_attr_index[sysml_qn] = ca
+
+        # Build aggregation output index (maps symbolic refs -> channel names).
+        # Three key patterns per aggregation: dotted, bare, full instance dotted.
+        self._aggregation_output_index: dict[str, str] = {}
+        for agg in (aggregation_data or []):
+            channel = get_channel_name(
+                agg.module_eqn, agg.expression.attribute_name
+            )
+
+            instance_parts = agg.instance_path.split("__")
+            part_usage_name = (
+                instance_parts[-1]
+                if instance_parts
+                else agg.expression.owning_part_name
+            )
+
+            # Key 1: "part_usage_name.attribute_name" (dotted)
+            self._aggregation_output_index[
+                f"{part_usage_name}.{agg.expression.attribute_name}"
+            ] = channel
+
+            # Key 2: bare attribute_name (only if not already present)
+            if agg.expression.attribute_name not in self._aggregation_output_index:
+                self._aggregation_output_index[
+                    agg.expression.attribute_name
+                ] = channel
+
+            # Key 3: full instance path dotted
+            dotted_path = ".".join(
+                instance_parts + [agg.expression.attribute_name]
+            )
+            self._aggregation_output_index[dotted_path] = channel
 
         # Build lookup tables
         self._calc_def_by_name: dict[str, object] = {c.name: c for c in calc_defs}
@@ -417,6 +451,33 @@ class DependencyBacktracker:
                     )
                     self._trace_log.append(
                         f"    {param_name} -> COMPUTED_ATTR ({channel})"
+                    )
+                    continue  # No recursive tracing -- graph builder creates the module
+
+                # Check aggregation output index (same pattern as computed attr)
+                agg_channel = self._aggregation_output_index.get(
+                    binding.source_path
+                )
+                if agg_channel is None and "." in binding.source_path:
+                    bare = binding.source_path.split(".")[-1]
+                    agg_channel = self._aggregation_output_index.get(bare)
+                if agg_channel is None and "::" in binding.source_path:
+                    parts = binding.source_path.split("::")
+                    if len(parts) >= 2:
+                        dotted = f"{parts[-2]}.{parts[-1]}"
+                        agg_channel = self._aggregation_output_index.get(
+                            dotted
+                        )
+
+                if agg_channel is not None:
+                    self._binding_resolutions[mapping_key] = BindingResolution(
+                        resolution_type=BindingResolutionType.MODULE_OUTPUT,
+                        qualified_name=agg_channel,
+                        source_path=binding.source_path,
+                        is_transitive=False,
+                    )
+                    self._trace_log.append(
+                        f"    {param_name} -> AGGREGATION ({agg_channel})"
                     )
                     continue  # No recursive tracing -- graph builder creates the module
 

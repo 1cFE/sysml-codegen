@@ -37,6 +37,7 @@ __all__ = [
     "PartDefinitionData",
     "RedefinitionData",
     "RedefinitionType",
+    "ScopedAggregationData",
     "SingletonTerm",
     "SumTerm",
 ]
@@ -334,3 +335,26 @@ class HierarchyExtractionResult:
     multiplicities: list[MultiplicityData]
     aggregation_expressions: list[AggregationExpressionData]
     warnings: list[str]
+
+
+@dataclass
+class ScopedAggregationData:
+    """Aggregation expression scoped to a specific design instance.
+
+    Produced by Step 4.7 from PartDef-level AggregationExpressionData.
+    Each ScopedAggregationData maps a PartDef aggregation to one design
+    instance path. Uses composition to avoid field drift with
+    AggregationExpressionData.
+    """
+
+    expression: AggregationExpressionData  # All PartDef-level data (delegated)
+    instance_path: str  # Design scope (e.g., "solar_battery_plant__solar_array")
+
+    @property
+    def module_eqn(self) -> str:
+        """Module execution qualified name (ADR-003).
+
+        Single source of truth -- used by backtracker (D.2), graph builder
+        (E.2, E.4), and CLI generation (F.1).
+        """
+        return f"{self.instance_path}__{self.expression.attribute_name}"

@@ -263,7 +263,7 @@ def _create_virtual_calc_usage(
         parent_part_path=parent_part_path,
         qualified_name=qualified_name,
         is_template=False,
-        owning_part_def_qn=None,
+        owning_part_def_qn=template.owning_part_def_qn,
         raw_element=template.raw_element,
     )
 

@@ -120,7 +120,9 @@ def _module_to_context(
     """
     return {
         "name": (
-            f"source: computed_attribute ({module.module_type})"
+            f"source: aggregation ({module.module_type})"
+            if module.is_aggregation
+            else f"source: computed_attribute ({module.module_type})"
             if module.is_computed_attribute
             else module.module_type
         ),

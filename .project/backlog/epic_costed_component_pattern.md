@@ -321,9 +321,10 @@ part solar_battery_plant : 'Solar Battery Plant' {
 
 ### Item 4: Pipeline Integration -- Hierarchy-Aware Module Generation
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Integration
 **Effort**: ~2-2.5 days (spec 2h, design 3h, plan 2h, execute 9-12h)
+**Completed**: 2026-02-10
 **Dependencies**: Items 2 + 3 (template instantiation and redefinition/aggregation resolution must be built)
 
 **Objective**: Wire template CalcUsage instantiation, redefinition resolution, and aggregation expression compilation into the full extraction→resolution→generation pipeline, producing correct modules, auto-implementations, and pipeline YAML for the Costed Component pattern.
@@ -608,5 +609,5 @@ This epic implements **Phase 3** from the research report's phased roadmap:
 
 ---
 
-**Last Updated**: 2026-02-10 (Item 3 complete)
-**Next Action**: Item 4 -- Pipeline Integration: Hierarchy-Aware Module Generation
+**Last Updated**: 2026-02-10 (Item 4 complete)
+**Next Action**: Item 5 -- E2E Validation & Documentation

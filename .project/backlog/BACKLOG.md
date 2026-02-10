@@ -19,15 +19,13 @@ Prioritized list of epics and features.
 
 | Epic | Priority | Status | Started | Notes |
 |------|----------|--------|---------|-------|
-| [None yet] | - | - | - | - |
+| [COST-PATTERN] Costed Component Pattern Support | P1 | In Progress (4/5 items) | 2026-02-10 | Items 1-4 complete. Item 5 (E2E Validation & Documentation) remaining. |
 
 ---
 
 ## P1 - High Priority
 
-| Epic | Priority | Status | Notes |
-|------|----------|--------|-------|
-| [COST-PATTERN] Costed Component Pattern Support | P1 | Not Started | Phase 3: hierarchy, multiplicity, aggregation. Templates + `:>>` + `sum()` + parametric multiply. Solar_battery model as validation target. ~8-10.5 days. |
+*No epics -- COST-PATTERN moved to In Progress*
 
 ---
 

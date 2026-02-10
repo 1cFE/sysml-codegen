@@ -4,6 +4,30 @@ Historical record of completed work.
 
 ---
 
+## [2026-02-10] - [COST-PATTERN] Item 4: Pipeline Integration -- Hierarchy-Aware Module Generation
+
+**Type**: Epic Item (COST-PATTERN Item 4)
+**Duration**: ~1 day
+
+### Summary
+Integrated hierarchy-aware extraction (Items 2-3) into the full codegen pipeline. Virtual CalcUsage binding rewriting resolves `:>>` redefinitions (LITERAL, CHAIN, design deep-path) before the backtracker runs. Aggregation modules generate from `AggregationExpressionData` with symbolic channel resolution, multiplicity entry points, and `# source: aggregation` YAML comments. Extended CLI generation layer with aggregation module wrappers, auto-implementations, registry entries, and backlog reporting.
+
+### Deliverables
+- Pipeline Step 3.5: `_extract_hierarchy_and_rewrite_bindings()` in initialization.py
+- Pipeline Step 4.7: Aggregation expression storage on `PipelineContext`
+- Graph builder: `_build_aggregation_module()`, `_extend_output_catalog_with_aggregation()`, symbolic channel resolution
+- Backtracker: `_resolve_from_aggregation_output()` strategy (Strategy 7)
+- CLI: `_generate_aggregation_modules()`, `_generate_aggregation_stencils()`, registry and backlog extensions
+- Generation: `_module_to_context()` aggregation comment, `generate_registry_function()` and `generate_backlog_report()` aggregation params
+- 454 tests, 0 failures (141 new tests across 4 phases)
+
+### Lessons Learned
+- Computed attribute pattern provided clean template for aggregation CLI generation
+- `ScopedAggregationData` with `module_eqn` property cleanly handled ADR-003 naming
+- Deriving input names from `PipelineModule` (vs regex-parsing expressions) was the cleaner approach
+
+---
+
 ## [2026-02-09] - [ATTR-EXPR] Attribute Expression Capture
 
 **Type**: Epic

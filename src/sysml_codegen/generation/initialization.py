@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
+from agentic_mbse.sysml.types import BindingType
 
 from sysml_codegen.analysis.dependency_backtracker import (
     BacktrackingResult,
@@ -22,11 +23,15 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
-from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import sanitize_name, sysml_to_python_qualified_name
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
+    HierarchyExtractionResult,
+    RedefinitionData,
+    RedefinitionType,
+    ScopedAggregationData,
 )
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
@@ -97,6 +102,12 @@ class PipelineContext:
 
     # Computed attributes extracted from PartDef/PartUsage elements (Step 4.5).
     computed_attributes: list[ComputedAttributeData] = field(default_factory=list)
+
+    # Hierarchy data from extract_hierarchy_data() (Step 3.5).
+    hierarchy_data: HierarchyExtractionResult | None = None
+
+    # Aggregation expressions scoped to design instances (Step 4.7).
+    aggregation_expressions: list[ScopedAggregationData] = field(default_factory=list)
 
 
 def _remove_formula_from_design_attrs(
@@ -196,6 +207,146 @@ def _extract_and_filter_computed_attributes(
     return all_computed_attrs
 
 
+def _extract_hierarchy_and_rewrite_bindings(
+    model: Any,
+    calc_usages: list[CalcUsageData],
+) -> HierarchyExtractionResult:
+    """Step 3.5: Extract hierarchy data and rewrite virtual CalcUsage bindings.
+
+    Follows the _extract_and_filter_computed_attributes() pattern:
+    late import, side-effects on existing data, return result for downstream.
+    """
+    from sysml_codegen.extraction.hierarchy_resolver import extract_hierarchy_data
+
+    hierarchy_data = extract_hierarchy_data(model)
+
+    rewrite_count = _rewrite_virtual_bindings(calc_usages, hierarchy_data)
+
+    logger.info(
+        "Step 3.5: Hierarchy extraction complete — %d redefinitions, "
+        "%d design overrides, %d aggregation expressions, %d bindings rewritten",
+        len(hierarchy_data.redefinitions),
+        len(hierarchy_data.design_overrides),
+        len(hierarchy_data.aggregation_expressions),
+        rewrite_count,
+    )
+
+    return hierarchy_data
+
+
+def _rewrite_virtual_bindings(
+    calc_usages: list[CalcUsageData],
+    hierarchy_data: HierarchyExtractionResult,
+) -> int:
+    """Rewrite virtual CalcUsage bindings using :>> design overrides.
+
+    Mutates BindingInfo objects in-place. Returns count of rewritten bindings.
+
+    Phase 1: Build override index from design_overrides.
+    Phase 2: Match bare-name bindings on virtual CalcUsages to overrides and
+             rewrite to LITERAL.
+    """
+    # Phase 1: Build override index
+    # Key: (full_target_parent_path, leaf_attribute_name) -> RedefinitionData
+    override_index: dict[tuple[str, str], RedefinitionData] = {}
+    for override in hierarchy_data.design_overrides:
+        if override.is_deep_path and len(override.target_path) >= 2:
+            intermediate = "__".join(override.target_path[:-1])
+            full_parent = f"{override.owning_part_qn}__{intermediate}"
+            leaf_attr = override.target_path[-1]
+            override_index[(full_parent, leaf_attr)] = override
+        elif not override.is_deep_path:
+            full_parent = override.owning_part_qn
+            override_index[(full_parent, override.attribute_name)] = override
+
+    if not override_index:
+        return 0
+
+    # Phase 2: Rewrite bindings
+    rewrite_count = 0
+    for usage in calc_usages:
+        if usage.is_template:
+            continue
+
+        parts = usage.qualified_name.rsplit("__", 1)
+        if len(parts) < 2:
+            continue
+        parent_path = parts[0]
+
+        for binding in usage.bindings:
+            if binding.binding_type == BindingType.LITERAL:
+                continue
+            if not binding.source_path:
+                continue
+
+            # Only rewrite bare-name bindings (no dots, no ::)
+            if "." not in binding.source_path and "::" not in binding.source_path:
+                key = (parent_path, binding.source_path)
+                matched = override_index.get(key)
+
+                if matched and matched.redefinition_type == RedefinitionType.LITERAL:
+                    binding.binding_type = BindingType.LITERAL
+                    binding.literal_value = matched.literal_value
+                    binding.source_path = None
+                    rewrite_count += 1
+
+    return rewrite_count
+
+
+def _scope_aggregation_expressions(
+    hierarchy_data: HierarchyExtractionResult | None,
+    calc_usages: list[CalcUsageData],
+) -> list[ScopedAggregationData]:
+    """Scope PartDef-level aggregation expressions to design instances.
+
+    Returns one ScopedAggregationData per (AggregationExpressionData, instance_path)
+    pair found in the virtual CalcUsage list.
+    """
+    if not hierarchy_data or not hierarchy_data.aggregation_expressions:
+        return []
+
+    result: list[ScopedAggregationData] = []
+
+    # Build index: owning_part_def_qn -> list of virtual CalcUsage QNs
+    virtual_qns_by_partdef: dict[str, list[str]] = {}
+    for usage in calc_usages:
+        if usage.is_template or not usage.owning_part_def_qn:
+            continue
+        virtual_qns_by_partdef.setdefault(
+            usage.owning_part_def_qn, []
+        ).append(usage.qualified_name)
+
+    for agg_expr in hierarchy_data.aggregation_expressions:
+        instance_paths: set[str] = set()
+
+        # Strategy 1: Direct match -- virtual CalcUsages on the SAME PartDef
+        direct_qns = virtual_qns_by_partdef.get(agg_expr.owning_part_qn, [])
+        for qn in direct_qns:
+            parent = qn.rsplit("__", 1)[0]
+            instance_paths.add(parent)
+
+        # Strategy 2: Child match -- derive assembly instance path from
+        # child PartUsage virtual CalcUsage QN segments
+        if not instance_paths:
+            owning_name = sanitize_name(agg_expr.owning_part_name).lower()
+            for _partdef_qn, qns in virtual_qns_by_partdef.items():
+                for qn in qns:
+                    segments = qn.split("__")
+                    for i, seg in enumerate(segments):
+                        if seg.lower() == owning_name and i < len(segments) - 1:
+                            instance_paths.add("__".join(segments[: i + 1]))
+                            break
+
+        for path in sorted(instance_paths):
+            result.append(ScopedAggregationData(
+                expression=agg_expr,
+                instance_path=path,
+            ))
+
+    logger.info("Scoped %d aggregation module(s)", len(result))
+    return result
+
+
 def build_pipeline_context(
     model_paths: list[Path],
     targets: list[str] | None = None,
@@ -254,6 +405,11 @@ def build_pipeline_context(
         calc_defs=calc_defs,
     )
 
+    # Step 3.5: Extract hierarchy data and rewrite virtual CalcUsage bindings
+    hierarchy_data = _extract_hierarchy_and_rewrite_bindings(
+        extractor.model, calc_usages
+    )
+
     # Step 4: Extract design attributes for group derivation
     design_attrs = extract_design_attributes(extractor.model, design_path_filter=design_path_filter)
 
@@ -261,6 +417,9 @@ def build_pipeline_context(
     computed_attrs = _extract_and_filter_computed_attributes(
         extractor.model, calc_usages, design_attrs
     )
+
+    # Step 4.7: Scope aggregation expressions to design instances
+    scoped_agg_data = _scope_aggregation_expressions(hierarchy_data, calc_usages)
 
     # Step 5: Create parameter group deriver (uses filtered design_attrs)
     group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
@@ -271,6 +430,7 @@ def build_pipeline_context(
         calc_defs,
         design_attributes=design_attrs,
         computed_attributes=computed_attrs,
+        aggregation_data=scoped_agg_data,
     )
     backtracking_result = backtracker.find_required_modules(
         targets or [],
@@ -327,6 +487,8 @@ def build_pipeline_context(
         group_deriver=group_deriver,
         compilation_results=compilation_results,
         computed_attributes=computed_attrs,
+        aggregation_data=scoped_agg_data,
+        hierarchy_redefinitions=hierarchy_data.redefinitions if hierarchy_data else None,
     )
 
     return PipelineContext(
@@ -340,6 +502,8 @@ def build_pipeline_context(
         computation_graph=computation_graph,
         compilation_results=compilation_results,
         computed_attributes=computed_attrs,
+        hierarchy_data=hierarchy_data,
+        aggregation_expressions=scoped_agg_data,
     )
 
 

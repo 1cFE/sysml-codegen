@@ -22,6 +22,7 @@ from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
+    ScopedAggregationData,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.resolution.identifier_types import (
@@ -69,6 +70,7 @@ def generate_registry_function(
     entry_point_groups: list[ModelParameterGroup],
     exit_point_primitive_types: list[str] | None = None,
     computed_attributes: list[ComputedAttributeData] | None = None,
+    aggregation_data: list[ScopedAggregationData] | None = None,
 ) -> str:
     """Generate registry creation function.
 
@@ -117,6 +119,22 @@ def generate_registry_function(
                 })
                 import_module = f"{package_name}.modules.{python_path.import_path}"
                 imports.append(f"from {import_module} import {class_name}")
+
+    # Add aggregation modules
+    if aggregation_data:
+        for agg in aggregation_data:
+            sysml_qn = f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
+            sqn = SysMLQualifiedName(sysml_qn)
+            python_path = PythonModulePath.from_sysml(sqn)
+            module_type_full = derive_module_type(sysml_qn)
+            class_name = module_type_full.split(".")[-1]
+
+            all_modules.append({
+                "class_name": class_name,
+                "module_type": module_type_full,
+            })
+            import_module = f"{package_name}.modules.{python_path.import_path}"
+            imports.append(f"from {import_module} import {class_name}")
 
     context = {
         "function_name": f"create_{package_name}_registry",

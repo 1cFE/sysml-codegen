@@ -1,53 +1,57 @@
 # Current Work
 
-**Last Updated**: [DATE]
+**Last Updated**: 2026-02-10
 
 ---
 
 ## Active Work
 
-### [Item/Epic Name]
+### COST-PATTERN: Costed Component Pattern Support
 
-**Status**: [Not Started | In Progress | Blocked | In Review]
-**Epic**: [Link to epic in backlog/ if applicable]
-**Started**: [DATE]
+**Status**: In Progress (4/5 items complete)
+**Epic**: `.project/backlog/epic_costed_component_pattern.md`
+**Started**: 2026-02-10
 
-**Objective**: [One sentence describing what this accomplishes]
+**Objective**: Support hierarchy-aware codegen for costed component patterns (templates, `:>>` redefinitions, `sum()` aggregation, parametric multiply).
 
-**Current Phase**: [Which phase of the plan]
+**Current Phase**: Item 4 complete. Item 5 (E2E Validation & Documentation) is next.
 
-**Tasks**:
-- [ ] Task 1
-- [ ] Task 2
-- [ ] Task 3
+**Completed Items**:
+- [x] Item 1: Bug fixes from E2E validation (6 bugs fixed)
+- [x] Item 2: Template CalcUsage detection & virtual instantiation
+- [x] Item 3: Redefinition extraction, multiplicity, & aggregation
+- [x] Item 4: Pipeline integration -- hierarchy-aware module generation
 
-**Blockers**: [None | Description of blockers]
+**Remaining**:
+- [ ] Item 5: E2E Validation & Documentation
 
-**Location**: `.project/active/[item_name]/`
+**Blockers**: None
+
+**Location**: `.project/active/hierarchy-pipeline/`
 
 ---
 
 ## Recently Completed
 
-### [DATE]: [Item Name]
-- Brief summary of what was accomplished
-- Key deliverables produced
-- Any notable learnings
+### 2026-02-10: COST-PATTERN Item 4 -- Pipeline Integration
+- Integrated hierarchy extraction into full codegen pipeline (4 phases)
+- Virtual CalcUsage binding rewriting, aggregation module generation, CLI extensions
+- 454 tests, 0 failures, 141 new tests
+
+### 2026-02-10: COST-PATTERN Items 1-3
+- Bug fixes, template detection, redefinition extraction
+- Foundation for hierarchy-aware codegen
+
+### 2026-02-09: [ATTR-EXPR] Attribute Expression Capture
+- FORMULA computed attributes generate synthetic pipeline modules
+- 5-way classification scheme, ADR-004/005
 
 ---
 
 ## Up Next
 
-1. [Next priority item from backlog]
-2. [Following item]
-3. [Future consideration]
+1. COST-PATTERN Item 5: E2E Validation & Documentation
+2. Close COST-PATTERN epic
+3. Consider next epic from backlog
 
 ---
-
-## Session Notes
-
-### [DATE]
-- What was worked on
-- Progress made
-- Decisions made
-- Questions or blockers encountered

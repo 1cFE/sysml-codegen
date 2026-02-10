@@ -518,13 +518,13 @@ class TestVirtualCalcUsageGeneration:
         assert virtual.unbound_params == ["cost_per_watt"]
 
     def test_virtual_calc_is_not_template(self):
-        """Virtual instance has is_template=False."""
+        """Virtual instance has is_template=False but preserves owning_part_def_qn."""
         template = self._make_template()
         virtual = _create_virtual_calc_usage(
             template, "Pkg__plant__array__module"
         )
         assert virtual.is_template is False
-        assert virtual.owning_part_def_qn is None
+        assert virtual.owning_part_def_qn == template.owning_part_def_qn
 
     def test_virtual_calc_parent_part_path(self):
         """parent_part_path is dot-separated from instantiation path segments."""

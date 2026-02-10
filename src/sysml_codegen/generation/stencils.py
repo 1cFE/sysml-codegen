@@ -22,6 +22,7 @@ from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
+    ScopedAggregationData,
 )
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
@@ -344,6 +345,7 @@ def generate_backlog_report(
     package_name: str = "generated_code",
     compilation_results: dict[str, CalcDefCompilationResult] | None = None,
     computed_attributes: list[ComputedAttributeData] | None = None,
+    aggregation_data: list[ScopedAggregationData] | None = None,
 ) -> str:
     """Generate markdown report of implementation backlog.
 
@@ -446,6 +448,19 @@ def generate_backlog_report(
             lines.extend([
                 "",
                 f"**{auto_count} computed attribute module(s) auto-implemented** "
+                "(not included in manual count above).",
+            ])
+
+    # Add aggregation auto-implementation summary
+    if aggregation_data:
+        agg_auto_count = sum(
+            1 for agg in aggregation_data
+            if not agg.expression.has_unsupported_nodes
+        )
+        if agg_auto_count > 0:
+            lines.extend([
+                "",
+                f"**{agg_auto_count} aggregation module(s) auto-implemented** "
                 "(not included in manual count above).",
             ])
 
