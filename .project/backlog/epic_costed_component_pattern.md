@@ -46,7 +46,7 @@ Enable codegen to natively support the **Costed Component pattern**: PartDefinit
 - [ ] `:>>` redefinition chains resolve literal values (`:>> pv_module.wattage = 400.0` → ENTRY_POINT)
 - [ ] `:>>` redefinition chains resolve calc output aliases (`:>> capital_cost = cost_model.total_cost` → MODULE_OUTPUT wiring)
 - [ ] Multiplicity handled via parametric multiply (`sum(pv_module.capital_cost)` → `module_count * pv_module__cost_model.total_cost`)
-- [ ] All existing tests pass with zero regressions (285+ baseline from Phase 2)
+- [ ] All existing tests pass with zero regressions (313 baseline after Phase 2 + bug fixes)
 - [ ] Template detection distinguishes CalcUsages in PartDefs (templates) from CalcUsages in design PartUsages (concrete)
 - [ ] Deep hierarchy module naming follows ADR-003 (`solar_battery_plant__solar_array__pv_module__cost_model`)
 
@@ -147,7 +147,7 @@ part solar_battery_plant : 'Solar Battery Plant' {
 
 ### Item 2: Template CalcUsage Detection & Virtual Instantiation
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Implementation
 **Effort**: ~1.5-2 days (spec 1h, design 2h, plan 1h, execute 6-8h)
 **Dependencies**: Item 1 (needs validated AST traversal patterns)
@@ -159,6 +159,7 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - ✅ `_get_parent_part_path()` walks AST owner chain and collects PartUsage names
 - ✅ `_extract_single_usage()` extracts data for each CalcUsage
 - ✅ Expression compiler auto-implements compilable CalcDefs (Phase 1)
+- ✅ `sanitize_name()` handles special chars (`&`, `$`, `@`, `-`) robustly (Bug 6 fix) -- use canonical `sanitize_name()` from `core/qualified_names.py` for all name sanitization (duplicate in `extractor.py` was removed)
 - ❌ No detection of whether CalcUsage owner is PartDefinition (template) vs PartUsage (concrete)
 - ❌ No `is_template` or `owning_part_def_qn` fields on CalcUsageData
 - ❌ No function to find PartUsages of a given PartDefinition
@@ -208,7 +209,7 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - [ ] Virtual CalcUsages generated per PartUsage instantiation with correct qualified names
 - [ ] Internal bindings (`in wattage = wattage`) reference parent PartDef attributes
 - [ ] `extract_calculation_usages()` returns expanded list (templates replaced by concrete instances)
-- [ ] All existing tests pass with zero regressions
+- [ ] All existing tests pass with zero regressions (313 baseline)
 - [ ] `uv run mypy` passes on modified code
 
 **Deliverables**:
@@ -234,6 +235,8 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - ✅ Template CalcUsages detected and virtual instances generated (Item 2)
 - ✅ Expression compiler handles `+`, `-`, `*`, `/`, `**` operators (Phase 1)
 - ✅ Computed attribute extraction handles FORMULA and EXPOSE_PURE (Phase 2)
+- ✅ Backtracker has `::` qualified name handling infrastructure (Bug 2 fix): `_computed_attr_index` keyed by SysML QN, `_resolve_binding_to_usage()` Strategy 5 normalizes `::` → dotted format, `_determine_output_attr()` normalizes `::` paths. Deep-path `:>>` resolution can build on this foundation.
+- ✅ Backtracker has self-referential binding guard (Bug 2 fix): prevents self-loops when `::` qualified names resolve to the same usage. Relevant for `:>>` chains where redefined attributes might reference themselves through a definition chain.
 - ❌ `:>>` redefinition chains not resolved (neither literal nor chain)
 - ❌ Multiplicity (`[count]`) not detected on PartUsages
 - ❌ `sum()` classified as UNRESOLVABLE by expression compiler (InvocationExpression)
@@ -301,7 +304,7 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - [ ] `sum(array.attr)` transformed to `count * attr` (parametric multiply)
 - [ ] `pv_module.capital_cost` resolved through `:>> capital_cost = cost_model.total_cost` chain
 - [ ] `AggregationExpressionData` correctly models solar_array.capital_cost aggregation
-- [ ] All existing tests pass with zero regressions
+- [ ] All existing tests pass with zero regressions (313 baseline)
 - [ ] `uv run mypy` passes on modified code
 
 **Deliverables**:
@@ -329,9 +332,13 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - ✅ Template CalcUsages detected and virtual instances generated (Item 2)
 - ✅ `:>>` redefinitions resolved, multiplicity detected, `sum()` transformed (Item 3)
 - ✅ `AggregationExpressionData` models assembly aggregation expressions (Item 3)
-- ✅ Pipeline has 7 steps + Step 4.5 (computed attributes) + Step 6.5 (expression compilation)
-- ✅ Backtracker resolves MODULE_OUTPUT and ENTRY_POINT bindings
-- ✅ Graph builder generates PipelineModules from CalcUsageData and ComputedAttributeData
+- ✅ Pipeline has 7 steps + Step 4.5 (computed attributes) + Step 6.5 (expression compilation) + Step 6.6 (param_groups rebuild)
+- ✅ Backtracker resolves MODULE_OUTPUT and ENTRY_POINT bindings, including `::` qualified name normalization (Bug 2 fix)
+- ✅ Graph builder generates PipelineModules from CalcUsageData and ComputedAttributeData; `_build_pipeline_module()` and `_build_computed_attr_module()` no longer take `param_groups` parameter (Bug 1 fix refactored this)
+- ✅ Step 6.6 rebuilds `param_groups` after ALL modules built (Bug 1 fix) — ensures late-discovered entry points (from FORMULA modules and, in future, aggregation modules) are included in schemas
+- ✅ `_convert_derived_groups()` extracted as shared helper for param_group rebuilding (Bug 1 fix)
+- ✅ `_ensure_package_init_files()` helper creates `__init__.py` in all intermediate directories (Bug 7 fix) — deep hierarchy module paths will get correct package structure automatically
+- ✅ Smart-regen upgrades stubs to auto-impls when FULLY_COMPILABLE (Bug 5 fix) — previous partial codegen stubs will be automatically upgraded
 - ❌ Pipeline doesn't process template CalcUsages (virtual instances not wired in)
 - ❌ Backtracker doesn't resolve cross-hierarchy bindings (`:>>` chains through PartUsage→PartDef)
 - ❌ Graph builder doesn't generate modules from `AggregationExpressionData`
@@ -351,13 +358,14 @@ part solar_battery_plant : 'Solar Battery Plant' {
    - Extend `_resolve_binding_to_usage()` for deep-path resolution:
      - When a binding references `pv_module.capital_cost`, resolve through the `:>>` chain to find the MODULE_OUTPUT channel from `pv_module__cost_model`
      - Support arbitrary nesting depth (not just 2-level dotted paths)
+     - **Build on existing `::` normalization infrastructure** (Bug 2 fix): Strategy 5 already normalizes `Package::Part::attr` → `Part.attr` for design attr transitive resolution. Deep-path hierarchy resolution extends this pattern with additional strategies for PartUsage→PartDef→child traversal.
    - Accept `AggregationExpressionData` for aggregation module dependency resolution:
      - Each `input_channel` on the aggregation expression is a dependency on an upstream module
      - Each `entry_point` (multiplicity count) is an ENTRY_POINT
    - Build extended binding index that includes inherited attributes from PartDefs via `:>>`
 
 3. **Graph builder** (`resolution/graph_builder.py`):
-   - Virtual CalcUsages should generate PipelineModules via existing `_build_pipeline_module()` -- verify qualified names, module types, and input/output wiring
+   - Virtual CalcUsages should generate PipelineModules via existing `_build_pipeline_module()` -- verify qualified names, module types, and input/output wiring. **Note**: `_build_pipeline_module()` no longer takes `param_groups` (removed in Bug 1 fix); entry points are added to shared `entry_points` dict and Step 6.6 rebuilds param_groups after all modules are built.
    - New: `_build_aggregation_module(agg_expr: AggregationExpressionData) -> PipelineModule` -- generates a synthetic module for each assembly aggregation expression:
      - Module name: `{assembly_part_qn}__{attribute_name}` (e.g., `solar_array__capital_cost`)
      - Module type: PascalCase (e.g., `SolarArrayCapitalCost`)
@@ -366,14 +374,18 @@ part solar_battery_plant : 'Solar Battery Plant' {
      - `is_computed_attribute = True` (reuse Phase 2 marker) or new `is_aggregation = True`
      - `compilability = FULLY_COMPILABLE`
      - Compiled expression: the parametric-multiply-transformed expression string
+     - **Do NOT pass `param_groups`** -- follow the Bug 1 fix pattern where modules add entry points to the shared dict and Step 6.6 handles param_group rebuilding
    - Topological ordering: aggregation modules after their dependency modules (child cost calcs) and before their consumers (parent aggregation or system-level CalcUsages)
+   - **Verify Step 6.6** picks up aggregation module entry points (multiplicity counts) -- the existing rebuild logic should work since it re-derives from the shared `entry_points` dict, but must be verified
 
-4. **Generation layer** (`generation/stencils.py`, templates):
+4. **Generation layer** (`cli/__init__.py`, templates):
    - Virtual CalcUsage modules: reuse Phase 1 auto-impl template (CalcDef expressions are already compilable)
    - Aggregation modules: reuse Phase 2 computed attribute auto-impl template (aggregation expression compiles to Python)
    - Include all modules in pipeline YAML, module registry, `IMPLEMENTATION_BACKLOG.md`
    - Aggregation modules marked with `# source: aggregation` comment in YAML for debuggability
-   - Verify preservation.py interaction for all new module types
+   - Deep hierarchy directory creation handled by existing `_ensure_package_init_files()` (Bug 7 fix) -- no new directory logic needed
+   - Smart-regen stub-to-auto-impl upgrade handled by existing Bug 5 fix logic -- stubs from previous runs will be upgraded automatically
+   - FORMULA module input types already use `float` (Bug 3 fix) -- aggregation module inputs should follow same convention
 
 5. **Entry point handling**:
    - Resolved literal `:>>` redefinitions (e.g., `wattage = 400.0`) become DESIGN_ATTRIBUTE entry points
@@ -396,7 +408,7 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - [ ] Auto-implementations generated for all aggregation modules
 - [ ] Entry points correctly classified (DESIGN_ATTRIBUTE for `:>>` literals, LIBRARY_DEFAULT for defaults)
 - [ ] Module registry includes all template and aggregation modules
-- [ ] All existing tests pass with zero regressions
+- [ ] All existing tests pass with zero regressions (313 baseline)
 - [ ] Integration tests for: simple template, deep hierarchy, aggregation with sum()
 
 **Deliverables**:
@@ -404,7 +416,7 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - Modified: `src/sysml_codegen/analysis/dependency_backtracker.py` (deep-path resolution, aggregation awareness)
 - Modified: `src/sysml_codegen/resolution/graph_builder.py` (aggregation module generation)
 - Modified: `src/sysml_codegen/resolution/models.py` (if new fields needed on PipelineModule)
-- Modified: `src/sysml_codegen/generation/stencils.py` (if template adjustments needed)
+- Modified: `src/sysml_codegen/cli/__init__.py` (if template/generation adjustments needed)
 - New: `tests/integration/test_hierarchy_pipeline.py`
 - `.project/active/hierarchy-pipeline/spec.md`
 - `.project/active/hierarchy-pipeline/design.md`
@@ -453,7 +465,8 @@ part solar_battery_plant : 'Solar Battery Plant' {
    - chain_spike model: all 3 CalcDefs still auto-implemented
    - solar_battery system-level CalcUsages: still correct (15 Phase 1 auto-impls)
    - CATF MFE: 19 auto-impls, 2 manual_required
-   - Computed attribute tests: all 285+ tests pass
+   - All 313+ tests pass (baseline after Phase 2 + bug fixes)
+   - TEAx primitive type support is complete (Bug 4 fix in TEAx) -- multi-output CalcUsage `float` channels are serializable without workarounds
 
 3. **ADR-006: Part Hierarchy and Template Instantiation**:
    - Captures: Template detection strategy, virtual CalcUsage generation, hierarchy-aware naming, `part redefines` handling
@@ -506,6 +519,8 @@ part solar_battery_plant : 'Solar Battery Plant' {
 **Internal**:
 - **Epic EXPR-CODEGEN (Phase 1)**: Complete. Provides expression compiler, auto-implementation templates, compilability classification, Step 6.5 pipeline integration.
 - **Epic ATTR-EXPR (Phase 2)**: Complete. Provides computed attribute extraction (Step 4.5), FORMULA classification, synthetic module generation, backtracker computed attribute awareness.
+- **Bug fixes (Phases 1+2)**: Complete (commit `93f0a55`). Fixed 6 codegen bugs: FORMULA entry point omission, FORMULA/EXPOSE backtracker wiring (including `::` QN infrastructure), FORMULA module input types, smart-regen stub upgrade, special char sanitization, intermediate `__init__.py` generation. These fixes provide reusable infrastructure for Items 2-4 (see per-item Current State sections).
+- **TEAx ExitPoint primitive types**: Complete (TEAx commit `b2f91f2`). Fixed Bug 4 -- bare `float`/`int`/`str`/`bool` are now first-class ExitPoint and EntryPoint types. E2E validation (Item 5) will not need workarounds for multi-output channel serialization.
 - Research: `.project/research/20260202-180000_expression-compilation-and-inline-math-strategy.md` (Phase 3 roadmap)
 - Research: `.project/research/20260109-205122_cost-modeling-codegen-changes.md` (Costed Component gap analysis)
 
@@ -530,6 +545,7 @@ All items are sequential. Item 1's go/no-go gate passed (GO) -- subsequent items
 | SysIDE doesn't expose multiplicity on PartUsages | ~~Low~~ | ~~Medium~~ | ~~Item 1 spike validates~~ | **RESOLVED** (Item 1): `MultiplicityRange` with `cached_lower_bound` and `upper_bound` expression chain. Note: `cached_upper_bound` is N+1 (exclusive). |
 | `sum()` InvocationExpression structure is opaque | ~~Medium~~ | ~~Medium~~ | ~~Item 1 spike validates~~ | **RESOLVED** (Item 1): `InvocationExpression` with `function.name='sum'`, single `FeatureChainExpression` operand. |
 | Deep-path `:>>` chains have ambiguous resolution | ~~Medium~~ | ~~High~~ | ~~Test with real models in spike~~ | **RESOLVED** (Item 1): Fully structured via `redefined_feature.chaining_features`. No heuristic needed. |
+| Phase 1+2 bugs compound in Phase 3 | ~~High~~ | ~~High~~ | ~~Must fix before proceeding~~ | **RESOLVED**: All 7 bugs fixed (commit `93f0a55` + TEAx `b2f91f2`). Fixes provide reusable infrastructure: `::` QN handling, Step 6.6 param_groups rebuild, `_ensure_package_init_files()`, smart-regen stub upgrade, robust `sanitize_name()`. |
 | Parametric multiply assumption fails (non-uniform arrays) | Low | Low | Solar_battery arrays ARE uniform. Document assumption in ADR-007. Add warning if non-uniform detected (fall back to Approach E). | Open |
 | Virtual CalcUsage qualified names become very long | Low | Low | ADR-003 already uses `__` separator. Long names are valid Python identifiers. | Open |
 | Performance impact from template expansion | Low | Low | Solar_battery has ~10 template CalcUsages × ~1-3 instantiations each. O(n*m) where n and m are small. | Open |
@@ -592,5 +608,5 @@ This epic implements **Phase 3** from the research report's phased roadmap:
 
 ---
 
-**Last Updated**: 2026-02-10
-**Next Action**: Item 2 -- Template CalcUsage Detection & Virtual Instantiation
+**Last Updated**: 2026-02-10 (Item 2 complete)
+**Next Action**: Item 3 -- Redefinition Resolution, Multiplicity, & Aggregation Expressions
