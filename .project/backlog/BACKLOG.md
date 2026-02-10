@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-02-09
+**Last Updated**: 2026-02-10
 
 ---
 
@@ -25,7 +25,9 @@ Prioritized list of epics and features.
 
 ## P1 - High Priority
 
-*No epics yet*
+| Epic | Priority | Status | Notes |
+|------|----------|--------|-------|
+| [COST-PATTERN] Costed Component Pattern Support | P1 | Not Started | Phase 3: hierarchy, multiplicity, aggregation. Templates + `:>>` + `sum()` + parametric multiply. Solar_battery model as validation target. ~8-10.5 days. |
 
 ---
 
@@ -52,7 +54,7 @@ Prioritized list of epics and features.
 
 ## Ideas / Future Considerations
 
-- Phase 3: Hierarchy, multiplicity, aggregation (native nested CalcUsage-in-PartDef patterns)
 - InvocationExpression / function call support (sqrt, min, max whitelist)
 - SelectExpression / if-then-else support (piecewise functions)
 - EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
+- Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
