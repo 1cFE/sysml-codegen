@@ -224,9 +224,10 @@ part solar_battery_plant : 'Solar Battery Plant' {
 
 ### Item 3: Redefinition Resolution, Multiplicity, & Aggregation Expressions
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Implementation
 **Effort**: ~1.5-2 days (spec 1h, design 2h, plan 1h, execute 6-8h)
+**Completed**: 2026-02-10
 **Dependencies**: Item 2 (needs template detection and virtual CalcUsage infrastructure)
 
 **Objective**: Resolve `:>>` redefinition chains to bind design parameters through the hierarchy, detect multiplicity on PartUsages, handle `sum()` aggregation via parametric multiply, and compile assembly aggregation expressions into synthetic module data.
@@ -308,11 +309,10 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - [ ] `uv run mypy` passes on modified code
 
 **Deliverables**:
-- Modified: `src/sysml_codegen/extraction/usage_extractor.py` (redefinition resolution)
-- New or modified: `src/sysml_codegen/extraction/data_models.py` (AggregationExpressionData, multiplicity)
-- New: `src/sysml_codegen/extraction/hierarchy_resolver.py` (or integrated into existing modules)
-- New: `tests/unit/test_redefinition_resolution.py`
-- New: `tests/unit/test_aggregation_expressions.py`
+- Modified: `src/sysml_codegen/extraction/data_models.py` (RedefinitionType, RedefinitionData, MultiplicityData, SumTerm, SingletonTerm, LocalTerm, AggregationExpressionData, HierarchyExtractionResult)
+- Modified: `src/sysml_codegen/extraction/expression_utils.py` (InvocationExpression handling in reconstruct_expression)
+- New: `src/sysml_codegen/extraction/hierarchy_resolver.py` (extract_redefinitions, extract_design_overrides, extract_multiplicities, build_aggregation_expression, extract_hierarchy_data)
+- New: `tests/unit/test_hierarchy_resolver.py` (42 tests)
 - `.project/active/hierarchy-resolution/spec.md`
 - `.project/active/hierarchy-resolution/design.md`
 - `.project/active/hierarchy-resolution/plan.md`
@@ -608,5 +608,5 @@ This epic implements **Phase 3** from the research report's phased roadmap:
 
 ---
 
-**Last Updated**: 2026-02-10 (Item 2 complete)
-**Next Action**: Item 3 -- Redefinition Resolution, Multiplicity, & Aggregation Expressions
+**Last Updated**: 2026-02-10 (Item 3 complete)
+**Next Action**: Item 4 -- Pipeline Integration: Hierarchy-Aware Module Generation

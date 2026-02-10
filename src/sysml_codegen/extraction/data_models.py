@@ -23,6 +23,7 @@ from agentic_mbse.sysml.types import BindingType, ExpressionRef
 from .expression_compiler import Compilability
 
 __all__ = [
+    "AggregationExpressionData",
     "AttributeInfo",
     "BaseAttributeInfo",  # Export base class for type checking
     "BindingType",  # Re-export from agentic-mbse
@@ -30,7 +31,14 @@ __all__ = [
     "ComputedAttributeClassification",
     "ComputedAttributeData",
     "ConstraintInfo",
+    "HierarchyExtractionResult",
+    "LocalTerm",
+    "MultiplicityData",
     "PartDefinitionData",
+    "RedefinitionData",
+    "RedefinitionType",
+    "SingletonTerm",
+    "SumTerm",
 ]
 
 
@@ -205,3 +213,124 @@ class ComputedAttributeData:
     compiled_expression: str | None = None
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Hierarchy Resolution Data Models (Item 3 — COST-PATTERN)
+# ---------------------------------------------------------------------------
+
+
+class RedefinitionType(str, Enum):
+    """Classification of a :>> redefinition's RHS expression."""
+
+    LITERAL = "literal"  # :>> wattage = 400.0
+    CHAIN = "chain"  # :>> capital_cost = cost_model.total_cost
+    EXPRESSION = "expression"  # :>> capital_cost = sum(pv_module.capital_cost) + ...
+
+
+@dataclass
+class RedefinitionData:
+    """Extracted data for a single :>> redefinition on a PartDef or design PartUsage.
+
+    Represents the resolution of one ReferenceUsage with owned_redefinitions.
+    """
+
+    owning_part_qn: str  # QN of the PartDef/PartUsage this :>> lives on
+    attribute_name: str  # The redefined attribute (e.g., "capital_cost")
+    redefinition_type: RedefinitionType
+    # For LITERAL:
+    literal_value: float | int | str | bool | None = None
+    # For CHAIN:
+    source_path: str | None = None  # e.g., "cost_model.total_cost"
+    # For EXPRESSION:
+    expression_ast: Any = None  # Raw syside AST for downstream transformation
+    expression_text: str = ""  # Display text from reconstruct_expression()
+    # Deep-path info (for design-level overrides):
+    target_path: list[str] = field(default_factory=list)
+    # e.g., ["pv_module", "wattage"] for :>> pv_module.wattage = 400.0
+    is_deep_path: bool = False
+    source_file: Path = field(default_factory=lambda: Path("unknown"))
+    source_line: int = 0
+
+
+@dataclass
+class MultiplicityData:
+    """Multiplicity information for a PartUsage within a PartDef.
+
+    count is defensively cast to int() at extraction time because
+    cached_lower_bound may return a float or other numeric type from syside.
+    """
+
+    part_usage_name: str  # e.g., "pv_module"
+    owning_part_def_qn: str  # QN of the owning PartDef (e.g., "Lib__Solar_Array")
+    count: int | None  # Resolved literal count (e.g., 20), or None if unresolvable
+    count_attribute_name: str | None  # Name of the multiplicity attribute (e.g., "module_count")
+    default_value: int | None  # Default value of the count attribute
+
+
+@dataclass
+class SumTerm:
+    """One sum() operand in an aggregation expression."""
+
+    part_usage_name: str  # e.g., "pv_module"
+    attribute_name: str  # e.g., "capital_cost"
+    multiplicity_attr: str | None  # e.g., "module_count" (None if singleton)
+    multiplicity_count: int | None  # e.g., 20
+
+
+@dataclass
+class SingletonTerm:
+    """A non-sum child attribute reference in an aggregation expression."""
+
+    source_path: str  # e.g., "allocation_model.total_allocation"
+
+
+@dataclass
+class LocalTerm:
+    """A PartDef-local attribute reference in an aggregation expression."""
+
+    attribute_name: str  # e.g., "misc_hardware_cost"
+
+
+@dataclass
+class AggregationExpressionData:
+    """Extracted and transformed aggregation expression from a PartDef :>> attribute.
+
+    Produced by hierarchy_resolver after scanning :>> EXPRESSION redefinitions
+    that contain sum() calls. The expression has been decomposed into typed terms
+    and the sum() calls transformed to parametric multiply.
+
+    compilability is set to UNKNOWN at extraction time because the transformed
+    expression still contains symbolic channel references (e.g., "pv_module.capital_cost")
+    that Item 4 must resolve to actual pipeline channels.
+
+    has_unsupported_nodes signals whether the AST walk encountered any node types
+    it could not process. If True, Item 4 should expect MANUAL_REQUIRED after
+    channel resolution.
+    """
+
+    owning_part_qn: str  # Assembly PartDef QN (e.g., "Lib__Solar_Array")
+    owning_part_name: str  # Short name (e.g., "Solar_Array")
+    attribute_name: str  # Redefined attribute (e.g., "capital_cost")
+    raw_expression_text: str  # Before transformation
+    transformed_expression: str  # After parametric multiply (symbolic channel refs)
+    sum_terms: list[SumTerm]
+    singleton_terms: list[SingletonTerm]
+    local_terms: list[LocalTerm]
+    input_channels: list[str]  # All upstream channel references (for Item 4 wiring)
+    entry_points: list[str]  # Multiplicity count attrs → pipeline entry points
+    compilability: Compilability = Compilability.UNKNOWN
+    has_unsupported_nodes: bool = False
+    source_file: Path = field(default_factory=lambda: Path("unknown"))
+    source_line: int = 0
+
+
+@dataclass
+class HierarchyExtractionResult:
+    """Complete extraction result for hierarchy patterns."""
+
+    redefinitions: list[RedefinitionData]
+    design_overrides: list[RedefinitionData]
+    multiplicities: list[MultiplicityData]
+    aggregation_expressions: list[AggregationExpressionData]
+    warnings: list[str]

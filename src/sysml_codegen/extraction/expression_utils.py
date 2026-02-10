@@ -44,6 +44,13 @@ def reconstruct_expression(expr_node: Any) -> str:
     if SysideAdapter.is_instance(expr_node, "OperatorExpression"):
         return reconstruct_operator_expression(expr_node)
 
+    if hasattr(expr_node, "function") and hasattr(expr_node.function, "name"):
+        # InvocationExpression (e.g., sum(), sqrt())
+        func_name = expr_node.function.name
+        operands = list(getattr(expr_node, "operands", []))
+        args = ", ".join(reconstruct_expression(op) for op in operands)
+        return f"{func_name}({args})"
+
     if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"):
         return extract_feature_reference_name(expr_node)
 
@@ -154,10 +161,37 @@ def extract_feature_chain_name(expr_node: Any) -> str:
     return str(expr_node)
 
 
+def is_literal_expression(expr: Any) -> bool:
+    """Check if a syside AST node is a literal value expression.
+
+    Handles all five SysML literal types: LiteralInteger, LiteralRational,
+    LiteralReal, LiteralBoolean, LiteralString.
+    """
+    return (
+        SysideAdapter.is_instance(expr, "LiteralInteger")
+        or SysideAdapter.is_instance(expr, "LiteralRational")
+        or SysideAdapter.is_instance(expr, "LiteralReal")
+        or SysideAdapter.is_instance(expr, "LiteralBoolean")
+        or SysideAdapter.is_instance(expr, "LiteralString")
+    )
+
+
+def extract_literal_value(expr: Any) -> float | int | str | bool | None:
+    """Extract the Python value from a literal AST node.
+
+    Returns None if the node has no ``value`` attribute.
+    """
+    if hasattr(expr, "value"):
+        return expr.value
+    return None
+
+
 __all__ = [
     "OPERATOR_MAP",
     "reconstruct_expression",
     "reconstruct_operator_expression",
     "extract_feature_reference_name",
     "extract_feature_chain_name",
+    "is_literal_expression",
+    "extract_literal_value",
 ]

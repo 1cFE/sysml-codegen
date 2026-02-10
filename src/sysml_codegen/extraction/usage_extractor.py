@@ -29,6 +29,10 @@ from sysml_codegen.core.qualified_names import (
     sanitize_name,
 )
 from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.extraction.expression_utils import (
+    is_literal_expression as _is_literal_expression,
+    extract_literal_value as _extract_literal_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -656,18 +660,3 @@ def _get_parent_part_path(elem: Any) -> str:
     return ".".join(parts)
 
 
-def _is_literal_expression(expr: Any) -> bool:
-    """Check if expression is a literal value."""
-    return (
-        SysideAdapter.is_instance(expr, "LiteralInteger")
-        or SysideAdapter.is_instance(expr, "LiteralRational")
-        or SysideAdapter.is_instance(expr, "LiteralBoolean")
-        or SysideAdapter.is_instance(expr, "LiteralString")
-    )
-
-
-def _extract_literal_value(expr: Any) -> float | int | str | bool | None:
-    """Extract value from literal expression."""
-    if hasattr(expr, "value"):
-        return expr.value
-    return None
