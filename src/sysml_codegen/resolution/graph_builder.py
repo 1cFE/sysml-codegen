@@ -142,7 +142,6 @@ def build_computation_graph(
             calc_def=calc_def,
             output_catalog=output_catalog,
             entry_points=entry_points,
-            param_groups=param_groups,
             execution_order=idx,
             binding_resolutions=result.binding_resolutions,
         )
@@ -162,9 +161,24 @@ def build_computation_graph(
             ):
                 module = _build_computed_attr_module(
                     ca, attr_resolution_map, entry_points,
-                    param_groups, design_attrs, group_deriver,
+                    design_attrs, group_deriver,
                 )
                 modules.append(module)
+
+    # Step 6.6: Rebuild param_groups with ALL entry points
+    # FORMULA modules (Step 6.5) may have added new entry points to the
+    # entry_points dict. Rebuild param_groups to include them.
+    # param_groups is NOT used during module building (Steps 6 and 6.5 use
+    # entry_points dict and group_deriver.classify() directly), so this is safe.
+    all_ep_names = set(entry_points.keys())
+    raw_groups = group_deriver.derive_groups()
+    for group in raw_groups:
+        group.parameters = [
+            p for p in group.parameters
+            if p.name in all_ep_names
+        ]
+    filtered_groups = [g for g in raw_groups if g.parameters]
+    param_groups = _convert_derived_groups(filtered_groups, entry_points)
 
     # Step 7: Unified topological sort across ALL modules
     modules = _unified_topological_sort(modules)
@@ -368,7 +382,24 @@ def _group_entry_points_via_deriver(
         calc_defs,
     )
 
-    # Convert DerivedParameterGroup -> ParameterGroup (Pydantic)
+    return _convert_derived_groups(derived_groups, entry_points)
+
+
+def _convert_derived_groups(
+    derived_groups: list,
+    entry_points: dict[str, EntryPoint],
+) -> list[ParameterGroup]:
+    """Convert DerivedParameterGroup list to ParameterGroup Pydantic models.
+
+    Shared by _group_entry_points_via_deriver (Step 5) and Step 6.6 rebuild.
+
+    Args:
+        derived_groups: DerivedParameterGroup list (already filtered)
+        entry_points: Classified entry points by qualified name
+
+    Returns:
+        List of ParameterGroup Pydantic models
+    """
     result = []
     for dg in derived_groups:
         # Map parameters to EntryPoint objects
@@ -624,7 +655,6 @@ def _build_computed_attr_module(
     ca: ComputedAttributeData,
     resolution_map: dict[str, dict[str, AttributeResolution]],
     entry_points: dict[str, EntryPoint],
-    param_groups: list[ParameterGroup],
     design_attrs: dict[Path, list[DesignAttributeData]],
     group_deriver: ParameterGroupDeriver,
 ) -> PipelineModule:
@@ -634,7 +664,6 @@ def _build_computed_attr_module(
         ca: The FORMULA computed attribute (must be FULLY_COMPILABLE)
         resolution_map: Per-part attribute resolution map
         entry_points: Mutable dict -- new entry points may be added
-        param_groups: Existing parameter groups
         design_attrs: Design attributes for default value lookup
         group_deriver: For classifying new entry points
     """
@@ -818,7 +847,6 @@ def _build_pipeline_module(
     calc_def,
     output_catalog: dict[str, tuple[str, str, str]],
     entry_points: dict[str, EntryPoint],
-    param_groups: list[ParameterGroup],
     execution_order: int,
     binding_resolutions: dict[str, BindingResolution],
 ) -> PipelineModule:
@@ -840,7 +868,6 @@ def _build_pipeline_module(
         calc_def: Corresponding calc definition
         output_catalog: Maps binding sources to (module_name, channel_name, field_name)
         entry_points: All classified entry points
-        param_groups: All parameter groups (for finding group name)
         execution_order: Position in topological order
         binding_resolutions: Unified mapping for ALL binding resolutions (REQUIRED).
             Maps "{usage_qn}|{param_name}" -> BindingResolution.

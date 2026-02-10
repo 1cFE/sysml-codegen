@@ -175,8 +175,11 @@ def extract_computed_attributes(
 
         if classification == ComputedAttributeClassification.FORMULA:
             # Self-exclusion: exclude the attribute being classified from
-            # input_names so self-references become UNSUPPORTED (not INPUT_REF)
-            input_names = sibling_attr_names - {attr_name}
+            # input_names so self-references become UNSUPPORTED (not INPUT_REF).
+            # Sanitize names so they match _sanitize_name() in build_expression_ast.
+            input_names = {
+                _sanitize_name(n) for n in sibling_attr_names
+            } - {_sanitize_name(attr_name)}
             try:
                 ast_ir = build_expression_ast(
                     syside_node=expr,

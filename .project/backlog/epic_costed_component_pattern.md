@@ -1,7 +1,7 @@
 # Epic: Costed Component Pattern Support
 
 **Epic ID**: COST-PATTERN
-**Status**: Not Started
+**Status**: In Progress
 **Priority**: P1
 **Created**: 2026-02-10
 **Estimated Effort**: ~8-10.5 days
@@ -112,38 +112,31 @@ part solar_battery_plant : 'Solar Battery Plant' {
 
 ### Item 1: Spike -- SysIDE AST Discovery for Hierarchy Patterns
 
-**Status**: Not Started
+**Status**: Complete
 **Type**: Research
 **Effort**: ~1 day (spec 0.5h, execute 5-6h, report 1h)
 **Dependencies**: None
+**Completed**: 2026-02-10
 
 **Objective**: Validate that SysIDE exposes sufficient AST information for all Costed Component sub-patterns, using the solar_battery model as the probe target. Determine the exact AST node types, attribute names, and traversal patterns needed for Items 2-4.
 
-**Questions to Answer**:
+**Result**: **GO** -- 10/10 questions passed, all 7 syside metamodel types available and populated. SysIDE AST provides sufficient structure for Items 2-4.
 
-1. **Template CalcUsage ownership**: How does SysIDE distinguish a CalcUsage owned by a PartDefinition (template) from one owned by a PartUsage (concrete)? What's the AST path from `cost_model` to `PV Module` PartDef? Does the owner chain expose `PartDefinition` vs `PartUsage` node types?
-2. **`:>>` redefinition representation**: How does `:>> capital_cost = cost_model.total_cost` appear in the AST? Is it an `ownedRedefinition` on the PartDef? Does the redefined feature reference the `Costed Component` abstract interface? What AST node type wraps the expression?
-3. **`part redefines` representation**: How does `part redefines solar_array : 'Solar Array' { ... }` differ from `part solar_array : 'Solar Array'` in the AST? Is there an explicit `ownedRedefinition` link?
-4. **Deep-path `:>>` resolution**: How does `:>> pv_module.wattage = 400.0` appear? Is `pv_module.wattage` a `FeatureChainExpression`? Can we resolve it to the leaf attribute through the PartUsage→PartDef chain?
-5. **Multiplicity representation**: How does `part pv_module : 'PV Module' [module_count]` encode the multiplicity? Is it on the `PartUsage` element? Is `module_count` resolvable to a literal or a reference to a sibling attribute?
-6. **`sum()` representation**: How does `sum(pv_module.capital_cost)` appear in the expression AST? Is it an `InvocationExpression`? What are its operands? Can we distinguish `sum(array.attr)` from other function calls?
-7. **Specialization chain traversal**: Can we navigate from `solar_battery_plant` → `Solar Battery Plant` → `solar_array` → `Solar Array` → `pv_module` → `PV Module` → `cost_model` → `PVModuleCostCalc` entirely through the AST? Where are the links (`.type`, `.ownedSpecialization`, `.general`)?
+**Key Learnings** (see full report: `.project/active/hierarchy-spike/report.md`):
 
-**Approach**:
-- Write a probe script (`scripts/spike_hierarchy_ast.py`) that loads the solar_battery model via SysIDE and dumps the AST structure for each pattern
-- For each question, capture the exact attribute names, node types, and traversal paths
-- Assess any SysIDE limitations or missing information
-- Document findings in a structured report with code examples
+1. **`:>>` creates `ReferenceUsage`, NOT `AttributeUsage`** (Q2, Q8). All code processing `:>>` must filter on `ReferenceUsage` with non-empty `owned_redefinitions`. New attributes are `AttributeUsage`; redefined `:>>` attributes are `ReferenceUsage`. This is the single most important finding for Items 2-3.
 
-**Go/No-Go Gate**: If SysIDE does not expose redefinition relationships or specialization chains at all, the implementation strategy must change fundamentally (potentially requiring agentic-mbse SysideAdapter extensions first). Document the alternative path if this occurs.
+2. **Deep-path chaining lives on the redefined feature** (Q4). `owned_redefinitions[0].redefined_feature.chaining_features` returns path components (e.g., `[PartUsage 'pv_module', AttributeUsage 'wattage']`). The redefining element itself has `name=None` and empty `owned_feature_chainings`. No heuristic value-matching needed.
 
-**Success Criteria**:
-- [ ] All 7 questions answered with concrete AST examples from solar_battery model
-- [ ] Exact attribute names documented for each traversal (e.g., `elem.ownedRedefinition[0].redefinedFeature.name`)
-- [ ] `sum()` InvocationExpression structure documented with operand types
-- [ ] Deep-path `:>>` chain traversal demonstrated end-to-end
-- [ ] Go/no-go decision made with rationale
-- [ ] Any SysIDE limitations documented with workarounds
+3. **Multiplicity `cached_upper_bound` is N+1** (Q5). Syside uses exclusive upper bound convention despite KerML spec saying "inclusive." Use `cached_lower_bound` (correct for `[N]` syntax) or resolve via `upper_bound.referent.feature_value_expression.value`. Confirmed systematic across all 3 multiplicities in the model (20→21, 4→5, 8→9).
+
+4. **Hierarchy traversal uses alternating `.types` and `owned_members`** (Q7). Full 8-step chain from `solar_battery_plant` to `PVModuleCostCalc` works via `next(iter(elem.types))` to get definition, then `owned_members` name lookup to get child usage.
+
+5. **`sum()` is `InvocationExpression` with `function.name='sum'`** (Q6). Single operand is a `FeatureChainExpression` for the collection path. Both `walk_expression_tree()` and `traverse_expression()` visit it successfully.
+
+6. **Template detection via `owning_type`** (Q1). `type(calc_usage.owning_type).__name__` cleanly returns `'PartDefinition'` (template) or `'PartUsage'` (concrete).
+
+7. **agentic-mbse needs minimal extensions** (FR-11). Only `extract_invocation_info()` recommended for expression.py. Hierarchy traversal belongs in sysml-codegen. No changes needed to binding.py or helpers.py.
 
 **Deliverables**:
 - `scripts/spike_hierarchy_ast.py`
@@ -171,6 +164,11 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - ❌ No function to find PartUsages of a given PartDefinition
 - ❌ No virtual CalcUsage generation for per-instance expansion
 
+**Spike Findings (Item 1) -- Key Inputs for This Item**:
+- **Template detection**: `type(calc_usage.owning_type).__name__` returns `'PartDefinition'` (template) or `'PartUsage'` (concrete) -- clean distinguisher (Report Q1)
+- **Hierarchy traversal**: Use alternating `.types` and `owned_members` to walk PartUsage→PartDef→child PartUsage chains. Specifically, `next(iter(usage.types))` gets the PartDefinition, then `owned_members` name lookup gets child usages (Report Q7)
+- **`part redefines` vs plain `part`**: `part redefines` has non-empty `owned_redefinitions`; plain `part` has empty `owned_redefinitions` -- use `len(elem.owned_redefinitions) > 0` to distinguish (Report Q3)
+
 **Scope**:
 
 1. **Data model extensions** (`extraction/data_models.py` or `usage_extractor.py`):
@@ -179,13 +177,13 @@ part solar_battery_plant : 'Solar Battery Plant' {
    - Add `raw_element: Any = None` to CalcUsageData (for re-inspection during instantiation)
 
 2. **Template detection** (`extraction/usage_extractor.py`):
-   - New function: `_get_owning_type_info(elem) -> tuple[str | None, Any | None]` -- returns ("PartDefinition", elem) or ("PartUsage", elem) or (None, None)
+   - New function: `_get_owning_type_info(elem) -> tuple[str | None, Any | None]` -- check `type(elem.owning_type).__name__` for `'PartDefinition'` vs `'PartUsage'` (Report Q1)
    - Update `_extract_single_usage()` to set `is_template` and `owning_part_def_qn`
    - Unit tests: verify detection on leaf-part CalcUsages vs design-level CalcUsages
 
 3. **PartUsage finder** (`extraction/usage_extractor.py`):
    - New function: `_find_part_usages_of_definition(model, part_def) -> list[tuple[Any, str]]` -- returns (PartUsage element, full qualified path) tuples
-   - Helper: `_usage_instantiates_definition(usage, part_def, part_def_qn) -> bool` -- checks type reference and specialization chain
+   - Helper: `_usage_instantiates_definition(usage, part_def, part_def_qn) -> bool` -- use `next(iter(usage.types))` to get the PartDefinition and compare (Report Q7). Must handle quoted names (`'PV Module'`)
    - Helper: `_build_full_part_path(elem) -> str` -- builds full dot-separated path from root to element
    - Unit tests: verify detection of `pv_module` as instantiation of `PV Module`
 
@@ -241,28 +239,39 @@ part solar_battery_plant : 'Solar Battery Plant' {
 - ❌ `sum()` classified as UNRESOLVABLE by expression compiler (InvocationExpression)
 - ❌ No aggregation expression compilation (cross-child attribute references)
 
+**Spike Findings (Item 1) -- Key Inputs for This Item**:
+- **CRITICAL: `:>>` creates `ReferenceUsage`, NOT `AttributeUsage`** (Report Q2, Q8). All `:>>` scanning code must filter on `ReferenceUsage` with non-empty `owned_redefinitions`. New attributes are `AttributeUsage` with empty `owned_redefinitions` -- this is the clean distinguisher.
+- **Deep-path chaining lives on the redefined feature, not the redefining element** (Report Q4). Access via `owned_redefinitions[0].redefined_feature.chaining_features` which returns `[PartUsage 'pv_module', AttributeUsage 'wattage']`. The redefining element has `name=None` and empty `owned_feature_chainings`. No heuristic value-matching needed -- resolution is fully structured.
+- **Multiplicity `cached_upper_bound` is N+1 (exclusive convention)** (Report Q5). Systematic across all 3 model multiplicities (20→21, 4→5, 8→9). `_extract_multiplicity()` MUST use `cached_lower_bound` (correct for `[N]` syntax) or resolve via `upper_bound.referent.feature_value_expression.value`. DO NOT use `cached_upper_bound`.
+- **`sum()` is `InvocationExpression` with `.function.name='sum'`** (Report Q6). Single operand is `FeatureChainExpression` for the collection path. Expression tree for aggregation is `OperatorExpression(+)` containing `InvocationExpression(sum)` children.
+- **`default :=` uses `feature_value.is_default=True`** (Report Q9). Uniform across CalcDef params and part attributes. Can extract default literal via `feature_value_expression.value`.
+- **Binding to redefined attr resolves to concrete PartDef** (Report Q10). `in total_capex = capital_cost` resolves to `Solar Battery Plant`'s redefined attribute, NOT the abstract `Costed Component`. The backtracker can follow this chain.
+- **agentic-mbse extension**: Consider adding `extract_invocation_info()` to `agentic-mbse/expression.py` for function name extraction from `InvocationExpression` nodes (Report FR-11).
+
 **Scope**:
 
 1. **`:>>` redefinition chain resolution** (`extraction/`):
    - New function: `_resolve_binding_through_redefinition(original_binding, part_usage, part_def) -> BindingInfo` -- walks `:>>` chain on PartUsage to resolve template bindings
+   - **All `:>>` elements are `ReferenceUsage` with non-empty `owned_redefinitions`** -- scan accordingly
    - Handle three `:>>` patterns:
      - **Literal redefinition**: `:>> wattage = 400.0` → `BindingType.LITERAL` with value 400.0
      - **Chain redefinition**: `:>> input_value = power_balance.p_net` → `BindingType.CHAIN` with source path
      - **Expression redefinition**: `:>> idiot_index = capital_cost / raw_material_cost` → `BindingType.EXPRESSION` with AST
-   - Handle deep-path redefinitions from design: `part redefines solar_array { :>> pv_module.wattage = 400.0; }` → traverse `pv_module.wattage` through PartUsage→PartDef chain to resolve to `PV Module`'s `wattage` attribute
-   - Helper: `_member_redefines_attribute(member, attr_name, part_def) -> bool` -- checks `ownedRedefinition` for explicit and implicit name-based matches
-   - Helper: `_extract_redefinition_value(member) -> float | None` -- extracts literal value from `:>>` expression
+   - Handle deep-path redefinitions from design: `part redefines solar_array { :>> pv_module.wattage = 400.0; }` → use `owned_redefinitions[0].redefined_feature.chaining_features` to resolve path components (e.g., `[PartUsage 'pv_module', AttributeUsage 'wattage']`), then traverse PartUsage→PartDef chain to reach leaf attribute
+   - Helper: `_member_redefines_attribute(member, attr_name, part_def) -> bool` -- check `type(member).__name__ == 'ReferenceUsage'` and `owned_redefinitions[0].redefined_feature` name/chain match
+   - Helper: `_extract_redefinition_value(member) -> float | None` -- extracts literal value from `feature_value_expression` on the `ReferenceUsage`
    - Unit tests: all three `:>>` patterns + deep-path traversal
 
 2. **Multiplicity detection** (`extraction/`):
    - New function: `_extract_multiplicity(part_usage) -> int | str | None` -- returns literal count, attribute reference name, or None
-   - Detect `[module_count]` on PartUsage elements, resolve to literal if possible (via default value or design redefinition)
+   - Access via `part_usage.multiplicity` (returns `MultiplicityRange`)
+   - **Use `multiplicity.cached_lower_bound`** (correct for `[N]`) **or `multiplicity.upper_bound.referent.feature_value_expression.value`** (most robust). **DO NOT use `cached_upper_bound`** -- it is N+1 due to syside exclusive convention
    - Add `multiplicity: int | None = None` to CalcUsageData (or to a new data model)
    - Unit tests: literal multiplicity (`[3]`), attribute-reference multiplicity (`[module_count]`), no multiplicity (singleton)
 
 3. **`sum()` → parametric multiply transformation** (`extraction/`):
    - New function: `_transform_sum_to_parametric_multiply(expression_ast, part_usages) -> TransformedExpression`
-   - Detect `InvocationExpression` with function name `sum` and operand pattern `array_part.attribute`
+   - Detect `InvocationExpression` with `function.name == 'sum'` and single operand (`FeatureChainExpression` for `array_part.attribute`)
    - Transform `sum(pv_module.capital_cost)` → `module_count * pv_module.capital_cost` (compile-time rewrite)
    - Resolve `pv_module.capital_cost` through `:>> capital_cost = cost_model.total_cost` chain to get the MODULE_OUTPUT channel name
    - Result: aggregation expression becomes compilable by the Phase 1 expression compiler (all operators are `+` and `*`, all operands are MODULE_OUTPUT channels or entry points)
@@ -490,8 +499,8 @@ part solar_battery_plant : 'Solar Battery Plant' {
 ## Dependencies
 
 **External**:
-- `agentic-mbse` package: SysIDE adapter. **May need extensions** for specialization chain traversal and redefinition access -- Item 1 spike will determine.
-- SysIDE: Must expose `:>>` redefinition information, `PartDefinition` vs `PartUsage` owner types, multiplicity on PartUsages, and `sum()` InvocationExpression structure. **Validated by Item 1 spike.**
+- `agentic-mbse` package: SysIDE adapter. **Minor extension recommended**: add `extract_invocation_info()` to `expression.py` for `sum()` function name extraction. No changes needed to `binding.py`, `helpers.py`, or `syside_adapter.py` type map (validated by Item 1 spike).
+- SysIDE: All required AST information confirmed available and populated -- `:>>` redefinitions, `PartDefinition`/`PartUsage` owner types, multiplicity, `sum()` InvocationExpression, specialization chains. **Validated by Item 1 spike (10/10 PASS).**
 - Solar_battery model: Must be accessible and correct (already in `tests/fixtures/solar_battery_model/`)
 
 **Internal**:
@@ -509,23 +518,23 @@ Item 1: Spike -- AST Discovery (no dependencies)
                     └─> Item 5: E2E Validation & Documentation (needs integrated pipeline from Item 4)
 ```
 
-All items are sequential. Item 1's go/no-go gate determines whether subsequent items proceed as designed or need re-scoping.
+All items are sequential. Item 1's go/no-go gate passed (GO) -- subsequent items proceed as designed with spike-informed adjustments noted in each item's "Spike Findings" section.
 
 ---
 
 ## Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| SysIDE doesn't expose `:>>` redefinition AST info | Medium | High | Item 1 spike validates before implementation. Fallback: build resolution from model semantics (name matching) rather than AST links. |
-| SysIDE doesn't expose multiplicity on PartUsages | Low | Medium | Item 1 spike validates. Fallback: parse multiplicity from model text or require explicit CalcDef for aggregation. |
-| `sum()` InvocationExpression structure is opaque | Medium | Medium | Item 1 spike validates. Fallback: whitelist `sum` as a special case, extract operand pattern heuristically. |
-| Deep-path `:>>` chains have ambiguous resolution | Medium | High | Test with real models in spike. Document resolution rules. Add warnings for ambiguous cases. |
-| Parametric multiply assumption fails (non-uniform arrays) | Low | Low | Solar_battery arrays ARE uniform. Document assumption in ADR-007. Add warning if non-uniform detected (fall back to Approach E). |
-| Virtual CalcUsage qualified names become very long | Low | Low | ADR-003 already uses `__` separator. Long names are valid Python identifiers. |
-| Performance impact from template expansion | Low | Low | Solar_battery has ~10 template CalcUsages × ~1-3 instantiations each. O(n*m) where n and m are small. |
-| Aggregation module generation conflicts with Phase 2 computed attributes | Medium | Medium | Aggregation expressions use `:>>` on inherited abstract attributes; computed attributes use plain `attribute = expr`. Different detection paths. Spike should verify no overlap. |
-| agentic-mbse SysideAdapter needs extensions | Medium | Medium | Item 1 spike determines. If needed, add helpers before proceeding with Items 2-4. |
+| Risk | Likelihood | Impact | Mitigation | Status |
+|------|-----------|--------|------------|--------|
+| SysIDE doesn't expose `:>>` redefinition AST info | ~~Medium~~ | ~~High~~ | ~~Item 1 spike validates~~ | **RESOLVED** (Item 1): All 4 `:>>` patterns have `owned_redefinitions` linking to abstract interface. Element type is `ReferenceUsage`. |
+| SysIDE doesn't expose multiplicity on PartUsages | ~~Low~~ | ~~Medium~~ | ~~Item 1 spike validates~~ | **RESOLVED** (Item 1): `MultiplicityRange` with `cached_lower_bound` and `upper_bound` expression chain. Note: `cached_upper_bound` is N+1 (exclusive). |
+| `sum()` InvocationExpression structure is opaque | ~~Medium~~ | ~~Medium~~ | ~~Item 1 spike validates~~ | **RESOLVED** (Item 1): `InvocationExpression` with `function.name='sum'`, single `FeatureChainExpression` operand. |
+| Deep-path `:>>` chains have ambiguous resolution | ~~Medium~~ | ~~High~~ | ~~Test with real models in spike~~ | **RESOLVED** (Item 1): Fully structured via `redefined_feature.chaining_features`. No heuristic needed. |
+| Parametric multiply assumption fails (non-uniform arrays) | Low | Low | Solar_battery arrays ARE uniform. Document assumption in ADR-007. Add warning if non-uniform detected (fall back to Approach E). | Open |
+| Virtual CalcUsage qualified names become very long | Low | Low | ADR-003 already uses `__` separator. Long names are valid Python identifiers. | Open |
+| Performance impact from template expansion | Low | Low | Solar_battery has ~10 template CalcUsages × ~1-3 instantiations each. O(n*m) where n and m are small. | Open |
+| Aggregation module generation conflicts with Phase 2 computed attributes | ~~Medium~~ | ~~Medium~~ | ~~Spike should verify no overlap~~ | **RESOLVED** (Item 1): Aggregation uses `ReferenceUsage` with `owned_redefinitions`; computed attributes use `AttributeUsage` with empty `owned_redefinitions`. Clean distinguisher (Q8). |
+| agentic-mbse SysideAdapter needs extensions | ~~Medium~~ | ~~Medium~~ | ~~Item 1 spike determines~~ | **RESOLVED** (Item 1): Minimal -- only `extract_invocation_info()` recommended for expression.py. No type map, binding.py, or helpers.py changes needed. |
 
 ---
 
@@ -584,4 +593,4 @@ This epic implements **Phase 3** from the research report's phased roadmap:
 ---
 
 **Last Updated**: 2026-02-10
-**Next Action**: Item 1 -- Spike: SysIDE AST Discovery for Hierarchy Patterns
+**Next Action**: Item 2 -- Template CalcUsage Detection & Virtual Instantiation

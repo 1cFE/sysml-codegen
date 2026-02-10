@@ -429,3 +429,47 @@ class TestRegistryInclusion:
         )
 
         assert "PAlphaOutModule" not in code
+
+
+# ---------------------------------------------------------------------------
+# Tests: FORMULA Module Input Type (Bug 3)
+# ---------------------------------------------------------------------------
+
+
+class TestFormulaModuleInputType:
+    """Bug 3: FORMULA input type must be 'float', not 'Float'."""
+
+    def test_formula_module_inputs_use_float_primitive(self):
+        """FORMULA module inputs should use 'float' (primitive), not 'Float' (RootModel)."""
+        env = _get_template_env()
+        template = env.get_template("teax_module.py.jinja2")
+
+        context = {
+            "class_name": "PowerMwModule",
+            "input_class_name": "PowerMwInput",
+            "output_class_name": None,
+            "schema_name": None,
+            "handler_name": "pkg__plant__power_mw",
+            "impl_import_path": "pkg.plant.power_mw_impl",
+            "doc_comment": "Computed attribute module.",
+            "package_name": "test_pkg",
+            "is_multioutput": False,
+            "input_attributes": [
+                {"name": "capacity", "type_hint": "float", "description": "Input capacity"},
+                {"name": "factor", "type_hint": "float", "description": "Input factor"},
+            ],
+            "output_attributes": [
+                {"name": "power_mw", "description": "Computed power_mw"},
+            ],
+            "calc_expressions": ["power_mw = capacity * factor"],
+            "sysml_source": "unknown:0",
+            "primitive_imports": ["Float"],
+        }
+
+        rendered = template.render(**context)
+
+        # Input fields must use float (primitive), not Float (RootModel)
+        assert "capacity: float" in rendered
+        assert "factor: float" in rendered
+        # Output type is still Float (RootModel[float])
+        assert "ModuleBase[PowerMwInput, Float]" in rendered

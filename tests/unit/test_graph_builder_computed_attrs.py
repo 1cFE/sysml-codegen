@@ -391,13 +391,13 @@ class TestComputedAttrModule:
         attr_resolution_map = {}
 
         entry_points: dict[str, EntryPoint] = {}
-        param_groups: list[ParameterGroup] = []
+
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
         module = _build_computed_attr_module(
             ca, attr_resolution_map, entry_points,
-            param_groups, design_attrs, group_deriver,
+            design_attrs, group_deriver,
         )
 
         # Naming
@@ -437,13 +437,13 @@ class TestComputedAttrModule:
         )
 
         entry_points: dict[str, EntryPoint] = {}
-        param_groups: list[ParameterGroup] = []
+
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
         module = _build_computed_attr_module(
             ca_cost, attr_resolution_map, entry_points,
-            param_groups, design_attrs, group_deriver,
+            design_attrs, group_deriver,
         )
 
         # Find the "area" input
@@ -486,13 +486,13 @@ class TestComputedAttrModule:
         )
 
         entry_points: dict[str, EntryPoint] = {}
-        param_groups: list[ParameterGroup] = []
+
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
         module = _build_computed_attr_module(
             ca_formula, attr_resolution_map, entry_points,
-            param_groups, design_attrs, group_deriver,
+            design_attrs, group_deriver,
         )
 
         # p_alpha_out input should be wired via EXPOSE_PURE alias
@@ -508,13 +508,13 @@ class TestComputedAttrModule:
         )
 
         entry_points: dict[str, EntryPoint] = {}
-        param_groups: list[ParameterGroup] = []
+
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
         _build_computed_attr_module(
             ca, {}, entry_points,
-            param_groups, design_attrs, group_deriver,
+            design_attrs, group_deriver,
         )
 
         # Entry points should have been created for length and width
@@ -531,7 +531,7 @@ class TestComputedAttrModule:
         entry_points: dict[str, EntryPoint] = {}
         module = _build_computed_attr_module(
             ca, {}, entry_points,
-            [], {}, _make_mock_group_deriver(),
+            {}, _make_mock_group_deriver(),
         )
 
         # x appears twice in expression but should only create one input
@@ -847,3 +847,78 @@ class TestBuildComputationGraphWithComputedAttrs:
         )
 
         assert len(graph.modules) == 0
+
+
+# ---------------------------------------------------------------------------
+# Tests: Bug 1 — FORMULA entry points appear in param_groups after Step 6.6
+# ---------------------------------------------------------------------------
+
+
+class TestParamGroupsRebuild:
+    """Bug 1: FORMULA entry points must appear in entry_point_groups."""
+
+    def test_formula_entry_points_in_param_groups(self):
+        """After build_computation_graph, FORMULA module entry points appear
+        in entry_point_groups (rebuilt at Step 6.6)."""
+        _ensure_backtracking_result_rebuilt()
+
+        # FORMULA: area = length * width (creates entry points for length, width)
+        ca = _make_computed_attr(
+            "area", "probe_design", "Pkg::probe_design",
+            compiled_expression="(inputs.length * inputs.width)",
+        )
+
+        result = _make_minimal_backtracking_result()
+        group_deriver = _make_mock_group_deriver()
+        # derive_groups() returns groups that include the FORMULA input params
+        from sysml_codegen.analysis.parameter_groups import DerivedParameterGroup, ParameterSource
+        group_deriver.derive_groups.return_value = [
+            DerivedParameterGroup(
+                name="probe_design_params",
+                class_name="ProbeDesignParams",
+                source_type="design",
+                source_identifier="test.sysml",
+                parameters=[
+                    ParameterSource(name="Pkg__probe_design__length", default_value=1.0),
+                    ParameterSource(name="Pkg__probe_design__width", default_value=2.0),
+                ],
+            ),
+        ]
+
+        graph = build_computation_graph(
+            result=result,
+            calc_defs=[],
+            design_attrs={},
+            group_deriver=group_deriver,
+            computed_attributes=[ca],
+        )
+
+        # Collect all EP names from entry_point_groups
+        all_ep_names = {
+            ep.qualified_name
+            for pg in graph.entry_point_groups
+            for ep in pg.parameters
+        }
+
+        # FORMULA inputs must appear
+        assert "Pkg__probe_design__length" in all_ep_names
+        assert "Pkg__probe_design__width" in all_ep_names
+
+    def test_param_groups_empty_when_no_formula(self):
+        """Without FORMULA attrs, param_groups has only backtracker EPs."""
+        _ensure_backtracking_result_rebuilt()
+
+        result = _make_minimal_backtracking_result()
+        group_deriver = _make_mock_group_deriver()
+        # derive_groups returns empty (no FORMULA EPs to add)
+        group_deriver.derive_groups.return_value = []
+
+        graph = build_computation_graph(
+            result=result,
+            calc_defs=[],
+            design_attrs={},
+            group_deriver=group_deriver,
+            computed_attributes=[],
+        )
+
+        assert len(graph.entry_point_groups) == 0

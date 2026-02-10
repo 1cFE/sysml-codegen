@@ -143,6 +143,10 @@ class DependencyBacktracker:
                 continue
             self._computed_attr_index[f"{ca.owning_part_name}.{ca.python_name}"] = ca
             self._computed_attr_index[ca.python_name] = ca
+            # SysML qualified name key (what FeatureReferenceExpression produces)
+            if ca.owning_part_qualified_name:
+                sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+                self._computed_attr_index[sysml_qn] = ca
 
         # Build lookup tables
         self._calc_def_by_name: dict[str, object] = {c.name: c for c in calc_defs}
@@ -398,6 +402,10 @@ class DependencyBacktracker:
                 if ca is None and "." in binding.source_path:
                     bare = binding.source_path.split(".")[-1]
                     ca = self._computed_attr_index.get(bare)
+                # Handle SysML qualified names with :: separator
+                if ca is None and "::" in binding.source_path:
+                    bare = binding.source_path.split("::")[-1]
+                    ca = self._computed_attr_index.get(bare)
 
                 if ca is not None:
                     channel = self._build_computed_attr_channel(ca)
@@ -413,6 +421,17 @@ class DependencyBacktracker:
                     continue  # No recursive tracing -- graph builder creates the module
 
                 source_usage = self._resolve_binding_to_usage(binding.source_path)
+
+                # Guard: self-referential bindings (e.g., :: qualified name of
+                # the param itself) must not create self-loops.  Treat as
+                # unresolvable so they fall through to entry point handling.
+                if source_usage and source_usage.qualified_name == usage.qualified_name:
+                    logger.debug(
+                        f"Self-reference detected for {param_name}: "
+                        f"{binding.source_path} -> {source_usage.qualified_name}, "
+                        f"treating as entry point"
+                    )
+                    source_usage = None
 
                 if source_usage:
                     # Cases 4-5: Resolved to calc output -> module_output wiring
@@ -640,9 +659,16 @@ class DependencyBacktracker:
         Raises:
             ValueError: If unable to determine output attribute (fail-fast)
         """
+        # Normalize :: paths to dotted format for consistent lookup
+        normalized_source = binding_source
+        if "::" in binding_source:
+            parts = binding_source.split("::")
+            if len(parts) >= 2:
+                normalized_source = f"{parts[-2]}.{parts[-1]}"
+
         # Check if this was a transitive resolution through design attr
-        if binding_source in self._design_attr_binding_index:
-            target = self._design_attr_binding_index[binding_source]
+        if normalized_source in self._design_attr_binding_index:
+            target = self._design_attr_binding_index[normalized_source]
 
             # If target is already a qualified name (contains __), use it directly
             # This handles multi-hop chains where the index stores final resolution
@@ -656,8 +682,8 @@ class DependencyBacktracker:
                 return f"{resolved_usage.qualified_name}__{output_attr}"
 
         # Direct binding (e.g., "other_calc.output")
-        if "." in binding_source:
-            parts = binding_source.split(".")
+        if "." in normalized_source:
+            parts = normalized_source.split(".")
             output_attr = parts[-1]
             return f"{resolved_usage.qualified_name}__{output_attr}"
 
@@ -746,6 +772,24 @@ class DependencyBacktracker:
         # Strategy 3: Bare instance name
         if binding_source in self._usage_by_name:
             return self._usage_by_name[binding_source]
+
+        # Strategy 5: Normalize :: qualified names for design attr transitive
+        # resolution ONLY.  SysML FeatureReferenceExpression produces paths like
+        # "E2EDesign::e2e_plant::total_capex" but _design_attr_binding_index
+        # uses "parent.attr" dotted format.  We ONLY check the design attr
+        # index here — recursing through all strategies would match calc usage
+        # instance names via Strategy 2a, creating incorrect self-dependencies
+        # for self-referential paths (Package::Part::CalcUsage::Param).
+        if "::" in binding_source:
+            parts = binding_source.split("::")
+            if len(parts) >= 2:
+                dotted = f"{parts[-2]}.{parts[-1]}"
+                if dotted in self._design_attr_binding_index:
+                    target = self._design_attr_binding_index[dotted]
+                    logger.debug(
+                        f":: transitive resolution: {binding_source} -> {dotted} -> {target}"
+                    )
+                    return self._resolve_binding_to_usage(target, visited)
 
         return None  # Unresolvable - will become entry point
 
@@ -872,7 +916,11 @@ class DependencyBacktracker:
 
                 if binding.source_path:
                     source_usage = self._resolve_binding_to_usage(binding.source_path)
-                    if source_usage and source_usage.qualified_name in required_names:
+                    if (
+                        source_usage
+                        and source_usage.qualified_name in required_names
+                        and source_usage.qualified_name != usage.qualified_name  # no self-edges
+                    ):
                         if source_usage.qualified_name not in deps:
                             deps.append(source_usage.qualified_name)
 

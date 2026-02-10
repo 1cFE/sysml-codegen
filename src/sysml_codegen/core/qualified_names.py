@@ -7,13 +7,15 @@ Per ADR-003: Signal Identifier Architecture, this module provides
 the authoritative implementation for building qualified names.
 """
 
+import re
 
 
 def sanitize_name(name: str | None) -> str:
     """Sanitize SysML name for Python.
 
     Args:
-        name: Raw SysML name (may contain quotes, spaces, reserved words)
+        name: Raw SysML name (may contain quotes, spaces, reserved words,
+              special characters like &, $, @, -)
 
     Returns:
         Python-safe identifier string
@@ -22,6 +24,13 @@ def sanitize_name(name: str | None) -> str:
         return ""
     name = name.strip("'\"")
     name = name.replace(" ", "_")
+    # Replace non-alphanumeric, non-underscore chars with underscore
+    name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
+    # Collapse runs of underscores (safe: operates on individual segments,
+    # not qualified names — the __ ADR-003 separator is applied later)
+    name = re.sub(r"_+", "_", name)
+    # Strip leading/trailing underscores
+    name = name.strip("_") or "unnamed"
     if name in {"class", "def", "import", "from", "return", "yield"}:
         name = f"{name}_"
     return name

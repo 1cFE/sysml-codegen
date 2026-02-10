@@ -14,6 +14,7 @@ from typing import Any
 # CRITICAL: Import syside adapter from agentic-mbse, NOT direct syside import
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
+from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
     CalculationDefinitionData,
@@ -90,7 +91,7 @@ class SysMLDataExtractor:
 
     def _extract_part_definition(self, elem) -> PartDefinitionData | None:
         """Extract data from single part definition element."""
-        name = self._sanitize_name(elem.name)
+        name = sanitize_name(elem.name)
         if not name:
             return None
 
@@ -129,7 +130,7 @@ class SysMLDataExtractor:
         self, elem
     ) -> CalculationDefinitionData | None:
         """Extract data from calculation definition element."""
-        name = self._sanitize_name(elem.name)
+        name = sanitize_name(elem.name)
         if not name:
             return None
 
@@ -152,7 +153,7 @@ class SysMLDataExtractor:
                 continue
 
             attr_info = self._extract_attribute(member)
-            member_name = self._sanitize_name(member.name)
+            member_name = sanitize_name(member.name)
             if member_name:
                 all_member_names.add(member_name)
 
@@ -188,7 +189,7 @@ class SysMLDataExtractor:
         for member in elem.owned_members:
             if not self.adapter.is_instance(member, "AttributeUsage"):
                 continue
-            member_name = self._sanitize_name(member.name)
+            member_name = sanitize_name(member.name)
             if not member_name or member_name in input_names or member_name in output_names:
                 continue
             if hasattr(member, "feature_value_expression") and member.feature_value_expression:
@@ -255,7 +256,7 @@ class SysMLDataExtractor:
         for relationship, target in elem.heritage:
             if self.adapter.is_instance(relationship, "FeatureTyping"):
                 if hasattr(target, 'name') and target.name:
-                    return self._sanitize_name(target.name)
+                    return sanitize_name(target.name)
 
         return None
 
@@ -338,7 +339,7 @@ class SysMLDataExtractor:
 
     def _extract_attribute(self, attr_elem) -> AttributeInfo | None:
         """Extract attribute information from attribute usage element."""
-        name = self._sanitize_name(attr_elem.name)
+        name = sanitize_name(attr_elem.name)
         if not name:
             return None
 
@@ -612,16 +613,6 @@ class SysMLDataExtractor:
                 return unit
 
         return None
-
-    def _sanitize_name(self, name: str | None) -> str:
-        """Sanitize SysML name for Python identifier."""
-        if not name:
-            return ""
-        name = name.strip("'\"")
-        name = name.replace(" ", "_")
-        if name in ["class", "def", "import", "from", "return", "yield"]:
-            name = f"{name}_"
-        return name
 
     def _map_sysml_to_python_type(self, sysml_type: str) -> str:
         """Map SysML type to Python type."""

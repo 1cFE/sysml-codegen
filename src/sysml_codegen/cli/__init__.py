@@ -27,6 +27,19 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+def _ensure_package_init_files(
+    base_dir: Path, relative_path: str, docstring: str = '"""Namespace package."""\n'
+) -> None:
+    """Ensure __init__.py exists in all directories along relative_path."""
+    parts = Path(relative_path).parts
+    current = base_dir
+    for part in parts:
+        current = current / part
+        init_file = current / "__init__.py"
+        if not init_file.exists():
+            init_file.write_text(docstring)
+
 # Commands available for installation
 CODEGEN_COMMANDS = [
     "teax-completion.md",
@@ -164,7 +177,6 @@ def _generate_modules(
     from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 
     modules_dir = config.output_path / "modules"
-    created_namespaces: set[str] = set()
     module_count = 0
 
     for calc_def in ctx.calc_defs:
@@ -177,16 +189,14 @@ def _generate_modules(
         sqn = SysMLQualifiedName(calc_def.qualified_name)
         python_path = PythonModulePath.from_sysml(sqn)
 
-        # Create namespace subdirectory if needed
+        # Create namespace subdirectory with __init__.py in all intermediates
         if python_path.directory:
             namespace_dir = modules_dir / python_path.directory
             namespace_dir.mkdir(parents=True, exist_ok=True)
-
-            if python_path.directory not in created_namespaces:
-                init_file = namespace_dir / "__init__.py"
-                if not init_file.exists():
-                    init_file.write_text('"""Namespace package for generated modules."""\n')
-                created_namespaces.add(python_path.directory)
+            _ensure_package_init_files(
+                modules_dir, python_path.directory,
+                '"""Namespace package for generated modules."""\n',
+            )
 
         output_path = modules_dir / python_path.full_path
         code = generate_teax_module(
@@ -235,13 +245,14 @@ def _generate_computed_attr_modules(
         python_path = PythonModulePath.from_sysml(sqn)
         module_eqn = sysml_to_python_qualified_name(sysml_qn)
 
-        # Create namespace subdirectory
+        # Create namespace subdirectory with __init__.py in all intermediates
         if python_path.directory:
             namespace_dir = modules_dir / python_path.directory
             namespace_dir.mkdir(parents=True, exist_ok=True)
-            init_file = namespace_dir / "__init__.py"
-            if not init_file.exists():
-                init_file.write_text('"""Namespace package for generated modules."""\n')
+            _ensure_package_init_files(
+                modules_dir, python_path.directory,
+                '"""Namespace package for generated modules."""\n',
+            )
 
         # Extract input names from compiled expression
         if ca.compiled_expression is None:
@@ -262,7 +273,7 @@ def _generate_computed_attr_modules(
         input_class_name = class_name.replace("Module", "Input")
 
         input_attributes = [
-            {"name": n, "type_hint": "Float", "description": f"Input {n}"}
+            {"name": n, "type_hint": "float", "description": f"Input {n}"}
             for n in input_names
         ]
 
@@ -343,13 +354,14 @@ def _generate_computed_attr_stencils(
         class_name = module_type_full.split(".")[-1]
         input_class_name = class_name.replace("Module", "Input")
 
-        # Create namespace subdirectory
+        # Create namespace subdirectory with __init__.py in all intermediates
         if python_path.directory:
             namespace_dir = handwritten_dir / python_path.directory
             namespace_dir.mkdir(parents=True, exist_ok=True)
-            init_file = namespace_dir / "__init__.py"
-            if not init_file.exists():
-                init_file.write_text('"""Handwritten implementations."""\n')
+            _ensure_package_init_files(
+                handwritten_dir, python_path.directory,
+                '"""Handwritten implementations."""\n',
+            )
             output_path = namespace_dir / f"{python_path.filename}_impl.py"
         else:
             output_path = handwritten_dir / f"{python_path.filename}_impl.py"
@@ -401,6 +413,7 @@ def _generate_stencils(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils (ADR-003 namespacing)."""
+    from sysml_codegen.extraction.expression_compiler import Compilability
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
@@ -413,7 +426,6 @@ def _generate_stencils(
 
     handwritten_dir = config.output_path / "handwritten"
     backup_dir = handwritten_dir / "backup"
-    created_namespaces: set[str] = set()
 
     stats = {"new": 0, "preserved": 0, "regenerated": 0}
 
@@ -425,16 +437,14 @@ def _generate_stencils(
         sqn = SysMLQualifiedName(calc_def.qualified_name)
         python_path = PythonModulePath.from_sysml(sqn)
 
-        # Create namespace subdirectory if needed
+        # Create namespace subdirectory with __init__.py in all intermediates
         if python_path.directory:
             namespace_dir = handwritten_dir / python_path.directory
             namespace_dir.mkdir(parents=True, exist_ok=True)
-
-            if python_path.directory not in created_namespaces:
-                init_file = namespace_dir / "__init__.py"
-                if not init_file.exists():
-                    init_file.write_text('"""Handwritten implementations."""\n')
-                created_namespaces.add(python_path.directory)
+            _ensure_package_init_files(
+                handwritten_dir, python_path.directory,
+                '"""Handwritten implementations."""\n',
+            )
 
             output_path = namespace_dir / f"{python_path.filename}_impl.py"
         else:
@@ -457,8 +467,26 @@ def _generate_stencils(
                 stats["regenerated"] += 1
                 logger.debug(f"Regenerated stencil ({reason}): {output_path.name}")
             else:
-                stats["preserved"] += 1
-                logger.debug(f"Preserved stencil ({reason}): {output_path.name}")
+                # Smart-regen: signature unchanged. Check if stub can be upgraded.
+                existing_content = output_path.read_text()
+                is_stub = "raise NotImplementedError" in existing_content
+                has_auto_impl = (
+                    compilation_result is not None
+                    and compilation_result.overall_compilability == Compilability.FULLY_COMPILABLE
+                )
+                if is_stub and has_auto_impl:
+                    backup_implementation(output_path, backup_dir)
+                    code = generate_implementation(
+                        calc_def, template_env, output_path, config.package_name,
+                        compilation_result=compilation_result,
+                    )
+                    if code:
+                        output_path.write_text(code)
+                    stats["regenerated"] += 1
+                    logger.debug(f"Upgraded stub to auto-impl: {output_path.name}")
+                else:
+                    stats["preserved"] += 1
+                    logger.debug(f"Preserved stencil ({reason}): {output_path.name}")
         elif config.preserve_handwritten and output_path.exists():
             stats["preserved"] += 1
             logger.debug(f"Preserved existing stencil: {output_path.name}")

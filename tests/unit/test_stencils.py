@@ -9,6 +9,7 @@ Tests:
 - Backlog report excludes FULLY_COMPILABLE CalcDefs
 - Undeclared intermediates emitted as local variables
 - Multi-output CalcDefs produce tuple return
+- Smart-regen stub-to-auto-impl upgrade (Bug 5)
 """
 
 from __future__ import annotations
@@ -640,3 +641,91 @@ class TestAutoImplOutputCrossRefs:
         assert "out3 = (out1 * out2)" in code
         assert "return (" in code
         assert "(inputs.x * 2)," not in code
+
+
+# --- Smart-regen stub upgrade tests (Bug 5) ---
+
+
+class TestSmartRegenStubUpgrade:
+    """Bug 5: --smart-regen upgrades stubs when auto-impl available."""
+
+    def _run_smart_regen(self, tmp_path, existing_content, compilation_result):
+        """Run _generate_stencils with smart_regen=True, return stencil path."""
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from sysml_codegen.cli import GenerationConfig, _generate_stencils
+
+        output_path = tmp_path / "output"
+        handwritten_dir = output_path / "handwritten"
+        handwritten_dir.mkdir(parents=True)
+
+        calc_def = _make_calc_def()
+
+        stencil_path = handwritten_dir / "testcalc_impl.py"
+        stencil_path.write_text(existing_content)
+
+        config = GenerationConfig(
+            models_path=tmp_path / "models",
+            output_path=output_path,
+            package_name="test_pkg",
+            smart_regen=True,
+        )
+
+        ctx = SimpleNamespace(
+            calc_defs=[calc_def],
+            compilation_results=(
+                {"TestCalc": compilation_result} if compilation_result else {}
+            ),
+        )
+
+        template_env = _get_template_env()
+
+        with patch(
+            "sysml_codegen.generation.should_regenerate_stencil",
+            return_value=(False, "Signature unchanged"),
+        ):
+            _generate_stencils(ctx, config, template_env)
+
+        return stencil_path
+
+    def test_stub_upgraded_when_fully_compilable(self, tmp_path):
+        """Stub file + FULLY_COMPILABLE -> upgraded to auto-impl."""
+        stub = 'def run_testcalc(inputs):\n    raise NotImplementedError("TODO")\n'
+        result = _make_compilable_result()
+
+        path = self._run_smart_regen(tmp_path, stub, result)
+
+        content = path.read_text()
+        assert "raise NotImplementedError" not in content
+        assert "AUTO_IMPLEMENTED = True" in content
+
+    def test_handwritten_preserved_when_fully_compilable(self, tmp_path):
+        """Handwritten file + FULLY_COMPILABLE -> preserved."""
+        handwritten = "def run_testcalc(inputs):\n    return inputs.x * 2\n"
+        result = _make_compilable_result()
+
+        path = self._run_smart_regen(tmp_path, handwritten, result)
+
+        assert path.read_text() == handwritten
+
+    def test_auto_impl_preserved_when_fully_compilable(self, tmp_path):
+        """Auto-implemented file + FULLY_COMPILABLE -> preserved."""
+        auto_impl = (
+            "AUTO_IMPLEMENTED = True\n"
+            "def run_testcalc(inputs):\n"
+            "    return inputs.x * 2\n"
+        )
+        result = _make_compilable_result()
+
+        path = self._run_smart_regen(tmp_path, auto_impl, result)
+
+        assert path.read_text() == auto_impl
+
+    def test_stub_preserved_when_not_compilable(self, tmp_path):
+        """Stub file + no compilation result -> preserved."""
+        stub = 'def run_testcalc(inputs):\n    raise NotImplementedError("TODO")\n'
+
+        path = self._run_smart_regen(tmp_path, stub, None)
+
+        assert "raise NotImplementedError" in path.read_text()

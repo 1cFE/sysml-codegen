@@ -157,7 +157,7 @@ class TestComputedAttrIndex:
 
         assert "part_a.area" in bt._computed_attr_index
         assert "part_b.cost" in bt._computed_attr_index
-        assert len(bt._computed_attr_index) == 4  # 2 dotted + 2 bare
+        assert len(bt._computed_attr_index) == 6  # 2 dotted + 2 bare + 2 :: keys
 
 
 # ---------------------------------------------------------------------------
@@ -414,3 +414,133 @@ class TestComputedAttrResolution:
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.ENTRY_POINT
+
+
+# ---------------------------------------------------------------------------
+# Tests: Bug 2 — SysML :: qualified name index key + resolution
+# ---------------------------------------------------------------------------
+
+
+class TestSysmlQualifiedNameIndex:
+    """Bug 2 Change A: _computed_attr_index includes :: qualified name key."""
+
+    def test_sysml_qn_key_in_index(self):
+        """Index has 'Part::attr' key alongside dotted and bare keys."""
+        ca = _make_computed_attr("power_mw", "e2e_plant", "E2EDesign::e2e_plant")
+        bt = DependencyBacktracker([], [], computed_attributes=[ca])
+
+        assert "E2EDesign::e2e_plant::power_mw" in bt._computed_attr_index
+        assert "e2e_plant.power_mw" in bt._computed_attr_index
+        assert "power_mw" in bt._computed_attr_index
+        assert len(bt._computed_attr_index) == 3
+
+    def test_sysml_qn_key_skipped_when_no_owning_part_qn(self):
+        """No :: key added when owning_part_qualified_name is empty."""
+        ca = _make_computed_attr("area", "part", "")
+        bt = DependencyBacktracker([], [], computed_attributes=[ca])
+
+        assert "part.area" in bt._computed_attr_index
+        assert "area" in bt._computed_attr_index
+        # No :: key because owning_part_qualified_name is empty
+        assert len(bt._computed_attr_index) == 2
+
+
+class TestColonColonBindingResolution:
+    """Bug 2 Changes B+C: :: source_path resolves to FORMULA MODULE_OUTPUT."""
+
+    def test_colon_colon_binding_resolves_to_module_output(self):
+        """CalcUsage binding with source_path 'E2EDesign::e2e_plant::power_mw'
+        resolves as MODULE_OUTPUT via the :: index key."""
+        ca = _make_computed_attr("power_mw", "e2e_plant", "E2EDesign::e2e_plant")
+
+        usage = _make_calc_usage(
+            "energy_calc", "EnergyCalc",
+            bindings=[
+                BindingInfo(
+                    param_name="power",
+                    source_path="E2EDesign::e2e_plant::power_mw",
+                    binding_type=BindingType.REFERENCE,
+                ),
+            ],
+            qualified_name="Pkg__Part__energy_calc",
+        )
+
+        calc_def = SimpleCalcDef(
+            name="EnergyCalc",
+            qualified_name="Lib::EnergyCalc",
+            output_attributes=[SimpleAttrInfo("energy")],
+        )
+
+        bt = DependencyBacktracker(
+            [usage], [calc_def],
+            computed_attributes=[ca],
+        )
+        bt.find_required_modules([], include_all=True)
+
+        key = "Pkg__Part__energy_calc|power"
+        assert key in bt._binding_resolutions
+        resolution = bt._binding_resolutions[key]
+        assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
+        assert "power_mw" in resolution.qualified_name
+
+    def test_colon_colon_binding_to_expose_pure_resolves_transitively(self):
+        """Binding with :: source_path to EXPOSE_PURE attr resolves transitively
+        to upstream calc output via _resolve_binding_to_usage."""
+        # Set up: EXPOSE_PURE attr "total_capex" is aliased via design attr binding
+        # to a calc usage output "component_cost.total_cost"
+        usage_producer = _make_calc_usage(
+            "component_cost", "CostCalc",
+            bindings=[],
+            qualified_name="Pkg__Part__component_cost",
+        )
+
+        usage_consumer = _make_calc_usage(
+            "financial", "FinancialCalc",
+            bindings=[
+                BindingInfo(
+                    param_name="capex",
+                    source_path="E2EDesign::e2e_plant::total_capex",
+                    binding_type=BindingType.REFERENCE,
+                ),
+            ],
+            qualified_name="Pkg__Part__financial",
+        )
+
+        calc_def_cost = SimpleCalcDef(
+            name="CostCalc",
+            qualified_name="Lib::CostCalc",
+            output_attributes=[SimpleAttrInfo("total_cost")],
+        )
+        calc_def_fin = SimpleCalcDef(
+            name="FinancialCalc",
+            qualified_name="Lib::FinancialCalc",
+            output_attributes=[SimpleAttrInfo("lcoe")],
+        )
+
+        # Design attr binding: e2e_plant.total_capex -> component_cost.total_cost
+        design_attrs = {
+            Path("design.sysml"): [
+                DesignAttributeData(
+                    qualified_name="Pkg__Part__total_capex",
+                    name="total_capex",
+                    sysml_type="Real",
+                    default_value="component_cost.total_cost",
+                    unit=None,
+                    source_file=Path("design.sysml"),
+                    source_line=10,
+                    parent_part="e2e_plant",
+                ),
+            ],
+        }
+
+        bt = DependencyBacktracker(
+            [usage_producer, usage_consumer],
+            [calc_def_cost, calc_def_fin],
+            design_attributes=design_attrs,
+        )
+        bt.find_required_modules([], include_all=True)
+
+        key = "Pkg__Part__financial|capex"
+        assert key in bt._binding_resolutions
+        resolution = bt._binding_resolutions[key]
+        assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT

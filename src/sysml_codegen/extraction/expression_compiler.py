@@ -11,6 +11,7 @@ analysis/, resolution/, or generation/.
 from __future__ import annotations
 
 import ast as python_ast
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -166,15 +167,20 @@ PYTHON_OPERATOR_MAP: dict[str, str | None] = {
 def _sanitize_name(name: str) -> str:
     """Normalize a syside referent name to match extractor conventions.
 
-    Strips surrounding quotes and replaces spaces with underscores.
-    Mirrors extractor._sanitize_name() to ensure feature reference names
-    from syside AST nodes match the sanitized attribute names stored in
+    Mirrors core.qualified_names.sanitize_name() to ensure feature reference
+    names from syside AST nodes match the sanitized attribute names stored in
     CalculationDefinitionData.input_attributes / output_attributes.
+
+    Note: does NOT apply reserved-word suffixing (unlike sanitize_name)
+    because expression context (e.g. ``inputs.class``) is safe.
     """
     if not name:
         return ""
     name = name.strip("'\"")
     name = name.replace(" ", "_")
+    name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
+    name = re.sub(r"_+", "_", name)
+    name = name.strip("_") or "unnamed"
     return name
 
 
