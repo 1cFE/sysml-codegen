@@ -44,18 +44,18 @@ def reconstruct_expression(expr_node: Any) -> str:
     if SysideAdapter.is_instance(expr_node, "OperatorExpression"):
         return reconstruct_operator_expression(expr_node)
 
+    if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"):
+        return extract_feature_reference_name(expr_node)
+
+    if SysideAdapter.is_instance(expr_node, "FeatureChainExpression"):
+        return extract_feature_chain_name(expr_node)
+
     if hasattr(expr_node, "function") and hasattr(expr_node.function, "name"):
         # InvocationExpression (e.g., sum(), sqrt())
         func_name = expr_node.function.name
         operands = list(getattr(expr_node, "operands", []))
         args = ", ".join(reconstruct_expression(op) for op in operands)
         return f"{func_name}({args})"
-
-    if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"):
-        return extract_feature_reference_name(expr_node)
-
-    if SysideAdapter.is_instance(expr_node, "FeatureChainExpression"):
-        return extract_feature_chain_name(expr_node)
 
     if node_type in ("LiteralInteger", "LiteralReal", "LiteralRational"):
         if hasattr(expr_node, "value"):

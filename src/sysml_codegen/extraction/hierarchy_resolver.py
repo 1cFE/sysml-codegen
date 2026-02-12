@@ -272,6 +272,36 @@ class _AggregationContext:
         self.has_unsupported: bool = False
 
 
+_KNOWN_WRAPPER_FUNCTIONS = frozenset({"Evaluation", "evaluate", "collect", "select"})
+
+
+def _unwrap_invocation(node: Any, _depth: int = 0) -> Any:
+    """Unwrap InvocationExpression wrappers (Evaluation, collect, select, etc.).
+
+    Recursively peels off InvocationExpression layers to find the innermost
+    non-InvocationExpression node. Handles nested wrappers like
+    collect(Evaluation(FeatureChainExpression)).
+
+    Args:
+        node: AST node, potentially an InvocationExpression wrapper.
+        _depth: Recursion depth counter (max 3 to prevent infinite loops).
+
+    Returns:
+        The unwrapped node, or the original if no wrapper found.
+    """
+    if _depth >= 3:
+        return node
+    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
+        return node
+    if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
+        return node
+    if hasattr(node, "function") and hasattr(node.function, "name"):
+        operands = list(getattr(node, "operands", []))
+        if operands:
+            return _unwrap_invocation(operands[0], _depth + 1)
+    return node
+
+
 def _walk_aggregation_ast(
     node: Any,
     mult_lookup: dict[str, MultiplicityData],
@@ -317,13 +347,26 @@ def _walk_aggregation_ast(
             return op_str.join(parts)
         return operator
 
+    # FeatureChainExpression: child.attr → SingletonTerm
+    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
+        chain_name = extract_feature_chain_name(node)
+        ctx.singleton_terms.append(SingletonTerm(source_path=chain_name))
+        ctx.input_channels.append(chain_name)
+        return chain_name
+
+    # FeatureReferenceExpression: local attribute → LocalTerm
+    if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
+        ref_name = extract_feature_reference_name(node)
+        ctx.local_terms.append(LocalTerm(attribute_name=ref_name))
+        return ref_name
+
     # InvocationExpression: sum() → parametric multiply
     if hasattr(node, "function") and hasattr(node.function, "name"):
         func_name = node.function.name
         operands = list(getattr(node, "operands", []))
 
         if func_name == "sum" and operands:
-            operand = operands[0]
+            operand = _unwrap_invocation(operands[0])
             if SysideAdapter.is_instance(operand, "FeatureChainExpression"):
                 chain_name = extract_feature_chain_name(operand)
             else:
@@ -363,26 +406,19 @@ def _walk_aggregation_ast(
             ctx.local_terms.append(LocalTerm(attribute_name=chain_name))
             return chain_name
 
-        # Non-sum invocation — mark as unsupported, still reconstruct
+        # Non-sum invocation — unwrap known wrappers before marking unsupported
+        if func_name in _KNOWN_WRAPPER_FUNCTIONS and operands:
+            unwrapped = _unwrap_invocation(node)
+            if unwrapped is not node:
+                return _walk_aggregation_ast(unwrapped, mult_lookup, ctx)
+
+        # Truly unsupported invocation — mark and reconstruct
         ctx.has_unsupported = True
         args = ", ".join(
             _walk_aggregation_ast(op, mult_lookup, ctx)
             for op in operands
         )
         return f"{func_name}({args})"
-
-    # FeatureChainExpression: child.attr → SingletonTerm
-    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
-        chain_name = extract_feature_chain_name(node)
-        ctx.singleton_terms.append(SingletonTerm(source_path=chain_name))
-        ctx.input_channels.append(chain_name)
-        return chain_name
-
-    # FeatureReferenceExpression: local attribute → LocalTerm
-    if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
-        ref_name = extract_feature_reference_name(node)
-        ctx.local_terms.append(LocalTerm(attribute_name=ref_name))
-        return ref_name
 
     # Literals: delegate to expression_utils (consistent with is_instance pattern)
     if is_literal_expression(node):
@@ -465,6 +501,7 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     all_multiplicities: list[MultiplicityData] = []
     all_aggregations: list[AggregationExpressionData] = []
     warnings: list[str] = []
+    part_usage_names: dict[str, set[str]] = {}
 
     for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
         redefs = extract_redefinitions(part_def)
@@ -472,6 +509,17 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
 
         mults = extract_multiplicities(part_def)
         all_multiplicities.extend(mults)
+
+        # Collect ALL child PartUsage names (both multiplicity and singleton)
+        owning_qn = build_element_qualified_name(part_def)
+        names: set[str] = set()
+        for member in getattr(part_def, "owned_members", []):
+            if SysideAdapter.is_instance(member, "PartUsage"):
+                name = sanitize_name(getattr(member, "name", ""))
+                if name:
+                    names.add(name)
+        if names:
+            part_usage_names[owning_qn] = names
 
         # Build aggregation expressions from EXPRESSION-type redefinitions
         for redef in redefs:
@@ -484,6 +532,16 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                             f"{agg.owning_part_qn}.{agg.attribute_name} "
                             f"contains unsupported AST nodes"
                         )
+                    # BF-7: Find CHAIN-type aliases for this aggregation attribute
+                    # e.g., :>> total_capex = capital_cost creates alias "total_capex"
+                    for sibling in redefs:
+                        if (
+                            sibling.redefinition_type == RedefinitionType.CHAIN
+                            and sibling.source_path
+                            and sibling.source_path.endswith(agg.attribute_name)
+                            and sibling.attribute_name != agg.attribute_name
+                        ):
+                            agg.aliases.append(sibling.attribute_name)
                     all_aggregations.append(agg)
 
     # Design-level overrides from PartUsages
@@ -496,4 +554,5 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
         multiplicities=all_multiplicities,
         aggregation_expressions=all_aggregations,
         warnings=warnings,
+        part_usage_names=part_usage_names,
     )

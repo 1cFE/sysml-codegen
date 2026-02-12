@@ -403,3 +403,108 @@ class TestNoAggregationDataGraceful:
         """aggregation_data=[] works same as before."""
         bt = DependencyBacktracker([], [], aggregation_data=[])
         assert bt._aggregation_output_index == {}
+
+
+# ---------------------------------------------------------------------------
+# BF-7: Aggregation Alias Resolution
+# ---------------------------------------------------------------------------
+
+
+class TestAggregationAliasResolution:
+    """BF-7: EXPOSE_PURE aliases registered in aggregation output index."""
+
+    def test_alias_in_index_resolves_to_module_output(self):
+        """':>> total_capex = capital_cost' alias resolves to aggregation output."""
+        agg = _make_scoped_agg(
+            attribute_name="capital_cost",
+            instance_path="Design__plant__solar_battery_plant",
+        )
+        agg.expression.aliases = ["total_capex"]
+
+        bt = DependencyBacktracker([], [], aggregation_data=[agg])
+
+        # Both original and alias should resolve
+        assert "solar_battery_plant.capital_cost" in bt._aggregation_output_index
+        assert "solar_battery_plant.total_capex" in bt._aggregation_output_index
+
+    def test_bare_alias_resolves(self):
+        """Bare alias name resolves when unambiguous."""
+        agg = _make_scoped_agg(attribute_name="capital_cost")
+        agg.expression.aliases = ["total_capex"]
+
+        bt = DependencyBacktracker([], [], aggregation_data=[agg])
+        assert "total_capex" in bt._aggregation_output_index
+
+    def test_alias_channel_matches_original(self):
+        """Alias points to the same channel as the original attribute."""
+        agg = _make_scoped_agg(
+            attribute_name="capital_cost",
+            instance_path="Design__plant__solar_battery_plant",
+        )
+        agg.expression.aliases = ["total_capex"]
+
+        bt = DependencyBacktracker([], [], aggregation_data=[agg])
+        original_channel = bt._aggregation_output_index["solar_battery_plant.capital_cost"]
+        alias_channel = bt._aggregation_output_index["solar_battery_plant.total_capex"]
+        assert original_channel == alias_channel
+
+    def test_full_dotted_alias_resolves(self):
+        """Full dotted instance path with alias resolves."""
+        agg = _make_scoped_agg(
+            attribute_name="capital_cost",
+            instance_path="Design__plant__solar_battery_plant",
+        )
+        agg.expression.aliases = ["total_capex"]
+
+        bt = DependencyBacktracker([], [], aggregation_data=[agg])
+        assert "Design.plant.solar_battery_plant.total_capex" in bt._aggregation_output_index
+
+    def test_no_aliases_no_extra_keys(self):
+        """Aggregation with no aliases only has original 3 keys."""
+        agg = _make_scoped_agg(
+            attribute_name="capital_cost",
+            instance_path="Design__plant__solar_battery_plant",
+        )
+        # No aliases set (default empty list)
+
+        bt = DependencyBacktracker([], [], aggregation_data=[agg])
+        assert "total_capex" not in bt._aggregation_output_index
+
+    def test_sanitized_partdef_name_in_fallback(self):
+        """:: fallback sanitizes PartDef names ('Solar Battery Plant' → 'solar_battery_plant')."""
+        agg = _make_scoped_agg(
+            attribute_name="capital_cost",
+            instance_path="Design__plant__solar_battery_plant",
+        )
+        agg.expression.aliases = ["total_capex"]
+
+        usage = _make_calc_usage(
+            "annualized_financial",
+            "AnnualizedFinancial",
+            bindings=[
+                BindingInfo(
+                    param_name="total_capex",
+                    source_path="Solar Battery Plant::total_capex",
+                    binding_type=BindingType.REFERENCE,
+                ),
+            ],
+            qualified_name="Pkg__Part__annualized_financial",
+        )
+
+        calc_def = SimpleCalcDef(
+            name="AnnualizedFinancial",
+            qualified_name="Lib__AnnualizedFinancial",
+            output_attributes=[SimpleAttrInfo("lcoe")],
+        )
+
+        bt = DependencyBacktracker(
+            [usage],
+            [calc_def],
+            aggregation_data=[agg],
+        )
+        bt.find_required_modules([], include_all=True)
+
+        key = "Pkg__Part__annualized_financial|total_capex"
+        assert key in bt._binding_resolutions
+        resolution = bt._binding_resolutions[key]
+        assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT

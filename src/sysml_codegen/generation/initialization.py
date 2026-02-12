@@ -23,8 +23,9 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
-from sysml_codegen.core.qualified_names import sanitize_name, sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
 from sysml_codegen.extraction.data_models import (
+    AggregationExpressionData,
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
@@ -293,6 +294,55 @@ def _rewrite_virtual_bindings(
     return rewrite_count
 
 
+def _enrich_aliases_from_bindings(
+    hierarchy_data: HierarchyExtractionResult,
+    calc_usages: list[CalcUsageData],
+) -> int:
+    """Enrich aggregation aliases from CalcUsage binding parameter names.
+
+    Scans CalcUsage bindings for parameters that reference aggregation
+    attribute names. When a binding's source resolves to an aggregation
+    attribute with a different param_name, that param_name becomes an alias.
+
+    Returns count of aliases added.
+    """
+    if not hierarchy_data.aggregation_expressions:
+        return 0
+
+    # Build lookup: attribute_name -> list of AggregationExpressionData
+    agg_by_attr: dict[str, list[AggregationExpressionData]] = {}
+    for agg in hierarchy_data.aggregation_expressions:
+        agg_by_attr.setdefault(agg.attribute_name, []).append(agg)
+
+    added = 0
+    for usage in calc_usages:
+        for binding in usage.bindings:
+            if not binding.source_path or not binding.param_name:
+                continue
+
+            # Extract leaf name from source_path
+            # REFERENCE bindings: "Package::PartDef::attr" -> "attr"
+            # CHAIN bindings: "instance.attr" -> "attr"
+            source_leaf = binding.source_path
+            if "::" in source_leaf:
+                source_leaf = source_leaf.rsplit("::", 1)[-1]
+            elif "." in source_leaf:
+                source_leaf = source_leaf.rsplit(".", 1)[-1]
+
+            if source_leaf not in agg_by_attr:
+                continue
+            if binding.param_name == source_leaf:
+                continue
+
+            # Add alias to all matching aggregation expressions
+            for agg in agg_by_attr[source_leaf]:
+                if binding.param_name not in agg.aliases:
+                    agg.aliases.append(binding.param_name)
+                    added += 1
+
+    return added
+
+
 def _scope_aggregation_expressions(
     hierarchy_data: HierarchyExtractionResult | None,
     calc_usages: list[CalcUsageData],
@@ -325,17 +375,26 @@ def _scope_aggregation_expressions(
             parent = qn.rsplit("__", 1)[0]
             instance_paths.add(parent)
 
-        # Strategy 2: Child match -- derive assembly instance path from
-        # child PartUsage virtual CalcUsage QN segments
+        # Strategy 2: Child-walk — find parent instance path via child PartUsages
+        # Uses MultiplicityData (structural parent-child data) instead of name
+        # comparison, handling cases where PartDef name differs from PartUsage
+        # name (e.g., SiteInfrastructure typed by usage 'site_infra'). (BF-6)
         if not instance_paths:
-            owning_name = sanitize_name(agg_expr.owning_part_name).lower()
-            for _partdef_qn, qns in virtual_qns_by_partdef.items():
-                for qn in qns:
-                    segments = qn.split("__")
-                    for i, seg in enumerate(segments):
-                        if seg.lower() == owning_name and i < len(segments) - 1:
-                            instance_paths.add("__".join(segments[: i + 1]))
-                            break
+            children = {
+                name.lower()
+                for name in hierarchy_data.part_usage_names.get(
+                    agg_expr.owning_part_qn, set()
+                )
+            }
+            if children:
+                for _partdef_qn, qns in virtual_qns_by_partdef.items():
+                    for qn in qns:
+                        segments = qn.split("__")
+                        for i, seg in enumerate(segments):
+                            if seg.lower() in children and i > 0:
+                                parent_path = "__".join(segments[:i])
+                                instance_paths.add(parent_path)
+                                break
 
         for path in sorted(instance_paths):
             result.append(ScopedAggregationData(
@@ -409,6 +468,11 @@ def build_pipeline_context(
     hierarchy_data = _extract_hierarchy_and_rewrite_bindings(
         extractor.model, calc_usages
     )
+
+    # Step 3.6: Enrich aggregation aliases from CalcUsage bindings
+    alias_count = _enrich_aliases_from_bindings(hierarchy_data, calc_usages)
+    if alias_count:
+        logger.info("Step 3.6: Enriched %d aggregation alias(es) from CalcUsage bindings", alias_count)
 
     # Step 4: Extract design attributes for group derivation
     design_attrs = extract_design_attributes(extractor.model, design_path_filter=design_path_filter)

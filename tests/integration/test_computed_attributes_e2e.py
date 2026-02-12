@@ -238,8 +238,8 @@ class TestSolarBatteryComputedAttrE2E:
 
     def test_impl_count_includes_computed_attr(self, solar_battery_output: Path):
         impls = find_impl_files(solar_battery_output)
-        assert len(impls) == 16, (
-            f"Expected 16 impl files (15 CalcDefs + 1 computed attr), got {len(impls)}"
+        assert len(impls) == 36, (
+            f"Expected 36 impl files (15 CalcDefs + 1 computed attr + 20 aggregation modules), got {len(impls)}"
         )
 
     def test_annualized_om_uses_computed_p_net_kw(self, solar_battery_output: Path):

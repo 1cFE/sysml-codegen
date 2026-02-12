@@ -144,8 +144,8 @@ class TestSolarBatteryValidation:
 
     def test_auto_implementation_count(self, solar_battery_output: Path):
         impls = find_impl_files(solar_battery_output)
-        # 15 CalcDef impls + 1 computed attribute auto-impl (p_net_kw)
-        assert len(impls) == 16, f"Expected 16 impl files, got {len(impls)}"
+        # 15 CalcDef impls + 1 computed attribute auto-impl (p_net_kw) + 20 aggregation modules
+        assert len(impls) == 36, f"Expected 36 impl files, got {len(impls)}"
 
         auto_count = sum(1 for p in impls if is_auto_implemented(p))
         assert auto_count >= 10, (

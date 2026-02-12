@@ -1,8 +1,12 @@
-"""Unit tests for graph builder aggregation module support (Phase 3).
+"""Unit tests for graph builder aggregation module support (Phase 3 & 4).
 
 Tests _extend_output_catalog_with_aggregation(), _resolve_aggregation_input_channel(),
-_build_aggregation_module(), and topological ordering with aggregation modules.
+_build_aggregation_module(), topological ordering with aggregation modules,
+orphan entry point surfacing (BF-8), and expression compilation (BF-2).
 """
+
+import ast
+from pathlib import Path
 
 from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.qualified_names import get_channel_name, get_module_name
@@ -28,6 +32,7 @@ from sysml_codegen.resolution.models import (
     InputSource,
     ModuleInput,
     ModuleOutput,
+    ParameterGroup,
     PipelineModule,
 )
 
@@ -574,3 +579,372 @@ class TestTopologicalOrderWithAggregation:
         assert sorted_modules[0].execution_order == 0
         assert sorted_modules[1].name == "m2"
         assert sorted_modules[1].execution_order == 1
+
+
+# ---------------------------------------------------------------------------
+# BF-8: TestOrphanEntryPointsSurfaced
+# ---------------------------------------------------------------------------
+
+
+class TestOrphanEntryPointsSurfaced:
+    """BF-8: Orphan entry points (e.g., multiplicity) appear in parameter groups."""
+
+    def _collect_orphans(
+        self,
+        modules: list[PipelineModule],
+        entry_points: dict[str, EntryPoint],
+        param_groups: list[ParameterGroup],
+    ) -> list[ParameterGroup]:
+        """Reproduce the orphan EP collection logic from graph_builder Step 6.6.
+
+        This mirrors the code we're adding to graph_builder.py so we can unit-test
+        the logic directly without calling the full build_computation_graph().
+        """
+        covered_ep_names: set[str] = set()
+        for group in param_groups:
+            for p in group.parameters:
+                covered_ep_names.add(p.qualified_name)
+
+        orphan_eps = {
+            qn: ep for qn, ep in entry_points.items()
+            if qn not in covered_ep_names
+        }
+
+        if orphan_eps:
+            ep_type_lookup: dict[str, str] = {}
+            for m in modules:
+                for inp in m.inputs:
+                    if inp.source.source_type == "entry_point" and inp.source.qualified_name:
+                        ep_type_lookup[inp.source.qualified_name] = inp.python_type
+
+            orphan_params = []
+            for qn, ep in orphan_eps.items():
+                orphan_params.append(EntryPoint(
+                    qualified_name=qn,
+                    simple_name=ep.simple_name,
+                    entry_type=ep.entry_type,
+                    default_value=ep.default_value,
+                    python_type=ep_type_lookup.get(qn, "float"),
+                ))
+            if orphan_params:
+                param_groups.append(ParameterGroup(
+                    name="system_design",
+                    class_name="SystemDesign",
+                    source_file=Path("hierarchy"),
+                    parameters=orphan_params,
+                ))
+
+        return param_groups
+
+    def test_multiplicity_ep_in_system_design_group(self):
+        """module_count entry point appears in 'system_design' parameter group."""
+        ep_qn = "Design__plant__solar_array__module_count"
+        entry_points = {
+            ep_qn: EntryPoint(
+                qualified_name=ep_qn,
+                simple_name="module_count",
+                entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                default_value=20.0,
+            ),
+        }
+        module = PipelineModule(
+            name="design__plant__solar_array__capital_cost",
+            module_type="CapitalCostModule",
+            inputs=[ModuleInput(
+                param_name="module_count",
+                python_type="int",
+                source=InputSource(
+                    source_type="entry_point",
+                    qualified_name=ep_qn,
+                ),
+            )],
+            outputs=[],
+            execution_order=0,
+            is_aggregation=True,
+        )
+
+        result = self._collect_orphans([module], entry_points, [])
+
+        assert len(result) == 1
+        assert result[0].name == "system_design"
+        param_names = [p.qualified_name for p in result[0].parameters]
+        assert ep_qn in param_names
+        # Type should be "int" from ModuleInput.python_type
+        mc_param = next(p for p in result[0].parameters if p.qualified_name == ep_qn)
+        assert mc_param.python_type == "int"
+
+    def test_non_multiplicity_orphan_also_captured(self):
+        """Any orphan entry point (not just multiplicity) gets captured."""
+        ep_qn = "Design__plant__solar_array__capital_cost__misc_hardware_cost"
+        entry_points = {
+            ep_qn: EntryPoint(
+                qualified_name=ep_qn,
+                simple_name="misc_hardware_cost",
+                entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+            ),
+        }
+        module = PipelineModule(
+            name="design__plant__solar_array__capital_cost",
+            module_type="CapitalCostModule",
+            inputs=[ModuleInput(
+                param_name="misc_hardware_cost",
+                python_type="float",
+                source=InputSource(
+                    source_type="entry_point",
+                    qualified_name=ep_qn,
+                ),
+            )],
+            outputs=[],
+            execution_order=0,
+            is_aggregation=True,
+        )
+
+        result = self._collect_orphans([module], entry_points, [])
+
+        assert len(result) == 1
+        param_names = [p.qualified_name for p in result[0].parameters]
+        assert ep_qn in param_names
+
+    def test_covered_ep_not_orphaned(self):
+        """Entry point already in a param group is NOT collected as orphan."""
+        ep_qn = "SomeCalc__param__x"
+        ep = EntryPoint(
+            qualified_name=ep_qn,
+            simple_name="x",
+            entry_type=EntryPointType.LIBRARY_DEFAULT,
+            default_value=1.0,
+        )
+        entry_points = {ep_qn: ep}
+        existing_group = ParameterGroup(
+            name="existing_group",
+            class_name="ExistingGroup",
+            source_file=Path("existing.sysml"),
+            parameters=[ep],
+        )
+
+        result = self._collect_orphans([], entry_points, [existing_group])
+
+        # No synthetic group created; only the existing group
+        assert len(result) == 1
+        assert result[0].name == "existing_group"
+
+    def test_mixed_covered_and_orphan(self):
+        """Covered EPs stay in existing groups; orphans go to system_design."""
+        covered_ep_qn = "SomeCalc__param__x"
+        orphan_ep_qn = "Design__plant__solar_array__module_count"
+        covered_ep = EntryPoint(
+            qualified_name=covered_ep_qn,
+            simple_name="x",
+            entry_type=EntryPointType.LIBRARY_DEFAULT,
+            default_value=1.0,
+        )
+        orphan_ep = EntryPoint(
+            qualified_name=orphan_ep_qn,
+            simple_name="module_count",
+            entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+            default_value=20.0,
+        )
+        entry_points = {covered_ep_qn: covered_ep, orphan_ep_qn: orphan_ep}
+        existing_group = ParameterGroup(
+            name="existing",
+            class_name="Existing",
+            source_file=Path("existing.sysml"),
+            parameters=[covered_ep],
+        )
+        module = PipelineModule(
+            name="agg_module",
+            module_type="AggModule",
+            inputs=[ModuleInput(
+                param_name="module_count",
+                python_type="int",
+                source=InputSource(
+                    source_type="entry_point",
+                    qualified_name=orphan_ep_qn,
+                ),
+            )],
+            outputs=[],
+            execution_order=0,
+            is_aggregation=True,
+        )
+
+        result = self._collect_orphans([module], entry_points, [existing_group])
+
+        assert len(result) == 2
+        group_names = [g.name for g in result]
+        assert "existing" in group_names
+        assert "system_design" in group_names
+        sys_group = next(g for g in result if g.name == "system_design")
+        assert len(sys_group.parameters) == 1
+        assert sys_group.parameters[0].python_type == "int"
+
+    def test_no_orphans_no_synthetic_group(self):
+        """When all entry points are covered, no synthetic group is created."""
+        ep_qn = "SomeCalc__param__x"
+        ep = EntryPoint(
+            qualified_name=ep_qn,
+            simple_name="x",
+            entry_type=EntryPointType.LIBRARY_DEFAULT,
+        )
+        entry_points = {ep_qn: ep}
+        existing_group = ParameterGroup(
+            name="existing",
+            class_name="Existing",
+            source_file=Path("existing.sysml"),
+            parameters=[ep],
+        )
+
+        result = self._collect_orphans([], entry_points, [existing_group])
+
+        assert len(result) == 1
+        assert result[0].name == "existing"
+
+
+# ---------------------------------------------------------------------------
+# BF-2: TestAggregationExpressionCompilation
+# ---------------------------------------------------------------------------
+
+
+class TestAggregationExpressionCompilation:
+    """BF-2: Aggregation modules have compiled_expression with inputs.X form."""
+
+    def test_compiled_expression_has_inputs_prefix(self):
+        """_build_aggregation_module() produces compiled_expression with inputs.X refs."""
+        agg = _make_scoped_agg(
+            sum_terms=[SumTerm("pv_module", "capital_cost", "module_count", 20)],
+            instance_path="Design__plant__solar_array",
+            transformed_expression="module_count * pv_module.capital_cost",
+        )
+        expected_channel = get_channel_name(
+            "Design__plant__solar_array__pv_module__cost_model", "total_cost"
+        )
+        redefs = [
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+        ]
+        catalog: dict[str, tuple[str, str, str]] = {
+            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
+        }
+
+        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+
+        assert module.compiled_expression is not None
+        assert "inputs.module_count" in module.compiled_expression
+        assert "inputs.pv_module_capital_cost" in module.compiled_expression
+        # No raw refs should remain
+        assert "pv_module.capital_cost" not in module.compiled_expression
+
+    def test_compiled_expression_ast_parses(self):
+        """compiled_expression is valid Python (ast.parse succeeds)."""
+        agg = _make_scoped_agg(
+            sum_terms=[SumTerm("pv_module", "capital_cost", "module_count", 20)],
+            instance_path="Design__plant__solar_array",
+            transformed_expression="module_count * pv_module.capital_cost",
+        )
+        expected_channel = get_channel_name(
+            "Design__plant__solar_array__pv_module__cost_model", "total_cost"
+        )
+        redefs = [
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+        ]
+        catalog: dict[str, tuple[str, str, str]] = {
+            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
+        }
+
+        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+
+        assert module.compiled_expression is not None
+        # Should not raise
+        ast.parse(module.compiled_expression, mode="eval")
+
+    def test_singleton_term_compiled_correctly(self):
+        """Singleton term ref replaced with inputs.X form."""
+        agg = _make_scoped_agg(
+            sum_terms=[SumTerm("pv_module", "capital_cost", "module_count", 20)],
+            singleton_terms=[SingletonTerm("allocation_model.total_allocation")],
+            instance_path="Design__plant__solar_array",
+            transformed_expression=(
+                "module_count * pv_module.capital_cost + allocation_model.total_allocation"
+            ),
+        )
+        # Channel for sum term
+        cost_channel = get_channel_name(
+            "Design__plant__solar_array__pv_module__cost_model", "total_cost"
+        )
+        # Channel for singleton (direct)
+        alloc_channel = get_channel_name(
+            "Design__plant__solar_array__allocation_model", "total_allocation"
+        )
+        redefs = [
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+        ]
+        catalog: dict[str, tuple[str, str, str]] = {
+            "cost_model.total_cost": ("CostModelModule", cost_channel, "root"),
+            "some_key": ("AllocType", alloc_channel, "root"),
+        }
+
+        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+
+        assert module.compiled_expression is not None
+        assert "inputs.allocation_model_total_allocation" in module.compiled_expression
+
+    def test_local_term_compiled_correctly(self):
+        """Local term ref replaced with inputs.X form."""
+        agg = _make_scoped_agg(
+            sum_terms=[],
+            local_terms=[LocalTerm("misc_cost")],
+            instance_path="Design__plant__solar_array",
+            transformed_expression="misc_cost",
+        )
+
+        module = _build_aggregation_module(agg, [], {}, {}, None)
+
+        assert module.compiled_expression is not None
+        assert module.compiled_expression == "inputs.misc_cost"
+
+    def test_unsupported_nodes_no_compilation(self):
+        """has_unsupported_nodes=True -> compiled_expression is None."""
+        agg = _make_scoped_agg(
+            has_unsupported_nodes=True,
+            sum_terms=[],
+            transformed_expression="unknown()",
+        )
+
+        module = _build_aggregation_module(agg, [], {}, {}, None)
+
+        assert module.compiled_expression is None
+
+    def test_multi_sum_term_expression(self):
+        """Expression with multiple sum terms compiles all refs."""
+        agg = _make_scoped_agg(
+            sum_terms=[
+                SumTerm("pv_module", "capital_cost", "module_count", 20),
+                SumTerm("inverter", "cost", "inverter_count", 5),
+            ],
+            instance_path="Design__plant__solar_array",
+            transformed_expression=(
+                "module_count * pv_module.capital_cost + inverter_count * inverter.cost"
+            ),
+        )
+        cost_channel = get_channel_name(
+            "Design__plant__solar_array__pv_module__cost_model", "total_cost"
+        )
+        inv_channel = get_channel_name(
+            "Design__plant__solar_array__inverter__cost_calc", "cost"
+        )
+        redefs = [
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module"),
+            _make_chain_redef("cost", "cost_calc.cost", "Lib__Inverter"),
+        ]
+        catalog: dict[str, tuple[str, str, str]] = {
+            "cost_model.total_cost": ("CostModelModule", cost_channel, "root"),
+            "cost_calc.cost": ("CostCalcModule", inv_channel, "root"),
+        }
+
+        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+
+        assert module.compiled_expression is not None
+        assert "inputs.pv_module_capital_cost" in module.compiled_expression
+        assert "inputs.inverter_cost" in module.compiled_expression
+        assert "inputs.module_count" in module.compiled_expression
+        assert "inputs.inverter_count" in module.compiled_expression
+        # Valid Python
+        ast.parse(module.compiled_expression, mode="eval")

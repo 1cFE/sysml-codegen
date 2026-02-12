@@ -202,6 +202,42 @@ def build_computation_graph(
     filtered_groups = [g for g in raw_groups if g.parameters]
     param_groups = _convert_derived_groups(filtered_groups, entry_points)
 
+    # Step 6.8: Collect orphan entry points not covered by any param group
+    covered_ep_names: set[str] = set()
+    for group in param_groups:
+        for p in group.parameters:
+            covered_ep_names.add(p.qualified_name)
+
+    orphan_eps = {
+        qn: ep for qn, ep in entry_points.items()
+        if qn not in covered_ep_names
+    }
+
+    if orphan_eps:
+        # Build ep_qn -> python_type lookup from ModuleInput sources
+        ep_type_lookup: dict[str, str] = {}
+        for m in modules:
+            for inp in m.inputs:
+                if inp.source.source_type == "entry_point" and inp.source.qualified_name:
+                    ep_type_lookup[inp.source.qualified_name] = inp.python_type
+
+        orphan_params = []
+        for qn, ep in orphan_eps.items():
+            orphan_params.append(EntryPoint(
+                qualified_name=qn,
+                simple_name=ep.simple_name,
+                entry_type=ep.entry_type,
+                default_value=ep.default_value,
+                python_type=ep_type_lookup.get(qn, "float"),
+            ))
+        if orphan_params:
+            param_groups.append(ParameterGroup(
+                name="system_design",
+                class_name="SystemDesign",
+                source_file=Path("hierarchy"),
+                parameters=orphan_params,
+            ))
+
     # Step 7: Unified topological sort across ALL modules
     modules = _unified_topological_sort(modules)
 
@@ -924,6 +960,7 @@ def _build_aggregation_module(
     )
 
     inputs: list[ModuleInput] = []
+    ref_to_inputs: dict[str, str] = {}
     compilability = Compilability.FULLY_COMPILABLE
 
     if agg.expression.has_unsupported_nodes:
@@ -966,6 +1003,7 @@ def _build_aggregation_module(
             python_type="float",
             source=source,
         ))
+        ref_to_inputs[f"{term.part_usage_name}.{term.attribute_name}"] = f"inputs.{param_name}"
 
         # Multiplicity entry point
         if term.multiplicity_attr:
@@ -993,6 +1031,7 @@ def _build_aggregation_module(
                     param_group=ep.param_group,
                 ),
             ))
+            ref_to_inputs[term.multiplicity_attr] = f"inputs.{term.multiplicity_attr}"
 
     # Process SingletonTerms (non-multiplied child references)
     for s_term in agg.expression.singleton_terms:
@@ -1045,6 +1084,7 @@ def _build_aggregation_module(
             python_type="float",
             source=s_source,
         ))
+        ref_to_inputs[s_term.source_path] = f"inputs.{param_name}"
 
     # Process LocalTerms (PartDef-local attribute references)
     for l_term in agg.expression.local_terms:
@@ -1067,6 +1107,15 @@ def _build_aggregation_module(
                 param_group=ep.param_group,
             ),
         ))
+        ref_to_inputs[l_term.attribute_name] = f"inputs.{l_term.attribute_name}"
+
+    # Compile expression: replace symbolic refs with inputs.X form
+    compiled_expression: str | None = None
+    if not agg.expression.has_unsupported_nodes and agg.expression.transformed_expression:
+        compiled = agg.expression.transformed_expression
+        for ref in sorted(ref_to_inputs, key=len, reverse=True):
+            compiled = compiled.replace(ref, ref_to_inputs[ref])
+        compiled_expression = compiled
 
     # Single output
     output = ModuleOutput(
@@ -1082,6 +1131,7 @@ def _build_aggregation_module(
         outputs=[output],
         execution_order=0,  # Reassigned during unified toposort
         compilability=compilability,
+        compiled_expression=compiled_expression,
         is_aggregation=True,
     )
 

@@ -527,8 +527,8 @@ class TestFormulaRemoval:
         # "area" should NOT appear as an entry point (it was removed from design_attrs)
         entry_point_names = set()
         for group in graph.entry_point_groups:
-            for ep in group.entries:
-                entry_point_names.add(ep.name)
+            for ep in group.parameters:
+                entry_point_names.add(ep.simple_name)
         # "area" must not be an entry point (it's a module output)
         assert "area" not in entry_point_names or all(
             "area" in m.name for m in graph.modules

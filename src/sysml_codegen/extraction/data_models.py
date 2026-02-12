@@ -322,6 +322,7 @@ class AggregationExpressionData:
     entry_points: list[str]  # Multiplicity count attrs → pipeline entry points
     compilability: Compilability = Compilability.UNKNOWN
     has_unsupported_nodes: bool = False
+    aliases: list[str] = field(default_factory=list)  # CHAIN redef aliases (e.g., ["total_capex"])
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
 
@@ -335,6 +336,7 @@ class HierarchyExtractionResult:
     multiplicities: list[MultiplicityData]
     aggregation_expressions: list[AggregationExpressionData]
     warnings: list[str]
+    part_usage_names: dict[str, set[str]] = field(default_factory=dict)
 
 
 @dataclass

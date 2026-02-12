@@ -560,7 +560,7 @@ def generate_all_derived_schemas_from_graph(
         for ep in group.parameters:
             field: dict[str, Any] = {
                 "name": ep.qualified_name,
-                "type": "float",  # All entry points are numeric
+                "type": getattr(ep, "python_type", "float"),
                 "description": f"Entry point: {ep.simple_name}",
                 "default": ep.default_value,
             }

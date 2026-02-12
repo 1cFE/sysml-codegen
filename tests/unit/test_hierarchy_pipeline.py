@@ -12,6 +12,7 @@ from agentic_mbse.sysml.types import BindingType
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
     HierarchyExtractionResult,
+    MultiplicityData,
     RedefinitionData,
     RedefinitionType,
     ScopedAggregationData,
@@ -90,13 +91,16 @@ def _make_hierarchy_with_override(
 def _make_hierarchy(
     agg_exprs: list[AggregationExpressionData] | None = None,
     design_overrides: list[RedefinitionData] | None = None,
+    multiplicities: list[MultiplicityData] | None = None,
+    part_usage_names: dict[str, set[str]] | None = None,
 ) -> HierarchyExtractionResult:
     return HierarchyExtractionResult(
         redefinitions=[],
         design_overrides=design_overrides or [],
-        multiplicities=[],
+        multiplicities=multiplicities or [],
         aggregation_expressions=agg_exprs or [],
         warnings=[],
+        part_usage_names=part_usage_names or {},
     )
 
 
@@ -359,6 +363,9 @@ class TestScopeAggregationExpressions:
         agg_expr = _make_agg_expr(
             owning_part_qn="Lib__Solar_Array", owning_part_name="Solar_Array"
         )
+        multiplicities = [
+            MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20),
+        ]
         usages = [
             _make_virtual_calc_usage(
                 qn="SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model",
@@ -366,7 +373,11 @@ class TestScopeAggregationExpressions:
             )
         ]
         result = _scope_aggregation_expressions(
-            _make_hierarchy(agg_exprs=[agg_expr]), usages
+            _make_hierarchy(
+                agg_exprs=[agg_expr],
+                multiplicities=multiplicities,
+                part_usage_names={"Lib__Solar_Array": {"pv_module"}},
+            ), usages
         )
         assert len(result) == 1
         assert (
@@ -396,6 +407,10 @@ class TestScopeAggregationExpressions:
         agg_expr = _make_agg_expr(
             owning_part_qn="Lib__Solar_Array", owning_part_name="Solar_Array"
         )
+        multiplicities = [
+            MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20),
+            MultiplicityData("inverter", "Lib__Solar_Array", 4, "inverter_count", 4),
+        ]
         usages = [
             _make_virtual_calc_usage(
                 qn="Design__plant__solar_array__pv_module__cost_model",
@@ -407,7 +422,11 @@ class TestScopeAggregationExpressions:
             ),
         ]
         result = _scope_aggregation_expressions(
-            _make_hierarchy(agg_exprs=[agg_expr]), usages
+            _make_hierarchy(
+                agg_exprs=[agg_expr],
+                multiplicities=multiplicities,
+                part_usage_names={"Lib__Solar_Array": {"pv_module", "inverter"}},
+            ), usages
         )
         assert len(result) == 1
         assert result[0].instance_path == "Design__plant__solar_array"
@@ -440,6 +459,9 @@ class TestScopeAggregationExpressions:
             owning_part_name="Solar_Array",
             attribute_name="capital_cost",
         )
+        multiplicities = [
+            MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20),
+        ]
         usages = [
             _make_virtual_calc_usage(
                 qn="Design__plant__solar_array__pv_module__cost_model",
@@ -447,7 +469,11 @@ class TestScopeAggregationExpressions:
             )
         ]
         result = _scope_aggregation_expressions(
-            _make_hierarchy(agg_exprs=[agg_expr]), usages
+            _make_hierarchy(
+                agg_exprs=[agg_expr],
+                multiplicities=multiplicities,
+                part_usage_names={"Lib__Solar_Array": {"pv_module"}},
+            ), usages
         )
         assert len(result) == 1
         assert result[0].module_eqn == "Design__plant__solar_array__capital_cost"
@@ -475,6 +501,124 @@ class TestScopeAggregationExpressions:
         assert len(result) == 1
         # Direct match produces parent of the direct CalcUsage
         assert result[0].instance_path == "Design__plant__solar_array"
+
+
+# ---------------------------------------------------------------------------
+# BF-6: Scope Aggregation via Child-Walk
+# ---------------------------------------------------------------------------
+
+
+class TestScopeAggregationSiteInfra:
+    """BF-6: _scope_aggregation_expressions() finds Site Infrastructure via child-walk."""
+
+    def test_partdef_with_mismatched_usage_name_scoped_via_children(self):
+        """PartDef 'SiteInfrastructure' typed by usage 'site_infra' is found via child-walk."""
+        agg_expr = _make_agg_expr(
+            owning_part_qn="Lib__SiteInfrastructure",
+            owning_part_name="SiteInfrastructure",
+            attribute_name="capital_cost",
+        )
+        multiplicities = [
+            MultiplicityData(
+                owning_part_def_qn="Lib__SiteInfrastructure",
+                part_usage_name="grid_connection",
+                count=2,
+                count_attribute_name="connection_count",
+                default_value=2,
+            ),
+        ]
+        virtual_usages = [
+            _make_virtual_calc_usage(
+                qn="Design__plant__site_infra__grid_connection__cost_model",
+                owning_part_def_qn="Lib__GridConnection",
+            ),
+        ]
+        hierarchy = _make_hierarchy(
+            agg_exprs=[agg_expr],
+            multiplicities=multiplicities,
+            part_usage_names={"Lib__SiteInfrastructure": {"grid_connection"}},
+        )
+
+        result = _scope_aggregation_expressions(hierarchy, virtual_usages)
+
+        assert len(result) == 1
+        assert "site_infra" in result[0].instance_path
+
+    def test_child_walk_does_not_duplicate_with_strategy1(self):
+        """If Strategy 1 (direct match) already found paths, child-walk is skipped."""
+        agg_expr = _make_agg_expr(
+            owning_part_qn="Lib__Solar_Array",
+            owning_part_name="Solar_Array",
+        )
+        multiplicities = [
+            MultiplicityData(
+                owning_part_def_qn="Lib__Solar_Array",
+                part_usage_name="pv_module",
+                count=20,
+                count_attribute_name="module_count",
+                default_value=20,
+            ),
+        ]
+        usages = [
+            # Direct match via owning_part_def_qn
+            _make_virtual_calc_usage(
+                qn="Design__plant__solar_array__agg_calc",
+                owning_part_def_qn="Lib__Solar_Array",
+            ),
+            # Child usages that child-walk could also find
+            _make_virtual_calc_usage(
+                qn="Design__plant__solar_array__pv_module__cost_model",
+                owning_part_def_qn="Lib__PV_Module",
+            ),
+        ]
+        hierarchy = _make_hierarchy(
+            agg_exprs=[agg_expr],
+            multiplicities=multiplicities,
+        )
+
+        result = _scope_aggregation_expressions(hierarchy, usages)
+        assert len(result) == 1  # Strategy 1 found it, no duplicate from child-walk
+
+    def test_all_four_assemblies_scoped(self):
+        """With 4 assembly PartDefs (including mismatched name), all 4 get scoped."""
+        agg_exprs = [
+            _make_agg_expr(owning_part_qn="Lib__Solar_Array", owning_part_name="Solar_Array", attribute_name="capital_cost"),
+            _make_agg_expr(owning_part_qn="Lib__Battery_System", owning_part_name="Battery_System", attribute_name="capital_cost"),
+            _make_agg_expr(owning_part_qn="Lib__Inverter_Array", owning_part_name="Inverter_Array", attribute_name="capital_cost"),
+            _make_agg_expr(owning_part_qn="Lib__SiteInfrastructure", owning_part_name="SiteInfrastructure", attribute_name="capital_cost"),
+        ]
+        multiplicities = [
+            MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20),
+            MultiplicityData("battery_pack", "Lib__Battery_System", 8, "pack_count", 8),
+            MultiplicityData("inverter", "Lib__Inverter_Array", 4, "inverter_count", 4),
+            MultiplicityData("grid_connection", "Lib__SiteInfrastructure", 2, "connection_count", 2),
+        ]
+        usages = [
+            # Child CalcUsages — each child's QN contains the parent instance path segment
+            _make_virtual_calc_usage(qn="Design__plant__solar_array__pv_module__cost_model", owning_part_def_qn="Lib__PV_Module"),
+            _make_virtual_calc_usage(qn="Design__plant__battery_system__battery_pack__cost_model", owning_part_def_qn="Lib__BatteryPack"),
+            _make_virtual_calc_usage(qn="Design__plant__inverter_array__inverter__cost_model", owning_part_def_qn="Lib__Inverter"),
+            _make_virtual_calc_usage(qn="Design__plant__site_infra__grid_connection__cost_model", owning_part_def_qn="Lib__GridConnection"),
+        ]
+        hierarchy = _make_hierarchy(
+            agg_exprs=agg_exprs,
+            multiplicities=multiplicities,
+            part_usage_names={
+                "Lib__Solar_Array": {"pv_module"},
+                "Lib__Battery_System": {"battery_pack"},
+                "Lib__Inverter_Array": {"inverter"},
+                "Lib__SiteInfrastructure": {"grid_connection"},
+            },
+        )
+
+        result = _scope_aggregation_expressions(hierarchy, usages)
+        assert len(result) == 4
+
+        instance_paths = {r.instance_path for r in result}
+        assert "Design__plant__solar_array" in instance_paths
+        assert "Design__plant__battery_system" in instance_paths
+        assert "Design__plant__inverter_array" in instance_paths
+        assert "Design__plant__site_infra" in instance_paths
 
 
 # ---------------------------------------------------------------------------

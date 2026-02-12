@@ -431,7 +431,7 @@ def _generate_aggregation_modules(
     }
 
     for agg in (ctx.aggregation_expressions or []):
-        sysml_qn = f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
+        sysml_qn = agg.module_eqn.replace("__", "::")  # BF-4: instance-scoped
         sqn = SysMLQualifiedName(sysml_qn)
         python_path = PythonModulePath.from_sysml(sqn)
         module_eqn = sysml_to_python_qualified_name(sysml_qn)
@@ -449,8 +449,8 @@ def _generate_aggregation_modules(
         class_name = module_type_full.split(".")[-1]
         input_class_name = class_name.replace("Module", "Input")
 
-        # Derive input names from PipelineModule if available
-        pipeline_module = agg_modules_by_name.get(agg.module_eqn)
+        # Derive input names from PipelineModule if available (BF-3: normalize case)
+        pipeline_module = agg_modules_by_name.get(get_module_name(agg.module_eqn))
         if pipeline_module:
             input_names = [inp.param_name for inp in pipeline_module.inputs]
         else:
@@ -518,10 +518,17 @@ def _generate_aggregation_stencils(
         SysMLQualifiedName,
         derive_module_type,
     )
-    from sysml_codegen.core.qualified_names import get_module_name, sysml_to_python_qualified_name
+    from sysml_codegen.core.qualified_names import get_module_name
 
     handwritten_dir = config.output_path / "handwritten"
     impl_count = 0
+
+    # Build lookup from module name to PipelineModule for compiled_expression
+    agg_modules_by_name = {
+        m.name: m
+        for m in ctx.computation_graph.modules
+        if m.is_aggregation
+    }
 
     for agg in (ctx.aggregation_expressions or []):
         if agg.expression.has_unsupported_nodes:
@@ -530,10 +537,10 @@ def _generate_aggregation_stencils(
         if not agg.expression.transformed_expression:
             continue
 
-        sysml_qn = f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
+        sysml_qn = agg.module_eqn.replace("__", "::")  # BF-5: instance-scoped
         sqn = SysMLQualifiedName(sysml_qn)
         python_path = PythonModulePath.from_sysml(sqn)
-        module_eqn = sysml_to_python_qualified_name(sysml_qn)
+        module_eqn = agg.module_eqn  # BF-5: use directly, no recompute
         module_type_full = derive_module_type(sysml_qn)
         class_name = module_type_full.split(".")[-1]
         input_class_name = class_name.replace("Module", "Input")
@@ -550,6 +557,12 @@ def _generate_aggregation_stencils(
         else:
             output_path = handwritten_dir / f"{python_path.filename}_impl.py"
 
+        # BF-2: Use compiled_expression (inputs.X form) from PipelineModule
+        pipeline_module = agg_modules_by_name.get(get_module_name(agg.module_eqn))
+        expression = agg.expression.transformed_expression  # fallback
+        if pipeline_module and pipeline_module.compiled_expression:
+            expression = pipeline_module.compiled_expression
+
         context = {
             "function_name": f"run_{get_module_name(module_eqn)}",
             "calc_name": module_eqn,
@@ -559,11 +572,11 @@ def _generate_aggregation_stencils(
             "output_expressions": [
                 {
                     "name": agg.expression.attribute_name,
-                    "expression": agg.expression.transformed_expression,
+                    "expression": expression,
                 },
             ],
             "output_count": 1,
-            "single_output_expression": agg.expression.transformed_expression,
+            "single_output_expression": expression,
             "module_import_path": python_path.import_path,
             "package_name": config.package_name,
             "sysml_source": "aggregation",

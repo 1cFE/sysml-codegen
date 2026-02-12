@@ -56,6 +56,7 @@ class EntryPoint(BaseModel):
     default_value: float | None = None
     source_calc_usage: str | None = None
     param_group: str | None = None
+    python_type: str = "float"
 
     @property
     def json_field_name(self) -> str:
@@ -165,6 +166,7 @@ class PipelineModule(BaseModel):
     outputs: list[ModuleOutput]
     execution_order: int
     compilability: Compilability = Compilability.UNKNOWN
+    compiled_expression: str | None = None
     is_computed_attribute: bool = False
     is_aggregation: bool = False
 

@@ -1006,3 +1006,154 @@ class TestExtractHierarchyData:
         assert len(result.design_overrides) == 1  # pv_module.wattage
         assert result.aggregation_expressions[0].attribute_name == "capital_cost"
         assert len(result.aggregation_expressions[0].sum_terms) == 1
+
+
+# ---------------------------------------------------------------------------
+# BF-1 — Test Suite: _walk_aggregation_ast() Evaluation Unwrap
+# ---------------------------------------------------------------------------
+
+
+def _make_wrapped_sum_invocation(
+    part_name: str,
+    attr_name: str,
+    wrapper_name: str = "Evaluation",
+) -> MockInvocationExpression:
+    """Build a mock sum(Wrapper(part.attr)) InvocationExpression."""
+    chain = MockFeatureChainExpression([part_name, attr_name])
+    wrapper = MockInvocationExpression(wrapper_name, [chain])
+    return MockInvocationExpression("sum", [wrapper])
+
+
+class TestWalkAggregationAstEvaluationUnwrap:
+    """BF-1: _walk_aggregation_ast() unwraps InvocationExpression around sum() operands."""
+
+    def test_sum_with_evaluation_wrapper_produces_correct_sum_term(self):
+        """sum(Evaluation(pv_module.capital_cost)) → SumTerm(part_usage_name='pv_module', ...)."""
+        sum_expr = _make_wrapped_sum_invocation("pv_module", "capital_cost")
+        redef = RedefinitionData(
+            owning_part_qn="Lib__Solar_Array",
+            attribute_name="capital_cost",
+            redefinition_type=RedefinitionType.EXPRESSION,
+            expression_ast=sum_expr,
+            expression_text="sum(Evaluation(pv_module.capital_cost))",
+        )
+        mults = [MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20)]
+        part = MockPartDefinitionForRedef(
+            "Solar_Array", owned_members=[MockPartUsageForMultiplicity("pv_module")]
+        )
+        result = build_aggregation_expression(redef, mults, part)
+        assert result is not None
+        assert len(result.sum_terms) == 1
+        assert result.sum_terms[0].part_usage_name == "pv_module"
+        assert result.sum_terms[0].attribute_name == "capital_cost"
+        assert result.has_unsupported_nodes is False
+
+    def test_sum_without_wrapper_still_works(self):
+        """sum(pv_module.capital_cost) — no wrapper — still produces correct SumTerm."""
+        sum_expr = _make_sum_invocation("pv_module", "capital_cost")
+        redef = RedefinitionData(
+            owning_part_qn="Lib__Solar_Array",
+            attribute_name="capital_cost",
+            redefinition_type=RedefinitionType.EXPRESSION,
+            expression_ast=sum_expr,
+            expression_text="sum(pv_module.capital_cost)",
+        )
+        mults = [MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20)]
+        part = MockPartDefinitionForRedef(
+            "Solar_Array", owned_members=[MockPartUsageForMultiplicity("pv_module")]
+        )
+        result = build_aggregation_expression(redef, mults, part)
+        assert result is not None
+        assert len(result.sum_terms) == 1
+        assert result.has_unsupported_nodes is False
+
+    def test_nested_wrapper_unwrapped(self):
+        """collect(Evaluation(chain)) — nested invocations are unwrapped."""
+        chain = MockFeatureChainExpression(["inverter", "cost"])
+        eval_wrap = MockInvocationExpression("Evaluation", [chain])
+        collect_wrap = MockInvocationExpression("collect", [eval_wrap])
+        sum_expr = MockInvocationExpression("sum", [collect_wrap])
+
+        redef = RedefinitionData(
+            owning_part_qn="Lib__Inverter_Array",
+            attribute_name="capital_cost",
+            redefinition_type=RedefinitionType.EXPRESSION,
+            expression_ast=sum_expr,
+            expression_text="sum(collect(Evaluation(inverter.cost)))",
+        )
+        mults = [MultiplicityData("inverter", "Lib__Inverter_Array", 4, "inverter_count", 4)]
+        part = MockPartDefinitionForRedef(
+            "Inverter_Array", owned_members=[MockPartUsageForMultiplicity("inverter")]
+        )
+        result = build_aggregation_expression(redef, mults, part)
+        assert result is not None
+        assert len(result.sum_terms) == 1
+        assert result.sum_terms[0].part_usage_name == "inverter"
+        assert result.has_unsupported_nodes is False
+
+    def test_non_sum_evaluation_wrapper_unwrapped_not_marked_unsupported(self):
+        """Standalone Evaluation(chain) outside sum() is unwrapped, not marked unsupported."""
+        chain = MockFeatureChainExpression(["allocation_model", "total_allocation"])
+        eval_wrapper = MockInvocationExpression("Evaluation", [chain])
+
+        redef = RedefinitionData(
+            owning_part_qn="Lib__Solar_Array",
+            attribute_name="total",
+            redefinition_type=RedefinitionType.EXPRESSION,
+            expression_ast=eval_wrapper,
+            expression_text="Evaluation(allocation_model.total_allocation)",
+        )
+        part = MockPartDefinitionForRedef("Solar_Array", owned_members=[])
+        result = build_aggregation_expression(redef, [], part)
+        assert result is not None
+        assert result.has_unsupported_nodes is False
+        assert len(result.singleton_terms) == 1
+        assert result.singleton_terms[0].source_path == "allocation_model.total_allocation"
+
+    def test_transformed_expression_contains_real_attribute_names(self):
+        """After unwrap, transformed_expression has real names, not 'Evaluation()'."""
+        sum_expr = _make_wrapped_sum_invocation("pv_module", "capital_cost")
+        redef = RedefinitionData(
+            owning_part_qn="Lib__Solar_Array",
+            attribute_name="capital_cost",
+            redefinition_type=RedefinitionType.EXPRESSION,
+            expression_ast=sum_expr,
+            expression_text="sum(Evaluation(pv_module.capital_cost))",
+        )
+        mults = [MultiplicityData("pv_module", "Lib__Solar_Array", 20, "module_count", 20)]
+        part = MockPartDefinitionForRedef(
+            "Solar_Array", owned_members=[MockPartUsageForMultiplicity("pv_module")]
+        )
+        result = build_aggregation_expression(redef, mults, part)
+        assert result is not None
+        assert "Evaluation" not in result.transformed_expression
+        assert "pv_module" in result.transformed_expression or "capital_cost" in result.transformed_expression
+
+    def test_mixed_expression_with_evaluation_wrappers(self):
+        """Full expression with Evaluation wrappers on both sum() terms."""
+        sum1 = _make_wrapped_sum_invocation("pv_module", "capital_cost")
+        sum2 = _make_wrapped_sum_invocation("inverter", "capital_cost")
+        alloc = MockFeatureChainExpression(["allocation_model", "total_allocation"])
+        misc = MockFeatureReferenceExpression("misc_hardware_cost")
+        inner = MockOperatorExpression("+", [sum1, sum2])
+        mid = MockOperatorExpression("+", [inner, alloc])
+        full_ast = MockOperatorExpression("+", [mid, misc])
+
+        redef = RedefinitionData(
+            owning_part_qn="Lib__Solar_Array",
+            attribute_name="capital_cost",
+            redefinition_type=RedefinitionType.EXPRESSION,
+            expression_ast=full_ast,
+            expression_text="sum(Evaluation(pv_module.capital_cost)) + sum(Evaluation(inverter.capital_cost)) + allocation_model.total_allocation + misc_hardware_cost",
+        )
+        mults = _make_solar_array_multiplicities()
+        part = _make_solar_array_part()
+        result = build_aggregation_expression(redef, mults, part)
+        assert result is not None
+        assert len(result.sum_terms) == 2
+        assert len(result.singleton_terms) == 1
+        assert len(result.local_terms) == 1
+        assert result.has_unsupported_nodes is False
+        assert "module_count * pv_module.capital_cost" in result.transformed_expression
+        assert "inverter_count * inverter.capital_cost" in result.transformed_expression
+        assert "Evaluation" not in result.transformed_expression

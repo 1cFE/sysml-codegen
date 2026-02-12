@@ -24,7 +24,11 @@ from pydantic import BaseModel, Field
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, PhantomDetector
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
-from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import (
+    get_channel_name,
+    sanitize_name,
+    sysml_to_python_qualified_name,
+)
 from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
     ComputedAttributeData,
@@ -181,6 +185,16 @@ class DependencyBacktracker:
                 instance_parts + [agg.expression.attribute_name]
             )
             self._aggregation_output_index[dotted_path] = channel
+
+            # BF-7: Register :>> EXPOSE_PURE aliases (e.g., total_capex for capital_cost)
+            for alias_name in getattr(agg.expression, "aliases", []):
+                self._aggregation_output_index[
+                    f"{part_usage_name}.{alias_name}"
+                ] = channel
+                if alias_name not in self._aggregation_output_index:
+                    self._aggregation_output_index[alias_name] = channel
+                dotted_alias = ".".join(instance_parts + [alias_name])
+                self._aggregation_output_index[dotted_alias] = channel
 
         # Build lookup tables
         self._calc_def_by_name: dict[str, object] = {c.name: c for c in calc_defs}
@@ -464,7 +478,9 @@ class DependencyBacktracker:
                 if agg_channel is None and "::" in binding.source_path:
                     parts = binding.source_path.split("::")
                     if len(parts) >= 2:
-                        dotted = f"{parts[-2]}.{parts[-1]}"
+                        # BF-7: sanitize PartDef names in :: fallback
+                        sanitized = sanitize_name(parts[-2]).lower()
+                        dotted = f"{sanitized}.{parts[-1]}"
                         agg_channel = self._aggregation_output_index.get(
                             dotted
                         )
