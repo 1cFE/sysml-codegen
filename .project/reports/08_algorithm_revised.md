@@ -115,8 +115,14 @@ on every calculation, then generating code that wires them together.
 > inside the backtracker constructor. Registry uses a 4-phase registration
 > protocol and resolves via **exact match only** (no bare names, no SYSML_QN
 > normalization -- Spike 5 showed `::` -> `__` normalization is broken).
+> Phase 1 CalcUsage registration includes **Key_C** (dotted hierarchy path,
+> Spike 8) required for Phase 2 alias resolution against virtual CalcUsage outputs.
+> Phase 3 (EXPOSE_PURE) and Phase 4 (transitive defaults) **filter out PartDef-level
+> attributes** (Spike 8: PartDef-local canonical names can't resolve against
+> instance-scoped registry keys; CHAIN aliases from Step 3.5 handle this role).
 > REFERENCE bindings that target computed attributes are resolved by the
-> backtracker's secondary resolution path, not by the OutputRegistry directly.
+> backtracker's secondary resolution path (`segments[-2]` + leaf name, Spike 8),
+> not by the OutputRegistry directly.
 
 ---
 
@@ -345,12 +351,27 @@ class ChannelAlias:
     source: str              # "redefinition" | "expose_pure" | "design_override"
 
 # Construction at Step 3.5(D):
+#
+# instance_path format (Spike 8, Issue 16):
+#   ScopedAggregationData.instance_path uses __ separator and INCLUDES
+#   the design PartDef prefix as the first segment:
+#     "SolarBatteryDesign__solar_battery_plant__solar_array"
+#
+#   For consumer-facing dotted keys: strip first segment, replace __ with .
+#     instance_path_to_dotted("SolarBatteryDesign__solar_battery_plant__solar_array")
+#     -> "solar_battery_plant.solar_array"
+#
+#   This derivation is used by find_instance_paths_for_partdef() which
+#   finds virtual CalcUsages owned by the PartDef, extracts parent QN,
+#   splits on __, drops index 0 (design prefix), and joins with ".".
+#
 for redef in chain_redefinitions:
     # Filter: skip BARE non-reference values (CAS codes, enums, etc.)
     if "." not in redef.source_path:
         continue
 
-    # Scope with design instance path (available from aggregation scoping)
+    # instance_path here is the DOTTED form (prefix-stripped, .-separated)
+    # produced by find_instance_paths_for_partdef()
     ChannelAlias(
         alias_name=f"{instance_path}.{redef.attribute_name}",
         canonical_name=f"{instance_path}.{redef.source_path}",
@@ -489,11 +510,24 @@ extraction, preventing false entry points.
 > `_computed_attr_index` alongside FORMULA attrs, and the backtracker treats them
 > identically -- building a channel name for a module that doesn't exist (Bug 2).
 >
-> In the target design, EXPOSE_PURE attrs produce `ChannelAlias` objects:
+> In the target design, EXPOSE_PURE attrs produce `ChannelAlias` objects.
+>
+> **IMPORTANT (Spike 8):** EXPOSE_PURE on PartDefinitions produces PartDef-local
+> canonical names that can't resolve against instance-scoped registry keys. CHAIN
+> aliases from Step 3.5 already handle PartDef aliasing (41/41 resolved in
+> solar_battery). Filter out PartDef EXPOSE_PURE:
 
 ```python
 for ca in computed_attrs:
     if ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
+
+        # FILTER: Skip EXPOSE_PURE on PartDefs (Spike 8: Issue 21).
+        # PartDef-local canonical names are unscoped and can't resolve against
+        # instance-scoped registry keys. CHAIN aliases from Step 3.5 handle
+        # PartDef aliasing.
+        if ca.is_on_part_definition:
+            continue
+
         # IMPORTANT: Do NOT use ca.expression_text -- SysIDE produces raw AST text
         # like ".(component_cost)" which is not a parseable dotted key.
         # Instead, reconstruct the dotted target from the references field:
@@ -523,6 +557,46 @@ for ca in computed_attrs:
 EXPOSE_PURE attrs are NOT added to any computed attribute index. They are NOT
 available for direct resolution. They exist ONLY as aliases in the OutputRegistry,
 which resolves them transitively.
+
+**FORMULA synthetic CalcUsage construction:**
+
+> **Added in iteration 3** (Issue 19: makes the design self-contained).
+
+FORMULA-classified computed attributes produce synthetic `CalcUsageData` objects
+that flow through normal backtracking (Step 6). This is the mechanism specified
+in `expression-aware-codegen.md` Section 3 (Pattern J), inlined here for
+completeness:
+
+```python
+for ca in computed_attrs:
+    if ca.classification != ComputedAttributeClassification.FORMULA:
+        continue
+
+    parent_eqn = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+    parent_short = ca.owning_part_name  # e.g., "e2e_plant"
+
+    synthetic_usage = CalcUsageData(
+        qualified_name=f"{parent_eqn}__{ca.python_name}",
+        instance_name=ca.python_name,
+        calc_def_name=None,                      # inline expression, no CalcDef
+        is_computed_attribute=True,
+        bindings=[
+            BindingInfo(
+                param_name=ref.name,
+                binding_type=BindingType.CHAIN,
+                source_path=f"{parent_short}.{ref.name}",  # scoped dotted
+            )
+            for ref in ca.references
+            if ref.name != ca.python_name          # exclude self-reference
+        ],
+        # ... (other fields: output from compiled expression, etc.)
+    )
+    calc_usages.append(synthetic_usage)
+```
+
+Synthetic CalcUsages flow through Step 6 (backtracking) like any other CalcUsage.
+Their CHAIN bindings resolve through the OutputRegistry normally (Key_A or Key_F
+match). No special input wiring mechanism needed.
 
 ### Steps 4-4.5 output
 
@@ -565,20 +639,43 @@ registry = OutputRegistry()
 for usage in calc_usages:
     for output_attr in calc_def.output_attributes:
         channel = get_channel_name(usage.qualified_name, output_attr.name)
-        registry.register(channel, [
-            f"{usage.instance_name}.{output_attr.name}",  # dotted (short)
-            f"{usage.qualified_name}__{output_attr.name}", # EQN (full)
-        ])
+
+        key_a = f"{usage.instance_name}.{output_attr.name}"  # dotted (short)
+        key_b = f"{usage.qualified_name}__{output_attr.name}" # EQN (full)
+
+        # Key_C: dotted hierarchy path (Issue 15 fix -- required for Phase 2 resolution)
+        # Strips design PartDef prefix, replaces __ with .
+        # For concrete CalcUsages: may duplicate Key_A (harmless).
+        # For virtual CalcUsages: produces the fully dotted path that Phase 2
+        # CHAIN alias canonical_names resolve against.
+        # Spike 8: All 41 Phase 2 CHAIN aliases resolve exclusively via Key_C.
+        segments = usage.qualified_name.split("__")
+        key_c = ".".join(segments[1:]) + "." + output_attr.name
+
+        registry.register(channel, [key_a, key_b, key_c])
         # NOTE: No bare-name registration (Spike 4: zero bare-name references).
 
 # Aggregation outputs (scoped to design instances)
+# NOTE: instance_path uses __ separator and INCLUDES design PartDef prefix.
+#   Format: "DesignPartDef__part_usage1__part_usage2"
+#   To get consumer-facing dotted keys: strip prefix, replace __ with .
 for agg in scoped_aggregation_data:
     channel = get_channel_name(agg.module_eqn, agg.expression.attribute_name)
-    registry.register(channel, [
-        f"{instance_part}.{agg.expression.attribute_name}",         # dotted
-        ".".join(instance_parts + [agg.expression.attribute_name]), # full dotted path
-    ])
+    instance_parts = agg.instance_path.split("__")
+    part_usage_name = instance_parts[-1]  # last segment (e.g., "solar_array")
+
+    key_d = f"{part_usage_name}.{agg.expression.attribute_name}"  # "solar_array.capital_cost"
+    key_e = ".".join(instance_parts) + "." + agg.expression.attribute_name  # includes prefix
+
+    registry.register(channel, [key_d, key_e])
     # NOTE: No bare-name registration.
+
+    # Also register alias variants from hierarchy extractor
+    for alias_name in agg.expression.aliases:
+        registry.register_alias(f"{part_usage_name}.{alias_name}", channel)
+        registry.register_alias(
+            ".".join(instance_parts) + "." + alias_name, channel,
+        )
 
 # FORMULA computed attribute outputs
 for ca in computed_attrs_formula_only:
@@ -605,11 +702,18 @@ for alias in chain_aliases:  # filtered from all_channel_aliases where source ==
 # IMPORTANT: canonical_name is built from references field, NOT expression_text.
 # (Spike 3: expression_text is ".(component_cost)", not a parseable dotted key.)
 # Aliases are registered with SCOPED dotted keys (parent_part.attr_name).
-for alias in expose_pure_aliases:  # filtered where source == "expose_pure"
+#
+# IMPORTANT: Only process EXPOSE_PURE on PartUsages (concrete design), NOT PartDefs.
+# Spike 8: EXPOSE_PURE on PartDefs produces PartDef-local canonical names that
+# can't resolve against instance-scoped registry keys. CHAIN aliases from Step 3.5
+# already handle the PartDef aliasing role (41/41 resolved in solar_battery).
+for alias in expose_pure_aliases:  # filtered: source == "expose_pure", NOT on PartDef
     canonical_channel = registry.resolve(alias.canonical_name)
     if canonical_channel:
+        # Derive short name from QN (Issue 18 resolution)
+        owning_part_short = alias.owning_part_qn.split("__")[-1]
         # Register scoped alias: "e2e_plant.total_capex" -> channel
-        scoped_alias = f"{alias.owning_part_short_name}.{alias.alias_name}"
+        scoped_alias = f"{owning_part_short}.{alias.alias_name}"
         registry.register_alias(scoped_alias, canonical_channel)
     else:
         logger.warning(
@@ -620,6 +724,17 @@ for alias in expose_pure_aliases:  # filtered where source == "expose_pure"
 # ── Phase 4: Register design-attribute transitive aliases ────
 # Design attributes whose default_value is a dotted path pointing to a
 # module output. These collapse the two-hop resolution problem.
+#
+# Filter: only PartUsage-level attributes. PartDef-level design attributes
+# with dotted defaults (e.g., "allocation_model.total_allocation" on Solar_Array)
+# are PartDef-local and can't resolve against instance-scoped registry keys.
+# Spike 8: 1/2 transitive defaults resolved (PartUsage); 1/2 failed (PartDef).
+#
+# Identification: _is_transitive_default() filters numeric/None defaults:
+#   if default_value is None: skip
+#   if "." not in str(default_value): skip
+#   if float(str(default_value)) succeeds: skip (numeric like "3.14")
+#   else: attempt registry resolution
 for attr in design_attrs_with_transitive_defaults:
     canonical_channel = registry.resolve(attr.default_value)
     if canonical_channel:
@@ -724,10 +839,22 @@ if channel is None:
     # Step 2: Secondary resolution for computed attributes.
     # Extract leaf name from SYSML_QN, try parent-scoped dotted lookup.
     # This handles the 4 REFERENCE -> MODULE_OUTPUT cases (Spike 5).
+    # Spike 8 validated: segments[-2] is the correct parent_part for all 4 cases.
     leaf_name = binding.source_path.rsplit("::", 1)[-1].strip("'")
     parent_part = self._get_parent_part_for_usage(usage)
     if parent_part:
         channel = self._output_registry.resolve(f"{parent_part}.{leaf_name}")
+    # NOTE: secondary resolution uses immediate parent (segments[-2]).
+    # This works for:
+    #   - Design-root-level CalcUsages (Spike 8: 4/4 cases)
+    #   - CalcUsages that share instance scope with the aggregation output
+    #     (Spike 9, Issue 22: CalcUsage + aggregation on same PartDef,
+    #     virtual expansion preserves shared scope, segments[-2] = the
+    #     PartUsage instance = aggregation Key_D scope)
+    # Known limitation: deeply nested CalcUsages referencing parent-scope
+    # aggregation outputs (e.g., CalcUsage on child PartDef referencing
+    # grandparent aggregation) would fail. If that scenario arises,
+    # resolution would need to walk up the hierarchy.
 
 if channel is not None:
     self._binding_resolutions[mapping_key] = BindingResolution(
@@ -778,6 +905,35 @@ def _resolve_to_design_attribute(self, source_path: str) -> DesignAttributeData 
 > **Key change:** The fallback to ENTRY_POINT now emits a **warning**, not silent
 > acceptance. This makes it visible when the pipeline creates a false entry point
 > because resolution failed, rather than burying it in the pipeline YAML.
+
+### `_get_parent_part_for_usage()` specification
+
+> **Added in iteration 3** (Spike 8 validated against all 4 REFERENCE -> MODULE_OUTPUT cases).
+
+```python
+def _get_parent_part_for_usage(self, usage: CalcUsageData) -> str | None:
+    """Get the immediate parent PartUsage name for scoping secondary resolution.
+
+    Returns the second-to-last segment of the CalcUsage's qualified_name.
+    This is the PartUsage that directly contains the CalcUsage.
+
+    Spike 8 validated: segments[-2] produces the correct parent for all 4
+    REFERENCE -> MODULE_OUTPUT cases across both models.
+
+    Example:
+      QN: "SolarBatteryDesign__solar_battery_plant__annualized_financial"
+      -> "solar_battery_plant"
+
+      QN: "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model"
+      -> "pv_module"
+
+    Returns None if QN has < 2 segments (shouldn't happen in practice).
+    """
+    segments = usage.qualified_name.split("__")
+    if len(segments) < 2:
+        return None
+    return segments[-2]
+```
 
 ### The guarantee
 
@@ -1181,16 +1337,79 @@ class OutputRegistry:
 
 | Source | Phase | Canonical Channel Format | Lookup Keys |
 |--------|-------|--------------------------|-------------|
-| CalcUsage outputs | 1 | `{usage_eqn}__{output_name}` | dotted (`instance.output`), EQN |
-| FORMULA computed attr outputs | 1 | `{part_eqn}__{attr_name}__{attr_name}` | dotted (`part.attr`) |
-| Aggregation module outputs | 1 | `{scoped_eqn}__{attr_name}` | dotted, full instance path |
+| CalcUsage outputs | 1 | `{usage_eqn}__{output_name}` | Key_A: `instance.output`, Key_B: EQN, **Key_C: dotted hierarchy path** |
+| FORMULA computed attr outputs | 1 | `{part_eqn}__{attr_name}__{attr_name}` | Key_F: `part.attr` |
+| Aggregation module outputs | 1 | `{scoped_eqn}__{attr_name}` | Key_D: `part_usage.attr`, Key_E: full dotted (incl. prefix) |
 | `:>>` CHAIN aliases | 2 | (resolved against Phase 1) | scoped dotted (`instance_path.attr`) |
-| EXPOSE_PURE aliases | 3 | (resolved against Phase 1+2) | scoped dotted (`parent_part.attr`, from `references` field) |
-| Design-attr transitive aliases | 4 | (resolved against Phase 1-3) | `parent_part.attr_name` |
+| EXPOSE_PURE aliases (PartUsage only) | 3 | (resolved against Phase 1+2) | scoped dotted (`parent_part.attr`, from `references` field) |
+| Design-attr transitive aliases (PartUsage only) | 4 | (resolved against Phase 1-3) | `parent_part.attr_name` |
 
 > **All keys are dotted format.** No bare-name registration (Spike 4). No SYSML_QN
 > keys (Spike 5: `::` normalization is broken). CHAIN and EXPOSE_PURE aliases
 > are scoped with instance/parent paths at construction time (Spike 6).
+> **Key_C** (Spike 8) is required for Phase 2 CHAIN alias resolution against
+> virtual CalcUsage outputs. **Phase 3+4 filter out PartDef-level attributes**
+> (Spike 8: PartDef-local canonical names can't resolve against instance-scoped keys).
+
+### Key Format Specification (Spike 8 -- authoritative contract)
+
+> **Added in iteration 3.** This is the definitive key format contract that all
+> producers and consumers must follow. Empirically validated against solar_battery
+> (77 channels, 217 keys) and e2e_attr_expr (15 channels, 33 keys). Zero collisions.
+
+```
+Phase 1 Registration Keys:
+
+  CalcUsage outputs (per output attribute):
+    Key_A: "{instance_name}.{output_attr_name}"
+           Concrete: "lcoe.lcoe_per_mwh"
+           Virtual:  "SolarBatteryDesign__...cost_model.total_cost" (hybrid)
+    Key_B: "{EQN}__{output_attr_name}"
+           "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
+    Key_C: ".".join(EQN.split("__")[1:]) + "." + output_attr_name
+           "solar_battery_plant.lcoe.lcoe_per_mwh"
+           Strips design PartDef prefix, replaces __ with .
+
+  Aggregation outputs (per ScopedAggregationData):
+    Key_D: "{instance_parts[-1]}.{attribute_name}"
+           "solar_array.capital_cost"
+    Key_E: ".".join(instance_path.split("__")) + "." + attribute_name
+           "SolarBatteryDesign.solar_battery_plant.solar_array.capital_cost"
+           NOTE: includes design prefix (from instance_path)
+    + Alias variants of Key_D and Key_E for each alias in expression.aliases
+
+  FORMULA computed attribute outputs:
+    Key_F: "{owning_part_name}.{python_name}"
+           "e2e_plant.power_mw"
+    Channel: get_channel_name(
+        sysml_to_python_qualified_name(owning_part_qn) + "__" + python_name,
+        python_name,
+    )
+
+Phase 2 Alias Construction (CHAIN):
+  For each DOTTED CHAIN redefinition on a PartDef:
+    instance_path = find_instance_paths_for_partdef(owning_part_qn)
+      -> dotted, design prefix stripped
+    alias_key     = instance_path + "." + redef.attribute_name
+    canonical_key = instance_path + "." + redef.source_path (already dotted)
+    Resolves against: Key_C (CalcUsage dotted hierarchy path)
+
+Phase 3 Alias Construction (EXPOSE_PURE on PartUsages only):
+    canonical_name = "{references[1].name}.{references[0].name}"
+    owning_part_short = owning_part_qn.split("__")[-1]
+    scoped_alias   = "{owning_part_short}.{python_name}"
+    Resolves against: Key_A (CalcUsage instance.output)
+
+Phase 4 Alias Construction (transitive defaults on PartUsages only):
+    Filter: "." in default_value and not float(default_value)
+    Resolves against: Phase 1-3 keys
+
+Secondary Resolution (REFERENCE bindings):
+    leaf_name   = source_path.rsplit("::", 1)[-1].strip("'")
+    parent_part = usage.qualified_name.split("__")[-2]
+    resolve_key = "{parent_part}.{leaf_name}"
+    Resolves against: Key_F (FORMULA) or Key_D (Aggregation) or Key_A (CalcUsage)
+```
 
 ### The guarantee
 
@@ -1254,10 +1473,10 @@ This rule applies in:
 | 3.5 | Hierarchy extraction + override application + aggregation scoping | hierarchy_resolver.py, initialization.py | **Yes:** handles CHAIN overrides, SYSML_QN/DOTTED normalization, produces scoped ChannelAlias (filtered, instance-path-prefixed) + ScopedAggregationData. Direct sum() code (no Protocol). |
 | ~~3.6~~ | ~~Alias enrichment~~ | ~~initialization.py~~ | **Eliminated.** Aliases come from 3.5 and 4.5 |
 | 4 | Extract design attributes | analysis/parameter_groups.py | No |
-| 4.5 | Extract & classify computed attributes | computed_attribute_extractor.py | **Yes:** EXPOSE_PURE produces scoped ChannelAlias (using `references` field, not `expression_text`). FORMULA produces synthetic CalcUsageData. |
+| 4.5 | Extract & classify computed attributes | computed_attribute_extractor.py | **Yes:** EXPOSE_PURE produces scoped ChannelAlias (using `references` field, not `expression_text`). **Filters out PartDef EXPOSE_PURE** (Spike 8). FORMULA produces synthetic CalcUsageData (construction spec inlined). |
 | ~~4.7~~ | ~~Scope aggregation expressions~~ | ~~initialization.py~~ | **Moved** into Step 3.5 (scoping) + Step 5 (registration only) |
-| 5 | **Build OutputRegistry** | **NEW: core/output_registry.py** | **New step.** Replaces 5 backtracker indexes. Exact-match resolve only (no SYSML_QN normalization). |
-| 6 | Dependency backtracking | analysis/dependency_backtracker.py | **Yes:** CHAIN via OutputRegistry.resolve(). REFERENCE via leaf-name extraction + parent-scoped resolve + design_attr fallback. Warns on unresolved. |
+| 5 | **Build OutputRegistry** | **NEW: core/output_registry.py** | **New step.** Replaces 5 backtracker indexes. Exact-match resolve only. Phase 1 includes Key_C (Spike 8). Phase 3+4 filter PartDef attrs. Key format contract in Section 12. |
+| 6 | Dependency backtracking | analysis/dependency_backtracker.py | **Yes:** CHAIN via OutputRegistry.resolve(). REFERENCE via `segments[-2]` + leaf-name (Spike 8) + design_attr fallback. `_get_parent_part_for_usage()` + `_resolve_to_design_attribute()` specified. Warns on unresolved. |
 | 6.5 | Expression compilation | extraction/expression_compiler.py | No |
 | 7 | Build ComputationGraph | resolution/graph_builder.py | **Yes:** no longer builds output catalog (registry does it) |
 
@@ -1297,24 +1516,30 @@ src/sysml_codegen/
 ## Appendix C: Migration Path
 
 The changes can be implemented incrementally. All spikes are complete
-(iterations 1+2, 7 spikes total). Design is empirically grounded.
+(iterations 1-3, 8 spikes total). Design is empirically grounded and all
+22 issues across 3 review iterations are closed.
 
 1. **Add `ChannelAlias` data model** to `core/models.py`. Zero risk -- additive only.
 2. **Add `OutputRegistry`** to `core/output_registry.py`. Zero risk -- new file.
    Exact-match `resolve()` only (Spike 5: no SYSML_QN normalization).
-   No bare-name registration (Spike 4).
+   No bare-name registration (Spike 4). Follow Key Format Specification
+   (Section 12) for registration keys.
 3. **Produce scoped `ChannelAlias` from EXPOSE_PURE** in computed_attribute_extractor.
    Low risk -- additive. Must use `references` field, not `expression_text` (Spike 3).
-   Alias keys scoped with parent part name (Spike 5: enables REFERENCE resolution).
+   **Filter out PartDef EXPOSE_PURE** (Spike 8: Issue 21). Alias keys scoped with
+   parent part name derived inline from `owning_part_qn` (Spike 8: Issue 18).
 4. **Produce scoped `ChannelAlias` from `:>>` CHAIN** in hierarchy_resolver.
    Low risk -- additive. Filter BARE non-references (Spike 6: CAS codes).
    Scope DOTTED canonical_names with instance_path prefix (Spike 6).
 5. **Build `OutputRegistry` in initialization.py** (new Step 5). Medium risk -- must
    register all current output formats with explicit 4-phase ordering.
+   **Phase 1 must include Key_C** (Spike 8: Issue 15 -- required for Phase 2).
+   Phase 3+4 must filter PartDef-level attributes (Spike 8: Issue 21).
 6. **Wire backtracker to use `OutputRegistry.resolve()`**. High risk -- replaces 5 indexes.
-   CHAIN: direct resolve(). REFERENCE: leaf-name extraction + parent-scoped resolve.
-   Add `_resolve_to_design_attribute()` per spec. Gate behind feature flag.
-   Run both paths in parallel and assert same results.
+   CHAIN: direct resolve(). REFERENCE: leaf-name extraction via
+   `_get_parent_part_for_usage()` = `segments[-2]` (Spike 8: Issue 17) +
+   parent-scoped resolve. Add `_resolve_to_design_attribute()` per spec.
+   Gate behind feature flag. Run both paths in parallel and assert same results.
 7. **Remove old indexes** from backtracker after parallel validation passes.
 8. **Add CHAIN override support** to `_rewrite_virtual_bindings()`. Normalize SYSML_QN
    and DOTTED formats only (Spike 1 -- no bare names exist).
@@ -1322,3 +1547,17 @@ The changes can be implemented incrementally. All spikes are complete
    Aggregation scoping produces `ScopedAggregationData` in Step 3.5 before Step 5
    registration. Aggregation modules built directly from scoped data in Step 7
    (not through OutputRegistry).
+
+### Spike Coverage Summary
+
+| Spike | Iteration | Key Finding |
+|-------|-----------|-------------|
+| 1 | 1 | source_path formats: SYSML_QN (REFERENCE), DOTTED (CHAIN), zero bare names |
+| 2 | 1 | Virtual CalcUsage outputs consumed via aggregation, not CHAIN |
+| 3 | 1 | EXPOSE_PURE: use `references` field, not `expression_text`. 4-phase ordering. |
+| 4 | 1 | Zero bare-name references across 94 bindings. Skip bare-name registration. |
+| 5 | 2 | 4 REFERENCE->MODULE_OUTPUT cases (all computed attrs). SYSML_QN normalization broken. |
+| 6 | 2 | CHAIN redef RHS: 76% DOTTED, 24% BARE CAS codes. Filter and scope. |
+| 7 | 2 | 2 transitive defaults, both DOTTED_PATH, both resolve. Filter works. |
+| 8 | 3 | Key_C required (41/41 Phase 2). segments[-2] correct (4/4 REFERENCE). PartDef filter needed (Phase 3+4 fail). Zero collisions. |
+| 9 | 3 | Issue 22 same-scope REFERENCE->aggregation verified. segments[-2] resolves CalcUsage+aggregation on same PartDef. Current backtracker false-entry-point confirmed. |
