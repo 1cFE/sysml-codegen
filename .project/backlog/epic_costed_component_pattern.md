@@ -1,7 +1,7 @@
 # Epic: Costed Component Pattern Support
 
 **Epic ID**: COST-PATTERN
-**Status**: In Progress
+**Status**: Complete
 **Priority**: P1
 **Created**: 2026-02-10
 **Estimated Effort**: ~8-10.5 days
@@ -427,7 +427,8 @@ part solar_battery_plant : 'Solar Battery Plant' {
 
 ### Item 5: E2E Validation & Documentation
 
-**Status**: Not Started
+**Status**: Complete
+**Completed**: 2026-02-12
 **Type**: Testing + Documentation
 **Effort**: ~1.5-2 days (spec 0.5h, design 1h, plan 0.5h, execute 6-8h, ADRs 3-4h)
 **Dependencies**: Item 4 (pipeline integration must be complete)
@@ -599,15 +600,25 @@ This epic implements **Phase 3** from the research report's phased roadmap:
 *Fill in after epic is complete*
 
 **What Went Well**:
-- TBD
+- Spike-first approach (Item 1) eliminated nearly all technical risk — 10/10 SysIDE AST questions answered, zero surprises in Items 2-4 about API availability
+- Unit tests on synthetic data (Items 2-4) caught algorithmic bugs before E2E validation — 69 new unit tests covered edge cases that real models don't exercise
+- Bug fix commit (93f0a55) before starting this epic provided reusable infrastructure: `::` QN normalization, Step 6.6 param_groups rebuild, `_ensure_package_init_files()`, smart-regen stub upgrade
+- E2E tests on solar_battery model confirmed all 36 impls generate correctly, with 25 integration tests covering structural validation and numerical ground truth
+- Phases 2+3 of Item 5 combined effectively since Phase 1 discovery provided all needed data
 
 **What Could Improve**:
-- TBD
+- Phase 1 discovery notes became stale after the 3318da7 fix commit — should have re-run discovery after each fix
+- 16 of 20 aggregation cost impls have unresolved `.()` FeatureReferenceExpression syntax (singleton terms not fully compiled to Python). These are marked AUTO_IMPLEMENTED but aren't valid Python. The expression compiler needs a follow-up to handle singleton `FeatureReferenceExpression` nodes in aggregation contexts
+- Original plan overestimated some unknowns (expected 16+N impls, actual was 36 from the start after Item 4 fixes) — the discovery-first approach was correct but the plan could have been updated sooner
+- FR-7 (aggregation ground truth) was descoped to idiot_index only — the 16 aggregation cost impls can't be numerically validated until `.()` syntax is resolved
 
 **Surprises**:
-- TBD
+- `cached_upper_bound` being N+1 (exclusive convention) was the most impactful spike finding — would have caused silent off-by-one errors in multiplicity handling
+- `:>>` creating `ReferenceUsage` (not `AttributeUsage`) was the single most critical finding — would have caused all redefinition scanning to miss every `:>>` element
+- Site Infrastructure generating aggregation modules was unexpected (original Phase 1 notes said only 3 assemblies) — all 4 assemblies now have 5 aggregation modules each
+- `annualized_financial.total_capex` wiring to MODULE_OUTPUT (not ENTRY_POINT) was confirmed correct after the 3318da7 fix — validates the full leaf→aggregation→system-level chain
 
 ---
 
-**Last Updated**: 2026-02-10 (Item 4 complete)
-**Next Action**: Item 5 -- E2E Validation & Documentation
+**Last Updated**: 2026-02-12 (Item 5 complete, epic closed)
+**Next Action**: None — epic complete

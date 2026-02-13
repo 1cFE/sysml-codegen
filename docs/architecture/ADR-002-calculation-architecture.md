@@ -661,6 +661,67 @@ calc adjusted_cost : AdjustedCost {
 attribute adjusted : Real = adjusted_cost.adjusted;  // EXPOSE_PURE: works!
 ```
 
+## Amendment: Hierarchy Pattern Relaxations (2026-02-10)
+
+### Context
+
+The COST-PATTERN epic (Items 1-4) introduces the Costed Component pattern where:
+- Calculation definitions live in PartDefs (templates) rather than standalone library packages
+- Assembly parts aggregate child costs via `:>>` redefinition expressions (not explicit CalcDefs)
+- Multiplicity counts are structural properties (not user-parameterized values)
+
+These patterns relax Rules 1, 3, and 4 under specific conditions.
+
+### Rule 1 Relaxation: CalcDefs in PartDefs
+
+**Original Rule 1**: All `calc def` declarations SHALL be in `models/library/` ONLY.
+
+**Relaxation**: CalcDefs embedded within PartDefs in library packages are permitted. These are template CalcUsages, not standalone CalcDefs — they are instantiated per design PartUsage via virtual CalcUsage generation (see ADR-006).
+
+**Condition**: The CalcDef must be in a library package (not a design package). It is embedded inside a PartDef which is also in the library.
+
+**Example**:
+```sysml
+// library/solar_battery.sysml — PERMITTED
+part def 'PV Module' :> 'Costed Component' {
+    calc cost_model : PVModuleCostCalc { ... }  // Embedded in PartDef
+}
+```
+
+### Rule 3 Relaxation: Aggregation via Redefinition
+
+**Original Rule 3**: Design attributes SHALL contain literal values or bindings to calc outputs ONLY.
+
+**Relaxation**: PartDef attributes MAY use `:>>` redefinition with aggregation expressions combining `sum()` of child costs and direct child attribute references.
+
+**Condition**: All of the following must hold:
+- Expression uses only `sum()` calls on child PartUsage attributes and direct child attribute references
+- All array children are uniform (same parameters per instance)
+- Expression is on a PartDef in library/ (not design/)
+- The resulting aggregation expression is auto-compilable
+
+**Example**:
+```sysml
+// PERMITTED: aggregation redefinition on PartDef
+:>> capital_cost = sum(pv_module.capital_cost) + array_bos.capital_cost + misc_hardware_cost;
+```
+
+### Rule 4 Relaxation: Multiplicity as Structural Property
+
+**Original Rule 4 (implicit)**: Multiplicity is a parameter that users may override per scenario.
+
+**Relaxation**: For uniform arrays under parametric multiply, multiplicity counts are Integer entry points in parameter schemas but default to the PartDef-declared value. Users MAY override them, but the default correctly reflects the design model.
+
+**Condition**: Non-uniform arrays still require Approach E (explicit CalcDef with multiplicity as input parameter and per-instance outputs).
+
+### When Approach E Is Still Required
+
+The original rules (no relaxation) apply when ANY of:
+- Array children have non-uniform parameters (different values per instance)
+- Aggregation logic involves conditionals, functions, or non-arithmetic operators
+- Context-dependent calculations need per-instance differentiation
+- The aggregation expression has `has_unsupported_nodes = True`
+
 ## References
 
 - **ADR-001**: `docs/architecture/ADR-001-input-parameter-definition.md` - Input parameter taxonomy
@@ -681,3 +742,4 @@ attribute adjusted : Real = adjusted_cost.adjusted;  // EXPOSE_PURE: works!
 | 2025-12-22 | Amendment: Prohibited derived expressions in Rule 3; clarified "true static" definition; added structural check and standard library exemption documentation |
 | 2025-12-22 | Amendment: Added EXPOSE pattern exemption (Rule 3 Amendment) for pure value propagation from sibling calc outputs |
 | 2025-12-21 | Initial version - established calculation architecture and static expression evaluation |
+| 2026-02-10 | **Amendment: Hierarchy pattern relaxations** (Rules 1, 3, 4). CalcDefs embedded in library PartDefs permitted. Aggregation redefinition expressions on PartDefs permitted. Multiplicity as structural property with Integer entry point. Approach E still required for non-uniform arrays. See ADR-006, ADR-007. |
