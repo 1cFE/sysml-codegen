@@ -100,6 +100,20 @@ Option (a) is authoritative.
 Additionally, for concrete CalcUsages (non-virtual), `instance_name` is already the short
 form, so the dotted key is already correct. The fix only affects virtual CalcUsages.
 
+> **UPDATE (2026-02-13, Spike 2 results):** Issue is **narrower than feared**. Spike 2
+> confirmed that **no CHAIN binding in any tested model targets a virtual CalcUsage
+> output**. Virtual CalcUsage outputs are consumed exclusively via aggregation (`:>>`
+> expressions), not via direct CHAIN wiring. Short-key collisions exist (9 instances of
+> `cost_model.total_cost` in solar_battery) but are irrelevant for CHAIN resolution.
+>
+> The fix is still needed for **aggregation scoping** (which maps `child_part.attr` to
+> the correct virtual CalcUsage channel), but the urgency is lower -- aggregation scoping
+> already resolves by hierarchy path, not by short instance name.
+>
+> **Resolution: Register both short and full keys.** Short-key collisions don't affect
+> CHAIN wiring. Aggregation scoping handles virtual outputs via hierarchy path, not
+> OutputRegistry lookup. No new field on CalcUsageData needed.
+
 ---
 
 ### Issue 2: Bare-name ambiguity is acknowledged but not handled
@@ -153,6 +167,17 @@ Any binding to bare `"total_cost"` now resolves to B regardless of intent.
   per key, and returning `None` when the set has more than one entry.
 
 Option B is the right balance: safe, zero silent wrong wiring, and diagnostic.
+
+> **UPDATE (2026-02-13, Spike 4 results):** Issue is **entirely theoretical**. Spike 4
+> tested 94 bindings across 4 models: **zero bare-name references**. All bindings use
+> either DOTTED (`instance.output`) or SYSML_QN (`Namespace::Part::attr`) format.
+> Ambiguous bare names exist (5 per model, e.g., `total_cost` from 9 virtual
+> CalcUsages), but no binding ever references them.
+>
+> **Resolution: Skip bare-name registration entirely.** Don't register bare names,
+> don't need collision detection. The OutputRegistry only needs dotted keys and
+> SysML QN normalization. This eliminates Options A/B/C and simplifies the registry.
+> **CLOSED -- no action required.**
 
 ---
 
@@ -209,6 +234,33 @@ hop is in the OutputRegistry, you still have two mechanisms that need to agree o
 
 Option A collapses the two-hop problem entirely and eliminates a class of bugs.
 
+> **UPDATE (2026-02-13, Spike 3 results):** Issue confirmed, but **critical new
+> discovery** about EXPOSE_PURE alias construction.
+>
+> The design assumed `expression_text = "component_cost.total_cost"` for EXPOSE_PURE
+> attributes. SysIDE actually produces `expression_text = ".(component_cost)"` -- the
+> raw FeatureChainExpression AST text, which is **not a parseable dotted key**.
+>
+> The actual target information is in the `references` field:
+> - `references[0].name = "total_cost"` (the output attribute name)
+> - `references[1].name = "component_cost"` (the CalcUsage instance name)
+> - Combined: `component_cost.total_cost` -- which IS in the output catalog
+>
+> **Option A is still correct** (register transitive design attrs as aliases in the
+> OutputRegistry), but the alias construction must use `references`, NOT
+> `expression_text`. The ChannelAlias `canonical_name` field must be built as
+> `f"{references[1].name}.{references[0].name}"` (instance.output), not from
+> `ca.expression_text`.
+>
+> The existing two-hop path (design_attr_binding_index -> output_catalog) works when
+> keys match, but Option A is more reliable because it doesn't depend on
+> `DesignAttributeData` having correct `parent_part` (solar_battery showed a broken
+> key with empty parent).
+>
+> **Resolution: Adopt Option A. Update EXPOSE_PURE alias construction to use
+> `references` field.** Update Section 5 (Step 4.5) and Section 6 (Step 5) in the
+> algorithm document.
+
 ---
 
 ### Issue 4: Alias registration order dependency is implicit
@@ -254,6 +306,21 @@ Phase N alias can't resolve, log a warning -- don't silently drop it.
 Alternatively, make alias resolution iterative (resolve, re-resolve until fixed point),
 but that adds complexity and requires cycle detection.
 
+> **UPDATE (2026-02-13, Spike 3 results):** Phase ordering confirmed as critical.
+> Spike 3 traced the e2e_attr_expr resolution chain and confirmed EXPOSE_PURE aliases
+> must resolve against already-registered CalcUsage outputs. The proposed 4-phase
+> ordering is correct and validated by empirical data:
+>
+> ```
+> Phase 1: CalcUsage outputs + aggregation outputs + FORMULA outputs (canonical)
+> Phase 2: :>> CHAIN aliases (resolve against Phase 1)
+> Phase 3: EXPOSE_PURE aliases (resolve against Phase 1+2, using references field)
+> Phase 4: Design-attribute transitive aliases (if adopting Issue 3 Option A)
+> ```
+>
+> **Resolution: Adopt the explicit 4-phase protocol.** Add it to the OutputRegistry
+> design in the algorithm document. **CLOSED -- ready to implement.**
+
 ---
 
 ### Issue 5: Aggregation scoping complexity is hidden, not eliminated
@@ -280,6 +347,17 @@ Where does it run? The design doesn't say.
   hierarchy extraction results from 3.5, not on the OutputRegistry.
 
 Option (b) is cleaner: Step 3.5 extracts and scopes, Step 5 registers.
+
+> **UPDATE (2026-02-13, Spike 2 results):** Confirmed. Spike 2 showed that virtual
+> CalcUsage outputs are consumed via aggregation, not CHAIN. Scoping must run before
+> OutputRegistry construction so that scoped aggregation data can be registered as
+> channels.
+>
+> **Resolution: Adopt Option (b).** Step 3.5 extracts and scopes aggregation
+> expressions (producing `ScopedAggregationData`). Step 5 registers the scoped
+> results into the OutputRegistry. The algorithm document already says this
+> conceptually but needs clearer language separating the scoping logic from
+> registration. **CLOSED -- minor wording fix.**
 
 ---
 
@@ -331,6 +409,25 @@ Determine: bare name? dotted? full SysML QN?
 """
 ```
 
+> **UPDATE (2026-02-13, Spike 1 results):** Probe completed. Results are definitive:
+>
+> - **REFERENCE bindings:** Always SYSML_QN format (e.g.,
+>   `SolarBatteryLibrary::'PV Module'::cost_model::wattage`)
+> - **CHAIN bindings:** Always DOTTED format (e.g.,
+>   `annualized_financial.annualized_capital_cost`)
+> - **Bare names:** **Never observed.** Zero instances across 94 bindings in 3 models.
+> - **Template bindings** use the same SYSML_QN format as concrete bindings.
+> - **Virtual CalcUsages** inherit the original source_path unchanged.
+>
+> **Implications:**
+> 1. The virtual binding rewrite for bare-name source_paths (Step 3.5E) is dead code.
+> 2. The OutputRegistry needs exactly two source_path formats: SYSML_QN and DOTTED.
+> 3. The `_extract_leaf_name()` normalization handling bare names is unnecessary.
+>
+> **Resolution: Update design to remove bare-name handling from OutputRegistry and
+> Step 3.5E. Simplify resolve() to handle only DOTTED (exact match) and SYSML_QN
+> (normalize to dotted). CLOSED.**
+
 ---
 
 ### Issue 8: Missing spike/test strategy
@@ -368,6 +465,14 @@ into cascading bugs from untested assumptions, the revised design should define:
 - Pass criteria: `financial.total_capex` resolves to MODULE_OUTPUT (not ENTRY_POINT)
   for both concrete and virtual CalcUsage formats
 
+> **UPDATE (2026-02-13):** Spikes 1-4 from the `syside-assumption-spikes` spec have
+> been completed. See `.project/research/20260213_spike_results_syside_assumptions.md`
+> for full results. These spikes provide the empirical ground truth for design
+> finalization and satisfy the process gap identified here.
+>
+> **Resolution: CLOSED.** The spike/test plan was executed and results are
+> documented. Remaining validation work is implementation-time unit tests.
+
 ---
 
 ## Summary
@@ -394,3 +499,33 @@ which is the exact root cause of Bug 2.
 |---|-------|--------|
 | 5 | Aggregation scoping hidden | Clarify that scoping runs in 3.5, Step 5 only registers |
 | 6 | AggregationDecomposer | Drop the Protocol/registry, keep direct sum() code with validation |
+
+---
+
+## Post-Spike Status (2026-02-13)
+
+All 8 issues now have UPDATE notes with spike-backed resolutions. Summary:
+
+### Resolved -- ready to update algorithm document
+
+| # | Issue | Resolution | Spike |
+|---|-------|-----------|-------|
+| 1 | Virtual instance_name | Narrower than feared. No CHAIN wires to virtual outputs. Register both keys; aggregation scoping handles virtual outputs separately. | Spike 2 |
+| 2 | Bare-name ambiguity | **Skip entirely.** Zero bare-name references across 94 bindings. No collision handling needed. | Spike 4 |
+| 3 | Design attr two-hop | Adopt Option A (aliases in registry). EXPOSE_PURE alias must use `references` field, NOT `expression_text`. | Spike 3 |
+| 4 | Alias registration order | Adopt explicit 4-phase protocol. Confirmed by Spike 3 resolution chain. | Spike 3 |
+| 5 | Aggregation scoping | Adopt Option (b). Scoping in 3.5, registration in Step 5. | Spike 2 |
+| 6 | AggregationDecomposer | **OPEN.** No spike data. Decision pending: drop Protocol or keep. | N/A |
+| 7 | Probe first | **Done.** SysIDE produces SYSML_QN for REFERENCE, DOTTED for CHAIN. Zero bare names. Bare-name handling in resolve() is dead code. | Spike 1 |
+| 8 | Missing spikes | **Done.** Spikes executed and documented. | All |
+
+### Key algorithm document changes needed
+
+1. **OutputRegistry.resolve():** Remove bare-name extraction (step 3). Only handle exact match and `::` -> `__` normalization.
+2. **OutputRegistry.register():** Remove bare-name registration. Remove collision handling code.
+3. **EXPOSE_PURE alias construction (Step 4.5):** Use `references` field to build `canonical_name`, not `expression_text`.
+4. **Registration phases:** Add explicit 4-phase protocol to Section 12.
+5. **Step 3.5E (binding rewrite):** Remove bare-name normalization. Only handle SYSML_QN and DOTTED.
+6. **Section 4 (Step 3.5C):** Drop `AggregationDecomposer` Protocol. Show direct sum() code.
+7. **Section 4 (Step 3.5):** Clarify aggregation scoping runs here, Step 5 only registers.
+8. **Migration path:** Remove step 10 (probe). Reorder: OutputRegistry as step 1-2, parallel validation, then remove old indexes.
