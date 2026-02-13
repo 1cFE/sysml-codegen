@@ -1,7 +1,7 @@
 # Epic: OutputRegistry Backtracker Redesign
 
 **Epic ID**: OUTPUT-REGISTRY
-**Status**: Draft
+**Status**: In Progress
 **Priority**: P0
 **Created**: 2026-02-13
 **Estimated Effort**: 6-6.5 days
@@ -265,26 +265,26 @@ class OutputRegistry:
 - Bare-name registration (proven unnecessary by Spike 4 -- not implemented)
 
 **Success Criteria**:
-- [ ] `ChannelAlias` dataclass exists with all fields
-- [ ] `OutputRegistry.register()` correctly indexes multiple keys per channel
-- [ ] `OutputRegistry.register()` refuses to overwrite on collision (logs warning, returns first)
-- [ ] `OutputRegistry.register_alias()` asserts canonical channel exists
-- [ ] `OutputRegistry.resolve()` returns exact match or `None`
-- [ ] Phase ordering test: Phase 2 alias resolves only after Phase 1 canonical is registered
-- [ ] Phase ordering test: Phase 3 alias resolves against Phase 1+2
-- [ ] Phase ordering test: Phase 4 alias resolves against Phase 1-3
-- [ ] Key format tests using Spike 8 data:
+- [x] `ChannelAlias` dataclass exists with all fields
+- [x] `OutputRegistry.register()` correctly indexes multiple keys per channel
+- [x] `OutputRegistry.register()` refuses to overwrite on collision (logs warning, returns first)
+- [x] `OutputRegistry.register_alias()` asserts canonical channel exists
+- [x] `OutputRegistry.resolve()` returns exact match or `None`
+- [x] Phase ordering test: Phase 2 alias resolves only after Phase 1 canonical is registered
+- [x] Phase ordering test: Phase 3 alias resolves against Phase 1+2
+- [x] Phase ordering test: Phase 4 alias resolves against Phase 1-3
+- [x] Key format tests using Spike 8 data:
   - Key_A (dotted short) resolves for concrete CalcUsage outputs
   - Key_B (EQN) resolves for all CalcUsage outputs
   - Key_C (dotted hierarchy) resolves for virtual CalcUsage outputs
   - Key_D (part_usage.attr) resolves for aggregation outputs
   - Key_F (owning_part.attr) resolves for FORMULA outputs
-- [ ] Collision test: two CalcUsages with same `total_cost` output -- Key_A collision logged, first wins
-- [ ] `_is_transitive_default()` correctly identifies dotted-path defaults and rejects numeric/None defaults
-- [ ] **Negative tests**: `resolve()` returns `None` for bare names (`total_cost`), SYSML_QN paths (`Namespace::Part::calc`), and unregistered keys -- validates "no normalization" contract
-- [ ] **Collision logging test**: When Key_A collision occurs (e.g., `cost_model.total_cost` from 9 virtual CalcUsages), exactly one warning is logged and first registration wins
-- [ ] **Phase isolation test**: Phase 2 `register_alias()` fails/warns if the canonical channel hasn't been registered in Phase 1
-- [ ] **Bug 2 xfail regression test (written BEFORE implementation)**: A separate failing integration test that exposes Bug 2 (EXPOSE_PURE `financial.total_capex` resolves to ENTRY_POINT instead of MODULE_OUTPUT). Marked `@pytest.mark.xfail(reason="Bug 2: EXPOSE_PURE two-hop failure")`. When Item 3 completes, the `xfail` is removed and the test goes green. This is the definitive proof the fix works.
+- [x] Collision test: two CalcUsages with same `total_cost` output -- Key_A collision logged, first wins
+- [x] `is_transitive_default()` correctly identifies dotted-path defaults and rejects numeric/None defaults
+- [x] **Negative tests**: `resolve()` returns `None` for bare names (`total_cost`), SYSML_QN paths (`Namespace::Part::calc`), and unregistered keys -- validates "no normalization" contract
+- [x] **Collision logging test**: When Key_A collision occurs (e.g., `cost_model.total_cost` from 9 virtual CalcUsages), exactly one warning is logged and first registration wins
+- [x] **Phase isolation test**: Phase 2 `register_alias()` fails/warns if the canonical channel hasn't been registered in Phase 1
+- [x] **Bug 2 xfail regression test (written BEFORE implementation)**: A separate failing integration test that exposes Bug 2 (EXPOSE_PURE `financial.total_capex` resolves to ENTRY_POINT instead of MODULE_OUTPUT). Marked `@pytest.mark.xfail(reason="Bug 2: EXPOSE_PURE two-hop failure")`. When Item 3 completes, the `xfail` is removed and the test goes green. This is the definitive proof the fix works.
   ```python
   @pytest.mark.xfail(reason="Bug 2: EXPOSE_PURE two-hop failure")
   def test_bug2_expose_pure_total_capex_currently_fails():
@@ -735,4 +735,4 @@ Item 4 (cut-over) is the only destructive step, and it only proceeds after paral
 - E1: Item 4 estimate increased to 2-2.5 days (total 6-6.5 days)
 - E2: Graph builder validation interface details added to Change 10
 - Added `spec_review_synthesis.md` to Key Reference Documents (C1, C2 resolutions)
-**Next Action**: Begin Item 1 (OutputRegistry Foundation)
+**Next Action**: Begin Item 2a (ChannelAlias Producers) -- Item 1 complete, audited, all gates passed
