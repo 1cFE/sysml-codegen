@@ -113,7 +113,10 @@ on every calculation, then generating code that wires them together.
 > (producing `ScopedAggregationData`); Step 5 only registers the results.
 > The OutputRegistry (Step 5) replaces the five ad-hoc indexes currently built
 > inside the backtracker constructor. Registry uses a 4-phase registration
-> protocol and resolves only DOTTED and SYSML_QN formats (no bare names).
+> protocol and resolves via **exact match only** (no bare names, no SYSML_QN
+> normalization -- Spike 5 showed `::` -> `__` normalization is broken).
+> REFERENCE bindings that target computed attributes are resolved by the
+> backtracker's secondary resolution path, not by the OutputRegistry directly.
 
 ---
 
@@ -186,7 +189,9 @@ arrives in exactly one of two formats depending on binding type:
 Bare names were **never observed** (94 bindings, 3 models, all confirmed DOTTED or
 SYSML_QN). These source_path formats are **not normalized at extraction time**. They
 stay in their original format. The OutputRegistry (Step 5) resolves DOTTED via exact
-match and SYSML_QN via `::` -> `__` normalization. See [Section 12](#12-output-registry).
+match. SYSML_QN source_paths are handled by the backtracker's secondary resolution
+path (leaf-name extraction + parent-scoped lookup). See [Section 7](#7-step-6-backtracking)
+and [Section 12](#12-output-registry).
 
 #### Template detection (COST-PATTERN)
 
@@ -255,20 +260,25 @@ Finds array sizes on child PartUsages:
 
 When a `:>>` has an aggregation function call, it gets decomposed into typed terms.
 
-> **DELTA vs. current:** The current code only handles `sum()`. The target design
-> uses an `AggregationDecomposer` registry that maps function names to decomposition
-> strategies. Initially only `SumDecomposer` is implemented, but the abstraction
-> supports extension.
+> **DELTA vs. current:** The current code only handles `sum()`. The target
+> design keeps direct `sum()` handling code -- no Protocol/registry abstraction.
+> Per project guidelines: "Don't create abstractions for one-time operations."
+> There is exactly one aggregation function. Add the registry later if a second
+> decomposer is needed.
 
 ```python
-# Target design:
-class AggregationDecomposer(Protocol):
-    """Strategy for decomposing an aggregation function into pipeline terms."""
-    def decompose(
-        self,
-        operands: list[AST],
-        mult_lookup: dict[str, MultiplicityData],
-    ) -> DecompositionResult: ...
+# Direct sum() handling (no Protocol):
+def decompose_sum_aggregation(
+    operands: list[AST],
+    mult_lookup: dict[str, MultiplicityData],
+) -> DecompositionResult:
+    """Decompose sum(child.attr, ...) into parametric multiply terms.
+
+    Precondition (uniform-array assumption): All instances in a PartUsage
+    array are identical. sum(child.attr) becomes count * child.attr.
+    This assumption is documented here, not buried in an ADR.
+    """
+    ...
 
 @dataclass
 class DecompositionResult:
@@ -277,18 +287,13 @@ class DecompositionResult:
     local_terms: list[LocalTerm]
     transformed_expression: str
     has_unsupported_nodes: bool
-
-AGGREGATION_DECOMPOSERS: dict[str, AggregationDecomposer] = {
-    "sum": SumDecomposer(),    # parametric multiply: sum(child.attr) -> count * child.attr
-    # Future: "max": MaxDecomposer(), "min": MinDecomposer()
-}
 ```
 
-The aggregation walker then becomes:
+The aggregation walker:
 
 ```python
-if func_name in AGGREGATION_DECOMPOSERS:
-    result = AGGREGATION_DECOMPOSERS[func_name].decompose(operands, mult_lookup)
+if func_name == "sum":
+    result = decompose_sum_aggregation(operands, mult_lookup)
 elif func_name in _KNOWN_WRAPPER_FUNCTIONS:
     # unwrap Evaluation/collect/select wrappers
 else:
@@ -296,16 +301,11 @@ else:
     logger.warning("Unknown aggregation function '%s' -- marking unsupported", func_name)
 ```
 
-**Validation rule:** The `SumDecomposer` MUST verify that each operand is a
-`FeatureChainExpression` referencing a child part attribute (i.e., the first
+**Validation rule:** `decompose_sum_aggregation()` MUST verify that each operand
+is a `FeatureChainExpression` referencing a child part attribute (i.e., the first
 segment of the dotted path matches a child PartUsage name). If the operand
 is a bare name or a non-child reference, it should be classified as a
 `LocalTerm` or flagged as unsupported -- not silently treated as a `SumTerm`.
-
-**Uniform-array assumption:** `SumDecomposer` transforms `sum(child.attr)` to
-`count * child.attr`. This assumes all instances in the array are identical.
-This assumption MUST be documented on `SumDecomposer` as a precondition, not
-buried in ADR-007.
 
 > **NOTE:** `sum()` in a `:>>` EXPRESSION on a PartDefinition goes through this
 > aggregation decomposer. `sum()` inside a CalcDef expression body goes through
@@ -316,24 +316,47 @@ buried in ADR-007.
 
 ### (D) Extract `:>>` CHAIN aliases
 
-`:>>` CHAIN redefinitions create named aliases for aggregation attributes:
+`:>>` CHAIN redefinitions create named aliases for attributes:
 
 ```
- :>> total_capex = capital_cost
+ :>> total_capex = cost_model.total_cost
 
- This means: "total_capex" is another name for "capital_cost" on this PartDef.
+ This means: "total_capex" aliases "cost_model.total_cost" on this PartDef.
 ```
 
-These produce `ChannelAlias` objects:
+> **Empirically verified (Spike 6):** CHAIN redefinition source_paths come in
+> exactly two formats:
+> - **DOTTED (76%):** PartDef-local paths like `cost_model.total_cost`
+> - **BARE (24%):** CAS category codes like `CAS220101` -- string literal values,
+>   NOT channel references. These are filtered out before alias construction.
+>
+> `expression_text` is empty and `expression_ast` is None for all CHAIN redefs.
+> `source_path` is the only reliable field.
+
+These produce `ChannelAlias` objects, but only for DOTTED source_paths:
 
 ```python
 @dataclass
 class ChannelAlias:
     """An explicit alias for a pipeline output channel."""
-    alias_name: str          # "total_capex"
-    canonical_name: str      # "capital_cost"
+    alias_name: str          # "solar_array.total_capex" (scoped)
+    canonical_name: str      # "solar_array.cost_model.total_cost" (scoped)
     owning_part_qn: str      # PartDef where the :>> lives
     source: str              # "redefinition" | "expose_pure" | "design_override"
+
+# Construction at Step 3.5(D):
+for redef in chain_redefinitions:
+    # Filter: skip BARE non-reference values (CAS codes, enums, etc.)
+    if "." not in redef.source_path:
+        continue
+
+    # Scope with design instance path (available from aggregation scoping)
+    ChannelAlias(
+        alias_name=f"{instance_path}.{redef.attribute_name}",
+        canonical_name=f"{instance_path}.{redef.source_path}",
+        owning_part_qn=redef.owning_part_qn,
+        source="redefinition",
+    )
 ```
 
 > **DELTA vs. current:** Currently, alias detection happens in two places
@@ -526,9 +549,11 @@ The OutputRegistry is built from three sources:
  Step 4.5 output (computed attrs)   -> register FORMULA output channels + EXPOSE_PURE aliases
 ```
 
-After construction, the registry can resolve ANY binding source_path format
-(dotted, `::`, bare name) to a canonical channel name -- or return `None`
-if the source_path doesn't match any known output.
+After construction, the registry can resolve any **dotted** binding source_path
+to a canonical channel name -- or return `None` if the source_path doesn't
+match any known output. SYSML_QN source_paths (from REFERENCE bindings) are
+handled by the backtracker's secondary resolution path (see Section 7), not
+by the OutputRegistry directly.
 
 ```python
 registry = OutputRegistry()
@@ -579,10 +604,13 @@ for alias in chain_aliases:  # filtered from all_channel_aliases where source ==
 # These may alias CHAIN aliases from Phase 2.
 # IMPORTANT: canonical_name is built from references field, NOT expression_text.
 # (Spike 3: expression_text is ".(component_cost)", not a parseable dotted key.)
+# Aliases are registered with SCOPED dotted keys (parent_part.attr_name).
 for alias in expose_pure_aliases:  # filtered where source == "expose_pure"
     canonical_channel = registry.resolve(alias.canonical_name)
     if canonical_channel:
-        registry.register_alias(alias.alias_name, canonical_channel)
+        # Register scoped alias: "e2e_plant.total_capex" -> channel
+        scoped_alias = f"{alias.owning_part_short_name}.{alias.alias_name}"
+        registry.register_alias(scoped_alias, canonical_channel)
     else:
         logger.warning(
             "EXPOSE_PURE alias '%s' -> '%s' could not resolve (Phase 3)",
@@ -616,7 +644,7 @@ for attr in design_attrs_with_transitive_defaults:
 
 ### Step 5 output
 
-- `OutputRegistry` -- the single lookup for all binding resolution
+- `OutputRegistry` -- the single lookup for CHAIN binding resolution and alias lookups
 - `list[ScopedAggregationData]` -- scoped aggregation expressions (for Step 7 module building)
 
 ---
@@ -645,38 +673,106 @@ Simple:
 - **LITERAL** (`p_recirculating = 50.0`) -> Always `ENTRY_POINT`. Literal value is the default.
 - **UNBOUND** (parameter not mentioned) -> Always `ENTRY_POINT`. CalcDef default (if any) is the default.
 
-### How CHAIN and REFERENCE bindings resolve
+### How CHAIN bindings resolve
 
 > **DELTA vs. current:** The current code uses a 7-strategy cascade with 12+ lookup
-> attempts across 5 indexes. In the target design, the backtracker uses the
-> OutputRegistry for ALL channel resolution:
+> attempts across 5 indexes. In the target design, CHAIN bindings resolve via
+> the OutputRegistry with exact dotted-key match:
 
 ```python
-# For each CHAIN or REFERENCE binding:
+# For each CHAIN binding (source_path is always DOTTED, e.g. "alpha_split.p_alpha"):
 channel = self._output_registry.resolve(binding.source_path)
 
 if channel is not None:
-    # Resolved to a module output
     self._binding_resolutions[mapping_key] = BindingResolution(
         resolution_type=BindingResolutionType.MODULE_OUTPUT,
         qualified_name=channel,
         source_path=binding.source_path,
     )
 else:
-    # Not a module output -- check if it's a design attribute
+    # CHAIN target not found -- likely a design attribute entry point
     design_attr = self._resolve_to_design_attribute(binding.source_path)
     if design_attr:
         # ENTRY_POINT with design attribute default
         ...
     else:
-        # ENTRY_POINT (unresolved)
         logger.warning(
-            "Binding '%s' on '%s' could not be resolved to any known output. "
-            "Treating as entry point. If this is unexpected, check that the "
-            "source module's outputs are registered in the OutputRegistry.",
+            "CHAIN binding '%s' on '%s' could not be resolved. "
+            "Treating as entry point.",
             binding.source_path, usage.qualified_name,
         )
         ...
+```
+
+### How REFERENCE bindings resolve
+
+> **Empirically verified (Spike 5):** REFERENCE bindings use SYSML_QN source_paths
+> (e.g., `SolarBatteryLibrary::'PV Module'::cost_model::wattage`). 119/123
+> resolve to ENTRY_POINT. 4/123 resolve to MODULE_OUTPUT (all computed attributes).
+>
+> The OutputRegistry does NOT do SYSML_QN normalization (`::` -> `__` is broken --
+> Spike 5 showed the consuming path differs from the producing path in all 4 cases).
+> Instead, the backtracker has a structured resolution path:
+
+```python
+# For each REFERENCE binding (source_path is always SYSML_QN):
+
+# Step 1: Try OutputRegistry exact match (rare, but handles any dotted aliases)
+channel = self._output_registry.resolve(binding.source_path)
+
+if channel is None:
+    # Step 2: Secondary resolution for computed attributes.
+    # Extract leaf name from SYSML_QN, try parent-scoped dotted lookup.
+    # This handles the 4 REFERENCE -> MODULE_OUTPUT cases (Spike 5).
+    leaf_name = binding.source_path.rsplit("::", 1)[-1].strip("'")
+    parent_part = self._get_parent_part_for_usage(usage)
+    if parent_part:
+        channel = self._output_registry.resolve(f"{parent_part}.{leaf_name}")
+
+if channel is not None:
+    self._binding_resolutions[mapping_key] = BindingResolution(
+        resolution_type=BindingResolutionType.MODULE_OUTPUT,
+        qualified_name=channel,
+        source_path=binding.source_path,
+    )
+else:
+    # Step 3: Design attribute fallback (the 119 ENTRY_POINT cases)
+    design_attr = self._resolve_to_design_attribute(binding.source_path)
+    if design_attr:
+        # ENTRY_POINT with design attribute default
+        ...
+    else:
+        logger.warning(
+            "REFERENCE binding '%s' on '%s' could not be resolved. "
+            "Treating as entry point.",
+            binding.source_path, usage.qualified_name,
+        )
+        ...
+```
+
+### `_resolve_to_design_attribute()` specification
+
+> **Added in iteration 2** (was previously unspecified).
+
+```python
+def _resolve_to_design_attribute(self, source_path: str) -> DesignAttributeData | None:
+    """Resolve source_path to a literal-valued design attribute (ENTRY_POINT).
+
+    This is the fallback after OutputRegistry resolution fails. It handles
+    the 119 REFERENCE -> ENTRY_POINT cases (Spike 5).
+
+    Transitive design attrs (whose default_value is a dotted path pointing
+    to a module output) are handled by Phase 4 OutputRegistry aliases and
+    never reach this method.
+
+    Resolution:
+    1. Extract leaf name from source_path:
+       - SYSML_QN ("Ns::Part::attr") -> last segment after "::", strip quotes
+       - DOTTED ("instance.output") -> last segment after "."
+    2. Search design_attrs by (parent_path, leaf_name) match
+    3. If match with literal or None default_value -> return it
+    4. If no match -> return None
+    """
 ```
 
 > **Key change:** The fallback to ENTRY_POINT now emits a **warning**, not silent
@@ -786,6 +882,10 @@ This is the **single source of truth** contract (ADR-003).
  |  +-------------------------------+                                        |
  |  | Source: FORMULA-classified    |  "A formula attribute like             |
  |  |   ComputedAttributeData      |   p_net_kw = p_net_mw * 1000"         |
+ |  | Mechanism: synthetic          |                                        |
+ |  |   CalcUsageData created in   |  Inputs resolve through the            |
+ |  |   Step 4.5, flows through    |  standard backtracker pipeline.        |
+ |  |   normal backtracking        |                                        |
  |  | Flag: is_computed_attribute   |                                        |
  |  +-------------------------------+                                        |
  |  | NOTE: EXPOSE_PURE does NOT    |                                        |
@@ -864,8 +964,14 @@ silently generating broken code.
 ### Sub-steps within Step 7
 
 1. **Build CalcUsage modules** (Family 1) from `binding_resolutions`
-2. **Build FORMULA computed attribute modules** (Family 2)
-3. **Build aggregation modules** (Family 3) from `ScopedAggregationData`
+2. **Build FORMULA computed attribute modules** (Family 2) from `binding_resolutions`
+   (FORMULA attrs produce synthetic CalcUsages in Step 4.5 that flow through
+   normal backtracking in Step 6. Their inputs resolve through the OutputRegistry
+   like any other CalcUsage binding.)
+3. **Build aggregation modules** (Family 3) directly from `ScopedAggregationData`
+   (NOT through the OutputRegistry -- aggregation modules construct their input
+   channels from pre-scoped data. The OutputRegistry is for *binding* resolution
+   in Step 6, not for all channel construction.)
 4. **Classify entry points** into the 3 types
 5. **Group entry points** via ParameterGroupDeriver
 6. **Collect orphan entry points** not in any group -> "system_design" group
@@ -929,7 +1035,10 @@ come from a different parser code path (`referent.qualified_name` on AST nodes).
 > **DELTA vs. current:** This is NOT a change -- the current conversion point is
 > correct. The problem was never WHEN conversion happens, but that binding
 > source_paths arrive in multiple formats and the lookup code didn't handle all of
-> them consistently. The OutputRegistry (Section 12) solves this.
+> them consistently. The OutputRegistry (Section 12) handles DOTTED format via
+> exact match. SYSML_QN format is handled by the backtracker's secondary
+> resolution path (Section 7): extract leaf name, scope with parent, then
+> resolve the resulting dotted key through the OutputRegistry.
 
 ### The naming hierarchy
 
@@ -997,8 +1106,18 @@ Bindings arrive in two formats (Spike 1, empirically verified):
 Module outputs are registered with one canonical channel name (PQN format):
 - `"catfmfephysics__catf_physics__alpha_split__p_alpha"`
 
-The registry bridges the gap by indexing each output under the dotted and EQN
-formats that bindings actually use.
+The registry handles **dotted format resolution** (exact match). SYSML_QN
+source_paths from REFERENCE bindings are handled by the **backtracker's
+secondary resolution path** (leaf-name extraction + parent-scoped lookup),
+not by the OutputRegistry. This is because SYSML_QN normalization (`::` -> `__`)
+is broken: the consuming path differs from the producing path (Spike 5).
+
+> **Scope clarification:** The OutputRegistry is the single mechanism for
+> *binding* resolution from CHAIN source_paths and alias lookups. It is NOT
+> the universal channel construction mechanism. Aggregation modules construct
+> their input channels directly from `ScopedAggregationData` (Step 7).
+> REFERENCE bindings use the backtracker's secondary resolution + design
+> attribute fallback (Step 6).
 
 ### Design
 
@@ -1042,33 +1161,20 @@ class OutputRegistry:
         self._index[alias] = canonical_channel
 
     def resolve(self, source_path: str) -> str | None:
-        """Resolve any source_path format to a canonical channel name.
+        """Resolve a dotted source_path to a canonical channel name.
 
-        Empirically verified (Spike 1): SysIDE produces exactly two formats:
-        - DOTTED for CHAIN bindings: "instance.output"
-        - SYSML_QN for REFERENCE bindings: "Namespace::Part::attr"
-        Bare names are never produced by the parser.
+        Exact match only. No normalization.
 
-        Tries in order:
-        1. Exact match (handles DOTTED)
-        2. Normalize :: -> __ and retry (handles SYSML_QN)
+        Empirically verified:
+        - Spike 1: CHAIN bindings always use DOTTED format ("instance.output")
+        - Spike 5: SYSML_QN normalization (:: -> __) is broken -- the consuming
+          path differs from the producing path. REFERENCE bindings are handled
+          by the backtracker's secondary resolution, not here.
+        - Spike 4: Bare names are never produced by the parser.
 
         Returns canonical channel name or None.
         """
-        # 1. Exact match (DOTTED format: "instance.output")
-        if source_path in self._index:
-            return self._index[source_path]
-
-        # 2. Normalize :: to __ (SYSML_QN format: "Namespace::Part::attr")
-        if "::" in source_path:
-            normalized = source_path.replace("::", "__")
-            if normalized in self._index:
-                return self._index[normalized]
-            # Also try lowercase (module name format)
-            if normalized.lower() in self._index:
-                return self._index[normalized.lower()]
-
-        return None
+        return self._index.get(source_path)
 ```
 
 ### What gets registered and when
@@ -1078,20 +1184,26 @@ class OutputRegistry:
 | CalcUsage outputs | 1 | `{usage_eqn}__{output_name}` | dotted (`instance.output`), EQN |
 | FORMULA computed attr outputs | 1 | `{part_eqn}__{attr_name}__{attr_name}` | dotted (`part.attr`) |
 | Aggregation module outputs | 1 | `{scoped_eqn}__{attr_name}` | dotted, full instance path |
-| `:>>` CHAIN aliases | 2 | (resolved against Phase 1) | alias name |
-| EXPOSE_PURE aliases | 3 | (resolved against Phase 1+2) | alias name (from `references` field) |
+| `:>>` CHAIN aliases | 2 | (resolved against Phase 1) | scoped dotted (`instance_path.attr`) |
+| EXPOSE_PURE aliases | 3 | (resolved against Phase 1+2) | scoped dotted (`parent_part.attr`, from `references` field) |
 | Design-attr transitive aliases | 4 | (resolved against Phase 1-3) | `parent_part.attr_name` |
 
-> **No bare-name registration.** Spike 4 confirmed zero bare-name references across
-> all tested models. All binding source_paths use DOTTED or SYSML_QN format.
+> **All keys are dotted format.** No bare-name registration (Spike 4). No SYSML_QN
+> keys (Spike 5: `::` normalization is broken). CHAIN and EXPOSE_PURE aliases
+> are scoped with instance/parent paths at construction time (Spike 6).
 
 ### The guarantee
 
-> `OutputRegistry.resolve(source_path)` is a **pure function** of the binding's
-> source_path. It returns `None` or a canonical channel name. There is no cascade
-> and no silent fallback. The phase ordering is an explicit contract: each phase
-> only references names from prior phases. The backtracker checks the result
-> and explicitly decides: MODULE_OUTPUT if resolved, ENTRY_POINT (with warning) if not.
+> `OutputRegistry.resolve(source_path)` is a **pure function**: exact match only,
+> returns `None` or a canonical channel name. No cascade, no normalization,
+> no silent fallback. The phase ordering is an explicit contract: each phase
+> only references names from prior phases.
+>
+> The **backtracker** owns the full resolution strategy:
+> - CHAIN bindings: `resolve(source_path)` directly (DOTTED -> exact match)
+> - REFERENCE bindings: extract leaf name + parent-scoped `resolve()` (secondary)
+> - Fallback: `_resolve_to_design_attribute()` for entry points
+> - Final fallback: ENTRY_POINT with warning
 
 ---
 
@@ -1139,13 +1251,13 @@ This rule applies in:
 | 1 | Load models | extraction/extractor.py | No |
 | 2 | Extract CalcDefs | extraction/extractor.py | No |
 | 3 | Extract CalcUsages + template expansion | extraction/usage_extractor.py | No |
-| 3.5 | Hierarchy extraction + override application + aggregation scoping | hierarchy_resolver.py, initialization.py | **Yes:** handles CHAIN overrides, SYSML_QN/DOTTED normalization, produces ChannelAlias + ScopedAggregationData |
+| 3.5 | Hierarchy extraction + override application + aggregation scoping | hierarchy_resolver.py, initialization.py | **Yes:** handles CHAIN overrides, SYSML_QN/DOTTED normalization, produces scoped ChannelAlias (filtered, instance-path-prefixed) + ScopedAggregationData. Direct sum() code (no Protocol). |
 | ~~3.6~~ | ~~Alias enrichment~~ | ~~initialization.py~~ | **Eliminated.** Aliases come from 3.5 and 4.5 |
 | 4 | Extract design attributes | analysis/parameter_groups.py | No |
-| 4.5 | Extract & classify computed attributes | computed_attribute_extractor.py | **Yes:** EXPOSE_PURE produces ChannelAlias (using `references` field, not `expression_text`) |
+| 4.5 | Extract & classify computed attributes | computed_attribute_extractor.py | **Yes:** EXPOSE_PURE produces scoped ChannelAlias (using `references` field, not `expression_text`). FORMULA produces synthetic CalcUsageData. |
 | ~~4.7~~ | ~~Scope aggregation expressions~~ | ~~initialization.py~~ | **Moved** into Step 3.5 (scoping) + Step 5 (registration only) |
-| 5 | **Build OutputRegistry** | **NEW: core/output_registry.py** | **New step.** Replaces 5 backtracker indexes |
-| 6 | Dependency backtracking | analysis/dependency_backtracker.py | **Yes:** uses OutputRegistry.resolve(), warns on fallback |
+| 5 | **Build OutputRegistry** | **NEW: core/output_registry.py** | **New step.** Replaces 5 backtracker indexes. Exact-match resolve only (no SYSML_QN normalization). |
+| 6 | Dependency backtracking | analysis/dependency_backtracker.py | **Yes:** CHAIN via OutputRegistry.resolve(). REFERENCE via leaf-name extraction + parent-scoped resolve + design_attr fallback. Warns on unresolved. |
 | 6.5 | Expression compilation | extraction/expression_compiler.py | No |
 | 7 | Build ComputationGraph | resolution/graph_builder.py | **Yes:** no longer builds output catalog (registry does it) |
 
@@ -1162,7 +1274,8 @@ src/sysml_codegen/
     extractor.py             Steps 1-2: SysMLDataExtractor, CalcDefs
     usage_extractor.py       Step 3: CalcUsages, template detection, virtual expansion
     hierarchy_resolver.py    Step 3.5: redefinitions, multiplicities, aggregation + scoping
-                             CHANGED: AggregationDecomposer registry, ChannelAlias production,
+                             CHANGED: direct sum() decomposition (no Protocol),
+                             scoped ChannelAlias production (filtered, instance-path-prefixed),
                              ScopedAggregationData output
     computed_attribute_extractor.py   Step 4.5: 5-way classification
                              CHANGED: EXPOSE_PURE -> ChannelAlias (via references field)
@@ -1183,22 +1296,29 @@ src/sysml_codegen/
 
 ## Appendix C: Migration Path
 
-The changes can be implemented incrementally. Probe (former step 10) is complete --
-results in `.project/research/20260213_spike_results_syside_assumptions.md`.
+The changes can be implemented incrementally. All spikes are complete
+(iterations 1+2, 7 spikes total). Design is empirically grounded.
 
 1. **Add `ChannelAlias` data model** to `core/models.py`. Zero risk -- additive only.
 2. **Add `OutputRegistry`** to `core/output_registry.py`. Zero risk -- new file.
-   No bare-name registration or resolution (Spike 4). Two-format resolve only (Spike 1).
-3. **Produce `ChannelAlias` from EXPOSE_PURE** in computed_attribute_extractor.
+   Exact-match `resolve()` only (Spike 5: no SYSML_QN normalization).
+   No bare-name registration (Spike 4).
+3. **Produce scoped `ChannelAlias` from EXPOSE_PURE** in computed_attribute_extractor.
    Low risk -- additive. Must use `references` field, not `expression_text` (Spike 3).
-4. **Produce `ChannelAlias` from `:>>` CHAIN** in hierarchy_resolver. Low risk -- additive.
+   Alias keys scoped with parent part name (Spike 5: enables REFERENCE resolution).
+4. **Produce scoped `ChannelAlias` from `:>>` CHAIN** in hierarchy_resolver.
+   Low risk -- additive. Filter BARE non-references (Spike 6: CAS codes).
+   Scope DOTTED canonical_names with instance_path prefix (Spike 6).
 5. **Build `OutputRegistry` in initialization.py** (new Step 5). Medium risk -- must
    register all current output formats with explicit 4-phase ordering.
 6. **Wire backtracker to use `OutputRegistry.resolve()`**. High risk -- replaces 5 indexes.
-   Gate behind feature flag. Run both paths in parallel and assert same results.
+   CHAIN: direct resolve(). REFERENCE: leaf-name extraction + parent-scoped resolve.
+   Add `_resolve_to_design_attribute()` per spec. Gate behind feature flag.
+   Run both paths in parallel and assert same results.
 7. **Remove old indexes** from backtracker after parallel validation passes.
 8. **Add CHAIN override support** to `_rewrite_virtual_bindings()`. Normalize SYSML_QN
    and DOTTED formats only (Spike 1 -- no bare names exist).
-9. **Add `AggregationDecomposer` registry** to hierarchy_resolver. Low risk -- wraps
-   existing `sum()` logic. Aggregation scoping produces `ScopedAggregationData` in
-   Step 3.5 before Step 5 registration.
+9. **Wrap existing `sum()` logic** in hierarchy_resolver with validation. No Protocol.
+   Aggregation scoping produces `ScopedAggregationData` in Step 3.5 before Step 5
+   registration. Aggregation modules built directly from scoped data in Step 7
+   (not through OutputRegistry).
