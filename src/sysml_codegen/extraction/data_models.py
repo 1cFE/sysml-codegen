@@ -212,6 +212,7 @@ class ComputedAttributeData:
     classification: ComputedAttributeClassification
     compilability: Compilability
     compiled_expression: str | None = None
+    is_on_part_definition: bool = False  # True if owning element is a PartDefinition
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
 

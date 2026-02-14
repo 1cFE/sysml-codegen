@@ -427,7 +427,7 @@ class TestFormulaCompilation:
             mock_extract_feature_refs,
         )
 
-        results = extract_computed_attributes(None, part, calc_usage_names=set())
+        results, _aliases = extract_computed_attributes(None, part, calc_usage_names=set())
 
         # length and width are LITERAL (no refs) → excluded
         # area is FORMULA → included and compiled
@@ -488,7 +488,7 @@ class TestFormulaCompilation:
             mock_extract_feature_refs,
         )
 
-        results = extract_computed_attributes(None, part, calc_usage_names=set())
+        results, _aliases = extract_computed_attributes(None, part, calc_usage_names=set())
 
         # Only p_blanket is non-LITERAL
         assert len(results) == 1
@@ -558,7 +558,7 @@ class TestFormulaCompilation:
             mock_extract_feature_refs,
         )
 
-        results = extract_computed_attributes(None, part, calc_usage_names=set())
+        results, _aliases = extract_computed_attributes(None, part, calc_usage_names=set())
 
         # area and cost are FORMULA; length, width, rate are LITERAL
         assert len(results) == 2
@@ -625,7 +625,7 @@ class TestFormulaCompilation:
         )
 
         # Must not raise — graceful degradation
-        results = extract_computed_attributes(None, part, calc_usage_names=set())
+        results, _aliases = extract_computed_attributes(None, part, calc_usage_names=set())
 
         assert len(results) == 1
         remainder = results[0]
@@ -694,7 +694,7 @@ class TestExtractComputedAttributes:
             mock_extract_feature_refs,
         )
 
-        results = extract_computed_attributes(
+        results, _aliases = extract_computed_attributes(
             None, part, calc_usage_names={"scale_calc"}
         )
 

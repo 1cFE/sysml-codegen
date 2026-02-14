@@ -358,24 +358,24 @@ These fixtures ground the unit tests in real spike data without requiring SysIDE
 - Expression compiler changes (none needed)
 
 **Success Criteria**:
-- [ ] `ComputedAttributeData.is_on_part_definition` field exists and is correctly populated at extraction time
-- [ ] `find_instance_paths_for_partdef()` utility exists and returns correct dotted instance paths
-- [ ] EXPOSE_PURE on e2e_attr_expr `total_capex` produces a `ChannelAlias` with:
+- [x] `ComputedAttributeData.is_on_part_definition` field exists and is correctly populated at extraction time
+- [x] `find_instance_paths_for_partdef()` utility exists and returns correct dotted instance paths
+- [x] EXPOSE_PURE on e2e_attr_expr `total_capex` produces a `ChannelAlias` with:
   - `alias_name = "total_capex"` (or scoped form)
   - `canonical_name = "component_cost.total_cost"` (from references field)
   - `source = "expose_pure"`
-- [ ] EXPOSE_PURE on solar_battery PartDef `misc_hardware_cost` is FILTERED (not an alias) via `is_on_part_definition`
-- [ ] `:>>` CHAIN redefs on solar_battery produce 41 `ChannelAlias` objects (matching Spike 8 count)
-- [ ] BARE CAS code redefs (13 instances in solar_battery) are filtered out
-- [ ] CHAIN aliases have instance-path-scoped canonical_names (dotted, prefix-stripped)
-- [ ] All existing tests pass (zero regressions)
+- [x] EXPOSE_PURE on solar_battery PartDef `misc_hardware_cost` is FILTERED (not an alias) via `is_on_part_definition`
+- [x] `:>>` CHAIN redefs on solar_battery produce 41 `ChannelAlias` objects (matching Spike 8 count)
+- [x] BARE CAS code redefs (13 instances in solar_battery) are filtered out
+- [x] CHAIN aliases have instance-path-scoped canonical_names (dotted, prefix-stripped)
+- [x] All existing tests pass (zero regressions)
 
 **Unit Tests for Filtering Logic** (synthetic, fast):
-- [ ] Test: CHAIN redef with `"."` in source_path -> produces ChannelAlias
-- [ ] Test: CHAIN redef with `"CAS220101"` (no dot) -> filtered out
-- [ ] Test: EXPOSE_PURE on PartDef (`is_on_part_definition=True`) -> filtered out
-- [ ] Test: EXPOSE_PURE on PartUsage (`is_on_part_definition=False`) -> produces ChannelAlias with correct `canonical_name` from `references`
-- [ ] Test: EXPOSE_PURE with < 2 references -> skipped with warning
+- [x] Test: CHAIN redef with `"."` in source_path -> produces ChannelAlias
+- [x] Test: CHAIN redef with `"CAS220101"` (no dot) -> filtered out
+- [x] Test: EXPOSE_PURE on PartDef (`is_on_part_definition=True`) -> filtered out
+- [x] Test: EXPOSE_PURE on PartUsage (`is_on_part_definition=False`) -> produces ChannelAlias with correct `canonical_name` from `references`
+- [x] Test: EXPOSE_PURE with < 2 references -> skipped with warning
 
 **Estimated Effort**: 1 day (spec 1h, design 1.5h, plan 0.5h, execute 5h)
 
@@ -426,17 +426,17 @@ These fixtures ground the unit tests in real spike data without requiring SysIDE
 - Expression compiler changes (none needed)
 
 **Success Criteria**:
-- [ ] CHAIN override test: virtual CalcUsage binding with SYSML_QN source_path gets leaf extracted and matched
-- [ ] CHAIN override test: virtual CalcUsage binding with DOTTED source_path gets leaf extracted and matched
-- [ ] **Step 3.6 diagnostic (committed test, not just a log)**: All aliases produced by `_enrich_aliases_from_bindings()` confirmed as a subset of CHAIN-derived aliases from Item 2a. This is a committed test, not just a diagnostic run:
+- [x] CHAIN override test: virtual CalcUsage binding with SYSML_QN source_path gets leaf extracted and matched
+- [x] CHAIN override test: virtual CalcUsage binding with DOTTED source_path gets leaf extracted and matched
+- [x] **Step 3.6 diagnostic (committed test, not just a log)**: All aliases produced by `_enrich_aliases_from_bindings()` confirmed as a subset of CHAIN-derived aliases from Item 2a. This is a committed test, not just a diagnostic run:
   ```python
   def test_step36_aliases_are_subset_of_chain_aliases():
       """All aliases from _enrich_aliases_from_bindings() are also produced by CHAIN."""
   ```
   If this test fails, it means Step 3.6 covers a case that CHAIN doesn't, and investigation is required before removal.
-- [ ] Step 3.6 is removed: `_enrich_aliases_from_bindings()` no longer called (only after committed test passes)
-- [ ] Step 4.7 logic merged into Step 3.5: `ScopedAggregationData` produced by hierarchy step
-- [ ] All existing tests pass (zero regressions)
+- [ ] Step 3.6 is removed: `_enrich_aliases_from_bindings()` no longer called (only after committed test passes) — **DEFERRED**: diagnostic found param_name gap; retained until Item 3/4
+- [x] Step 4.7 logic merged into Step 3.5: `ScopedAggregationData` produced by hierarchy step
+- [x] All existing tests pass (zero regressions)
 
 **Estimated Effort**: 0.5 days (spec 0.5h, design 0.5h, plan 0.5h, execute 2.5h)
 
@@ -735,4 +735,4 @@ Item 4 (cut-over) is the only destructive step, and it only proceeds after paral
 - E1: Item 4 estimate increased to 2-2.5 days (total 6-6.5 days)
 - E2: Graph builder validation interface details added to Change 10
 - Added `spec_review_synthesis.md` to Key Reference Documents (C1, C2 resolutions)
-**Next Action**: Begin Item 2a (ChannelAlias Producers) -- Item 1 complete, audited, all gates passed
+**Next Action**: Begin Item 3 (OutputRegistry Construction + Backtracker Integration) -- Items 1, 2a, 2b complete, audited, all gates passed. Step 3.6 removal deferred (diagnostic found param_name alias gap).

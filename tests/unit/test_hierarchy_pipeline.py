@@ -211,8 +211,8 @@ class TestRewriteVirtualBindings:
         assert count == 0
         assert usage.bindings[0].literal_value == 300.0  # Unchanged
 
-    def test_dotted_source_path_not_rewritten(self):
-        """Dotted paths like 'instance.output' are left for the backtracker."""
+    def test_dotted_source_path_no_match_unchanged(self):
+        """Dotted paths with no matching override remain unchanged."""
         usage = _make_virtual_calc_usage(
             qn="Design__plant__solar_array__pv_module__cost_model",
             bindings=[
@@ -327,8 +327,8 @@ class TestRewriteVirtualBindings:
         assert usage_a.bindings[0].literal_value == 400.0
         assert usage_b.bindings[0].literal_value == 350.0
 
-    def test_chain_override_not_rewritten(self):
-        """CHAIN redefinitions are not applied during binding rewriting."""
+    def test_chain_override_rewrites_source_path(self):
+        """CHAIN redefinitions rewrite binding.source_path to the chain target."""
         usage = _make_virtual_calc_usage(
             qn="Design__plant__cost_model",
             bindings=[
@@ -348,8 +348,10 @@ class TestRewriteVirtualBindings:
         )
         hierarchy = _make_hierarchy(design_overrides=[override])
         count = _rewrite_virtual_bindings([usage], hierarchy)
-        assert count == 0
-        assert usage.bindings[0].source_path == "capital_cost"
+        assert count == 1
+        assert usage.bindings[0].source_path == "cost_model.total_cost"
+        # binding_type preserved (not changed to LITERAL)
+        assert usage.bindings[0].binding_type == BindingType.REFERENCE
 
 
 # ---------------------------------------------------------------------------

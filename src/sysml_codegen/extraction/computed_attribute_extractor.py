@@ -17,6 +17,8 @@ from agentic_mbse.sysml.expression import extract_feature_refs
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import ExpressionRef
 
+from sysml_codegen.core.models import ChannelAlias
+
 from .data_models import ComputedAttributeClassification, ComputedAttributeData
 from .expression_compiler import (
     CompilationError,
@@ -111,11 +113,12 @@ def extract_computed_attributes(
     adapter: SysideAdapter,
     part_element: Any,
     calc_usage_names: set[str],
-) -> list[ComputedAttributeData]:
+) -> tuple[list[ComputedAttributeData], list[ChannelAlias]]:
     """Extract and classify computed attributes from a PartDef/PartUsage.
 
     Iterates owned_members, classifies each AttributeUsage expression,
     and returns ComputedAttributeData for all non-LITERAL attributes.
+    EXPOSE_PURE attributes also produce ChannelAlias objects.
 
     Args:
         adapter: SysIDE adapter for type checking.
@@ -123,7 +126,9 @@ def extract_computed_attributes(
         calc_usage_names: CalcUsage instance names on this part.
 
     Returns:
-        List of ComputedAttributeData (LITERAL excluded, UNRESOLVABLE included).
+        Tuple of (computed_attributes, channel_aliases).
+        EXPOSE_PURE attrs appear in BOTH lists (CAD for graph builder compat,
+        ChannelAlias for OutputRegistry in Item 3).
     """
     # Build context
     sibling_attr_names: set[str] = set()
@@ -133,8 +138,10 @@ def extract_computed_attributes(
 
     part_name = _sanitize_name(part_element.name)
     part_qn = str(getattr(part_element, "qualified_name", "") or part_name)
+    is_part_def = SysideAdapter.is_instance(part_element, "PartDefinition")
 
     results: list[ComputedAttributeData] = []
+    aliases: list[ChannelAlias] = []
 
     for member in part_element.owned_members:
         if not SysideAdapter.is_instance(member, "AttributeUsage"):
@@ -216,10 +223,12 @@ def extract_computed_attributes(
             compiled_expression,
         )
 
+        python_name = _sanitize_name(attr_name)
+
         results.append(
             ComputedAttributeData(
                 name=attr_name,
-                python_name=_sanitize_name(attr_name),
+                python_name=python_name,
                 owning_part_name=part_name,
                 owning_part_qualified_name=part_qn,
                 expression_ast=expr,
@@ -228,7 +237,39 @@ def extract_computed_attributes(
                 classification=classification,
                 compilability=compilability,
                 compiled_expression=compiled_expression,
+                is_on_part_definition=is_part_def,
             )
         )
 
-    return results
+        # EXPOSE_PURE → ChannelAlias production
+        if classification == ComputedAttributeClassification.EXPOSE_PURE and not is_part_def:
+            if len(refs) < 2:
+                logger.warning(
+                    "EXPOSE_PURE '%s' on '%s' has fewer than 2 references, "
+                    "skipping alias production: refs=%s",
+                    attr_name,
+                    part_name,
+                    [r.name for r in refs],
+                )
+            else:
+                # Classify refs by role, not index position.
+                # Use calc_usage_names to identify the instance ref — same proven
+                # pattern as graph_builder._resolve_expose_pure() (line 630-634).
+                instance_name = None
+                output_name = None
+                for ref in refs:
+                    if ref.name in calc_usage_names:
+                        instance_name = ref.name
+                    else:
+                        output_name = ref.name
+
+                if instance_name and output_name:
+                    # Bare alias_name per C2 resolution — scoping at Phase 3 registration
+                    aliases.append(ChannelAlias(
+                        alias_name=python_name,
+                        canonical_name=f"{instance_name}.{output_name}",
+                        owning_part_qn=part_qn,
+                        source="expose_pure",
+                    ))
+
+    return (results, aliases)
