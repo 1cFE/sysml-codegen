@@ -36,6 +36,8 @@ from sysml_codegen.extraction.data_models import (
 from sysml_codegen.extraction.expression_compiler import Compilability
 
 if TYPE_CHECKING:
+    from agentic_mbse.sysml.types import BindingInfo
+    from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
 
 logger = logging.getLogger(__name__)
@@ -121,6 +123,7 @@ class DependencyBacktracker:
         design_attributes: dict[Path, list[DesignAttributeData]] | None = None,
         computed_attributes: list | None = None,
         aggregation_data: list | None = None,
+        output_registry: OutputRegistry | None = None,
     ):
         """Initialize with all available usages, calc definitions, and design attributes.
 
@@ -130,12 +133,15 @@ class DependencyBacktracker:
             design_attributes: Design attributes by file (for transitive binding resolution)
             computed_attributes: Computed attributes from Step 4.5 (used in Phase 2)
             aggregation_data: ScopedAggregationData list from Step 4.7 (hierarchy pipeline)
+            output_registry: OutputRegistry from Step 5.5 (enables parallel validation)
         """
         self.all_usages = all_usages
         self.calc_defs = calc_defs
         self._design_attributes = design_attributes or {}
         self._computed_attributes = computed_attributes or []
+        self._output_registry = output_registry
 
+        # TODO(Item-4): Remove _computed_attr_index after OutputRegistry cut-over
         # Build FORMULA computed attribute lookup index for binding resolution.
         # Only FULLY_COMPILABLE FORMULAs are indexed -- MANUAL_REQUIRED won't get
         # synthetic modules in the graph builder, so bindings to them must fall
@@ -154,6 +160,7 @@ class DependencyBacktracker:
                 sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
                 self._computed_attr_index[sysml_qn] = ca
 
+        # TODO(Item-4): Remove _aggregation_output_index after OutputRegistry cut-over
         # Build aggregation output index (maps symbolic refs -> channel names).
         # Three key patterns per aggregation: dotted, bare, full instance dotted.
         self._aggregation_output_index: dict[str, str] = {}
@@ -204,6 +211,8 @@ class DependencyBacktracker:
             u.qualified_name: u for u in all_usages
         }
 
+        # TODO(Item-4): Remove _usage_by_name after OutputRegistry cut-over
+        #   (retain only if find_required_modules() still needs it)
         # Secondary index: instance name (for backward compatibility)
         # Only stores first occurrence; logs on collision at DEBUG level.
         # Collisions are expected and benign: SysML allows same instance names in
@@ -220,6 +229,7 @@ class DependencyBacktracker:
                     f"{existing.calc_def_name} and {u.calc_def_name}"
                 )
 
+        # TODO(Item-4): Remove _output_catalog after OutputRegistry cut-over
         # Build output catalog: "instance.output" -> CalcUsageData
         # Uses both qualified keys (unique) and simple keys (for resolution)
         self._output_catalog: dict[str, CalcUsageData] = {}
@@ -237,6 +247,7 @@ class DependencyBacktracker:
                         self._output_catalog[simple_key] = usage
                     # Note: collision on simple_key is expected; qualified_key is authoritative
 
+        # TODO(Item-4): Remove _design_attr_binding_index after OutputRegistry cut-over
         # Build design attribute binding index for transitive resolution
         self._design_attr_binding_index: dict[str, str] = {}
         if design_attributes:
@@ -466,6 +477,8 @@ class DependencyBacktracker:
                     self._trace_log.append(
                         f"    {param_name} -> COMPUTED_ATTR ({channel})"
                     )
+                    if self._output_registry is not None:
+                        self._compare_with_registry(binding, usage, mapping_key)
                     continue  # No recursive tracing -- graph builder creates the module
 
                 # Check aggregation output index (same pattern as computed attr)
@@ -495,6 +508,8 @@ class DependencyBacktracker:
                     self._trace_log.append(
                         f"    {param_name} -> AGGREGATION ({agg_channel})"
                     )
+                    if self._output_registry is not None:
+                        self._compare_with_registry(binding, usage, mapping_key)
                     continue  # No recursive tracing -- graph builder creates the module
 
                 source_usage = self._resolve_binding_to_usage(binding.source_path)
@@ -599,6 +614,10 @@ class DependencyBacktracker:
                         # DEPRECATED: Keep for backward compat
                         self._binding_to_entry_point[mapping_key] = qualified_param_name
 
+                # Parallel validation: compare old-path result with registry
+                if self._output_registry is not None:
+                    self._compare_with_registry(binding, usage, mapping_key)
+
         # Also track unbound params as entry points (Case 1: use qualified name)
         for param in usage.unbound_params:
             qualified_param_name = f"{usage.qualified_name}__{param}"
@@ -625,6 +644,135 @@ class DependencyBacktracker:
         part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
         module_eqn = f"{part_qn_python}__{ca.python_name}"
         return get_channel_name(module_eqn, ca.python_name)
+
+    def _get_parent_part_for_usage(self, usage: CalcUsageData) -> str | None:
+        """Return segments[-2] of usage.qualified_name (the parent part name).
+
+        E.g., "Design__solar_battery_plant__lcoe" -> "solar_battery_plant"
+        """
+        segments = usage.qualified_name.split("__")
+        if len(segments) >= 2:
+            return segments[-2]
+        return None
+
+    def _resolve_reference_via_registry(
+        self,
+        source_path: str,
+        usage: CalcUsageData,
+    ) -> str | None:
+        """Secondary REFERENCE resolution via leaf + parent scope.
+
+        For REFERENCE bindings (FeatureReferenceExpression), the source_path
+        is often a SysML qualified name (Package::Part::attr) or dotted path.
+        Extract the leaf, combine with parent_part from the consuming CalcUsage,
+        and resolve against the registry.
+        """
+        assert self._output_registry is not None
+        # Extract leaf name
+        if "::" in source_path:
+            leaf = source_path.rsplit("::", 1)[-1]
+        elif "." in source_path:
+            leaf = source_path.rsplit(".", 1)[-1]
+        else:
+            leaf = source_path
+
+        parent_part = self._get_parent_part_for_usage(usage)
+        if parent_part:
+            scoped_key = f"{parent_part}.{leaf}"
+            channel = self._output_registry.resolve(scoped_key)
+            if channel is not None:
+                # Self-reference guard
+                producing_usage_qn = channel.rsplit("__", 1)[0] if "__" in channel else channel
+                if producing_usage_qn != usage.qualified_name:
+                    return channel
+
+        return None
+
+    def _resolve_binding_via_registry(
+        self,
+        binding: BindingInfo,
+        usage: CalcUsageData,
+    ) -> BindingResolution:
+        """Resolve a binding via the OutputRegistry (parallel validation path).
+
+        Resolution order:
+        1. registry.resolve(source_path) -> MODULE_OUTPUT
+        2. REFERENCE secondary: leaf + parent scope -> MODULE_OUTPUT
+        3. _resolve_to_design_attribute() -> ENTRY_POINT
+        4. Fallback -> ENTRY_POINT with warning
+        """
+        assert self._output_registry is not None
+        source_path = binding.source_path
+        param_name = binding.param_name
+
+        # Step 1: Direct registry resolve
+        channel = self._output_registry.resolve(source_path)
+
+        if channel is not None:
+            # Self-reference guard (adapted for channel-based resolution)
+            producing_usage_qn = channel.rsplit("__", 1)[0] if "__" in channel else channel
+            if producing_usage_qn == usage.qualified_name:
+                logger.debug(
+                    "Registry self-reference: %s -> %s, treating as entry point",
+                    source_path, channel,
+                )
+                channel = None
+
+        # Step 2: REFERENCE secondary resolution (if step 1 didn't resolve)
+        if channel is None and binding.binding_type == BindingType.REFERENCE:
+            channel = self._resolve_reference_via_registry(source_path, usage)
+
+        if channel is not None:
+            return BindingResolution(
+                resolution_type=BindingResolutionType.MODULE_OUTPUT,
+                qualified_name=channel,
+                source_path=source_path,
+                is_transitive=False,
+            )
+
+        # Step 3: Design attribute resolution (existing method, unchanged)
+        design_attr_qn = self._resolve_to_design_attribute(source_path, usage)
+        if design_attr_qn:
+            return BindingResolution(
+                resolution_type=BindingResolutionType.ENTRY_POINT,
+                qualified_name=design_attr_qn,
+                source_path=source_path,
+                is_transitive=False,
+            )
+
+        # Step 4: Fallback entry point with warning
+        logger.warning(
+            "Registry unresolved: %s|%s source_path='%s'",
+            usage.qualified_name, param_name, source_path,
+        )
+        return BindingResolution(
+            resolution_type=BindingResolutionType.ENTRY_POINT,
+            qualified_name=f"{usage.qualified_name}__{param_name}",
+            source_path=source_path,
+            is_transitive=False,
+        )
+
+    def _compare_with_registry(
+        self,
+        binding: BindingInfo,
+        usage: CalcUsageData,
+        mapping_key: str,
+    ) -> None:
+        """Compare old-path result with registry resolution. Log divergences."""
+        if not binding.source_path or mapping_key not in self._binding_resolutions:
+            return
+        new_resolution = self._resolve_binding_via_registry(binding, usage)
+        old_resolution = self._binding_resolutions[mapping_key]
+        if (new_resolution.resolution_type != old_resolution.resolution_type or
+                new_resolution.qualified_name != old_resolution.qualified_name):
+            logger.warning(
+                "PARALLEL DIVERGENCE: %s|%s: old=%s/%s new=%s/%s",
+                usage.qualified_name, binding.param_name,
+                old_resolution.resolution_type.value,
+                old_resolution.qualified_name,
+                new_resolution.resolution_type.value,
+                new_resolution.qualified_name,
+            )
 
     def _resolve_to_design_attribute(
         self,

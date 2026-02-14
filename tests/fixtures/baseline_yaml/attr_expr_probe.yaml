@@ -1,0 +1,189 @@
+# Generated Pipeline Configuration for attr_expr_probe
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for attr_expr_probe"
+  output_folder: "attr_expr_probe_results"
+
+modules:
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+      design_params: DesignParams ../inputs/design_params.json
+
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.areaModule)
+  attrexprprobedesign__probe_design__area:
+    module_type: attrexprprobedesign.probe_design.areaModule
+    inputs:
+      length: float design_params.AttrExprProbeDesign__probe_design__length
+      width: float design_params.AttrExprProbeDesign__probe_design__width
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__area__area
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.q_scientificModule)
+  attrexprprobedesign__probe_design__q_scientific:
+    module_type: attrexprprobedesign.probe_design.q_scientificModule
+    inputs:
+      p_fusion: float design_params.AttrExprProbeDesign__probe_design__p_fusion
+      p_input: float design_params.AttrExprProbeDesign__probe_design__p_input
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__q_scientific__q_scientific
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.total_dimModule)
+  attrexprprobedesign__probe_design__total_dim:
+    module_type: attrexprprobedesign.probe_design.total_dimModule
+    inputs:
+      length: float design_params.AttrExprProbeDesign__probe_design__length
+      width: float design_params.AttrExprProbeDesign__probe_design__width
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__total_dim__total_dim
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.net_lengthModule)
+  attrexprprobedesign__probe_design__net_length:
+    module_type: attrexprprobedesign.probe_design.net_lengthModule
+    inputs:
+      length: float design_params.AttrExprProbeDesign__probe_design__length
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__net_length__net_length
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.volumeModule)
+  attrexprprobedesign__probe_design__volume:
+    module_type: attrexprprobedesign.probe_design.volumeModule
+    inputs:
+      length: float design_params.AttrExprProbeDesign__probe_design__length
+      width: float design_params.AttrExprProbeDesign__probe_design__width
+      height: float design_params.AttrExprProbeDesign__probe_design__height
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__volume__volume
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.perimeterModule)
+  attrexprprobedesign__probe_design__perimeter:
+    module_type: attrexprprobedesign.probe_design.perimeterModule
+    inputs:
+      length: float design_params.AttrExprProbeDesign__probe_design__length
+      width: float design_params.AttrExprProbeDesign__probe_design__width
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__perimeter__perimeter
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.minor_radiusModule)
+  attrexprprobedesign__probe_design__minor_radius:
+    module_type: attrexprprobedesign.probe_design.minor_radiusModule
+    inputs:
+      r_inner: float design_params.AttrExprProbeDesign__probe_design__r_inner
+      r_outer: float design_params.AttrExprProbeDesign__probe_design__r_outer
+      r_major: float design_params.AttrExprProbeDesign__probe_design__r_major
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__minor_radius__minor_radius
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.gross_electric_simpleModule)
+  attrexprprobedesign__probe_design__gross_electric_simple:
+    module_type: attrexprprobedesign.probe_design.gross_electric_simpleModule
+    inputs:
+      eta_thermal: float design_params.AttrExprProbeDesign__probe_design__eta_thermal
+      p_fusion: float design_params.AttrExprProbeDesign__probe_design__p_fusion
+      eta_direct: float design_params.AttrExprProbeDesign__probe_design__eta_direct
+      p_input: float design_params.AttrExprProbeDesign__probe_design__p_input
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__gross_electric_simple__gross_electric_simple
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.p_alphaModule)
+  attrexprprobedesign__probe_design__p_alpha:
+    module_type: attrexprprobedesign.probe_design.p_alphaModule
+    inputs:
+      p_fusion: float design_params.AttrExprProbeDesign__probe_design__p_fusion
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__p_alpha__p_alpha
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.p_neutronModule)
+  attrexprprobedesign__probe_design__p_neutron:
+    module_type: attrexprprobedesign.probe_design.p_neutronModule
+    inputs:
+      p_fusion: float design_params.AttrExprProbeDesign__probe_design__p_fusion
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__p_neutron__p_neutron
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.p_blanket_thermalModule)
+  attrexprprobedesign__probe_design__p_blanket_thermal:
+    module_type: attrexprprobedesign.probe_design.p_blanket_thermalModule
+    inputs:
+      m_neutron: float design_params.AttrExprProbeDesign__probe_design__m_neutron
+      p_fusion: float design_params.AttrExprProbeDesign__probe_design__p_fusion
+      p_input: float design_params.AttrExprProbeDesign__probe_design__p_input
+      eta_thermal: float design_params.AttrExprProbeDesign__probe_design__eta_thermal
+      f_pump: float design_params.AttrExprProbeDesign__probe_design__f_pump
+      eta_pump: float design_params.AttrExprProbeDesign__probe_design__eta_pump
+      f_subsystem: float design_params.AttrExprProbeDesign__probe_design__f_subsystem
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__p_blanket_thermal__p_blanket_thermal
+
+  # attrexprprobelibrary.ScaleCalcModule
+  attrexprprobedesign__probe_design__scale_calc:
+    module_type: attrexprprobelibrary.ScaleCalcModule
+    inputs:
+      value: float AttrExprProbeDesign__probe_design__area__area.root
+      factor: float design_params.AttrExprProbeDesign__probe_design__markup
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__scale_calc__result
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.costModule)
+  attrexprprobedesign__probe_design__cost:
+    module_type: attrexprprobedesign.probe_design.costModule
+    inputs:
+      area: float AttrExprProbeDesign__probe_design__area__area.root
+      rate: float design_params.AttrExprProbeDesign__probe_design__rate
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__cost__cost
+
+  # attrexprprobelibrary.SplitCalcModule
+  attrexprprobedesign__probe_design__split:
+    module_type: attrexprprobelibrary.SplitCalcModule
+    inputs:
+      total: float AttrExprProbeDesign__probe_design__volume__volume.root
+    outputs:
+      half: float AttrExprProbeDesign__probe_design__split__half
+      quarter: float AttrExprProbeDesign__probe_design__split__quarter
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.marked_up_costModule)
+  attrexprprobedesign__probe_design__marked_up_cost:
+    module_type: attrexprprobedesign.probe_design.marked_up_costModule
+    inputs:
+      cost: float AttrExprProbeDesign__probe_design__cost__cost.root
+      markup: float design_params.AttrExprProbeDesign__probe_design__markup
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__marked_up_cost__marked_up_cost
+
+  # source: computed_attribute (attrexprprobedesign.probe_design.cost_densityModule)
+  attrexprprobedesign__probe_design__cost_density:
+    module_type: attrexprprobedesign.probe_design.cost_densityModule
+    inputs:
+      cost: float AttrExprProbeDesign__probe_design__cost__cost.root
+      volume: float AttrExprProbeDesign__probe_design__volume__volume.root
+    outputs:
+      root: RootModel[float] AttrExprProbeDesign__probe_design__cost_density__cost_density
+
+
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+      AttrExprProbeDesign__probe_design__area__area: RootModel[float] AttrExprProbeDesign__probe_design__area__area.json
+      AttrExprProbeDesign__probe_design__q_scientific__q_scientific: RootModel[float] AttrExprProbeDesign__probe_design__q_scientific__q_scientific.json
+      AttrExprProbeDesign__probe_design__total_dim__total_dim: RootModel[float] AttrExprProbeDesign__probe_design__total_dim__total_dim.json
+      AttrExprProbeDesign__probe_design__net_length__net_length: RootModel[float] AttrExprProbeDesign__probe_design__net_length__net_length.json
+      AttrExprProbeDesign__probe_design__volume__volume: RootModel[float] AttrExprProbeDesign__probe_design__volume__volume.json
+      AttrExprProbeDesign__probe_design__perimeter__perimeter: RootModel[float] AttrExprProbeDesign__probe_design__perimeter__perimeter.json
+      AttrExprProbeDesign__probe_design__minor_radius__minor_radius: RootModel[float] AttrExprProbeDesign__probe_design__minor_radius__minor_radius.json
+      AttrExprProbeDesign__probe_design__gross_electric_simple__gross_electric_simple: RootModel[float] AttrExprProbeDesign__probe_design__gross_electric_simple__gross_electric_simple.json
+      AttrExprProbeDesign__probe_design__p_alpha__p_alpha: RootModel[float] AttrExprProbeDesign__probe_design__p_alpha__p_alpha.json
+      AttrExprProbeDesign__probe_design__p_neutron__p_neutron: RootModel[float] AttrExprProbeDesign__probe_design__p_neutron__p_neutron.json
+      AttrExprProbeDesign__probe_design__p_blanket_thermal__p_blanket_thermal: RootModel[float] AttrExprProbeDesign__probe_design__p_blanket_thermal__p_blanket_thermal.json
+      AttrExprProbeDesign__probe_design__scale_calc__result: RootModel[float] AttrExprProbeDesign__probe_design__scale_calc__result.json
+      AttrExprProbeDesign__probe_design__cost__cost: RootModel[float] AttrExprProbeDesign__probe_design__cost__cost.json
+      AttrExprProbeDesign__probe_design__split__half: float AttrExprProbeDesign__probe_design__split__half.json
+      AttrExprProbeDesign__probe_design__split__quarter: float AttrExprProbeDesign__probe_design__split__quarter.json
+      AttrExprProbeDesign__probe_design__marked_up_cost__marked_up_cost: RootModel[float] AttrExprProbeDesign__probe_design__marked_up_cost__marked_up_cost.json
+      AttrExprProbeDesign__probe_design__cost_density__cost_density: RootModel[float] AttrExprProbeDesign__probe_design__cost_density__cost_density.json

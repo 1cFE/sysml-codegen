@@ -15,6 +15,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
 from sysml_codegen.core.models import ChannelAlias
+from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
 
 from sysml_codegen.analysis.dependency_backtracker import (
     BacktrackingResult,
@@ -25,7 +26,7 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
-from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
     CalculationDefinitionData,
@@ -38,6 +39,7 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
+    Compilability,
     compile_calc_def,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData, extract_calculation_usages
@@ -114,6 +116,9 @@ class PipelineContext:
 
     # Channel aliases from EXPOSE_PURE + CHAIN redefinitions (Steps 3.5 + 4.5).
     channel_aliases: list[ChannelAlias] = field(default_factory=list)
+
+    # OutputRegistry from Step 5.5 (None if not yet constructed).
+    output_registry: OutputRegistry | None = None
 
 
 def _remove_formula_from_design_attrs(
@@ -543,6 +548,172 @@ def _scope_aggregation_expressions(
     return result
 
 
+def build_output_registry(
+    calc_usages: list[CalcUsageData],
+    calc_defs: list[CalculationDefinitionData],
+    aggregation_data: list[ScopedAggregationData],
+    computed_attributes: list[ComputedAttributeData],
+    channel_aliases: list[ChannelAlias],
+    design_attributes: dict[Path, list[DesignAttributeData]],
+) -> OutputRegistry:
+    """Construct a fully-populated OutputRegistry from pipeline data.
+
+    Implements the 4-phase registration protocol:
+      Phase 1: Canonical channels (CalcUsage outputs, aggregation outputs, FORMULA outputs)
+      Phase 2: CHAIN aliases (source="redefinition")
+      Phase 3: EXPOSE_PURE aliases (source="expose_pure")
+      Phase 4: Transitive design attribute aliases
+
+    Args:
+        calc_usages: All CalcUsageData from usage extraction.
+        calc_defs: All CalculationDefinitionData from model.
+        aggregation_data: ScopedAggregationData list from Step 3.5.
+        computed_attributes: ComputedAttributeData list from Step 4.5.
+        channel_aliases: ChannelAlias list from Steps 3.5 + 4.5.
+        design_attributes: Design attributes by source file.
+
+    Returns:
+        Fully-populated OutputRegistry.
+    """
+    registry = OutputRegistry()
+    calc_def_by_name = {cd.name: cd for cd in calc_defs}
+
+    # ------------------------------------------------------------------
+    # Phase 1: Canonical channels
+    # ------------------------------------------------------------------
+    phase1_count = 0
+
+    # Phase 1a: CalcUsage outputs (Key_A, Key_B, Key_C)
+    for usage in calc_usages:
+        calc_def = calc_def_by_name.get(usage.calc_def_name)
+        if not calc_def:
+            continue
+        for attr in calc_def.output_attributes:
+            canonical = get_channel_name(usage.qualified_name, attr.name)
+            key_a = f"{usage.instance_name}.{attr.name}"
+            # Key_B = canonical (self-registered by register())
+            key_c = OutputRegistry.derive_key_c(usage.qualified_name, attr.name)
+            registry.register(canonical, [key_a, key_c])
+            phase1_count += 1
+
+    # Phase 1b: Aggregation outputs (Key_D, Key_E, alias variants)
+    for agg in aggregation_data:
+        canonical = get_channel_name(agg.module_eqn, agg.expression.attribute_name)
+        instance_parts = agg.instance_path.split("__")
+        part_usage = (
+            instance_parts[-1]
+            if instance_parts
+            else agg.expression.owning_part_name
+        )
+
+        key_d = f"{part_usage}.{agg.expression.attribute_name}"
+        key_e = ".".join(instance_parts + [agg.expression.attribute_name])
+        keys = [key_d, key_e]
+
+        # Bare key
+        keys.append(agg.expression.attribute_name)
+
+        # BF-7 alias variants (from agg.expression.aliases including Step 3.6 param_name aliases)
+        for alias_name in agg.expression.aliases:
+            keys.append(f"{part_usage}.{alias_name}")
+            keys.append(alias_name)
+            keys.append(".".join(instance_parts + [alias_name]))
+
+        registry.register(canonical, keys)
+        phase1_count += 1
+
+    # Phase 1c: FORMULA computed attribute outputs (Key_F, bare, SysML QN)
+    for ca in computed_attributes:
+        if ca.classification != ComputedAttributeClassification.FORMULA:
+            continue
+        if ca.compilability != Compilability.FULLY_COMPILABLE:
+            continue
+        part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+        module_eqn = f"{part_qn_python}__{ca.python_name}"
+        canonical = get_channel_name(module_eqn, ca.python_name)
+
+        key_f = f"{ca.owning_part_name}.{ca.python_name}"
+        keys = [key_f, ca.python_name]  # dotted + bare
+
+        # SysML QN key
+        if ca.owning_part_qualified_name:
+            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+            keys.append(sysml_qn)
+
+        registry.register(canonical, keys)
+        phase1_count += 1
+
+    # ------------------------------------------------------------------
+    # Phase 2: CHAIN aliases (source="redefinition")
+    # ------------------------------------------------------------------
+    phase2_count = 0
+    for alias in channel_aliases:
+        if alias.source != "redefinition":
+            continue
+        resolved = registry.resolve(alias.canonical_name)
+        if resolved:
+            registry.register_alias(alias.alias_name, resolved)
+            phase2_count += 1
+        else:
+            logger.warning(
+                "Phase 2: CHAIN alias '%s' canonical '%s' not in registry",
+                alias.alias_name,
+                alias.canonical_name,
+            )
+
+    # ------------------------------------------------------------------
+    # Phase 3: EXPOSE_PURE aliases (source="expose_pure")
+    # ------------------------------------------------------------------
+    phase3_count = 0
+    for alias in channel_aliases:
+        if alias.source != "expose_pure":
+            continue
+        # owning_part_qn may use "::" (SysML format) or "__" (Python format)
+        qn = alias.owning_part_qn
+        if "::" in qn:
+            owning_part_short = qn.rsplit("::", 1)[-1]
+        else:
+            owning_part_short = qn.split("__")[-1]
+        scoped_key = f"{owning_part_short}.{alias.alias_name}"
+        resolved = registry.resolve(alias.canonical_name)
+        if resolved:
+            registry.register_alias(scoped_key, resolved)
+            phase3_count += 1
+        else:
+            logger.warning(
+                "Phase 3: EXPOSE_PURE alias '%s' canonical '%s' not in registry",
+                scoped_key,
+                alias.canonical_name,
+            )
+
+    # ------------------------------------------------------------------
+    # Phase 4: Transitive design attribute aliases
+    # ------------------------------------------------------------------
+    phase4_count = 0
+    for _path, attrs in design_attributes.items():
+        for attr in attrs:
+            if not is_transitive_default(attr.default_value):
+                continue
+            key = f"{attr.parent_part}.{attr.name}"
+            resolved = registry.resolve(str(attr.default_value))
+            if resolved:
+                registry.register_alias(key, resolved)
+                phase4_count += 1
+
+    logger.info(
+        "Step 5.5: OutputRegistry built — %d Phase 1 channels, "
+        "%d Phase 2 CHAIN aliases, %d Phase 3 EXPOSE_PURE aliases, "
+        "%d Phase 4 transitive aliases (%d total keys)",
+        phase1_count,
+        phase2_count,
+        phase3_count,
+        phase4_count,
+        len(registry),
+    )
+
+    return registry
+
+
 def build_pipeline_context(
     model_paths: list[Path],
     targets: list[str] | None = None,
@@ -625,6 +796,16 @@ def build_pipeline_context(
     # Step 5: Create parameter group deriver (uses filtered design_attrs)
     group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
 
+    # Step 5.5: Build OutputRegistry (4-phase registration protocol)
+    output_registry = build_output_registry(
+        calc_usages=calc_usages,
+        calc_defs=calc_defs,
+        aggregation_data=scoped_agg_data,
+        computed_attributes=computed_attrs,
+        channel_aliases=all_channel_aliases,
+        design_attributes=design_attrs,
+    )
+
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(
         calc_usages,
@@ -632,6 +813,7 @@ def build_pipeline_context(
         design_attributes=design_attrs,
         computed_attributes=computed_attrs,
         aggregation_data=scoped_agg_data,
+        output_registry=output_registry,
     )
     backtracking_result = backtracker.find_required_modules(
         targets or [],
@@ -706,6 +888,7 @@ def build_pipeline_context(
         hierarchy_data=hierarchy_data,
         aggregation_expressions=scoped_agg_data,
         channel_aliases=all_channel_aliases,
+        output_registry=output_registry,
     )
 
 
@@ -715,6 +898,7 @@ __all__ = [
     "SysMLParsingError",
     "_build_chain_aliases",
     "_remove_formula_from_design_attrs",
+    "build_output_registry",
     "build_pipeline_context",
     "find_instance_paths_for_partdef",
 ]
