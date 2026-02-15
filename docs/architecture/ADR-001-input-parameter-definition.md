@@ -294,7 +294,7 @@ Different scenarios may have different input parameter sets.
 
 **Requirements**:
 
-8. **Implement transitive binding resolution in `DependencyBacktracker._resolve_binding_to_usage()`**
+8. **Implement transitive binding resolution via OutputRegistry Phase 4 aliases.** When a design attribute's `default_value` is a dotted path pointing to a module output, the OutputRegistry registers it as a transitive alias during Phase 4 construction, collapsing multi-hop resolution into a single `registry.resolve()` lookup. The old `_resolve_binding_to_usage()` cascade has been replaced by `_resolve_binding_via_registry()`. See ADR-008.
    - WHEN a binding resolves to a design attribute (not a calc output)
    - AND that design attribute is ITSELF bound to another source
    - THEN follow the chain transitively until reaching a calc output OR a true entry point (literal value)

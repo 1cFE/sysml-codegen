@@ -178,11 +178,16 @@ SysML Model
 │ BACKTRACKING PHASE                                           │
 │                                                               │
 │ dependency_backtracker.py:                                   │
-│   - Traces bindings to sources                               │
-│   - Resolves bound params to design attribute EQNs           │
-│   - Computes unbound param PQNs ({usage.EQN}__{param})       │
-│   - Stores mapping: (usage_EQN, param_name) → PQN            │
-│   - Computes output PQNs ({usage.EQN}__{output_attr})        │
+│   - Receives OutputRegistry (pre-built, Step 5)              │
+│   - CHAIN bindings: registry.resolve(source_path) →          │
+│       MODULE_OUTPUT or design attr fallback → ENTRY_POINT    │
+│   - REFERENCE bindings: leaf-name extraction +               │
+│       parent-scoped registry.resolve() → MODULE_OUTPUT       │
+│       or design attr fallback                                │
+│   - LITERAL/UNBOUND: → ENTRY_POINT directly                 │
+│   - Stores results in binding_resolutions dict               │
+│   - See ADR-008 for the full OutputRegistry architectural    │
+│     decision.                                                │
 └──────────────────────────────────────────────────────────────┘
     │
     ▼
@@ -190,9 +195,12 @@ SysML Model
 │ GRAPH BUILDING PHASE                                         │
 │                                                               │
 │ graph_builder.py:                                            │
+│   - build_computation_graph() takes output_registry param    │
 │   - Module name = usage.qualified_name.lower()               │
-│   - Channel name = PQN (from backtracker)                    │
-│   - LOOKS UP entry point PQNs (does NOT construct)           │
+│   - Channel existence uses registry.resolve() and            │
+│     registry.canonical_channels                              │
+│   - _build_pipeline_module() uses binding_resolutions        │
+│     (no output_catalog parameter)                            │
 │   - Wires inputs to entry points or upstream channels        │
 └──────────────────────────────────────────────────────────────┘
     │
@@ -206,61 +214,112 @@ SysML Model
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Single Source of Truth: `binding_to_entry_point` Mapping
+### Single Source of Truth: `binding_resolutions` Mapping
 
-**The Fix**: The backtracker SHALL compute a mapping from `(usage_qualified_name, param_name)` to `entry_point_qualified_name`. The graph builder SHALL look up this mapping instead of constructing identifiers.
+**The Fix**: The backtracker resolves every binding via the `OutputRegistry` and stores a `BindingResolution` for each. The graph builder looks up this mapping instead of constructing identifiers. The older `binding_to_entry_point` mapping is deprecated; `binding_resolutions` is the authoritative source.
 
 **Data Structure**:
 ```python
+class BindingResolution(BaseModel):
+    resolution_type: BindingResolutionType  # MODULE_OUTPUT or ENTRY_POINT
+    qualified_name: str                      # channel PQN or entry point PQN
+    source_path: str | None                  # original SysML source path
+    is_transitive: bool
+
 class BacktrackingResult(BaseModel):
     # Existing fields...
     entry_points: set[str]
     execution_order: list[CalcUsageData]
 
-    # NEW: The authoritative mapping
-    binding_to_entry_point: dict[tuple[str, str], str]
-    # Maps (usage_qualified_name, param_name) → entry_point_qualified_name
+    # AUTHORITATIVE: Unified binding resolutions via OutputRegistry
+    binding_resolutions: dict[str, BindingResolution]
+    # Maps "{usage_qn}|{param_name}" → BindingResolution
+
+    # DEPRECATED: Kept for backward compatibility
+    binding_to_entry_point: dict[str, str]
 ```
 
-**Construction in Backtracker**:
+**Construction in Backtracker** (via OutputRegistry):
 ```python
-def _trace_dependencies(self, usage: CalcUsageData):
+def _trace_dependencies(self, usage, visited, path):
     for binding in usage.bindings:
-        if binding resolves to design attribute:
-            entry_point_key = design_attr.qualified_name  # Use attr's EQN
-        else:
-            entry_point_key = f"{usage.qualified_name}__{binding.param_name}"
+        mapping_key = f"{usage.qualified_name}|{param_name}"
 
-        # Store the authoritative mapping
-        self._binding_to_entry_point[(usage.qualified_name, binding.param_name)] = entry_point_key
+        if binding is LITERAL or UNBOUND:
+            # -> ENTRY_POINT directly
+            entry_point_qn = f"{usage.qualified_name}__{param_name}"
+            self._binding_resolutions[mapping_key] = BindingResolution(
+                resolution_type=BindingResolutionType.ENTRY_POINT,
+                qualified_name=entry_point_qn,
+            )
+
+        elif binding has source_path:
+            # Sole resolution path via OutputRegistry
+            resolution = self._resolve_binding_via_registry(binding, usage)
+            self._binding_resolutions[mapping_key] = resolution
+
+            if resolution.resolution_type == MODULE_OUTPUT:
+                # DFS into producing usage
+                producing_usage = self._find_usage_for_channel(resolution.qualified_name)
+                if producing_usage and producing_usage not in visited:
+                    self._trace_dependencies(producing_usage, visited, path)
+            else:
+                # ENTRY_POINT (design attribute fallback)
+                self._entry_point_context[resolution.qualified_name] = usage
 
     for param in usage.unbound_params:
-        entry_point_key = f"{usage.qualified_name}__{param}"
-        self._binding_to_entry_point[(usage.qualified_name, param)] = entry_point_key
+        mapping_key = f"{usage.qualified_name}|{param}"
+        self._binding_resolutions[mapping_key] = BindingResolution(
+            resolution_type=BindingResolutionType.ENTRY_POINT,
+            qualified_name=f"{usage.qualified_name}__{param}",
+        )
 ```
+
+The `_resolve_binding_via_registry()` method implements the resolution cascade:
+1. `registry.resolve(source_path)` -- direct channel lookup
+2. Normalize `::` SysML QN to dotted format and retry
+3. REFERENCE secondary: leaf-name extraction + parent-scoped `registry.resolve()`
+4. Design attribute fallback -- `ENTRY_POINT`
+5. Fallback -- `ENTRY_POINT` with warning
+
+See ADR-008 for the full OutputRegistry architectural decision.
 
 **Lookup in Graph Builder**:
 ```python
-def _build_pipeline_module(usage, binding_to_entry_point, entry_points, ...):
+def build_computation_graph(result, calc_defs, design_attrs,
+                            group_deriver, output_registry, ...):
+    # output_registry: OutputRegistry passed in (no output_catalog construction)
+    # Channel existence checks use registry.resolve() and
+    # registry.canonical_channels
+    ...
+
+def _build_pipeline_module(usage, calc_def, entry_points,
+                           execution_order, binding_resolutions):
     # Module name is just the EQN lowercased
     module_name = usage.qualified_name.lower()
 
     for input_attr in calc_def.input_attributes:
         param_name = input_attr.name
 
-        # LOOKUP instead of construction
-        lookup_key = (usage.qualified_name, param_name)
-        if lookup_key in binding_to_entry_point:
-            qualified_name = binding_to_entry_point[lookup_key]
-            ep = entry_points.get(qualified_name)
+        # LOOKUP via binding_resolutions (sole source of truth)
+        lookup_key = f"{usage.qualified_name}|{param_name}"
+        resolution = binding_resolutions.get(lookup_key)
+        if resolution is None:
+            raise ValueError(f"No binding resolution for {lookup_key}")
+
+        if resolution.resolution_type == MODULE_OUTPUT:
+            # Wire to upstream producer channel
+            ...
         else:
-            # Should not happen if backtracker ran correctly
-            raise ValueError(f"No entry point mapping for {lookup_key}")
+            # Wire to entry point
+            ep = entry_points.get(resolution.qualified_name)
 
     # Channel names are PQNs
     for output_attr in calc_def.output_attributes:
         channel_name = f"{usage.qualified_name}__{output_attr.name}"
 ```
+
+See ADR-008 for the full OutputRegistry architectural decision.
 
 ### Shared Utility: `qualified_names.py`
 
@@ -312,7 +371,7 @@ def get_channel_name(usage_qualified_name: str, output_attr_name: str) -> str:
 | Rule | Location | Validation |
 |------|----------|------------|
 | V1 | Extraction | Element qualified names must be non-empty |
-| V2 | Backtracking | All bindings must resolve to output catalog or design attributes |
+| V2 | Backtracking | All bindings must resolve via OutputRegistry (MODULE_OUTPUT) or design attribute fallback (ENTRY_POINT). See ADR-008. |
 | V3 | Graph Building | All entry point lookups must succeed |
 | V4 | Pipeline Generation | All channel references must resolve to declared outputs |
 
@@ -337,7 +396,7 @@ def get_channel_name(usage_qualified_name: str, output_attr_name: str) -> str:
 3. **No collision detection**: Using full EQN eliminates collision risk entirely
 4. **Simpler code**: Remove `_derive_unique_module_name()` and `_assert_module_names_unique()`
 5. **Works with arbitrary nesting**: Full EQN handles any part hierarchy depth
-6. **Explicit mappings**: The `binding_to_entry_point` mapping makes resolution transparent
+6. **Explicit mappings**: The `binding_resolutions` mapping makes resolution transparent
 7. **Fail-fast validation**: Lookup failures are explicit errors, not silent bugs
 8. **Consolidated code**: Shared `qualified_names.py` eliminates duplicate functions
 9. **Supports same-named calc defs**: Multiple packages can have `Capex` calc def without collision (e.g., `magnets.CapexModule`, `blanket.CapexModule`)
@@ -491,6 +550,7 @@ catfmfephysics__catf_physics__blanket_thermal:
 
 - **ADR-001**: `docs/architecture/ADR-001-input-parameter-definition.md` - Namespace format
 - **ADR-002**: `docs/architecture/ADR-002-calculation-architecture.md` - Calculation location
+- **ADR-008**: `docs/architecture/ADR-008-output-registry.md` - OutputRegistry architectural decision
 - **SysML Glossary**: `docs/glossary/sysml.md` - Formal SysML v2 terms
 - **Codegen Glossary**: `docs/glossary/codegen.md` - Project-specific terminology
 - **Bug Analysis**: `project/research/20251223-000000_e2e-test-channel-mismatch.md`
@@ -504,6 +564,7 @@ catfmfephysics__catf_physics__blanket_thermal:
 
 | Date | Change |
 |------|--------|
+| 2026-02-15 | **OutputRegistry cutover**: Updated backtracker and graph builder sections to reflect OutputRegistry-based resolution. `binding_resolutions` is now the authoritative mapping (replaces deprecated `binding_to_entry_point`). Updated V2 validation rule, pseudocode, and identifier resolution flow. Added cross-references to ADR-008. |
 | 2025-12-23 | **Module Type namespacing**: Changed Module Type format from `{CalcDefName}Module` to `{namespace}.{CalcDefName}Module`. Enables same-named calc defs in different packages. Changed status from Draft to Accepted. |
 | 2025-12-23 | **Simplified module/channel naming**: Changed Module Name from "last 2 segments" to full EQN (lowercased). Changed Channel Name from derived format to PQN. Removed collision detection requirement. |
 | 2025-12-23 | Initial draft - comprehensive identifier architecture |

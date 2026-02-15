@@ -56,11 +56,13 @@ Step 4:   extract_design_attributes()               -> dict[Path, list[DesignAtt
 Step 4.5: extract_computed_attributes()              -> list[ComputedAttributeData]     <- NEW
             + removes FORMULA attributes from Step 4's design_attributes dict
 Step 5:   ParameterGroupDeriver                      -> list[ParameterGroup]
+Step 5.5: Build OutputRegistry                       -> OutputRegistry                   <- NEW
+            + registers FORMULA computed attributes as FORMULA channels
 Step 6:   DependencyBacktracker.find_required_modules() -> BacktrackingResult
-            + accepts computed_attributes for resolution
+            + receives OutputRegistry (pre-built with FORMULA channels in Step 5.5)
 Step 6.5: classify_compilability()                   -> dict[str, CalcDefCompilationResult]
 Step 7:   build_computation_graph()                  -> ComputationGraph
-            + accepts computed_attributes as additional input
+            + accepts computed_attributes + output_registry
             + generates PipelineModule for each FORMULA computed attribute
             + resolves EXPOSE_PURE aliases for input wiring
 Step 8:   Generation (modules, stencils, YAML, schemas, backlog)
@@ -159,16 +161,18 @@ def find_required_modules(
 ) -> BacktrackingResult:
 
 # After ATTR-EXPR:
-def find_required_modules(
-    self,
-    calc_usages: list[CalcUsageData],
-    calc_defs: list[CalculationDefinitionData],
-    computed_attributes: list[ComputedAttributeData],  # NEW
-    ...
-) -> BacktrackingResult:
+class DependencyBacktracker:
+    def __init__(
+        self,
+        all_usages: list[CalcUsageData],
+        calc_defs: list[CalculationDefinitionData],
+        ...,
+        *,
+        output_registry: OutputRegistry,  # NEW — sole resolution path
+    ):
 ```
 
-The backtracker builds a lookup dict from computed attributes keyed by `(owning_part_qualified_name, attribute_name)` for O(1) resolution during dependency tracing.
+FORMULA computed attributes are registered in the OutputRegistry (Step 5.5, Phase 1) with dotted keys (e.g., `parent_part.attr_name`). The backtracker resolves CHAIN bindings to these via `registry.resolve(source_path)`. No internal computed attribute index is built -- the OutputRegistry is the single lookup.
 
 ### Chain Handling: A Non-Decision
 

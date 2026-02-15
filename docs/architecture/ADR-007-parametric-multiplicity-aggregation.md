@@ -85,7 +85,7 @@ All instances in an array share the same parameter bindings. This assumption is:
 ### Negative
 - Uniform-array assumption limits applicability to non-uniform designs
 - Non-uniform arrays require manual Approach E workaround (explicit CalcDef)
-- Singleton term compilation currently produces `.(inputs.xxx)` syntax for some FeatureReferenceExpressions — 16 of 20 aggregation cost impls are syntactically invalid Python (the 4 idiot_index impls, which use only local terms, are valid)
+- Singleton term compilation currently produces `.(inputs.xxx)` syntax for some FeatureReferenceExpressions — 16 of 20 aggregation cost impls are syntactically invalid Python (the 4 idiot_index impls, which use only local terms, are valid). **Update (2026-02-15):** This remains a known extraction-time limitation. The graph builder works around it: unresolvable singleton terms set `compilability = MANUAL_REQUIRED`, so affected aggregation modules generate `_impl.py` stencils for manual implementation rather than auto-impl.
 
 ## References
 
@@ -94,9 +94,11 @@ All instances in an array share the same parameter bindings. This assumption is:
 - **Item 4**: commit `f49005c` — Pipeline integration for aggregation module generation
 - **`ScopedAggregationData`**: `src/sysml_codegen/generation/initialization.py`
 - **`AggregationExpressionData`**: `src/sysml_codegen/extraction/data_models.py`
+- **OutputRegistry integration (ADR-008)**: Aggregation outputs are registered in OutputRegistry Phase 1 (Key_D: `part_usage.attr`, Key_E: full dotted path). The graph builder's `_build_aggregation_module()` receives `OutputRegistry` directly for channel verification and lookup. The three former catalog construction functions (`_build_output_catalog`, `_extend_output_catalog_with_computed_attrs`, `_extend_output_catalog_with_aggregation`) have been removed.
 
 ## Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-02-10 | Initial version |
+| 2026-02-15 | Fix stale references: note singleton bug workaround status, add OutputRegistry cross-reference (ADR-008) |
