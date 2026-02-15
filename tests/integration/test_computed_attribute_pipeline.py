@@ -40,7 +40,8 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
-from sysml_codegen.generation.initialization import _remove_formula_from_design_attrs
+from sysml_codegen.core.output_registry import OutputRegistry
+from sysml_codegen.generation.initialization import build_output_registry, _remove_formula_from_design_attrs
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import (
     EntryPointType,
@@ -173,6 +174,7 @@ class TestSimpleFormula:
             calc_defs=[],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -194,6 +196,7 @@ class TestSimpleFormula:
             calc_defs=[],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -217,6 +220,7 @@ class TestSimpleFormula:
             calc_defs=[],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -238,6 +242,7 @@ class TestSimpleFormula:
             calc_defs=[],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -274,6 +279,7 @@ class TestFormulaChain:
             calc_defs=[],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[ca_area, ca_cost],
         )
         return graph
@@ -382,11 +388,17 @@ class TestFormulaWithExposePure:
             binding_resolutions=binding_resolutions,
         )
 
+        registry = build_output_registry(
+            calc_usages=[usage], calc_defs=[calc_def],
+            computed_attributes=[expose_ca, formula_ca],
+            aggregation_data=[], channel_aliases=[], design_attributes={},
+        )
         graph = build_computation_graph(
             result=result,
             calc_defs=[calc_def],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=registry,
             computed_attributes=[expose_ca, formula_ca],
         )
 
@@ -426,6 +438,7 @@ class TestFormulaWithExposePure:
             calc_defs=[],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[expose_ca],
         )
 
@@ -519,6 +532,7 @@ class TestFormulaRemoval:
             calc_defs=[],
             design_attrs=design_attrs,
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -585,9 +599,14 @@ class TestBacktrackerResolution:
             input_attributes=[SimpleAttrInfo(name="power")],
         )
 
+        registry = build_output_registry(
+            calc_usages=[usage], calc_defs=[calc_def],
+            computed_attributes=[ca], aggregation_data=[],
+            channel_aliases=[], design_attributes={},
+        )
         bt = DependencyBacktracker(
             [usage], [calc_def],
-            computed_attributes=[ca],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -615,9 +634,14 @@ class TestBacktrackerResolution:
             input_attributes=[SimpleAttrInfo(name="rate")],
         )
 
+        registry = build_output_registry(
+            calc_usages=[usage], calc_defs=[calc_def],
+            computed_attributes=[], aggregation_data=[],
+            channel_aliases=[], design_attributes={},
+        )
         bt = DependencyBacktracker(
             [usage], [calc_def],
-            computed_attributes=[],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -648,9 +672,14 @@ class TestBacktrackerResolution:
             input_attributes=[SimpleAttrInfo(name="power")],
         )
 
+        registry = build_output_registry(
+            calc_usages=[usage], calc_defs=[calc_def],
+            computed_attributes=[ca], aggregation_data=[],
+            channel_aliases=[], design_attributes={},
+        )
         bt = DependencyBacktracker(
             [usage], [calc_def],
-            computed_attributes=[ca],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -704,6 +733,7 @@ class TestEmptyComputedAttrs:
             calc_defs=[calc_def],
             design_attrs={},
             group_deriver=_make_mock_group_deriver(),
+            output_registry=OutputRegistry(),
             computed_attributes=computed_attrs,
         )
 

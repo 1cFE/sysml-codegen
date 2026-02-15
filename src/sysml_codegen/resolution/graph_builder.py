@@ -41,6 +41,7 @@ from sysml_codegen.extraction.data_models import (
     RedefinitionType,
     ScopedAggregationData,
 )
+from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.resolution.models import (
@@ -71,6 +72,7 @@ def build_computation_graph(
     calc_defs: list,
     design_attrs: dict[Path, list[DesignAttributeData]],
     group_deriver: ParameterGroupDeriver,
+    output_registry: OutputRegistry,
     compilation_results: dict | None = None,
     computed_attributes: list[ComputedAttributeData] | None = None,
     aggregation_data: list[ScopedAggregationData] | None = None,
@@ -86,6 +88,7 @@ def build_computation_graph(
         calc_defs: All calculation definitions
         design_attrs: Design attributes by file
         group_deriver: Existing ParameterGroupDeriver for entry point grouping
+        output_registry: OutputRegistry for channel resolution and validation
         compilation_results: Expression compilation results keyed by calc_def.name.
             If provided, sets each module's compilability field.
         computed_attributes: Computed attributes from Step 4.5. FORMULA+FULLY_COMPILABLE
@@ -101,25 +104,12 @@ def build_computation_graph(
     # Step 1: Build calc def lookup
     calc_def_map = {cd.name: cd for cd in calc_defs}
 
-    # Step 2: Build output channel catalog
-    # ADR-003: Module names use full EQN (guaranteed unique), no collision check needed
-    # Uses backtracker's already-resolved bindings, just maps to channel names
-    output_catalog = _build_output_catalog(result.required_usages, calc_def_map)
-
-    # Step 2.5: Extend output catalog with computed attribute outputs
-    if computed_attributes:
-        _extend_output_catalog_with_computed_attrs(output_catalog, computed_attributes)
-
-    # Step 2.7: Extend output catalog with aggregation module outputs
-    if aggregation_data:
-        _extend_output_catalog_with_aggregation(output_catalog, aggregation_data)
-
     # Step 3: Build attribute resolution map (for FORMULA module input wiring)
     calc_usage_names = {u.instance_name for u in result.required_usages}
     attr_resolution_map: dict[str, dict[str, AttributeResolution]] = {}
     if computed_attributes:
         attr_resolution_map = _build_attribute_resolution_map(
-            computed_attributes, design_attrs, output_catalog, calc_usage_names
+            computed_attributes, design_attrs, output_registry, calc_usage_names
         )
 
     # Step 4: Classify entry points with full context
@@ -154,7 +144,6 @@ def build_computation_graph(
         module = _build_pipeline_module(
             usage=usage,
             calc_def=calc_def,
-            output_catalog=output_catalog,
             entry_points=entry_points,
             execution_order=idx,
             binding_resolutions=result.binding_resolutions,
@@ -182,7 +171,7 @@ def build_computation_graph(
     # Step 6.7: Build aggregation modules
     for agg in (aggregation_data or []):
         agg_module = _build_aggregation_module(
-            agg, hierarchy_redefinitions or [], output_catalog,
+            agg, hierarchy_redefinitions or [], output_registry,
             entry_points, group_deriver,
         )
         modules.append(agg_module)
@@ -251,56 +240,6 @@ def build_computation_graph(
         execution_order=[m.name for m in modules],
     )
 
-
-def _build_output_catalog(
-    usages: list[CalcUsageData],
-    calc_def_map: dict,
-) -> dict[str, tuple[str, str, str]]:
-    """Build catalog mapping binding sources to (module_name, channel_name, field_name).
-
-    Key insight: The backtracker has ALREADY resolved which usages are in
-    the required set and sorted them. We just need to build the channel
-    name mapping for YAML generation.
-
-    Args:
-        usages: Required usages (already sorted by backtracker)
-        calc_def_map: Calc def lookup by name
-
-    Returns:
-        Dict mapping source patterns to (module_name, channel_name, field_name):
-        - "alpha_neutron_split.p_neutron" -> ("AlphaNeutronSplitModule", "..._p_neutron", "p_neutron")
-        - For single-output modules, field_name is "root"
-        - Qualified pattern also supported for disambiguation
-    """
-    catalog: dict[str, tuple[str, str, str]] = {}
-
-    for usage in usages:
-        calc_def = calc_def_map.get(usage.calc_def_name)
-        if not calc_def:
-            raise MissingCalcDefError(
-                f"Usage '{usage.instance_name}' references calc def '{usage.calc_def_name}' "
-                f"which was not found in calc_def_map. This indicates a model inconsistency."
-            )
-
-        # ADR-003: Derive namespaced module_type from calc def qualified_name
-        module_type = derive_module_type(calc_def.qualified_name)
-
-        # Determine if this is a single-output or multi-output module
-        is_multi_output = len(calc_def.output_attributes) > 1
-
-        for output_attr in calc_def.output_attributes:
-            # ADR-003: Channel name is PQN format (usage EQN + output name)
-            channel_name = get_channel_name(usage.qualified_name, output_attr.name)
-
-            # Field name: "root" for single-output, attr.name for multi-output
-            field_name = output_attr.name if is_multi_output else "root"
-
-            # Key format matches binding.source_path from usage_extractor
-            # (e.g., "alpha_neutron_split.p_neutron")
-            key = f"{usage.instance_name}.{output_attr.name}"
-            catalog[key] = (module_type, channel_name, field_name)
-
-    return catalog
 
 
 def _classify_entry_points(
@@ -580,49 +519,20 @@ class AttributeResolution:
     channel_name: str | None = None  # For formula and expose_alias
 
 
-def _extend_output_catalog_with_computed_attrs(
-    output_catalog: dict[str, tuple[str, str, str]],
-    computed_attributes: list[ComputedAttributeData],
-) -> None:
-    """Extend the output catalog with computed attribute module outputs.
-
-    Must be called BEFORE _build_pipeline_module() so CalcUsage modules
-    that reference computed attribute outputs can validate their channels.
-
-    Args:
-        output_catalog: Mutable catalog to extend in-place
-        computed_attributes: All computed attributes from Step 4.5
-    """
-    for ca in computed_attributes:
-        if (
-            ca.classification != ComputedAttributeClassification.FORMULA
-            or ca.compilability != Compilability.FULLY_COMPILABLE
-        ):
-            continue
-
-        sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-        module_eqn = sysml_to_python_qualified_name(sysml_qn)
-        module_type = derive_module_type(sysml_qn)
-        channel_name = get_channel_name(module_eqn, ca.python_name)
-
-        # Key: "part_name.attr_name" for binding resolution
-        key = f"{ca.owning_part_name}.{ca.python_name}"
-        output_catalog[key] = (module_type, channel_name, "root")
-
 
 def _resolve_expose_pure(
     ca: ComputedAttributeData,
     calc_usage_names: set[str],
-    output_catalog: dict[str, tuple[str, str, str]],
+    output_registry: OutputRegistry,
 ) -> str | None:
     """Resolve an EXPOSE_PURE attribute to its upstream calc output channel.
 
     An EXPOSE_PURE attribute like ``p_alpha_out = alpha_split.p_alpha`` has
     references containing both the calc usage instance name and the calc output
-    attribute name. This function separates them and looks up the output catalog.
+    attribute name. This function separates them and looks up the output registry.
 
     Returns:
-        channel_name if resolved, None if the catalog key is not found.
+        channel_name if resolved, None if the registry key is not found.
     """
     instance_name: str | None = None
     output_attr_name: str | None = None
@@ -641,22 +551,21 @@ def _resolve_expose_pure(
         return None
 
     catalog_key = f"{instance_name}.{output_attr_name}"
-    entry = output_catalog.get(catalog_key)
-    if entry is None:
+    channel_name = output_registry.resolve(catalog_key)
+    if channel_name is None:
         logger.warning(
-            "EXPOSE_PURE %s: catalog key '%s' not found. Available: %s",
-            ca.name, catalog_key, list(output_catalog.keys()),
+            "EXPOSE_PURE %s: key '%s' not found in output registry",
+            ca.name, catalog_key,
         )
         return None
 
-    _, channel_name, _ = entry
     return channel_name
 
 
 def _build_attribute_resolution_map(
     computed_attrs: list[ComputedAttributeData],
     design_attrs: dict[Path, list[DesignAttributeData]],
-    output_catalog: dict[str, tuple[str, str, str]],
+    output_registry: OutputRegistry,
     calc_usage_names: set[str],
 ) -> dict[str, dict[str, AttributeResolution]]:
     """Build per-part map: owning_part_name -> {attr_name -> AttributeResolution}.
@@ -671,7 +580,7 @@ def _build_attribute_resolution_map(
     Args:
         computed_attrs: All computed attributes from Step 4.5
         design_attrs: Design attributes indexed by file
-        output_catalog: Output channel catalog (includes computed attr outputs)
+        output_registry: OutputRegistry for channel resolution
         calc_usage_names: CalcUsage instance names for EXPOSE_PURE resolution
     """
     result: dict[str, dict[str, AttributeResolution]] = {}
@@ -695,7 +604,7 @@ def _build_attribute_resolution_map(
 
         elif ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
             # EXPOSE_PURE -> resolve through alias to upstream calc output
-            channel = _resolve_expose_pure(ca, calc_usage_names, output_catalog)
+            channel = _resolve_expose_pure(ca, calc_usage_names, output_registry)
             if channel is not None:
                 result[part_name][ca.python_name] = AttributeResolution(
                     kind=AttributeResolutionKind.EXPOSE_ALIAS, channel_name=channel,
@@ -827,37 +736,12 @@ def _build_computed_attr_module(
     )
 
 
-def _extend_output_catalog_with_aggregation(
-    output_catalog: dict[str, tuple[str, str, str]],
-    aggregation_data: list[ScopedAggregationData],
-) -> None:
-    """Extend the output catalog with aggregation module outputs.
-
-    Must be called BEFORE _build_pipeline_module() and _build_aggregation_module()
-    so modules that reference aggregation outputs can validate their channels.
-
-    Args:
-        output_catalog: Mutable catalog to extend in-place
-        aggregation_data: Scoped aggregation expressions from Step 4.7
-    """
-    for agg in aggregation_data:
-        module_type = derive_module_type(
-            f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
-        )
-        channel_name = get_channel_name(agg.module_eqn, agg.expression.attribute_name)
-
-        # Key: "part_name.attr_name" for binding resolution
-        instance_parts = agg.instance_path.split("__")
-        part_name = instance_parts[-1] if instance_parts else agg.expression.owning_part_name
-        key = f"{part_name}.{agg.expression.attribute_name}"
-        output_catalog[key] = (module_type, channel_name, "root")
-
 
 def _resolve_aggregation_input_channel(
     symbolic_ref: str,
     instance_path: str,
     redefinitions: list[RedefinitionData],
-    output_catalog: dict[str, tuple[str, str, str]],
+    output_registry: OutputRegistry,
     _visited: set[str] | None = None,
 ) -> str | None:
     """Resolve a symbolic aggregation input to a pipeline channel name.
@@ -866,7 +750,7 @@ def _resolve_aggregation_input_channel(
     1. Parse "part_usage.attribute" from symbolic ref
     2. Find CHAIN :>> redefinition on child PartDef for that attribute
     3. Follow chain to CalcUsage output -> build pipeline channel name
-    4. Fall back to output catalog lookup
+    4. Fall back to output registry lookup
 
     Cycle detection: tracks visited (part_usage, attr) pairs. If a CHAIN
     redefinition leads back to an already-visited pair, logs a warning and
@@ -876,7 +760,7 @@ def _resolve_aggregation_input_channel(
         symbolic_ref: Dotted symbolic reference (e.g., "pv_module.capital_cost")
         instance_path: Design scope (e.g., "Design__plant__solar_array")
         redefinitions: PartDef-level :>> redefinitions
-        output_catalog: Full output catalog for channel verification
+        output_registry: OutputRegistry for channel verification and lookup
         _visited: Internal cycle guard (set of visited keys)
 
     Returns:
@@ -899,6 +783,9 @@ def _resolve_aggregation_input_channel(
         return None
     _visited.add(visit_key)
 
+    # Capture canonical channels once for O(1) membership checks
+    canonical_channels = output_registry.canonical_channels
+
     # Find CHAIN redefinition for this attribute on the child PartDef
     chain_redef = None
     for redef in redefinitions:
@@ -916,19 +803,20 @@ def _resolve_aggregation_input_channel(
             channel = get_channel_name(
                 f"{instance_path}__{part_usage}__{calc_usage}", output
             )
-            # Verify channel exists in catalog
-            if any(v[1] == channel for v in output_catalog.values()):
+            # Verify channel exists in registry
+            if channel in canonical_channels:
                 return channel
         # If channel not found or source has no dot, recurse with cycle guard
         return _resolve_aggregation_input_channel(
             chain_redef.source_path, instance_path, redefinitions,
-            output_catalog, _visited,
+            output_registry, _visited,
         )
 
-    # Fall back to output catalog lookup (handles agg-to-agg references)
+    # Fall back to output registry lookup (handles agg-to-agg references)
     catalog_key = f"{part_usage}.{attr}"
-    if catalog_key in output_catalog:
-        return output_catalog[catalog_key][1]  # channel_name
+    channel = output_registry.resolve(catalog_key)
+    if channel is not None:
+        return channel
 
     return None
 
@@ -936,7 +824,7 @@ def _resolve_aggregation_input_channel(
 def _build_aggregation_module(
     agg: ScopedAggregationData,
     redefinitions: list[RedefinitionData],
-    output_catalog: dict[str, tuple[str, str, str]],
+    output_registry: OutputRegistry,
     entry_points: dict[str, EntryPoint],
     group_deriver: ParameterGroupDeriver | None,
 ) -> PipelineModule:
@@ -949,7 +837,7 @@ def _build_aggregation_module(
     Args:
         agg: Scoped aggregation expression
         redefinitions: PartDef-level :>> redefinitions for CHAIN resolution
-        output_catalog: Full output catalog for channel verification
+        output_registry: OutputRegistry for channel verification and lookup
         entry_points: Mutable dict -- new entry points may be added
         group_deriver: For classifying new entry points (None in tests)
     """
@@ -972,7 +860,7 @@ def _build_aggregation_module(
         param_name = f"{term.part_usage_name}_{term.attribute_name}"
 
         channel = _resolve_aggregation_input_channel(
-            symbolic_ref, agg.instance_path, redefinitions, output_catalog,
+            symbolic_ref, agg.instance_path, redefinitions, output_registry,
         )
 
         if channel:
@@ -1034,6 +922,7 @@ def _build_aggregation_module(
             ref_to_inputs[term.multiplicity_attr] = f"inputs.{term.multiplicity_attr}"
 
     # Process SingletonTerms (non-multiplied child references)
+    canonical_channels = output_registry.canonical_channels
     for s_term in agg.expression.singleton_terms:
         param_name = s_term.source_path.replace(".", "_")
 
@@ -1045,7 +934,7 @@ def _build_aggregation_module(
             channel = get_channel_name(
                 f"{agg.instance_path}__{calc_path}", output_name,
             )
-            if any(v[1] == channel for v in output_catalog.values()):
+            if channel in canonical_channels:
                 s_source = InputSource(
                     source_type="module_output",
                     producer_channel=channel,
@@ -1053,7 +942,7 @@ def _build_aggregation_module(
             else:
                 # Fall back to chain resolution
                 resolved = _resolve_aggregation_input_channel(
-                    s_term.source_path, agg.instance_path, redefinitions, output_catalog,
+                    s_term.source_path, agg.instance_path, redefinitions, output_registry,
                 )
                 if resolved:
                     s_source = InputSource(
@@ -1212,7 +1101,6 @@ def _unified_topological_sort(modules: list[PipelineModule]) -> list[PipelineMod
 def _build_pipeline_module(
     usage: CalcUsageData,
     calc_def,
-    output_catalog: dict[str, tuple[str, str, str]],
     entry_points: dict[str, EntryPoint],
     execution_order: int,
     binding_resolutions: dict[str, BindingResolution],
@@ -1233,7 +1121,6 @@ def _build_pipeline_module(
     Args:
         usage: The calc usage to convert
         calc_def: Corresponding calc definition
-        output_catalog: Maps binding sources to (module_name, channel_name, field_name)
         entry_points: All classified entry points
         execution_order: Position in topological order
         binding_resolutions: Unified mapping for ALL binding resolutions (REQUIRED).
@@ -1333,8 +1220,6 @@ __all__ = [
     "_build_aggregation_module",
     "_build_attribute_resolution_map",
     "_build_computed_attr_module",
-    "_extend_output_catalog_with_aggregation",
-    "_extend_output_catalog_with_computed_attrs",
     "_resolve_aggregation_input_channel",
     "_resolve_expose_pure",
     "_unified_topological_sort",

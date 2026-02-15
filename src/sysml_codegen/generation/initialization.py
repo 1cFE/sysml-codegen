@@ -28,7 +28,6 @@ from sysml_codegen.analysis.parameter_groups import (
 )
 from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
 from sysml_codegen.extraction.data_models import (
-    AggregationExpressionData,
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
@@ -328,54 +327,6 @@ def _rewrite_virtual_bindings(
     return rewrite_count
 
 
-def _enrich_aliases_from_bindings(
-    hierarchy_data: HierarchyExtractionResult,
-    calc_usages: list[CalcUsageData],
-) -> int:
-    """Enrich aggregation aliases from CalcUsage binding parameter names.
-
-    Scans CalcUsage bindings for parameters that reference aggregation
-    attribute names. When a binding's source resolves to an aggregation
-    attribute with a different param_name, that param_name becomes an alias.
-
-    Returns count of aliases added.
-    """
-    if not hierarchy_data.aggregation_expressions:
-        return 0
-
-    # Build lookup: attribute_name -> list of AggregationExpressionData
-    agg_by_attr: dict[str, list[AggregationExpressionData]] = {}
-    for agg in hierarchy_data.aggregation_expressions:
-        agg_by_attr.setdefault(agg.attribute_name, []).append(agg)
-
-    added = 0
-    for usage in calc_usages:
-        for binding in usage.bindings:
-            if not binding.source_path or not binding.param_name:
-                continue
-
-            # Extract leaf name from source_path
-            # REFERENCE bindings: "Package::PartDef::attr" -> "attr"
-            # CHAIN bindings: "instance.attr" -> "attr"
-            source_leaf = binding.source_path
-            if "::" in source_leaf:
-                source_leaf = source_leaf.rsplit("::", 1)[-1]
-            elif "." in source_leaf:
-                source_leaf = source_leaf.rsplit(".", 1)[-1]
-
-            if source_leaf not in agg_by_attr:
-                continue
-            if binding.param_name == source_leaf:
-                continue
-
-            # Add alias to all matching aggregation expressions
-            for agg in agg_by_attr[source_leaf]:
-                if binding.param_name not in agg.aliases:
-                    agg.aliases.append(binding.param_name)
-                    added += 1
-
-    return added
-
 
 def find_instance_paths_for_partdef(
     owning_part_qn: str,
@@ -613,7 +564,7 @@ def build_output_registry(
         # Bare key
         keys.append(agg.expression.attribute_name)
 
-        # BF-7 alias variants (from agg.expression.aliases including Step 3.6 param_name aliases)
+        # BF-7 alias variants (from agg.expression.aliases)
         for alias_name in agg.expression.aliases:
             keys.append(f"{part_usage}.{alias_name}")
             keys.append(alias_name)
@@ -777,11 +728,6 @@ def build_pipeline_context(
         extractor.model, calc_usages
     )
 
-    # Step 3.6: Enrich aggregation aliases from CalcUsage bindings
-    alias_count = _enrich_aliases_from_bindings(hierarchy_data, calc_usages)
-    if alias_count:
-        logger.info("Step 3.6: Enriched %d aggregation alias(es) from CalcUsage bindings", alias_count)
-
     # Step 4: Extract design attributes for group derivation
     design_attrs = extract_design_attributes(extractor.model, design_path_filter=design_path_filter)
 
@@ -811,8 +757,6 @@ def build_pipeline_context(
         calc_usages,
         calc_defs,
         design_attributes=design_attrs,
-        computed_attributes=computed_attrs,
-        aggregation_data=scoped_agg_data,
         output_registry=output_registry,
     )
     backtracking_result = backtracker.find_required_modules(
@@ -868,6 +812,7 @@ def build_pipeline_context(
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        output_registry=output_registry,
         compilation_results=compilation_results,
         computed_attributes=computed_attrs,
         aggregation_data=scoped_agg_data,

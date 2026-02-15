@@ -1,8 +1,10 @@
-"""Unit tests for backtracker aggregation output awareness (Phase 2).
+"""Unit tests for aggregation output registration and resolution.
 
-Tests the aggregation output index, three-level cascade lookup, and
-_trace_dependencies() integration that resolves CalcUsage bindings
-to aggregation module outputs as MODULE_OUTPUT.
+Tests OutputRegistry registration of aggregation outputs (category a),
+backtracker binding resolution via registry (category b), and integration
+behavior (category c).
+
+Migrated from internal index access to OutputRegistry API for Item 4 cut-over.
 """
 
 from dataclasses import dataclass, field
@@ -19,8 +21,22 @@ from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
 
 
 # ---------------------------------------------------------------------------
-# Test helpers (reused from test_backtracker_computed_attrs.py pattern)
+# Test helpers
 # ---------------------------------------------------------------------------
+
+
+def _build_test_registry(**kwargs):
+    """Build OutputRegistry from synthetic test data."""
+    from sysml_codegen.generation.initialization import build_output_registry
+
+    return build_output_registry(
+        calc_usages=kwargs.get("calc_usages", []),
+        calc_defs=kwargs.get("calc_defs", []),
+        aggregation_data=kwargs.get("aggregation_data", []),
+        computed_attributes=kwargs.get("computed_attributes", []),
+        channel_aliases=kwargs.get("channel_aliases", []),
+        design_attributes=kwargs.get("design_attributes", {}),
+    )
 
 
 def _make_scoped_agg(
@@ -78,25 +94,27 @@ class SimpleAttrInfo:
 
 
 # ---------------------------------------------------------------------------
-# Tests: Aggregation Output Index
+# Category (a): Aggregation Output Registration
 # ---------------------------------------------------------------------------
 
 
-class TestAggregationOutputIndex:
+class TestAggregationOutputRegistration:
+    """Test OutputRegistry registration of aggregation outputs."""
+
     def test_dotted_reference_resolves(self):
         """'solar_array.capital_cost' resolves to aggregation module output channel."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
         )
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        assert "solar_array.capital_cost" in bt._aggregation_output_index
+        registry = _build_test_registry(aggregation_data=[agg])
+        assert registry.resolve("solar_array.capital_cost") is not None
 
     def test_bare_reference_resolves(self):
         """Bare 'capital_cost' resolves when only one aggregation has that name."""
         agg = _make_scoped_agg(attribute_name="capital_cost")
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        assert "capital_cost" in bt._aggregation_output_index
+        registry = _build_test_registry(aggregation_data=[agg])
+        assert registry.resolve("capital_cost") is not None
 
     def test_full_instance_dotted_resolves(self):
         """Full dotted instance path resolves."""
@@ -104,11 +122,8 @@ class TestAggregationOutputIndex:
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
         )
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        assert (
-            "Design.plant.solar_array.capital_cost"
-            in bt._aggregation_output_index
-        )
+        registry = _build_test_registry(aggregation_data=[agg])
+        assert registry.resolve("Design.plant.solar_array.capital_cost") is not None
 
     def test_channel_name_format(self):
         """Channel follows PQN format: {module_eqn}__{attribute_name}."""
@@ -116,8 +131,8 @@ class TestAggregationOutputIndex:
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
         )
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        channel = bt._aggregation_output_index["solar_array.capital_cost"]
+        registry = _build_test_registry(aggregation_data=[agg])
+        channel = registry.resolve("solar_array.capital_cost")
         assert (
             channel
             == "Design__plant__solar_array__capital_cost__capital_cost"
@@ -135,35 +150,37 @@ class TestAggregationOutputIndex:
             owning_part_name="Battery_System",
             instance_path="Design__plant__battery_system",
         )
-        bt = DependencyBacktracker([], [], aggregation_data=[agg1, agg2])
+        registry = _build_test_registry(aggregation_data=[agg1, agg2])
 
-        # Both dotted keys present
-        assert "solar_array.capital_cost" in bt._aggregation_output_index
-        assert "battery_system.capital_cost" in bt._aggregation_output_index
-        # Bare key only stores first
-        assert "capital_cost" in bt._aggregation_output_index
+        # Both dotted keys resolve
+        assert registry.resolve("solar_array.capital_cost") is not None
+        assert registry.resolve("battery_system.capital_cost") is not None
+        # Bare key resolves to first-registered
+        assert registry.resolve("capital_cost") is not None
         assert (
-            bt._aggregation_output_index["capital_cost"]
-            == bt._aggregation_output_index["solar_array.capital_cost"]
+            registry.resolve("capital_cost")
+            == registry.resolve("solar_array.capital_cost")
         )
 
     def test_empty_aggregation_data(self):
-        """Empty aggregation_data produces empty index."""
-        bt = DependencyBacktracker([], [], aggregation_data=[])
-        assert bt._aggregation_output_index == {}
+        """Empty aggregation_data produces no aggregation registrations."""
+        registry = _build_test_registry(aggregation_data=[])
+        assert registry.resolve("capital_cost") is None
 
     def test_none_aggregation_data(self):
-        """None aggregation_data produces empty index."""
-        bt = DependencyBacktracker([], [], aggregation_data=None)
-        assert bt._aggregation_output_index == {}
+        """Default (no aggregation_data) produces no registrations."""
+        registry = _build_test_registry()
+        assert registry.resolve("capital_cost") is None
 
 
 # ---------------------------------------------------------------------------
-# Tests: _trace_dependencies() with Aggregation
+# Category (b): Resolution Tests
 # ---------------------------------------------------------------------------
 
 
 class TestSystemCalcWiresToAggregation:
+    """Test backtracker resolution of bindings to aggregation outputs."""
+
     def test_dotted_binding_resolves_to_module_output(self):
         """System-level CalcUsage with binding source_path='solar_array.capital_cost'
         resolves to MODULE_OUTPUT pointing at aggregation channel."""
@@ -191,10 +208,13 @@ class TestSystemCalcWiresToAggregation:
             output_attributes=[SimpleAttrInfo("lcoe")],
         )
 
+        registry = _build_test_registry(
+            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=[agg],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -235,10 +255,13 @@ class TestSystemCalcWiresToAggregation:
             output_attributes=[SimpleAttrInfo("result")],
         )
 
+        registry = _build_test_registry(
+            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=[agg],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -273,10 +296,13 @@ class TestSystemCalcWiresToAggregation:
             output_attributes=[SimpleAttrInfo("out")],
         )
 
+        registry = _build_test_registry(
+            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=[agg],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -285,8 +311,10 @@ class TestSystemCalcWiresToAggregation:
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
 
-    def test_trace_log_contains_aggregation_entry(self):
-        """Trace log records AGGREGATION resolution for debugging."""
+    # -- Category (c): Integration Tests --
+
+    def test_trace_log_contains_aggregation_resolution(self):
+        """Trace log records resolution for debugging (checks outcome, not label)."""
         agg = _make_scoped_agg(attribute_name="capital_cost")
 
         usage = _make_calc_usage(
@@ -308,18 +336,25 @@ class TestSystemCalcWiresToAggregation:
             output_attributes=[SimpleAttrInfo("out")],
         )
 
+        registry = _build_test_registry(
+            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=[agg],
+            output_registry=registry,
         )
         result = bt.find_required_modules([], include_all=True)
 
-        agg_entries = [
-            line for line in result.trace_log if "AGGREGATION" in line
+        # Verify the binding resolved to MODULE_OUTPUT
+        key = "Pkg__Part__sys_calc|cost"
+        assert bt._binding_resolutions[key].resolution_type == BindingResolutionType.MODULE_OUTPUT
+
+        # Verify trace log mentions the attribute (resilient to label changes)
+        capital_cost_entries = [
+            line for line in result.trace_log if "capital_cost" in line.lower()
         ]
-        assert len(agg_entries) == 1
-        assert "capital_cost" in agg_entries[0]
+        assert len(capital_cost_entries) >= 1
 
     def test_literal_binding_not_affected(self):
         """LITERAL bindings still handled before aggregation check."""
@@ -345,10 +380,13 @@ class TestSystemCalcWiresToAggregation:
             output_attributes=[SimpleAttrInfo("out")],
         )
 
+        registry = _build_test_registry(
+            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=[agg],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
@@ -359,7 +397,7 @@ class TestSystemCalcWiresToAggregation:
 
 
 # ---------------------------------------------------------------------------
-# Tests: No Aggregation Data (backward compat)
+# Category (c): No Aggregation Data (backward compat)
 # ---------------------------------------------------------------------------
 
 
@@ -385,35 +423,36 @@ class TestNoAggregationDataGraceful:
             output_attributes=[SimpleAttrInfo("out")],
         )
 
-        # Should not raise
+        registry = _build_test_registry(
+            calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=None,
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 
-        # Binding goes to entry point (no aggregation, no other resolution)
         key = "Pkg__Part__calc|x"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.ENTRY_POINT
 
     def test_empty_list_aggregation_data_works(self):
-        """aggregation_data=[] works same as before."""
-        bt = DependencyBacktracker([], [], aggregation_data=[])
-        assert bt._aggregation_output_index == {}
+        """aggregation_data=[] produces no registrations."""
+        registry = _build_test_registry(aggregation_data=[])
+        assert registry.resolve("capital_cost") is None
 
 
 # ---------------------------------------------------------------------------
-# BF-7: Aggregation Alias Resolution
+# Category (a): BF-7 Aggregation Alias Registration
 # ---------------------------------------------------------------------------
 
 
-class TestAggregationAliasResolution:
-    """BF-7: EXPOSE_PURE aliases registered in aggregation output index."""
+class TestAggregationAliasRegistration:
+    """BF-7: EXPOSE_PURE aliases registered in OutputRegistry."""
 
-    def test_alias_in_index_resolves_to_module_output(self):
+    def test_alias_resolves(self):
         """':>> total_capex = capital_cost' alias resolves to aggregation output."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
@@ -421,19 +460,19 @@ class TestAggregationAliasResolution:
         )
         agg.expression.aliases = ["total_capex"]
 
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
+        registry = _build_test_registry(aggregation_data=[agg])
 
         # Both original and alias should resolve
-        assert "solar_battery_plant.capital_cost" in bt._aggregation_output_index
-        assert "solar_battery_plant.total_capex" in bt._aggregation_output_index
+        assert registry.resolve("solar_battery_plant.capital_cost") is not None
+        assert registry.resolve("solar_battery_plant.total_capex") is not None
 
     def test_bare_alias_resolves(self):
         """Bare alias name resolves when unambiguous."""
         agg = _make_scoped_agg(attribute_name="capital_cost")
         agg.expression.aliases = ["total_capex"]
 
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        assert "total_capex" in bt._aggregation_output_index
+        registry = _build_test_registry(aggregation_data=[agg])
+        assert registry.resolve("total_capex") is not None
 
     def test_alias_channel_matches_original(self):
         """Alias points to the same channel as the original attribute."""
@@ -443,9 +482,9 @@ class TestAggregationAliasResolution:
         )
         agg.expression.aliases = ["total_capex"]
 
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        original_channel = bt._aggregation_output_index["solar_battery_plant.capital_cost"]
-        alias_channel = bt._aggregation_output_index["solar_battery_plant.total_capex"]
+        registry = _build_test_registry(aggregation_data=[agg])
+        original_channel = registry.resolve("solar_battery_plant.capital_cost")
+        alias_channel = registry.resolve("solar_battery_plant.total_capex")
         assert original_channel == alias_channel
 
     def test_full_dotted_alias_resolves(self):
@@ -456,22 +495,24 @@ class TestAggregationAliasResolution:
         )
         agg.expression.aliases = ["total_capex"]
 
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        assert "Design.plant.solar_battery_plant.total_capex" in bt._aggregation_output_index
+        registry = _build_test_registry(aggregation_data=[agg])
+        assert registry.resolve("Design.plant.solar_battery_plant.total_capex") is not None
 
     def test_no_aliases_no_extra_keys(self):
-        """Aggregation with no aliases only has original 3 keys."""
+        """Aggregation with no aliases only has original keys."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_battery_plant",
         )
         # No aliases set (default empty list)
 
-        bt = DependencyBacktracker([], [], aggregation_data=[agg])
-        assert "total_capex" not in bt._aggregation_output_index
+        registry = _build_test_registry(aggregation_data=[agg])
+        assert registry.resolve("total_capex") is None
+
+    # -- Category (b): Alias resolution through backtracker --
 
     def test_sanitized_partdef_name_in_fallback(self):
-        """:: fallback sanitizes PartDef names ('Solar Battery Plant' → 'solar_battery_plant')."""
+        """:: fallback sanitizes PartDef names ('Solar Battery Plant' -> 'solar_battery_plant')."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_battery_plant",
@@ -497,10 +538,13 @@ class TestAggregationAliasResolution:
             output_attributes=[SimpleAttrInfo("lcoe")],
         )
 
+        registry = _build_test_registry(
+            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
+        )
         bt = DependencyBacktracker(
             [usage],
             [calc_def],
-            aggregation_data=[agg],
+            output_registry=registry,
         )
         bt.find_required_modules([], include_all=True)
 

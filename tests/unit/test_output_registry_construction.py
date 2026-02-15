@@ -781,7 +781,7 @@ class TestGetParentPartForUsage:
 
     def _make_bt(self):
         """Minimal backtracker (no usages/defs needed for this helper)."""
-        return DependencyBacktracker([], [])
+        return DependencyBacktracker([], [], output_registry=OutputRegistry())
 
     def test_normal_three_segments(self):
         """'Design__solar_battery_plant__lcoe' -> 'solar_battery_plant'."""
@@ -1047,64 +1047,3 @@ class TestResolveBindingViaRegistry:
         assert "efficiency" in result.qualified_name
 
 
-class TestCompareWithRegistry:
-    """Tests for _compare_with_registry() divergence detection."""
-
-    def test_no_divergence_no_warning(self, caplog):
-        """Matching results produce no warning."""
-        import logging
-
-        usages, defs, aggs, cas, aliases, da = _build_solar_battery_synthetic()
-        registry = build_output_registry(
-            calc_usages=usages, calc_defs=defs,
-            aggregation_data=aggs, computed_attributes=cas,
-            channel_aliases=aliases, design_attributes=da,
-        )
-        bt = DependencyBacktracker(usages, defs, output_registry=registry)
-        usage = _make_usage(
-            "consumer", "Design__solar_battery_plant__consumer", "ConsumerCalc"
-        )
-        binding = _make_binding("input_cost", "lcoe.lcoe_per_mwh", BindingType.CHAIN)
-        mapping_key = f"{usage.qualified_name}|input_cost"
-        # Store the same resolution the registry would produce
-        channel = registry.resolve("lcoe.lcoe_per_mwh")
-        bt._binding_resolutions[mapping_key] = BindingResolution(
-            resolution_type=BindingResolutionType.MODULE_OUTPUT,
-            qualified_name=channel,
-            source_path="lcoe.lcoe_per_mwh",
-            is_transitive=False,
-        )
-        with caplog.at_level(logging.WARNING):
-            bt._compare_with_registry(binding, usage, mapping_key)
-        divergences = [r for r in caplog.records if "PARALLEL DIVERGENCE" in r.message]
-        assert divergences == []
-
-    def test_divergence_logs_warning(self, caplog):
-        """Mismatched results produce PARALLEL DIVERGENCE warning."""
-        import logging
-
-        usages, defs, aggs, cas, aliases, da = _build_solar_battery_synthetic()
-        registry = build_output_registry(
-            calc_usages=usages, calc_defs=defs,
-            aggregation_data=aggs, computed_attributes=cas,
-            channel_aliases=aliases, design_attributes=da,
-        )
-        bt = DependencyBacktracker(usages, defs, output_registry=registry)
-        usage = _make_usage(
-            "consumer", "Design__solar_battery_plant__consumer", "ConsumerCalc"
-        )
-        binding = _make_binding("input_cost", "lcoe.lcoe_per_mwh", BindingType.CHAIN)
-        mapping_key = f"{usage.qualified_name}|input_cost"
-        # Store a DIFFERENT resolution (old path says ENTRY_POINT)
-        bt._binding_resolutions[mapping_key] = BindingResolution(
-            resolution_type=BindingResolutionType.ENTRY_POINT,
-            qualified_name="Design__consumer__input_cost",
-            source_path="lcoe.lcoe_per_mwh",
-            is_transitive=False,
-        )
-        with caplog.at_level(logging.WARNING):
-            bt._compare_with_registry(binding, usage, mapping_key)
-        divergences = [r for r in caplog.records if "PARALLEL DIVERGENCE" in r.message]
-        assert len(divergences) == 1
-        assert "old=entry_point" in divergences[0].message
-        assert "new=module_output" in divergences[0].message

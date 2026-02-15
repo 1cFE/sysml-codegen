@@ -22,6 +22,7 @@ from sysml_codegen.extraction.expression_compiler import (
     CompilationResult,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
+from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 
 
@@ -83,6 +84,7 @@ def test_compilation_results_none_leaves_unknown():
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        output_registry=OutputRegistry(),
     )
 
     assert len(graph.modules) == 1
@@ -113,6 +115,7 @@ def test_compilation_results_set_module_compilability():
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        output_registry=OutputRegistry(),
         compilation_results=compilation_results,
     )
 
@@ -138,6 +141,7 @@ def test_compilation_results_manual_required():
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        output_registry=OutputRegistry(),
         compilation_results=compilation_results,
     )
 
@@ -162,6 +166,7 @@ def test_compilation_results_partially_compilable():
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        output_registry=OutputRegistry(),
         compilation_results=compilation_results,
     )
 
@@ -187,6 +192,7 @@ def test_compilation_results_missing_key_leaves_unknown():
         calc_defs=calc_defs,
         design_attrs=design_attrs,
         group_deriver=group_deriver,
+        output_registry=OutputRegistry(),
         compilation_results=compilation_results,
     )
 

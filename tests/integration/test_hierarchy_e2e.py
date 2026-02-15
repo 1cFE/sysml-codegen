@@ -121,12 +121,18 @@ class TestHierarchyExtractionE2E:
                 f"Scoped paths: {sorted(scoped_instance_paths)}"
             )
 
-    def test_bf7_aliases_extracted(
+    def test_bf7_capital_cost_aggregation_exists(
         self, pipeline_context: PipelineContext,
     ):
-        """BF-7: Solar Battery Plant's capital_cost aggregation should have
-        'total_capex' in aliases (from design.sysml line 85:
-        `in total_capex = capital_cost;`)."""
+        """BF-7: Solar Battery Plant's capital_cost aggregation is extracted.
+
+        The 'total_capex' param_name alias was previously enriched by Step 3.6
+        (_enrich_aliases_from_bindings), but Phase 1 diagnostic confirmed it is
+        redundant with OutputRegistry Phase 1b BF-7 registration. Step 3.6
+        was removed as dead code. The aggregation itself is the important
+        extraction result; resolution of 'total_capex' bindings is validated
+        by E2E YAML diff tests.
+        """
         hierarchy = pipeline_context.hierarchy_data
         assert hierarchy is not None
 
@@ -138,12 +144,6 @@ class TestHierarchyExtractionE2E:
         ]
         assert plant_capital, (
             "Expected aggregation for Solar_Battery_Plant.capital_cost"
-        )
-
-        agg = plant_capital[0]
-        assert "total_capex" in agg.aliases, (
-            f"Expected 'total_capex' in aliases for "
-            f"Solar_Battery_Plant.capital_cost, got: {agg.aliases}"
         )
 
 

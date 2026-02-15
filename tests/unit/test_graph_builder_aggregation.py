@@ -1,6 +1,6 @@
 """Unit tests for graph builder aggregation module support (Phase 3 & 4).
 
-Tests _extend_output_catalog_with_aggregation(), _resolve_aggregation_input_channel(),
+Tests _resolve_aggregation_input_channel(),
 _build_aggregation_module(), topological ordering with aggregation modules,
 orphan entry point surfacing (BF-8), and expression compilation (BF-2).
 """
@@ -20,9 +20,9 @@ from sysml_codegen.extraction.data_models import (
     SumTerm,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
+from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.resolution.graph_builder import (
     _build_aggregation_module,
-    _extend_output_catalog_with_aggregation,
     _resolve_aggregation_input_channel,
     _unified_topological_sort,
 )
@@ -84,83 +84,6 @@ def _make_chain_redef(
     )
 
 
-# ---------------------------------------------------------------------------
-# TestExtendOutputCatalogWithAggregation
-# ---------------------------------------------------------------------------
-
-
-class TestExtendOutputCatalogWithAggregation:
-    def test_adds_catalog_entry_with_correct_key(self):
-        """Output catalog keyed by 'part_name.attribute_name'."""
-        agg = _make_scoped_agg(
-            attribute_name="capital_cost",
-            instance_path="Design__plant__solar_array",
-        )
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_aggregation(catalog, [agg])
-
-        assert "solar_array.capital_cost" in catalog
-
-    def test_channel_name_follows_pqn_format(self):
-        """Channel is module_eqn__attribute_name."""
-        agg = _make_scoped_agg(
-            attribute_name="capital_cost",
-            instance_path="Design__plant__solar_array",
-        )
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_aggregation(catalog, [agg])
-
-        _, channel, field = catalog["solar_array.capital_cost"]
-        assert channel == "Design__plant__solar_array__capital_cost__capital_cost"
-        assert field == "root"
-
-    def test_multiple_aggregations(self):
-        """Multiple aggregation expressions each get catalog entry."""
-        agg1 = _make_scoped_agg(
-            attribute_name="capital_cost",
-            instance_path="Design__plant__solar_array",
-        )
-        agg2 = _make_scoped_agg(
-            attribute_name="capital_cost",
-            owning_part_qn="Lib__Battery_System",
-            owning_part_name="Battery_System",
-            instance_path="Design__plant__battery_system",
-        )
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_aggregation(catalog, [agg1, agg2])
-
-        assert "solar_array.capital_cost" in catalog
-        assert "battery_system.capital_cost" in catalog
-
-    def test_same_attr_name_different_parts_disambiguated(self):
-        """Two PartDefs with same attribute_name produce distinct channels."""
-        agg1 = _make_scoped_agg(
-            attribute_name="capital_cost",
-            owning_part_qn="Lib__Solar_Array",
-            owning_part_name="Solar_Array",
-            instance_path="Design__plant__solar_array",
-        )
-        agg2 = _make_scoped_agg(
-            attribute_name="capital_cost",
-            owning_part_qn="Lib__Battery_System",
-            owning_part_name="Battery_System",
-            instance_path="Design__plant__battery_system",
-        )
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_aggregation(catalog, [agg1, agg2])
-
-        _, ch1, _ = catalog["solar_array.capital_cost"]
-        _, ch2, _ = catalog["battery_system.capital_cost"]
-        assert ch1 != ch2
-        assert "solar_array" in ch1
-        assert "battery_system" in ch2
-
-    def test_empty_list(self):
-        """Empty aggregation list produces no catalog entries."""
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_aggregation(catalog, [])
-        assert catalog == {}
-
 
 # ---------------------------------------------------------------------------
 # TestResolveAggregationInputChannel
@@ -177,29 +100,27 @@ class TestResolveAggregationInputChannel:
         expected_channel = get_channel_name(
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
         )
-        # Catalog must contain the channel for verification
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
-        }
+        # Registry must contain the channel as canonical for verification
+        registry = OutputRegistry()
+        registry.register(expected_channel, ["cost_model.total_cost"])
         result = _resolve_aggregation_input_channel(
             "pv_module.capital_cost",
             "Design__plant__solar_array",
             redefs,
-            catalog,
+            registry,
         )
         assert result == expected_channel
 
-    def test_agg_to_agg_falls_back_to_catalog(self):
-        """'solar_array.capital_cost' with no CHAIN -> falls back to catalog."""
+    def test_agg_to_agg_falls_back_to_registry(self):
+        """'solar_array.capital_cost' with no CHAIN -> falls back to registry resolve."""
         agg_channel = "Design__plant__solar_array__capital_cost__capital_cost"
-        catalog: dict[str, tuple[str, str, str]] = {
-            "solar_array.capital_cost": ("AggType", agg_channel, "root"),
-        }
+        registry = OutputRegistry()
+        registry.register(agg_channel, ["solar_array.capital_cost"])
         result = _resolve_aggregation_input_channel(
             "solar_array.capital_cost",
             "Design__plant",
             [],  # No redefinitions
-            catalog,
+            registry,
         )
         assert result == agg_channel
 
@@ -213,17 +134,17 @@ class TestResolveAggregationInputChannel:
             "a.x",
             "instance",
             redefs,
-            {},
+            OutputRegistry(),
         )
         assert result is None
 
     def test_no_match_returns_none(self):
-        """No matching redef and no catalog entry returns None."""
+        """No matching redef and no registry entry returns None."""
         result = _resolve_aggregation_input_channel(
             "unknown.attr",
             "instance",
             [],
-            {},
+            OutputRegistry(),
         )
         assert result is None
 
@@ -233,12 +154,12 @@ class TestResolveAggregationInputChannel:
             "misc_cost",
             "instance",
             [],
-            {},
+            OutputRegistry(),
         )
         assert result is None
 
-    def test_chain_source_not_in_catalog_recurses(self):
-        """If chain source channel not in catalog, recurse following the chain."""
+    def test_chain_source_not_in_registry_recurses(self):
+        """If chain source channel not in registry, recurse following the chain."""
         redefs = [
             _make_chain_redef("cost", "intermediate.value", "Lib__PV_Module"),
             _make_chain_redef("value", "calc.output", "Lib__Intermediate"),
@@ -246,14 +167,13 @@ class TestResolveAggregationInputChannel:
         expected_channel = get_channel_name(
             "inst__intermediate__calc", "output"
         )
-        catalog: dict[str, tuple[str, str, str]] = {
-            "calc.output": ("CalcModule", expected_channel, "root"),
-        }
+        registry = OutputRegistry()
+        registry.register(expected_channel, ["calc.output"])
         result = _resolve_aggregation_input_channel(
             "pv_module.cost",
             "inst",
             redefs,
-            catalog,
+            registry,
         )
         assert result == expected_channel
 
@@ -264,6 +184,13 @@ class TestResolveAggregationInputChannel:
 
 
 class TestBuildAggregationModule:
+    def _make_registry(self, entries: dict[str, list[str]] | None = None) -> OutputRegistry:
+        """Build an OutputRegistry from {canonical_channel: [alias_keys]}."""
+        registry = OutputRegistry()
+        for channel, keys in (entries or {}).items():
+            registry.register(channel, keys)
+        return registry
+
     def test_sum_term_wires_to_module_output(self):
         """SumTerm produces ModuleInput wired to resolved channel."""
         agg = _make_scoped_agg(
@@ -276,12 +203,10 @@ class TestBuildAggregationModule:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
-        }
+        registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, catalog, entry_points, None)
+        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         cost_inputs = [i for i in module.inputs if i.param_name == "pv_module_capital_cost"]
         assert len(cost_inputs) == 1
@@ -301,12 +226,10 @@ class TestBuildAggregationModule:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
-        }
+        registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, catalog, entry_points, None)
+        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         mult_inputs = [i for i in module.inputs if i.param_name == "module_count"]
         assert len(mult_inputs) == 1
@@ -330,19 +253,17 @@ class TestBuildAggregationModule:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
-        }
+        registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, catalog, entry_points, None)
+        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         # Only cost input, no multiplicity
         assert len(module.inputs) == 1
         assert module.inputs[0].param_name == "pv_module_capital_cost"
 
     def test_singleton_term_direct_channel(self):
-        """SingletonTerm resolved to direct channel from catalog."""
+        """SingletonTerm resolved to direct channel from registry."""
         singleton_channel = get_channel_name(
             "Design__plant__solar_array__allocation_model", "total_allocation"
         )
@@ -351,12 +272,11 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        catalog: dict[str, tuple[str, str, str]] = {
-            "some_key": ("Type", singleton_channel, "root"),
-        }
+        # Register the channel as canonical so `channel in canonical_channels` passes
+        registry = self._make_registry({singleton_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], catalog, entry_points, None)
+        module = _build_aggregation_module(agg, [], registry, entry_points, None)
 
         singleton_inputs = [i for i in module.inputs if "allocation" in i.param_name]
         assert len(singleton_inputs) == 1
@@ -378,12 +298,10 @@ class TestBuildAggregationModule:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", resolved_channel, "root"),
-        }
+        registry = self._make_registry({resolved_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, catalog, entry_points, None)
+        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         inputs = [i for i in module.inputs if "capital_cost" in i.param_name]
         assert len(inputs) == 1
@@ -399,7 +317,7 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], {}, entry_points, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
 
         local_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
         assert len(local_inputs) == 1
@@ -412,13 +330,13 @@ class TestBuildAggregationModule:
     def test_unsupported_nodes_manual_required(self):
         """has_unsupported_nodes=True -> Compilability.MANUAL_REQUIRED."""
         agg = _make_scoped_agg(has_unsupported_nodes=True, sum_terms=[])
-        module = _build_aggregation_module(agg, [], {}, {}, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
         assert module.compilability == Compilability.MANUAL_REQUIRED
 
     def test_module_is_aggregation_true(self):
         """PipelineModule.is_aggregation == True."""
         agg = _make_scoped_agg(sum_terms=[])
-        module = _build_aggregation_module(agg, [], {}, {}, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
         assert module.is_aggregation is True
         assert module.is_computed_attribute is False
 
@@ -430,7 +348,7 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        module = _build_aggregation_module(agg, [], {}, {}, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         expected_eqn = "Design__plant__solar_array__capital_cost"
         assert module.name == get_module_name(expected_eqn)
@@ -443,7 +361,7 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        module = _build_aggregation_module(agg, [], {}, {}, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         assert len(module.outputs) == 1
         assert module.outputs[0].field_name == "root"
@@ -452,14 +370,14 @@ class TestBuildAggregationModule:
         )
 
     def test_unresolvable_sum_term_creates_entry_point(self):
-        """SumTerm with no matching chain/catalog becomes entry point + MANUAL_REQUIRED."""
+        """SumTerm with no matching chain/registry becomes entry point + MANUAL_REQUIRED."""
         agg = _make_scoped_agg(
             sum_terms=[SumTerm("unknown_part", "cost", None, None)],
             instance_path="Design__plant__solar_array",
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], {}, entry_points, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
 
         cost_inputs = [i for i in module.inputs if i.param_name == "unknown_part_cost"]
         assert len(cost_inputs) == 1
@@ -820,11 +738,10 @@ class TestAggregationExpressionCompilation:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
-        }
+        registry = OutputRegistry()
+        registry.register(expected_channel, ["cost_model.total_cost"])
 
-        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+        module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         assert "inputs.module_count" in module.compiled_expression
@@ -845,11 +762,10 @@ class TestAggregationExpressionCompilation:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", expected_channel, "root"),
-        }
+        registry = OutputRegistry()
+        registry.register(expected_channel, ["cost_model.total_cost"])
 
-        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+        module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         # Should not raise
@@ -876,12 +792,11 @@ class TestAggregationExpressionCompilation:
         redefs = [
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", cost_channel, "root"),
-            "some_key": ("AllocType", alloc_channel, "root"),
-        }
+        registry = OutputRegistry()
+        registry.register(cost_channel, ["cost_model.total_cost"])
+        registry.register(alloc_channel, [])
 
-        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+        module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         assert "inputs.allocation_model_total_allocation" in module.compiled_expression
@@ -895,7 +810,7 @@ class TestAggregationExpressionCompilation:
             transformed_expression="misc_cost",
         )
 
-        module = _build_aggregation_module(agg, [], {}, {}, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         assert module.compiled_expression is not None
         assert module.compiled_expression == "inputs.misc_cost"
@@ -908,7 +823,7 @@ class TestAggregationExpressionCompilation:
             transformed_expression="unknown()",
         )
 
-        module = _build_aggregation_module(agg, [], {}, {}, None)
+        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         assert module.compiled_expression is None
 
@@ -934,12 +849,11 @@ class TestAggregationExpressionCompilation:
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module"),
             _make_chain_redef("cost", "cost_calc.cost", "Lib__Inverter"),
         ]
-        catalog: dict[str, tuple[str, str, str]] = {
-            "cost_model.total_cost": ("CostModelModule", cost_channel, "root"),
-            "cost_calc.cost": ("CostCalcModule", inv_channel, "root"),
-        }
+        registry = OutputRegistry()
+        registry.register(cost_channel, ["cost_model.total_cost"])
+        registry.register(inv_channel, ["cost_calc.cost"])
 
-        module = _build_aggregation_module(agg, redefs, catalog, {}, None)
+        module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         assert "inputs.pv_module_capital_cost" in module.compiled_expression

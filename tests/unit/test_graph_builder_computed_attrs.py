@@ -1,7 +1,7 @@
 """Unit tests for graph builder computed attribute support (Phase 3).
 
 Tests the attribute resolution map, EXPOSE_PURE resolution, computed attribute
-module building, output catalog extension, and unified topological sort.
+module building, and unified topological sort.
 """
 
 from __future__ import annotations
@@ -32,11 +32,11 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
+from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.resolution.graph_builder import (
     AttributeResolutionKind,
     _build_attribute_resolution_map,
     _build_computed_attr_module,
-    _extend_output_catalog_with_computed_attrs,
     _resolve_expose_pure,
     _unified_topological_sort,
     build_computation_graph,
@@ -124,7 +124,7 @@ class TestAttributeResolutionMap:
         attr_map = _build_attribute_resolution_map(
             computed_attrs=[ca],
             design_attrs={},
-            output_catalog={},
+            output_registry=OutputRegistry(),
             calc_usage_names=set(),
         )
 
@@ -148,15 +148,14 @@ class TestAttributeResolutionMap:
             ],
         )
 
-        # Output catalog has the upstream calc output
-        output_catalog = {
-            "alpha_split.p_alpha": ("AlphaSplitModule", "Pkg__plant__alpha_split__p_alpha", "root"),
-        }
+        # Output registry has the upstream calc output
+        output_registry = OutputRegistry()
+        output_registry.register("Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
 
         attr_map = _build_attribute_resolution_map(
             computed_attrs=[ca],
             design_attrs={},
-            output_catalog=output_catalog,
+            output_registry=output_registry,
             calc_usage_names={"alpha_split"},
         )
 
@@ -187,7 +186,7 @@ class TestAttributeResolutionMap:
         attr_map = _build_attribute_resolution_map(
             computed_attrs=[],
             design_attrs=design_attrs,
-            output_catalog={},
+            output_registry=OutputRegistry(),
             calc_usage_names=set(),
         )
 
@@ -204,7 +203,7 @@ class TestAttributeResolutionMap:
         attr_map = _build_attribute_resolution_map(
             computed_attrs=[ca],
             design_attrs={},
-            output_catalog={},
+            output_registry=OutputRegistry(),
             calc_usage_names=set(),
         )
 
@@ -222,7 +221,7 @@ class TestAttributeResolutionMap:
         attr_map = _build_attribute_resolution_map(
             computed_attrs=[ca1, ca2],
             design_attrs={},
-            output_catalog={},
+            output_registry=OutputRegistry(),
             calc_usage_names=set(),
         )
 
@@ -252,11 +251,10 @@ class TestExposeResolution:
             ],
         )
 
-        output_catalog = {
-            "alpha_split.p_alpha": ("AlphaSplitModule", "Pkg__plant__alpha_split__p_alpha", "root"),
-        }
+        output_registry = OutputRegistry()
+        output_registry.register("Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
 
-        channel = _resolve_expose_pure(ca, {"alpha_split"}, output_catalog)
+        channel = _resolve_expose_pure(ca, {"alpha_split"}, output_registry)
         assert channel == "Pkg__plant__alpha_split__p_alpha"
 
     def test_builds_correct_catalog_key(self):
@@ -271,12 +269,11 @@ class TestExposeResolution:
             ],
         )
 
-        # The catalog key should be "my_calc.efficiency"
-        output_catalog = {
-            "my_calc.efficiency": ("EffCalcModule", "Pkg__part__my_calc__efficiency", "root"),
-        }
+        # The registry key should be "my_calc.efficiency"
+        output_registry = OutputRegistry()
+        output_registry.register("Pkg__part__my_calc__efficiency", ["my_calc.efficiency"])
 
-        channel = _resolve_expose_pure(ca, {"my_calc"}, output_catalog)
+        channel = _resolve_expose_pure(ca, {"my_calc"}, output_registry)
         assert channel == "Pkg__part__my_calc__efficiency"
 
     def test_missing_catalog_key_returns_none(self):
@@ -291,8 +288,8 @@ class TestExposeResolution:
             ],
         )
 
-        # Empty catalog -- key won't be found
-        channel = _resolve_expose_pure(ca, {"my_calc"}, {})
+        # Empty registry -- key won't be found
+        channel = _resolve_expose_pure(ca, {"my_calc"}, OutputRegistry())
         assert channel is None
 
     def test_no_instance_ref_returns_none(self):
@@ -308,68 +305,9 @@ class TestExposeResolution:
             ],
         )
 
-        channel = _resolve_expose_pure(ca, {"real_calc"}, {})
+        channel = _resolve_expose_pure(ca, {"real_calc"}, OutputRegistry())
         assert channel is None
 
-
-# ---------------------------------------------------------------------------
-# Tests: Output Catalog Extension
-# ---------------------------------------------------------------------------
-
-
-class TestOutputCatalogExtension:
-    """Test _extend_output_catalog_with_computed_attrs()."""
-
-    def test_formula_output_added_to_catalog(self):
-        """FORMULA+FULLY_COMPILABLE computed attr added to output catalog."""
-        ca = _make_computed_attr("area", "probe_design", "Pkg::probe_design")
-
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_computed_attrs(catalog, [ca])
-
-        key = "probe_design.area"
-        assert key in catalog
-        module_type, channel_name, field_name = catalog[key]
-        assert "areaModule" in module_type  # lowercase because element name is "area"
-        assert "area__area" in channel_name
-        assert field_name == "root"
-
-    def test_manual_required_excluded(self):
-        """FORMULA with MANUAL_REQUIRED not added to catalog."""
-        ca = _make_computed_attr(
-            "broken", "part", "Pkg::part",
-            compilability=Compilability.MANUAL_REQUIRED,
-        )
-
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_computed_attrs(catalog, [ca])
-
-        assert "part.broken" not in catalog
-
-    def test_expose_pure_excluded(self):
-        """EXPOSE_PURE not added to catalog (not a synthetic module)."""
-        ca = _make_computed_attr(
-            "alias", "part", "Pkg::part",
-            classification=ComputedAttributeClassification.EXPOSE_PURE,
-            compiled_expression=None,
-        )
-
-        catalog: dict[str, tuple[str, str, str]] = {}
-        _extend_output_catalog_with_computed_attrs(catalog, [ca])
-
-        assert "part.alias" not in catalog
-
-    def test_existing_catalog_entries_preserved(self):
-        """Extending catalog doesn't overwrite existing CalcUsage entries."""
-        ca = _make_computed_attr("area", "part", "Pkg::part")
-
-        catalog = {
-            "my_calc.result": ("MyCalcModule", "Pkg__Part__my_calc__result", "root"),
-        }
-        _extend_output_catalog_with_computed_attrs(catalog, [ca])
-
-        assert "my_calc.result" in catalog
-        assert "part.area" in catalog
 
 
 # ---------------------------------------------------------------------------
@@ -432,7 +370,7 @@ class TestComputedAttrModule:
         attr_resolution_map = _build_attribute_resolution_map(
             computed_attrs=[ca_area, ca_cost],
             design_attrs={},
-            output_catalog={},
+            output_registry=OutputRegistry(),
             calc_usage_names=set(),
         )
 
@@ -474,14 +412,13 @@ class TestComputedAttrModule:
             compiled_expression="(inputs.p_alpha_out * inputs.efficiency)",
         )
 
-        output_catalog = {
-            "alpha_split.p_alpha": ("AlphaSplitModule", "Pkg__plant__alpha_split__p_alpha", "root"),
-        }
+        output_registry = OutputRegistry()
+        output_registry.register("Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
 
         attr_resolution_map = _build_attribute_resolution_map(
             computed_attrs=[ca_expose, ca_formula],
             design_attrs={},
-            output_catalog=output_catalog,
+            output_registry=output_registry,
             calc_usage_names={"alpha_split"},
         )
 
@@ -794,6 +731,7 @@ class TestBuildComputationGraphWithComputedAttrs:
             calc_defs=[calc_def],
             design_attrs={},
             group_deriver=group_deriver,
+            output_registry=OutputRegistry(),
             computed_attributes=[],
         )
 
@@ -817,6 +755,7 @@ class TestBuildComputationGraphWithComputedAttrs:
             calc_defs=[],
             design_attrs={},
             group_deriver=group_deriver,
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -843,6 +782,7 @@ class TestBuildComputationGraphWithComputedAttrs:
             calc_defs=[],
             design_attrs={},
             group_deriver=group_deriver,
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -890,6 +830,7 @@ class TestParamGroupsRebuild:
             calc_defs=[],
             design_attrs={},
             group_deriver=group_deriver,
+            output_registry=OutputRegistry(),
             computed_attributes=[ca],
         )
 
@@ -918,6 +859,7 @@ class TestParamGroupsRebuild:
             calc_defs=[],
             design_attrs={},
             group_deriver=group_deriver,
+            output_registry=OutputRegistry(),
             computed_attributes=[],
         )
 
