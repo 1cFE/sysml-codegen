@@ -77,6 +77,7 @@ def build_computation_graph(
     computed_attributes: list[ComputedAttributeData] | None = None,
     aggregation_data: list[ScopedAggregationData] | None = None,
     hierarchy_redefinitions: list[RedefinitionData] | None = None,
+    usage_type_map: dict[tuple[str, str], str] | None = None,
 ) -> ComputationGraph:
     """Build the complete computation graph from backtracking result.
 
@@ -97,6 +98,10 @@ def build_computation_graph(
             Each produces a synthetic aggregation PipelineModule.
         hierarchy_redefinitions: PartDef-level :>> redefinitions for CHAIN
             resolution during aggregation input channel wiring.
+        usage_type_map: Maps (owning_part_def_qn, usage_name) → type_part_def_qn.
+            Used to resolve usage names to their type PartDef QNs for LITERAL
+            redefinition lookup (e.g., ("Lib__Site_Infra", "permitting") →
+            "Lib__Permitting_Interconnect").
 
     Returns:
         ComputationGraph ready for YAML and JSON generation
@@ -168,11 +173,26 @@ def build_computation_graph(
                 )
                 modules.append(module)
 
+    # Step 6.6b: Build EXPOSE_PURE alias map for aggregation LocalTerm resolution.
+    # Maps (owning_part_qn, python_name) -> expression_text (e.g., "allocation_model.total_allocation").
+    # Used by _build_aggregation_module() to wire LocalTerms that are computed attribute aliases.
+    # NOTE: ComputedAttributeData.owning_part_qualified_name uses "::" separator with raw names
+    # (e.g., "SolarBatteryLibrary::'Solar Array'"), while AggregationExpressionData.owning_part_qn
+    # uses "__" separator with sanitized names (e.g., "SolarBatteryLibrary__Solar_Array").
+    # We normalize by splitting on "::", sanitizing each segment, and joining with "__".
+    expose_aliases: dict[tuple[str, str], str] = {}
+    for ca in (computed_attributes or []):
+        if ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
+            segments = ca.owning_part_qualified_name.split("::")
+            normalized_qn = "__".join(sanitize_name(seg) for seg in segments)
+            expose_aliases[(normalized_qn, ca.python_name)] = ca.expression_text
+
     # Step 6.7: Build aggregation modules
     for agg in (aggregation_data or []):
         agg_module = _build_aggregation_module(
             agg, hierarchy_redefinitions or [], output_registry,
-            entry_points, group_deriver,
+            entry_points, group_deriver, expose_aliases,
+            usage_type_map or {},
         )
         modules.append(agg_module)
 
@@ -847,12 +867,66 @@ def _resolve_aggregation_input_channel(
     return None
 
 
+def _find_literal_redefinition(
+    part_usage: str,
+    attr: str,
+    redefinitions: list[RedefinitionData],
+    usage_type_map: dict[tuple[str, str], str] | None = None,
+    owning_part_qn: str | None = None,
+) -> float | None:
+    """Find a LITERAL :>> redefinition value for a part usage attribute.
+
+    Mirrors the CHAIN matching pattern in _resolve_aggregation_input_channel()
+    but for RedefinitionType.LITERAL. Used to propagate default values for
+    entry points when a PartDef sets e.g. `:>> raw_material_cost = 0.0`.
+
+    Matching strategy:
+    1. If usage_type_map is available, resolve (owning_part_qn, part_usage)
+       to the child's type PartDef QN and match redefinitions by owning_part_qn.
+    2. Fall back to the original name-based matching (last segment of owning_part_qn).
+
+    Args:
+        part_usage: Part usage name (e.g., "permitting")
+        attr: Attribute name (e.g., "raw_material_cost")
+        redefinitions: PartDef-level :>> redefinitions
+        usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
+        owning_part_qn: QN of the PartDef that owns the aggregation expression
+
+    Returns:
+        Float value if a matching LITERAL redefinition is found, None otherwise.
+    """
+    # Resolve usage name to its type PartDef QN if possible
+    target_partdef_qn: str | None = None
+    if usage_type_map and owning_part_qn:
+        target_partdef_qn = usage_type_map.get((owning_part_qn, part_usage))
+
+    for redef in redefinitions:
+        if redef.redefinition_type == RedefinitionType.LITERAL and redef.attribute_name == attr:
+            matched = False
+            if target_partdef_qn is not None:
+                # Strategy 1: exact PartDef QN match (handles aliased usage names)
+                matched = redef.owning_part_qn == target_partdef_qn
+            else:
+                # Strategy 2: name-based fallback (last segment match)
+                redef_part_name = redef.owning_part_qn.split("__")[-1]
+                matched = sanitize_name(redef_part_name).lower() == part_usage.lower()
+
+            if matched and redef.literal_value is not None:
+                try:
+                    return float(redef.literal_value)
+                except (ValueError, TypeError):
+                    return None
+    return None
+
+
 def _build_aggregation_module(
     agg: ScopedAggregationData,
     redefinitions: list[RedefinitionData],
     output_registry: OutputRegistry,
     entry_points: dict[str, EntryPoint],
     group_deriver: ParameterGroupDeriver | None,
+    expose_aliases: dict[tuple[str, str], str] | None = None,
+    usage_type_map: dict[tuple[str, str], str] | None = None,
 ) -> PipelineModule:
     """Build a PipelineModule from a ScopedAggregationData.
 
@@ -866,6 +940,8 @@ def _build_aggregation_module(
         output_registry: OutputRegistry for channel verification and lookup
         entry_points: Mutable dict -- new entry points may be added
         group_deriver: For classifying new entry points (None in tests)
+        expose_aliases: EXPOSE_PURE alias map for LocalTerm resolution
+        usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
     """
     # Naming per ADR-003, using module_eqn property
     module_name = get_module_name(agg.module_eqn)
@@ -895,12 +971,19 @@ def _build_aggregation_module(
                 producer_channel=channel,
             )
         else:
-            # Unresolvable -> entry point fallback + MANUAL_REQUIRED
-            logger.warning(
-                "Aggregation SumTerm '%s' in '%s' unresolved → ENTRY_POINT",
-                symbolic_ref, agg.instance_path,
+            # Check for LITERAL :>> redefinition before falling back (defensive).
+            literal_default = _find_literal_redefinition(
+                term.part_usage_name, term.attribute_name, redefinitions,
+                usage_type_map, agg.expression.owning_part_qn,
             )
-            compilability = Compilability.MANUAL_REQUIRED
+
+            if literal_default is None:
+                logger.warning(
+                    "Aggregation SumTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                    symbolic_ref, agg.instance_path,
+                )
+                compilability = Compilability.MANUAL_REQUIRED
+
             ep_qn = f"{agg.module_eqn}__{param_name}"
             if ep_qn not in entry_points:
                 param_group = group_deriver.classify(ep_qn) if group_deriver else None
@@ -908,7 +991,18 @@ def _build_aggregation_module(
                     qualified_name=ep_qn,
                     simple_name=param_name,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=literal_default,
                     param_group=param_group,
+                )
+            elif literal_default is not None and entry_points[ep_qn].default_value is None:
+                ep = entry_points[ep_qn]
+                entry_points[ep_qn] = EntryPoint(
+                    qualified_name=ep.qualified_name,
+                    simple_name=ep.simple_name,
+                    entry_type=ep.entry_type,
+                    default_value=literal_default,
+                    source_calc_usage=ep.source_calc_usage,
+                    param_group=ep.param_group,
                 )
             source = InputSource(
                 source_type="entry_point",
@@ -984,12 +1078,24 @@ def _build_aggregation_module(
                     )
 
         if s_source is None:
-            # Unresolvable -> entry point fallback
-            logger.warning(
-                "Aggregation SingletonTerm '%s' in '%s' unresolved → ENTRY_POINT",
-                s_term.source_path, agg.instance_path,
-            )
-            compilability = Compilability.MANUAL_REQUIRED
+            # Check for LITERAL :>> redefinition before falling back to entry point.
+            # e.g., Permitting defines `:>> raw_material_cost = 0.0` — the value
+            # becomes the entry point default so the JSON template is pre-populated.
+            literal_default: float | None = None
+            if "." in s_term.source_path:
+                s_part_usage, s_attr = s_term.source_path.rsplit(".", 1)
+                literal_default = _find_literal_redefinition(
+                    s_part_usage, s_attr, redefinitions,
+                    usage_type_map, agg.expression.owning_part_qn,
+                )
+
+            if literal_default is None:
+                logger.warning(
+                    "Aggregation SingletonTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                    s_term.source_path, agg.instance_path,
+                )
+                compilability = Compilability.MANUAL_REQUIRED
+
             ep_qn = f"{agg.module_eqn}__{param_name}"
             if ep_qn not in entry_points:
                 param_group = group_deriver.classify(ep_qn) if group_deriver else None
@@ -997,7 +1103,19 @@ def _build_aggregation_module(
                     qualified_name=ep_qn,
                     simple_name=param_name,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=literal_default,
                     param_group=param_group,
+                )
+            elif literal_default is not None and entry_points[ep_qn].default_value is None:
+                # Backfill default if entry point was created earlier without it
+                ep = entry_points[ep_qn]
+                entry_points[ep_qn] = EntryPoint(
+                    qualified_name=ep.qualified_name,
+                    simple_name=ep.simple_name,
+                    entry_type=ep.entry_type,
+                    default_value=literal_default,
+                    source_calc_usage=ep.source_calc_usage,
+                    param_group=ep.param_group,
                 )
             s_source = InputSource(
                 source_type="entry_point",
@@ -1027,8 +1145,26 @@ def _build_aggregation_module(
                 producer_channel=sibling_channel,
             )
 
+        if l_source is None and expose_aliases:
+            # Try: EXPOSE_PURE alias resolution.
+            # e.g., misc_hardware_cost = allocation_model.total_allocation
+            # The expression_text is a dotted path that _resolve_aggregation_input_channel
+            # already handles via scoped/unscoped registry lookups.
+            alias_key = (agg.expression.owning_part_qn, l_term.attribute_name)
+            alias_source = expose_aliases.get(alias_key)
+            if alias_source:
+                channel = _resolve_aggregation_input_channel(
+                    alias_source, agg.instance_path,
+                    redefinitions, output_registry,
+                )
+                if channel:
+                    l_source = InputSource(
+                        source_type="module_output",
+                        producer_channel=channel,
+                    )
+
         if l_source is None:
-            # Genuinely unresolvable → entry point (e.g., misc_hardware_cost)
+            # Genuinely unresolvable → entry point
             ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
             if ep_qn not in entry_points:
                 param_group = group_deriver.classify(ep_qn) if group_deriver else None
@@ -1274,6 +1410,7 @@ __all__ = [
     "_build_aggregation_module",
     "_build_attribute_resolution_map",
     "_build_computed_attr_module",
+    "_find_literal_redefinition",
     "_resolve_aggregation_input_channel",
     "_resolve_expose_pure",
     "_unified_topological_sort",

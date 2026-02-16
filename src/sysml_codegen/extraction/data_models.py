@@ -338,6 +338,10 @@ class HierarchyExtractionResult:
     aggregation_expressions: list[AggregationExpressionData]
     warnings: list[str]
     part_usage_names: dict[str, set[str]] = field(default_factory=dict)
+    # Maps (owning_part_def_qn, usage_name) → type_part_def_qn.
+    # e.g., ("Lib__Site_Infrastructure", "permitting") → "Lib__Permitting_Interconnect"
+    # Used to resolve usage names to their type PartDef for LITERAL redefinition lookup.
+    usage_type_map: dict[tuple[str, str], str] = field(default_factory=dict)
 
 
 @dataclass

@@ -428,3 +428,179 @@ class TestAggregationFCEOrdering:
                 f"Aggregation {agg.owning_part_name}.{agg.attribute_name} "
                 f"has Bug A3 artifact in: {agg.transformed_expression}"
             )
+
+
+# ---------------------------------------------------------------------------
+# Class 5: Aggregation LITERAL redefinition + EXPOSE_PURE alias wiring
+# ---------------------------------------------------------------------------
+
+
+class TestAggregationLiteralAndAlias:
+    """Validates Fix A (LITERAL redefinition propagation) and Fix B
+    (EXPOSE_PURE alias resolution) in aggregation builder.
+
+    Fix A: Permitting defines `:>> raw_material_cost = 0.0` etc. — these
+    LITERAL redefinitions should propagate as entry point default_value.
+
+    Fix B: Solar Array defines `misc_hardware_cost = allocation_model.total_allocation`
+    (EXPOSE_PURE alias) — should wire to the allocation_model module output,
+    not fall through to an entry point.
+    """
+
+    @pytest.fixture(scope="class")
+    def pipeline_context(self) -> PipelineContext:
+        model_path = FIXTURES_DIR / "solar_battery_model"
+        return build_pipeline_context([model_path])
+
+    def test_permitting_literal_redefinitions_have_defaults(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Fix A: Permitting sub-costs (raw_material_cost, fabrication_cost,
+        installation_cost) with `:>> attr = 0.0` should produce entry points
+        with default_value == 0.0, not None."""
+        graph = pipeline_context.computation_graph
+
+        # Find site_infra aggregation modules (they reference permitting sub-costs)
+        site_infra_aggs = [
+            m for m in graph.modules
+            if m.is_aggregation and "site_infra" in m.name.lower()
+        ]
+        assert site_infra_aggs, (
+            f"Expected site_infra aggregation modules. "
+            f"Aggregation modules: {[m.name for m in graph.modules if m.is_aggregation]}"
+        )
+
+        # Collect entry point qualified names from site_infra aggregation inputs
+        # that reference permitting sub-costs
+        permitting_cost_attrs = {"raw_material_cost", "fabrication_cost", "installation_cost"}
+        found_defaults: dict[str, float | None] = {}
+
+        for module in site_infra_aggs:
+            for inp in module.inputs:
+                # Check if this input references a permitting cost attribute
+                for attr in permitting_cost_attrs:
+                    if attr in inp.param_name and "permitting" in inp.param_name:
+                        if inp.source.source_type == "entry_point" and inp.source.qualified_name:
+                            ep = pipeline_context.computation_graph.entry_point_groups
+                            # Look up the entry point default from the groups
+                            for group in ep:
+                                for param in group.parameters:
+                                    if param.qualified_name == inp.source.qualified_name:
+                                        found_defaults[attr] = param.default_value
+
+        # At least some permitting cost entry points should have been found
+        assert found_defaults, (
+            f"Expected to find permitting cost entry points in site_infra agg modules. "
+            f"Site infra agg input names: "
+            f"{[inp.param_name for m in site_infra_aggs for inp in m.inputs]}"
+        )
+
+        # Each found entry point should have default_value == 0.0
+        for attr, default in found_defaults.items():
+            assert default == 0.0, (
+                f"Permitting '{attr}' entry point default_value should be 0.0, got {default}"
+            )
+
+    def test_misc_hardware_cost_wired_to_module_output(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Fix B: Solar Array's misc_hardware_cost should be wired to
+        allocation_model's total_allocation output (module_output), NOT
+        an entry_point."""
+        graph = pipeline_context.computation_graph
+
+        # Find the solar_array capital_cost aggregation module
+        solar_array_capital = [
+            m for m in graph.modules
+            if m.is_aggregation
+            and "solar_array" in m.name.lower()
+            and "capital_cost" in m.name.lower()
+        ]
+        assert solar_array_capital, (
+            f"Expected solar_array capital_cost aggregation module. "
+            f"Aggregation modules: {[m.name for m in graph.modules if m.is_aggregation]}"
+        )
+
+        module = solar_array_capital[0]
+
+        # Find the misc_hardware_cost input
+        misc_hw_inputs = [
+            inp for inp in module.inputs
+            if inp.param_name == "misc_hardware_cost"
+        ]
+        assert misc_hw_inputs, (
+            f"Expected 'misc_hardware_cost' input on {module.name}. "
+            f"Inputs: {[i.param_name for i in module.inputs]}"
+        )
+
+        misc_hw_input = misc_hw_inputs[0]
+        assert misc_hw_input.source.source_type == "module_output", (
+            f"misc_hardware_cost should be wired as module_output "
+            f"(from allocation_model), not '{misc_hw_input.source.source_type}'. "
+            f"Source: {misc_hw_input.source}"
+        )
+
+        # Verify the channel references allocation_model and total_allocation
+        channel = misc_hw_input.source.producer_channel
+        assert channel is not None, "producer_channel should not be None"
+        assert "allocation_model" in channel, (
+            f"Channel should reference allocation_model, got: {channel}"
+        )
+        assert "total_allocation" in channel, (
+            f"Channel should reference total_allocation, got: {channel}"
+        )
+
+    def test_no_none_default_aggregation_cost_entry_points(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Fix A+B: Aggregation cost inputs that fall back to entry points
+        should have non-None defaults (from LITERAL redefinitions) or be
+        wired to module_output (from EXPOSE_PURE aliases).
+
+        Multiplicity entry points (module_count, etc.) are excluded from
+        this check since they have their own default propagation path.
+        """
+        graph = pipeline_context.computation_graph
+
+        # Collect all aggregation module entry-point inputs with None defaults
+        none_default_eps: list[str] = []
+        multiplicity_names = {"module_count", "inverter_count", "pack_count",
+                              "string_count", "cell_count"}
+
+        for module in graph.modules:
+            if not module.is_aggregation:
+                continue
+            for inp in module.inputs:
+                if inp.source.source_type != "entry_point":
+                    continue
+                if inp.param_name in multiplicity_names:
+                    continue
+                # Look up the entry point to check default_value
+                ep_qn = inp.source.qualified_name
+                if ep_qn:
+                    ep_default = None
+                    for group in graph.entry_point_groups:
+                        for param in group.parameters:
+                            if param.qualified_name == ep_qn:
+                                ep_default = param.default_value
+                                break
+                    if ep_default is None:
+                        none_default_eps.append(
+                            f"{module.name}.{inp.param_name} (ep={ep_qn})"
+                        )
+
+        # Allow a baseline of known None-default entry points (library params, etc.)
+        # The permitting sub-costs and misc_hardware_cost should NOT be in this list.
+        for ep_desc in none_default_eps:
+            assert "raw_material_cost" not in ep_desc, (
+                f"raw_material_cost should have default from LITERAL redef: {ep_desc}"
+            )
+            assert "fabrication_cost" not in ep_desc, (
+                f"fabrication_cost should have default from LITERAL redef: {ep_desc}"
+            )
+            assert "installation_cost" not in ep_desc, (
+                f"installation_cost should have default from LITERAL redef: {ep_desc}"
+            )
+            assert "misc_hardware_cost" not in ep_desc, (
+                f"misc_hardware_cost should be wired to module_output, not entry_point: {ep_desc}"
+            )

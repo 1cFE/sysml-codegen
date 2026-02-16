@@ -827,6 +827,7 @@ def build_pipeline_context(
         computed_attributes=computed_attrs,
         aggregation_data=scoped_agg_data,
         hierarchy_redefinitions=hierarchy_data.redefinitions if hierarchy_data else None,
+        usage_type_map=hierarchy_data.usage_type_map if hierarchy_data else None,
     )
 
     return PipelineContext(

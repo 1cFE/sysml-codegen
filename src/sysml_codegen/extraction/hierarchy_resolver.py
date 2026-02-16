@@ -505,6 +505,7 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     all_aggregations: list[AggregationExpressionData] = []
     warnings: list[str] = []
     part_usage_names: dict[str, set[str]] = {}
+    usage_type_map: dict[tuple[str, str], str] = {}
 
     for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
         redefs = extract_redefinitions(part_def)
@@ -514,6 +515,7 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
         all_multiplicities.extend(mults)
 
         # Collect ALL child PartUsage names (both multiplicity and singleton)
+        # and extract usage→type PartDef mapping for LITERAL redefinition lookup.
         owning_qn = build_element_qualified_name(part_def)
         names: set[str] = set()
         for member in getattr(part_def, "owned_members", []):
@@ -521,6 +523,14 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                 name = sanitize_name(getattr(member, "name", ""))
                 if name:
                     names.add(name)
+                    # Extract the type PartDef QN via .types attribute
+                    try:
+                        type_def = next(iter(member.types))
+                        type_qn = build_element_qualified_name(type_def)
+                        if type_qn:
+                            usage_type_map[(owning_qn, name)] = type_qn
+                    except (StopIteration, TypeError, AttributeError):
+                        pass
         if names:
             part_usage_names[owning_qn] = names
 
@@ -558,4 +568,5 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
         aggregation_expressions=all_aggregations,
         warnings=warnings,
         part_usage_names=part_usage_names,
+        usage_type_map=usage_type_map,
     )
