@@ -177,6 +177,80 @@ class TestResolveAggregationInputChannel:
         )
         assert result == expected_channel
 
+    def test_scoped_registry_resolves_when_chain_fails(self):
+        """Scoped key resolves when no CHAIN redef exists (AC-2)."""
+        expected_channel = get_channel_name(
+            "Design__plant__array__pv_module__cost_model", "total_cost"
+        )
+        registry = OutputRegistry()
+        registry.register(expected_channel, [])
+        registry.register_alias(
+            "plant.array.pv_module.capital_cost", expected_channel
+        )
+        result = _resolve_aggregation_input_channel(
+            "pv_module.capital_cost",
+            "Design__plant__array",
+            [],
+            registry,
+        )
+        assert result == expected_channel
+
+    def test_scoped_registry_resolves_chain_part_mismatch(self):
+        """Scoped key resolves when CHAIN fails due to PartDef/PartUsage name mismatch (AC-2)."""
+        expected_channel = get_channel_name(
+            "Design__plant__array__inverter__cost_model", "total_cost"
+        )
+        registry = OutputRegistry()
+        registry.register(expected_channel, [])
+        registry.register_alias(
+            "plant.array.inverter.capital_cost", expected_channel
+        )
+        # CHAIN redef on String_Inverter won't match "inverter" via sanitize_name
+        redefs = [
+            _make_chain_redef(
+                "capital_cost", "cost_model.total_cost", "Lib__String_Inverter"
+            )
+        ]
+        result = _resolve_aggregation_input_channel(
+            "inverter.capital_cost",
+            "Design__plant__array",
+            redefs,
+            registry,
+        )
+        assert result == expected_channel
+
+    def test_scoped_before_unscoped_avoids_collision(self):
+        """Scoped key wins over colliding Key_D (AC-7)."""
+        correct_channel = "Design__plant__array__child__calc__cost"
+        wrong_channel = "Design__other__child__calc__cost"
+        registry = OutputRegistry()
+        registry.register(correct_channel, [])
+        registry.register(wrong_channel, ["child.cost"])  # Key_D collision
+        registry.register_alias(
+            "plant.array.child.cost", correct_channel
+        )  # scoped
+        result = _resolve_aggregation_input_channel(
+            "child.cost",
+            "Design__plant__array",
+            [],
+            registry,
+        )
+        assert result == correct_channel
+
+    def test_agg_to_agg_via_key_e_stripped(self):
+        """Plant-level resolves sub-assembly agg via Key_E_stripped (AC-3, AC-6)."""
+        agg_channel = "Design__plant__array__capital_cost__capital_cost"
+        registry = OutputRegistry()
+        # Key_E_stripped: "plant.array.capital_cost" (registered by Change 2)
+        registry.register(agg_channel, ["plant.array.capital_cost"])
+        result = _resolve_aggregation_input_channel(
+            "array.capital_cost",
+            "Design__plant",
+            [],
+            registry,
+        )
+        assert result == agg_channel
+
 
 # ---------------------------------------------------------------------------
 # TestBuildAggregationModule
@@ -307,6 +381,42 @@ class TestBuildAggregationModule:
         assert len(inputs) == 1
         assert inputs[0].source.source_type == "module_output"
         assert inputs[0].source.producer_channel == resolved_channel
+
+    def test_singleton_term_registry_first_for_aggregation_target(self):
+        """SingletonTerm resolves aggregation output via registry-first (AC-5)."""
+        # Aggregation output has double-attr channel format
+        agg_channel = "Design__plant__array__cost__cost"
+        agg = _make_scoped_agg(
+            singleton_terms=[SingletonTerm("array.cost")],
+            instance_path="Design__plant",
+            sum_terms=[],
+        )
+        registry = self._make_registry({agg_channel: ["plant.array.cost"]})
+        entry_points: dict[str, EntryPoint] = {}
+        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        singleton_inputs = [i for i in module.inputs if "cost" in i.param_name]
+        assert len(singleton_inputs) == 1
+        assert singleton_inputs[0].source.source_type == "module_output"
+        assert singleton_inputs[0].source.producer_channel == agg_channel
+
+    def test_sum_term_scoped_resolution_no_chain(self):
+        """SumTerm resolves via scoped registry when no CHAIN exists (AC-2)."""
+        expected_channel = get_channel_name(
+            "Design__plant__array__pv_module__cost_model", "total_cost"
+        )
+        agg = _make_scoped_agg(
+            sum_terms=[SumTerm("pv_module", "capital_cost", None, None)],
+            instance_path="Design__plant__array",
+        )
+        registry = self._make_registry({expected_channel: []})
+        # Register scoped alias (as Phase 2 CHAIN alias registration would)
+        registry.register_alias("plant.array.pv_module.capital_cost", expected_channel)
+        entry_points: dict[str, EntryPoint] = {}
+        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        cost_inputs = [i for i in module.inputs if i.param_name == "pv_module_capital_cost"]
+        assert len(cost_inputs) == 1
+        assert cost_inputs[0].source.source_type == "module_output"
+        assert cost_inputs[0].source.producer_channel == expected_channel
 
     def test_local_term_creates_entry_point(self):
         """LocalTerm becomes DESIGN_ATTRIBUTE entry point."""

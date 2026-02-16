@@ -812,12 +812,38 @@ def _resolve_aggregation_input_channel(
             output_registry, _visited,
         )
 
-    # Fall back to output registry lookup (handles agg-to-agg references)
+    # Fall back to output registry lookup with scoped keys.
+    # The instance_path provides full hierarchy scope; stripping the design
+    # prefix (segments[0]) produces the dotted format that Phase 2 CHAIN
+    # aliases and Phase 1b aggregation keys are registered under.
+    instance_parts = instance_path.split("__")
+    if len(instance_parts) > 1:
+        dotted_scope = ".".join(instance_parts[1:])
+        scoped_key = f"{dotted_scope}.{part_usage}.{attr}"
+        channel = output_registry.resolve(scoped_key)
+        if channel is not None:
+            logger.debug(
+                "Aggregation input '%s.%s' resolved via scoped registry key '%s'",
+                part_usage, attr, scoped_key,
+            )
+            return channel
+
+    # Unscoped Key_D fallback (e.g., "solar_array.capital_cost")
     catalog_key = f"{part_usage}.{attr}"
     channel = output_registry.resolve(catalog_key)
     if channel is not None:
+        logger.debug(
+            "Aggregation input '%s.%s' resolved via unscoped Key_D '%s'",
+            part_usage, attr, catalog_key,
+        )
         return channel
 
+    logger.debug(
+        "Aggregation input '%s.%s' unresolved (tried scoped '%s', unscoped '%s')",
+        part_usage, attr,
+        f"{'.'.join(instance_parts[1:])}.{part_usage}.{attr}" if len(instance_parts) > 1 else "N/A",
+        catalog_key,
+    )
     return None
 
 
@@ -870,6 +896,10 @@ def _build_aggregation_module(
             )
         else:
             # Unresolvable -> entry point fallback + MANUAL_REQUIRED
+            logger.warning(
+                "Aggregation SumTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                symbolic_ref, agg.instance_path,
+            )
             compilability = Compilability.MANUAL_REQUIRED
             ep_qn = f"{agg.module_eqn}__{param_name}"
             if ep_qn not in entry_points:
@@ -928,30 +958,37 @@ def _build_aggregation_module(
 
         s_source: InputSource | None = None
         if "." in s_term.source_path:
-            # Direct channel build: dots -> __ path
-            prefix, output_name = s_term.source_path.rsplit(".", 1)
-            calc_path = prefix.replace(".", "__")
-            channel = get_channel_name(
-                f"{agg.instance_path}__{calc_path}", output_name,
+            # Try 1: Registry-first resolution (handles both CalcUsage and
+            # aggregation targets via Phase 1/2 keys and aliases).
+            resolved = _resolve_aggregation_input_channel(
+                s_term.source_path, agg.instance_path, redefinitions, output_registry,
             )
-            if channel in canonical_channels:
+            if resolved:
                 s_source = InputSource(
                     source_type="module_output",
-                    producer_channel=channel,
+                    producer_channel=resolved,
                 )
             else:
-                # Fall back to chain resolution
-                resolved = _resolve_aggregation_input_channel(
-                    s_term.source_path, agg.instance_path, redefinitions, output_registry,
+                # Try 2: Direct channel construction (CalcUsage targets only).
+                # Builds instance_path__prefix__output_name — correct for CalcUsage
+                # EQN format but wrong for aggregation outputs (double-attr).
+                prefix, output_name = s_term.source_path.rsplit(".", 1)
+                calc_path = prefix.replace(".", "__")
+                channel = get_channel_name(
+                    f"{agg.instance_path}__{calc_path}", output_name,
                 )
-                if resolved:
+                if channel in canonical_channels:
                     s_source = InputSource(
                         source_type="module_output",
-                        producer_channel=resolved,
+                        producer_channel=channel,
                     )
 
         if s_source is None:
             # Unresolvable -> entry point fallback
+            logger.warning(
+                "Aggregation SingletonTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                s_term.source_path, agg.instance_path,
+            )
             compilability = Compilability.MANUAL_REQUIRED
             ep_qn = f"{agg.module_eqn}__{param_name}"
             if ep_qn not in entry_points:

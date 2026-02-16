@@ -561,6 +561,13 @@ def build_output_registry(
         key_e = ".".join(instance_parts + [agg.expression.attribute_name])
         keys = [key_d, key_e]
 
+        # Key_E_stripped: scoped dotted key without design prefix.
+        # Required for plant-level → sub-assembly aggregation resolution
+        # where the scoped lookup strips segments[0] from instance_path.
+        if len(instance_parts) > 1:
+            key_e_stripped = ".".join(instance_parts[1:] + [agg.expression.attribute_name])
+            keys.append(key_e_stripped)
+
         # Bare key
         keys.append(agg.expression.attribute_name)
 
@@ -569,6 +576,9 @@ def build_output_registry(
             keys.append(f"{part_usage}.{alias_name}")
             keys.append(alias_name)
             keys.append(".".join(instance_parts + [alias_name]))
+            # Alias Key_E_stripped
+            if len(instance_parts) > 1:
+                keys.append(".".join(instance_parts[1:] + [alias_name]))
 
         registry.register(canonical, keys)
         phase1_count += 1

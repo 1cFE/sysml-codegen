@@ -321,7 +321,7 @@ modules:
     inputs:
       pv_module_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__total_cost
       module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
-      inverter_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__inverter_capital_cost
+      inverter_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__total_cost
       inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos: float SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__array_bos
       misc_hardware_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__misc_hardware_cost
@@ -334,7 +334,7 @@ modules:
     inputs:
       pv_module_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__material_cost
       module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
-      inverter_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__inverter_raw_material_cost
+      inverter_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__material_cost
       inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos: float SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__array_bos
       allocation_model: float SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__allocation_model
@@ -347,7 +347,7 @@ modules:
     inputs:
       pv_module_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_cost
       module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
-      inverter_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__inverter_fabrication_cost
+      inverter_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_cost
       inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos: float SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__array_bos
     outputs:
@@ -359,7 +359,7 @@ modules:
     inputs:
       pv_module_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_cost
       module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
-      inverter_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__inverter_installation_cost
+      inverter_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_cost
       inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos: float SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__array_bos
     outputs:
