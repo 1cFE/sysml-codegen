@@ -329,3 +329,102 @@ class TestHierarchyCodegenE2E:
             assert "Evaluation" not in content, (
                 f"Pipeline YAML {yaml_file.name} contains 'Evaluation' artifact"
             )
+
+
+# ---------------------------------------------------------------------------
+# Class 4: Aggregation FCE/OE ordering validation
+# ---------------------------------------------------------------------------
+
+
+class TestAggregationFCEOrdering:
+    """Validates Bug A fix: FeatureChainExpression check before OperatorExpression.
+
+    In SysIDE's type system, FCE is a subtype of OE — both is_instance() checks
+    return True on the same node. The FCE check must come first in all dispatch
+    sites to prevent dotted refs like array_bos.capital_cost from entering the
+    OE handler and being misclassified.
+
+    These tests use the real solar_battery fixture because mock classes cannot
+    reproduce the FCE/OE subtype relationship.
+    """
+
+    @pytest.fixture(scope="class")
+    def pipeline_context(self) -> PipelineContext:
+        model_path = FIXTURES_DIR / "solar_battery_model"
+        return build_pipeline_context([model_path])
+
+    def test_fce_nodes_classified_as_singleton_terms(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Bug A1: FeatureChainExpression nodes must classify as SingletonTerms,
+        not LocalTerms. FCE is a subtype of OE in SysIDE's type system — the
+        FCE check must run before OE to prevent dotted refs like
+        array_bos.capital_cost from entering the OE handler.
+
+        Spike B verified: {sum: 12, singleton: 37, local: 9}."""
+        hierarchy = pipeline_context.hierarchy_data
+        assert hierarchy is not None
+
+        total_sum = sum(
+            len(a.sum_terms) for a in hierarchy.aggregation_expressions
+        )
+        total_singleton = sum(
+            len(a.singleton_terms) for a in hierarchy.aggregation_expressions
+        )
+        total_local = sum(
+            len(a.local_terms) for a in hierarchy.aggregation_expressions
+        )
+
+        assert total_sum == 12, (
+            f"SumTerm count {total_sum} != 12 (regression)"
+        )
+        assert total_singleton == 37, (
+            f"SingletonTerm count {total_singleton} != 37 (FCE misclassified)"
+        )
+        assert total_local == 9, (
+            f"LocalTerm count {total_local} != 9 (FCE misclassified)"
+        )
+
+    def test_singleton_terms_have_dotted_source_paths(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Bug A1: SingletonTerms from FCE nodes must have dotted source paths
+        (e.g., 'allocation_model.total_allocation'), not bare names."""
+        hierarchy = pipeline_context.hierarchy_data
+        assert hierarchy is not None
+
+        for agg in hierarchy.aggregation_expressions:
+            for st in agg.singleton_terms:
+                assert "." in st.source_path, (
+                    f"SingletonTerm in {agg.owning_part_name}.{agg.attribute_name} "
+                    f"has bare source_path '{st.source_path}' — FCE misclassified as FRE"
+                )
+
+    def test_no_unsupported_dot_operator_in_compilation(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Bug A2: FCE nodes must not produce 'unsupported operator: .' diagnostic.
+        This happens when FCE enters the OE handler in build_expression_ast()."""
+        for calc_name, comp_result in pipeline_context.compilation_results.items():
+            for output_result in comp_result.output_results:
+                if output_result.unsupported_reason:
+                    assert "unsupported operator: ." not in output_result.unsupported_reason, (
+                        f"CalcDef '{calc_name}' output '{output_result.output_name}' "
+                        f"has Bug A2 artifact: {output_result.unsupported_reason}"
+                    )
+
+    def test_no_mangled_dot_parenthesized_expressions(
+        self, pipeline_context: PipelineContext,
+    ):
+        """Bug A3: FCE nodes must not produce '.(name)' mangled text.
+        This happens when FCE enters reconstruct_operator_expression()."""
+        import re
+        mangled_pattern = re.compile(r"\.\([a-zA-Z_]+\)")
+
+        hierarchy = pipeline_context.hierarchy_data
+        assert hierarchy is not None
+        for agg in hierarchy.aggregation_expressions:
+            assert not mangled_pattern.search(agg.transformed_expression), (
+                f"Aggregation {agg.owning_part_name}.{agg.attribute_name} "
+                f"has Bug A3 artifact in: {agg.transformed_expression}"
+            )

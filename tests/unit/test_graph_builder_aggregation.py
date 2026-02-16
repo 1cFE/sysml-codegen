@@ -494,6 +494,94 @@ class TestBuildAggregationModule:
         assert cost_inputs[0].source.source_type == "entry_point"
         assert module.compilability == Compilability.MANUAL_REQUIRED
 
+    def test_local_term_resolves_to_sibling_agg_output(self):
+        """Bug B: LocalTerm resolves to sibling aggregation module output
+        via canonical_channels membership check (double-attr channel format)."""
+        sibling_channel = get_channel_name(
+            "Design__plant__solar_array__capital_cost", "capital_cost"
+        )  # → "Design__plant__solar_array__capital_cost__capital_cost"
+        agg = _make_scoped_agg(
+            local_terms=[LocalTerm("capital_cost")],
+            attribute_name="idiot_index",
+            instance_path="Design__plant__solar_array",
+            sum_terms=[],
+            transformed_expression="capital_cost",
+        )
+        registry = self._make_registry({sibling_channel: []})
+        entry_points: dict[str, EntryPoint] = {}
+
+        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+
+        cost_inputs = [i for i in module.inputs if i.param_name == "capital_cost"]
+        assert len(cost_inputs) == 1
+        assert cost_inputs[0].source.source_type == "module_output"
+        assert cost_inputs[0].source.producer_channel == sibling_channel
+        # No entry point created for resolved LocalTerm
+        assert not any("capital_cost" in k for k in entry_points)
+
+    def test_unresolvable_local_term_still_entry_point(self):
+        """Bug B regression guard: LocalTerm with no sibling agg module
+        still becomes DESIGN_ATTRIBUTE entry point (e.g., misc_hardware_cost)."""
+        agg = _make_scoped_agg(
+            local_terms=[LocalTerm("misc_hardware_cost")],
+            instance_path="Design__plant__solar_array",
+            sum_terms=[],
+            transformed_expression="misc_hardware_cost",
+        )
+        entry_points: dict[str, EntryPoint] = {}
+
+        module = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+
+        local_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
+        assert len(local_inputs) == 1
+        assert local_inputs[0].source.source_type == "entry_point"
+
+        ep_qn = "Design__plant__solar_array__capital_cost__misc_hardware_cost"
+        assert ep_qn in entry_points
+        assert entry_points[ep_qn].entry_type == EntryPointType.DESIGN_ATTRIBUTE
+
+    def test_mixed_local_terms_partial_resolution(self):
+        """Bug B: Mixed LocalTerms — some resolve to sibling agg outputs,
+        some fall back to entry points."""
+        cc_channel = get_channel_name(
+            "Design__plant__solar_array__capital_cost", "capital_cost"
+        )
+        rmc_channel = get_channel_name(
+            "Design__plant__solar_array__raw_material_cost", "raw_material_cost"
+        )
+        agg = _make_scoped_agg(
+            local_terms=[
+                LocalTerm("capital_cost"),
+                LocalTerm("raw_material_cost"),
+                LocalTerm("misc_hardware_cost"),
+            ],
+            attribute_name="idiot_index",
+            instance_path="Design__plant__solar_array",
+            sum_terms=[],
+            transformed_expression="capital_cost / raw_material_cost + misc_hardware_cost",
+        )
+        registry = self._make_registry({cc_channel: [], rmc_channel: []})
+        entry_points: dict[str, EntryPoint] = {}
+
+        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+
+        # capital_cost → module_output
+        cc_inputs = [i for i in module.inputs if i.param_name == "capital_cost"]
+        assert len(cc_inputs) == 1
+        assert cc_inputs[0].source.source_type == "module_output"
+        assert cc_inputs[0].source.producer_channel == cc_channel
+
+        # raw_material_cost → module_output
+        rmc_inputs = [i for i in module.inputs if i.param_name == "raw_material_cost"]
+        assert len(rmc_inputs) == 1
+        assert rmc_inputs[0].source.source_type == "module_output"
+        assert rmc_inputs[0].source.producer_channel == rmc_channel
+
+        # misc_hardware_cost → entry_point (no sibling agg)
+        misc_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
+        assert len(misc_inputs) == 1
+        assert misc_inputs[0].source.source_type == "entry_point"
+
 
 # ---------------------------------------------------------------------------
 # TestTopologicalOrderWithAggregation

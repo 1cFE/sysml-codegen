@@ -238,6 +238,30 @@ No code changes. Validation only.
   those outputs in the current model. These are correct ENTRY_POINTs, not a bug.
   Breakdown: 12 multiplicity + 1 misc_hardware_cost + 3 permitting = 16 entry points.
 
+### Post-Completion: Test Coverage Hardening
+**Completed:** 2026-02-16
+**Trigger:** Implementation audit found tests A-3 and A-4 (integration) were not
+exercising the code paths they claimed to protect:
+- **A-3** (Bug A2): Vacuously passing — solar_battery has zero CalcDef outputs with
+  FCE nodes, so `unsupported_reason` is always None and the assert never fires.
+- **A-4** (Bug A3): Tests the wrong code path — `transformed_expression` is built by
+  `_walk_aggregation_ast()` directly, not via `reconstruct_expression()`. Validates
+  the A1 fix (already well-covered), not the A3 fix.
+
+**Fix:** Added targeted unit tests using dual-name mock classes whose `__name__`
+contains both `"FeatureChainExpression"` and `"OperatorExpression"`, reproducing
+the real SysIDE subtype dual-match via `SysideAdapter.is_instance()`'s name-based
+fallback.
+
+**New tests:**
+- `tests/unit/test_expression_compiler.py::TestFCEBeforeOEOrdering` (3 tests) —
+  Bug A2: dual-match node produces FCE diagnostic, not `"unsupported operator: ."`
+- `tests/unit/test_hierarchy_resolver.py::TestFCEBeforeOEOrdering` (3 tests) —
+  Bug A3: dual-match node produces `"array_bos.capital_cost"`, not `".(array_bos)"`
+
+**Validation:** 660 tests pass (6 new), 0 failures. Verified mocks reproduce the
+exact bug artifacts when handlers are called directly.
+
 ---
 
 **Status**: ~~Draft~~ → ~~In Progress~~ → **Complete**

@@ -41,14 +41,18 @@ def reconstruct_expression(expr_node: Any) -> str:
 
     node_type = type(expr_node).__name__
 
+    # FeatureChainExpression MUST be before OperatorExpression — FCE is a
+    # subtype of OE in SysIDE's type system. Without this, FCE nodes enter
+    # reconstruct_operator_expression() and produce ".(name)" instead of
+    # "name.attr".
+    if SysideAdapter.is_instance(expr_node, "FeatureChainExpression"):
+        return extract_feature_chain_name(expr_node)
+
     if SysideAdapter.is_instance(expr_node, "OperatorExpression"):
         return reconstruct_operator_expression(expr_node)
 
     if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"):
         return extract_feature_reference_name(expr_node)
-
-    if SysideAdapter.is_instance(expr_node, "FeatureChainExpression"):
-        return extract_feature_chain_name(expr_node)
 
     if hasattr(expr_node, "function") and hasattr(expr_node.function, "name"):
         # InvocationExpression (e.g., sum(), sqrt())

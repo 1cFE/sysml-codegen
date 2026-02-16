@@ -78,6 +78,27 @@ class MockOperatorExpression:
         self.operands = operands
 
 
+class MockFeatureChainExpressionOperatorExpression:
+    """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
+
+    Reproduces the SysIDE subtype relationship where FCE is a subtype of OE,
+    causing SysideAdapter.is_instance()'s name-based fallback to return True
+    for both type checks on the same node.
+    """
+
+    def __init__(self, parts: list[str], operator: str = "."):
+        self.operands = (
+            [MockFeatureReferenceExpression(parts[0])] if parts else []
+        )
+        self.target_feature = (
+            type("Target", (), {"name": parts[-1]})()
+            if len(parts) > 1
+            else None
+        )
+        self.memberships = []
+        self.operator = operator
+
+
 # ---------------------------------------------------------------------------
 # Phase 1 — Test Suite: Data Model Construction
 # ---------------------------------------------------------------------------
@@ -294,6 +315,58 @@ class TestReconstructExpressionInvocation:
         invoc = MockInvocationExpression("now", [])
         result = reconstruct_expression(invoc)
         assert result == "now()"
+
+
+# ---------------------------------------------------------------------------
+# Bug A3: FCE/OE dispatch ordering in reconstruct_expression()
+# ---------------------------------------------------------------------------
+
+
+class TestFCEBeforeOEOrdering:
+    """Bug A3: reconstruct_expression() must dispatch FCE before OE.
+
+    Uses dual-name mock to reproduce the SysIDE subtype relationship where
+    both is_instance() checks return True on the same node. Does NOT use
+    monkeypatching — relies on the name-based fallback.
+    """
+
+    def test_dual_match_node_produces_dotted_path(self):
+        """A node matching both FCE and OE must hit extract_feature_chain_name.
+
+        Without the fix, this node enters reconstruct_operator_expression()
+        with operator='.' and a single operand, producing '.(array_bos)'.
+        With the fix, FCE is checked first, producing 'array_bos.capital_cost'.
+        """
+        node = MockFeatureChainExpressionOperatorExpression(
+            parts=["array_bos", "capital_cost"],
+        )
+        result = reconstruct_expression(node)
+        assert result == "array_bos.capital_cost"
+
+    def test_dual_match_never_produces_dot_prefix(self):
+        """A dual-match node must never produce '.(name)' mangled text."""
+        node = MockFeatureChainExpressionOperatorExpression(
+            parts=["allocation_model", "total_allocation"],
+        )
+        result = reconstruct_expression(node)
+        assert result == "allocation_model.total_allocation"
+        assert not result.startswith(".")
+
+    def test_pure_oe_still_reconstructs_after_reorder(self):
+        """OperatorExpression that is NOT an FCE subtype still works.
+
+        Regression guard: the FCE-before-OE reorder must not break normal
+        operator expression reconstruction.
+        """
+        node = MockOperatorExpression(
+            "+",
+            [
+                MockFeatureReferenceExpression("a"),
+                MockFeatureReferenceExpression("b"),
+            ],
+        )
+        result = reconstruct_expression(node)
+        assert result == "a + b"
 
 
 # ---------------------------------------------------------------------------

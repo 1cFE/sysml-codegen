@@ -324,6 +324,16 @@ def _walk_aggregation_ast(
     if node is None:
         return ""
 
+    # FeatureChainExpression: child.attr → SingletonTerm
+    # MUST be before OperatorExpression — FCE is a subtype of OE in SysIDE's
+    # type system, so both is_instance() checks return True on the same node.
+    # The more specific check must come first.
+    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
+        chain_name = extract_feature_chain_name(node)
+        ctx.singleton_terms.append(SingletonTerm(source_path=chain_name))
+        ctx.input_channels.append(chain_name)
+        return chain_name
+
     # OperatorExpression: recurse into operands
     if SysideAdapter.is_instance(node, "OperatorExpression"):
         operator = getattr(node, "operator", "+")
@@ -346,13 +356,6 @@ def _walk_aggregation_ast(
             op_str = OPERATOR_MAP.get(operator, f" {operator} ")
             return op_str.join(parts)
         return operator
-
-    # FeatureChainExpression: child.attr → SingletonTerm
-    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
-        chain_name = extract_feature_chain_name(node)
-        ctx.singleton_terms.append(SingletonTerm(source_path=chain_name))
-        ctx.input_channels.append(chain_name)
-        return chain_name
 
     # FeatureReferenceExpression: local attribute → LocalTerm
     if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):

@@ -542,6 +542,19 @@ class MockUnknownNode:
     pass
 
 
+class MockFeatureChainExpressionOperatorExpression:
+    """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
+
+    Reproduces the SysIDE subtype relationship where FCE is a subtype of OE,
+    causing SysideAdapter.is_instance()'s name-based fallback to return True
+    for both type checks on the same node.
+    """
+
+    def __init__(self, operator: str, operands: list):
+        self.operator = operator
+        self.operands = operands
+
+
 @pytest.fixture
 def mock_syside_adapter(monkeypatch):
     """Monkeypatch SysideAdapter.is_instance to work with mock nodes."""
@@ -1455,3 +1468,79 @@ class TestCompileCalcDefEdge6:
             result.output_results[0].python_expression
             == "(inputs.a * 2.0)"
         )
+
+
+# ---------------------------------------------------------------------------
+# Bug A2: FCE/OE dispatch ordering in build_expression_ast()
+# ---------------------------------------------------------------------------
+
+
+class TestFCEBeforeOEOrdering:
+    """Bug A2: build_expression_ast() must dispatch FCE before OE.
+
+    These tests do NOT use the mock_syside_adapter monkeypatch — they rely on
+    SysideAdapter.is_instance()'s name-based fallback (type_name in
+    type(elem).__name__) to reproduce the real dual-match behavior where
+    FeatureChainExpression nodes also match OperatorExpression.
+    """
+
+    def test_dual_match_node_hits_fce_handler(self):
+        """A node matching both FCE and OE must produce the FCE diagnostic.
+
+        Without the fix, a dual-match node with operator='.' enters the OE
+        handler, producing 'unsupported operator: .' (since '.' is not in
+        PYTHON_OPERATOR_MAP). With the fix, FCE is checked first.
+        """
+        from sysml_codegen.extraction.expression_compiler import (
+            ExpressionNodeType,
+            build_expression_ast,
+        )
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operator=".",
+            operands=[MockFeatureReferenceExpression("array_bos")],
+        )
+        ast = build_expression_ast(node, input_names=set(), output_names=set())
+
+        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
+        assert "feature chain expression" in ast.reason
+        assert "unsupported operator: ." not in ast.reason
+
+    def test_dual_match_node_raw_text_is_type_name(self):
+        """The unsupported node's raw_text should be the actual class name."""
+        from sysml_codegen.extraction.expression_compiler import (
+            build_expression_ast,
+        )
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operator=".",
+            operands=[MockFeatureReferenceExpression("array_bos")],
+        )
+        ast = build_expression_ast(node, input_names=set(), output_names=set())
+
+        assert ast.raw_text == "MockFeatureChainExpressionOperatorExpression"
+
+    def test_pure_oe_still_dispatches_after_reorder(self):
+        """An OperatorExpression that is NOT an FCE subtype still works.
+
+        Regression guard: the FCE-before-OE reorder must not break normal
+        OE handling for nodes that only match OperatorExpression.
+        """
+        from sysml_codegen.extraction.expression_compiler import (
+            ExpressionNodeType,
+            build_expression_ast,
+        )
+
+        node = MockOperatorExpression(
+            "??",
+            [
+                MockFeatureReferenceExpression("a"),
+                MockFeatureReferenceExpression("b"),
+            ],
+        )
+        ast = build_expression_ast(
+            node, input_names={"a", "b"}, output_names=set()
+        )
+
+        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
+        assert "unsupported operator: ??" in ast.reason

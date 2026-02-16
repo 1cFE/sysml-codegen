@@ -309,6 +309,16 @@ def build_expression_ast(
     Returns:
         ExpressionAST tree ready for compile_expression().
     """
+    # --- FeatureChainExpression ---
+    # MUST be before OperatorExpression — FCE is a subtype of OE in SysIDE's
+    # type system. Without this, FCE nodes enter the OE handler and produce
+    # "unsupported operator: ." instead of the correct diagnostic.
+    if SysideAdapter.is_instance(syside_node, "FeatureChainExpression"):
+        return ExpressionAST.unsupported(
+            type(syside_node).__name__,
+            "feature chain expression not supported in CalcDef output",
+        )
+
     # --- OperatorExpression ---
     if SysideAdapter.is_instance(syside_node, "OperatorExpression"):
         operator = ""
@@ -390,13 +400,6 @@ def build_expression_ast(
         if hasattr(syside_node, "value"):
             return ExpressionAST.literal(syside_node.value)
         return ExpressionAST.unsupported("literal", "literal with no value")
-
-    # --- FeatureChainExpression ---
-    if SysideAdapter.is_instance(syside_node, "FeatureChainExpression"):
-        return ExpressionAST.unsupported(
-            type(syside_node).__name__,
-            "feature chain expression not supported in CalcDef output",
-        )
 
     # --- Unknown ---
     type_name = type(syside_node).__name__

@@ -1014,24 +1014,41 @@ def _build_aggregation_module(
 
     # Process LocalTerms (PartDef-local attribute references)
     for l_term in agg.expression.local_terms:
-        ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
-        if ep_qn not in entry_points:
-            param_group = group_deriver.classify(ep_qn) if group_deriver else None
-            entry_points[ep_qn] = EntryPoint(
-                qualified_name=ep_qn,
-                simple_name=l_term.attribute_name,
-                entry_type=EntryPointType.DESIGN_ATTRIBUTE,
-                param_group=param_group,
+        l_source: InputSource | None = None
+
+        # Try: sibling aggregation output at the same scope.
+        # Aggregation modules use double-attr channel format:
+        #   get_channel_name("{instance_path}__{attr}", attr) → "{ip}__{attr}__{attr}"
+        sibling_eqn = f"{agg.instance_path}__{l_term.attribute_name}"
+        sibling_channel = get_channel_name(sibling_eqn, l_term.attribute_name)
+        if sibling_channel in canonical_channels:
+            l_source = InputSource(
+                source_type="module_output",
+                producer_channel=sibling_channel,
             )
-        ep = entry_points[ep_qn]
-        inputs.append(ModuleInput(
-            param_name=l_term.attribute_name,
-            python_type="float",
-            source=InputSource(
+
+        if l_source is None:
+            # Genuinely unresolvable → entry point (e.g., misc_hardware_cost)
+            ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
+            if ep_qn not in entry_points:
+                param_group = group_deriver.classify(ep_qn) if group_deriver else None
+                entry_points[ep_qn] = EntryPoint(
+                    qualified_name=ep_qn,
+                    simple_name=l_term.attribute_name,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    param_group=param_group,
+                )
+            ep = entry_points[ep_qn]
+            l_source = InputSource(
                 source_type="entry_point",
                 qualified_name=ep_qn,
                 param_group=ep.param_group,
-            ),
+            )
+
+        inputs.append(ModuleInput(
+            param_name=l_term.attribute_name,
+            python_type="float",
+            source=l_source,
         ))
         ref_to_inputs[l_term.attribute_name] = f"inputs.{l_term.attribute_name}"
 
