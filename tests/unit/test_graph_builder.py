@@ -1,8 +1,9 @@
-"""Unit tests for graph builder compilation_results integration.
+"""Unit tests for graph builder.
 
 Tests:
 - build_computation_graph sets PipelineModule.compilability from compilation_results
 - Backward compatibility: compilation_results=None leaves UNKNOWN
+- LITERAL binding entry points get default_value from entry_point_sources
 """
 
 from __future__ import annotations
@@ -23,7 +24,9 @@ from sysml_codegen.extraction.expression_compiler import (
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.core.output_registry import OutputRegistry
+from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.resolution.graph_builder import build_computation_graph
+from sysml_codegen.resolution.models import EntryPointType
 
 
 def _make_minimal_graph_inputs():
@@ -197,3 +200,72 @@ def test_compilation_results_missing_key_leaves_unknown():
     )
 
     assert graph.modules[0].compilability == Compilability.UNKNOWN
+
+
+def test_literal_entry_point_gets_default_value():
+    """LITERAL binding entry points get default_value from entry_point_sources."""
+    _ensure_backtracking_result_rebuilt()
+
+    calc_def = CalculationDefinitionData(
+        name="CostCalc",
+        qualified_name="CostCalc",
+        doc_comment="",
+        calc_expressions=[],
+        input_attributes=[
+            AttributeInfo(name="wattage", sysml_type="Real", python_type="float"),
+        ],
+        output_attributes=[
+            AttributeInfo(name="cost", sysml_type="Real", python_type="float"),
+        ],
+        references=[],
+        source_file=Path("test.sysml"),
+    )
+
+    usage = CalcUsageData(
+        instance_name="cost_model",
+        calc_def_name="CostCalc",
+        calc_def_qualified_name="CostCalc",
+        module_type="CostCalcModule",
+        qualified_name="Design__part__cost_model",
+    )
+
+    entry_point_qn = "Design__part__cost_model__wattage"
+    mapping_key = "Design__part__cost_model|wattage"
+
+    result = BacktrackingResult(
+        required_usages=[usage],
+        dependency_graph={},
+        entry_points={entry_point_qn},
+        entry_point_sources={entry_point_qn: "400.0"},
+        phantom_report=PhantomDetectionReport(),
+        binding_resolutions={
+            mapping_key: BindingResolution(
+                resolution_type=BindingResolutionType.ENTRY_POINT,
+                qualified_name=entry_point_qn,
+                source_path=None,
+                is_transitive=False,
+            ),
+        },
+    )
+
+    group_deriver = MagicMock()
+    group_deriver.classify.return_value = None
+    group_deriver.derive_groups_filtered.return_value = []
+
+    graph = build_computation_graph(
+        result=result,
+        calc_defs=[calc_def],
+        design_attrs={},
+        group_deriver=group_deriver,
+        output_registry=OutputRegistry(),
+    )
+
+    # Find the entry point across all groups
+    all_eps = [ep for g in graph.entry_point_groups for ep in g.parameters]
+    matching = [ep for ep in all_eps if ep.qualified_name == entry_point_qn]
+    assert len(matching) == 1, f"Expected 1 entry point, found {len(matching)}"
+
+    ep = matching[0]
+    assert ep.default_value == 400.0
+    assert ep.entry_type == EntryPointType.USAGE_LITERAL
+    assert ep.simple_name == "wattage"

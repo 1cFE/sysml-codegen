@@ -53,7 +53,9 @@ class BacktrackingResult(BaseModel):
         required_usages: Calc usages in topological order (dependencies first)
         dependency_graph: Maps instance_name -> list of dependency instance_names
         entry_points: Set of qualified parameter names that are true external inputs
-        entry_point_sources: Maps param_name -> binding source path for design attr matching
+        entry_point_sources: Maps qualified entry point name -> source value string.
+            For non-literal bindings: the binding source path (for design attr matching).
+            For literal bindings: str(literal_value) (for default value propagation).
         phantom_report: Report of suspected phantom entry points
         trace_log: Debug trace of resolution steps (for troubleshooting)
         binding_to_entry_point: DEPRECATED - Use binding_resolutions instead.
@@ -156,7 +158,7 @@ class DependencyBacktracker:
 
         # Tracking for inline phantom detection
         self._entry_point_context: dict[str, CalcUsageData] = {}
-        self._entry_point_sources: dict[str, str] = {}  # param_name -> binding source path
+        self._entry_point_sources: dict[str, str] = {}  # qname -> source path or literal value
         self._trace_log: list[str] = []
 
         # Authoritative mapping from (usage_qn, param) -> entry_point_qn
@@ -350,6 +352,11 @@ class DependencyBacktracker:
                 # DEPRECATED: Keep for backward compat
                 self._binding_to_entry_point[mapping_key] = entry_point_qn
                 self._entry_point_context[entry_point_qn] = usage
+
+                # Carry literal value for entry point classification
+                if binding.literal_value is not None:
+                    self._entry_point_sources[entry_point_qn] = str(binding.literal_value)
+
                 continue
 
             if binding.source_path:
