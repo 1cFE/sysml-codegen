@@ -109,6 +109,13 @@ def _setup_output_directories(config: GenerationConfig) -> None:
     for d in dirs:
         d.mkdir(parents=True, exist_ok=True)
 
+    # Bug 7 broader scope: ensure all subdirectories are proper Python packages.
+    # Excludes output_path itself — its __init__.py is generated later by _generate_registry().
+    for d in dirs:
+        init_file = d / "__init__.py"
+        if d != config.output_path and not init_file.exists():
+            init_file.write_text('"""Generated package."""\n')
+
 
 def _generate_primitives(config: GenerationConfig) -> None:
     """Generate primitives.py with RootModel wrappers."""

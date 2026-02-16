@@ -324,6 +324,11 @@ class TestRunCodegenPhases:
         content = init_file.read_text()
         assert "create_" in content, "Registry should have creation function"
 
+        # Bug 7 broader scope: all subdirectories should have __init__.py
+        for subdir in ["schemas", "modules", "handwritten", "pipelines", "inputs", "tests"]:
+            sub_init = output / subdir / "__init__.py"
+            assert sub_init.exists(), f"Bug 7: missing __init__.py in {subdir}/"
+
     def test_generates_entry_points_and_extras(self, tmp_path: Path, sample_model_path: Path):
         """Verify entry points, JSON templates, and extras are generated (Phase 5)."""
         from sysml_codegen.cli import run_codegen, GenerationConfig
