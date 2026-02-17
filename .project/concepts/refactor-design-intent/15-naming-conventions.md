@@ -22,6 +22,7 @@ Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identi
 **Example**: `SolarBatteryLibrary::BatteryPackCostCalc`
 
 Used only at [extraction](01-extraction.md) boundaries. Immediately converted to internal formats downstream.
+**Type wrapper**: `SysMLQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ## 2. Element Qualified Name (EQN)
 
@@ -33,6 +34,7 @@ Used only at [extraction](01-extraction.md) boundaries. Immediately converted to
 Constructed by traversing the AST owner chain and sanitizing each segment
 (`sanitize_name()`: strip quotes, replace spaces/specials with `_`, collapse runs,
 strip leading/trailing `_`). Segments are joined with `__`.
+**Type wrapper**: `EQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ## 3. Parameter Qualified Name (PQN)
 
@@ -45,6 +47,7 @@ Key insight: when a calc input binds to a design attribute at a *different* scop
 the PQN is the design attribute's EQN, not `{usage_eqn}__{param_name}`. The
 `binding_resolutions` mapping (ADR-003 Phase 7) is the single source of truth.
 See [input resolver](04-input-resolver.md) for how bindings determine PQN selection.
+**Type wrapper**: `PQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ## 4. Module Name
 
@@ -87,6 +90,7 @@ Channels ARE PQNs. There is no separate "channel name" concept (REQ-NC-05).
 The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps lookup keys to canonical
 channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol. All keys use
 dotted format; no SYSML_QN (`::`) keys are registered.
+**Type wrapper**: `RegistryKey` — all keys use dotted format ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ### Phase 1: Canonical Channels
 
@@ -197,17 +201,17 @@ Key_C to the canonical channel
 
 ## 10. Summary Table
 
-| Name | Separator | Case | Example |
-|------|-----------|------|---------|
-| SysML QN | `::` | Original | `SolarBatteryLibrary::BatteryPackCostCalc` |
-| EQN | `__` | Mixed (sanitized) | `SolarBatteryDesign__solar_battery_plant__cost_model` |
-| PQN | `__` | Mixed | `{EQN}__total_cost` |
-| Module Name | `__` | lowercase | `solarbatterydesign__solar_battery_plant__cost_model` |
-| Module Type | `.` + PascalCase | namespace lower, name original | `solarbatterylibrary.BatteryPackCostCalcModule` |
-| Channel | `__` | Mixed (is a PQN) | `SBD__sbp__bs__bp__cost_model__total_cost` |
-| Key_A | `.` | original | `cost_model.total_cost` |
-| Key_C | `.` | original | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
-| Key_D | `.` | original | `battery_system.capital_cost` |
+| Name | Separator | Case | Type | Example |
+|------|-----------|------|------|---------|
+| SysML QN | `::` | Original | `SysMLQN` | `SolarBatteryLibrary::BatteryPackCostCalc` |
+| EQN | `__` | Mixed (sanitized) | `EQN` | `SolarBatteryDesign__solar_battery_plant__cost_model` |
+| PQN | `__` | Mixed | `PQN` | `{EQN}__total_cost` |
+| Module Name | `__` | lowercase | `str` | `solarbatterydesign__solar_battery_plant__cost_model` |
+| Module Type | `.` + PascalCase | namespace lower, name original | `str` | `solarbatterylibrary.BatteryPackCostCalcModule` |
+| Channel | `__` | Mixed (is a PQN) | `PQN` | `SBD__sbp__bs__bp__cost_model__total_cost` |
+| Key_A | `.` | original | `RegistryKey` | `cost_model.total_cost` |
+| Key_C | `.` | original | `RegistryKey` | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
+| Key_D | `.` | original | `RegistryKey` | `battery_system.capital_cost` |
 
 ## Related Documents
 

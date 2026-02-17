@@ -399,8 +399,13 @@ the target architecture. This is pure refactoring — no behavior changes.
 
 - [ ] **7.1 — Extract orchestration into `orchestration/` package**
   - Move `build_pipeline_context()` and friends from `generation/initialization.py`
+  - Functions moved: `build_pipeline_context()`, `_rewrite_virtual_bindings()`, `_scope_aggregation_expressions()`, `_classify_entry_points()`
   - Update all imports
   - Run full test suite — must be green
+  - **AC**:
+    - [ ] `generation/initialization.py` line count drops below 200 (currently ~860; only PipelineContext and helpers remain)
+    - [ ] No circular imports between `orchestration/` and `generation/`
+    - [ ] All imports updated; `git grep 'from.*initialization import'` returns only allowed paths
 
 - [ ] **7.2 — Extract input resolver into `resolution/input_resolver.py`**
   - If `resolve_input()` is currently inline in graph_builder.py, extract it
@@ -411,12 +416,26 @@ the target architecture. This is pure refactoring — no behavior changes.
   - Merge `analysis/qualified_names.py` and `core/qualified_names.py`
   - Remove duplicated identifier_types
   - Run full test suite
+  - **AC**:
+    - [ ] Single import path for all naming functions: `from sysml_codegen.core.qualified_names import ...`
+    - [ ] `analysis/qualified_names.py` deleted
+    - [ ] `resolution/identifier_types.py` deleted (merged into `core/identifier_types.py`)
+    - [ ] No duplicate function definitions across modules
+  - **Consolidation candidates** (from Deferred Issues #5, #6):
+    - [ ] Two `BindingInfo` classes consolidated
+    - [ ] Three expression reconstruction implementations consolidated (or new 7.7 item)
 
 - [ ] **7.4 — Dead code removal**
   - Identify unreachable code paths (functions never called, branches never taken)
   - Remove one file/function at a time
   - Run full test suite after each removal
   - **Safety**: only remove code that has zero callers and zero test coverage
+  - **Research-identified dead paths**:
+    - [ ] Bare-name handling in resolve() (Research §5.#1)
+    - [ ] SYSML_QN normalization / Strategy B (Research §5.#5, RB-03)
+    - [ ] Virtual binding rewrite for bare names (Research §5.#1)
+    - [ ] Step 3.6 alias enrichment heuristic (Research §1.L10)
+    - [ ] Bare-name registration keys (Research §1.L10)
 
 - [ ] **7.5 — PipelineModule Field Expansion (C26)**
   - **Refs**: [26-pipeline-module-migration.md](26-pipeline-module-migration.md)
@@ -475,6 +494,23 @@ architecture from STRATEGY.md.
    pre-computed at classification time. If classification logic changes, FORMULA
    wiring can silently break. Conformance tests must verify map -> module wiring
    chain end-to-end.
+
+---
+
+## Deferred Issues
+
+Issues from the research retrospective (§7) with explicit scope decisions.
+
+| # | Issue | Scope Decision | Rationale |
+|---|-------|---------------|-----------|
+| 1 | 16/20 aggregation impls produce invalid Python (`.()` syntax) | In scope — C04 | Expression compiler conformance tests (Phase 1.4) will document which patterns fail |
+| 2 | EXPOSE_COMPUTED pattern deferred | Out of scope | Acknowledged in Doc 16; no model exercises this yet |
+| 3 | agentic-mbse V2 validation rejects valid FORMULA | Out of scope | Upstream fix; tracked in agentic-mbse |
+| 4 | 28+ ADR references point to nonexistent docs | In scope — documentation | Low priority; fix as encountered |
+| 5 | Two BindingInfo classes un-consolidated | Deferred to Phase 7 | Add to 7.3 naming consolidation |
+| 6 | Three expression reconstruction impls | Deferred to Phase 7 | Add to 7.3 or new 7.7 item |
+| 7 | Deeply-nested cross-scope REFERENCE | Out of scope | Not observed in any tested model |
+| 8 | sum() is only recognized aggregation | Out of scope | Feature request, not refactor |
 
 ---
 

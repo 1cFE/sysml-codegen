@@ -18,6 +18,7 @@ with wrong values, caught in Phase A validation).
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` and `module_output` wiring | Example section present with 2+ modules |
 | REQ-DM-06 | Models with dedicated docs SHALL link to those docs, not duplicate detail | Delegation links for aggregation terms, expression compiler, etc. |
 | REQ-DM-07 | The data flow diagram SHALL show all pipeline stages and their primary I/O models | Diagram covers extraction → analysis → core → resolution → generation |
+| REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | Field type annotations use SysMLQN/EQN/PQN/RegistryKey |
 
 ## Data Flow
 ```
@@ -53,6 +54,43 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 | `ExpressionNodeType` | `BINARY_OP`, `UNARY_OP`, `LITERAL`, `INPUT_REF`, `INTERMEDIATE_REF`, `UNSUPPORTED` | `extraction/expression_compiler.py:38` |
 | `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py:13` |
 | `EntryPointType` | `LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL` | `resolution/models.py:23` |
+
+## Name Type Wrappers
+
+The system uses 5+ name formats with incompatible semantics (REQ-DM-08).
+Raw `str` fields prevent the type checker from catching format mismatches.
+See [15-naming-conventions](15-naming-conventions.md) for format definitions.
+
+```python
+from typing import NewType
+
+SysMLQN = NewType('SysMLQN', str)        # "Package::Element" — extraction boundary only
+EQN = NewType('EQN', str)                # "Package__Element" — internal canonical form
+PQN = NewType('PQN', str)                # "EQN__param" — channel names, entry point QNs
+RegistryKey = NewType('RegistryKey', str) # dotted format — OutputRegistry keys, never "::"
+```
+
+**Conversion boundary**: Raw SysML names (`SysMLQN`) are converted to `EQN` at extraction
+time. All downstream indexes, lookups, and registrations use typed names only.
+
+**Field type assignments** (fields that remain `str`: `BindingInfo.param_name` (simple name,
+no format constraint), `PipelineModule.name` (module name = lowered EQN, could be typed
+later), `InputSource.producer_channel` (PQN but nullable)):
+
+| Model | Field | Type |
+|-------|-------|------|
+| `CalculationDefinitionData` | `qualified_name` | `SysMLQN` |
+| `CalcUsageData` | `qualified_name` | `EQN` |
+| `CalcUsageData` | `calc_def_qualified_name` | `SysMLQN` |
+| `PartDefinitionData` | `qualified_name` | `SysMLQN` |
+| `RedefinitionData` | `owning_part_qn` | `EQN` |
+| `DesignAttributeData` | `qualified_name` | `EQN` |
+| `BindingResolution` | `qualified_name` | `PQN` |
+| `ModuleOutput` | `channel_name` | `PQN` |
+| `EntryPoint` | `qualified_name` | `PQN` |
+| `OutputRegistry` | `_index` keys | `RegistryKey` |
+| `ChannelAlias` | `alias_name` | `RegistryKey` |
+| `ChannelAlias` | `canonical_name` | `PQN` |
 
 ## Extraction Models
 

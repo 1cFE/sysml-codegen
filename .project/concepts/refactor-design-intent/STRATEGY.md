@@ -57,6 +57,26 @@ Docs 08 covers the overview but not the invariants, rules, and per-generator log
 - [x] `23-smart-regen-preservation.md` -- FunctionSignature matching, 4-case decision tree, stub upgrade, backup
 - [x] `24-dual-resolution-architecture.md` -- CalcUsage vs aggregation resolution paths, shared OutputRegistry, domain-specific strategies
 
+## Design Invariants from Empirical Data
+
+Findings from 9 spikes across 3 models (94 bindings, 37 commits). Each invariant
+is either anchored in a design doc requirement or flagged as unanchored.
+
+| # | Invariant | Evidence | Anchored in | Status |
+|---|-----------|----------|-------------|--------|
+| 1 | Zero bare-name references | 94 bindings, 3 models | (unanchored) | Phase 7.4 dead code |
+| 2 | Key_C is load-bearing | 41/41 Phase 2 aliases | Doc 15 §7, Doc 10 | Anchored |
+| 3 | expression_text is raw AST | Spike 3 | Doc 16 REQ-CA-03 | Anchored |
+| 4 | Virtual outputs only via aggregation | Spike 7 | (unanchored) | Implicit |
+| 5 | SYSML_QN normalization fails 100% | 94 bindings | RB-03 (Strategy B) | Flagged |
+| 6 | instance_path has design prefix | Spike 5 | Doc 15 Key_C derivation | Implicit |
+| 7 | :>> creates ReferenceUsage | Spike 4 | Doc 25 REQ-HR-05 | Anchored |
+| 8 | cached_upper_bound is N+1 | Spike 6 | (unanchored) | Code-level |
+| 9 | 24% CHAIN RHS are string literals | Spike 8 | (unanchored) | Implicit |
+| 10 | FCE is subtype of OE | Bug A | Doc 19 REQ-AST-01 | Anchored |
+| 11 | segments[-2] for REFERENCE parent | 4/4 cases | Doc 11 Step 2 | Anchored |
+| 12 | EXPOSE_PURE on PartDefs must filter | Design Issue 21 | Doc 16 REQ-CA-04 | Anchored |
+
 ## Validation Status -- ALL PHASES COMPLETE (27 docs)
 
 ### Phase A: Source Code Accuracy -- COMPLETE

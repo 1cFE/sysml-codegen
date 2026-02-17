@@ -88,6 +88,11 @@ in the [OutputRegistry](10-output-registry.md).
 
 ### B: SysmlQnNormalization
 
+> **REMOVAL_CANDIDATE** — 0% success rate across 3 models (94 bindings).
+> No tested model produces a `::` reference at resolution time; all SysML QNs
+> are converted to EQN format at extraction. Retained for documentation
+> completeness; flagged for Phase 7.4 dead code removal. See Research §5.#5.
+
 If `ref` contains `::`, normalize to registry format: split on `::`,
 sanitize/lowercase the penultimate segment, join as dotted path, re-resolve.
 Bridges SysML `Package::Part::attr` to the registry's `part.attr` format.
@@ -146,7 +151,7 @@ design attribute share one entry point.
 |-----|---------------|----------|--------|
 | `"cost_model.total_cost"` (CHAIN binding) | `"plant.battery_pack"` | **C** | scoped key `"plant.battery_pack.cost_model.total_cost"` (Key_C) -> `module_output` |
 | `"solar_battery_plant.lcoe.lcoe_per_mwh"` (already qualified) | `"plant.battery_pack"` | A | direct Key_C match in registry (C tried first, C's scoped form doesn't match) |
-| `"SolarBattery::calc_energy::output"` | `"plant.battery_pack"` | B | normalized to `"solar_battery.calc_energy.output"`, found in registry |
+| `"SolarBattery::calc_energy::output"` | `"plant.battery_pack"` | B | normalized to `"solar_battery.calc_energy.output"`, found in registry *(never exercised in tested models — REMOVAL_CANDIDATE)* |
 | `"pv_module.capital_cost"` (`:>> calc_cost.total`) | `"plant.solar_array"` (agg) | D | follows CHAIN redef to upstream channel |
 | `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | E | `entry_point`, QN `"SolarArray__panel_efficiency"` |
 | `"unknown_param"` | `"plant.battery_pack"` | fallback | `entry_point`, QN `"<module_eqn>__unknown_param"` |
@@ -212,7 +217,8 @@ the refactoring does not change its shape.
 ```python
 AGG_STRATEGIES = [
     ScopedRegistryLookup, ChainRedefinitionFollow, DirectRegistryLookup,
-    SysmlQnNormalization, DesignAttributeLookup,
+    SysmlQnNormalization,    # REMOVAL_CANDIDATE — 0% success (Research §5.#5)
+    DesignAttributeLookup,
 ]
 ```
 

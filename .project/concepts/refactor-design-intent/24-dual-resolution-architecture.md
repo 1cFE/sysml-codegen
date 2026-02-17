@@ -60,7 +60,7 @@ Stage 1: Direct registry lookup
          registry.resolve(source_path)
          → channel or None
 
-Stage 1b: SysML QN normalization
+Stage 1b: SysML QN normalization          REMOVAL_CANDIDATE — 0% success rate
           "Package::Part::attr" → "part.attr"
           → channel or None
 
@@ -103,7 +103,7 @@ AGG_STRATEGIES:
   C: ScopedRegistryLookup
   D: ChainRedefinitionFollow
   A: DirectRegistryLookup
-  B: SysmlQnNormalization
+  B: SysmlQnNormalization       # REMOVAL_CANDIDATE — 0% success (Research §5.#5)
   E: DesignAttributeLookup
 ```
 
@@ -122,7 +122,7 @@ Both paths solve the same problem with overlapping (but not identical) strategie
 |----------|:-:|:-:|
 | Scoped lookup (Key_C) | Stage 0 | Strategy C |
 | Direct lookup (Key_A) | Stage 1 | Strategy A |
-| SysML QN normalization | Stage 1b | Strategy B |
+| SysML QN normalization (removal candidate) | Stage 1b | Strategy B |
 | CHAIN redefinition follow | -- | Strategy D |
 | REFERENCE secondary | Stage 2 | Strategy C secondary form |
 | Design attr transitive | Stage 3 | Strategy E |

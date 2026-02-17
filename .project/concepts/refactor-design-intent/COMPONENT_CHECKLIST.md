@@ -18,7 +18,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ### C01 — Data Models
 - **Doc**: [09-data-models.md](09-data-models.md)
-- **REQs**: REQ-DM-01 through REQ-DM-07
+- **REQs**: REQ-DM-01 through REQ-DM-08
 - **Current location**: `extraction/data_models.py`, `core/models.py`, `resolution/models.py`
 - **Target location**: same (or consolidated per refactor)
 - **Interfaces**:
@@ -34,6 +34,8 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] Pydantic models validate with real data (construct from extraction output)
   - [x] Containment hierarchy matches doc 09 diagram
   - [x] AggregationExpressionData has all 15 fields
+  - [ ] NewType wrappers (SysMLQN, EQN, PQN, RegistryKey) defined and importable
+  - [ ] Field types in extraction/analysis/core/resolution models use typed names per Doc 09 table
 
 ### C02 — Naming Conventions
 - **Doc**: [15-naming-conventions.md](15-naming-conventions.md)
