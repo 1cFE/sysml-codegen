@@ -50,6 +50,12 @@ separator avoids conflict with SysML's `::` delimiter). See [09-data-models](09-
 2. **Skip visited** — if `qualified_name` is already in `visited`, return empty dict.
 3. **Process bindings** — for each [`BindingInfo`](09-data-models.md#extraction-models) on the usage:
    - **LITERAL** bindings become ENTRY_POINTs immediately (no registry lookup).
+   - **EXPRESSION** bindings (`source_path=None`, `BindingType.EXPRESSION`) are handled as
+     ENTRY_POINTs with a warning. These represent inline operator expressions (e.g., `in x = a + b`)
+     where the extractor cannot decompose the expression into a single source path. The backtracker
+     logs a warning and creates an ENTRY_POINT resolution. No registry lookup is attempted.
+     (C11b typed dispatch, 2026-02-17. Zero EXPRESSION bindings in natural fixture models — covered
+     by `expression_binding_probe`.)
    - **Non-literal** bindings with a `source_path` go through `_resolve_binding_via_registry()`.
      If the resolution is MODULE_OUTPUT, DFS recurses into the producing usage.
      If ENTRY_POINT, the binding is recorded as an external input.
@@ -268,6 +274,30 @@ Consumer:  CATFMFEMagnets__catf_tf_system__cryo_load
 
 This is why the alias registry exists: cross-package references where Step 1
 structurally cannot work.
+
+## Compat-Only Resolution Migration (C11b, 2026-02-17)
+
+Prior to the typed dispatch migration (C11b), 14 MODULE_OUTPUT resolutions across
+2 models required the deprecated `_compat` dict — they could not resolve via typed
+lookups alone. C11b migrated all 14 to typed registries:
+
+**12 catf_mfe cross-scope CHAIN** (`minor_calc.a` pattern): Consumers in different
+radial build layers than the `plasma_region` producer. These resolved via Key_A
+alias format (`instance_name.attr`) in `_compat`. **Fix**: Key_A values registered
+as aliases in Phase 1a (`register_alias(ScopedKey(key_a), canonical)`, first-wins
+collision policy). Now resolve via `alias_lookup()` in CHAIN Step 2.
+
+**2 solar_battery REFERENCE secondary**:
+- `annualized_om|p_net_kw` — resolved via Key_F (`solar_battery_plant.p_net_kw`)
+  in `_compat`. **Fix**: Key_F registered as ScopedKey in Phase 1c
+  (`register_scoped(ScopedKey(key_f), canonical)`). Now resolves via
+  `scoped_lookup()` in REFERENCE Step 2 (normalized scoped fallback).
+- `annualized_financial|total_capex` — resolved via Key_E_stripped in `_compat`.
+  **Fix**: Already registered as ScopedKey in Phase 1b. Was a false positive in
+  the compat-only count (resolved via typed scoped lookup after registration order fix).
+
+After C11b: **zero compat-only resolutions**. The `_compat` dict and `resolve()`
+method are removed from OutputRegistry.
 
 ## Concrete Walkthrough: REFERENCE Resolution
 

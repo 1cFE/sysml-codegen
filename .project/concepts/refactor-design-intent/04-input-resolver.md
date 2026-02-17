@@ -18,7 +18,7 @@ resolver). LocalTerm uses a [factory-specific cascade](05-module-factory.md#4c-l
 | REQ-IR-02 | Strategies SHALL execute in declared list order; first non-None result wins. | `for strategy in strategies: result = strategy(ref, ctx); if result: return ...` |
 | REQ-IR-03 | Self-reference guard SHALL reject channels where the producing module [EQN](15-naming-conventions.md) matches `ctx.module_eqn`. | Guard check after each strategy: `channel.rsplit("__", 1)[0] == ctx.module_eqn` triggers skip |
 | REQ-IR-04 | [ResolutionContext](#resolutioncontext) SHALL be immutable (`frozen=True`); no strategy mutates it. | `@dataclass(frozen=True)` on ResolutionContext; mutation raises `FrozenInstanceError` |
-| REQ-IR-05 | Aggregation modules SHALL use `AGG_STRATEGIES` with `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `DirectRegistryLookup`). | `AGG_STRATEGIES[0] == ScopedRegistryLookup` and `AGG_STRATEGIES[1] == ChainRedefinitionFollow` |
+| REQ-IR-05 | Aggregation modules SHALL use `AGG_STRATEGIES` with `ChainRedefinitionFollow` at position 1 (after `ScopedRegistryLookup`, before `SysMLQNLookup`). | `AGG_STRATEGIES[0] == ScopedRegistryLookup` and `AGG_STRATEGIES[1] == ChainRedefinitionFollow` |
 | REQ-IR-06 | Fallback SHALL produce an `entry_point` [InputSource](#inputsource-output-model) with qualified name `"{module_eqn}__{param_name}"`. | `result.source_type == "entry_point"` and `result.qualified_name.startswith(ctx.module_eqn)` |
 | REQ-IR-07 | Aggregation SumTerm and SingletonTerm inputs SHALL use `resolve_input()` with `AGG_STRATEGIES`. FORMULA modules use pre-computed [attribute resolution](16-computed-attributes.md) (not this resolver). LocalTerm uses [factory-specific cascade](05-module-factory.md#4c-localterm). CalcUsage uses the [backtracker cascade](11-analysis-backtracker.md). | Aggregation call sites use `AGG_STRATEGIES` |
 
@@ -28,7 +28,7 @@ resolver). LocalTerm uses a [factory-specific cascade](05-module-factory.md#4c-l
 def resolve_input(
     ref: str,
     ctx: ResolutionContext,
-    strategies: list[ResolutionStrategy] = STANDARD_STRATEGIES,
+    strategies: list[ResolutionStrategy],
 ) -> InputSource
 ```
 
@@ -36,8 +36,8 @@ def resolve_input(
 SysML QN, or dotted path). The format of `ref` determines which typed registry
 path the strategies will query. **`ctx`**: Immutable context bag with typed
 [OutputRegistry](10-output-registry.md). **`strategies`**: Ordered strategy list;
-defaults to `STANDARD_STRATEGIES`, aggregation modules override with
-`AGG_STRATEGIES` (REQ-IR-05).
+callers must pass explicitly. Aggregation modules use `AGG_STRATEGIES` (REQ-IR-05).
+No default — there is no non-aggregation caller identified in the current codebase.
 
 Always returns an [InputSource](#inputsource-output-model) (REQ-IR-01). Never raises on
 unresolved refs -- the [fallback](#fallback) produces an entry point (REQ-IR-06).
@@ -141,6 +141,13 @@ If the SysML QN lookup misses, falls back to normalization: split on `::`,
 sanitize/lowercase the penultimate segment, construct a `ScopedKey`, and
 retry in the scoped registry.
 
+> **Coverage note (C12 spike, 2026-02-17)**: Strategy B has zero exercise for
+> aggregation scope — no aggregation term ref contains `::` across all fixture
+> models. Implemented for completeness; tested only with constructed data.
+> The backtracker's REFERENCE Step 2 (leaf + parent_part scoped lookup) is more
+> capable than Strategy B's normalization fallback — see
+> [24-dual-resolution-architecture](24-dual-resolution-architecture.md).
+
 ### C: ChainRedefinitionFollow
 
 Search `ctx.redefinitions` for a CHAIN (`:>>`) [redefinition](01-extraction.md#redefinitions-redefinitiondata)
@@ -155,6 +162,11 @@ Match `ref` against `ctx.design_attrs` by name (bare, dotted, or SysML QN).
 Returns the design attribute's QN, which becomes the [entry point](06-entry-point-classifier.md)
 QN. Enables entry point deduplication: multiple modules binding to the same
 design attribute share one entry point.
+
+> **Coverage note (C12 spike, 2026-02-17)**: Strategy D has zero exercise for
+> aggregation scope — no aggregation entry point duplicates a design attribute
+> name across all fixture models. Implemented for completeness; tested only with
+> constructed data.
 
 ## Truth table
 

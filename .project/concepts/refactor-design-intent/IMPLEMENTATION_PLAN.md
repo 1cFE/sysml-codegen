@@ -1024,8 +1024,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 27-typed-registry-refactor.md | Add `_compat` bridge dict transitional architecture section | C08 conformance — dead keys load-bearing through backtracker (2026-02-17) | Yes |
 | 16-computed-attributes.md | Note inherited attribute misclassification: QNs resolve to supertype namespace, causing FORMULA→EXPOSE_COMPUTED misclassification. Classifier needs supertype chain walk. | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — Known Issues §Inherited Attribute Misclassification + Step 2b annotation |
 | 16-computed-attributes.md | Note UNRESOLVABLE is likely dead code for valid SysML — SysIDE always resolves QNs | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — Known Issues §UNRESOLVABLE Likely Dead Code + UNRESOLVABLE section note + Step 2d annotation |
-| 11-analysis-backtracker.md | Note EXPRESSION bindings silently skipped (source_path=None → no resolution). Gap for C11b | C11 conformance (2026-02-17) | No |
-| 11-analysis-backtracker.md | Document 14 compat-only resolutions: 12 catf_mfe cross-scope CHAIN, 2 solar_battery REFERENCE secondary (C11b spike corrected count from 13). C11b migration concern | C11 conformance (2026-02-17) | No |
+| 11-analysis-backtracker.md | Note EXPRESSION bindings silently skipped (source_path=None → no resolution). Gap for C11b | C11 conformance (2026-02-17) | Yes (2026-02-17) — DFS §3 EXPRESSION bullet added |
+| 11-analysis-backtracker.md | Document 14 compat-only resolutions: 12 catf_mfe cross-scope CHAIN, 2 solar_battery REFERENCE secondary (C11b spike corrected count from 13). C11b migration concern | C11 conformance (2026-02-17) | Yes (2026-02-17) — Compat-Only Resolution Migration section added |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Add issues #9 (inherited attribute misclassification) and #10 (UNRESOLVABLE dead code) to Deferred Issues table | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | 09-data-models.md | Add footnote to ComputedAttributeClassification enum noting inherited attr misclassification and UNRESOLVABLE dead code status | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | 01-extraction.md | Add note to Part Definitions section about supertype chain data needed for C05 classifier | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
@@ -1034,10 +1034,10 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | COMPONENT_CHECKLIST.md | C06: Update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case" | C5 probe (Phase 2 audit) (2026-02-17) | No |
 | 11-analysis-backtracker.md | Note Step 1b normalization limitation: only extracts last 2 segments of `::` QN, losing intermediate hierarchy for 5+ segment paths. Fix in C11b typed dispatch. | C6 probe (Phase 2 audit) (2026-02-17) | No |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Update issue #7 from "Out of scope" to "Partially addressed (C6 probe)" with Step 1b normalization analysis | C6 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
-| 04-input-resolver.md | Remove STANDARD_STRATEGIES default from resolve_input() signature; always require explicit strategies | C12 spike: no non-aggregation caller (2026-02-17) | No |
-| 04-input-resolver.md | Correct REQ-IR-05 "DirectRegistryLookup" → "SysMLQNLookup" | C12 plan Issue #2 (2026-02-17) | No |
-| 04-input-resolver.md | Note Strategy B zero-exercise for aggregation; Strategy D is no-op placeholder | C12 spike findings (2026-02-17) | No |
-| 24-dual-resolution-architecture.md | Note Strategy B asymmetry: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by SysMLQNLookup | X02 conformance finding #1 (2026-02-17) | No |
+| 04-input-resolver.md | Remove STANDARD_STRATEGIES default from resolve_input() signature; always require explicit strategies | C12 spike: no non-aggregation caller (2026-02-17) | Yes (2026-02-17) — signature updated, description revised |
+| 04-input-resolver.md | Correct REQ-IR-05 "DirectRegistryLookup" → "SysMLQNLookup" | C12 plan Issue #2 (2026-02-17) | Yes (2026-02-17) — also fixed position number (2→1) |
+| 04-input-resolver.md | Note Strategy B zero-exercise for aggregation; Strategy D is no-op placeholder | C12 spike findings (2026-02-17) | Yes (2026-02-17) — coverage notes added to §B and §D |
+| 24-dual-resolution-architecture.md | Note Strategy B asymmetry: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by SysMLQNLookup | X02 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — Known Asymmetry subsection added to Strategy Overlap |
 
 ---
 

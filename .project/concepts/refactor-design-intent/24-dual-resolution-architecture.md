@@ -146,6 +146,21 @@ Both paths use the same typed [OutputRegistry](10-output-registry.md) with typed
 lookup methods. No untyped `dict.get()` calls remain. See
 [27-typed-registry-refactor](27-typed-registry-refactor.md).
 
+### Known Asymmetry: REFERENCE Step 2 (X02, 2026-02-17)
+
+The backtracker's REFERENCE Step 2 (leaf + parent_part scoped lookup) is **more
+capable** than Strategy B's normalization fallback. The backtracker extracts the
+leaf and parent segments from the `::` path and constructs a `ScopedKey` using
+`_resolve_reference_via_registry()`, which can resolve secondary REFERENCE paths
+(e.g., solar_battery `annualized_om|p_net_kw` via Key_F scoped registration).
+
+Strategy B in `resolve_input()` normalizes the penultimate + last `::` segments
+into a `ScopedKey` (e.g., `annualized_om.p_net_kw`), which may not match the
+scoped registry key format. This is **not a consistency violation** — REFERENCE
+bindings are a CalcUsage concern (no aggregation term ref contains `::` in any
+fixture model). The asymmetry only matters for the backtracker path, which has
+its own Step 2 implementation. See X02 conformance tests for verification.
+
 ---
 
 ## Concrete Trace: Same Reference, Both Paths
