@@ -83,8 +83,18 @@ channel name on success, `None` to defer to the next strategy (REQ-IR-02).
 ### A: DirectRegistryLookup
 
 `ctx.output_registry.resolve(ref)` -- exact match. The happy path when the
-binding `source_path` was registered verbatim as a [Key_A/B/C/D](15-naming-conventions.md#6-channel-name)
-in the [OutputRegistry](10-output-registry.md).
+binding `source_path` was registered verbatim as a [Key_B/C/D](15-naming-conventions.md#6-channel-name)
+or a Phase 2-4 alias in the [OutputRegistry](10-output-registry.md).
+
+> **Key_A ambiguity warning (cross-ref [REQ-OR-08](10-output-registry.md)):**
+> Strategy A can hit Key_A (`{instance_name}.{attr}`), which is ambiguous when
+> multiple scopes contain identically-named instances. In `AGG_STRATEGIES`,
+> Strategy C (scoped) runs first, so Strategy A only fires when scoped
+> resolution missed. If Strategy A resolves via a Key_A hit, the same silent
+> wrong-answer risk applies as in the backtracker's former Step 1. The
+> backtracker now raises `UnscopedResolutionError` for this case
+> ([REQ-BT-08](11-analysis-backtracker.md)). Strategy A in `resolve_input()`
+> should apply the same guard when implemented — flag for C12 implementation.
 
 ### B: SysmlQnNormalization
 
@@ -225,9 +235,10 @@ AGG_STRATEGIES = [
 **Why C is first** ([REQ-RES-07](03-resolution-overview.md#the-scope-problem)):
 CHAIN `source_path` is a scope-relative reference. The scoped lookup (Key_C)
 is the only correct resolution for models where instance names are not globally
-unique. Strategy A (unscoped Key_A) is retained as a fallback for references
-that are already globally unambiguous (fully-qualified paths, Phase 2-4 alias
-hits). See [The Scope Problem](03-resolution-overview.md#the-scope-problem).
+unique. Strategy A (unscoped) is retained for references that are already
+globally unambiguous (fully-qualified paths, Phase 2-4 alias hits), but must
+guard against Key_A hits — see [REQ-OR-08](10-output-registry.md) and the
+warning on Strategy A above. See [The Scope Problem](03-resolution-overview.md#the-scope-problem).
 
 `AGG_STRATEGIES` promotes `ChainRedefinitionFollow` to position 2 (REQ-IR-05):
 aggregation inputs ([SumTerms](05-module-factory.md#4a-sumterm)) almost always

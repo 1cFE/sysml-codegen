@@ -138,7 +138,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ### C08 — Output Registry
 - **Doc**: [10-output-registry.md](10-output-registry.md)
-- **REQs**: REQ-OR-01 through REQ-OR-07
+- **REQs**: REQ-OR-01 through REQ-OR-08
 - **Current location**: `core/output_registry.py`
 - **Interfaces**:
   - `register(key, canonical_channel)`
@@ -153,6 +153,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [ ] Phase 1 registers all key variants for each channel
   - [ ] Phase 2-4 aliases resolve through registry before registering
   - [ ] Key_C strips design prefix, joins with dots
+  - [ ] Key_A registered for diagnostic visibility but NOT used as silent resolution fallback (REQ-OR-08)
   - [ ] Verified with real channels from solar_battery and catf_mfe extraction output
 
 ### C09 — Virtual Binding Rewrite
@@ -196,14 +197,15 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ### C11 — DependencyBacktracker
 - **Doc**: [11-analysis-backtracker.md](11-analysis-backtracker.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
-- **REQs**: REQ-BT-01 through REQ-BT-07, REQ-DRA-01
+- **REQs**: REQ-BT-01 through REQ-BT-08, REQ-DRA-01
 - **Current location**: `analysis/dependency_backtracker.py`
 - **Interfaces**:
   - Input: root calc usages, OutputRegistry, CalcUsageData, CalculationDefinitionData
   - Output: `BacktrackingResult` (required_usages, dependency_graph, entry_points, binding_resolutions)
 - **AC**:
   - [ ] Every non-literal binding resolved via `_resolve_binding_via_registry()`
-  - [ ] Scoped resolution (Step 0/Key_C) runs before unscoped (Step 1/Key_A)
+  - [ ] Scoped resolution (Step 0/Key_C) is the primary path for CHAIN bindings
+  - [ ] Step 1 (unscoped Key_A) raises `UnscopedResolutionError` instead of silently returning (REQ-BT-08)
   - [ ] Cycle detection via path tracking — cycles don't crash, they warn
   - [ ] Every binding resolves (Step 4 fallback guarantees total resolution)
   - [ ] Key format: `"{usage_qn}|{param_name}"` for binding_resolutions

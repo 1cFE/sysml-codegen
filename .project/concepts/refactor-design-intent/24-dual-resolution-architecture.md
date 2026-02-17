@@ -33,7 +33,7 @@ This gives us two resolution paths. Not by accident, but by necessity.
 |----|-------------|-------------|
 | REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs stop) depends on the resolution result. | `_trace_dependencies` calls `_resolve_binding_via_registry` at line 364; branch on `resolution_type` at line 367 |
 | REQ-DRA-02 | FORMULA SHALL use pre-computed [attribute resolution map](16-computed-attributes.md). Aggregation SumTerm/SingletonTerm SHALL use [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`. LocalTerm SHALL use factory-specific cascade. | Factory call sites use appropriate resolution mechanism |
-| REQ-DRA-03 | Both paths SHALL implement [scoped resolution](03-resolution-overview.md#the-scope-problem) (REQ-RES-07): consumer scope prepended before unscoped fallback. | Backtracker: Step 0 (line 512). resolve_input(): Strategy C first in chain. |
+| REQ-DRA-03 | Both paths SHALL implement [scoped resolution](03-resolution-overview.md#the-scope-problem) (REQ-RES-07): consumer scope prepended before any unscoped lookup. Unscoped Key_A fallback is prohibited ([REQ-OR-08](10-output-registry.md), [REQ-BT-08](11-analysis-backtracker.md)). | Backtracker: Step 0 (line 512), Step 1 raises on Key_A hit. resolve_input(): Strategy C first in chain, Strategy A flagged for same guard. |
 | REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.total_cost"` in scope `"plant.battery_pack"` SHALL resolve to the same channel regardless of path. | Integration test: same reference through both paths → identical `InputSource` |
 | REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produce `InputSource` objects. Both encode the same two-valued answer (module_output or entry_point). | `BindingResolution.resolution_type` maps to `InputSource.source_type` |
 
@@ -56,9 +56,9 @@ Stage 0: Scoped registry lookup (REQ-RES-07)
          consumer_scope + "." + source_path → Key_C
          → channel or None
 
-Stage 1: Direct registry lookup
+Stage 1: Unscoped Key_A guard (REQ-BT-08)
          registry.resolve(source_path)
-         → channel or None
+         → RAISES UnscopedResolutionError if match found (Key_A is diagnostic-only)
 
 Stage 1b: SysML QN normalization          REMOVAL_CANDIDATE — 0% success rate
           "Package::Part::attr" → "part.attr"
@@ -76,8 +76,10 @@ Stage 4: Fallback entry point
          → ENTRY_POINT with warning
 ```
 
-Both Stage 0 and Stage 1 include a **self-reference guard**: if the resolved
-channel belongs to the current usage, the resolution is discarded.
+Stage 0 includes a **self-reference guard**: if the resolved channel belongs to
+the current usage, the resolution is discarded. Stage 1 now raises
+`UnscopedResolutionError` if the unscoped lookup matches ([REQ-BT-08](11-analysis-backtracker.md)),
+so the self-reference guard is no longer reached there.
 
 **Result**: `BindingResolution(resolution_type, qualified_name, source_path, is_transitive)`.
 Stored in `BacktrackingResult.binding_resolutions` keyed by
@@ -121,7 +123,7 @@ Both paths solve the same problem with overlapping (but not identical) strategie
 | Strategy | Backtracker (CalcUsage) | Agg resolve_input() / FORMULA attr map |
 |----------|:-:|:-:|
 | Scoped lookup (Key_C) | Stage 0 | Strategy C |
-| Direct lookup (Key_A) | Stage 1 | Strategy A |
+| Direct lookup (Key_A guard) | Stage 1 (RAISES on hit — [REQ-BT-08](11-analysis-backtracker.md)) | Strategy A (flagged for same guard — [REQ-OR-08](10-output-registry.md)) |
 | SysML QN normalization (removal candidate) | Stage 1b | Strategy B |
 | CHAIN redefinition follow | -- | Strategy D |
 | REFERENCE secondary | Stage 2 | Strategy C secondary form |

@@ -27,6 +27,7 @@ regardless of which format the binding used.
 | REQ-OR-05 | Phase 1 SHALL register Key_A/B/C (CalcUsage), Key_D/E/bare (Aggregation), Key_F/bare/QN (FORMULA) | Key format tables in each sub-phase |
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through the registry before registering | `registry.resolve(alias.canonical_name)` precedes `register_alias()` |
 | REQ-OR-07 | Key_C SHALL be constructed by stripping design prefix from EQN and joining with dots | `derive_key_c()`: split on `__`, drop `segments[0]`, join with `.` |
+| REQ-OR-08 | Key_A SHALL be registered for diagnostic visibility but SHALL NOT be used as a silent resolution fallback. Resolution paths that would match Key_A SHALL raise an error instead. | Backtracker Step 1 raises `UnscopedResolutionError`; see [REQ-BT-08](11-analysis-backtracker.md) |
 
 ## What It Is
 
@@ -93,6 +94,18 @@ drop `segments[0]`, join with `.`, append `.{attr}`. Key_C is the most critical 
 it is the [scoped key](03-resolution-overview.md#the-scope-problem) that the
 [input resolver](04-input-resolver.md) constructs to disambiguate cross-scope references.
 Empirically, ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
+
+**Key_A is diagnostic-only (REQ-OR-08).** Key_A is registered so that it appears in
+registry dumps and diagnostics, making it visible what *would* match an unscoped lookup.
+However, no resolution path may silently fall back to Key_A. If scoped resolution (Step 0)
+fails for a CHAIN binding, the resolver SHALL raise an error rather than attempting an
+unscoped Key_A match. Rationale: Key_A (`{instance_name}.{attr}`) is ambiguous when
+multiple scopes contain identically-named instances. Using it as a silent fallback hides
+scoping bugs and produces silent wrong answers — the system wires to whichever output
+happened to register first, generating code that computes incorrect values with no
+diagnostic signal. The correct response to a scoped resolution miss is to surface the
+failure so the root cause (incorrect scope derivation, missing Key_C, or unexpected model
+structure) can be diagnosed.
 
 **Phase 1b: Aggregation outputs** (`build_output_registry`, lines 550-584)
 

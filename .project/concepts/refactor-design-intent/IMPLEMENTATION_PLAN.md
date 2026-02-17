@@ -141,8 +141,9 @@ extraction and analysis. Each is independently testable.
     - Verify collision policy (first wins, warning logged)
     - Verify phase ordering enforcement
     - Verify Key_C derivation for scoped lookups
+    - Verify Key_A is registered (diagnostic visibility) but resolution paths raise `UnscopedResolutionError` instead of silently using Key_A (REQ-OR-08)
   - If current impl needs changes, make them. If not, just lock it down with tests.
-  - **Acceptance**: REQ-OR-01 through REQ-OR-07 all green
+  - **Acceptance**: REQ-OR-01 through REQ-OR-08 all green
 
 - [ ] **2.2 — Virtual Binding Rewrite Spike (C09)**
   - **Refs**: [12-virtual-binding-rewrite.md](12-virtual-binding-rewrite.md)
@@ -186,12 +187,13 @@ and aggregation scoping all independently validated. ~40-60 new conformance test
     - Build real OutputRegistry from extraction snapshot
     - Run backtracker on real calc usages from each fixture model
     - Verify binding_resolutions key format
-    - Verify scoped-before-unscoped resolution order (instrument or use known-ambiguous case)
+    - Verify scoped resolution (Step 0/Key_C) is primary path
+    - Verify Step 1 raises `UnscopedResolutionError` when scoped resolution fails but unscoped Key_A would match (REQ-BT-08)
     - Verify cycle detection (construct a model with cycles if needed, or use synthetic calc data)
     - Verify self-reference guard
     - Verify topological ordering (every dependency appears before its consumer)
     - Verify total resolution (no unresolved bindings)
-  - **Acceptance**: REQ-BT-01 through REQ-BT-07 all green
+  - **Acceptance**: REQ-BT-01 through REQ-BT-08 all green
 
 - [ ] **3.2 — Input Resolver Spike (C12)**
   - **Refs**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
@@ -552,6 +554,11 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 | Doc | Amendment needed | Triggered by | Applied? |
 |-----|-----------------|--------------|----------|
+| 10-output-registry.md | Added REQ-OR-08: Key_A diagnostic-only, resolution SHALL raise instead of silent fallback | Design review discussion (2026-02-17) | Yes |
+| 11-analysis-backtracker.md | Added REQ-BT-08: Step 1 raises `UnscopedResolutionError`; rewrote Step 1 section and concrete walkthrough | Design review discussion (2026-02-17) | Yes |
+| 03-resolution-overview.md | Strengthened REQ-RES-07: unscoped Key_A fallback explicitly prohibited | Design review discussion (2026-02-17) | Yes |
+| 04-input-resolver.md | Strategy A cross-reference to REQ-OR-08; flagged same Key_A ambiguity concern | Consistency review (2026-02-17) | Yes |
+| 24-dual-resolution-architecture.md | Updated REQ-DRA-03 and Stage 1 cascade description to reflect Key_A error behavior | Consistency review (2026-02-17) | Yes |
 
 ---
 
@@ -563,3 +570,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C01 Data Models | 667 | 91 | 758 | 2026-02-17 |
 | C02 Naming Conventions | 758 | 46 | 804 | 2026-02-17 |
 | Phase 0 Infrastructure | 804 | 70 | 874 | 2026-02-17 |
+| C03 Extractor Conformance | 874 | 44 | 918 | 2026-02-17 |

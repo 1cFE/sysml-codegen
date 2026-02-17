@@ -62,7 +62,7 @@ unique by SysML ownership. See
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a [Key_C](15-naming-conventions.md#7-output-registry-key-formats)-format lookup, not the unscoped [Key_A](15-naming-conventions.md#7-output-registry-key-formats). | Scoped lookup before unscoped in both backtracker and `STANDARD_STRATEGIES` |
+| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a [Key_C](15-naming-conventions.md#7-output-registry-key-formats)-format lookup. Unscoped [Key_A](15-naming-conventions.md#7-output-registry-key-formats) fallback is prohibited — if scoped resolution fails but unscoped Key_A would match, the system SHALL raise `UnscopedResolutionError` ([REQ-BT-08](11-analysis-backtracker.md), [REQ-OR-08](10-output-registry.md)). | Scoped lookup in both backtracker and `STANDARD_STRATEGIES`; Step 1 raises on unscoped match |
 | REQ-RES-08 | Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation). | Backtracker: Step 0 (line 512). resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
 
 ## Why Resolution Is Hard

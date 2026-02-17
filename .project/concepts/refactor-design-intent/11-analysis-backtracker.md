@@ -23,6 +23,7 @@ Source: `src/sysml_codegen/analysis/dependency_backtracker.py`
 | REQ-BT-05 | `binding_resolutions` key format SHALL be `"{usage_qn}\|{param_name}"` (pipe separator) | All `mapping_key` assignments use `f"{usage.qualified_name}\|{param_name}"` |
 | REQ-BT-06 | Topological sort SHALL produce dependency-first ordering or raise on cycles | Kahn's algorithm with cycle detection at line 744 |
 | REQ-BT-07 | Self-reference guard SHALL prevent a usage from wiring to its own output | `producing_usage_qn == usage.qualified_name` check at line 538 |
+| REQ-BT-08 | Step 1 (unscoped Key_A fallback) SHALL raise `UnscopedResolutionError` instead of silently returning a result. Key_A is [diagnostic-only](10-output-registry.md) (REQ-OR-08). | Step 1 body raises; no silent fallback path |
 
 ## BacktrackingResult Output Model
 
@@ -85,15 +86,30 @@ two scopes with identically-named calc usages resolve to different Key_C paths.
 
 Step 0 is skipped for `::` source paths (SysML QN format — handled by Step 1b instead).
 
-### Step 1: Direct registry lookup (unscoped fallback)
+### Step 1: Unscoped Key_A guard (REQ-BT-08) — RAISES ERROR
 
 ```python
+# PREVIOUS BEHAVIOR (removed): silent fallback via Key_A
+#   channel = self._output_registry.resolve(source_path)
+#
+# NEW BEHAVIOR: raise diagnostic error
 channel = self._output_registry.resolve(source_path)
+if channel is not None:
+    raise UnscopedResolutionError(
+        f"Scoped resolution (Step 0) failed for binding '{source_path}' "
+        f"on usage '{usage.qualified_name}', but unscoped lookup matched "
+        f"channel '{channel}'. This indicates a scoping bug — investigate "
+        f"why Key_C was not found. Consumer scope: '{consumer_scope}', "
+        f"expected scoped key: '{consumer_scope}.{source_path}'"
+    )
 ```
 
-Pure exact-match against [Key_A/alias](10-output-registry.md) format. Works when instance
-names are globally unique but is **NOT correct** when two scopes contain identically-named
-usages. This is why Step 0 runs first (REQ-BT-02).
+**Rationale:** Key_A (`{instance_name}.{attr}`) is ambiguous when multiple scopes
+contain identically-named instances. The previous behavior silently returned whichever
+output registered first, hiding scoping bugs and producing silent wrong answers. If
+Step 0 (scoped Key_C) fails but an unscoped match exists, that is a signal that scope
+derivation is incorrect or Key_C registration is missing — both are bugs that must be
+surfaced, not papered over. See [REQ-OR-08](10-output-registry.md).
 
 ### Step 1b: SysML QN normalization + retry
 
@@ -185,8 +201,9 @@ Design__solar_battery_plant__battery__sizing            (BatterySizing)
 ```
 
 The [OutputRegistry](10-output-registry.md) has these keys for the sizing output:
-- Key_A: `"sizing.nameplate_capacity"` → canonical `"Design__...__sizing__nameplate_capacity"`
+- Key_A: `"sizing.nameplate_capacity"` → canonical `"Design__...__sizing__nameplate_capacity"` (diagnostic-only, REQ-OR-08)
 - Alias: `"battery.nameplate_capacity"` → same canonical (from [virtual binding rewrite](12-virtual-binding-rewrite.md))
+- Key_C: `"solar_battery_plant.battery.sizing.nameplate_capacity"` → same canonical
 
 **DFS trace for `component_cost`:**
 
@@ -199,7 +216,26 @@ The [OutputRegistry](10-output-registry.md) has these keys for the sizing output
    - Enter `_resolve_binding_via_registry()`.
    - **Step 0**: consumer scope = `"solar_battery_plant.battery"`. Scoped key =
      `"solar_battery_plant.battery.battery.nameplate_capacity"`. Not in registry — fall through.
-   - **Step 1**: `registry.resolve("battery.nameplate_capacity")` → matches alias →
+   - **Step 1 (REQ-BT-08)**: `registry.resolve("battery.nameplate_capacity")` → matches alias →
+     `UnscopedResolutionError` raised. **This is a scoping bug**: the scoped key has a
+     doubled `"battery.battery"` segment, which means the consumer scope derivation is
+     producing an incorrect path. The error surfaces this for investigation rather than
+     silently wiring via the unscoped alias.
+   - **Fix required**: consumer scope derivation must be corrected so that Step 0 produces
+     `"solar_battery_plant.battery.sizing.nameplate_capacity"` (hitting Key_C), or the
+     alias `"battery.nameplate_capacity"` must be registered as a properly scoped key.
+
+**NOTE:** This walkthrough intentionally shows a case where the old silent fallback
+masked a scoping bug. The doubled `"battery.battery"` in the Step 0 key indicates
+that `_consumer_scope_dotted()` is including a segment that also appears in
+`source_path`. The correct fix is upstream (scope derivation or alias registration),
+not downstream (silent fallback).
+
+**When fixed, the trace should be:**
+
+4. **Binding 2: `capacity`** — `BindingType.CHAIN`, `source_path="sizing.nameplate_capacity"`.
+   - **Step 0**: consumer scope = `"solar_battery_plant.battery"`. Scoped key =
+     `"solar_battery_plant.battery.sizing.nameplate_capacity"`. Matches Key_C →
      canonical `"Design__...__sizing__nameplate_capacity"`. Self-reference guard passes.
    - Return `BindingResolution(MODULE_OUTPUT, "Design__...__sizing__nameplate_capacity")`.
    - **DFS recurse** into `sizing` (new branch, no cycle).
