@@ -262,14 +262,14 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Interfaces**:
   - Input: DesignAttributeData, CalcUsageData, CalculationDefinitionData
   - Output: `list[DerivedParameterGroup]`, group classification per qualified name
-- **AC**:
-  - [ ] Every entry point in exactly one group
-  - [ ] 4 indexes with strict precedence: attr > binding > unbound > literal
-  - [ ] Grouping mirrors SysML source file structure
-  - [ ] Filtered groups remove non-entry-point parameters
-  - [ ] `classify()` checks indexes in precedence order
-  - [ ] `get_default_value()` resolves through binding index
-  - [ ] Group names follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention
+- **AC**: *(all verified 2026-02-17 — 30 tests in `tests/conformance/test_parameter_group_deriver.py`)*
+  - [x] Every entry point in exactly one group
+  - [x] 4 indexes with strict precedence: attr > binding > unbound > literal
+  - [x] Grouping mirrors SysML source file structure
+  - [x] Filtered groups remove non-entry-point parameters
+  - [x] `classify()` checks indexes in precedence order
+  - [x] `get_default_value()` resolves through binding index
+  - [x] Group names follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention
 
 ---
 

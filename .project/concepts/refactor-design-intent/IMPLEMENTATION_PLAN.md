@@ -345,15 +345,13 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
   - graph_builder.py integration deferred to C16 (Aggregation Module Factory)
   - **Acceptance**: REQ-IR-01 through REQ-IR-07, REQ-DRA-02, REQ-DRA-04 all green (1299 tests, 0 failures)
 
-- [ ] **3.3 — ParameterGroupDeriver Conformance (C13)**
+- [x] **3.3 — ParameterGroupDeriver Conformance (C13)** *(completed 2026-02-17)*
   - **Refs**: [17-parameter-group-deriver.md](17-parameter-group-deriver.md)
-  - Write `tests/conformance/test_parameter_group_deriver.py`:
-    - Derive groups from real extraction data
-    - Verify 4-index precedence
-    - Verify group naming convention
-    - Verify filtered groups exclude non-entry-point params
-    - Verify default_value resolution through binding index
-  - **Acceptance**: REQ-PGD-01 through REQ-PGD-07 all green
+  - 30 conformance tests in `tests/conformance/test_parameter_group_deriver.py`
+  - 4-index precedence verified (attr > binding > unbound > literal) with solar_battery and catf_mfe
+  - Group naming convention, filtered groups, classify(), get_default_value() all verified
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-PGD-01 through REQ-PGD-07 all green (1334 tests, 1329 passed, 5 xfailed, 0 failures)
 
 - [ ] **3.4 — Dual Resolution Consistency (X02)**
   - **Refs**: [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
@@ -1045,3 +1043,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C5 Alias Agg Probe (audit) | 1250 | 10 | 1260 (+5 xfail) | 2026-02-17 |
 | C11b Typed Dispatch (C11b) | 1260 | 17 conformance (net +13 after unit test updates) | 1273 (+5 xfail) | 2026-02-17 |
 | C12 Input Resolver | 1273 | 26 | 1299 (+5 xfail) | 2026-02-17 |
+| C13 ParameterGroupDeriver | 1304 | 30 | 1334 (+5 xfail) | 2026-02-17 |
