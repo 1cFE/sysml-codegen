@@ -1,89 +1,107 @@
-"""OutputRegistry: single lookup for resolving binding source_paths to canonical channel names.
+"""OutputRegistry: typed registries for resolving binding source_paths to canonical channel names.
 
-Replaces the backtracker's 5 ad-hoc indexes with one exact-match dict.
-See: .project/reports/08_algorithm_revised.md (Sections 4, 6, 12)
+Three typed registries replace the former flat ``dict[str, str]``:
+- Scoped: ``dict[ScopedKey, CanonicalChannel]`` — Key_C (CalcUsage) and Key_E_stripped (Aggregation)
+- SysML QN: ``dict[SysMLQN, CanonicalChannel]`` — Phase 1c FORMULA outputs
+- Alias: ``dict[ScopedKey, CanonicalChannel]`` — Phases 2-4 aliases (CHAIN, EXPOSE_PURE, transitive)
+
+See: 10-output-registry.md, 27-typed-registry-refactor.md
 """
 
 import logging
 from typing import Any
 
+from sysml_codegen.core.identifier_types import (
+    CanonicalChannel,
+    ScopedKey,
+    SysMLQN,
+    make_scoped_key,
+)
+
 logger = logging.getLogger(__name__)
 
 
 class OutputRegistry:
-    """Single lookup for resolving binding source_paths to canonical channel names.
+    """Typed registries for resolving binding source_paths to canonical channel names.
 
-    Replaces the backtracker's 5 ad-hoc indexes with one exact-match dict.
-    No normalization, no cascade, no fallback. If a key isn't registered,
-    resolve() returns None.
+    Three typed registries provide scoped, exact-match lookups:
+    - ``_scoped``: ``dict[ScopedKey, CanonicalChannel]`` — Key_C and Key_E_stripped
+    - ``_sysml_qn``: ``dict[SysMLQN, CanonicalChannel]`` — SysML QN keys
+    - ``_alias``: ``dict[ScopedKey, CanonicalChannel]`` — Phase 2-4 aliases
 
     Usage protocol (4-phase registration):
-        Phase 1: register() -- CalcUsage outputs (Key_A, Key_B, Key_C),
-                 aggregation outputs (Key_D, Key_E), FORMULA outputs (Key_F)
-        Phase 2: register_alias() -- CHAIN redefinition aliases
-        Phase 3: register_alias() -- EXPOSE_PURE aliases (PartUsage only)
-        Phase 4: register_alias() -- Transitive design attribute aliases
+        Phase 1a: register_scoped() — CalcUsage outputs (Key_C)
+        Phase 1b: register_scoped() — Aggregation outputs (Key_E_stripped)
+        Phase 1c: register_sysml_qn() — FORMULA outputs
+        Phase 2:  register_alias() — CHAIN redefinition aliases
+        Phase 3:  register_alias() — EXPOSE_PURE aliases
+        Phase 4:  register_alias() — Transitive design attribute aliases
     """
 
     def __init__(self) -> None:
-        self._index: dict[str, str] = {}
-        self._canonical: set[str] = set()
+        self._scoped: dict[ScopedKey, CanonicalChannel] = {}
+        self._sysml_qn: dict[SysMLQN, CanonicalChannel] = {}
+        self._alias: dict[ScopedKey, CanonicalChannel] = {}
+        self._canonical: set[CanonicalChannel] = set()
+        # Legacy keys (Key_A, Key_D, Key_F, bare) for deprecated resolve()
+        # only. NOT checked by typed lookup methods. Removed in C11.
+        self._compat: dict[str, CanonicalChannel] = {}
 
-    def register(self, canonical_channel: str, lookup_keys: list[str]) -> None:
-        """Register a canonical channel with its lookup keys (Phase 1).
+    # ------------------------------------------------------------------
+    # Typed registration methods (REQ-OR-03)
+    # ------------------------------------------------------------------
 
-        The canonical_channel itself is also registered as a self-referencing
-        key, so resolve(canonical_channel) always works.
+    def register_scoped(self, key: ScopedKey, channel: CanonicalChannel) -> None:
+        """Register a scoped key mapping to a canonical channel (Phase 1a, 1b).
 
-        Collision policy: refuse overwrite. If a key already maps to a
-        different canonical channel, log a warning and keep the first
-        registration. This prevents silent mis-wiring from duplicate keys.
+        Also adds the channel to the canonical set for phase-ordering enforcement.
 
-        Args:
-            canonical_channel: The PQN-format channel name
-                (e.g., "Design__plant__lcoe__lcoe_per_mwh").
-            lookup_keys: List of alternative key formats (Key_A, Key_B,
-                Key_C, etc.) that should resolve to this channel.
+        Collision policy: raise on duplicate key with different channel (unique
+        by construction — a duplicate indicates a bug in key derivation).
+        Same key with same channel is silently ignored.
         """
-        self._canonical.add(canonical_channel)
-        # Self-register the canonical channel name
-        if canonical_channel not in self._index:
-            self._index[canonical_channel] = canonical_channel
-        for key in lookup_keys:
-            if key in self._index:
-                if self._index[key] != canonical_channel:
-                    logger.warning(
-                        "OutputRegistry key collision: '%s' already maps to '%s', "
-                        "refusing to overwrite with '%s'",
-                        key,
-                        self._index[key],
-                        canonical_channel,
-                    )
-                continue  # skip duplicate or collision
-            self._index[key] = canonical_channel
+        self._canonical.add(channel)
+        if key in self._scoped:
+            if self._scoped[key] != channel:
+                raise ValueError(
+                    f"OutputRegistry scoped key collision: '{key}' already maps "
+                    f"to '{self._scoped[key]}', cannot overwrite with '{channel}'"
+                )
+            return
+        self._scoped[key] = channel
 
-    def register_alias(self, alias: str, canonical_channel: str) -> None:
+    def register_sysml_qn(self, key: SysMLQN, channel: CanonicalChannel) -> None:
+        """Register a SysML QN key mapping to a canonical channel (Phase 1c).
+
+        Also adds the channel to the canonical set.
+
+        Collision policy: raise on duplicate key with different channel.
+        """
+        self._canonical.add(channel)
+        if key in self._sysml_qn:
+            if self._sysml_qn[key] != channel:
+                raise ValueError(
+                    f"OutputRegistry SysML QN collision: '{key}' already maps "
+                    f"to '{self._sysml_qn[key]}', cannot overwrite with '{channel}'"
+                )
+            return
+        self._sysml_qn[key] = channel
+
+    def register_alias(
+        self, alias: ScopedKey | str, canonical_channel: CanonicalChannel | str
+    ) -> None:
         """Register an alias pointing to an existing canonical channel (Phases 2-4).
 
-        Enforces phase ordering: the canonical_channel MUST already be
-        registered (via register() or a prior register_alias()). If not,
-        logs a warning and skips -- this catches phase ordering violations
-        and unresolvable alias targets.
+        Enforces phase ordering: the canonical_channel MUST already be in
+        ``_canonical``. If not, logs a warning and skips.
 
-        Note: The source design document (08_algorithm_revised.md, Section 12)
-        uses ``assert`` for phase ordering enforcement. This implementation
-        intentionally uses ``logger.warning()`` + skip instead, because an
-        assert crash on data issues in a production pipeline is too harsh --
-        a warning with diagnostic context is more actionable. The spec (FR-2)
-        allows either "assert/warn", so this satisfies the contract.
-
-        Collision policy: same as register() -- refuse overwrite on collision.
-
-        Args:
-            alias: The alias lookup key (scoped dotted format).
-            canonical_channel: The canonical channel this alias points to.
-                Must already exist in the registry.
+        Collision policy: first-wins with warning (alias registry is not
+        guaranteed unique — different sources may produce the same alias key).
         """
+        # Accept str for backward compatibility during transition
+        canonical_channel = CanonicalChannel(canonical_channel)
+        alias = ScopedKey(alias)
+
         if canonical_channel not in self._canonical:
             logger.warning(
                 "OutputRegistry alias '%s' targets unregistered channel '%s' "
@@ -92,74 +110,128 @@ class OutputRegistry:
                 canonical_channel,
             )
             return
-        if alias in self._index:
-            if self._index[alias] != canonical_channel:
+        if alias in self._alias:
+            if self._alias[alias] != canonical_channel:
                 logger.warning(
-                    "OutputRegistry key collision: '%s' already maps to '%s', "
+                    "OutputRegistry alias collision: '%s' already maps to '%s', "
                     "refusing to overwrite with '%s'",
                     alias,
-                    self._index[alias],
+                    self._alias[alias],
                     canonical_channel,
                 )
             return
-        self._index[alias] = canonical_channel
+        self._alias[alias] = canonical_channel
+
+    # ------------------------------------------------------------------
+    # Typed lookup methods (REQ-OR-02)
+    # ------------------------------------------------------------------
+
+    def scoped_lookup(self, key: ScopedKey) -> CanonicalChannel | None:
+        """Exact-match lookup in the scoped registry."""
+        return self._scoped.get(key)
+
+    def sysml_qn_lookup(self, key: SysMLQN) -> CanonicalChannel | None:
+        """Exact-match lookup in the SysML QN registry."""
+        return self._sysml_qn.get(key)
+
+    def alias_lookup(self, key: ScopedKey) -> CanonicalChannel | None:
+        """Exact-match lookup in the alias registry."""
+        return self._alias.get(key)
+
+    # ------------------------------------------------------------------
+    # Deprecated API (backward compat for C11/C12 transition)
+    # ------------------------------------------------------------------
+
+    def register(self, canonical_channel: str, lookup_keys: list[str]) -> None:
+        """Register a canonical channel with lookup keys (DEPRECATED).
+
+        This method is kept for backward compatibility during the transition
+        to typed registration. It registers keys in the ``_compat`` dict
+        (checked only by ``resolve()``, not by typed lookup methods) and
+        adds the canonical channel to the canonical set.
+
+        Use ``register_scoped()``, ``register_sysml_qn()``, or
+        ``register_alias()`` instead.
+        """
+        cc = CanonicalChannel(canonical_channel)
+        self._canonical.add(cc)
+        for key in lookup_keys:
+            if key in self._compat:
+                if self._compat[key] != cc:
+                    logger.warning(
+                        "OutputRegistry key collision: '%s' already maps to '%s', "
+                        "refusing to overwrite with '%s'",
+                        key,
+                        self._compat[key],
+                        cc,
+                    )
+                continue
+            self._compat[key] = cc
 
     def resolve(self, source_path: str) -> str | None:
-        """Resolve a binding source_path to a canonical channel name.
+        """Resolve a source_path to a canonical channel name (DEPRECATED).
 
-        EXACT MATCH ONLY. No normalization, no :: -> . conversion,
-        no bare-name fallback. This is a pure dict lookup.
+        Checks registries in order:
+        scoped → sysml_qn → alias → compat → canonical_set.
 
-        Empirically validated contracts (do NOT add normalization):
-        - Spike 4: Zero bare-name references across 94 bindings
-        - Spike 5: SYSML_QN normalization is broken (consuming path
-          differs from producing path)
+        The ``_compat`` dict holds legacy keys (Key_A, Key_D, Key_F, bare)
+        that the backtracker's ``resolve()`` calls still need. These are NOT
+        visible to typed lookup methods. Removed when C11 updates the
+        backtracker to use typed dispatch.
 
-        Args:
-            source_path: The binding's source_path in dotted format.
-
-        Returns:
-            Canonical channel name, or None if not found.
+        Use ``scoped_lookup()``, ``sysml_qn_lookup()``, or ``alias_lookup()``
+        instead.
         """
-        return self._index.get(source_path)
+        result = self._scoped.get(ScopedKey(source_path))
+        if result is not None:
+            return result
+        result = self._sysml_qn.get(SysMLQN(source_path))
+        if result is not None:
+            return result
+        result = self._alias.get(ScopedKey(source_path))
+        if result is not None:
+            return result
+        # Legacy compat keys (Key_A, Key_D, Key_F, bare)
+        result = self._compat.get(source_path)
+        if result is not None:
+            return result
+        # Canonical self-lookup (Key_B equivalent)
+        cc = CanonicalChannel(source_path)
+        if cc in self._canonical:
+            return cc
+        return None
 
     @staticmethod
     def derive_key_c(usage_qualified_name: str, output_attr_name: str) -> str:
-        """Derive Key_C: dotted hierarchy path (strips design prefix).
+        """Derive Key_C: dotted hierarchy path (DEPRECATED).
 
-        Key_C is CRITICAL for Phase 2 CHAIN alias resolution. Spike 8
-        confirmed: ALL 41 Phase 2 CHAIN aliases in solar_battery resolve
-        EXCLUSIVELY via Key_C.
-
-        Algorithm: split QN on '__', drop segments[0] (design PartDef
-        prefix), join remaining with '.', append '.' + output_attr_name.
-
-        Args:
-            usage_qualified_name: The CalcUsage EQN
-                (e.g., "SolarBatteryDesign__solar_battery_plant__lcoe").
-            output_attr_name: The output attribute name
-                (e.g., "lcoe_per_mwh").
-
-        Returns:
-            Dotted hierarchy path
-            (e.g., "solar_battery_plant.lcoe.lcoe_per_mwh").
+        Use ``make_scoped_key()`` from ``core.identifier_types`` instead.
         """
-        segments = usage_qualified_name.split("__")
-        return ".".join(segments[1:]) + "." + output_attr_name
+        return make_scoped_key(usage_qualified_name, output_attr_name)
+
+    # ------------------------------------------------------------------
+    # Properties and diagnostics
+    # ------------------------------------------------------------------
 
     def __len__(self) -> int:
-        """Number of lookup keys in the registry (for diagnostics)."""
-        return len(self._index)
+        """Total number of lookup keys across all registries."""
+        return (
+            len(self._scoped) + len(self._sysml_qn) + len(self._alias)
+            + len(self._compat) + len(self._canonical)
+        )
 
     def __repr__(self) -> str:
-        """Diagnostic repr showing key and channel counts."""
+        """Diagnostic repr showing registry sizes."""
         return (
-            f"OutputRegistry(keys={len(self._index)}, "
+            f"OutputRegistry(scoped={len(self._scoped)}, "
+            f"sysml_qn={len(self._sysml_qn)}, "
+            f"alias={len(self._alias)}, "
+            f"compat={len(self._compat)}, "
             f"channels={len(self._canonical)})"
         )
 
     @property
-    def canonical_channels(self) -> frozenset[str]:
+    def canonical_channels(self) -> frozenset[CanonicalChannel]:
         """Read-only view of all canonical channel names."""
         return frozenset(self._canonical)
 
@@ -172,8 +244,7 @@ def is_transitive_default(default_value: Any) -> bool:
     as opposed to a numeric literal ("3.14"), None, or a bare name ("width").
 
     Used by Phase 4 registration to filter candidates for transitive alias
-    registration. Empirically validated by Spike 7: 128 attrs tested,
-    correct for all. Only 2 transitive defaults exist across all models.
+    registration.
 
     Args:
         default_value: The design attribute's default_value (any type).

@@ -211,8 +211,11 @@ class TestRegisterAlias:
 
     def test_alias_collision_refuses_overwrite(self, caplog):
         reg = OutputRegistry()
-        reg.register("channel_A", ["shared.key"])
+        reg.register("channel_A", [])
         reg.register("channel_B", [])
+        # Register alias for shared.key -> channel_A
+        reg.register_alias("shared.key", "channel_A")
+        # Attempt to re-register same alias key -> channel_B
         with caplog.at_level(logging.WARNING):
             reg.register_alias("shared.key", "channel_B")
         assert "collision" in caplog.text.lower()
@@ -445,9 +448,9 @@ class TestDiagnostics:
     def test_repr_shows_key_and_channel_counts(self):
         reg = OutputRegistry()
         reg.register("ch_A", ["key_1", "key_2"])
-        # 1 canonical self-key + 2 lookup keys = 3 keys, 1 channel
-        assert repr(reg) == "OutputRegistry(keys=3, channels=1)"
+        # 2 compat keys + 1 canonical channel
+        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, compat=2, channels=1)"
 
     def test_repr_empty_registry(self):
         reg = OutputRegistry()
-        assert repr(reg) == "OutputRegistry(keys=0, channels=0)"
+        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, compat=0, channels=0)"

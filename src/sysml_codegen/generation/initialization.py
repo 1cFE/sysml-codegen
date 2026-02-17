@@ -14,9 +14,6 @@ from typing import Any
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
-from sysml_codegen.core.models import ChannelAlias
-from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
-
 from sysml_codegen.analysis.dependency_backtracker import (
     BacktrackingResult,
     DependencyBacktracker,
@@ -26,6 +23,15 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
+from sysml_codegen.core.identifier_types import (
+    CanonicalChannel,
+    ScopedKey,
+    SysMLQN,
+    make_canonical_channel,
+    make_scoped_key,
+)
+from sysml_codegen.core.models import ChannelAlias
+from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
 from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
@@ -484,6 +490,15 @@ def _scope_aggregation_expressions(
             part_usage_names=hierarchy_data.part_usage_names,
         )
 
+        if not dotted_paths:
+            logger.warning(
+                "Aggregation expression '%s' on PartDef '%s' produced zero "
+                "scoped modules — PartDef may not be instantiated in the design",
+                agg_expr.attribute_name,
+                agg_expr.owning_part_qn,
+            )
+            continue
+
         for dotted in dotted_paths:
             # Reconstruct __-separated path for ScopedAggregationData.instance_path
             if design_prefix:
@@ -531,25 +546,35 @@ def build_output_registry(
 
     # ------------------------------------------------------------------
     # Phase 1: Canonical channels
+    #
+    # Typed registration puts Key_C, Key_E_stripped, SysML QN into typed
+    # registries. Legacy keys (Key_A, Key_D, Key_E full, Key_F, bare) go
+    # into _compat via deprecated register() for backtracker backward
+    # compat. Typed lookup methods do NOT see _compat keys. The _compat
+    # dict is removed when C11 updates the backtracker to typed dispatch.
     # ------------------------------------------------------------------
     phase1_count = 0
 
-    # Phase 1a: CalcUsage outputs (Key_A, Key_B, Key_C)
+    # Phase 1a: CalcUsage outputs
     for usage in calc_usages:
         calc_def = calc_def_by_name.get(usage.calc_def_name)
         if not calc_def:
             continue
         for attr in calc_def.output_attributes:
-            canonical = get_channel_name(usage.qualified_name, attr.name)
+            canonical = make_canonical_channel(usage.qualified_name, attr.name)
+            key_c = make_scoped_key(usage.qualified_name, attr.name)
+            # Typed: Key_C only (REQ-OR-05, REQ-OR-08)
+            registry.register_scoped(key_c, canonical)
+            # Compat: Key_A for backtracker Step 1 resolve()
             key_a = f"{usage.instance_name}.{attr.name}"
-            # Key_B = canonical (self-registered by register())
-            key_c = OutputRegistry.derive_key_c(usage.qualified_name, attr.name)
-            registry.register(canonical, [key_a, key_c])
+            registry.register(canonical, [key_a])
             phase1_count += 1
 
-    # Phase 1b: Aggregation outputs (Key_D, Key_E, alias variants)
+    # Phase 1b: Aggregation outputs
     for agg in aggregation_data:
-        canonical = get_channel_name(agg.module_eqn, agg.expression.attribute_name)
+        canonical = CanonicalChannel(
+            get_channel_name(agg.module_eqn, agg.expression.attribute_name)
+        )
         instance_parts = agg.instance_path.split("__")
         part_usage = (
             instance_parts[-1]
@@ -557,33 +582,37 @@ def build_output_registry(
             else agg.expression.owning_part_name
         )
 
+        # Typed: Key_E_stripped only (REQ-OR-05)
+        if len(instance_parts) > 1:
+            key_e_stripped = ScopedKey(
+                ".".join(instance_parts[1:] + [agg.expression.attribute_name])
+            )
+            registry.register_scoped(key_e_stripped, canonical)
+
+            # BF-7 alias variants — Key_E_stripped format
+            for alias_name in agg.expression.aliases:
+                alias_stripped = ScopedKey(
+                    ".".join(instance_parts[1:] + [alias_name])
+                )
+                registry.register_scoped(alias_stripped, canonical)
+        else:
+            registry._canonical.add(canonical)
+
+        # Compat: Key_D, Key_E full, bare, alias variants
         key_d = f"{part_usage}.{agg.expression.attribute_name}"
         key_e = ".".join(instance_parts + [agg.expression.attribute_name])
-        keys = [key_d, key_e]
-
-        # Key_E_stripped: scoped dotted key without design prefix.
-        # Required for plant-level → sub-assembly aggregation resolution
-        # where the scoped lookup strips segments[0] from instance_path.
-        if len(instance_parts) > 1:
-            key_e_stripped = ".".join(instance_parts[1:] + [agg.expression.attribute_name])
-            keys.append(key_e_stripped)
-
-        # Bare key
-        keys.append(agg.expression.attribute_name)
-
-        # BF-7 alias variants (from agg.expression.aliases)
+        compat_keys = [key_d, key_e, agg.expression.attribute_name]
         for alias_name in agg.expression.aliases:
-            keys.append(f"{part_usage}.{alias_name}")
-            keys.append(alias_name)
-            keys.append(".".join(instance_parts + [alias_name]))
-            # Alias Key_E_stripped
-            if len(instance_parts) > 1:
-                keys.append(".".join(instance_parts[1:] + [alias_name]))
+            compat_keys.extend([
+                f"{part_usage}.{alias_name}",
+                alias_name,
+                ".".join(instance_parts + [alias_name]),
+            ])
+        registry.register(canonical, compat_keys)
 
-        registry.register(canonical, keys)
         phase1_count += 1
 
-    # Phase 1c: FORMULA computed attribute outputs (Key_F, bare, SysML QN)
+    # Phase 1c: FORMULA computed attribute outputs
     for ca in computed_attributes:
         if ca.classification != ComputedAttributeClassification.FORMULA:
             continue
@@ -591,21 +620,24 @@ def build_output_registry(
             continue
         part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
         module_eqn = f"{part_qn_python}__{ca.python_name}"
-        canonical = get_channel_name(module_eqn, ca.python_name)
+        canonical = CanonicalChannel(get_channel_name(module_eqn, ca.python_name))
 
-        key_f = f"{ca.owning_part_name}.{ca.python_name}"
-        keys = [key_f, ca.python_name]  # dotted + bare
-
-        # SysML QN key
+        # Typed: SysML QN only (REQ-OR-05)
         if ca.owning_part_qualified_name:
-            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-            keys.append(sysml_qn)
+            sysml_qn_key = SysMLQN(f"{ca.owning_part_qualified_name}::{ca.name}")
+            registry.register_sysml_qn(sysml_qn_key, canonical)
+        else:
+            registry._canonical.add(canonical)
 
-        registry.register(canonical, keys)
+        # Compat: Key_F + bare for backtracker secondary resolution
+        key_f = f"{ca.owning_part_name}.{ca.python_name}"
+        registry.register(canonical, [key_f, ca.python_name])
+
         phase1_count += 1
 
     # ------------------------------------------------------------------
     # Phase 2: CHAIN aliases (source="redefinition")
+    # Use resolve() to find canonical_name (may be in typed or compat)
     # ------------------------------------------------------------------
     phase2_count = 0
     for alias in channel_aliases:
@@ -613,7 +645,7 @@ def build_output_registry(
             continue
         resolved = registry.resolve(alias.canonical_name)
         if resolved:
-            registry.register_alias(alias.alias_name, resolved)
+            registry.register_alias(ScopedKey(alias.alias_name), resolved)
             phase2_count += 1
         else:
             logger.warning(
@@ -624,6 +656,7 @@ def build_output_registry(
 
     # ------------------------------------------------------------------
     # Phase 3: EXPOSE_PURE aliases (source="expose_pure")
+    # Use resolve() for canonical_name resolution
     # ------------------------------------------------------------------
     phase3_count = 0
     for alias in channel_aliases:
@@ -635,7 +668,7 @@ def build_output_registry(
             owning_part_short = qn.rsplit("::", 1)[-1]
         else:
             owning_part_short = qn.split("__")[-1]
-        scoped_key = f"{owning_part_short}.{alias.alias_name}"
+        scoped_key = ScopedKey(f"{owning_part_short}.{alias.alias_name}")
         resolved = registry.resolve(alias.canonical_name)
         if resolved:
             registry.register_alias(scoped_key, resolved)
@@ -649,14 +682,16 @@ def build_output_registry(
 
     # ------------------------------------------------------------------
     # Phase 4: Transitive design attribute aliases
+    # Use resolve() for default_value resolution
     # ------------------------------------------------------------------
     phase4_count = 0
     for _path, attrs in design_attributes.items():
         for attr in attrs:
             if not is_transitive_default(attr.default_value):
                 continue
-            key = f"{attr.parent_part}.{attr.name}"
-            resolved = registry.resolve(str(attr.default_value))
+            key = ScopedKey(f"{attr.parent_part}.{attr.name}")
+            val = str(attr.default_value)
+            resolved = registry.resolve(val)
             if resolved:
                 registry.register_alias(key, resolved)
                 phase4_count += 1

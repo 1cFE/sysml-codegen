@@ -34,10 +34,10 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] Pydantic models validate with real data (construct from extraction output)
   - [x] Containment hierarchy matches doc 09 diagram
   - [x] AggregationExpressionData has all 15 fields
-  - [ ] NewType wrappers (SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey) defined and importable
+  - [x] NewType wrappers (SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey) defined and importable *(C08, 2026-02-17 — `core/identifier_types.py`)*
   - [ ] Field types in extraction/analysis/core/resolution models use typed names per Doc 09 table
-  - [ ] `CanonicalChannel` wraps PQN-format output channel names; constructor rejects `::` and `.`
-  - [ ] `ScopedKey` wraps dotted hierarchy keys; constructor rejects `::`; `from_eqn()` replaces `derive_key_c()`
+  - [x] `CanonicalChannel` wraps PQN-format output channel names; `make_canonical_channel()` constructor *(C08, 2026-02-17)*
+  - [x] `ScopedKey` wraps dotted hierarchy keys; `make_scoped_key()` replaces `derive_key_c()` *(C08, 2026-02-17)*
 
 ### C02 — Naming Conventions
 - **Doc**: [15-naming-conventions.md](15-naming-conventions.md)
@@ -155,52 +155,53 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - `alias_lookup(ScopedKey) -> CanonicalChannel | None` — cross-package EXPOSE_PURE lookup
   - `ScopedKey.from_eqn(usage_eqn, attr_name)` — replaces `derive_key_c()`
 - **AC**:
-  - [ ] Three typed registries: scoped (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`), alias (`dict[ScopedKey, CanonicalChannel]`)
-  - [ ] No `dict[str, str]` — all registry internals use typed keys and values
-  - [ ] No `resolve(key)` single-method API — each registry has its own typed lookup
-  - [ ] Key_A, Key_D, Key_E full, Key_F, bare keys NOT registered (eliminated per FR-3)
-  - [ ] Scoped and SysML QN registries: unique by construction (no collision policy needed)
-  - [ ] Alias registry: first-wins collision policy retained (with warning)
-  - [ ] `register_alias()` enforces phase ordering (target must already be canonical)
-  - [ ] Phase 2-4 aliases resolve through typed lookup before registering
-  - [ ] `ScopedKey.from_eqn()` strips design prefix, joins with dots (replaces `derive_key_c()`)
-  - [ ] `canonical_channels` property returns `frozenset[CanonicalChannel]`
-  - [ ] Verified with real channels from solar_battery and catf_mfe extraction output
+  - [x] Three typed registries: scoped (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`), alias (`dict[ScopedKey, CanonicalChannel]`)
+  - [x] No `dict[str, str]` — typed registries use typed keys and values (`_compat` bridge dict holds legacy keys for deprecated `resolve()`, removed in C11)
+  - [x] Each registry has its own typed lookup — `scoped_lookup()`, `sysml_qn_lookup()`, `alias_lookup()`; deprecated `resolve()` kept for backtracker backward compat
+  - [x] Key_A, Key_D, Key_E full, Key_F, bare NOT in typed registries — moved to `_compat` (invisible to typed lookups), eliminated in C11
+  - [x] Scoped and SysML QN registries: raise on duplicate key with different channel
+  - [x] Alias registry: first-wins collision policy retained (with warning)
+  - [x] `register_alias()` enforces phase ordering (target must already be canonical)
+  - [x] Phase 2-4 aliases resolve before registering
+  - [x] `make_scoped_key()` strips design prefix, joins with dots (replaces `derive_key_c()`)
+  - [x] `canonical_channels` property returns `frozenset[CanonicalChannel]`
+  - [x] Verified with real channels from solar_battery and catf_mfe extraction output
+- **Tests**: 32 conformance tests in `tests/conformance/test_output_registry.py`
 
 ### C09 — Virtual Binding Rewrite
 - **Doc**: [12-virtual-binding-rewrite.md](12-virtual-binding-rewrite.md)
 - **REQs**: REQ-VBR-01 through REQ-VBR-07
-- **Current location**: `generation/initialization.py` (to be extracted)
+- **Current location**: `generation/initialization.py` (to be extracted in Phase 7.1)
 - **Interfaces**:
   - Input: `list[CalcUsageData]`, `HierarchyExtractionResult`
   - Output: mutated `CalcUsageData.bindings` (in-place)
-- **AC**:
-  - [ ] Override index keyed by `(full_parent_path, leaf_attribute_name)`
-  - [ ] Deep-path joins intermediate segments with `__`
-  - [ ] LITERAL override: sets binding_type=LITERAL, copies literal_value
-  - [ ] CHAIN override: replaces source_path
-  - [ ] Template copies (is_template=True) skipped
-  - [ ] Already-LITERAL or no source_path skipped
-  - [ ] Rewrite completes before downstream (backtracker, registry build)
-  - [ ] Test: extract solar_battery, apply rewrite, verify binding changes
+- **AC**: *(all verified 2026-02-17 — 38 tests in `tests/conformance/test_virtual_binding_rewrite.py`)*
+  - [x] Override index keyed by `(full_parent_path, leaf_attribute_name)`
+  - [x] Deep-path joins intermediate segments with `__`
+  - [x] LITERAL override: sets binding_type=LITERAL, copies literal_value
+  - [x] CHAIN override: replaces source_path (tested with constructed data — zero CHAIN overrides in fixtures)
+  - [x] Template copies (is_template=True) skipped
+  - [x] Already-LITERAL or no source_path skipped
+  - [x] Rewrite completes before downstream (backtracker, registry build) — verified via AST static analysis
+  - [x] Test: extract solar_battery, apply rewrite, verify binding changes (13 overrides reconstructed and verified)
 
 ### C10 — Aggregation Scoping
 - **Doc**: [13-aggregation-scoping.md](13-aggregation-scoping.md)
 - **REQs**: REQ-AS-01 through REQ-AS-08
-- **Current location**: `generation/initialization.py` (to be extracted)
+- **Current location**: `generation/initialization.py` (to be extracted in Phase 7.1)
 - **Interfaces**:
   - Input: extraction aggregation data, PartDefinitionData, CalcUsageData
   - Output: `list[ScopedAggregationData]`, `list[ChannelAlias]`
-- **AC**:
-  - [ ] One ScopedAggregationData per design instance (one-to-many expansion)
-  - [ ] Direct CalcUsage match strategy before child-walk fallback
-  - [ ] Instance paths: `__`-separated converted to dotted, design prefix stripped
-  - [ ] CHAIN aliases only for non-deep-path with `.` in source_path
-  - [ ] Phase 1b registration of canonical channels per ScopedAggregationData
-  - [ ] Phase 2 resolution of ChannelAlias before registering
-  - [ ] module_eqn = `"{instance_path}__{attribute_name}"`
-  - [ ] Test: solar_battery model produces expected scoped modules
-  - [ ] Zero-instance case logs WARNING with PartDef QN and attribute name (REQ-AS-08)
+- **AC**: *(all verified 2026-02-17 — 47 tests in `tests/conformance/test_aggregation_scoping.py`)*
+  - [x] One ScopedAggregationData per design instance (one-to-many expansion)
+  - [x] Direct CalcUsage match strategy before child-walk fallback
+  - [x] Instance paths: `__`-separated converted to dotted, design prefix stripped
+  - [x] CHAIN aliases only for non-deep-path with `.` in source_path
+  - [x] Phase 1b registration of canonical channels per ScopedAggregationData
+  - [x] Phase 2 resolution of ChannelAlias before registering
+  - [x] module_eqn = `"{instance_path}__{attribute_name}"`
+  - [x] Test: solar_battery model produces expected scoped modules (20 expressions, 41 CHAIN aliases match snapshot)
+  - [x] Zero-instance case logs WARNING with PartDef QN and attribute name (REQ-AS-08)
 
 ---
 
@@ -463,15 +464,15 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **REQs**: FR-1 through FR-6, NFR-1 through NFR-3
 - **Scope**: Design intent document defining the type system and registry architecture
 - **AC**:
-  - [ ] All 5 typed identifier types defined: SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey
-  - [ ] All 3 typed registries defined: Scoped, SysML QN, Alias
-  - [ ] All 5 eliminated key formats documented with zero-hit evidence: Key_A, Key_D, Key_E full, Key_F, bare
-  - [ ] Type-directed dispatch table present: CHAIN → scoped/alias, REFERENCE → SysML QN/scoped
-  - [ ] Constructor invariants documented: ScopedKey rejects `::`, SysMLQN rejects `__`
-  - [ ] Uniqueness guarantee: scoped/SysML QN unique by construction, alias retains first-wins
-  - [ ] NFR notes: NewType for zero runtime cost, mypy --strict, incremental adoption
-  - [ ] Evidence base: citations from spike research
-  - [ ] Cross-references to all 7 amended docs (03, 04, 09, 10, 11, 15, 24)
+  - [x] All 5 typed identifier types defined: SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey *(TRR-1 doc 27 §Typed Identifier Types, validated 2026-02-17)*
+  - [x] All 3 typed registries defined: Scoped, SysML QN, Alias *(TRR-1 doc 27 §Typed Registries, validated 2026-02-17)*
+  - [x] All 5 eliminated key formats documented with zero-hit evidence: Key_A, Key_D, Key_E full, Key_F, bare *(TRR-1 doc 27 §Eliminated Keys, validated 2026-02-17)*
+  - [x] Type-directed dispatch table present: CHAIN → scoped/alias, REFERENCE → SysML QN/scoped *(TRR-1 doc 27 §Type-Directed Resolution Dispatch, validated 2026-02-17)*
+  - [x] Constructor invariants documented: ScopedKey rejects `::`, SysMLQN rejects `__` *(TRR-1 doc 27 §Constructor Invariants, validated 2026-02-17)*
+  - [x] Uniqueness guarantee: scoped/SysML QN unique by construction, alias retains first-wins *(TRR-1 doc 27 §Uniqueness Guarantee, validated 2026-02-17)*
+  - [x] NFR notes: NewType for zero runtime cost, mypy --strict, incremental adoption *(TRR-1 doc 27 §NFR Notes, validated 2026-02-17)*
+  - [x] Evidence base: citations from spike research *(TRR-1 doc 27 §Evidence Base, validated 2026-02-17)*
+  - [x] Cross-references to all 7 amended docs (03, 04, 09, 10, 11, 15, 24) *(TRR-1 doc 27 §Cross-References, validated 2026-02-17)*
 
 ---
 

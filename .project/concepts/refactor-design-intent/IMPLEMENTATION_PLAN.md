@@ -248,20 +248,16 @@ All conformance test acceptance criteria in C08, C11, C12 updated to match typed
 **Goal**: Build and validate the three infrastructure components that sit between
 extraction and analysis. Each is independently testable.
 
-- [ ] **2.1 — Output Registry Spike (C08)**
-  - **Refs**: [10-output-registry.md](10-output-registry.md)
-  - Write `tests/conformance/test_output_registry.py`:
-    - Register channels using real PQNs from extraction snapshots
-    - Verify `scoped_lookup(ScopedKey)` resolves to `CanonicalChannel`
-    - Verify `sysml_qn_lookup(SysMLQN)` resolves to `CanonicalChannel`
-    - Verify `alias_lookup(ScopedKey)` resolves to `CanonicalChannel`
-    - Verify collision policy (alias: first wins, warning logged; scoped/SysML QN: unique by construction)
-    - Verify phase ordering enforcement
-    - Verify `ScopedKey.from_eqn()` derivation for scoped lookups
-  - If current impl needs changes, make them. If not, just lock it down with tests.
-  - **Acceptance**: REQ-OR-01 through REQ-OR-08 all green
+- [x] **2.1 — Output Registry (C08)** *(completed 2026-02-17)*
+  - **Refs**: [10-output-registry.md](10-output-registry.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
+  - Created 5 `NewType` wrappers (`SysMLQN`, `EQN`, `PQN`, `CanonicalChannel`, `ScopedKey`) + 2 constructor functions in `core/identifier_types.py`
+  - Refactored `OutputRegistry`: 3 typed dicts + typed lookup methods + `_compat` dict for legacy keys
+  - Refactored `build_output_registry()`: typed registration + legacy compat keys
+  - 32 conformance tests in `tests/conformance/test_output_registry.py`
+  - Dead keys (Key_A, Key_F, bare) in `_compat` only (invisible to typed lookups), removed in C11
+  - **Acceptance**: REQ-OR-01 through REQ-OR-08 all green (1080 tests, 0 failures)
 
-- [ ] **2.2 — Virtual Binding Rewrite Spike (C09)**
+- [x] **2.2 — Virtual Binding Rewrite Spike (C09)** *(completed 2026-02-17)*
   - **Refs**: [12-virtual-binding-rewrite.md](12-virtual-binding-rewrite.md)
   - **Approach**: Extract `_rewrite_virtual_bindings()` from `generation/initialization.py`
     into a standalone function (target: `orchestration/virtual_binding_rewrite.py` or keep
@@ -274,22 +270,19 @@ extraction and analysis. Each is independently testable.
     - Verify template copies skipped
     - Verify already-LITERAL bindings untouched
     - Verify deep-path override index key format
-  - **Acceptance**: REQ-VBR-01 through REQ-VBR-07 all green
+  - **Acceptance**: REQ-VBR-01 through REQ-VBR-07 all green (1118 tests, 0 failures)
 
-- [ ] **2.3 — Aggregation Scoping Spike (C10)**
+- [x] **2.3 — Aggregation Scoping Spike (C10)** *(completed 2026-02-17)*
   - **Refs**: [13-aggregation-scoping.md](13-aggregation-scoping.md)
-  - **Approach**: Extract `_scope_aggregation_expressions()` similarly
-  - Write `tests/conformance/test_aggregation_scoping.py`:
-    - Load solar_battery extraction snapshot
-    - Scope aggregation expressions
-    - Verify one-to-many expansion (count ScopedAggregationData vs PartDef count)
-    - Verify instance path format (dotted, design prefix stripped)
-    - Verify CHAIN alias generation
-    - Verify module_eqn format
-  - **Acceptance**: REQ-AS-01 through REQ-AS-07 all green
+  - Validated all 3 scoping functions (`find_instance_paths_for_partdef`, `_scope_aggregation_expressions`, `_build_chain_aliases`) with real solar_battery and issue22 data
+  - Added REQ-AS-08 implementation: `logger.warning()` for zero-instance case (6 lines in `initialization.py`)
+  - 47 conformance tests in `tests/conformance/test_aggregation_scoping.py`
+  - Both Strategy 1 (direct match) and Strategy 2 (child-walk fallback) covered by real data
+  - 41 CHAIN aliases verified against snapshot; 12 cas_category CHAIN redefs correctly filtered
+  - **Acceptance**: REQ-AS-01 through REQ-AS-08 all green (1165 tests, 0 failures)
 
-**Checkpoint 2**: [ ] Core infrastructure proven. Output registry, virtual binding rewrite,
-and aggregation scoping all independently validated. ~40-60 new conformance tests.
+**Checkpoint 2**: [x] Core infrastructure proven. 117 new conformance tests
+(C08: 32, C09: 38, C10: 47). 1165 total tests, 0 failures. *(2026-02-17)*
 
 ---
 
@@ -750,6 +743,47 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    version is broader (`_is_any_is_instance_call`). If a fourth copy appears, extract to
    `tests/helpers/static_analysis.py`.
 
+### C09 Virtual Binding Rewrite Conformance (2026-02-17)
+
+1. **Pre-rewrite reconstruction from post-rewrite snapshots works reliably.** The approach
+   of reversing `owning_part_def_qn` from `__` to `::` format to reconstruct `source_path`
+   is deterministic for all 13 solar_battery overrides. This pattern is directly reusable
+   for C10 (aggregation scoping) which faces the same post-mutation snapshot issue.
+
+2. **`_rewrite_virtual_bindings()` is idempotent.** Calling on already-rewritten data returns
+   0 with no side effects. LITERAL bindings have `source_path=None`, triggering the guard
+   before leaf extraction.
+
+3. **Zero CHAIN overrides across all 6 fixture models.** All `design_overrides` in every
+   fixture model are `RedefinitionType.LITERAL`. CHAIN override behavior verified only with
+   constructed test data using real qualified names from solar_battery.
+
+4. **EXPRESSION overrides silently skipped.** The function's `if/elif` handles only LITERAL
+   and CHAIN. EXPRESSION overrides match in the index but fall through without mutation.
+   This is correct per the design intent doc but undocumented.
+
+### C10 Aggregation Scoping Conformance (2026-02-17)
+
+1. **All three scoping functions fully testable with real fixture data.** Unlike C09 (which
+   needed constructed CHAIN override data), C10 has complete coverage from solar_battery:
+   41 qualifying CHAIN redefinitions, both instance discovery strategies exercised, and 20
+   scoped aggregation outputs verifiable against the snapshot. No constructed test data needed.
+
+2. **Strategy 2 (child-walk) is the dominant instance discovery strategy.** 3 of 4 PartDefs
+   with aggregation expressions use Strategy 2 (Battery_System, Site_Infrastructure,
+   Solar_Battery_Plant). Only Solar_Array uses Strategy 1 (direct match). This is because
+   assembly-level PartDefs don't own virtual CalcUsages directly — they aggregate child
+   PartUsage outputs.
+
+3. **cas_category CHAIN redefinitions correctly filtered by dot-in-source_path guard.** 12
+   CHAIN redefinitions with bare CAS codes (no dot in `source_path`) are filtered out. These
+   are entry-point identifiers, not channel chains. This validates REQ-AS-04's filter design.
+
+4. **C09 Learning #1 (post-mutation snapshot) NOT needed for C10.** C10's scoping functions
+   create new `ScopedAggregationData` objects from raw inputs — they don't mutate the hierarchy
+   data. The snapshot contains both raw inputs and expected outputs side-by-side, enabling
+   straightforward input→output comparison without reconstruction.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -803,6 +837,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 03-resolution-overview.md | Scope Problem updated; Key_A refs removed; typed registries | TRR spec (2026-02-17) | Yes (TRR-8) |
 | 19-ast-dispatch-invariant.md | Correct "8 files" → "8 multi-type dispatch functions across 5 files"; note `_extract_single_binding` not `extract_binding_info` | C07 conformance (2026-02-17) | No |
 | 19-ast-dispatch-invariant.md | Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types) | C07 conformance (2026-02-17) | No |
+| IMPLEMENTATION_PLAN.md Step 2.3 | Change "REQ-AS-01 through REQ-AS-07" to "REQ-AS-01 through REQ-AS-08" in acceptance criteria | C10 conformance (2026-02-17) | Yes |
 
 ---
 
@@ -819,3 +854,6 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C05 Computed Attributes | 956 | 37 | 993 | 2026-02-17 |
 | C06 Hierarchy Resolver | 986 | 36 | 1022 | 2026-02-17 |
 | C07 AST Dispatch Invariant | 1027 | 26 | 1053 | 2026-02-17 |
+| C08 Output Registry | 1053 | 32 | 1080 | 2026-02-17 |
+| C09 Virtual Binding Rewrite | 1080 | 38 | 1118 | 2026-02-17 |
+| C10 Aggregation Scoping | 1118 | 47 | 1165 | 2026-02-17 |
