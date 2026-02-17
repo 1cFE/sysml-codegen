@@ -131,6 +131,15 @@ PipelineModule(
 [aggregation scoping](13-aggregation-scoping.md). Rollup across child part usages.
 Additional inputs: `expose_aliases` ([EXPOSE_PURE](16-computed-attributes.md) alias map
 for LocalTerms), `usage_type_map` (type-aware PartDef QN resolution -- see [doc 18](18-literal-value-propagation.md)).
+
+> **C16 conformance finding (2026-02-17)**: The `usage_type_map` (Strategy 1
+> in `_find_literal_redefinition()`) is **essential** when the PartUsage name
+> differs from the PartDef name. In solar_battery, the usage `permitting` types
+> to PartDef `Permitting_Interconnect`. Name-based Strategy 2 fails because
+> `sanitize_name("Permitting_Interconnect").lower()` != `"permitting"`.
+> Strategy 1 resolves this via `usage_type_map[("Site_Infrastructure",
+> "permitting")]` → `"Permitting_Interconnect"`.
+
 Expression is decomposed into three term types (REQ-MF-04):
 
 ### 4a. SumTerm -- `sum(child.attr * count)`

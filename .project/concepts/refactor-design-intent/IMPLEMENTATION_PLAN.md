@@ -409,12 +409,13 @@ typed dispatch (no `_compat` dependency). The two resolution paths are verified 
 
 - [ ] **4.4 — Entry Point Classification (C17)**
   - **Refs**: [06-entry-point-classifier.md](06-entry-point-classifier.md)
+  - **C16 cross-component warning**: C16 creates DESIGN_ATTRIBUTE entry points via in-place mutation of the shared `entry_points` dict. C17 must verify these factory-created EPs retain `entry_type=DESIGN_ATTRIBUTE` and are never re-classified by `_classify_entry_points()`.
   - Write `tests/conformance/test_entry_point_classifier.py`:
     - Classify entry points from real BacktrackingResult
     - Verify precedence: DESIGN_ATTRIBUTE > LIBRARY_DEFAULT > USAGE_LITERAL
     - Verify float conversion of default_value
     - Verify orphan -> "system_design" fallback
-    - Verify factory EPs not re-classified
+    - Verify factory EPs not re-classified (C14, C15, C16 all create DESIGN_ATTRIBUTE EPs)
   - **Acceptance**: REQ-EPC-01 through REQ-EPC-08 all green
 
 - [ ] **4.5 — Graph Assembly (C18)**
@@ -609,6 +610,18 @@ the target architecture. This is pure refactoring — no behavior changes.
   - If yes, refactor to pass needed data through ComputationGraph/PipelineModule
   - This is the REQ-PIPE-07 / REQ-GEN-01 endgame
 
+- [ ] **7.7 — Factory entry_points mutation → pure return refactor**
+  - All 3 module factories deviate from REQ-MF-01's "pure data transformer" aspiration in the same way:
+    - C14 (CalcUsage): reads but does not mutate entry_points (already pure)
+    - C15 (FORMULA): mutates entry_points dict in-place (documented deviation)
+    - C16 (Aggregation): mutates entry_points dict in-place (documented deviation)
+  - **Fix**: Refactor C15 and C16 factories to return `(PipelineModule, dict[str, EntryPoint])` instead of mutating the shared dict. Callers merge returned EPs.
+  - **AC**:
+    - [ ] No `entry_points[k] = v` inside any factory function body
+    - [ ] All 3 factories return `(PipelineModule, dict[str, EntryPoint])`
+    - [ ] Callers (`build_computation_graph()`) merge returned dicts into the shared entry_points
+    - [ ] All conformance tests still green (C14: 48, C15: 32, C16: 32)
+
 **Final Checkpoint**: [ ] Full test suite green (660+ existing + ~200-250 new conformance tests).
 All baselines match. All 168+ requirements have at least one test. Codebase matches target
 architecture from STRATEGY.md.
@@ -620,15 +633,15 @@ architecture from STRATEGY.md.
 | Checkpoint | After Phase | What We Verify | Approx New Tests |
 |------------|-------------|----------------|------------------|
 | 0 | Infrastructure | Baselines captured, harness ready | 70 (actual) |
-| 1 | Foundation + Extraction | Data models, naming, extraction, expressions locked | ~60 |
-| 2 | Infrastructure | Registry, VBR, agg scoping proven | ~50 |
-| 3 | Analysis | Backtracker, resolver, groups, dual consistency | ~40 |
-| 4 | Factories + Graph | All module types + graph assembly | ~40 |
+| 1 | Foundation + Extraction | Data models, naming, extraction, expressions locked | 311 (actual) |
+| 2 | Infrastructure | Registry, VBR, agg scoping proven | 117 (actual) |
+| 3 | Analysis | Backtracker, resolver, groups, dual consistency | 136 (actual) |
+| 4 | Factories + Graph | All module types + graph assembly | 112+ (C14-C16 actual: 112; C17+C18 pending) |
 | 5 | Orchestrator | E2E pipeline matches baselines | ~20 |
 | 6 | Generation | All generators validated against graph | ~40 |
-| 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26) | ~10 |
+| 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26), factory purity (7.7) | ~10 |
 
-**Total**: ~270 new conformance tests on top of existing 660.
+**Total**: 800+ new conformance tests on top of existing 660 (746 actual through C16; C17-C25 pending).
 
 ---
 
@@ -1063,8 +1076,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 04-input-resolver.md | Correct REQ-IR-05 "DirectRegistryLookup" → "SysMLQNLookup" | C12 plan Issue #2 (2026-02-17) | Yes (2026-02-17) — also fixed position number (2→1) |
 | 04-input-resolver.md | Note Strategy B zero-exercise for aggregation; Strategy D is no-op placeholder | C12 spike findings (2026-02-17) | Yes (2026-02-17) — coverage notes added to §B and §D |
 | 24-dual-resolution-architecture.md | Note Strategy B asymmetry: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by SysMLQNLookup | X02 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — Known Asymmetry subsection added to Strategy Overlap |
-| 18-literal-value-propagation.md | Note LITERAL redef fallback naturally exercised by SingletonTerms in solar_battery, not SumTerms. SumTerm fallback path valid but not naturally tested | C16 conformance finding #1 (2026-02-17) | No |
-| 05-module-factory.md | Note Strategy 1 (type-aware) essential when usage name differs from PartDef name (permitting → Permitting_Interconnect) | C16 conformance finding #2 (2026-02-17) | No |
+| 18-literal-value-propagation.md | Note LITERAL redef fallback naturally exercised by SingletonTerms in solar_battery, not SumTerms. SumTerm fallback path valid but not naturally tested | C16 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — §Where It's Called conformance note added |
+| 05-module-factory.md | Note Strategy 1 (type-aware) essential when usage name differs from PartDef name (permitting → Permitting_Interconnect) | C16 conformance finding #2 (2026-02-17) | Yes (2026-02-17) — §4 Aggregation Modules conformance note added |
 
 ---
 

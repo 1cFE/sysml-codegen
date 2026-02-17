@@ -125,6 +125,14 @@ resolution fails, call `_find_literal_redefinition(part_usage, attr, ...)`.
 For SumTerms, `part_usage` and `attr` come directly from the term fields.
 For SingletonTerms, they're parsed from `source_path.rsplit(".", 1)`.
 
+> **C16 conformance finding (2026-02-17)**: In solar_battery, the LITERAL
+> redef fallback path is naturally exercised by **SingletonTerms** (permitting
+> costs: raw_material_cost=0.0, fabrication_cost=0.0, installation_cost=0.0),
+> not SumTerms. All SumTerms resolve via upstream channel successfully. The
+> SumTerm fallback path is valid code but requires constructed test data to
+> exercise. This is because Permitting_Interconnect is referenced as
+> SingletonTerms in Site_Infrastructure aggregations, not as SumTerms.
+
 When a literal default is found, the module stays `FULLY_COMPILABLE` (the value
 is known, just user-overridable via JSON). When no literal is found, the entry
 point gets `default_value=None` and compilability drops to `MANUAL_REQUIRED`.
