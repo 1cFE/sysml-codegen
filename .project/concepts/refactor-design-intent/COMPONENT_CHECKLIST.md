@@ -242,17 +242,18 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - `resolve_input(ref, ctx, strategies) -> InputSource`
   - `ResolutionContext`: frozen dataclass with typed output_registry, redefinitions, design_attrs, module_eqn, consumer_scope, instance_path
   - 4 strategies for aggregation SumTerm/SingletonTerm: A (ScopedRegistryLookup → `scoped_lookup(ScopedKey)`), B (SysMLQNLookup → `sysml_qn_lookup(SysMLQN)`), C (ChainRedefinitionFollow), D (DesignAttributeLookup)
-- **AC**:
-  - [ ] Always returns InputSource, NEVER raises
-  - [ ] Strategies execute in declared order; first match wins
-  - [ ] Strategy A produces `ScopedKey`, queries scoped registry (no Key_A ambiguity possible)
-  - [ ] Strategy B queries SysML QN registry for `::` references (not REMOVAL_CANDIDATE — promoted to typed lookup)
-  - [ ] Strategy C produces `ScopedKey` from chain target, queries scoped registry
-  - [ ] Self-reference guard rejects wiring to own channels
-  - [ ] ResolutionContext is immutable (frozen=True), holds typed OutputRegistry
-  - [ ] AGG_STRATEGIES has ChainRedefinitionFollow at position 2 (before B)
-  - [ ] Fallback produces entry_point (never unresolved)
-  - [ ] Same reference in same scope produces same wiring as backtracker (REQ-DRA-04)
+- **AC**: *(all verified 2026-02-17 — 26 tests in `tests/conformance/test_input_resolver.py`)*
+  - [x] Always returns InputSource, NEVER raises — `test_always_returns_input_source` (3 models), `test_unresolvable_ref_returns_entry_point`
+  - [x] Strategies execute in declared order; first match wins — `test_first_match_wins`, `test_strategy_ordering_matches_agg_strategies`
+  - [x] Strategy A produces `ScopedKey`, queries scoped registry (no Key_A ambiguity possible) — `test_scoped_lookup_primary`
+  - [x] Strategy B queries SysML QN registry for `::` references (not REMOVAL_CANDIDATE — promoted to typed lookup) — `test_sysml_qn_lookup`
+  - [x] Strategy C produces `ScopedKey` from chain target, queries scoped registry — `test_chain_redef_resolves_sumterm`, `test_chain_redef_resolves_singleton`
+  - [x] Self-reference guard rejects wiring to own channels — `test_self_reference_guard`
+  - [x] ResolutionContext is immutable (frozen=True), holds typed OutputRegistry — `test_resolution_context_immutable`, `test_resolution_context_fields`
+  - [x] AGG_STRATEGIES has ChainRedefinitionFollow at position 2 (before B) — `test_agg_strategies_ordering`
+  - [x] Fallback produces entry_point (never unresolved) — `test_fallback_entry_point_format`
+  - [x] Same reference in same scope produces same wiring as backtracker (REQ-DRA-04) — `test_cross_path_consistency`
+- **Tests**: 26 conformance tests in `tests/conformance/test_input_resolver.py`
 
 ### C13 — ParameterGroupDeriver
 - **Doc**: [17-parameter-group-deriver.md](17-parameter-group-deriver.md)

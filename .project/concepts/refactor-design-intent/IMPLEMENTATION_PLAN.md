@@ -336,19 +336,14 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
     confirmed: Key_A aliases (first-wins) for catf_mfe cross-scope, Key_F scoped registration for
     solar_battery REFERENCE secondary case 1, existing Key_E_stripped for case 2.
 
-- [ ] **3.2 — Input Resolver Spike (C12)**
+- [x] **3.2 — Input Resolver (C12)** *(completed 2026-02-17)*
   - **Refs**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
-  - **Approach**: This may need to be extracted from graph_builder.py into its own module.
-    If it already exists as `resolve_input()`, write conformance tests. If not, spike it.
-  - Write `tests/conformance/test_input_resolver.py`:
-    - Build ResolutionContext from real extraction + real OutputRegistry
-    - Test each strategy individually with known inputs
-    - Test strategy ordering (A before B per AGG_STRATEGIES)
-    - Test self-reference guard
-    - Test fallback to entry_point
-    - Test STANDARD_STRATEGIES and AGG_STRATEGIES ordering
-    - Test immutability of ResolutionContext (attempt mutation, verify frozen)
-  - **Acceptance**: REQ-IR-01 through REQ-IR-07 all green
+  - Created `resolution/input_resolver.py`: `ResolutionContext` (frozen dataclass), 4 strategy callables (A: ScopedRegistryLookup, C: ChainRedefinitionFollow, B: SysMLQNLookup, D: DesignAttributeLookup), `resolve_input()`, `AGG_STRATEGIES`
+  - Spike: 7 questions answered empirically (51 refs, 3 models). Strategy A resolves 94% of refs; A-first ordering safe; zero `::` refs; zero design attr duplicates.
+  - 26 conformance tests in `tests/conformance/test_input_resolver.py`
+  - Regression test verifies resolve_input() produces identical results to _resolve_aggregation_input_channel() for all 51 refs
+  - graph_builder.py integration deferred to C16 (Aggregation Module Factory)
+  - **Acceptance**: REQ-IR-01 through REQ-IR-07, REQ-DRA-02, REQ-DRA-04 all green (1299 tests, 0 failures)
 
 - [ ] **3.3 — ParameterGroupDeriver Conformance (C13)**
   - **Refs**: [17-parameter-group-deriver.md](17-parameter-group-deriver.md)
@@ -929,6 +924,30 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    migration (C11b), where `_resolve_binding_via_registry()` is rewritten to use
    `ScopedKey` construction from all path segments.
 
+### C12 Input Resolver (2026-02-17)
+
+1. **Strategy A is the dominant aggregation resolution path (94% hit rate).** 48/51 refs resolve
+   via ScopedRegistryLookup across 3 models. Strategy C (ChainRedefinitionFollow) resolves 26/51,
+   all of which are also resolved by A with the same channel. Zero ordering conflicts between
+   A-first and C-first — safe to use the design doc's A-C-B-D ordering.
+
+2. **Strategy B (SysMLQNLookup) and Strategy D (DesignAttributeLookup) are zero-exercise for
+   aggregation scope.** No aggregation term ref contains `::`. No aggregation entry point
+   duplicates a design attribute name. Both implemented for completeness; tested only with
+   constructed ResolutionContext data.
+
+3. **No natural REQ-DRA-04 overlap in fixture models.** CalcUsage bindings and aggregation terms
+   reference different parts in different scopes. Cross-path consistency tested by constructing
+   ResolutionContext from CalcUsage binding metadata. Solar_battery: all CHAIN MODULE_OUTPUT
+   resolutions match through both paths.
+
+4. **STANDARD_STRATEGIES not needed.** No non-aggregation caller identified for resolve_input().
+   Removed default parameter — always require explicit strategies argument.
+
+5. **graph_builder.py integration deferred to C16.** The resolve_input() function is proven
+   equivalent to `_resolve_aggregation_input_channel()` via regression test (51/51 refs match).
+   Wiring the call sites is the Aggregation Module Factory's responsibility (C16, Phase 4).
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -997,6 +1016,9 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | COMPONENT_CHECKLIST.md | C06: Update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case" | C5 probe (Phase 2 audit) (2026-02-17) | No |
 | 11-analysis-backtracker.md | Note Step 1b normalization limitation: only extracts last 2 segments of `::` QN, losing intermediate hierarchy for 5+ segment paths. Fix in C11b typed dispatch. | C6 probe (Phase 2 audit) (2026-02-17) | No |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Update issue #7 from "Out of scope" to "Partially addressed (C6 probe)" with Step 1b normalization analysis | C6 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
+| 04-input-resolver.md | Remove STANDARD_STRATEGIES default from resolve_input() signature; always require explicit strategies | C12 spike: no non-aggregation caller (2026-02-17) | No |
+| 04-input-resolver.md | Correct REQ-IR-05 "DirectRegistryLookup" → "SysMLQNLookup" | C12 plan Issue #2 (2026-02-17) | No |
+| 04-input-resolver.md | Note Strategy B zero-exercise for aggregation; Strategy D is no-op placeholder | C12 spike findings (2026-02-17) | No |
 
 ---
 
@@ -1022,3 +1044,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C11 Backtracker Conformance | — | 43 | 1250 (+5 xfail) | 2026-02-17 |
 | C5 Alias Agg Probe (audit) | 1250 | 10 | 1260 (+5 xfail) | 2026-02-17 |
 | C11b Typed Dispatch (C11b) | 1260 | 17 conformance (net +13 after unit test updates) | 1273 (+5 xfail) | 2026-02-17 |
+| C12 Input Resolver | 1273 | 26 | 1299 (+5 xfail) | 2026-02-17 |
