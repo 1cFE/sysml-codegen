@@ -34,8 +34,10 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] Pydantic models validate with real data (construct from extraction output)
   - [x] Containment hierarchy matches doc 09 diagram
   - [x] AggregationExpressionData has all 15 fields
-  - [ ] NewType wrappers (SysMLQN, EQN, PQN, RegistryKey) defined and importable
+  - [ ] NewType wrappers (SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey) defined and importable
   - [ ] Field types in extraction/analysis/core/resolution models use typed names per Doc 09 table
+  - [ ] `CanonicalChannel` wraps PQN-format output channel names; constructor rejects `::` and `.`
+  - [ ] `ScopedKey` wraps dotted hierarchy keys; constructor rejects `::`; `from_eqn()` replaces `derive_key_c()`
 
 ### C02 — Naming Conventions
 - **Doc**: [15-naming-conventions.md](15-naming-conventions.md)
@@ -113,14 +115,17 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] Test with attr_expr_probe fixture (primary), solar_battery (cross-model), catf_mfe (cross-model)
 
 ### C06 — Hierarchy Resolver
-- **Doc**: [01-extraction.md](01-extraction.md), [13-aggregation-scoping.md](13-aggregation-scoping.md)
+- **Doc**: [25-hierarchy-resolver.md](25-hierarchy-resolver.md), [13-aggregation-scoping.md](13-aggregation-scoping.md)
+- **REQs**: REQ-HR-01 through REQ-HR-07
 - **Current location**: `extraction/hierarchy_resolver.py`
-- **AC**:
-  - [ ] Template detection (is_template) correct for all fixture models
-  - [ ] Part usage hierarchy extracted with correct parent/child relationships
-  - [ ] Multiplicity data extracted from PartUsage nodes
-  - [ ] Aggregation term type classification correct (SumTerm, SingletonTerm, LocalTerm)
-  - [ ] FCE classified as SingletonTerm (not LocalTerm) — AST dispatch invariant
+- **AC**: *(all verified 2026-02-17 — 36 tests in `tests/conformance/test_hierarchy_resolver.py`)*
+  - [x] `part_usage_names` correctly maps assembly PartDefs to child PartUsage names for all fixture models
+  - [x] Part usage hierarchy extracted with correct parent/child relationships (`usage_type_map` tuple keys)
+  - [x] Multiplicity data extracted from PartUsage nodes (pv_module=20, inverter=4, battery_pack=8)
+  - [x] Aggregation term type classification correct (SumTerm, SingletonTerm, LocalTerm); all 3 present in solar_battery
+  - [x] FCE classified as SingletonTerm (not LocalTerm) — verified by static analysis + dotted source_path check
+  - [x] Verified with solar_battery_model (78 redefs, 13 overrides, 3 mults, 20 aggs), issue22_model (edge cases), cross-model on all 6 fixtures
+  - Note: REQ-HR-07 alias detection has zero positive-case fixture coverage (no model has CHAIN sibling aliases)
 
 ### C07 — AST Dispatch Invariant
 - **Doc**: [19-ast-dispatch-invariant.md](19-ast-dispatch-invariant.md)
@@ -136,24 +141,29 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ## Layer 2: Core Infrastructure
 
-### C08 — Output Registry
-- **Doc**: [10-output-registry.md](10-output-registry.md)
+### C08 — Output Registry (Typed)
+- **Doc**: [10-output-registry.md](10-output-registry.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
 - **REQs**: REQ-OR-01 through REQ-OR-08
 - **Current location**: `core/output_registry.py`
 - **Interfaces**:
-  - `register(key, canonical_channel)`
-  - `register_alias(alias_key, target)` — with phase enforcement
-  - `resolve(key) -> canonical_channel | None`
-  - `derive_key_c(eqn) -> str`
+  - `register_scoped(ScopedKey, CanonicalChannel)` — Phase 1 CalcUsage (Key_C) and Aggregation (Key_E_stripped)
+  - `register_sysml_qn(SysMLQN, CanonicalChannel)` — Phase 1c FORMULA SysML QN keys
+  - `register_alias(ScopedKey, CanonicalChannel)` — Phase 2-4 aliases with phase enforcement
+  - `scoped_lookup(ScopedKey) -> CanonicalChannel | None` — primary lookup for CHAIN bindings
+  - `sysml_qn_lookup(SysMLQN) -> CanonicalChannel | None` — REFERENCE binding lookup
+  - `alias_lookup(ScopedKey) -> CanonicalChannel | None` — cross-package EXPOSE_PURE lookup
+  - `ScopedKey.from_eqn(usage_eqn, attr_name)` — replaces `derive_key_c()`
 - **AC**:
-  - [ ] Maps every key format (A through F) to canonical PQN
-  - [ ] `resolve()` is exact-match only — no normalization, no fuzzy matching
-  - [ ] Collision policy: first registration wins, logs warning, does not overwrite
-  - [ ] `register_alias()` enforces phase ordering (reject alias to unknown canonical)
-  - [ ] Phase 1 registers all key variants for each channel
-  - [ ] Phase 2-4 aliases resolve through registry before registering
-  - [ ] Key_C strips design prefix, joins with dots
-  - [ ] Key_A registered for diagnostic visibility but NOT used as silent resolution fallback (REQ-OR-08)
+  - [ ] Three typed registries: scoped (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`), alias (`dict[ScopedKey, CanonicalChannel]`)
+  - [ ] No `dict[str, str]` — all registry internals use typed keys and values
+  - [ ] No `resolve(key)` single-method API — each registry has its own typed lookup
+  - [ ] Key_A, Key_D, Key_E full, Key_F, bare keys NOT registered (eliminated per FR-3)
+  - [ ] Scoped and SysML QN registries: unique by construction (no collision policy needed)
+  - [ ] Alias registry: first-wins collision policy retained (with warning)
+  - [ ] `register_alias()` enforces phase ordering (target must already be canonical)
+  - [ ] Phase 2-4 aliases resolve through typed lookup before registering
+  - [ ] `ScopedKey.from_eqn()` strips design prefix, joins with dots (replaces `derive_key_c()`)
+  - [ ] `canonical_channels` property returns `frozenset[CanonicalChannel]`
   - [ ] Verified with real channels from solar_battery and catf_mfe extraction output
 
 ### C09 — Virtual Binding Rewrite
@@ -195,41 +205,45 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ## Layer 3: Analysis
 
-### C11 — DependencyBacktracker
-- **Doc**: [11-analysis-backtracker.md](11-analysis-backtracker.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
+### C11 — DependencyBacktracker (Type-Directed)
+- **Doc**: [11-analysis-backtracker.md](11-analysis-backtracker.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
 - **REQs**: REQ-BT-01 through REQ-BT-08, REQ-DRA-01
 - **Current location**: `analysis/dependency_backtracker.py`
 - **Interfaces**:
-  - Input: root calc usages, OutputRegistry, CalcUsageData, CalculationDefinitionData
+  - Input: root calc usages, OutputRegistry (typed), CalcUsageData, CalculationDefinitionData
   - Output: `BacktrackingResult` (required_usages, dependency_graph, entry_points, binding_resolutions)
 - **AC**:
   - [ ] Every non-literal binding resolved via `_resolve_binding_via_registry()`
-  - [ ] Scoped resolution (Step 0/Key_C) is the primary path for CHAIN bindings
-  - [ ] Step 1 (unscoped Key_A) raises `UnscopedResolutionError` instead of silently returning (REQ-BT-08)
+  - [ ] CHAIN bindings (no `::` in source_path): ScopedKey → scoped registry, then alias registry (cross-package)
+  - [ ] REFERENCE bindings (`::` in source_path): SysMLQN → SysML QN registry, then normalized ScopedKey → scoped registry
+  - [ ] No Key_A references — type-directed dispatch replaces Step 1 cascade
+  - [ ] No `UnscopedResolutionError` — eliminated with Key_A
   - [ ] Cycle detection via path tracking — cycles don't crash, they warn
-  - [ ] Every binding resolves (Step 4 fallback guarantees total resolution)
+  - [ ] Every binding resolves (fallback guarantees total resolution)
   - [ ] Key format: `"{usage_qn}|{param_name}"` for binding_resolutions
   - [ ] Topological sort produces dependency-first ordering
   - [ ] Self-reference guard prevents wiring module to its own output
-  - [ ] Test with real OutputRegistry + real extraction from all fixture models
+  - [ ] Test with real typed OutputRegistry + real extraction from all fixture models
 
-### C12 — Input Resolver (resolve_input)
-- **Doc**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
+### C12 — Input Resolver (resolve_input, Typed)
+- **Doc**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
 - **REQs**: REQ-IR-01 through REQ-IR-07, REQ-DRA-02
 - **Target location**: `resolution/input_resolver.py` (new, extracted from graph_builder)
 - **Scope**: Aggregation SumTerm/SingletonTerm inputs only. FORMULA uses pre-computed attribute resolution map (not resolve_input). LocalTerm uses factory-specific cascade.
 - **Interfaces**:
   - `resolve_input(ref, ctx, strategies) -> InputSource`
-  - `ResolutionContext`: frozen dataclass with output_registry, redefinitions, design_attrs, module_eqn, consumer_scope, instance_path
-  - 5 strategies for aggregation SumTerm/SingletonTerm: A (DirectRegistryLookup), B (SysmlQnNormalization), C (ScopedRegistryLookup), D (ChainRedefinitionFollow), E (DesignAttributeLookup)
+  - `ResolutionContext`: frozen dataclass with typed output_registry, redefinitions, design_attrs, module_eqn, consumer_scope, instance_path
+  - 4 strategies for aggregation SumTerm/SingletonTerm: A (ScopedRegistryLookup → `scoped_lookup(ScopedKey)`), B (SysMLQNLookup → `sysml_qn_lookup(SysMLQN)`), C (ChainRedefinitionFollow), D (DesignAttributeLookup)
 - **AC**:
   - [ ] Always returns InputSource, NEVER raises
   - [ ] Strategies execute in declared order; first match wins
+  - [ ] Strategy A produces `ScopedKey`, queries scoped registry (no Key_A ambiguity possible)
+  - [ ] Strategy B queries SysML QN registry for `::` references (not REMOVAL_CANDIDATE — promoted to typed lookup)
+  - [ ] Strategy C produces `ScopedKey` from chain target, queries scoped registry
   - [ ] Self-reference guard rejects wiring to own channels
-  - [ ] ResolutionContext is immutable (frozen=True)
-  - [ ] AGG_STRATEGIES has ChainRedefinitionFollow at position 2 (before A/B)
+  - [ ] ResolutionContext is immutable (frozen=True), holds typed OutputRegistry
+  - [ ] AGG_STRATEGIES has ChainRedefinitionFollow at position 2 (before B)
   - [ ] Fallback produces entry_point (never unresolved)
-  - [ ] STANDARD_STRATEGIES has 5 strategies with C first
   - [ ] Same reference in same scope produces same wiring as backtracker (REQ-DRA-04)
 
 ### C13 — ParameterGroupDeriver
@@ -442,6 +456,21 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [ ] PipelineModule has all 6 additional fields populated
   - [ ] All generators have `_from_graph()` variants
   - [ ] Generated output identical before/after migration (REQ-PMM-04)
+
+### C27 — Typed Registry Refactor (Design Intent)
+- **Doc**: [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
+- **REQs**: FR-1 through FR-6, NFR-1 through NFR-3
+- **Scope**: Design intent document defining the type system and registry architecture
+- **AC**:
+  - [ ] All 5 typed identifier types defined: SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey
+  - [ ] All 3 typed registries defined: Scoped, SysML QN, Alias
+  - [ ] All 5 eliminated key formats documented with zero-hit evidence: Key_A, Key_D, Key_E full, Key_F, bare
+  - [ ] Type-directed dispatch table present: CHAIN → scoped/alias, REFERENCE → SysML QN/scoped
+  - [ ] Constructor invariants documented: ScopedKey rejects `::`, SysMLQN rejects `__`
+  - [ ] Uniqueness guarantee: scoped/SysML QN unique by construction, alias retains first-wins
+  - [ ] NFR notes: NewType for zero runtime cost, mypy --strict, incremental adoption
+  - [ ] Evidence base: citations from spike research
+  - [ ] Cross-references to all 7 amended docs (03, 04, 09, 10, 11, 15, 24)
 
 ---
 

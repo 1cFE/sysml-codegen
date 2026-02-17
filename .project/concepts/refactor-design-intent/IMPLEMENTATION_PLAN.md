@@ -104,7 +104,7 @@ and real SysML fixture output.
     - Verify EXPOSE_PURE produces alias, not module
   - **Acceptance**: REQ-CA-01 through REQ-CA-07 all green
 
-- [ ] **1.6 — Hierarchy Resolver Conformance (C06)**
+- [x] **1.6 — Hierarchy Resolver Conformance (C06)** *(2026-02-17, 36 tests)*
   - **Refs**: [25-hierarchy-resolver.md](25-hierarchy-resolver.md), [13-aggregation-scoping.md](13-aggregation-scoping.md)
   - Write `tests/conformance/test_hierarchy_resolver.py`:
     - Template detection correct for all fixture models
@@ -125,6 +125,134 @@ and real SysML fixture output.
 
 **Checkpoint 1**: [ ] Foundation locked. All naming, data model, extraction, and expression
 compilation requirements verified. ~50-70 new conformance tests.
+
+---
+
+## Phase TRR: Typed Registry Refactor — Design Doc Updates
+
+**Goal**: Correct the design intent corpus to specify typed identifiers, typed registries,
+and elimination of ambiguous key formats. NO code changes — docs only.
+
+**Prerequisite**: Key_A fallback spike (`.project/research/20260217-060000_key-a-fallback-spike.md`)
+proved the current docs are wrong in multiple places:
+- REQ-BT-08 as written breaks 12 correct resolutions (10 EXPOSE_PURE aliases + 2 SysML QN keys)
+- REQ-NC-07 ("no `::` keys") is factually incorrect — 14 SysML QN keys registered in attr_expr_probe
+- 5 key formats (Key_A, Key_D, Key_E full, Key_F, bare) have zero resolution hits across all 6 models
+
+**Spec**: `.project/active/typed-registry-refactor/spec.md`
+
+### Execution Order (doc dependencies dictate sequencing)
+
+- [ ] **TRR-1 — 27-typed-registry-refactor.md** (NEW)
+  - Type system: SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey with format invariants
+  - Three typed registries: Scoped (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`), Alias (`dict[ScopedKey, CanonicalChannel]`)
+  - Eliminated keys: Key_A, Key_D, Key_E full, Key_F, bare — with zero-hit evidence
+  - Type-directed dispatch: CHAIN → scoped/alias, REFERENCE → SysML QN/scoped
+  - **AC**: All 5 types defined, all 3 registries defined, dispatch table present, evidence cited
+
+- [ ] **TRR-2 — 09-data-models.md**
+  - Add `CanonicalChannel` and `ScopedKey` NewType definitions to Name Type Wrappers section
+  - Add field type rows for OutputRegistry typed keys/values
+  - Replace `_index: dict[str, str]` with 3 typed registries in OutputRegistry description
+  - Expand REQ-DM-08 to include new types
+  - **AC**: All 5 typed identifiers present, OutputRegistry description uses typed registries
+
+- [ ] **TRR-3 — 15-naming-conventions.md**
+  - Correct REQ-NC-07: SysML QN keys exist in own typed registry
+  - Remove "no `::` keys" claim from Section 7 intro
+  - Remove Key_A from Phase 1a table, Key_D from Phase 1b table, Key_F/bare from Phase 1c table
+  - Update Section 10 Summary table: remove dead keys, add CanonicalChannel/ScopedKey
+  - Add doc 27 to Related docs
+  - **AC**: Zero dead key rows in Phase 1 tables, REQ-NC-07 accurate, types consistent
+
+- [ ] **TRR-4 — 10-output-registry.md**
+  - REQ-OR-02: typed lookup methods per registry (not `resolve()`)
+  - REQ-OR-05: eliminate Key_A/D/E-full/F/bare from Phase 1
+  - REQ-OR-08: Key_A not registered at all (no guard needed)
+  - Replace `dict[str, str]` with 3 typed registries throughout
+  - Replace `resolve()` API with `scoped_lookup()`, `sysml_qn_lookup()`, `alias_lookup()`
+  - Remove dead key rows from all Phase 1 tables
+  - Rewrite concrete example with typed constructors
+  - **AC**: Zero `resolve()` as single API method, zero `dict[str, str]`, zero dead key rows
+
+- [ ] **TRR-5 — 11-analysis-backtracker.md**
+  - REQ-BT-08: replace "Step 1 raises" with "dispatch on BindingType"
+  - Rename "5-Step Cascade" → "Type-Directed Resolution Dispatch"
+  - DELETE Step 1 entirely (Key_A guard removed)
+  - Transform Step 0 to CHAIN primary path with ScopedKey
+  - Transform Step 1b to REFERENCE primary path (SysMLQN registry)
+  - Rewrite concrete walkthrough for CHAIN and REFERENCE paths
+  - Remove all `UnscopedResolutionError` references
+  - **AC**: Zero Key_A refs, zero UnscopedResolutionError, CHAIN/REFERENCE dispatch documented
+
+- [ ] **TRR-6 — 04-input-resolver.md**
+  - Strategy A: delete Key_A warning block, query scoped registry
+  - Strategy B: transform to SysML QN registry lookup (remove REMOVAL_CANDIDATE)
+  - Strategy C: produce ScopedKey, query scoped registry
+  - Update ResolutionContext, AGG_STRATEGIES, truth table
+  - **AC**: Zero Key_A refs, strategies use typed registries
+
+- [ ] **TRR-7 — 24-dual-resolution-architecture.md**
+  - REQ-DRA-03: typed registries, no untyped `dict.get()`
+  - Path 1 cascade: binding-type dispatch (CHAIN/REFERENCE paths)
+  - Delete Key_A guard from Stage 1
+  - Transform Stage 1b to REFERENCE SysML QN lookup
+  - Full rewrite of Strategy Overlap table for typed registries
+  - **AC**: Zero Key_A refs, typed registries in cascade, strategy table accurate
+
+- [ ] **TRR-8 — 03-resolution-overview.md**
+  - REQ-RES-07: ScopedKey + typed registries, remove UnscopedResolutionError
+  - Replace `dict[str,str]` with typed registries in Scope Problem section
+  - Update CalcUsage/pseudocode sections with typed references
+  - Add doc 27 to Related docs
+  - **AC**: Zero `dict[str,str]` describing OutputRegistry, zero UnscopedResolutionError
+
+### Cascade Updates (secondary docs — mention-level updates only)
+
+| Doc | Change |
+|-----|--------|
+| 00-pipeline-overview.md | Note typed registries in Step 5.5 description if OutputRegistry mentioned |
+| 01-extraction.md | No changes needed (extraction is upstream of registries) |
+| 02-orchestration.md | Note typed registry in Step 5.5 if OutputRegistry mentioned |
+| 05-module-factory.md | Note typed registry lookups if resolve() referenced |
+| 13-aggregation-scoping.md | Note ScopedKey for Key_E_stripped if mentioned |
+| revision_backlog.md | Mark RB-01 as superseded by doc 27 |
+
+### Validation Criteria
+
+After all TRR edits:
+1. `grep -r "Key_A" *.md` in design intent dir → zero hits outside doc 27 rationale and `_intermediate_` files
+2. `grep -r "dict\[str, str\]" *.md` → zero hits describing OutputRegistry
+3. `grep -r "UnscopedResolutionError" *.md` → zero hits outside `_intermediate_` files
+4. `grep -r "resolve()" *.md` → zero hits describing OutputRegistry single-method API
+5. All REQ cross-references consistent between definition and citation docs
+6. `ScopedKey`, `CanonicalChannel`, `SysMLQN` used consistently across docs 03, 04, 09, 10, 11, 15, 24, 27
+7. No orphan requirement references (every REQ-XX-NN cited exists in its home doc)
+
+### Impact on Subsequent Phases
+
+| Phase.Step | Component | Impact |
+|-----------|-----------|--------|
+| 2.1 | C08 — Output Registry | Conformance tests must verify typed registries, not flat `dict[str,str]`. Test `scoped_lookup()`, `sysml_qn_lookup()`, `alias_lookup()` instead of `resolve()`. |
+| 3.1 | C11 — DependencyBacktracker | Conformance tests must verify binding-type dispatch (CHAIN/REFERENCE), not Step 1 `UnscopedResolutionError`. |
+| 3.2 | C12 — Input Resolver | Strategies use typed registry methods. Strategy A queries scoped registry. Strategy B queries SysML QN registry. |
+| 7.4 | Dead code removal | 10 additional items for removal (see below) |
+
+### Phase 7.4 Additions (from TRR)
+
+- [ ] Key_A registration code in `build_output_registry()` Phase 1a
+- [ ] Key_D registration code in `build_output_registry()` Phase 1b
+- [ ] Key_E full (with design prefix) registration code in Phase 1b
+- [ ] Key_F registration code in `build_output_registry()` Phase 1c
+- [ ] Bare-name registration code in Phase 1b and 1c
+- [ ] `derive_key_c()` method (replaced by `ScopedKey.from_eqn()`)
+- [ ] `resolve()` single-method API on OutputRegistry
+- [ ] `UnscopedResolutionError` class definition
+- [ ] Step 1 code block in `_resolve_binding_via_registry()`
+- [ ] `_key_a_keys: set[str]` if it was added per spike recommendation (moot — Key_A not registered)
+
+**Checkpoint TRR**: [ ] All 8 design docs updated. Validation criteria 1-7 pass.
+All conformance test acceptance criteria in C08, C11, C12 updated to match typed registries.
 
 ---
 
@@ -508,7 +636,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 | # | Issue | Scope Decision | Rationale |
 |---|-------|---------------|-----------|
-| 1 | 16/20 aggregation impls produce invalid Python (`.()` syntax) | Reassigned C04→C06/C07 | `.()` syntax comes from `reconstruct_expression()` in aggregation walker, not expression compiler. Expression compiler only imports `extract_feature_reference_name` from expression_utils.py. |
+| 1 | 16/20 aggregation impls produce invalid Python (`.()` syntax) | Resolved by C06 | Bug was fixed in commit `20b720e` (FCE-before-OE). C06 confirms all 20 solar_battery transformed expressions pass `ast.parse()`. REQ-HR-05 static analysis test prevents regression. |
 | 2 | EXPOSE_COMPUTED pattern deferred | Out of scope | Acknowledged in Doc 16; no model exercises this yet |
 | 3 | agentic-mbse V2 validation rejects valid FORMULA | Out of scope | Upstream fix; tracked in agentic-mbse |
 | 4 | 28+ ADR references point to nonexistent docs | In scope — documentation | Low priority; fix as encountered |
@@ -578,6 +706,30 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    compiler output is valid Python for all attr_expr_probe formulas. Parametrized
    regression tests lock down exact expression strings.
 
+### C06 Hierarchy Resolver Conformance (2026-02-17)
+
+1. **REQ-HR-07 alias detection has zero positive-case fixture coverage.** All 20
+   solar_battery aggregation expressions have empty `aliases` lists. No CHAIN sibling
+   redefinition has `source_path` ending with an aggregation `attribute_name` in any
+   fixture model. The code path exists (`hierarchy_resolver.py:550-557`) but is never
+   exercised with real data.
+
+2. **Deferred Issue #1 (.() syntax) confirmed resolved.** All 20 transformed
+   expressions in solar_battery pass `ast.parse()`. The root cause (FCE-before-OE
+   ordering) is locked down by REQ-HR-05 static analysis test. No `.()` pattern
+   found in any snapshot.
+
+3. **issue22 SumTerm has null multiplicity.** The `widget` PartUsage has multiplicity
+   `[3]` but `count_attribute_name` is None (literal count, no named attribute). The
+   parametric multiply transformation is correctly skipped — `transformed_expression`
+   is just `"widget.total_cost"` with no `*` operator.
+
+4. **Static analysis helpers copied, not shared.** `_find_is_instance_calls_in_function`
+   and `_is_syside_is_instance_call` are duplicated from C04's test file. These are
+   test utilities specific to static analysis verification; sharing via import would
+   create coupling between conformance test files. C07 will likely need the same
+   helpers — consider extracting to `tests/helpers/` if a third copy appears.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -619,6 +771,16 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | IMPLEMENTATION_PLAN.md Deferred Issues | Reassigned issue #1 (".() syntax") from C04 to C06/C07 | C04 conformance — reconstruct_expression() not used by expression compiler (2026-02-17) | Yes |
 | 16-computed-attributes.md | Note UNRESOLVABLE has zero coverage in fixture models | C05 conformance (2026-02-17) | No |
 | COMPONENT_CHECKLIST.md | Consider adding REQ-CA-08 (FORMULA-to-FORMULA limitation) to AC list | C05 conformance — present in design doc but absent from checklist (2026-02-17) | No |
+| COMPONENT_CHECKLIST.md | C06: changed doc ref from `01-extraction.md` to `25-hierarchy-resolver.md`; added REQ-HR-01 through REQ-HR-07; clarified "Template detection" AC to "part_usage_names maps assembly PartDefs to child names" | C06 conformance (2026-02-17) | Yes |
+| 25-hierarchy-resolver.md | Note REQ-HR-07 alias detection has zero positive-case fixture coverage | C06 conformance (2026-02-17) | No |
+| 27-typed-registry-refactor.md | NEW: Type system, typed registries, eliminated keys, dispatch tables | Typed Registry Refactor spec (2026-02-17) | Yes (TRR-1) |
+| 09-data-models.md | Add CanonicalChannel, ScopedKey types; typed registries replace dict[str,str] | TRR spec (2026-02-17) | Yes (TRR-2) |
+| 15-naming-conventions.md | Correct REQ-NC-07; remove dead keys from tables; add typed key rows | TRR spike findings (2026-02-17) | Yes (TRR-3) |
+| 10-output-registry.md | Typed registries replace flat dict; resolve() → typed lookups; dead keys removed | TRR spec (2026-02-17) | Yes (TRR-4) |
+| 11-analysis-backtracker.md | REQ-BT-08 corrected; Step 1 deleted; type-directed dispatch | TRR spike findings (2026-02-17) | Yes (TRR-5) |
+| 04-input-resolver.md | Strategies use typed registries; Key_A warning removed | TRR spec (2026-02-17) | Yes (TRR-6) |
+| 24-dual-resolution-architecture.md | Strategy tables rewritten for typed registries | TRR spec (2026-02-17) | Yes (TRR-7) |
+| 03-resolution-overview.md | Scope Problem updated; Key_A refs removed; typed registries | TRR spec (2026-02-17) | Yes (TRR-8) |
 
 ---
 
@@ -633,3 +795,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C03 Extractor Conformance | 874 | 44 | 918 | 2026-02-17 |
 | C04 Expression Compiler | 918 | 31 | 949 | 2026-02-17 |
 | C05 Computed Attributes | 956 | 37 | 993 | 2026-02-17 |
+| C06 Hierarchy Resolver | 986 | 36 | 1022 | 2026-02-17 |
