@@ -14,7 +14,7 @@
 
 ---
 
-## RB-01: No CanonicalName type in data models (DONE 2026-02-17)
+## RB-01: No CanonicalName type in data models (DONE 2026-02-17, superseded by [27-typed-registry-refactor](27-typed-registry-refactor.md))
 
 **Priority**: Critical
 **Research lesson**: L1 — "Define a canonical name type and use it everywhere"

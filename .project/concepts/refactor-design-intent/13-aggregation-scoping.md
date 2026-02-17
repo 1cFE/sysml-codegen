@@ -138,9 +138,9 @@ The [`build_output_registry()`](10-output-registry.md) function (same file, line
 these outputs in its [4-phase registration protocol](10-output-registry.md):
 
 - **Phase 1b:** Each `ScopedAggregationData` registers a canonical channel via
-  `get_channel_name(agg.module_eqn, agg.expression.attribute_name)` using
-  [Key_D/Key_E formats](15-naming-conventions.md). Alias keys include bare, dotted,
-  and alias-variant forms.
+  `get_channel_name(agg.module_eqn, agg.expression.attribute_name)` producing
+  a `CanonicalChannel`. Registered with `ScopedKey` in the scoped registry
+  ([15-naming-conventions](15-naming-conventions.md), [27-typed-registry-refactor](27-typed-registry-refactor.md)).
 - **Phase 2:** Each `ChannelAlias` with `source="redefinition"` is resolved — the registry
   looks up `alias.canonical_name`, and if found, registers `alias.alias_name` as an alias
   pointing to the same canonical channel. This is how downstream modules can wire to
@@ -210,7 +210,7 @@ module binding to `solar_array.total_capex` now resolves correctly.
 ## Related Documents
 
 - **Upstream**: [01-extraction](01-extraction.md) — produces `AggregationExpressionData` and `RedefinitionData`, [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — runs just before scoping in Step 3.5
-- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — Key_D/Key_E channel formats
+- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — channel formats, [27-typed-registry-refactor](27-typed-registry-refactor.md) — typed key types
 - **Downstream**: [05-module-factory](05-module-factory.md) — builds aggregation modules from `ScopedAggregationData`, [04-input-resolver](04-input-resolver.md) — resolves aggregation module inputs
 - **Architecture**: [00-pipeline-overview](00-pipeline-overview.md) — Step 3.5 placement, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — aggregation as second resolution path
 - **Data models**: [09-data-models](09-data-models.md) — `AggregationExpressionData`, `ScopedAggregationData`, `ChannelAlias`

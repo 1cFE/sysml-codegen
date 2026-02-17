@@ -66,20 +66,20 @@ on AST node type and context. A `FeatureChainExpression` produces
 target uses the hierarchy path `"solar_battery_plant...cost_model.total_cost"`.
 These are different strings for the **same output**.
 
-The [OutputRegistry](10-output-registry.md) pre-registers each output under
-every format that could appear as a binding `source_path`, mapping them all to
-one canonical channel name:
+The [OutputRegistry](10-output-registry.md) maps each output to a canonical
+channel name (`CanonicalChannel`) via three [typed registries](27-typed-registry-refactor.md):
 
 ```
-Key_B (canonical): "SolarBatteryDesign__...cost_model__total_cost"   (unique by construction)
-Key_A:             "cost_model.total_cost"                           (local -- ambiguous if names collide)
-Key_C:             "solar_battery_plant.battery_system.battery_pack.cost_model.total_cost"
-                                                                     (hierarchy -- unique by SysML ownership)
+Canonical (PQN):   "SolarBatteryDesign__...cost_model__total_cost"    (CanonicalChannel, unique by construction)
+Scoped (Key_C):    "solar_battery_plant.battery_system.battery_pack.cost_model.total_cost"
+                                                                      (ScopedKey, unique by SysML ownership)
+SysML QN:          "SolarBatteryLibrary::BatteryPackCostCalc::total_cost"
+                                                                      (SysMLQN, for REFERENCE bindings)
 ```
 
-**Key_C is the critical key.** It is the only key format that is both unique AND
-matchable from the consumer's scope. The [backtracker](11-analysis-backtracker.md) constructs
-Key_C-format lookups by prepending the consumer's scope to the `source_path`. See
+**ScopedKey is the critical key.** It is both unique AND matchable from the
+consumer's scope. The [backtracker](11-analysis-backtracker.md) constructs
+`ScopedKey` lookups by prepending the consumer's scope to the `source_path`. See
 [The Scope Problem](03-resolution-overview.md#the-scope-problem).
 
 Keys follow a [strict 4-phase protocol](10-output-registry.md#the-4-phase-registration-protocol).
@@ -89,8 +89,8 @@ Phase 2 aliases (e.g., `battery_pack.capital_cost` -> same canonical).
 ### Step 3: Trace dependencies ([backtracker](11-analysis-backtracker.md) | [overview](03-resolution-overview.md))
 
 The [DependencyBacktracker](11-analysis-backtracker.md) performs DFS from root calc
-usages, resolving each binding via a [5-step cascade](11-analysis-backtracker.md#the-5-step-resolution-cascade)
-against the [OutputRegistry](10-output-registry.md). Each binding resolves to
+usages, resolving each binding via [type-directed dispatch](11-analysis-backtracker.md#type-directed-resolution-dispatch)
+against the [typed registries](10-output-registry.md). Each binding resolves to
 MODULE_OUTPUT (recurse into producer) or ENTRY_POINT (external input):
 
 | Input              | Resolution           | Source                           |

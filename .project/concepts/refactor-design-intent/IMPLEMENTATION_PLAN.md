@@ -123,8 +123,8 @@ and real SysML fixture output.
     - Regression test: if FCE/OE order reversed, test fails
   - **Acceptance**: REQ-AST-01 through REQ-AST-07 all green
 
-**Checkpoint 1**: [ ] Foundation locked. All naming, data model, extraction, and expression
-compilation requirements verified. ~50-70 new conformance tests.
+**Checkpoint 1**: [x] Foundation locked. All naming, data model, extraction, and expression
+compilation requirements verified. 311 new conformance tests. *(2026-02-17)*
 
 ---
 
@@ -143,21 +143,21 @@ proved the current docs are wrong in multiple places:
 
 ### Execution Order (doc dependencies dictate sequencing)
 
-- [ ] **TRR-1 — 27-typed-registry-refactor.md** (NEW)
+- [x] **TRR-1 — 27-typed-registry-refactor.md** (NEW)
   - Type system: SysMLQN, EQN, PQN, CanonicalChannel, ScopedKey with format invariants
   - Three typed registries: Scoped (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`), Alias (`dict[ScopedKey, CanonicalChannel]`)
   - Eliminated keys: Key_A, Key_D, Key_E full, Key_F, bare — with zero-hit evidence
   - Type-directed dispatch: CHAIN → scoped/alias, REFERENCE → SysML QN/scoped
   - **AC**: All 5 types defined, all 3 registries defined, dispatch table present, evidence cited
 
-- [ ] **TRR-2 — 09-data-models.md**
+- [x] **TRR-2 — 09-data-models.md**
   - Add `CanonicalChannel` and `ScopedKey` NewType definitions to Name Type Wrappers section
   - Add field type rows for OutputRegistry typed keys/values
   - Replace `_index: dict[str, str]` with 3 typed registries in OutputRegistry description
   - Expand REQ-DM-08 to include new types
   - **AC**: All 5 typed identifiers present, OutputRegistry description uses typed registries
 
-- [ ] **TRR-3 — 15-naming-conventions.md**
+- [x] **TRR-3 — 15-naming-conventions.md**
   - Correct REQ-NC-07: SysML QN keys exist in own typed registry
   - Remove "no `::` keys" claim from Section 7 intro
   - Remove Key_A from Phase 1a table, Key_D from Phase 1b table, Key_F/bare from Phase 1c table
@@ -165,7 +165,7 @@ proved the current docs are wrong in multiple places:
   - Add doc 27 to Related docs
   - **AC**: Zero dead key rows in Phase 1 tables, REQ-NC-07 accurate, types consistent
 
-- [ ] **TRR-4 — 10-output-registry.md**
+- [x] **TRR-4 — 10-output-registry.md**
   - REQ-OR-02: typed lookup methods per registry (not `resolve()`)
   - REQ-OR-05: eliminate Key_A/D/E-full/F/bare from Phase 1
   - REQ-OR-08: Key_A not registered at all (no guard needed)
@@ -175,7 +175,7 @@ proved the current docs are wrong in multiple places:
   - Rewrite concrete example with typed constructors
   - **AC**: Zero `resolve()` as single API method, zero `dict[str, str]`, zero dead key rows
 
-- [ ] **TRR-5 — 11-analysis-backtracker.md**
+- [x] **TRR-5 — 11-analysis-backtracker.md**
   - REQ-BT-08: replace "Step 1 raises" with "dispatch on BindingType"
   - Rename "5-Step Cascade" → "Type-Directed Resolution Dispatch"
   - DELETE Step 1 entirely (Key_A guard removed)
@@ -185,14 +185,14 @@ proved the current docs are wrong in multiple places:
   - Remove all `UnscopedResolutionError` references
   - **AC**: Zero Key_A refs, zero UnscopedResolutionError, CHAIN/REFERENCE dispatch documented
 
-- [ ] **TRR-6 — 04-input-resolver.md**
+- [x] **TRR-6 — 04-input-resolver.md**
   - Strategy A: delete Key_A warning block, query scoped registry
   - Strategy B: transform to SysML QN registry lookup (remove REMOVAL_CANDIDATE)
   - Strategy C: produce ScopedKey, query scoped registry
   - Update ResolutionContext, AGG_STRATEGIES, truth table
   - **AC**: Zero Key_A refs, strategies use typed registries
 
-- [ ] **TRR-7 — 24-dual-resolution-architecture.md**
+- [x] **TRR-7 — 24-dual-resolution-architecture.md**
   - REQ-DRA-03: typed registries, no untyped `dict.get()`
   - Path 1 cascade: binding-type dispatch (CHAIN/REFERENCE paths)
   - Delete Key_A guard from Stage 1
@@ -200,7 +200,7 @@ proved the current docs are wrong in multiple places:
   - Full rewrite of Strategy Overlap table for typed registries
   - **AC**: Zero Key_A refs, typed registries in cascade, strategy table accurate
 
-- [ ] **TRR-8 — 03-resolution-overview.md**
+- [x] **TRR-8 — 03-resolution-overview.md**
   - REQ-RES-07: ScopedKey + typed registries, remove UnscopedResolutionError
   - Replace `dict[str,str]` with typed registries in Scope Problem section
   - Update CalcUsage/pseudocode sections with typed references
@@ -236,22 +236,9 @@ After all TRR edits:
 | 2.1 | C08 — Output Registry | Conformance tests must verify typed registries, not flat `dict[str,str]`. Test `scoped_lookup()`, `sysml_qn_lookup()`, `alias_lookup()` instead of `resolve()`. |
 | 3.1 | C11 — DependencyBacktracker | Conformance tests must verify binding-type dispatch (CHAIN/REFERENCE), not Step 1 `UnscopedResolutionError`. |
 | 3.2 | C12 — Input Resolver | Strategies use typed registry methods. Strategy A queries scoped registry. Strategy B queries SysML QN registry. |
-| 7.4 | Dead code removal | 10 additional items for removal (see below) |
+| 7.4 | Dead code removal | 10 additional TRR items (moved to Phase 7.4 below) |
 
-### Phase 7.4 Additions (from TRR)
-
-- [ ] Key_A registration code in `build_output_registry()` Phase 1a
-- [ ] Key_D registration code in `build_output_registry()` Phase 1b
-- [ ] Key_E full (with design prefix) registration code in Phase 1b
-- [ ] Key_F registration code in `build_output_registry()` Phase 1c
-- [ ] Bare-name registration code in Phase 1b and 1c
-- [ ] `derive_key_c()` method (replaced by `ScopedKey.from_eqn()`)
-- [ ] `resolve()` single-method API on OutputRegistry
-- [ ] `UnscopedResolutionError` class definition
-- [ ] Step 1 code block in `_resolve_binding_via_registry()`
-- [ ] `_key_a_keys: set[str]` if it was added per spike recommendation (moot — Key_A not registered)
-
-**Checkpoint TRR**: [ ] All 8 design docs updated. Validation criteria 1-7 pass.
+**Checkpoint TRR**: [x] All 8 design docs updated. Validation criteria 1-7 pass. *(2026-02-17, commit a64c622)*
 All conformance test acceptance criteria in C08, C11, C12 updated to match typed registries.
 
 ---
@@ -570,6 +557,17 @@ the target architecture. This is pure refactoring — no behavior changes.
     - [ ] Virtual binding rewrite for bare names (Research §5.#1)
     - [ ] Step 3.6 alias enrichment heuristic (Research §1.L10)
     - [ ] Bare-name registration keys (Research §1.L10)
+  - **TRR-identified dead code** (typed registry refactor):
+    - [ ] Key_A registration code in `build_output_registry()` Phase 1a
+    - [ ] Key_D registration code in `build_output_registry()` Phase 1b
+    - [ ] Key_E full (with design prefix) registration code in Phase 1b
+    - [ ] Key_F registration code in `build_output_registry()` Phase 1c
+    - [ ] Bare-name registration code in Phase 1b and 1c
+    - [ ] `derive_key_c()` method (replaced by `ScopedKey.from_eqn()`)
+    - [ ] `resolve()` single-method API on OutputRegistry
+    - [ ] `UnscopedResolutionError` class definition
+    - [ ] Step 1 code block in `_resolve_binding_via_registry()`
+    - [ ] `_key_a_keys: set[str]` if it was added per spike recommendation (moot — Key_A not registered)
 
 - [ ] **7.5 — PipelineModule Field Expansion (C26)**
   - **Refs**: [26-pipeline-module-migration.md](26-pipeline-module-migration.md)

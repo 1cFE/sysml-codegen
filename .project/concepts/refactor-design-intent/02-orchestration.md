@@ -59,39 +59,38 @@ Key ordering constraints (REQ-ORCH-01):
 
 ## build_output_registry() -- the 4-phase lookup table
 
-The [OutputRegistry](10-output-registry.md) is a flat `dict[str, str]` mapping every
-possible way a binding might reference an output to that output's canonical channel
-name. **Why multiple keys?** Extraction produces `source_path` strings in different
-formats depending on AST node type -- a `FeatureChainExpression` produces a bare
-local path (`"cost_model.total_cost"`), while a `:>>` redefinition uses a hierarchy
-path. The registry must have a matching key for each format. See
-[The Scope Problem](03-resolution-overview.md#the-scope-problem) for why **Key_C**
+The [OutputRegistry](10-output-registry.md) uses three [typed registries](27-typed-registry-refactor.md)
+mapping binding references to canonical channel names (`CanonicalChannel`).
+**Why multiple registries?** Extraction produces `source_path` strings in different
+formats depending on AST node type -- a `FeatureChainExpression` produces a scope-relative
+dotted path (queried via `ScopedKey`), while a `REFERENCE` binding uses a SysML QN
+(queried via `SysMLQN`). Type-directed dispatch selects the correct registry. See
+[The Scope Problem](03-resolution-overview.md#the-scope-problem) for why `ScopedKey`
 (the hierarchy-scoped key) is the critical one. Phase ordering is enforced (REQ-ORCH-04).
 
 ### Phase 1: Canonical channels
 
 Registers the actual outputs that pipeline modules produce.
 
-**Phase 1a -- CalcUsage outputs.** Three [key variants](15-naming-conventions.md#6-channel-name) per output:
+**Phase 1a -- CalcUsage outputs.** Two typed keys per output ([15-naming-conventions](15-naming-conventions.md), [27-typed-registry-refactor](27-typed-registry-refactor.md)):
 
 ```
 Calc usage: SolarBatteryDesign__solar_battery_plant__solar_array__cost_model
 Output:     total_cost
 
-Canonical:  solar_battery_plant__solar_array__cost_model__total_cost
-Key_A:      cost_model.total_cost           (local -- ambiguous if names collide!)
-Key_C:      solar_battery_plant.solar_array.cost_model.total_cost  (unique by SysML ownership)
+Canonical (CanonicalChannel): solar_battery_plant__solar_array__cost_model__total_cost
+Scoped    (ScopedKey):        solar_battery_plant.solar_array.cost_model.total_cost
 ```
 
-**Key_C is the critical key** -- the [resolver](04-input-resolver.md#c-scopedregistrylookup)
-constructs Key_C lookups by prepending the consumer's scope to the bare `source_path`.
+**ScopedKey is the critical key** -- the [resolver](04-input-resolver.md#c-scopedregistrylookup)
+constructs `ScopedKey` lookups by prepending the consumer's scope to the bare `source_path`.
 
-**Phase 1b -- Aggregation outputs.** Registered with dotted keys at
-multiple scoping levels (Key_D, Key_E, stripped variants, alias variants).
+**Phase 1b -- Aggregation outputs.** Registered with `ScopedKey` (stripped
+dotted hierarchy path) in the scoped registry.
 
 **Phase 1c -- FORMULA outputs.** [Computed attributes](16-computed-attributes.md)
 classified as FORMULA with `FULLY_COMPILABLE` compilability generate synthetic
-modules. Registered with `PartName.attr_name`, bare `attr_name`, and SysML QN keys.
+modules. Registered with `SysMLQN` key in the SysML QN registry.
 
 ### Phase 2: CHAIN aliases (REQ-ORCH-07)
 
@@ -120,15 +119,15 @@ as an alias for whatever `net_electric.p_net` already resolved to.
 ### After construction
 
 ```python
-registry.resolve("cost_model.total_cost")
-# => "solar_battery_plant__solar_array__cost_model__total_cost"
+registry.scoped_lookup(ScopedKey("solar_battery_plant.solar_array.cost_model.total_cost"))
+# => CanonicalChannel("solar_battery_plant__solar_array__cost_model__total_cost")
 
-registry.resolve("solar_array.total_capex")
-# => "solar_battery_plant__solar_array__cost_model__total_cost"  (via Phase 2 alias)
+registry.alias_lookup(ScopedKey("solar_battery_plant.solar_array.total_capex"))
+# => CanonicalChannel("solar_battery_plant__solar_array__cost_model__total_cost")  (via Phase 2 alias)
 ```
 
-Both keys resolve to the same canonical channel. The [backtracker](11-analysis-backtracker.md)
-and [graph builder](07-graph-assembly.md) never need to know which key format a binding used.
+Both lookups resolve to the same canonical channel via type-directed dispatch.
+See [27-typed-registry-refactor](27-typed-registry-refactor.md) for the full type system.
 
 ## Virtual binding rewriting
 

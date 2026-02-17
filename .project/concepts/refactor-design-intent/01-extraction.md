@@ -56,7 +56,7 @@ Key fields:
 
 | Field | Example | Consumed by |
 |-------|---------|-------------|
-| `instance_name` | `"battery_cost"` | [Registry](10-output-registry.md): Key_A format |
+| `instance_name` | `"battery_cost"` | [Naming](15-naming-conventions.md): used in EQN construction |
 | `calc_def_name` | `"battery_cost_calc"` | [Module factory](05-module-factory.md): calc def lookup |
 | `qualified_name` | `"solar_battery_plant__solar_battery__battery_cost"` | [Naming](15-naming-conventions.md): EQN |
 | `bindings` | `[BindingInfo(param_name="capacity", ...)]` | [Backtracker](11-analysis-backtracker.md): resolution |
