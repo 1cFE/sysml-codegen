@@ -407,16 +407,19 @@ typed dispatch (no `_compat` dependency). The two resolution paths are verified 
   - No production code changes — conformance-only
   - **Acceptance**: REQ-MF-01, REQ-MF-04, REQ-MF-05, REQ-MF-06, REQ-MF-07, REQ-LVP-01, REQ-LVP-04 through REQ-LVP-07 all green (1461 tests, 0 failures, 5 xfailed)
 
-- [ ] **4.4 — Entry Point Classification (C17)**
+- [x] **4.4 — Entry Point Classification (C17)** *(completed 2026-02-17)*
   - **Refs**: [06-entry-point-classifier.md](06-entry-point-classifier.md)
-  - **C16 cross-component warning**: C16 creates DESIGN_ATTRIBUTE entry points via in-place mutation of the shared `entry_points` dict. C17 must verify these factory-created EPs retain `entry_type=DESIGN_ATTRIBUTE` and are never re-classified by `_classify_entry_points()`.
-  - Write `tests/conformance/test_entry_point_classifier.py`:
-    - Classify entry points from real BacktrackingResult
-    - Verify precedence: DESIGN_ATTRIBUTE > LIBRARY_DEFAULT > USAGE_LITERAL
-    - Verify float conversion of default_value
-    - Verify orphan -> "system_design" fallback
-    - Verify factory EPs not re-classified (C14, C15, C16 all create DESIGN_ATTRIBUTE EPs)
-  - **Acceptance**: REQ-EPC-01 through REQ-EPC-08 all green
+  - 35 conformance tests in `tests/conformance/test_entry_point_classifier.py`
+  - Parametrized over 3 models (solar_battery, catf_mfe, chain_spike)
+  - Precedence verified via catf_mfe (all 3 types present from classifier Path 1)
+  - Float conversion verified for all 3 branches (DA, LD, UL)
+  - Factory EPs retain DESIGN_ATTRIBUTE (runtime check on solar_battery full graph)
+  - Static analysis: `_classify_entry_points()` called exactly once, before factory calls
+  - Pure function verified (deep-copy comparison of all inputs)
+  - Graph-level grouping invariant verified (every EP in some ParameterGroup after orphan handling)
+  - Key finding: solar_battery has zero DESIGN_ATTRIBUTE EPs from classifier (DA QNs don't match EP QNs); catf_mfe exercises all 3 types
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-EPC-01 through REQ-EPC-08 all green (1498 tests, 0 failures, 5 xfailed)
 
 - [ ] **4.5 — Graph Assembly (C18)**
   - **Refs**: [07-graph-assembly.md](07-graph-assembly.md)
@@ -1025,6 +1028,28 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    12 parametrized + 20 solar_battery-specific. Some plan-listed tests were consolidated,
    but constructed edge cases added new tests.
 
+### C17 Entry Point Classification (2026-02-17)
+
+1. **solar_battery has zero DESIGN_ATTRIBUTE EPs from the classifier (Path 1).** Design
+   attribute QNs use library-qualified names (`SolarBatteryLibrary__PVModuleCostCalc__cost_per_watt`)
+   while EP QNs use design-qualified names (`SolarBatteryDesign__solar_battery_plant__...`). The QNs
+   never match in `design_attr_by_qname`, so all solar_battery EPs are classified as LIBRARY_DEFAULT
+   or USAGE_LITERAL. DESIGN_ATTRIBUTE EPs come exclusively from factory construction (Path 2).
+   catf_mfe_model produces all 3 types from the classifier.
+
+2. **13 solar_battery EPs have param_group=None from the classifier.** Deeply-nested QNs
+   (e.g., `SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh`)
+   don't match any `ParameterGroupDeriver.classify()` pattern. These become orphans handled by
+   Step 6.8 in `build_computation_graph()`. catf_mfe and chain_spike have zero param_group=None EPs.
+
+3. **REQ-EPC-04 is a graph-level invariant, not a classifier-level invariant.** The classifier
+   sets `param_group = group_deriver.classify(qname)` which CAN return None. The orphan handling
+   at Step 6.8 ensures every EP belongs to some ParameterGroup after full graph assembly.
+
+4. **`build_full_graph_from_snapshot()` helper enables graph-level verification.** Calling
+   `build_computation_graph()` with all inputs exercises the full Path 1 + Path 2 + Step 6.6
+   rebuild + Step 6.8 orphan pipeline. Reusable for C18 (Graph Assembly).
+
 ---
 
 ## Design Doc Amendments
@@ -1078,6 +1103,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 24-dual-resolution-architecture.md | Note Strategy B asymmetry: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by SysMLQNLookup | X02 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — Known Asymmetry subsection added to Strategy Overlap |
 | 18-literal-value-propagation.md | Note LITERAL redef fallback naturally exercised by SingletonTerms in solar_battery, not SumTerms. SumTerm fallback path valid but not naturally tested | C16 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — §Where It's Called conformance note added |
 | 05-module-factory.md | Note Strategy 1 (type-aware) essential when usage name differs from PartDef name (permitting → Permitting_Interconnect) | C16 conformance finding #2 (2026-02-17) | Yes (2026-02-17) — §4 Aggregation Modules conformance note added |
+| 06-entry-point-classifier.md | Note solar_battery has zero DESIGN_ATTRIBUTE EPs from Path 1 classifier. catf_mfe exercises all 3 types. | C17 conformance finding #1 (2026-02-17) | No |
+| 06-entry-point-classifier.md | Clarify REQ-EPC-04: param_group may be None from classifier; orphan handling (REQ-EPC-05) ensures graph-level invariant | C17 conformance finding #3 (2026-02-17) | No |
 
 ---
 
@@ -1109,3 +1136,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C14 CalcUsage Factory | 1349 | 48 | 1397 (+5 xfail) | 2026-02-17 |
 | C15 FORMULA Factory | 1397 | 34 | 1431 (+5 xfail) | 2026-02-17 |
 | C16 Aggregation Factory | 1431 | 32 | 1463 (+5 xfail) | 2026-02-17 |
+| C17 Entry Point Classifier | 1463 | 35 | 1498 (+5 xfail) | 2026-02-17 |

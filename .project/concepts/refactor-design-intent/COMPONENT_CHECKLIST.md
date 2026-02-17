@@ -333,14 +333,14 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - Input: BacktrackingResult entry points, DesignAttributeData, CalcUsageData
   - Output: `dict[str, EntryPoint]` with classified types
 - **AC**:
-  - [ ] Exactly one EntryPointType per entry point
-  - [ ] Strict precedence: DESIGN_ATTRIBUTE > LIBRARY_DEFAULT > USAGE_LITERAL
-  - [ ] `default_value` converted to float at classification time
-  - [ ] Every entry point assigned a param_group
-  - [ ] Orphans land in "system_design" fallback group
-  - [ ] Groups rebuilt after FORMULA/Aggregation module construction
-  - [ ] `_classify_entry_points()` is a pure function
-  - [ ] Factory-created entry points retain entry_type=DESIGN_ATTRIBUTE (never re-classified)
+  - [x] Exactly one EntryPointType per entry point
+  - [x] Strict precedence: DESIGN_ATTRIBUTE > LIBRARY_DEFAULT > USAGE_LITERAL
+  - [x] `default_value` converted to float at classification time
+  - [x] Every entry point assigned a param_group (via classifier + orphan handling at graph level)
+  - [x] Orphans land in "system_design" fallback group
+  - [x] Groups rebuilt after FORMULA/Aggregation module construction
+  - [x] `_classify_entry_points()` is a pure function
+  - [x] Factory-created entry points retain entry_type=DESIGN_ATTRIBUTE (never re-classified)
 
 ### C18 — Graph Assembly
 - **Doc**: [07-graph-assembly.md](07-graph-assembly.md)
