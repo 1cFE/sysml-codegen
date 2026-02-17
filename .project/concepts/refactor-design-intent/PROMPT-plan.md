@@ -4,7 +4,7 @@
 
 ## Your Task
 
-You are planning the implementation of component **{COMPONENT_CODE}** for the sysml-codegen refactor.
+You are planning the implementation of step **{STEP_ID}** for the sysml-codegen refactor.
 
 Your job is to produce a high-quality, validated implementation plan — NOT to write any code.
 
@@ -12,14 +12,15 @@ Your job is to produce a high-quality, validated implementation plan — NOT to 
 
 Read these files in order:
 
-1. `.project/concepts/refactor-design-intent/IMPLEMENTATION_PLAN.md` — overall phasing and sequence
-2. `.project/concepts/refactor-design-intent/COMPONENT_CHECKLIST.md` — find the entry for {COMPONENT_CODE}
-3. The design intent doc(s) referenced in the checklist entry (e.g., `10-output-registry.md`)
-4. `.project/concepts/refactor-design-intent/component-loop.md` — the plan template
+1. `.project/concepts/refactor-design-intent/IMPLEMENTATION_PLAN.md` — find the step **{STEP_ID}** (e.g., "1.3", "2.1", "0.2"). This is the authoritative description of what to build and in what order.
+2. If the step references a component code (e.g., C08, C11), also read:
+   - `.project/concepts/refactor-design-intent/COMPONENT_CHECKLIST.md` — the entry for that code (detailed interfaces and AC)
+   - The design intent doc(s) referenced there (e.g., `10-output-registry.md`)
+3. `.project/concepts/refactor-design-intent/component-loop.md` — the plan template
 
 Check `IMPLEMENTATION_PLAN.md` for:
-- Prerequisites: are upstream components complete?
-- Accumulated learnings that affect this component (bottom of file)
+- Prerequisites: are upstream steps/checkpoints complete? (look at checkboxes)
+- Accumulated learnings that affect this step (bottom of file)
 - Design doc amendments that change requirements (bottom of file)
 
 Also read the current source files listed in the checklist entry ("Current location") to understand what exists today.

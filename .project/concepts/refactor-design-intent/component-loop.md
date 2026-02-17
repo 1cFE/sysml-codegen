@@ -132,7 +132,26 @@
 
 ---
 
-## 6. Learnings
+## 6. Commit
+
+**Branch**: `refactor/{component-name}`
+**Commit convention**: one commit per component, message references component code
+
+- [ ] All validation checks above are green
+- [ ] `git add` only the files listed in Build Plan + test file (no unrelated changes)
+- [ ] Commit message format:
+  ```
+  refactor({CODE}): {one-line summary}
+
+  - Tests: {N} new conformance tests in tests/conformance/test_{name}.py
+  - Refs: {REQ-XX-01 through REQ-XX-NN}
+  - Design intent: {doc number(s)}
+  ```
+- [ ] Committed successfully
+
+---
+
+## 7. Learnings
 
 ### Findings
 {What did we learn during implementation that wasn't obvious from the design docs?}
