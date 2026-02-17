@@ -421,22 +421,30 @@ typed dispatch (no `_compat` dependency). The two resolution paths are verified 
   - No production code changes — conformance-only
   - **Acceptance**: REQ-EPC-01 through REQ-EPC-08 all green (1498 tests, 0 failures, 5 xfailed)
 
-- [ ] **4.5 — Graph Assembly (C18)**
+- [x] **4.5 — Graph Assembly (C18)** *(completed 2026-02-17)*
   - **Refs**: [07-graph-assembly.md](07-graph-assembly.md)
-  - Write `tests/conformance/test_graph_assembly.py`:
-    - Assemble graph from real PipelineModules + ParameterGroups
-    - Verify topological sort validity (no forward references)
-    - Verify cycle detection with synthetic cycle
-    - Verify channel reference validation (no dangling wires)
-    - Verify ComputationGraph shape (3 fields)
-  - **Acceptance**: REQ-GA-01 through REQ-GA-07 all green
+  - 34 conformance tests in `tests/conformance/test_graph_assembly.py`
+  - Parametrized over 3 models (solar_battery, catf_mfe, chain_spike)
+  - Topological sort validity verified (no forward references across 3 models)
+  - Cycle detection verified with synthetic 2-module cycle (CircularDependencyError with participant names)
+  - Channel reference validation verified (3 models + dangling channel ValueError)
+  - Self-dependency guard verified (3 models + synthetic self-referencing module)
+  - ComputationGraph shape (exactly 3 fields) and execution_order invariant verified
+  - Static analysis confirms Kahn's algorithm pattern (deque, popleft, in_degree, successors)
+  - Checkpoint 4 baseline comparison: 3 models (solar_battery, chain_spike, attr_expr_probe) match Phase 0 baselines
+  - Baseline normalization: CalcUsage compilability (unknown vs fully_compilable, snapshot serialization boundary) and parameter ordering within groups (dict iteration order)
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-GA-01 through REQ-GA-07 all green (1532 tests, 0 failures, 5 xfailed)
 
-**Checkpoint 4**: [ ] Every component from extraction through graph assembly independently tested.
+**Checkpoint 4**: [x] Every component from extraction through graph assembly independently tested.
 All 3 module types verified. Graph assembly proven correct. This is the critical milestone —
 the pipeline "spine" is validated end-to-end in parts.
+149 new conformance tests (C14: 48, C15: 34, C16: 32, C17: 35, C18: 34). 1532 total tests,
+5 xfailed, 0 failures. *(2026-02-17)*
 
-**Assessment**: Compare ComputationGraph produced by running all components in sequence
-against baseline snapshots from Phase 0. Must match exactly (or document intentional changes).
+**Assessment**: ComputationGraph produced by `build_full_graph_from_snapshot()` matches Phase 0
+baselines for solar_battery, chain_spike, and attr_expr_probe (after normalizing CalcUsage
+compilability and entry_point_groups parameter ordering — known snapshot-vs-live differences).
 
 ---
 
@@ -639,7 +647,7 @@ architecture from STRATEGY.md.
 | 1 | Foundation + Extraction | Data models, naming, extraction, expressions locked | 311 (actual) |
 | 2 | Infrastructure | Registry, VBR, agg scoping proven | 117 (actual) |
 | 3 | Analysis | Backtracker, resolver, groups, dual consistency | 136 (actual) |
-| 4 | Factories + Graph | All module types + graph assembly | 112+ (C14-C16 actual: 112; C17+C18 pending) |
+| 4 | Factories + Graph | All module types + graph assembly | 149 (C14: 48, C15: 34, C16: 32, C17: 35, C18: 34) |
 | 5 | Orchestrator | E2E pipeline matches baselines | ~20 |
 | 6 | Generation | All generators validated against graph | ~40 |
 | 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26), factory purity (7.7) | ~10 |
@@ -983,6 +991,24 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 3. **FORMULA SysML QN registration complete.** Every FORMULA channel in the attribute
    resolution map has a corresponding SysML QN key in the registry.
 
+### C18 Graph Assembly (2026-02-17)
+
+1. **Baseline comparison requires two normalizations for snapshot-vs-live pipelines.** CalcUsage
+   modules get `compilability='unknown'` from `build_full_graph_from_snapshot()` because
+   `compilation_results=None` (AST fields null in snapshots). FORMULA and aggregation modules set
+   compilability directly in their factories, so those match. Also, `entry_point_groups` parameter
+   ordering within groups differs between live and snapshot pipelines (dict iteration order differences
+   in orphan EP collection). Both are documented in the baseline comparison test.
+
+2. **`build_full_graph_from_snapshot()` (from C17) is the complete Checkpoint 4 vehicle.** It
+   exercises the full pipeline: extraction → backtracker → 3 module factories → entry point
+   classification → topological sort → channel validation → ComputationGraph assembly. All 3
+   baseline models (solar_battery, chain_spike, attr_expr_probe) match their Phase 0 baselines.
+
+3. **All 34 C18 tests pass on first run.** Confirms graph assembly is conformance-only — no
+   production code changes needed. The toposort, channel validation, and ComputationGraph shape
+   all behave as documented in design intent doc 07.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -1137,3 +1163,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C15 FORMULA Factory | 1397 | 34 | 1431 (+5 xfail) | 2026-02-17 |
 | C16 Aggregation Factory | 1431 | 32 | 1463 (+5 xfail) | 2026-02-17 |
 | C17 Entry Point Classifier | 1463 | 35 | 1498 (+5 xfail) | 2026-02-17 |
+| C18 Graph Assembly | 1498 | 34 | 1532 (+5 xfail) | 2026-02-17 |

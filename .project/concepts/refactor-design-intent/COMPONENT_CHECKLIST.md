@@ -349,14 +349,15 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Interfaces**:
   - Input: `list[PipelineModule]`, `list[ParameterGroup]`
   - Output: `ComputationGraph`
-- **AC**:
-  - [ ] Valid topological sort: no module reads from a module later in execution_order
-  - [ ] Cycle detection raises `CircularDependencyError`
-  - [ ] Every `producer_channel` in every ModuleInput resolves to a declared ModuleOutput
-  - [ ] No self-dependency in the graph
-  - [ ] ComputationGraph has exactly 3 fields: modules, entry_point_groups, execution_order
-  - [ ] execution_order list matches module ordering
-  - [ ] O(V+E) Kahn's algorithm with deque
+- **AC**: *(all verified 2026-02-17 — 34 tests in `tests/conformance/test_graph_assembly.py`)*
+  - [x] Valid topological sort: no module reads from a module later in execution_order
+  - [x] Cycle detection raises `CircularDependencyError`
+  - [x] Every `producer_channel` in every ModuleInput resolves to a declared ModuleOutput
+  - [x] No self-dependency in the graph
+  - [x] ComputationGraph has exactly 3 fields: modules, entry_point_groups, execution_order
+  - [x] execution_order list matches module ordering
+  - [x] O(V+E) Kahn's algorithm with deque
+- **Tests**: 34 conformance tests (21 parametrized over 3 models + 13 non-parametrized including 3 baseline comparisons)
 
 ---
 

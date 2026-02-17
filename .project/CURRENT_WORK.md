@@ -24,9 +24,9 @@
 
 **Current Phase**: Phase 4 — Module Factory + Graph Assembly (C14-C18)
 
-**Next Component**: C15 — FORMULA Module Factory. Builds FORMULA modules from ComputedAttributeData. Design specified in doc 05.
+**Phase 4 Status**: COMPLETE — all 5 components done (C14-C18), Checkpoint 4 passed.
 
-**Test Suite**: 1397 tests passing (730 conformance + 667 existing), 5 xfailed
+**Test Suite**: 1532 tests passing (865 conformance + 667 existing), 5 xfailed
 
 **Key Decisions**:
 - Typed Registry Refactor complete — 3 typed registries, zero `_compat`, zero `resolve()`
