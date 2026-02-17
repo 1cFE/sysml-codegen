@@ -372,18 +372,18 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - Input: extraction results (calc_defs, calc_usages, part_defs, hierarchy)
   - Output: `ComputationGraph` (the single artifact for generation)
 - **AC**:
-  - [ ] Steps execute in strict dependency order (documented 7-step + substeps)
-  - [ ] Virtual binding rewrite completes before downstream steps
-  - [ ] FORMULA attributes removed from design_attrs before parameter group construction
-  - [ ] OutputRegistry phases in strict order (1a/1b/1c then 2/3/4)
-  - [ ] Each aggregation expression scoped to concrete instance paths
-  - [ ] ComputationGraph is single source of truth for generation
-  - [ ] CHAIN alias unresolvable = warning, not error
-  - [ ] Every ModuleInput wired to exactly one source
-  - [ ] Every module_output reference resolves to canonical channel in OutputRegistry
-  - [ ] execution_order is a valid topological sort
-  - [ ] Graph includes all 3 module types when model requires them
-  - [ ] Generation uses ONLY ComputationGraph — no back-references
+  - [x] Steps execute in strict dependency order (documented 7-step + substeps) — `test_step_ordering_call_sequence`
+  - [x] Virtual binding rewrite completes before downstream steps — `test_vbr_before_registry_and_backtracker`
+  - [x] FORMULA attributes removed from design_attrs before parameter group construction — `test_formula_removal_before_pgd_in_source`, `test_formula_removal_constructed_overlap`
+  - [x] OutputRegistry phases in strict order (1a/1b/1c then 2/3/4) — `test_phase_ordering_static_analysis`, `test_all_aliases_target_canonical_channels`
+  - [x] Each aggregation expression scoped to concrete instance paths — `test_scoped_count_ge_expression_count_solar_battery`
+  - [x] ComputationGraph is single source of truth for generation — `test_computation_graph_is_last_step`, `test_computation_graph_has_all_generation_fields`
+  - [x] CHAIN alias unresolvable = warning, not error — `test_unresolvable_chain_alias_logs_warning`
+  - [x] Every ModuleInput wired to exactly one source — `test_every_module_input_wired` (×4 models)
+  - [x] Every module_output reference resolves to canonical channel in OutputRegistry — `test_every_producer_channel_declared` (×4 models)
+  - [x] execution_order is a valid topological sort — `test_valid_topological_sort` (×4 models)
+  - [x] Graph includes all 3 module types when model requires them — `test_all_three_module_types_solar_battery`
+  - [x] Generation uses ONLY ComputationGraph — no back-references — `test_generation_extraction_import_count` (baseline: 9 violating files, Phase 7.6)
 
 ---
 

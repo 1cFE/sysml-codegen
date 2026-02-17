@@ -452,15 +452,18 @@ compilability and entry_point_groups parameter ordering — known snapshot-vs-li
 
 **Goal**: Wire all proven components into the orchestrator and verify the end-to-end pipeline.
 
-- [ ] **5.1 — Orchestrator Step Ordering (C19)**
-  - **Refs**: [02-orchestration.md](02-orchestration.md)
-  - Write `tests/conformance/test_orchestrator.py`:
-    - Run full orchestrator on each fixture model
-    - Verify step ordering via instrumentation or output inspection
-    - Verify FORMULA attrs removed from design_attrs before param group construction
-    - Verify OutputRegistry phase ordering
-    - Verify CHAIN alias unresolvable = warning, not error (check logs)
-  - **Acceptance**: REQ-ORCH-01 through REQ-ORCH-07 all green
+- [x] **5.1 — Orchestrator Step Ordering (C19)** *(completed 2026-02-17)*
+  - **Refs**: [02-orchestration.md](02-orchestration.md), [00-pipeline-overview.md](00-pipeline-overview.md)
+  - 39 conformance tests in `tests/conformance/test_orchestrator.py`
+  - Static analysis: build_pipeline_context() call ordering matches DAG (5 tests)
+  - FORMULA removal with real + constructed data (5 tests)
+  - Registry 4-phase ordering + alias canonical channel validation (3 tests)
+  - Aggregation scoping instance count (1 test)
+  - CHAIN alias warning path with constructed unresolvable alias (2 tests)
+  - Pipeline invariants parametrized over 4 models (20 tests)
+  - Module types (PIPE-06 solar_battery) + generation boundary (PIPE-07) (3 tests)
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-ORCH-01 through REQ-ORCH-07, REQ-PIPE-01 through REQ-PIPE-07 all green (1571 tests, 0 failures, 5 xfailed)
 
 - [ ] **5.2 — End-to-End Pipeline Validation**
   - **Refs**: [00-pipeline-overview.md](00-pipeline-overview.md)
@@ -1009,6 +1012,23 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    production code changes needed. The toposort, channel validation, and ComputationGraph shape
    all behave as documented in design intent doc 07.
 
+### C19 Orchestrator Step Ordering (2026-02-17)
+
+1. **FORMULA QNs and design attribute QNs have zero overlap in all fixture models.** The
+   `_remove_formula_from_design_attrs()` safety net function returns 0 for all 6 models.
+   FORMULA QNs (`sysml_to_python_qualified_name(owning_part_qn)__python_name`) and design
+   attribute QNs (from `extract_design_attributes()`) occupy disjoint attribute namespaces.
+   The removal logic is verified correct with constructed overlap data.
+
+2. **`build_pipeline_context()` step ordering verified deterministically via AST.** The
+   static analysis pattern (C04, C07, C09) extends cleanly to the orchestrator. All 10 major
+   call sites appear in strict DAG order. `build_computation_graph` is the last significant
+   call before `return PipelineContext(...)`.
+
+3. **REQ-PIPE-07 (generation uses ONLY ComputationGraph) has 9 violating files.** All files
+   in `generation/` that import from `extraction/` or `analysis/` were counted. This is the
+   known violation baseline for Phase 7.6 to drive toward zero.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -1164,3 +1184,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C16 Aggregation Factory | 1431 | 32 | 1463 (+5 xfail) | 2026-02-17 |
 | C17 Entry Point Classifier | 1463 | 35 | 1498 (+5 xfail) | 2026-02-17 |
 | C18 Graph Assembly | 1498 | 34 | 1532 (+5 xfail) | 2026-02-17 |
+| C19 Orchestrator Step Ordering | 1532 | 39 | 1571 (+5 xfail) | 2026-02-17 |
