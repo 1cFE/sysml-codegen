@@ -86,10 +86,10 @@ and real SysML fixture output.
     - `output_expression_asts` preserves raw SysIDE AST nodes
   - **Acceptance**: REQ-EXT-01 through REQ-EXT-07 all green
 
-- [ ] **1.4 — Expression Compiler Conformance (C04)**
+- [x] **1.4 — Expression Compiler Conformance (C04)** *(2026-02-17, 31 tests)*
   - **Refs**: [14-expression-compiler.md](14-expression-compiler.md), [19-ast-dispatch-invariant.md](19-ast-dispatch-invariant.md)
   - Write `tests/conformance/test_expression_compiler.py`:
-    - Compile every output expression from snapshot calc defs
+    - Verify compiler with real calc def metadata from snapshots (AST serialization boundary prevents compiling from snapshots directly; tests use real attribute name sets + mock ASTs)
     - Verify ast.parse() succeeds on every compiled expression
     - Verify compilability verdicts match expected
     - Verify FCE-before-OE ordering at all dispatch sites (static analysis test)
@@ -508,7 +508,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 | # | Issue | Scope Decision | Rationale |
 |---|-------|---------------|-----------|
-| 1 | 16/20 aggregation impls produce invalid Python (`.()` syntax) | In scope — C04 | Expression compiler conformance tests (Phase 1.4) will document which patterns fail |
+| 1 | 16/20 aggregation impls produce invalid Python (`.()` syntax) | Reassigned C04→C06/C07 | `.()` syntax comes from `reconstruct_expression()` in aggregation walker, not expression compiler. Expression compiler only imports `extract_feature_reference_name` from expression_utils.py. |
 | 2 | EXPOSE_COMPUTED pattern deferred | Out of scope | Acknowledged in Doc 16; no model exercises this yet |
 | 3 | agentic-mbse V2 validation rejects valid FORMULA | Out of scope | Upstream fix; tracked in agentic-mbse |
 | 4 | 28+ ADR references point to nonexistent docs | In scope — documentation | Low priority; fix as encountered |
@@ -540,6 +540,27 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    `_create_virtual_calc_usage` function sets instance_name to the full design-relative
    qualified_name. Concrete usages have short instance_name distinct from qualified_name.
    This is a reliable discriminator for virtual vs concrete usages.
+
+### C04 Expression Compiler Conformance (2026-02-17)
+
+1. **Deferred Issue #1 mis-assigned to C04.** The `.()` syntax issue comes from
+   `reconstruct_expression()` in `expression_utils.py`, used by
+   `hierarchy_resolver._walk_aggregation_ast()`. The expression compiler does NOT
+   use `reconstruct_expression()` — it only imports `extract_feature_reference_name`.
+   Reassigned to C06 (Hierarchy Resolver) or C07 (AST Dispatch Invariant).
+
+2. **REQ-AST-01 scoped to expression compiler dispatch sites for C04.** C04 verifies
+   FCE-before-OE ordering in `build_expression_ast()` (expression_compiler.py) and
+   `reconstruct_expression()` (expression_utils.py). C07 will cover the remaining
+   6+ dispatch sites across the codebase.
+
+3. **Static analysis via Python ast module is effective for dispatch ordering verification.**
+   Parsing source with `ast.parse()` and walking for `is_instance()` calls provides
+   deterministic line-number verification without executing SysIDE code.
+
+4. **Cross-model validation confirms compiler handles all real name sets.** 39 calc defs
+   across 3 fixture models (solar_battery: 15, catf_mfe: 21, chain_spike: 3) all
+   classify correctly when tested with real attribute names from snapshots.
 
 ### Phase 0 (2026-02-17)
 
@@ -578,6 +599,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 03-resolution-overview.md | Strengthened REQ-RES-07: unscoped Key_A fallback explicitly prohibited | Design review discussion (2026-02-17) | Yes |
 | 04-input-resolver.md | Strategy A cross-reference to REQ-OR-08; flagged same Key_A ambiguity concern | Consistency review (2026-02-17) | Yes |
 | 24-dual-resolution-architecture.md | Updated REQ-DRA-03 and Stage 1 cascade description to reflect Key_A error behavior | Consistency review (2026-02-17) | Yes |
+| IMPLEMENTATION_PLAN.md Step 1.4 | Clarified "compile every output from snapshot calc defs" → "verify compiler with real calc def metadata from snapshots" | C04 conformance — AST serialization boundary (2026-02-17) | Yes |
+| IMPLEMENTATION_PLAN.md Deferred Issues | Reassigned issue #1 (".() syntax") from C04 to C06/C07 | C04 conformance — reconstruct_expression() not used by expression compiler (2026-02-17) | Yes |
 
 ---
 
@@ -590,3 +613,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C02 Naming Conventions | 758 | 46 | 804 | 2026-02-17 |
 | Phase 0 Infrastructure | 804 | 70 | 874 | 2026-02-17 |
 | C03 Extractor Conformance | 874 | 44 | 918 | 2026-02-17 |
+| C04 Expression Compiler | 918 | 31 | 949 | 2026-02-17 |
