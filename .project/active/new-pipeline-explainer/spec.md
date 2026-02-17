@@ -13,7 +13,7 @@
 
 ### Why This Matters
 
-The refactor design intent (`.project/concepts/refactor-design-intent/`, 26 documents, 168 requirements) describes a clean pipeline architecture. But architecture documents are not proof. They describe what should happen — they don't demonstrate that the pieces actually compose into a working whole.
+The refactor design intent (`.project/concepts/refactor-design-intent/`, 27 documents, 168 requirements) describes a clean pipeline architecture. But architecture documents are not proof. They describe what should happen — they don't demonstrate that the pieces actually compose into a working whole.
 
 This explainer serves two purposes:
 
@@ -29,7 +29,7 @@ The old explainer spec was written against the old architecture. That architectu
 - [ ] The three "hard parts" (template instantiation, aggregation decomposition, dual resolution) are each explained with concrete before/after examples, not abstract descriptions
 - [ ] The explanation surfaces at least one design gap, ambiguity, or unstated assumption in the refactor design intent — or provides evidence that none exist
 - [ ] Every PipelineModule in the LCOE computation graph can be clicked to show: its inputs (with source type and producer), its outputs (with channel names), and its factory type
-- [ ] The dual resolution architecture is shown with parallel traces through both paths, demonstrating they produce equivalent wiring for the same reference
+- [ ] The dual resolution architecture is shown with parallel traces through all resolution mechanisms, demonstrating they produce equivalent wiring for the same reference
 
 ### Priority
 
@@ -41,7 +41,7 @@ High. This should be built before or in parallel with the refactor implementatio
 
 ### Current State
 
-The refactor design intent exists as 26 prose documents with requirements tables. These are thorough but linear — they describe each component in isolation. No single artifact demonstrates that the components compose correctly end-to-end. The existing `08_block_diagrams.html` explains a design that is being thrown away.
+The refactor design intent exists as 27 prose documents with requirements tables. These are thorough but linear — they describe each component in isolation. No single artifact demonstrates that the components compose correctly end-to-end. The existing `08_block_diagrams.html` explains a design that is being thrown away.
 
 ### Desired Outcome
 
@@ -58,7 +58,7 @@ A single self-contained HTML file that traces the LCOE computation through the r
 - Concrete data examples at each step (not pseudocode — actual model instances with real field values from the solar battery example)
 - Interactive computation graph DAG with module drill-down
 - Visualizations of the three hard parts: template instantiation, aggregation decomposition, dual resolution
-- Implementation pattern visualization: pure factory functions, strategy chain, OutputRegistry key formats
+- Implementation pattern visualization: pure factory functions, strategy chain, OutputRegistry typed registries
 - Brief expandable SysML glossary grounded in the solar battery example
 - Large zoomable/pannable diagrams
 
@@ -95,7 +95,7 @@ The 7 steps, with sub-steps where orchestration ordering matters:
 | Step | Name | Produces |
 |------|------|----------|
 | 1 | Extract | `CalculationDefinitionData`, `CalcUsageData`, `PartDefinitionData` |
-| 2 | Build Registry | `OutputRegistry` (Key_A through Key_F populated) |
+| 2 | Build Registry | `OutputRegistry` (3 typed registries: scoped, SysML QN, alias) |
 | 3 | Trace Dependencies | `BacktrackingResult` (binding resolutions, required usages) |
 | 3.5 | Hierarchy + Virtual Binding Rewrite | `HierarchyExtractionResult`, mutated `CalcUsageData` bindings |
 | 4 | Classify Entry Points | `EntryPoint` instances typed as DESIGN_ATTRIBUTE / LIBRARY_DEFAULT / USAGE_LITERAL |
@@ -186,43 +186,52 @@ Aggregation MUST be explained through Solar Array's `capital_cost`:
 
 ### FR-8: Dual Resolution Architecture
 
-This is the most important "prove it works" section. The refactored design has two resolution paths that MUST stay separate (doc 24). The explainer MUST demonstrate why and show they compose correctly:
+This is the most important "prove it works" section. The refactored design has three resolution mechanisms that MUST stay separate (doc 24). The explainer MUST demonstrate why and show they compose correctly:
 
-**Path 1: Backtracker (CalcUsage modules)**
+**Mechanism 1: Backtracker with type-directed dispatch (CalcUsage modules)**
 - MUST show the DFS traversal: backtracker encounters a binding, resolves it to decide "recurse deeper" vs "stop — this is an entry point"
+- MUST show type-directed dispatch based on `BindingType`: CHAIN bindings (no `::` in source_path) query the scoped registry first; REFERENCE bindings (`::` in source_path) query the SysML QN registry first
 - MUST show why resolution is embedded in traversal: you can't separate "what to resolve" from "what to traverse next"
 - MUST show the output: `BindingResolution` objects in `BacktrackingResult.binding_resolutions`
 
-**Path 2: resolve_input() (FORMULA + Aggregation modules)**
+**Mechanism 2: Pre-computed attribute resolution map (FORMULA modules)**
+- MUST show that FORMULA inputs are resolved during computed attribute analysis (Step 4.5), before module building begins
+- MUST show there is no runtime strategy chain — the answer is already known from the attribute map
+- MUST show the output: `InputSource` objects wired directly from the pre-computed map
+
+**Mechanism 3: resolve_input() with strategy chain (Aggregation modules)**
 - MUST show the strategy chain: `resolve_input(ref, ctx, strategies) -> InputSource`
-- MUST show the 5 strategies in order with concrete examples:
-  - C: ScopedRegistryLookup (Key_C — hierarchy-scoped, unique)
-  - A: DirectRegistryLookup (Key_A — unscoped, potentially ambiguous)
-  - B: SysmlQnNormalization (`Package::Part::attr` → dotted)
-  - D: ChainRedefinitionFollow (`:>>` chains, cycle-safe)
-  - E: DesignAttributeLookup (bare name match)
-- MUST show that `AGG_STRATEGIES` reorders to promote D before A/B (because aggregation inputs almost always resolve through `:>>` chains)
+- MUST show the 3 active strategies in `AGG_STRATEGIES` order with concrete examples:
+  - A: ScopedRegistryLookup (`ScopedKey` — hierarchy-scoped, unique; queries scoped + alias registries)
+  - C: ChainRedefinitionFollow (`:>>` chains, cycle-safe)
+  - D: DesignAttributeLookup (bare name match against design attrs)
+- MUST show that `AGG_STRATEGIES` orders `[A, C, D]` with ChainRedefinitionFollow promoted (because aggregation inputs almost always resolve through `:>>` chains)
 - MUST show the self-reference guard: prevents wiring a module to its own output
+- MUST note different output types: backtracker produces `BindingResolution`, resolve_input() produces `InputSource`
 
 **Composition proof:**
-- MUST pick one concrete reference that both paths could resolve (e.g., a binding that appears in a CalcUsage AND would also appear if the same calc were a FORMULA)
+- MUST pick one concrete reference that multiple mechanisms could resolve (e.g., a binding that appears in a CalcUsage AND would also appear if the same calc were an Aggregation)
 - MUST show both paths arriving at the same `InputSource` / wiring decision
 - MUST explain why this equivalence is required (REQ-DRA-04) and how it's tested
+- MUST note that all mechanisms query the same typed registries (scoped, SysML QN, alias), ensuring consistency
 
-### FR-9: The OutputRegistry and Key Formats
+### FR-9: The OutputRegistry and Typed Registries
 
 The OutputRegistry MUST be shown as the namespace that makes resolution work:
 
-- MUST show it as a flat `dict[str, str]` mapping alias → canonical channel
-- MUST show the 4-phase build protocol with concrete examples from LCOE:
-  - Phase 1a: CalcUsage outputs → Key_A (`cost_model.total_cost`), Key_B (`BatteryPackCostCalc.total_cost`), Key_C (`plant.battery_system.battery_pack.cost_model.total_cost`)
-  - Phase 1b: Aggregation outputs → Key_D, Key_E, stripped variants
-  - Phase 1c: FORMULA outputs → Key_F, bare, SysML QN
-  - Phase 2: CHAIN aliases (`:>>` redefinition chains)
-  - Phase 3: EXPOSE_PURE aliases (computed attribute passthrough)
-  - Phase 4: Transitive design attribute aliases
-- MUST show the scope problem: two parts containing identically-named `cost_model` usages — Key_A is ambiguous, Key_C disambiguates
-- SHOULD be interactive: let the user select a reference and see which key format matches
+- MUST show it as three typed registries + one membership set:
+  - `_scoped: dict[ScopedKey, CanonicalChannel]` — hierarchy-qualified lookups (primary resolution path)
+  - `_sysml_qn: dict[SysMLQN, CanonicalChannel]` — `Package::Element` format lookups (REFERENCE bindings)
+  - `_alias: dict[ScopedKey, CanonicalChannel]` — CHAIN/EXPOSE_PURE/transitive aliases
+  - `_canonical: set[CanonicalChannel]` — membership check for phase ordering enforcement
+- MUST introduce typed identifiers: `ScopedKey` (dotted hierarchy, e.g., `solar_battery_plant.solar_array.pv_module.cost_model.total_cost`), `SysMLQN` (`Package::Element`), `CanonicalChannel` (PQN of output)
+- MUST show the 4-phase build protocol with concrete examples from LCOE, showing which registry each phase populates:
+  - Phase 1a: CalcUsage outputs → **scoped** registry (`ScopedKey`) + `_canonical` set
+  - Phase 1b: Aggregation outputs → **scoped** registry (`ScopedKey`)
+  - Phase 1c: FORMULA outputs → **SysML QN** registry (`SysMLQN`)
+  - Phases 2–4: CHAIN/EXPOSE_PURE/transitive aliases → **alias** registry (target must exist in `_canonical`)
+- MUST show the scope problem: unscoped keys (e.g., `cost_model.total_cost`) are not registered at all — ambiguity is prevented by construction. Across 6 models and 150 bindings, unscoped keys had zero resolution hits while causing 10+ collisions, proving they were never needed. `ScopedKey` (hierarchy-qualified) is unique by SysML ownership semantics.
+- SHOULD be interactive: let the user select a reference and see which typed registry is queried (based on CHAIN vs REFERENCE dispatch) and what `ScopedKey` or `SysMLQN` is constructed
 
 ### FR-10: Entry Point Classification
 
@@ -299,7 +308,7 @@ An expandable glossary MUST be available:
 - [ ] A reader can answer: "What are the 7 pipeline steps and what does each produce?" after the pipeline overview
 - [ ] A reader can answer: "Why are there two resolution paths and why can't they be merged?" after the dual resolution section
 - [ ] A reader can answer: "How does `sum(pv_module.capital_cost)` become a parametric multiply?" after the aggregation section
-- [ ] A reader can answer: "What is Key_C and why does it exist?" after the OutputRegistry section
+- [ ] A reader can answer: "What is a ScopedKey and why does it exist?" after the OutputRegistry section
 - [ ] A reader can answer: "What guarantees that generation doesn't need extraction data?" after the ComputationGraph section
 
 ### Core Functionality
@@ -318,7 +327,7 @@ An expandable glossary MUST be available:
 - [ ] No external CDN or library dependencies
 - [ ] File size SHOULD be under 500KB
 - [ ] Works in Chrome, Firefox, Safari (latest)
-- [ ] Self-consistent with the 26 design intent documents — no contradictions
+- [ ] Self-consistent with the 27 design intent documents — no contradictions
 
 ---
 
@@ -341,7 +350,7 @@ Walk through each step with the LCOE data:
 
 **Step 1 — Extract**: SysML files → `CalculationDefinitionData` + `CalcUsageData`. Show one calc def and one usage with concrete fields.
 
-**Step 2 — Build Registry**: Catalog all module outputs into the `OutputRegistry`. Show Key_A/B/C for `pv_module_cost_model.total_cost`. Show why Key_C exists (scope disambiguation).
+**Step 2 — Build Registry**: Catalog all module outputs into the `OutputRegistry`. Show typed registries being populated and `ScopedKey` construction. Show why typed registries exist: prevent the ambiguity that unscoped keys allowed.
 
 **Step 3 — Trace Dependencies**: Backtracker DFS from LCOE. Show the traversal tree. Show one binding resolution decision: "this resolves to an upstream module (recurse)" vs "this has no producer (entry point, stop)."
 
@@ -353,7 +362,7 @@ Walk through each step with the LCOE data:
 
 **Step 5 — Build Modules**: Show one factory call of each type. Emphasize pure function → `(PipelineModule, dict[str, EntryPoint])`.
 
-**Step 5.5 — Build OutputRegistry (4-phase)**: Show the registry growing across 4 phases. Show the scope problem and Key_C resolution.
+**Step 5.5 — Build OutputRegistry (4-phase)**: Show the three registries growing across 4 phases. Show phase ordering enforcement (alias registration rejects unknown canonical channels). Show `ScopedKey` as the load-bearing resolution key.
 
 **Step 6 — Sort + Validate**: Show Kahn's algorithm producing execution order. Show validation: every `producer_channel` resolves to a declared output.
 
@@ -367,7 +376,7 @@ Walk through each step with the LCOE data:
 
 **3b: Aggregation Decomposition** — Solar Array `capital_cost` decomposed term-by-term. SumTerm → parametric multiply. LocalTerm → 3-strategy resolution. Cascade to plant total.
 
-**3c: Dual Resolution** — Side-by-side: Backtracker path (DFS + binding context) vs `resolve_input()` (strategy chain). Same reference, same answer. Why they can't merge (resolution is embedded in traversal for CalcUsage).
+**3c: Dual Resolution** — Three-way comparison: Backtracker (DFS + type-directed dispatch on CHAIN/REFERENCE), FORMULA (pre-computed attribute map — no runtime strategy chain), Aggregation (`resolve_input()` with `AGG_STRATEGIES`). Same reference, same answer. Why they can't merge (backtracker resolution is embedded in DFS traversal; FORMULA resolution is pre-computed; aggregation needs a strategy chain because its references span scopes).
 
 ### Act 4: "The Full Graph" (the result)
 
@@ -383,9 +392,10 @@ Walk through each step with the LCOE data:
 
 ## Related Artifacts
 
-- **Design Intent:** `.project/concepts/refactor-design-intent/` (26 documents)
+- **Design Intent:** `.project/concepts/refactor-design-intent/` (27 documents, including doc 27: typed registry refactor)
 - **Supersedes:** `.project/active/interactive-pipeline-explainer/spec.md`
 - **Research:** `.project/research/20260216-120000_interactive-html-diagram-frameworks.md`
+- **TRR Research:** `.project/research/20260217-175904_pipeline-explainer-spec-update-mapping.md`
 - **Design:** `.project/active/new-pipeline-explainer/design.md` (to be created)
 
 ---

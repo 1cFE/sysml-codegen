@@ -501,6 +501,10 @@ _TO BE FILLED DURING IMPLEMENTATION_
 **Issues:**
 - None. All validations pass: 36 modules match YAML exactly, 61 edges all reference valid modules, JS parses cleanly.
 
+**TRR Amendment (post-implementation):**
+- MODEL_DATA.pipelineTrace.step2_registry updated for Typed Registry Refactor — Key_A/Key_B removed, ScopedKey/CanonicalChannel added. scopeAmbiguity reframed: unscoped keys are not registered at all (ambiguity prevented by construction).
+- MODEL_DATA.resolutionExamples updated — DirectRegistryLookup (A) and SysmlQnNormalization (B) removed; strategies relabeled: A=ScopedRegistryLookup, C=ChainRedefinitionFollow, D=DesignAttributeLookup. Backtracker path now includes dispatchType and registryQueried fields.
+
 **Deviations:**
 - **Module count: 36 not 35.** The baseline YAML has 36 modules (15 F1 + 1 F2 + 20 F3). The 15th F1 is `allocation_model` (AllocationCostCalc on Solar Array). The design doc estimated 14 F1 — the discrepancy was the allocation model being counted differently. MODEL_DATA uses the correct 36.
 - **Tier range: 0-4 not 0-6.** The actual dependency depth from the baseline data is 5 tiers (0 through 4), not 7 as the design speculated. Tier 0 = 13 leaf modules, Tier 1 = 13 subsystem aggregations + ann_om, Tier 2 = 7 plant aggregations + idiot indices, Tier 3 = ann_fin + plant_idiot, Tier 4 = LCOE.
@@ -555,6 +559,12 @@ _TO BE FILLED DURING IMPLEMENTATION_
 - **Step 5.5 uses hardcoded phase data**: The registry phase data was constructed inline in renderStep55() rather than added to MODEL_DATA, since the phase structure is presentational (different from the flat alias→canonical data).
 - **Collapsible fields deferred**: Plan item "Collapsible fields (click to expand arrays/objects)" remains deferred — the data panels show fields inline. Could add in Phase 5 polish.
 
+**TRR Amendment (post-implementation):**
+- Step 2 (Build Registry) updated for typed registries — flat dict description replaced with three typed registries (`_scoped`, `_sysml_qn`, `_alias`) + `_canonical` set. Key_A/B/C terminology replaced with ScopedKey/CanonicalChannel/SysMLQN. Scope ambiguity visual reframed: unscoped keys not registered at all. Empirical callout added (0/150 Key_A hits across 6 models).
+- Step 5.5 (4-phase) updated — phase table rows updated from Key_A/Key_D/Key_F to typed registry targets. Phase ordering enforcement note added.
+- Strategy chain in FORMULA factory card updated — "resolve_input() strategy chain" changed to "pre-computed attribute resolution map".
+- Step 5.5 ordering constraint text updated to separate FORMULA and Aggregation resolution descriptions.
+
 **Design Validation Findings:**
 - No design gaps surfaced. All 10 pipeline steps can be concretely explained with real data from the solar battery model. The three ordering constraints (3.5→4, 4.5→5, 5.5→6) each have clear "what breaks without this" explanations. The ComputationGraph boundary is clean — generation needs nothing from upstream steps.
 
@@ -570,6 +580,9 @@ _TO BE FILLED DURING IMPLEMENTATION_
 
 **Issues:**
 - None. JS syntax check passes, all classes instantiate from MODEL_DATA.
+
+**TRR Amendment (post-implementation):**
+- DualResolutionDemo updated: side-by-side reframed as three resolution mechanisms (Backtracker with type-directed dispatch, FORMULA pre-computed attribute map, Aggregation resolve_input()). Strategy names updated — DirectRegistryLookup and SysmlQnNormalization removed. Active strategies: A=ScopedRegistryLookup, C=ChainRedefinitionFollow, D=DesignAttributeLookup. AGG_STRATEGIES shown as [A, C, D]. Backtracker panel explains CHAIN vs REFERENCE type-directed dispatch. FORMULA panel explains pre-computed attribute map (no strategy chain). "Why they can't merge" expanded with FORMULA reason.
 
 **Deviations:**
 - **Tier boxes use HTML divs, not SVG renderModuleNode()**: The design spec suggested using SVG with renderModuleNode() for tier boxes, but HTML divs are simpler and sufficient for the static visual. SVG is reserved for the DAG (Phase 5) where zoom/pan matters.

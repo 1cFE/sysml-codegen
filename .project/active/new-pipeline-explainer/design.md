@@ -17,7 +17,7 @@ A single self-contained HTML file (~200-300KB) that traces the LCOE computation 
 
 - **Spec:** `.project/active/new-pipeline-explainer/spec.md`
 - **Prior design (old spec):** `.project/active/interactive-pipeline-explainer/design.md`
-- **Design intent:** `.project/concepts/refactor-design-intent/` (26 documents)
+- **Design intent:** `.project/concepts/refactor-design-intent/` (27 documents)
 - **Research:** `.project/research/20260216-120000_interactive-html-diagram-frameworks.md`
 - **Existing HTML (superseded):** `.project/diagrams/08_block_diagrams.html`
 - **Solar battery fixtures:** `tests/fixtures/solar_battery_model/` (3 .sysml files)
@@ -77,7 +77,7 @@ Documented fully in the explore agent output. Key models for the explainer:
 | Extraction | `HierarchyExtractionResult` | redefinitions, design_overrides, multiplicities, aggregation_expressions, usage_type_map |
 | Extraction | `AggregationExpressionData` | sum_terms, singleton_terms, local_terms, transformed_expression |
 | Analysis | `BacktrackingResult` | required_usages, binding_resolutions (dict[str, BindingResolution]), entry_points |
-| Core | `OutputRegistry` | _index (dict[str,str]), register(), resolve(), derive_key_c() |
+| Core | `OutputRegistry` | _scoped (dict[ScopedKey, CanonicalChannel]), _sysml_qn (dict[SysMLQN, CanonicalChannel]), _alias (dict[ScopedKey, CanonicalChannel]), _canonical (set[CanonicalChannel]), scoped_lookup(), sysml_qn_lookup(), alias_lookup(), register_scoped(), register_sysml_qn(), register_alias() |
 | Core | `BindingResolution` | resolution_type (ENTRY_POINT\|MODULE_OUTPUT), qualified_name, source_path |
 | Resolution | `ComputationGraph` | modules (list[PipelineModule]), entry_point_groups (list[ParameterGroup]), execution_order |
 | Resolution | `PipelineModule` | name, module_type, inputs (list[ModuleInput]), outputs (list[ModuleOutput]), compilability, is_computed_attribute, is_aggregation |
@@ -284,7 +284,8 @@ Carried forward + new pipeline-step colors:
 
   /* Resolution paths */
   --path-backtracker: #2563EB;  /* Blue */
-  --path-resolve-input: #7C3AED; /* Purple */
+  --path-formula: #7C3AED;      /* Purple — FORMULA attribute map */
+  --path-resolve-input: #EA580C; /* Orange — Aggregation resolve_input() */
 
   /* Structural */
   --edge-color: #94A3B8;
@@ -443,28 +444,28 @@ bindings: [
 
 #### 4d. Step 2: Build Registry (OutputRegistry overview — detailed build in Step 5.5)
 
-**Explanation**: "Catalog every possible output channel name so that later steps can look up where a value comes from. The OutputRegistry is a flat dict[str, str] mapping alias names to canonical channels."
+**Explanation**: "Catalog every output channel name into three typed registries so that later steps can look up where a value comes from. The `OutputRegistry` uses typed identifiers — `ScopedKey`, `SysMLQN`, and `CanonicalChannel` — to prevent key-format confusion."
 
-**Output panel**: The OutputRegistry conceptual structure, showing Key_A/B/C for the traced module:
+**Output panel**: The OutputRegistry conceptual structure, showing typed registry entries for the traced module:
 
 ```
 OutputRegistry (partial — PV Module cost_model only)
 ─────────────────────────────────────────────
-Key_A: "cost_model.total_cost"
-  → canonical: "...pv_module__cost_model__total_cost"
+_scoped registry (ScopedKey → CanonicalChannel):
+  "solar_battery_plant.solar_array.pv_module.cost_model.total_cost"
+  → "...pv_module__cost_model__total_cost"
 
-Key_B: "PVModuleCostCalc.total_cost"
-  → canonical: (same)
+_canonical set (membership):
+  "...pv_module__cost_model__total_cost" ✓
 
-Key_C: "solar_battery_plant.solar_array.pv_module.cost_model.total_cost"
-  → canonical: (same)
+(SysML QN and alias registries populated in later phases)
 ```
 
-**Why this step exists**: "Bindings in SysML use scope-relative names (`cost_model.total_cost`). But multiple parts can have a `cost_model` — the registry maps every possible reference format to the one canonical channel, disambiguating with hierarchy-scoped Key_C."
+**Why this step exists**: "Bindings in SysML use scope-relative names (`cost_model.total_cost`). But multiple parts can have a `cost_model` — the typed registry only registers hierarchy-scoped `ScopedKey` entries, making ambiguity impossible by construction."
 
-**Scope problem callout**: Visual showing that `cost_model.total_cost` (Key_A) is ambiguous (9 components have `cost_model`), but `solar_battery_plant.solar_array.pv_module.cost_model.total_cost` (Key_C) is unique.
+**Scope problem callout**: Visual showing that unscoped names like `cost_model.total_cost` are not registered at all — ambiguity is prevented by construction. Across 6 models and 150 bindings, unscoped keys had zero resolution hits while causing 10+ collisions. `ScopedKey` (hierarchy-qualified, e.g., `solar_battery_plant.solar_array.pv_module.cost_model.total_cost`) is unique by SysML ownership semantics.
 
-Note: "Step 2 registers the canonical channels. The full 4-phase build (CHAIN aliases, EXPOSE aliases, transitive aliases) happens in Step 5.5 after all module types are known."
+Note: "Step 2 registers into the scoped registry and `_canonical` set. The alias registry is populated in Step 5.5 (Phases 2–4) after all module types are known."
 
 #### 4e. Step 3: Trace Dependencies (Backtracker DFS)
 
@@ -634,19 +635,21 @@ Similar panels for FORMULA factory (`build_formula_module`) and Aggregation fact
 
 **Visual**: The registry growing phase by phase (same approach as prior design's Act 2c, but positioned here in the pipeline sequence). Interactive table with rows appearing per phase:
 
-| Phase | Alias Type | Example Key | Points To |
-|-------|-----------|-------------|-----------|
-| 1a | CalcUsage output (Key_A) | `cost_model.total_cost` | `...pv_module__cost_model__total_cost` |
-| 1a | CalcUsage output (Key_C) | `solar_battery_plant.solar_array.pv_module.cost_model.total_cost` | (same) |
-| 1b | Aggregation output (Key_D) | `solar_array.capital_cost` | `...solar_array__capital_cost__capital_cost` |
-| 1c | FORMULA output (Key_F) | `Solar_Battery_Plant.p_net_kw` | `...p_net_kw__p_net_kw` |
-| 2 | CHAIN alias | `pv_module.capital_cost` | `...pv_module__cost_model__total_cost` |
-| 3 | EXPOSE_PURE alias | *(none in this model)* | — |
-| 4 | Transitive alias | *(none in this model)* | — |
+| Phase | Registry | Key Type | Example Key | Points To |
+|-------|----------|----------|-------------|-----------|
+| 1a | `_scoped` | `ScopedKey` | `solar_battery_plant.solar_array.pv_module.cost_model.total_cost` | `...pv_module__cost_model__total_cost` |
+| 1a | `_canonical` | `CanonicalChannel` | `...pv_module__cost_model__total_cost` | (membership set) |
+| 1b | `_scoped` | `ScopedKey` | `solar_battery_plant.solar_array.capital_cost` | `...solar_array__capital_cost__capital_cost` |
+| 1c | `_sysml_qn` | `SysMLQN` | `SolarBatteryLibrary::Solar_Battery_Plant::p_net_kw` | `...p_net_kw__p_net_kw` |
+| 2 | `_alias` | `ScopedKey` | `pv_module.capital_cost` (CHAIN) | `...pv_module__cost_model__total_cost` |
+| 3 | `_alias` | `ScopedKey` | *(none in this model — EXPOSE_PURE)* | — |
+| 4 | `_alias` | `ScopedKey` | *(none in this model — transitive)* | — |
 
 Phases 3 and 4 are shown as labeled empty rows: "No EXPOSE_PURE/transitive aliases in this model — these come from computed attribute passthroughs and multi-hop :>> chains."
 
-**Ordering constraint callout** (red): "This MUST happen before Step 6. The backtracker (CalcUsage resolution) uses this registry. FORMULA and Aggregation factory resolution (via `resolve_input()`) also uses it."
+Note about phase ordering enforcement: Phases 2–4 register into the `_alias` registry. The `register_alias()` API enforces that the target `CanonicalChannel` must already exist in `_canonical` — rejecting out-of-order registration attempts.
+
+**Ordering constraint callout** (red): "This MUST happen before Step 6. The backtracker (CalcUsage resolution) uses this registry. Aggregation factory resolution (via `resolve_input()`) and FORMULA attribute map resolution also use it."
 
 #### 4k. Step 6: Sort + Validate
 
@@ -797,76 +800,64 @@ If a literal `:>>` redefinition exists, show literal value propagation instead.
 
 This is the most important "prove it works" section. **NEW — not in the prior design.**
 
-**Layout**: Side-by-side comparison, two parallel vertical traces:
+**Layout**: Three-panel comparison (or 2-panel with FORMULA as a distinct callout between them):
 
 ```
-┌────────────────────────────┐    ┌────────────────────────────────────┐
-│ PATH 1: Backtracker        │    │ PATH 2: resolve_input()            │
-│ (CalcUsage modules)        │    │ (FORMULA + Aggregation modules)    │
-│                             │    │                                    │
-│ Context: DFS traversal.    │    │ Context: Post-DFS factory call.   │
-│ Resolution is embedded     │    │ Uses strategy chain.              │
-│ in traversal — the result  │    │                                    │
-│ determines recurse vs stop.│    │                                    │
-│                             │    │                                    │
-│ Reference:                  │    │ Reference:                        │
-│ "capital_cost" on           │    │ "capital_cost" as aggregation     │
-│ annualized_financial        │    │ input on same scope               │
-│                             │    │                                    │
-│ ┌── Scoped resolve ──────┐ │    │ ┌── Strategy C: Scoped ────────┐ │
-│ │ scope + source_path     │ │    │ │ ScopedRegistryLookup         │ │
-│ │ → Key_C lookup          │ │    │ │ → Key_C lookup               │ │
-│ │ → MATCH: plant agg      │ │    │ │ → MATCH: plant agg           │ │
-│ └─────────────────────────┘ │    │ └──────────────────────────────┘ │
-│                             │    │                                    │
-│ Output:                     │    │ Output:                            │
-│ BindingResolution(          │    │ InputSource(                       │
-│   type: MODULE_OUTPUT,      │    │   source_type: "module_output",   │
-│   channel: "...capital_cost │    │   producer_channel: "...capital_  │
-│     __capital_cost")        │    │     cost__capital_cost")           │
-│                             │    │                                    │
-│ Decision: RECURSE           │    │ Wired to upstream module.          │
-│ (found upstream module)     │    │                                    │
-│                             │    │                                    │
-│ ═══════════════════════════ │    │ ════════════════════════════════   │
-│  SAME CHANNEL.              │    │  SAME CHANNEL.                     │
-│  SAME WIRING.               │    │  SAME WIRING.                      │
-│  DIFFERENT DATA TYPE.       │    │  DIFFERENT DATA TYPE.               │
-│  (BindingResolution vs      │    │  (InputSource)                     │
-│   InputSource)              │    │                                    │
-└────────────────────────────┘    └────────────────────────────────────┘
+┌──────────────────────────┐  ┌───────────────────────────┐  ┌───────────────────────────────┐
+│ MECHANISM 1: Backtracker │  │ MECHANISM 2: Attribute Map│  │ MECHANISM 3: resolve_input()  │
+│ (CalcUsage modules)      │  │ (FORMULA modules)         │  │ (Aggregation modules)         │
+│                          │  │                           │  │                               │
+│ Context: DFS traversal.  │  │ Context: Pre-computed     │  │ Context: Post-DFS factory.    │
+│ Type-directed dispatch:  │  │ during computed attribute  │  │ Uses strategy chain.          │
+│ CHAIN → scoped registry  │  │ analysis (Step 4.5).      │  │                               │
+│ REFERENCE → SysML QN reg │  │ No runtime strategy chain │  │ AGG_STRATEGIES order:         │
+│                          │  │ — answer already known.   │  │ A: ScopedRegistryLookup       │
+│ Reference:               │  │                           │  │ C: ChainRedefinitionFollow    │
+│ "capital_cost" on        │  │ Reference:                │  │ D: DesignAttributeLookup      │
+│ annualized_financial     │  │ "p_net_mw" on p_net_kw    │  │                               │
+│                          │  │                           │  │ Reference:                    │
+│ ┌── Type dispatch ─────┐│  │ ┌── Attribute map ──────┐ │  │ "capital_cost" as agg input   │
+│ │ CHAIN binding (no ::) ││  │ │ p_net_mw → scoped     │ │  │                               │
+│ │ → scoped registry     ││  │ │ registry lookup       │ │  │ ┌── Strategy A: Scoped ────┐ │
+│ │ → ScopedKey lookup    ││  │ │ → pre-computed match  │ │  │ │ ScopedRegistryLookup     │ │
+│ │ → MATCH: plant agg    ││  │ └───────────────────────┘ │  │ │ → ScopedKey lookup       │ │
+│ └───────────────────────┘│  │                           │  │ │ → MATCH: plant agg       │ │
+│                          │  │ Output:                   │  │ └──────────────────────────┘ │
+│ Output:                  │  │ InputSource(module_output) │  │                               │
+│ BindingResolution(       │  │                           │  │ Output:                       │
+│   MODULE_OUTPUT,         │  │                           │  │ InputSource(module_output)    │
+│   channel: "...")        │  │                           │  │                               │
+│                          │  │                           │  │                               │
+│ ════════════════════════ │  │ ═════════════════════════ │  │ ═════════════════════════════ │
+│ SAME CHANNEL.            │  │ SAME CHANNEL.             │  │ SAME CHANNEL.                 │
+│ (BindingResolution)      │  │ (InputSource)             │  │ (InputSource)                 │
+└──────────────────────────┘  └───────────────────────────┘  └───────────────────────────────┘
 ```
 
-**Below the side-by-side**: Explanation of why they can't merge:
+**Below the panels**: Explanation of why they can't merge:
 
-"The backtracker resolves during DFS — it needs the resolution result to decide whether to recurse deeper or stop. You can't separate 'what to resolve' from 'what to traverse next.' FORMULA and Aggregation modules don't need DFS — they're post-traversal — so they use a standalone strategy chain. Both paths produce equivalent wiring for the same reference (REQ-DRA-04)."
+"The **backtracker** resolves during DFS traversal — it needs the resolution result to decide whether to recurse deeper or stop. You can't separate 'what to resolve' from 'what to traverse next.' **FORMULA** inputs are resolved during computed attribute analysis (Step 4.5), before module building begins — there's no strategy chain to run because the answer is already known from the attribute map. **Aggregation** modules use a standalone strategy chain (`resolve_input()`) because their references span scopes. All three mechanisms query the same typed registries (scoped, SysML QN, alias), ensuring consistency (REQ-DRA-04)."
 
-**Strategy chain detail** (for Path 2):
+**Strategy chain detail** (for Mechanism 3 — Aggregation only):
 
 ```
 resolve_input(ref, ctx, strategies) → InputSource
 ───────────────────────────────────
-STANDARD_STRATEGIES order:
-  C: ScopedRegistryLookup    ──→ Key_C (unique, hierarchy-scoped)
-  A: DirectRegistryLookup    ──→ Key_A (unscoped, may be ambiguous)
-  B: SysmlQnNormalization    ──→ Package::Part::attr → dotted
-  D: ChainRedefinitionFollow ──→ :>> chains, cycle-safe
-  E: DesignAttributeLookup   ──→ bare name match
-
-AGG_STRATEGIES (reordered):
-  C → D → A → B → E
-       ↑
-  D promoted: aggregation inputs almost always resolve through :>> chains
+AGG_STRATEGIES order:
+  A: ScopedRegistryLookup      ──→ ScopedKey (hierarchy-scoped, queries scoped + alias registries)
+  C: ChainRedefinitionFollow   ──→ :>> chains, cycle-safe
+  D: DesignAttributeLookup     ──→ bare name match against design attrs
 ```
+
+ChainRedefinitionFollow is promoted to position C (was D in earlier designs) because aggregation inputs almost always resolve through `:>>` redefinition chains.
 
 Each strategy box is clickable — expands to show a concrete example of when that strategy fires and what happens.
 
-**Self-reference guard callout**: "Both paths include a guard that prevents wiring a module to its own output. Without this, aggregation modules that produce `capital_cost` and consume `capital_cost` (from children) would create a cycle."
+**Self-reference guard callout**: "All mechanisms include a guard that prevents wiring a module to its own output. Without this, aggregation modules that produce `capital_cost` and consume `capital_cost` (from children) would create a cycle."
 
-**Interactive element**: Dropdown to select different references and see which path/strategy resolves them. Three examples:
-1. `total_capex = capital_cost` → Strategy C (scoped) → MODULE_OUTPUT
+**Interactive element**: Dropdown to select different references and see which mechanism/strategy resolves them. Examples:
+1. `total_capex = capital_cost` → Strategy A (scoped) → MODULE_OUTPUT
 2. `discount_rate = discount_rate` → All strategies miss → ENTRY_POINT
-3. `in p_net_kw = p_net_mw * 1000` → (FORMULA, only Path 2) → Strategy C → MODULE_OUTPUT from F2 module
 
 ### 6. Act 4: "The Full Graph"
 
@@ -993,14 +984,13 @@ const MODEL_DATA = {
     },
     step2_registry: {
       tracedKeys: [
-        { format: "Key_A", key: "cost_model.total_cost", canonical: "...pv_module__cost_model__total_cost" },
-        { format: "Key_B", key: "PVModuleCostCalc.total_cost", canonical: "..." },
-        { format: "Key_C", key: "solar_battery_plant.solar_array.pv_module.cost_model.total_cost", canonical: "..." }
+        { format: "ScopedKey", key: "solar_battery_plant.solar_array.pv_module.cost_model.total_cost", canonical: "...pv_module__cost_model__total_cost", registry: "_scoped" },
+        { format: "CanonicalChannel", key: "...pv_module__cost_model__total_cost", canonical: "(membership in _canonical set)", registry: "_canonical" }
       ],
       scopeAmbiguity: {
-        key_a: "cost_model.total_cost",
-        matches: 9,
-        explanation: "9 components have a cost_model"
+        unscopedKey: "cost_model.total_cost",
+        registered: false,
+        explanation: "Not registered at all — 9 components have a cost_model, so unscoped keys are ambiguous. Prevented by construction: only ScopedKey (hierarchy-qualified) is registered."
       }
     },
     step35_rewrite: {
@@ -1079,14 +1069,16 @@ const MODEL_DATA = {
       consumer: "annualized_financial",
       backtrackerPath: {
         scope: "solar_battery_plant",
+        dispatchType: "CHAIN",
         scopedKey: "solar_battery_plant.capital_cost",
+        registryQueried: "_scoped",
         result: "MODULE_OUTPUT",
         channel: "...capital_cost__capital_cost"
       },
       resolveInputPath: {
         strategies: [
-          { name: "C: ScopedRegistryLookup", key: "solar_battery_plant.capital_cost", result: "HIT" }
-          // A, B, D, E not reached
+          { name: "A: ScopedRegistryLookup", key: "solar_battery_plant.capital_cost", result: "HIT" }
+          // C, D not reached
         ],
         result: "module_output",
         channel: "...capital_cost__capital_cost"
@@ -1098,17 +1090,17 @@ const MODEL_DATA = {
       consumer: "annualized_financial",
       backtrackerPath: {
         scope: "solar_battery_plant",
+        dispatchType: "CHAIN",
         scopedKey: "solar_battery_plant.discount_rate",
+        registryQueried: "_scoped",
         result: "ENTRY_POINT",
         channel: null
       },
       resolveInputPath: {
         strategies: [
-          { name: "C: ScopedRegistryLookup", key: "solar_battery_plant.discount_rate", result: "MISS" },
-          { name: "A: DirectRegistryLookup", key: "discount_rate", result: "MISS" },
-          { name: "B: SysmlQnNormalization", result: "SKIP (no ::)" },
-          { name: "D: ChainRedefinitionFollow", result: "MISS" },
-          { name: "E: DesignAttributeLookup", key: "discount_rate", result: "HIT" }
+          { name: "A: ScopedRegistryLookup", key: "solar_battery_plant.discount_rate", result: "MISS" },
+          { name: "C: ChainRedefinitionFollow", result: "MISS" },
+          { name: "D: DesignAttributeLookup", key: "discount_rate", result: "HIT" }
         ],
         result: "entry_point",
         channel: null
@@ -1208,7 +1200,7 @@ The full 35-module list, all edges, and complete entry point data will be derive
 - [ ] Reader answers "What are the 7 pipeline steps?" after Act 2 overview
 - [ ] Reader answers "Why two resolution paths?" after Act 3c
 - [ ] Reader answers "How does sum() become a multiply?" after Act 3b
-- [ ] Reader answers "What is Key_C?" after Step 2 / Step 5.5
+- [ ] Reader answers "What is a ScopedKey?" after Step 2 / Step 5.5
 - [ ] Reader answers "What guarantees generation doesn't need extraction data?" after Step 6
 
 ---
