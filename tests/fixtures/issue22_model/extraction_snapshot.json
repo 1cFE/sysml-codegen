@@ -1,0 +1,357 @@
+{
+  "model_name": "issue22_model",
+  "captured_at": "2026-02-17T03:54:07.992167+00:00",
+  "calc_defs": [
+    {
+      "name": "WidgetCostCalc",
+      "qualified_name": "Issue22Library::WidgetCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "markup_factor = LiteralRationalEvaluation()",
+        "cost = base_cost * markup_factor"
+      ],
+      "input_attributes": [
+        {
+          "name": "base_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "markup_factor",
+          "sysml_type": "Real",
+          "default_value": "1.75",
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": true
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "issue22_model/library.sysml",
+      "source_line": 11,
+      "source_hash": "671bee7095c1fde952da6ac5999bcb714fcb21535440275020a209d8e363e82e",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "base_cost",
+        "cost",
+        "markup_factor"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "MarginCalc",
+      "qualified_name": "Issue22Library::MarginCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "margin = component_total * margin_rate"
+      ],
+      "input_attributes": [
+        {
+          "name": "component_total",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "margin_rate",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "margin",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "issue22_model/library.sysml",
+      "source_line": 19,
+      "source_hash": "671bee7095c1fde952da6ac5999bcb714fcb21535440275020a209d8e363e82e",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "component_total",
+        "margin",
+        "margin_rate"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "Issue22Design__plant__assembly__widget__cost_model",
+      "calc_def_name": "WidgetCostCalc",
+      "calc_def_qualified_name": "Issue22Library::WidgetCostCalc",
+      "module_type": "issue22library.WidgetCostCalcModule",
+      "bindings": [
+        {
+          "param_name": "base_cost",
+          "source_path": "Issue22Library::Widget::cost_model::base_cost",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> Issue22Library::Widget::cost_model::base_cost",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "base_cost"
+        }
+      ],
+      "unbound_params": [
+        "markup_factor"
+      ],
+      "source_file": "issue22_model/library.sysml",
+      "source_line": 30,
+      "parent_part_path": "plant.assembly.widget",
+      "qualified_name": "Issue22Design__plant__assembly__widget__cost_model",
+      "is_template": false,
+      "owning_part_def_qn": "Issue22Library__Widget",
+      "raw_element": null
+    },
+    {
+      "instance_name": "Issue22Design__plant__assembly__margin_calc",
+      "calc_def_name": "MarginCalc",
+      "calc_def_qualified_name": "Issue22Library::MarginCalc",
+      "module_type": "issue22library.MarginCalcModule",
+      "bindings": [
+        {
+          "param_name": "component_total",
+          "source_path": "Issue22Library::WidgetAssembly::total_cost",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> Issue22Library::WidgetAssembly::total_cost",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "total_cost"
+        },
+        {
+          "param_name": "margin_rate",
+          "source_path": "0.15",
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "LiteralExpression -> 0.15",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 0.15,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": null
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "issue22_model/library.sysml",
+      "source_line": 46,
+      "parent_part_path": "plant.assembly",
+      "qualified_name": "Issue22Design__plant__assembly__margin_calc",
+      "is_template": false,
+      "owning_part_def_qn": "Issue22Library__WidgetAssembly",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/issue22_model/library.sysml": [
+      {
+        "name": "markup_factor",
+        "sysml_type": "Real",
+        "default_value": "1.75",
+        "unit": null,
+        "source_file": "issue22_model/library.sysml",
+        "source_line": 13,
+        "parent_part": "",
+        "qualified_name": "Issue22Library__WidgetCostCalc__markup_factor"
+      },
+      {
+        "name": "cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "issue22_model/library.sysml",
+        "source_line": 15,
+        "parent_part": "",
+        "qualified_name": "Issue22Library__WidgetCostCalc__cost"
+      },
+      {
+        "name": "margin",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "issue22_model/library.sysml",
+        "source_line": 23,
+        "parent_part": "",
+        "qualified_name": "Issue22Library__MarginCalc__margin"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [
+      {
+        "owning_part_qn": "Issue22Library__Widget",
+        "attribute_name": "total_cost",
+        "redefinition_type": "chain",
+        "literal_value": null,
+        "source_path": "cost_model.cost",
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "Issue22Library__WidgetAssembly",
+        "attribute_name": "total_cost",
+        "redefinition_type": "expression",
+        "literal_value": null,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "sum(widget.total_cost)",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "design_overrides": [],
+    "multiplicities": [
+      {
+        "part_usage_name": "widget",
+        "owning_part_def_qn": "Issue22Library__WidgetAssembly",
+        "count": 3,
+        "count_attribute_name": null,
+        "default_value": null
+      }
+    ],
+    "aggregation_expressions": [
+      {
+        "owning_part_qn": "Issue22Library__WidgetAssembly",
+        "owning_part_name": "WidgetAssembly",
+        "attribute_name": "total_cost",
+        "raw_expression_text": "sum(widget.total_cost)",
+        "transformed_expression": "widget.total_cost",
+        "sum_terms": [
+          {
+            "part_usage_name": "widget",
+            "attribute_name": "total_cost",
+            "multiplicity_attr": null,
+            "multiplicity_count": null
+          }
+        ],
+        "singleton_terms": [],
+        "local_terms": [],
+        "input_channels": [
+          "widget.total_cost"
+        ],
+        "entry_points": [],
+        "compilability": "unknown",
+        "has_unsupported_nodes": false,
+        "aliases": [],
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "warnings": [],
+    "part_usage_names": {
+      "Issue22Library__WidgetAssembly": [
+        "widget"
+      ]
+    },
+    "usage_type_map": {
+      "[\"Issue22Library__WidgetAssembly\", \"widget\"]": "Issue22Library__Widget"
+    }
+  },
+  "aggregation_expressions": [
+    {
+      "expression": {
+        "owning_part_qn": "Issue22Library__WidgetAssembly",
+        "owning_part_name": "WidgetAssembly",
+        "attribute_name": "total_cost",
+        "raw_expression_text": "sum(widget.total_cost)",
+        "transformed_expression": "widget.total_cost",
+        "sum_terms": [
+          {
+            "part_usage_name": "widget",
+            "attribute_name": "total_cost",
+            "multiplicity_attr": null,
+            "multiplicity_count": null
+          }
+        ],
+        "singleton_terms": [],
+        "local_terms": [],
+        "input_channels": [
+          "widget.total_cost"
+        ],
+        "entry_points": [],
+        "compilability": "unknown",
+        "has_unsupported_nodes": false,
+        "aliases": [],
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      "instance_path": "Issue22Design__plant__assembly"
+    }
+  ],
+  "computed_attributes": [],
+  "channel_aliases": [
+    {
+      "alias_name": "plant.assembly.widget.total_cost",
+      "canonical_name": "plant.assembly.widget.cost_model.cost",
+      "owning_part_qn": "Issue22Library__Widget",
+      "source": "redefinition"
+    }
+  ]
+}

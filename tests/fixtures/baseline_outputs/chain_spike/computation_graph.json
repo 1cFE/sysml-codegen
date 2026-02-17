@@ -1,0 +1,159 @@
+{
+  "modules": [
+    {
+      "name": "chainspikedesign__spike_design__area_calc",
+      "module_type": "chainspikelibrary.AreaCalcModule",
+      "inputs": [
+        {
+          "param_name": "length",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "ChainSpikeDesign__spike_design__area_calc__length",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "width",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "ChainSpikeDesign__spike_design__area_calc__width",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "ChainSpikeDesign__spike_design__area_calc__area"
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "chainspikedesign__spike_design__cost_calc",
+      "module_type": "chainspikelibrary.CostCalcModule",
+      "inputs": [
+        {
+          "param_name": "area",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "ChainSpikeDesign__spike_design__area_calc__area"
+          }
+        },
+        {
+          "param_name": "rate",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "ChainSpikeDesign__spike_design__cost_calc__rate",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "ChainSpikeDesign__spike_design__cost_calc__total_cost"
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "chainspikedesign__spike_design__summary",
+      "module_type": "chainspikelibrary.SummaryCalcModule",
+      "inputs": [
+        {
+          "param_name": "area",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "ChainSpikeDesign__spike_design__area_calc__area"
+          }
+        },
+        {
+          "param_name": "cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "ChainSpikeDesign__spike_design__cost_calc__total_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "ChainSpikeDesign__spike_design__summary__cost_per_area"
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "design_params",
+      "class_name": "DesignParams",
+      "source_file": "design.sysml",
+      "parameters": [
+        {
+          "qualified_name": "ChainSpikeDesign__spike_design__area_calc__length",
+          "simple_name": "length",
+          "entry_type": "usage_literal",
+          "default_value": 10.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "ChainSpikeDesign__spike_design__area_calc__width",
+          "simple_name": "width",
+          "entry_type": "usage_literal",
+          "default_value": 5.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "ChainSpikeDesign__spike_design__cost_calc__rate",
+          "simple_name": "rate",
+          "entry_type": "usage_literal",
+          "default_value": 12.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "chainspikedesign__spike_design__area_calc",
+    "chainspikedesign__spike_design__cost_calc",
+    "chainspikedesign__spike_design__summary"
+  ]
+}

@@ -1,0 +1,2796 @@
+{
+  "modules": [
+    {
+      "name": "solarbatterydesign__solar_battery_plant__energy_production",
+      "module_type": "solarbatterylibrary.EnergyProductionCalcModule",
+      "inputs": [
+        {
+          "param_name": "p_net_mw",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "n_mod",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__n_mod",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "plant_availability",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh"
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__annualized_fuel",
+      "module_type": "solarbatterylibrary.AnnualizedFuelCalcModule",
+      "inputs": [
+        {
+          "param_name": "fuel_unit_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fuel_consumption",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__annual_fuel_cost"
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__pv_module__cost_model",
+      "module_type": "solarbatterylibrary.PVModuleCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "wattage",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_watt",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__inverter__cost_model",
+      "module_type": "solarbatterylibrary.InverterCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "power_rating",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_watt",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 3,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__array_bos__cost_model",
+      "module_type": "solarbatterylibrary.ArrayBOSCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "string_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "panel_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_string",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_panel_bos",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 4,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__battery_pack__cost_model",
+      "module_type": "solarbatterylibrary.BatteryPackCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "capacity_kwh",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "chemistry_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_kwh",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 5,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model",
+      "module_type": "solarbatterylibrary.HybridInverterCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "power_rating",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_watt",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 6,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__battery_bos__cost_model",
+      "module_type": "solarbatterylibrary.BatteryBOSCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "pack_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_pack_bos",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 7,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__racking__cost_model",
+      "module_type": "solarbatterylibrary.RackingCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "panel_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "tilt_angle",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_panel_rack",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 8,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__electrical_panel__cost_model",
+      "module_type": "solarbatterylibrary.ElectricalPanelCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "circuit_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "base_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_circuit",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fab_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "install_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 9,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__permitting__cost_model",
+      "module_type": "solarbatterylibrary.PermittingCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "system_capacity_kw",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "cost_per_kw",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "material_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__material_cost"
+        },
+        {
+          "field_name": "fab_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__fab_cost"
+        },
+        {
+          "field_name": "install_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__install_cost"
+        },
+        {
+          "field_name": "total_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__total_cost"
+        },
+        {
+          "field_name": "idiot_index",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__idiot_index"
+        }
+      ],
+      "execution_order": 10,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__allocation_model",
+      "module_type": "solarbatterylibrary.AllocationCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "child_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "total_child_mass",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "fastener_cost_per_child",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "seal_cost_per_child",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "wiring_cost_per_kg",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "fastener_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost"
+        },
+        {
+          "field_name": "seal_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost"
+        },
+        {
+          "field_name": "wiring_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost"
+        },
+        {
+          "field_name": "total_allocation",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation"
+        },
+        {
+          "field_name": "material_portion",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__material_portion"
+        }
+      ],
+      "execution_order": 11,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__p_net_kw",
+      "module_type": "solarbatterydesign.solar_battery_plant.p_net_kwModule",
+      "inputs": [
+        {
+          "param_name": "p_net_mw",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw"
+        }
+      ],
+      "execution_order": 12,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": true,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__fabrication_cost",
+      "module_type": "solarbatterylibrary__solar_array.fabrication_costModule",
+      "inputs": [
+        {
+          "param_name": "pv_module_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_cost"
+          }
+        },
+        {
+          "param_name": "module_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "inverter_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_cost"
+          }
+        },
+        {
+          "param_name": "inverter_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "array_bos_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__fabrication_cost"
+        }
+      ],
+      "execution_order": 13,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(((inputs.module_count * inputs.pv_module_fabrication_cost) + (inputs.inverter_count * inputs.inverter_fabrication_cost)) + inputs.array_bos_fabrication_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__installation_cost",
+      "module_type": "solarbatterylibrary__solar_array.installation_costModule",
+      "inputs": [
+        {
+          "param_name": "pv_module_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_cost"
+          }
+        },
+        {
+          "param_name": "module_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "inverter_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_cost"
+          }
+        },
+        {
+          "param_name": "inverter_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "array_bos_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__installation_cost"
+        }
+      ],
+      "execution_order": 14,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(((inputs.module_count * inputs.pv_module_installation_cost) + (inputs.inverter_count * inputs.inverter_installation_cost)) + inputs.array_bos_installation_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__capital_cost",
+      "module_type": "solarbatterylibrary__battery_system.capital_costModule",
+      "inputs": [
+        {
+          "param_name": "battery_pack_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "pack_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "hybrid_inverter_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "battery_bos_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__total_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__capital_cost__capital_cost"
+        }
+      ],
+      "execution_order": 15,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_capital_cost) + inputs.hybrid_inverter_capital_cost) + inputs.battery_bos_capital_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__raw_material_cost",
+      "module_type": "solarbatterylibrary__battery_system.raw_material_costModule",
+      "inputs": [
+        {
+          "param_name": "battery_pack_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "pack_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "hybrid_inverter_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "battery_bos_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__material_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__raw_material_cost__raw_material_cost"
+        }
+      ],
+      "execution_order": 16,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_raw_material_cost) + inputs.hybrid_inverter_raw_material_cost) + inputs.battery_bos_raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__fabrication_cost",
+      "module_type": "solarbatterylibrary__battery_system.fabrication_costModule",
+      "inputs": [
+        {
+          "param_name": "battery_pack_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_cost"
+          }
+        },
+        {
+          "param_name": "pack_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "hybrid_inverter_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_cost"
+          }
+        },
+        {
+          "param_name": "battery_bos_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__fabrication_cost__fabrication_cost"
+        }
+      ],
+      "execution_order": 17,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_fabrication_cost) + inputs.hybrid_inverter_fabrication_cost) + inputs.battery_bos_fabrication_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__installation_cost",
+      "module_type": "solarbatterylibrary__battery_system.installation_costModule",
+      "inputs": [
+        {
+          "param_name": "battery_pack_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_cost"
+          }
+        },
+        {
+          "param_name": "pack_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "hybrid_inverter_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_cost"
+          }
+        },
+        {
+          "param_name": "battery_bos_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__installation_cost__installation_cost"
+        }
+      ],
+      "execution_order": 18,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_installation_cost) + inputs.hybrid_inverter_installation_cost) + inputs.battery_bos_installation_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__raw_material_cost",
+      "module_type": "solarbatterylibrary__site_infrastructure.raw_material_costModule",
+      "inputs": [
+        {
+          "param_name": "racking_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "electrical_panel_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "permitting_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__raw_material_cost"
+        }
+      ],
+      "execution_order": 19,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.racking_raw_material_cost + inputs.electrical_panel_raw_material_cost) + inputs.permitting_raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__fabrication_cost",
+      "module_type": "solarbatterylibrary__site_infrastructure.fabrication_costModule",
+      "inputs": [
+        {
+          "param_name": "racking_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_cost"
+          }
+        },
+        {
+          "param_name": "electrical_panel_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_cost"
+          }
+        },
+        {
+          "param_name": "permitting_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__fabrication_cost"
+        }
+      ],
+      "execution_order": 20,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.racking_fabrication_cost + inputs.electrical_panel_fabrication_cost) + inputs.permitting_fabrication_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__installation_cost",
+      "module_type": "solarbatterylibrary__site_infrastructure.installation_costModule",
+      "inputs": [
+        {
+          "param_name": "racking_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_cost"
+          }
+        },
+        {
+          "param_name": "electrical_panel_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_cost"
+          }
+        },
+        {
+          "param_name": "permitting_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__installation_cost"
+        }
+      ],
+      "execution_order": 21,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.racking_installation_cost + inputs.electrical_panel_installation_cost) + inputs.permitting_installation_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__capital_cost",
+      "module_type": "solarbatterylibrary__site_infrastructure.capital_costModule",
+      "inputs": [
+        {
+          "param_name": "racking_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "electrical_panel_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "permitting_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__total_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__capital_cost__capital_cost"
+        }
+      ],
+      "execution_order": 22,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.racking_capital_cost + inputs.electrical_panel_capital_cost) + inputs.permitting_capital_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__capital_cost",
+      "module_type": "solarbatterylibrary__solar_array.capital_costModule",
+      "inputs": [
+        {
+          "param_name": "pv_module_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "module_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "inverter_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "inverter_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "array_bos_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__total_cost"
+          }
+        },
+        {
+          "param_name": "misc_hardware_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"
+        }
+      ],
+      "execution_order": 23,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((((inputs.module_count * inputs.pv_module_capital_cost) + (inputs.inverter_count * inputs.inverter_capital_cost)) + inputs.array_bos_capital_cost) + inputs.misc_hardware_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__raw_material_cost",
+      "module_type": "solarbatterylibrary__solar_array.raw_material_costModule",
+      "inputs": [
+        {
+          "param_name": "pv_module_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "module_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "inverter_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "inverter_count",
+          "python_type": "int",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": null,
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "array_bos_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__material_cost"
+          }
+        },
+        {
+          "param_name": "allocation_model_material_portion",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__material_portion"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__raw_material_cost"
+        }
+      ],
+      "execution_order": 24,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((((inputs.module_count * inputs.pv_module_raw_material_cost) + (inputs.inverter_count * inputs.inverter_raw_material_cost)) + inputs.array_bos_raw_material_cost) + inputs.allocation_model_material_portion)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__annualized_om",
+      "module_type": "solarbatterylibrary.AnnualizedOMCalcModule",
+      "inputs": [
+        {
+          "param_name": "om_rate_per_kw_year",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "p_net_kw",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__annual_om_cost"
+        }
+      ],
+      "execution_order": 25,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__battery_system__idiot_index",
+      "module_type": "solarbatterylibrary__battery_system.idiot_indexModule",
+      "inputs": [
+        {
+          "param_name": "capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__raw_material_cost__raw_material_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__battery_system__idiot_index__idiot_index"
+        }
+      ],
+      "execution_order": 26,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__fabrication_cost",
+      "module_type": "solarbatterylibrary__solar_battery_plant.fabrication_costModule",
+      "inputs": [
+        {
+          "param_name": "solar_array_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__fabrication_cost"
+          }
+        },
+        {
+          "param_name": "battery_system_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__fabrication_cost__fabrication_cost"
+          }
+        },
+        {
+          "param_name": "site_infra_fabrication_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__fabrication_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__fabrication_cost__fabrication_cost"
+        }
+      ],
+      "execution_order": 27,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.solar_array_fabrication_cost + inputs.battery_system_fabrication_cost) + inputs.site_infra_fabrication_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__installation_cost",
+      "module_type": "solarbatterylibrary__solar_battery_plant.installation_costModule",
+      "inputs": [
+        {
+          "param_name": "solar_array_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__installation_cost"
+          }
+        },
+        {
+          "param_name": "battery_system_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__installation_cost__installation_cost"
+          }
+        },
+        {
+          "param_name": "site_infra_installation_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__installation_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__installation_cost__installation_cost"
+        }
+      ],
+      "execution_order": 28,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.solar_array_installation_cost + inputs.battery_system_installation_cost) + inputs.site_infra_installation_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__site_infra__idiot_index",
+      "module_type": "solarbatterylibrary__site_infrastructure.idiot_indexModule",
+      "inputs": [
+        {
+          "param_name": "capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__raw_material_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__site_infra__idiot_index__idiot_index"
+        }
+      ],
+      "execution_order": 29,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__capital_cost",
+      "module_type": "solarbatterylibrary__solar_battery_plant.capital_costModule",
+      "inputs": [
+        {
+          "param_name": "solar_array_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "battery_system_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "site_infra_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__capital_cost__capital_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__capital_cost__capital_cost"
+        }
+      ],
+      "execution_order": 30,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.solar_array_capital_cost + inputs.battery_system_capital_cost) + inputs.site_infra_capital_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__solar_array__idiot_index",
+      "module_type": "solarbatterylibrary__solar_array.idiot_indexModule",
+      "inputs": [
+        {
+          "param_name": "capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__raw_material_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__solar_array__idiot_index__idiot_index"
+        }
+      ],
+      "execution_order": 31,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__raw_material_cost",
+      "module_type": "solarbatterylibrary__solar_battery_plant.raw_material_costModule",
+      "inputs": [
+        {
+          "param_name": "solar_array_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__raw_material_cost"
+          }
+        },
+        {
+          "param_name": "battery_system_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__battery_system__raw_material_cost__raw_material_cost"
+          }
+        },
+        {
+          "param_name": "site_infra_raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__raw_material_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__raw_material_cost__raw_material_cost"
+        }
+      ],
+      "execution_order": 32,
+      "compilability": "fully_compilable",
+      "compiled_expression": "((inputs.solar_array_raw_material_cost + inputs.battery_system_raw_material_cost) + inputs.site_infra_raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__annualized_financial",
+      "module_type": "solarbatterylibrary.AnnualizedFinancialCalcModule",
+      "inputs": [
+        {
+          "param_name": "total_capex",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "discount_rate",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "plant_lifetime",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "capital_recovery_factor",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__capital_recovery_factor"
+        },
+        {
+          "field_name": "annualized_capital_cost",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__annualized_capital_cost"
+        }
+      ],
+      "execution_order": 33,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__idiot_index",
+      "module_type": "solarbatterylibrary__solar_battery_plant.idiot_indexModule",
+      "inputs": [
+        {
+          "param_name": "capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__capital_cost__capital_cost"
+          }
+        },
+        {
+          "param_name": "raw_material_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__raw_material_cost__raw_material_cost"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__idiot_index__idiot_index"
+        }
+      ],
+      "execution_order": 34,
+      "compilability": "fully_compilable",
+      "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
+      "is_computed_attribute": false,
+      "is_aggregation": true
+    },
+    {
+      "name": "solarbatterydesign__solar_battery_plant__lcoe",
+      "module_type": "solarbatterylibrary.LCOECalcModule",
+      "inputs": [
+        {
+          "param_name": "annualized_capital_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__annualized_financial__annualized_capital_cost"
+          }
+        },
+        {
+          "param_name": "annual_om_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__annualized_om__annual_om_cost"
+          }
+        },
+        {
+          "param_name": "annual_fuel_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__annual_fuel_cost"
+          }
+        },
+        {
+          "param_name": "yearly_inflation",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "plant_lifetime",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "annual_energy_mwh",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
+        }
+      ],
+      "execution_order": 35,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "library_params",
+      "class_name": "LibraryParams",
+      "source_file": "library.sysml",
+      "parameters": [
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count",
+          "simple_name": "child_count",
+          "entry_type": "usage_literal",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass",
+          "simple_name": "total_child_mass",
+          "entry_type": "usage_literal",
+          "default_value": 50.0,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt",
+          "simple_name": "cost_per_watt",
+          "entry_type": "library_default",
+          "default_value": 1.07,
+          "source_calc_usage": "PVModuleCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "PVModuleCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "PVModuleCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt",
+          "simple_name": "cost_per_watt",
+          "entry_type": "library_default",
+          "default_value": 0.286,
+          "source_calc_usage": "InverterCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "InverterCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "InverterCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos",
+          "simple_name": "cost_per_panel_bos",
+          "entry_type": "library_default",
+          "default_value": 30.0,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string",
+          "simple_name": "cost_per_string",
+          "entry_type": "library_default",
+          "default_value": 150.0,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh",
+          "simple_name": "cost_per_kwh",
+          "entry_type": "library_default",
+          "default_value": 171.5,
+          "source_calc_usage": "BatteryPackCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "BatteryPackCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "BatteryPackCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt",
+          "simple_name": "cost_per_watt",
+          "entry_type": "library_default",
+          "default_value": 0.1714,
+          "source_calc_usage": "HybridInverterCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "HybridInverterCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "HybridInverterCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos",
+          "simple_name": "cost_per_pack_bos",
+          "entry_type": "library_default",
+          "default_value": 71.5,
+          "source_calc_usage": "BatteryBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "BatteryBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "BatteryBOSCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack",
+          "simple_name": "cost_per_panel_rack",
+          "entry_type": "library_default",
+          "default_value": 57.0,
+          "source_calc_usage": "RackingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "RackingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "RackingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost",
+          "simple_name": "base_cost",
+          "entry_type": "library_default",
+          "default_value": 150.0,
+          "source_calc_usage": "ElectricalPanelCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit",
+          "simple_name": "cost_per_circuit",
+          "entry_type": "library_default",
+          "default_value": 34.0,
+          "source_calc_usage": "ElectricalPanelCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "ElectricalPanelCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "ElectricalPanelCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw",
+          "simple_name": "cost_per_kw",
+          "entry_type": "library_default",
+          "default_value": 187.5,
+          "source_calc_usage": "PermittingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child",
+          "simple_name": "fastener_cost_per_child",
+          "entry_type": "library_default",
+          "default_value": 0.5,
+          "source_calc_usage": "AllocationCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child",
+          "simple_name": "seal_cost_per_child",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "AllocationCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg",
+          "simple_name": "wiring_cost_per_kg",
+          "entry_type": "library_default",
+          "default_value": 2.0,
+          "source_calc_usage": "AllocationCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "design_params",
+      "class_name": "DesignParams",
+      "source_file": "design.sysml",
+      "parameters": [
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw",
+          "simple_name": "p_net_mw",
+          "entry_type": "design_attribute",
+          "default_value": 0.008,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw",
+          "simple_name": "p_net_mw",
+          "entry_type": "usage_literal",
+          "default_value": 0.008,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__n_mod",
+          "simple_name": "n_mod",
+          "entry_type": "usage_literal",
+          "default_value": 1.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability",
+          "simple_name": "plant_availability",
+          "entry_type": "usage_literal",
+          "default_value": 0.159,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year",
+          "simple_name": "om_rate_per_kw_year",
+          "entry_type": "usage_literal",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost",
+          "simple_name": "fuel_unit_cost",
+          "entry_type": "usage_literal",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption",
+          "simple_name": "fuel_consumption",
+          "entry_type": "usage_literal",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate",
+          "simple_name": "discount_rate",
+          "entry_type": "usage_literal",
+          "default_value": 0.05,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime",
+          "simple_name": "plant_lifetime",
+          "entry_type": "usage_literal",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation",
+          "simple_name": "yearly_inflation",
+          "entry_type": "usage_literal",
+          "default_value": 0.0245,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime",
+          "simple_name": "plant_lifetime",
+          "entry_type": "usage_literal",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "system_design",
+      "class_name": "SystemDesign",
+      "source_file": "hierarchy",
+      "parameters": [
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
+          "simple_name": "tilt_angle",
+          "entry_type": "usage_literal",
+          "default_value": 30.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
+          "simple_name": "wattage",
+          "entry_type": "usage_literal",
+          "default_value": 400.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count",
+          "simple_name": "pack_count",
+          "entry_type": "usage_literal",
+          "default_value": 8.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh",
+          "simple_name": "capacity_kwh",
+          "entry_type": "usage_literal",
+          "default_value": 5.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
+          "simple_name": "power_rating",
+          "entry_type": "usage_literal",
+          "default_value": 2000.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
+          "simple_name": "string_count",
+          "entry_type": "usage_literal",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw",
+          "simple_name": "system_capacity_kw",
+          "entry_type": "usage_literal",
+          "default_value": 8.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
+          "simple_name": "efficiency",
+          "entry_type": "usage_literal",
+          "default_value": 0.21,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
+          "simple_name": "panel_count",
+          "entry_type": "usage_literal",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
+          "simple_name": "power_rating",
+          "entry_type": "usage_literal",
+          "default_value": 10000.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
+          "simple_name": "panel_count",
+          "entry_type": "usage_literal",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
+          "simple_name": "circuit_count",
+          "entry_type": "usage_literal",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
+          "simple_name": "chemistry_factor",
+          "entry_type": "usage_literal",
+          "default_value": 1.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
+          "simple_name": "module_count",
+          "entry_type": "design_attribute",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "int"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+          "simple_name": "inverter_count",
+          "entry_type": "design_attribute",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "int"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
+          "simple_name": "pack_count",
+          "entry_type": "design_attribute",
+          "default_value": 8.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "int"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost",
+          "simple_name": "permitting_raw_material_cost",
+          "entry_type": "design_attribute",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost",
+          "simple_name": "permitting_fabrication_cost",
+          "entry_type": "design_attribute",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost",
+          "simple_name": "permitting_installation_cost",
+          "entry_type": "design_attribute",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "solarbatterydesign__solar_battery_plant__energy_production",
+    "solarbatterydesign__solar_battery_plant__annualized_fuel",
+    "solarbatterydesign__solar_battery_plant__solar_array__pv_module__cost_model",
+    "solarbatterydesign__solar_battery_plant__solar_array__inverter__cost_model",
+    "solarbatterydesign__solar_battery_plant__solar_array__array_bos__cost_model",
+    "solarbatterydesign__solar_battery_plant__battery_system__battery_pack__cost_model",
+    "solarbatterydesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model",
+    "solarbatterydesign__solar_battery_plant__battery_system__battery_bos__cost_model",
+    "solarbatterydesign__solar_battery_plant__site_infra__racking__cost_model",
+    "solarbatterydesign__solar_battery_plant__site_infra__electrical_panel__cost_model",
+    "solarbatterydesign__solar_battery_plant__site_infra__permitting__cost_model",
+    "solarbatterydesign__solar_battery_plant__solar_array__allocation_model",
+    "solarbatterydesign__solar_battery_plant__p_net_kw",
+    "solarbatterydesign__solar_battery_plant__solar_array__fabrication_cost",
+    "solarbatterydesign__solar_battery_plant__solar_array__installation_cost",
+    "solarbatterydesign__solar_battery_plant__battery_system__capital_cost",
+    "solarbatterydesign__solar_battery_plant__battery_system__raw_material_cost",
+    "solarbatterydesign__solar_battery_plant__battery_system__fabrication_cost",
+    "solarbatterydesign__solar_battery_plant__battery_system__installation_cost",
+    "solarbatterydesign__solar_battery_plant__site_infra__raw_material_cost",
+    "solarbatterydesign__solar_battery_plant__site_infra__fabrication_cost",
+    "solarbatterydesign__solar_battery_plant__site_infra__installation_cost",
+    "solarbatterydesign__solar_battery_plant__site_infra__capital_cost",
+    "solarbatterydesign__solar_battery_plant__solar_array__capital_cost",
+    "solarbatterydesign__solar_battery_plant__solar_array__raw_material_cost",
+    "solarbatterydesign__solar_battery_plant__annualized_om",
+    "solarbatterydesign__solar_battery_plant__battery_system__idiot_index",
+    "solarbatterydesign__solar_battery_plant__fabrication_cost",
+    "solarbatterydesign__solar_battery_plant__installation_cost",
+    "solarbatterydesign__solar_battery_plant__site_infra__idiot_index",
+    "solarbatterydesign__solar_battery_plant__capital_cost",
+    "solarbatterydesign__solar_battery_plant__solar_array__idiot_index",
+    "solarbatterydesign__solar_battery_plant__raw_material_cost",
+    "solarbatterydesign__solar_battery_plant__annualized_financial",
+    "solarbatterydesign__solar_battery_plant__idiot_index",
+    "solarbatterydesign__solar_battery_plant__lcoe"
+  ]
+}

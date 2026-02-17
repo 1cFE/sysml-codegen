@@ -1,0 +1,414 @@
+{
+  "model_name": "sample_model",
+  "captured_at": "2026-02-17T03:54:07.570919+00:00",
+  "calc_defs": [
+    {
+      "name": "FirstCalc",
+      "qualified_name": "TestModels::FirstCalc",
+      "doc_comment": "\nFirst calculation in dependency chain.",
+      "calc_expressions": [
+        "doubled = base_value * LiteralRationalEvaluation()",
+        "\nDocumentation:\n\nFirst calculation in dependency chain."
+      ],
+      "input_attributes": [
+        {
+          "name": "base_value",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "doubled",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "sample_model/dependencies.sysml",
+      "source_line": 7,
+      "source_hash": "19dbf8d208a4c4d95e4a9064acd49ea4b5c540497f3d1102ec222668d732f260",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "base_value",
+        "doubled"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "SecondCalc",
+      "qualified_name": "TestModels::SecondCalc",
+      "doc_comment": "\nSecond calculation that depends on FirstCalc output.",
+      "calc_expressions": [
+        "squared = input_val * input_val",
+        "\nDocumentation:\n\nSecond calculation that depends on FirstCalc output."
+      ],
+      "input_attributes": [
+        {
+          "name": "input_val",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "squared",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "sample_model/dependencies.sysml",
+      "source_line": 15,
+      "source_hash": "19dbf8d208a4c4d95e4a9064acd49ea4b5c540497f3d1102ec222668d732f260",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "input_val",
+        "squared"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "FinalCalc",
+      "qualified_name": "TestModels::FinalCalc",
+      "doc_comment": "\nFinal calculation combining results.",
+      "calc_expressions": [
+        "total = val_a + val_b",
+        "\nDocumentation:\n\nFinal calculation combining results."
+      ],
+      "input_attributes": [
+        {
+          "name": "val_a",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "val_b",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "total",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "sample_model/dependencies.sysml",
+      "source_line": 23,
+      "source_hash": "19dbf8d208a4c4d95e4a9064acd49ea4b5c540497f3d1102ec222668d732f260",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "total",
+        "val_a",
+        "val_b"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "MultiOutputCalc",
+      "qualified_name": "TestModels::MultiOutputCalc",
+      "doc_comment": "\nMulti-output calculation for testing.\n\nTests extraction of multiple output attributes.",
+      "calc_expressions": [
+        "sum = x + y",
+        "diff = x - y",
+        "product = x * y",
+        "\nDocumentation:\n\nMulti-output calculation for testing.\n\nTests extraction of multiple output attributes."
+      ],
+      "input_attributes": [
+        {
+          "name": "x",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "y",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "sum",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "diff",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "product",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "sample_model/multi_output.sysml",
+      "source_line": 9,
+      "source_hash": "0bf64e028dfa425b78c879d84d41b54aef5f978ecd4d88da11e81292b48b6770",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "diff",
+        "product",
+        "sum",
+        "x",
+        "y"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "SimpleCalc",
+      "qualified_name": "TestModels::SimpleCalc",
+      "doc_comment": "\nSimple calculation for testing extraction.\n\nSpecification: result = input_a + input_b\n\nTests basic input/output attribute extraction.",
+      "calc_expressions": [
+        "result = input_a + input_b",
+        "\nDocumentation:\n\nSimple calculation for testing extraction.\n\nSpecification: result = input_a + input_b\n\nTests basic input/output attribute extraction."
+      ],
+      "input_attributes": [
+        {
+          "name": "input_a",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "input_b",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "result",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "sample_model/simple_calc.sysml",
+      "source_line": 11,
+      "source_hash": "623d859ecbf37cc2d07539ce3bf1ec07bb16458f243a795a9678f1d7fdb65b6b",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "input_a",
+        "input_b",
+        "result"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/sample_model/dependencies.sysml": [
+      {
+        "name": "doubled",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/dependencies.sysml",
+        "source_line": 9,
+        "parent_part": "",
+        "qualified_name": "TestModels__FirstCalc__doubled"
+      },
+      {
+        "name": "squared",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/dependencies.sysml",
+        "source_line": 17,
+        "parent_part": "",
+        "qualified_name": "TestModels__SecondCalc__squared"
+      },
+      {
+        "name": "total",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/dependencies.sysml",
+        "source_line": 26,
+        "parent_part": "",
+        "qualified_name": "TestModels__FinalCalc__total"
+      }
+    ],
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/sample_model/multi_output.sysml": [
+      {
+        "name": "sum",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/multi_output.sysml",
+        "source_line": 12,
+        "parent_part": "",
+        "qualified_name": "TestModels__MultiOutputCalc__sum"
+      },
+      {
+        "name": "diff",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/multi_output.sysml",
+        "source_line": 13,
+        "parent_part": "",
+        "qualified_name": "TestModels__MultiOutputCalc__diff"
+      },
+      {
+        "name": "product",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/multi_output.sysml",
+        "source_line": 14,
+        "parent_part": "",
+        "qualified_name": "TestModels__MultiOutputCalc__product"
+      }
+    ],
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/sample_model/simple_calc.sysml": [
+      {
+        "name": "result",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "sample_model/simple_calc.sysml",
+        "source_line": 14,
+        "parent_part": "",
+        "qualified_name": "TestModels__SimpleCalc__result"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {},
+    "usage_type_map": {}
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": []
+}
