@@ -27,13 +27,13 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - Analysis models: BacktrackingResult, DesignAttributeData, DerivedParameterGroup
   - Core models: BindingResolution, ChannelAlias, OutputRegistry
   - Resolution models: ComputationGraph, PipelineModule, ModuleInput, ModuleOutput, InputSource, EntryPoint, ParameterGroup
-- **AC**:
-  - [ ] Every model referenced in docs 00-24 exists and is importable
-  - [ ] Every enum lists ALL values documented in 09
-  - [ ] Field lists match doc 09 exactly (names, types, optionality)
-  - [ ] Pydantic models validate with real data (construct from extraction output)
-  - [ ] Containment hierarchy matches doc 09 diagram
-  - [ ] AggregationExpressionData has all 15 fields
+- **AC**: *(all verified 2026-02-17 — 91 tests in `tests/conformance/test_data_models.py`)*
+  - [x] Every model referenced in docs 00-24 exists and is importable
+  - [x] Every enum lists ALL values documented in 09
+  - [x] Field lists match doc 09 exactly (names, types, optionality)
+  - [x] Pydantic models validate with real data (construct from extraction output)
+  - [x] Containment hierarchy matches doc 09 diagram
+  - [x] AggregationExpressionData has all 15 fields
 
 ### C02 — Naming Conventions
 - **Doc**: [15-naming-conventions.md](15-naming-conventions.md)

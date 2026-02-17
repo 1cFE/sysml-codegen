@@ -53,7 +53,7 @@ and real SysML fixture output.
 
 **Goal**: Validate and lock down the lowest-level building blocks and extraction layer.
 
-- [ ] **1.1 — Data Model Conformance (C01)**
+- [x] **1.1 — Data Model Conformance (C01)** *(2026-02-17, 91 tests)*
   - **Refs**: [09-data-models.md](09-data-models.md)
   - Write `tests/conformance/test_data_models.py`:
     - Every model importable from documented location
@@ -502,3 +502,4 @@ architecture from STRATEGY.md.
 | Milestone | Existing | New Conformance | Total | Date |
 |-----------|----------|-----------------|-------|------|
 | Baseline (pre-refactor) | 660 | 0 | 660 | 2026-02-17 |
+| C01 Data Models | 667 | 91 | 758 | 2026-02-17 |
