@@ -3,8 +3,8 @@
 ## What It Does
 
 `ParameterGroupDeriver` answers: "which JSON input file should each
-pipeline entry point live in?" Every entry point -- a parameter the user
-supplies at runtime -- needs to land in exactly one JSON file. The deriver
+pipeline [entry point](06-entry-point-classifier.md) live in?" Every entry point — a parameter the user
+supplies at runtime — needs to land in exactly one JSON file. The deriver
 groups entry points by the SysML source file they originate from, so the
 generated JSON files mirror the model's file structure.
 
@@ -14,29 +14,41 @@ deriver organizes parameters into coherent per-file groups (e.g.,
 
 Source: `src/sysml_codegen/analysis/parameter_groups.py`
 
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-PGD-01 | Every entry point SHALL be assigned to exactly one parameter group | Precedence prevents duplicate claims; `classify()` returns first match |
+| REQ-PGD-02 | Four indexes SHALL be built with strict precedence: attr > binding > unbound > literal | Each builder skips names claimed by earlier indexes |
+| REQ-PGD-03 | Grouping SHALL mirror SysML source file structure (one group per file) | `_generate_group_names()` derives from `source_file.stem` |
+| REQ-PGD-04 | `derive_groups_filtered()` SHALL remove parameters not in `backtracking_result.entry_points` | Filter loop retains only names present in entry_points dict |
+| REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | 4-index cascade with early return; `None` if unclaimed |
+| REQ-PGD-06 | `get_default_value()` SHALL resolve through binding index to source attribute | Binding-traced params look up `_attr_index` for the resolved attribute |
+| REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | `_generate_group_names()` output verified in test |
+
 ---
 
 ## Where It Fits in the Pipeline
 
 Constructed at **Step 5** of `build_pipeline_context()` in
-`src/sysml_codegen/generation/initialization.py`:
+`src/sysml_codegen/generation/initialization.py` ([orchestration](02-orchestration.md)):
 
 ```python
 group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
 ```
 
-Consumed in `src/sysml_codegen/resolution/graph_builder.py` two ways:
-1. **`derive_groups_filtered()`** -- Step 5 of graph building produces the
-   initial `ParameterGroup` list.
-2. **`classify(qualified_name)`** -- called during Steps 6.5--6.7 to assign
-   new entry points discovered during computed attribute / aggregation wiring.
+Consumed in `src/sysml_codegen/resolution/graph_builder.py` ([graph assembly](07-graph-assembly.md)) two ways:
+1. **`derive_groups_filtered()`** — Step 5 of graph building produces the
+   initial [`ParameterGroup`](09-data-models.md) list (REQ-PGD-04).
+2. **`classify(qualified_name)`** — called at Step 4 for initial classification and
+   during Steps 6.5–6.7 to assign new entry points from [FORMULA](16-computed-attributes.md) / [aggregation](13-aggregation-scoping.md) wiring (REQ-PGD-05).
 
 ---
 
 ## Constructor: The Four Indexes
 
 `__init__()` builds four internal indexes mapping qualified parameter names
-to source files. A strict precedence prevents duplicate claims.
+to source files (REQ-PGD-02). A strict precedence prevents duplicate claims (REQ-PGD-01).
 
 | Index | Tracks | Source | Key example |
 |-------|--------|--------|-------------|
@@ -53,7 +65,7 @@ to source files. A strict precedence prevents duplicate claims.
 
 ### DesignAttributeData (input)
 
-Extracted from SysML `AttributeUsage` elements with a `feature_value_expression`. Produced by `extract_design_attributes()`.
+Extracted from SysML `AttributeUsage` elements with a `feature_value_expression`. Produced by `extract_design_attributes()` during [extraction](01-extraction.md).
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -82,7 +94,7 @@ Wraps a single parameter inside a group.
 
 ### DerivedParameterGroup (output)
 
-One group per SysML source file. Converted to `ParameterGroup` Pydantic models by `_convert_derived_groups()` in graph_builder.
+One group per SysML source file (REQ-PGD-03). Converted to [`ParameterGroup`](09-data-models.md) Pydantic models by `_convert_derived_groups()` in [graph_builder](07-graph-assembly.md).
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -115,11 +127,11 @@ Merges results from two internal methods:
 
 **`derive_for_entry_points(entry_points)`** keeps entire groups containing at least one matching parameter (no per-parameter trimming).
 
-**`classify(qualified_name)`** returns the group name for a single parameter by checking each index in precedence order. Returns `None` if unclaimed. Called during module construction for late-discovered entry points.
+**`classify(qualified_name)`** returns the group name for a single parameter by checking each index in precedence order (REQ-PGD-05). Returns `None` if unclaimed. Called during [module construction](05-module-factory.md) for late-discovered entry points.
 
-**`get_default_value(qualified_name)`** returns the numeric default. For binding-traced parameters, resolves through `_attr_index` to the source attribute.
+**`get_default_value(qualified_name)`** returns the numeric default (REQ-PGD-06). For binding-traced parameters, resolves through `_attr_index` to the source attribute. See [literal value propagation](18-literal-value-propagation.md) for how defaults flow into entry points.
 
-**`_generate_group_names(base_name)`** converts a file stem to `(group_name, class_name)`:
+**`_generate_group_names(base_name)`** converts a file stem to `(group_name, class_name)` (REQ-PGD-07):
 ```
 "SolarBatteryDesign" -> ("solar_battery_design_params", "SolarBatteryDesignParams")
 ```
@@ -171,7 +183,7 @@ Merges results from two internal methods:
 ```
 
 After `derive_groups_filtered()` trims to true entry points, these become
-the groups in the generated YAML's `entry_fusion` block:
+the groups in the generated [pipeline YAML's](21-pipeline-yaml-generation.md) `entry_fusion` block:
 
 ```yaml
 entry_fusion:
@@ -182,4 +194,18 @@ entry_fusion:
 ```
 
 Each JSON file is pre-filled with default values from the deriver, so the
-user only edits values they want to override.
+user only edits values they want to override. See [output schema rules](22-output-schema-rules.md) for schema generation.
+
+## Related Documents
+
+- **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) — grouping happens at Step 4 (classify) and Step 5 (build)
+- **Orchestration**: [02-orchestration](02-orchestration.md) — `build_pipeline_context()` constructs deriver at Step 5
+- **Module factory**: [05-module-factory](05-module-factory.md) — FORMULA/aggregation modules call `classify()` for new EPs
+- **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — 3 entry point types that groups organize
+- **Graph assembly**: [07-graph-assembly](07-graph-assembly.md) — `_convert_derived_groups()` converts to Pydantic models
+- **Extraction**: [01-extraction](01-extraction.md) — produces `DesignAttributeData` and `CalcUsageData` inputs
+- **Aggregation**: [13-aggregation-scoping](13-aggregation-scoping.md) — aggregation modules create new EPs needing classification
+- **Computed attrs**: [16-computed-attributes](16-computed-attributes.md) — FORMULA modules create new EPs needing classification
+- **Literal propagation**: [18-literal-value-propagation](18-literal-value-propagation.md) — default value flow into entry points
+- **Pipeline YAML**: [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) — `entry_fusion` block uses group names
+- **Data models**: [09-data-models](09-data-models.md) — `ParameterGroup`, `EntryPoint` field definitions

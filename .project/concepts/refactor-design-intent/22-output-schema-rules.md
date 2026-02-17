@@ -9,18 +9,26 @@ Every pipeline module produces outputs. The schema depends on output count:
 | 1 | `RootModel[float]` (alias `Float`) | No schema file | `"root"` |
 | 2+ | Named `MultiOutput` subclass | Schema file generated | Attribute names |
 
-**Decision function**: `should_use_multioutput()` at `generation/schemas.py:103-113`:
+**Decision function**: `should_use_multioutput()` at `generation/schemas.py:103-113`.
 
-```python
-def should_use_multioutput(calc_def: CalculationDefinitionData) -> bool:
-    return len(calc_def.output_attributes) >= 2
-```
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | [graph_builder.py](07-graph-assembly.md): `field_name = "root"` when `len(output_attributes) == 1` |
+| REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `should_use_multioutput()` returns `True` when `len >= 2` |
+| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | Template: `{{ field.name }}` from `AttributeInfo.name` |
+| REQ-OSR-04 | SysML types SHALL map to Python types per the [type mapping table](#type-mapping) | `_map_output_type()` at `schemas.py:183-202` |
+| REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values (Bug 11) | TEAx `create_registry()` treats defaulted fields as optional, not outputs |
+| REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | Both hardcode `field_name="root"`, `outputs=[output]` in [graph_builder](07-graph-assembly.md) |
+| REQ-OSR-07 | Output channels SHALL use PQN format via [`get_channel_name()`](15-naming-conventions.md) | All three module types call `get_channel_name(usage_qn, attr_name)` |
 
 ---
 
 ## Single-Output Modules
 
-Return `Float` (`RootModel[float]`) from `generation/primitives.py`:
+Return `Float` (`RootModel[float]`). The `Float` alias is defined in a **generated**
+`primitives.py` file (written by `cli/__init__.py:120-134`, not in source control):
 
 ```python
 Float = RootModel[float]
@@ -64,7 +72,7 @@ class PVModuleCostCalcModule(ModuleBase[PVModuleCostInput, PVModuleCostOutput]):
 
 ## Field Name Derivation
 
-Output field names come directly from SysML `output_attributes`:
+Output field names come directly from SysML [`output_attributes`](01-extraction.md):
 
 ```
 SysML CalcDef:
@@ -95,13 +103,15 @@ Output attribute SysML types are mapped to Python types:
 
 | SysML Type | Python Type |
 |---|---|
-| `Real` | `float` |
-| `ScalarValues::Real` | `float` |
-| `Integer` | `int` |
-| `Boolean` | `bool` |
-| `String` | `str` |
+| `Real` / `ScalarValues::Real` | `float` |
+| `Integer` / `ScalarValues::Integer` | `int` |
+| `Boolean` / `ScalarValues::Boolean` | `bool` |
+| `String` / `ScalarValues::String` | `str` |
+| *(unknown)* | `float` (default fallback) |
 
-Mapping at `schemas.py:183-202` (`_map_output_type()`).
+Mapping at `schemas.py:183-202` (`_map_output_type()`). The `ScalarValues::` prefix
+is the SysML standard library namespace; both forms are accepted. Unknown types
+default to `float`.
 
 ---
 
@@ -149,7 +159,8 @@ Both are always single-output: `field_name = "root"`, `python_type = "float"`,
 use `RootModel[float]`. No MultiOutput schema generated. No default value risk.
 
 Output channels use PQN format: `get_channel_name(usage_qn, attr_name)` ->
-`"{usage_qn}__{attr_name}"`. See doc 15 for full naming conventions.
+`"{usage_qn}__{attr_name}"`. See [naming conventions](15-naming-conventions.md) for
+full PQN format. These channels are registered in the [output registry](10-output-registry.md).
 
 ---
 
@@ -163,3 +174,13 @@ Output channels use PQN format: `get_channel_name(usage_qn, attr_name)` ->
 | `PipelineModule` | `resolution/models.py` | Module with is_aggregation flag |
 | `MultiOutput` | TEAx (`simkit`) | Base class for multi-output schemas |
 | `RootModel[float]` | Pydantic | Single-output wrapper |
+
+## Related Documents
+
+- **Upstream**: [08-generation](08-generation.md) — generation overview, template inventory
+- **Upstream**: [01-extraction](01-extraction.md) — produces `output_attributes` with types and defaults
+- **Resolution**: [07-graph-assembly](07-graph-assembly.md) — builds `ModuleOutput` with `field_name` and `channel_name`
+- **Registry**: [10-output-registry](10-output-registry.md) — registers output channels for downstream wiring
+- **Naming**: [15-naming-conventions](15-naming-conventions.md) — PQN channel format
+- **Data models**: [09-data-models](09-data-models.md) — `ModuleOutput`, `PipelineModule` definitions
+- **Bug trace**: Bug 11 — `default=0.0` on MultiOutput fields breaks TEAx output detection

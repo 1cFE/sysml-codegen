@@ -1,159 +1,250 @@
 # 09 -- Data Models Reference
 
-All key data models in sysml-codegen, organized by pipeline stage.
+## Why This Document Exists
+14 documents in this set link here as the canonical field reference. When a doc
+says "see [09-data-models](09-data-models.md#resolution-models)," the reader
+expects the definitive field list. If a field exists in the code but not here,
+it's a doc bug. If a value is missing from an enum, someone will implement
+the wrong case coverage (this happened: BindingType was originally documented
+with wrong values, caught in Phase A validation).
+
+## Requirements
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-DM-01 | Every model referenced by another doc in this set SHALL appear here or have an explicit delegation link | Grep `09-data-models` refs; verify each anchor resolves |
+| REQ-DM-02 | Every enum SHALL list ALL values with no omissions | Diff enum tables against source enum definitions |
+| REQ-DM-03 | Field lists SHALL match source code (name, type, optionality) | Field-by-field comparison with dataclass/BaseModel defs |
+| REQ-DM-04 | Every model SHALL state its parent class and source file location | All entries include `(type, file:line)` notation |
+| REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` and `module_output` wiring | Example section present with 2+ modules |
+| REQ-DM-06 | Models with dedicated docs SHALL link to those docs, not duplicate detail | Delegation links for aggregation terms, expression compiler, etc. |
+| REQ-DM-07 | The data flow diagram SHALL show all pipeline stages and their primary I/O models | Diagram covers extraction → analysis → core → resolution → generation |
 
 ## Data Flow
-
 ```
 SysML Files
   |
   v
-[Extraction] --> CalculationDefinitionData, CalcUsageData, PartDefinitionData,
-                 RedefinitionData, AggregationExpressionData, ComputedAttributeData
+[Extraction]  → CalculationDefinitionData, CalcUsageData, PartDefinitionData,
+                 RedefinitionData, AggregationExpressionData, ComputedAttributeData,
+                 HierarchyExtractionResult
   |
   v
-[Analysis]   --> BacktrackingResult (binding_resolutions, entry_points)
-                 DesignAttributeData, DerivedParameterGroup
+[Analysis]    → BacktrackingResult (binding_resolutions, entry_points)
+                 DesignAttributeData, DerivedParameterGroup, PhantomDetectionReport
   |
   v
-[Core]       --> OutputRegistry, BindingResolution, ChannelAlias
+[Core]        → OutputRegistry, BindingResolution, ChannelAlias
   |
   v
-[Resolution] --> ComputationGraph (PipelineModule, ParameterGroup, EntryPoint)
+[Resolution]  → ComputationGraph (PipelineModule, ParameterGroup, EntryPoint)
   |
   v
-[Generation] --> Python files, YAML pipelines, JSON input templates
+[Generation]  → PipelineContext → Python files, YAML, JSON templates
 ```
+
+## Enums
+Every value listed (REQ-DM-02). These are the most common source of doc bugs.
+| Enum | Values | Source |
+|------|--------|--------|
+| `BindingType` | `CHAIN`, `REFERENCE`, `LITERAL`, `EXPRESSION`, `UNBOUND` | `agentic_mbse` |
+| `RedefinitionType` | `LITERAL`, `CHAIN`, `EXPRESSION` | `extraction/data_models.py:225` |
+| `ComputedAttributeClassification` | `FORMULA`, `EXPOSE_PURE`, `EXPOSE_COMPUTED`, `LITERAL`, `UNRESOLVABLE` | `extraction/data_models.py:164` |
+| `Compilability` | `FULLY_COMPILABLE`, `PARTIALLY_COMPILABLE`, `MANUAL_REQUIRED`, `UNKNOWN` | `extraction/expression_compiler.py:25` |
+| `ExpressionNodeType` | `BINARY_OP`, `UNARY_OP`, `LITERAL`, `INPUT_REF`, `INTERMEDIATE_REF`, `UNSUPPORTED` | `extraction/expression_compiler.py:38` |
+| `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py:13` |
+| `EntryPointType` | `LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL` | `resolution/models.py:23` |
 
 ## Extraction Models
 
-**CalculationDefinitionData** (dataclass) -- primary model for code generation.
-Key fields: `name` ("AlphaNeutronSplit"), `qualified_name` ("FusionPhysics::AlphaNeutronSplit"),
+**CalculationDefinitionData** (dataclass, `extraction/data_models.py:121`)
+`name: str`, `qualified_name: str`, `doc_comment: str`, `calc_expressions: list[str]`,
 `input_attributes: list[AttributeInfo]`, `output_attributes: list[AttributeInfo]`,
-`calc_expressions: list[str]`, `output_expression_asts: dict[str, Any]`,
-`all_member_names: set[str]`, `source_file: Path`, `source_hash: str`.
+`references: list[str]`, `source_file: Path`, `source_line: int`, `source_hash: str`,
+`output_expression_asts: dict[str, Any]`, `all_member_names: set[str]`,
+`member_expressions: dict[str, Any]`.
 
-**CalcUsageData** (dataclass, `extraction/usage_extractor.py`) -- a calc usage instance.
-Key fields: `instance_name` ("net_electric"), `calc_def_name` ("NetElectricPower"),
-`qualified_name` ("Design__plant__net_electric"), `module_type` ("PowerBalance__NetElectricPower"),
-`bindings: list[BindingInfo]`, `unbound_params: list[str]`,
-`is_template: bool`, `owning_part_def_qn: str | None`.
+**CalcUsageData** (dataclass, `extraction/usage_extractor.py:90`)
+`instance_name: str`, `calc_def_name: str`, `calc_def_qualified_name: str`,
+`module_type: str`, `bindings: list[BindingInfo]`, `unbound_params: list[str]`,
+`source_file: Path`, `source_line: int`, `parent_part_path: str`,
+`qualified_name: str`, `is_template: bool`, `owning_part_def_qn: str | None`.
 
-**BindingInfo** (dataclass) -- one parameter binding on a CalcUsageData.
-Fields: `param_name` ("p_fusion"), `source_path` ("alpha_neutron.p_neutron" or None),
-`binding_type: BindingType` (CHAIN, REFERENCE, LITERAL, EXPRESSION, UNBOUND),
-`literal_value: float | None`.
+**BindingInfo** (dataclass, `extraction/usage_extractor.py:48`)
+`param_name: str`, `source_path: str | None`, `binding_type: BindingType`,
+`is_cross_file: bool`, `raw_expression: str`, `source_instance_elem: object | None`,
+`source_attribute_elem: object | None`, `literal_value: float | int | str | bool | None`,
+`expression_ast: Any`. Properties: `source_instance_name`, `source_attribute_name`.
 
-**PartDefinitionData** (dataclass) -- `name`, `qualified_name`, `attributes: list[AttributeInfo]`,
-`constraints: list[ConstraintInfo]`, `source_file: Path`.
+**PartDefinitionData** (dataclass, `extraction/data_models.py:96`)
+`name: str`, `qualified_name: str`, `doc_comment: str`, `attributes: list[AttributeInfo]`,
+`constraints: list[ConstraintInfo]`, `source_file: Path`, `source_line: int`, `source_hash: str`.
 
-**RedefinitionData** (dataclass) -- a `:>>` redefinition on a PartDef/PartUsage.
-Fields: `owning_part_qn` ("Lib__Solar_Array"), `attribute_name` ("capital_cost"),
-`redefinition_type: RedefinitionType` (LITERAL | CHAIN | EXPRESSION),
-`literal_value: float | None`, `source_path: str | None` ("cost_model.total_cost"),
-`expression_ast: Any`, `target_path: list[str]`, `is_deep_path: bool`.
+**RedefinitionData** (dataclass, `extraction/data_models.py:233`)
+`owning_part_qn: str`, `attribute_name: str`, `redefinition_type: RedefinitionType`,
+`literal_value: float | int | str | bool | None`, `source_path: str | None`,
+`expression_ast: Any`, `expression_text: str`, `target_path: list[str]`,
+`is_deep_path: bool`, `source_file: Path`, `source_line: int`.
 
-**SumTerm** -- sum() operand: `part_usage_name` ("pv_module"), `attribute_name` ("capital_cost"),
-`multiplicity_attr` ("module_count"), `multiplicity_count` (20).
+**MultiplicityData** (dataclass, `extraction/data_models.py:258`)
+`part_usage_name: str`, `owning_part_def_qn: str`, `count: int | None`,
+`count_attribute_name: str | None`, `default_value: int | None`.
 
-**SingletonTerm** -- non-sum child ref: `source_path` ("allocation_model.total_allocation").
-
-**LocalTerm** -- PartDef-local attr: `attribute_name` ("misc_hardware_cost").
-
-**AggregationExpressionData** (dataclass) -- decomposed sum()-based rollup expression.
-Key fields: `owning_part_qn`, `attribute_name`, `transformed_expression` (symbolic Python),
-`sum_terms: list[SumTerm]`, `singleton_terms: list[SingletonTerm]`, `local_terms: list[LocalTerm]`,
-`input_channels: list[str]`, `entry_points: list[str]`, `compilability: Compilability`.
-
-**ScopedAggregationData** (dataclass) -- scopes an AggregationExpressionData to one design instance.
-Fields: `expression: AggregationExpressionData`, `instance_path` ("solar_battery_plant__solar_array").
-Property `module_eqn` -> `"{instance_path}__{attribute_name}"`.
-
-**HierarchyExtractionResult** (dataclass) -- complete hierarchy extraction output.
-Fields: `redefinitions: list[RedefinitionData]`, `design_overrides: list[RedefinitionData]`,
+**HierarchyExtractionResult** (dataclass, `extraction/data_models.py:331`)
+`redefinitions: list[RedefinitionData]`, `design_overrides: list[RedefinitionData]`,
 `multiplicities: list[MultiplicityData]`, `aggregation_expressions: list[AggregationExpressionData]`,
-`part_usage_names: dict[str, set[str]]`, `usage_type_map: dict[tuple[str, str], str]`,
-`warnings: list[str]`.
+`warnings: list[str]`, `part_usage_names: dict[str, set[str]]`,
+`usage_type_map: dict[tuple[str, str], str]`.
+
+**AttributeInfo** (dataclass, `extraction/data_models.py:47`, extends `BaseAttributeInfo`)
+Inherited: `name`, `sysml_type`, `default_value`, `binding_type`, `is_input`, `is_output`.
+Added: `python_type: str`, `description: str`, `unit: str | None`, `source_line: int`,
+`is_optional: bool`.
+
+**AggregationExpressionData** (dataclass, `extraction/data_models.py:275`)
+`owning_part_qn`, `owning_part_name`, `attribute_name`, `raw_expression_text`,
+`transformed_expression`, `sum_terms: list[SumTerm]`, `singleton_terms: list[SingletonTerm]`,
+`local_terms: list[LocalTerm]`, `input_channels: list[str]`, `entry_points: list[str]`,
+`aliases: list[str]`, `compilability`, `has_unsupported_nodes: bool`, `source_file`, `source_line`.
+See [13](13-aggregation-scoping.md), [25](25-hierarchy-resolver.md) for semantics.
+
+*Delegated: ComputedAttributeData → [16](16-computed-attributes.md). Expression compiler → [14](14-expression-compiler.md).*
 
 ## Analysis Models
 
-**BacktrackingResult** (Pydantic BaseModel) -- output of dependency backtracking.
-Fields: `required_usages: list[CalcUsageData]` (topological order),
-`dependency_graph: dict[str, list[str]]`, `entry_points: set[str]`,
-`entry_point_sources: dict[str, str]` (QN -> source value),
-`binding_resolutions: dict[str, BindingResolution]` (THE source of truth for wiring).
+**BacktrackingResult** (BaseModel, `analysis/dependency_backtracker.py:47`)
+`required_usages: list[CalcUsageData]`, `dependency_graph: dict[str, list[str]]`,
+`entry_points: set[str]`, `entry_point_sources: dict[str, str]`,
+`binding_resolutions: dict[str, BindingResolution]`, `phantom_report: PhantomDetectionReport`,
+`trace_log: list[str]`, `binding_to_entry_point: dict[str, str]` *(deprecated)*.
 Key format: `"{usage_qualified_name}|{param_name}"`.
 
-**DesignAttributeData** (dataclass, `analysis/parameter_groups.py`) -- design attr with default.
-Fields: `name`, `qualified_name`, `default_value: str | None`, `parent_part`, `source_file`.
+**DesignAttributeData** (dataclass, `analysis/parameter_groups.py:46`)
+`name: str`, `sysml_type: str`, `default_value: str | None`, `unit: str | None`,
+`source_file: Path`, `source_line: int`, `parent_part: str`, `qualified_name: str`.
 
-**DerivedParameterGroup** (dataclass) -- auto-derived parameter group.
-Fields: `name` ("solar_battery_params"), `class_name` ("SolarBatteryParams"),
-`source_type` ("design" | "library"), `parameters: list[ParameterSource]`.
+**DerivedParameterGroup** (dataclass, `analysis/parameter_groups.py:73`)
+`name: str`, `class_name: str`, `source_type: Literal["design", "library"]`,
+`source_identifier: str`, `parameters: list[ParameterSource]`.
 
-## Core Models (shared across layers)
+**ScopedAggregationData** (dataclass, `extraction/data_models.py:359`)
+`expression: AggregationExpressionData`, `instance_path: str`.
+Property: `module_eqn` = `"{instance_path}__{attribute_name}"`.
+Bridge from extraction to pipeline — wraps an aggregation with a concrete design
+instance path. See [13](13-aggregation-scoping.md).
 
-**BindingResolution** (Pydantic BaseModel, `core/models.py`) -- single binding wiring decision.
-Fields: `resolution_type: BindingResolutionType` (ENTRY_POINT | MODULE_OUTPUT),
-`qualified_name: str` (entry point QN or upstream channel name),
-`source_path: str | None` (original binding path, for debug), `is_transitive: bool`.
+*Delegated: PhantomDetectionReport → `analysis/phantom_detector.py`. FunctionSignature → [23](23-smart-regen-preservation.md).*
 
-**ChannelAlias** (Pydantic BaseModel, `core/models.py`) -- alias -> canonical channel mapping.
-Fields: `alias_name` ("solar_array.total_capex"), `canonical_name` ("solar_array.cost_model.total_cost"),
-`owning_part_qn`, `source` ("redefinition" | "expose_pure" | "design_override").
+## Core Models
 
-**OutputRegistry** (class, `core/output_registry.py`) -- the master lookup table.
-Internal: `_index: dict[str, str]` (key -> canonical), `_canonical: set[str]`.
-4-phase registration: (1) CalcUsage/aggregation/FORMULA outputs via `register()`,
-(2) CHAIN aliases, (3) EXPOSE_PURE aliases, (4) transitive design aliases via `register_alias()`.
-`resolve(source_path) -> str | None` -- exact match only, no normalization.
+**BindingResolution** (BaseModel, `core/models.py:32`)
+`resolution_type: BindingResolutionType`, `qualified_name: str`,
+`source_path: str | None`, `is_transitive: bool`.
 
-## Resolution Models (the key output)
+**ChannelAlias** (BaseModel, `core/models.py:71`)
+`alias_name: str`, `canonical_name: str`, `owning_part_qn: str`,
+`source: Literal["redefinition", "expose_pure", "design_override"]`.
 
-**ComputationGraph** (Pydantic BaseModel, `resolution/models.py`) -- THE single source of truth.
-Fields: `modules: list[PipelineModule]`, `entry_point_groups: list[ParameterGroup]`,
+**OutputRegistry** (class, `core/output_registry.py`)
+Internal: `_index: dict[str, str]` (key → canonical), `_canonical: set[str]`.
+API: `register(key, canonical)`, `register_alias(alias, target)`, `resolve(key) → str | None`,
+`canonical_channels → frozenset[str]` (read-only view of all canonical channels).
+See [10-output-registry](10-output-registry.md) for the 4-phase protocol.
+
+*Delegated: Identifier types (SysMLQualifiedName, ModuleType, PythonModulePath, ElementQualifiedName) → [15](15-naming-conventions.md), [20](20-module-registry-generation.md).*
+
+## Resolution Models
+
+**ComputationGraph** (BaseModel, `resolution/models.py:174`)
+`modules: list[PipelineModule]`, `entry_point_groups: list[ParameterGroup]`,
 `execution_order: list[str]`.
 
-**PipelineModule** -- `name` ("alphaneutronsplit"), `module_type` ("AlphaNeutronSplitModule"),
-`inputs: list[ModuleInput]`, `outputs: list[ModuleOutput]`, `execution_order: int`,
-`compilability: Compilability`, `compiled_expression: str | None`,
+**PipelineModule** (BaseModel, `resolution/models.py:150`)
+`name: str`, `module_type: str`, `inputs: list[ModuleInput]`, `outputs: list[ModuleOutput]`,
+`execution_order: int`, `compilability: Compilability`, `compiled_expression: str | None`,
 `is_computed_attribute: bool`, `is_aggregation: bool`.
 
-**ModuleInput** -- `param_name` ("p_fusion"), `python_type` ("float"), `source: InputSource`.
+**ModuleInput** (BaseModel, `resolution/models.py:122`)
+`param_name: str`, `python_type: str`, `source: InputSource`.
 
-**ModuleOutput** -- `field_name` ("p_neutron" or "root"), `python_type`, `channel_name` ("alphaneutronsplit_p_neutron").
+**ModuleOutput** (BaseModel, `resolution/models.py:136`)
+`field_name: str`, `python_type: str`, `channel_name: str`.
 
-**InputSource** -- `source_type` ("entry_point" | "module_output"),
-`param_group: str | None`, `qualified_name: str | None` (entry_point),
-`producer_channel: str | None` (module_output).
+**InputSource** (BaseModel, `resolution/models.py:100`)
+`source_type: str` ("entry_point" | "module_output"), `param_group: str | None`,
+`qualified_name: str | None`, `producer_channel: str | None`.
 
-**EntryPoint** -- `qualified_name` ("Design__plant__catf_physics__p_fusion"),
-`simple_name` ("p_fusion"), `entry_type: EntryPointType` (LIBRARY_DEFAULT | DESIGN_ATTRIBUTE | USAGE_LITERAL),
-`default_value: float | None`, `param_group: str | None`, `python_type: str`.
+**EntryPoint** (BaseModel, `resolution/models.py:37`)
+`qualified_name: str`, `simple_name: str`, `entry_type: EntryPointType`,
+`default_value: float | None`, `source_calc_usage: str | None`,
+`param_group: str | None`, `python_type: str`. Property: `json_field_name`.
 
-**ParameterGroup** -- `name` ("physics_params"), `class_name` ("PhysicsParams"),
-`source_file: Path`, `parameters: list[EntryPoint]`.
+**ParameterGroup** (BaseModel, `resolution/models.py:70`)
+`name: str`, `class_name: str`, `source_file: Path`, `parameters: list[EntryPoint]`.
+Properties: `json_filename`, `schema_filename`.
+
+## Orchestration Model
+
+**PipelineContext** (dataclass, `generation/initialization.py:75`)
+`extractor`, `calc_defs`, `calc_usages`, `design_attributes`, `group_deriver`,
+`backtracker`, `backtracking_result`, `computation_graph`, `compilation_results`,
+`computed_attributes`, `hierarchy_data`, `aggregation_expressions: list[ScopedAggregationData]`,
+`channel_aliases: list[ChannelAlias]`, `output_registry: OutputRegistry | None`.
+
+## Concrete Example
+
+2-module graph with both `entry_point` and `module_output` wiring (REQ-DM-05):
+
+```python
+ComputationGraph(modules=[
+  PipelineModule(name="battery_pack__cost_model", module_type="BatteryPackCostCalcModule",
+    inputs=[
+      ModuleInput("capacity_kwh", "float",
+        source=InputSource("entry_point", param_group="design_params",
+          qualified_name="Design__battery_pack__capacity_kwh")),
+      ModuleInput("cost_per_kwh", "float",
+        source=InputSource("entry_point", param_group="library_params",
+          qualified_name="BatteryPackCostCalc__cost_per_kwh")),
+    ],
+    outputs=[ModuleOutput("total_cost", "float", "battery_pack__cost_model__total_cost")],
+    execution_order=0, compilability=Compilability.FULLY_COMPILABLE,
+    compiled_expression="capacity_kwh * cost_per_kwh"),
+  PipelineModule(name="battery_system__total_cost", module_type="BatterySystemTotalCostModule",
+    inputs=[
+      ModuleInput("battery_cost", "float",
+        source=InputSource("module_output",
+          producer_channel="battery_pack__cost_model__total_cost")),
+    ],
+    outputs=[ModuleOutput("root", "float", "battery_system__total_cost__root")],
+    execution_order=1, is_aggregation=True),
+], entry_point_groups=[
+  ParameterGroup(name="design_params", class_name="DesignParams",
+    source_file=Path("SolarBatteryDesign.sysml"), parameters=[
+      EntryPoint("Design__battery_pack__capacity_kwh", "capacity_kwh",
+        EntryPointType.DESIGN_ATTRIBUTE, default_value=100.0, param_group="design_params")]),
+  ParameterGroup(name="library_params", class_name="LibraryParams",
+    source_file=Path("BatteryPackCostCalc.sysml"), parameters=[
+      EntryPoint("BatteryPackCostCalc__cost_per_kwh", "cost_per_kwh",
+        EntryPointType.LIBRARY_DEFAULT, default_value=150.0, param_group="library_params")]),
+], execution_order=["battery_pack__cost_model", "battery_system__total_cost"])
+```
 
 ## Model Containment
 
 ```
-ComputationGraph
-  +-- modules: list[PipelineModule]
-  |     +-- inputs: list[ModuleInput]
-  |     |     +-- source: InputSource
-  |     +-- outputs: list[ModuleOutput]
-  +-- entry_point_groups: list[ParameterGroup]
-  |     +-- parameters: list[EntryPoint]
-  +-- execution_order: list[str]
-
-BacktrackingResult
-  +-- required_usages: list[CalcUsageData]
-  |     +-- bindings: list[BindingInfo]
-  +-- binding_resolutions: dict[str, BindingResolution]
-
-HierarchyExtractionResult
-  +-- redefinitions / design_overrides: list[RedefinitionData]
-  +-- multiplicities: list[MultiplicityData]
-  +-- aggregation_expressions: list[AggregationExpressionData]
-        +-- sum_terms / singleton_terms / local_terms
+ComputationGraph ── modules: [PipelineModule] ── inputs: [ModuleInput] ── source: InputSource
+                 │                             └─ outputs: [ModuleOutput]
+                 ├─ entry_point_groups: [ParameterGroup] ── parameters: [EntryPoint]
+                 └─ execution_order: [str]
+BacktrackingResult ── required_usages: [CalcUsageData] ── bindings: [BindingInfo]
+                   ├─ binding_resolutions: dict[str, BindingResolution]
+                   └─ phantom_report: PhantomDetectionReport
+HierarchyExtractionResult ── redefinitions/design_overrides: [RedefinitionData]
+                          ├─ multiplicities: [MultiplicityData]
+                          └─ aggregation_expressions: [AggregationExpressionData]
 ```
+
+## Related Documents
+
+- **Upstream**: [00](00-pipeline-overview.md), [01](01-extraction.md), [02](02-orchestration.md), [03](03-resolution-overview.md)
+- **Delegated**: [13](13-aggregation-scoping.md), [14](14-expression-compiler.md), [15](15-naming-conventions.md), [16](16-computed-attributes.md), [17](17-parameter-group-deriver.md), [23](23-smart-regen-preservation.md), [25](25-hierarchy-resolver.md)
+- **Consumers**: [10](10-output-registry.md), [11](11-analysis-backtracker.md), [07](07-graph-assembly.md), [08](08-generation.md)

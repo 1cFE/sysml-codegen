@@ -4,8 +4,20 @@
 
 Some PartDef/PartUsage attributes have inline expressions rather than literal
 values. The computed attribute extractor (`extraction/computed_attribute_extractor.py`)
-discovers these, classifies each by how it should be handled in the pipeline, and
-compiles FORMULA patterns into Python code.
+discovers these, classifies each by how it should be handled in the [pipeline](00-pipeline-overview.md), and
+compiles FORMULA patterns into Python code via the [expression compiler](14-expression-compiler.md).
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-CA-01 | Classification SHALL produce exactly one of 5 values per attribute expression | `_classify_attribute_expression()` returns single `ComputedAttributeClassification` enum |
+| REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expression()` | Compilation path in extractor; compilability set to `FULLY_COMPILABLE` on success |
+| REQ-CA-03 | EXPOSE_PURE SHALL produce `ChannelAlias` only for PartUsage-level (not PartDef) | `not is_part_def` guard before alias creation |
+| REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | Returns `LITERAL`; excluded by caller before adding to `ComputedAttributeData` list |
+| REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | Included in list for reporting; no module or alias emitted |
+| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or LITERAL | 3-value enum in `graph_builder.py:526`; `_build_attribute_resolution_map()` assigns one per input |
+| REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `input_names = siblings - {self_name}` prevents circular dependency |
 
 ```sysml
 part def Solar_Array {
@@ -26,8 +38,8 @@ Source: `src/sysml_codegen/extraction/computed_attribute_extractor.py`
 
 ## The 5 Classifications
 
-`ComputedAttributeClassification` (in `extraction/data_models.py`) classifies
-each attribute expression by analyzing its feature references:
+`ComputedAttributeClassification` (in `extraction/data_models.py`, see [data models](09-data-models.md)) classifies
+each attribute expression by analyzing its feature references (REQ-CA-01):
 
 ### FORMULA
 
@@ -37,10 +49,10 @@ All references are sibling attributes on the same PartDef.
 attribute dc_capacity = panel_count * panel_wattage;
 ```
 
-**Pipeline effect**: generates a synthetic `PipelineModule` with
-`is_computed_attribute=True`. The expression compiles to Python via
-`build_expression_ast()` + `compile_expression()`. Inputs wire to sibling
-attribute channels or entry points.
+**Pipeline effect**: generates a synthetic [`PipelineModule`](09-data-models.md) with
+`is_computed_attribute=True` (REQ-CA-02). The expression compiles to Python via
+`build_expression_ast()` + `compile_expression()` ([expression compiler](14-expression-compiler.md)). Inputs wire to sibling
+attribute channels or [entry points](06-entry-point-classifier.md).
 
 ### EXPOSE_PURE
 
@@ -52,10 +64,10 @@ attribute p_alpha_out = alpha_split.p_alpha;
 
 **Pipeline effect**: produces a `ChannelAlias` (not a module). The alias maps
 `PartName.p_alpha_out` to the output channel of `alpha_split.p_alpha` in the
-OutputRegistry (Phase 3). Downstream bindings to `p_alpha_out` resolve
-transparently through the alias.
+[OutputRegistry](10-output-registry.md) (Phase 3). Downstream bindings to `p_alpha_out` resolve
+transparently through the alias. See [naming conventions](15-naming-conventions.md) for Phase 3 key format.
 
-Filter: only PartUsage-level EXPOSE_PURE attributes produce aliases.
+Filter: only PartUsage-level EXPOSE_PURE attributes produce aliases (REQ-CA-03).
 PartDefinition-level ones are skipped (`is_on_part_definition` guard).
 
 ### EXPOSE_COMPUTED
@@ -69,7 +81,7 @@ Future work: decompose into a FORMULA module that reads the exposed output.
 
 Pure constant, no feature references (e.g., `attribute pi = 3.14159`).
 
-**Pipeline effect**: excluded from computed attributes entirely. Stays in
+**Pipeline effect**: excluded from computed attributes entirely (REQ-CA-04). Stays in
 the `design_attributes` path as a normal `DesignAttributeData`.
 
 ### UNRESOLVABLE
@@ -77,7 +89,7 @@ the `design_attributes` path as a normal `DesignAttributeData`.
 Contains references that cannot be resolved to known siblings or calc outputs.
 
 **Pipeline effect**: included in the `ComputedAttributeData` list (for reporting)
-but does not generate a module or alias. Logged as a warning.
+but does not generate a module or alias (REQ-CA-05). Logged as a warning.
 
 ---
 
@@ -106,7 +118,7 @@ Step 3: Decision:
 For FORMULA attributes, the extractor immediately compiles the expression:
 
 1. Build `input_names` from sibling attributes (excluding self to prevent
-   circular self-reference).
+   circular self-reference — REQ-CA-07).
 2. Call `build_expression_ast(expr, input_names, output_names=set())`.
 3. Call `compile_expression(ast_ir)` to produce Python string.
 4. If compilation succeeds: `compilability = FULLY_COMPILABLE`.
@@ -140,13 +152,13 @@ attr_resolution_map: dict[str, dict[str, AttributeResolution]]
 # owning_part_name -> {attr_name -> AttributeResolution}
 ```
 
-`AttributeResolutionKind` (in `graph_builder.py`, line 526):
+`AttributeResolutionKind` (in `graph_builder.py`, line 526) — REQ-CA-06:
 
 | Kind | When | Wiring |
 |------|------|--------|
-| `FORMULA` | Another FORMULA attr on the same part | Wire to that FORMULA module's output channel |
-| `EXPOSE_ALIAS` | An EXPOSE_PURE attr | Wire to the upstream calc output channel via alias |
-| `LITERAL` | Attr is a design attribute with literal default | Entry point |
+| `FORMULA` | Another FORMULA attr on the same part | Wire to that FORMULA [module's](05-module-factory.md) output channel |
+| `EXPOSE_ALIAS` | An EXPOSE_PURE attr | Wire to the upstream calc output channel via [alias](10-output-registry.md) |
+| `LITERAL` | Attr is a design attribute with literal default | [Entry point](06-entry-point-classifier.md) |
 
 ```python
 @dataclass
@@ -202,27 +214,32 @@ PipelineModule(
 ChannelAlias(
     alias_name="total_capex",
     canonical_name="cost_model.total_cost",
-    owning_part_qn="SolarBatteryLibrary::Solar_Array",
+    owning_part_qn="SolarBatteryLibrary__Solar_Array",
     source="expose_pure",
 )
 ```
 
 ---
 
-## Data Models
+## FORMULA-to-FORMULA Limitation
 
-| Model | File | Role |
-|-------|------|------|
-| `ComputedAttributeClassification` | `extraction/data_models.py` | 5-value enum |
-| `ComputedAttributeData` | `extraction/data_models.py` | Per-attribute extraction result |
-| `ChannelAlias` | `core/models.py` | EXPOSE_PURE alias for OutputRegistry |
-| `AttributeResolutionKind` | `resolution/graph_builder.py` | FORMULA input wiring classification |
-| `AttributeResolution` | `resolution/graph_builder.py` | Per-input wiring decision for FORMULA modules |
+**REQ-CA-08**: FORMULA compilation SHALL NOT resolve sibling FORMULA outputs
+as inputs. FORMULA attributes cannot reference other FORMULA outputs on the
+same PartDef. The compiler receives `output_names=set()` (only inputs, not
+sibling outputs), so a cross-FORMULA reference like `dc_capacity` in
+`annual_output = dc_capacity * 8760` classifies `dc_capacity` as UNSUPPORTED.
+Workaround: promote the dependency to a separate CalcDef or use EXPOSE_PURE.
 
-## Key Source Files
+## Data Models & Source Files
 
-| File | Function |
-|------|----------|
-| `extraction/computed_attribute_extractor.py` | `extract_computed_attributes()`, `_classify_attribute_expression()` |
-| `generation/initialization.py` | `_extract_and_filter_computed_attributes()` (Step 4.5 orchestration) |
-| `resolution/graph_builder.py` | `_build_attribute_resolution_map()`, `_build_computed_attr_module()` |
+Models: `ComputedAttributeClassification` (enum), `ComputedAttributeData` (`extraction/data_models.py`), `ChannelAlias` (`core/models.py`), `AttributeResolutionKind`/`AttributeResolution` (`resolution/graph_builder.py`).
+Source: `extraction/computed_attribute_extractor.py`, `generation/initialization.py`, `resolution/graph_builder.py`.
+
+## Related Documents
+
+- **Upstream**: [01-extraction](01-extraction.md) (raw attribute data), [00-pipeline-overview](00-pipeline-overview.md) (Step 5)
+- **Resolution**: [05-module-factory](05-module-factory.md) (FORMULA as module type), [06-entry-point-classifier](06-entry-point-classifier.md) (LITERAL→EP)
+- **Registry**: [10-output-registry](10-output-registry.md) (Phase 3 EXPOSE_PURE aliases), [15-naming-conventions](15-naming-conventions.md) (key formats)
+- **Expression**: [14-expression-compiler](14-expression-compiler.md) (AST+compile), [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) (FCE/OE ordering)
+- **Generation**: [08-generation](08-generation.md) (stencils), [22-output-schema-rules](22-output-schema-rules.md), [23-smart-regen-preservation](23-smart-regen-preservation.md)
+- **Data models**: [09-data-models](09-data-models.md) — `PipelineModule`, `ModuleInput`, `ModuleOutput` fields

@@ -8,189 +8,216 @@ it answers: **where does this value come from?**
 The answer is always one of two things:
 
 1. **From another module's output** -- wire to that channel (e.g., `alpha_split__p_neutron`).
-2. **From the user** -- create an entry point in a JSON input file (e.g., `physics_params.json`).
+2. **From the user** -- create an [entry point](06-entry-point-classifier.md) in a JSON input file.
 
 That is the entire contract. Everything else in the resolution layer exists to
 answer this question correctly across all reachable combinations.
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-RES-01 | Every [ModuleInput](09-data-models.md#resolution-models) SHALL resolve to exactly one of {`module_output`, `entry_point`}. | `all(mi.source.source_type in {"module_output","entry_point"} for m in modules for mi in m.inputs)` |
+| REQ-RES-02 | Three resolution mechanisms: CalcUsage uses backtracker DFS cascade ([11](11-analysis-backtracker.md)). FORMULA uses pre-computed attribute resolution map ([16](16-computed-attributes.md)). Aggregation SumTerm/SingletonTerm uses `resolve_input()` with `AGG_STRATEGIES` ([04](04-input-resolver.md)). Aggregation LocalTerm uses factory-specific 3-strategy cascade ([05](05-module-factory.md#4c-localterm)). | Call site inspection per module type |
+| REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation of shared state (REQ-RES-03a: no side effects). | Type signature + no external dict mutation in [module factory](05-module-factory.md) |
+| REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the [OutputRegistry](10-output-registry.md). | `_validate_channel_references()` in [graph assembly](07-graph-assembly.md) |
+| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups -> toposort -> validate. | Code structure of `build_computation_graph()` |
+| REQ-RES-06 | `binding_resolutions` from the [backtracker](11-analysis-backtracker.md) SHALL be the single source of truth for CalcUsage input wiring. Key format: `"{usage_qn}\|{param_name}"`. | Every CalcUsage input looked up in this dict; missing key = immediate `ValueError` |
+
+## The Scope Problem
+
+Every binding in SysML is written **relative to a scope**. When a calc usage
+inside `battery_pack` says `cost_model.total_cost`, that is a local reference
+to the `cost_model` instance that is a sibling within `battery_pack`. It is NOT
+a global identifier.
+
+But extraction (`_parse_chain_expression`) strips the scope context and produces
+a bare `source_path = "cost_model.total_cost"`. If `solar_array` also contains
+a `cost_model`, the string `"cost_model.total_cost"` is ambiguous -- it could
+refer to either one.
+
+The [OutputRegistry](10-output-registry.md) is a flat `dict[str, str]`. It has
+no concept of scope. It cannot answer "which `cost_model.total_cost` does this
+consumer mean?"
+
+**This is the central design constraint of the resolution layer:**
+
+> `source_path` from extraction is a scope-relative reference.
+> The registry is a flat global namespace.
+> The resolver MUST bridge the gap by re-attaching scope before lookup.
+
+The mechanism: both the backtracker and `resolve_input()` know the consumer's
+identity. From this they derive the consumer's parent scope as a dotted path.
+Prepending that scope to `source_path` produces a
+[Key_C](15-naming-conventions.md#7-output-registry-key-formats) lookup, which is
+unique by SysML ownership. See
+[Strategy C: ScopedRegistryLookup](04-input-resolver.md#c-scopedregistrylookup).
+
+| What | Example |
+|------|---------|
+| Consumer EQN | `Design__plant__subsys__battery_pack__sizing` |
+| Parent scope (dotted, design prefix stripped) | `plant.subsys.battery_pack` |
+| source_path (from extraction) | `cost_model.total_cost` |
+| Scoped key (= Key_C) | `plant.subsys.battery_pack.cost_model.total_cost` |
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a [Key_C](15-naming-conventions.md#7-output-registry-key-formats)-format lookup, not the unscoped [Key_A](15-naming-conventions.md#7-output-registry-key-formats). | Scoped lookup before unscoped in both backtracker and `STANDARD_STRATEGIES` |
+| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation). | Backtracker: Step 0 (line 512). resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
 
 ## Why Resolution Is Hard
 
 The combinatorial space is the problem:
 
 - **3 module types**: CalcUsage, ComputedAttribute (FORMULA), Aggregation
-- **5 binding types**: CHAIN, REFERENCE, LITERAL, EXPRESSION, UNBOUND
-- **3 redefinition types**: CHAIN (delegation), LITERAL (value override), EXPRESSION (computed)
+- **5 [binding types](01-extraction.md#binding-types)**: CHAIN, REFERENCE, LITERAL, EXPRESSION, UNBOUND
+- **3 [redefinition types](01-extraction.md#redefinitions-redefinitiondata)**: CHAIN, LITERAL, EXPRESSION
 - **2 registry outcomes**: channel found, channel not found
-- **3 entry point types**: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL
+- **3 [entry point types](06-entry-point-classifier.md)**: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL
+
+**Note on EXPRESSION**: EXPRESSION bindings have `source_path=None` because their
+source is the expression AST itself, not an external reference. The backtracker
+skips them during DFS — they contribute to the module's `compiled_expression`
+(see [14-expression-compiler](14-expression-compiler.md)), not to its wiring.
 
 That is 3 x 5 x 3 x 2 x 3 = 270 combinations. Not all are reachable, but the
-code must handle every reachable one correctly. A missed combination is a silent
-wiring bug -- the pipeline compiles and runs, but produces wrong numbers.
+code must handle every reachable one correctly.
 
 ## Current State: Three Code Paths
 
-The current `graph_builder.py` is 1418 lines containing three independent
-module construction functions, each reimplementing input resolution differently.
-
-**`_build_pipeline_module`** (CalcUsage, line 1291) -- Looks up pre-computed
-`BindingResolution` objects keyed by `"{usage_qn}|{param_name}"`. Clean and
-fail-fast, but the resolution was computed upstream by the backtracker.
-
-```python
-resolution = binding_resolutions[mapping_key]
-if resolution.resolution_type == MODULE_OUTPUT:
-    source = InputSource(source_type="module_output", producer_channel=resolution.qualified_name)
-elif resolution.resolution_type == ENTRY_POINT:
-    source = InputSource(source_type="entry_point", qualified_name=resolution.qualified_name)
-```
-
-**`_build_computed_attr_module`** (FORMULA, line 641) -- Parses `inputs.X`
-references from compiled expressions via regex. Checks an `AttributeResolution`
-map (FORMULA -> synthetic channel, EXPOSE_PURE -> upstream alias, fallback ->
-entry point). Creates new entry points by mutating the shared `entry_points`
-dict as a side effect.
-
-**`_build_aggregation_module`** (Aggregation, line 922) -- The most complex
-path. Three term types, each with its own resolution strategy: SumTerms chase
-CHAIN redefinitions with cycle detection; SingletonTerms try registry-first
-then direct channel construction; LocalTerms check sibling aggregation outputs,
-then EXPOSE_PURE aliases, then fall back to entry points. All mutate
-`entry_points` in place.
+The current `graph_builder.py` has three independent module construction
+functions, each reimplementing input resolution differently. See
+[24-dual-resolution-architecture](24-dual-resolution-architecture.md) for the
+full breakdown.
 
 ### The Problems
 
-1. **Three resolution implementations.** The same question ("where does this
-   come from?") is answered by three code paths with different strategies,
-   fallback chains, and error handling. A fix to one does not fix the others.
+1. **Three resolution implementations.** Same question answered by three paths
+   with different strategies and error handling.
+2. **Shared mutable state.** `entry_points` mutated as side effect. (Violates REQ-RES-03.)
+3. **Untestable resolution.** Cannot test "does input X resolve to channel Y?"
+   without constructing a full module.
 
-2. **Shared mutable state.** `entry_points` is passed into all three builders
-   and mutated as a side effect. The orchestrator rebuilds `param_groups` after
-   all mutations. Ordering dependencies are implicit.
+## Why CalcUsage Resolution Stays in the Backtracker
 
-3. **Untestable resolution.** You cannot test "does input X resolve to channel
-   Y?" without constructing a full module.
+The [backtracker](11-analysis-backtracker.md)'s DFS must resolve bindings
+**during traversal** to decide which usages to recurse into:
 
-## Refactored State: The Thin Orchestrator
+```python
+# In _trace_dependencies (backtracker DFS):
+resolution = self._resolve_binding_via_registry(binding, usage)
+if resolution.resolution_type == MODULE_OUTPUT:
+    producing_usage = self._find_usage_for_channel(resolution.qualified_name)
+    self._trace_dependencies(producing_usage, visited, path)  # RECURSE
+# If ENTRY_POINT: stop -- no upstream module to trace
+```
 
-The refactoring decomposes the god module into focused sub-modules:
+Without resolving each binding, the DFS cannot know whether to recurse (it's
+a MODULE_OUTPUT, trace the producer) or stop (it's an ENTRY_POINT, nothing to
+trace). This makes CalcUsage resolution **structurally inseparable** from
+dependency discovery.
+
+The backtracker already implements scoped resolution (REQ-RES-07): Step 0
+prepends `consumer_scope` to `source_path` for Key_C lookup, matching the
+[Scope Problem](#the-scope-problem) solution before any unscoped fallback.
+
+FORMULA and Aggregation modules do NOT participate in DFS -- they are built
+after dependency discovery. Their resolution CAN be extracted into a standalone
+[`resolve_input()`](04-input-resolver.md) function.
+
+## Refactored State: Consolidated Resolution
+
+The refactoring reduces three resolution paths to **two well-defined paths**:
+
+| Path | Module type | Where | Why separate |
+|------|------------|-------|-------------|
+| **Backtracker** | CalcUsage | `analysis/dependency_backtracker.py` | DFS requires resolution during traversal |
+| **resolve_input()** | FORMULA, Aggregation | `resolution/input_resolver.py` | Post-DFS; can use shared strategy chain |
+
+The code structure:
 
 ```
+analysis/
+  dependency_backtracker.py   -- DFS + CalcUsage resolution (existing)   --> 11
 resolution/
-  graph_builder.py           -- thin orchestrator (< 100 lines)
-  input_resolver.py          -- ONE unified resolution function
-  module_factory.py          -- THREE pure construction functions
-  entry_point_classifier.py  -- entry point collection + classification
-  models.py                  -- ComputationGraph (unchanged)
+  graph_builder.py            -- orchestrator (< 100 lines)              --> 07
+  input_resolver.py           -- resolve_input() for FORMULA/Agg         --> 04
+  module_factory.py           -- THREE pure construction functions        --> 05
+  entry_point_classifier.py   -- entry point collection + classify       --> 06
+  models.py                   -- ComputationGraph (unchanged)            --> 09
 ```
 
-### The Orchestrator
+### The Orchestrator (REQ-RES-05)
 
 ```python
 def build_computation_graph(result, calc_defs, design_attrs, ...) -> ComputationGraph:
-    entry_points = classify_entry_points(result.entry_points, result.entry_point_sources,
-                                         design_attrs, calc_defs, group_deriver)
+    entry_points = classify_entry_points(...)              # 06 -- from backtracker results
     modules = []
     for usage in result.required_usages:
-        module, new_eps = build_calc_usage_module(usage, calc_defs, result.binding_resolutions)
+        module, new_eps = build_calc_usage_module(         # 05 -- lookup binding_resolutions
+            usage, binding_resolutions=result.binding_resolutions)
         modules.append(module); entry_points.update(new_eps)
     for ca in computed_attributes:
-        module, new_eps = build_formula_module(ca, resolution_map, design_attrs)
+        module, new_eps = build_formula_module(             # 05 -- uses attr resolution map
+            ca, attr_resolution_map=...)
         modules.append(module); entry_points.update(new_eps)
     for agg in aggregation_data:
-        module, new_eps = build_aggregation_module(agg, redefinitions, output_registry)
+        module, new_eps = build_aggregation_module(         # 05 -- calls resolve_input()
+            agg, ctx=ResolutionContext(...))
         modules.append(module); entry_points.update(new_eps)
-    param_groups = group_entry_points(entry_points, group_deriver)
-    modules = topological_sort(modules)
-    validate_channel_references(modules)
-    return ComputationGraph(modules=modules, entry_point_groups=param_groups,
-                            execution_order=[m.name for m in modules])
+    param_groups = rebuild_groups(entry_points)             # 17
+    modules = topological_sort(modules)                     # 07
+    validate_channel_references(modules)                    # 07
+    return ComputationGraph(...)
 ```
 
-The key structural change: factory functions return `(module, new_entry_points)`
-instead of mutating a shared dict. Data flows down, results flow up.
+CalcUsage modules look up pre-computed `binding_resolutions` (REQ-RES-06).
+FORMULA modules use the pre-computed [attribute resolution map](16-computed-attributes.md).
+Aggregation modules call [`resolve_input()`](04-input-resolver.md)
+with `AGG_STRATEGIES`. All factory functions return
+`(module, new_entry_points)` (REQ-RES-03).
 
-### Mutable vs. Pure Data Flow
+### What Changed vs. What Stayed
 
-Current (shared mutable state):
-```
-entry_points = classify(...)
-build_calc_usage(entry_points)      # reads
-build_formula(entry_points)         # reads AND MUTATES
-build_aggregation(entry_points)     # reads AND MUTATES
-param_groups = rebuild(entry_points)
-```
-
-Refactored (pure returns):
-```
-entry_points = classify(...)
-m1, eps1 = build_calc_usage(...)    # returns new EPs
-m2, eps2 = build_formula(...)       # returns new EPs
-m3, eps3 = build_aggregation(...)   # returns new EPs
-all_eps = entry_points | eps1 | eps2 | eps3
-param_groups = group(all_eps)
-```
-
-No function mutates its inputs. Every contribution is visible at the call site.
-
-## The Four Sub-Modules
-
-**input_resolver.py** (detailed in 04) -- One function:
-`resolve_input(symbolic_ref, context) -> InputSource`. All three module types
-call this same function. Returns `module_output` with a channel name, or
-`entry_point` with a qualified name.
-
-**module_factory.py** (detailed in 05) -- Three pure construction functions,
-one per module type. Each calls `resolve_input()` for every input and returns
-`(PipelineModule, dict[str, EntryPoint])`. No shared mutable state.
-
-**entry_point_classifier.py** (detailed in 06) -- Classifies entry point names
-into the three ADR-001 types and resolves default values. Handles post-build
-grouping into parameter groups for JSON file generation.
-
-**graph_builder.py** (detailed in 07) -- The thin orchestrator. Under 100 lines.
-Calls the other three modules in order and assembles the `ComputationGraph`.
+| Aspect | Before | After |
+|--------|--------|-------|
+| CalcUsage resolution | Backtracker [5-step resolution cascade](11-analysis-backtracker.md#the-5-step-resolution-cascade) | **Same** (DFS constraint) |
+| FORMULA resolution | Ad-hoc regex + attr map + mutation | Pre-computed [attribute resolution map](16-computed-attributes.md) (no registry lookup) |
+| Aggregation resolution | 3 term-type-specific functions + mutation | `resolve_input()` with `AGG_STRATEGIES` |
+| Entry point creation | Side-effect mutation of shared dict | Returned as tuple second element |
+| Testability | Full module construction required | `resolve_input()` testable in isolation |
 
 ## Concrete Example: Tracing Two Inputs
 
-A calc usage `alpha_split` has two inputs:
+A CalcUsage `alpha_split` has two inputs:
 - `p_total` -- bound to upstream `plasma_power.p_total` (should wire to channel)
 - `f_alpha` -- unbound param with library default 0.2 (should become entry point)
 
-**Current flow:** The backtracker produces binding resolutions. `_classify_entry_points`
-finds `f_alpha` in `unbound_lookup`, classifies it as LIBRARY_DEFAULT with default
-0.2. Then `_build_pipeline_module` looks up each resolution and builds `ModuleInput`
-objects. This works, but the resolution pattern differs from FORMULA and aggregation.
-
-**Refactored flow:** Same binding resolutions from the backtracker. Then
-`build_calc_usage_module` calls `resolve_input()` for each input:
-
-- `resolve_input("p_total", ctx)` -> binding resolution found ->
-  `InputSource(module_output, "plasma_power__p_total")`
-- `resolve_input("f_alpha", ctx)` -> binding resolution found ->
-  `InputSource(entry_point, "Physics__alpha_split__f_alpha")`
-
-Factory returns `(PipelineModule, {})`. Orchestrator merges and continues.
-
-The critical difference: both inputs go through `resolve_input()`. A bug fix
-in that function fixes it for all module types. In the current code, you would
-need to find and fix the same bug in each of the three builders independently.
-
-## What This Enables
-
-With resolution extracted into `input_resolver.py`:
+**CalcUsage path**: The backtracker resolves both during DFS. `p_total` hits the
+registry → MODULE_OUTPUT → DFS recurses into `plasma_power`. `f_alpha` has no
+binding → ENTRY_POINT. Results stored in `binding_resolutions`. Then
+`build_calc_usage_module` looks up each:
 
 ```python
-def test_bound_input_resolves_to_channel():
-    source = resolve_input("p_total", context_with_binding("plasma_power.p_total"))
-    assert source.source_type == "module_output"
-    assert source.producer_channel == "plasma_power__p_total"
-
-def test_unbound_input_resolves_to_entry_point():
-    source = resolve_input("f_alpha", context_without_binding())
-    assert source.source_type == "entry_point"
-    assert source.qualified_name == "Physics__alpha_split__f_alpha"
+binding_resolutions["alpha_split|p_total"]  → MODULE_OUTPUT, channel="plasma_power__p_total"
+binding_resolutions["alpha_split|f_alpha"]  → ENTRY_POINT, qn="Physics__alpha_split__f_alpha"
 ```
 
-Today these tests are impossible -- resolution is embedded inside module
-construction. After the refactoring, the 270-combination space can be tested
-as a matrix against a single function.
+**Aggregation path**: Same question, answered by `resolve_input()`:
+
+```python
+resolve_input("p_total", ctx)  → InputSource(module_output, "plasma_power__p_total")
+resolve_input("f_alpha", ctx)  → InputSource(entry_point, "Physics__alpha_split__f_alpha")
+```
+
+Both paths produce the same wiring. FORMULA uses the attribute resolution map
+instead, but reaches equivalent answers for shared references.
+
+## Related Documents
+
+- **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) (Steps 3-6), [01-extraction](01-extraction.md) (provides bindings and redefinitions), [11-analysis-backtracker](11-analysis-backtracker.md) (CalcUsage resolution + DFS)
+- **Sub-modules**: [04-input-resolver](04-input-resolver.md) (FORMULA/Agg resolution), [05-module-factory](05-module-factory.md), [06-entry-point-classifier](06-entry-point-classifier.md), [07-graph-assembly](07-graph-assembly.md)
+- **Architecture**: [24-dual-resolution-architecture](24-dual-resolution-architecture.md) (why two paths exist)
+- **Registry**: [10-output-registry](10-output-registry.md) (channel lookup), [15-naming-conventions](15-naming-conventions.md) (key formats)
+- **Data models**: [09-data-models](09-data-models.md) -- ComputationGraph, PipelineModule, InputSource, BindingResolution
+- **Deep dives**: [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [18-literal-value-propagation](18-literal-value-propagation.md)

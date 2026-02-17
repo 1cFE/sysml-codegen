@@ -7,6 +7,18 @@ files (`handwritten/*_impl.py`) can be overwritten. Smart-regen compares
 function signatures to preserve handwritten code when the interface hasn't
 changed, and upgrades stubs to auto-implementations when possible.
 
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `matches()` at `signature_extractor.py:35-62` |
+| REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `sorted(self.input_fields) == sorted(other.input_fields)` |
+| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [4-case decision tree](#the-4-case-decision-tree) | 4 return paths in `preservation.py:20-61` |
+| REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `FULLY_COMPILABLE` | `cli/__init__.py:659-691` checks all three |
+| REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `backup_implementation()` called before `write_text()` |
+| REQ-SR-06 | Aggregation and [computed-attribute](16-computed-attributes.md) modules SHALL NOT use smart-regen (always regenerated) | No `smart_regen` references in `_generate_aggregation_stencils()` or `_generate_computed_attr_stencils()` |
+| REQ-SR-07 | `--preserve-handwritten` SHALL skip ALL existing handwritten files without comparison | Blanket skip, no signature extraction |
+
 ---
 
 ## FunctionSignature Data Model
@@ -62,15 +74,18 @@ Returns `None` if file doesn't exist, has syntax errors, or lacks `run_*`.
 
 ### From SysML Model (lines 195-239)
 
-`generate_expected_signature(calc_def: CalculationDefinitionData) -> FunctionSignature`
+`generate_expected_signature(calc_def:` [`CalculationDefinitionData`](09-data-models.md)`) -> FunctionSignature`
 
 ```python
 func_name = f"run_{calc_def.name.lower()}"
 input_type = f"{calc_def.name}Input"
-if len(calc_def.output_attributes) == 1:
+output_count = len(calc_def.output_attributes)
+if output_count == 0:
+    return_type = "None"
+elif output_count == 1:
     return_type = "float"
-elif len(calc_def.output_attributes) >= 2:
-    return_type = f"tuple[{', '.join(['float'] * len(calc_def.output_attributes))}]"
+else:  # >= 2
+    return_type = f"tuple[{', '.join(['float'] * output_count)}]"
 input_fields = [attr.name for attr in calc_def.input_attributes]
 ```
 
@@ -166,41 +181,19 @@ system. It simply skips generation for any existing `handwritten/*.py` file.
 
 ---
 
-## Concrete Scenario Trace
+## Concrete Scenarios
 
-**Model**: CalcDef `AlphaNeutronSplit` with 2 inputs, 2 outputs.
+| Case | Condition | Action |
+|------|-----------|--------|
+| A: New file | impl doesn't exist | Generate (auto-impl or stub) |
+| B: Handwritten, unchanged | matches()=True, no NotImplementedError | **Preserve** |
+| C: Stub, compilable | matches()=True, has NotImplementedError, FULLY_COMPILABLE | Backup + upgrade |
+| D: Interface changed | matches()=False (return type or fields differ) | Backup + regenerate |
 
-**Case A: New file** -- `handwritten/alphaneutronsplit_impl.py` doesn't exist.
-- `should_regenerate_stencil()` -> `(True, "New module")`
-- Generate auto-impl (if FULLY_COMPILABLE) or stub
-
-**Case B: Handwritten, unchanged** -- Developer wrote custom logic.
-- Extract signature from file: `run_alphaneutronsplit(inputs: AlphaNeutronSplitInput) -> tuple[float, float]`
-- `matches(expected)` -> `True`
-- `is_stub` -> `False` (no NotImplementedError)
-- **Preserved**, no backup needed.
-
-**Case C: Stub, auto-impl available** -- Stub exists, model now compilable.
-- `matches(expected)` -> `True` (stubs have same signature)
-- `is_stub` -> `True`
-- `has_auto_impl` -> `True` (FULLY_COMPILABLE)
-- Backup stub, write auto-impl.
-
-**Case D: Interface changed** -- SysML added an output attribute.
-- Extract: `return_type = "tuple[float, float]"` (old)
-- Expected: `return_type = "tuple[float, float, float]"` (new, 3 outputs)
-- `matches()` -> `False` (return type differs)
-- `should_regenerate_stencil()` -> `(True, "Signature changed")`
-- Backup old file, regenerate.
-
----
-
-## Important Limitation
-
-Smart-regen compares against `CalculationDefinitionData`, which only exists
-for CalcUsage modules. Aggregation modules and computed attribute modules
-are synthetic -- they have no CalcDef and are not covered by smart-regen.
-These modules are regenerated every time.
+**Limitation**: Smart-regen only works for CalcUsage modules (which have
+[`CalculationDefinitionData`](09-data-models.md)). [Aggregation](13-aggregation-scoping.md)
+and [computed attribute](16-computed-attributes.md) modules are synthetic — regenerated
+every time (REQ-SR-06).
 
 ---
 
@@ -210,5 +203,14 @@ These modules are regenerated every time.
 |-------|------|------|
 | `FunctionSignature` | `analysis/signature_extractor.py` | Signature comparison |
 | `CalculationDefinitionData` | `extraction/data_models.py` | Expected signature source |
-| `Compilability` | `extraction/expression_compiler.py` | FULLY_COMPILABLE check |
+| `Compilability` | `extraction/expression_compiler.py` | FULLY_COMPILABLE check ([doc 14](14-expression-compiler.md)) |
 | `GenerationConfig` | `cli/__init__.py` | smart_regen, preserve_handwritten flags |
+
+## Related Documents
+
+- **Upstream**: [08-generation](08-generation.md) — generation overview, where smart-regen fits in the output pipeline
+- **Upstream**: [14-expression-compiler](14-expression-compiler.md) — `Compilability` enum, determines if auto-impl is available
+- **Extraction**: [01-extraction](01-extraction.md) — produces `CalculationDefinitionData` used for expected signatures
+- **Schema**: [22-output-schema-rules](22-output-schema-rules.md) — output schema generation that smart-regen protects
+- **Module types**: [05-module-factory](05-module-factory.md) — CalcUsage vs synthetic module distinction
+- **Data models**: [09-data-models](09-data-models.md) — `CalculationDefinitionData`, `AttributeInfo` definitions

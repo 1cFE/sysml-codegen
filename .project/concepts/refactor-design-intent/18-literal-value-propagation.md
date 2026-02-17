@@ -38,6 +38,20 @@ split. The PartDef says so. The JSON template should reflect that:
 
 ---
 
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-LVP-01 | `_find_literal_redefinition()` SHALL try type-aware resolution (Strategy 1) before name-based fallback (Strategy 2) | `graph_builder.py:870`: type-aware at 898-908, fallback at 910-912 |
+| REQ-LVP-02 | SumTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | `graph_builder.py:975` in `_build_aggregation_module()` |
+| REQ-LVP-03 | SingletonTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | `graph_builder.py:1087` in `_build_aggregation_module()` |
+| REQ-LVP-04 | LocalTerms SHALL NOT use literal redefinition lookup (different resolution path) | No `_find_literal_redefinition` call in LocalTerm handling (lines 1133-1176) |
+| REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered by later terms | Backfill at lines 997-1006 (SumTerm) and 1109-1119 (SingletonTerm) |
+| REQ-LVP-06 | `usage_type_map` SHALL be threaded from [`HierarchyExtractionResult`](09-data-models.md) through [`build_computation_graph()`](07-graph-assembly.md) to `_build_aggregation_module()` | Parameter passing: initialization.py:830 → graph_builder.py:80 → 929 |
+| REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_REQUIRED` | Compilability conditional in `_build_aggregation_module()` |
+
+---
+
 ## The Solution: `_find_literal_redefinition()`
 
 **File:** `src/sysml_codegen/resolution/graph_builder.py`, line 870.
@@ -104,7 +118,7 @@ type resolution.
 
 ## Where It's Called
 
-**SumTerm fallback** (line 974) and **SingletonTerm fallback** (line 1081) in
+**SumTerm fallback** (line 975) and **SingletonTerm fallback** (line 1087) in
 `_build_aggregation_module()`. Both follow the same pattern: after channel
 resolution fails, call `_find_literal_redefinition(part_usage, attr, ...)`.
 
@@ -182,8 +196,13 @@ Site Infrastructure aggregates: `:>> raw_material_cost = sum(permitting.raw_mate
 | `EntryPoint` | `resolution/models.py` | Receives `default_value` from literal lookup |
 | `SumTerm` / `SingletonTerm` | `extraction/data_models.py` | Term types checked for literal fallback |
 
-| File | Elements |
-|------|----------|
-| `resolution/graph_builder.py` | `_find_literal_redefinition()`, `_build_aggregation_module()` |
-| `extraction/hierarchy_resolver.py` | Populates `usage_type_map` during hierarchy extraction |
-| `generation/initialization.py` | Threads `usage_type_map` through pipeline context |
+## Related Documents
+
+- **Pipeline**: [00-pipeline-overview](00-pipeline-overview.md) — Step 5 module building invokes aggregation construction
+- **Aggregation scoping**: [13-aggregation-scoping](13-aggregation-scoping.md) — discovers SumTerm/SingletonTerm that need literal fallback
+- **Virtual bindings**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — `:>>` CHAIN redefinitions that carry literal values
+- **Module factory**: [05-module-factory](05-module-factory.md) — term resolution strategies (SumTerm, SingletonTerm, LocalTerm)
+- **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — factory-created EPs receive literal defaults
+- **Parameter groups**: [17-parameter-group-deriver](17-parameter-group-deriver.md) — groups EPs with backfilled defaults into JSON files
+- **Naming**: [15-naming-conventions](15-naming-conventions.md) — EQN format used by `usage_type_map` keys
+- **Data models**: [09-data-models](09-data-models.md) — `RedefinitionData`, `EntryPoint`, `HierarchyExtractionResult` definitions

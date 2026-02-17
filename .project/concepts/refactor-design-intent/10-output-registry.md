@@ -1,13 +1,50 @@
 # 10 - Output Registry
 
+## What Problem It Solves
+
+SysML bindings reference upstream outputs using different string formats depending
+on the AST node type and where the reference appears:
+
+| AST node | What extraction produces as `source_path` | Example |
+|----------|-------------------------------------------|---------|
+| `FeatureChainExpression` | dotted local path (scope-relative) | `cost_model.total_cost` |
+| `FeatureReferenceExpression` | SysML qualified name (global) | `SolarBatteryLibrary::Solar_Array::capital_cost` |
+| `:>>` redefinition target | dotted hierarchy path | `solar_battery_plant.battery_system.battery_pack.capital_cost` |
+
+These are all different strings that may refer to the **same output channel**.
+The registry's job is to map every one of these reference formats to the single
+canonical channel name for that output, so that the resolver can do O(1) lookup
+regardless of which format the binding used.
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-OR-01 | Registry SHALL map every reference format (FCE dotted path, FRE qualified name, redefinition target) to a canonical PQN [channel name](15-naming-conventions.md) | All Phase 1 key formats present in `_index` |
+| REQ-OR-02 | `resolve()` SHALL perform exact-match dict lookup with no normalization or fallback | `resolve()` body is `return self._index.get(source_path)` |
+| REQ-OR-03 | Collision policy SHALL refuse overwrites — first registration wins with warning logged | `register()` and `register_alias()` both check `key in self._index` |
+| REQ-OR-04 | `register_alias()` SHALL enforce phase ordering — target must already be in `_canonical` | Guard: `if canonical_channel not in self._canonical: return` |
+| REQ-OR-05 | Phase 1 SHALL register Key_A/B/C (CalcUsage), Key_D/E/bare (Aggregation), Key_F/bare/QN (FORMULA) | Key format tables in each sub-phase |
+| REQ-OR-06 | Phase 2-4 aliases SHALL resolve through the registry before registering | `registry.resolve(alias.canonical_name)` precedes `register_alias()` |
+| REQ-OR-07 | Key_C SHALL be constructed by stripping design prefix from EQN and joining with dots | `derive_key_c()`: split on `__`, drop `segments[0]`, join with `.` |
+
 ## What It Is
 
-The `OutputRegistry` (in `core/output_registry.py`) is a flat `dict[str, str]` mapping every
-possible reference key to a **canonical channel name**. When a binding's `source_path` needs to
-be resolved to the upstream output that produces its value, `resolve(source_path)` does a single
-exact-match dict lookup -- no normalization, no cascade, no fallback.
+The `OutputRegistry` (in `core/output_registry.py`) is a **flat, scopeless**
+`dict[str, str]` mapping every possible reference key to a **canonical channel
+name**. `resolve(key)` does a single exact-match dict lookup -- no
+normalization, no cascade, no fallback.
 
-A canonical channel name is the PQN-format string produced by `get_channel_name()`:
+**The registry has no concept of scope.** It does not know which module is asking.
+A key like `cost_model.total_cost` (Key_A) is ambiguous if two scopes both
+contain a `cost_model` instance -- the first registration wins, the second is
+refused with a warning. This is intentional: scope-awareness is the
+[resolver's](04-input-resolver.md) responsibility, not the registry's. The
+resolver [prepends the consumer's scope](03-resolution-overview.md#the-scope-problem)
+to produce a Key_C lookup that is unambiguous. The registry just needs to have
+Key_C registered.
+
+A canonical channel name is the PQN-format string produced by `get_channel_name()` (see [naming conventions](15-naming-conventions.md)):
 
 ```
 "{usage_qualified_name}__{output_attr_name}"
@@ -26,6 +63,7 @@ is two fields: `_index: dict[str, str]` (all keys -> canonical) and `_canonical:
 | `register_alias(alias, canonical)` | 2-4 | Register an alias pointing to an already-registered canonical |
 | `resolve(source_path) -> str\|None` | runtime | Exact-match lookup; returns `None` on miss |
 | `derive_key_c(usage_qn, attr_name)` | helper | Builds the dotted hierarchy key (strips design prefix) |
+| `canonical_channels` (property) | read | `frozenset[str]` of all canonical channel names (used by graph builder for membership checks) |
 
 **Collision policy**: both `register()` and `register_alias()` refuse overwrites. If a key
 already maps to a different channel, a warning is logged and the first registration wins.
@@ -37,9 +75,10 @@ must already exist in `_canonical`, or the alias is rejected with a warning.
 
 ### Phase 1 -- Canonical Channels
 
-Three sub-phases populate the canonical channel set.
+Three sub-phases populate the canonical channel set. Each sub-phase corresponds
+to one of the three [module types](05-module-factory.md): CalcUsage, Aggregation, FORMULA.
 
-**Phase 1a: CalcUsage outputs** (`build_output_registry`, lines 538-548)
+**Phase 1a: CalcUsage outputs** (`build_output_registry`, lines 537-548)
 
 For each CalcUsage + each output attribute on its CalcDef, three keys are registered:
 
@@ -49,13 +88,15 @@ For each CalcUsage + each output attribute on its CalcDef, three keys are regist
 | Key_B | canonical (self-registered) | `SBD__sbp__lcoe__lcoe_per_mwh` |
 | Key_C | dotted hierarchy, design prefix stripped | `solar_battery_plant.lcoe.lcoe_per_mwh` |
 
-Key_C is derived by `OutputRegistry.derive_key_c()`: split the usage EQN on `__`, drop
-`segments[0]`, join with `.`, append `.{attr}`. Key_C is the most critical key -- empirically,
-ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
+Key_C is derived by `OutputRegistry.derive_key_c()` (REQ-OR-07): split the usage EQN on `__`,
+drop `segments[0]`, join with `.`, append `.{attr}`. Key_C is the most critical key —
+it is the [scoped key](03-resolution-overview.md#the-scope-problem) that the
+[input resolver](04-input-resolver.md) constructs to disambiguate cross-scope references.
+Empirically, ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
 
-**Phase 1b: Aggregation outputs** (`build_output_registry`, lines 551-583)
+**Phase 1b: Aggregation outputs** (`build_output_registry`, lines 550-584)
 
-For each `ScopedAggregationData`, registered keys include:
+For each [`ScopedAggregationData`](09-data-models.md), registered keys include:
 
 | Key | Format | Example |
 |---|---|---|
@@ -65,9 +106,10 @@ For each `ScopedAggregationData`, registered keys include:
 | bare | just the attribute name | `total_capex` |
 | alias variants | same patterns for each `agg.expression.aliases` entry | ... |
 
-**Phase 1c: FORMULA outputs** (`build_output_registry`, lines 587-605)
+**Phase 1c: FORMULA outputs** (`build_output_registry`, lines 586-605)
 
-For each `ComputedAttributeData` with classification `FORMULA` and `FULLY_COMPILABLE`:
+For each [`ComputedAttributeData`](09-data-models.md) with classification `FORMULA` and
+`FULLY_COMPILABLE` (see [computed attributes](16-computed-attributes.md)):
 
 | Key | Format | Example |
 |---|---|---|
@@ -181,7 +223,20 @@ Note this depends on Phase 2 having already registered `solar_battery_plant.leve
 ## Construction Site
 
 `build_output_registry()` in `generation/initialization.py` (lines 502-675) is the sole
-constructor. It is called at Step 5.5 of `build_pipeline_context()`, after calc usages,
-hierarchy data, aggregation scoping, computed attributes, and channel aliases are all
-available. The populated registry is then passed to the `DependencyBacktracker` (Step 6)
-and `build_computation_graph()` (Step 7) as their shared lookup mechanism.
+constructor. It is called at Step 5.5 of [`build_pipeline_context()`](02-orchestration.md),
+after calc usages, hierarchy data, [aggregation scoping](13-aggregation-scoping.md),
+[computed attributes](16-computed-attributes.md), and [channel aliases](12-virtual-binding-rewrite.md)
+are all available. The populated registry is then passed to the
+[`DependencyBacktracker`](11-analysis-backtracker.md) (Step 6) and
+[`build_computation_graph()`](07-graph-assembly.md) (Step 7) as their shared lookup mechanism.
+
+## Related Documents
+
+- **Upstream**: [02-orchestration](02-orchestration.md) — `build_pipeline_context()` calls `build_output_registry()`
+- **Downstream**: [04-input-resolver](04-input-resolver.md) — uses `resolve()` for FORMULA/aggregation resolution
+- **Downstream**: [11-analysis-backtracker](11-analysis-backtracker.md) — uses `resolve()` for CalcUsage resolution
+- **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — produces `ChannelAlias` inputs for Phases 2-3
+- **Sub-processes**: [13-aggregation-scoping](13-aggregation-scoping.md) — produces `ScopedAggregationData` for Phase 1b
+- **Sub-processes**: [16-computed-attributes](16-computed-attributes.md) — produces `ComputedAttributeData` for Phase 1c
+- **Naming**: [15-naming-conventions](15-naming-conventions.md) — PQN, Key_A through Key_F formats
+- **Data models**: [09-data-models](09-data-models.md) — full field definitions

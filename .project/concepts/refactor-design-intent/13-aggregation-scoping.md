@@ -3,46 +3,64 @@
 ## The Problem
 
 SysML PartDefinitions define aggregation expressions at the **type level**: a `Solar_Array` PartDef
-declares `capital_cost :>> sum(pv_module.capital_cost) * module_count + bos_cost`. This is abstract --
+declares `capital_cost :>> sum(pv_module.capital_cost) * module_count + bos_cost`. This is abstract —
 it says "any Solar_Array instance computes capital_cost this way." But the pipeline operates on
 **concrete design instances** like `Design__plant__solar_array`. The aggregation scoping subsystem
 bridges this gap: it discovers which design instances correspond to each PartDef and stamps out
 one scoped aggregation module per instance.
 
-Three functions in `initialization.py` implement this, called during Step 3.5:
+Three functions in `initialization.py` implement this, called during
+[Step 3.5](00-pipeline-overview.md) of `build_pipeline_context()`:
 
-1. `find_instance_paths_for_partdef()` -- discovers design instance paths
-2. `_scope_aggregation_expressions()` -- produces `ScopedAggregationData` per instance
-3. `_build_chain_aliases()` -- produces `ChannelAlias` objects for `:>>` CHAIN redefinitions
+1. `find_instance_paths_for_partdef()` — discovers design instance paths
+2. `_scope_aggregation_expressions()` — produces [`ScopedAggregationData`](09-data-models.md#extraction-models) per instance
+3. `_build_chain_aliases()` — produces [`ChannelAlias`](09-data-models.md#core-models) objects for `:>>` CHAIN redefinitions
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-AS-01 | Each PartDef-level aggregation SHALL produce one `ScopedAggregationData` per design instance | One-to-many expansion in `_scope_aggregation_expressions()` at line 456 |
+| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) BEFORE child-walk fallback (Strategy 2) | Strategy 1 at line 366, Strategy 2 guarded by `if not instance_paths` at line 372 |
+| REQ-AS-03 | Instance paths SHALL be converted from `__`-separated to dotted format with design prefix stripped | Prefix stripping + dot join at lines 388-396 |
+| REQ-AS-04 | CHAIN aliases SHALL only be produced for non-deep-path redefinitions whose `source_path` contains `"."` | Three filters at lines 425-431: `!= CHAIN`, `is_deep_path`, `"." not in source_path` |
+| REQ-AS-05 | [Phase 1b](10-output-registry.md) SHALL register a canonical channel for each `ScopedAggregationData` | `registry.register(canonical, keys)` at line 575 |
+| REQ-AS-06 | [Phase 2](10-output-registry.md) SHALL resolve `ChannelAlias.canonical_name` in registry before registering alias | `resolved = registry.resolve(alias.canonical_name)` at line 617 |
+| REQ-AS-07 | `module_eqn` property SHALL be `"{instance_path}__{attribute_name}"` | Property at line 360 in `data_models.py` |
 
 ## Data Models
 
-All models live in `src/sysml_codegen/extraction/data_models.py` unless noted.
+Full definitions in [09-data-models](09-data-models.md). All models live in
+`extraction/data_models.py` unless noted.
 
-**AggregationExpressionData** -- PartDef-level aggregation, decomposed into typed terms:
-- `owning_part_qn: str` -- e.g., `"SolarBatteryLibrary__Solar_Array"`
-- `attribute_name: str` -- e.g., `"capital_cost"`
-- `sum_terms: list[SumTerm]` -- multiplied child sums
-- `singleton_terms: list[SingletonTerm]` -- non-sum child refs (e.g., `allocation_model.total_allocation`)
-- `local_terms: list[LocalTerm]` -- PartDef-local sibling attributes (e.g., `misc_hardware_cost`)
-- `input_channels: list[str]` -- all upstream channel references for wiring
-- `aliases: list[str]` -- CHAIN redef aliases (e.g., `["total_capex"]`)
+**[`AggregationExpressionData`](09-data-models.md#extraction-models)** — PartDef-level aggregation,
+decomposed into typed terms. Key fields for scoping:
+- `owning_part_qn: str` — e.g., `"SolarBatteryLibrary__Solar_Array"`
+- `owning_part_name: str` — human-readable name
+- `attribute_name: str` — e.g., `"capital_cost"`
+- `sum_terms: list[SumTerm]` — multiplied child sums (used by [module factory](05-module-factory.md))
+- `singleton_terms: list[SingletonTerm]` — non-sum child refs
+- `local_terms: list[LocalTerm]` — PartDef-local sibling attributes
+- `input_channels: list[str]` — all upstream channel references for wiring
+- `entry_points: list[str]` — parameters that become [entry points](06-entry-point-classifier.md)
+- `aliases: list[str]` — CHAIN redef aliases (e.g., `["total_capex"]`)
+- `compilability`, `has_unsupported_nodes` — [expression compiler](14-expression-compiler.md) state
 
-**SumTerm** -- one `sum()` operand: `part_usage_name`, `attribute_name`, `multiplicity_attr`, `multiplicity_count`.
+**`SumTerm`** — one `sum()` operand: `part_usage_name`, `attribute_name`, `multiplicity_attr`, `multiplicity_count`.
 
-**SingletonTerm** -- a non-sum child reference: `source_path` (e.g., `"cost_model.total_cost"`).
+**`SingletonTerm`** — a non-sum child reference: `source_path` (e.g., `"cost_model.total_cost"`).
 
-**LocalTerm** -- a PartDef-local sibling attribute: `attribute_name` (e.g., `"misc_hardware_cost"`).
+**`LocalTerm`** — a PartDef-local sibling attribute: `attribute_name` (e.g., `"misc_hardware_cost"`).
 
-**ScopedAggregationData** -- an `AggregationExpressionData` bound to a design instance:
-- `expression: AggregationExpressionData` -- the PartDef-level data (composition, not inheritance)
-- `instance_path: str` -- e.g., `"SolarBatteryDesign__solar_battery_plant__solar_array"`
-- `module_eqn` property: `"{instance_path}__{attribute_name}"` -- the module's execution qualified name
+**[`ScopedAggregationData`](09-data-models.md#extraction-models)** — an `AggregationExpressionData` bound to a design instance:
+- `expression: AggregationExpressionData` — the PartDef-level data (composition, not inheritance)
+- `instance_path: str` — e.g., `"SolarBatteryDesign__solar_battery_plant__solar_array"`
+- `module_eqn` property: `"{instance_path}__{attribute_name}"` — the [EQN](15-naming-conventions.md)
 
-**ChannelAlias** (in `src/sysml_codegen/core/models.py`) -- maps an alias key to a canonical channel:
-- `alias_name: str` -- scoped dotted key (e.g., `"solar_battery_plant.solar_array.total_capex"`)
-- `canonical_name: str` -- dotted target resolving to canonical channel (e.g., `"solar_battery_plant.solar_array.cost_model.total_cost"`)
-- `owning_part_qn: str` -- PartDef where the alias originates
+**[`ChannelAlias`](09-data-models.md#core-models)** (in `core/models.py`) — maps an alias key to a canonical channel:
+- `alias_name: str` — scoped dotted key (e.g., `"solar_battery_plant.solar_array.total_capex"`)
+- `canonical_name: str` — dotted target resolving to canonical channel
+- `owning_part_qn: str` — PartDef where the alias originates
 - `source: Literal["redefinition", "expose_pure", "design_override"]`
 
 ## find_instance_paths_for_partdef()
@@ -99,17 +117,31 @@ not `is_deep_path`, and `source_path` contains a dot):
    ```
 
 The filter `"." not in source_path` excludes bare CAS codes like `"CAS220101"` which are
-entry-point references, not channel chains.
+[entry-point](06-entry-point-classifier.md) references, not channel chains.
+
+### Edge case: zero instances found
+
+If both strategies find zero instance paths for a PartDef, the aggregation
+expression produces NO `ScopedAggregationData` and NO pipeline module. This is
+silent — the only signal is the `logger.info("Scoped 0 aggregation module(s)")`
+count. This can happen when:
+- The design never instantiates the PartDef that declares the aggregation
+- Instance discovery strategies fail to match (e.g., PartDef QN mismatch)
+
+**REQ-AS-08**: The scoping function SHALL log a WARNING (not just info) when an
+aggregation expression produces zero scoped modules, identifying the PartDef QN
+and attribute name.
 
 ## How This Feeds Into the OutputRegistry
 
-The `build_output_registry()` function (same file, line 502) consumes these outputs in its
-4-phase registration protocol:
+The [`build_output_registry()`](10-output-registry.md) function (same file, line 502) consumes
+these outputs in its [4-phase registration protocol](10-output-registry.md):
 
 - **Phase 1b:** Each `ScopedAggregationData` registers a canonical channel via
-  `get_channel_name(agg.module_eqn, agg.expression.attribute_name)` with alias keys including
-  bare, dotted, and alias-variant forms.
-- **Phase 2:** Each `ChannelAlias` with `source="redefinition"` is resolved -- the registry
+  `get_channel_name(agg.module_eqn, agg.expression.attribute_name)` using
+  [Key_D/Key_E formats](15-naming-conventions.md). Alias keys include bare, dotted,
+  and alias-variant forms.
+- **Phase 2:** Each `ChannelAlias` with `source="redefinition"` is resolved — the registry
   looks up `alias.canonical_name`, and if found, registers `alias.alias_name` as an alias
   pointing to the same canonical channel. This is how downstream modules can wire to
   `solar_array.total_capex` instead of the fully-qualified aggregation output channel.
@@ -171,6 +203,14 @@ module binding to `solar_array.total_capex` now resolves correctly.
 
 | File | Elements |
 |------|----------|
-| `src/sysml_codegen/extraction/data_models.py` | `AggregationExpressionData`, `ScopedAggregationData`, `SumTerm`, `SingletonTerm`, `LocalTerm` |
-| `src/sysml_codegen/core/models.py` | `ChannelAlias` |
-| `src/sysml_codegen/generation/initialization.py` | `find_instance_paths_for_partdef()`, `_scope_aggregation_expressions()`, `_build_chain_aliases()`, `build_output_registry()` |
+| `extraction/data_models.py` | `AggregationExpressionData`, `ScopedAggregationData`, `SumTerm`, `SingletonTerm`, `LocalTerm` |
+| `core/models.py` | `ChannelAlias` |
+| `generation/initialization.py` | `find_instance_paths_for_partdef()`, `_scope_aggregation_expressions()`, `_build_chain_aliases()`, `build_output_registry()` |
+
+## Related Documents
+
+- **Upstream**: [01-extraction](01-extraction.md) — produces `AggregationExpressionData` and `RedefinitionData`, [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — runs just before scoping in Step 3.5
+- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — Key_D/Key_E channel formats
+- **Downstream**: [05-module-factory](05-module-factory.md) — builds aggregation modules from `ScopedAggregationData`, [04-input-resolver](04-input-resolver.md) — resolves aggregation module inputs
+- **Architecture**: [00-pipeline-overview](00-pipeline-overview.md) — Step 3.5 placement, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — aggregation as second resolution path
+- **Data models**: [09-data-models](09-data-models.md) — `AggregationExpressionData`, `ScopedAggregationData`, `ChannelAlias`

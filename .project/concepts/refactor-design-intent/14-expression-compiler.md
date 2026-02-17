@@ -1,13 +1,25 @@
-# 14 -- Expression Compiler
+# 14 — Expression Compiler
 
-## What this module does
+## What This Module Does
 
 `extraction/expression_compiler.py` converts raw SysIDE AST nodes from
-CalcDef output attributes into Python expression strings. It is a **leaf
-module** in the extraction layer -- no imports from analysis/, resolution/,
-or generation/. The compiler answers two questions per CalcDef output:
-(1) what Python code computes it, and (2) can the pipeline auto-generate
-that code or must a human write it?
+[`CalculationDefinitionData`](09-data-models.md#extraction-models) output attributes into
+Python expression strings. It is a **leaf module** in the extraction layer — no imports from
+analysis/, resolution/, or generation/. The compiler answers two questions per CalcDef output:
+(1) what Python code computes it, and (2) can the pipeline auto-generate that code or must a
+human write it?
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype in SysIDE) | Line 312 checks FCE before line 323 checks OE; see also [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) |
+| REQ-EC-02 | N-ary operands SHALL be left-folded into binary `BINARY_OP` nodes | Left-fold loop at lines 364-374 |
+| REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `[` handler at lines 333-340 discards unit, recurses on value |
+| REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | Validation at lines 217-223 raises `CompilationError` on `SyntaxError` |
+| REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `if execution_order is None` block at lines 532-547 |
+| REQ-EC-06 | `classify_compilability()` SHALL use worst-case roll-up semantics | Function at lines 263-282: MANUAL > PARTIALLY > FULLY |
+| REQ-EC-07 | Undeclared intermediates SHALL be discovered iteratively from `member_expressions` | Iterative discovery loop at lines 520-527 |
 
 ---
 
@@ -28,7 +40,8 @@ and produces a clean `ExpressionAST` binary tree. Key transformations:
   `all_member_names`) to produce `INPUT_REF`, `INTERMEDIATE_REF`, or
   `UNSUPPORTED` nodes.
 - **Subtype ordering**: `FeatureChainExpression` is checked *before*
-  `OperatorExpression` because FCE is an OE subtype in SysIDE. FCE always
+  `OperatorExpression` because FCE is an OE subtype in SysIDE (see
+  [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md)). FCE always
   produces UNSUPPORTED (chained paths like `part.attr` are not compilable).
 
 ### Phase 2: `compile_expression()` -- ExpressionAST IR to Python string
@@ -55,8 +68,8 @@ CalcDef verdict using worst-case semantics.
 
 ## ExpressionAST Intermediate Representation
 
-`ExpressionAST` is a `@dataclass` with tagged-union design. The
-`node_type: ExpressionNodeType` discriminant selects which fields apply:
+[`ExpressionAST`](09-data-models.md#extraction-models) is a `@dataclass` with tagged-union
+design. The `node_type: ExpressionNodeType` discriminant selects which fields apply:
 
 ```
 ExpressionAST
@@ -110,7 +123,7 @@ Compiles all outputs of a CalcDef in dependency order:
    per name. Result stored as `CompilationResult`.
 6. **Roll up** via `classify_compilability()`.
 
-Returns `CalcDefCompilationResult` with `calc_def_name`,
+Returns [`CalcDefCompilationResult`](09-data-models.md#extraction-models) with `calc_def_name`,
 `overall_compilability`, `output_results: list[CompilationResult]`,
 and `execution_order: list[str]`.
 
@@ -166,9 +179,9 @@ Verdict: `FULLY_COMPILABLE`.
 
 A `FeatureReferenceExpression` whose `_sanitize_name()`-d name is in
 `input_names` becomes `INPUT_REF`. `compile_expression()` renders it as
-`inputs.<name>`, mapping to the Pydantic input schema at runtime.
+`inputs.<name>`, mapping to the Pydantic [input schema](22-output-schema-rules.md) at runtime.
 `_sanitize_name()` strips quotes, replaces special chars with underscores,
-and collapses runs to match names in `CalculationDefinitionData`.
+and collapses runs to match names in [`CalculationDefinitionData`](09-data-models.md#extraction-models).
 
 ### Intermediate references -> bare name or undeclared discovery
 
@@ -185,3 +198,29 @@ Two cases for intermediates:
 
 Unresolved names (not in any name set) become `UNSUPPORTED` with reason
 `"unresolved reference: <name>"`.
+
+## Two AST Processing Pipelines
+
+This system has TWO separate expression-to-Python paths:
+
+| Aspect | Expression Compiler (this doc) | Aggregation Walker ([13](13-aggregation-scoping.md), [25](25-hierarchy-resolver.md)) |
+|--------|------|------|
+| **Scope** | CalcDef outputs, FORMULA attributes | Aggregation expressions (sum/count) |
+| **Input** | SysIDE AST nodes | SysIDE AST nodes |
+| **Output** | `ExpressionAST` IR → Python string | Text string (direct transform) |
+| **Operators** | 7 arithmetic (+, -, *, /, **, ^, [) | 12+ (arithmetic + comparison + logical) |
+| **FCE handling** | → INPUT_REF (compilable) | → SingletonTerm (wired to upstream) |
+| **OE handling** | → BinaryOp (recursive) | → text concatenation |
+| **Shared invariant** | [FCE before OE](19-ast-dispatch-invariant.md) | [FCE before OE](19-ast-dispatch-invariant.md) |
+
+These pipelines exist separately because they serve different purposes: the compiler
+produces executable Python expressions; the walker decomposes aggregation math into
+typed terms (SumTerm, SingletonTerm, LocalTerm) for module wiring.
+
+## Related Documents
+
+- **Upstream**: [01-extraction](01-extraction.md) — provides `CalculationDefinitionData` with AST nodes and member expressions
+- **Invariant**: [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) — FCE-before-OE subtype ordering rule (REQ-EC-01)
+- **Downstream**: [08-generation](08-generation.md) — uses `CalcDefCompilationResult` to decide auto-fill vs TODO stubs, [23-smart-regen-preservation](23-smart-regen-preservation.md) — preserves handwritten code when compilability is MANUAL_REQUIRED
+- **Cross-cutting**: [16-computed-attributes](16-computed-attributes.md) — FORMULA modules also use compilability verdicts, [05-module-factory](05-module-factory.md) — reads `compilability` from `AggregationExpressionData`
+- **Data models**: [09-data-models](09-data-models.md) — `ExpressionAST`, `CalcDefCompilationResult`, `Compilability`

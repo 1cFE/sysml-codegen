@@ -14,73 +14,90 @@ those layers in the right order and threads data between them:
 Today, this logic lives in `generation/initialization.py` (860 lines).
 After the refactor it moves to `orchestration/`, because it is not
 generation code -- it is coordination code that produces the
-`PipelineContext` that generation consumes.
+[PipelineContext](#pipelinecontext) that [generation](08-generation.md) consumes.
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-ORCH-01 | `build_pipeline_context()` SHALL execute steps in strict dependency order: 3.5 before 4, 4.5 before 5, 5.5 before 6, all before 7. | Step ordering in `build_pipeline_context()` matches DAG; reorder causes `AttributeError` or silent wiring bugs |
+| REQ-ORCH-02 | Step 3.5 SHALL [rewrite virtual bindings](#virtual-binding-rewriting) in-place before any downstream step reads `calc_usages`. | `_rewrite_virtual_bindings()` called before Steps 4-7; binding_type mutations visible to backtracker |
+| REQ-ORCH-03 | Step 4.5 SHALL remove FORMULA-classified [computed attributes](16-computed-attributes.md) from `design_attrs` before [ParameterGroupDeriver](17-parameter-group-deriver.md) construction. | After Step 4.5: `all(ca.name not in design_attrs for ca in computed_attrs if ca.classification == FORMULA)` |
+| REQ-ORCH-04 | [OutputRegistry](10-output-registry.md) SHALL register outputs in strict phase order: 1a/1b/1c (canonical) then 2/3/4 (aliases). | Phase 2-4 `register_alias()` calls reject unknown canonical channels |
+| REQ-ORCH-05 | Each [aggregation expression](01-extraction.md#aggregation-data-sumterm-singletonterm-localterm) SHALL be scoped to its concrete design instance path(s) via virtual CalcUsage matching. | `len(scoped_agg_data) >= len(hierarchy_data.aggregation_expressions)` (one per instance) |
+| REQ-ORCH-06 | `build_pipeline_context()` SHALL return a [PipelineContext](#pipelinecontext) where `computation_graph` is the single source of truth -- [generation](08-generation.md) SHALL NOT access extraction models directly. | All [templates](08-generation.md) receive only `ComputationGraph` fields |
+| REQ-ORCH-07 | CHAIN alias canonical names SHALL resolve to Phase 1 channels. Unresolvable aliases produce a warning, not an error. | Phase 2 logs warning for unresolved; does not raise |
 
 ## build_pipeline_context() -- the 7-step sequence
 
-Everything the orchestrator builds ends up in a `PipelineContext` dataclass.
-Generation templates primarily need `computation_graph`, but the context
-carries all intermediate data for debugging and future generation modes.
+Everything the orchestrator builds ends up in a [PipelineContext](#pipelinecontext).
+[Generation](08-generation.md) templates primarily need `computation_graph`, but the
+context carries all intermediate data for debugging and future generation modes.
 
-Each step feeds into the next:
+| Step | What it does | Produces | Detail |
+|------|-------------|----------|--------|
+| 1 | Load SysML models via `SysMLDataExtractor` | `extractor` | [01-extraction](01-extraction.md) |
+| 2 | Extract calc definitions from the model | `calc_defs` | [01-extraction](01-extraction.md) |
+| 3 | Extract calc usages with binding info | `calc_usages` | [01-extraction](01-extraction.md) |
+| 3.5 | Hierarchy extraction + [binding rewrite](#virtual-binding-rewriting) + [aggregation scoping](#aggregation-scoping) + CHAIN aliases | `hierarchy_data`, `scoped_agg_data`, `chain_aliases` | [12](12-virtual-binding-rewrite.md), [13](13-aggregation-scoping.md) |
+| 4 | Extract design attributes (literal values from PartDefs) | `design_attrs` | [17](17-parameter-group-deriver.md) |
+| 4.5 | Extract [computed attributes](16-computed-attributes.md), remove FORMULAs from design attrs | `computed_attrs`, `expose_aliases` | [16](16-computed-attributes.md) |
+| 5 | Create [ParameterGroupDeriver](17-parameter-group-deriver.md) | `group_deriver` | [17](17-parameter-group-deriver.md) |
+| 5.5 | Build [OutputRegistry](10-output-registry.md) (4-phase lookup table) | `output_registry` | [10](10-output-registry.md) |
+| 6 | Run [DependencyBacktracker](11-analysis-backtracker.md) | `backtracking_result` | [11](11-analysis-backtracker.md) |
+| 6.5 | Compile SysML expressions to Python strings | `compilation_results` | [14](14-expression-compiler.md) |
+| 7 | Build [ComputationGraph](09-data-models.md#resolution-models) | `computation_graph` | [07](07-graph-assembly.md) |
 
-| Step | What it does | Produces |
-|------|-------------|----------|
-| 1 | Load SysML models via `SysMLDataExtractor` | `extractor` |
-| 2 | Extract calc definitions from the model | `calc_defs` |
-| 3 | Extract calc usages with binding info | `calc_usages` |
-| 3.5 | Hierarchy extraction + binding rewrite + aggregation scoping + CHAIN aliases | `hierarchy_data`, `scoped_agg_data`, `chain_aliases` |
-| 4 | Extract design attributes (literal values from PartDefs) | `design_attrs` |
-| 4.5 | Extract computed attributes, remove FORMULAs from design attrs | `computed_attrs`, `expose_aliases` |
-| 5 | Create `ParameterGroupDeriver` (classifies entry points) | `group_deriver` |
-| 5.5 | Build `OutputRegistry` (4-phase lookup table) | `output_registry` |
-| 6 | Run `DependencyBacktracker` (trace all input wiring) | `backtracking_result` |
-| 6.5 | Compile SysML expressions to Python strings | `compilation_results` |
-| 7 | Build `ComputationGraph` (single source of truth) | `computation_graph` |
+Key ordering constraints (REQ-ORCH-01):
 
-Key ordering constraints:
-
-- Step 3.5 before Step 4: binding rewriting mutates `calc_usages` in place;
+- **Step 3.5 before Step 4**: binding rewriting mutates `calc_usages` in place (REQ-ORCH-02);
   later steps must see rewritten bindings.
-- Step 4.5 before Step 5: removes FORMULA attributes from `design_attrs`,
-  preventing false entry points in the parameter group deriver.
-- Step 5.5 before Step 6: the backtracker uses the `OutputRegistry` to
-  resolve binding source paths to canonical channel names.
+- **Step 4.5 before Step 5**: removes FORMULA attributes from `design_attrs` (REQ-ORCH-03),
+  preventing false entry points in the [parameter group deriver](17-parameter-group-deriver.md).
+- **Step 5.5 before Step 6**: the [backtracker](11-analysis-backtracker.md) uses the
+  [OutputRegistry](10-output-registry.md) as its sole resolution path.
 
 ## build_output_registry() -- the 4-phase lookup table
 
-The `OutputRegistry` is a flat `dict[str, str]` mapping every possible
-way a binding might reference an output to that output's canonical channel
-name. SysML bindings can reference the same output using different key
-formats, so the registry normalizes all of them.
+The [OutputRegistry](10-output-registry.md) is a flat `dict[str, str]` mapping every
+possible way a binding might reference an output to that output's canonical channel
+name. **Why multiple keys?** Extraction produces `source_path` strings in different
+formats depending on AST node type -- a `FeatureChainExpression` produces a bare
+local path (`"cost_model.total_cost"`), while a `:>>` redefinition uses a hierarchy
+path. The registry must have a matching key for each format. See
+[The Scope Problem](03-resolution-overview.md#the-scope-problem) for why **Key_C**
+(the hierarchy-scoped key) is the critical one. Phase ordering is enforced (REQ-ORCH-04).
 
 ### Phase 1: Canonical channels
 
 Registers the actual outputs that pipeline modules produce.
 
-**Phase 1a -- CalcUsage outputs.** Three key variants per output:
+**Phase 1a -- CalcUsage outputs.** Three [key variants](15-naming-conventions.md#6-channel-name) per output:
 
 ```
 Calc usage: SolarBatteryDesign__solar_battery_plant__solar_array__cost_model
 Output:     total_cost
 
 Canonical:  solar_battery_plant__solar_array__cost_model__total_cost
-Key_A:      cost_model.total_cost           (instance_name.output)
-Key_C:      solar_battery_plant.solar_array.cost_model.total_cost  (dotted QN)
+Key_A:      cost_model.total_cost           (local -- ambiguous if names collide!)
+Key_C:      solar_battery_plant.solar_array.cost_model.total_cost  (unique by SysML ownership)
 ```
 
+**Key_C is the critical key** -- the [resolver](04-input-resolver.md#c-scopedregistrylookup)
+constructs Key_C lookups by prepending the consumer's scope to the bare `source_path`.
+
 **Phase 1b -- Aggregation outputs.** Registered with dotted keys at
-multiple scoping levels (with and without the design prefix).
+multiple scoping levels (Key_D, Key_E, stripped variants, alias variants).
 
-**Phase 1c -- FORMULA outputs.** Computed attributes classified as FORMULA
-generate synthetic modules. Registered with `PartName.attr_name` and bare
-`attr_name` keys.
+**Phase 1c -- FORMULA outputs.** [Computed attributes](16-computed-attributes.md)
+classified as FORMULA with `FULLY_COMPILABLE` compilability generate synthetic
+modules. Registered with `PartName.attr_name`, bare `attr_name`, and SysML QN keys.
 
-### Phase 2: CHAIN aliases
+### Phase 2: CHAIN aliases (REQ-ORCH-07)
 
-For each `:>>` CHAIN redefinition, look up the canonical channel that the
-chain target resolves to, then register the alias name pointing to the
-same canonical. Example:
+For each `:>>` CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata),
+look up the canonical channel that the chain target resolves to, then register
+the alias name pointing to the same canonical. Unresolvable aliases log a warning.
 
 ```
 Redefinition:  total_capex :>> cost_model.total_cost
@@ -90,8 +107,9 @@ Resolves to:   solar_battery_plant__solar_array__cost_model__total_cost
 
 ### Phase 3: EXPOSE_PURE aliases
 
-Similar to Phase 2, but for attributes that expose another calculation's
-output through a PartUsage. Scoped to the owning part name.
+Similar to Phase 2, but for [EXPOSE_PURE computed attributes](16-computed-attributes.md)
+that expose another calculation's output through a PartUsage. Scoped to the
+owning part name (e.g., `SolarArray.total_allocation`).
 
 ### Phase 4: Transitive design attribute aliases
 
@@ -106,24 +124,23 @@ registry.resolve("cost_model.total_cost")
 # => "solar_battery_plant__solar_array__cost_model__total_cost"
 
 registry.resolve("solar_array.total_capex")
-# => "solar_battery_plant__solar_array__cost_model__total_cost"  (via alias)
+# => "solar_battery_plant__solar_array__cost_model__total_cost"  (via Phase 2 alias)
 ```
 
-Both keys resolve to the same canonical channel. The backtracker and graph
-builder never need to know which key format a binding used.
+Both keys resolve to the same canonical channel. The [backtracker](11-analysis-backtracker.md)
+and [graph builder](07-graph-assembly.md) never need to know which key format a binding used.
 
 ## Virtual binding rewriting
 
-A calc usage is "virtual" when it was instantiated by template expansion.
+A calc usage is "virtual" when it was instantiated by [template expansion](12-virtual-binding-rewrite.md).
 A PartDef acts as the template; each PartUsage creates a virtual copy.
 The problem: virtual copies carry the template's generic bindings, which
 reference template-level attributes. These must be rewritten for the
-design instance.
+design instance. See [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) for full detail.
 
 `_rewrite_virtual_bindings()` builds an override index from
 `hierarchy_data.design_overrides`, keyed by `(parent_path, leaf_attribute)`.
-Then for each non-template calc usage, it extracts the leaf name from each
-binding's `source_path` and matches against the index:
+Then for each non-template calc usage, it matches bindings against the index:
 
 ```
 BEFORE (template binding):
@@ -138,12 +155,13 @@ AFTER (CHAIN override -- design redirects to another output):
   binding.source_path = "cost_model.adjusted_cost"
 ```
 
-This mutation happens in place, which is why Step 3.5 must run before
-any downstream step that reads bindings.
+This mutation happens in place (REQ-ORCH-02), which is why Step 3.5
+must run before any downstream step that reads bindings.
 
 ## Aggregation scoping
 
-SysML models define aggregation expressions at the PartDef level:
+SysML models define aggregation expressions at the PartDef level (see
+[01-extraction](01-extraction.md#aggregation-data-sumterm-singletonterm-localterm)):
 
 ```sysml
 part def Solar_Array {
@@ -153,9 +171,9 @@ part def Solar_Array {
 
 But the pipeline operates on concrete design instances, not abstract
 PartDefs. `_scope_aggregation_expressions()` maps each PartDef-level
-aggregation to its design instances by scanning virtual calc usages:
-if a usage's `owning_part_def_qn` matches the aggregation's owning
-PartDef, its parent path is an instance.
+aggregation to its design instances (REQ-ORCH-05) by scanning virtual
+calc usages: if a usage's `owning_part_def_qn` matches the aggregation's
+owning PartDef, its parent path is an instance.
 
 ```
 PartDef:   SolarBatteryLibrary__Solar_Array
@@ -165,9 +183,27 @@ Instance:  SolarBatteryDesign__solar_battery_plant__solar_array
 ```
 
 CHAIN alias construction (`_build_chain_aliases()`) uses the same
-instance-discovery mechanism: for each `:>>` CHAIN redefinition on a
-PartDef, it finds the instance paths and produces scoped `ChannelAlias`
-objects that Phase 2 of the registry builder consumes.
+instance-discovery mechanism: for each `:>>` CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata)
+on a PartDef, it finds the instance paths and produces scoped `ChannelAlias`
+objects that Phase 2 of the [registry builder](#build_output_registry----the-4-phase-lookup-table) consumes.
+See [13-aggregation-scoping](13-aggregation-scoping.md) for full detail.
+
+## PipelineContext
+
+The `PipelineContext` dataclass carries all pipeline state. Key fields:
+
+| Field | Type | Source step |
+|-------|------|-------------|
+| `calc_defs` | `list[CalculationDefinitionData]` | Step 2 |
+| `calc_usages` | `list[CalcUsageData]` | Step 3 (mutated by 3.5) |
+| `design_attributes` | `dict[Path, list[DesignAttributeData]]` | Step 4 (mutated by 4.5) |
+| `computed_attributes` | `list[ComputedAttributeData]` | Step 4.5 |
+| `output_registry` | `OutputRegistry` | Step 5.5 |
+| `backtracking_result` | `BacktrackingResult` | Step 6 |
+| `compilation_results` | `dict[str, CalcDefCompilationResult]` | Step 6.5 |
+| `computation_graph` | [ComputationGraph](09-data-models.md#resolution-models) | Step 7 |
+
+See [09-data-models](09-data-models.md) for full field definitions.
 
 ## Post-refactor structure
 
@@ -184,6 +220,10 @@ Supporting functions (`_rewrite_virtual_bindings`, `_scope_aggregation_expressio
 `pipeline_builder.py` as data-preparation helpers called exclusively by
 the pipeline builder.
 
-The exception classes `SysMLParsingError` and `CodeGenerationError` also
-move to `orchestration/`, since they are raised by the pipeline builder,
-not by the generation layer.
+## Related Documents
+
+- **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) -- Steps 1-7 overview, [01-extraction](01-extraction.md) -- provides calc defs, usages, hierarchy data
+- **Downstream**: [03-resolution-overview](03-resolution-overview.md) (consumes PipelineContext), [08-generation](08-generation.md) (consumes ComputationGraph)
+- **Registry**: [10-output-registry](10-output-registry.md) -- 4-phase protocol detail, [15-naming-conventions](15-naming-conventions.md) -- key formats
+- **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md), [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [17-parameter-group-deriver](17-parameter-group-deriver.md)
+- **Data models**: [09-data-models](09-data-models.md) -- PipelineContext, ComputationGraph, all extraction types

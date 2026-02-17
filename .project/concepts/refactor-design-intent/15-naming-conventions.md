@@ -3,19 +3,31 @@
 Definitive reference for every identifier format in sysml-codegen.
 Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identifier_types.py`.
 
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-NC-01 | EQN SHALL be constructed by joining sanitized owner-chain segments with `__` | `build_element_qualified_name()` uses `__` separator; segments pass through `sanitize_name()` |
+| REQ-NC-02 | PQN SHALL extend an EQN with `__{param_name}` | `build_parameter_qualified_name()` returns `f"{eqn}__{param}"` |
+| REQ-NC-03 | Module name SHALL equal the EQN lowercased | `get_module_name()` returns `eqn.lower()` |
+| REQ-NC-04 | Module type SHALL use `{namespace}.{ElementName}Module` format | `derive_module_type()` lowercases package, preserves element case, appends `Module` |
+| REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `get_channel_name()` returns `f"{eqn}__{output_attr}"` which is a PQN |
+| REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→`_`, collapse `_` runs, strip edge `_`, reserved-word suffix | Unit test on each transform rule |
+| REQ-NC-07 | Registry keys SHALL use dotted format; no `::` keys are registered | `OutputRegistry.register()` never receives `::` keys |
+
 ## 1. SysML Qualified Name (SysML QN)
 
 **Format**: `Package::PartDef::Element` (uses `::` separator, native SysML v2)
-**Origin**: SysIDE adapter; stored in `CalculationDefinitionData.qualified_name`
+**Origin**: SysIDE adapter; stored in [`CalculationDefinitionData.qualified_name`](09-data-models.md)
 **Example**: `SolarBatteryLibrary::BatteryPackCostCalc`
 
-Used only at extraction boundaries. Immediately converted to internal formats downstream.
+Used only at [extraction](01-extraction.md) boundaries. Immediately converted to internal formats downstream.
 
 ## 2. Element Qualified Name (EQN)
 
 **Format**: `Package__PartDef__SubPart__Element` (uses `__` separator)
 **Source of truth**: `build_element_qualified_name()` in `core/qualified_names.py`
-**Stored in**: `CalcUsageData.qualified_name`, `DesignAttributeData.qualified_name`
+**Stored in**: [`CalcUsageData.qualified_name`](09-data-models.md), `DesignAttributeData.qualified_name`
 **Uniqueness**: Guaranteed by SysML v2 ownership chain.
 
 Constructed by traversing the AST owner chain and sanitizing each segment
@@ -26,12 +38,13 @@ strip leading/trailing `_`). Segments are joined with `__`.
 
 **Format**: `{EQN}__{param_name}` (extends an EQN with a parameter)
 **Source of truth**: `build_parameter_qualified_name()` / `get_channel_name()`
-**Stored in**: `EntryPoint.qualified_name`, `ModuleOutput.channel_name`
-**Scope**: Entry points, channel names, module input wiring.
+**Stored in**: [`EntryPoint.qualified_name`](09-data-models.md), [`ModuleOutput.channel_name`](09-data-models.md)
+**Scope**: [Entry points](06-entry-point-classifier.md), channel names, module input wiring.
 
 Key insight: when a calc input binds to a design attribute at a *different* scope,
 the PQN is the design attribute's EQN, not `{usage_eqn}__{param_name}`. The
 `binding_resolutions` mapping (ADR-003 Phase 7) is the single source of truth.
+See [input resolver](04-input-resolver.md) for how bindings determine PQN selection.
 
 ## 4. Module Name
 
@@ -47,7 +60,7 @@ detection. Full EQN eliminates this complexity.
 
 **Format**: `{namespace}.{CalcDefName}Module`
 **Source of truth**: `derive_module_type()` in `core/identifier_types.py`
-**Stored in**: `PipelineModule.module_type`
+**Stored in**: [`PipelineModule.module_type`](09-data-models.md)
 
 Derivation from SysML QN:
 1. Split on `::`
@@ -65,14 +78,14 @@ Python file path derived the same way: `solarbatterylibrary/batterypackcostcalc.
 
 **Format**: PQN of the output = `{usage_EQN}__{output_attr_name}`
 **Source of truth**: `get_channel_name()` in `core/qualified_names.py`
-**Stored in**: `ModuleOutput.channel_name`, `InputSource.producer_channel`
+**Stored in**: [`ModuleOutput.channel_name`](09-data-models.md), [`InputSource.producer_channel`](09-data-models.md)
 
-Channels ARE PQNs. There is no separate "channel name" concept.
+Channels ARE PQNs. There is no separate "channel name" concept (REQ-NC-05).
 
 ## 7. Output Registry Key Formats
 
-The `OutputRegistry` (`core/output_registry.py`) maps lookup keys to canonical
-channel names. Keys are registered in a strict 4-phase protocol. All keys use
+The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps lookup keys to canonical
+channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol. All keys use
 dotted format; no SYSML_QN (`::`) keys are registered.
 
 ### Phase 1: Canonical Channels
@@ -88,6 +101,7 @@ dotted format; no SYSML_QN (`::`) keys are registered.
 Key_C derivation (`OutputRegistry.derive_key_c()`): split EQN on `__`, drop
 `segments[0]` (design PartDef prefix), join with `.`, append `.{output_attr}`.
 Key_C is critical: ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
+See [The Scope Problem](03-resolution-overview.md) for why Key_C is the primary resolution path.
 
 **Aggregation outputs** register:
 
@@ -108,8 +122,8 @@ Key_C is critical: ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
 
 | Phase | Source | Alias Format | Resolves Against |
 |-------|--------|-------------|-----------------|
-| 2 | `:>>` CHAIN redefinitions | `{instance_path}.{attr}` | Phase 1 (via Key_C) |
-| 3 | EXPOSE_PURE attributes | `{owning_part_short}.{attr}` | Phase 1+2 |
+| 2 | `:>>` CHAIN [redefinitions](12-virtual-binding-rewrite.md) | `{instance_path}.{attr}` | Phase 1 (via Key_C) |
+| 3 | [EXPOSE_PURE](16-computed-attributes.md) attributes | `{owning_part_short}.{attr}` | Phase 1+2 |
 | 4 | Transitive design attrs | `{parent_part}.{attr}` | Phase 1-3 |
 
 Collision policy: refuse overwrite, log warning, keep first registration.
@@ -125,7 +139,7 @@ Reverse: `python_to_sysml_qualified_name()`: `replace("__", "::")`.
 - Replace non-alphanumeric (except `_`) with `_`
 - Collapse runs of `_` to single `_`
 - Strip leading/trailing `_`
-- Append `_` to Python reserved words
+- Append `_` to Python reserved words (`class`, `def`, `import`, `from`, `return`, `yield`)
 
 The `__` separator is applied *after* sanitization, so it is never collapsed.
 
@@ -194,3 +208,19 @@ Key_C to the canonical channel
 | Key_A | `.` | original | `cost_model.total_cost` |
 | Key_C | `.` | original | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
 | Key_D | `.` | original | `battery_system.capital_cost` |
+
+## Related Documents
+
+- **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) — where naming applies across all 7 steps
+- **Extraction (origin)**: [01-extraction](01-extraction.md) — SysML QN is produced here
+- **Resolution (consumer)**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem relies on Key_C
+- **Input resolver**: [04-input-resolver](04-input-resolver.md) — strategies use Key_A/C/D/F for lookup
+- **Module factory**: [05-module-factory](05-module-factory.md) — EQN → module name/type derivation
+- **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — PQN used for entry point QN
+- **Registry**: [10-output-registry](10-output-registry.md) — Key format details, 4-phase protocol
+- **Backtracker**: [11-analysis-backtracker](11-analysis-backtracker.md) — Key_C scoped resolution (Step 0)
+- **Virtual bindings**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — Phase 2 CHAIN aliases
+- **Computed attributes**: [16-computed-attributes](16-computed-attributes.md) — Phase 3 EXPOSE_PURE aliases
+- **Registry generation**: [20-module-registry-generation](20-module-registry-generation.md) — import paths from module type
+- **Pipeline YAML**: [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) — channel format in YAML
+- **Data models**: [09-data-models](09-data-models.md) — field definitions for all named entities

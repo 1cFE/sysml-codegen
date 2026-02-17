@@ -1,219 +1,157 @@
-# 24 -- Dual Resolution Architecture: CalcUsage vs Aggregation Paths
+# 24 -- Why Resolution Has Two Paths (and Must Stay That Way)
 
-## The One Question, Two Answers
+## The Structural Constraint
 
-Both paths answer: "Where does this input come from?" But they operate on
-different input types with different strategies.
+Resolution answers one question for every input: "where does this value come
+from?" ([03-resolution-overview](03-resolution-overview.md)). It would be
+cleaner to answer it with one function. But a structural constraint prevents
+full unification: **CalcUsage resolution must happen during DFS traversal.**
 
-| Aspect | CalcUsage Path | Aggregation Path |
-|--------|---------------|-----------------|
-| Entry point | `_resolve_binding_via_registry()` | `_resolve_aggregation_input_channel()` |
-| File | `analysis/dependency_backtracker.py:462` | `resolution/graph_builder.py:760` |
-| Input type | `BindingInfo` (from CalcUsageData) | Term types (SumTerm, SingletonTerm, LocalTerm) |
-| Output type | `BindingResolution` object | `str \| None` (channel name) |
-| When | Backtracking phase (before graph) | Graph building phase (during module construction) |
-
----
-
-## CalcUsage Path: 4-Stage Resolution
-
-Resolves calc usage parameter bindings to upstream module outputs or entry points.
-
-```
-Stage 1: Direct registry lookup
-          registry.resolve(binding.source_path)
-          → channel or None
-
-Stage 1b: Normalize SysML QN
-          "Package::Part::attr" → "package.part.attr"
-          registry.resolve(normalized)
-          → channel or None
-
-Stage 2: REFERENCE secondary resolution
-          (only for REFERENCE bindings)
-          Extract leaf name, combine with parent scope
-          → channel or None
-
-Stage 3: Design attribute transitive
-          Match source_path to DesignAttributeData
-          → ENTRY_POINT (design attribute becomes the value source)
-
-Stage 4: Fallback entry point
-          → ENTRY_POINT with warning (all else failed)
-```
-
-**Result**: `BindingResolution(resolution_type, qualified_name, source_path, is_transitive)`
-
-Stored in `BacktrackingResult.binding_resolutions` dict keyed by
-`"{usage_qn}|{param_name}"`. Consumed later by `_build_pipeline_module()`.
-
----
-
-## Aggregation Path: Term-Type Resolution
-
-Resolves aggregation expression terms to upstream channels or entry points.
-
-### SumTerms and SingletonTerms
-
-```
-Stage 1: CHAIN redefinition lookup
-          Match part_usage.attr to RedefinitionData where type=CHAIN
-          Follow source_path chain (with cycle guard)
-          → channel or None
-
-Stage 2: Scoped registry lookup
-          Strip design prefix from instance_path
-          Build scoped key: "scope.part_usage.attribute"
-          registry.resolve(scoped_key)
-          → channel or None
-
-Stage 3: Unscoped Key_D fallback
-          catalog_key: "part_usage.attribute"
-          registry.resolve(catalog_key)
-          → channel or None
-
-Fallback: LITERAL :>> redefinition check
-          _find_literal_redefinition(part_usage, attr, ...)
-          → float (becomes entry point default) or None
-          → If None: entry point with MANUAL_REQUIRED
-```
-
-### LocalTerms (same-PartDef attributes)
-
-```
-Strategy 1: Sibling aggregation output
-            Build sibling_eqn = "{instance_path}__{attr}"
-            Check "{sibling_eqn}__{attr}" in canonical_channels
-            → module_output or None
-
-Strategy 2: EXPOSE_PURE alias
-            expose_aliases map provides dotted path
-            _resolve_aggregation_input_channel(dotted_path, ...)
-            → module_output or None
-
-Strategy 3: Entry point fallback
-            → entry point (user provides value)
-```
-
----
-
-## Shared Infrastructure: OutputRegistry
-
-Both paths converge on `OutputRegistry.resolve(key) -> str | None`:
+The [backtracker](11-analysis-backtracker.md)'s DFS discovers which modules are
+needed by tracing bindings. To trace a binding, it must resolve it -- only then
+can it know whether to recurse into an upstream module (MODULE_OUTPUT) or stop
+(ENTRY_POINT). Resolution and discovery are inseparable:
 
 ```python
-# core/output_registry.py:107-124
-def resolve(self, key: str) -> str | None:
-    return self._lookup.get(key)
+# dependency_backtracker.py, _trace_dependencies (line 364):
+resolution = self._resolve_binding_via_registry(binding, usage)
+if resolution.resolution_type == MODULE_OUTPUT:
+    producing_usage = self._find_usage_for_channel(resolution.qualified_name)
+    self._trace_dependencies(producing_usage, visited, path)  # RECURSE
 ```
 
-Pure dict lookup, no normalization, no fallback. Keys are registered during
-Phase 1-4 of the registry protocol (see doc 10).
+FORMULA and Aggregation modules are discovered differently -- not by tracing
+bindings but by scanning computed attributes and aggregation expressions. They
+are built AFTER the DFS completes. Their resolution CAN be extracted into a
+standalone [`resolve_input()`](04-input-resolver.md).
 
-**CalcUsage** passes `binding.source_path` as key (Stages 1-2).
-**Aggregation** passes scoped or catalog keys (Stages 2-3).
+This gives us two resolution paths. Not by accident, but by necessity.
 
-Both use `canonical_channels` (`frozenset` of all registered channels) for
-existence checks, but aggregation uses it explicitly while CalcUsage relies
-on `resolve()` returning `None`.
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs stop) depends on the resolution result. | `_trace_dependencies` calls `_resolve_binding_via_registry` at line 364; branch on `resolution_type` at line 367 |
+| REQ-DRA-02 | FORMULA SHALL use pre-computed [attribute resolution map](16-computed-attributes.md). Aggregation SumTerm/SingletonTerm SHALL use [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`. LocalTerm SHALL use factory-specific cascade. | Factory call sites use appropriate resolution mechanism |
+| REQ-DRA-03 | Both paths SHALL implement [scoped resolution](03-resolution-overview.md#the-scope-problem) (REQ-RES-07): consumer scope prepended before unscoped fallback. | Backtracker: Step 0 (line 512). resolve_input(): Strategy C first in chain. |
+| REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.total_cost"` in scope `"plant.battery_pack"` SHALL resolve to the same channel regardless of path. | Integration test: same reference through both paths → identical `InputSource` |
+| REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produce `InputSource` objects. Both encode the same two-valued answer (module_output or entry_point). | `BindingResolution.resolution_type` maps to `InputSource.source_type` |
 
 ---
 
-## Why Two Paths Exist
+## Path 1: CalcUsage Resolution (Backtracker)
 
-### Different Input Types
+**When**: During DFS traversal, before graph construction.
+**File**: `analysis/dependency_backtracker.py`, `_resolve_binding_via_registry()` (line 477).
+**Input**: `BindingInfo` from [CalcUsageData](09-data-models.md#extraction-models).
+**Output**: `BindingResolution` stored in `binding_resolutions` dict.
 
-CalcUsage bindings are `BindingInfo` objects with `source_path`, `binding_type`,
-and `literal_value`. Aggregation terms are `SumTerm(part_usage, attribute)`,
-`SingletonTerm(source_path)`, or `LocalTerm(attribute)`.
+### Resolution cascade (6 stages)
 
-### Different Domain Strategies
+*Stages 0-3 are resolution steps; stage 4 is a guaranteed fallback.
+Stage 1b is a sub-step of stage 1 (same goal: direct registry hit, different key format).*
 
-| Strategy | CalcUsage | Aggregation |
-|----------|-----------|-------------|
-| REFERENCE secondary | Yes | No |
-| Design attr transitive | Yes | No |
-| CHAIN recursion | No | Yes |
-| Scoped key construction | No | Yes |
-| LocalTerm sibling | No | Yes |
-| EXPOSE_PURE alias | No | Yes |
-| LITERAL fallback | No | Yes |
+```
+Stage 0: Scoped registry lookup (REQ-RES-07)
+         consumer_scope + "." + source_path → Key_C
+         → channel or None
 
-CHAIN recursion traces `:>>` redefinition chains through part hierarchy --
-only meaningful for aggregation where `pv_module.capital_cost` might
-redirect through `cost_model.total_cost`. CalcUsage bindings are direct.
+Stage 1: Direct registry lookup
+         registry.resolve(source_path)
+         → channel or None
 
-### Different Output Designs
+Stage 1b: SysML QN normalization
+          "Package::Part::attr" → "part.attr"
+          → channel or None
 
-CalcUsage produces `BindingResolution` objects stored in a persistent dict
-for inter-stage consumption. Aggregation returns channel strings consumed
-immediately by `_build_aggregation_module()`.
+Stage 2: REFERENCE secondary (leaf + parent scope)
+         Only for REFERENCE bindings
+         → channel or None
 
-### Different Timing
+Stage 3: Design attribute transitive
+         Match source_path to DesignAttributeData
+         → ENTRY_POINT
 
-CalcUsage resolution happens during the backtracking phase (before graph
-construction). Aggregation resolution happens during graph construction
-(Step 6.7 in `build_computation_graph()`).
+Stage 4: Fallback entry point
+         → ENTRY_POINT with warning
+```
+
+Both Stage 0 and Stage 1 include a **self-reference guard**: if the resolved
+channel belongs to the current usage, the resolution is discarded.
+
+**Result**: `BindingResolution(resolution_type, qualified_name, source_path, is_transitive)`.
+Stored in `BacktrackingResult.binding_resolutions` keyed by
+`"{usage_qn}|{param_name}"`. Consumed by `_build_pipeline_module()` in the
+[module factory](05-module-factory.md#2-calcusage-modules).
+
+---
+
+## Path 2: FORMULA/Aggregation Resolution
+
+**When**: During graph construction, after DFS.
+**File**: `resolution/input_resolver.py`, `resolve_input()`.
+**Input**: Symbolic reference string + [ResolutionContext](04-input-resolver.md#resolutioncontext).
+**Output**: `InputSource` (consumed immediately by the factory).
+
+### Strategy chain
+
+FORMULA uses a pre-computed [attribute resolution map](16-computed-attributes.md),
+not `resolve_input()`. Aggregation SumTerm/SingletonTerm inputs use:
+
+```
+AGG_STRATEGIES:
+  C: ScopedRegistryLookup
+  D: ChainRedefinitionFollow
+  A: DirectRegistryLookup
+  B: SysmlQnNormalization
+  E: DesignAttributeLookup
+```
+
+`ChainRedefinitionFollow` (D) is promoted because aggregation inputs almost
+always resolve through `:>>` chains. LocalTerm uses a factory-specific cascade
+(see [05](05-module-factory.md#4c-localterm)).
+See [04-input-resolver](04-input-resolver.md) for strategy details.
+
+---
+
+## Strategy Overlap Between Paths
+
+Both paths solve the same problem with overlapping (but not identical) strategies:
+
+| Strategy | Backtracker (CalcUsage) | Agg resolve_input() / FORMULA attr map |
+|----------|:-:|:-:|
+| Scoped lookup (Key_C) | Stage 0 | Strategy C |
+| Direct lookup (Key_A) | Stage 1 | Strategy A |
+| SysML QN normalization | Stage 1b | Strategy B |
+| CHAIN redefinition follow | -- | Strategy D |
+| REFERENCE secondary | Stage 2 | Strategy C secondary form |
+| Design attr transitive | Stage 3 | Strategy E |
+| LITERAL :>> fallback | -- | In factory (REQ-MF-06) |
+| Self-reference guard | After Stage 0/1 | After each strategy |
+
+The overlap is intentional. Both paths must reach the same answer for the same
+reference (REQ-DRA-04). The difference is which strategies are relevant:
+- CHAIN redefinition follow is aggregation-specific (`:>>` chains through part hierarchy)
+- REFERENCE secondary is CalcUsage-specific (FeatureReferenceExpression bindings)
+- LITERAL fallback is aggregation-specific (`:>> attr = 42.0` defaults)
 
 ---
 
 ## Concrete Trace: Same Reference, Both Paths
 
-**Reference**: `"solar_array.capital_cost"` (an aggregation output channel)
+**Reference**: `"cost_model.total_cost"` in scope `"plant.battery_pack"`.
+**Registry**: Key_C `"plant.battery_pack.cost_model.total_cost"` →
+canonical `"Design__plant__battery_pack__cost_model__total_cost"`.
 
-### CalcUsage Path (if this were a binding)
+**CalcUsage** (backtracker): Stage 0 scoped lookup →
+`"plant.battery_pack.cost_model.total_cost"` → HIT →
+`BindingResolution(MODULE_OUTPUT, canonical)`.
 
-```
-_resolve_binding_via_registry("solar_array.capital_cost", ...)
-  Stage 1: registry.resolve("solar_array.capital_cost")
-           → HIT: "Design__solar_array__capital_cost__capital_cost"
-  Return: BindingResolution(MODULE_OUTPUT,
-           "Design__solar_array__capital_cost__capital_cost")
+**Aggregation** (resolve_input with AGG_STRATEGIES): Strategy C scoped lookup →
+`"plant.battery_pack.cost_model.total_cost"` → HIT →
+`InputSource(module_output, canonical)`.
 
-_build_pipeline_module():
-  InputSource(source_type="module_output",
-              producer_channel="Design__solar_array__capital_cost__capital_cost")
-```
-
-### Aggregation Path (SingletonTerm)
-
-```
-_resolve_aggregation_input_channel("solar_array.capital_cost",
-                                    "Design__plant", ...)
-  Stage 1 (CHAIN): No match in redefinitions
-  Stage 2 (Scoped): scoped_key="plant.solar_array.capital_cost"
-                     registry.resolve() → MISS
-  Stage 3 (Unscoped): catalog_key="solar_array.capital_cost"
-                       registry.resolve() → HIT
-  Return: "Design__solar_array__capital_cost__capital_cost"
-
-_build_aggregation_module():
-  InputSource(source_type="module_output",
-              producer_channel="Design__solar_array__capital_cost__capital_cost")
-```
-
-**Result**: Both paths produce identical `InputSource` wiring.
-
----
-
-## Data Flow Summary
-
-```
-CalcUsage:
-  CalcUsageData.bindings[]
-    → _resolve_binding_via_registry()
-    → BindingResolution
-    → BacktrackingResult.binding_resolutions["{usage}|{param}"]
-    → _build_pipeline_module()
-    → ModuleInput(source=InputSource(...))
-
-Aggregation:
-  ScopedAggregationData.expression.{sum,singleton,local}_terms
-    → _resolve_aggregation_input_channel()
-    → str (channel) | None
-    → _build_aggregation_module()
-    → ModuleInput(source=InputSource(...))
-```
+**Result**: Identical wiring. Different objects, same answer (REQ-DRA-04).
 
 ---
 
@@ -221,11 +159,19 @@ Aggregation:
 
 | Model | File | Role |
 |-------|------|------|
-| `BindingResolution` | `core/models.py` | CalcUsage resolution result |
-| `BindingInfo` | `extraction/data_models.py` | Calc usage binding |
-| `SumTerm` | `extraction/data_models.py` | `sum(part.attr * count)` |
-| `SingletonTerm` | `extraction/data_models.py` | `part.attr` (no sum) |
-| `LocalTerm` | `extraction/data_models.py` | Same-PartDef attribute |
-| `RedefinitionData` | `extraction/data_models.py` | `:>>` CHAIN/LITERAL/EXPRESSION |
-| `OutputRegistry` | `core/output_registry.py` | Shared lookup table |
-| `BacktrackingResult` | `analysis/dependency_backtracker.py` | CalcUsage resolution store |
+| `BindingResolution` | `core/models.py` | CalcUsage resolution result (backtracker) |
+| `InputSource` | `resolution/models.py` | FORMULA/Agg resolution result (resolve_input) |
+| `BindingInfo` | `extraction/data_models.py` | CalcUsage binding input |
+| `SumTerm` / `SingletonTerm` / `LocalTerm` | `extraction/data_models.py` | Aggregation term inputs |
+| `ResolutionContext` | `resolution/input_resolver.py` | Immutable context for resolve_input() |
+| `OutputRegistry` | `core/output_registry.py` | Shared lookup table (both paths) |
+
+## Related Documents
+
+- **Architecture**: [03-resolution-overview](03-resolution-overview.md) -- consolidated design and why CalcUsage stays separate
+- **Backtracker**: [11-analysis-backtracker](11-analysis-backtracker.md) -- DFS algorithm and CalcUsage cascade
+- **Resolver**: [04-input-resolver](04-input-resolver.md) -- resolve_input() strategies for FORMULA/Agg
+- **Factories**: [05-module-factory](05-module-factory.md) -- how each path feeds module construction
+- **Registry**: [10-output-registry](10-output-registry.md) -- shared O(1) lookup
+- **Scope**: [15-naming-conventions](15-naming-conventions.md) -- Key_C format for scoped resolution
+- **Data models**: [09-data-models](09-data-models.md) -- BindingResolution, InputSource, BacktrackingResult
