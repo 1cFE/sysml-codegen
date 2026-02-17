@@ -1,0 +1,564 @@
+"""C07: AST Dispatch Invariant conformance tests.
+
+Verifies that every is_instance() dispatch site in the codebase that checks
+both FeatureChainExpression (FCE) and OperatorExpression (OE) always checks
+FCE first. FCE is a subtype of OE in SysIDE's type system, so checking OE
+first misclassifies FCE nodes. This was the root cause of Bug A (commit 20b720e).
+
+Testing strategy:
+- Static analysis tests parse source files with Python ast module -- no mocks.
+- Behavioral tests use SysIDE adapter name-based fallback with dual-match mock
+  classes (acceptable per Ground Rule 1).
+- Snapshot tests use real extraction snapshots from Phase 0.
+
+Requirements: REQ-AST-01 through REQ-AST-07.
+"""
+
+from __future__ import annotations
+
+import ast as python_ast
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+# ---------------------------------------------------------------------------
+# Source paths for static analysis
+# ---------------------------------------------------------------------------
+
+SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
+EXTRACTION_DIR = SRC_ROOT / "extraction"
+ANALYSIS_DIR = SRC_ROOT / "analysis"
+
+EXPRESSION_UTILS_PATH = EXTRACTION_DIR / "expression_utils.py"
+EXPRESSION_COMPILER_PATH = EXTRACTION_DIR / "expression_compiler.py"
+HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
+USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
+PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
+EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
+
+# Expression type names used for dispatch site identification
+EXPRESSION_TYPE_NAMES = frozenset({
+    "FeatureChainExpression",
+    "OperatorExpression",
+    "FeatureReferenceExpression",
+})
+
+# ---------------------------------------------------------------------------
+# Dispatch site inventory (foundation for all audit tests)
+# ---------------------------------------------------------------------------
+
+# Sites where both FCE and OE are checked (the critical invariant sites)
+DUAL_CHECK_SITES = [
+    (EXPRESSION_UTILS_PATH, "reconstruct_expression"),
+    (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
+    (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
+    (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
+    (PARAMETER_GROUPS_PATH, "_extract_default_value"),
+]
+
+DUAL_CHECK_IDS = [
+    "reconstruct_expression",
+    "build_expression_ast",
+    "_walk_aggregation_ast",
+    "_extract_single_binding",
+    "_extract_default_value",
+]
+
+# Sites that use if/if/if chains (not elif) and must follow full canonical ordering
+CANONICAL_SITES = [
+    (EXPRESSION_UTILS_PATH, "reconstruct_expression"),
+    (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
+    (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
+]
+
+CANONICAL_IDS = [
+    "reconstruct_expression",
+    "build_expression_ast",
+    "_walk_aggregation_ast",
+]
+
+# Sites that use elif chains -- FCE < OE is sufficient, full canonical not required
+ELIF_SITES = [
+    (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
+    (PARAMETER_GROUPS_PATH, "_extract_default_value"),
+]
+
+ELIF_IDS = [
+    "_extract_single_binding",
+    "_extract_default_value",
+]
+
+
+# ---------------------------------------------------------------------------
+# Static analysis helpers
+# ---------------------------------------------------------------------------
+
+
+def _is_any_is_instance_call(call_node) -> bool:
+    """Check if an ast.Call node is *.is_instance(...).
+
+    Matches both SysideAdapter.is_instance() and self.adapter.is_instance().
+    """
+    func = call_node.func
+    if isinstance(func, python_ast.Attribute) and func.attr == "is_instance":
+        return True
+    return False
+
+
+def _find_is_instance_calls_in_function(
+    source_path: Path, function_name: str
+) -> dict[str, int]:
+    """Parse source file and find is_instance() calls in a specific function.
+
+    Returns dict mapping type_name argument to line number (first occurrence only).
+    """
+    source = source_path.read_text()
+    tree = python_ast.parse(source, filename=str(source_path))
+
+    results: dict[str, int] = {}
+
+    for node in python_ast.walk(tree):
+        if isinstance(node, python_ast.FunctionDef) and node.name == function_name:
+            for child in python_ast.walk(node):
+                if isinstance(child, python_ast.Call) and _is_any_is_instance_call(child):
+                    if len(child.args) >= 2:
+                        type_arg = child.args[1]
+                        if isinstance(type_arg, python_ast.Constant) and isinstance(
+                            type_arg.value, str
+                        ):
+                            if type_arg.value not in results:
+                                results[type_arg.value] = child.lineno
+            break
+
+    return results
+
+
+def _find_comment_near_line(
+    source_lines: list[str], target_line: int, pattern: str, window: int = 5
+) -> bool:
+    """Check if a comment matching pattern appears within window lines above target_line.
+
+    Args:
+        source_lines: File contents split by newlines (0-indexed).
+        target_line: 1-based line number of the target (e.g., FCE check).
+        pattern: Substring to look for in comments.
+        window: Number of lines above target_line to search.
+
+    Returns:
+        True if a comment containing the pattern is found within the window.
+    """
+    start = max(0, target_line - 1 - window)
+    end = target_line  # include the target line itself
+    for line in source_lines[start:end]:
+        stripped = line.strip()
+        if stripped.startswith("#") and pattern in stripped:
+            return True
+    return False
+
+
+def _find_all_dispatch_functions(src_dir: Path) -> dict[tuple[str, str], dict[str, int]]:
+    """Walk all .py files in src_dir and find functions with is_instance() on expression types.
+
+    Returns dict mapping (relative_path, function_name) to {type_name: line_number}.
+    Only includes functions that check at least one of the EXPRESSION_TYPE_NAMES.
+    """
+    results: dict[tuple[str, str], dict[str, int]] = {}
+
+    for py_file in sorted(src_dir.rglob("*.py")):
+        try:
+            source = py_file.read_text()
+            tree = python_ast.parse(source, filename=str(py_file))
+        except SyntaxError:
+            continue
+
+        rel_path = str(py_file.relative_to(src_dir))
+
+        for node in python_ast.walk(tree):
+            if isinstance(node, python_ast.FunctionDef):
+                func_types: dict[str, int] = {}
+                for child in python_ast.walk(node):
+                    if isinstance(child, python_ast.Call) and _is_any_is_instance_call(child):
+                        if len(child.args) >= 2:
+                            type_arg = child.args[1]
+                            if (
+                                isinstance(type_arg, python_ast.Constant)
+                                and isinstance(type_arg.value, str)
+                                and type_arg.value in EXPRESSION_TYPE_NAMES
+                            ):
+                                if type_arg.value not in func_types:
+                                    func_types[type_arg.value] = child.lineno
+
+                if func_types:
+                    results[(rel_path, node.name)] = func_types
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Mock infrastructure (SysIDE adapter boundary stubs -- Ground Rule 1)
+# ---------------------------------------------------------------------------
+
+
+class MockFeatureReferenceExpression:
+    """Mock syside FeatureReferenceExpression node."""
+
+    def __init__(self, name: str):
+        self.referent = SimpleNamespace(name=name)
+
+
+class MockFeatureChainExpressionOperatorExpression:
+    """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
+
+    Class name contains both type names, triggering SysideAdapter.is_instance()'s
+    name-based fallback for both type checks. Used to verify that FCE handler fires
+    first when both would match.
+    """
+
+    def __init__(self, operands: list | None = None, target_feature=None):
+        self.operator = "."
+        self.operands = operands or []
+        self.target_feature = target_feature
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-01: FCE before OE at every dual-check site
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-01")
+class TestReqAst01FceBeforeOe:
+    """Static analysis: FCE is_instance check precedes OE at every dual-check site."""
+
+    @pytest.mark.parametrize(
+        "source_path,function_name",
+        DUAL_CHECK_SITES,
+        ids=DUAL_CHECK_IDS,
+    )
+    def test_fce_before_oe_all_dual_check_sites(self, source_path, function_name):
+        """FCE check line < OE check line in the given function."""
+        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        assert "FeatureChainExpression" in calls, (
+            f"No is_instance call for FeatureChainExpression in "
+            f"{source_path.name}:{function_name}"
+        )
+        assert "OperatorExpression" in calls, (
+            f"No is_instance call for OperatorExpression in "
+            f"{source_path.name}:{function_name}"
+        )
+        assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
+            f"{source_path.name}:{function_name}: "
+            f"FCE at line {calls['FeatureChainExpression']} must precede "
+            f"OE at line {calls['OperatorExpression']}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-02: Comment present at every dual-check site
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-02")
+class TestReqAst02CommentPresent:
+    """Invariant comment 'MUST be before OperatorExpression' present at every dual-check site."""
+
+    @pytest.mark.parametrize(
+        "source_path,function_name",
+        DUAL_CHECK_SITES,
+        ids=DUAL_CHECK_IDS,
+    )
+    def test_invariant_comment_at_all_dual_check_sites(self, source_path, function_name):
+        """Comment matching 'MUST be before OperatorExpression' appears within 5 lines
+        above the FCE check in the given function."""
+        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        assert "FeatureChainExpression" in calls, (
+            f"No is_instance call for FeatureChainExpression in "
+            f"{source_path.name}:{function_name}"
+        )
+
+        fce_line = calls["FeatureChainExpression"]
+        source_lines = source_path.read_text().splitlines()
+
+        assert _find_comment_near_line(
+            source_lines, fce_line, "MUST be before OperatorExpression"
+        ), (
+            f"{source_path.name}:{function_name}: "
+            f"Missing invariant comment 'MUST be before OperatorExpression' "
+            f"within 5 lines above FCE check at line {fce_line}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-03: Canonical ordering at all dual-check sites
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-03")
+class TestReqAst03CanonicalOrdering:
+    """Dispatch ordering: canonical (FCE < OE < FRE) at if-chain sites,
+    critical invariant (FCE < OE) at elif-chain sites."""
+
+    @pytest.mark.parametrize(
+        "source_path,function_name",
+        CANONICAL_SITES,
+        ids=CANONICAL_IDS,
+    )
+    def test_canonical_ordering_fce_oe_fre(self, source_path, function_name):
+        """Full canonical ordering: FCE < OE < FRE at if-chain sites."""
+        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        assert "FeatureChainExpression" in calls
+        assert "OperatorExpression" in calls
+        assert "FeatureReferenceExpression" in calls
+
+        fce = calls["FeatureChainExpression"]
+        oe = calls["OperatorExpression"]
+        fre = calls["FeatureReferenceExpression"]
+
+        assert fce < oe < fre, (
+            f"{source_path.name}:{function_name}: "
+            f"Expected FCE({fce}) < OE({oe}) < FRE({fre})"
+        )
+
+    @pytest.mark.parametrize(
+        "source_path,function_name",
+        ELIF_SITES,
+        ids=ELIF_IDS,
+    )
+    def test_elif_sites_fce_before_oe(self, source_path, function_name):
+        """Critical invariant: FCE < OE at elif-chain sites (full canonical not required)."""
+        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        assert "FeatureChainExpression" in calls
+        assert "OperatorExpression" in calls
+
+        assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
+            f"{source_path.name}:{function_name}: "
+            f"FCE at line {calls['FeatureChainExpression']} must precede "
+            f"OE at line {calls['OperatorExpression']}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-04: Total dispatch site guardrail
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-04")
+class TestReqAst04DispatchSiteGuardrail:
+    """Guard against new unaudited dispatch sites appearing in the codebase."""
+
+    def test_total_dual_check_site_count(self):
+        """Exactly 5 functions have both FCE and OE is_instance() checks."""
+        all_dispatch = _find_all_dispatch_functions(SRC_ROOT)
+        dual_check = {
+            key: types
+            for key, types in all_dispatch.items()
+            if "FeatureChainExpression" in types and "OperatorExpression" in types
+        }
+        assert len(dual_check) == 5, (
+            f"Expected 5 dual-check sites (FCE+OE), found {len(dual_check)}: "
+            f"{sorted(dual_check.keys())}"
+        )
+
+    def test_total_dispatch_function_count(self):
+        """Exactly 8 functions dispatch on 2+ expression types (where ordering matters)."""
+        all_dispatch = _find_all_dispatch_functions(SRC_ROOT)
+        multi_type = {
+            key: types
+            for key, types in all_dispatch.items()
+            if len(types) >= 2
+        }
+        assert len(multi_type) == 8, (
+            f"Expected 8 multi-type dispatch functions, found {len(multi_type)}: "
+            f"{sorted(multi_type.keys())}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-05: FCE -> SingletonTerm in aggregation
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-05")
+class TestReqAst05SingletonTermClassification:
+    """FCE nodes in aggregation AST must be classified as SingletonTerm, not LocalTerm."""
+
+    def test_fce_classified_as_singleton_term_solar_battery(self, solar_battery_snapshot):
+        """Every SingletonTerm in solar_battery has dotted source_path (from FCE)."""
+        hd = solar_battery_snapshot["hierarchy_data"]
+        for agg in hd.aggregation_expressions:
+            for st in agg.singleton_terms:
+                assert "." in st.source_path, (
+                    f"SingletonTerm source_path={st.source_path!r} missing '.' "
+                    f"(expected dotted FCE path) in aggregation {agg.attribute_name}"
+                )
+
+    def test_no_singleton_term_in_local_terms(self, solar_battery_snapshot):
+        """No LocalTerm has a dotted attribute_name (Bug A regression)."""
+        hd = solar_battery_snapshot["hierarchy_data"]
+        for agg in hd.aggregation_expressions:
+            for lt in agg.local_terms:
+                assert "." not in lt.attribute_name, (
+                    f"LocalTerm attribute_name={lt.attribute_name!r} contains '.' -- "
+                    f"Bug A regression: FCE misclassified as LocalTerm in "
+                    f"aggregation {agg.attribute_name}"
+                )
+
+    def test_walk_aggregation_ast_fce_produces_singleton_behavioral(self):
+        """Behavioral: dual-match FCE+OE mock node -> SingletonTerm in _AggregationContext.
+
+        Uses SysideAdapter name-based fallback (no monkeypatch needed).
+        """
+        from sysml_codegen.extraction.hierarchy_resolver import (
+            _AggregationContext,
+            _walk_aggregation_ast,
+        )
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operands=[MockFeatureReferenceExpression("child")],
+            target_feature=SimpleNamespace(name="attr"),
+        )
+
+        ctx = _AggregationContext()
+        _walk_aggregation_ast(node, {}, ctx)
+
+        assert len(ctx.singleton_terms) == 1, (
+            f"Expected 1 SingletonTerm, got {len(ctx.singleton_terms)}"
+        )
+        assert "child" in ctx.singleton_terms[0].source_path, (
+            f"SingletonTerm source_path={ctx.singleton_terms[0].source_path!r} "
+            f"missing 'child'"
+        )
+        assert len(ctx.local_terms) == 0, (
+            f"Expected 0 LocalTerms (FCE should not be classified as LocalTerm), "
+            f"got {len(ctx.local_terms)}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-06: Expression compiler FCE diagnostic
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-06")
+class TestReqAst06ExpressionCompilerDiagnostic:
+    """build_expression_ast: FCE produces 'feature chain' diagnostic."""
+
+    def test_build_expression_ast_fce_produces_feature_chain_reason(self):
+        """Dual-match FCE+OE mock -> UNSUPPORTED with 'feature chain' in reason."""
+        from sysml_codegen.extraction.expression_compiler import (
+            ExpressionNodeType,
+            build_expression_ast,
+        )
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operands=[MockFeatureReferenceExpression("x")],
+        )
+        result = build_expression_ast(node, input_names=set(), output_names=set())
+        assert result.node_type == ExpressionNodeType.UNSUPPORTED, (
+            f"Expected UNSUPPORTED, got {result.node_type}"
+        )
+        assert "feature chain" in result.reason, (
+            f"Expected 'feature chain' in reason, got: {result.reason!r}"
+        )
+
+    def test_build_expression_ast_fce_no_dot_operator_error(self):
+        """Dual-match FCE+OE mock -> reason does NOT contain 'unsupported operator'."""
+        from sysml_codegen.extraction.expression_compiler import build_expression_ast
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operands=[MockFeatureReferenceExpression("x")],
+        )
+        result = build_expression_ast(node, input_names=set(), output_names=set())
+        assert "unsupported operator" not in result.reason, (
+            f"FCE should not produce 'unsupported operator' diagnostic: {result.reason!r}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# REQ-AST-07: reconstruct_expression FCE output format
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-07")
+class TestReqAst07ReconstructExpressionFormat:
+    """reconstruct_expression must return 'name.attr' for FCE, not '.(name)'."""
+
+    def test_reconstruct_expression_fce_returns_dotted_name(self):
+        """Dual-match FCE+OE mock with operands=[FRE('instance')] and
+        target_feature.name='attr' -> returns 'instance.attr'."""
+        from sysml_codegen.extraction.expression_utils import reconstruct_expression
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operands=[MockFeatureReferenceExpression("instance")],
+            target_feature=SimpleNamespace(name="attr"),
+        )
+        result = reconstruct_expression(node)
+        assert result == "instance.attr", (
+            f"Expected 'instance.attr', got {result!r}"
+        )
+
+    def test_reconstruct_expression_fce_no_dot_paren_format(self):
+        """Dual-match FCE+OE mock -> result does NOT contain '.(' pattern (Bug A symptom)."""
+        from sysml_codegen.extraction.expression_utils import reconstruct_expression
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operands=[MockFeatureReferenceExpression("instance")],
+            target_feature=SimpleNamespace(name="attr"),
+        )
+        result = reconstruct_expression(node)
+        assert ".(" not in result, (
+            f"Bug A regression: result contains '.(' pattern: {result!r}"
+        )
+
+    def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_snapshot):
+        """No solar_battery transformed_expression contains the '.()' pattern."""
+        hd = solar_battery_snapshot["hierarchy_data"]
+        for agg in hd.aggregation_expressions:
+            assert ".(" not in agg.transformed_expression, (
+                f"Bug A regression: aggregation {agg.attribute_name} "
+                f"transformed_expression contains '.(' pattern: "
+                f"{agg.transformed_expression!r}"
+            )
+
+
+# ---------------------------------------------------------------------------
+# Regression: order reversal detection
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-AST-01")
+class TestRegressionOrderReversal:
+    """Verify the current code takes the FCE path for dual-match nodes."""
+
+    def test_regression_if_oe_checked_before_fce_in_walk_agg_ast(self):
+        """Construct dual-match FCE+OE mock node. With correct dispatch order,
+        _walk_aggregation_ast classifies it as SingletonTerm (FCE handler).
+        If OE handler fired instead, the node would be recursed into as an
+        operator expression, producing wrong results."""
+        from sysml_codegen.extraction.hierarchy_resolver import (
+            _AggregationContext,
+            _walk_aggregation_ast,
+        )
+
+        node = MockFeatureChainExpressionOperatorExpression(
+            operands=[MockFeatureReferenceExpression("pv_module")],
+            target_feature=SimpleNamespace(name="capital_cost"),
+        )
+
+        ctx = _AggregationContext()
+        result = _walk_aggregation_ast(node, {}, ctx)
+
+        # FCE handler produces a chain name and SingletonTerm
+        assert result == "pv_module.capital_cost", (
+            f"Expected 'pv_module.capital_cost', got {result!r}. "
+            f"If this fails, FCE handler may not be firing (OE checked first?)"
+        )
+        assert len(ctx.singleton_terms) == 1, (
+            f"Expected 1 SingletonTerm from FCE handler, got {len(ctx.singleton_terms)}. "
+            f"If 0, OE handler may be firing instead of FCE."
+        )
+        assert ctx.singleton_terms[0].source_path == "pv_module.capital_cost"
+        assert len(ctx.local_terms) == 0, (
+            f"Expected 0 LocalTerms, got {len(ctx.local_terms)}. "
+            f"LocalTerm would indicate FCE misclassified (Bug A)."
+        )

@@ -114,7 +114,7 @@ and real SysML fixture output.
     - FCE classified as SingletonTerm (not LocalTerm) — AST dispatch invariant
   - **Acceptance**: REQ-HR-01 through REQ-HR-07 all green
 
-- [ ] **1.7 — AST Dispatch Invariant Conformance (C07)**
+- [x] **1.7 — AST Dispatch Invariant Conformance (C07)** *(2026-02-17, 26 tests)*
   - **Refs**: [19-ast-dispatch-invariant.md](19-ast-dispatch-invariant.md)
   - Write `tests/conformance/test_ast_dispatch_invariant.py`:
     - Audit: every dual-check site checks FCE before OE
@@ -265,11 +265,12 @@ extraction and analysis. Each is independently testable.
   - **Refs**: [10-output-registry.md](10-output-registry.md)
   - Write `tests/conformance/test_output_registry.py`:
     - Register channels using real PQNs from extraction snapshots
-    - Verify all 6 key formats resolve to canonical PQN
-    - Verify collision policy (first wins, warning logged)
+    - Verify `scoped_lookup(ScopedKey)` resolves to `CanonicalChannel`
+    - Verify `sysml_qn_lookup(SysMLQN)` resolves to `CanonicalChannel`
+    - Verify `alias_lookup(ScopedKey)` resolves to `CanonicalChannel`
+    - Verify collision policy (alias: first wins, warning logged; scoped/SysML QN: unique by construction)
     - Verify phase ordering enforcement
-    - Verify Key_C derivation for scoped lookups
-    - Verify Key_A is registered (diagnostic visibility) but resolution paths raise `UnscopedResolutionError` instead of silently using Key_A (REQ-OR-08)
+    - Verify `ScopedKey.from_eqn()` derivation for scoped lookups
   - If current impl needs changes, make them. If not, just lock it down with tests.
   - **Acceptance**: REQ-OR-01 through REQ-OR-08 all green
 
@@ -315,8 +316,8 @@ and aggregation scoping all independently validated. ~40-60 new conformance test
     - Build real OutputRegistry from extraction snapshot
     - Run backtracker on real calc usages from each fixture model
     - Verify binding_resolutions key format
-    - Verify scoped resolution (Step 0/Key_C) is primary path
-    - Verify Step 1 raises `UnscopedResolutionError` when scoped resolution fails but unscoped Key_A would match (REQ-BT-08)
+    - Verify CHAIN bindings query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)` (type-directed dispatch)
+    - Verify REFERENCE bindings query `sysml_qn_lookup(SysMLQN)` then normalized `scoped_lookup(ScopedKey)` (type-directed dispatch)
     - Verify cycle detection (construct a model with cycles if needed, or use synthetic calc data)
     - Verify self-reference guard
     - Verify topological ordering (every dependency appears before its consumer)
@@ -330,7 +331,7 @@ and aggregation scoping all independently validated. ~40-60 new conformance test
   - Write `tests/conformance/test_input_resolver.py`:
     - Build ResolutionContext from real extraction + real OutputRegistry
     - Test each strategy individually with known inputs
-    - Test strategy ordering (C before A)
+    - Test strategy ordering (A before B per AGG_STRATEGIES)
     - Test self-reference guard
     - Test fallback to entry_point
     - Test STANDARD_STRATEGIES and AGG_STRATEGIES ordering
@@ -730,6 +731,27 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    create coupling between conformance test files. C07 will likely need the same
    helpers — consider extracting to `tests/helpers/` if a third copy appears.
 
+### C07 AST Dispatch Invariant Conformance (2026-02-17)
+
+1. **Plan's function name for usage_extractor dispatch site was wrong.** The plan
+   and design doc listed `extract_binding_info` for dispatch site #4, but the actual
+   function containing the FCE/OE checks at lines 521/557 is `_extract_single_binding`.
+   The top-level `extract_binding_info` delegates to `_extract_single_binding`.
+
+2. **13 functions call `is_instance()` on expression types, not 8.** Using the broader
+   `*.is_instance()` pattern (catching `self.adapter.is_instance()` in `extractor.py`)
+   finds 13. 5 are single-type helpers where ordering doesn't matter. The meaningful
+   guardrail is "functions with 2+ expression type checks" = 8.
+
+3. **SysideAdapter name-based fallback works for behavioral tests without monkeypatching.**
+   The `MockFeatureChainExpressionOperatorExpression` class name triggers the name-based
+   fallback for both FCE and OE checks. No monkeypatching needed.
+
+4. **Third copy of static analysis helpers created.** C04, C06, and C07 each have their
+   own copy of `_find_is_instance_calls_in_function` and `_is_*_is_instance_call`. C07's
+   version is broader (`_is_any_is_instance_call`). If a fourth copy appears, extract to
+   `tests/helpers/static_analysis.py`.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -781,6 +803,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 04-input-resolver.md | Strategies use typed registries; Key_A warning removed | TRR spec (2026-02-17) | Yes (TRR-6) |
 | 24-dual-resolution-architecture.md | Strategy tables rewritten for typed registries | TRR spec (2026-02-17) | Yes (TRR-7) |
 | 03-resolution-overview.md | Scope Problem updated; Key_A refs removed; typed registries | TRR spec (2026-02-17) | Yes (TRR-8) |
+| 19-ast-dispatch-invariant.md | Correct "8 files" → "8 multi-type dispatch functions across 5 files"; note `_extract_single_binding` not `extract_binding_info` | C07 conformance (2026-02-17) | No |
+| 19-ast-dispatch-invariant.md | Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types) | C07 conformance (2026-02-17) | No |
 
 ---
 
@@ -796,3 +820,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C04 Expression Compiler | 918 | 31 | 949 | 2026-02-17 |
 | C05 Computed Attributes | 956 | 37 | 993 | 2026-02-17 |
 | C06 Hierarchy Resolver | 986 | 36 | 1022 | 2026-02-17 |
+| C07 AST Dispatch Invariant | 1027 | 26 | 1053 | 2026-02-17 |

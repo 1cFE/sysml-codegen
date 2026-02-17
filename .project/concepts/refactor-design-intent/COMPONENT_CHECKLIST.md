@@ -131,11 +131,12 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Doc**: [19-ast-dispatch-invariant.md](19-ast-dispatch-invariant.md)
 - **REQs**: REQ-AST-01 through REQ-AST-07
 - **Cross-cutting**: affects C04, C05, C06
-- **AC**:
-  - [ ] Audit: every dual-check site checks FCE before OE
-  - [ ] Comment present at every dual-check site
-  - [ ] All 8+ dispatch sites follow canonical ordering: FCE, OE, FRE, Literal
-  - [ ] Regression test: if FCE/OE order reversed, test fails
+- **AC**: *(all verified 2026-02-17 — 26 tests in `tests/conformance/test_ast_dispatch_invariant.py`)*
+  - [x] Audit: every dual-check site checks FCE before OE (5 parametrized static analysis tests)
+  - [x] Comment present at every dual-check site (5 parametrized tests; comments added to `_extract_single_binding` and `_extract_default_value`)
+  - [x] All 8 multi-type dispatch sites follow canonical ordering: FCE, OE, FRE, Literal (with documented deviation for elif-chain sites)
+  - [x] Regression test: if FCE/OE order reversed, test fails (behavioral test with dual-match mock)
+  - Note: Plan listed `extract_binding_info` for site #4; actual function is `_extract_single_binding` in usage_extractor.py
 
 ---
 

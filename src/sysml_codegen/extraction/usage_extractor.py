@@ -518,6 +518,8 @@ def _extract_single_binding(
 
     expr = param_elem.feature_value_expression
 
+    # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
+    # subtype of OE in SysIDE's type system (doc 19 invariant).
     if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)
