@@ -36,33 +36,34 @@ a bare `source_path = "cost_model.total_cost"`. If `solar_array` also contains
 a `cost_model`, the string `"cost_model.total_cost"` is ambiguous -- it could
 refer to either one.
 
-The [OutputRegistry](10-output-registry.md) is a flat `dict[str, str]`. It has
-no concept of scope. It cannot answer "which `cost_model.total_cost` does this
-consumer mean?"
+The [OutputRegistry](10-output-registry.md) uses three typed registries
+([27-typed-registry-refactor](27-typed-registry-refactor.md)): scoped
+(`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`),
+and alias (`dict[ScopedKey, CanonicalChannel]`). The scoped registry does not
+contain ambiguous keys — only `ScopedKey` entries derived from the SysML
+ownership chain. But the registry still has no concept of which module is asking.
 
 **This is the central design constraint of the resolution layer:**
 
 > `source_path` from extraction is a scope-relative reference.
-> The registry is a flat global namespace.
 > The resolver MUST bridge the gap by re-attaching scope before lookup.
 
 The mechanism: both the backtracker and `resolve_input()` know the consumer's
 identity. From this they derive the consumer's parent scope as a dotted path.
 Prepending that scope to `source_path` produces a
-[Key_C](15-naming-conventions.md#7-output-registry-key-formats) lookup, which is
-unique by SysML ownership. See
-[Strategy C: ScopedRegistryLookup](04-input-resolver.md#c-scopedregistrylookup).
+`ScopedKey` for exact match against the scoped registry. See
+[Strategy A: ScopedRegistryLookup](04-input-resolver.md#a-scopedregistrylookup).
 
 | What | Example |
 |------|---------|
 | Consumer EQN | `Design__plant__subsys__battery_pack__sizing` |
 | Parent scope (dotted, design prefix stripped) | `plant.subsys.battery_pack` |
 | source_path (from extraction) | `cost_model.total_cost` |
-| Scoped key (= Key_C) | `plant.subsys.battery_pack.cost_model.total_cost` |
+| `ScopedKey` | `ScopedKey("plant.subsys.battery_pack.cost_model.total_cost")` |
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a [Key_C](15-naming-conventions.md#7-output-registry-key-formats)-format lookup. Unscoped [Key_A](15-naming-conventions.md#7-output-registry-key-formats) fallback is prohibited — if scoped resolution fails but unscoped Key_A would match, the system SHALL raise `UnscopedResolutionError` ([REQ-BT-08](11-analysis-backtracker.md), [REQ-OR-08](10-output-registry.md)). | Scoped lookup in both backtracker and `STANDARD_STRATEGIES`; Step 1 raises on unscoped match |
+| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `ScopedKey` lookup against the typed scoped registry ([27-typed-registry-refactor](27-typed-registry-refactor.md)). REFERENCE bindings (`::` in source_path) SHALL use `SysMLQN` lookup against the SysML QN registry. Cross-package CHAIN references fall through to the alias registry. | Typed dispatch in backtracker (REQ-BT-08) and typed strategies in `AGG_STRATEGIES` |
 | REQ-RES-08 | Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation). | Backtracker: Step 0 (line 512). resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
 
 ## Why Resolution Is Hard
@@ -117,9 +118,10 @@ a MODULE_OUTPUT, trace the producer) or stop (it's an ENTRY_POINT, nothing to
 trace). This makes CalcUsage resolution **structurally inseparable** from
 dependency discovery.
 
-The backtracker already implements scoped resolution (REQ-RES-07): Step 0
-prepends `consumer_scope` to `source_path` for Key_C lookup, matching the
-[Scope Problem](#the-scope-problem) solution before any unscoped fallback.
+The backtracker implements type-directed dispatch (REQ-BT-08): CHAIN bindings
+query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`; REFERENCE
+bindings query `sysml_qn_lookup(SysMLQN)` then normalized `scoped_lookup()`.
+See [27-typed-registry-refactor](27-typed-registry-refactor.md) FR-4.
 
 FORMULA and Aggregation modules do NOT participate in DFS -- they are built
 after dependency discovery. Their resolution CAN be extracted into a standalone
@@ -181,9 +183,10 @@ with `AGG_STRATEGIES`. All factory functions return
 
 | Aspect | Before | After |
 |--------|--------|-------|
-| CalcUsage resolution | Backtracker [5-step resolution cascade](11-analysis-backtracker.md#the-5-step-resolution-cascade) | **Same** (DFS constraint) |
+| CalcUsage resolution | Backtracker 5-step cascade against flat `dict[str, str]` | Backtracker [type-directed dispatch](11-analysis-backtracker.md#type-directed-resolution-dispatch): CHAIN/REFERENCE paths with typed registries |
 | FORMULA resolution | Ad-hoc regex + attr map + mutation | Pre-computed [attribute resolution map](16-computed-attributes.md) (no registry lookup) |
-| Aggregation resolution | 3 term-type-specific functions + mutation | `resolve_input()` with `AGG_STRATEGIES` |
+| Aggregation resolution | 3 term-type-specific functions + mutation | `resolve_input()` with `AGG_STRATEGIES` using typed registries |
+| Registry | `dict[str, str]` with 12+ key formats | 3 typed registries: `dict[ScopedKey, CanonicalChannel]`, `dict[SysMLQN, CanonicalChannel]`, `dict[ScopedKey, CanonicalChannel]` |
 | Entry point creation | Side-effect mutation of shared dict | Returned as tuple second element |
 | Testability | Full module construction required | `resolve_input()` testable in isolation |
 
@@ -220,4 +223,5 @@ instead, but reaches equivalent answers for shared references.
 - **Architecture**: [24-dual-resolution-architecture](24-dual-resolution-architecture.md) (why two paths exist)
 - **Registry**: [10-output-registry](10-output-registry.md) (channel lookup), [15-naming-conventions](15-naming-conventions.md) (key formats)
 - **Data models**: [09-data-models](09-data-models.md) -- ComputationGraph, PipelineModule, InputSource, BindingResolution
+- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) -- typed identifiers and registries
 - **Deep dives**: [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [18-literal-value-propagation](18-literal-value-propagation.md)

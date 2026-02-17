@@ -33,7 +33,7 @@ This gives us two resolution paths. Not by accident, but by necessity.
 |----|-------------|-------------|
 | REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs stop) depends on the resolution result. | `_trace_dependencies` calls `_resolve_binding_via_registry` at line 364; branch on `resolution_type` at line 367 |
 | REQ-DRA-02 | FORMULA SHALL use pre-computed [attribute resolution map](16-computed-attributes.md). Aggregation SumTerm/SingletonTerm SHALL use [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`. LocalTerm SHALL use factory-specific cascade. | Factory call sites use appropriate resolution mechanism |
-| REQ-DRA-03 | Both paths SHALL implement [scoped resolution](03-resolution-overview.md#the-scope-problem) (REQ-RES-07): consumer scope prepended before any unscoped lookup. Unscoped Key_A fallback is prohibited ([REQ-OR-08](10-output-registry.md), [REQ-BT-08](11-analysis-backtracker.md)). | Backtracker: Step 0 (line 512), Step 1 raises on Key_A hit. resolve_input(): Strategy C first in chain, Strategy A flagged for same guard. |
+| REQ-DRA-03 | Both paths SHALL use typed registries ([27-typed-registry-refactor](27-typed-registry-refactor.md)): `scoped_lookup(ScopedKey)` for CHAIN bindings, `sysml_qn_lookup(SysMLQN)` for REFERENCE bindings, `alias_lookup(ScopedKey)` for cross-package. No untyped `dict.get()`. | Backtracker: type-directed dispatch (REQ-BT-08). resolve_input(): Strategy A uses `scoped_lookup()`, Strategy B uses `sysml_qn_lookup()`. |
 | REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.total_cost"` in scope `"plant.battery_pack"` SHALL resolve to the same channel regardless of path. | Integration test: same reference through both paths → identical `InputSource` |
 | REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produce `InputSource` objects. Both encode the same two-valued answer (module_output or entry_point). | `BindingResolution.resolution_type` maps to `InputSource.source_type` |
 
@@ -46,40 +46,45 @@ This gives us two resolution paths. Not by accident, but by necessity.
 **Input**: `BindingInfo` from [CalcUsageData](09-data-models.md#extraction-models).
 **Output**: `BindingResolution` stored in `binding_resolutions` dict.
 
-### Resolution cascade (6 stages)
+### Type-directed dispatch (REQ-BT-08)
 
-*Stages 0-3 are resolution steps; stage 4 is a guaranteed fallback.
-Stage 1b is a sub-step of stage 1 (same goal: direct registry hit, different key format).*
+Resolution dispatches on the binding's `source_path` format, selecting the
+appropriate typed registry. See [27-typed-registry-refactor](27-typed-registry-refactor.md) FR-4.
+
+**CHAIN bindings** (no `::` in source_path):
 
 ```
-Stage 0: Scoped registry lookup (REQ-RES-07)
-         consumer_scope + "." + source_path → Key_C
-         → channel or None
+Step 1: Scoped lookup (primary)
+        ScopedKey(consumer_scope + "." + source_path) → scoped registry
+        → CanonicalChannel or None
 
-Stage 1: Unscoped Key_A guard (REQ-BT-08)
-         registry.resolve(source_path)
-         → RAISES UnscopedResolutionError if match found (Key_A is diagnostic-only)
+Step 2: Alias lookup (cross-package)
+        ScopedKey(source_path) → alias registry
+        → CanonicalChannel or None
 
-Stage 1b: SysML QN normalization          REMOVAL_CANDIDATE — 0% success rate
-          "Package::Part::attr" → "part.attr"
-          → channel or None
+Step 3: Design attribute match → ENTRY_POINT
 
-Stage 2: REFERENCE secondary (leaf + parent scope)
-         Only for REFERENCE bindings
-         → channel or None
-
-Stage 3: Design attribute transitive
-         Match source_path to DesignAttributeData
-         → ENTRY_POINT
-
-Stage 4: Fallback entry point
-         → ENTRY_POINT with warning
+Step 4: Fallback → ENTRY_POINT with warning
 ```
 
-Stage 0 includes a **self-reference guard**: if the resolved channel belongs to
-the current usage, the resolution is discarded. Stage 1 now raises
-`UnscopedResolutionError` if the unscoped lookup matches ([REQ-BT-08](11-analysis-backtracker.md)),
-so the self-reference guard is no longer reached there.
+**REFERENCE bindings** (`::` in source_path):
+
+```
+Step 1: SysML QN lookup (primary)
+        SysMLQN(source_path) → SysML QN registry
+        → CanonicalChannel or None
+
+Step 2: Normalized scoped lookup (secondary)
+        Extract leaf + parent → ScopedKey → scoped registry
+        → CanonicalChannel or None
+
+Step 3: Design attribute match → ENTRY_POINT
+
+Step 4: Fallback → ENTRY_POINT with warning
+```
+
+Each step includes a **self-reference guard**: if the resolved channel belongs to
+the current usage, the resolution is discarded.
 
 **Result**: `BindingResolution(resolution_type, qualified_name, source_path, is_transitive)`.
 Stored in `BacktrackingResult.binding_resolutions` keyed by
@@ -102,15 +107,15 @@ not `resolve_input()`. Aggregation SumTerm/SingletonTerm inputs use:
 
 ```
 AGG_STRATEGIES:
-  C: ScopedRegistryLookup
-  D: ChainRedefinitionFollow
-  A: DirectRegistryLookup
-  B: SysmlQnNormalization       # REMOVAL_CANDIDATE — 0% success (Research §5.#5)
-  E: DesignAttributeLookup
+  A: ScopedRegistryLookup     — ScopedKey → scoped registry + alias registry
+  C: ChainRedefinitionFollow   — :>> chain → ScopedKey → scoped registry
+  B: SysMLQNLookup            — SysMLQN → SysML QN registry (for :: refs)
+  D: DesignAttributeLookup    — design attr match → entry point
 ```
 
-`ChainRedefinitionFollow` (D) is promoted because aggregation inputs almost
-always resolve through `:>>` chains. LocalTerm uses a factory-specific cascade
+`ChainRedefinitionFollow` (C) is promoted because aggregation inputs almost
+always resolve through `:>>` chains. All strategies use typed registry methods.
+LocalTerm uses a factory-specific cascade
 (see [05](05-module-factory.md#4c-localterm)).
 See [04-input-resolver](04-input-resolver.md) for strategy details.
 
@@ -122,20 +127,24 @@ Both paths solve the same problem with overlapping (but not identical) strategie
 
 | Strategy | Backtracker (CalcUsage) | Agg resolve_input() / FORMULA attr map |
 |----------|:-:|:-:|
-| Scoped lookup (Key_C) | Stage 0 | Strategy C |
-| Direct lookup (Key_A guard) | Stage 1 (RAISES on hit — [REQ-BT-08](11-analysis-backtracker.md)) | Strategy A (flagged for same guard — [REQ-OR-08](10-output-registry.md)) |
-| SysML QN normalization (removal candidate) | Stage 1b | Strategy B |
-| CHAIN redefinition follow | -- | Strategy D |
-| REFERENCE secondary | Stage 2 | Strategy C secondary form |
-| Design attr transitive | Stage 3 | Strategy E |
+| Scoped lookup (`scoped_lookup(ScopedKey)`) | CHAIN Step 1 | Strategy A (primary form) |
+| Alias lookup (`alias_lookup(ScopedKey)`) | CHAIN Step 2 | Strategy A (cross-package form) |
+| SysML QN lookup (`sysml_qn_lookup(SysMLQN)`) | REFERENCE Step 1 | Strategy B |
+| Normalized scoped lookup | REFERENCE Step 2 | Strategy B (fallback) |
+| CHAIN redefinition follow | -- | Strategy C |
+| Design attr transitive | Step 3 (both paths) | Strategy D |
 | LITERAL :>> fallback | -- | In factory (REQ-MF-06) |
-| Self-reference guard | After Stage 0/1 | After each strategy |
+| Self-reference guard | After each step | After each strategy |
 
 The overlap is intentional. Both paths must reach the same answer for the same
 reference (REQ-DRA-04). The difference is which strategies are relevant:
 - CHAIN redefinition follow is aggregation-specific (`:>>` chains through part hierarchy)
-- REFERENCE secondary is CalcUsage-specific (FeatureReferenceExpression bindings)
+- SysML QN lookup handles REFERENCE bindings (`::` source paths) in both paths
 - LITERAL fallback is aggregation-specific (`:>> attr = 42.0` defaults)
+
+Both paths use the same typed [OutputRegistry](10-output-registry.md) with typed
+lookup methods. No untyped `dict.get()` calls remain. See
+[27-typed-registry-refactor](27-typed-registry-refactor.md).
 
 ---
 
@@ -165,15 +174,19 @@ canonical `"Design__plant__battery_pack__cost_model__total_cost"`.
 | `InputSource` | `resolution/models.py` | FORMULA/Agg resolution result (resolve_input) |
 | `BindingInfo` | `extraction/data_models.py` | CalcUsage binding input |
 | `SumTerm` / `SingletonTerm` / `LocalTerm` | `extraction/data_models.py` | Aggregation term inputs |
-| `ResolutionContext` | `resolution/input_resolver.py` | Immutable context for resolve_input() |
-| `OutputRegistry` | `core/output_registry.py` | Shared lookup table (both paths) |
+| `ResolutionContext` | `resolution/input_resolver.py` | Immutable context for resolve_input() (holds typed OutputRegistry) |
+| `OutputRegistry` | `core/output_registry.py` | Typed registries: scoped, SysML QN, alias (both paths) |
+| `ScopedKey` | `core/identifier_types.py` | Typed key for scoped/alias registry lookups |
+| `SysMLQN` | `core/identifier_types.py` | Typed key for SysML QN registry lookups |
+| `CanonicalChannel` | `core/identifier_types.py` | Typed value for all registry lookups |
 
 ## Related Documents
 
 - **Architecture**: [03-resolution-overview](03-resolution-overview.md) -- consolidated design and why CalcUsage stays separate
-- **Backtracker**: [11-analysis-backtracker](11-analysis-backtracker.md) -- DFS algorithm and CalcUsage cascade
-- **Resolver**: [04-input-resolver](04-input-resolver.md) -- resolve_input() strategies for FORMULA/Agg
+- **Backtracker**: [11-analysis-backtracker](11-analysis-backtracker.md) -- DFS algorithm and CalcUsage type-directed dispatch
+- **Resolver**: [04-input-resolver](04-input-resolver.md) -- resolve_input() typed strategies for FORMULA/Agg
 - **Factories**: [05-module-factory](05-module-factory.md) -- how each path feeds module construction
-- **Registry**: [10-output-registry](10-output-registry.md) -- shared O(1) lookup
-- **Scope**: [15-naming-conventions](15-naming-conventions.md) -- Key_C format for scoped resolution
+- **Registry**: [10-output-registry](10-output-registry.md) -- typed O(1) lookup
+- **Scope**: [15-naming-conventions](15-naming-conventions.md) -- ScopedKey format for scoped resolution
+- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) -- typed identifiers and registries
 - **Data models**: [09-data-models](09-data-models.md) -- BindingResolution, InputSource, BacktrackingResult

@@ -244,17 +244,17 @@ No baseline impact expected. Comment additions are non-behavioral. No output cha
 **Commit convention**: one commit per component, message references component code
 
 - [x] All validation checks above are green
-- [ ] `git add` only the files listed in Build Plan + test file (no unrelated changes)
-- [ ] Commit message format:
+- [x] `git add` only the files listed in Build Plan + test file + COMPONENT_CHECKLIST.md (no unrelated changes)
+- [x] Commit message format:
   ```
   refactor(C07): AST Dispatch Invariant conformance tests
 
-  - Tests: ~28 new conformance tests in tests/conformance/test_ast_dispatch_invariant.py
+  - Tests: 26 new conformance tests in tests/conformance/test_ast_dispatch_invariant.py
   - Added invariant comments to usage_extractor.py and parameter_groups.py
   - Refs: REQ-AST-01 through REQ-AST-07
   - Design intent: 19-ast-dispatch-invariant.md
   ```
-- [ ] Committed successfully
+- [x] Committed successfully (b126d23)
 
 ---
 

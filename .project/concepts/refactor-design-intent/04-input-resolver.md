@@ -33,9 +33,11 @@ def resolve_input(
 ```
 
 **`ref`**: Raw symbolic reference ([binding](01-extraction.md#binding-types) `source_path`,
-SysML QN, dotted path, or bare name). **`ctx`**: Immutable context bag.
-**`strategies`**: Ordered strategy list; defaults to `STANDARD_STRATEGIES`,
-aggregation modules override with `AGG_STRATEGIES` (REQ-IR-05).
+SysML QN, or dotted path). The format of `ref` determines which typed registry
+path the strategies will query. **`ctx`**: Immutable context bag with typed
+[OutputRegistry](10-output-registry.md). **`strategies`**: Ordered strategy list;
+defaults to `STANDARD_STRATEGIES`, aggregation modules override with
+`AGG_STRATEGIES` (REQ-IR-05).
 
 Always returns an [InputSource](#inputsource-output-model) (REQ-IR-01). Never raises on
 unresolved refs -- the [fallback](#fallback) produces an entry point (REQ-IR-06).
@@ -47,13 +49,17 @@ Immutable frozen dataclass (REQ-IR-04). No strategy mutates it.
 ```python
 @dataclass(frozen=True)
 class ResolutionContext:
-    output_registry: OutputRegistry       # Phase 1-4 lookup table (10-output-registry)
+    output_registry: OutputRegistry       # Typed registries (10-output-registry, 27-typed-registry-refactor)
     redefinitions: list[RedefinitionData]  # :>> chain/literal redefs (01-extraction)
     design_attrs: dict[str, DesignAttributeData]  # QN -> design attr (bare-name matching)
     module_eqn: str                       # Current module EQN (self-reference guard)
     consumer_scope: str                   # Consumer's parent scope (dotted, design prefix stripped)
     instance_path: str                    # Aggregation scope (15-naming-conventions)
 ```
+
+The `output_registry` provides typed lookups: `scoped_lookup(ScopedKey)`,
+`sysml_qn_lookup(SysMLQN)`, and `alias_lookup(ScopedKey)`. Strategies select
+the appropriate lookup method based on the reference format.
 
 **`consumer_scope`** is derived from `module_eqn` for ALL module types (REQ-RES-08).
 Derivation: split `module_eqn` on `__`, drop `segments[0]` (design prefix) and
@@ -80,75 +86,68 @@ Example: `module_eqn = "SolarBatteryDesign__solar_array__capital_cost"` →
 Each strategy is a callable: `(ref, ctx) -> str | None`. Returns a canonical
 channel name on success, `None` to defer to the next strategy (REQ-IR-02).
 
-### A: DirectRegistryLookup
-
-`ctx.output_registry.resolve(ref)` -- exact match. The happy path when the
-binding `source_path` was registered verbatim as a [Key_B/C/D](15-naming-conventions.md#6-channel-name)
-or a Phase 2-4 alias in the [OutputRegistry](10-output-registry.md).
-
-> **Key_A ambiguity warning (cross-ref [REQ-OR-08](10-output-registry.md)):**
-> Strategy A can hit Key_A (`{instance_name}.{attr}`), which is ambiguous when
-> multiple scopes contain identically-named instances. In `AGG_STRATEGIES`,
-> Strategy C (scoped) runs first, so Strategy A only fires when scoped
-> resolution missed. If Strategy A resolves via a Key_A hit, the same silent
-> wrong-answer risk applies as in the backtracker's former Step 1. The
-> backtracker now raises `UnscopedResolutionError` for this case
-> ([REQ-BT-08](11-analysis-backtracker.md)). Strategy A in `resolve_input()`
-> should apply the same guard when implemented — flag for C12 implementation.
-
-### B: SysmlQnNormalization
-
-> **REMOVAL_CANDIDATE** — 0% success rate across 3 models (94 bindings).
-> No tested model produces a `::` reference at resolution time; all SysML QNs
-> are converted to EQN format at extraction. Retained for documentation
-> completeness; flagged for Phase 7.4 dead code removal. See Research §5.#5.
-
-If `ref` contains `::`, normalize to registry format: split on `::`,
-sanitize/lowercase the penultimate segment, join as dotted path, re-resolve.
-Bridges SysML `Package::Part::attr` to the registry's `part.attr` format.
-
-### C: ScopedRegistryLookup
+### A: ScopedRegistryLookup
 
 **Why this exists**: `ref` from a CHAIN binding is a scope-relative local
 reference (e.g., `"cost_model.total_cost"`). It is only meaningful within the
-consumer's parent scope. Without scoping, an unscoped registry lookup (Strategy A)
-hits [Key_A](15-naming-conventions.md#7-output-registry-key-formats) which is
-ambiguous when multiple scopes contain identically-named instances. See
+consumer's parent scope. Without scoping, a flat lookup is ambiguous when
+multiple scopes contain identically-named instances. See
 [The Scope Problem](03-resolution-overview.md#the-scope-problem).
 
 **Primary form** (REQ-RES-07): prepend `ctx.consumer_scope` to `ref`, producing
-a [Key_C](15-naming-conventions.md#7-output-registry-key-formats)-format path:
+a `ScopedKey`-format path for typed lookup:
 
 ```python
-scoped_key = f"{ctx.consumer_scope}.{ref}"   # e.g. "plant.subsys.battery_pack.cost_model.total_cost"
-channel = ctx.output_registry.resolve(scoped_key)
+scoped_key = ScopedKey(f"{ctx.consumer_scope}.{ref}")
+channel = ctx.output_registry.scoped_lookup(scoped_key)
 ```
 
-Key_C is unique by construction (derived from the SysML ownership chain via
-`OutputRegistry.derive_key_c()`). This is the **correct** resolution path for
-all CHAIN bindings.
+`ScopedKey` is unique by construction (derived from the SysML ownership chain via
+`ScopedKey.from_eqn()`). This is the **correct** resolution path for
+all CHAIN bindings. See [27-typed-registry-refactor](27-typed-registry-refactor.md).
 
 **Aggregation form**: when `ctx.instance_path` is set, also tries the
 aggregation-scoped key (strips design prefix from `instance_path`, prepends
-to `ref`). This handles aggregation term resolution within the owning part
-hierarchy.
+to `ref` as a `ScopedKey`). This handles aggregation term resolution within
+the owning part hierarchy.
+
+**Cross-package form**: if scoped lookup misses, tries the alias registry for
+EXPOSE_PURE cross-package references:
+
+```python
+channel = ctx.output_registry.alias_lookup(ScopedKey(ref))
+```
 
 **Secondary form**: extract leaf name from `ref` (after last `.` or `::`),
-combine with parent part name from `ctx.consumer_scope`, retry. Subsumes the
-current `_resolve_reference_via_registry` logic from the
-[backtracker](11-analysis-backtracker.md). Handles REFERENCE bindings where the
-ref is a fully-qualified SysML path but the relevant output is registered under
-the parent part's short name.
+combine with parent part name from `ctx.consumer_scope` as a `ScopedKey`, retry.
+Handles REFERENCE bindings where the ref is a fully-qualified SysML path but the
+relevant output is registered under the parent part's short name.
 
-### D: ChainRedefinitionFollow
+### B: SysMLQNLookup
+
+If `ref` contains `::`, query the SysML QN typed registry directly:
+
+```python
+channel = ctx.output_registry.sysml_qn_lookup(SysMLQN(ref))
+```
+
+This handles REFERENCE bindings where extraction produces a SysML qualified name
+(e.g., `"AttrExprProbeDesign::probe_design::area"`). The SysML QN registry
+contains Phase 1c FORMULA keys. See [27-typed-registry-refactor](27-typed-registry-refactor.md).
+
+If the SysML QN lookup misses, falls back to normalization: split on `::`,
+sanitize/lowercase the penultimate segment, construct a `ScopedKey`, and
+retry in the scoped registry.
+
+### C: ChainRedefinitionFollow
 
 Search `ctx.redefinitions` for a CHAIN (`:>>`) [redefinition](01-extraction.md#redefinitions-redefinitiondata)
-matching the attribute in `ref`. If found, recursively resolve the chain's
-target. Includes cycle detection via a visited set. This connects
-[aggregation](13-aggregation-scoping.md) inputs to CalcUsage outputs through
-part hierarchy redefinitions.
+matching the attribute in `ref`. If found, construct a `ScopedKey` from the
+chain's target and resolve through the scoped registry. Includes cycle detection
+via a visited set. This connects [aggregation](13-aggregation-scoping.md) inputs
+to CalcUsage outputs through part hierarchy redefinitions.
 
-### E: DesignAttributeLookup
+### D: DesignAttributeLookup
 
 Match `ref` against `ctx.design_attrs` by name (bare, dotted, or SysML QN).
 Returns the design attribute's QN, which becomes the [entry point](06-entry-point-classifier.md)
@@ -159,17 +158,16 @@ design attribute share one entry point.
 
 | ref | consumer_scope | Strategy | Output |
 |-----|---------------|----------|--------|
-| `"cost_model.total_cost"` (CHAIN binding) | `"plant.battery_pack"` | **C** | scoped key `"plant.battery_pack.cost_model.total_cost"` (Key_C) -> `module_output` |
-| `"solar_battery_plant.lcoe.lcoe_per_mwh"` (already qualified) | `"plant.battery_pack"` | A | direct Key_C match in registry (C tried first, C's scoped form doesn't match) |
-| `"SolarBattery::calc_energy::output"` | `"plant.battery_pack"` | B | normalized to `"solar_battery.calc_energy.output"`, found in registry *(never exercised in tested models — REMOVAL_CANDIDATE)* |
-| `"pv_module.capital_cost"` (`:>> calc_cost.total`) | `"plant.solar_array"` (agg) | D | follows CHAIN redef to upstream channel |
-| `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | E | `entry_point`, QN `"SolarArray__panel_efficiency"` |
+| `"cost_model.total_cost"` (CHAIN binding) | `"plant.battery_pack"` | **A** | `ScopedKey("plant.battery_pack.cost_model.total_cost")` → `scoped_lookup()` → `module_output` |
+| `"catf_radial_build.magnet_surface_area"` (cross-package CHAIN) | `"catf_tf_system"` | **A** (alias) | scoped miss → `alias_lookup(ScopedKey("catf_radial_build.magnet_surface_area"))` → EXPOSE_PURE alias → `module_output` |
+| `"AttrExprProbeDesign::probe_design::area"` (REFERENCE) | `"probe_design"` | **B** | `sysml_qn_lookup(SysMLQN("AttrExprProbeDesign::probe_design::area"))` → Phase 1c key → `module_output` |
+| `"pv_module.capital_cost"` (`:>> calc_cost.total`) | `"plant.solar_array"` (agg) | **C** | follows CHAIN redef → `ScopedKey` → `scoped_lookup()` → upstream channel |
+| `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | **D** | `entry_point`, QN `"SolarArray__panel_efficiency"` |
 | `"unknown_param"` | `"plant.battery_pack"` | fallback | `entry_point`, QN `"<module_eqn>__unknown_param"` |
 
 Row 1 is the critical case: a bare CHAIN `source_path` disambiguated by prepending
-`consumer_scope` to form a [Key_C](15-naming-conventions.md#7-output-registry-key-formats)
-lookup. Without this, `"cost_model.total_cost"` would hit Key_A (ambiguous).
-See [The Scope Problem](03-resolution-overview.md#the-scope-problem).
+`consumer_scope` to form a `ScopedKey` lookup. This is the typed equivalent of the
+former Key_C lookup. See [The Scope Problem](03-resolution-overview.md#the-scope-problem).
 
 ## Self-reference guard
 
@@ -226,19 +224,19 @@ the refactoring does not change its shape.
 
 ```python
 AGG_STRATEGIES = [
-    ScopedRegistryLookup, ChainRedefinitionFollow, DirectRegistryLookup,
-    SysmlQnNormalization,    # REMOVAL_CANDIDATE — 0% success (Research §5.#5)
-    DesignAttributeLookup,
+    ScopedRegistryLookup,       # A: ScopedKey → scoped registry + alias registry
+    ChainRedefinitionFollow,    # C: :>> chain → ScopedKey → scoped registry
+    SysMLQNLookup,              # B: SysMLQN → SysML QN registry (for :: refs)
+    DesignAttributeLookup,      # D: design attr match → entry point
 ]
 ```
 
-**Why C is first** ([REQ-RES-07](03-resolution-overview.md#the-scope-problem)):
-CHAIN `source_path` is a scope-relative reference. The scoped lookup (Key_C)
-is the only correct resolution for models where instance names are not globally
-unique. Strategy A (unscoped) is retained for references that are already
-globally unambiguous (fully-qualified paths, Phase 2-4 alias hits), but must
-guard against Key_A hits — see [REQ-OR-08](10-output-registry.md) and the
-warning on Strategy A above. See [The Scope Problem](03-resolution-overview.md#the-scope-problem).
+**Why A is first** ([REQ-RES-07](03-resolution-overview.md#the-scope-problem)):
+CHAIN `source_path` is a scope-relative reference. The scoped lookup using
+`ScopedKey` is the only correct resolution for models where instance names are
+not globally unique. With typed registries, there is no ambiguity risk — the
+scoped registry only contains `ScopedKey` entries, not unscoped Key_A entries.
+See [27-typed-registry-refactor](27-typed-registry-refactor.md).
 
 `AGG_STRATEGIES` promotes `ChainRedefinitionFollow` to position 2 (REQ-IR-05):
 aggregation inputs ([SumTerms](05-module-factory.md#4a-sumterm)) almost always
@@ -262,4 +260,5 @@ duplicated logic become context construction + a single call.
 - **Downstream**: [05-module-factory](05-module-factory.md), [06-entry-point-classifier](06-entry-point-classifier.md)
 - **Architecture**: [24-dual-resolution-architecture](24-dual-resolution-architecture.md) -- why two paths
 - **Registry**: [10-output-registry](10-output-registry.md), [15-naming-conventions](15-naming-conventions.md)
+- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) -- typed identifiers and registries
 - **Data models**: [09-data-models](09-data-models.md) -- InputSource, ResolutionContext

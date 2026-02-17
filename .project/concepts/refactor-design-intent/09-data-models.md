@@ -18,7 +18,7 @@ with wrong values, caught in Phase A validation).
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` and `module_output` wiring | Example section present with 2+ modules |
 | REQ-DM-06 | Models with dedicated docs SHALL link to those docs, not duplicate detail | Delegation links for aggregation terms, expression compiler, etc. |
 | REQ-DM-07 | The data flow diagram SHALL show all pipeline stages and their primary I/O models | Diagram covers extraction → analysis → core → resolution → generation |
-| REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | Field type annotations use SysMLQN/EQN/PQN/RegistryKey |
+| REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | Field type annotations use SysMLQN/EQN/PQN/CanonicalChannel/ScopedKey |
 
 ## Data Flow
 ```
@@ -64,18 +64,29 @@ See [15-naming-conventions](15-naming-conventions.md) for format definitions.
 ```python
 from typing import NewType
 
-SysMLQN = NewType('SysMLQN', str)        # "Package::Element" — extraction boundary only
-EQN = NewType('EQN', str)                # "Package__Element" — internal canonical form
-PQN = NewType('PQN', str)                # "EQN__param" — channel names, entry point QNs
-RegistryKey = NewType('RegistryKey', str) # dotted format — OutputRegistry keys, never "::"
+SysMLQN = NewType('SysMLQN', str)                # "Package::Element" — extraction boundary only
+EQN = NewType('EQN', str)                        # "Package__Element" — internal canonical form
+PQN = NewType('PQN', str)                        # "EQN__param" — channel names, entry point QNs
+CanonicalChannel = NewType('CanonicalChannel', str)  # PQN of output — registry values
+ScopedKey = NewType('ScopedKey', str)            # dotted hierarchy — scoped/alias registry keys
 ```
+
+`CanonicalChannel` wraps the PQN-format output channel name (e.g.,
+`SBD__sbp__lcoe__lcoe_per_mwh`). It is the value type for all three typed registries.
+Constructor: `CanonicalChannel.from_eqn(usage_eqn, attr_name)` — replaces `get_channel_name()`.
+
+`ScopedKey` wraps the dotted hierarchy key used for scoped and alias registry lookups
+(e.g., `solar_battery_plant.lcoe.lcoe_per_mwh`). Constructor: `ScopedKey.from_eqn(usage_eqn, attr_name)`
+— replaces `OutputRegistry.derive_key_c()`. Rejects strings containing `::`.
+
+See [27-typed-registry-refactor](27-typed-registry-refactor.md) for full type system specification.
 
 **Conversion boundary**: Raw SysML names (`SysMLQN`) are converted to `EQN` at extraction
 time. All downstream indexes, lookups, and registrations use typed names only.
 
 **Field type assignments** (fields that remain `str`: `BindingInfo.param_name` (simple name,
 no format constraint), `PipelineModule.name` (module name = lowered EQN, could be typed
-later), `InputSource.producer_channel` (PQN but nullable)):
+later), `InputSource.producer_channel` (CanonicalChannel but nullable)):
 
 | Model | Field | Type |
 |-------|-------|------|
@@ -86,11 +97,15 @@ later), `InputSource.producer_channel` (PQN but nullable)):
 | `RedefinitionData` | `owning_part_qn` | `EQN` |
 | `DesignAttributeData` | `qualified_name` | `EQN` |
 | `BindingResolution` | `qualified_name` | `PQN` |
-| `ModuleOutput` | `channel_name` | `PQN` |
+| `ModuleOutput` | `channel_name` | `CanonicalChannel` |
 | `EntryPoint` | `qualified_name` | `PQN` |
-| `OutputRegistry` | `_index` keys | `RegistryKey` |
-| `ChannelAlias` | `alias_name` | `RegistryKey` |
-| `ChannelAlias` | `canonical_name` | `PQN` |
+| `InputSource` | `producer_channel` | `CanonicalChannel \| None` |
+| `OutputRegistry` | scoped registry keys | `ScopedKey` |
+| `OutputRegistry` | SysML QN registry keys | `SysMLQN` |
+| `OutputRegistry` | alias registry keys | `ScopedKey` |
+| `OutputRegistry` | all registry values | `CanonicalChannel` |
+| `ChannelAlias` | `alias_name` | `ScopedKey` |
+| `ChannelAlias` | `canonical_name` | `CanonicalChannel` |
 
 ## Extraction Models
 
@@ -183,10 +198,18 @@ instance path. See [13](13-aggregation-scoping.md).
 `source: Literal["redefinition", "expose_pure", "design_override"]`.
 
 **OutputRegistry** (class, `core/output_registry.py`)
-Internal: `_index: dict[str, str]` (key → canonical), `_canonical: set[str]`.
-API: `register(key, canonical)`, `register_alias(alias, target)`, `resolve(key) → str | None`,
-`canonical_channels → frozenset[str]` (read-only view of all canonical channels).
-See [10-output-registry](10-output-registry.md) for the 4-phase protocol.
+Internal: 3 typed registries — `_scoped: dict[ScopedKey, CanonicalChannel]`,
+`_sysml_qn: dict[SysMLQN, CanonicalChannel]`, `_alias: dict[ScopedKey, CanonicalChannel]`.
+Membership set: `_canonical: set[CanonicalChannel]` (for phase-ordering enforcement).
+API: `register_scoped(ScopedKey, CanonicalChannel)`,
+`register_sysml_qn(SysMLQN, CanonicalChannel)`,
+`register_alias(ScopedKey, CanonicalChannel)`,
+`scoped_lookup(ScopedKey) → CanonicalChannel | None`,
+`sysml_qn_lookup(SysMLQN) → CanonicalChannel | None`,
+`alias_lookup(ScopedKey) → CanonicalChannel | None`,
+`canonical_channels → frozenset[CanonicalChannel]`.
+See [10-output-registry](10-output-registry.md) for the 4-phase protocol,
+[27-typed-registry-refactor](27-typed-registry-refactor.md) for type system.
 
 *Delegated: Identifier types (SysMLQualifiedName, ModuleType, PythonModulePath, ElementQualifiedName) → [15](15-naming-conventions.md), [20](20-module-registry-generation.md).*
 
@@ -286,3 +309,4 @@ HierarchyExtractionResult ── redefinitions/design_overrides: [RedefinitionDa
 - **Upstream**: [00](00-pipeline-overview.md), [01](01-extraction.md), [02](02-orchestration.md), [03](03-resolution-overview.md)
 - **Delegated**: [13](13-aggregation-scoping.md), [14](14-expression-compiler.md), [15](15-naming-conventions.md), [16](16-computed-attributes.md), [17](17-parameter-group-deriver.md), [23](23-smart-regen-preservation.md), [25](25-hierarchy-resolver.md)
 - **Consumers**: [10](10-output-registry.md), [11](11-analysis-backtracker.md), [07](07-graph-assembly.md), [08](08-generation.md)
+- **Type system**: [27](27-typed-registry-refactor.md)

@@ -126,32 +126,14 @@
 - [ ] Full test suite passes (record count: ___ tests, 0 failures)
 - [ ] Cross-check: re-read design intent doc, verify implementation matches
 - [ ] No unresolved TODOs or FIXMEs in new/modified code
+- [ ] COMPONENT_CHECKLIST and IMPLEMENTATION_PLAN have been updated. 
 
 ### Baseline Impact
 {Did this component change any output baselines? If yes, document what changed and why.}
 
 ---
 
-## 6. Commit
-
-**Branch**: `refactor/{component-name}`
-**Commit convention**: one commit per component, message references component code
-
-- [ ] All validation checks above are green
-- [ ] `git add` only the files listed in Build Plan + test file (no unrelated changes)
-- [ ] Commit message format:
-  ```
-  refactor({CODE}): {one-line summary}
-
-  - Tests: {N} new conformance tests in tests/conformance/test_{name}.py
-  - Refs: {REQ-XX-01 through REQ-XX-NN}
-  - Design intent: {doc number(s)}
-  ```
-- [ ] Committed successfully
-
----
-
-## 7. Learnings
+## 6. Learnings
 
 ### Findings
 {What did we learn during implementation that wasn't obvious from the design docs?}
@@ -169,6 +151,25 @@
 
 ### Deviations from Plan
 {Where did the actual implementation differ from the plan? Why?}
+
+---
+
+## 7. Commit
+
+**Branch**: `refactor/{component-name}`
+**Commit convention**: one commit per component, message references component code
+
+- [ ] All validation checks above are green
+- [ ] `git add` only the files listed in Build Plan + test file, plus IMPLEMENTATION_PLAN and COMPONENT_CHECKLIST (no unrelated changes)
+- [ ] Commit message format:
+  ```
+  refactor({CODE}): {one-line summary}
+
+  - Tests: {N} new conformance tests in tests/conformance/test_{name}.py
+  - Refs: {REQ-XX-01 through REQ-XX-NN}
+  - Design intent: {doc number(s)}
+  ```
+- [ ] Committed successfully
 
 ---
 

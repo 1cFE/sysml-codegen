@@ -225,7 +225,7 @@ No baseline changes expected. C05 is conformance-only; no production code modifi
   - Refs: REQ-CA-01 through REQ-CA-07
   - Design intent: 16-computed-attributes.md
   ```
-- [ ] Committed successfully
+- [x] Committed successfully (4d8755a)
 
 ---
 

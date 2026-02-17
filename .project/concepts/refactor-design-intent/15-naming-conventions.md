@@ -13,7 +13,7 @@ Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identi
 | REQ-NC-04 | Module type SHALL use `{namespace}.{ElementName}Module` format | `derive_module_type()` lowercases package, preserves element case, appends `Module` |
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `get_channel_name()` returns `f"{eqn}__{output_attr}"` which is a PQN |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→`_`, collapse `_` runs, strip edge `_`, reserved-word suffix | Unit test on each transform rule |
-| REQ-NC-07 | Registry keys SHALL use dotted format; no `::` keys are registered | `OutputRegistry.register()` never receives `::` keys |
+| REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see [27-typed-registry-refactor](27-typed-registry-refactor.md) |
 
 ## 1. SysML Qualified Name (SysML QN)
 
@@ -21,7 +21,9 @@ Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identi
 **Origin**: SysIDE adapter; stored in [`CalculationDefinitionData.qualified_name`](09-data-models.md)
 **Example**: `SolarBatteryLibrary::BatteryPackCostCalc`
 
-Used only at [extraction](01-extraction.md) boundaries. Immediately converted to internal formats downstream.
+Used at [extraction](01-extraction.md) boundaries and in the SysML QN typed registry
+([27-typed-registry-refactor](27-typed-registry-refactor.md)). Converted to internal
+formats for scoped lookups downstream.
 **Type wrapper**: `SysMLQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ## 2. Element Qualified Name (EQN)
@@ -87,50 +89,50 @@ Channels ARE PQNs. There is no separate "channel name" concept (REQ-NC-05).
 
 ## 7. Output Registry Key Formats
 
-The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps lookup keys to canonical
-channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol. All keys use
-dotted format; no SYSML_QN (`::`) keys are registered.
-**Type wrapper**: `RegistryKey` — all keys use dotted format ([09-data-models](09-data-models.md#name-type-wrappers))
+The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps typed lookup keys
+to canonical channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol
+using three typed registries ([27-typed-registry-refactor](27-typed-registry-refactor.md)):
+scoped (`ScopedKey` → `CanonicalChannel`), SysML QN (`SysMLQN` → `CanonicalChannel`),
+and alias (`ScopedKey` → `CanonicalChannel`).
+**Type wrappers**: `ScopedKey` for scoped/alias keys, `SysMLQN` for SysML QN keys,
+`CanonicalChannel` for all registry values ([09-data-models](09-data-models.md#name-type-wrappers))
 
 ### Phase 1: Canonical Channels
 
-**CalcUsage outputs** register three key formats:
+**CalcUsage outputs** register in the scoped registry:
 
-| Key | Format | Example |
-|-----|--------|---------|
-| Key_A | `{instance_name}.{output}` | `cost_model.total_cost` |
-| Key_B | (self-registered canonical) | `SBD__sbp__bs__bp__cost_model__total_cost` |
-| Key_C | dotted hierarchy (strip design prefix) | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
+| Key | Type | Format | Example |
+|-----|------|--------|---------|
+| Key_B | `CanonicalChannel` | canonical (self-registered) | `SBD__sbp__bs__bp__cost_model__total_cost` |
+| Key_C | `ScopedKey` | dotted hierarchy (strip design prefix) | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
 
-Key_C derivation (`OutputRegistry.derive_key_c()`): split EQN on `__`, drop
+Key_C derivation (`ScopedKey.from_eqn()`): split EQN on `__`, drop
 `segments[0]` (design PartDef prefix), join with `.`, append `.{output_attr}`.
 Key_C is critical: ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
 See [The Scope Problem](03-resolution-overview.md) for why Key_C is the primary resolution path.
 
-**Aggregation outputs** register:
+**Aggregation outputs** register in the scoped registry:
 
-| Key | Format | Example |
-|-----|--------|---------|
-| Key_D | `{part_usage}.{attr}` | `battery_system.capital_cost` |
-| Key_E | full dotted instance path | `SolarBatteryDesign.solar_battery_plant.battery_system.capital_cost` |
-| Key_E_stripped | Key_E minus design prefix | `solar_battery_plant.battery_system.capital_cost` |
+| Key | Type | Format | Example |
+|-----|------|--------|---------|
+| Key_E_stripped | `ScopedKey` | dotted instance path (design prefix stripped) | `solar_battery_plant.battery_system.capital_cost` |
 
-**FORMULA outputs** register:
+**FORMULA outputs** register in the SysML QN registry:
 
-| Key | Format | Example |
-|-----|--------|---------|
-| Key_F | `{owning_part_name}.{attr}` | `Solar_Array.dc_capacity` |
-| bare | `{attr}` alone | `dc_capacity` |
+| Key | Type | Format | Example |
+|-----|------|--------|---------|
+| SysML QN | `SysMLQN` | `{owning_part_qn}::{name}` | `SolarBatteryLibrary::Solar_Array::panel_cost` |
 
 ### Phase 2-4: Aliases
 
-| Phase | Source | Alias Format | Resolves Against |
-|-------|--------|-------------|-----------------|
-| 2 | `:>>` CHAIN [redefinitions](12-virtual-binding-rewrite.md) | `{instance_path}.{attr}` | Phase 1 (via Key_C) |
-| 3 | [EXPOSE_PURE](16-computed-attributes.md) attributes | `{owning_part_short}.{attr}` | Phase 1+2 |
-| 4 | Transitive design attrs | `{parent_part}.{attr}` | Phase 1-3 |
+| Phase | Source | Alias Type | Alias Format | Resolves Against |
+|-------|--------|-----------|-------------|-----------------|
+| 2 | `:>>` CHAIN [redefinitions](12-virtual-binding-rewrite.md) | `ScopedKey` | `{instance_path}.{attr}` | Phase 1 scoped (via Key_C) |
+| 3 | [EXPOSE_PURE](16-computed-attributes.md) attributes | `ScopedKey` | `{owning_part_short}.{attr}` | Phase 1+2 |
+| 4 | Transitive design attrs | `ScopedKey` | `{parent_part}.{attr}` | Phase 1-3 |
 
-Collision policy: refuse overwrite, log warning, keep first registration.
+Collision policy for alias registry: refuse overwrite, log warning, keep first registration.
+Scoped and SysML QN registries are unique by construction — no collision policy needed.
 
 ## 8. SysML `::` to `__` Conversion
 
@@ -177,8 +179,8 @@ part def SolarBatteryDesign {
 | **Module Type** | namespace.CalcDefModule | `solarbatterylibrary.BatteryPackCostCalcModule` |
 | **Channel (total_cost)** | PQN = EQN__output | `SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost` |
 | **Entry point (capacity_kwh)** | PQN = EQN__param | `SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh` |
-| **Registry Key_A** | instance.output | `cost_model.total_cost` |
-| **Registry Key_C** | dotted hierarchy (no design prefix) | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
+| **CanonicalChannel** | PQN of output | `SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost` |
+| **ScopedKey (Key_C)** | dotted hierarchy (no design prefix) | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
 
 ### In generated YAML
 
@@ -208,17 +210,15 @@ Key_C to the canonical channel
 | PQN | `__` | Mixed | `PQN` | `{EQN}__total_cost` |
 | Module Name | `__` | lowercase | `str` | `solarbatterydesign__solar_battery_plant__cost_model` |
 | Module Type | `.` + PascalCase | namespace lower, name original | `str` | `solarbatterylibrary.BatteryPackCostCalcModule` |
-| Channel | `__` | Mixed (is a PQN) | `PQN` | `SBD__sbp__bs__bp__cost_model__total_cost` |
-| Key_A | `.` | original | `RegistryKey` | `cost_model.total_cost` |
-| Key_C | `.` | original | `RegistryKey` | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
-| Key_D | `.` | original | `RegistryKey` | `battery_system.capital_cost` |
+| CanonicalChannel | `__` | Mixed (is a PQN) | `CanonicalChannel` | `SBD__sbp__bs__bp__cost_model__total_cost` |
+| ScopedKey (Key_C) | `.` | original | `ScopedKey` | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
 
 ## Related Documents
 
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) — where naming applies across all 7 steps
 - **Extraction (origin)**: [01-extraction](01-extraction.md) — SysML QN is produced here
 - **Resolution (consumer)**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem relies on Key_C
-- **Input resolver**: [04-input-resolver](04-input-resolver.md) — strategies use Key_A/C/D/F for lookup
+- **Input resolver**: [04-input-resolver](04-input-resolver.md) — strategies use typed registry lookups (ScopedKey, SysMLQN)
 - **Module factory**: [05-module-factory](05-module-factory.md) — EQN → module name/type derivation
 - **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — PQN used for entry point QN
 - **Registry**: [10-output-registry](10-output-registry.md) — Key format details, 4-phase protocol
@@ -228,3 +228,4 @@ Key_C to the canonical channel
 - **Registry generation**: [20-module-registry-generation](20-module-registry-generation.md) — import paths from module type
 - **Pipeline YAML**: [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) — channel format in YAML
 - **Data models**: [09-data-models](09-data-models.md) — field definitions for all named entities
+- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) — typed identifiers and registries
