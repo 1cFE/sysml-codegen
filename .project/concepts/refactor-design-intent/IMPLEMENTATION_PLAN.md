@@ -647,12 +647,12 @@ architecture from STRATEGY.md.
 | 1 | Foundation + Extraction | Data models, naming, extraction, expressions locked | 311 (actual) |
 | 2 | Infrastructure | Registry, VBR, agg scoping proven | 117 (actual) |
 | 3 | Analysis | Backtracker, resolver, groups, dual consistency | 136 (actual) |
-| 4 | Factories + Graph | All module types + graph assembly | 149 (C14: 48, C15: 34, C16: 32, C17: 35, C18: 34) |
+| 4 | Factories + Graph | All module types + graph assembly | 183 (actual: C14: 48, C15: 34, C16: 32, C17: 35, C18: 34) |
 | 5 | Orchestrator | E2E pipeline matches baselines | ~20 |
 | 6 | Generation | All generators validated against graph | ~40 |
 | 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26), factory purity (7.7) | ~10 |
 
-**Total**: 800+ new conformance tests on top of existing 660 (746 actual through C16; C17-C25 pending).
+**Total**: 800+ new conformance tests on top of existing 660 (865 actual through C18; C19-C25 pending).
 
 ---
 
@@ -1085,8 +1085,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 | Doc | Amendment needed | Triggered by | Applied? |
 |-----|-----------------|--------------|----------|
-| 01-extraction.md | Note EXPRESSION binding type has zero coverage in fixture models | C03 conformance (2026-02-17) | No |
-| COMPONENT_CHECKLIST.md | C03 AC8: clarify "all binding types" — solar_battery has 4 of 5 (EXPRESSION absent) | C03 conformance (2026-02-17) | No |
+| 01-extraction.md | Note EXPRESSION binding type has zero coverage in fixture models | C03 conformance (2026-02-17) | Yes — §Binding Types EXPRESSION coverage note |
+| COMPONENT_CHECKLIST.md | C03 AC8: clarify "all binding types" — solar_battery has 4 of 5 (EXPRESSION absent) | C03 conformance (2026-02-17) | Yes — C03 AC lines 76, 82 |
 | 10-output-registry.md | Added REQ-OR-08: Key_A diagnostic-only, resolution SHALL raise instead of silent fallback | Design review discussion (2026-02-17) | Yes |
 | 11-analysis-backtracker.md | Added REQ-BT-08: Step 1 raises `UnscopedResolutionError`; rewrote Step 1 section and concrete walkthrough | Design review discussion (2026-02-17) | Yes |
 | 03-resolution-overview.md | Strengthened REQ-RES-07: unscoped Key_A fallback explicitly prohibited | Design review discussion (2026-02-17) | Yes |
@@ -1094,10 +1094,10 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 24-dual-resolution-architecture.md | Updated REQ-DRA-03 and Stage 1 cascade description to reflect Key_A error behavior | Consistency review (2026-02-17) | Yes |
 | IMPLEMENTATION_PLAN.md Step 1.4 | Clarified "compile every output from snapshot calc defs" → "verify compiler with real calc def metadata from snapshots" | C04 conformance — AST serialization boundary (2026-02-17) | Yes |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Reassigned issue #1 (".() syntax") from C04 to C06/C07 | C04 conformance — reconstruct_expression() not used by expression compiler (2026-02-17) | Yes |
-| 16-computed-attributes.md | Note UNRESOLVABLE has zero coverage in fixture models | C05 conformance (2026-02-17) | No |
-| COMPONENT_CHECKLIST.md | Consider adding REQ-CA-08 (FORMULA-to-FORMULA limitation) to AC list | C05 conformance — present in design doc but absent from checklist (2026-02-17) | No |
+| 16-computed-attributes.md | Note UNRESOLVABLE has zero coverage in fixture models | C05 conformance (2026-02-17) | Yes — §UNRESOLVABLE coverage note + Known Issues |
+| COMPONENT_CHECKLIST.md | Consider adding REQ-CA-08 (FORMULA-to-FORMULA limitation) to AC list | C05 conformance — present in design doc but absent from checklist (2026-02-17) | Yes — C05 AC line 117 |
 | COMPONENT_CHECKLIST.md | C06: changed doc ref from `01-extraction.md` to `25-hierarchy-resolver.md`; added REQ-HR-01 through REQ-HR-07; clarified "Template detection" AC to "part_usage_names maps assembly PartDefs to child names" | C06 conformance (2026-02-17) | Yes |
-| 25-hierarchy-resolver.md | Note REQ-HR-07 alias detection has zero positive-case fixture coverage | C06 conformance (2026-02-17) | No |
+| 25-hierarchy-resolver.md | Note REQ-HR-07 alias detection has zero positive-case fixture coverage | C06 conformance (2026-02-17) | Yes — superseded by C5 probe (line 1122); §Alias Detection coverage note |
 | 27-typed-registry-refactor.md | NEW: Type system, typed registries, eliminated keys, dispatch tables | Typed Registry Refactor spec (2026-02-17) | Yes (TRR-1) |
 | 09-data-models.md | Add CanonicalChannel, ScopedKey types; typed registries replace dict[str,str] | TRR spec (2026-02-17) | Yes (TRR-2) |
 | 15-naming-conventions.md | Correct REQ-NC-07; remove dead keys from tables; add typed key rows | TRR spike findings (2026-02-17) | Yes (TRR-3) |
@@ -1106,8 +1106,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 04-input-resolver.md | Strategies use typed registries; Key_A warning removed | TRR spec (2026-02-17) | Yes (TRR-6) |
 | 24-dual-resolution-architecture.md | Strategy tables rewritten for typed registries | TRR spec (2026-02-17) | Yes (TRR-7) |
 | 03-resolution-overview.md | Scope Problem updated; Key_A refs removed; typed registries | TRR spec (2026-02-17) | Yes (TRR-8) |
-| 19-ast-dispatch-invariant.md | Correct "8 files" → "8 multi-type dispatch functions across 5 files"; note `_extract_single_binding` not `extract_binding_info` | C07 conformance (2026-02-17) | No |
-| 19-ast-dispatch-invariant.md | Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types) | C07 conformance (2026-02-17) | No |
+| 19-ast-dispatch-invariant.md | Correct "8 files" → "8 multi-type dispatch functions across 5 files"; note `_extract_single_binding` not `extract_binding_info` | C07 conformance (2026-02-17) | Yes — §Dispatch Site Audit heading + Other Sites table |
+| 19-ast-dispatch-invariant.md | Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types) | C07 conformance (2026-02-17) | Yes — §Dispatch Site Audit note block |
 | IMPLEMENTATION_PLAN.md Step 2.3 | Change "REQ-AS-01 through REQ-AS-07" to "REQ-AS-01 through REQ-AS-08" in acceptance criteria | C10 conformance (2026-02-17) | Yes |
 | 04-input-resolver.md | Add `CanonicalChannel` return type to strategy signatures and code examples; remove stale Key_A reference | Phase 2 audit — TRR validation criterion 5 (2026-02-17) | Yes |
 | 27-typed-registry-refactor.md | Add `_compat` bridge dict transitional architecture section | C08 conformance — dead keys load-bearing through backtracker (2026-02-17) | Yes |
@@ -1119,9 +1119,9 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 09-data-models.md | Add footnote to ComputedAttributeClassification enum noting inherited attr misclassification and UNRESOLVABLE dead code status | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | 01-extraction.md | Add note to Part Definitions section about supertype chain data needed for C05 classifier | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | COMPONENT_CHECKLIST.md | C05: update UNRESOLVABLE AC, add inherited attr AC + sibling_attr_names AC; C03: add supertype chain AC | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
-| 25-hierarchy-resolver.md | Update REQ-HR-07 note: positive-case coverage now exists in alias_agg_probe. Note `endswith()` false-positive edge case for dotted source_paths | C5 probe (Phase 2 audit) (2026-02-17) | No |
-| COMPONENT_CHECKLIST.md | C06: Update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case" | C5 probe (Phase 2 audit) (2026-02-17) | No |
-| 11-analysis-backtracker.md | Note Step 1b normalization limitation: only extracts last 2 segments of `::` QN, losing intermediate hierarchy for 5+ segment paths. Fix in C11b typed dispatch. | C6 probe (Phase 2 audit) (2026-02-17) | No |
+| 25-hierarchy-resolver.md | Update REQ-HR-07 note: positive-case coverage now exists in alias_agg_probe. Note `endswith()` false-positive edge case for dotted source_paths | C5 probe (Phase 2 audit) (2026-02-17) | Yes — §Alias Detection coverage note with endswith edge case |
+| COMPONENT_CHECKLIST.md | C06: Update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case" | C5 probe (Phase 2 audit) (2026-02-17) | Yes — C06 AC line 132 |
+| 11-analysis-backtracker.md | Note Step 1b normalization limitation: only extracts last 2 segments of `::` QN, losing intermediate hierarchy for 5+ segment paths. Fix in C11b typed dispatch. | C6 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — REFERENCE Step 2 limitation note added |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Update issue #7 from "Out of scope" to "Partially addressed (C6 probe)" with Step 1b normalization analysis | C6 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | 04-input-resolver.md | Remove STANDARD_STRATEGIES default from resolve_input() signature; always require explicit strategies | C12 spike: no non-aggregation caller (2026-02-17) | Yes (2026-02-17) — signature updated, description revised |
 | 04-input-resolver.md | Correct REQ-IR-05 "DirectRegistryLookup" → "SysMLQNLookup" | C12 plan Issue #2 (2026-02-17) | Yes (2026-02-17) — also fixed position number (2→1) |
@@ -1129,8 +1129,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 24-dual-resolution-architecture.md | Note Strategy B asymmetry: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by SysMLQNLookup | X02 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — Known Asymmetry subsection added to Strategy Overlap |
 | 18-literal-value-propagation.md | Note LITERAL redef fallback naturally exercised by SingletonTerms in solar_battery, not SumTerms. SumTerm fallback path valid but not naturally tested | C16 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — §Where It's Called conformance note added |
 | 05-module-factory.md | Note Strategy 1 (type-aware) essential when usage name differs from PartDef name (permitting → Permitting_Interconnect) | C16 conformance finding #2 (2026-02-17) | Yes (2026-02-17) — §4 Aggregation Modules conformance note added |
-| 06-entry-point-classifier.md | Note solar_battery has zero DESIGN_ATTRIBUTE EPs from Path 1 classifier. catf_mfe exercises all 3 types. | C17 conformance finding #1 (2026-02-17) | No |
-| 06-entry-point-classifier.md | Clarify REQ-EPC-04: param_group may be None from classifier; orphan handling (REQ-EPC-05) ensures graph-level invariant | C17 conformance finding #3 (2026-02-17) | No |
+| 06-entry-point-classifier.md | Note solar_battery has zero DESIGN_ATTRIBUTE EPs from Path 1 classifier. catf_mfe exercises all 3 types. | C17 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — Path 1 coverage note added |
+| 06-entry-point-classifier.md | Clarify REQ-EPC-04: param_group may be None from classifier; orphan handling (REQ-EPC-05) ensures graph-level invariant | C17 conformance finding #3 (2026-02-17) | Yes (2026-02-17) — REQ-EPC-04 description expanded |
 
 ---
 

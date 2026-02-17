@@ -8,7 +8,7 @@
 
 ### REFACTOR: Incremental Pipeline Refactor
 
-**Status**: In Progress (Phases 0–3 complete)
+**Status**: In Progress (Phases 0–4 complete)
 **Plan**: `.project/concepts/refactor-design-intent/IMPLEMENTATION_PLAN.md`
 **Checklist**: `.project/concepts/refactor-design-intent/COMPONENT_CHECKLIST.md`
 **Branch**: `cost-pattern-refactor`
@@ -21,10 +21,9 @@
 - [x] Phase TRR: Typed Registry Refactor design doc updates (8 docs updated)
 - [x] Phase 2: Core Infrastructure Spikes (C08-C10, 117 conformance tests)
 - [x] Phase 3: Analysis Components (C11a/b, C12, C13, X02, 136 conformance tests)
+- [x] Phase 4: Module Factory + Graph Assembly (C14-C18, 183 conformance tests, Checkpoint 4 passed)
 
-**Current Phase**: Phase 4 — Module Factory + Graph Assembly (C14-C18)
-
-**Phase 4 Status**: COMPLETE — all 5 components done (C14-C18), Checkpoint 4 passed.
+**Current Phase**: Phase 5 — Orchestrator Integration (C19)
 
 **Test Suite**: 1532 tests passing (865 conformance + 667 existing), 5 xfailed
 
@@ -40,6 +39,14 @@
 ---
 
 ## Recently Completed
+
+### 2026-02-17: Phase 4 — Module Factory + Graph Assembly
+- C14 CalcUsage Factory (48 tests), C15 FORMULA Factory (34 tests), C16 Aggregation Factory (32 tests)
+- C17 Entry Point Classification (35 tests), C18 Graph Assembly (34 tests)
+- Checkpoint 4 baseline comparison: solar_battery, chain_spike, attr_expr_probe match Phase 0 baselines
+- All 3 module types verified (CalcUsage + FORMULA + Aggregation)
+- Baseline normalization documented: CalcUsage compilability (snapshot serialization boundary), parameter ordering (dict iteration order)
+- All design doc amendments applied (06-entry-point-classifier.md, 11-analysis-backtracker.md)
 
 ### 2026-02-17: Phase 3 — Analysis Components
 - C11a Backtracker Conformance (43 tests), C11b Typed Dispatch Migration (17 tests)
@@ -71,10 +78,9 @@
 
 ## Up Next
 
-1. Phase 4: C14 CalcUsage Module Factory — build modules from BacktrackingResult
-2. Phase 4: C15 FORMULA Module Factory — build FORMULA modules from ComputedAttributeData
-3. Phase 4: C16 Aggregation Module Factory — wire resolve_input() into graph_builder
-4. Phase 4: C17 Entry Point Classification, C18 Graph Assembly
-5. Apply Tier 1 design doc amendments (6 items — see PHASE3_AUDIT_ACTIONS.md §B)
+1. Phase 5: C19 Orchestrator Step Ordering — wire all proven components into the orchestrator, verify end-to-end pipeline
+2. Phase 5: End-to-End Pipeline Validation — ComputationGraph matches baselines on all fixture models
+3. Phase 6: Generation Layer Validation (C20-C25, X01)
+4. Phase 7: Structural Refactoring & Dead Code Removal
 
 ---

@@ -18,7 +18,7 @@ computes it, so the user supplies it via a JSON input file.
 | REQ-EPC-01 | Every entry point SHALL be classified as exactly one [EntryPointType](09-data-models.md#resolution-models): {`DESIGN_ATTRIBUTE`, `LIBRARY_DEFAULT`, `USAGE_LITERAL`}. | `all(ep.entry_type in EntryPointType for ep in entry_points.values())` |
 | REQ-EPC-02 | Classification SHALL follow strict precedence: `DESIGN_ATTRIBUTE` > `LIBRARY_DEFAULT` > `USAGE_LITERAL`. | Decision tree in `_classify_entry_points()`: design_attr_by_qname checked first, then unbound_lookup, then fallback |
 | REQ-EPC-03 | `default_value` SHALL be converted to `float` at classification time; if conversion fails, `default_value` SHALL be `None`. | `float()` with try/except in all 3 branches (lines 324, 340, 351) |
-| REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via [ParameterGroupDeriver](17-parameter-group-deriver.md). | Line 356: `param_group = group_deriver.classify(qname)` |
+| REQ-EPC-04 | Every classified entry point SHALL be assigned a `param_group` via [ParameterGroupDeriver](17-parameter-group-deriver.md). `classify()` may return `None` for deeply-nested QNs that don't match any group pattern; the graph-level orphan handling (REQ-EPC-05) ensures every EP belongs to a group after full assembly. | Line 356: `param_group = group_deriver.classify(qname)` |
 | REQ-EPC-05 | Every entry point SHALL belong to exactly one [ParameterGroup](09-data-models.md#resolution-models). Orphans SHALL land in a `"system_design"` fallback group. | Step 6.8: orphan detection + `ParameterGroup(name="system_design", ...)` |
 | REQ-EPC-06 | After [FORMULA](16-computed-attributes.md) and [aggregation](13-aggregation-scoping.md) module construction, parameter groups SHALL be rebuilt from the complete entry point set. | Step 6.6: `group_deriver.derive_groups()` re-invoked on full `entry_points` dict |
 | REQ-EPC-07 | `_classify_entry_points()` SHALL be a pure function: input data in, `dict[str, EntryPoint]` out, no side effects. | Function signature returns `dict[str, EntryPoint]`; no mutation of arguments |
@@ -204,6 +204,15 @@ backtracker.entry_points  →  _classify_entry_points()  →  {qn: EntryPoint(..
 
 This path handles CalcUsage entry points with correct `entry_type` assignment:
 DESIGN_ATTRIBUTE, LIBRARY_DEFAULT, or USAGE_LITERAL.
+
+> **Coverage note (C17 conformance, 2026-02-17)**: solar_battery has **zero
+> DESIGN_ATTRIBUTE EPs from Path 1** classifier. Design attribute QNs use
+> library-qualified names (e.g., `SolarBatteryLibrary__PVModuleCostCalc__cost_per_watt`)
+> while EP QNs use design-qualified names (e.g., `SolarBatteryDesign__solar_battery_plant__...`).
+> The QNs never match in `design_attr_by_qname`, so all solar_battery EPs are
+> classified as LIBRARY_DEFAULT or USAGE_LITERAL. DESIGN_ATTRIBUTE EPs come
+> exclusively from factory construction (Path 2). catf_mfe exercises all 3 types
+> from the classifier.
 
 ### Path 2: Factory fallback → hardcoded DESIGN_ATTRIBUTE (Steps 6.5, 6.7)
 

@@ -157,6 +157,17 @@ scoped_key = ScopedKey(f"{sanitized_part}.{parts[-1]}")
 channel = self._output_registry.scoped_lookup(scoped_key)
 ```
 
+> **Limitation (C6 probe, 2026-02-17)**: Step 2 normalization only extracts
+> the last 2 segments (`parts[-2]` and `parts[-1]`) of the `::` QN, discarding
+> all intermediate hierarchy segments. For a 6-segment path like
+> `A::B::C::D::E::F`, this produces `ScopedKey("e.F")` — but the OutputRegistry
+> ScopedKey includes the full instance path (e.g., `b.c.d.e.F`), so the
+> 2-segment lookup will not match. This is acceptable for current models:
+> idiomatic SysML v2 cross-scope references use `import` + `.` chain (CHAIN
+> binding), not deep `::` paths (REFERENCE). Deep REFERENCE bindings are
+> non-idiomatic and may only arise from programmatic model generation.
+> See C6 deep cross-scope probe findings.
+
 ### Self-Reference Guard
 
 After each lookup step returns a channel, the resolver checks whether the channel
