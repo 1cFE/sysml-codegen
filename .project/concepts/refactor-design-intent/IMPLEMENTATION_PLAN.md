@@ -62,7 +62,7 @@ and real SysML fixture output.
     - Construct each model from snapshot extraction data
   - **Acceptance**: REQ-DM-01 through REQ-DM-07 all green
 
-- [ ] **1.2 — Naming Convention Conformance (C02)**
+- [x] **1.2 — Naming Convention Conformance (C02)** *(2026-02-17, 46 tests)*
   - **Refs**: [15-naming-conventions.md](15-naming-conventions.md)
   - Write `tests/conformance/test_naming_conventions.py`:
     - `sanitize_name()` with edge cases: quotes, spaces, reserved words, Unicode
@@ -503,3 +503,4 @@ architecture from STRATEGY.md.
 |-----------|----------|-----------------|-------|------|
 | Baseline (pre-refactor) | 660 | 0 | 660 | 2026-02-17 |
 | C01 Data Models | 667 | 91 | 758 | 2026-02-17 |
+| C02 Naming Conventions | 758 | 46 | 804 | 2026-02-17 |

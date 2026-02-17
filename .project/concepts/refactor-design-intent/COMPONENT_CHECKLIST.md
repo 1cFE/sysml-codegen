@@ -48,13 +48,13 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - `derive_module_type()` — namespace.ElementNameModule
   - `get_channel_name()` — PQN format
   - Key_C derivation — split EQN on __, drop segment[0], join with `.`
-- **AC**:
-  - [ ] `sanitize_name()` applies all 6 transforms in documented order
-  - [ ] Reserved word handling for: class, def, import, from, return, yield
-  - [ ] EQN/PQN/module_name/module_type/channel_name all derive deterministically from SysML QN
-  - [ ] Key_C derivation strips design prefix correctly
-  - [ ] No `::` keys in any registry key format
-  - [ ] Test with names from every fixture model (sample, solar_battery, catf_mfe)
+- **AC**: *(all verified 2026-02-17 -- 46 tests in `tests/conformance/test_naming_conventions.py`)*
+  - [x] `sanitize_name()` applies all 6 transforms in documented order
+  - [x] Reserved word handling for: class, def, import, from, return, yield
+  - [x] EQN/PQN/module_name/module_type/channel_name all derive deterministically from SysML QN
+  - [x] Key_C derivation strips design prefix correctly
+  - [x] No `::` keys in any registry key format
+  - [x] Test with names from every fixture model (sample, solar_battery, catf_mfe)
 
 ---
 
