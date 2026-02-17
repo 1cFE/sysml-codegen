@@ -83,8 +83,8 @@ Example: `module_eqn = "SolarBatteryDesign__solar_array__capital_cost"` →
 
 ## The five strategies
 
-Each strategy is a callable: `(ref, ctx) -> str | None`. Returns a canonical
-channel name on success, `None` to defer to the next strategy (REQ-IR-02).
+Each strategy is a callable: `(ref, ctx) -> CanonicalChannel | None`. Returns a
+canonical channel on success, `None` to defer to the next strategy (REQ-IR-02).
 
 ### A: ScopedRegistryLookup
 
@@ -99,12 +99,13 @@ a `ScopedKey`-format path for typed lookup:
 
 ```python
 scoped_key = ScopedKey(f"{ctx.consumer_scope}.{ref}")
-channel = ctx.output_registry.scoped_lookup(scoped_key)
+channel: CanonicalChannel | None = ctx.output_registry.scoped_lookup(scoped_key)
 ```
 
 `ScopedKey` is unique by construction (derived from the SysML ownership chain via
-`ScopedKey.from_eqn()`). This is the **correct** resolution path for
-all CHAIN bindings. See [27-typed-registry-refactor](27-typed-registry-refactor.md).
+`ScopedKey.from_eqn()`). The return type is `CanonicalChannel | None`. This is the
+**correct** resolution path for all CHAIN bindings. See
+[27-typed-registry-refactor](27-typed-registry-refactor.md).
 
 **Aggregation form**: when `ctx.instance_path` is set, also tries the
 aggregation-scoped key (strips design prefix from `instance_path`, prepends
@@ -115,7 +116,7 @@ the owning part hierarchy.
 EXPOSE_PURE cross-package references:
 
 ```python
-channel = ctx.output_registry.alias_lookup(ScopedKey(ref))
+channel: CanonicalChannel | None = ctx.output_registry.alias_lookup(ScopedKey(ref))
 ```
 
 **Secondary form**: extract leaf name from `ref` (after last `.` or `::`),
@@ -128,12 +129,13 @@ relevant output is registered under the parent part's short name.
 If `ref` contains `::`, query the SysML QN typed registry directly:
 
 ```python
-channel = ctx.output_registry.sysml_qn_lookup(SysMLQN(ref))
+channel: CanonicalChannel | None = ctx.output_registry.sysml_qn_lookup(SysMLQN(ref))
 ```
 
 This handles REFERENCE bindings where extraction produces a SysML qualified name
-(e.g., `"AttrExprProbeDesign::probe_design::area"`). The SysML QN registry
-contains Phase 1c FORMULA keys. See [27-typed-registry-refactor](27-typed-registry-refactor.md).
+(e.g., `"AttrExprProbeDesign::probe_design::area"`). The return type is
+`CanonicalChannel | None`. The SysML QN registry contains Phase 1c FORMULA keys.
+See [27-typed-registry-refactor](27-typed-registry-refactor.md).
 
 If the SysML QN lookup misses, falls back to normalization: split on `::`,
 sanitize/lowercase the penultimate segment, construct a `ScopedKey`, and
@@ -235,8 +237,8 @@ AGG_STRATEGIES = [
 CHAIN `source_path` is a scope-relative reference. The scoped lookup using
 `ScopedKey` is the only correct resolution for models where instance names are
 not globally unique. With typed registries, there is no ambiguity risk — the
-scoped registry only contains `ScopedKey` entries, not unscoped Key_A entries.
-See [27-typed-registry-refactor](27-typed-registry-refactor.md).
+scoped registry contains only `ScopedKey` entries (scope-qualified by
+construction). See [27-typed-registry-refactor](27-typed-registry-refactor.md).
 
 `AGG_STRATEGIES` promotes `ChainRedefinitionFollow` to position 2 (REQ-IR-05):
 aggregation inputs ([SumTerms](05-module-factory.md#4a-sumterm)) almost always

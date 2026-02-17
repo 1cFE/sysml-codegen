@@ -838,6 +838,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 19-ast-dispatch-invariant.md | Correct "8 files" → "8 multi-type dispatch functions across 5 files"; note `_extract_single_binding` not `extract_binding_info` | C07 conformance (2026-02-17) | No |
 | 19-ast-dispatch-invariant.md | Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types) | C07 conformance (2026-02-17) | No |
 | IMPLEMENTATION_PLAN.md Step 2.3 | Change "REQ-AS-01 through REQ-AS-07" to "REQ-AS-01 through REQ-AS-08" in acceptance criteria | C10 conformance (2026-02-17) | Yes |
+| 04-input-resolver.md | Add `CanonicalChannel` return type to strategy signatures and code examples; remove stale Key_A reference | Phase 2 audit — TRR validation criterion 5 (2026-02-17) | Yes |
+| 27-typed-registry-refactor.md | Add `_compat` bridge dict transitional architecture section | C08 conformance — dead keys load-bearing through backtracker (2026-02-17) | Yes |
 
 ---
 

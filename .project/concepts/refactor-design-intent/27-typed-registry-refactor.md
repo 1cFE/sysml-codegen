@@ -100,6 +100,25 @@ Key_B (canonical self-registration) becomes the `_canonical: set[CanonicalChanne
 membership set. It is not a lookup key — it exists only for phase-ordering enforcement
 (`register_alias()` checks target is in `_canonical`).
 
+### Transitional `_compat` Bridge (NFR-3 staged adoption)
+
+During incremental adoption (C08 → C11), the OutputRegistry maintains a
+`_compat: dict[str, CanonicalChannel]` bridge dict that holds legacy keys
+(Key_A, Key_D, Key_F, bare) stripped from the typed registries. This dict:
+
+- Is populated by the deprecated `register()` method during `build_output_registry()`
+- Is queried **only** by the deprecated `resolve()` pass-through
+- Is **invisible** to the typed lookup methods (`scoped_lookup`, `sysml_qn_lookup`, `alias_lookup`)
+- Is **invisible** to conformance tests verifying dead key elimination (REQ-OR-05/08)
+
+The `_compat` dict exists because the backtracker's resolution dispatch (C11) and
+the Phase 2/3/4 alias registration in `build_output_registry()` still rely on
+Key_A-format canonical names reachable through `resolve()`. Eliminating `_compat`
+requires updating these consumers to type-directed dispatch — this is C11 scope.
+
+**C11 removes `_compat` and `resolve()` entirely.** After C11, only the three
+typed registries remain.
+
 ## Eliminated Keys (FR-3)
 
 The following key formats are NOT registered. Evidence from spike:

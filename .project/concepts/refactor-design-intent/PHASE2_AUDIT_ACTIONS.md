@@ -24,22 +24,18 @@
 
 > TRR validation found specific gaps in the design intent corpus.
 
-- [ ] **B1** — `04-input-resolver.md`: Add `CanonicalChannel` to resolution strategy return types.
-  Currently 0 occurrences of `CanonicalChannel` in this doc. Strategies resolve inputs to
-  upstream output channels — the return type should be `CanonicalChannel | None`, not bare `str`.
-  All other TRR-amended docs (03, 09, 10, 11, 15, 24, 27) use this type.
+- [x] **B1** — `04-input-resolver.md`: Added `CanonicalChannel` return type to strategy callable
+  signature, Strategy A/B code examples, and cross-package alias lookup. *(done 2026-02-17)*
 
-- [ ] **B2** — `04-input-resolver.md:238`: Review Key_A reference. Determine if it's retained
-  rationale ("scoped registry should not contain Key_A") or stale text. If rationale, add
-  context note. If stale, remove.
+- [x] **B2** — `04-input-resolver.md:238`: Removed stale Key_A reference. Replaced with
+  scope-qualification rationale that doesn't reference eliminated key format. *(done 2026-02-17)*
 
-- [ ] **B3** — `27-typed-registry-refactor.md`: Add `_compat` bridge dict to §Typed Registries
-  or a new §Transitional Architecture section. C08 Learning #1 identified this as a needed
-  update. The `_compat` dict holds legacy keys (Key_A, Key_D, Key_F, bare) visible only to
-  the deprecated `resolve()`, invisible to typed lookups. Eliminated in C11.
+- [x] **B3** — `27-typed-registry-refactor.md`: Added §Transitional `_compat` Bridge subsection
+  under §Typed Registries. Documents `_compat` dict purpose, visibility rules, and C11 removal
+  timeline. *(done 2026-02-17)*
 
-- [ ] **B4** — Add a Design Doc Amendments entry in IMPLEMENTATION_PLAN.md for the `_compat`
-  deviation: `| 27-typed-registry-refactor.md | Add _compat bridge dict note | C08 conformance — dead keys load-bearing through backtracker (2026-02-17) | No |`
+- [x] **B4** — Added Design Doc Amendments entries in IMPLEMENTATION_PLAN.md for B1/B2 and B3.
+  *(done 2026-02-17)*
 
 ---
 
@@ -51,20 +47,35 @@
 
 ### C1. EXPRESSION Binding Type (identified in C03)
 
-- **Gap**: `BindingType.EXPRESSION` absent from all 6 fixture models. Code path at
-  `usage_extractor.py:557-564` has zero fixture coverage.
+- **Gap**: ~~`BindingType.EXPRESSION` absent from all 6 fixture models.~~ **CLOSED.**
+  Code path at `usage_extractor.py:559-566` now has full fixture coverage.
 - **What it means**: An `in x = a + b` style inline expression binding in SysML. The extractor
   recognizes `OperatorExpression` nodes and classifies them as EXPRESSION, but no fixture model
-  contains one.
-- **Risk**: Medium — if the classification logic has a latent bug, it won't surface until a
-  real model uses inline expression bindings.
-- [ ] **Action**: Create a new fixture model (e.g., `expression_binding_probe`) containing at
-  least one CalcUsage with an `OperatorExpression` binding (e.g., `in cost = material + labor`).
-  Capture extraction snapshot. Add parametrized conformance tests to `test_extractor.py` verifying
-  EXPRESSION classification.
+  contained one.
+- **Risk**: ~~Medium~~ **Mitigated** — 6 EXPRESSION bindings verified across 5 patterns.
+- [x] **Action**: Created `tests/fixtures/expression_binding_probe/` (library.sysml + design.sysml).
+  Captured extraction snapshot (extraction-only; full pipeline fails on EXPRESSION — see UPDATE below).
+  Added 19 parametrized conformance tests to `test_extractor.py::TestExpressionBindingType`.
+  Updated conftest.py, capture script. **1184 tests, 0 failures.**
 - **Affected REQs**: REQ-EXT-02
 - **Affected components**: C03 (extractor), C09 (VBR — EXPRESSION overrides silently skipped),
   C11 (backtracker — EXPRESSION binding dispatch path)
+
+> **UPDATE (C1)**: The full pipeline (`build_pipeline_context`) crashes on EXPRESSION bindings
+> because the backtracker has no dispatch path for `BindingType.EXPRESSION`. The error is:
+> `ValueError: ADR-003 VIOLATION: No binding resolution for '...combined_input'`.
+> This confirms the C11 scope note in D4 — the backtracker typed dispatch migration (C11)
+> must add EXPRESSION binding handling. The capture script was refactored to support
+> `EXTRACTION_ONLY_MODELS` for models that can't complete the full pipeline.
+>
+> **Patterns exercised**: (1) binary op with two refs (`material + labor`), (2) ref * literal
+> (`material * 1.2`), (3) 3-term nested binary (`a + b + c`), (4) two EXPRESSION bindings on
+> one CalcUsage, (5) subtraction (`material - overhead`). All 6 produce `BindingType.EXPRESSION`
+> with `source_path=None`, `literal_value=None`, `expression_ast=None` (in snapshot — serialization boundary).
+>
+> **Learning**: UNBOUND params go into `CalcUsageData.unbound_params` (string list), not into
+> `bindings` as BindingInfo with `BindingType.UNBOUND`. So the bindings list only ever contains
+> 4 binding types: CHAIN, REFERENCE, LITERAL, EXPRESSION. All 4 now have fixture coverage.
 
 ### C2. CHAIN Design Overrides (identified in C09)
 
@@ -220,3 +231,5 @@ handles serialization once extraction is run. New snapshots must be added to
 |------|----------------|----|
 | 2026-02-17 | Audit performed, action items written | Phase 2 checkpoint review |
 | 2026-02-17 | Section A complete (A1–A7), committed | Phase 2 checkpoint review |
+| 2026-02-17 | C1 — EXPRESSION binding fixture + 19 conformance tests (1184 total) | C1 implementation |
+| 2026-02-17 | Section B complete (B1–B4), design docs amended | Phase 2 checkpoint review |
