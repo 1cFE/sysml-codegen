@@ -20,6 +20,9 @@ SNAPSHOT_MODELS = [
     "attr_expr_probe",
     "chain_spike_model",
     "issue22_model",
+    "expression_binding_probe",
+    "chain_override_probe",
+    "unresolvable_attr_probe",
 ]
 
 
@@ -71,3 +74,21 @@ def chain_spike_snapshot(extraction_snapshots):
 def issue22_snapshot(extraction_snapshots):
     """Convenience fixture for issue22_model snapshot."""
     return extraction_snapshots["issue22_model"]
+
+
+@pytest.fixture
+def expression_binding_snapshot(extraction_snapshots):
+    """Convenience fixture for expression_binding_probe snapshot."""
+    return extraction_snapshots["expression_binding_probe"]
+
+
+@pytest.fixture
+def chain_override_snapshot(extraction_snapshots):
+    """Convenience fixture for chain_override_probe snapshot."""
+    return extraction_snapshots["chain_override_probe"]
+
+
+@pytest.fixture
+def unresolvable_attr_snapshot(extraction_snapshots):
+    """Convenience fixture for unresolvable_attr_probe snapshot."""
+    return extraction_snapshots["unresolvable_attr_probe"]

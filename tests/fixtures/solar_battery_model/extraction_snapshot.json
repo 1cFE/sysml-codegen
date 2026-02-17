@@ -1,6 +1,6 @@
 {
   "model_name": "solar_battery_model",
-  "captured_at": "2026-02-17T03:54:07.673386+00:00",
+  "captured_at": "2026-02-17T15:03:00.595068+00:00",
   "calc_defs": [
     {
       "name": "PVModuleCostCalc",

@@ -1,6 +1,6 @@
 {
   "model_name": "catf_mfe_model",
-  "captured_at": "2026-02-17T03:54:07.902046+00:00",
+  "captured_at": "2026-02-17T15:03:00.824292+00:00",
   "calc_defs": [
     {
       "name": "MagnetCryogenicLoad",

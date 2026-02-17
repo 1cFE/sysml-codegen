@@ -234,9 +234,10 @@ After all TRR edits:
 | Phase.Step | Component | Impact |
 |-----------|-----------|--------|
 | 2.1 | C08 — Output Registry | Conformance tests must verify typed registries, not flat `dict[str,str]`. Test `scoped_lookup()`, `sysml_qn_lookup()`, `alias_lookup()` instead of `resolve()`. |
-| 3.1 | C11 — DependencyBacktracker | Conformance tests must verify binding-type dispatch (CHAIN/REFERENCE), not Step 1 `UnscopedResolutionError`. |
+| 3.1a | C11a — DependencyBacktracker | Conformance tests verify binding-type dispatch outcomes (CHAIN/REFERENCE). Done. |
+| 3.1b | C11b — Backtracker Migration | Typed dispatch implementation + `_compat` removal. Subsumes 3 items from Phase 7.4 (`resolve()`, Step 1 block, `_key_a_keys`). |
 | 3.2 | C12 — Input Resolver | Strategies use typed registry methods. Strategy A queries scoped registry. Strategy B queries SysML QN registry. |
-| 7.4 | Dead code removal | 10 additional TRR items (moved to Phase 7.4 below) |
+| 7.4 | Dead code removal | 7 remaining TRR items (3 moved to C11b: `resolve()`, Step 1 block, `_key_a_keys`) |
 
 **Checkpoint TRR**: [x] All 8 design docs updated. Validation criteria 1-7 pass. *(2026-02-17, commit a64c622)*
 All conformance test acceptance criteria in C08, C11, C12 updated to match typed registries.
@@ -289,20 +290,44 @@ extraction and analysis. Each is independently testable.
 ## Phase 3: Analysis Components
 
 **Goal**: Validate the two analysis components that consume infrastructure output.
+Migrate backtracker to typed dispatch (C11b) before downstream components depend on it.
 
-- [ ] **3.1 — DependencyBacktracker Conformance (C11)**
+- [x] **3.1a — DependencyBacktracker Conformance (C11a)** *(completed 2026-02-17)*
   - **Refs**: [11-analysis-backtracker.md](11-analysis-backtracker.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
-  - Write `tests/conformance/test_backtracker.py`:
-    - Build real OutputRegistry from extraction snapshot
-    - Run backtracker on real calc usages from each fixture model
-    - Verify binding_resolutions key format
-    - Verify CHAIN bindings query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)` (type-directed dispatch)
-    - Verify REFERENCE bindings query `sysml_qn_lookup(SysMLQN)` then normalized `scoped_lookup(ScopedKey)` (type-directed dispatch)
-    - Verify cycle detection (construct a model with cycles if needed, or use synthetic calc data)
-    - Verify self-reference guard
-    - Verify topological ordering (every dependency appears before its consumer)
-    - Verify total resolution (no unresolved bindings)
-  - **Acceptance**: REQ-BT-01 through REQ-BT-08 all green
+  - Spike: diagnosed resolution paths for 7 models (41 MODULE_OUTPUT, 13 compat-only)
+  - 43 conformance tests in `tests/conformance/test_backtracker.py`
+  - CHAIN → scoped/alias, REFERENCE → sysml_qn/scoped dispatch outcomes verified
+  - 13 compat-only resolutions documented (12 catf_mfe cross-scope + 1 solar_battery secondary REFERENCE)
+  - EXPRESSION bindings silently skipped (gap documented for C11b)
+  - Cycle detection, topological sort, self-reference guard, key format all verified
+  - **Acceptance**: REQ-BT-01 through REQ-BT-08, REQ-DRA-01 all green (1238 tests, 0 failures)
+
+- [ ] **3.1b — DependencyBacktracker Typed Dispatch Migration (C11b)**
+  - **Refs**: [11-analysis-backtracker.md](11-analysis-backtracker.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
+  - **Depends on**: C11a (conformance safety net), C08 (typed registry)
+  - **Scope** (per Phase 2 audit D4 and C11 plan Issue #1):
+    - Refactor `_resolve_binding_via_registry()` to use type-directed dispatch:
+      CHAIN → `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`;
+      REFERENCE → `sysml_qn_lookup(SysMLQN)` then normalized `scoped_lookup(ScopedKey)`
+    - Implement `_consumer_scope_dotted(usage)` for ScopedKey construction
+    - Add EXPRESSION binding dispatch path (currently silently skipped — C1 audit finding)
+    - Migrate 3 `resolve()` calls in `build_output_registry()` Phases 2/3/4 (Key_A canonical
+      names → typed keys, per D1 audit item)
+    - Resolve 13 compat-only MODULE_OUTPUT resolutions: 12 catf_mfe cross-scope CHAIN
+      (`minor_calc.a`) + 1 solar_battery REFERENCE secondary (`annualized_om.p_net_kw`).
+      Options: cross-scope alias registration, sibling-scope lookup, or consumer-relative ScopedKey
+    - Remove `_compat` dict and deprecated `resolve()` method from OutputRegistry
+  - **Acceptance**:
+    - All 43 C11a conformance tests still green (outcomes unchanged)
+    - Static analysis: `_resolve_binding_via_registry()` calls `scoped_lookup`/`sysml_qn_lookup`/`alias_lookup` (not `resolve()`)
+    - Zero `resolve()` calls in `dependency_backtracker.py` and `build_output_registry()`
+    - Zero `_compat` references in `output_registry.py`
+    - 13 previously-compat-only resolutions now resolve via typed lookups
+    - EXPRESSION bindings produce documented behavior (ENTRY_POINT or explicit skip with warning)
+  - **Risk**: The 13 compat-only resolutions may require new alias registration in
+    `build_output_registry()` or a new ScopedKey derivation strategy. Spike findings suggest
+    cross-scope alias registration for catf_mfe and consumer-relative ScopedKey for solar_battery
+    REFERENCE secondary.
 
 - [ ] **3.2 — Input Resolver Spike (C12)**
   - **Refs**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
@@ -336,8 +361,9 @@ extraction and analysis. Each is independently testable.
     - Use real extraction data where such overlap exists (or construct minimal fixture)
   - **Acceptance**: REQ-DRA-04 green
 
-**Checkpoint 3**: [ ] All analysis and resolution logic independently proven. The two resolution
-paths are verified consistent. ~50-70 new conformance tests total at this point.
+**Checkpoint 3**: [ ] All analysis and resolution logic independently proven. Backtracker uses
+typed dispatch (no `_compat` dependency). The two resolution paths are verified consistent.
+~50-70 new conformance tests total at this point.
 
 ---
 
@@ -557,10 +583,12 @@ the target architecture. This is pure refactoring — no behavior changes.
     - [ ] Key_F registration code in `build_output_registry()` Phase 1c
     - [ ] Bare-name registration code in Phase 1b and 1c
     - [ ] `derive_key_c()` method (replaced by `ScopedKey.from_eqn()`)
-    - [ ] `resolve()` single-method API on OutputRegistry
     - [ ] `UnscopedResolutionError` class definition
-    - [ ] Step 1 code block in `_resolve_binding_via_registry()`
-    - [ ] `_key_a_keys: set[str]` if it was added per spike recommendation (moot — Key_A not registered)
+  - **Moved to C11b (Phase 3.1b)** — these are removed as part of typed dispatch migration:
+    - `resolve()` single-method API on OutputRegistry
+    - Step 1 code block in `_resolve_binding_via_registry()`
+    - `_key_a_keys: set[str]` (moot — Key_A not registered)
+    - `_compat` dict on OutputRegistry
 
 - [ ] **7.5 — PipelineModule Field Expansion (C26)**
   - **Refs**: [26-pipeline-module-migration.md](26-pipeline-module-migration.md)
@@ -636,6 +664,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 6 | Three expression reconstruction impls | Deferred to Phase 7 | Add to 7.3 or new 7.7 item |
 | 7 | Deeply-nested cross-scope REFERENCE | Out of scope | Not observed in any tested model |
 | 8 | sum() is only recognized aggregation | Out of scope | Feature request, not refactor |
+| 9 | Inherited attribute misclassification in `_classify_attribute_expression` | C05 fix (before Phase 3 recommended) | Classifier assumes flat namespace; SysIDE resolves inherited QNs to supertype. 5 of 6 test patterns affected. Fix requires supertype chain walk in Step 2b + C03 extraction enrichment. See Doc 16 Known Issues. |
+| 10 | UNRESOLVABLE classification likely dead code for valid SysML | Document only | SysIDE always resolves attribute QNs; empty-QN fallback (Step 2d) unreachable without parser bugs. Retain as defensive fallback. |
 
 ---
 
@@ -762,6 +792,33 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    and CHAIN. EXPRESSION overrides match in the index but fall through without mutation.
    This is correct per the design intent doc but undocumented.
 
+### C3 (Phase 2 Audit) — Inherited Attribute Classification (2026-02-17)
+
+1. **UNRESOLVABLE classification is likely dead code for well-formed SysML.** SysIDE always
+   resolves inherited attribute QNs (to the supertype's namespace), so the empty-QN fallback
+   path (Step 2d in `_classify_attribute_expression`) is never hit. The UNRESOLVABLE code path
+   requires `ref.qualified_name` to be empty, which only happens if SysIDE fails to resolve —
+   not observed with any valid SysML construct tested.
+
+2. **Classifier misclassifies inherited attributes as EXPOSE_COMPUTED instead of FORMULA.**
+   SysIDE resolves inherited attr QNs to the supertype's namespace (e.g.,
+   `'Base Component'::base_rate`), not the subtype's (`'Derived Component'::base_rate`).
+   Step 2b's prefix check fails → Step 2c (calc_ref) → EXPOSE_COMPUTED. 5 of 6 test patterns
+   affected. **Fix scope**: C05 classifier or Phase 7 refactor — walk the supertype chain.
+
+3. **`owned_members` excludes inherited attributes.** SysIDE's `owned_members` only returns
+   locally-declared members. Inherited attributes are NOT in `sibling_attr_names`. This is
+   consistent with SysML v2 semantics (`owned` = locally owned, not inherited).
+
+4. **SysML v2 syntax: `:>` on part usages expects a Feature, not a PartDefinition.**
+   `part probe :> 'Base Component'` produces `error (reference-error): Expected Feature element
+   but found PartDefinition`. Correct syntax for PartDef inheritance is
+   `part def 'Derived' :> 'Base'` (definition-to-definition). Part usages use `: 'Type'` typing.
+
+5. **Practical consequence: computed attributes referencing inherited attrs produce no pipeline
+   module.** Since they're misclassified as EXPOSE_COMPUTED (unhandled — Deferred Issue #2),
+   they silently produce no module, no compiled expression, and no alias.
+
 ### C10 Aggregation Scoping Conformance (2026-02-17)
 
 1. **All three scoping functions fully testable with real fixture data.** Unlike C09 (which
@@ -783,6 +840,32 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    create new `ScopedAggregationData` objects from raw inputs — they don't mutate the hierarchy
    data. The snapshot contains both raw inputs and expected outputs side-by-side, enabling
    straightforward input→output comparison without reconstruction.
+
+### C11 DependencyBacktracker Conformance (2026-02-17)
+
+1. **13 compat-only MODULE_OUTPUT resolutions across 2 models.** 12 in catf_mfe (cross-scope
+   `minor_calc.a` CHAIN bindings — consumers in different radial build layers than the
+   `plasma_region` producer) + 1 in solar_battery (REFERENCE secondary path `annualized_om.p_net_kw`
+   resolving through Key_A in `_compat`). These resolve through the deprecated `resolve()` cascade
+   hitting `_compat` dict. Under typed dispatch, they need a new resolution strategy — potentially
+   cross-scope alias registration or sibling-scope lookup. This is the primary C11b migration concern.
+
+2. **EXPRESSION bindings silently skipped by backtracker.** `source_path=None` causes the
+   `if binding.source_path:` guard to skip them — no resolution created, no crash. The pipeline
+   crash from Issue #2 occurs downstream (graph builder or generation), not in the backtracker.
+
+3. **build_backtracker_from_snapshot() is simpler than anticipated.** Snapshots contain
+   post-VBR, post-scoping data, so the helper only needs: load snapshot → build_output_registry() →
+   instantiate backtracker → run. No manual VBR or scoping replication needed.
+
+4. **catf_mfe cross-package resolution confirmed working.** 10 alias_lookup hits validate the
+   Phase 2 CHAIN alias bridge between CATFMFEMagnets and CATFMFERadialBuild packages.
+
+5. **sample_model produces 0 usages/resolutions.** Not useful for conformance testing — excluded
+   from parametrized model lists.
+
+6. **Static analysis via textwrap.dedent + ast.parse for method source.** `inspect.getsource()`
+   returns indented method source. Must `textwrap.dedent()` before `ast.parse()`.
 
 ### Phase 0 (2026-02-17)
 
@@ -840,6 +923,14 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | IMPLEMENTATION_PLAN.md Step 2.3 | Change "REQ-AS-01 through REQ-AS-07" to "REQ-AS-01 through REQ-AS-08" in acceptance criteria | C10 conformance (2026-02-17) | Yes |
 | 04-input-resolver.md | Add `CanonicalChannel` return type to strategy signatures and code examples; remove stale Key_A reference | Phase 2 audit — TRR validation criterion 5 (2026-02-17) | Yes |
 | 27-typed-registry-refactor.md | Add `_compat` bridge dict transitional architecture section | C08 conformance — dead keys load-bearing through backtracker (2026-02-17) | Yes |
+| 16-computed-attributes.md | Note inherited attribute misclassification: QNs resolve to supertype namespace, causing FORMULA→EXPOSE_COMPUTED misclassification. Classifier needs supertype chain walk. | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — Known Issues §Inherited Attribute Misclassification + Step 2b annotation |
+| 16-computed-attributes.md | Note UNRESOLVABLE is likely dead code for valid SysML — SysIDE always resolves QNs | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — Known Issues §UNRESOLVABLE Likely Dead Code + UNRESOLVABLE section note + Step 2d annotation |
+| 11-analysis-backtracker.md | Note EXPRESSION bindings silently skipped (source_path=None → no resolution). Gap for C11b | C11 conformance (2026-02-17) | No |
+| 11-analysis-backtracker.md | Document 13 compat-only resolutions: 12 catf_mfe cross-scope CHAIN, 1 solar_battery REFERENCE secondary. C11b migration concern | C11 conformance (2026-02-17) | No |
+| IMPLEMENTATION_PLAN.md Deferred Issues | Add issues #9 (inherited attribute misclassification) and #10 (UNRESOLVABLE dead code) to Deferred Issues table | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
+| 09-data-models.md | Add footnote to ComputedAttributeClassification enum noting inherited attr misclassification and UNRESOLVABLE dead code status | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
+| 01-extraction.md | Add note to Part Definitions section about supertype chain data needed for C05 classifier | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
+| COMPONENT_CHECKLIST.md | C05: update UNRESOLVABLE AC, add inherited attr AC + sibling_attr_names AC; C03: add supertype chain AC | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 
 ---
 
@@ -859,3 +950,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C08 Output Registry | 1053 | 32 | 1080 | 2026-02-17 |
 | C09 Virtual Binding Rewrite | 1080 | 38 | 1118 | 2026-02-17 |
 | C10 Aggregation Scoping | 1118 | 47 | 1165 | 2026-02-17 |
+| C1 EXPRESSION Binding (audit) | 1165 | 19 | 1184 | 2026-02-17 |
+| C2 CHAIN Override (audit) | 1184 | 10 | 1194 | 2026-02-17 |
+| C3 Inherited Attr (audit) | 1194 | 56 | 1250 | 2026-02-17 |
+| C11 Backtracker Conformance | — | 43 | 1250 (+5 xfail) | 2026-02-17 |

@@ -49,7 +49,14 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 |------|--------|--------|
 | `BindingType` | `CHAIN`, `REFERENCE`, `LITERAL`, `EXPRESSION`, `UNBOUND` | `agentic_mbse` |
 | `RedefinitionType` | `LITERAL`, `CHAIN`, `EXPRESSION` | `extraction/data_models.py:225` |
-| `ComputedAttributeClassification` | `FORMULA`, `EXPOSE_PURE`, `EXPOSE_COMPUTED`, `LITERAL`, `UNRESOLVABLE` | `extraction/data_models.py:164` |
+| `ComputedAttributeClassification` | `FORMULA`, `EXPOSE_PURE`, `EXPOSE_COMPUTED`, `LITERAL`, `UNRESOLVABLE` | `extraction/data_models.py:164` | ¹ |
+
+> ¹ **C3 finding (2026-02-17)**: `UNRESOLVABLE` is likely unreachable for
+> well-formed SysML (SysIDE always resolves attribute QNs). Inherited attributes
+> from supertypes are currently misclassified as `EXPOSE_COMPUTED` instead of
+> `FORMULA` due to Step 2b namespace prefix check failure — see
+> [16-computed-attributes](16-computed-attributes.md) Known Issues (Deferred
+> Issue #9).
 | `Compilability` | `FULLY_COMPILABLE`, `PARTIALLY_COMPILABLE`, `MANUAL_REQUIRED`, `UNKNOWN` | `extraction/expression_compiler.py:25` |
 | `ExpressionNodeType` | `BINARY_OP`, `UNARY_OP`, `LITERAL`, `INPUT_REF`, `INTERMEDIATE_REF`, `UNSUPPORTED` | `extraction/expression_compiler.py:38` |
 | `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py:13` |

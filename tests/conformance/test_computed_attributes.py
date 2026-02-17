@@ -608,3 +608,211 @@ class TestCrossModelCatfMfe:
                 assert ca.is_on_part_definition is False, (
                     f"catf_mfe EXPOSE_PURE {ca.python_name} unexpectedly on PartDef"
                 )
+
+
+# ---------------------------------------------------------------------------
+# C3: Inherited Attribute Classification (unresolvable_attr_probe fixture)
+# ---------------------------------------------------------------------------
+#
+# FINDING (C3, 2026-02-17): The classifier misclassifies inherited attributes
+# as EXPOSE_COMPUTED instead of FORMULA. SysIDE resolves inherited attribute
+# QNs to the supertype's namespace (e.g., 'Base Component'::base_rate), not
+# the subtype's ('Derived Component'::base_rate). The classifier's Step 2b
+# check `qn.startswith(owning_part_qn + "::")` fails, and the ref falls
+# through to Step 2c as a calc_ref. This pushes classification to
+# EXPOSE_COMPUTED.
+#
+# UNRESOLVABLE was NOT triggered: all refs have non-empty QNs. The empty-QN
+# fallback path (Step 2d) is never hit for valid SysML with inheritance.
+# ---------------------------------------------------------------------------
+
+
+# Expected classification results for unresolvable_attr_probe fixture.
+# Documents the ACTUAL (misclassified) behavior for regression tracking.
+# The "correct" column shows what the result SHOULD be once the classifier
+# handles inheritance; the "actual" column shows current behavior.
+INHERITED_ATTR_PATTERNS = {
+    # (owning_part_name, attr_name): (actual_classification, correct_classification, description)
+    ("Derived_Component", "inherited_product"): (
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        ComputedAttributeClassification.FORMULA,
+        "L1: only inherited attrs — both refs resolve to supertype namespace",
+    ),
+    ("Derived_Component", "mixed_product"): (
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        ComputedAttributeClassification.FORMULA,
+        "L2: inherited + local — base_rate resolves to supertype, local_multiplier to subtype",
+    ),
+    ("Design_Derived", "inherited_product"): (
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        ComputedAttributeClassification.FORMULA,
+        "D1: only inherited attrs (design-side PartDef inheritance)",
+    ),
+    ("Design_Derived", "mixed_product"): (
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        ComputedAttributeClassification.FORMULA,
+        "D2: inherited + local (design-side)",
+    ),
+    ("Design_Derived", "mixed_expose"): (
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        "D3: CalcUsage output + inherited attr — EXPOSE_COMPUTED is correct",
+    ),
+    ("Design_Derived", "inherited_sum"): (
+        ComputedAttributeClassification.EXPOSE_COMPUTED,
+        ComputedAttributeClassification.FORMULA,
+        "D4: multi-term with inherited attrs (design-side)",
+    ),
+}
+
+
+class TestInheritedAttrClassification:
+    """C3: Inherited attribute classification with unresolvable_attr_probe fixture.
+
+    Documents the classifier's behavior when PartDef-to-PartDef inheritance
+    introduces attributes whose QNs resolve to the supertype's namespace.
+    """
+
+    def test_fixture_has_expected_count(self, unresolvable_attr_snapshot):
+        """unresolvable_attr_probe produces exactly 6 computed attributes."""
+        computed = unresolvable_attr_snapshot["computed_attributes"]
+        assert len(computed) == 6, (
+            f"Expected 6 computed_attributes, got {len(computed)}: "
+            f"{[(ca.owning_part_name, ca.python_name) for ca in computed]}"
+        )
+
+    def test_all_on_part_definition(self, unresolvable_attr_snapshot):
+        """All computed attributes are on PartDefinitions (not PartUsages)."""
+        for ca in unresolvable_attr_snapshot["computed_attributes"]:
+            assert ca.is_on_part_definition is True, (
+                f"{ca.owning_part_name}.{ca.python_name}: expected is_on_part_definition=True"
+            )
+
+    def test_no_channel_aliases(self, unresolvable_attr_snapshot):
+        """No EXPOSE_PURE patterns exist, so no channel aliases produced."""
+        aliases = unresolvable_attr_snapshot["channel_aliases"]
+        assert len(aliases) == 0, (
+            f"Expected 0 channel_aliases, got {len(aliases)}"
+        )
+
+    def test_zero_unresolvable_classifications(self, unresolvable_attr_snapshot):
+        """UNRESOLVABLE is NOT triggered by inheritance patterns.
+
+        SysIDE always resolves inherited attribute QNs (to the supertype's
+        namespace), so the empty-QN fallback path (Step 2d) is never hit.
+        """
+        unresolvable = [
+            ca for ca in unresolvable_attr_snapshot["computed_attributes"]
+            if ca.classification == ComputedAttributeClassification.UNRESOLVABLE
+        ]
+        assert len(unresolvable) == 0, (
+            f"Expected 0 UNRESOLVABLE, got {len(unresolvable)}: "
+            f"{[ca.python_name for ca in unresolvable]}"
+        )
+
+    @pytest.mark.parametrize(
+        "key,expected",
+        list(INHERITED_ATTR_PATTERNS.items()),
+        ids=[f"{k[0]}.{k[1]}" for k in INHERITED_ATTR_PATTERNS],
+    )
+    def test_inherited_attr_classification(
+        self, unresolvable_attr_snapshot, key, expected
+    ):
+        """Each inherited-attr pattern produces the documented (mis)classification.
+
+        This test locks down the ACTUAL behavior as a regression guard.
+        When the classifier is fixed to handle inheritance, update the
+        expected values in INHERITED_ATTR_PATTERNS.
+        """
+        owning_part, attr_name = key
+        actual_cls, correct_cls, description = expected
+
+        ca_match = [
+            ca for ca in unresolvable_attr_snapshot["computed_attributes"]
+            if ca.owning_part_name == owning_part and ca.python_name == attr_name
+        ]
+        assert len(ca_match) == 1, (
+            f"Expected 1 match for {owning_part}.{attr_name}, got {len(ca_match)}"
+        )
+        ca = ca_match[0]
+
+        # Assert actual (current) classification
+        assert ca.classification == actual_cls, (
+            f"{owning_part}.{attr_name}: expected {actual_cls.value}, "
+            f"got {ca.classification.value} — {description}"
+        )
+
+    @pytest.mark.parametrize(
+        "key,expected",
+        [
+            (k, v) for k, v in INHERITED_ATTR_PATTERNS.items()
+            if v[0] != v[1]  # only misclassified patterns
+        ],
+        ids=[
+            f"{k[0]}.{k[1]}" for k, v in INHERITED_ATTR_PATTERNS.items()
+            if v[0] != v[1]
+        ],
+    )
+    def test_misclassification_documented(
+        self, unresolvable_attr_snapshot, key, expected
+    ):
+        """Document misclassification: 5 of 6 patterns should be FORMULA but are EXPOSE_COMPUTED.
+
+        Root cause: SysIDE resolves inherited attribute QNs to supertype namespace.
+        Classifier Step 2b (owning_part_qn prefix check) fails for inherited attrs.
+
+        This test uses xfail to mark the known-wrong behavior. When the
+        classifier is fixed to handle supertype QN resolution, these tests
+        will start PASSING (xfail strict=False allows that).
+        """
+        owning_part, attr_name = key
+        actual_cls, correct_cls, description = expected
+
+        ca_match = [
+            ca for ca in unresolvable_attr_snapshot["computed_attributes"]
+            if ca.owning_part_name == owning_part and ca.python_name == attr_name
+        ]
+        ca = ca_match[0]
+
+        # This SHOULD be correct_cls, but currently is actual_cls (misclassified)
+        if ca.classification != correct_cls:
+            pytest.xfail(
+                f"KNOWN MISCLASSIFICATION: {owning_part}.{attr_name} is "
+                f"{ca.classification.value}, should be {correct_cls.value}. "
+                f"Cause: inherited attr QN resolves to supertype namespace. "
+                f"Fix scope: C05 classifier or Phase 7 refactor."
+            )
+
+    def test_inherited_refs_have_supertype_qn(self, unresolvable_attr_snapshot):
+        """Inherited attribute refs have QNs in the supertype's namespace, not the subtype's.
+
+        This is the root cause of the misclassification. SysIDE resolves
+        `base_rate` on 'Derived Component' to `'Base Component'::base_rate`,
+        not `'Derived Component'::base_rate`.
+        """
+        for ca in unresolvable_attr_snapshot["computed_attributes"]:
+            for ref in ca.references:
+                if ref.name in ("base_rate", "base_factor"):
+                    assert "'Base Component'" in ref.qualified_name, (
+                        f"{ca.owning_part_name}.{ca.python_name}: inherited ref "
+                        f"{ref.name} has QN={ref.qualified_name}, expected "
+                        f"'Base Component' in QN (supertype namespace)"
+                    )
+                    assert ca.owning_part_qualified_name not in ref.qualified_name, (
+                        f"{ca.owning_part_name}.{ca.python_name}: inherited ref "
+                        f"{ref.name} has QN={ref.qualified_name} containing "
+                        f"subtype namespace — unexpected (would mean no misclassification)"
+                    )
+
+    def test_no_compiled_expressions(self, unresolvable_attr_snapshot):
+        """Misclassified attrs have no compiled expression (EXPOSE_COMPUTED skips compilation)."""
+        for ca in unresolvable_attr_snapshot["computed_attributes"]:
+            if ca.classification == ComputedAttributeClassification.EXPOSE_COMPUTED:
+                assert ca.compiled_expression is None, (
+                    f"{ca.owning_part_name}.{ca.python_name}: EXPOSE_COMPUTED should "
+                    f"have compiled_expression=None, got {ca.compiled_expression}"
+                )
+                assert ca.compilability == Compilability.MANUAL_REQUIRED, (
+                    f"{ca.owning_part_name}.{ca.python_name}: EXPOSE_COMPUTED should "
+                    f"have compilability=MANUAL_REQUIRED"
+                )

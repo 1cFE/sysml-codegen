@@ -75,6 +75,14 @@ generated pipeline. See [17-parameter-group-deriver](17-parameter-group-deriver.
 **Note**: [ComputedAttributeData](16-computed-attributes.md) is also produced
 during extraction (from PartDef attribute expressions). See doc 16 for details.
 
+> **Data gap (C3 finding, 2026-02-17)**: PartDefinitionData does not currently
+> include **supertype chain information** (ancestor PartDef QNs). This data is
+> needed by the downstream computed attribute classifier (C05) to correctly
+> classify inherited attribute references as sibling refs instead of external
+> calc refs. SysIDE provides supertype information via `part_element.types`,
+> but it is not extracted or stored. See [16-computed-attributes](16-computed-attributes.md)
+> Known Issues §Inherited Attribute Misclassification (Deferred Issue #9).
+
 ### 4. Hierarchy Data ([HierarchyExtractionResult](09-data-models.md#extraction-models))
 
 `extract_hierarchy_data()` returns structural patterns beyond simple attributes:

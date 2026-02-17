@@ -91,6 +91,13 @@ Contains references that cannot be resolved to known siblings or calc outputs.
 **Pipeline effect**: included in the `ComputedAttributeData` list (for reporting)
 but does not generate a module or alias (REQ-CA-05). Logged as a warning.
 
+> **Note (C3 finding, 2026-02-17)**: UNRESOLVABLE is likely **unreachable for
+> well-formed SysML**. SysIDE always resolves attribute QNs (even inherited ones
+> resolve to the supertype's namespace), so the empty-QN fallback path (Step 2d)
+> is never triggered. This classification may only be reachable through SysIDE
+> parser bugs, partially valid SysML, or synthetic test data. Treat as a
+> defensive fallback, not a primary classification path.
+
 ---
 
 ## Classification Algorithm
@@ -102,8 +109,10 @@ Step 1: No refs at all                                → LITERAL
 Step 2: For each ref, classify by QN:
   2a: ref.name in calc_usage_names                    → skip (traversal artifact)
   2b: ref.qualified_name starts with owning part QN   → sibling_ref
+      ⚠ KNOWN BUG: fails for inherited attrs (see Known Issues below)
   2c: ref.qualified_name is non-empty, other namespace → calc_ref
   2d: empty QN, fallback to name matching             → sibling or unresolvable
+      ⚠ Likely unreachable for valid SysML (see UNRESOLVABLE note above)
 Step 3: Decision:
   - any unresolvable_refs                             → UNRESOLVABLE
   - no calc_refs (only sibling refs)                  → FORMULA
@@ -229,6 +238,71 @@ same PartDef. The compiler receives `output_names=set()` (only inputs, not
 sibling outputs), so a cross-FORMULA reference like `dc_capacity` in
 `annual_output = dc_capacity * 8760` classifies `dc_capacity` as UNSUPPORTED.
 Workaround: promote the dependency to a separate CalcDef or use EXPOSE_PURE.
+
+## Known Issues
+
+> **Changelog**: Added 2026-02-17 from C3 Phase 2 Audit findings
+> (PHASE2_AUDIT_ACTIONS.md §C3). Captures inherited attribute misclassification
+> bug and UNRESOLVABLE dead code finding.
+
+### Inherited Attribute Misclassification (Deferred Issue #9)
+
+**Status**: Confirmed bug. 5 of 6 test patterns affected. Fix deferred to C05
+classifier fix or Phase 7 refactor.
+
+**Root cause**: When a PartDef inherits from a supertype via `:>` (e.g.,
+`part def 'Derived' :> 'Base'`), SysIDE resolves inherited attribute QNs to
+the **supertype's namespace**:
+
+```
+owning_part_qn:      "Library::'Derived Component'"
+inherited attr QN:   "Library::'Base Component'::base_rate"   ← supertype prefix
+expected (but wrong): "Library::'Derived Component'::base_rate"
+```
+
+Step 2b checks `qn.startswith(owning_part_qn + "::")`, which fails for
+inherited attrs. They fall through to Step 2c as `calc_ref` (different namespace
+= external CalcUsage output), pushing classification from FORMULA to
+**EXPOSE_COMPUTED**.
+
+**Additional factor**: `sibling_attr_names` is built from `owned_members`, which
+per SysML v2 semantics only includes locally-declared attributes — inherited
+attributes are excluded. So even Step 2d's fallback name check can't rescue
+the classification.
+
+**Impact**: Computed attributes referencing inherited attrs silently produce
+**no pipeline module** and **no compiled expression**. They appear in
+`computed_attributes` but EXPOSE_COMPUTED is unhandled (Deferred Issue #2),
+so they are silent no-ops in the pipeline.
+
+**Fix scope**: The classifier needs to walk the supertype chain when checking
+QN prefixes. Instead of checking only the immediate `owning_part_qn`, check if
+the QN starts with ANY ancestor PartDef's QN. This requires:
+
+1. **Extraction enrichment (C03)**: Extract supertype chain information from
+   SysIDE during `_extract_part_definitions()`.
+2. **Classifier fix (C05)**: Accept `ancestor_part_qns: set[str]` parameter
+   and augment the Step 2b prefix check.
+
+**Fixture coverage**: `tests/fixtures/unresolvable_attr_probe/` exercises this
+pattern with 5 xfailed tests in
+`test_computed_attributes.py::TestInheritedAttrClassification`.
+
+### UNRESOLVABLE Likely Dead Code (Deferred Issue #10)
+
+**Status**: Documented. No fix needed — defensive retention recommended.
+
+SysIDE always resolves attribute QNs, even for inherited attributes (to the
+supertype's namespace). The empty-QN path (Step 2d → UNRESOLVABLE) was not
+triggered by any of the 8 fixture models tested, including the inheritance-
+specific `unresolvable_attr_probe`. The UNRESOLVABLE classification may only
+be reachable through SysIDE parser bugs, partially valid SysML that SysIDE
+tolerates, or synthetic `ExpressionRef` data.
+
+**Decision**: Retain the code path as a defensive fallback with documentation.
+Do not invest in testing unreachable paths.
+
+---
 
 ## Data Models & Source Files
 

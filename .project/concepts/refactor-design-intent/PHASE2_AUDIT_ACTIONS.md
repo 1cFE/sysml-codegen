@@ -45,6 +45,29 @@
 > production but has zero exercise from real SysML data. Currently tested only with
 > constructed/synthetic data or not tested at all.
 
+### CRITICAL: Expect Failures — Do Not Force Green Tests
+
+**The purpose of closing these gaps is to DISCOVER latent bugs, not to produce passing
+tests.** The pre-refactor implementation has known issues, and exercising previously-uncovered
+code paths will surface them. C1 proved this pattern: extraction-level tests pass, but
+**the full pipeline crashes** because the backtracker has no EXPRESSION dispatch path.
+
+**Rules for agents working on C items:**
+
+1. **Create the fixture model and capture the extraction snapshot.** Verify extraction-level
+   conformance tests pass (the extractor is well-tested).
+2. **Run the full pipeline** (`build_pipeline_context`) on the new fixture. **Expect it to
+   fail.** Document the failure precisely — error message, stack trace location, root cause.
+3. **Write conformance tests that verify the extraction-level behavior** (these should pass).
+   Write additional tests that **document the pipeline-level failure as a known issue** using
+   `pytest.mark.xfail(reason="...")` or `pytest.raises(...)` with a descriptive message.
+4. **NEVER work around a pipeline failure to make tests green.** If the backtracker crashes,
+   the graph builder produces wrong wiring, or the module factory mishandles a term — that is
+   the finding. Document it, link it to the responsible phase (C11, C12, C16, etc.), and move on.
+5. **Update IMPLEMENTATION_PLAN.md** with the finding so the responsible phase knows what to fix.
+6. **Use `EXTRACTION_ONLY_MODELS`** in the capture script for models that can't complete the
+   full pipeline (same pattern as C1's expression_binding_probe).
+
 ### C1. EXPRESSION Binding Type (identified in C03)
 
 - **Gap**: ~~`BindingType.EXPRESSION` absent from all 6 fixture models.~~ **CLOSED.**
@@ -79,37 +102,91 @@
 
 ### C2. CHAIN Design Overrides (identified in C09)
 
-- **Gap**: Zero `RedefinitionType.CHAIN` entries in `design_overrides` across all 6 fixture models.
-  All overrides are LITERAL. C09 tested CHAIN override path with constructed data only.
+- **Gap**: ~~Zero `RedefinitionType.CHAIN` entries in `design_overrides` across all 6 fixture models.~~
+  **CLOSED.** chain_override_probe has 1 CHAIN + 1 LITERAL design override.
 - **What it means**: A design-level `:>>` that redirects a binding's source (e.g., override a
   template's `efficiency` input to read from a different upstream calc) rather than setting a
   literal value.
-- **Risk**: Medium — the CHAIN override mutation path (`source_path` replacement at
-  `initialization.py:328-331`) is only verified with synthetic data using real names.
-- [ ] **Action**: Create a fixture model (could be added to `expression_binding_probe` or a
-  separate `chain_override_probe`) containing a template CalcDef with a REFERENCE binding, a
-  design PartUsage that instantiates it, and a `:>>` override of type CHAIN pointing to a
-  different upstream output. Capture snapshot. Add conformance tests to
-  `test_virtual_binding_rewrite.py`.
+- **Risk**: ~~Medium~~ **Mitigated** — CHAIN override mutation path verified with real SysML data.
+- [x] **Action**: Created `tests/fixtures/chain_override_probe/` (library.sysml + design.sysml).
+  Model has 'Sensor' PartDef with template CalcUsage, 'Instrument Package' assembly with
+  calibration calc, and design with `:>> sensitivity = calibration.calibrated_factor` (CHAIN).
+  Captured extraction snapshot. Added 9 conformance tests to
+  `test_virtual_binding_rewrite.py::TestChainOverrideFixtureCoverage`. **1194 tests, 0 failures.**
 - **Affected REQs**: REQ-VBR-04
 - **Affected components**: C09 (VBR)
 
+> **UPDATE (C2)**: The CHAIN override is a flat (non-deep-path) override, unlike solar_battery's
+> deep-path LITERAL overrides. SysML v2 `part redefines sensor : 'Sensor' { :>> sensitivity = calibration.calibrated_factor; }`
+> produces a FeatureChainExpression at the redefinition level, classified as
+> `RedefinitionType.CHAIN` with `source_path="calibration.calibrated_factor"`.
+>
+> **VBR behavior confirmed**: The rewrite replaces the binding's `source_path` with the override's
+> `source_path`. The `binding_type` stays REFERENCE (unchanged). Post-rewrite snapshot shows
+> `sensitivity.source_path = "calibration.calibrated_factor"` — exactly matching the code path at
+> `initialization.py:329-331`.
+>
+> **SysML syntax learning**: `calc redefines` with overridden `in` bindings is rejected by SysIDE
+> with `error (feature-value-overriding)`. Design-level CalcUsage overrides must use `:>>` on the
+> owning PartUsage, not `calc redefines`.
+>
+> **Limitation**: This fixture exercises flat CHAIN overrides only. Deep-path CHAIN overrides
+> (e.g., `:>> child.attr = sibling.output`) would require a 3-level PartDef hierarchy. The VBR
+> code handles both via the same `_build_override_index` path, so this is low additional risk.
+
 ### C3. UNRESOLVABLE Computed Attribute Classification (identified in C05)
 
-- **Gap**: `ComputedAttributeClassification.UNRESOLVABLE` absent from all 6 fixture models. Code
-  path exists and is unit-tested with mock data, but no real SysML model produces it.
+- **Gap**: ~~`ComputedAttributeClassification.UNRESOLVABLE` absent from all 6 fixture models.~~
+  **PARTIALLY CLOSED.** UNRESOLVABLE remains untriggered (see UPDATE), but the probe revealed a
+  **classifier misclassification bug** for inherited attributes — 5 of 6 patterns are wrongly
+  classified as EXPOSE_COMPUTED instead of FORMULA.
 - **What it means**: A PartDef attribute expression where the expression compiler cannot determine
   whether it references a CalcUsage output or a sibling attribute — the expression is structurally
   ambiguous.
-- **Risk**: Low — UNRESOLVABLE is a fallback/error classification. The code correctly logs a
-  warning and skips module/alias creation. The risk is that the detection heuristic has false
-  negatives (classifying ambiguous expressions as something else).
-- [ ] **Action**: Create a fixture model attribute expression that is genuinely ambiguous (e.g.,
-  references a name that exists as both a CalcUsage output and a sibling attribute, or references
-  a non-existent name). Add to `expression_binding_probe` or `attr_expr_probe`. Capture snapshot.
-  Add conformance test to `test_computed_attributes.py`.
-- **Affected REQs**: REQ-CA-05
-- **Affected components**: C05 (computed attributes)
+- **Risk**: ~~Medium~~ **Confirmed** — the classifier has a real bug where inherited attributes
+  from supertypes are misclassified because their QNs resolve to the supertype's namespace.
+- [x] **Action**: Created `tests/fixtures/unresolvable_attr_probe/` (library.sysml + design.sysml).
+  Model exercises PartDef-to-PartDef inheritance (`'Derived Component' :> 'Base Component'`) with
+  computed attributes referencing inherited attributes. Captured extraction snapshot (extraction-only).
+  Added 17 conformance tests to `test_computed_attributes.py::TestInheritedAttrClassification`
+  (12 passed, 5 xfailed). Updated conftest.py, capture script, test_extractor.py expected counts.
+  **1250 tests, 0 failures, 5 xfailed.**
+- **Affected REQs**: REQ-CA-05, REQ-CA-01 (classification correctness)
+- **Affected components**: C05 (computed attributes — classifier bug), C15 (FORMULA module factory
+  — misclassified attrs never reach FORMULA path, so no downstream crash, just silent no-op)
+
+> **UPDATE (C3)**: UNRESOLVABLE was NOT triggered. SysIDE always resolves inherited attribute QNs
+> (to the supertype's namespace), so the empty-QN fallback path (Step 2d in
+> `_classify_attribute_expression`) is never hit for valid SysML with inheritance. The UNRESOLVABLE
+> code path may only be reachable through: (a) SysIDE bugs that produce empty QNs, (b) partially
+> valid SysML that SysIDE tolerates, or (c) synthetic ExpressionRef data. It is likely **dead code**
+> for any well-formed SysML model.
+>
+> **FINDING: Inherited Attribute Misclassification Bug.**
+> - **Root cause**: SysIDE resolves inherited attribute QNs to the **supertype's namespace**
+>   (e.g., `UnresolvableAttrProbeLibrary::'Base Component'::base_rate`), not the subtype's
+>   (`UnresolvableAttrProbeLibrary::'Derived Component'::base_rate`).
+> - **Classifier behavior**: Step 2b checks `qn.startswith(owning_part_qn + "::")`. For inherited
+>   attrs, this fails because the QN starts with the supertype's prefix. The ref falls through to
+>   Step 2c as a `calc_ref` (different namespace = treated as external CalcUsage output). This
+>   pushes classification from FORMULA to EXPOSE_COMPUTED.
+> - **Impact**: 5 of 6 test patterns are misclassified as EXPOSE_COMPUTED instead of FORMULA.
+>   The 6th (D3: `my_calc.result * base_rate`) is correctly EXPOSE_COMPUTED because it genuinely
+>   references a CalcUsage output (`result`).
+> - **Practical consequence**: Computed attributes referencing inherited attrs silently produce
+>   **no pipeline module** and **no compiled expression**. They appear in `computed_attributes`
+>   but EXPOSE_COMPUTED is unhandled (Deferred Issue #2).
+> - **Fix scope**: The classifier needs to walk the supertype chain when checking QN prefixes.
+>   Instead of `qn.startswith(owning_part_qn + "::")`, check if the QN starts with ANY ancestor
+>   PartDef's QN. This is a C05 classifier fix or Phase 7 refactor item.
+> - **SysML syntax learning**: `part probe :> 'Base Component'` is INVALID for part usages —
+>   `:>` expects a Feature, not a PartDefinition. The correct syntax for PartDef inheritance is
+>   `part def 'Derived' :> 'Base'` (definition-to-definition). Part usages use `: 'Type'` typing.
+>
+> **Patterns exercised**: (L1) only inherited attrs in expression, (L2) mix inherited + local,
+> (D1-D4) same patterns on design-side PartDef with CalcUsage. All 6 are on PartDefinitions.
+> `owned_members` only includes locally-declared attributes, confirming that inherited attrs are
+> NOT in `sibling_attr_names`.
 
 ### C4. EXPOSE_COMPUTED Pattern (identified in C05, Deferred Issue #2)
 
@@ -152,12 +229,13 @@
 
 ### Summary: Fixture Model Creation Plan
 
-| Priority | New Fixture Model | Gaps Closed | Effort |
-|----------|-------------------|-------------|--------|
-| 1 (High) | `expression_binding_probe.sysml` | C1 (EXPRESSION binding), potentially C3 (UNRESOLVABLE) | Medium — needs SysML authoring + JVM extraction |
-| 2 (High) | `chain_override_probe.sysml` | C2 (CHAIN design override) | Medium — needs design-level `:>>` with CHAIN type |
-| 3 (Medium) | Extend `attr_expr_probe` or new fixture | C3 (UNRESOLVABLE), C5 (HR-07 aliases) | Medium |
-| 4 (Low) | Defer | C4 (EXPOSE_COMPUTED), C6 (deep cross-scope) | N/A |
+| Priority | New Fixture Model | Gaps Closed | Effort | Status |
+|----------|-------------------|-------------|--------|--------|
+| 1 (High) | `expression_binding_probe.sysml` | C1 (EXPRESSION binding) | Medium | **DONE** |
+| 2 (High) | `chain_override_probe.sysml` | C2 (CHAIN design override) | Medium | **DONE** |
+| 3 (Medium) | `unresolvable_attr_probe.sysml` | C3 (inheritance misclassification — UNRESOLVABLE untriggered) | Medium | **DONE** |
+| 4 (Medium) | Extend `issue22_model` or new fixture | C5 (HR-07 aliases) | Medium | Pending |
+| 5 (Low) | Defer | C4 (EXPOSE_COMPUTED), C6 (deep cross-scope) | N/A | Deferred |
 
 **Dependency**: Creating new fixture models requires the SysIDE JVM parser (`agentic-mbse`
 SysideAdapter). The extraction snapshot capture script (`scripts/capture_extraction_snapshots.py`)
@@ -205,9 +283,9 @@ handles serialization once extraction is run. New snapshots must be added to
   the actual scope now includes: (a) backtracker typed dispatch, (b) `_compat` dict elimination,
   (c) Phase 2/3/4 `resolve()` migration in `build_output_registry()`, (d) catf_mfe cross-package
   resolution patterns.
-- [ ] **Action**: Update IMPLEMENTATION_PLAN §3.1 description to note expanded scope. Add a
-  note that C11 may need to be split into C11a (conformance tests on current behavior) and C11b
-  (typed dispatch migration + `_compat` removal).
+- [x] **Action**: Split IMPLEMENTATION_PLAN §3.1 into §3.1a (C11a conformance, done) and §3.1b
+  (C11b typed dispatch migration + `_compat` removal). Updated Checkpoint 3, TRR impact table,
+  and Phase 7.4 to move 3 dead code items to C11b. *(done 2026-02-17)*
 
 ---
 
@@ -233,3 +311,5 @@ handles serialization once extraction is run. New snapshots must be added to
 | 2026-02-17 | Section A complete (A1–A7), committed | Phase 2 checkpoint review |
 | 2026-02-17 | C1 — EXPRESSION binding fixture + 19 conformance tests (1184 total) | C1 implementation |
 | 2026-02-17 | Section B complete (B1–B4), design docs amended | Phase 2 checkpoint review |
+| 2026-02-17 | C3 — Inherited attr misclassification bug found + 17 conformance tests (1250 total, 5 xfail) | C3 implementation |
+| 2026-02-17 | C3 design doc amendments: Doc 16 (Known Issues + algorithm annotations), Doc 09 (enum footnote), Doc 01 (supertype chain data gap), COMPONENT_CHECKLIST (C03/C05 new ACs), IMPLEMENTATION_PLAN (Deferred Issues #9/#10 + amendments table) | C3 design doc propagation |

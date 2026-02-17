@@ -80,6 +80,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] Extraction imports NOTHING from analysis/, resolution/, or generation/
   - [x] `output_expression_asts` preserves raw SysIDE AST nodes — field+type verified; content deferred to C04 (ASTs null in snapshots per serialization boundary)
   - [x] Verified with solar_battery_model (4 of 5 binding types; EXPRESSION absent from all fixtures) and catf_mfe_model (has hierarchy)
+  - [ ] PartDefinitionData includes supertype chain information (ancestor PartDef QNs) sufficient for downstream C05 classifier to distinguish inherited sibling attributes from external calc output references — **required for Deferred Issue #9 fix**
 
 ### C04 — Expression Compiler
 - **Doc**: [14-expression-compiler.md](14-expression-compiler.md)
@@ -105,14 +106,16 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Interfaces**:
   - Input: PartDefinitionData attribute expressions
   - Output: ComputedAttributeClassification per attribute, ComputedAttributeData
-- **AC**: *(all verified 2026-02-17 — 37 tests in `tests/conformance/test_computed_attributes.py`)*
+- **AC**: *(37 tests verified 2026-02-17 in `tests/conformance/test_computed_attributes.py`; +17 C3 tests added 2026-02-17 in `TestInheritedAttrClassification`, 12 pass / 5 xfail)*
   - [x] Every attribute expression classified as exactly one of: FORMULA, EXPOSE_PURE, EXPOSE_COMPUTED, LITERAL, UNRESOLVABLE
   - [x] FORMULA attributes compile to valid Python
   - [x] EXPOSE_PURE only for PartUsage-level single-FCE
   - [x] LITERAL attributes excluded (no module, no alias)
-  - [x] UNRESOLVABLE logged but no module/alias created — zero fixture coverage (same gap as C03 EXPRESSION)
+  - [x] UNRESOLVABLE logged but no module/alias created — zero fixture coverage; likely dead code for well-formed SysML (C3 finding: SysIDE always resolves inherited attr QNs, so empty-QN fallback unreachable)
   - [x] Self-reference excluded from input_names
   - [x] Test with attr_expr_probe fixture (primary), solar_battery (cross-model), catf_mfe (cross-model)
+  - [ ] Inherited attribute QNs from supertypes recognized as sibling refs, not calc_refs (classifier walks supertype chain for Step 2b prefix check) — **Deferred Issue #9; 5 xfailed tests in `TestInheritedAttrClassification`**
+  - [ ] `sibling_attr_names` includes inherited members (not just `owned_members`) — **requires C03 extraction enrichment**
 
 ### C06 — Hierarchy Resolver
 - **Doc**: [25-hierarchy-resolver.md](25-hierarchy-resolver.md), [13-aggregation-scoping.md](13-aggregation-scoping.md)
@@ -491,3 +494,12 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **AC**:
   - [ ] Same reference in same scope produces identical wiring from all applicable paths
   - [ ] Test: for every Agg input that COULD be a CalcUsage input, both paths agree
+
+---
+
+## Changelog
+
+| Date | Change | Source |
+|------|--------|--------|
+| 2026-02-17 | C05: Updated UNRESOLVABLE AC note (likely dead code); added 2 new unchecked ACs for inherited attr fix (Deferred Issue #9) and `sibling_attr_names` enrichment | C3 Phase 2 Audit findings |
+| 2026-02-17 | C03: Added unchecked AC for supertype chain extraction (required for C05 Deferred Issue #9 fix) | C3 Phase 2 Audit findings |

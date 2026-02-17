@@ -33,6 +33,9 @@ EXPECTED_CALC_DEF_COUNTS = {
     "attr_expr_probe": 2,
     "chain_spike_model": 3,
     "issue22_model": 2,
+    "expression_binding_probe": 3,
+    "chain_override_probe": 2,
+    "unresolvable_attr_probe": 1,
 }
 
 
@@ -637,3 +640,195 @@ class TestReqExt07AstFields:
                 f"member_expressions should be null/empty, "
                 f"got {member_val!r}"
             )
+
+
+# ---------------------------------------------------------------------------
+# REQ-EXT-02 (extended): EXPRESSION binding type coverage
+# Closes fixture gap C1 from Phase 2 audit.
+# ---------------------------------------------------------------------------
+
+# Expected EXPRESSION bindings in expression_binding_probe:
+# Each tuple is (calc_usage_instance_name, param_name)
+EXPECTED_EXPRESSION_BINDINGS = [
+    ("cost_calc", "combined_input"),       # Pattern 1: binary op (two refs, +)
+    ("adjusted_calc", "combined_input"),   # Pattern 2: ref * literal
+    ("full_cost_calc", "combined_input"),  # Pattern 3: 3-term (ref + ref + ref)
+    ("delta_calc", "value_a"),             # Pattern 4a: binary op (two refs, +)
+    ("delta_calc", "value_b"),             # Pattern 4b: ref * literal
+    ("net_calc", "x"),                     # Pattern 5: binary op (ref - ref)
+]
+
+# Expected non-EXPRESSION bindings (REFERENCE) in expression_binding_probe
+EXPECTED_REFERENCE_BINDINGS_EXPR_PROBE = [
+    ("cost_calc", "tax_rate"),
+    ("adjusted_calc", "tax_rate"),
+    ("full_cost_calc", "tax_rate"),
+]
+
+
+@pytest.mark.req("REQ-EXT-02")
+class TestExpressionBindingType:
+    """EXPRESSION binding type (OperatorExpression) coverage from expression_binding_probe.
+
+    Closes fixture gap C1: BindingType.EXPRESSION was absent from all 6 original
+    fixture models. The expression_binding_probe fixture exercises the code path
+    at usage_extractor.py:559-566.
+    """
+
+    def test_expression_binding_type_present(self, expression_binding_snapshot):
+        """expression_binding_probe has EXPRESSION bindings."""
+        all_types = set()
+        for usage in expression_binding_snapshot["calc_usages"]:
+            for binding in usage.bindings:
+                all_types.add(binding.binding_type)
+        assert BindingType.EXPRESSION in all_types, (
+            f"expression_binding_probe missing EXPRESSION binding type. "
+            f"Found: {all_types}"
+        )
+
+    def test_expression_binding_count(self, expression_binding_snapshot):
+        """expression_binding_probe has exactly 6 EXPRESSION bindings."""
+        expr_count = 0
+        for usage in expression_binding_snapshot["calc_usages"]:
+            for binding in usage.bindings:
+                if binding.binding_type == BindingType.EXPRESSION:
+                    expr_count += 1
+        assert expr_count == 6, (
+            f"Expected 6 EXPRESSION bindings, got {expr_count}"
+        )
+
+    @pytest.mark.parametrize(
+        "usage_name,param_name",
+        EXPECTED_EXPRESSION_BINDINGS,
+        ids=[f"{u}.{p}" for u, p in EXPECTED_EXPRESSION_BINDINGS],
+    )
+    def test_specific_expression_binding(
+        self, expression_binding_snapshot, usage_name, param_name
+    ):
+        """Each expected EXPRESSION binding is correctly classified."""
+        usages = expression_binding_snapshot["calc_usages"]
+        usage = next((u for u in usages if u.instance_name == usage_name), None)
+        assert usage is not None, f"CalcUsage '{usage_name}' not found"
+
+        binding = next((b for b in usage.bindings if b.param_name == param_name), None)
+        assert binding is not None, (
+            f"Binding '{param_name}' not found in {usage_name}"
+        )
+        assert binding.binding_type == BindingType.EXPRESSION, (
+            f"{usage_name}.{param_name}: expected EXPRESSION, "
+            f"got {binding.binding_type.value}"
+        )
+
+    def test_expression_binding_has_raw_expression(self, expression_binding_snapshot):
+        """EXPRESSION bindings have raw_expression containing 'OperatorExpression'."""
+        for usage in expression_binding_snapshot["calc_usages"]:
+            for binding in usage.bindings:
+                if binding.binding_type == BindingType.EXPRESSION:
+                    assert binding.raw_expression is not None, (
+                        f"{usage.instance_name}.{binding.param_name}: "
+                        f"EXPRESSION binding has None raw_expression"
+                    )
+                    assert "OperatorExpression" in binding.raw_expression, (
+                        f"{usage.instance_name}.{binding.param_name}: "
+                        f"raw_expression={binding.raw_expression!r} "
+                        f"missing 'OperatorExpression'"
+                    )
+
+    def test_expression_binding_source_path_is_none(self, expression_binding_snapshot):
+        """EXPRESSION bindings have source_path=None (no single source reference)."""
+        for usage in expression_binding_snapshot["calc_usages"]:
+            for binding in usage.bindings:
+                if binding.binding_type == BindingType.EXPRESSION:
+                    assert binding.source_path is None, (
+                        f"{usage.instance_name}.{binding.param_name}: "
+                        f"EXPRESSION binding should have source_path=None, "
+                        f"got {binding.source_path!r}"
+                    )
+
+    def test_expression_binding_literal_value_is_none(
+        self, expression_binding_snapshot
+    ):
+        """EXPRESSION bindings have literal_value=None (not a literal)."""
+        for usage in expression_binding_snapshot["calc_usages"]:
+            for binding in usage.bindings:
+                if binding.binding_type == BindingType.EXPRESSION:
+                    assert binding.literal_value is None, (
+                        f"{usage.instance_name}.{binding.param_name}: "
+                        f"EXPRESSION binding should have literal_value=None, "
+                        f"got {binding.literal_value!r}"
+                    )
+
+    def test_expression_binding_ast_nullified_in_snapshot(
+        self, expression_binding_snapshot
+    ):
+        """EXPRESSION binding expression_ast is None in snapshots (serialization boundary).
+
+        Live extraction stores the raw SysIDE OperatorExpression node, but
+        the snapshot serializer nullifies it (Java object can't survive JSON).
+        """
+        for usage in expression_binding_snapshot["calc_usages"]:
+            for binding in usage.bindings:
+                if binding.binding_type == BindingType.EXPRESSION:
+                    assert binding.expression_ast is None, (
+                        f"{usage.instance_name}.{binding.param_name}: "
+                        f"expression_ast should be None in snapshot"
+                    )
+
+    @pytest.mark.parametrize(
+        "usage_name,param_name",
+        EXPECTED_REFERENCE_BINDINGS_EXPR_PROBE,
+        ids=[f"{u}.{p}" for u, p in EXPECTED_REFERENCE_BINDINGS_EXPR_PROBE],
+    )
+    def test_non_expression_bindings_still_correct(
+        self, expression_binding_snapshot, usage_name, param_name
+    ):
+        """Non-EXPRESSION bindings in the same CalcUsages are still correctly classified."""
+        usages = expression_binding_snapshot["calc_usages"]
+        usage = next((u for u in usages if u.instance_name == usage_name), None)
+        assert usage is not None
+        binding = next((b for b in usage.bindings if b.param_name == param_name), None)
+        assert binding is not None
+        assert binding.binding_type == BindingType.REFERENCE, (
+            f"{usage_name}.{param_name}: expected REFERENCE, "
+            f"got {binding.binding_type.value}"
+        )
+
+    def test_mixed_binding_types_on_same_usage(self, expression_binding_snapshot):
+        """CalcUsages can have both EXPRESSION and non-EXPRESSION bindings."""
+        usages = expression_binding_snapshot["calc_usages"]
+        cost_calc = next(u for u in usages if u.instance_name == "cost_calc")
+        types = {b.binding_type for b in cost_calc.bindings}
+        assert BindingType.EXPRESSION in types, "cost_calc missing EXPRESSION binding"
+        assert BindingType.REFERENCE in types, "cost_calc missing REFERENCE binding"
+
+    def test_all_bound_binding_types_across_models(self, extraction_snapshots):
+        """With expression_binding_probe, all 4 bound BindingType values have fixture coverage.
+
+        Previously EXPRESSION was absent from all 6 original models.
+        UNBOUND params go into CalcUsageData.unbound_params (string list),
+        not into bindings, so BindingType.UNBOUND doesn't appear in binding lists.
+        """
+        all_types = set()
+        for model_name, snapshot in extraction_snapshots.items():
+            for usage in snapshot["calc_usages"]:
+                for binding in usage.bindings:
+                    all_types.add(binding.binding_type)
+        expected_bound = {
+            BindingType.CHAIN,
+            BindingType.REFERENCE,
+            BindingType.LITERAL,
+            BindingType.EXPRESSION,
+        }
+        assert expected_bound.issubset(all_types), (
+            f"Missing binding types across all models: {expected_bound - all_types}"
+        )
+
+    def test_total_binding_counts(self, expression_binding_snapshot):
+        """expression_binding_probe has 5 CalcUsages with 9 total bindings."""
+        usages = expression_binding_snapshot["calc_usages"]
+        assert len(usages) == 5, f"Expected 5 calc_usages, got {len(usages)}"
+        total_bindings = sum(len(u.bindings) for u in usages)
+        assert total_bindings == 9, (
+            f"Expected 9 total bindings (6 EXPRESSION + 3 REFERENCE), "
+            f"got {total_bindings}"
+        )

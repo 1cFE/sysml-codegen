@@ -936,3 +936,131 @@ class TestRewriteCount:
         assert count == 2
         assert binding1.binding_type == BindingType.LITERAL
         assert binding2.source_path == "tracker.eta"
+
+
+# ---------------------------------------------------------------------------
+# CHAIN override fixture coverage (C2 gap closure)
+# Uses chain_override_probe fixture — real SysML data with CHAIN design override.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-VBR-04")
+class TestChainOverrideFixtureCoverage:
+    """CHAIN design override with real SysML fixture data (closes C2 gap).
+
+    The chain_override_probe fixture has:
+    - 1 LITERAL override: :>> base_cost = 100.0
+    - 1 CHAIN override: :>> sensitivity = calibration.calibrated_factor
+    Both are flat (not deep-path) overrides on the sensor PartUsage.
+    """
+
+    def test_chain_override_present_in_fixture(self, chain_override_snapshot):
+        """chain_override_probe has at least one CHAIN design override."""
+        overrides = chain_override_snapshot["hierarchy_data"].design_overrides
+        chain_overrides = [
+            o for o in overrides
+            if o.redefinition_type == RedefinitionType.CHAIN
+        ]
+        assert len(chain_overrides) >= 1, (
+            f"Expected at least 1 CHAIN override, found {len(chain_overrides)}"
+        )
+
+    def test_chain_override_has_source_path(self, chain_override_snapshot):
+        """CHAIN override has non-None source_path (calibration.calibrated_factor)."""
+        overrides = chain_override_snapshot["hierarchy_data"].design_overrides
+        chain_overrides = [
+            o for o in overrides
+            if o.redefinition_type == RedefinitionType.CHAIN
+        ]
+        for o in chain_overrides:
+            assert o.source_path is not None and o.source_path != "", (
+                f"CHAIN override {o.attribute_name} has empty source_path"
+            )
+
+    def test_chain_override_sensitivity_redirected(self, chain_override_snapshot):
+        """sensitivity binding source_path is redirected to calibration.calibrated_factor."""
+        overrides = chain_override_snapshot["hierarchy_data"].design_overrides
+        sensitivity_override = next(
+            (o for o in overrides if o.attribute_name == "sensitivity"), None
+        )
+        assert sensitivity_override is not None, "sensitivity override not found"
+        assert sensitivity_override.redefinition_type == RedefinitionType.CHAIN
+        assert sensitivity_override.source_path == "calibration.calibrated_factor"
+
+    def test_literal_override_also_present(self, chain_override_snapshot):
+        """chain_override_probe has both LITERAL and CHAIN overrides."""
+        overrides = chain_override_snapshot["hierarchy_data"].design_overrides
+        types = {o.redefinition_type for o in overrides}
+        assert RedefinitionType.LITERAL in types, "Missing LITERAL override"
+        assert RedefinitionType.CHAIN in types, "Missing CHAIN override"
+
+    def test_override_count(self, chain_override_snapshot):
+        """chain_override_probe has exactly 2 design overrides (1 LITERAL + 1 CHAIN)."""
+        overrides = chain_override_snapshot["hierarchy_data"].design_overrides
+        assert len(overrides) == 2, (
+            f"Expected 2 design overrides, got {len(overrides)}"
+        )
+
+    def test_vbr_applies_chain_override_to_real_binding(self, chain_override_snapshot):
+        """VBR applies CHAIN override on real fixture data, changing source_path."""
+        hierarchy = chain_override_snapshot["hierarchy_data"]
+        calc_usages = copy.deepcopy(chain_override_snapshot["calc_usages"])
+
+        # Find the sensor cost_model CalcUsage
+        cost_model = next(
+            (u for u in calc_usages if "cost_model" in u.instance_name),
+            None,
+        )
+        assert cost_model is not None, "cost_model CalcUsage not found"
+
+        # Snapshot is post-rewrite. The sensitivity binding should already be redirected.
+        sensitivity = next(
+            (b for b in cost_model.bindings if b.param_name == "sensitivity"), None
+        )
+        assert sensitivity is not None, "sensitivity binding not found"
+
+        # Post-rewrite: source_path should be the CHAIN target
+        assert sensitivity.source_path == "calibration.calibrated_factor", (
+            f"Expected source_path='calibration.calibrated_factor', "
+            f"got {sensitivity.source_path!r}"
+        )
+
+    def test_vbr_applies_literal_override_to_real_binding(self, chain_override_snapshot):
+        """VBR applies LITERAL override on real fixture data, setting literal_value."""
+        calc_usages = chain_override_snapshot["calc_usages"]
+
+        cost_model = next(
+            (u for u in calc_usages if "cost_model" in u.instance_name), None
+        )
+        assert cost_model is not None
+
+        base_cost = next(
+            (b for b in cost_model.bindings if b.param_name == "base_cost"), None
+        )
+        assert base_cost is not None, "base_cost binding not found"
+        assert base_cost.binding_type == BindingType.LITERAL
+        assert base_cost.literal_value == 100.0
+        assert base_cost.source_path is None
+
+    def test_chain_override_is_flat_not_deep(self, chain_override_snapshot):
+        """chain_override_probe overrides are flat (not deep-path)."""
+        overrides = chain_override_snapshot["hierarchy_data"].design_overrides
+        for o in overrides:
+            assert o.is_deep_path is False, (
+                f"Override {o.attribute_name} is_deep_path={o.is_deep_path}, "
+                f"expected False"
+            )
+
+    def test_chain_override_across_all_models(self, extraction_snapshots):
+        """With chain_override_probe, CHAIN design overrides now have fixture coverage."""
+        has_chain_override = False
+        for model_name, snapshot in extraction_snapshots.items():
+            for o in snapshot["hierarchy_data"].design_overrides:
+                if o.redefinition_type == RedefinitionType.CHAIN:
+                    has_chain_override = True
+                    break
+            if has_chain_override:
+                break
+        assert has_chain_override, (
+            "No CHAIN design override found across any fixture model"
+        )
