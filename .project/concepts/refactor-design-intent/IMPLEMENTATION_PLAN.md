@@ -1027,7 +1027,14 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 3. **REQ-PIPE-07 (generation uses ONLY ComputationGraph) has 9 violating files.** All files
    in `generation/` that import from `extraction/` or `analysis/` were counted. This is the
-   known violation baseline for Phase 7.6 to drive toward zero.
+   known violation baseline for Phase 7.6 to drive toward zero. The C19 test
+   `test_generation_extraction_import_count` asserts violations > 0 (documenting the
+   baseline); Phase 7.6 must invert this assertion when it achieves zero violations.
+
+4. **All pipeline invariants (PIPE-01 through PIPE-06) pass on first run across 4 models.**
+   No surprises from the composed pipeline — every module input wired, every producer channel
+   declared, valid topological sort, every entry point classified. Confirms C14–C18 component
+   tests compose correctly.
 
 ### Phase 0 (2026-02-17)
 

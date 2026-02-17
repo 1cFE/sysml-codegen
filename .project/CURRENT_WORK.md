@@ -22,10 +22,11 @@
 - [x] Phase 2: Core Infrastructure Spikes (C08-C10, 117 conformance tests)
 - [x] Phase 3: Analysis Components (C11a/b, C12, C13, X02, 136 conformance tests)
 - [x] Phase 4: Module Factory + Graph Assembly (C14-C18, 183 conformance tests, Checkpoint 4 passed)
+- [x] Phase 5 (partial): C19 Orchestrator Step Ordering (39 conformance tests)
 
-**Current Phase**: Phase 5 — Orchestrator Integration (C19)
+**Current Phase**: Phase 5 — End-to-End Pipeline Validation (5.2)
 
-**Test Suite**: 1532 tests passing (865 conformance + 667 existing), 5 xfailed
+**Test Suite**: 1571 tests passing (904 conformance + 667 existing), 5 xfailed
 
 **Key Decisions**:
 - Typed Registry Refactor complete — 3 typed registries, zero `_compat`, zero `resolve()`
@@ -39,6 +40,15 @@
 ---
 
 ## Recently Completed
+
+### 2026-02-17: Phase 5 (partial) — Orchestrator Step Ordering (C19)
+- 39 conformance tests in `tests/conformance/test_orchestrator.py`
+- Static analysis: `build_pipeline_context()` 10-step DAG ordering verified
+- FORMULA removal safety net verified (zero natural overlap in fixtures; constructed overlap exercises logic)
+- Registry 4-phase ordering: all aliases target Phase 1 canonical channels (solar_battery + catf_mfe)
+- Pipeline invariants (PIPE-01–06) verified across 4 models (solar_battery, catf_mfe, chain_spike, attr_expr_probe)
+- REQ-PIPE-07 baseline: 9 generation/ files import from extraction/analysis (Phase 7.6 target)
+- No production code changes — conformance-only
 
 ### 2026-02-17: Phase 4 — Module Factory + Graph Assembly
 - C14 CalcUsage Factory (48 tests), C15 FORMULA Factory (34 tests), C16 Aggregation Factory (32 tests)
@@ -78,9 +88,8 @@
 
 ## Up Next
 
-1. Phase 5: C19 Orchestrator Step Ordering — wire all proven components into the orchestrator, verify end-to-end pipeline
-2. Phase 5: End-to-End Pipeline Validation — ComputationGraph matches baselines on all fixture models
-3. Phase 6: Generation Layer Validation (C20-C25, X01)
-4. Phase 7: Structural Refactoring & Dead Code Removal
+1. Phase 5: 5.2 End-to-End Pipeline Validation — ComputationGraph matches baselines on all fixture models
+2. Phase 6: Generation Layer Validation (C20-C25, X01)
+3. Phase 7: Structural Refactoring & Dead Code Removal
 
 ---
