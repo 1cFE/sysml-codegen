@@ -496,8 +496,9 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **REQs**: REQ-DRA-01 through REQ-DRA-05
 - **Paths**: (1) Backtracker DFS cascade (CalcUsage), (2) Pre-computed attribute resolution map (FORMULA), (3) resolve_input() with AGG_STRATEGIES (Aggregation SumTerm/SingletonTerm) + factory cascade (LocalTerm)
 - **AC**:
-  - [ ] Same reference in same scope produces identical wiring from all applicable paths
-  - [ ] Test: for every Agg input that COULD be a CalcUsage input, both paths agree
+  - [x] Same reference in same scope produces identical wiring from all applicable paths
+  - [x] Test: for every Agg input that COULD be a CalcUsage input, both paths agree
+- **Status**: DONE (2026-02-17) — 20 conformance tests in `tests/conformance/test_dual_resolution.py`
 
 ---
 
@@ -505,5 +506,6 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 | Date | Change | Source |
 |------|--------|--------|
+| 2026-02-17 | X02: Marked both ACs as done; 20 conformance tests covering REQ-DRA-03, REQ-DRA-04, REQ-DRA-05 | X02 build session |
 | 2026-02-17 | C05: Updated UNRESOLVABLE AC note (likely dead code); added 2 new unchecked ACs for inherited attr fix (Deferred Issue #9) and `sibling_attr_names` enrichment | C3 Phase 2 Audit findings |
 | 2026-02-17 | C03: Added unchecked AC for supertype chain extraction (required for C05 Deferred Issue #9 fix) | C3 Phase 2 Audit findings |

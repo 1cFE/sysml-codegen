@@ -353,17 +353,21 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
   - No production code changes — conformance-only
   - **Acceptance**: REQ-PGD-01 through REQ-PGD-07 all green (1334 tests, 1329 passed, 5 xfailed, 0 failures)
 
-- [ ] **3.4 — Dual Resolution Consistency (X02)**
+- [x] **3.4 — Dual Resolution Consistency (X02)** *(completed 2026-02-17)*
   - **Refs**: [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
-  - Write `tests/conformance/test_dual_resolution.py`:
-    - For a shared reference that appears in both CalcUsage and FORMULA context,
-      verify both paths produce the same wiring decision
-    - Use real extraction data where such overlap exists (or construct minimal fixture)
-  - **Acceptance**: REQ-DRA-04 green
+  - 20 conformance tests in `tests/conformance/test_dual_resolution.py`
+  - Cross-path consistency: backtracker vs resolve_input for CHAIN (3 models) and REFERENCE (3 models)
+  - FORMULA map consistency: EXPOSE_PURE channels in canonical_channels, FORMULA channels in SysML QN registry
+  - REQ-DRA-05 structural mapping: BindingResolution ↔ InputSource type correspondence
+  - REQ-DRA-03 static analysis: no untyped dict.get() in resolution paths (4 tests)
+  - Known asymmetry documented: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by Strategy B
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-DRA-03, REQ-DRA-04, REQ-DRA-05 all green (1349 tests passed, 5 xfailed, 0 failures)
 
-**Checkpoint 3**: [ ] All analysis and resolution logic independently proven. Backtracker uses
+**Checkpoint 3**: [x] All analysis and resolution logic independently proven. Backtracker uses
 typed dispatch (no `_compat` dependency). The two resolution paths are verified consistent.
-~50-70 new conformance tests total at this point.
+136 new conformance tests (C11a: 43, C11b: 17, C12: 26, C13: 30, X02: 20). 1349 total tests,
+5 xfailed, 0 failures. *(2026-02-17)*
 
 ---
 
@@ -946,6 +950,22 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    equivalent to `_resolve_aggregation_input_channel()` via regression test (51/51 refs match).
    Wiring the call sites is the Aggregation Module Factory's responsibility (C16, Phase 4).
 
+### X02 Dual Resolution Consistency (2026-02-17)
+
+1. **Backtracker REFERENCE Step 2 not replicated by Strategy B.** The backtracker's
+   `_resolve_reference_dispatch` Step 2 (leaf + parent_part scoped lookup) resolves
+   solar_battery `annualized_om|p_net_kw` via Key_F (`solar_battery_plant.p_net_kw`).
+   Strategy B normalizes to `annualized_om.p_net_kw` (penultimate + last `::` segment),
+   which doesn't match. This is expected — REFERENCE bindings are not aggregation scope
+   (C12 spike: zero `::` in aggregation refs). Not a consistency violation.
+
+2. **All CHAIN cross-path verifications pass perfectly across 3 models.** Every CHAIN
+   MODULE_OUTPUT from the backtracker matches resolve_input with AGG_STRATEGIES for
+   solar_battery, catf_mfe, and chain_spike. Strategy A is sufficient for all CHAIN cases.
+
+3. **FORMULA SysML QN registration complete.** Every FORMULA channel in the attribute
+   resolution map has a corresponding SysML QN key in the registry.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -1017,6 +1037,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 04-input-resolver.md | Remove STANDARD_STRATEGIES default from resolve_input() signature; always require explicit strategies | C12 spike: no non-aggregation caller (2026-02-17) | No |
 | 04-input-resolver.md | Correct REQ-IR-05 "DirectRegistryLookup" → "SysMLQNLookup" | C12 plan Issue #2 (2026-02-17) | No |
 | 04-input-resolver.md | Note Strategy B zero-exercise for aggregation; Strategy D is no-op placeholder | C12 spike findings (2026-02-17) | No |
+| 24-dual-resolution-architecture.md | Note Strategy B asymmetry: backtracker REFERENCE Step 2 (leaf + parent scope) not replicated by SysMLQNLookup | X02 conformance finding #1 (2026-02-17) | No |
 
 ---
 
@@ -1044,3 +1065,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C11b Typed Dispatch (C11b) | 1260 | 17 conformance (net +13 after unit test updates) | 1273 (+5 xfail) | 2026-02-17 |
 | C12 Input Resolver | 1273 | 26 | 1299 (+5 xfail) | 2026-02-17 |
 | C13 ParameterGroupDeriver | 1304 | 30 | 1334 (+5 xfail) | 2026-02-17 |
+| X02 Dual Resolution | 1329 | 20 | 1349 (+5 xfail) | 2026-02-17 |
