@@ -375,15 +375,17 @@ typed dispatch (no `_compat` dependency). The two resolution paths are verified 
 
 **Goal**: Validate module construction and graph assembly as standalone functions.
 
-- [ ] **4.1 — CalcUsage Module Factory (C14)**
+- [x] **4.1 — CalcUsage Module Factory (C14)** *(completed 2026-02-17)*
   - **Refs**: [05-module-factory.md](05-module-factory.md)
-  - Write `tests/conformance/test_factory_calc_usage.py`:
-    - Build modules from real BacktrackingResult + real calc defs
-    - Verify pure function (no side effects on inputs)
-    - Verify fail-fast on missing binding_resolutions
-    - Verify single vs multi output field naming
-    - Verify every ModuleInput has exactly one InputSource
-  - **Acceptance**: REQ-MF-01, REQ-MF-02, REQ-MF-05, REQ-MF-08 all green
+  - 48 conformance tests in `tests/conformance/test_factory_calc_usage.py`
+  - Parametrized over 3 models (solar_battery, catf_mfe, chain_spike)
+  - Pure data transformer verified (no mutation of entry_points or binding_resolutions)
+  - Fail-fast on missing binding_resolutions key and missing entry_point
+  - Single-output field_name="root", multi-output uses attribute names (constructed test)
+  - Every ModuleInput has exactly one InputSource (module_output or entry_point)
+  - Module name/type/execution_order/default flags all verified
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-MF-01, REQ-MF-02, REQ-MF-05, REQ-MF-08 all green (1397 tests, 0 failures, 5 xfailed)
 
 - [ ] **4.2 — FORMULA Module Factory (C15)**
   - **Refs**: [05-module-factory.md](05-module-factory.md), [16-computed-attributes.md](16-computed-attributes.md)
@@ -1066,3 +1068,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C12 Input Resolver | 1273 | 26 | 1299 (+5 xfail) | 2026-02-17 |
 | C13 ParameterGroupDeriver | 1304 | 30 | 1334 (+5 xfail) | 2026-02-17 |
 | X02 Dual Resolution | 1329 | 20 | 1349 (+5 xfail) | 2026-02-17 |
+| C14 CalcUsage Factory | 1349 | 48 | 1397 (+5 xfail) | 2026-02-17 |

@@ -91,6 +91,11 @@ Contains references that cannot be resolved to known siblings or calc outputs.
 **Pipeline effect**: included in the `ComputedAttributeData` list (for reporting)
 but does not generate a module or alias (REQ-CA-05). Logged as a warning.
 
+> **Coverage note (C05 conformance, 2026-02-17)**: UNRESOLVABLE has **zero
+> coverage** in all fixture models. No fixture attribute expression triggers the
+> empty-QN fallback path (Step 2d). See Known Issues §UNRESOLVABLE Likely Dead
+> Code (Deferred Issue #10) below.
+
 > **Note (C3 finding, 2026-02-17)**: UNRESOLVABLE is likely **unreachable for
 > well-formed SysML**. SysIDE always resolves attribute QNs (even inherited ones
 > resolve to the supertype's namespace), so the empty-QN fallback path (Step 2d)

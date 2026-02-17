@@ -59,8 +59,9 @@ Literals have no subtype overlaps and go last.
 
 ## Dispatch Site Audit
 
-The codebase has **8 files** with `is_instance()` dispatch on expression types.
-Three were the Bug A sites fixed in commit `20b720e`.
+The codebase has **8 multi-type dispatch functions across 5 files** with
+`is_instance()` dispatch on expression types. Three were the Bug A sites fixed
+in commit `20b720e`.
 
 ### Bug A Sites (Fixed)
 
@@ -86,7 +87,7 @@ if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"): # 3rd
 
 | File | Function | Lines | Checks both FCE+OE? | Status |
 |------|----------|-------|----------------------|--------|
-| `usage_extractor.py` | `extract_binding_info` | 521-557 | Yes (elif) | CORRECT |
+| `usage_extractor.py` | `_extract_single_binding` | 521-557 | Yes (elif) | CORRECT |
 | `parameter_groups.py` | `_extract_default_value` | 163-191 | Yes (elif) | CORRECT |
 | `hierarchy_resolver.py` | `extract_redefinition_value` | 105-116 | No (FCE+FRE only) | N/A |
 | `hierarchy_resolver.py` | `_unwrap_invocation` | 294-296 | No (FCE+FRE only) | N/A |
@@ -95,6 +96,13 @@ if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"): # 3rd
 Sites using `elif` chains (parameter_groups.py, usage_extractor.py) are safe
 because first-match-wins prevents misclassification. However, they should still
 follow canonical ordering for consistency (REQ-AST-03).
+
+> **Note (C07 conformance, 2026-02-17)**: In addition to the 8 multi-type
+> dispatch functions above, 5 single-type helper functions also call
+> `is_instance()` on expression types (e.g., checking only FCE or only FRE).
+> These are not dispatch sites — they check a single type and cannot
+> misclassify. Total `is_instance()` call sites on expression types: **13**
+> across the codebase.
 
 ---
 

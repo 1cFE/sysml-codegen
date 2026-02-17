@@ -24,9 +24,9 @@
 
 **Current Phase**: Phase 4 — Module Factory + Graph Assembly (C14-C18)
 
-**Next Component**: C14 — CalcUsage Module Factory. Builds PipelineModules from BacktrackingResult + real calc defs. Design specified in doc 05.
+**Next Component**: C15 — FORMULA Module Factory. Builds FORMULA modules from ComputedAttributeData. Design specified in doc 05.
 
-**Test Suite**: 1349 tests passing (682 conformance + 667 existing), 5 xfailed
+**Test Suite**: 1397 tests passing (730 conformance + 667 existing), 5 xfailed
 
 **Key Decisions**:
 - Typed Registry Refactor complete — 3 typed registries, zero `_compat`, zero `resolve()`

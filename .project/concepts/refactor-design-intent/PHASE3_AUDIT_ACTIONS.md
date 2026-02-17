@@ -45,31 +45,31 @@
 
 > Coverage notes and terminology corrections. No Phase 4 impact.
 
-- [ ] **C1** — `01-extraction.md`: Note EXPRESSION binding type has zero coverage in fixture models
+- [x] **C1** — `01-extraction.md`: Note EXPRESSION binding type has zero coverage in fixture models *(done 2026-02-17)*
   - **Source**: C03 conformance (2026-02-17)
 
-- [ ] **C2** — `COMPONENT_CHECKLIST.md`: C03 AC8 — clarify "all binding types" means 4 of 5 (EXPRESSION absent from natural fixtures; covered by expression_binding_probe)
+- [x] **C2** — `COMPONENT_CHECKLIST.md`: C03 AC8 — clarify "all binding types" means 4 of 5 (EXPRESSION absent from natural fixtures; covered by expression_binding_probe) *(done 2026-02-17)*
   - **Source**: C03 conformance (2026-02-17)
 
-- [ ] **C3** — `16-computed-attributes.md`: Note UNRESOLVABLE has zero coverage in fixture models
+- [x] **C3** — `16-computed-attributes.md`: Note UNRESOLVABLE has zero coverage in fixture models *(done 2026-02-17)*
   - **Source**: C05 conformance (2026-02-17)
 
-- [ ] **C4** — `COMPONENT_CHECKLIST.md`: Consider adding REQ-CA-08 (FORMULA-to-FORMULA limitation) to AC list
+- [x] **C4** — `COMPONENT_CHECKLIST.md`: Consider adding REQ-CA-08 (FORMULA-to-FORMULA limitation) to AC list *(done 2026-02-17 — added REQ-CA-08 to C05 ACs and updated REQ range to REQ-CA-01 through REQ-CA-08)*
   - **Source**: C05 conformance — present in design doc but absent from checklist
 
-- [ ] **C5** — `19-ast-dispatch-invariant.md`: Correct "8 files" → "8 multi-type dispatch functions across 5 files"
+- [x] **C5** — `19-ast-dispatch-invariant.md`: Correct "8 files" → "8 multi-type dispatch functions across 5 files" *(done 2026-02-17)*
   - **Source**: C07 conformance (2026-02-17)
 
-- [ ] **C6** — `19-ast-dispatch-invariant.md`: Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types)
+- [x] **C6** — `19-ast-dispatch-invariant.md`: Note 5 additional single-type helper functions exist (13 total with `is_instance` on expression types) *(done 2026-02-17)*
   - **Source**: C07 conformance (2026-02-17)
 
-- [ ] **C7** — `25-hierarchy-resolver.md`: Update REQ-HR-07 note — alias_agg_probe now exercises positive case. Note `endswith()` false-positive edge case for dotted source_paths
+- [x] **C7** — `25-hierarchy-resolver.md`: Update REQ-HR-07 note — alias_agg_probe now exercises positive case. Note `endswith()` false-positive edge case for dotted source_paths *(done 2026-02-17)*
   - **Source**: C5 probe (Phase 2 audit) + C06 conformance
 
-- [ ] **C8** — `COMPONENT_CHECKLIST.md`: C06 — update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case"
+- [x] **C8** — `COMPONENT_CHECKLIST.md`: C06 — update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case" *(already applied — line 131 of checklist has updated language)*
   - **Source**: C5 probe (Phase 2 audit)
 
-- [ ] **C9** — `19-ast-dispatch-invariant.md`: Note `_extract_single_binding` is the actual function name (not `extract_binding_info` as listed in plan)
+- [x] **C9** — `19-ast-dispatch-invariant.md`: Note `_extract_single_binding` is the actual function name (not `extract_binding_info` as listed in plan) *(done 2026-02-17 — corrected function name in dispatch site table)*
   - **Source**: C07 conformance — plan had wrong function name for dispatch site #4
 
 ---
@@ -202,3 +202,4 @@ point for `resolve_input()`. C17 depends on C14. C18 depends on all three factor
 | 2026-02-17 | B1–B3 — `04-input-resolver.md`: REQ-IR-05 strategy name fix, STANDARD_STRATEGIES default removed, Strategy B/D coverage notes added | Phase 3 checkpoint review |
 | 2026-02-17 | B4–B5 — `11-analysis-backtracker.md`: EXPRESSION binding handling documented, compat-only migration section added | Phase 3 checkpoint review |
 | 2026-02-17 | B6 — `24-dual-resolution-architecture.md`: REFERENCE Step 2 asymmetry documented | Phase 3 checkpoint review |
+| 2026-02-17 | C1–C9 — Tier 2 doc amendments applied: EXPRESSION zero-coverage note (01), binding type clarification (checklist), UNRESOLVABLE zero-coverage note (16), REQ-CA-08 added (checklist), dispatch site count corrected (19), single-type helpers noted (19), alias detection coverage+edge case (25), C06 REQ-HR-07 verified (checklist), function name corrected (19) | Tier 2 doc pass |

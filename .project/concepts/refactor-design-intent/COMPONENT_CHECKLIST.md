@@ -73,7 +73,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - Output: `list[CalculationDefinitionData]`, `list[CalcUsageData]`, `list[PartDefinitionData]`, `HierarchyExtractionResult`
 - **AC**: *(all verified 2026-02-17 — 44 tests in `tests/conformance/test_extractor.py`)*
   - [x] One `CalculationDefinitionData` per calc def in model
-  - [x] Every binding has exactly one BindingType (CHAIN, REFERENCE, LITERAL, EXPRESSION, UNBOUND)
+  - [x] Every binding has exactly one BindingType (CHAIN, REFERENCE, LITERAL, EXPRESSION, UNBOUND) — 4 of 5 types exercised by natural fixtures; EXPRESSION absent from all fixture models, covered by synthetic `expression_binding_probe`
   - [x] Every redefinition classified as exactly one RedefinitionType (LITERAL, CHAIN, EXPRESSION)
   - [x] Every aggregation expression decomposed into typed terms (SumTerm, SingletonTerm, LocalTerm)
   - [x] Template calc usages produce one virtual CalcUsageData per PartUsage instance
@@ -101,7 +101,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ### C05 — Computed Attribute Extractor
 - **Doc**: [16-computed-attributes.md](16-computed-attributes.md)
-- **REQs**: REQ-CA-01 through REQ-CA-07
+- **REQs**: REQ-CA-01 through REQ-CA-08
 - **Current location**: `extraction/computed_attribute_extractor.py`
 - **Interfaces**:
   - Input: PartDefinitionData attribute expressions
@@ -114,6 +114,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] UNRESOLVABLE logged but no module/alias created — zero fixture coverage; likely dead code for well-formed SysML (C3 finding: SysIDE always resolves inherited attr QNs, so empty-QN fallback unreachable)
   - [x] Self-reference excluded from input_names
   - [x] Test with attr_expr_probe fixture (primary), solar_battery (cross-model), catf_mfe (cross-model)
+  - [x] REQ-CA-08: FORMULA-to-FORMULA limitation — FORMULA compilation passes `output_names=set()`, so cross-FORMULA references classify as UNSUPPORTED; documented in design doc §FORMULA-to-FORMULA Limitation
   - [ ] Inherited attribute QNs from supertypes recognized as sibling refs, not calc_refs (classifier walks supertype chain for Step 2b prefix check) — **Deferred Issue #9; 5 xfailed tests in `TestInheritedAttrClassification`**
   - [ ] `sibling_attr_names` includes inherited members (not just `owned_members`) — **requires C03 extraction enrichment**
 
@@ -283,11 +284,11 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - Input: CalcUsageData, BacktrackingResult.binding_resolutions, CalculationDefinitionData
   - Output: `(PipelineModule, dict[str, EntryPoint])`
 - **AC**:
-  - [ ] Pure data transformer — no shared state mutation
-  - [ ] Fails fast on missing binding_resolutions key
-  - [ ] Every ModuleInput has exactly one InputSource (module_output or entry_point)
-  - [ ] Single output uses field_name="root"; multi uses attribute names
-  - [ ] Wiring matches binding_resolutions exactly
+  - [x] Pure data transformer — no shared state mutation
+  - [x] Fails fast on missing binding_resolutions key
+  - [x] Every ModuleInput has exactly one InputSource (module_output or entry_point)
+  - [x] Single output uses field_name="root"; multi uses attribute names
+  - [x] Wiring matches binding_resolutions exactly
 
 ### C15 — Module Factory: FORMULA
 - **Doc**: [05-module-factory.md](05-module-factory.md), [16-computed-attributes.md](16-computed-attributes.md)

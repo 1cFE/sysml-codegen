@@ -123,6 +123,14 @@ in adjusted_cost = base_cost * inflation_factor;
 ```
 `BindingInfo(param_name="adjusted_cost", source_path=None, binding_type=EXPRESSION, expression_ast=<node>)`
 
+> **Coverage note (C03 conformance, 2026-02-17)**: EXPRESSION binding type has
+> **zero coverage** in all natural fixture models (solar_battery, catf_mfe, sample,
+> issue22, attr_expr_probe, alias_agg_probe). No calc usage in any fixture binds
+> a parameter to an inline expression. Coverage is provided by the synthetic
+> `expression_binding_probe` fixture. The backtracker handles EXPRESSION bindings
+> by creating an ENTRY_POINT with a warning (see
+> [11-analysis-backtracker](11-analysis-backtracker.md)).
+
 **UNBOUND** -- no binding expression at all. These appear in
 `CalcUsageData.unbound_params` as string names (not in the `bindings` list).
 The backtracker processes `unbound_params` separately after the binding loop
