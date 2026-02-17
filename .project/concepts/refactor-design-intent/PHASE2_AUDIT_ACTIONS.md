@@ -408,8 +408,11 @@ handles serialization once extraction is run. New snapshots must be added to
 - **Issue**: C04, C06, and C07 each have copies of `_find_is_instance_calls_in_function` and
   `_is_*_is_instance_call` helpers. C07 Learning #4 says "if a fourth copy appears, extract to
   `tests/helpers/static_analysis.py`."
-- [ ] **Action**: Monitor during Phase 3. If C11 or C12 need static analysis helpers, extract
-  to shared location.
+- [x] **Action**: Extracted to `tests/helpers/static_analysis.py`. Module exports
+  `find_is_instance_calls_in_function` (with configurable predicate parameter),
+  `is_syside_is_instance_call`, `is_any_is_instance_call`, `find_comment_near_line`,
+  and `find_all_dispatch_functions`. Updated C04, C06, C07 to import from shared module.
+  1273 tests pass. *(done 2026-02-17)*
 
 ### D4. C11 Scope Expansion Warning
 

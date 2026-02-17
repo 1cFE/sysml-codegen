@@ -24,6 +24,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.helpers.static_analysis import find_is_instance_calls_in_function
+
 from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationError,
@@ -156,48 +158,6 @@ def _extract_name_sets(calc_def):
 
 
 # ---------------------------------------------------------------------------
-# Static analysis helpers
-# ---------------------------------------------------------------------------
-
-
-def _find_is_instance_calls_in_function(
-    source_path: Path, function_name: str
-) -> dict[str, int]:
-    """Parse source file and find SysideAdapter.is_instance() calls in a function.
-
-    Returns dict mapping type_name argument to line number (first occurrence only).
-    """
-    source = source_path.read_text()
-    tree = python_ast.parse(source, filename=str(source_path))
-
-    results: dict[str, int] = {}
-
-    for node in python_ast.walk(tree):
-        if isinstance(node, python_ast.FunctionDef) and node.name == function_name:
-            for child in python_ast.walk(node):
-                if isinstance(child, python_ast.Call) and _is_syside_is_instance_call(child):
-                    if len(child.args) >= 2:
-                        type_arg = child.args[1]
-                        if isinstance(type_arg, python_ast.Constant) and isinstance(
-                            type_arg.value, str
-                        ):
-                            if type_arg.value not in results:
-                                results[type_arg.value] = child.lineno
-            break
-
-    return results
-
-
-def _is_syside_is_instance_call(call_node) -> bool:
-    """Check if an ast.Call node is SysideAdapter.is_instance(...)."""
-    func = call_node.func
-    if isinstance(func, python_ast.Attribute) and func.attr == "is_instance":
-        if isinstance(func.value, python_ast.Name) and func.value.id == "SysideAdapter":
-            return True
-    return False
-
-
-# ---------------------------------------------------------------------------
 # REQ-EC-01: FCE before OE at dispatch site
 # ---------------------------------------------------------------------------
 
@@ -208,7 +168,7 @@ class TestReqEc01FceBeforeOe:
 
     def test_fce_dispatch_before_oe_in_source(self):
         """Static analysis: FCE is_instance check precedes OE is_instance check."""
-        calls = _find_is_instance_calls_in_function(
+        calls = find_is_instance_calls_in_function(
             EXPRESSION_COMPILER_PATH, "build_expression_ast"
         )
         assert "FeatureChainExpression" in calls, (
@@ -687,7 +647,7 @@ class TestReqAst01DispatchOrdering:
 
     def test_dispatch_ordering_in_expression_compiler(self):
         """expression_compiler.py build_expression_ast: FCE line < OE line."""
-        calls = _find_is_instance_calls_in_function(
+        calls = find_is_instance_calls_in_function(
             EXPRESSION_COMPILER_PATH, "build_expression_ast"
         )
         assert "FeatureChainExpression" in calls
@@ -699,7 +659,7 @@ class TestReqAst01DispatchOrdering:
 
     def test_dispatch_ordering_in_expression_utils(self):
         """expression_utils.py reconstruct_expression: FCE line < OE line."""
-        calls = _find_is_instance_calls_in_function(
+        calls = find_is_instance_calls_in_function(
             EXPRESSION_UTILS_PATH, "reconstruct_expression"
         )
         assert "FeatureChainExpression" in calls

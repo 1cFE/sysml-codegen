@@ -18,6 +18,7 @@ from sysml_codegen.extraction.data_models import (
     HierarchyExtractionResult,
     RedefinitionType,
 )
+from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 # ---------------------------------------------------------------------------
 # Source paths for static analysis
@@ -55,48 +56,6 @@ ALL_MODELS = [
     "issue22_model",
     "alias_agg_probe",
 ]
-
-
-# ---------------------------------------------------------------------------
-# Static analysis helpers (reused from C04 pattern)
-# ---------------------------------------------------------------------------
-
-
-def _is_syside_is_instance_call(call_node) -> bool:
-    """Check if an ast.Call node is SysideAdapter.is_instance(...)."""
-    func = call_node.func
-    if isinstance(func, python_ast.Attribute) and func.attr == "is_instance":
-        if isinstance(func.value, python_ast.Name) and func.value.id == "SysideAdapter":
-            return True
-    return False
-
-
-def _find_is_instance_calls_in_function(
-    source_path: Path, function_name: str
-) -> dict[str, int]:
-    """Parse source file and find SysideAdapter.is_instance() calls in a function.
-
-    Returns dict mapping type_name argument to line number (first occurrence only).
-    """
-    source = source_path.read_text()
-    tree = python_ast.parse(source, filename=str(source_path))
-
-    results: dict[str, int] = {}
-
-    for node in python_ast.walk(tree):
-        if isinstance(node, python_ast.FunctionDef) and node.name == function_name:
-            for child in python_ast.walk(node):
-                if isinstance(child, python_ast.Call) and _is_syside_is_instance_call(child):
-                    if len(child.args) >= 2:
-                        type_arg = child.args[1]
-                        if isinstance(type_arg, python_ast.Constant) and isinstance(
-                            type_arg.value, str
-                        ):
-                            if type_arg.value not in results:
-                                results[type_arg.value] = child.lineno
-            break
-
-    return results
 
 
 # ---------------------------------------------------------------------------
@@ -288,7 +247,7 @@ class TestReqHr05DispatchOrdering:
 
     def test_fce_before_oe_in_walk_aggregation_ast(self):
         """In _walk_aggregation_ast(), FCE check appears before OE check."""
-        calls = _find_is_instance_calls_in_function(
+        calls = find_is_instance_calls_in_function(
             HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"
         )
         assert "FeatureChainExpression" in calls, (

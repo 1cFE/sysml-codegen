@@ -16,11 +16,17 @@ Requirements: REQ-AST-01 through REQ-AST-07.
 
 from __future__ import annotations
 
-import ast as python_ast
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+
+from tests.helpers.static_analysis import (
+    find_all_dispatch_functions,
+    find_comment_near_line,
+    find_is_instance_calls_in_function,
+    is_any_is_instance_call,
+)
 
 # ---------------------------------------------------------------------------
 # Source paths for static analysis
@@ -90,109 +96,6 @@ ELIF_IDS = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Static analysis helpers
-# ---------------------------------------------------------------------------
-
-
-def _is_any_is_instance_call(call_node) -> bool:
-    """Check if an ast.Call node is *.is_instance(...).
-
-    Matches both SysideAdapter.is_instance() and self.adapter.is_instance().
-    """
-    func = call_node.func
-    if isinstance(func, python_ast.Attribute) and func.attr == "is_instance":
-        return True
-    return False
-
-
-def _find_is_instance_calls_in_function(
-    source_path: Path, function_name: str
-) -> dict[str, int]:
-    """Parse source file and find is_instance() calls in a specific function.
-
-    Returns dict mapping type_name argument to line number (first occurrence only).
-    """
-    source = source_path.read_text()
-    tree = python_ast.parse(source, filename=str(source_path))
-
-    results: dict[str, int] = {}
-
-    for node in python_ast.walk(tree):
-        if isinstance(node, python_ast.FunctionDef) and node.name == function_name:
-            for child in python_ast.walk(node):
-                if isinstance(child, python_ast.Call) and _is_any_is_instance_call(child):
-                    if len(child.args) >= 2:
-                        type_arg = child.args[1]
-                        if isinstance(type_arg, python_ast.Constant) and isinstance(
-                            type_arg.value, str
-                        ):
-                            if type_arg.value not in results:
-                                results[type_arg.value] = child.lineno
-            break
-
-    return results
-
-
-def _find_comment_near_line(
-    source_lines: list[str], target_line: int, pattern: str, window: int = 5
-) -> bool:
-    """Check if a comment matching pattern appears within window lines above target_line.
-
-    Args:
-        source_lines: File contents split by newlines (0-indexed).
-        target_line: 1-based line number of the target (e.g., FCE check).
-        pattern: Substring to look for in comments.
-        window: Number of lines above target_line to search.
-
-    Returns:
-        True if a comment containing the pattern is found within the window.
-    """
-    start = max(0, target_line - 1 - window)
-    end = target_line  # include the target line itself
-    for line in source_lines[start:end]:
-        stripped = line.strip()
-        if stripped.startswith("#") and pattern in stripped:
-            return True
-    return False
-
-
-def _find_all_dispatch_functions(src_dir: Path) -> dict[tuple[str, str], dict[str, int]]:
-    """Walk all .py files in src_dir and find functions with is_instance() on expression types.
-
-    Returns dict mapping (relative_path, function_name) to {type_name: line_number}.
-    Only includes functions that check at least one of the EXPRESSION_TYPE_NAMES.
-    """
-    results: dict[tuple[str, str], dict[str, int]] = {}
-
-    for py_file in sorted(src_dir.rglob("*.py")):
-        try:
-            source = py_file.read_text()
-            tree = python_ast.parse(source, filename=str(py_file))
-        except SyntaxError:
-            continue
-
-        rel_path = str(py_file.relative_to(src_dir))
-
-        for node in python_ast.walk(tree):
-            if isinstance(node, python_ast.FunctionDef):
-                func_types: dict[str, int] = {}
-                for child in python_ast.walk(node):
-                    if isinstance(child, python_ast.Call) and _is_any_is_instance_call(child):
-                        if len(child.args) >= 2:
-                            type_arg = child.args[1]
-                            if (
-                                isinstance(type_arg, python_ast.Constant)
-                                and isinstance(type_arg.value, str)
-                                and type_arg.value in EXPRESSION_TYPE_NAMES
-                            ):
-                                if type_arg.value not in func_types:
-                                    func_types[type_arg.value] = child.lineno
-
-                if func_types:
-                    results[(rel_path, node.name)] = func_types
-
-    return results
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +140,7 @@ class TestReqAst01FceBeforeOe:
     )
     def test_fce_before_oe_all_dual_check_sites(self, source_path, function_name):
         """FCE check line < OE check line in the given function."""
-        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
         assert "FeatureChainExpression" in calls, (
             f"No is_instance call for FeatureChainExpression in "
             f"{source_path.name}:{function_name}"
@@ -270,7 +173,7 @@ class TestReqAst02CommentPresent:
     def test_invariant_comment_at_all_dual_check_sites(self, source_path, function_name):
         """Comment matching 'MUST be before OperatorExpression' appears within 5 lines
         above the FCE check in the given function."""
-        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
         assert "FeatureChainExpression" in calls, (
             f"No is_instance call for FeatureChainExpression in "
             f"{source_path.name}:{function_name}"
@@ -279,7 +182,7 @@ class TestReqAst02CommentPresent:
         fce_line = calls["FeatureChainExpression"]
         source_lines = source_path.read_text().splitlines()
 
-        assert _find_comment_near_line(
+        assert find_comment_near_line(
             source_lines, fce_line, "MUST be before OperatorExpression"
         ), (
             f"{source_path.name}:{function_name}: "
@@ -305,7 +208,7 @@ class TestReqAst03CanonicalOrdering:
     )
     def test_canonical_ordering_fce_oe_fre(self, source_path, function_name):
         """Full canonical ordering: FCE < OE < FRE at if-chain sites."""
-        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
         assert "FeatureReferenceExpression" in calls
@@ -326,7 +229,7 @@ class TestReqAst03CanonicalOrdering:
     )
     def test_elif_sites_fce_before_oe(self, source_path, function_name):
         """Critical invariant: FCE < OE at elif-chain sites (full canonical not required)."""
-        calls = _find_is_instance_calls_in_function(source_path, function_name)
+        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
 
@@ -348,7 +251,7 @@ class TestReqAst04DispatchSiteGuardrail:
 
     def test_total_dual_check_site_count(self):
         """Exactly 5 functions have both FCE and OE is_instance() checks."""
-        all_dispatch = _find_all_dispatch_functions(SRC_ROOT)
+        all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         dual_check = {
             key: types
             for key, types in all_dispatch.items()
@@ -361,7 +264,7 @@ class TestReqAst04DispatchSiteGuardrail:
 
     def test_total_dispatch_function_count(self):
         """Exactly 8 functions dispatch on 2+ expression types (where ordering matters)."""
-        all_dispatch = _find_all_dispatch_functions(SRC_ROOT)
+        all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         multi_type = {
             key: types
             for key, types in all_dispatch.items()
