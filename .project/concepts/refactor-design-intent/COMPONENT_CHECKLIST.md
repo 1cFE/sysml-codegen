@@ -86,15 +86,15 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Interfaces**:
   - Input: `CalculationDefinitionData` with `output_expression_asts`
   - Output: compiled Python expressions, compilability verdicts per output
-- **AC**:
-  - [ ] FCE checked BEFORE OE at every dispatch site (doc 19 invariant)
-  - [ ] N-ary operands left-folded into binary nodes
-  - [ ] Unit annotations stripped from expressions
-  - [ ] Every compiled expression validates via `ast.parse()`
-  - [ ] Cycles mark all outputs MANUAL_REQUIRED
-  - [ ] Worst-case roll-up for calc-level compilability
-  - [ ] Undeclared intermediates discovered iteratively
-  - [ ] Test with real calc defs from all fixture models
+- **AC**: *(all verified 2026-02-17 — 31 tests in `tests/conformance/test_expression_compiler.py`)*
+  - [x] FCE checked BEFORE OE at every dispatch site (doc 19 invariant)
+  - [x] N-ary operands left-folded into binary nodes
+  - [x] Unit annotations stripped from expressions
+  - [x] Every compiled expression validates via `ast.parse()`
+  - [x] Cycles mark all outputs MANUAL_REQUIRED
+  - [x] Worst-case roll-up for calc-level compilability
+  - [x] Undeclared intermediates discovered iteratively
+  - [x] Test with real calc defs from all fixture models (metadata + SysIDE boundary stub)
 
 ### C05 — Computed Attribute Extractor
 - **Doc**: [16-computed-attributes.md](16-computed-attributes.md)
@@ -103,14 +103,14 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Interfaces**:
   - Input: PartDefinitionData attribute expressions
   - Output: ComputedAttributeClassification per attribute, ComputedAttributeData
-- **AC**:
-  - [ ] Every attribute expression classified as exactly one of: FORMULA, EXPOSE_PURE, EXPOSE_COMPUTED, LITERAL, UNRESOLVABLE
-  - [ ] FORMULA attributes compile to valid Python
-  - [ ] EXPOSE_PURE only for PartUsage-level single-FCE
-  - [ ] LITERAL attributes excluded (no module, no alias)
-  - [ ] UNRESOLVABLE logged but no module/alias created
-  - [ ] Self-reference excluded from input_names
-  - [ ] Test with attr_expr_probe fixture
+- **AC**: *(all verified 2026-02-17 — 37 tests in `tests/conformance/test_computed_attributes.py`)*
+  - [x] Every attribute expression classified as exactly one of: FORMULA, EXPOSE_PURE, EXPOSE_COMPUTED, LITERAL, UNRESOLVABLE
+  - [x] FORMULA attributes compile to valid Python
+  - [x] EXPOSE_PURE only for PartUsage-level single-FCE
+  - [x] LITERAL attributes excluded (no module, no alias)
+  - [x] UNRESOLVABLE logged but no module/alias created — zero fixture coverage (same gap as C03 EXPRESSION)
+  - [x] Self-reference excluded from input_names
+  - [x] Test with attr_expr_probe fixture (primary), solar_battery (cross-model), catf_mfe (cross-model)
 
 ### C06 — Hierarchy Resolver
 - **Doc**: [01-extraction.md](01-extraction.md), [13-aggregation-scoping.md](13-aggregation-scoping.md)

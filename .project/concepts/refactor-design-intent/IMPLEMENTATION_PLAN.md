@@ -95,7 +95,7 @@ and real SysML fixture output.
     - Verify FCE-before-OE ordering at all dispatch sites (static analysis test)
   - **Acceptance**: REQ-EC-01 through REQ-EC-07, REQ-AST-01 all green
 
-- [ ] **1.5 — Computed Attribute Classification Conformance (C05)**
+- [x] **1.5 — Computed Attribute Classification Conformance (C05)** *(2026-02-17, 37 tests)*
   - **Refs**: [16-computed-attributes.md](16-computed-attributes.md)
   - Write `tests/conformance/test_computed_attributes.py`:
     - Classify every part def attribute from attr_expr_probe fixture
@@ -562,6 +562,22 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    across 3 fixture models (solar_battery: 15, catf_mfe: 21, chain_spike: 3) all
    classify correctly when tested with real attribute names from snapshots.
 
+### C05 Computed Attribute Conformance (2026-02-17)
+
+1. **UNRESOLVABLE classification absent from all 6 fixture models.** Same pattern as
+   C03's EXPRESSION binding type gap. The code path exists and is unit-tested with mock
+   data, but no real SysML model produces UNRESOLVABLE computed attributes. Documented
+   as a coverage gap.
+
+2. **REQ-CA-06 resolution map testable with minimal OutputRegistry.** Building a
+   lightweight registry from snapshot data (FORMULA channels + calc usage outputs) was
+   sufficient to test `_build_attribute_resolution_map()`. No full pipeline infrastructure
+   needed. This pattern may be reusable for C08 (Output Registry).
+
+3. **All 14 FORMULA compiled expressions pass ast.parse().** Confirms C04 expression
+   compiler output is valid Python for all attr_expr_probe formulas. Parametrized
+   regression tests lock down exact expression strings.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -601,6 +617,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 24-dual-resolution-architecture.md | Updated REQ-DRA-03 and Stage 1 cascade description to reflect Key_A error behavior | Consistency review (2026-02-17) | Yes |
 | IMPLEMENTATION_PLAN.md Step 1.4 | Clarified "compile every output from snapshot calc defs" → "verify compiler with real calc def metadata from snapshots" | C04 conformance — AST serialization boundary (2026-02-17) | Yes |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Reassigned issue #1 (".() syntax") from C04 to C06/C07 | C04 conformance — reconstruct_expression() not used by expression compiler (2026-02-17) | Yes |
+| 16-computed-attributes.md | Note UNRESOLVABLE has zero coverage in fixture models | C05 conformance (2026-02-17) | No |
+| COMPONENT_CHECKLIST.md | Consider adding REQ-CA-08 (FORMULA-to-FORMULA limitation) to AC list | C05 conformance — present in design doc but absent from checklist (2026-02-17) | No |
 
 ---
 
@@ -614,3 +632,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | Phase 0 Infrastructure | 804 | 70 | 874 | 2026-02-17 |
 | C03 Extractor Conformance | 874 | 44 | 918 | 2026-02-17 |
 | C04 Expression Compiler | 918 | 31 | 949 | 2026-02-17 |
+| C05 Computed Attributes | 956 | 37 | 993 | 2026-02-17 |
