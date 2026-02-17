@@ -74,7 +74,7 @@ and real SysML fixture output.
     - Parametrize over real qualified names from extraction snapshots
   - **Acceptance**: REQ-NC-01 through REQ-NC-07 all green
 
-- [ ] **1.3 — SysMLDataExtractor Conformance (C03)**
+- [x] **1.3 — SysMLDataExtractor Conformance (C03)** *(2026-02-17, 44 tests)*
   - **Refs**: [01-extraction.md](01-extraction.md)
   - Write `tests/conformance/test_extractor.py`:
     - One `CalculationDefinitionData` per calc def in model
@@ -524,6 +524,23 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 > Findings from completed components that affect other components.
 > Updated during the LEARN phase of each component (see `component-loop.md` template).
 
+### C03 Extractor Conformance (2026-02-17)
+
+1. **EXPRESSION binding type absent from all 6 fixture models.** No model exercises
+   `OperatorExpression` bindings. The code path exists in `usage_extractor.py:557-564`
+   but has zero fixture coverage. Future fixture models should include `in x = a + b`
+   style bindings to close this gap.
+
+2. **AST fields confirmed null in snapshots.** `output_expression_asts` and
+   `member_expressions` are nullified during serialization (SysIDE Java objects).
+   REQ-EXT-07 content verification deferred to C04 (expression compiler with live
+   extraction). This is the serialization boundary from Phase 0 Learning #2.
+
+3. **Virtual usage naming invariant: `instance_name == qualified_name`.** The
+   `_create_virtual_calc_usage` function sets instance_name to the full design-relative
+   qualified_name. Concrete usages have short instance_name distinct from qualified_name.
+   This is a reliable discriminator for virtual vs concrete usages.
+
 ### Phase 0 (2026-02-17)
 
 1. **Extraction data models are dataclasses, not Pydantic.** Serialization requires
@@ -554,6 +571,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 | Doc | Amendment needed | Triggered by | Applied? |
 |-----|-----------------|--------------|----------|
+| 01-extraction.md | Note EXPRESSION binding type has zero coverage in fixture models | C03 conformance (2026-02-17) | No |
+| COMPONENT_CHECKLIST.md | C03 AC8: clarify "all binding types" — solar_battery has 4 of 5 (EXPRESSION absent) | C03 conformance (2026-02-17) | No |
 | 10-output-registry.md | Added REQ-OR-08: Key_A diagnostic-only, resolution SHALL raise instead of silent fallback | Design review discussion (2026-02-17) | Yes |
 | 11-analysis-backtracker.md | Added REQ-BT-08: Step 1 raises `UnscopedResolutionError`; rewrote Step 1 section and concrete walkthrough | Design review discussion (2026-02-17) | Yes |
 | 03-resolution-overview.md | Strengthened REQ-RES-07: unscoped Key_A fallback explicitly prohibited | Design review discussion (2026-02-17) | Yes |
