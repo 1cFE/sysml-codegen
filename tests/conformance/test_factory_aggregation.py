@@ -588,6 +588,7 @@ class TestInputSourceWiring:
 class TestLiteralFallback:
     """Verify LITERAL :>> redefinition as fallback for entry point defaults."""
 
+    @pytest.mark.req("REQ-LVP-02")
     def test_sumterm_literal_fallback(self, solar_battery_agg):
         """SumTerm where channel fails but LITERAL redef exists: EP default matches literal.
 
@@ -662,6 +663,7 @@ class TestLiteralFallback:
                         f"EP default {ep.default_value} != literal {lit_val}"
                     )
 
+    @pytest.mark.req("REQ-LVP-03")
     def test_singleton_literal_fallback(self, solar_battery_agg):
         """SingletonTerm where channel fails but LITERAL redef exists: EP default matches."""
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])

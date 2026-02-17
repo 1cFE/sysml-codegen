@@ -1,0 +1,31 @@
+The plan is complete and saved to `.project/active/backtracker-conformance/plan.md`.
+
+## Summary
+
+**Deliverable**: `.project/active/backtracker-conformance/plan.md` — a complete implementation plan for step 3.1 (C11 DependencyBacktracker Conformance).
+
+### Key Decisions
+
+1. **SPIKE decision**: Yes — the `_compat` dict dependency creates genuine uncertainty about which resolution outcomes depend on legacy keys vs typed registries. A diagnostic script will map all resolution paths before writing tests.
+
+2. **Scope split (C11a / C11b)**: The plan covers **C11a (conformance tests)** only. The actual typed dispatch migration is C11b, which also includes:
+   - Rewriting `_resolve_binding_via_registry()` to use typed dispatch
+   - Implementing `_consumer_scope_dotted()`
+   - Migrating 3 `resolve()` calls in `build_output_registry()`
+   - Removing `_compat` dict
+
+3. **Outcome-based testing**: Tests verify _what_ channels are resolved (correct outcomes), not _how_ they are resolved (mechanism). This makes them resilient to the C11b dispatch rewrite — the same tests must pass before and after.
+
+### Design Consistency Issues Found
+
+| # | Issue | Resolution |
+|---|-------|-----------|
+| 1 | `_compat` and `resolve()` are load-bearing in `build_output_registry()` Phase 2/3/4 | Split C11 into C11a (conformance) + C11b (migration) |
+| 2 | EXPRESSION binding type crashes the pipeline (no dispatch path) | Document as `xfail` test; fix is C11b scope |
+| 3 | REQ-BT-08 describes typed dispatch that doesn't exist yet | Test outcomes, not mechanism |
+| 4 | Self-reference guard uses string manipulation | Not a blocker; test behavior, not implementation |
+| 5 | `_resolve_reference_via_registry()` uses deprecated `resolve()` | Same as #1 |
+
+### Test Plan: 25 test cases covering REQ-BT-01–08 and REQ-DRA-01
+
+All tests use real extraction snapshot data from fixture models (solar_battery, catf_mfe, attr_expr_probe, chain_spike, sample_model). No mocks.

@@ -1,0 +1,28 @@
+C08 Output Registry refactor is complete. Here's a summary of what was done:
+
+## C08 Output Registry — Complete
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/sysml_codegen/core/identifier_types.py` | Added 5 `NewType` wrappers (`SysMLQN`, `EQN`, `PQN`, `CanonicalChannel`, `ScopedKey`) + `make_scoped_key()` and `make_canonical_channel()` constructors |
+| `src/sysml_codegen/core/output_registry.py` | Replaced flat `_index: dict[str, str]` with 3 typed dicts (`_scoped`, `_sysml_qn`, `_alias`) + `_compat` legacy bridge. Added typed lookup methods. Deprecated `resolve()` as pass-through. |
+| `src/sysml_codegen/generation/initialization.py` | Refactored `build_output_registry()` to use typed registration + legacy compat keys |
+| `tests/unit/test_output_registry.py` | Updated repr format tests for new `compat=` field |
+
+### Files Created
+| File | Purpose |
+|------|--------|
+| `tests/conformance/test_output_registry.py` | 32 conformance tests covering REQ-OR-01 through REQ-OR-08 |
+
+### Key Design Decision: `_compat` Bridge
+Dead keys (Key_A, Key_F, bare) could not be fully eliminated because the backtracker's `resolve(source_path)` is tightly coupled to Key_A format. Instead, dead keys are stored in a `_compat` dict that ONLY the deprecated `resolve()` checks — typed lookup methods (`scoped_lookup`, `sysml_qn_lookup`, `alias_lookup`) do NOT see `_compat`. This satisfies both:
+- REQ-OR-05/08: Dead keys are not in typed registries (conformance tests verify this)
+- Backward compat: Backtracker and all 1048 existing tests continue to work
+
+The `_compat` dict is eliminated in C11 when the backtracker is updated to typed dispatch.
+
+### Test Results
+- 32 conformance tests: all pass
+- Full suite: **1080 passed, 0 failures**
+- Lint: clean

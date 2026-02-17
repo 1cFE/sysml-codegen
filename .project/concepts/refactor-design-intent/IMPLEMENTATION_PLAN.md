@@ -439,8 +439,8 @@ typed dispatch (no `_compat` dependency). The two resolution paths are verified 
 **Checkpoint 4**: [x] Every component from extraction through graph assembly independently tested.
 All 3 module types verified. Graph assembly proven correct. This is the critical milestone —
 the pipeline "spine" is validated end-to-end in parts.
-149 new conformance tests (C14: 48, C15: 34, C16: 32, C17: 35, C18: 34). 1532 total tests,
-5 xfailed, 0 failures. *(2026-02-17)*
+149 new conformance tests (C14: 48, C15: 34, C16: 32, C17: 35, C18: 34). 1532 passed,
+2 skipped, 5 xfailed, 0 failures (1539 collected). *(2026-02-17)*
 
 **Assessment**: ComputationGraph produced by `build_full_graph_from_snapshot()` matches Phase 0
 baselines for solar_battery, chain_spike, and attr_expr_probe (after normalizing CalcUsage
