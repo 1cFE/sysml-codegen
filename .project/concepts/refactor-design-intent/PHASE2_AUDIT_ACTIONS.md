@@ -238,29 +238,130 @@ code paths will surface them. C1 proved this pattern: extraction-level tests pas
 
 ### C5. REQ-HR-07 Alias Detection (identified in C06)
 
-- **Gap**: All aggregation expressions across all 6 fixture models have empty `aliases` lists.
+- **Gap**: ~~All aggregation expressions across all 6 fixture models have empty `aliases` lists.
   No CHAIN sibling redefinition has `source_path` ending with an aggregation `attribute_name`.
-  The alias detection code at `hierarchy_resolver.py:550-557` is never exercised with real data.
+  The alias detection code at `hierarchy_resolver.py:550-557` is never exercised with real data.~~
+  **CLOSED.** `alias_agg_probe` exercises the positive case: `:>> reported_cost = total_cost`
+  detected as a CHAIN alias for the `sum(widget.total_cost)` aggregation.
 - **What it means**: When a PartDef has an aggregation expression AND a sibling `:>>` CHAIN
   redefinition whose target is the aggregation attribute, the hierarchy resolver should detect
   this and populate the `aliases` field.
-- **Risk**: Medium — if the alias detection logic has a bug, aggregation inputs could silently
-  fail to wire through CHAIN aliases, causing incorrect pipeline wiring for models that use
-  this pattern.
-- [ ] **Action**: Create a fixture model (could extend `issue22_model`) where a PartDef has
-  both an aggregation expression (e.g., `total_cost = sum(children.cost)`) and a CHAIN
-  redefinition on a sibling PartUsage that targets the aggregation attribute. Capture snapshot.
-  Add conformance test to `test_hierarchy_resolver.py` verifying non-empty `aliases`.
+- **Risk**: ~~Medium~~ **Mitigated** — alias detection confirmed working with real SysML data.
+  Full pipeline completes successfully with alias-based CalcUsage resolution.
+- [x] **Action**: Created `tests/fixtures/alias_agg_probe/` (library.sysml + design.sysml).
+  Model has abstract `'Costed Item'` base with `total_cost` + `reported_cost`, `'Widget'` leaf
+  with CalcUsage, `'Widget Assembly'` with `sum()` aggregation + CHAIN alias + two CalcUsages
+  (one binding direct, one through the alias). Captured extraction snapshot (full pipeline).
+  Added 10 conformance tests to `test_hierarchy_resolver.py::TestAliasAggProbe` + 2 positive-case
+  tests to `TestReqHr07AliasDetection`. **1260 tests, 0 failures, 5 xfailed.**
 - **Affected REQs**: REQ-HR-07
 - **Affected components**: C06 (hierarchy resolver), C10 (aggregation scoping — alias handling)
+
+> **UPDATE (C5)**: The alias detection code at `hierarchy_resolver.py:550-557` works correctly.
+> The model structure exercises:
+>
+> - **Aggregation**: `:>> total_cost = sum(widget.total_cost)` on `'Widget Assembly'`
+>   produces `AggregationExpressionData` with `attribute_name="total_cost"`
+> - **CHAIN alias**: `:>> reported_cost = total_cost` produces `RedefinitionType.CHAIN`
+>   with `source_path="total_cost"` — alias detection matches via
+>   `source_path.endswith(agg.attribute_name)` and appends `"reported_cost"` to `agg.aliases`
+> - **Direct CalcUsage binding**: `margin_calc { in cost_basis = total_cost; }` binds
+>   directly to the aggregation output (REFERENCE binding)
+> - **Alias CalcUsage binding**: `report_calc { in cost_input = reported_cost; }` binds
+>   through the CHAIN alias (REFERENCE binding to alias attribute)
+>
+> **Full pipeline succeeds** with 4 modules in correct topological order:
+> `cost_model → total_cost (agg) → margin_calc → report_calc`
+>
+> **Multiplicity note**: `widget : 'Widget' [3]` uses literal multiplicity (no count attribute),
+> producing `MultiplicityData(count=3, count_attribute_name=None)`. Same pattern as issue22.
+> The `sum()` walker logs a warning about missing multiplicity data but still creates the
+> SumTerm (with `multiplicity_attr=None`, `multiplicity_count=None`).
+>
+> **Potential edge case (not exercised)**: The `endswith()` check in alias detection could
+> false-positive on dotted paths like `source_path="child.total_cost"` matching
+> `attribute_name="total_cost"`. This would incorrectly alias a child reference as an
+> aggregation alias. No fixture exercises this — documented as future edge case for C10 or
+> Phase 7 if needed.
 
 ### C6. Deeply-Nested Cross-Scope REFERENCE (Deferred Issue #7)
 
 - **Gap**: No fixture model contains a REFERENCE binding that crosses scope boundaries through
   deep nesting (e.g., `Design::SubSystem::Component::calc` referencing
-  `OtherDesign::OtherSubSystem::output`).
-- **Risk**: Low — explicitly out of scope (Deferred Issue #7). Not observed in any tested model.
-- [ ] **Action**: Defer. Track in fixture gap list. Only address if a real model triggers this.
+  `OtherDesign::OtherSubSystem::output`). **PARTIALLY ADDRESSED.** Fixture model created with
+  3 binding patterns; snapshot capture pending SysIDE validation.
+- **What it means**: A binding that references an output deep inside another part's hierarchy
+  (4+ levels of containment), using either dotted feature chains (CHAIN) or qualified-name
+  `::` paths (REFERENCE). The backtracker's Step 1b normalization extracts only the last 2
+  segments of a `::` QN, potentially losing intermediate hierarchy context for deep paths.
+- **Risk**: Low → **Medium (conditional)** — if SysIDE accepts the deep `::` syntax (Pattern B),
+  the Step 1b normalization will demonstrably fail for 5+ segment QNs. If SysIDE rejects it,
+  the risk remains low because deep cross-scope references naturally use `.` chains (CHAIN bindings)
+  which don't hit the Step 1b code path.
+- [x] **Action**: Created `tests/fixtures/deep_cross_scope_probe/` (library.sysml + design.sysml).
+  Model has 3-level producer nesting (Station > Array > Sensor > CalcUsage) and 3 consumer binding
+  patterns testing different depths and notations. **Snapshot capture pending** — requires SysIDE
+  JVM parser to validate syntax and extract binding types.
+- **Affected REQs**: REQ-BT-08 (type-directed dispatch), REQ-DRA-01 (resolution consistency)
+- **Affected components**: C11 (backtracker — Step 1b normalization), C12 (input resolver —
+  deep ScopedKey construction)
+
+> **UPDATE (C6)**: Created `deep_cross_scope_probe` fixture with 3 binding patterns:
+>
+> **Pattern A — Deep CHAIN (4-level dot chain):**
+> `in data_point = station.array.derived.derived_value;`
+> - Expected: `BindingType.CHAIN`, `source_path = "station.array.derived.derived_value"`
+> - Tests: Deep dotted path resolution through `scoped_lookup()`. Similar to existing
+>   catf_mfe patterns (`catf_tf_system.cooling_power`), but 4 levels instead of 2.
+> - **Expected outcome**: May succeed if OutputRegistry ScopedKey includes the full
+>   dotted path from design root. The ScopedKey for the `derived` calc's output would be
+>   `station.array.derived` (from EQN after design prefix strip). The source_path
+>   `station.array.derived.derived_value` includes the attribute suffix — resolution depends
+>   on how the backtracker decomposes dotted CHAIN paths.
+>
+> **Pattern B — Deep REFERENCE (6-segment QN with `::`):**
+> `in data_point = measurement_system::station::array::sensor::core::metric_value;`
+> - Expected: `BindingType.REFERENCE`, source_path with 6 `::` segments
+> - Tests: Step 1b normalization bug. For 6-segment path, Step 1b extracts
+>   `parts[-2] = "core"`, `parts[-1] = "metric_value"`, producing `dotted = "core.metric_value"`.
+>   The actual ScopedKey in OutputRegistry would be `station.array.sensor.core` (full instance
+>   path from design root, prefix-stripped). So `core.metric_value` would NOT match.
+> - **Expected outcome**: Resolution FAILS — falls through to entry_point. This demonstrates
+>   the Step 1b limitation for deeply nested QNs.
+> - **SysIDE syntax risk**: `::` navigation through parts (not just packages) works for
+>   2-segment self-refs (catf_mfe: `catf_physics::p_fusion`). 6-segment navigation through
+>   nested parts is untested. SysIDE may reject, normalize, or parse it differently.
+>
+> **Pattern C — Shallow REFERENCE (2-segment self-ref, control):**
+> `in data_point = analyzer::baseline_value;`
+> - Expected: `BindingType.REFERENCE`, 2-segment self-reference
+> - Tests: Baseline — this pattern is known to work (catf_mfe precedent).
+> - **Expected outcome**: Resolution succeeds (or falls to entry_point as expected for
+>   a self-reference to a non-output attribute).
+>
+> **Step 1b Normalization Analysis:**
+> The current code at `_resolve_binding_via_registry()` does:
+> ```python
+> parts = source_path.split("::")
+> sanitized_part = sanitize_name(parts[-2]).lower()
+> dotted = f"{sanitized_part}.{parts[-1]}"
+> channel = self._output_registry.resolve(dotted)
+> ```
+> For a 6-segment path `A::B::C::D::E::F`, this extracts only `E.F`, discarding the
+> intermediate nesting `B::C::D`. For typed dispatch (C11b), the fix would be to construct
+> a full `ScopedKey` from ALL intermediate segments, not just the last 2.
+>
+> **Next steps**: Capture extraction snapshot (requires SysIDE JVM). If Pattern B is accepted
+> by SysIDE, write conformance tests documenting the Step 1b failure. If rejected, document
+> as a SysML syntax limitation and note that deep cross-scope references naturally use `.`
+> chains (which bypass Step 1b entirely).
+>
+> **Learning**: In SysML v2, `::` navigates the ownership/namespace hierarchy while `.`
+> navigates feature chains. Cross-scope bindings in catf_mfe use import + `.` (producing
+> CHAIN), not deep `::` paths (REFERENCE). The idiomatic SysML v2 pattern for cross-scope
+> references is `private import Package::part_instance; in x = part_instance.attr;` —
+> which produces CHAIN bindings. Deep `::` REFERENCE bindings may be an edge case that
+> only arises from non-idiomatic SysML authoring or programmatic model generation.
 
 ### Summary: Fixture Model Creation Plan
 
@@ -269,9 +370,9 @@ code paths will surface them. C1 proved this pattern: extraction-level tests pas
 | 1 (High) | `expression_binding_probe.sysml` | C1 (EXPRESSION binding) | Medium | **DONE** |
 | 2 (High) | `chain_override_probe.sysml` | C2 (CHAIN design override) | Medium | **DONE** |
 | 3 (Medium) | `unresolvable_attr_probe.sysml` | C3 (inheritance misclassification — UNRESOLVABLE untriggered) | Medium | **DONE** |
-| 4 (Medium) | Extend `issue22_model` or new fixture | C5 (HR-07 aliases) | Medium | Pending |
+| 4 (Medium) | `alias_agg_probe` (new fixture) | C5 (HR-07 aliases) | Medium | **DONE** |
 | 5 (Low) | N/A — existing attr_expr_probe D2 | C4 (EXPOSE_COMPUTED) | N/A | **CLOSED** (existing coverage) |
-| 6 (Low) | Defer | C6 (deep cross-scope) | N/A | Deferred |
+| 6 (Low) | `deep_cross_scope_probe` (new fixture) | C6 (deep cross-scope REFERENCE + CHAIN) | Medium | **CREATED** (snapshot pending) |
 
 **Dependency**: Creating new fixture models requires the SysIDE JVM parser (`agentic-mbse`
 SysideAdapter). The extraction snapshot capture script (`scripts/capture_extraction_snapshots.py`)
@@ -348,3 +449,5 @@ handles serialization once extraction is run. New snapshots must be added to
 | 2026-02-17 | C3 design doc amendments: Doc 16 (Known Issues + algorithm annotations), Doc 09 (enum footnote), Doc 01 (supertype chain data gap), COMPONENT_CHECKLIST (C03/C05 new ACs), IMPLEMENTATION_PLAN (Deferred Issues #9/#10 + amendments table) | C3 design doc propagation |
 | 2026-02-17 | D1 — Added spike question with 3 options to IMPLEMENTATION_PLAN §3.1b C11b scope | D1 completion |
 | 2026-02-17 | C4 — EXPOSE_COMPUTED gap overstated; existing attr_expr_probe D2 already exercises it. 1 genuine pattern verified with existing conformance tests. No new fixture needed. | C4 audit |
+| 2026-02-17 | C5 — REQ-HR-07 alias detection: created alias_agg_probe fixture + 10 conformance tests (1260 total). Alias detection works correctly. Full pipeline succeeds with alias-based resolution. | C5 implementation |
+| 2026-02-17 | C6 — Deep cross-scope probe: created `deep_cross_scope_probe/` fixture with 3 binding patterns (deep CHAIN, deep REFERENCE, shallow REFERENCE control). Identified Step 1b normalization limitation for 5+ segment QNs. Snapshot pending SysIDE validation. | C6 implementation |

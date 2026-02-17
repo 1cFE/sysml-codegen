@@ -21,6 +21,7 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.core.output_registry import OutputRegistry
+from tests.helpers.registry_compat import registry_register
 from sysml_codegen.resolution.graph_builder import (
     _build_aggregation_module,
     _resolve_aggregation_input_channel,
@@ -102,7 +103,7 @@ class TestResolveAggregationInputChannel:
         )
         # Registry must contain the channel as canonical for verification
         registry = OutputRegistry()
-        registry.register(expected_channel, ["cost_model.total_cost"])
+        registry_register(registry,expected_channel, ["cost_model.total_cost"])
         result = _resolve_aggregation_input_channel(
             "pv_module.capital_cost",
             "Design__plant__solar_array",
@@ -115,7 +116,7 @@ class TestResolveAggregationInputChannel:
         """'solar_array.capital_cost' with no CHAIN -> falls back to registry resolve."""
         agg_channel = "Design__plant__solar_array__capital_cost__capital_cost"
         registry = OutputRegistry()
-        registry.register(agg_channel, ["solar_array.capital_cost"])
+        registry_register(registry,agg_channel, ["solar_array.capital_cost"])
         result = _resolve_aggregation_input_channel(
             "solar_array.capital_cost",
             "Design__plant",
@@ -168,7 +169,7 @@ class TestResolveAggregationInputChannel:
             "inst__intermediate__calc", "output"
         )
         registry = OutputRegistry()
-        registry.register(expected_channel, ["calc.output"])
+        registry_register(registry,expected_channel, ["calc.output"])
         result = _resolve_aggregation_input_channel(
             "pv_module.cost",
             "inst",
@@ -183,7 +184,7 @@ class TestResolveAggregationInputChannel:
             "Design__plant__array__pv_module__cost_model", "total_cost"
         )
         registry = OutputRegistry()
-        registry.register(expected_channel, [])
+        registry_register(registry,expected_channel, [])
         registry.register_alias(
             "plant.array.pv_module.capital_cost", expected_channel
         )
@@ -201,7 +202,7 @@ class TestResolveAggregationInputChannel:
             "Design__plant__array__inverter__cost_model", "total_cost"
         )
         registry = OutputRegistry()
-        registry.register(expected_channel, [])
+        registry_register(registry,expected_channel, [])
         registry.register_alias(
             "plant.array.inverter.capital_cost", expected_channel
         )
@@ -224,8 +225,8 @@ class TestResolveAggregationInputChannel:
         correct_channel = "Design__plant__array__child__calc__cost"
         wrong_channel = "Design__other__child__calc__cost"
         registry = OutputRegistry()
-        registry.register(correct_channel, [])
-        registry.register(wrong_channel, ["child.cost"])  # Key_D collision
+        registry_register(registry,correct_channel, [])
+        registry_register(registry,wrong_channel, ["child.cost"])  # Key_D collision
         registry.register_alias(
             "plant.array.child.cost", correct_channel
         )  # scoped
@@ -242,7 +243,7 @@ class TestResolveAggregationInputChannel:
         agg_channel = "Design__plant__array__capital_cost__capital_cost"
         registry = OutputRegistry()
         # Key_E_stripped: "plant.array.capital_cost" (registered by Change 2)
-        registry.register(agg_channel, ["plant.array.capital_cost"])
+        registry_register(registry,agg_channel, ["plant.array.capital_cost"])
         result = _resolve_aggregation_input_channel(
             "array.capital_cost",
             "Design__plant",
@@ -262,7 +263,7 @@ class TestBuildAggregationModule:
         """Build an OutputRegistry from {canonical_channel: [alias_keys]}."""
         registry = OutputRegistry()
         for channel, keys in (entries or {}).items():
-            registry.register(channel, keys)
+            registry_register(registry,channel, keys)
         return registry
 
     def test_sum_term_wires_to_module_output(self):
@@ -937,7 +938,7 @@ class TestAggregationExpressionCompilation:
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
         registry = OutputRegistry()
-        registry.register(expected_channel, ["cost_model.total_cost"])
+        registry_register(registry,expected_channel, ["cost_model.total_cost"])
 
         module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
@@ -961,7 +962,7 @@ class TestAggregationExpressionCompilation:
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
         registry = OutputRegistry()
-        registry.register(expected_channel, ["cost_model.total_cost"])
+        registry_register(registry,expected_channel, ["cost_model.total_cost"])
 
         module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
@@ -991,8 +992,8 @@ class TestAggregationExpressionCompilation:
             _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
         ]
         registry = OutputRegistry()
-        registry.register(cost_channel, ["cost_model.total_cost"])
-        registry.register(alloc_channel, [])
+        registry_register(registry,cost_channel, ["cost_model.total_cost"])
+        registry_register(registry,alloc_channel, [])
 
         module = _build_aggregation_module(agg, redefs, registry, {}, None)
 
@@ -1048,8 +1049,8 @@ class TestAggregationExpressionCompilation:
             _make_chain_redef("cost", "cost_calc.cost", "Lib__Inverter"),
         ]
         registry = OutputRegistry()
-        registry.register(cost_channel, ["cost_model.total_cost"])
-        registry.register(inv_channel, ["cost_calc.cost"])
+        registry_register(registry,cost_channel, ["cost_model.total_cost"])
+        registry_register(registry,inv_channel, ["cost_calc.cost"])
 
         module = _build_aggregation_module(agg, redefs, registry, {}, None)
 

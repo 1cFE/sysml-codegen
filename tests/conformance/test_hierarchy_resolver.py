@@ -53,6 +53,7 @@ ALL_MODELS = [
     "attr_expr_probe",
     "chain_spike_model",
     "issue22_model",
+    "alias_agg_probe",
 ]
 
 
@@ -416,6 +417,44 @@ class TestReqHr07AliasDetection:
                     f"{type(agg.aliases).__name__}, expected list"
                 )
 
+    def test_alias_detection_positive_case(self, alias_agg_probe_snapshot):
+        """alias_agg_probe: CHAIN sibling 'reported_cost = total_cost' detected as alias.
+
+        This is the POSITIVE case for REQ-HR-07. The hierarchy resolver detects
+        that ':>> reported_cost = total_cost' is a CHAIN-type sibling redef
+        whose source_path ends with the aggregation attribute_name 'total_cost'.
+        """
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        assert len(hd.aggregation_expressions) == 1, (
+            f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
+        )
+        agg = hd.aggregation_expressions[0]
+        assert agg.attribute_name == "total_cost", (
+            f"Expected aggregation attribute_name='total_cost', got {agg.attribute_name!r}"
+        )
+        assert agg.aliases == ["reported_cost"], (
+            f"Expected aliases=['reported_cost'], got {agg.aliases}"
+        )
+
+    def test_alias_sibling_redef_is_chain_type(self, alias_agg_probe_snapshot):
+        """The alias sibling redefinition has type=CHAIN, source_path='total_cost'."""
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        alias_redef = [
+            r for r in hd.redefinitions
+            if r.attribute_name == "reported_cost"
+            and "Widget_Assembly" in r.owning_part_qn
+        ]
+        assert len(alias_redef) == 1, (
+            f"Expected 1 'reported_cost' redef on Widget_Assembly, got {len(alias_redef)}"
+        )
+        redef = alias_redef[0]
+        assert redef.redefinition_type == RedefinitionType.CHAIN, (
+            f"Expected CHAIN type, got {redef.redefinition_type}"
+        )
+        assert redef.source_path == "total_cost", (
+            f"Expected source_path='total_cost', got {redef.source_path!r}"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Additional tests: Checklist AC coverage
@@ -629,4 +668,137 @@ class TestDataIntegrity:
         assert len(hd.aggregation_expressions) == len(expression_redefs) == 20, (
             f"Expected 20 EXPRESSION redefs and 20 aggregation expressions, "
             f"got {len(expression_redefs)} redefs and {len(hd.aggregation_expressions)} aggs"
+        )
+
+
+# ---------------------------------------------------------------------------
+# C5: alias_agg_probe — CHAIN alias for aggregation attribute (REQ-HR-07)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-HR-07")
+class TestAliasAggProbe:
+    """Comprehensive tests for alias_agg_probe fixture (C5 gap closure).
+
+    This fixture exercises the POSITIVE case for REQ-HR-07: a CHAIN sibling
+    redefinition that targets an aggregation attribute, producing a non-empty
+    aliases list. Previously, all fixture models had empty aliases.
+    """
+
+    def test_hierarchy_structure(self, alias_agg_probe_snapshot):
+        """alias_agg_probe has 3 redefs, 0 design overrides, 1 multiplicity, 1 aggregation."""
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        assert len(hd.redefinitions) == 3, (
+            f"Expected 3 redefinitions, got {len(hd.redefinitions)}"
+        )
+        assert len(hd.design_overrides) == 0, (
+            f"Expected 0 design_overrides, got {len(hd.design_overrides)}"
+        )
+        assert len(hd.multiplicities) == 1, (
+            f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
+        )
+        assert len(hd.aggregation_expressions) == 1, (
+            f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
+        )
+
+    def test_redefinition_types(self, alias_agg_probe_snapshot):
+        """3 redefinitions: 2 CHAIN (Widget.total_cost, WA.reported_cost), 1 EXPRESSION (WA.total_cost)."""
+        from collections import Counter
+
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        counts = Counter(r.redefinition_type for r in hd.redefinitions)
+        assert counts[RedefinitionType.CHAIN] == 2, (
+            f"Expected 2 CHAIN redefs, got {counts[RedefinitionType.CHAIN]}"
+        )
+        assert counts[RedefinitionType.EXPRESSION] == 1, (
+            f"Expected 1 EXPRESSION redef, got {counts[RedefinitionType.EXPRESSION]}"
+        )
+
+    def test_aggregation_sum_term(self, alias_agg_probe_snapshot):
+        """Aggregation has 1 SumTerm: widget.total_cost with literal multiplicity (no attr)."""
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        agg = hd.aggregation_expressions[0]
+        assert len(agg.sum_terms) == 1, (
+            f"Expected 1 sum_term, got {len(agg.sum_terms)}"
+        )
+        st = agg.sum_terms[0]
+        assert st.part_usage_name == "widget", (
+            f"Expected part_usage_name='widget', got {st.part_usage_name!r}"
+        )
+        assert st.attribute_name == "total_cost", (
+            f"Expected attribute_name='total_cost', got {st.attribute_name!r}"
+        )
+        # Literal [3] multiplicity — no count_attribute_name
+        assert st.multiplicity_attr is None, (
+            f"Expected multiplicity_attr=None (literal [3]), got {st.multiplicity_attr!r}"
+        )
+
+    def test_multiplicity_literal(self, alias_agg_probe_snapshot):
+        """widget has count=3 with count_attribute_name=None (literal multiplicity)."""
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        assert len(hd.multiplicities) == 1
+        mult = hd.multiplicities[0]
+        assert mult.part_usage_name == "widget", (
+            f"Expected part_usage_name='widget', got {mult.part_usage_name!r}"
+        )
+        assert mult.count == 3, (
+            f"Expected count=3, got {mult.count}"
+        )
+        assert mult.count_attribute_name is None, (
+            f"Expected count_attribute_name=None, got {mult.count_attribute_name!r}"
+        )
+
+    def test_calc_usages_correct(self, alias_agg_probe_snapshot):
+        """3 CalcUsages: cost_model (leaf), margin_calc (direct), report_calc (via alias)."""
+        calc_usages = alias_agg_probe_snapshot["calc_usages"]
+        instance_names = {cu.instance_name for cu in calc_usages}
+        expected_suffixes = {"cost_model", "margin_calc", "report_calc"}
+        for suffix in expected_suffixes:
+            matching = [n for n in instance_names if n.endswith(suffix)]
+            assert len(matching) >= 1, (
+                f"No CalcUsage instance ending with '{suffix}'. "
+                f"Actual: {instance_names}"
+            )
+
+    def test_report_calc_binds_through_alias(self, alias_agg_probe_snapshot):
+        """report_calc binds cost_input to reported_cost (the CHAIN alias attribute)."""
+        calc_usages = alias_agg_probe_snapshot["calc_usages"]
+        report_calc = [cu for cu in calc_usages if cu.instance_name.endswith("report_calc")]
+        assert len(report_calc) == 1
+        bindings = report_calc[0].bindings
+        cost_input_binding = [b for b in bindings if b.param_name == "cost_input"]
+        assert len(cost_input_binding) == 1, (
+            f"Expected 1 cost_input binding, got {len(cost_input_binding)}"
+        )
+        binding = cost_input_binding[0]
+        assert binding.source_path is not None, (
+            "cost_input binding should have non-None source_path"
+        )
+        assert "reported_cost" in binding.source_path, (
+            f"cost_input binding source_path should reference 'reported_cost', "
+            f"got {binding.source_path!r}"
+        )
+
+    def test_part_usage_names_widget_assembly(self, alias_agg_probe_snapshot):
+        """Widget_Assembly's part_usage_names includes 'widget'."""
+        hd = alias_agg_probe_snapshot["hierarchy_data"]
+        wa_keys = [k for k in hd.part_usage_names if "Widget_Assembly" in k]
+        assert len(wa_keys) == 1, (
+            f"Expected 1 Widget_Assembly key, got {wa_keys}"
+        )
+        children = hd.part_usage_names[wa_keys[0]]
+        assert "widget" in children, (
+            f"Expected 'widget' in children, got {children}"
+        )
+
+    def test_channel_alias_from_chain_redef(self, alias_agg_probe_snapshot):
+        """Widget's ':>> total_cost = cost_model.unit_cost' produces a channel alias."""
+        aliases = alias_agg_probe_snapshot["channel_aliases"]
+        assert len(aliases) >= 1, (
+            f"Expected at least 1 channel alias, got {len(aliases)}"
+        )
+        # The CHAIN redef on Widget produces a channel alias
+        widget_aliases = [a for a in aliases if "Widget" in a.owning_part_qn]
+        assert len(widget_aliases) >= 1, (
+            f"Expected at least 1 Widget-related alias, got {len(widget_aliases)}"
         )

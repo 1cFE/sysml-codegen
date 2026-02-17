@@ -16,7 +16,9 @@ import logging
 
 import pytest
 
+from sysml_codegen.core.identifier_types import make_scoped_key
 from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
+from tests.helpers.registry_compat import registry_resolve, registry_register
 
 
 # ---------------------------------------------------------------------------
@@ -36,14 +38,14 @@ def _make_registry_with_calc_usage() -> OutputRegistry:
     key_a_1 = "lcoe.lcoe_per_mwh"
     key_b_1 = canonical_1  # EQN format = canonical
     key_c_1 = "solar_battery_plant.lcoe.lcoe_per_mwh"
-    reg.register(canonical_1, [key_a_1, key_b_1, key_c_1])
+    registry_register(reg,canonical_1, [key_a_1, key_b_1, key_c_1])
 
     # Output 2: npv
     canonical_2 = "SolarBatteryDesign__solar_battery_plant__lcoe__npv"
     key_a_2 = "lcoe.npv"
     key_b_2 = canonical_2
     key_c_2 = "solar_battery_plant.lcoe.npv"
-    reg.register(canonical_2, [key_a_2, key_b_2, key_c_2])
+    registry_register(reg,canonical_2, [key_a_2, key_b_2, key_c_2])
 
     return reg
 
@@ -63,7 +65,7 @@ def _make_registry_with_virtual_calc_usage() -> OutputRegistry:
     key_a = "cost_model.total_cost"
     key_b = canonical
     key_c = "solar_battery_plant.solar_array.pv_module.cost_model.total_cost"
-    reg.register(canonical, [key_a, key_b, key_c])
+    registry_register(reg,canonical, [key_a, key_b, key_c])
     return reg
 
 
@@ -77,7 +79,7 @@ def _make_registry_with_aggregation() -> OutputRegistry:
     canonical = "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"
     key_d = "solar_array.capital_cost"
     key_e = "solar_battery_plant.solar_array.capital_cost"
-    reg.register(canonical, [key_d, key_e])
+    registry_register(reg,canonical, [key_d, key_e])
     return reg
 
 
@@ -90,7 +92,7 @@ def _make_registry_with_formula() -> OutputRegistry:
     reg = OutputRegistry()
     canonical = "E2EDesign__e2e_plant__power_mw"
     key_f = "e2e_plant.power_mw"
-    reg.register(canonical, [key_f])
+    registry_register(reg,canonical, [key_f])
     return reg
 
 
@@ -104,39 +106,39 @@ class TestRegister:
 
     def test_register_single_key(self):
         reg = OutputRegistry()
-        reg.register("Design__plant__lcoe__lcoe_per_mwh", ["lcoe.lcoe_per_mwh"])
-        assert reg.resolve("lcoe.lcoe_per_mwh") == "Design__plant__lcoe__lcoe_per_mwh"
+        registry_register(reg,"Design__plant__lcoe__lcoe_per_mwh", ["lcoe.lcoe_per_mwh"])
+        assert registry_resolve(reg,"lcoe.lcoe_per_mwh") == "Design__plant__lcoe__lcoe_per_mwh"
 
     def test_register_multiple_keys(self):
         reg = OutputRegistry()
         canonical = "Design__plant__lcoe__lcoe_per_mwh"
-        reg.register(canonical, [
+        registry_register(reg,canonical, [
             "lcoe.lcoe_per_mwh",
             canonical,
             "plant.lcoe.lcoe_per_mwh",
         ])
-        assert reg.resolve("lcoe.lcoe_per_mwh") == canonical
-        assert reg.resolve(canonical) == canonical
-        assert reg.resolve("plant.lcoe.lcoe_per_mwh") == canonical
+        assert registry_resolve(reg,"lcoe.lcoe_per_mwh") == canonical
+        assert registry_resolve(reg,canonical) == canonical
+        assert registry_resolve(reg,"plant.lcoe.lcoe_per_mwh") == canonical
 
     def test_canonical_channel_self_resolves(self):
         reg = OutputRegistry()
         canonical = "Design__plant__lcoe__lcoe_per_mwh"
-        reg.register(canonical, [])
-        assert reg.resolve(canonical) == canonical
+        registry_register(reg,canonical, [])
+        assert registry_resolve(reg,canonical) == canonical
 
     def test_register_duplicate_key_same_channel_is_noop(self, caplog):
         reg = OutputRegistry()
         canonical = "Design__plant__lcoe__lcoe_per_mwh"
-        reg.register(canonical, ["lcoe.lcoe_per_mwh"])
+        registry_register(reg,canonical, ["lcoe.lcoe_per_mwh"])
         with caplog.at_level(logging.WARNING):
-            reg.register(canonical, ["lcoe.lcoe_per_mwh"])
+            registry_register(reg,canonical, ["lcoe.lcoe_per_mwh"])
         assert "collision" not in caplog.text.lower()
-        assert reg.resolve("lcoe.lcoe_per_mwh") == canonical
+        assert registry_resolve(reg,"lcoe.lcoe_per_mwh") == canonical
 
     def test_len_reflects_registered_keys(self):
         reg = OutputRegistry()
-        reg.register("ch_A", ["key_1", "key_2"])
+        registry_register(reg,"ch_A", ["key_1", "key_2"])
         # canonical self-key + 2 lookup keys = 3
         assert len(reg) == 3
 
@@ -151,15 +153,15 @@ class TestCollisionHandling:
 
     def test_collision_refuses_overwrite(self):
         reg = OutputRegistry()
-        reg.register("channel_A", ["shared.key"])
-        reg.register("channel_B", ["shared.key"])
-        assert reg.resolve("shared.key") == "channel_A"  # first wins
+        registry_register(reg,"channel_A", ["shared.key"])
+        registry_register(reg,"channel_B", ["shared.key"])
+        assert registry_resolve(reg,"shared.key") == "channel_A"  # first wins
 
     def test_collision_logs_warning(self, caplog):
         reg = OutputRegistry()
-        reg.register("channel_A", ["shared.key"])
+        registry_register(reg,"channel_A", ["shared.key"])
         with caplog.at_level(logging.WARNING):
-            reg.register("channel_B", ["shared.key"])
+            registry_register(reg,"channel_B", ["shared.key"])
         assert "collision" in caplog.text.lower()
         assert "shared.key" in caplog.text
         assert "channel_A" in caplog.text
@@ -169,16 +171,16 @@ class TestCollisionHandling:
         """Key_A 'cost_model.total_cost' from 9 virtual CalcUsages: first wins, 8 warnings."""
         reg = OutputRegistry()
         first_canonical = "Design__part1__cost_model__total_cost"
-        reg.register(first_canonical, ["cost_model.total_cost"])
+        registry_register(reg,first_canonical, ["cost_model.total_cost"])
 
         with caplog.at_level(logging.WARNING):
             for i in range(2, 10):
-                reg.register(
+                registry_register(reg,
                     f"Design__part{i}__cost_model__total_cost",
                     ["cost_model.total_cost"],
                 )
 
-        assert reg.resolve("cost_model.total_cost") == first_canonical
+        assert registry_resolve(reg,"cost_model.total_cost") == first_canonical
         # 8 collisions (parts 2-9)
         collision_warnings = [
             r for r in caplog.records
@@ -198,28 +200,28 @@ class TestRegisterAlias:
     def test_alias_resolves_to_canonical(self):
         reg = OutputRegistry()
         canonical = "Design__plant__cost_model__total_cost"
-        reg.register(canonical, [])
+        registry_register(reg,canonical, [])
         reg.register_alias("solar_array.total_capex", canonical)
-        assert reg.resolve("solar_array.total_capex") == canonical
+        assert registry_resolve(reg,"solar_array.total_capex") == canonical
 
     def test_alias_to_unregistered_channel_warns(self, caplog):
         reg = OutputRegistry()
         with caplog.at_level(logging.WARNING):
             reg.register_alias("alias.key", "nonexistent__channel")
         assert "unregistered" in caplog.text.lower()
-        assert reg.resolve("alias.key") is None
+        assert registry_resolve(reg,"alias.key") is None
 
     def test_alias_collision_refuses_overwrite(self, caplog):
         reg = OutputRegistry()
-        reg.register("channel_A", [])
-        reg.register("channel_B", [])
+        registry_register(reg,"channel_A", [])
+        registry_register(reg,"channel_B", [])
         # Register alias for shared.key -> channel_A
         reg.register_alias("shared.key", "channel_A")
         # Attempt to re-register same alias key -> channel_B
         with caplog.at_level(logging.WARNING):
             reg.register_alias("shared.key", "channel_B")
         assert "collision" in caplog.text.lower()
-        assert reg.resolve("shared.key") == "channel_A"  # first wins
+        assert registry_resolve(reg,"shared.key") == "channel_A"  # first wins
 
 
 # ---------------------------------------------------------------------------
@@ -232,27 +234,27 @@ class TestResolve:
 
     def test_resolve_exact_match(self):
         reg = _make_registry_with_calc_usage()
-        assert reg.resolve("lcoe.lcoe_per_mwh") == (
+        assert registry_resolve(reg,"lcoe.lcoe_per_mwh") == (
             "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
         )
 
     def test_resolve_unregistered_returns_none(self):
         reg = _make_registry_with_calc_usage()
-        assert reg.resolve("nonexistent.key") is None
+        assert registry_resolve(reg,"nonexistent.key") is None
 
     def test_resolve_bare_name_returns_none(self):
         reg = _make_registry_with_calc_usage()
-        assert reg.resolve("lcoe_per_mwh") is None
+        assert registry_resolve(reg,"lcoe_per_mwh") is None
 
     def test_resolve_sysml_qn_returns_none(self):
         reg = _make_registry_with_calc_usage()
-        assert reg.resolve("SolarBatteryDesign::solar_battery_plant::lcoe") is None
+        assert registry_resolve(reg,"SolarBatteryDesign::solar_battery_plant::lcoe") is None
 
     def test_resolve_no_normalization(self):
         """Register 'a.b', resolve 'a__b' -- must return None (no format conversion)."""
         reg = OutputRegistry()
-        reg.register("canonical", ["a.b"])
-        assert reg.resolve("a__b") is None
+        registry_register(reg,"canonical", ["a.b"])
+        assert registry_resolve(reg,"a__b") is None
 
 
 # ---------------------------------------------------------------------------
@@ -265,24 +267,24 @@ class TestKeyFormats:
 
     def test_key_a_dotted_short_resolves(self):
         reg = _make_registry_with_calc_usage()
-        result = reg.resolve("lcoe.lcoe_per_mwh")
+        result = registry_resolve(reg,"lcoe.lcoe_per_mwh")
         assert result == "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
 
     def test_key_b_eqn_resolves(self):
         reg = _make_registry_with_calc_usage()
-        result = reg.resolve(
+        result = registry_resolve(reg,
             "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
         )
         assert result == "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
 
     def test_key_c_dotted_hierarchy_resolves(self):
         reg = _make_registry_with_calc_usage()
-        result = reg.resolve("solar_battery_plant.lcoe.lcoe_per_mwh")
+        result = registry_resolve(reg,"solar_battery_plant.lcoe.lcoe_per_mwh")
         assert result == "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
 
     def test_key_c_virtual_calc_usage(self):
         reg = _make_registry_with_virtual_calc_usage()
-        result = reg.resolve(
+        result = registry_resolve(reg,
             "solar_battery_plant.solar_array.pv_module.cost_model.total_cost"
         )
         assert result == (
@@ -292,14 +294,14 @@ class TestKeyFormats:
 
     def test_key_d_aggregation_resolves(self):
         reg = _make_registry_with_aggregation()
-        result = reg.resolve("solar_array.capital_cost")
+        result = registry_resolve(reg,"solar_array.capital_cost")
         assert result == (
             "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"
         )
 
     def test_key_f_formula_resolves(self):
         reg = _make_registry_with_formula()
-        result = reg.resolve("e2e_plant.power_mw")
+        result = registry_resolve(reg,"e2e_plant.power_mw")
         assert result == "E2EDesign__e2e_plant__power_mw"
 
 
@@ -312,11 +314,11 @@ class TestDeriveKeyC:
     """FR-6: Key_C derivation from usage QN + output attr name."""
 
     def test_concrete_calc_usage(self):
-        result = OutputRegistry.derive_key_c("Design__plant__lcoe", "lcoe_per_mwh")
+        result = make_scoped_key("Design__plant__lcoe", "lcoe_per_mwh")
         assert result == "plant.lcoe.lcoe_per_mwh"
 
     def test_virtual_calc_usage_deep(self):
-        result = OutputRegistry.derive_key_c(
+        result = make_scoped_key(
             "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model",
             "total_cost",
         )
@@ -325,7 +327,7 @@ class TestDeriveKeyC:
         )
 
     def test_single_segment_after_prefix(self):
-        result = OutputRegistry.derive_key_c("Design__lcoe", "out")
+        result = make_scoped_key("Design__lcoe", "out")
         assert result == "lcoe.out"
 
 
@@ -343,19 +345,19 @@ class TestPhaseOrdering:
         # Phase 1: register virtual CalcUsage with Key_C
         canonical = "Design__plant__solar_array__cost_model__total_cost"
         key_c = "plant.solar_array.cost_model.total_cost"
-        reg.register(canonical, [key_c])
+        registry_register(reg,canonical, [key_c])
 
         # Phase 2: CHAIN alias points to canonical
         reg.register_alias("plant.solar_array.total_capex", canonical)
 
-        assert reg.resolve("plant.solar_array.total_capex") == canonical
+        assert registry_resolve(reg,"plant.solar_array.total_capex") == canonical
 
     def test_phase3_alias_resolves_via_phase1_and_phase2(self):
         """Phase 3 EXPOSE_PURE alias resolves against Phase 1+2 entries."""
         reg = OutputRegistry()
         # Phase 1
         canonical = "Design__plant__lcoe__lcoe_per_mwh"
-        reg.register(canonical, ["lcoe.lcoe_per_mwh"])
+        registry_register(reg,canonical, ["lcoe.lcoe_per_mwh"])
 
         # Phase 2: CHAIN alias
         reg.register_alias("plant.lcoe.lcoe_per_mwh_alias", canonical)
@@ -363,14 +365,14 @@ class TestPhaseOrdering:
         # Phase 3: EXPOSE_PURE alias also points to same canonical
         reg.register_alias("plant.lcoe_result", canonical)
 
-        assert reg.resolve("plant.lcoe_result") == canonical
+        assert registry_resolve(reg,"plant.lcoe_result") == canonical
 
     def test_phase4_alias_resolves_via_phase1_through_3(self):
         """Phase 4 transitive alias resolves against Phase 1-3 entries."""
         reg = OutputRegistry()
         # Phase 1
         canonical = "Design__plant__cost_model__total_cost"
-        reg.register(canonical, ["cost_model.total_cost"])
+        registry_register(reg,canonical, ["cost_model.total_cost"])
 
         # Phase 2: CHAIN alias
         reg.register_alias("plant.cost_model.total_cost", canonical)
@@ -381,7 +383,7 @@ class TestPhaseOrdering:
         # Phase 4: transitive design attr alias
         reg.register_alias("design.total_capex", canonical)
 
-        assert reg.resolve("design.total_capex") == canonical
+        assert registry_resolve(reg,"design.total_capex") == canonical
 
     def test_phase2_before_phase1_warns(self, caplog):
         """register_alias() warns if canonical isn't registered yet."""
@@ -435,8 +437,8 @@ class TestDiagnostics:
 
     def test_canonical_channels_returns_frozenset(self):
         reg = OutputRegistry()
-        reg.register("ch_A", ["key_1"])
-        reg.register("ch_B", ["key_2"])
+        registry_register(reg,"ch_A", ["key_1"])
+        registry_register(reg,"ch_B", ["key_2"])
         result = reg.canonical_channels
         assert isinstance(result, frozenset)
         assert result == frozenset({"ch_A", "ch_B"})
@@ -447,10 +449,10 @@ class TestDiagnostics:
 
     def test_repr_shows_key_and_channel_counts(self):
         reg = OutputRegistry()
-        reg.register("ch_A", ["key_1", "key_2"])
-        # 2 compat keys + 1 canonical channel
-        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, compat=2, channels=1)"
+        registry_register(reg,"ch_A", ["key_1", "key_2"])
+        # 2 alias keys + 1 canonical channel
+        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=2, channels=1)"
 
     def test_repr_empty_registry(self):
         reg = OutputRegistry()
-        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, compat=0, channels=0)"
+        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, channels=0)"

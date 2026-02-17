@@ -18,6 +18,7 @@ from sysml_codegen.extraction.data_models import (
     ScopedAggregationData,
 )
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
+from tests.helpers.registry_compat import registry_resolve
 
 
 # ---------------------------------------------------------------------------
@@ -102,28 +103,33 @@ class TestAggregationOutputRegistration:
     """Test OutputRegistry registration of aggregation outputs."""
 
     def test_dotted_reference_resolves(self):
-        """'solar_array.capital_cost' resolves to aggregation module output channel."""
+        """Key_E_stripped resolves to aggregation module output channel."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
         )
         registry = _build_test_registry(aggregation_data=[agg])
-        assert registry.resolve("solar_array.capital_cost") is not None
+        # Key_E_stripped: instance_parts[1:] + attr = plant.solar_array.capital_cost
+        assert registry_resolve(registry, "plant.solar_array.capital_cost") is not None
 
-    def test_bare_reference_resolves(self):
-        """Bare 'capital_cost' resolves when only one aggregation has that name."""
+    def test_scoped_key_resolves(self):
+        """Scoped key resolves with default instance path."""
         agg = _make_scoped_agg(attribute_name="capital_cost")
         registry = _build_test_registry(aggregation_data=[agg])
-        assert registry.resolve("capital_cost") is not None
+        # Default instance_path="Design__plant__solar_array"
+        assert registry_resolve(registry, "plant.solar_array.capital_cost") is not None
 
-    def test_full_instance_dotted_resolves(self):
-        """Full dotted instance path resolves."""
+    def test_key_e_stripped_is_only_typed_key(self):
+        """Only Key_E_stripped (no design prefix) is registered in typed registry."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
         )
         registry = _build_test_registry(aggregation_data=[agg])
-        assert registry.resolve("Design.plant.solar_array.capital_cost") is not None
+        # Key_E_stripped works
+        assert registry_resolve(registry, "plant.solar_array.capital_cost") is not None
+        # Full path with design prefix does NOT work (no _compat)
+        assert registry_resolve(registry, "Design.plant.solar_array.capital_cost") is None
 
     def test_channel_name_format(self):
         """Channel follows PQN format: {module_eqn}__{attribute_name}."""
@@ -132,14 +138,14 @@ class TestAggregationOutputRegistration:
             instance_path="Design__plant__solar_array",
         )
         registry = _build_test_registry(aggregation_data=[agg])
-        channel = registry.resolve("solar_array.capital_cost")
+        channel = registry_resolve(registry, "plant.solar_array.capital_cost")
         assert (
             channel
             == "Design__plant__solar_array__capital_cost__capital_cost"
         )
 
-    def test_bare_key_no_collision(self):
-        """If two aggregations share same attribute_name, first wins bare key."""
+    def test_two_aggregations_each_resolve_via_key_e_stripped(self):
+        """Two aggregations with same attribute_name each resolve via their own Key_E_stripped."""
         agg1 = _make_scoped_agg(
             attribute_name="capital_cost",
             owning_part_name="Solar_Array",
@@ -152,25 +158,22 @@ class TestAggregationOutputRegistration:
         )
         registry = _build_test_registry(aggregation_data=[agg1, agg2])
 
-        # Both dotted keys resolve
-        assert registry.resolve("solar_array.capital_cost") is not None
-        assert registry.resolve("battery_system.capital_cost") is not None
-        # Bare key resolves to first-registered
-        assert registry.resolve("capital_cost") is not None
-        assert (
-            registry.resolve("capital_cost")
-            == registry.resolve("solar_array.capital_cost")
-        )
+        # Both Key_E_stripped keys resolve to distinct channels
+        ch1 = registry_resolve(registry, "plant.solar_array.capital_cost")
+        ch2 = registry_resolve(registry, "plant.battery_system.capital_cost")
+        assert ch1 is not None
+        assert ch2 is not None
+        assert ch1 != ch2
 
     def test_empty_aggregation_data(self):
         """Empty aggregation_data produces no aggregation registrations."""
         registry = _build_test_registry(aggregation_data=[])
-        assert registry.resolve("capital_cost") is None
+        assert registry_resolve(registry, "plant.solar_array.capital_cost") is None
 
     def test_none_aggregation_data(self):
         """Default (no aggregation_data) produces no registrations."""
         registry = _build_test_registry()
-        assert registry.resolve("capital_cost") is None
+        assert registry_resolve(registry, "plant.solar_array.capital_cost") is None
 
 
 # ---------------------------------------------------------------------------
@@ -183,7 +186,12 @@ class TestSystemCalcWiresToAggregation:
 
     def test_dotted_binding_resolves_to_module_output(self):
         """System-level CalcUsage with binding source_path='solar_array.capital_cost'
-        resolves to MODULE_OUTPUT pointing at aggregation channel."""
+        resolves to MODULE_OUTPUT pointing at aggregation channel.
+
+        Consumer QN 'Design__plant__financial_calc' produces consumer_scope='plant',
+        so scoped_lookup tries 'plant.solar_array.capital_cost' which matches
+        the Key_E_stripped for instance_path='Design__plant__solar_array'.
+        """
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
@@ -199,7 +207,7 @@ class TestSystemCalcWiresToAggregation:
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
-            qualified_name="Pkg__Part__financial_calc",
+            qualified_name="Design__plant__financial_calc",
         )
 
         calc_def = SimpleCalcDef(
@@ -218,7 +226,7 @@ class TestSystemCalcWiresToAggregation:
         )
         bt.find_required_modules([], include_all=True)
 
-        key = "Pkg__Part__financial_calc|total_capex"
+        key = "Design__plant__financial_calc|total_capex"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
@@ -229,8 +237,12 @@ class TestSystemCalcWiresToAggregation:
         assert resolution.source_path == "solar_array.capital_cost"
         assert resolution.is_transitive is False
 
-    def test_bare_reference_resolves_for_top_level(self):
-        """Bare 'capital_cost' resolves when only one aggregation has that name."""
+    def test_direct_key_e_stripped_resolves_for_top_level(self):
+        """Direct Key_E_stripped source_path resolves via scoped_lookup (Step 1b).
+
+        source_path='plant.solar_array.capital_cost' is the full Key_E_stripped
+        and resolves directly without consumer_scope prefix.
+        """
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_array",
@@ -242,11 +254,11 @@ class TestSystemCalcWiresToAggregation:
             bindings=[
                 BindingInfo(
                     param_name="capex",
-                    source_path="capital_cost",
+                    source_path="plant.solar_array.capital_cost",
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
-            qualified_name="Pkg__Part__system_calc",
+            qualified_name="Design__system_calc",
         )
 
         calc_def = SimpleCalcDef(
@@ -265,16 +277,21 @@ class TestSystemCalcWiresToAggregation:
         )
         bt.find_required_modules([], include_all=True)
 
-        key = "Pkg__Part__system_calc|capex"
+        key = "Design__system_calc|capex"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
 
     def test_sysml_qn_reference_normalizes(self):
-        """'Package::solar_array::capital_cost' normalizes to dotted and resolves."""
+        """'Package::solar_array::capital_cost' normalizes to dotted and resolves.
+
+        REFERENCE dispatch Step 1b normalizes '::'-separated SysML QN to dotted:
+        parts[-2].parts[-1] = 'solar_array.capital_cost'. This matches
+        Key_E_stripped when instance_path='Design__solar_array'.
+        """
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
-            instance_path="Design__plant__solar_array",
+            instance_path="Design__solar_array",
         )
 
         usage = _make_calc_usage(
@@ -287,7 +304,7 @@ class TestSystemCalcWiresToAggregation:
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
-            qualified_name="Pkg__Part__sys_calc",
+            qualified_name="Design__sys_calc",
         )
 
         calc_def = SimpleCalcDef(
@@ -306,7 +323,7 @@ class TestSystemCalcWiresToAggregation:
         )
         bt.find_required_modules([], include_all=True)
 
-        key = "Pkg__Part__sys_calc|cost_input"
+        key = "Design__sys_calc|cost_input"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
@@ -314,7 +331,11 @@ class TestSystemCalcWiresToAggregation:
     # -- Category (c): Integration Tests --
 
     def test_trace_log_contains_aggregation_resolution(self):
-        """Trace log records resolution for debugging (checks outcome, not label)."""
+        """Trace log records resolution for debugging (checks outcome, not label).
+
+        Consumer QN 'Design__plant__sys_calc' yields consumer_scope='plant',
+        so scoped_lookup('plant.solar_array.capital_cost') matches Key_E_stripped.
+        """
         agg = _make_scoped_agg(attribute_name="capital_cost")
 
         usage = _make_calc_usage(
@@ -327,7 +348,7 @@ class TestSystemCalcWiresToAggregation:
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
-            qualified_name="Pkg__Part__sys_calc",
+            qualified_name="Design__plant__sys_calc",
         )
 
         calc_def = SimpleCalcDef(
@@ -347,7 +368,7 @@ class TestSystemCalcWiresToAggregation:
         result = bt.find_required_modules([], include_all=True)
 
         # Verify the binding resolved to MODULE_OUTPUT
-        key = "Pkg__Part__sys_calc|cost"
+        key = "Design__plant__sys_calc|cost"
         assert bt._binding_resolutions[key].resolution_type == BindingResolutionType.MODULE_OUTPUT
 
         # Verify trace log mentions the attribute (resilient to label changes)
@@ -441,7 +462,7 @@ class TestNoAggregationDataGraceful:
     def test_empty_list_aggregation_data_works(self):
         """aggregation_data=[] produces no registrations."""
         registry = _build_test_registry(aggregation_data=[])
-        assert registry.resolve("capital_cost") is None
+        assert registry_resolve(registry, "plant.solar_array.capital_cost") is None
 
 
 # ---------------------------------------------------------------------------
@@ -462,17 +483,21 @@ class TestAggregationAliasRegistration:
 
         registry = _build_test_registry(aggregation_data=[agg])
 
-        # Both original and alias should resolve
-        assert registry.resolve("solar_battery_plant.capital_cost") is not None
-        assert registry.resolve("solar_battery_plant.total_capex") is not None
+        # Both original and alias should resolve via Key_E_stripped
+        assert registry_resolve(registry, "plant.solar_battery_plant.capital_cost") is not None
+        assert registry_resolve(registry, "plant.solar_battery_plant.total_capex") is not None
 
-    def test_bare_alias_resolves(self):
-        """Bare alias name resolves when unambiguous."""
+    def test_key_e_stripped_alias_resolves(self):
+        """Key_E_stripped alias resolves via scoped registry.
+
+        Default instance_path='Design__plant__solar_array' produces
+        Key_E_stripped alias 'plant.solar_array.total_capex'.
+        """
         agg = _make_scoped_agg(attribute_name="capital_cost")
         agg.expression.aliases = ["total_capex"]
 
         registry = _build_test_registry(aggregation_data=[agg])
-        assert registry.resolve("total_capex") is not None
+        assert registry_resolve(registry, "plant.solar_array.total_capex") is not None
 
     def test_alias_channel_matches_original(self):
         """Alias points to the same channel as the original attribute."""
@@ -483,12 +508,12 @@ class TestAggregationAliasRegistration:
         agg.expression.aliases = ["total_capex"]
 
         registry = _build_test_registry(aggregation_data=[agg])
-        original_channel = registry.resolve("solar_battery_plant.capital_cost")
-        alias_channel = registry.resolve("solar_battery_plant.total_capex")
+        original_channel = registry_resolve(registry, "plant.solar_battery_plant.capital_cost")
+        alias_channel = registry_resolve(registry, "plant.solar_battery_plant.total_capex")
         assert original_channel == alias_channel
 
-    def test_full_dotted_alias_resolves(self):
-        """Full dotted instance path with alias resolves."""
+    def test_design_prefix_alias_does_not_resolve(self):
+        """Full path with Design prefix does NOT resolve (Key_E_stripped strips it)."""
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_battery_plant",
@@ -496,7 +521,10 @@ class TestAggregationAliasRegistration:
         agg.expression.aliases = ["total_capex"]
 
         registry = _build_test_registry(aggregation_data=[agg])
-        assert registry.resolve("Design.plant.solar_battery_plant.total_capex") is not None
+        # Design prefix is stripped — full path should NOT resolve
+        assert registry_resolve(registry, "Design.plant.solar_battery_plant.total_capex") is None
+        # Key_E_stripped (no Design prefix) SHOULD resolve
+        assert registry_resolve(registry, "plant.solar_battery_plant.total_capex") is not None
 
     def test_no_aliases_no_extra_keys(self):
         """Aggregation with no aliases only has original keys."""
@@ -507,12 +535,20 @@ class TestAggregationAliasRegistration:
         # No aliases set (default empty list)
 
         registry = _build_test_registry(aggregation_data=[agg])
-        assert registry.resolve("total_capex") is None
+        # Alias key should not resolve when no aliases registered
+        assert registry_resolve(registry, "plant.solar_battery_plant.total_capex") is None
 
     # -- Category (b): Alias resolution through backtracker --
 
-    def test_sanitized_partdef_name_in_fallback(self):
-        """:: fallback sanitizes PartDef names ('Solar Battery Plant' -> 'solar_battery_plant')."""
+    def test_sanitized_partdef_name_in_reference_dispatch(self):
+        """REFERENCE dispatch normalizes 'Solar Battery Plant::total_capex'.
+
+        Step 1b normalizes to 'solar_battery_plant.total_capex', which doesn't
+        directly match Key_E_stripped 'plant.solar_battery_plant.total_capex'.
+        But Step 2 combines consumer_scope 'plant.solar_battery_plant' with
+        leaf 'total_capex', yielding 'plant.solar_battery_plant.total_capex'
+        which matches the BF-7 alias in the scoped registry.
+        """
         agg = _make_scoped_agg(
             attribute_name="capital_cost",
             instance_path="Design__plant__solar_battery_plant",
@@ -529,7 +565,7 @@ class TestAggregationAliasRegistration:
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
-            qualified_name="Pkg__Part__annualized_financial",
+            qualified_name="Design__plant__solar_battery_plant__annualized_financial",
         )
 
         calc_def = SimpleCalcDef(
@@ -548,7 +584,7 @@ class TestAggregationAliasRegistration:
         )
         bt.find_required_modules([], include_all=True)
 
-        key = "Pkg__Part__annualized_financial|total_capex"
+        key = "Design__plant__solar_battery_plant__annualized_financial|total_capex"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT

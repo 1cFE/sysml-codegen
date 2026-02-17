@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.core.identifier_types import derive_module_type, make_scoped_key
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
@@ -328,7 +328,7 @@ class TestKeyFormats:
     """Verifies registry key formats use dots, not ::."""
 
     def test_key_c_strips_design_prefix(self):
-        result = OutputRegistry.derive_key_c(
+        result = make_scoped_key(
             "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model",
             "total_cost",
         )
@@ -336,7 +336,7 @@ class TestKeyFormats:
         assert not result.startswith("SolarBatteryDesign")
 
     def test_key_c_uses_dots_not_colons(self):
-        result = OutputRegistry.derive_key_c(
+        result = make_scoped_key(
             "CATFMFEPhysics__catf_physics__net_electric",
             "net_power",
         )
@@ -349,7 +349,7 @@ class TestKeyFormats:
         ids=[e[2].split(".")[-1] for e in KEY_C_EXAMPLES],
     )
     def test_key_c_parametrized(self, eqn, output, expected):
-        assert OutputRegistry.derive_key_c(eqn, output) == expected
+        assert make_scoped_key(eqn, output) == expected
 
     def test_no_colon_keys_in_key_formats(self):
         """All key formats (A, B, C, D, E, F) use dotted format, never ::."""
@@ -365,7 +365,7 @@ class TestKeyFormats:
         assert "::" not in key_b
 
         # Key_C: derive_key_c()
-        key_c = OutputRegistry.derive_key_c(
+        key_c = make_scoped_key(
             "SolarBatteryDesign__solar_battery_plant__cost_model",
             "total_cost",
         )

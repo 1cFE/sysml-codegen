@@ -128,7 +128,7 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
   - [x] Aggregation term type classification correct (SumTerm, SingletonTerm, LocalTerm); all 3 present in solar_battery
   - [x] FCE classified as SingletonTerm (not LocalTerm) — verified by static analysis + dotted source_path check
   - [x] Verified with solar_battery_model (78 redefs, 13 overrides, 3 mults, 20 aggs), issue22_model (edge cases), cross-model on all 6 fixtures
-  - Note: REQ-HR-07 alias detection has zero positive-case fixture coverage (no model has CHAIN sibling aliases)
+  - [x] REQ-HR-07 alias detection: positive case verified with alias_agg_probe (`:>> reported_cost = total_cost` → `agg.aliases = ["reported_cost"]`). Note: `endswith()` check may false-positive on dotted paths — edge case documented.
 
 ### C07 — AST Dispatch Invariant
 - **Doc**: [19-ast-dispatch-invariant.md](19-ast-dispatch-invariant.md)
@@ -217,18 +217,21 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **Interfaces**:
   - Input: root calc usages, OutputRegistry (typed), CalcUsageData, CalculationDefinitionData
   - Output: `BacktrackingResult` (required_usages, dependency_graph, entry_points, binding_resolutions)
-- **AC**:
-  - [ ] Every non-literal binding resolved via `_resolve_binding_via_registry()`
-  - [ ] CHAIN bindings (no `::` in source_path): ScopedKey → scoped registry, then alias registry (cross-package)
-  - [ ] REFERENCE bindings (`::` in source_path): SysMLQN → SysML QN registry, then normalized ScopedKey → scoped registry
-  - [ ] No Key_A references — type-directed dispatch replaces Step 1 cascade
-  - [ ] No `UnscopedResolutionError` — eliminated with Key_A
-  - [ ] Cycle detection via path tracking — cycles don't crash, they warn
-  - [ ] Every binding resolves (fallback guarantees total resolution)
-  - [ ] Key format: `"{usage_qn}|{param_name}"` for binding_resolutions
-  - [ ] Topological sort produces dependency-first ordering
-  - [ ] Self-reference guard prevents wiring module to its own output
-  - [ ] Test with real typed OutputRegistry + real extraction from all fixture models
+- **AC**: *(all verified 2026-02-17 — 60 tests in `tests/conformance/test_backtracker.py`: 43 C11a outcome + 17 C11b mechanism)*
+  - [x] Every non-literal binding resolved via `_resolve_binding_via_registry()` (typed dispatch)
+  - [x] CHAIN bindings (no `::` in source_path): ScopedKey → scoped registry, then alias registry (cross-package)
+  - [x] REFERENCE bindings (`::` in source_path): SysMLQN → SysML QN registry, then normalized ScopedKey → scoped registry
+  - [x] No Key_A references — type-directed dispatch replaces Step 1 cascade
+  - [x] No `UnscopedResolutionError` — eliminated with Key_A
+  - [x] Cycle detection via path tracking — cycles don't crash, they warn
+  - [x] Every binding resolves (fallback guarantees total resolution)
+  - [x] Key format: `"{usage_qn}|{param_name}"` for binding_resolutions
+  - [x] Topological sort produces dependency-first ordering
+  - [x] Self-reference guard prevents wiring module to its own output
+  - [x] Test with real typed OutputRegistry + real extraction from all fixture models
+  - [x] Zero `resolve()`, `register()`, `_compat` on OutputRegistry — removed; tests use `registry_compat.py` helper
+  - [x] 14 previously-compat-only resolutions now typed (12 catf_mfe alias, 2 solar_battery scoped)
+  - [x] EXPRESSION bindings produce ENTRY_POINT with warning log
 
 ### C12 — Input Resolver (resolve_input, Typed)
 - **Doc**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)

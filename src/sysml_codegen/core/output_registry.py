@@ -15,7 +15,6 @@ from sysml_codegen.core.identifier_types import (
     CanonicalChannel,
     ScopedKey,
     SysMLQN,
-    make_scoped_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,9 +42,6 @@ class OutputRegistry:
         self._sysml_qn: dict[SysMLQN, CanonicalChannel] = {}
         self._alias: dict[ScopedKey, CanonicalChannel] = {}
         self._canonical: set[CanonicalChannel] = set()
-        # Legacy keys (Key_A, Key_D, Key_F, bare) for deprecated resolve()
-        # only. NOT checked by typed lookup methods. Removed in C11.
-        self._compat: dict[str, CanonicalChannel] = {}
 
     # ------------------------------------------------------------------
     # Typed registration methods (REQ-OR-03)
@@ -139,77 +135,6 @@ class OutputRegistry:
         return self._alias.get(key)
 
     # ------------------------------------------------------------------
-    # Deprecated API (backward compat for C11/C12 transition)
-    # ------------------------------------------------------------------
-
-    def register(self, canonical_channel: str, lookup_keys: list[str]) -> None:
-        """Register a canonical channel with lookup keys (DEPRECATED).
-
-        This method is kept for backward compatibility during the transition
-        to typed registration. It registers keys in the ``_compat`` dict
-        (checked only by ``resolve()``, not by typed lookup methods) and
-        adds the canonical channel to the canonical set.
-
-        Use ``register_scoped()``, ``register_sysml_qn()``, or
-        ``register_alias()`` instead.
-        """
-        cc = CanonicalChannel(canonical_channel)
-        self._canonical.add(cc)
-        for key in lookup_keys:
-            if key in self._compat:
-                if self._compat[key] != cc:
-                    logger.warning(
-                        "OutputRegistry key collision: '%s' already maps to '%s', "
-                        "refusing to overwrite with '%s'",
-                        key,
-                        self._compat[key],
-                        cc,
-                    )
-                continue
-            self._compat[key] = cc
-
-    def resolve(self, source_path: str) -> str | None:
-        """Resolve a source_path to a canonical channel name (DEPRECATED).
-
-        Checks registries in order:
-        scoped → sysml_qn → alias → compat → canonical_set.
-
-        The ``_compat`` dict holds legacy keys (Key_A, Key_D, Key_F, bare)
-        that the backtracker's ``resolve()`` calls still need. These are NOT
-        visible to typed lookup methods. Removed when C11 updates the
-        backtracker to use typed dispatch.
-
-        Use ``scoped_lookup()``, ``sysml_qn_lookup()``, or ``alias_lookup()``
-        instead.
-        """
-        result = self._scoped.get(ScopedKey(source_path))
-        if result is not None:
-            return result
-        result = self._sysml_qn.get(SysMLQN(source_path))
-        if result is not None:
-            return result
-        result = self._alias.get(ScopedKey(source_path))
-        if result is not None:
-            return result
-        # Legacy compat keys (Key_A, Key_D, Key_F, bare)
-        result = self._compat.get(source_path)
-        if result is not None:
-            return result
-        # Canonical self-lookup (Key_B equivalent)
-        cc = CanonicalChannel(source_path)
-        if cc in self._canonical:
-            return cc
-        return None
-
-    @staticmethod
-    def derive_key_c(usage_qualified_name: str, output_attr_name: str) -> str:
-        """Derive Key_C: dotted hierarchy path (DEPRECATED).
-
-        Use ``make_scoped_key()`` from ``core.identifier_types`` instead.
-        """
-        return make_scoped_key(usage_qualified_name, output_attr_name)
-
-    # ------------------------------------------------------------------
     # Properties and diagnostics
     # ------------------------------------------------------------------
 
@@ -217,7 +142,7 @@ class OutputRegistry:
         """Total number of lookup keys across all registries."""
         return (
             len(self._scoped) + len(self._sysml_qn) + len(self._alias)
-            + len(self._compat) + len(self._canonical)
+            + len(self._canonical)
         )
 
     def __repr__(self) -> str:
@@ -226,7 +151,6 @@ class OutputRegistry:
             f"OutputRegistry(scoped={len(self._scoped)}, "
             f"sysml_qn={len(self._sysml_qn)}, "
             f"alias={len(self._alias)}, "
-            f"compat={len(self._compat)}, "
             f"channels={len(self._canonical)})"
         )
 

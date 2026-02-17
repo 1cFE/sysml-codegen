@@ -24,6 +24,7 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.generation.initialization import build_output_registry
 from tests.helpers.snapshot_loader import load_extraction_snapshot
+from tests.helpers.registry_compat import registry_resolve
 
 
 # ---------------------------------------------------------------------------
@@ -232,8 +233,8 @@ class TestReqOR01:
         )
         assert len(registry) == 0
         assert len(registry.canonical_channels) == 0
-        # resolve() should return None
-        assert registry.resolve("nonexistent.key") is None
+        # typed lookups should return None
+        assert registry.scoped_lookup(ScopedKey("nonexistent.key")) is None
 
 
 # ===================================================================
@@ -370,7 +371,7 @@ class TestReqOR04:
                 "Unregistered__channel",
             )
         # Alias should NOT be registered
-        assert registry.resolve("test.alias") is None
+        assert registry_resolve(registry,"test.alias") is None
         # Warning should be logged
         assert "phase ordering" in caplog.text.lower() or "unregistered" in caplog.text.lower()
 
@@ -454,10 +455,9 @@ class TestReqOR05:
                 key_e_stripped = ".".join(
                     instance_parts[1:] + [agg.expression.attribute_name]
                 )
-                # Should be resolvable (via scoped or deprecated resolve)
-                result = registry.resolve(key_e_stripped)
+                result = registry.scoped_lookup(ScopedKey(key_e_stripped))
                 assert result is not None, (
-                    f"Key_E_stripped '{key_e_stripped}' not found in registry"
+                    f"Key_E_stripped '{key_e_stripped}' not found in scoped registry"
                 )
 
     @pytest.mark.req("REQ-OR-05")
@@ -474,9 +474,9 @@ class TestReqOR05:
                 continue
             if ca.owning_part_qualified_name:
                 sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-                result = registry.resolve(sysml_qn)
+                result = registry.sysml_qn_lookup(SysMLQN(sysml_qn))
                 assert result is not None, (
-                    f"FORMULA SysML QN '{sysml_qn}' not found in registry"
+                    f"FORMULA SysML QN '{sysml_qn}' not found in sysml_qn registry"
                 )
                 formula_qn_count += 1
 
@@ -505,8 +505,6 @@ class TestReqOR06:
             # The alias's canonical_name should be resolvable via scoped
             scoped_result = registry.scoped_lookup(
                 ScopedKey(alias.canonical_name)
-            ) if _has_typed_methods(registry) else registry.resolve(
-                alias.canonical_name
             )
             assert scoped_result is not None, (
                 f"CHAIN alias canonical '{alias.canonical_name}' not "
@@ -516,11 +514,10 @@ class TestReqOR06:
     @pytest.mark.req("REQ-OR-06")
     @needs_typed_methods
     def test_phase3_alias_resolves_through_registry(self):
-        """EXPOSE_PURE aliases' canonical_name resolves via resolve()
-        before alias registration.
+        """EXPOSE_PURE aliases' canonical_name resolves via alias_lookup.
 
-        canonical_name is Key_A format (instance.attr); Phase 3 uses
-        resolve() which finds it via _compat registry.
+        canonical_name is Key_A format (instance.attr); Phase 1a now
+        registers Key_A as alias, making it reachable via alias_lookup.
         """
         snap = load_extraction_snapshot("attr_expr_probe")
         registry = build_registry_from_snapshot(snap)
@@ -529,11 +526,11 @@ class TestReqOR06:
         for alias in snap.get("channel_aliases", []):
             if alias.source != "expose_pure":
                 continue
-            # Phase 3 resolves canonical_name via resolve() (backward compat)
-            result = registry.resolve(alias.canonical_name)
+            # Phase 1a registers Key_A as alias
+            result = registry.alias_lookup(ScopedKey(alias.canonical_name))
             assert result is not None, (
                 f"EXPOSE_PURE alias canonical '{alias.canonical_name}' "
-                f"not resolvable via resolve()"
+                f"not resolvable via alias_lookup()"
             )
             expose_pure_count += 1
 
@@ -572,12 +569,15 @@ class TestReqOR06:
         for _path, attrs in snap.get("design_attributes", {}).items():
             for attr in attrs:
                 if is_transitive_default(attr.default_value):
-                    key = f"{attr.parent_part}.{attr.name}"
-                    result = registry.resolve(str(attr.default_value))
+                    key = ScopedKey(f"{attr.parent_part}.{attr.name}")
+                    val = str(attr.default_value)
+                    result = registry.alias_lookup(ScopedKey(val))
+                    if result is None:
+                        result = registry.scoped_lookup(ScopedKey(val))
                     if result is not None:
                         transitive_count += 1
                         # The alias should be registered
-                        alias_result = registry.resolve(key)
+                        alias_result = registry.alias_lookup(key)
                         assert alias_result is not None, (
                             f"Transitive alias '{key}' not registered"
                         )
@@ -621,10 +621,10 @@ class TestReqOR07:
             )
 
     @pytest.mark.req("REQ-OR-07")
-    def test_scoped_key_matches_derive_key_c(self):
-        """For every CalcUsage in solar_battery, make_scoped_key matches
-        derive_key_c (backward compatibility)."""
+    def test_scoped_key_in_registry(self):
+        """For every CalcUsage in solar_battery, make_scoped_key is in scoped registry."""
         snap = load_extraction_snapshot("solar_battery_model")
+        registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
 
         for usage in snap["calc_usages"]:
@@ -632,28 +632,24 @@ class TestReqOR07:
             if not calc_def:
                 continue
             for attr in calc_def.output_attributes:
-                new_key = make_scoped_key(usage.qualified_name, attr.name)
-                old_key = OutputRegistry.derive_key_c(
-                    usage.qualified_name, attr.name
-                )
-                assert new_key == old_key, (
-                    f"make_scoped_key != derive_key_c for "
-                    f"{usage.qualified_name}.{attr.name}: "
-                    f"{new_key!r} != {old_key!r}"
+                key = make_scoped_key(usage.qualified_name, attr.name)
+                result = registry.scoped_lookup(ScopedKey(key))
+                assert result is not None, (
+                    f"ScopedKey '{key}' not found in scoped registry"
                 )
 
 
 # ===================================================================
-# REQ-OR-08: Key_A not registered
+# REQ-OR-08: Key_A not in scoped registry
 # ===================================================================
 class TestReqOR08:
-    """REQ-OR-08: Key_A SHALL NOT be registered."""
+    """REQ-OR-08: Key_A SHALL NOT be in scoped registry (it IS in alias)."""
 
     @pytest.mark.req("REQ-OR-08")
     @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"])
     @needs_typed_methods
-    def test_key_a_not_registered(self, model_name):
-        """Key_A format (instance_name.attr) not in any registry."""
+    def test_key_a_not_in_scoped(self, model_name):
+        """Key_A format (instance_name.attr) not in scoped registry."""
         snap = load_extraction_snapshot(model_name)
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
@@ -676,72 +672,3 @@ class TestReqOR08:
                     )
 
 
-# ===================================================================
-# Backward compatibility: deprecated resolve()
-# ===================================================================
-class TestDeprecatedResolve:
-    """Verify deprecated resolve() pass-through works for transition."""
-
-    @pytest.mark.req("REQ-OR-01")
-    def test_resolve_still_works_for_scoped_keys(self):
-        """resolve() finds scoped keys via pass-through."""
-        snap = load_extraction_snapshot("solar_battery_model")
-        registry = build_registry_from_snapshot(snap)
-        calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
-
-        for usage in snap["calc_usages"]:
-            calc_def = calc_def_by_name.get(usage.calc_def_name)
-            if not calc_def:
-                continue
-            for attr in calc_def.output_attributes:
-                key_c = OutputRegistry.derive_key_c(
-                    usage.qualified_name, attr.name
-                )
-                result = registry.resolve(key_c)
-                assert result is not None, (
-                    f"Deprecated resolve({key_c!r}) returned None"
-                )
-
-    @pytest.mark.req("REQ-OR-01")
-    def test_resolve_still_works_for_sysml_qn(self):
-        """resolve() finds SysML QN keys via pass-through."""
-        snap = load_extraction_snapshot("attr_expr_probe")
-        registry = build_registry_from_snapshot(snap)
-
-        for ca in snap["computed_attributes"]:
-            if ca.classification != ComputedAttributeClassification.FORMULA:
-                continue
-            if ca.compilability != Compilability.FULLY_COMPILABLE:
-                continue
-            if ca.owning_part_qualified_name:
-                sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-                result = registry.resolve(sysml_qn)
-                assert result is not None, (
-                    f"Deprecated resolve({sysml_qn!r}) returned None"
-                )
-
-    @pytest.mark.req("REQ-OR-01")
-    def test_resolve_still_works_for_aliases(self):
-        """resolve() finds alias keys via pass-through."""
-        snap = load_extraction_snapshot("solar_battery_model")
-        registry = build_registry_from_snapshot(snap)
-
-        for alias in snap.get("channel_aliases", []):
-            if alias.source != "redefinition":
-                continue
-            result = registry.resolve(alias.alias_name)
-            assert result is not None, (
-                f"Deprecated resolve({alias.alias_name!r}) returned None"
-            )
-
-    @pytest.mark.req("REQ-OR-01")
-    def test_resolve_canonical_self_lookup(self):
-        """resolve() finds canonical channel names (self-lookup)."""
-        snap = load_extraction_snapshot("solar_battery_model")
-        registry = build_registry_from_snapshot(snap)
-
-        for channel in list(registry.canonical_channels)[:5]:
-            result = registry.resolve(channel)
-            assert result == channel, (
-                f"Deprecated resolve({channel!r}) should return itself"
-            )

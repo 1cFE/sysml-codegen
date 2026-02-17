@@ -33,6 +33,7 @@ from sysml_codegen.extraction.data_models import (
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.core.output_registry import OutputRegistry
+from tests.helpers.registry_compat import registry_register
 from sysml_codegen.resolution.graph_builder import (
     AttributeResolutionKind,
     _build_attribute_resolution_map,
@@ -150,7 +151,7 @@ class TestAttributeResolutionMap:
 
         # Output registry has the upstream calc output
         output_registry = OutputRegistry()
-        output_registry.register("Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
+        registry_register(output_registry,"Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
 
         attr_map = _build_attribute_resolution_map(
             computed_attrs=[ca],
@@ -252,7 +253,7 @@ class TestExposeResolution:
         )
 
         output_registry = OutputRegistry()
-        output_registry.register("Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
+        registry_register(output_registry,"Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
 
         channel = _resolve_expose_pure(ca, {"alpha_split"}, output_registry)
         assert channel == "Pkg__plant__alpha_split__p_alpha"
@@ -271,7 +272,7 @@ class TestExposeResolution:
 
         # The registry key should be "my_calc.efficiency"
         output_registry = OutputRegistry()
-        output_registry.register("Pkg__part__my_calc__efficiency", ["my_calc.efficiency"])
+        registry_register(output_registry,"Pkg__part__my_calc__efficiency", ["my_calc.efficiency"])
 
         channel = _resolve_expose_pure(ca, {"my_calc"}, output_registry)
         assert channel == "Pkg__part__my_calc__efficiency"
@@ -413,7 +414,7 @@ class TestComputedAttrModule:
         )
 
         output_registry = OutputRegistry()
-        output_registry.register("Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
+        registry_register(output_registry,"Pkg__plant__alpha_split__p_alpha", ["alpha_split.p_alpha"])
 
         attr_resolution_map = _build_attribute_resolution_map(
             computed_attrs=[ca_expose, ca_formula],

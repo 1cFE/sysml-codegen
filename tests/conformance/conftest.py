@@ -23,6 +23,7 @@ SNAPSHOT_MODELS = [
     "expression_binding_probe",
     "chain_override_probe",
     "unresolvable_attr_probe",
+    "alias_agg_probe",
 ]
 
 
@@ -92,3 +93,9 @@ def chain_override_snapshot(extraction_snapshots):
 def unresolvable_attr_snapshot(extraction_snapshots):
     """Convenience fixture for unresolvable_attr_probe snapshot."""
     return extraction_snapshots["unresolvable_attr_probe"]
+
+
+@pytest.fixture
+def alias_agg_probe_snapshot(extraction_snapshots):
+    """Convenience fixture for alias_agg_probe snapshot."""
+    return extraction_snapshots["alias_agg_probe"]

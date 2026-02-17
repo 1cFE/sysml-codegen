@@ -13,9 +13,11 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.core.identifier_types import make_scoped_key
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import get_channel_name
 from sysml_codegen.generation.initialization import build_pipeline_context
+from tests.helpers.registry_compat import registry_resolve, registry_register
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
@@ -44,10 +46,10 @@ class TestOutputRegistrySmokeRealData:
                 canonical = get_channel_name(usage.qualified_name, attr.name)
                 key_a = f"{usage.instance_name}.{attr.name}"
                 key_b = canonical  # EQN format = canonical
-                key_c = OutputRegistry.derive_key_c(
+                key_c = make_scoped_key(
                     usage.qualified_name, attr.name,
                 )
-                reg.register(canonical, [key_a, key_b, key_c])
+                registry_register(reg,canonical, [key_a, key_b, key_c])
 
         return reg
 
@@ -62,7 +64,7 @@ class TestOutputRegistrySmokeRealData:
         resolve via Key_C (dotted hierarchy path).
         """
         # lcoe.lcoe_per_mwh is a known concrete CalcUsage output (Key_A)
-        result = registry.resolve("lcoe.lcoe_per_mwh")
+        result = registry_resolve(registry,"lcoe.lcoe_per_mwh")
         assert result is not None, (
             "Expected 'lcoe.lcoe_per_mwh' (Key_A) to resolve in "
             "solar_battery registry"
@@ -76,7 +78,7 @@ class TestOutputRegistrySmokeRealData:
         """
         # This is a known virtual CalcUsage Key_C path from Spike 8
         key_c = "solar_battery_plant.solar_array.pv_module.cost_model.total_cost"
-        result = registry.resolve(key_c)
+        result = registry_resolve(registry,key_c)
         assert result is not None, (
             f"Expected Key_C '{key_c}' to resolve for virtual CalcUsage "
             "in solar_battery registry"

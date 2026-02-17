@@ -23,6 +23,7 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
+from tests.helpers.registry_compat import registry_resolve
 
 
 # ---------------------------------------------------------------------------
@@ -105,18 +106,29 @@ class SimpleAttrInfo:
 class TestComputedAttrRegistration:
     """Test OutputRegistry registration of FORMULA computed attributes."""
 
-    def test_dotted_and_bare_keys_resolve(self):
-        """Registry resolves both 'part.attr' and bare 'attr' keys for FORMULA."""
+    def test_dotted_and_sysml_qn_keys_resolve(self):
+        """Registry resolves ScopedKey('part.attr') and SysMLQN('Pkg::part::attr') for FORMULA.
+
+        Bare keys (just 'attr') are NOT registered in the typed registry.
+        """
         ca = _make_computed_attr("p_net_kw", "plant", "Pkg::plant")
         registry = _build_test_registry(computed_attributes=[ca])
 
-        assert registry.resolve("plant.p_net_kw") is not None
-        assert registry.resolve("p_net_kw") is not None
+        # ScopedKey (Key_F) resolves
+        assert registry_resolve(registry,"plant.p_net_kw") is not None
+        # SysML QN resolves
+        assert registry_resolve(registry,"Pkg::plant::p_net_kw") is not None
         # Both resolve to the same canonical channel
-        assert registry.resolve("plant.p_net_kw") == registry.resolve("p_net_kw")
+        assert registry_resolve(registry,"plant.p_net_kw") == registry_resolve(registry,"Pkg::plant::p_net_kw")
+        # Bare key does NOT resolve in typed registries
+        assert registry_resolve(registry,"p_net_kw") is None
 
     def test_expose_pure_excluded_from_registration(self):
-        """Only FORMULA attrs are registered; EXPOSE_PURE is excluded."""
+        """Only FORMULA attrs are registered; EXPOSE_PURE is excluded.
+
+        Bare keys (just 'attr') are NOT in the typed registry for either
+        classification.
+        """
         formula = _make_computed_attr("area", "part", "Pkg::part",
                                       ComputedAttributeClassification.FORMULA)
         expose = _make_computed_attr("eta", "part", "Pkg::part",
@@ -124,11 +136,13 @@ class TestComputedAttrRegistration:
 
         registry = _build_test_registry(computed_attributes=[formula, expose])
 
-        assert registry.resolve("part.area") is not None
-        assert registry.resolve("area") is not None
-        # EXPOSE_PURE should NOT resolve
-        assert registry.resolve("part.eta") is None
-        assert registry.resolve("eta") is None
+        # FORMULA resolves via scoped key
+        assert registry_resolve(registry,"part.area") is not None
+        # EXPOSE_PURE should NOT resolve via scoped key
+        assert registry_resolve(registry,"part.eta") is None
+        # Bare keys don't exist for either classification
+        assert registry_resolve(registry,"area") is None
+        assert registry_resolve(registry,"eta") is None
 
     def test_expose_computed_excluded_from_registration(self):
         """EXPOSE_COMPUTED attrs excluded from registration."""
@@ -136,7 +150,7 @@ class TestComputedAttrRegistration:
                                  ComputedAttributeClassification.EXPOSE_COMPUTED)
         registry = _build_test_registry(computed_attributes=[ca])
 
-        assert registry.resolve("part.scaled") is None
+        assert registry_resolve(registry,"part.scaled") is None
 
     def test_manual_required_formula_excluded_from_registration(self):
         """FORMULA with MANUAL_REQUIRED compilability excluded from registration.
@@ -151,18 +165,18 @@ class TestComputedAttrRegistration:
         )
         registry = _build_test_registry(computed_attributes=[ca])
 
-        assert registry.resolve("part.broken") is None
-        assert registry.resolve("broken") is None
+        assert registry_resolve(registry,"part.broken") is None
+        assert registry_resolve(registry,"broken") is None
 
     def test_empty_computed_attrs(self):
         """Empty computed_attributes produces empty registry (for these keys)."""
         registry = _build_test_registry(computed_attributes=[])
-        assert registry.resolve("anything") is None
+        assert registry_resolve(registry,"anything") is None
 
     def test_none_computed_attrs_default(self):
         """Default (no computed_attributes) produces empty registry."""
         registry = _build_test_registry()
-        assert registry.resolve("anything") is None
+        assert registry_resolve(registry,"anything") is None
 
     def test_multiple_parts_register_distinct_channels(self):
         """Multiple parts each register their own entries with distinct channels."""
@@ -171,10 +185,10 @@ class TestComputedAttrRegistration:
 
         registry = _build_test_registry(computed_attributes=[ca1, ca2])
 
-        assert registry.resolve("part_a.area") is not None
-        assert registry.resolve("part_b.cost") is not None
+        assert registry_resolve(registry,"part_a.area") is not None
+        assert registry_resolve(registry,"part_b.cost") is not None
         # Distinct channels
-        assert registry.resolve("part_a.area") != registry.resolve("part_b.cost")
+        assert registry_resolve(registry,"part_a.area") != registry_resolve(registry,"part_b.cost")
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +205,7 @@ class TestComputedAttrChannelFormat:
                                  "AttrExprProbeDesign::probe_design")
         registry = _build_test_registry(computed_attributes=[ca])
 
-        channel = registry.resolve("probe_design.area")
+        channel = registry_resolve(registry,"probe_design.area")
         assert channel == "AttrExprProbeDesign__probe_design__area__area"
 
     def test_nested_namespace_channel(self):
@@ -200,7 +214,7 @@ class TestComputedAttrChannelFormat:
                                  "CATFDesign::FusionPlant::plant")
         registry = _build_test_registry(computed_attributes=[ca])
 
-        channel = registry.resolve("plant.p_net_kw")
+        channel = registry_resolve(registry,"plant.p_net_kw")
         assert channel == "CATFDesign__FusionPlant__plant__p_net_kw__p_net_kw"
 
 
@@ -326,8 +340,13 @@ class TestComputedAttrResolution:
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.ENTRY_POINT
 
-    def test_bare_name_binding_resolves(self):
-        """Bare name source_path='p_net_kw' resolves via bare key in registry."""
+    def test_bare_name_binding_falls_through_to_entry_point(self):
+        """Bare name source_path='p_net_kw' is not in typed registries.
+
+        Typed registries require scoped keys (part.attr) or SysML QN
+        (Pkg::part::attr). A bare name without scope information cannot
+        be resolved, so the backtracker falls through to ENTRY_POINT.
+        """
         ca = _make_computed_attr("p_net_kw", "plant", "Pkg::plant")
 
         usage = _make_calc_usage(
@@ -360,7 +379,7 @@ class TestComputedAttrResolution:
         key = "Pkg__Part__cost_calc|power"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
-        assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
+        assert resolution.resolution_type == BindingResolutionType.ENTRY_POINT
 
 
     # -- Category (c): Integration Tests --
@@ -451,23 +470,33 @@ class TestSysmlQualifiedNameRegistration:
     """SysML :: qualified name keys registered in OutputRegistry."""
 
     def test_sysml_qn_key_resolves(self):
-        """Registry resolves 'Part::attr' key alongside dotted and bare keys."""
+        """Registry resolves SysMLQN and ScopedKey for FORMULA, not bare key."""
         ca = _make_computed_attr("power_mw", "e2e_plant", "E2EDesign::e2e_plant")
         registry = _build_test_registry(computed_attributes=[ca])
 
-        assert registry.resolve("E2EDesign::e2e_plant::power_mw") is not None
-        assert registry.resolve("e2e_plant.power_mw") is not None
-        assert registry.resolve("power_mw") is not None
+        # SysML QN resolves
+        assert registry_resolve(registry,"E2EDesign::e2e_plant::power_mw") is not None
+        # ScopedKey (Key_F) resolves
+        assert registry_resolve(registry,"e2e_plant.power_mw") is not None
+        # Both point to the same canonical channel
+        assert registry_resolve(registry,"E2EDesign::e2e_plant::power_mw") == registry_resolve(registry,"e2e_plant.power_mw")
+        # Bare key does NOT resolve in typed registries
+        assert registry_resolve(registry,"power_mw") is None
 
     def test_sysml_qn_key_skipped_when_no_owning_part_qn(self):
-        """No :: key registered when owning_part_qualified_name is empty."""
+        """No SysML QN key registered when owning_part_qualified_name is empty.
+
+        ScopedKey (Key_F) is still registered. Bare key does not exist.
+        """
         ca = _make_computed_attr("area", "part", "")
         registry = _build_test_registry(computed_attributes=[ca])
 
-        assert registry.resolve("part.area") is not None
-        assert registry.resolve("area") is not None
+        # ScopedKey (Key_F) still resolves
+        assert registry_resolve(registry,"part.area") is not None
+        # Bare key does NOT resolve in typed registries
+        assert registry_resolve(registry,"area") is None
         # No :: key because owning_part_qualified_name is empty
-        assert registry.resolve("::area") is None
+        assert registry_resolve(registry,"::area") is None
 
 
 # ---------------------------------------------------------------------------
@@ -518,11 +547,16 @@ class TestColonColonBindingResolution:
 
     def test_colon_colon_binding_to_expose_pure_resolves_transitively(self):
         """Binding with :: source_path to EXPOSE_PURE attr resolves transitively
-        to upstream calc output via design attribute alias."""
+        to upstream calc output via design attribute alias.
+
+        The consumer usage must be scoped inside the same part (e2e_plant) where
+        the transitive alias is registered, so the backtracker's REFERENCE
+        secondary resolution finds 'e2e_plant.total_capex' via alias_lookup.
+        """
         usage_producer = _make_calc_usage(
             "component_cost", "CostCalc",
             bindings=[],
-            qualified_name="Pkg__Part__component_cost",
+            qualified_name="Pkg__e2e_plant__component_cost",
         )
 
         usage_consumer = _make_calc_usage(
@@ -534,7 +568,7 @@ class TestColonColonBindingResolution:
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
-            qualified_name="Pkg__Part__financial",
+            qualified_name="Pkg__e2e_plant__financial",
         )
 
         calc_def_cost = SimpleCalcDef(
@@ -552,7 +586,7 @@ class TestColonColonBindingResolution:
         design_attrs = {
             Path("design.sysml"): [
                 DesignAttributeData(
-                    qualified_name="Pkg__Part__total_capex",
+                    qualified_name="Pkg__e2e_plant__total_capex",
                     name="total_capex",
                     sysml_type="Real",
                     default_value="component_cost.total_cost",
@@ -578,7 +612,7 @@ class TestColonColonBindingResolution:
         )
         bt.find_required_modules([], include_all=True)
 
-        key = "Pkg__Part__financial|capex"
+        key = "Pkg__e2e_plant__financial|capex"
         assert key in bt._binding_resolutions
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT

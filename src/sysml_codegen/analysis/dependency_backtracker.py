@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, PhantomDetector
+from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_name, sysml_to_python_qualified_name
@@ -360,7 +361,7 @@ class DependencyBacktracker:
                 continue
 
             if binding.source_path:
-                # Sole resolution path via OutputRegistry
+                # Sole resolution path via OutputRegistry (typed dispatch)
                 resolution = self._resolve_binding_via_registry(binding, usage)
                 self._binding_resolutions[mapping_key] = resolution
 
@@ -383,6 +384,22 @@ class DependencyBacktracker:
                         self._entry_point_sources[resolution.qualified_name] = resolution.source_path
                     # DEPRECATED: Keep for backward compat
                     self._binding_to_entry_point[mapping_key] = resolution.qualified_name
+
+            elif binding.binding_type == BindingType.EXPRESSION:
+                # EXPRESSION bindings: no dispatch path, treat as entry point
+                entry_point_qn = f"{usage.qualified_name}__{param_name}"
+                logger.warning(
+                    "EXPRESSION binding %s|%s: no dispatch path, treating as entry point",
+                    usage.qualified_name, param_name,
+                )
+                self._binding_resolutions[mapping_key] = BindingResolution(
+                    resolution_type=BindingResolutionType.ENTRY_POINT,
+                    qualified_name=entry_point_qn,
+                    source_path=None,
+                    is_transitive=False,
+                )
+                self._entry_point_context[entry_point_qn] = usage
+                self._binding_to_entry_point[mapping_key] = entry_point_qn
 
         # Also track unbound params as entry points (Case 1: use qualified name)
         for param in usage.unbound_params:
@@ -415,6 +432,18 @@ class DependencyBacktracker:
             return segments[-2]
         return None
 
+    def _consumer_scope_dotted(self, usage: CalcUsageData) -> str:
+        """Extract consumer scope from usage QN for ScopedKey construction.
+
+        "Design__solar_battery_plant__lcoe" -> "solar_battery_plant"
+        "Design__catf_radial_build__vacuum_gap__volume_calc"
+            -> "catf_radial_build.vacuum_gap"
+        """
+        segments = usage.qualified_name.split("__")
+        if len(segments) <= 2:
+            return ""
+        return ".".join(segments[1:-1])
+
     def _find_usage_for_channel(self, channel: str) -> CalcUsageData | None:
         """Extract producing CalcUsage from a channel name for DFS traversal.
 
@@ -436,7 +465,7 @@ class DependencyBacktracker:
         For REFERENCE bindings (FeatureReferenceExpression), the source_path
         is often a SysML qualified name (Package::Part::attr) or dotted path.
         Extract the leaf, combine with parent_part from the consuming CalcUsage,
-        and resolve against the registry.
+        and look up via scoped_lookup then alias_lookup.
         """
         assert self._output_registry is not None
         # Extract leaf name
@@ -447,15 +476,25 @@ class DependencyBacktracker:
         else:
             leaf = source_path
 
+        # Try immediate parent scope first (segments[-2].leaf)
         parent_part = self._get_parent_part_for_usage(usage)
         if parent_part:
-            scoped_key = f"{parent_part}.{leaf}"
-            channel = self._output_registry.resolve(scoped_key)
-            if channel is not None:
-                # Self-reference guard
-                producing_usage_qn = channel.rsplit("__", 1)[0] if "__" in channel else channel
-                if producing_usage_qn != usage.qualified_name:
-                    return channel
+            sk = ScopedKey(f"{parent_part}.{leaf}")
+            channel = self._output_registry.scoped_lookup(sk)
+            if channel is None:
+                channel = self._output_registry.alias_lookup(sk)
+            if channel is not None and not self._is_self_reference(channel, usage):
+                return channel
+
+        # Try full consumer scope (design_root.....parent.leaf)
+        consumer_scope = self._consumer_scope_dotted(usage)
+        if consumer_scope and consumer_scope != parent_part:
+            sk = ScopedKey(f"{consumer_scope}.{leaf}")
+            channel = self._output_registry.scoped_lookup(sk)
+            if channel is None:
+                channel = self._output_registry.alias_lookup(sk)
+            if channel is not None and not self._is_self_reference(channel, usage):
+                return channel
 
         return None
 
@@ -464,45 +503,34 @@ class DependencyBacktracker:
         binding: BindingInfo,
         usage: CalcUsageData,
     ) -> BindingResolution:
-        """Resolve a binding via the OutputRegistry (sole resolution path).
+        """Resolve a binding via the OutputRegistry using type-directed dispatch.
 
-        Resolution order:
-        1. registry.resolve(source_path) -> MODULE_OUTPUT
-        1b. Normalize :: SysML QN to dotted -> MODULE_OUTPUT
-        2. REFERENCE secondary: leaf + parent scope -> MODULE_OUTPUT
-        3. _resolve_to_design_attribute() -> ENTRY_POINT
-        4. Fallback -> ENTRY_POINT with warning
+        Dispatch by binding format:
+
+        CHAIN (no "::" in source_path):
+          Step 1: scoped_lookup(consumer_scope.source_path)
+          Step 1b: scoped_lookup(source_path) — direct (Key_F FORMULA)
+          Step 2: alias_lookup(source_path) — cross-scope
+          Step 3: design_attribute match -> ENTRY_POINT
+          Step 4: fallback -> ENTRY_POINT with warning
+
+        REFERENCE ("::" in source_path):
+          Step 1: sysml_qn_lookup(source_path)
+          Step 1b: Normalize :: to dotted -> scoped_lookup
+          Step 2: leaf + parent scope -> scoped_lookup then alias_lookup
+          Step 3: design_attribute match -> ENTRY_POINT
+          Step 4: fallback -> ENTRY_POINT with warning
         """
         assert self._output_registry is not None
         source_path = binding.source_path
         param_name = binding.param_name
 
-        # Step 1: Direct registry resolve
-        channel = self._output_registry.resolve(source_path)
-
-        # Step 1b: Normalize :: SysML qualified names to dotted format
-        # "Package::solar_array::capital_cost" -> "solar_array.capital_cost"
-        # "Solar Battery Plant::total_capex" -> "solar_battery_plant.total_capex"
-        if channel is None and "::" in source_path:
-            parts = source_path.split("::")
-            if len(parts) >= 2:
-                sanitized_part = sanitize_name(parts[-2]).lower()
-                dotted = f"{sanitized_part}.{parts[-1]}"
-                channel = self._output_registry.resolve(dotted)
-
-        if channel is not None:
-            # Self-reference guard (adapted for channel-based resolution)
-            producing_usage_qn = channel.rsplit("__", 1)[0] if "__" in channel else channel
-            if producing_usage_qn == usage.qualified_name:
-                logger.debug(
-                    "Registry self-reference: %s -> %s, treating as entry point",
-                    source_path, channel,
-                )
-                channel = None
-
-        # Step 2: REFERENCE secondary resolution (if step 1 didn't resolve)
-        if channel is None and binding.binding_type == BindingType.REFERENCE:
-            channel = self._resolve_reference_via_registry(source_path, usage)
+        if "::" in source_path:
+            # --- REFERENCE dispatch ---
+            channel = self._resolve_reference_dispatch(source_path, usage)
+        else:
+            # --- CHAIN dispatch ---
+            channel = self._resolve_chain_dispatch(source_path, usage)
 
         if channel is not None:
             return BindingResolution(
@@ -533,6 +561,65 @@ class DependencyBacktracker:
             source_path=source_path,
             is_transitive=False,
         )
+
+    def _resolve_chain_dispatch(
+        self, source_path: str, usage: CalcUsageData
+    ) -> str | None:
+        """CHAIN dispatch: scoped_lookup then alias_lookup."""
+        # Step 1: Consumer-scoped lookup
+        consumer_scope = self._consumer_scope_dotted(usage)
+        if consumer_scope:
+            scoped_key = ScopedKey(f"{consumer_scope}.{source_path}")
+            channel = self._output_registry.scoped_lookup(scoped_key)
+            if channel is not None and not self._is_self_reference(channel, usage):
+                return channel
+
+        # Step 1b: Direct scoped lookup (no consumer scope prefix)
+        # Covers Key_F (FORMULA outputs registered as owning_part.attr)
+        channel = self._output_registry.scoped_lookup(ScopedKey(source_path))
+        if channel is not None and not self._is_self_reference(channel, usage):
+            return channel
+
+        # Step 2: Cross-scope alias lookup
+        channel = self._output_registry.alias_lookup(ScopedKey(source_path))
+        if channel is not None and not self._is_self_reference(channel, usage):
+            return channel
+
+        return None
+
+    def _resolve_reference_dispatch(
+        self, source_path: str, usage: CalcUsageData
+    ) -> str | None:
+        """REFERENCE dispatch: sysml_qn_lookup, then normalization, then leaf+parent."""
+        # Step 1: Direct SysML QN lookup
+        channel = self._output_registry.sysml_qn_lookup(SysMLQN(source_path))
+        if channel is not None and not self._is_self_reference(channel, usage):
+            return channel
+
+        # Step 1b: Normalize :: SysML qualified names to dotted format
+        # "Package::solar_array::capital_cost" -> "solar_array.capital_cost"
+        parts = source_path.split("::")
+        if len(parts) >= 2:
+            sanitized_part = sanitize_name(parts[-2]).lower()
+            dotted = f"{sanitized_part}.{parts[-1]}"
+            channel = self._output_registry.scoped_lookup(ScopedKey(dotted))
+            if channel is not None and not self._is_self_reference(channel, usage):
+                return channel
+
+        # Step 2: REFERENCE secondary (leaf + parent scope)
+        channel = self._resolve_reference_via_registry(source_path, usage)
+        return channel
+
+    def _is_self_reference(self, channel: str, usage: CalcUsageData) -> bool:
+        """Check if resolved channel points back to the consuming usage."""
+        producing_usage_qn = channel.rsplit("__", 1)[0] if "__" in channel else channel
+        if producing_usage_qn == usage.qualified_name:
+            logger.debug(
+                "Registry self-reference: %s, treating as entry point",
+                channel,
+            )
+            return True
+        return False
 
     def _resolve_to_design_attribute(
         self,

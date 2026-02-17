@@ -492,9 +492,9 @@ class TestReqAS06Phase2AliasResolution:
             if result is not None:
                 resolved_count += 1
                 # The resolved channel should also be findable via canonical_name
-                canonical_result = registry.resolve(alias.canonical_name)
+                canonical_result = registry.scoped_lookup(ScopedKey(alias.canonical_name))
                 assert canonical_result is not None, (
-                    f"canonical_name {alias.canonical_name} should resolve"
+                    f"canonical_name {alias.canonical_name} should resolve via scoped_lookup"
                 )
 
         # At least some aliases should have resolved

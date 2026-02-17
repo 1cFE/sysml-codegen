@@ -6,7 +6,7 @@ Written BEFORE build_output_registry() exists. Initially skipped
 (ImportError), go green when Phase 3 lands.
 
 Contract: for every binding type, the key the backtracker would
-construct for registry.resolve() must exist in a registry built
+construct for registry_resolve(registry,) must exist in a registry built
 from the same data.
 
 See: design.md#component-5-contract-tests
@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.core.identifier_types import make_scoped_key
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import get_channel_name
 from sysml_codegen.extraction.data_models import (
@@ -40,6 +41,7 @@ except ImportError:
     HAS_BUILD_REGISTRY = False
 
 from sysml_codegen.core.models import ChannelAlias
+from tests.helpers.registry_compat import registry_resolve
 
 pytestmark = pytest.mark.skipif(
     not HAS_BUILD_REGISTRY,
@@ -252,9 +254,10 @@ def _build_attr_expr_probe_synthetic():
     )
 
     # EXPOSE_PURE alias: total_capex -> component_cost's total_cost
+    # canonical_name uses Key_A format (instance_name.attr), matching real extraction
     expose_alias = ChannelAlias(
         alias_name="total_capex",
-        canonical_name="AttrExprProbeDesign__e2e_plant__component_cost__total_cost",
+        canonical_name="component_cost.total_cost",
         owning_part_qn="AttrExprProbeDesign__e2e_plant",
         source="expose_pure",
     )
@@ -296,11 +299,11 @@ class TestContractChainBindingKeys:
         "solar_battery_plant.lcoe.lcoe_per_mwh" for CHAIN bindings.
         Key_C is derived from derive_key_c() which produces exactly this format.
         """
-        key_c = OutputRegistry.derive_key_c(
+        key_c = make_scoped_key(
             "SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_per_mwh"
         )
         assert key_c == "solar_battery_plant.lcoe.lcoe_per_mwh"
-        result = registry.resolve(key_c)
+        result = registry_resolve(registry,key_c)
         assert result is not None
         assert result == "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
 
@@ -310,7 +313,7 @@ class TestContractChainBindingKeys:
         The alias "solar_battery_plant.solar_array.total_capex" should resolve
         to the cost_model's total_cost canonical channel via Key_C chain.
         """
-        result = registry.resolve(
+        result = registry_resolve(registry,
             "solar_battery_plant.solar_array.total_capex"
         )
         assert result is not None
@@ -318,12 +321,12 @@ class TestContractChainBindingKeys:
 
     def test_virtual_calcusage_key_c_resolves(self, registry):
         """Virtual CalcUsage Key_C (deep dotted path) resolves."""
-        key_c = OutputRegistry.derive_key_c(
+        key_c = make_scoped_key(
             "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model",
             "total_cost",
         )
         assert key_c == "solar_battery_plant.solar_array.pv_module.cost_model.total_cost"
-        result = registry.resolve(key_c)
+        result = registry_resolve(registry,key_c)
         assert result is not None
 
 
@@ -348,21 +351,27 @@ class TestContractReferenceSecondaryKeys:
         The backtracker's REFERENCE secondary resolution does:
             parent_part = segments[-2] of usage QN = "solar_battery_plant"
             leaf = last segment of source_path
-            -> registry.resolve("solar_battery_plant.p_net_kw")
+            -> registry_resolve(registry,"solar_battery_plant.p_net_kw")
 
         Key_F registered in Phase 1: "solar_battery_plant.p_net_kw"
         """
-        result = registry.resolve("solar_battery_plant.p_net_kw")
+        result = registry_resolve(registry,"solar_battery_plant.p_net_kw")
         assert result is not None
 
-    def test_formula_bare_name_resolves(self, registry):
-        """FORMULA bare name also registered as lookup key."""
-        result = registry.resolve("p_net_kw")
-        assert result is not None
+    def test_formula_bare_name_does_not_resolve(self, registry):
+        """Bare FORMULA name is NOT registered in the typed registry.
+
+        The typed registry requires Key_F format ("owning_part.python_name")
+        or SysML QN format. Bare names like "p_net_kw" are not registered.
+        """
+        result = registry_resolve(registry, "p_net_kw")
+        assert result is None, (
+            "Bare FORMULA name should not resolve; use Key_F 'owning_part.python_name' instead"
+        )
 
     def test_formula_sysml_qn_resolves(self, registry):
         """FORMULA SysML qualified name also registered."""
-        result = registry.resolve(
+        result = registry_resolve(registry,
             "SolarBatteryDesign::solar_battery_plant::p_net_kw"
         )
         assert result is not None
@@ -394,31 +403,52 @@ class TestContractAggregationKeys:
         """Key_D: "part_usage.attribute_name" resolves."""
         # instance_path = "solar_battery_plant__solar_array"
         # segments[-1] = "solar_array"
-        result = registry.resolve("solar_array.capital_cost")
+        result = registry_resolve(registry,"solar_array.capital_cost")
         assert result is not None
 
-    def test_aggregation_key_e_resolves(self, registry):
-        """Key_E: full dotted instance path resolves."""
-        result = registry.resolve(
-            "solar_battery_plant.solar_array.capital_cost"
+    def test_aggregation_full_design_prefix_does_not_resolve(self, registry):
+        """Full design-prefix key does NOT resolve in the typed registry.
+
+        instance_path = "solar_battery_plant__solar_array"
+        Key_E_stripped = ".".join(instance_parts[1:] + [attr]) = "solar_array.capital_cost"
+        The full-prefix version "solar_battery_plant.solar_array.capital_cost" is NOT registered.
+        """
+        result = registry_resolve(registry, "solar_battery_plant.solar_array.capital_cost")
+        assert result is None, (
+            "Full design-prefix key should not resolve; "
+            "only Key_E_stripped 'solar_array.capital_cost' is registered"
         )
-        assert result is not None
 
-    def test_aggregation_bare_name_resolves(self, registry):
-        """Aggregation bare attribute name resolves."""
-        result = registry.resolve("capital_cost")
-        assert result is not None
+    def test_aggregation_bare_name_does_not_resolve(self, registry):
+        """Bare aggregation attribute name is NOT registered in the typed registry.
+
+        The typed registry requires Key_E_stripped format (dotted path with
+        design prefix stripped). Bare names like "capital_cost" are not registered.
+        """
+        result = registry_resolve(registry, "capital_cost")
+        assert result is None, (
+            "Bare aggregation name should not resolve; "
+            "use Key_E_stripped 'solar_array.capital_cost' instead"
+        )
 
     def test_aggregation_alias_variant_resolves(self, registry):
         """BF-7 alias variant from expression.aliases resolves."""
         # "total_capex" is in expression.aliases
-        result = registry.resolve("solar_array.total_capex")
+        result = registry_resolve(registry,"solar_array.total_capex")
         assert result is not None
 
-    def test_aggregation_alias_bare_resolves(self, registry):
-        """Bare alias name resolves."""
-        result = registry.resolve("total_capex")
-        assert result is not None
+    def test_aggregation_alias_bare_does_not_resolve(self, registry):
+        """Bare BF-7 alias name is NOT registered in the typed registry.
+
+        The typed registry registers BF-7 aliases in Key_E_stripped format
+        (e.g., "solar_array.total_capex"). Bare alias names like "total_capex"
+        are not registered.
+        """
+        result = registry_resolve(registry, "total_capex")
+        assert result is None, (
+            "Bare BF-7 alias should not resolve; "
+            "use Key_E_stripped 'solar_array.total_capex' instead"
+        )
 
 
 class TestContractCalcUsageKeys:
@@ -438,7 +468,7 @@ class TestContractCalcUsageKeys:
 
     def test_key_a_instance_dot_output(self, registry):
         """Key_A: "instance_name.output" resolves."""
-        result = registry.resolve("lcoe.lcoe_per_mwh")
+        result = registry_resolve(registry,"lcoe.lcoe_per_mwh")
         assert result is not None
         assert result == "SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"
 
@@ -447,15 +477,15 @@ class TestContractCalcUsageKeys:
         canonical = get_channel_name(
             "SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_per_mwh"
         )
-        result = registry.resolve(canonical)
+        result = registry_resolve(registry,canonical)
         assert result == canonical
 
     def test_key_c_dotted_hierarchy(self, registry):
         """Key_C: dotted hierarchy resolves."""
-        key_c = OutputRegistry.derive_key_c(
+        key_c = make_scoped_key(
             "SolarBatteryDesign__solar_battery_plant__lcoe", "npv"
         )
-        result = registry.resolve(key_c)
+        result = registry_resolve(registry,key_c)
         assert result == "SolarBatteryDesign__solar_battery_plant__lcoe__npv"
 
 
@@ -484,7 +514,7 @@ class TestContractExposePureKeys:
         The backtracker's REFERENCE secondary resolution would try:
             parent_part.leaf -> "e2e_plant.total_capex"
         """
-        result = registry.resolve("e2e_plant.total_capex")
+        result = registry_resolve(registry,"e2e_plant.total_capex")
         assert result is not None
         assert "component_cost__total_cost" in result
 
@@ -503,7 +533,7 @@ class TestPhase3DualFormatOwningPartQn:
             source="expose_pure",
         )
         registry = build_output_registry([usage], [cdef], [], [], [alias], {})
-        assert registry.resolve("my_part.my_alias") is not None
+        assert registry_resolve(registry,"my_part.my_alias") is not None
 
     def test_dunder_format_produces_correct_scoped_key(self):
         """owning_part_qn with '__' separator extracts correct short name."""
@@ -516,7 +546,7 @@ class TestPhase3DualFormatOwningPartQn:
             source="expose_pure",
         )
         registry = build_output_registry([usage], [cdef], [], [], [alias], {})
-        assert registry.resolve("my_part.my_alias") is not None
+        assert registry_resolve(registry,"my_part.my_alias") is not None
 
     def test_both_formats_resolve_to_same_channel(self):
         """Both :: and __ formats resolve to the same canonical channel."""
@@ -537,8 +567,8 @@ class TestPhase3DualFormatOwningPartQn:
         registry = build_output_registry(
             [usage], [cdef], [], [], [alias_cc, alias_du], {}
         )
-        r1 = registry.resolve("my_part.alias_cc")
-        r2 = registry.resolve("my_part.alias_du")
+        r1 = registry_resolve(registry,"my_part.alias_cc")
+        r2 = registry_resolve(registry,"my_part.alias_du")
         assert r1 is not None
         assert r1 == r2
 
@@ -565,12 +595,12 @@ class TestContractTransitiveDesignAttrs:
         in the registry (via Key_A from Phase 1). Phase 4 registers
         "solar_battery_plant.total_cost_override" as an alias.
         """
-        result = registry.resolve("solar_battery_plant.total_cost_override")
+        result = registry_resolve(registry,"solar_battery_plant.total_cost_override")
         assert result is not None
 
     def test_non_transitive_not_registered(self, registry):
         """Non-transitive (numeric) default NOT registered as alias."""
-        result = registry.resolve("solar_battery_plant.width")
+        result = registry_resolve(registry,"solar_battery_plant.width")
         # width has default_value="10.0" (numeric) -- should NOT be an alias
         assert result is None
 
@@ -590,18 +620,18 @@ class TestBuildOutputRegistryPhases:
         registry = build_output_registry(usages, defs, aggs, cas, [], {})
 
         # CalcUsage Key_A
-        assert registry.resolve("lcoe.lcoe_per_mwh") is not None
+        assert registry_resolve(registry,"lcoe.lcoe_per_mwh") is not None
         # CalcUsage Key_C
-        assert registry.resolve("solar_battery_plant.lcoe.lcoe_per_mwh") is not None
+        assert registry_resolve(registry,"solar_battery_plant.lcoe.lcoe_per_mwh") is not None
         # Aggregation Key_D
-        assert registry.resolve("solar_array.capital_cost") is not None
+        assert registry_resolve(registry,"solar_array.capital_cost") is not None
         # FORMULA Key_F
-        assert registry.resolve("solar_battery_plant.p_net_kw") is not None
+        assert registry_resolve(registry,"solar_battery_plant.p_net_kw") is not None
 
         # Phase 2 CHAIN alias NOT present yet
-        assert registry.resolve("solar_battery_plant.solar_array.total_capex") is None
+        assert registry_resolve(registry,"solar_battery_plant.solar_array.total_capex") is None
         # Phase 4 transitive alias NOT present yet
-        assert registry.resolve("solar_battery_plant.total_cost_override") is None
+        assert registry_resolve(registry,"solar_battery_plant.total_cost_override") is None
 
     def test_phase2_adds_chain_alias(self):
         """Phase 2 adds CHAIN aliases that Phase 1 alone does not have."""
@@ -610,7 +640,7 @@ class TestBuildOutputRegistryPhases:
         r2 = build_output_registry(usages, defs, aggs, cas, aliases, {})
 
         # Phase 2 key now present
-        assert r2.resolve("solar_battery_plant.solar_array.total_capex") is not None
+        assert registry_resolve(r2,"solar_battery_plant.solar_array.total_capex") is not None
         # Registry grew by exactly 1 (the CHAIN alias)
         assert len(r2) == len(r1) + 1
 
@@ -620,8 +650,8 @@ class TestBuildOutputRegistryPhases:
         r_no_alias = build_output_registry(usages, defs, aggs, cas, [], da)
         r_with_alias = build_output_registry(usages, defs, aggs, cas, aliases, da)
 
-        assert r_no_alias.resolve("e2e_plant.total_capex") is None
-        assert r_with_alias.resolve("e2e_plant.total_capex") is not None
+        assert registry_resolve(r_no_alias,"e2e_plant.total_capex") is None
+        assert registry_resolve(r_with_alias,"e2e_plant.total_capex") is not None
 
     def test_phase4_adds_transitive_alias(self):
         """Phase 4 adds transitive design attr aliases."""
@@ -630,8 +660,8 @@ class TestBuildOutputRegistryPhases:
         r_no_da = build_output_registry(usages, defs, aggs, cas, aliases, {})
         r_full = build_output_registry(usages, defs, aggs, cas, aliases, da)
 
-        assert r_no_da.resolve("solar_battery_plant.total_cost_override") is None
-        assert r_full.resolve("solar_battery_plant.total_cost_override") is not None
+        assert registry_resolve(r_no_da,"solar_battery_plant.total_cost_override") is None
+        assert registry_resolve(r_full,"solar_battery_plant.total_cost_override") is not None
         # Phase 4 adds exactly 1 alias (only total_cost_override is transitive)
         assert len(r_full) == len(r_no_da) + 1
 
@@ -682,24 +712,26 @@ class TestContractRealSolarBattery:
     def test_known_chain_key_c_resolves(self, registry):
         """Known CHAIN source_path (Key_C format) resolves."""
         # lcoe.lcoe_per_mwh Key_A should resolve
-        assert registry.resolve("lcoe.lcoe_per_mwh") is not None
+        assert registry_resolve(registry,"lcoe.lcoe_per_mwh") is not None
 
     def test_reference_secondary_p_net_kw(self, registry):
         """REFERENCE secondary: solar_battery_plant.p_net_kw resolves.
 
         p_net_kw is a FORMULA computed attr on solar_battery_plant.
         """
-        result = registry.resolve("solar_battery_plant.p_net_kw")
+        result = registry_resolve(registry,"solar_battery_plant.p_net_kw")
         assert result is not None, (
             "p_net_kw should resolve as a FORMULA computed attr on solar_battery_plant"
         )
 
     def test_reference_secondary_capital_cost(self, registry):
-        """REFERENCE secondary: solar_array.capital_cost resolves.
+        """REFERENCE secondary: solar_battery_plant.solar_array.capital_cost resolves.
 
-        capital_cost is an aggregation output on solar_array.
+        capital_cost is an aggregation output on solar_array. In the real model,
+        Key_E_stripped = ".".join(instance_parts[1:] + [attr]) which includes
+        the full design-prefix-stripped path.
         """
-        result = registry.resolve("solar_array.capital_cost")
+        result = registry_resolve(registry, "solar_battery_plant.solar_array.capital_cost")
         assert result is not None
 
     def test_chain_alias_count_matches_spec(self, registry, pipeline_context):
@@ -744,7 +776,7 @@ class TestContractRealAttrExprProbe:
         The attr_expr_probe model has EXPOSE_PURE aliases like scale_result
         on probe_design. Phase 3 scopes them as "probe_design.scale_result".
         """
-        result = registry.resolve("probe_design.scale_result")
+        result = registry_resolve(registry,"probe_design.scale_result")
         assert result is not None, (
             "'probe_design.scale_result' should resolve via EXPOSE_PURE "
             "Phase 3 registration"

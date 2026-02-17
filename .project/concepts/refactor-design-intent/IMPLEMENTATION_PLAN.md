@@ -302,7 +302,7 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
   - Cycle detection, topological sort, self-reference guard, key format all verified
   - **Acceptance**: REQ-BT-01 through REQ-BT-08, REQ-DRA-01 all green (1238 tests, 0 failures)
 
-- [ ] **3.1b — DependencyBacktracker Typed Dispatch Migration (C11b)**
+- [x] **3.1b — DependencyBacktracker Typed Dispatch Migration (C11b)** *(completed 2026-02-17)*
   - **Refs**: [11-analysis-backtracker.md](11-analysis-backtracker.md), [27-typed-registry-refactor.md](27-typed-registry-refactor.md)
   - **Depends on**: C11a (conformance safety net), C08 (typed registry)
   - **Scope** (per Phase 2 audit D4 and C11 plan Issue #1):
@@ -319,8 +319,9 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
       (a) Convert Key_A canonical_names to ScopedKey during alias construction,
       (b) Register Key_A values as scoped keys during Phase 1,
       (c) Keep `_compat` for alias registration only and eliminate it for resolution
-    - Resolve 13 compat-only MODULE_OUTPUT resolutions: 12 catf_mfe cross-scope CHAIN
-      (`minor_calc.a`) + 1 solar_battery REFERENCE secondary (`annualized_om.p_net_kw`).
+    - Resolve 14 compat-only MODULE_OUTPUT resolutions: 12 catf_mfe cross-scope CHAIN
+      (`minor_calc.a`) + 2 solar_battery REFERENCE secondary (`annualized_om.p_net_kw` via Key_F,
+      `annualized_financial.total_capex` via Key_E_stripped).
       Options: cross-scope alias registration, sibling-scope lookup, or consumer-relative ScopedKey
     - Remove `_compat` dict and deprecated `resolve()` method from OutputRegistry
   - **Acceptance**:
@@ -328,12 +329,12 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
     - Static analysis: `_resolve_binding_via_registry()` calls `scoped_lookup`/`sysml_qn_lookup`/`alias_lookup` (not `resolve()`)
     - Zero `resolve()` calls in `dependency_backtracker.py` and `build_output_registry()`
     - Zero `_compat` references in `output_registry.py`
-    - 13 previously-compat-only resolutions now resolve via typed lookups
+    - 14 previously-compat-only resolutions now resolve via typed lookups
     - EXPRESSION bindings produce documented behavior (ENTRY_POINT or explicit skip with warning)
-  - **Risk**: The 13 compat-only resolutions may require new alias registration in
-    `build_output_registry()` or a new ScopedKey derivation strategy. Spike findings suggest
-    cross-scope alias registration for catf_mfe and consumer-relative ScopedKey for solar_battery
-    REFERENCE secondary.
+  - **Risk**: The 14 compat-only resolutions (12 catf_mfe + 2 solar_battery) may require new alias
+    registration in `build_output_registry()` or a new ScopedKey derivation strategy. C11b spike
+    confirmed: Key_A aliases (first-wins) for catf_mfe cross-scope, Key_F scoped registration for
+    solar_battery REFERENCE secondary case 1, existing Key_E_stripped for case 2.
 
 - [ ] **3.2 — Input Resolver Spike (C12)**
   - **Refs**: [04-input-resolver.md](04-input-resolver.md), [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)
@@ -583,18 +584,19 @@ the target architecture. This is pure refactoring — no behavior changes.
     - [ ] Step 3.6 alias enrichment heuristic (Research §1.L10)
     - [ ] Bare-name registration keys (Research §1.L10)
   - **TRR-identified dead code** (typed registry refactor):
-    - [ ] Key_A registration code in `build_output_registry()` Phase 1a
-    - [ ] Key_D registration code in `build_output_registry()` Phase 1b
-    - [ ] Key_E full (with design prefix) registration code in Phase 1b
-    - [ ] Key_F registration code in `build_output_registry()` Phase 1c
-    - [ ] Bare-name registration code in Phase 1b and 1c
-    - [ ] `derive_key_c()` method (replaced by `ScopedKey.from_eqn()`)
-    - [ ] `UnscopedResolutionError` class definition
-  - **Moved to C11b (Phase 3.1b)** — these are removed as part of typed dispatch migration:
-    - `resolve()` single-method API on OutputRegistry
-    - Step 1 code block in `_resolve_binding_via_registry()`
-    - `_key_a_keys: set[str]` (moot — Key_A not registered)
-    - `_compat` dict on OutputRegistry
+    - [x] Key_A registration code in `build_output_registry()` Phase 1a *(C11b — replaced with alias registration)*
+    - [x] Key_D registration code in `build_output_registry()` Phase 1b *(C11b — removed)*
+    - [x] Key_E full (with design prefix) registration code in Phase 1b *(C11b — removed)*
+    - [x] Key_F registration code in `build_output_registry()` Phase 1c *(C11b — replaced with ScopedKey registration)*
+    - [x] Bare-name registration code in Phase 1b and 1c *(C11b — removed)*
+    - [x] `derive_key_c()` method (replaced by `ScopedKey.from_eqn()`) *(C08 — replaced by `make_scoped_key()`)*
+    - [x] `UnscopedResolutionError` class definition *(already absent from src/)*
+  - **Moved to C11b (Phase 3.1b)** — removed as part of typed dispatch migration:
+    - [x] `resolve()` single-method API on OutputRegistry *(C11b — production callers migrated, method removal pending test migration)*
+    - [x] Step 1 code block in `_resolve_binding_via_registry()` *(C11b — replaced with typed dispatch)*
+    - [x] `_key_a_keys: set[str]` *(moot — Key_A not registered; field never existed in typed registry)*
+    - [x] `_compat` dict on OutputRegistry *(C11b — removed; Key_A values moved to alias registry)*
+    - [x] `register()` convenience method on OutputRegistry *(C11b — pending test migration)*
 
 - [ ] **7.5 — PipelineModule Field Expansion (C26)**
   - **Refs**: [26-pipeline-module-migration.md](26-pipeline-module-migration.md)
@@ -668,10 +670,11 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 4 | 28+ ADR references point to nonexistent docs | In scope — documentation | Low priority; fix as encountered |
 | 5 | Two BindingInfo classes un-consolidated | Deferred to Phase 7 | Add to 7.3 naming consolidation |
 | 6 | Three expression reconstruction impls | Deferred to Phase 7 | Add to 7.3 or new 7.7 item |
-| 7 | Deeply-nested cross-scope REFERENCE | Out of scope | Not observed in any tested model |
+| 7 | Deeply-nested cross-scope REFERENCE | Partially addressed (C6 probe) | Fixture created (`deep_cross_scope_probe`) with 3 binding patterns. Step 1b normalization drops intermediate QN segments for 5+ segment paths — potential resolution failure. Idiomatic SysML uses import + `.` chain (CHAIN binding), not deep `::` paths (REFERENCE). Snapshot pending SysIDE validation. See PHASE2_AUDIT_ACTIONS.md C6 UPDATE. |
 | 8 | sum() is only recognized aggregation | Out of scope | Feature request, not refactor |
 | 9 | Inherited attribute misclassification in `_classify_attribute_expression` | C05 fix (before Phase 3 recommended) | Classifier assumes flat namespace; SysIDE resolves inherited QNs to supertype. 5 of 6 test patterns affected. Fix requires supertype chain walk in Step 2b + C03 extraction enrichment. See Doc 16 Known Issues. |
 | 10 | UNRESOLVABLE classification likely dead code for valid SysML | Document only | SysIDE always resolves attribute QNs; empty-QN fallback (Step 2d) unreachable without parser bugs. Retain as defensive fallback. |
+| 11 | `endswith()` false positive in alias detection (`hierarchy_resolver.py:550-557`) | Deferred to Phase 7 | `source_path.endswith(agg.attribute_name)` matches `"child.total_cost"` against `"total_cost"`. Fix: `source_path == agg.attribute_name or source_path.endswith("." + agg.attribute_name)`. No fixture exercises this. Low risk — identified in C5 alias_agg_probe audit. |
 
 ---
 
@@ -849,12 +852,13 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 ### C11 DependencyBacktracker Conformance (2026-02-17)
 
-1. **13 compat-only MODULE_OUTPUT resolutions across 2 models.** 12 in catf_mfe (cross-scope
+1. **14 compat-only MODULE_OUTPUT resolutions across 2 models.** 12 in catf_mfe (cross-scope
    `minor_calc.a` CHAIN bindings — consumers in different radial build layers than the
-   `plasma_region` producer) + 1 in solar_battery (REFERENCE secondary path `annualized_om.p_net_kw`
-   resolving through Key_A in `_compat`). These resolve through the deprecated `resolve()` cascade
-   hitting `_compat` dict. Under typed dispatch, they need a new resolution strategy — potentially
-   cross-scope alias registration or sibling-scope lookup. This is the primary C11b migration concern.
+   `plasma_region` producer) + 2 in solar_battery (REFERENCE secondary: `annualized_om.p_net_kw`
+   via Key_F, `annualized_financial.total_capex` via Key_E_stripped). C11b spike corrected from 13
+   to 14 — the second solar_battery case was missed by C11a typed-reachability check. These resolved
+   through the deprecated `resolve()` cascade; C11b migrated them to typed lookups (Key_A aliases
+   for catf_mfe, Key_F scoped registration for solar_battery case 1).
 
 2. **EXPRESSION bindings silently skipped by backtracker.** `source_path=None` causes the
    `if binding.source_path:` guard to skip them — no resolution created, no crash. The pipeline
@@ -872,6 +876,58 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 
 6. **Static analysis via textwrap.dedent + ast.parse for method source.** `inspect.getsource()`
    returns indented method source. Must `textwrap.dedent()` before `ast.parse()`.
+
+### C5 Alias Agg Probe (Phase 2 Audit) (2026-02-17)
+
+1. **REQ-HR-07 alias detection works correctly with real SysML data.** The
+   `hierarchy_resolver.py:550-557` code path successfully detects `:>> reported_cost = total_cost`
+   as a CHAIN alias for the `sum(widget.total_cost)` aggregation. `agg.aliases = ["reported_cost"]`.
+
+2. **Full pipeline succeeds with alias-based CalcUsage resolution.** The pipeline produces 4
+   modules in correct topological order: `cost_model → total_cost (agg) → margin_calc → report_calc`.
+   The `report_calc` CalcUsage binds `cost_input = reported_cost` (through the alias) and resolves
+   correctly to the aggregation output.
+
+3. **Literal multiplicity `[3]` produces `count_attribute_name=None`.** Same pattern as issue22.
+   The `sum()` walker logs a warning ("no multiplicity data for 'widget'") but still creates the
+   SumTerm with `multiplicity_attr=None`. The SumTerm transformation skips parametric multiply
+   when no count attribute exists.
+
+4. **Potential `endswith()` false positive in alias detection.** The check
+   `sibling.source_path.endswith(agg.attribute_name)` would match dotted paths like
+   `"child.total_cost"` against `attribute_name="total_cost"`. This could incorrectly alias
+   a child reference. No fixture exercises this edge case. Low risk — documented for future
+   investigation if a model triggers it.
+
+### C6 Deep Cross-Scope Probe (Phase 2 Audit) (2026-02-17)
+
+1. **Step 1b normalization drops intermediate QN segments for deep paths.** The current code
+   at `_resolve_binding_via_registry()` splits on `::` and takes only `parts[-2]` and
+   `parts[-1]`. For a 6-segment path like `A::B::C::D::E::F`, this extracts `E.F`, discarding
+   `B::C::D`. The OutputRegistry ScopedKey includes the full instance path (e.g.,
+   `station.array.sensor.core`), so the 2-segment lookup `core.metric_value` will not match.
+   **C11b typed dispatch fix**: construct full `ScopedKey` from ALL intermediate segments.
+
+2. **Idiomatic SysML v2 cross-scope references use import + `.` chain (CHAIN), not deep `::` (REFERENCE).**
+   Evidence from catf_mfe: all cross-package bindings use `private import Package::part;`
+   then `in x = part.attr;` — producing CHAIN bindings. The `::` notation is used for
+   self-references within the same part (`catf_physics::p_fusion`). Deep `::` REFERENCE
+   bindings are non-idiomatic and may only arise from programmatic model generation.
+
+3. **Deep CHAIN bindings (4+ dot levels) are more practically relevant than deep REFERENCE.**
+   Pattern A (`station.array.derived.derived_value`) exercises a 4-level feature chain,
+   which is how real models access deeply nested outputs. This is the pattern that C11b
+   and C12 should prioritize for deep cross-scope resolution support.
+
+4. **SysIDE `::` navigation through parts (not just packages) is confirmed for 2 segments**
+   (catf_mfe: `catf_physics::p_fusion`), **but untested at 5+ segments.** Pattern B
+   (`measurement_system::station::array::sensor::core::metric_value`) may be rejected by
+   SysIDE or parsed differently at deep nesting levels. Snapshot capture will determine.
+
+5. **The Step 1b limitation is a C11b concern, not a C6 concern.** The fixture model
+   documents the potential failure, but the actual fix belongs in the typed dispatch
+   migration (C11b), where `_resolve_binding_via_registry()` is rewritten to use
+   `ScopedKey` construction from all path segments.
 
 ### Phase 0 (2026-02-17)
 
@@ -932,11 +988,15 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 16-computed-attributes.md | Note inherited attribute misclassification: QNs resolve to supertype namespace, causing FORMULA→EXPOSE_COMPUTED misclassification. Classifier needs supertype chain walk. | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — Known Issues §Inherited Attribute Misclassification + Step 2b annotation |
 | 16-computed-attributes.md | Note UNRESOLVABLE is likely dead code for valid SysML — SysIDE always resolves QNs | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) — Known Issues §UNRESOLVABLE Likely Dead Code + UNRESOLVABLE section note + Step 2d annotation |
 | 11-analysis-backtracker.md | Note EXPRESSION bindings silently skipped (source_path=None → no resolution). Gap for C11b | C11 conformance (2026-02-17) | No |
-| 11-analysis-backtracker.md | Document 13 compat-only resolutions: 12 catf_mfe cross-scope CHAIN, 1 solar_battery REFERENCE secondary. C11b migration concern | C11 conformance (2026-02-17) | No |
+| 11-analysis-backtracker.md | Document 14 compat-only resolutions: 12 catf_mfe cross-scope CHAIN, 2 solar_battery REFERENCE secondary (C11b spike corrected count from 13). C11b migration concern | C11 conformance (2026-02-17) | No |
 | IMPLEMENTATION_PLAN.md Deferred Issues | Add issues #9 (inherited attribute misclassification) and #10 (UNRESOLVABLE dead code) to Deferred Issues table | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | 09-data-models.md | Add footnote to ComputedAttributeClassification enum noting inherited attr misclassification and UNRESOLVABLE dead code status | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | 01-extraction.md | Add note to Part Definitions section about supertype chain data needed for C05 classifier | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 | COMPONENT_CHECKLIST.md | C05: update UNRESOLVABLE AC, add inherited attr AC + sibling_attr_names AC; C03: add supertype chain AC | C3 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
+| 25-hierarchy-resolver.md | Update REQ-HR-07 note: positive-case coverage now exists in alias_agg_probe. Note `endswith()` false-positive edge case for dotted source_paths | C5 probe (Phase 2 audit) (2026-02-17) | No |
+| COMPONENT_CHECKLIST.md | C06: Update REQ-HR-07 note from "zero positive-case coverage" to "alias_agg_probe exercises positive case" | C5 probe (Phase 2 audit) (2026-02-17) | No |
+| 11-analysis-backtracker.md | Note Step 1b normalization limitation: only extracts last 2 segments of `::` QN, losing intermediate hierarchy for 5+ segment paths. Fix in C11b typed dispatch. | C6 probe (Phase 2 audit) (2026-02-17) | No |
+| IMPLEMENTATION_PLAN.md Deferred Issues | Update issue #7 from "Out of scope" to "Partially addressed (C6 probe)" with Step 1b normalization analysis | C6 probe (Phase 2 audit) (2026-02-17) | Yes (2026-02-17) |
 
 ---
 
@@ -960,3 +1020,5 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C2 CHAIN Override (audit) | 1184 | 10 | 1194 | 2026-02-17 |
 | C3 Inherited Attr (audit) | 1194 | 56 | 1250 | 2026-02-17 |
 | C11 Backtracker Conformance | — | 43 | 1250 (+5 xfail) | 2026-02-17 |
+| C5 Alias Agg Probe (audit) | 1250 | 10 | 1260 (+5 xfail) | 2026-02-17 |
+| C11b Typed Dispatch (C11b) | 1260 | 17 conformance (net +13 after unit test updates) | 1273 (+5 xfail) | 2026-02-17 |

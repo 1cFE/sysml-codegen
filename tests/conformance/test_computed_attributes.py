@@ -19,6 +19,7 @@ from sysml_codegen.extraction.data_models import (
     ComputedAttributeData,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
+from tests.helpers.registry_compat import registry_register
 
 
 # ---------------------------------------------------------------------------
@@ -470,7 +471,7 @@ class TestReqCa06ResolutionKind:
                 sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
                 module_eqn = sysml_to_python_qualified_name(sysml_qn)
                 channel = get_channel_name(module_eqn, ca.python_name)
-                registry.register(channel, [])
+                registry_register(registry,channel, [])
 
         # Register EXPOSE_PURE aliases: register the calc usage outputs first
         # so the alias targets exist
@@ -484,7 +485,7 @@ class TestReqCa06ResolutionKind:
                         channel = get_channel_name(usage_eqn, out_attr.name)
                         # Key_B format: instance.output
                         key_b = f"{usage.instance_name}.{out_attr.name}"
-                        registry.register(channel, [key_b])
+                        registry_register(registry,channel, [key_b])
 
         # Build the resolution map
         result = _build_attribute_resolution_map(

@@ -16,6 +16,7 @@ import pytest
 
 from sysml_codegen.core.models import BindingResolutionType
 from sysml_codegen.generation.initialization import build_output_registry, build_pipeline_context
+from tests.helpers.registry_compat import registry_resolve
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
@@ -88,7 +89,7 @@ class TestParallelValidationSolarBattery:
 
         p_net_kw is a FORMULA computed attribute on solar_battery_plant.
         The old path resolves it via _computed_attr_index; the new path
-        resolves it via registry.resolve() (Phase 1 Key_F registration).
+        resolves it via registry_resolve(registry,) (Phase 1 Key_F registration).
         """
         resolutions = pipeline_context.backtracking_result.binding_resolutions
         p_net_kw_keys = [k for k in resolutions if "p_net_kw" in k]
@@ -107,7 +108,8 @@ class TestParallelValidationSolarBattery:
         """REFERENCE secondary: capital_cost resolves to MODULE_OUTPUT.
 
         capital_cost is an aggregation output on solar_array.
-        The registry resolves it via Phase 1 Key_D registration.
+        The registry resolves it via Phase 1b Key_E_stripped registration
+        (full scoped path from design root).
         """
         registry = build_output_registry(
             calc_usages=pipeline_context.calc_usages,
@@ -117,8 +119,12 @@ class TestParallelValidationSolarBattery:
             channel_aliases=pipeline_context.channel_aliases,
             design_attributes=pipeline_context.design_attributes,
         )
-        result = registry.resolve("solar_array.capital_cost")
-        assert result is not None, "solar_array.capital_cost should resolve via registry"
+        # Key_E_stripped format: design root path (minus design prefix) + attr
+        result = registry_resolve(registry, "solar_battery_plant.solar_array.capital_cost")
+        assert result is not None, (
+            "solar_battery_plant.solar_array.capital_cost should resolve via "
+            "Phase 1b Key_E_stripped scoped registration"
+        )
 
     def test_unresolved_bindings_produce_warnings(self, log_records):
         """Unresolved bindings in new path produce logger.warning().
@@ -172,7 +178,7 @@ class TestParallelValidationAttrExprProbe:
             channel_aliases=pipeline_context.channel_aliases,
             design_attributes=pipeline_context.design_attributes,
         )
-        result = registry.resolve("probe_design.scale_result")
+        result = registry_resolve(registry,"probe_design.scale_result")
         assert result is not None, (
             "EXPOSE_PURE 'probe_design.scale_result' should resolve via Phase 3"
         )

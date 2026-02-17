@@ -40,6 +40,7 @@ MODELS = {
     "attr_expr_probe": FIXTURES_DIR / "attr_expr_probe",
     "chain_spike_model": FIXTURES_DIR / "chain_spike_model",
     "issue22_model": FIXTURES_DIR / "issue22_model",
+    "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types

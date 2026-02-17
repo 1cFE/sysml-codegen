@@ -26,7 +26,7 @@ from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
 )
-from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.core.identifier_types import ScopedKey, derive_module_type
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
@@ -571,7 +571,9 @@ def _resolve_expose_pure(
         return None
 
     catalog_key = f"{instance_name}.{output_attr_name}"
-    channel_name = output_registry.resolve(catalog_key)
+    channel_name = output_registry.scoped_lookup(ScopedKey(catalog_key))
+    if channel_name is None:
+        channel_name = output_registry.alias_lookup(ScopedKey(catalog_key))
     if channel_name is None:
         logger.warning(
             "EXPOSE_PURE %s: key '%s' not found in output registry",
@@ -840,7 +842,9 @@ def _resolve_aggregation_input_channel(
     if len(instance_parts) > 1:
         dotted_scope = ".".join(instance_parts[1:])
         scoped_key = f"{dotted_scope}.{part_usage}.{attr}"
-        channel = output_registry.resolve(scoped_key)
+        channel = output_registry.scoped_lookup(ScopedKey(scoped_key))
+        if channel is None:
+            channel = output_registry.alias_lookup(ScopedKey(scoped_key))
         if channel is not None:
             logger.debug(
                 "Aggregation input '%s.%s' resolved via scoped registry key '%s'",
@@ -848,12 +852,14 @@ def _resolve_aggregation_input_channel(
             )
             return channel
 
-    # Unscoped Key_D fallback (e.g., "solar_array.capital_cost")
+    # Unscoped fallback (e.g., "solar_array.capital_cost")
     catalog_key = f"{part_usage}.{attr}"
-    channel = output_registry.resolve(catalog_key)
+    channel = output_registry.scoped_lookup(ScopedKey(catalog_key))
+    if channel is None:
+        channel = output_registry.alias_lookup(ScopedKey(catalog_key))
     if channel is not None:
         logger.debug(
-            "Aggregation input '%s.%s' resolved via unscoped Key_D '%s'",
+            "Aggregation input '%s.%s' resolved via unscoped key '%s'",
             part_usage, attr, catalog_key,
         )
         return channel

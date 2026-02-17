@@ -548,12 +548,12 @@ def build_output_registry(
     # Phase 1: Canonical channels
     #
     # Typed registration puts Key_C, Key_E_stripped, SysML QN into typed
-    # registries. Legacy keys (Key_A, Key_D, Key_E full, Key_F, bare) go
-    # into _compat via deprecated register() for backtracker backward
-    # compat. Typed lookup methods do NOT see _compat keys. The _compat
-    # dict is removed when C11 updates the backtracker to typed dispatch.
+    # registries. Key_A aliases registered for cross-scope CHAIN resolution.
     # ------------------------------------------------------------------
     phase1_count = 0
+    # Local helper for Phase 3/4: maps Key_A format to CanonicalChannel.
+    # NOT persisted in registry — exists only during construction.
+    instance_attr_to_channel: dict[str, CanonicalChannel] = {}
 
     # Phase 1a: CalcUsage outputs
     for usage in calc_usages:
@@ -563,11 +563,14 @@ def build_output_registry(
         for attr in calc_def.output_attributes:
             canonical = make_canonical_channel(usage.qualified_name, attr.name)
             key_c = make_scoped_key(usage.qualified_name, attr.name)
-            # Typed: Key_C only (REQ-OR-05, REQ-OR-08)
+            # Typed: Key_C (REQ-OR-05, REQ-OR-08)
             registry.register_scoped(key_c, canonical)
-            # Compat: Key_A for backtracker Step 1 resolve()
+            # Alias: Key_A for cross-scope CHAIN resolution (first-wins)
             key_a = f"{usage.instance_name}.{attr.name}"
-            registry.register(canonical, [key_a])
+            registry.register_alias(ScopedKey(key_a), canonical)
+            # Helper for Phase 3/4 (Key_A -> CanonicalChannel)
+            if key_a not in instance_attr_to_channel:
+                instance_attr_to_channel[key_a] = canonical
             phase1_count += 1
 
     # Phase 1b: Aggregation outputs
@@ -576,11 +579,6 @@ def build_output_registry(
             get_channel_name(agg.module_eqn, agg.expression.attribute_name)
         )
         instance_parts = agg.instance_path.split("__")
-        part_usage = (
-            instance_parts[-1]
-            if instance_parts
-            else agg.expression.owning_part_name
-        )
 
         # Typed: Key_E_stripped only (REQ-OR-05)
         if len(instance_parts) > 1:
@@ -598,18 +596,6 @@ def build_output_registry(
         else:
             registry._canonical.add(canonical)
 
-        # Compat: Key_D, Key_E full, bare, alias variants
-        key_d = f"{part_usage}.{agg.expression.attribute_name}"
-        key_e = ".".join(instance_parts + [agg.expression.attribute_name])
-        compat_keys = [key_d, key_e, agg.expression.attribute_name]
-        for alias_name in agg.expression.aliases:
-            compat_keys.extend([
-                f"{part_usage}.{alias_name}",
-                alias_name,
-                ".".join(instance_parts + [alias_name]),
-            ])
-        registry.register(canonical, compat_keys)
-
         phase1_count += 1
 
     # Phase 1c: FORMULA computed attribute outputs
@@ -622,28 +608,28 @@ def build_output_registry(
         module_eqn = f"{part_qn_python}__{ca.python_name}"
         canonical = CanonicalChannel(get_channel_name(module_eqn, ca.python_name))
 
-        # Typed: SysML QN only (REQ-OR-05)
+        # Typed: SysML QN (REQ-OR-05)
         if ca.owning_part_qualified_name:
             sysml_qn_key = SysMLQN(f"{ca.owning_part_qualified_name}::{ca.name}")
             registry.register_sysml_qn(sysml_qn_key, canonical)
         else:
             registry._canonical.add(canonical)
 
-        # Compat: Key_F + bare for backtracker secondary resolution
+        # Key_F as ScopedKey for REFERENCE secondary resolution (spike Q5)
         key_f = f"{ca.owning_part_name}.{ca.python_name}"
-        registry.register(canonical, [key_f, ca.python_name])
+        registry.register_scoped(ScopedKey(key_f), canonical)
 
         phase1_count += 1
 
     # ------------------------------------------------------------------
     # Phase 2: CHAIN aliases (source="redefinition")
-    # Use resolve() to find canonical_name (may be in typed or compat)
+    # canonical_name is ScopedKey format — use scoped_lookup directly
     # ------------------------------------------------------------------
     phase2_count = 0
     for alias in channel_aliases:
         if alias.source != "redefinition":
             continue
-        resolved = registry.resolve(alias.canonical_name)
+        resolved = registry.scoped_lookup(ScopedKey(alias.canonical_name))
         if resolved:
             registry.register_alias(ScopedKey(alias.alias_name), resolved)
             phase2_count += 1
@@ -656,7 +642,7 @@ def build_output_registry(
 
     # ------------------------------------------------------------------
     # Phase 3: EXPOSE_PURE aliases (source="expose_pure")
-    # Use resolve() for canonical_name resolution
+    # canonical_name is Key_A format — use instance_attr_to_channel helper
     # ------------------------------------------------------------------
     phase3_count = 0
     for alias in channel_aliases:
@@ -669,7 +655,9 @@ def build_output_registry(
         else:
             owning_part_short = qn.split("__")[-1]
         scoped_key = ScopedKey(f"{owning_part_short}.{alias.alias_name}")
-        resolved = registry.resolve(alias.canonical_name)
+        resolved = instance_attr_to_channel.get(alias.canonical_name)
+        if resolved is None:
+            resolved = registry.scoped_lookup(ScopedKey(alias.canonical_name))
         if resolved:
             registry.register_alias(scoped_key, resolved)
             phase3_count += 1
@@ -682,7 +670,8 @@ def build_output_registry(
 
     # ------------------------------------------------------------------
     # Phase 4: Transitive design attribute aliases
-    # Use resolve() for default_value resolution
+    # default_value is Key_A format — use instance_attr_to_channel,
+    # then scoped_lookup, then alias_lookup
     # ------------------------------------------------------------------
     phase4_count = 0
     for _path, attrs in design_attributes.items():
@@ -691,7 +680,11 @@ def build_output_registry(
                 continue
             key = ScopedKey(f"{attr.parent_part}.{attr.name}")
             val = str(attr.default_value)
-            resolved = registry.resolve(val)
+            resolved = instance_attr_to_channel.get(val)
+            if resolved is None:
+                resolved = registry.scoped_lookup(ScopedKey(val))
+            if resolved is None:
+                resolved = registry.alias_lookup(ScopedKey(val))
             if resolved:
                 registry.register_alias(key, resolved)
                 phase4_count += 1
