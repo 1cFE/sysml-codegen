@@ -313,6 +313,12 @@ Migrate backtracker to typed dispatch (C11b) before downstream components depend
     - Add EXPRESSION binding dispatch path (currently silently skipped — C1 audit finding)
     - Migrate 3 `resolve()` calls in `build_output_registry()` Phases 2/3/4 (Key_A canonical
       names → typed keys, per D1 audit item)
+    - **D1 spike question**: How do Phase 2/3/4 alias registration calls in
+      `build_output_registry()` migrate away from `resolve()` when `canonical_name` values
+      are in Key_A format (`instance_name.attr`)? Options:
+      (a) Convert Key_A canonical_names to ScopedKey during alias construction,
+      (b) Register Key_A values as scoped keys during Phase 1,
+      (c) Keep `_compat` for alias registration only and eliminate it for resolution
     - Resolve 13 compat-only MODULE_OUTPUT resolutions: 12 catf_mfe cross-scope CHAIN
       (`minor_calc.a`) + 1 solar_battery REFERENCE secondary (`annualized_om.p_net_kw`).
       Options: cross-scope alias registration, sibling-scope lookup, or consumer-relative ScopedKey

@@ -190,16 +190,51 @@ code paths will surface them. C1 proved this pattern: extraction-level tests pas
 
 ### C4. EXPOSE_COMPUTED Pattern (identified in C05, Deferred Issue #2)
 
-- **Gap**: `ComputedAttributeClassification.EXPOSE_COMPUTED` is defined in the enum and
-  documented in Doc 16, but no fixture model exercises it.
-- **What it means**: A PartDef attribute that exposes a computed value from a child PartUsage
-  (not a simple alias like EXPOSE_PURE, but an expression over computed values).
-- **Risk**: Low — explicitly deferred as out-of-scope (Deferred Issue #2). No production code
-  path exercises it either.
-- [ ] **Action**: Defer. Document in the fixture gap tracker below. Revisit when a real model
-  needs EXPOSE_COMPUTED.
+- **Gap**: ~~`ComputedAttributeClassification.EXPOSE_COMPUTED` is defined in the enum and
+  documented in Doc 16, but no fixture model exercises it.~~ **PARTIALLY CLOSED.**
+  attr_expr_probe D2 (`scaled_area = scale_calc.result * 2.0`) already exercises
+  EXPOSE_COMPUTED. 1 genuine pattern verified; additional patterns (calc+sibling,
+  multi-calc) remain unexercised.
+- **What it means**: A PartDef attribute that mixes a CalcUsage output reference with arithmetic
+  or sibling attributes. The expression contains `calc_refs` AND is not a pure
+  `FeatureChainExpression` — so it's neither EXPOSE_PURE (simple alias) nor FORMULA
+  (sibling-only). Pipeline effect: silent no-op (deferred per Deferred Issue #2).
+- **Risk**: Low — ~~explicitly deferred as out-of-scope~~ **Mitigated** — extraction-level
+  classification verified with real fixture data. Pipeline no-op is by design.
+- [x] **Action**: ~~Defer.~~ Verified existing coverage. No new fixture needed.
 - **Affected REQs**: (none currently — pattern is acknowledged but unspecified)
 - **Affected components**: C05, C15 (FORMULA module factory)
+
+> **UPDATE (C4)**: The gap description was overstated. `attr_expr_probe` D2
+> (`scaled_area = scale_calc.result * 2.0`, line 104 in design.sysml) already produces
+> `ComputedAttributeClassification.EXPOSE_COMPUTED` in the extraction snapshot. Existing
+> conformance tests verify this:
+>
+> - `test_computed_attributes.py::test_classification_count` — expects exactly 1
+>   EXPOSE_COMPUTED in attr_expr_probe
+> - `test_computed_attributes.py::test_expose_computed_no_compilation` — verifies
+>   EXPOSE_COMPUTED has `compiled_expression=None` and `compilability=MANUAL_REQUIRED`
+> - `test_computed_attributes.py::test_classifications_present` — EXPOSE_COMPUTED in the
+>   exercised classification set
+>
+> Additionally, C3's inherited attribute probe (unresolvable_attr_probe) produces 5
+> EXPOSE_COMPUTED instances via misclassification — these are tested as xfailed expectations
+> in `TestInheritedAttrClassification`.
+>
+> **Remaining gap**: Only 1 genuine EXPOSE_COMPUTED pattern exercised (calc output x literal).
+> Untested patterns: (a) calc output + sibling attr, (b) calc output x sibling attr,
+> (c) two calc outputs combined. These would require a new fixture model. Given the Low
+> risk and explicit deferral of pipeline handling, this is acceptable technical debt.
+>
+> **Classification trace for D2**: `scale_calc.result * 2.0` →
+> - `scale_calc` filtered by Step 2a (in `calc_usage_names`)
+> - `result` QN resolves to `AttrExprProbeLibrary::ScaleCalc::result` → Step 2c (calc_ref)
+> - `2.0` literal → no ref
+> - Step 3: calc_refs present, no sibling_refs, but top-level AST is `OperatorExpression`
+>   (not `FeatureChainExpression`) → EXPOSE_COMPUTED
+>
+> **No new fixture model required.** The gap is closed for classification verification
+> purposes. Pipeline-level handling remains explicitly deferred (Deferred Issue #2).
 
 ### C5. REQ-HR-07 Alias Detection (identified in C06)
 
@@ -235,7 +270,8 @@ code paths will surface them. C1 proved this pattern: extraction-level tests pas
 | 2 (High) | `chain_override_probe.sysml` | C2 (CHAIN design override) | Medium | **DONE** |
 | 3 (Medium) | `unresolvable_attr_probe.sysml` | C3 (inheritance misclassification — UNRESOLVABLE untriggered) | Medium | **DONE** |
 | 4 (Medium) | Extend `issue22_model` or new fixture | C5 (HR-07 aliases) | Medium | Pending |
-| 5 (Low) | Defer | C4 (EXPOSE_COMPUTED), C6 (deep cross-scope) | N/A | Deferred |
+| 5 (Low) | N/A — existing attr_expr_probe D2 | C4 (EXPOSE_COMPUTED) | N/A | **CLOSED** (existing coverage) |
+| 6 (Low) | Defer | C6 (deep cross-scope) | N/A | Deferred |
 
 **Dependency**: Creating new fixture models requires the SysIDE JVM parser (`agentic-mbse`
 SysideAdapter). The extraction snapshot capture script (`scripts/capture_extraction_snapshots.py`)
@@ -254,11 +290,8 @@ handles serialization once extraction is run. New snapshots must be added to
   not the `design_prefix_stripped.path.attr` format (Key_C/ScopedKey).
 - **Impact on C11**: The backtracker's typed dispatch migration (C11) must ALSO address these
   `build_output_registry()` calls, or a separate refactoring step is needed.
-- [ ] **Action**: Add a spike question to C11 plan: "How do Phase 2/3/4 alias registration
-  calls in `build_output_registry()` migrate away from `resolve()` when canonical_name values
-  are in Key_A format?" Options: (a) Convert Key_A canonical_names to ScopedKey during alias
-  construction, (b) Register Key_A values as scoped keys during Phase 1, (c) Keep `_compat`
-  for alias registration only and eliminate it for resolution.
+- [x] **Action**: Added D1 spike question with 3 options (a/b/c) to IMPLEMENTATION_PLAN §3.1b
+  C11b scope. Also documented in C11a plan Issue #1. *(done 2026-02-17)*
 
 ### D2. Pre-existing Ruff Errors
 
@@ -313,3 +346,5 @@ handles serialization once extraction is run. New snapshots must be added to
 | 2026-02-17 | Section B complete (B1–B4), design docs amended | Phase 2 checkpoint review |
 | 2026-02-17 | C3 — Inherited attr misclassification bug found + 17 conformance tests (1250 total, 5 xfail) | C3 implementation |
 | 2026-02-17 | C3 design doc amendments: Doc 16 (Known Issues + algorithm annotations), Doc 09 (enum footnote), Doc 01 (supertype chain data gap), COMPONENT_CHECKLIST (C03/C05 new ACs), IMPLEMENTATION_PLAN (Deferred Issues #9/#10 + amendments table) | C3 design doc propagation |
+| 2026-02-17 | D1 — Added spike question with 3 options to IMPLEMENTATION_PLAN §3.1b C11b scope | D1 completion |
+| 2026-02-17 | C4 — EXPOSE_COMPUTED gap overstated; existing attr_expr_probe D2 already exercises it. 1 genuine pattern verified with existing conformance tests. No new fixture needed. | C4 audit |
