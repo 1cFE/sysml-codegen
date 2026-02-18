@@ -20,7 +20,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import jinja2
 
 from sysml_codegen.generation.initialization import build_pipeline_context
-from sysml_codegen.generation.registry import generate_registry_function
+from sysml_codegen.generation.registry import (
+    _collect_exit_point_primitive_types,
+    generate_registry_function,
+)
 
 FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 OUTPUT_DIR = FIXTURES_DIR / "baseline_outputs"
@@ -63,13 +66,16 @@ def main() -> None:
         print(f"  -> computation_graph.json ({n_modules} modules, {n_exec} exec_order)")
 
         # 2. Registry __init__.py
+        exit_point_types = _collect_exit_point_primitive_types(
+            ctx.computation_graph.modules
+        )
         registry_code = generate_registry_function(
             calc_defs=ctx.calc_defs,
             package_name=model_name,
             template_env=template_env,
             output_path=model_output_dir,
             entry_point_groups=ctx.computation_graph.entry_point_groups,
-            exit_point_primitive_types=None,
+            exit_point_primitive_types=exit_point_types,
             computed_attributes=ctx.computed_attributes,
             aggregation_data=ctx.aggregation_expressions,
         )
