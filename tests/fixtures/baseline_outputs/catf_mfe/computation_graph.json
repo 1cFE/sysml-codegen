@@ -1,0 +1,2791 @@
+{
+  "modules": [
+    {
+      "name": "catfmfeheating__catf_heating__wall_plug",
+      "module_type": "fusionanalysesthermalloads.HeatingWallPlugPowerModule",
+      "inputs": [
+        {
+          "param_name": "delivered_power",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "heating_params",
+            "qualified_name": "CATFMFEHeating__catf_heating__delivered_power",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "heating_efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "heating_params",
+            "qualified_name": "CATFMFEHeating__catf_heating__wall_plug__heating_efficiency",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEHeating__catf_heating__wall_plug__wall_plug_power"
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__magnet_surface_calc",
+      "module_type": "fusionphysicsgeometry.MagnetSurfaceAreaModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "thickness",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__thickness",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "f_exposed",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__f_exposed",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__area"
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__plasma_region__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a"
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfeblanket__catf_blanket__pump_load",
+      "module_type": "fusionanalysesthermalloads.CoolantPumpPowerModule",
+      "inputs": [
+        {
+          "param_name": "p_thermal_electric",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "blanket_params",
+            "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__p_thermal_electric",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "f_pcppf",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "blanket_params",
+            "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__f_pcppf",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "pump_efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "blanket_params",
+            "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__pump_efficiency",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEBlanket__catf_blanket__pump_load__pump_power"
+        }
+      ],
+      "execution_order": 3,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__alpha_neutron_split",
+      "module_type": "fusionphysics_powerbalance.AlphaNeutronSplitModule",
+      "inputs": [
+        {
+          "param_name": "p_fusion",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__p_fusion",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "p_alpha",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__alpha_neutron_split__p_alpha"
+        },
+        {
+          "field_name": "p_neutron",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__alpha_neutron_split__p_neutron"
+        }
+      ],
+      "execution_order": 4,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfevacuum__catf_vacuum_pumping__cryo_load",
+      "module_type": "fusionanalysesthermalloads.CryoPumpRefrigerationModule",
+      "inputs": [
+        {
+          "param_name": "cryo_pump_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__n_pumps",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "pump_capacity",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__pumping_speed",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "operating_temp",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__operating_temp",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "carnot_efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__carnot_efficiency",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "load_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__load_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__refrigeration_power"
+        }
+      ],
+      "execution_order": 5,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfetritium__catf_tritium__processing_load",
+      "module_type": "fusionanalysesthermalloads.TritiumProcessingPowerModule",
+      "inputs": [
+        {
+          "param_name": "fusion_power",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "tritium_params",
+            "qualified_name": "CATFMFETritium__catf_tritium__fusion_power",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "processing_factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "tritium_params",
+            "qualified_name": "CATFMFETritium__catf_tritium__processing_load__processing_factor",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFETritium__catf_tritium__processing_load__processing_power"
+        }
+      ],
+      "execution_order": 6,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catf_mfe__catf_mfe_plant__auxiliary_load",
+      "module_type": "fusionanalysesthermalloads.AuxiliarySystemsPowerModule",
+      "inputs": [
+        {
+          "param_name": "gross_electric",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "system_params",
+            "qualified_name": "CATF_MFE__catf_mfe_plant__auxiliary_load__gross_electric",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "auxiliary_fraction",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "system_params",
+            "qualified_name": "CATF_MFE__catf_mfe_plant__auxiliary_load__auxiliary_fraction",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATF_MFE__catf_mfe_plant__auxiliary_load__auxiliary_power"
+        }
+      ],
+      "execution_order": 7,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__q_scientific",
+      "module_type": "fusionphysics_performancemetrics.ScientificQFactorModule",
+      "inputs": [
+        {
+          "param_name": "p_fusion",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__p_fusion",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "p_input",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__p_input",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__q_scientific__q_sci"
+        }
+      ],
+      "execution_order": 8,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfevacuum__catf_vacuum_pumping__pump_load",
+      "module_type": "fusionanalysesthermalloads.VacuumPumpPowerModule",
+      "inputs": [
+        {
+          "param_name": "pumping_speed_total",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "base_pressure",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__base_pressure_achievable",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "pump_count",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__n_pumps",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "pump_efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "vacuum_params",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_efficiency",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_power"
+        }
+      ],
+      "execution_order": 9,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__vacuum_gap__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__minor_calc__a"
+        }
+      ],
+      "execution_order": 10,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__first_wall__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__first_wall__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__first_wall__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__first_wall__minor_calc__a"
+        }
+      ],
+      "execution_order": 11,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__blanket__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__blanket__minor_calc__a"
+        }
+      ],
+      "execution_order": 12,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__reflector__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__reflector__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__reflector__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__reflector__minor_calc__a"
+        }
+      ],
+      "execution_order": 13,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__ht_shield__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__minor_calc__a"
+        }
+      ],
+      "execution_order": 14,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__structure__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__structure__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__structure__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__structure__minor_calc__a"
+        }
+      ],
+      "execution_order": 15,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__gap1__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap1__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap1__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__gap1__minor_calc__a"
+        }
+      ],
+      "execution_order": 16,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__vessel__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__vessel__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__vessel__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__vessel__minor_calc__a"
+        }
+      ],
+      "execution_order": 17,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__tf_coil__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__minor_calc__a"
+        }
+      ],
+      "execution_order": 18,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__gap2__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap2__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap2__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__gap2__minor_calc__a"
+        }
+      ],
+      "execution_order": 19,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__lt_shield__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__minor_calc__a"
+        }
+      ],
+      "execution_order": 20,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__bioshield__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__bioshield__inner_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__bioshield__outer_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__bioshield__minor_calc__a"
+        }
+      ],
+      "execution_order": 21,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__first_wall_area_calc",
+      "module_type": "fusionphysicsgeometry.TorusSurfaceAreaModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__first_wall_area_calc__area"
+        }
+      ],
+      "execution_order": 22,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__plasma_region__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume"
+        }
+      ],
+      "execution_order": 23,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__blanket_thermal",
+      "module_type": "fusionphysics_powerbalance.BlanketThermalPowerModule",
+      "inputs": [
+        {
+          "param_name": "p_neutron",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__alpha_neutron_split__p_neutron"
+          }
+        },
+        {
+          "param_name": "p_input",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__p_input",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "m_neutron",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__m_neutron",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "eta_thermal",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__eta_thermal",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "f_pump",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__f_pump",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "eta_pump",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__eta_pump",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "f_subsystem",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__f_subsystem",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__blanket_thermal__p_thermal"
+        }
+      ],
+      "execution_order": 24,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__vacuum_gap__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__volume_calc__volume"
+        }
+      ],
+      "execution_order": 25,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__first_wall__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__first_wall__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__first_wall__volume_calc__volume"
+        }
+      ],
+      "execution_order": 26,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__blanket__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__blanket__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__blanket__volume_calc__volume"
+        }
+      ],
+      "execution_order": 27,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__reflector__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__reflector__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__reflector__volume_calc__volume"
+        }
+      ],
+      "execution_order": 28,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__ht_shield__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__ht_shield__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__volume_calc__volume"
+        }
+      ],
+      "execution_order": 29,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__structure__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__structure__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__structure__volume_calc__volume"
+        }
+      ],
+      "execution_order": 30,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__gap1__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__gap1__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__gap1__volume_calc__volume"
+        }
+      ],
+      "execution_order": 31,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__vessel__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__vessel__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__vessel__volume_calc__volume"
+        }
+      ],
+      "execution_order": 32,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__tf_coil__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__tf_coil__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__volume_calc__volume"
+        }
+      ],
+      "execution_order": 33,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__gap2__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__gap2__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__gap2__volume_calc__volume"
+        }
+      ],
+      "execution_order": 34,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__lt_shield__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__lt_shield__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__volume_calc__volume"
+        }
+      ],
+      "execution_order": 35,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmferadialbuild__catf_radial_build__bioshield__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__bioshield__minor_calc__a"
+          }
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__bioshield__volume_calc__volume"
+        }
+      ],
+      "execution_order": 36,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfemagnets__catf_tf_system__cryo_load",
+      "module_type": "fusionanalysesthermalloads.MagnetCryogenicLoadModule",
+      "inputs": [
+        {
+          "param_name": "magnet_volume",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "magnets_params",
+            "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "magnet_surface_area",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__area"
+          }
+        },
+        {
+          "param_name": "first_wall_area",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__first_wall_area_calc__area"
+          }
+        },
+        {
+          "param_name": "p_neutron",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "magnets_params",
+            "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__p_neutron",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "b_field",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "magnets_params",
+            "qualified_name": "CATFMFEMagnets__catf_tf_system__field_at_coil",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "operating_temp",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "magnets_params",
+            "qualified_name": "CATFMFEMagnets__catf_tf_system__temperature_operating",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "carnot_efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "magnets_params",
+            "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__carnot_efficiency",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEMagnets__catf_tf_system__cryo_load__cooling_power"
+        }
+      ],
+      "execution_order": 37,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__gross_electric",
+      "module_type": "fusionphysics_powerbalance.GrossElectricPowerModule",
+      "inputs": [
+        {
+          "param_name": "p_thermal",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__blanket_thermal__p_thermal"
+          }
+        },
+        {
+          "param_name": "p_alpha",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__alpha_neutron_split__p_alpha"
+          }
+        },
+        {
+          "param_name": "eta_thermal",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__eta_thermal",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "eta_direct",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__eta_direct",
+            "producer_channel": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__gross_electric__p_electric_gross"
+        }
+      ],
+      "execution_order": 38,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__net_electric",
+      "module_type": "fusionphysics_powerbalance.NetElectricPowerModule",
+      "inputs": [
+        {
+          "param_name": "p_electric_gross",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__gross_electric__p_electric_gross"
+          }
+        },
+        {
+          "param_name": "p_coils",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEMagnets__catf_tf_system__cryo_load__cooling_power"
+          }
+        },
+        {
+          "param_name": "p_heating",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEHeating__catf_heating__wall_plug__wall_plug_power"
+          }
+        },
+        {
+          "param_name": "p_pumps",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEBlanket__catf_blanket__pump_load__pump_power"
+          }
+        },
+        {
+          "param_name": "p_cryo",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__refrigeration_power"
+          }
+        },
+        {
+          "param_name": "p_vacuum",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEBlanket__catf_blanket__pump_load__pump_power"
+          }
+        },
+        {
+          "param_name": "p_tritium",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFETritium__catf_tritium__processing_load__processing_power"
+          }
+        },
+        {
+          "param_name": "p_auxiliary",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATF_MFE__catf_mfe_plant__auxiliary_load__auxiliary_power"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "p_parasitic_total",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__net_electric__p_parasitic_total"
+        },
+        {
+          "field_name": "p_net",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__net_electric__p_net"
+        }
+      ],
+      "execution_order": 39,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__q_engineering",
+      "module_type": "fusionphysics_performancemetrics.EngineeringQFactorModule",
+      "inputs": [
+        {
+          "param_name": "p_electric_gross",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__gross_electric__p_electric_gross"
+          }
+        },
+        {
+          "param_name": "p_auxiliary_total",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__net_electric__p_parasitic_total"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "q_eng",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__q_engineering__q_eng"
+        },
+        {
+          "field_name": "f_recirculating",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__q_engineering__f_recirculating"
+        },
+        {
+          "field_name": "p_net",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__q_engineering__p_net"
+        }
+      ],
+      "execution_order": 40,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    },
+    {
+      "name": "catfmfephysics__catf_physics__plant_efficiency",
+      "module_type": "fusionphysics_performancemetrics.PlantEfficiencyModule",
+      "inputs": [
+        {
+          "param_name": "p_fusion",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "physics_params",
+            "qualified_name": "CATFMFEPhysics__catf_physics__p_fusion",
+            "producer_channel": null
+          }
+        },
+        {
+          "param_name": "p_net",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFEPhysics__catf_physics__net_electric__p_net"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFEPhysics__catf_physics__plant_efficiency__eta_plant"
+        }
+      ],
+      "execution_order": 41,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "heating_params",
+      "class_name": "HeatingParams",
+      "source_file": "heating.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFEHeating__catf_heating__delivered_power",
+          "simple_name": "delivered_power",
+          "entry_type": "design_attribute",
+          "default_value": 50.0,
+          "source_calc_usage": null,
+          "param_group": "heating_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEHeating__catf_heating__wall_plug__heating_efficiency",
+          "simple_name": "heating_efficiency",
+          "entry_type": "library_default",
+          "default_value": 0.5,
+          "source_calc_usage": "HeatingWallPlugPower",
+          "param_group": "heating_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "magnets_params",
+      "class_name": "MagnetsParams",
+      "source_file": "magnets.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFEMagnets__catf_tf_system__temperature_operating",
+          "simple_name": "temperature_operating",
+          "entry_type": "design_attribute",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": "magnets_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEMagnets__catf_tf_system__field_at_coil",
+          "simple_name": "field_at_coil",
+          "entry_type": "design_attribute",
+          "default_value": 12.0,
+          "source_calc_usage": null,
+          "param_group": "magnets_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume",
+          "simple_name": "magnet_volume",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "magnets_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__p_neutron",
+          "simple_name": "p_neutron",
+          "entry_type": "usage_literal",
+          "default_value": 2079.41,
+          "source_calc_usage": null,
+          "param_group": "magnets_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__carnot_efficiency",
+          "simple_name": "carnot_efficiency",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "MagnetCryogenicLoad",
+          "param_group": "magnets_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "blanket_params",
+      "class_name": "BlanketParams",
+      "source_file": "blanket.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__p_thermal_electric",
+          "simple_name": "p_thermal_electric",
+          "entry_type": "usage_literal",
+          "default_value": 1104.22,
+          "source_calc_usage": null,
+          "param_group": "blanket_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__f_pcppf",
+          "simple_name": "f_pcppf",
+          "entry_type": "library_default",
+          "default_value": 0.06,
+          "source_calc_usage": "CoolantPumpPower",
+          "param_group": "blanket_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__pump_efficiency",
+          "simple_name": "pump_efficiency",
+          "entry_type": "library_default",
+          "default_value": 0.5,
+          "source_calc_usage": "CoolantPumpPower",
+          "param_group": "blanket_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "physics_params",
+      "class_name": "PhysicsParams",
+      "source_file": "physics.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__p_fusion",
+          "simple_name": "p_fusion",
+          "entry_type": "design_attribute",
+          "default_value": 2600.0,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__p_input",
+          "simple_name": "p_input",
+          "entry_type": "design_attribute",
+          "default_value": 50.0,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__m_neutron",
+          "simple_name": "m_neutron",
+          "entry_type": "design_attribute",
+          "default_value": 1.1,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__eta_thermal",
+          "simple_name": "eta_thermal",
+          "entry_type": "design_attribute",
+          "default_value": 0.46,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__eta_direct",
+          "simple_name": "eta_direct",
+          "entry_type": "design_attribute",
+          "default_value": 0.85,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__f_pump",
+          "simple_name": "f_pump",
+          "entry_type": "design_attribute",
+          "default_value": 0.06,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__eta_pump",
+          "simple_name": "eta_pump",
+          "entry_type": "design_attribute",
+          "default_value": 0.5,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEPhysics__catf_physics__f_subsystem",
+          "simple_name": "f_subsystem",
+          "entry_type": "design_attribute",
+          "default_value": 0.03,
+          "source_calc_usage": null,
+          "param_group": "physics_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "system_params",
+      "class_name": "SystemParams",
+      "source_file": "system.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATF_MFE__catf_mfe_plant__auxiliary_load__gross_electric",
+          "simple_name": "gross_electric",
+          "entry_type": "usage_literal",
+          "default_value": 1546.72,
+          "source_calc_usage": null,
+          "param_group": "system_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATF_MFE__catf_mfe_plant__auxiliary_load__auxiliary_fraction",
+          "simple_name": "auxiliary_fraction",
+          "entry_type": "library_default",
+          "default_value": 0.009,
+          "source_calc_usage": "AuxiliarySystemsPower",
+          "param_group": "system_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "tritium_params",
+      "class_name": "TritiumParams",
+      "source_file": "tritium.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFETritium__catf_tritium__fusion_power",
+          "simple_name": "fusion_power",
+          "entry_type": "design_attribute",
+          "default_value": 2600.0,
+          "source_calc_usage": null,
+          "param_group": "tritium_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFETritium__catf_tritium__processing_load__processing_factor",
+          "simple_name": "processing_factor",
+          "entry_type": "library_default",
+          "default_value": 0.00385,
+          "source_calc_usage": "TritiumProcessingPower",
+          "param_group": "tritium_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "vacuum_params",
+      "class_name": "VacuumParams",
+      "source_file": "vacuum.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__n_pumps",
+          "simple_name": "n_pumps",
+          "entry_type": "design_attribute",
+          "default_value": 48.0,
+          "source_calc_usage": null,
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__base_pressure_achievable",
+          "simple_name": "base_pressure_achievable",
+          "entry_type": "design_attribute",
+          "default_value": 0.0001,
+          "source_calc_usage": null,
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__n_pumps",
+          "simple_name": "n_pumps",
+          "entry_type": "design_attribute",
+          "default_value": 32.0,
+          "source_calc_usage": null,
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__pumping_speed",
+          "simple_name": "pumping_speed",
+          "entry_type": "design_attribute",
+          "default_value": 5.0,
+          "source_calc_usage": null,
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total",
+          "simple_name": "pumping_speed_total",
+          "entry_type": "usage_literal",
+          "default_value": 200.0,
+          "source_calc_usage": null,
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_efficiency",
+          "simple_name": "pump_efficiency",
+          "entry_type": "library_default",
+          "default_value": 0.4,
+          "source_calc_usage": "VacuumPumpPower",
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__carnot_efficiency",
+          "simple_name": "carnot_efficiency",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "CryoPumpRefrigeration",
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__load_factor",
+          "simple_name": "load_factor",
+          "entry_type": "library_default",
+          "default_value": 0.001,
+          "source_calc_usage": "CryoPumpRefrigeration",
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__operating_temp",
+          "simple_name": "operating_temp",
+          "entry_type": "library_default",
+          "default_value": 20.0,
+          "source_calc_usage": "CryoPumpRefrigeration",
+          "param_group": "vacuum_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "radial_build_params",
+      "class_name": "RadialBuildParams",
+      "source_file": "radial_build.sysml",
+      "parameters": [
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+          "simple_name": "elongation",
+          "entry_type": "design_attribute",
+          "default_value": 3.0,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+          "simple_name": "major_radius",
+          "entry_type": "design_attribute",
+          "default_value": 3.0,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 3.0,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 4.1,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 4.1,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 4.2,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__first_wall__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 4.2,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__first_wall__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 4.4,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 4.4,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.2,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__reflector__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.2,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__reflector__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.4,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.4,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.6,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__structure__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.6,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__structure__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.8,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap1__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 5.8,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap1__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 6.3,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__vessel__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 6.3,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__vessel__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 6.5,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 6.5,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__thickness",
+          "simple_name": "thickness",
+          "entry_type": "design_attribute",
+          "default_value": 0.25,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 6.75,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap2__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 6.75,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap2__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 7.25,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 7.25,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 7.55,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__bioshield__inner_radius",
+          "simple_name": "inner_radius",
+          "entry_type": "design_attribute",
+          "default_value": 7.55,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__bioshield__outer_radius",
+          "simple_name": "outer_radius",
+          "entry_type": "design_attribute",
+          "default_value": 8.55,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__f_exposed",
+          "simple_name": "f_exposed",
+          "entry_type": "library_default",
+          "default_value": 0.5,
+          "source_calc_usage": "MagnetSurfaceArea",
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "catfmfeheating__catf_heating__wall_plug",
+    "catfmferadialbuild__catf_radial_build__magnet_surface_calc",
+    "catfmferadialbuild__catf_radial_build__plasma_region__minor_calc",
+    "catfmfeblanket__catf_blanket__pump_load",
+    "catfmfephysics__catf_physics__alpha_neutron_split",
+    "catfmfevacuum__catf_vacuum_pumping__cryo_load",
+    "catfmfetritium__catf_tritium__processing_load",
+    "catf_mfe__catf_mfe_plant__auxiliary_load",
+    "catfmfephysics__catf_physics__q_scientific",
+    "catfmfevacuum__catf_vacuum_pumping__pump_load",
+    "catfmferadialbuild__catf_radial_build__vacuum_gap__minor_calc",
+    "catfmferadialbuild__catf_radial_build__first_wall__minor_calc",
+    "catfmferadialbuild__catf_radial_build__blanket__minor_calc",
+    "catfmferadialbuild__catf_radial_build__reflector__minor_calc",
+    "catfmferadialbuild__catf_radial_build__ht_shield__minor_calc",
+    "catfmferadialbuild__catf_radial_build__structure__minor_calc",
+    "catfmferadialbuild__catf_radial_build__gap1__minor_calc",
+    "catfmferadialbuild__catf_radial_build__vessel__minor_calc",
+    "catfmferadialbuild__catf_radial_build__tf_coil__minor_calc",
+    "catfmferadialbuild__catf_radial_build__gap2__minor_calc",
+    "catfmferadialbuild__catf_radial_build__lt_shield__minor_calc",
+    "catfmferadialbuild__catf_radial_build__bioshield__minor_calc",
+    "catfmferadialbuild__catf_radial_build__first_wall_area_calc",
+    "catfmferadialbuild__catf_radial_build__plasma_region__volume_calc",
+    "catfmfephysics__catf_physics__blanket_thermal",
+    "catfmferadialbuild__catf_radial_build__vacuum_gap__volume_calc",
+    "catfmferadialbuild__catf_radial_build__first_wall__volume_calc",
+    "catfmferadialbuild__catf_radial_build__blanket__volume_calc",
+    "catfmferadialbuild__catf_radial_build__reflector__volume_calc",
+    "catfmferadialbuild__catf_radial_build__ht_shield__volume_calc",
+    "catfmferadialbuild__catf_radial_build__structure__volume_calc",
+    "catfmferadialbuild__catf_radial_build__gap1__volume_calc",
+    "catfmferadialbuild__catf_radial_build__vessel__volume_calc",
+    "catfmferadialbuild__catf_radial_build__tf_coil__volume_calc",
+    "catfmferadialbuild__catf_radial_build__gap2__volume_calc",
+    "catfmferadialbuild__catf_radial_build__lt_shield__volume_calc",
+    "catfmferadialbuild__catf_radial_build__bioshield__volume_calc",
+    "catfmfemagnets__catf_tf_system__cryo_load",
+    "catfmfephysics__catf_physics__gross_electric",
+    "catfmfephysics__catf_physics__net_electric",
+    "catfmfephysics__catf_physics__q_engineering",
+    "catfmfephysics__catf_physics__plant_efficiency"
+  ]
+}

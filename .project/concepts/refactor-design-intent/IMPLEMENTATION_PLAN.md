@@ -465,22 +465,19 @@ compilability and entry_point_groups parameter ordering — known snapshot-vs-li
   - No production code changes — conformance-only
   - **Acceptance**: REQ-ORCH-01 through REQ-ORCH-07, REQ-PIPE-01 through REQ-PIPE-07 all green (1571 tests, 0 failures, 5 xfailed)
 
-- [ ] **5.2 — End-to-End Pipeline Validation**
+- [x] **5.2 — End-to-End Pipeline Validation** *(completed 2026-02-17)*
   - **Refs**: [00-pipeline-overview.md](00-pipeline-overview.md)
-  - Write `tests/conformance/test_pipeline_e2e.py`:
-    - Run full pipeline on solar_battery_model
-    - Verify ComputationGraph matches baseline (or improved baseline if bugs fixed)
-    - Verify all 3 module types present
-    - Verify every ModuleInput wired
-    - Verify every module_output resolvable
-    - Verify execution_order is valid topological sort
-    - Run full pipeline on catf_mfe_model (larger model)
-    - Compare against baseline
-  - **Acceptance**: REQ-PIPE-01 through REQ-PIPE-07 all green
+  - 16 conformance tests in `tests/conformance/test_pipeline_e2e.py`
+  - Parametrized over 2 primary models (solar_battery, catf_mfe) + 2 secondary (chain_spike, attr_expr_probe)
+  - catf_mfe baseline generated: 42 modules (all CalcUsage), 8 EP groups
+  - Baseline comparison with 2 normalizations (CalcUsage compilability + EP parameter ordering)
+  - All 4 models match baselines — Checkpoint 5 validated
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-PIPE-01 through REQ-PIPE-06 all green; REQ-PIPE-07 tested in C19 (1587 tests, 0 failures, 5 xfailed)
 
-**Checkpoint 5**: [ ] Orchestrated pipeline produces identical output to current implementation
-on all fixture models. This proves the refactored components compose correctly. All 161
-requirements verified.
+**Checkpoint 5**: [x] Orchestrated pipeline produces identical output to current implementation
+on all fixture models. This proves the refactored components compose correctly.
+16 new conformance tests (5.2: 16). 1587 total tests, 2 skipped, 5 xfailed, 0 failures. *(2026-02-17)*
 
 ---
 
@@ -1192,3 +1189,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C17 Entry Point Classifier | 1463 | 35 | 1498 (+5 xfail) | 2026-02-17 |
 | C18 Graph Assembly | 1498 | 34 | 1532 (+5 xfail) | 2026-02-17 |
 | C19 Orchestrator Step Ordering | 1532 | 39 | 1571 (+5 xfail) | 2026-02-17 |
+| 5.2 E2E Pipeline Validation | 1571 | 16 | 1587 (+5 xfail) | 2026-02-17 |

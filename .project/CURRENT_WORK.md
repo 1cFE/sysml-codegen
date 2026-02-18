@@ -22,11 +22,11 @@
 - [x] Phase 2: Core Infrastructure Spikes (C08-C10, 117 conformance tests)
 - [x] Phase 3: Analysis Components (C11a/b, C12, C13, X02, 136 conformance tests)
 - [x] Phase 4: Module Factory + Graph Assembly (C14-C18, 183 conformance tests, Checkpoint 4 passed)
-- [x] Phase 5 (partial): C19 Orchestrator Step Ordering (39 conformance tests)
+- [x] Phase 5: Orchestrator Integration (C19 + 5.2, 55 conformance tests, Checkpoint 5 passed)
 
-**Current Phase**: Phase 5 — End-to-End Pipeline Validation (5.2)
+**Current Phase**: Phase 6 — Generation Layer Validation (C20-C25, X01)
 
-**Test Suite**: 1571 tests passing (904 conformance + 667 existing), 5 xfailed
+**Test Suite**: 1587 tests passing (920 conformance + 667 existing), 5 xfailed
 
 **Key Decisions**:
 - Typed Registry Refactor complete — 3 typed registries, zero `_compat`, zero `resolve()`
@@ -40,6 +40,14 @@
 ---
 
 ## Recently Completed
+
+### 2026-02-17: Phase 5 — E2E Pipeline Validation (5.2) — Checkpoint 5
+- 16 conformance tests in `tests/conformance/test_pipeline_e2e.py`
+- catf_mfe baseline generated: 42 modules (all CalcUsage), 8 EP groups
+- Baseline comparison for all 4 models (solar_battery, catf_mfe, chain_spike, attr_expr_probe)
+- REQ-PIPE-01 through REQ-PIPE-06 validated end-to-end
+- Checkpoint 5: All 4 models match baselines — refactored pipeline composes correctly
+- No production code changes — conformance-only
 
 ### 2026-02-17: Phase 5 (partial) — Orchestrator Step Ordering (C19)
 - 39 conformance tests in `tests/conformance/test_orchestrator.py`
@@ -88,8 +96,7 @@
 
 ## Up Next
 
-1. Phase 5: 5.2 End-to-End Pipeline Validation — ComputationGraph matches baselines on all fixture models
-2. Phase 6: Generation Layer Validation (C20-C25, X01)
-3. Phase 7: Structural Refactoring & Dead Code Removal
+1. Phase 6: Generation Layer Validation (C20-C25, X01)
+2. Phase 7: Structural Refactoring & Dead Code Removal
 
 ---
