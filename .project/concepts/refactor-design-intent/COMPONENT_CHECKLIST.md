@@ -389,27 +389,30 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ## Layer 6: Generation
 
-### C20 — Pipeline YAML Generator
+### C20 — Pipeline YAML Generator *(completed 2026-02-18)*
 - **Doc**: [21-pipeline-yaml-generation.md](21-pipeline-yaml-generation.md)
 - **REQs**: REQ-PY-01 through REQ-PY-07
 - **Current location**: `generation/pipeline.py`
+- **Tests**: 27 conformance tests in `tests/conformance/test_gen_pipeline_yaml.py`
+- **Fixes**: Bug 9 (param_group propagation in graph_builder.py Step 6.9), Bug 10 (int→float for multiplicity)
 - **AC**:
-  - [ ] All entry point sources include `param_group.` prefix
-  - [ ] All numeric types are "float" (including multiplicity)
-  - [ ] Single-output references append `.root`
-  - [ ] channel_field_map covers every ModuleOutput
-  - [ ] Exit point type matches upstream output type
-  - [ ] One JSON file per ParameterGroup
-  - [ ] Consumes ONLY ComputationGraph (gold standard)
+  - [x] All entry point sources include `param_group.` prefix
+  - [x] All numeric types are "float" (including multiplicity)
+  - [x] Single-output references append `.root`
+  - [x] channel_field_map covers every ModuleOutput
+  - [x] Exit point type matches upstream output type
+  - [x] One JSON file per ParameterGroup
+  - [x] Consumes ONLY ComputationGraph (gold standard)
 
-### C21 — Module Wrapper Generator
+### C21 — Module Wrapper Generator ✓
 - **Doc**: [08-generation.md](08-generation.md)
 - **REQs**: REQ-GEN-02
 - **Current location**: `generation/modules.py`
+- **Tests**: 19 conformance tests in `tests/conformance/test_gen_module_wrappers.py`
 - **AC**:
-  - [ ] One wrapper per PipelineModule
-  - [ ] Import path matches filesystem path
-  - [ ] Input/output types match module definition
+  - [x] One wrapper per PipelineModule
+  - [x] Import path matches filesystem path
+  - [x] Input/output types match module definition
 
 ### C22 — Schema Generator
 - **Doc**: [22-output-schema-rules.md](22-output-schema-rules.md)

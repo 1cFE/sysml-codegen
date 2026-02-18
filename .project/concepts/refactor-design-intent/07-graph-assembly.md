@@ -203,6 +203,37 @@ ComputationGraph(
 only). `battery_sizing` reads capacity from `capacity_calc`'s output.
 `cost_rollup` reads from both upstream modules.
 
+## Step 6.9: param_group propagation (added C20, 2026-02-18)
+
+After Step 6.8 orphan handling ensures every entry point belongs to some
+`ParameterGroup`, Step 6.9 propagates the group name back to `InputSource`
+objects. Some entry points created during module construction (particularly
+multiplicity EPs from aggregation factories) have `param_group=None` on
+their `InputSource` because the group wasn't known at creation time. Step 6.9
+builds a `qn_to_group` reverse map from the final `ParameterGroup` list and
+walks all module inputs to fill in any `None` values.
+
+```python
+# Step 6.9: Propagate param_group to all entry_point InputSources.
+qn_to_group: dict[str, str] = {}
+for group in param_groups:
+    for param in group.parameters:
+        qn_to_group[param.qualified_name] = group.name
+for m in modules:
+    for inp in m.inputs:
+        if (
+            inp.source.source_type == "entry_point"
+            and inp.source.param_group is None
+            and inp.source.qualified_name in qn_to_group
+        ):
+            inp.source.param_group = qn_to_group[inp.source.qualified_name]
+```
+
+This is required by REQ-PY-01 and REQ-PY-02 (see
+[21-pipeline-yaml-generation](21-pipeline-yaml-generation.md)): the YAML
+generator uses `param_group` to prefix entry point sources, and a `None`
+value produces bare qualified names that TEAx cannot resolve.
+
 ## What the ComputationGraph contract means
 
 The `ComputationGraph` is the **only** thing the [generation layer](08-generation.md)

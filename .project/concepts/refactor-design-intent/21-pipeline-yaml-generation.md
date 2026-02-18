@@ -29,8 +29,9 @@ fails to classify them.
 (e.g., `module_count`, `inverter_count`) were typed `int` but TEAx expects
 all numeric values as `float`. This broke TEAx input validation.
 
-**Root cause**: `graph_builder.py:1039` hardcodes `python_type="int"` for
+**Root cause**: `graph_builder.py:1061` hardcoded `python_type="int"` for
 multiplicity inputs -- the ONLY `int` usage in the entire pipeline.
+**Fixed**: C20 (2026-02-18) changed to `"float"`.
 
 ---
 
@@ -145,10 +146,10 @@ not during YAML generation. The YAML passes through `ModuleInput.python_type`.
 | CalcUsage inputs | `"float"` | graph_builder.py:1359-1365 | Compliant |
 | Computed attribute inputs | `"float"` | graph_builder.py:734-738 | Compliant |
 | Aggregation term inputs | `"float"` | graph_builder.py:1015 | Compliant |
-| Aggregation multiplicity | `"int"` | graph_builder.py:1039 | **Bug 10 -- must be "float"** |
+| Aggregation multiplicity | `"float"` | graph_builder.py:1061 | Fixed (C20, 2026-02-18) |
 
-**Multiplicity is the ONLY `int` type** in the entire pipeline. The fix is
-a one-line change at `graph_builder.py:1039`: `python_type="int"` to `"float"`.
+**Multiplicity was the ONLY `int` type** in the entire pipeline. Fixed in C20
+(2026-02-18): one-line change at `graph_builder.py:1061`, `python_type="int"` to `"float"`.
 
 ---
 

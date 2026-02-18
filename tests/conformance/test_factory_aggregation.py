@@ -363,8 +363,8 @@ class TestTermTypeHandling:
                         f"got {len(mult_inputs)}"
                     )
                     mult_inp = mult_inputs[0]
-                    assert mult_inp.python_type == "int", (
-                        f"Multiplicity input type should be 'int', got {mult_inp.python_type!r}"
+                    assert mult_inp.python_type == "float", (
+                        f"Multiplicity input type should be 'float', got {mult_inp.python_type!r}"
                     )
                     assert mult_inp.source.source_type == "entry_point"
                     # Default value should be the multiplicity count

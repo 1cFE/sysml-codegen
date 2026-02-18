@@ -485,24 +485,23 @@ on all fixture models. This proves the refactored components compose correctly.
 
 **Goal**: Verify generators consume only ComputationGraph and produce correct output.
 
-- [ ] **6.1 — Pipeline YAML Generator (C20)**
+- [x] **6.1 — Pipeline YAML Generator (C20)** *(completed 2026-02-18, 27 tests)*
   - **Refs**: [21-pipeline-yaml-generation.md](21-pipeline-yaml-generation.md)
-  - Write `tests/conformance/test_gen_pipeline_yaml.py`:
-    - Generate YAML from real ComputationGraph
-    - Verify param_group prefix on all entry points
-    - Verify all numerics are float
-    - Verify .root suffix on single-output references
-    - Parse generated YAML and validate structure
-  - **Acceptance**: REQ-PY-01 through REQ-PY-07 all green
+  - 27 conformance tests in `tests/conformance/test_gen_pipeline_yaml.py`
+  - Parametrized over 4 models (solar_battery, catf_mfe, chain_spike, attr_expr_probe)
+  - Bug 9 fix: Step 6.9 param_group propagation in graph_builder.py (9 lines after Step 6.8)
+  - Bug 10 fix: `python_type="int"` → `"float"` for multiplicity inputs
+  - Baseline updates: solar_battery YAML + ComputationGraph JSON regenerated
+  - **Acceptance**: REQ-PY-01 through REQ-PY-07 all green (1614 tests, 0 failures, 5 xfailed)
 
-- [ ] **6.2 — Module Wrapper Generator (C21)**
+- [x] **6.2 — Module Wrapper Generator (C21)** *(2026-02-18, 19 tests)*
   - **Refs**: [08-generation.md](08-generation.md)
   - Write `tests/conformance/test_gen_module_wrappers.py`:
     - Generate wrappers from real ComputationGraph
     - One wrapper per PipelineModule
     - Import path matches filesystem path
     - Input/output types match module definition
-  - **Acceptance**: REQ-GEN-02 all green
+  - **Acceptance**: REQ-GEN-02 all green (1633 tests, 0 failures, 5 xfailed)
 
 - [ ] **6.3 — Schema Generator (C22)**
   - **Refs**: [22-output-schema-rules.md](22-output-schema-rules.md)
@@ -1100,6 +1099,41 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    `build_computation_graph()` with all inputs exercises the full Path 1 + Path 2 + Step 6.6
    rebuild + Step 6.8 orphan pipeline. Reusable for C18 (Graph Assembly).
 
+### C20 Pipeline YAML Generator (2026-02-18)
+
+1. **Bug 9 affected 28 entry point InputSources in solar_battery.** 13 orphan EPs from the
+   classifier (deeply-nested QNs) plus multiplicity EPs shared across multiple aggregation modules.
+   Step 6.9 param_group propagation correctly assigns `system_design` to all 28.
+
+2. **Bug 10 fix required updating 6 test assertions across C16 conformance and unit tests.**
+   The `"int"` type for multiplicity was asserted in `test_factory_aggregation.py` (1 assertion)
+   and `test_graph_builder_aggregation.py` (1 test name, 3 assertions, 2 fixture constructions).
+
+3. **ComputationGraph JSON baselines needed updating alongside YAML baselines.** Both
+   `test_graph_assembly.py` and `test_pipeline_e2e.py` share the same baseline file at
+   `tests/fixtures/baseline_outputs/solar_battery/computation_graph.json`. One regeneration
+   fixes both. Only solar_battery affected.
+
+4. **chain_spike and attr_expr_probe baselines unchanged after Bug 9/10 fixes.** Neither model
+   has aggregation with named multiplicity attributes. catf_mfe has no YAML baseline file.
+
+### C21 Module Wrapper Generator (2026-02-18)
+
+1. **No type mapping divergence found between `_map_input_type()` and graph builder.** The
+   REQ-GEN-06 concern about 4 copies of type mapping was not triggered in real solar_battery
+   data — wrapper types match PipelineModule input types for all CalcUsage modules.
+
+2. **`teax_module_stub.py.jinja2` confirmed dead code.** Static analysis: zero references in
+   any Python source file. Safe to remove in Phase 7.
+
+3. **CalcUsage-to-calc_def mapping via `BacktrackingResult.required_usages` is reliable.**
+   `usage.qualified_name.lower()` matches `PipelineModule.name` for all CalcUsage modules in
+   both solar_battery (8 modules) and catf_mfe (42 modules).
+
+4. **catf_mfe is 100% CalcUsage (42/42 modules).** solar_battery has mixed types: 8 CalcUsage
+   + 2 FORMULA + 4 aggregation. `generate_teax_module()` covers CalcUsage only; other types
+   use `_generate_computed_attr_modules()` and `_generate_aggregation_modules()` in cli.
+
 ---
 
 ## Design Doc Amendments
@@ -1155,6 +1189,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 05-module-factory.md | Note Strategy 1 (type-aware) essential when usage name differs from PartDef name (permitting → Permitting_Interconnect) | C16 conformance finding #2 (2026-02-17) | Yes (2026-02-17) — §4 Aggregation Modules conformance note added |
 | 06-entry-point-classifier.md | Note solar_battery has zero DESIGN_ATTRIBUTE EPs from Path 1 classifier. catf_mfe exercises all 3 types. | C17 conformance finding #1 (2026-02-17) | Yes (2026-02-17) — Path 1 coverage note added |
 | 06-entry-point-classifier.md | Clarify REQ-EPC-04: param_group may be None from classifier; orphan handling (REQ-EPC-05) ensures graph-level invariant | C17 conformance finding #3 (2026-02-17) | Yes (2026-02-17) — REQ-EPC-04 description expanded |
+| 21-pipeline-yaml-generation.md | Update Bug 10 line reference from 1039 to 1061; mark fix as applied | C20 conformance (2026-02-18) | Yes (2026-02-18) — line ref updated, table row updated to "Fixed" |
+| 07-graph-assembly.md | Note Step 6.9 (param_group propagation) added after Step 6.8 orphan handling | C20 Bug 9 fix (2026-02-18) | Yes (2026-02-18) — new section with code and rationale added before §ComputationGraph contract |
 
 ---
 
@@ -1190,3 +1226,5 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C18 Graph Assembly | 1498 | 34 | 1532 (+5 xfail) | 2026-02-17 |
 | C19 Orchestrator Step Ordering | 1532 | 39 | 1571 (+5 xfail) | 2026-02-17 |
 | 5.2 E2E Pipeline Validation | 1571 | 16 | 1587 (+5 xfail) | 2026-02-17 |
+| C20 Pipeline YAML Generator | 1587 | 27 | 1614 (+5 xfail) | 2026-02-18 |
+| C21 Module Wrapper Generator | 1614 | 19 | 1633 (+5 xfail) | 2026-02-18 |

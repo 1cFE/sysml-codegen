@@ -40,8 +40,8 @@ modules:
   solarbatterydesign__solar_battery_plant__solar_array__pv_module__cost_model:
     module_type: solarbatterylibrary.PVModuleCostCalcModule
     inputs:
-      wattage: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage
-      efficiency: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency
+      wattage: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage
+      efficiency: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency
       cost_per_watt: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor
       install_factor: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor
@@ -56,7 +56,7 @@ modules:
   solarbatterydesign__solar_battery_plant__solar_array__inverter__cost_model:
     module_type: solarbatterylibrary.InverterCostCalcModule
     inputs:
-      power_rating: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating
+      power_rating: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating
       cost_per_watt: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor
       install_factor: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor
@@ -71,8 +71,8 @@ modules:
   solarbatterydesign__solar_battery_plant__solar_array__array_bos__cost_model:
     module_type: solarbatterylibrary.ArrayBOSCostCalcModule
     inputs:
-      string_count: float SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count
-      panel_count: float SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count
+      string_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count
+      panel_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count
       cost_per_string: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string
       cost_per_panel_bos: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor
@@ -88,8 +88,8 @@ modules:
   solarbatterydesign__solar_battery_plant__battery_system__battery_pack__cost_model:
     module_type: solarbatterylibrary.BatteryPackCostCalcModule
     inputs:
-      capacity_kwh: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh
-      chemistry_factor: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor
+      capacity_kwh: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh
+      chemistry_factor: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor
       cost_per_kwh: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor
       install_factor: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor
@@ -104,7 +104,7 @@ modules:
   solarbatterydesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model:
     module_type: solarbatterylibrary.HybridInverterCostCalcModule
     inputs:
-      power_rating: float SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating
+      power_rating: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating
       cost_per_watt: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor
       install_factor: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor
@@ -119,7 +119,7 @@ modules:
   solarbatterydesign__solar_battery_plant__battery_system__battery_bos__cost_model:
     module_type: solarbatterylibrary.BatteryBOSCostCalcModule
     inputs:
-      pack_count: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count
+      pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count
       cost_per_pack_bos: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor
       install_factor: float library_params.SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor
@@ -134,8 +134,8 @@ modules:
   solarbatterydesign__solar_battery_plant__site_infra__racking__cost_model:
     module_type: solarbatterylibrary.RackingCostCalcModule
     inputs:
-      panel_count: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count
-      tilt_angle: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle
+      panel_count: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count
+      tilt_angle: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle
       cost_per_panel_rack: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor
       install_factor: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor
@@ -150,7 +150,7 @@ modules:
   solarbatterydesign__solar_battery_plant__site_infra__electrical_panel__cost_model:
     module_type: solarbatterylibrary.ElectricalPanelCostCalcModule
     inputs:
-      circuit_count: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count
+      circuit_count: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count
       base_cost: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost
       cost_per_circuit: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit
       fab_factor: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor
@@ -166,7 +166,7 @@ modules:
   solarbatterydesign__solar_battery_plant__site_infra__permitting__cost_model:
     module_type: solarbatterylibrary.PermittingCostCalcModule
     inputs:
-      system_capacity_kw: float SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw
+      system_capacity_kw: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw
       cost_per_kw: float library_params.SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw
     outputs:
       material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__material_cost
@@ -204,9 +204,9 @@ modules:
     module_type: solarbatterylibrary__solar_array.fabrication_costModule
     inputs:
       pv_module_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_cost
-      module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
+      module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
       inverter_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_cost
-      inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
+      inverter_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_cost
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__fabrication_cost
@@ -216,9 +216,9 @@ modules:
     module_type: solarbatterylibrary__solar_array.installation_costModule
     inputs:
       pv_module_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_cost
-      module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
+      module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
       inverter_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_cost
-      inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
+      inverter_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_cost
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__installation_cost
@@ -228,7 +228,7 @@ modules:
     module_type: solarbatterylibrary__battery_system.capital_costModule
     inputs:
       battery_pack_capital_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost
-      pack_count: int SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
+      pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
       hybrid_inverter_capital_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__total_cost
       battery_bos_capital_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__total_cost
     outputs:
@@ -239,7 +239,7 @@ modules:
     module_type: solarbatterylibrary__battery_system.raw_material_costModule
     inputs:
       battery_pack_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__material_cost
-      pack_count: int SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
+      pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
       hybrid_inverter_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__material_cost
       battery_bos_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__material_cost
     outputs:
@@ -250,7 +250,7 @@ modules:
     module_type: solarbatterylibrary__battery_system.fabrication_costModule
     inputs:
       battery_pack_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_cost
-      pack_count: int SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
+      pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
       hybrid_inverter_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_cost
       battery_bos_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_cost
     outputs:
@@ -261,7 +261,7 @@ modules:
     module_type: solarbatterylibrary__battery_system.installation_costModule
     inputs:
       battery_pack_installation_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_cost
-      pack_count: int SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
+      pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
       hybrid_inverter_installation_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_cost
       battery_bos_installation_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_cost
     outputs:
@@ -273,7 +273,7 @@ modules:
     inputs:
       racking_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__material_cost
       electrical_panel_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__material_cost
-      permitting_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost
+      permitting_raw_material_cost: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__raw_material_cost
 
@@ -283,7 +283,7 @@ modules:
     inputs:
       racking_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_cost
       electrical_panel_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_cost
-      permitting_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost
+      permitting_fabrication_cost: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__fabrication_cost
 
@@ -293,7 +293,7 @@ modules:
     inputs:
       racking_installation_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_cost
       electrical_panel_installation_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_cost
-      permitting_installation_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost
+      permitting_installation_cost: float system_design.SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__installation_cost
 
@@ -312,9 +312,9 @@ modules:
     module_type: solarbatterylibrary__solar_array.capital_costModule
     inputs:
       pv_module_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__total_cost
-      module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
+      module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
       inverter_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__total_cost
-      inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
+      inverter_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__total_cost
       misc_hardware_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation
     outputs:
@@ -325,9 +325,9 @@ modules:
     module_type: solarbatterylibrary__solar_array.raw_material_costModule
     inputs:
       pv_module_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__material_cost
-      module_count: int SolarBatteryDesign__solar_battery_plant__solar_array__module_count
+      module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
       inverter_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__material_cost
-      inverter_count: int SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
+      inverter_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count
       array_bos_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__material_cost
       allocation_model_material_portion: float SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__material_portion
     outputs:

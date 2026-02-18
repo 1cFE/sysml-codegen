@@ -289,8 +289,8 @@ class TestBuildAggregationModule:
         assert cost_inputs[0].source.producer_channel == expected_channel
         assert cost_inputs[0].python_type == "float"
 
-    def test_multiplicity_creates_int_entry_point(self):
-        """SumTerm.multiplicity_attr becomes DESIGN_ATTRIBUTE entry point with int type."""
+    def test_multiplicity_creates_float_entry_point(self):
+        """SumTerm.multiplicity_attr becomes DESIGN_ATTRIBUTE entry point with float type."""
         agg = _make_scoped_agg(
             sum_terms=[SumTerm("pv_module", "capital_cost", "module_count", 20)],
             instance_path="Design__plant__solar_array",
@@ -308,7 +308,7 @@ class TestBuildAggregationModule:
 
         mult_inputs = [i for i in module.inputs if i.param_name == "module_count"]
         assert len(mult_inputs) == 1
-        assert mult_inputs[0].python_type == "int"
+        assert mult_inputs[0].python_type == "float"
         assert mult_inputs[0].source.source_type == "entry_point"
 
         ep_qn = "Design__plant__solar_array__module_count"
@@ -769,7 +769,7 @@ class TestOrphanEntryPointsSurfaced:
             module_type="CapitalCostModule",
             inputs=[ModuleInput(
                 param_name="module_count",
-                python_type="int",
+                python_type="float",
                 source=InputSource(
                     source_type="entry_point",
                     qualified_name=ep_qn,
@@ -786,9 +786,9 @@ class TestOrphanEntryPointsSurfaced:
         assert result[0].name == "system_design"
         param_names = [p.qualified_name for p in result[0].parameters]
         assert ep_qn in param_names
-        # Type should be "int" from ModuleInput.python_type
+        # Type should be "float" from ModuleInput.python_type (Bug 10 fix: int→float)
         mc_param = next(p for p in result[0].parameters if p.qualified_name == ep_qn)
-        assert mc_param.python_type == "int"
+        assert mc_param.python_type == "float"
 
     def test_non_multiplicity_orphan_also_captured(self):
         """Any orphan entry point (not just multiplicity) gets captured."""
@@ -873,7 +873,7 @@ class TestOrphanEntryPointsSurfaced:
             module_type="AggModule",
             inputs=[ModuleInput(
                 param_name="module_count",
-                python_type="int",
+                python_type="float",
                 source=InputSource(
                     source_type="entry_point",
                     qualified_name=orphan_ep_qn,
@@ -892,7 +892,7 @@ class TestOrphanEntryPointsSurfaced:
         assert "system_design" in group_names
         sys_group = next(g for g in result if g.name == "system_design")
         assert len(sys_group.parameters) == 1
-        assert sys_group.parameters[0].python_type == "int"
+        assert sys_group.parameters[0].python_type == "float"
 
     def test_no_orphans_no_synthetic_group(self):
         """When all entry points are covered, no synthetic group is created."""

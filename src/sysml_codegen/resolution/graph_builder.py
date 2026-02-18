@@ -247,6 +247,22 @@ def build_computation_graph(
                 parameters=orphan_params,
             ))
 
+    # Step 6.9: Propagate param_group to all entry_point InputSources.
+    # After orphan handling, every EP belongs to some ParameterGroup.
+    # Walk module inputs and fill in any InputSource with param_group=None.
+    qn_to_group: dict[str, str] = {}
+    for group in param_groups:
+        for param in group.parameters:
+            qn_to_group[param.qualified_name] = group.name
+    for m in modules:
+        for inp in m.inputs:
+            if (
+                inp.source.source_type == "entry_point"
+                and inp.source.param_group is None
+                and inp.source.qualified_name in qn_to_group
+            ):
+                inp.source.param_group = qn_to_group[inp.source.qualified_name]
+
     # Step 7: Unified topological sort across ALL modules
     modules = _unified_topological_sort(modules)
 
@@ -1042,7 +1058,7 @@ def _build_aggregation_module(
             ep = entry_points[mult_ep_qn]
             inputs.append(ModuleInput(
                 param_name=term.multiplicity_attr,
-                python_type="int",
+                python_type="float",
                 source=InputSource(
                     source_type="entry_point",
                     qualified_name=mult_ep_qn,
