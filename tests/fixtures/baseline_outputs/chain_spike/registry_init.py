@@ -7,6 +7,7 @@ from chain_spike.modules.chainspikelibrary.summarycalc import SummaryCalcModule
 
 from chain_spike.schemas.design_params import DesignParams as DesignParams
 
+from chain_spike.primitives import Float
 
 
 def create_chain_spike_registry() -> PipelineModuleRegistry:
@@ -28,4 +29,4 @@ def create_chain_spike_registry() -> PipelineModuleRegistry:
 
 # Custom schema types for TEAx pipeline registration
 # Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
-CUSTOM_SCHEMA_TYPES = [    DesignParams,]
+CUSTOM_SCHEMA_TYPES = [    DesignParams,    Float,]

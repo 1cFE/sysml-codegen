@@ -20,6 +20,7 @@ from attr_expr_probe.modules.attrexprprobedesign.probe_design.cost_density impor
 
 from attr_expr_probe.schemas.design_params import DesignParams as DesignParams
 
+from attr_expr_probe.primitives import Float
 
 
 def create_attr_expr_probe_registry() -> PipelineModuleRegistry:
@@ -41,4 +42,4 @@ def create_attr_expr_probe_registry() -> PipelineModuleRegistry:
 
 # Custom schema types for TEAx pipeline registration
 # Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
-CUSTOM_SCHEMA_TYPES = [    DesignParams,]
+CUSTOM_SCHEMA_TYPES = [    DesignParams,    Float,]

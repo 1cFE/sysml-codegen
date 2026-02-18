@@ -515,13 +515,15 @@ on all fixture models. This proves the refactored components compose correctly.
   - No production code changes — conformance-only
   - **Acceptance**: REQ-OSR-01 through REQ-OSR-07 all green (1653 tests, 0 failures, 6 xfailed)
 
-- [ ] **6.4 — Module Registry Generator (C24)**
+- [x] **6.4 — Module Registry Generator (C24)**
   - **Refs**: [20-module-registry-generation.md](20-module-registry-generation.md)
   - Write `tests/conformance/test_gen_registry.py`:
     - Generate __init__.py from real ComputationGraph
     - Verify design-scoped import paths
     - Verify no name collisions (or proper aliasing)
-  - **Acceptance**: REQ-REG-01 through REQ-REG-07 all green
+  - **Bug 8a fix (registry.py only)**: Change `agg.expression.owning_part_qn` → `agg.module_eqn.replace("__", "::")` at registry.py:126. This fixes aggregation import paths to use design-scoped EQN. **Note**: `graph_builder.py:970-972` has the same `owning_part_qn` bug for aggregation `module_type` derivation — deferred to 7.5a (see below) because fixing it cascades to ComputationGraph JSON, YAML, and all downstream baselines.
+  - **Bug 8b fix**: Add collision detection + aliased imports for duplicate aggregation class names (e.g., `capital_costModule` across 4 assemblies → `SolarArray_capital_costModule`, etc.)
+  - **Acceptance**: REQ-REG-01 through REQ-REG-07 all green (1675 tests, 0 failures, 6 xfailed)
 
 - [ ] **6.5 — Stencil + Smart Regen (C23)**
   - **Refs**: [23-smart-regen-preservation.md](23-smart-regen-preservation.md)
@@ -617,6 +619,15 @@ the target architecture. This is pure refactoring — no behavior changes.
   - Create `_from_graph()` generator variants
   - Verify output identity with baselines (REQ-PMM-04)
   - **Acceptance**: REQ-PMM-01 through REQ-PMM-05 all green
+
+- [ ] **7.5a — Fix aggregation module_type in graph_builder (Bug 8a remainder)**
+  - **Context**: C24 fixed registry.py to use `agg.module_eqn` for aggregation import paths and module_type_override values. But `graph_builder.py:970-972` still uses `agg.expression.owning_part_qn` for `PipelineModule.module_type`, producing malformed types like `"solarbatterylibrary__solar_array.capital_costModule"` instead of `"solarbatterydesign.solar_battery_plant.solar_array.capital_costModule"`.
+  - Change `graph_builder.py:970-972` to: `module_type = derive_module_type(agg.module_eqn.replace("__", "::"))`
+  - **Cascade**: This changes `PipelineModule.module_type` for all aggregation modules, affecting:
+    - ComputationGraph JSON baselines (solar_battery)
+    - Pipeline YAML baselines (solar_battery module_type values)
+    - C14-C18 conformance tests that assert aggregation module_type strings
+  - **Acceptance**: All module_type values in graph match registry module_type_override values. All baselines regenerated. Full test suite green.
 
 - [ ] **7.6 — Verify generation only consumes ComputationGraph**
   - Audit each generator: does it import from extraction or analysis?

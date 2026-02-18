@@ -444,11 +444,11 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **REQs**: REQ-REG-01 through REQ-REG-07
 - **Current location**: `generation/registry.py`
 - **AC**:
-  - [ ] Uses design-scoped EQN (module_eqn), not library QN
-  - [ ] Import paths match actual filesystem paths
-  - [ ] Globally unique class names via module_type_override
-  - [ ] Aliased imports when names collide
-  - [ ] Name collision detection and reporting before rendering
+  - [x] Uses design-scoped EQN (module_eqn), not library QN
+  - [x] Import paths match actual filesystem paths
+  - [x] Globally unique class names via module_type_override
+  - [x] Aliased imports when names collide
+  - [x] Name collision detection and reporting before rendering
 
 ### C25 — JSON Template + Parameter Schema Generator
 - **Doc**: [08-generation.md](08-generation.md), [21-pipeline-yaml-generation.md](21-pipeline-yaml-generation.md)

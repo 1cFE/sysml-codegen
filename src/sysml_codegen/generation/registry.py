@@ -12,6 +12,8 @@ Usage:
 
 from __future__ import annotations
 
+import logging
+from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -33,6 +35,8 @@ from sysml_codegen.resolution.identifier_types import (
 
 if TYPE_CHECKING:
     from sysml_codegen.resolution.models import ParameterGroup as ModelParameterGroup
+
+logger = logging.getLogger(__name__)
 
 
 def _collect_exit_point_primitive_types(
@@ -123,7 +127,7 @@ def generate_registry_function(
     # Add aggregation modules
     if aggregation_data:
         for agg in aggregation_data:
-            sysml_qn = f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
+            sysml_qn = agg.module_eqn.replace("__", "::")
             sqn = SysMLQualifiedName(sysml_qn)
             python_path = PythonModulePath.from_sysml(sqn)
             module_type_full = derive_module_type(sysml_qn)
@@ -135,6 +139,9 @@ def generate_registry_function(
             })
             import_module = f"{package_name}.modules.{python_path.import_path}"
             imports.append(f"from {import_module} import {class_name}")
+
+    # Detect name collisions and generate aliases (REQ-REG-03, REQ-REG-04, REQ-REG-07)
+    all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
 
     context = {
         "function_name": f"create_{package_name}_registry",
@@ -154,6 +161,81 @@ def generate_registry_function(
         code += '\n'
 
     return code
+
+
+def _resolve_class_name_collisions(
+    all_modules: list[dict],
+    imports: list[str],
+) -> tuple[list[dict], list[str]]:
+    """Detect and resolve class name collisions via aliased imports.
+
+    When multiple modules share the same class_name, each is given a unique
+    alias derived from its parent segment in the module_type path. The import
+    statement is updated to use 'import X as Alias' format.
+
+    Args:
+        all_modules: List of {"class_name": str, "module_type": str} dicts.
+        imports: List of import statement strings.
+
+    Returns:
+        Updated (all_modules, imports) with aliased class names.
+    """
+    # Group modules by class_name to find collisions
+    by_name: dict[str, list[int]] = defaultdict(list)
+    for i, module in enumerate(all_modules):
+        by_name[module["class_name"]].append(i)
+
+    # Find colliding names (more than one module with the same class_name)
+    collisions = {name: indices for name, indices in by_name.items() if len(indices) > 1}
+
+    if not collisions:
+        return all_modules, imports
+
+    # Report collisions (REQ-REG-07)
+    collision_names = sorted(collisions.keys())
+    logger.warning(
+        "Module class name collisions detected: %s. "
+        "Generating aliased imports for %d modules.",
+        collision_names,
+        sum(len(indices) for indices in collisions.values()),
+    )
+
+    # Build alias for each colliding module
+    for class_name, indices in collisions.items():
+        for idx in indices:
+            module = all_modules[idx]
+            module_type = module["module_type"]
+
+            # Extract parent segment: second-to-last segment of module_type
+            # e.g., "solarbatterydesign.solar_battery_plant.solar_array.capital_costModule"
+            #        → parent_segment = "solar_array"
+            segments = module_type.split(".")
+            if len(segments) >= 2:
+                parent_segment = segments[-2]
+            else:
+                parent_segment = segments[0] if segments else "unknown"
+
+            # PascalCase the parent segment
+            pascal_parent = "".join(
+                word.capitalize() for word in parent_segment.split("_")
+            )
+
+            alias = f"{pascal_parent}_{class_name}"
+            module["class_name"] = alias
+
+            # Update the corresponding import statement
+            # Find the import that imports this class_name from the matching path
+            import_path_prefix = ".".join(segments[:-1]).replace(".", ".")
+            for j, imp in enumerate(imports):
+                if (
+                    f"import {class_name}" in imp
+                    and import_path_prefix in imp
+                    and " as " not in imp  # Don't re-alias already aliased imports
+                ):
+                    imports[j] = f"{imp} as {alias}"
+                    break
+
+    return all_modules, imports
 
 
 def _extract_input_fields(calc_def: CalculationDefinitionData) -> dict[str, str]:
