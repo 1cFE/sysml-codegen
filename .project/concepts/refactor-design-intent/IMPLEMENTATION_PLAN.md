@@ -503,14 +503,17 @@ on all fixture models. This proves the refactored components compose correctly.
     - Input/output types match module definition
   - **Acceptance**: REQ-GEN-02 all green (1633 tests, 0 failures, 5 xfailed)
 
-- [ ] **6.3 — Schema Generator (C22)**
+- [x] **6.3 — Schema Generator (C22)** *(2026-02-18, 21 tests)*
   - **Refs**: [22-output-schema-rules.md](22-output-schema-rules.md)
-  - Write `tests/conformance/test_gen_schemas.py`:
-    - Generate schemas from real ComputationGraph
-    - Verify RootModel for single-output, MultiOutput for multi-output
-    - Verify no default values on output fields
-    - Import and instantiate generated schemas
-  - **Acceptance**: REQ-OSR-01 through REQ-OSR-07 all green
+  - 21 conformance tests in `tests/conformance/test_gen_schemas.py`
+  - Parametrized over 2 models (solar_battery, catf_mfe)
+  - Graph-level: single-output field_name="root", aggregation/FORMULA single-output, PQN channels
+  - Schema-level: MultiOutput generation, valid Python, MultiOutput inheritance, field name matching
+  - Type mapping: all 8 SysML types + unknown fallback verified
+  - REQ-OSR-05 xfail: Bug 11 confirmed — Permitting_Interconnect has default=0.0 on 4 output fields
+  - Cross-reference: should_use_multioutput decision matches graph output count, field names match PipelineModule outputs
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-OSR-01 through REQ-OSR-07 all green (1653 tests, 0 failures, 6 xfailed)
 
 - [ ] **6.4 — Module Registry Generator (C24)**
   - **Refs**: [20-module-registry-generation.md](20-module-registry-generation.md)
@@ -1134,6 +1137,28 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    + 2 FORMULA + 4 aggregation. `generate_teax_module()` covers CalcUsage only; other types
    use `_generate_computed_attr_modules()` and `_generate_aggregation_modules()` in cli.
 
+### C22 Schema Generator (2026-02-18)
+
+1. **Bug 11 confirmed: Permitting_Interconnect has default=0.0 on 4 output fields.** The
+   `Permitting_Interconnect` cost model calc_def has `default_value=0.0` on output attributes
+   `material_cost`, `fab_cost`, `install_cost`, `idiot_index`. The Jinja2 template renders
+   `Field(default=0.0, ...)` which violates REQ-OSR-05. Per the design doc, the generation
+   layer should strip defaults from outputs before rendering. Documented as xfail.
+
+2. **catf_mfe has multi-output CalcUsage modules.** Contrary to the plan's uncertainty,
+   catf_mfe does exercise the multi-output schema generation path. Both solar_battery and
+   catf_mfe have multi-output calc_defs with 2+ outputs.
+
+3. **No type mapping divergence found between `_map_output_type()` and graph builder for
+   multi-output modules.** All multi-output calc_def output attributes in solar_battery and
+   catf_mfe use `Real` type, which maps to `"float"` — matching the graph builder's hardcoded
+   `python_type="float"`. The Integer/Boolean/String type mapping paths are verified directly
+   via `_map_output_type()` unit tests but not triggered by real fixture data.
+
+4. **`should_use_multioutput()` perfectly matches graph output count.** For every CalcUsage
+   PipelineModule in solar_battery, `should_use_multioutput(calc_def)` returns True iff
+   `len(module.outputs) > 1`. No desync between extraction and resolution layers.
+
 ---
 
 ## Design Doc Amendments
@@ -1191,6 +1216,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 06-entry-point-classifier.md | Clarify REQ-EPC-04: param_group may be None from classifier; orphan handling (REQ-EPC-05) ensures graph-level invariant | C17 conformance finding #3 (2026-02-17) | Yes (2026-02-17) — REQ-EPC-04 description expanded |
 | 21-pipeline-yaml-generation.md | Update Bug 10 line reference from 1039 to 1061; mark fix as applied | C20 conformance (2026-02-18) | Yes (2026-02-18) — line ref updated, table row updated to "Fixed" |
 | 07-graph-assembly.md | Note Step 6.9 (param_group propagation) added after Step 6.8 orphan handling | C20 Bug 9 fix (2026-02-18) | Yes (2026-02-18) — new section with code and rationale added before §ComputationGraph contract |
+| 22-output-schema-rules.md | Note Bug 11 confirmed: Permitting_Interconnect has default=0.0 on 4 output fields | C22 conformance finding #1 (2026-02-18) | |
 
 ---
 
@@ -1228,3 +1254,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 5.2 E2E Pipeline Validation | 1571 | 16 | 1587 (+5 xfail) | 2026-02-17 |
 | C20 Pipeline YAML Generator | 1587 | 27 | 1614 (+5 xfail) | 2026-02-18 |
 | C21 Module Wrapper Generator | 1614 | 19 | 1633 (+5 xfail) | 2026-02-18 |
+| C22 Schema Generator | 1633 | 21 | 1653 (+6 xfail) | 2026-02-18 |

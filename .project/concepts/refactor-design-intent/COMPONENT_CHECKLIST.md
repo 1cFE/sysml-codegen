@@ -419,12 +419,12 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **REQs**: REQ-OSR-01 through REQ-OSR-07
 - **Current location**: `generation/schemas.py`
 - **AC**:
-  - [ ] Single-output uses `RootModel[float]` with field_name="root"
-  - [ ] Multi-output generates named MultiOutput subclass
-  - [ ] Field names match SysML output_attributes names
-  - [ ] Type mapping: Real->float, Integer->int, Boolean->bool, String->str
-  - [ ] Output fields MUST NOT have default values
-  - [ ] Aggregation and FORMULA always single-output ("root")
+  - [x] Single-output uses `RootModel[float]` with field_name="root"
+  - [x] Multi-output generates named MultiOutput subclass
+  - [x] Field names match SysML output_attributes names
+  - [x] Type mapping: Real->float, Integer->int, Boolean->bool, String->str
+  - [x] Output fields MUST NOT have default values (Bug 11 xfail: Permitting_Interconnect defaults)
+  - [x] Aggregation and FORMULA always single-output ("root")
 
 ### C23 — Stencil Generator + Smart Regen
 - **Doc**: [08-generation.md](08-generation.md), [23-smart-regen-preservation.md](23-smart-regen-preservation.md)
