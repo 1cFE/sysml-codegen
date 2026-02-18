@@ -525,13 +525,13 @@ on all fixture models. This proves the refactored components compose correctly.
   - **Bug 8b fix**: Add collision detection + aliased imports for duplicate aggregation class names (e.g., `capital_costModule` across 4 assemblies → `SolarArray_capital_costModule`, etc.)
   - **Acceptance**: REQ-REG-01 through REQ-REG-07 all green (1675 tests, 0 failures, 6 xfailed)
 
-- [ ] **6.5 — Stencil + Smart Regen (C23)**
+- [x] **6.5 — Stencil + Smart Regen (C23)** *(2026-02-18, 30 tests)*
   - **Refs**: [23-smart-regen-preservation.md](23-smart-regen-preservation.md)
   - Write `tests/conformance/test_gen_stencils.py`:
     - Generate stencils for FULLY_COMPILABLE (auto-impl) and MANUAL_REQUIRED (stub)
     - Verify smart regen decision tree with modified files
     - Verify backup creation
-  - **Acceptance**: REQ-SR-01 through REQ-SR-07, REQ-GEN-04 all green
+  - **Acceptance**: REQ-SR-01 through REQ-SR-07, REQ-GEN-04 all green (1705 tests, 0 failures, 6 xfailed)
 
 - [ ] **6.6 — JSON Template + Parameter Schema Generator (C25)**
   - **Refs**: [08-generation.md](08-generation.md), [21-pipeline-yaml-generation.md](21-pipeline-yaml-generation.md)
@@ -1266,3 +1266,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C20 Pipeline YAML Generator | 1587 | 27 | 1614 (+5 xfail) | 2026-02-18 |
 | C21 Module Wrapper Generator | 1614 | 19 | 1633 (+5 xfail) | 2026-02-18 |
 | C22 Schema Generator | 1633 | 21 | 1653 (+6 xfail) | 2026-02-18 |
+| C23 Stencil + Smart Regen | 1675 | 30 | 1705 (+6 xfail) | 2026-02-18 |

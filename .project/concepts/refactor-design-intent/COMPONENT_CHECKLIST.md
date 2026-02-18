@@ -431,13 +431,13 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **REQs**: REQ-GEN-04, REQ-SR-01 through REQ-SR-07
 - **Current location**: `generation/stencils.py`, `generation/preservation.py`
 - **AC**:
-  - [ ] FULLY_COMPILABLE gets auto-impl; others get stubs
-  - [ ] Two-level signature matching (type-level required, field-level order-independent)
-  - [ ] 4-case decision tree for should_regenerate_stencil
-  - [ ] Stub-to-auto-impl upgrade requires 3 conditions
-  - [ ] Backup before every regen/upgrade
-  - [ ] Aggregation/FORMULA modules always regenerated
-  - [ ] --preserve-handwritten skips without comparison
+  - [x] FULLY_COMPILABLE gets auto-impl; others get stubs *(C23, 30 tests, 2026-02-18)*
+  - [x] Two-level signature matching (type-level required, field-level order-independent) *(C23, 2026-02-18)*
+  - [x] 4-case decision tree for should_regenerate_stencil *(C23, 2026-02-18)*
+  - [x] Stub-to-auto-impl upgrade requires 3 conditions *(C23, 2026-02-18)*
+  - [x] Backup before every regen/upgrade *(C23, 2026-02-18)*
+  - [x] Aggregation/FORMULA modules always regenerated *(C23, 2026-02-18)*
+  - [x] --preserve-handwritten skips without comparison *(C23, 2026-02-18)*
 
 ### C24 — Module Registry Generator
 - **Doc**: [20-module-registry-generation.md](20-module-registry-generation.md)
