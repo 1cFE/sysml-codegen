@@ -15,7 +15,8 @@ from pathlib import Path
 import jinja2
 
 # UPDATED: Import from sysml_codegen package
-from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
+from sysml_codegen.extraction.data_models import CalculationDefinitionData
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 
 
@@ -106,7 +107,7 @@ def generate_teax_module(
     input_attributes = [
         {
             "name": attr.name,
-            "type_hint": _map_input_type(attr),
+            "type_hint": map_sysml_type_to_python(attr.sysml_type),
             "description": attr.description or f"{attr.name} input",
         }
         for attr in calc_def.input_attributes
@@ -166,33 +167,6 @@ def generate_teax_module(
         code += '\n'
 
     return code
-
-
-def _map_input_type(attr: AttributeInfo) -> str:
-    """Map input attribute to Python type hint.
-
-    All primitive types map to raw Python types (float, int, str, bool).
-    Schema types (parameter groups) pass through unchanged.
-
-    Args:
-        attr: Input attribute info
-
-    Returns:
-        Python type hint string (e.g., 'float', 'PlasmaParams')
-    """
-    # Map primitive types to raw Python types (not RootModel[T])
-    mapping = {
-        "Real": "float",
-        "ScalarValues::Real": "float",
-        "Integer": "int",
-        "ScalarValues::Integer": "int",
-        "String": "str",
-        "ScalarValues::String": "str",
-        "Boolean": "bool",
-        "ScalarValues::Boolean": "bool",
-    }
-
-    return mapping.get(attr.sysml_type, attr.sysml_type)  # Pass through schema types
 
 
 __all__ = [

@@ -543,12 +543,11 @@ on all fixture models. This proves the refactored components compose correctly.
   - No production code changes — conformance-only
   - **Acceptance**: REQ-GEN-05, REQ-PY-07 all green (1733 tests, 0 failures, 6 xfailed)
 
-- [ ] **6.7 — Type Mapping Consolidation (X01)**
+- [x] **6.7 — Type Mapping Consolidation (X01)** *(2026-02-19, 20 tests)*
   - **Refs**: [08-generation.md](08-generation.md) REQ-GEN-06
-  - Identify all copies of `_map_input_type()` / `_map_output_type()`
-  - Consolidate to single function
-  - Verify all generators use the same mapping
-  - **Acceptance**: REQ-GEN-06 green (currently violated — this is a fix)
+  - Created `generation/type_mapping.py` with `map_sysml_type_to_python()` and `map_sysml_type_to_rootmodel_wrapper()`
+  - Removed divergent copies from 5 generator files (modules, entry_point, schemas, stencils, registry)
+  - **Acceptance**: REQ-GEN-06 green (20 conformance tests, 1753 total tests, 0 failures)
 
 **Checkpoint 6**: [ ] Full generation validated. Generated output matches baselines.
 Type mapping inconsistency resolved. All generation requirements green.
@@ -1172,6 +1171,24 @@ Issues from the research retrospective (§7) with explicit scope decisions.
    PipelineModule in solar_battery, `should_use_multioutput(calc_def)` returns True iff
    `len(module.outputs) > 1`. No desync between extraction and resolution layers.
 
+### X01 Type Mapping Consolidation (2026-02-19)
+
+1. **Consolidation was purely mechanical.** All 5 generator files had straightforward function
+   removals and import+call-site changes. No logic changes needed beyond the unknown-type
+   fallback behavior change (pass-through instead of default-to-float in entry_point.py and
+   schemas.py).
+
+2. **No real fixture data triggers the unknown-type path.** All attributes in solar_battery and
+   catf_mfe use `Real` type. The behavioral change from default-to-float to pass-through is
+   safe and makes mismatches more visible if they occur with future models.
+
+3. **`_collect_exit_point_primitive_types()` in registry.py is NOT a type mapping copy.** It
+   operates on already-resolved `python_type` strings from `PipelineModule.outputs`, not SysML
+   types. Correctly left as-is per plan.
+
+4. **Two existing test files needed updating.** `test_gen_module_wrappers.py` (import + `.sysml_type`
+   accessor) and `test_gen_schemas.py` (import + unknown-type assertion change).
+
 ---
 
 ## Design Doc Amendments
@@ -1230,6 +1247,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 21-pipeline-yaml-generation.md | Update Bug 10 line reference from 1039 to 1061; mark fix as applied | C20 conformance (2026-02-18) | Yes (2026-02-18) — line ref updated, table row updated to "Fixed" |
 | 07-graph-assembly.md | Note Step 6.9 (param_group propagation) added after Step 6.8 orphan handling | C20 Bug 9 fix (2026-02-18) | Yes (2026-02-18) — new section with code and rationale added before §ComputationGraph contract |
 | 22-output-schema-rules.md | Note Bug 11 confirmed: Permitting_Interconnect has default=0.0 on 4 output fields | C22 conformance finding #1 (2026-02-18) | |
+| 08-generation.md | Update REQ-GEN-06 "Verified by" — remove "Currently VIOLATED", reference `type_mapping.py` | X01 consolidation (2026-02-19) | |
 
 ---
 
@@ -1270,3 +1288,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C22 Schema Generator | 1633 | 21 | 1653 (+6 xfail) | 2026-02-18 |
 | C23 Stencil + Smart Regen | 1675 | 30 | 1705 (+6 xfail) | 2026-02-18 |
 | C25 JSON Template + Schema | 1705 | 28 | 1733 (+6 xfail) | 2026-02-18 |
+| X01 Type Mapping Consolidation | 1733 | 20 | 1753 (+6 xfail) | 2026-02-19 |

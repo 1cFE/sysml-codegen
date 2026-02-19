@@ -14,6 +14,7 @@ import jinja2
 
 # UPDATED: Import from sysml_codegen package
 from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 
 logger = logging.getLogger(__name__)
 
@@ -74,32 +75,6 @@ def collect_entry_point_attributes(
     return list(entry_attrs_dict.values())
 
 
-def _map_input_type(sysml_type: str) -> str:
-    """Map SysML type to Python primitive for input fields.
-
-    Args:
-        sysml_type: SysML type string (e.g., "Real", "Integer")
-
-    Returns:
-        Python type string (e.g., "float", "int")
-    """
-    type_map = {
-        "Real": "float",
-        "Integer": "int",
-        "String": "str",
-        "Boolean": "bool",
-    }
-
-    if sysml_type in type_map:
-        return type_map[sysml_type]
-    else:
-        logger.warning(
-            f"Unknown SysML type '{sysml_type}', defaulting to 'float'. "
-            f"Consider adding explicit mapping."
-        )
-        return "float"
-
-
 def generate_entry_point_schema(
     entry_attrs: list[AttributeInfo],
     template_env: jinja2.Environment,
@@ -123,7 +98,7 @@ def generate_entry_point_schema(
 
     for attr in entry_attrs:
         # Map SysML type to Python type
-        python_type = _map_input_type(attr.sysml_type)
+        python_type = map_sysml_type_to_python(attr.sysml_type)
 
         # Extract default value if available
         default_value: Any = None
@@ -244,7 +219,7 @@ def _extract_json_value(attr: AttributeInfo) -> Any:
         return None
 
     # Map Python type for conversion
-    python_type = _map_input_type(attr.sysml_type)
+    python_type = map_sysml_type_to_python(attr.sysml_type)
 
     try:
         # Convert based on Python type
@@ -404,7 +379,7 @@ def generate_derived_group_schema(
 
     for param in group.parameters:
         # Map SysML type to Python type
-        python_type = _map_input_type(param.sysml_type)
+        python_type = map_sysml_type_to_python(param.sysml_type)
 
         # Build field dict with default from derivation
         field: dict[str, Any] = {

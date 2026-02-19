@@ -9,10 +9,10 @@ Tests verify generate_teax_module() behavior with real extraction snapshots:
 - REQ-GEN-02: Class name matches PipelineModule.module_type
 - REQ-GEN-02: Impl import path consistency with PythonModulePath
 - REQ-GEN-02: Input names match calc_def input_attributes
-- REQ-GEN-02: Input types match _map_input_type() output
+- REQ-GEN-02: Input types match map_sysml_type_to_python() output
 - REQ-GEN-02: Single-output returns Float, multi-output returns named class
 - REQ-GEN-02: Type cross-reference with ComputationGraph
-- REQ-GEN-02: _map_input_type() covers all SysML primitive types
+- REQ-GEN-02: map_sysml_type_to_python() covers all SysML primitive types
 - REQ-GEN-02: Static analysis — modules.py imports from extraction
 - REQ-GEN-02: Static analysis — stub template is dead code
 - REQ-GEN-02: Wrapper coverage by module type
@@ -30,9 +30,9 @@ import jinja2
 import pytest
 
 from sysml_codegen.generation.modules import (
-    _map_input_type,
     generate_teax_module,
 )
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.extraction.data_models import AttributeInfo
 from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph
@@ -332,11 +332,11 @@ class TestInputNamesMatchCalcDef:
 
 
 # ---------------------------------------------------------------------------
-# REQ-GEN-02: Input types match _map_input_type()
+# REQ-GEN-02: Input types match map_sysml_type_to_python()
 # ---------------------------------------------------------------------------
 
 class TestInputTypesMatchTypeMapping:
-    """Input type hints match _map_input_type() output for each attribute."""
+    """Input type hints match map_sysml_type_to_python() output for each attribute."""
 
     @pytest.mark.req("REQ-GEN-02")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
@@ -367,7 +367,7 @@ class TestInputTypesMatchTypeMapping:
                             )
                             if attr is None:
                                 continue
-                            expected_type = _map_input_type(attr)
+                            expected_type = map_sysml_type_to_python(attr.sysml_type)
                             # Get actual type from AST annotation
                             actual_type = ast.unparse(item.annotation)
                             if actual_type != expected_type:
@@ -477,7 +477,7 @@ class TestMultiOutputReturnsNamedClass:
 # ---------------------------------------------------------------------------
 
 class TestInputTypeCrossReferenceWithGraph:
-    """_map_input_type() output for each calc_def input matches the
+    """map_sysml_type_to_python() output for each calc_def input matches the
     corresponding PipelineModule.inputs[i].python_type."""
 
     @pytest.mark.req("REQ-GEN-02")
@@ -498,7 +498,7 @@ class TestInputTypeCrossReferenceWithGraph:
             graph_types = {inp.param_name: inp.python_type for inp in pipeline_module.inputs}
 
             for attr in calc_def.input_attributes:
-                wrapper_type = _map_input_type(attr)
+                wrapper_type = map_sysml_type_to_python(attr.sysml_type)
                 graph_type = graph_types.get(attr.name)
                 if graph_type is not None and wrapper_type != graph_type:
                     mismatches.append(
@@ -516,11 +516,11 @@ class TestInputTypeCrossReferenceWithGraph:
 
 
 # ---------------------------------------------------------------------------
-# REQ-GEN-02: _map_input_type() covers all SysML primitive types
+# REQ-GEN-02: map_sysml_type_to_python() covers all SysML primitive types
 # ---------------------------------------------------------------------------
 
 class TestTypeMappingCoversAllTypes:
-    """_map_input_type() handles Real, Integer, Boolean, String and their
+    """map_sysml_type_to_python() handles Real, Integer, Boolean, String and their
     ScalarValues:: prefixed forms."""
 
     @pytest.mark.req("REQ-GEN-02")
@@ -543,9 +543,9 @@ class TestTypeMappingCoversAllTypes:
                 name="test_attr",
                 sysml_type=sysml_type,
             )
-            result = _map_input_type(attr)
+            result = map_sysml_type_to_python(attr.sysml_type)
             assert result == expected_python_type, (
-                f"_map_input_type({sysml_type}) = '{result}', "
+                f"map_sysml_type_to_python({sysml_type}) = '{result}', "
                 f"expected '{expected_python_type}'"
             )
 
@@ -556,7 +556,7 @@ class TestTypeMappingCoversAllTypes:
             name="test_attr",
             sysml_type="PlasmaParams",
         )
-        result = _map_input_type(attr)
+        result = map_sysml_type_to_python(attr.sysml_type)
         assert result == "PlasmaParams"
 
 

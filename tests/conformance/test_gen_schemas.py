@@ -24,10 +24,10 @@ import jinja2
 import pytest
 
 from sysml_codegen.generation.schemas import (
-    _map_output_type,
     generate_multioutput_model,
     should_use_multioutput,
 )
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.resolution.models import ComputationGraph
 
 from tests.conformance.test_entry_point_classifier import (
@@ -454,32 +454,32 @@ class TestFieldNamesMatchOutputAttributes:
 # ---------------------------------------------------------------------------
 
 class TestTypeMapping:
-    """_map_output_type() handles all SysML primitive types."""
+    """map_sysml_type_to_python() handles all SysML primitive types."""
 
     @pytest.mark.req("REQ-OSR-04")
     def test_type_mapping_real_to_float(self):
-        assert _map_output_type("Real") == "float"
-        assert _map_output_type("ScalarValues::Real") == "float"
+        assert map_sysml_type_to_python("Real") == "float"
+        assert map_sysml_type_to_python("ScalarValues::Real") == "float"
 
     @pytest.mark.req("REQ-OSR-04")
     def test_type_mapping_integer_to_int(self):
-        assert _map_output_type("Integer") == "int"
-        assert _map_output_type("ScalarValues::Integer") == "int"
+        assert map_sysml_type_to_python("Integer") == "int"
+        assert map_sysml_type_to_python("ScalarValues::Integer") == "int"
 
     @pytest.mark.req("REQ-OSR-04")
     def test_type_mapping_boolean_to_bool(self):
-        assert _map_output_type("Boolean") == "bool"
-        assert _map_output_type("ScalarValues::Boolean") == "bool"
+        assert map_sysml_type_to_python("Boolean") == "bool"
+        assert map_sysml_type_to_python("ScalarValues::Boolean") == "bool"
 
     @pytest.mark.req("REQ-OSR-04")
     def test_type_mapping_string_to_str(self):
-        assert _map_output_type("String") == "str"
-        assert _map_output_type("ScalarValues::String") == "str"
+        assert map_sysml_type_to_python("String") == "str"
+        assert map_sysml_type_to_python("ScalarValues::String") == "str"
 
     @pytest.mark.req("REQ-OSR-04")
-    def test_type_mapping_unknown_defaults_to_float(self):
-        assert _map_output_type("UnknownType") == "float"
-        assert _map_output_type("SomeCustomType") == "float"
+    def test_type_mapping_unknown_passthrough(self):
+        assert map_sysml_type_to_python("UnknownType") == "UnknownType"
+        assert map_sysml_type_to_python("SomeCustomType") == "SomeCustomType"
 
 
 # ---------------------------------------------------------------------------

@@ -491,11 +491,12 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ## Cross-Cutting Concerns
 
-### X01 — Type Mapping Consistency
-- **Doc**: [08-generation.md](08-generation.md) (REQ-GEN-06 — currently violated)
+### X01 — Type Mapping Consistency *(completed 2026-02-19)*
+- **Doc**: [08-generation.md](08-generation.md) (REQ-GEN-06)
+- **Tests**: 20 conformance tests in `tests/conformance/test_type_mapping_consolidation.py`
 - **AC**:
-  - [ ] Single `_map_input_type()` / `_map_output_type()` function used everywhere
-  - [ ] No divergent copies across generators
+  - [x] Single `map_sysml_type_to_python()` / `map_sysml_type_to_rootmodel_wrapper()` function used everywhere (in `generation/type_mapping.py`)
+  - [x] No divergent copies across generators (verified by AST-based tests for all 5 files)
 
 ### X02 — Resolution Consistency (3 paths)
 - **Doc**: [24-dual-resolution-architecture.md](24-dual-resolution-architecture.md)

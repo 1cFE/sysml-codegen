@@ -28,6 +28,7 @@ from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
     Compilability,
 )
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 
 
@@ -123,7 +124,7 @@ def _build_stencil_context(
 
     # Extract input parameters
     input_params = [
-        {"name": attr.name, "type": _map_input_type(attr.sysml_type)}
+        {"name": attr.name, "type": map_sysml_type_to_python(attr.sysml_type)}
         for attr in calc_def.input_attributes
     ]
 
@@ -315,28 +316,6 @@ def _extract_calc_expressions(calc_def: CalculationDefinitionData) -> list[str]:
         List of expression strings from SysML
     """
     return calc_def.calc_expressions
-
-
-def _map_input_type(sysml_type: str) -> str:
-    """Map SysML input type to Python type for function signature.
-
-    Args:
-        sysml_type: SysML type reference
-
-    Returns:
-        Python type for function parameter
-    """
-    if sysml_type in ["Real", "ScalarValues::Real"]:
-        return "float"
-    elif sysml_type in ["Integer", "ScalarValues::Integer"]:
-        return "int"
-    elif sysml_type in ["String", "ScalarValues::String"]:
-        return "str"
-    elif sysml_type in ["Boolean", "ScalarValues::Boolean"]:
-        return "bool"
-    else:
-        # Assume it's a schema type - pass through
-        return sysml_type
 
 
 def generate_backlog_report(

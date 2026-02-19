@@ -27,6 +27,7 @@ from sysml_codegen.extraction.data_models import (
     ScopedAggregationData,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_rootmodel_wrapper
 from sysml_codegen.resolution.identifier_types import (
     PythonModulePath,
     SysMLQualifiedName,
@@ -249,7 +250,7 @@ def _extract_input_fields(calc_def: CalculationDefinitionData) -> dict[str, str]
     """
     inputs = {}
     for attr in calc_def.input_attributes:
-        inputs[attr.name] = _map_output_type(attr.sysml_type)
+        inputs[attr.name] = map_sysml_type_to_rootmodel_wrapper(attr.sysml_type)
     return inputs
 
 
@@ -273,7 +274,7 @@ def _extract_output_field(calc_def: CalculationDefinitionData) -> dict[str, str]
         )
 
     attr = output_attrs[0]
-    return {attr.name: _map_output_type(attr.sysml_type)}
+    return {attr.name: map_sysml_type_to_rootmodel_wrapper(attr.sysml_type)}
 
 
 def _generate_import_statements(
@@ -318,29 +319,6 @@ def _generate_import_statements(
     imports.extend(module_imports)
 
     return imports
-
-
-def _map_output_type(sysml_type: str) -> str:
-    """Map SysML type to Python RootModel wrapper type.
-
-    Args:
-        sysml_type: SysML type reference
-
-    Returns:
-        Python RootModel wrapper type for output field
-    """
-    mapping = {
-        "Real": "Float",
-        "ScalarValues::Real": "Float",
-        "Integer": "Int",
-        "ScalarValues::Integer": "Int",
-        "String": "String",
-        "ScalarValues::String": "String",
-        "Boolean": "Bool",
-        "ScalarValues::Boolean": "Bool",
-    }
-
-    return mapping.get(sysml_type, sysml_type)
 
 
 def _generate_schema_imports_from_entry_points(

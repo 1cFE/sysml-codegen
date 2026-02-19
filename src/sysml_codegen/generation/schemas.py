@@ -25,6 +25,7 @@ from sysml_codegen.extraction.constraint_extractor import ConstraintData
 from sysml_codegen.extraction.constraints import generate_field_constraints
 from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
 from sysml_codegen.generation.constraint_comments import generate_field_constraint_comments
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 
 
 def _build_field_description(
@@ -148,7 +149,7 @@ def generate_multioutput_model(
     for attr in calc_def.output_attributes:
         field_data = {
             "name": attr.name,
-            "type": _map_output_type(attr.sysml_type),
+            "type": map_sysml_type_to_python(attr.sysml_type),
             "description": _build_field_description(
                 attr, constraint_comments.get(attr.name)
             ),
@@ -180,28 +181,6 @@ def generate_multioutput_model(
     return code
 
 
-def _map_output_type(sysml_type: str) -> str:
-    """Map SysML type to Python primitive type for multi-output fields.
-
-    Args:
-        sysml_type: SysML type reference (e.g., 'Real', 'Integer', 'String')
-
-    Returns:
-        Python primitive type (e.g., 'float', 'int', 'str', 'bool')
-    """
-    mapping = {
-        "Real": "float",
-        "ScalarValues::Real": "float",
-        "Integer": "int",
-        "ScalarValues::Integer": "int",
-        "String": "str",
-        "ScalarValues::String": "str",
-        "Boolean": "bool",
-        "ScalarValues::Boolean": "bool",
-    }
-    return mapping.get(sysml_type, "float")
-
-
 def prepare_input_fields_with_constraints(calc_def: CalculationDefinitionData) -> list[dict[str, Any]]:
     """Prepare input field data with constraints for template rendering.
 
@@ -220,7 +199,7 @@ def prepare_input_fields_with_constraints(calc_def: CalculationDefinitionData) -
         # Build field dictionary
         field_data: dict[str, Any] = {
             "name": attr.name,
-            "type": _map_input_type(attr.sysml_type),
+            "type": map_sysml_type_to_python(attr.sysml_type),
             "description": attr.description or f"{attr.name} input",
         }
 
@@ -244,27 +223,6 @@ def prepare_input_fields_with_constraints(calc_def: CalculationDefinitionData) -
         fields.append(field_data)
 
     return fields
-
-
-def _map_input_type(sysml_type: str) -> str:
-    """Map SysML type to Python input type.
-
-    Args:
-        sysml_type: SysML type reference (e.g., 'Real', 'Integer')
-
-    Returns:
-        Python type for input field (e.g., 'float', 'int')
-    """
-    if sysml_type in ["Real", "ScalarValues::Real"]:
-        return "float"
-    elif sysml_type in ["Integer", "ScalarValues::Integer"]:
-        return "int"
-    elif sysml_type in ["Boolean", "ScalarValues::Boolean"]:
-        return "bool"
-    elif sysml_type in ["String"]:
-        return "str"
-
-    return "float"
 
 
 __all__ = [
