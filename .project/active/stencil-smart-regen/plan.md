@@ -213,7 +213,7 @@ No baseline changes expected — conformance tests only.
 **Commit convention**: one commit per component, message references component code
 
 - [x] All validation checks above are green
-- [ ] `git add` only the files listed in Build Plan + test file, plus IMPLEMENTATION_PLAN and COMPONENT_CHECKLIST (no unrelated changes)
+- [x] `git add` only the files listed in Build Plan + test file, plus IMPLEMENTATION_PLAN and COMPONENT_CHECKLIST (no unrelated changes)
 - [ ] Commit message format:
   ```
   refactor(C23): Stencil Generator + Smart Regen conformance tests
@@ -222,7 +222,7 @@ No baseline changes expected — conformance tests only.
   - Refs: REQ-GEN-04, REQ-SR-01 through REQ-SR-07
   - Design intent: 08-generation.md, 23-smart-regen-preservation.md
   ```
-- [ ] Committed successfully
+- [x] Committed successfully (eba5e7f)
 
 ---
 

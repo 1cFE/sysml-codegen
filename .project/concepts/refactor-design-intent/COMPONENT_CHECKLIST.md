@@ -455,9 +455,9 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 - **REQs**: REQ-GEN-05, REQ-PY-07
 - **Current location**: `generation/entry_point.py`, `generation/schemas.py`
 - **AC**:
-  - [ ] Each ParameterGroup produces one JSON template + one Pydantic schema
-  - [ ] JSON template values match entry point default_value
-  - [ ] Schema field types match declared SysML types
+  - [x] Each ParameterGroup produces one JSON template + one Pydantic schema
+  - [x] JSON template values match entry point default_value
+  - [x] Schema field types match declared SysML types
 
 ---
 

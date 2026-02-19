@@ -533,13 +533,15 @@ on all fixture models. This proves the refactored components compose correctly.
     - Verify backup creation
   - **Acceptance**: REQ-SR-01 through REQ-SR-07, REQ-GEN-04 all green (1705 tests, 0 failures, 6 xfailed)
 
-- [ ] **6.6 — JSON Template + Parameter Schema Generator (C25)**
+- [x] **6.6 — JSON Template + Parameter Schema Generator (C25)** *(2026-02-18, 28 tests)*
   - **Refs**: [08-generation.md](08-generation.md), [21-pipeline-yaml-generation.md](21-pipeline-yaml-generation.md)
-  - Write `tests/conformance/test_gen_json_templates.py`:
-    - Each ParameterGroup produces one JSON template + one Pydantic schema
-    - JSON template values match entry point default_value
-    - Schema field types match declared SysML types
-  - **Acceptance**: REQ-GEN-05, REQ-PY-07 all green
+  - 28 conformance tests in `tests/conformance/test_gen_json_templates.py`
+  - Parametrized over 2 models (solar_battery: 3 groups, catf_mfe: 8 groups)
+  - JSON templates: file count, filenames, key-value match, None-default exclusion, sorted keys
+  - Pydantic schemas: file count, filenames, class name, field names, field types, valid Python, default values
+  - catf_mfe magnets_params.magnet_volume (default_value=None) correctly excluded from JSON, present in schema
+  - No production code changes — conformance-only
+  - **Acceptance**: REQ-GEN-05, REQ-PY-07 all green (1733 tests, 0 failures, 6 xfailed)
 
 - [ ] **6.7 — Type Mapping Consolidation (X01)**
   - **Refs**: [08-generation.md](08-generation.md) REQ-GEN-06
@@ -1267,3 +1269,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C21 Module Wrapper Generator | 1614 | 19 | 1633 (+5 xfail) | 2026-02-18 |
 | C22 Schema Generator | 1633 | 21 | 1653 (+6 xfail) | 2026-02-18 |
 | C23 Stencil + Smart Regen | 1675 | 30 | 1705 (+6 xfail) | 2026-02-18 |
+| C25 JSON Template + Schema | 1705 | 28 | 1733 (+6 xfail) | 2026-02-18 |
