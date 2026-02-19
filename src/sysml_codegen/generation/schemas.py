@@ -225,8 +225,96 @@ def prepare_input_fields_with_constraints(calc_def: CalculationDefinitionData) -
     return fields
 
 
+def _build_field_description_from_graph(output) -> str:
+    """Build field description from ModuleOutput fields.
+
+    Mirrors _build_field_description() but uses ModuleOutput metadata.
+    """
+    desc = output.description.strip() if output.description else ""
+
+    if not desc:
+        desc = f"{output.field_name} output"
+
+    if output.unit:
+        unit_pattern = f"[{output.unit}]"
+        if unit_pattern not in desc:
+            desc = f"{desc} [{output.unit}]"
+
+    return desc
+
+
+def _build_schema_docstring_from_graph(module) -> str:
+    """Build schema docstring from PipelineModule fields."""
+    lines = []
+
+    lines.append(f"Multi-output container for {module.calc_def_name}.")
+
+    if module.doc_comment and module.doc_comment.strip():
+        lines.append("")
+        lines.append(module.doc_comment.strip())
+
+    lines.append("")
+    lines.append(f"SysML Source: {module.source_file}:{module.source_line}")
+
+    return "\n".join(lines)
+
+
+def generate_multioutput_model_from_graph(
+    module,
+    template_env: jinja2.Environment,
+    output_path: Path,
+    package_name: str = "generated_code",
+) -> str | None:
+    """Generate MultiOutput model from PipelineModule (graph-only variant).
+
+    Produces byte-identical output to generate_multioutput_model() by building
+    the same template context from PipelineModule fields.
+
+    Args:
+        module: PipelineModule with metadata fields populated
+        template_env: Jinja2 environment with templates loaded
+        output_path: Directory to write generated file
+        package_name: Package name
+
+    Returns:
+        Generated Python code string or None if single-output
+    """
+    if len(module.outputs) < 2:
+        return None
+
+    fields = []
+    for out in module.outputs:
+        field_data = {
+            "name": out.field_name,
+            "type": out.python_type,
+            "description": _build_field_description_from_graph(out),
+            "default": out.default_value,
+        }
+        fields.append(field_data)
+
+    primitive_types = set()
+
+    context = {
+        "class_name": f"{module.calc_def_name}Output",
+        "doc_comment": _build_schema_docstring_from_graph(module),
+        "package_name": package_name,
+        "fields": fields,
+        "primitive_types": sorted(primitive_types),
+        "sysml_source": f"{module.source_file}:{module.source_line}",
+    }
+
+    template = template_env.get_template("multioutput_model.py.jinja2")
+    code = template.render(**context)
+
+    if not code.endswith('\n'):
+        code += '\n'
+
+    return code
+
+
 __all__ = [
     "generate_multioutput_model",
+    "generate_multioutput_model_from_graph",
     "prepare_input_fields_with_constraints",
     "should_use_multioutput",
 ]

@@ -761,6 +761,7 @@ def _build_computed_attr_module(
         field_name="root",
         python_type="float",
         channel_name=get_channel_name(module_eqn, ca.python_name),
+        description=getattr(ca, "description", None),
     )
 
     return PipelineModule(
@@ -771,6 +772,12 @@ def _build_computed_attr_module(
         execution_order=0,  # Assigned during unified toposort
         compilability=Compilability.FULLY_COMPILABLE,
         is_computed_attribute=True,
+        calc_def_name=ca.name,
+        calc_def_qualified_name=ca.owning_part_qualified_name,
+        doc_comment=getattr(ca, "description", None),
+        calc_expressions=[ca.expression_text] if ca.expression_text else None,
+        source_file=str(ca.source_file),
+        source_line=ca.source_line,
     )
 
 
@@ -967,9 +974,7 @@ def _build_aggregation_module(
     """
     # Naming per ADR-003, using module_eqn property
     module_name = get_module_name(agg.module_eqn)
-    module_type = derive_module_type(
-        f"{agg.expression.owning_part_qn}::{agg.expression.attribute_name}"
-    )
+    module_type = derive_module_type(agg.module_eqn.replace("__", "::"))
 
     inputs: list[ModuleInput] = []
     ref_to_inputs: dict[str, str] = {}
@@ -1234,6 +1239,11 @@ def _build_aggregation_module(
         compilability=compilability,
         compiled_expression=compiled_expression,
         is_aggregation=True,
+        calc_def_name=agg.expression.attribute_name,
+        calc_def_qualified_name=agg.expression.owning_part_qn,
+        calc_expressions=[agg.expression.raw_expression_text] if agg.expression.raw_expression_text else None,
+        source_file=str(agg.expression.source_file),
+        source_line=agg.expression.source_line,
     )
 
 
@@ -1352,6 +1362,7 @@ def _build_pipeline_module(
 
     # Build inputs - ADR-003 Phase 7: FAIL FAST, NO FALLBACK
     inputs: list[ModuleInput] = []
+    input_attr_by_name = {a.name: a for a in calc_def.input_attributes}
     for input_attr in calc_def.input_attributes:
         param_name = input_attr.name
         mapping_key = f"{usage.qualified_name}|{param_name}"
@@ -1396,6 +1407,8 @@ def _build_pipeline_module(
                 param_name=param_name,
                 python_type="float",  # All numeric for now
                 source=source,
+                description=input_attr.description,
+                default_value=input_attr.default_value,
             )
         )
 
@@ -1413,6 +1426,9 @@ def _build_pipeline_module(
                 field_name=field_name,
                 python_type="float",
                 channel_name=channel_name,
+                description=output_attr.description,
+                default_value=output_attr.default_value,
+                unit=output_attr.unit,
             )
         )
 
@@ -1422,6 +1438,12 @@ def _build_pipeline_module(
         inputs=inputs,
         outputs=outputs,
         execution_order=execution_order,
+        calc_def_name=calc_def.name,
+        calc_def_qualified_name=calc_def.qualified_name,
+        doc_comment=calc_def.doc_comment,
+        calc_expressions=calc_def.calc_expressions,
+        source_file=str(calc_def.source_file),
+        source_line=calc_def.source_line,
     )
 
 

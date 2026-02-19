@@ -348,7 +348,121 @@ def _generate_schema_imports_from_entry_points(
     return sorted(imports)
 
 
+def generate_registry_from_graph(
+    graph,
+    package_name: str,
+    template_env: jinja2.Environment,
+    output_path: Path,
+    exit_point_primitive_types: list[str] | None = None,
+) -> str:
+    """Generate registry from ComputationGraph (graph-only variant).
+
+    Produces byte-identical output to generate_registry_function() by deriving
+    all module data, import paths, and schema imports from ComputationGraph.
+
+    Processes modules in the same order as the original: CalcUsage modules first
+    (sorted imports), then FORMULA modules, then aggregation modules.
+
+    Args:
+        graph: ComputationGraph with modules and entry_point_groups
+        package_name: Package name
+        template_env: Jinja2 environment
+        output_path: Where to write __init__.py
+        exit_point_primitive_types: Primitive types for exit point registration.
+
+    Returns:
+        Generated Python code
+    """
+    schema_imports = _generate_schema_imports_from_entry_points(
+        package_name, graph.entry_point_groups
+    )
+    group_names = [g.class_name for g in graph.entry_point_groups]
+
+    all_modules: list[dict] = []
+    imports: list[str] = [
+        "from simkit.core.registry_builder import create_registry",
+        "from simkit.core.pipeline_registry import PipelineModuleRegistry",
+        "",
+    ]
+
+    # Split modules by type (same processing order as generate_registry_function)
+    calcusage_modules = [m for m in graph.modules if not m.is_computed_attribute and not m.is_aggregation]
+    formula_modules = [m for m in graph.modules if m.is_computed_attribute]
+    aggregation_modules = [m for m in graph.modules if m.is_aggregation]
+
+    # 1. CalcUsage modules (sorted imports, deduplicated by calc_def_name)
+    seen_names: set[str] = set()
+    calcusage_imports: list[str] = []
+    for module in calcusage_modules:
+        class_name = f"{module.calc_def_name}Module"
+        all_modules.append({
+            "class_name": class_name,
+            "module_type": module.module_type,
+        })
+        if module.calc_def_name not in seen_names:
+            sqn = SysMLQualifiedName(module.calc_def_qualified_name)
+            python_path = PythonModulePath.from_sysml(sqn)
+            import_module = f"{package_name}.modules.{python_path.import_path}"
+            calcusage_imports.append(f"from {import_module} import {class_name}")
+            seen_names.add(module.calc_def_name)
+
+    calcusage_imports.sort()
+    imports.extend(calcusage_imports)
+
+    # 2. FORMULA modules (appended unsorted)
+    for module in formula_modules:
+        sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
+        sqn = SysMLQualifiedName(sysml_qn)
+        python_path = PythonModulePath.from_sysml(sqn)
+        module_type_full = module.module_type
+        class_name = module_type_full.split(".")[-1]
+
+        all_modules.append({
+            "class_name": class_name,
+            "module_type": module_type_full,
+        })
+        import_module = f"{package_name}.modules.{python_path.import_path}"
+        imports.append(f"from {import_module} import {class_name}")
+
+    # 3. Aggregation modules (appended unsorted)
+    for module in aggregation_modules:
+        sysml_qn = module.name.replace("__", "::")
+        sqn = SysMLQualifiedName(sysml_qn)
+        python_path = PythonModulePath.from_sysml(sqn)
+        module_type_full = module.module_type
+        class_name = module_type_full.split(".")[-1]
+
+        all_modules.append({
+            "class_name": class_name,
+            "module_type": module_type_full,
+        })
+        import_module = f"{package_name}.modules.{python_path.import_path}"
+        imports.append(f"from {import_module} import {class_name}")
+
+    # Resolve class name collisions
+    all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
+
+    context = {
+        "function_name": f"create_{package_name}_registry",
+        "all_modules": all_modules,
+        "imports": imports,
+        "schema_imports": schema_imports,
+        "parameter_groups": group_names,
+        "package_name": package_name,
+        "exit_point_types": exit_point_primitive_types or [],
+    }
+
+    template = template_env.get_template("registry_function.py.jinja2")
+    code = template.render(**context)
+
+    if not code.endswith('\n'):
+        code += '\n'
+
+    return code
+
+
 __all__ = [
     "_collect_exit_point_primitive_types",
+    "generate_registry_from_graph",
     "generate_registry_function",
 ]

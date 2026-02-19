@@ -550,8 +550,143 @@ def _estimate_complexity(calc_def: CalculationDefinitionData) -> str:
         return "High"
 
 
+def _build_stub_docstring_from_graph(module) -> str:
+    """Build stub docstring from PipelineModule fields.
+
+    Mirrors _build_stub_docstring() but uses PipelineModule metadata.
+    """
+    lines = []
+
+    # Derive output info from module outputs
+    output_names = []
+    for out in module.outputs:
+        name = out.field_name if out.field_name != "root" else module.calc_def_name
+        output_names.append(name)
+
+    lines.append(f"Execute {module.calc_def_name} calculation.")
+
+    if module.doc_comment:
+        lines.append("")
+        lines.append(module.doc_comment.strip())
+
+    lines.append("")
+    lines.append(f"SysML Source: {module.source_file}:{module.source_line}")
+
+    if module.calc_expressions:
+        lines.append("")
+        lines.append("SysML Expressions:")
+        for expr in module.calc_expressions:
+            lines.append(f"    {expr}")
+
+    lines.append("")
+    lines.append("Args:")
+    lines.append(
+        f"    inputs: Input parameters validated against {module.calc_def_name}Input schema"
+    )
+
+    if len(module.outputs) == 1:
+        out = module.outputs[0]
+        out_name = out.field_name if out.field_name != "root" else module.calc_def_name
+        desc = out.description or out_name
+        lines.append("")
+        lines.append("Returns:")
+        lines.append(f"    float: {desc}")
+    elif len(module.outputs) > 1:
+        names = ", ".join(output_names)
+        lines.append("")
+        lines.append("Returns:")
+        lines.append(f"    tuple[float, ...]: ({names})")
+
+    lines.append("")
+    lines.append("Example:")
+    lines.append(f"    >>> inputs = {module.calc_def_name}Input(...)")
+    func_name = f"run_{module.calc_def_name.lower()}"
+    if len(module.outputs) > 1:
+        output_vars = ", ".join(output_names)
+        lines.append(f"    >>> {output_vars} = {func_name}(inputs)")
+    else:
+        lines.append(f"    >>> result = {func_name}(inputs)")
+
+    return "\n".join(lines)
+
+
+def generate_implementation_from_graph(
+    module,
+    template_env: jinja2.Environment,
+    output_path: Path,
+    package_name: str = "generated_code",
+) -> str:
+    """Generate implementation stencil from PipelineModule (graph-only variant).
+
+    Produces byte-identical output to generate_implementation() (stub mode)
+    by building the same template context from PipelineModule fields.
+
+    Note: auto-implementation mode requires CalcDefCompilationResult which
+    is not available from the graph. This variant always generates stubs.
+
+    Args:
+        module: PipelineModule with metadata fields populated
+        template_env: Jinja2 environment
+        output_path: Where to write handwritten/ file
+        package_name: Package name for imports
+
+    Returns:
+        Generated Python code
+    """
+    # Derive output names from module outputs
+    output_names = []
+    for out in module.outputs:
+        name = out.field_name if out.field_name != "root" else module.calc_def_name
+        output_names.append(name)
+
+    # Return type
+    if len(module.outputs) == 0:
+        return_type = "None"
+    elif len(module.outputs) == 1:
+        return_type = "float"
+    else:
+        return_types = ", ".join(["float"] * len(module.outputs))
+        return_type = f"tuple[{return_types}]"
+
+    # Input parameters
+    input_params = [
+        {"name": inp.param_name, "type": inp.python_type}
+        for inp in module.inputs
+    ]
+
+    # Calc expressions
+    calc_expressions = module.calc_expressions or []
+
+    # ADR-003: Derive namespaced import path
+    sqn = SysMLQualifiedName(module.calc_def_qualified_name)
+    python_path = PythonModulePath.from_sysml(sqn)
+    module_import_path = python_path.import_path
+
+    context = {
+        "function_name": f"run_{module.calc_def_name.lower()}",
+        "calc_name": module.calc_def_name,
+        "sysml_source": f"{module.source_file}:{module.source_line}",
+        "sysml_expressions": calc_expressions,
+        "input_params": input_params,
+        "output_names": output_names,
+        "return_type": return_type,
+        "docstring": _build_stub_docstring_from_graph(module),
+        "input_class_name": f"{module.calc_def_name}Input",
+        "module_name": module.calc_def_name.lower(),
+        "module_import_path": module_import_path,
+        "package_name": package_name,
+    }
+
+    template = template_env.get_template("implementation_stencil.py.jinja2")
+    code = template.render(**context)
+    if not code.endswith('\n'):
+        code += '\n'
+    return code
+
+
 __all__ = [
     "generate_backlog_report",
     "generate_implementation",
+    "generate_implementation_from_graph",
     "generate_implementation_stencil",
 ]

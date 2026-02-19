@@ -126,11 +126,15 @@ class ModuleInput(BaseModel):
         param_name: Parameter name (e.g., "p_fusion")
         python_type: Python type string (e.g., "float")
         source: Where the input value comes from
+        description: Human-readable description from CalcDef input attribute
+        default_value: Default value from CalcDef input attribute
     """
 
     param_name: str
     python_type: str
     source: InputSource
+    description: str | None = None
+    default_value: float | int | str | bool | None = None
 
 
 class ModuleOutput(BaseModel):
@@ -140,11 +144,17 @@ class ModuleOutput(BaseModel):
         field_name: Field name ("root" for single-output, attr name for multi)
         python_type: Python type string (e.g., "float")
         channel_name: Channel name for wiring (e.g., "alphaneutronsplit_p_neutron")
+        description: Human-readable description from CalcDef output attribute
+        default_value: Default value from CalcDef output attribute
+        unit: Physical unit from CalcDef output attribute
     """
 
     field_name: str
     python_type: str
     channel_name: str
+    description: str | None = None
+    default_value: float | int | str | bool | None = None
+    unit: str | None = None
 
 
 class PipelineModule(BaseModel):
@@ -169,6 +179,13 @@ class PipelineModule(BaseModel):
     compiled_expression: str | None = None
     is_computed_attribute: bool = False
     is_aggregation: bool = False
+    # Metadata from CalcDef / ComputedAttributeData / AggregationExpressionData
+    calc_def_name: str | None = None
+    calc_def_qualified_name: str | None = None
+    doc_comment: str | None = None
+    calc_expressions: list[str] | None = None
+    source_file: str | None = None
+    source_line: int | None = None
 
 
 class ComputationGraph(BaseModel):
