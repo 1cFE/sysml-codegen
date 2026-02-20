@@ -388,8 +388,8 @@ class TestOutputFieldsHaveNoDefaults:
     """Generated MultiOutput code does NOT contain default= on any output field."""
 
     @pytest.mark.req("REQ-OSR-05")
-    @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
-                             ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS[:1]])
+    @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS,
+                             ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS])
     def test_output_fields_have_no_defaults(
         self, model_name, all_graph_data, template_env,
     ):
@@ -430,13 +430,10 @@ class TestOutputFieldsHaveNoDefaults:
                                     f"has default={ast.unparse(keyword.value)}"
                                 )
 
-        if violations:
-            # REQ-OSR-05 violation detected — document as Bug 11 finding
-            # but don't fail hard; mark as xfail with strict=False
-            pytest.xfail(
-                "REQ-OSR-05 violation (Bug 11): output fields have defaults.\n"
-                + "\n".join(violations)
-            )
+        assert not violations, (
+            "REQ-OSR-05 violation: output fields have defaults:\n"
+            + "\n".join(violations)
+        )
 
 
 # ---------------------------------------------------------------------------

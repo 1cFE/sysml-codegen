@@ -71,7 +71,7 @@ def generate_multioutput_model(
             "name": out.field_name,
             "type": out.python_type,
             "description": _build_field_description(out),
-            "default": out.default_value,
+            "default": None,  # REQ-OSR-05: output fields must never have defaults
         }
         fields.append(field_data)
 
