@@ -315,7 +315,7 @@ def _rewrite_virtual_bindings(
             elif "." in source:
                 leaf = source.rsplit(".", 1)[-1]
             else:
-                leaf = source  # bare name (defensive fallback)
+                raise ValueError(f"Unexpected bare-name source_path: {source!r}")
 
             key = (parent_path, leaf)
             matched = override_index.get(key)

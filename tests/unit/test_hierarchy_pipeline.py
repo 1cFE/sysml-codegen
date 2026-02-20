@@ -143,13 +143,13 @@ class TestScopedAggregationData:
 
 class TestRewriteVirtualBindings:
     def test_literal_override_rewrites_binding(self):
-        """Deep-path :>> pv_module.wattage = 400.0 rewrites bare 'wattage' binding to LITERAL."""
+        """Deep-path :>> pv_module.wattage = 400.0 rewrites dotted source_path to LITERAL."""
         usage = _make_virtual_calc_usage(
             qn="Design__plant__solar_array__pv_module__cost_model",
             bindings=[
                 BindingInfo(
                     param_name="wattage",
-                    source_path="wattage",
+                    source_path="parent.wattage",
                     binding_type=BindingType.REFERENCE,
                 )
             ],
@@ -173,7 +173,7 @@ class TestRewriteVirtualBindings:
             bindings=[
                 BindingInfo(
                     param_name="efficiency",
-                    source_path="efficiency",
+                    source_path="parent.efficiency",
                     binding_type=BindingType.REFERENCE,
                 )
             ],
@@ -187,7 +187,7 @@ class TestRewriteVirtualBindings:
         count = _rewrite_virtual_bindings([usage], hierarchy)
         assert count == 0
         assert usage.bindings[0].binding_type == BindingType.REFERENCE
-        assert usage.bindings[0].source_path == "efficiency"
+        assert usage.bindings[0].source_path == "parent.efficiency"
 
     def test_already_literal_binding_skipped(self):
         """LITERAL bindings are not re-processed."""
@@ -261,7 +261,7 @@ class TestRewriteVirtualBindings:
             bindings=[
                 BindingInfo(
                     param_name="wattage",
-                    source_path="wattage",
+                    source_path="parent.wattage",
                     binding_type=BindingType.REFERENCE,
                 )
             ],
@@ -283,14 +283,14 @@ class TestRewriteVirtualBindings:
         bindings_a = [
             BindingInfo(
                 param_name="wattage",
-                source_path="wattage",
+                source_path="parent.wattage",
                 binding_type=BindingType.REFERENCE,
             )
         ]
         bindings_b = [
             BindingInfo(
                 param_name="wattage",
-                source_path="wattage",
+                source_path="parent.wattage",
                 binding_type=BindingType.REFERENCE,
             )
         ]
@@ -334,7 +334,7 @@ class TestRewriteVirtualBindings:
             bindings=[
                 BindingInfo(
                     param_name="capital_cost",
-                    source_path="capital_cost",
+                    source_path="parent.capital_cost",
                     binding_type=BindingType.REFERENCE,
                 )
             ],

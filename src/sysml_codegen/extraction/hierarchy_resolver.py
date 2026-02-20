@@ -551,7 +551,10 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                         if (
                             sibling.redefinition_type == RedefinitionType.CHAIN
                             and sibling.source_path
-                            and sibling.source_path.endswith(agg.attribute_name)
+                            and (
+                                sibling.source_path == agg.attribute_name
+                                or sibling.source_path.endswith("." + agg.attribute_name)
+                            )
                             and sibling.attribute_name != agg.attribute_name
                         ):
                             agg.aliases.append(sibling.attribute_name)

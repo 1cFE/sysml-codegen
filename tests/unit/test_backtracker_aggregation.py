@@ -282,51 +282,7 @@ class TestSystemCalcWiresToAggregation:
         resolution = bt._binding_resolutions[key]
         assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
 
-    def test_sysml_qn_reference_normalizes(self):
-        """'Package::solar_array::capital_cost' normalizes to dotted and resolves.
-
-        REFERENCE dispatch Step 1b normalizes '::'-separated SysML QN to dotted:
-        parts[-2].parts[-1] = 'solar_array.capital_cost'. This matches
-        Key_E_stripped when instance_path='Design__solar_array'.
-        """
-        agg = _make_scoped_agg(
-            attribute_name="capital_cost",
-            instance_path="Design__solar_array",
-        )
-
-        usage = _make_calc_usage(
-            "sys_calc",
-            "SysCalc",
-            bindings=[
-                BindingInfo(
-                    param_name="cost_input",
-                    source_path="Package::solar_array::capital_cost",
-                    binding_type=BindingType.REFERENCE,
-                ),
-            ],
-            qualified_name="Design__sys_calc",
-        )
-
-        calc_def = SimpleCalcDef(
-            name="SysCalc",
-            qualified_name="Lib__SysCalc",
-            output_attributes=[SimpleAttrInfo("out")],
-        )
-
-        registry = _build_test_registry(
-            aggregation_data=[agg], calc_usages=[usage], calc_defs=[calc_def],
-        )
-        bt = DependencyBacktracker(
-            [usage],
-            [calc_def],
-            output_registry=registry,
-        )
-        bt.find_required_modules([], include_all=True)
-
-        key = "Design__sys_calc|cost_input"
-        assert key in bt._binding_resolutions
-        resolution = bt._binding_resolutions[key]
-        assert resolution.resolution_type == BindingResolutionType.MODULE_OUTPUT
+    # test_sysml_qn_reference_normalizes removed — Step 1b normalization is dead code (7.4)
 
     # -- Category (c): Integration Tests --
 

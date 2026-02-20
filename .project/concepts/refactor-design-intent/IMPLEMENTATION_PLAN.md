@@ -586,17 +586,19 @@ the target architecture. This is pure refactoring — no behavior changes.
     - [ ] Two `BindingInfo` classes consolidated
     - [ ] Three expression reconstruction implementations consolidated (or new 7.7 item)
 
-- [ ] **7.4 — Dead code removal**
-  - Identify unreachable code paths (functions never called, branches never taken)
-  - Remove one file/function at a time
-  - Run full test suite after each removal
-  - **Safety**: only remove code that has zero callers and zero test coverage
+- [x] **7.4 — Dead code removal** *(completed 2026-02-20, 6 conformance tests)*
+  - 6 conformance tests in `tests/conformance/test_dead_code_removal.py`
+  - Removed: Strategy B normalized fallback (`input_resolver.py`), backtracker Step 1b (`dependency_backtracker.py`)
+  - Removed: VBR bare-name fallback (`initialization.py`) → replaced with ValueError assertion
+  - Removed: `teax_module_stub.py.jinja2` (zero source references)
+  - Fixed: endswith() false positive in alias detection (`hierarchy_resolver.py`) — Deferred Issue #11
+  - 1783 tests pass, 0 failures, 6 xfailed
   - **Research-identified dead paths**:
-    - [ ] Bare-name handling in resolve() (Research §5.#1)
-    - [ ] SYSML_QN normalization / Strategy B (Research §5.#5, RB-03)
-    - [ ] Virtual binding rewrite for bare names (Research §5.#1)
-    - [ ] Step 3.6 alias enrichment heuristic (Research §1.L10)
-    - [ ] Bare-name registration keys (Research §1.L10)
+    - [x] Bare-name handling in resolve() (Research §5.#1) *(already removed in C11b)*
+    - [x] SYSML_QN normalization / Strategy B (Research §5.#5, RB-03) *(7.4 — normalized fallback removed, direct lookup preserved)*
+    - [x] Virtual binding rewrite for bare names (Research §5.#1) *(7.4 — replaced with ValueError)*
+    - [x] Step 3.6 alias enrichment heuristic (Research §1.L10) *(already removed pre-C11b)*
+    - [x] Bare-name registration keys (Research §1.L10) *(already removed in C11b)*
   - **TRR-identified dead code** (typed registry refactor):
     - [x] Key_A registration code in `build_output_registry()` Phase 1a *(C11b — replaced with alias registration)*
     - [x] Key_D registration code in `build_output_registry()` Phase 1b *(C11b — removed)*
@@ -713,7 +715,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 8 | sum() is only recognized aggregation | Out of scope | Feature request, not refactor |
 | 9 | Inherited attribute misclassification in `_classify_attribute_expression` | C05 fix (before Phase 3 recommended) | Classifier assumes flat namespace; SysIDE resolves inherited QNs to supertype. 5 of 6 test patterns affected. Fix requires supertype chain walk in Step 2b + C03 extraction enrichment. See Doc 16 Known Issues. |
 | 10 | UNRESOLVABLE classification likely dead code for valid SysML | Document only | SysIDE always resolves attribute QNs; empty-QN fallback (Step 2d) unreachable without parser bugs. Retain as defensive fallback. |
-| 11 | `endswith()` false positive in alias detection (`hierarchy_resolver.py:550-557`) | Deferred to Phase 7 | `source_path.endswith(agg.attribute_name)` matches `"child.total_cost"` against `"total_cost"`. Fix: `source_path == agg.attribute_name or source_path.endswith("." + agg.attribute_name)`. No fixture exercises this. Low risk — identified in C5 alias_agg_probe audit. |
+| 11 | `endswith()` false positive in alias detection (`hierarchy_resolver.py:550-557`) | **FIXED (7.4, 2026-02-20)** | `source_path.endswith(agg.attribute_name)` → `source_path == agg.attribute_name or source_path.endswith("." + agg.attribute_name)`. Conformance test in `test_dead_code_removal.py`. |
 
 ---
 

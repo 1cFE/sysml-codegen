@@ -820,30 +820,7 @@ class TestLeafExtraction:
         assert binding.binding_type == BindingType.LITERAL
         assert binding.literal_value == 0.95
 
-    def test_bare_name_leaf_extraction(self):
-        """Bare name (no separator): 'wattage' → leaf 'wattage'."""
-        override = _make_override(
-            owning_part_qn="Design__part",
-            attribute_name="wattage",
-            literal_value=400.0,
-            target_path=["sub", "wattage"],
-            is_deep_path=True,
-        )
-        hierarchy = _make_hierarchy_data([override])
-
-        binding = _make_binding(
-            param_name="wattage",
-            source_path="wattage",
-        )
-        usage = _make_calc_usage(
-            qualified_name="Design__part__sub__cost_model",
-            bindings=[binding],
-            owning_part_def_qn="Lib__SomePart",
-        )
-
-        count = _rewrite_virtual_bindings([usage], hierarchy)
-        assert count == 1
-        assert binding.binding_type == BindingType.LITERAL
+    # test_bare_name_leaf_extraction removed — bare-name source_paths are dead code (7.4)
 
 
 # ---------------------------------------------------------------------------

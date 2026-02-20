@@ -25,7 +25,7 @@ from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, Phan
 from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.core.qualified_names import sanitize_name, sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
 
 if TYPE_CHECKING:
     from agentic_mbse.sysml.types import BindingInfo
@@ -595,16 +595,6 @@ class DependencyBacktracker:
         channel = self._output_registry.sysml_qn_lookup(SysMLQN(source_path))
         if channel is not None and not self._is_self_reference(channel, usage):
             return channel
-
-        # Step 1b: Normalize :: SysML qualified names to dotted format
-        # "Package::solar_array::capital_cost" -> "solar_array.capital_cost"
-        parts = source_path.split("::")
-        if len(parts) >= 2:
-            sanitized_part = sanitize_name(parts[-2]).lower()
-            dotted = f"{sanitized_part}.{parts[-1]}"
-            channel = self._output_registry.scoped_lookup(ScopedKey(dotted))
-            if channel is not None and not self._is_self_reference(channel, usage):
-                return channel
 
         # Step 2: REFERENCE secondary (leaf + parent scope)
         channel = self._resolve_reference_via_registry(source_path, usage)

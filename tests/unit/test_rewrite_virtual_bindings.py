@@ -100,31 +100,7 @@ class TestLeafExtraction:
         assert usage.bindings[0].binding_type == BindingType.LITERAL
         assert usage.bindings[0].literal_value == 500.0
 
-    def test_bare_name_still_works(self):
-        """Bare-name source_path ('total_cost') → leaf extraction is identity."""
-        usage = _make_virtual_calc_usage(
-            qn="Design__plant__cost_model",
-            bindings=[
-                BindingInfo(
-                    param_name="total_cost",
-                    source_path="total_cost",
-                    binding_type=BindingType.REFERENCE,
-                ),
-            ],
-        )
-        override = RedefinitionData(
-            owning_part_qn="Design__plant",
-            attribute_name="total_cost",
-            redefinition_type=RedefinitionType.LITERAL,
-            literal_value=42.0,
-            is_deep_path=False,
-        )
-        hierarchy = _make_hierarchy(design_overrides=[override])
-
-        count = _rewrite_virtual_bindings([usage], hierarchy)
-
-        assert count == 1
-        assert usage.bindings[0].literal_value == 42.0
+    # test_bare_name_still_works removed — bare-name source_paths are dead code (7.4)
 
 
 class TestChainOverrideSupport:
@@ -137,7 +113,7 @@ class TestChainOverrideSupport:
             bindings=[
                 BindingInfo(
                     param_name="capital_cost",
-                    source_path="capital_cost",
+                    source_path="parent.capital_cost",
                     binding_type=BindingType.REFERENCE,
                 ),
             ],
@@ -166,7 +142,7 @@ class TestChainOverrideSupport:
             bindings=[
                 BindingInfo(
                     param_name="wattage",
-                    source_path="wattage",
+                    source_path="parent.wattage",
                     binding_type=BindingType.REFERENCE,
                 ),
             ],

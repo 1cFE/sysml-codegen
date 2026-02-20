@@ -122,21 +122,6 @@ def SysMLQNLookup(ref: str, ctx: ResolutionContext) -> CanonicalChannel | None: 
         logger.debug("Strategy B: '%s' resolved via SysML QN lookup", ref)
         return channel
 
-    # Normalized fallback: split on '::', extract penultimate + last segment,
-    # construct ScopedKey, retry in scoped registry.
-    parts = ref.split("::")
-    if len(parts) >= 2:
-        parent = sanitize_name(parts[-2]).lower()
-        leaf = parts[-1]
-        scoped_key = ScopedKey(f"{parent}.{leaf}")
-        channel = ctx.output_registry.scoped_lookup(scoped_key)
-        if channel is not None:
-            logger.debug(
-                "Strategy B: '%s' resolved via normalized scoped key '%s'",
-                ref, scoped_key,
-            )
-            return channel
-
     return None
 
 
