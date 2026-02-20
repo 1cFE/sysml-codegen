@@ -12,7 +12,9 @@
             "param_group": "design_params",
             "qualified_name": "ChainSpikeDesign__spike_design__area_calc__length",
             "producer_channel": null
-          }
+          },
+          "description": "",
+          "default_value": null
         },
         {
           "param_name": "width",
@@ -22,21 +24,34 @@
             "param_group": "design_params",
             "qualified_name": "ChainSpikeDesign__spike_design__area_calc__width",
             "producer_channel": null
-          }
+          },
+          "description": "",
+          "default_value": null
         }
       ],
       "outputs": [
         {
           "field_name": "root",
           "python_type": "float",
-          "channel_name": "ChainSpikeDesign__spike_design__area_calc__area"
+          "channel_name": "ChainSpikeDesign__spike_design__area_calc__area",
+          "description": "",
+          "default_value": null,
+          "unit": null
         }
       ],
       "execution_order": 0,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
-      "is_aggregation": false
+      "is_aggregation": false,
+      "calc_def_name": "AreaCalc",
+      "calc_def_qualified_name": "ChainSpikeLibrary::AreaCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "area = length * width"
+      ],
+      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_spike_model/library.sysml",
+      "source_line": 4
     },
     {
       "name": "chainspikedesign__spike_design__cost_calc",
@@ -50,7 +65,9 @@
             "param_group": null,
             "qualified_name": null,
             "producer_channel": "ChainSpikeDesign__spike_design__area_calc__area"
-          }
+          },
+          "description": "",
+          "default_value": null
         },
         {
           "param_name": "rate",
@@ -60,21 +77,34 @@
             "param_group": "design_params",
             "qualified_name": "ChainSpikeDesign__spike_design__cost_calc__rate",
             "producer_channel": null
-          }
+          },
+          "description": "",
+          "default_value": null
         }
       ],
       "outputs": [
         {
           "field_name": "root",
           "python_type": "float",
-          "channel_name": "ChainSpikeDesign__spike_design__cost_calc__total_cost"
+          "channel_name": "ChainSpikeDesign__spike_design__cost_calc__total_cost",
+          "description": "",
+          "default_value": null,
+          "unit": null
         }
       ],
       "execution_order": 1,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
-      "is_aggregation": false
+      "is_aggregation": false,
+      "calc_def_name": "CostCalc",
+      "calc_def_qualified_name": "ChainSpikeLibrary::CostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "total_cost = area * rate"
+      ],
+      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_spike_model/library.sysml",
+      "source_line": 11
     },
     {
       "name": "chainspikedesign__spike_design__summary",
@@ -88,7 +118,9 @@
             "param_group": null,
             "qualified_name": null,
             "producer_channel": "ChainSpikeDesign__spike_design__area_calc__area"
-          }
+          },
+          "description": "",
+          "default_value": null
         },
         {
           "param_name": "cost",
@@ -98,21 +130,34 @@
             "param_group": null,
             "qualified_name": null,
             "producer_channel": "ChainSpikeDesign__spike_design__cost_calc__total_cost"
-          }
+          },
+          "description": "",
+          "default_value": null
         }
       ],
       "outputs": [
         {
           "field_name": "root",
           "python_type": "float",
-          "channel_name": "ChainSpikeDesign__spike_design__summary__cost_per_area"
+          "channel_name": "ChainSpikeDesign__spike_design__summary__cost_per_area",
+          "description": "",
+          "default_value": null,
+          "unit": null
         }
       ],
       "execution_order": 2,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
-      "is_aggregation": false
+      "is_aggregation": false,
+      "calc_def_name": "SummaryCalc",
+      "calc_def_qualified_name": "ChainSpikeLibrary::SummaryCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "cost_per_area = cost / area"
+      ],
+      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_spike_model/library.sysml",
+      "source_line": 18
     }
   ],
   "entry_point_groups": [

@@ -22,8 +22,8 @@ def create_sample_model_registry() -> PipelineModuleRegistry:
     while keeping Python class names unchanged (e.g., "AlphaNeutronSplitModule").
     """
     return create_registry(
-        [            FirstCalcModule,            SecondCalcModule,            FinalCalcModule,            MultiOutputCalcModule,            SimpleCalcModule,        ],
-        module_type_override={            FirstCalcModule: "testmodels.FirstCalcModule",            SecondCalcModule: "testmodels.SecondCalcModule",            FinalCalcModule: "testmodels.FinalCalcModule",            MultiOutputCalcModule: "testmodels.MultiOutputCalcModule",            SimpleCalcModule: "testmodels.SimpleCalcModule",        },
+        [            FinalCalcModule,            FirstCalcModule,            MultiOutputCalcModule,            SecondCalcModule,            SimpleCalcModule,        ],
+        module_type_override={            FinalCalcModule: "testmodels.FinalCalcModule",            FirstCalcModule: "testmodels.FirstCalcModule",            MultiOutputCalcModule: "testmodels.MultiOutputCalcModule",            SecondCalcModule: "testmodels.SecondCalcModule",            SimpleCalcModule: "testmodels.SimpleCalcModule",        },
     )
 
 

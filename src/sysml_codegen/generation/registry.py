@@ -105,8 +105,9 @@ def generate_registry_function(
 
     imports = _generate_import_statements(calc_defs, package_name)
 
-    # Add computed attribute modules
+    # Add computed attribute modules (sorted for deterministic output)
     if computed_attributes:
+        formula_imports: list[str] = []
         for ca in computed_attributes:
             if (
                 ca.classification == ComputedAttributeClassification.FORMULA
@@ -123,10 +124,13 @@ def generate_registry_function(
                     "module_type": module_type_full,
                 })
                 import_module = f"{package_name}.modules.{python_path.import_path}"
-                imports.append(f"from {import_module} import {class_name}")
+                formula_imports.append(f"from {import_module} import {class_name}")
+        formula_imports.sort()
+        imports.extend(formula_imports)
 
-    # Add aggregation modules
+    # Add aggregation modules (sorted for deterministic output)
     if aggregation_data:
+        aggregation_imports: list[str] = []
         for agg in aggregation_data:
             sysml_qn = agg.module_eqn.replace("__", "::")
             sqn = SysMLQualifiedName(sysml_qn)
@@ -139,10 +143,15 @@ def generate_registry_function(
                 "module_type": module_type_full,
             })
             import_module = f"{package_name}.modules.{python_path.import_path}"
-            imports.append(f"from {import_module} import {class_name}")
+            aggregation_imports.append(f"from {import_module} import {class_name}")
+        aggregation_imports.sort()
+        imports.extend(aggregation_imports)
 
     # Detect name collisions and generate aliases (REQ-REG-03, REQ-REG-04, REQ-REG-07)
     all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
+
+    # Sort module entries by module_type for deterministic output
+    all_modules.sort(key=lambda m: m["module_type"])
 
     context = {
         "function_name": f"create_{package_name}_registry",
@@ -323,7 +332,7 @@ def _generate_import_statements(
 
 def _generate_schema_imports_from_entry_points(
     package_name: str,
-    entry_point_groups: "list[ModelParameterGroup]",
+    entry_point_groups: list[ModelParameterGroup],
 ) -> list[str]:
     """Generate import statements from Pydantic ParameterGroup models.
 
@@ -386,7 +395,10 @@ def generate_registry_from_graph(
     ]
 
     # Split modules by type (same processing order as generate_registry_function)
-    calcusage_modules = [m for m in graph.modules if not m.is_computed_attribute and not m.is_aggregation]
+    calcusage_modules = [
+        m for m in graph.modules
+        if not m.is_computed_attribute and not m.is_aggregation
+    ]
     formula_modules = [m for m in graph.modules if m.is_computed_attribute]
     aggregation_modules = [m for m in graph.modules if m.is_aggregation]
 
@@ -409,7 +421,8 @@ def generate_registry_from_graph(
     calcusage_imports.sort()
     imports.extend(calcusage_imports)
 
-    # 2. FORMULA modules (appended unsorted)
+    # 2. FORMULA modules (sorted for deterministic output)
+    formula_imports: list[str] = []
     for module in formula_modules:
         sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
         sqn = SysMLQualifiedName(sysml_qn)
@@ -422,9 +435,12 @@ def generate_registry_from_graph(
             "module_type": module_type_full,
         })
         import_module = f"{package_name}.modules.{python_path.import_path}"
-        imports.append(f"from {import_module} import {class_name}")
+        formula_imports.append(f"from {import_module} import {class_name}")
+    formula_imports.sort()
+    imports.extend(formula_imports)
 
-    # 3. Aggregation modules (appended unsorted)
+    # 3. Aggregation modules (sorted for deterministic output)
+    aggregation_imports: list[str] = []
     for module in aggregation_modules:
         sysml_qn = module.name.replace("__", "::")
         sqn = SysMLQualifiedName(sysml_qn)
@@ -437,10 +453,15 @@ def generate_registry_from_graph(
             "module_type": module_type_full,
         })
         import_module = f"{package_name}.modules.{python_path.import_path}"
-        imports.append(f"from {import_module} import {class_name}")
+        aggregation_imports.append(f"from {import_module} import {class_name}")
+    aggregation_imports.sort()
+    imports.extend(aggregation_imports)
 
     # Resolve class name collisions
     all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
+
+    # Sort module entries by module_type for deterministic output
+    all_modules.sort(key=lambda m: m["module_type"])
 
     context = {
         "function_name": f"create_{package_name}_registry",

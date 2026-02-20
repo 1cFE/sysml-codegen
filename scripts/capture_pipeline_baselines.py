@@ -30,6 +30,7 @@ OUTPUT_DIR = FIXTURES_DIR / "baseline_outputs"
 
 MODELS = {
     "solar_battery": FIXTURES_DIR / "solar_battery_model",
+    "catf_mfe": FIXTURES_DIR / "catf_mfe_model",
     "attr_expr_probe": FIXTURES_DIR / "attr_expr_probe",
     "chain_spike": FIXTURES_DIR / "chain_spike_model",
     "sample_model": FIXTURES_DIR / "sample_model",

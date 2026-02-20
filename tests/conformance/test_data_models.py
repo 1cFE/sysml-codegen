@@ -400,30 +400,32 @@ def test_req_dm_03_fields_pipeline_module():
         "name", "module_type", "inputs", "outputs", "execution_order",
         "compilability", "compiled_expression",
         "is_computed_attribute", "is_aggregation",
+        "calc_def_name", "calc_def_qualified_name", "doc_comment",
+        "calc_expressions", "source_file", "source_line",
     }
     actual = _pydantic_field_names(PipelineModule)
     assert actual == expected
-    assert len(actual) == 9
+    assert len(actual) == 15
 
 
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_module_input():
     from sysml_codegen.resolution.models import ModuleInput
 
-    expected = {"param_name", "python_type", "source"}
+    expected = {"param_name", "python_type", "source", "description", "default_value"}
     actual = _pydantic_field_names(ModuleInput)
     assert actual == expected
-    assert len(actual) == 3
+    assert len(actual) == 5
 
 
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_module_output():
     from sysml_codegen.resolution.models import ModuleOutput
 
-    expected = {"field_name", "python_type", "channel_name"}
+    expected = {"field_name", "python_type", "channel_name", "description", "default_value", "unit"}
     actual = _pydantic_field_names(ModuleOutput)
     assert actual == expected
-    assert len(actual) == 3
+    assert len(actual) == 6
 
 
 @pytest.mark.req("REQ-DM-03")

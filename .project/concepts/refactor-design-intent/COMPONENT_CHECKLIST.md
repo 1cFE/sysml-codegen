@@ -461,16 +461,17 @@ listing the requirements, interfaces, and acceptance criteria each must satisfy.
 
 ---
 
-### C26 — PipelineModule Migration
+### C26 — PipelineModule Migration *(completed 2026-02-20)*
 - **Doc**: [26-pipeline-module-migration.md](26-pipeline-module-migration.md)
 - **REQs**: REQ-PMM-01 through REQ-PMM-05
+- **Tests**: 27 conformance tests in `tests/conformance/test_pipeline_module_expansion.py`
 - **Interfaces**:
-  - 6 new fields on PipelineModule/ModuleInput/ModuleOutput
-  - `_from_graph()` generator variants
+  - 6 new fields on PipelineModule, 2 on ModuleInput, 3 on ModuleOutput
+  - `_from_graph()` generator variants for modules, stencils, schemas, registry
 - **AC**:
-  - [ ] PipelineModule has all 6 additional fields populated
-  - [ ] All generators have `_from_graph()` variants
-  - [ ] Generated output identical before/after migration (REQ-PMM-04)
+  - [x] PipelineModule has all 6 additional fields populated (+ ModuleInput 2, ModuleOutput 3) *(C26, 27 tests, 2026-02-20)*
+  - [x] All generators have `_from_graph()` variants (modules, stencils, schemas, registry) *(C26, 2026-02-20)*
+  - [x] Generated output identical before/after migration (REQ-PMM-04) *(C26 identity tests, 2026-02-20)*
 
 ### C27 — Typed Registry Refactor (Design Intent)
 - **Doc**: [27-typed-registry-refactor.md](27-typed-registry-refactor.md)

@@ -16,7 +16,7 @@ Source: `generation/pipeline.py`, `modules.py`, `schemas.py`, `stencils.py`,
 | REQ-GEN-03 | Multi-output modules (2+ outputs) SHALL get a `MultiOutput` schema in `schemas/`; single-output modules SHALL use `RootModel[float]` directly. | `should_use_multioutput(calc_def)` gates schema generation |
 | REQ-GEN-04 | FULLY_COMPILABLE calc defs SHALL produce auto-implemented stencils; all others SHALL produce `NotImplementedError` stubs. | `generate_implementation()` dispatches on `CalcDefCompilationResult.compilability` |
 | REQ-GEN-05 | Each [ParameterGroup](09-data-models.md#resolution-models) SHALL produce one JSON template (`inputs/`) and one Pydantic schema (`schemas/`). | `generate_all_derived_jsons_from_graph()` and `generate_all_derived_schemas_from_graph()` iterate groups |
-| REQ-GEN-06 | SysML type mapping (`Real`->`float`, `Integer`->`int`, `Boolean`->`bool`, `String`->`str`) SHALL be consistent across all generators. | Currently VIOLATED: 4 copies of `_map_input_type()` with subtle differences (refactor target) |
+| REQ-GEN-06 | SysML type mapping (`Real`->`float`, `Integer`->`int`, `Boolean`->`bool`, `String`->`str`) SHALL be consistent across all generators. | Verified by: `generation/type_mapping.py` — single shared `map_sysml_type_to_python()` and `map_sysml_type_to_rootmodel_wrapper()` used by all 5 generators. 20 conformance tests in `tests/conformance/test_type_mapping_consolidation.py` (X01, 2026-02-19) |
 | REQ-GEN-07 | Every generated module SHALL be registered in `__init__.py` for TEAx framework discovery. | `generate_registry_function()` produces `MODULE_REGISTRY` dict |
 
 ---
@@ -154,9 +154,14 @@ is a series of transformations from graph objects to template dicts:
 
 This is the target architecture for all generators.
 
-## Current Gap (REQ-GEN-06, REQ-PIPE-07 — see [26](26-pipeline-module-migration.md))
+## Current Gap (REQ-PIPE-07 — see [26](26-pipeline-module-migration.md))
 
-The other generators consume raw [CalculationDefinitionData](09-data-models.md#extraction-models):
+> **REQ-GEN-06 resolved** (X01, 2026-02-19): Type mapping consolidated into
+> `generation/type_mapping.py`. All 5 generators now use shared `map_sysml_type_to_python()`
+> and `map_sysml_type_to_rootmodel_wrapper()`. See 20 conformance tests in
+> `tests/conformance/test_type_mapping_consolidation.py`.
+
+The other generators still consume raw [CalculationDefinitionData](09-data-models.md#extraction-models):
 
 ```python
 def generate_teax_module(calc_def: CalculationDefinitionData, ...)     # modules.py
@@ -164,10 +169,7 @@ def generate_multioutput_model(calc_def: CalculationDefinitionData, ...) # schem
 def generate_implementation(calc_def: CalculationDefinitionData, ...)   # stencils.py
 ```
 
-They re-derive information the graph already contains. Each has its own
-`_map_input_type()` doing the same `"Real" -> "float"` mapping -- **4 copies**
-across `modules.py`, `schemas.py`, `stencils.py`, and `entry_point.py` with
-subtle differences (some default unknown types to `"float"`, others pass through).
+They re-derive information the graph already contains (REQ-PIPE-07 gap — target: Phase 7.6).
 
 Problems:
 - **Duplicated logic** -- type mapping, [naming](15-naming-conventions.md),

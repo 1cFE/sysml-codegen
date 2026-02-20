@@ -4,19 +4,19 @@ from simkit.core.pipeline_registry import PipelineModuleRegistry
 from attr_expr_probe.modules.attrexprprobelibrary.scalecalc import ScaleCalcModule
 from attr_expr_probe.modules.attrexprprobelibrary.splitcalc import SplitCalcModule
 from attr_expr_probe.modules.attrexprprobedesign.probe_design.area import areaModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.cost import costModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.cost_density import cost_densityModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.gross_electric_simple import gross_electric_simpleModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.marked_up_cost import marked_up_costModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.minor_radius import minor_radiusModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.net_length import net_lengthModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.p_alpha import p_alphaModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.p_blanket_thermal import p_blanket_thermalModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.p_neutron import p_neutronModule
+from attr_expr_probe.modules.attrexprprobedesign.probe_design.perimeter import perimeterModule
 from attr_expr_probe.modules.attrexprprobedesign.probe_design.q_scientific import q_scientificModule
 from attr_expr_probe.modules.attrexprprobedesign.probe_design.total_dim import total_dimModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.net_length import net_lengthModule
 from attr_expr_probe.modules.attrexprprobedesign.probe_design.volume import volumeModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.perimeter import perimeterModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.minor_radius import minor_radiusModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.gross_electric_simple import gross_electric_simpleModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.p_alpha import p_alphaModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.p_neutron import p_neutronModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.p_blanket_thermal import p_blanket_thermalModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.cost import costModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.marked_up_cost import marked_up_costModule
-from attr_expr_probe.modules.attrexprprobedesign.probe_design.cost_density import cost_densityModule
 
 from attr_expr_probe.schemas.design_params import DesignParams as DesignParams
 
@@ -35,8 +35,8 @@ def create_attr_expr_probe_registry() -> PipelineModuleRegistry:
     while keeping Python class names unchanged (e.g., "AlphaNeutronSplitModule").
     """
     return create_registry(
-        [            ScaleCalcModule,            SplitCalcModule,            areaModule,            q_scientificModule,            total_dimModule,            net_lengthModule,            volumeModule,            perimeterModule,            minor_radiusModule,            gross_electric_simpleModule,            p_alphaModule,            p_neutronModule,            p_blanket_thermalModule,            costModule,            marked_up_costModule,            cost_densityModule,        ],
-        module_type_override={            ScaleCalcModule: "attrexprprobelibrary.ScaleCalcModule",            SplitCalcModule: "attrexprprobelibrary.SplitCalcModule",            areaModule: "attrexprprobedesign.probe_design.areaModule",            q_scientificModule: "attrexprprobedesign.probe_design.q_scientificModule",            total_dimModule: "attrexprprobedesign.probe_design.total_dimModule",            net_lengthModule: "attrexprprobedesign.probe_design.net_lengthModule",            volumeModule: "attrexprprobedesign.probe_design.volumeModule",            perimeterModule: "attrexprprobedesign.probe_design.perimeterModule",            minor_radiusModule: "attrexprprobedesign.probe_design.minor_radiusModule",            gross_electric_simpleModule: "attrexprprobedesign.probe_design.gross_electric_simpleModule",            p_alphaModule: "attrexprprobedesign.probe_design.p_alphaModule",            p_neutronModule: "attrexprprobedesign.probe_design.p_neutronModule",            p_blanket_thermalModule: "attrexprprobedesign.probe_design.p_blanket_thermalModule",            costModule: "attrexprprobedesign.probe_design.costModule",            marked_up_costModule: "attrexprprobedesign.probe_design.marked_up_costModule",            cost_densityModule: "attrexprprobedesign.probe_design.cost_densityModule",        },
+        [            areaModule,            costModule,            cost_densityModule,            gross_electric_simpleModule,            marked_up_costModule,            minor_radiusModule,            net_lengthModule,            p_alphaModule,            p_blanket_thermalModule,            p_neutronModule,            perimeterModule,            q_scientificModule,            total_dimModule,            volumeModule,            ScaleCalcModule,            SplitCalcModule,        ],
+        module_type_override={            areaModule: "attrexprprobedesign.probe_design.areaModule",            costModule: "attrexprprobedesign.probe_design.costModule",            cost_densityModule: "attrexprprobedesign.probe_design.cost_densityModule",            gross_electric_simpleModule: "attrexprprobedesign.probe_design.gross_electric_simpleModule",            marked_up_costModule: "attrexprprobedesign.probe_design.marked_up_costModule",            minor_radiusModule: "attrexprprobedesign.probe_design.minor_radiusModule",            net_lengthModule: "attrexprprobedesign.probe_design.net_lengthModule",            p_alphaModule: "attrexprprobedesign.probe_design.p_alphaModule",            p_blanket_thermalModule: "attrexprprobedesign.probe_design.p_blanket_thermalModule",            p_neutronModule: "attrexprprobedesign.probe_design.p_neutronModule",            perimeterModule: "attrexprprobedesign.probe_design.perimeterModule",            q_scientificModule: "attrexprprobedesign.probe_design.q_scientificModule",            total_dimModule: "attrexprprobedesign.probe_design.total_dimModule",            volumeModule: "attrexprprobedesign.probe_design.volumeModule",            ScaleCalcModule: "attrexprprobelibrary.ScaleCalcModule",            SplitCalcModule: "attrexprprobelibrary.SplitCalcModule",        },
     )
 
 

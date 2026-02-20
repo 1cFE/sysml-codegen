@@ -463,7 +463,7 @@ class TestBuildAggregationModule:
 
         expected_eqn = "Design__plant__solar_array__capital_cost"
         assert module.name == get_module_name(expected_eqn)
-        assert module.module_type == derive_module_type("Lib__Solar_Array::capital_cost")
+        assert module.module_type == derive_module_type("Design::plant::solar_array::capital_cost")
 
     def test_output_channel(self):
         """Output channel follows PQN format."""

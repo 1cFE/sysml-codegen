@@ -549,8 +549,7 @@ on all fixture models. This proves the refactored components compose correctly.
   - Removed divergent copies from 5 generator files (modules, entry_point, schemas, stencils, registry)
   - **Acceptance**: REQ-GEN-06 green (20 conformance tests, 1753 total tests, 0 failures)
 
-**Checkpoint 6**: [ ] Full generation validated. Generated output matches baselines.
-Type mapping inconsistency resolved. All generation requirements green.
+**Checkpoint 6**: [x] Full generation validated. 167 new conformance tests (C20: 27, C21: 19, C22: 21, C24: 22, C23: 30, C25: 28, X01: 20). 1753 total tests, 2 skipped, 6 xfailed, 0 failures. *(2026-02-19)*
 
 ---
 
@@ -613,22 +612,26 @@ the target architecture. This is pure refactoring — no behavior changes.
     - [x] `_compat` dict on OutputRegistry *(C11b — removed; Key_A values moved to alias registry)*
     - [x] `register()` convenience method on OutputRegistry *(C11b — pending test migration)*
 
-- [ ] **7.5 — PipelineModule Field Expansion (C26)**
+- [x] **7.5 — PipelineModule Field Expansion (C26)** *(completed 2026-02-20, 27 tests)*
   - **Refs**: [26-pipeline-module-migration.md](26-pipeline-module-migration.md)
-  - Add 6 missing fields to PipelineModule, ModuleInput, ModuleOutput
-  - Populate during graph building
-  - Create `_from_graph()` generator variants
-  - Verify output identity with baselines (REQ-PMM-04)
-  - **Acceptance**: REQ-PMM-01 through REQ-PMM-05 all green
+  - 27 conformance tests in `tests/conformance/test_pipeline_module_expansion.py`
+  - Step 1: Added 6 fields to PipelineModule, 2 to ModuleInput, 3 to ModuleOutput (all Optional, None defaults)
+  - Step 2: Populated fields in all 3 factory functions (CalcUsage, FORMULA, Aggregation)
+  - Step 3: Created `_from_graph()` generator variants (modules, stencils, schemas, registry)
+  - Step 4: Regenerated all baselines (computation_graph.json × 4, registry_init.py × 4, solar_battery.yaml)
+  - 3 root causes resolved: RC-1 (`_output_attr_name()` helper wired), RC-2 (registry import sorting aligned), RC-3 (C01 field assertions + baselines updated)
+  - Known gaps documented for 7.6: stencil auto-impl dispatch, FORMULA/aggregation identity scope
+  - **Acceptance**: REQ-PMM-01 through REQ-PMM-05 all green (1780 tests, 0 failures, 6 xfailed)
 
-- [ ] **7.5a — Fix aggregation module_type in graph_builder (Bug 8a remainder)**
-  - **Context**: C24 fixed registry.py to use `agg.module_eqn` for aggregation import paths and module_type_override values. But `graph_builder.py:970-972` still uses `agg.expression.owning_part_qn` for `PipelineModule.module_type`, producing malformed types like `"solarbatterylibrary__solar_array.capital_costModule"` instead of `"solarbatterydesign.solar_battery_plant.solar_array.capital_costModule"`.
-  - Change `graph_builder.py:970-972` to: `module_type = derive_module_type(agg.module_eqn.replace("__", "::"))`
-  - **Cascade**: This changes `PipelineModule.module_type` for all aggregation modules, affecting:
-    - ComputationGraph JSON baselines (solar_battery)
-    - Pipeline YAML baselines (solar_battery module_type values)
-    - C14-C18 conformance tests that assert aggregation module_type strings
-  - **Acceptance**: All module_type values in graph match registry module_type_override values. All baselines regenerated. Full test suite green.
+- [x] **7.5a — Fix aggregation module_type in graph_builder (Bug 8a remainder)** *(completed 2026-02-19)*
+  - **Context**: C24 fixed registry.py to use `agg.module_eqn` for aggregation import paths and module_type_override values. But `graph_builder.py:970-972` used `agg.expression.owning_part_qn` for `PipelineModule.module_type`, producing malformed types like `"solarbatterylibrary__solar_array.capital_costModule"` instead of `"solarbatterydesign.solar_battery_plant.solar_array.capital_costModule"`.
+  - **Fix**: `graph_builder.py:970`: `module_type = derive_module_type(agg.module_eqn.replace("__", "::"))`
+  - **Actual cascade** (narrower than predicted — C14-C18 conformance tests had zero failures):
+    - ComputationGraph JSON baselines regenerated (solar_battery, attr_expr_probe, chain_spike)
+    - Pipeline YAML baselines regenerated (same 3 models)
+    - 1 unit test assertion updated (`test_graph_builder_aggregation.py::test_module_naming`)
+    - 1 static analysis test inverted (`test_gen_registry.py` — now asserts fix present)
+  - **Acceptance**: All 20 solar_battery aggregation module_types design-scoped and consistent with registry. All baselines regenerated. 1753 tests pass, 0 failures, 6 xfailed (unchanged).
 
 - [ ] **7.6 — Verify generation only consumes ComputationGraph**
   - Audit each generator: does it import from extraction or analysis?
@@ -662,8 +665,8 @@ architecture from STRATEGY.md.
 | 2 | Infrastructure | Registry, VBR, agg scoping proven | 117 (actual) |
 | 3 | Analysis | Backtracker, resolver, groups, dual consistency | 136 (actual) |
 | 4 | Factories + Graph | All module types + graph assembly | 183 (actual: C14: 48, C15: 34, C16: 32, C17: 35, C18: 34) |
-| 5 | Orchestrator | E2E pipeline matches baselines | ~20 |
-| 6 | Generation | All generators validated against graph | ~40 |
+| 5 | Orchestrator | E2E pipeline matches baselines | 55 (actual: C19: 39, 5.2: 16) |
+| 6 | Generation | All generators validated against graph | 167 (actual: C20: 27, C21: 19, C22: 21, C24: 22, C23: 30, C25: 28, X01: 20) |
 | 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26), factory purity (7.7) | ~10 |
 
 **Total**: 800+ new conformance tests on top of existing 660 (865 actual through C18; C19-C25 pending).
@@ -1246,8 +1249,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 06-entry-point-classifier.md | Clarify REQ-EPC-04: param_group may be None from classifier; orphan handling (REQ-EPC-05) ensures graph-level invariant | C17 conformance finding #3 (2026-02-17) | Yes (2026-02-17) — REQ-EPC-04 description expanded |
 | 21-pipeline-yaml-generation.md | Update Bug 10 line reference from 1039 to 1061; mark fix as applied | C20 conformance (2026-02-18) | Yes (2026-02-18) — line ref updated, table row updated to "Fixed" |
 | 07-graph-assembly.md | Note Step 6.9 (param_group propagation) added after Step 6.8 orphan handling | C20 Bug 9 fix (2026-02-18) | Yes (2026-02-18) — new section with code and rationale added before §ComputationGraph contract |
-| 22-output-schema-rules.md | Note Bug 11 confirmed: Permitting_Interconnect has default=0.0 on 4 output fields | C22 conformance finding #1 (2026-02-18) | |
-| 08-generation.md | Update REQ-GEN-06 "Verified by" — remove "Currently VIOLATED", reference `type_mapping.py` | X01 consolidation (2026-02-19) | |
+| 22-output-schema-rules.md | Note Bug 11 confirmed: Permitting_Interconnect has default=0.0 on 4 output fields | C22 conformance finding #1 (2026-02-18) | Yes (2026-02-19) — §Known Bug note added with root cause, affected fields, and tracking status |
+| 08-generation.md | Update REQ-GEN-06 "Verified by" — remove "Currently VIOLATED", reference `type_mapping.py` | X01 consolidation (2026-02-19) | Yes (2026-02-19) — REQ-GEN-06 updated, Current Gap section amended |
 
 ---
 
@@ -1286,6 +1289,7 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C20 Pipeline YAML Generator | 1587 | 27 | 1614 (+5 xfail) | 2026-02-18 |
 | C21 Module Wrapper Generator | 1614 | 19 | 1633 (+5 xfail) | 2026-02-18 |
 | C22 Schema Generator | 1633 | 21 | 1653 (+6 xfail) | 2026-02-18 |
+| C24 Module Registry Generator | 1653 | 22 | 1675 (+6 xfail) | 2026-02-18 |
 | C23 Stencil + Smart Regen | 1675 | 30 | 1705 (+6 xfail) | 2026-02-18 |
 | C25 JSON Template + Schema | 1705 | 28 | 1733 (+6 xfail) | 2026-02-18 |
 | X01 Type Mapping Consolidation | 1733 | 20 | 1753 (+6 xfail) | 2026-02-19 |

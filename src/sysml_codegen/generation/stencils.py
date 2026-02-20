@@ -550,6 +550,18 @@ def _estimate_complexity(calc_def: CalculationDefinitionData) -> str:
         return "High"
 
 
+def _output_attr_name(out) -> str:
+    """Get original output attribute name from ModuleOutput.
+
+    For multi-output modules, field_name IS the attribute name.
+    For single-output modules, field_name is "root" -- extract from channel_name.
+    Channel name format: {usage_eqn}__{attr_name} (PQN format).
+    """
+    if out.field_name != "root":
+        return out.field_name
+    return out.channel_name.split("__")[-1]
+
+
 def _build_stub_docstring_from_graph(module) -> str:
     """Build stub docstring from PipelineModule fields.
 
@@ -560,8 +572,7 @@ def _build_stub_docstring_from_graph(module) -> str:
     # Derive output info from module outputs
     output_names = []
     for out in module.outputs:
-        name = out.field_name if out.field_name != "root" else module.calc_def_name
-        output_names.append(name)
+        output_names.append(_output_attr_name(out))
 
     lines.append(f"Execute {module.calc_def_name} calculation.")
 
@@ -586,7 +597,7 @@ def _build_stub_docstring_from_graph(module) -> str:
 
     if len(module.outputs) == 1:
         out = module.outputs[0]
-        out_name = out.field_name if out.field_name != "root" else module.calc_def_name
+        out_name = _output_attr_name(out)
         desc = out.description or out_name
         lines.append("")
         lines.append("Returns:")
@@ -636,8 +647,7 @@ def generate_implementation_from_graph(
     # Derive output names from module outputs
     output_names = []
     for out in module.outputs:
-        name = out.field_name if out.field_name != "root" else module.calc_def_name
-        output_names.append(name)
+        output_names.append(_output_attr_name(out))
 
     # Return type
     if len(module.outputs) == 0:

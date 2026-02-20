@@ -681,35 +681,29 @@ class TestGeneratedCodeValidPython:
 # Cross-reference: graph_builder module_type mismatch documented
 # ---------------------------------------------------------------------------
 
-class TestGraphBuilderModuleTypeMismatch:
-    """Static analysis: verify graph_builder.py still uses owning_part_qn
-    for aggregation module_type. Documents the known mismatch for Phase 7."""
+class TestGraphBuilderModuleTypeConsistency:
+    """Static analysis: verify graph_builder.py uses module_eqn (design-scoped)
+    for aggregation module_type, consistent with registry.py (Bug 8a fix)."""
 
     @pytest.mark.req("REQ-REG-01")
-    def test_graph_builder_module_type_mismatch_documented(self):
-        """graph_builder.py line ~970 uses agg.expression.owning_part_qn
-        for aggregation module_type derivation -- known mismatch with
-        the registry's design-scoped derivation. Documented for Phase 7 fix."""
+    def test_graph_builder_uses_module_eqn_for_aggregation_module_type(self):
+        """graph_builder.py uses agg.module_eqn.replace('__', '::') for
+        aggregation module_type derivation — matching registry.py's
+        design-scoped derivation (Bug 8a remainder fix, 7.5a)."""
         graph_builder_path = SRC_DIR / "resolution" / "graph_builder.py"
         source = graph_builder_path.read_text()
 
-        # Find the aggregation module_type derivation
-        assert "agg.expression.owning_part_qn" in source, (
-            "graph_builder.py no longer uses owning_part_qn for aggregation "
-            "module_type -- Phase 7 fix may have been applied"
+        # owning_part_qn must NOT appear in derive_module_type() context
+        assert 'agg.expression.owning_part_qn' not in source or \
+            'derive_module_type' not in source[
+                max(0, source.find('agg.expression.owning_part_qn') - 200):
+                source.find('agg.expression.owning_part_qn') + 100
+            ] if 'agg.expression.owning_part_qn' in source else True, (
+            "graph_builder.py still uses owning_part_qn near derive_module_type()"
         )
 
-        # Verify it's in the derive_module_type() call context
-        lines = source.splitlines()
-        found = False
-        for i, line in enumerate(lines):
-            if "agg.expression.owning_part_qn" in line and "derive_module_type" in source[
-                max(0, source.find(line) - 200):source.find(line) + len(line)
-            ]:
-                found = True
-                break
-
-        assert found, (
-            "owning_part_qn usage not found near derive_module_type() call in "
-            "graph_builder.py -- verify the mismatch is still present"
+        # module_eqn.replace MUST appear in derive_module_type() context
+        assert 'module_eqn.replace("__", "::")' in source, (
+            "graph_builder.py should use module_eqn.replace('__', '::') "
+            "for aggregation module_type derivation"
         )

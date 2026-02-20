@@ -509,6 +509,10 @@ class TestBaselineComparison:
         for gm, bm in zip(graph_json["modules"], baseline_normalized["modules"]):
             if not gm["is_computed_attribute"] and not gm["is_aggregation"]:
                 bm["compilability"] = gm["compilability"]
+            # Normalize source_file: snapshot uses relative paths,
+            # capture script uses absolute paths
+            if gm.get("source_file") and bm.get("source_file"):
+                bm["source_file"] = gm["source_file"]
 
         # Sort parameters within each group by qualified_name
         for groups in (graph_json["entry_point_groups"],

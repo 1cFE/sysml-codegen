@@ -199,9 +199,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw
 
-  # source: aggregation (solarbatterylibrary__solar_array.fabrication_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.solar_array.fabrication_costModule)
   solarbatterydesign__solar_battery_plant__solar_array__fabrication_cost:
-    module_type: solarbatterylibrary__solar_array.fabrication_costModule
+    module_type: solarbatterydesign.solar_battery_plant.solar_array.fabrication_costModule
     inputs:
       pv_module_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_cost
       module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
@@ -211,9 +211,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__fabrication_cost
 
-  # source: aggregation (solarbatterylibrary__solar_array.installation_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.solar_array.installation_costModule)
   solarbatterydesign__solar_battery_plant__solar_array__installation_cost:
-    module_type: solarbatterylibrary__solar_array.installation_costModule
+    module_type: solarbatterydesign.solar_battery_plant.solar_array.installation_costModule
     inputs:
       pv_module_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_cost
       module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
@@ -223,9 +223,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__installation_cost
 
-  # source: aggregation (solarbatterylibrary__battery_system.capital_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.battery_system.capital_costModule)
   solarbatterydesign__solar_battery_plant__battery_system__capital_cost:
-    module_type: solarbatterylibrary__battery_system.capital_costModule
+    module_type: solarbatterydesign.solar_battery_plant.battery_system.capital_costModule
     inputs:
       battery_pack_capital_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost
       pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
@@ -234,9 +234,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__battery_system__capital_cost__capital_cost
 
-  # source: aggregation (solarbatterylibrary__battery_system.raw_material_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.battery_system.raw_material_costModule)
   solarbatterydesign__solar_battery_plant__battery_system__raw_material_cost:
-    module_type: solarbatterylibrary__battery_system.raw_material_costModule
+    module_type: solarbatterydesign.solar_battery_plant.battery_system.raw_material_costModule
     inputs:
       battery_pack_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__material_cost
       pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
@@ -245,9 +245,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__battery_system__raw_material_cost__raw_material_cost
 
-  # source: aggregation (solarbatterylibrary__battery_system.fabrication_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.battery_system.fabrication_costModule)
   solarbatterydesign__solar_battery_plant__battery_system__fabrication_cost:
-    module_type: solarbatterylibrary__battery_system.fabrication_costModule
+    module_type: solarbatterydesign.solar_battery_plant.battery_system.fabrication_costModule
     inputs:
       battery_pack_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_cost
       pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
@@ -256,9 +256,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__battery_system__fabrication_cost__fabrication_cost
 
-  # source: aggregation (solarbatterylibrary__battery_system.installation_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.battery_system.installation_costModule)
   solarbatterydesign__solar_battery_plant__battery_system__installation_cost:
-    module_type: solarbatterylibrary__battery_system.installation_costModule
+    module_type: solarbatterydesign.solar_battery_plant.battery_system.installation_costModule
     inputs:
       battery_pack_installation_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_cost
       pack_count: float system_design.SolarBatteryDesign__solar_battery_plant__battery_system__pack_count
@@ -267,9 +267,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__battery_system__installation_cost__installation_cost
 
-  # source: aggregation (solarbatterylibrary__site_infrastructure.raw_material_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.site_infra.raw_material_costModule)
   solarbatterydesign__solar_battery_plant__site_infra__raw_material_cost:
-    module_type: solarbatterylibrary__site_infrastructure.raw_material_costModule
+    module_type: solarbatterydesign.solar_battery_plant.site_infra.raw_material_costModule
     inputs:
       racking_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__material_cost
       electrical_panel_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__material_cost
@@ -277,9 +277,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__raw_material_cost
 
-  # source: aggregation (solarbatterylibrary__site_infrastructure.fabrication_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.site_infra.fabrication_costModule)
   solarbatterydesign__solar_battery_plant__site_infra__fabrication_cost:
-    module_type: solarbatterylibrary__site_infrastructure.fabrication_costModule
+    module_type: solarbatterydesign.solar_battery_plant.site_infra.fabrication_costModule
     inputs:
       racking_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_cost
       electrical_panel_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_cost
@@ -287,9 +287,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__fabrication_cost
 
-  # source: aggregation (solarbatterylibrary__site_infrastructure.installation_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.site_infra.installation_costModule)
   solarbatterydesign__solar_battery_plant__site_infra__installation_cost:
-    module_type: solarbatterylibrary__site_infrastructure.installation_costModule
+    module_type: solarbatterydesign.solar_battery_plant.site_infra.installation_costModule
     inputs:
       racking_installation_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_cost
       electrical_panel_installation_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_cost
@@ -297,9 +297,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__installation_cost
 
-  # source: aggregation (solarbatterylibrary__site_infrastructure.capital_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.site_infra.capital_costModule)
   solarbatterydesign__solar_battery_plant__site_infra__capital_cost:
-    module_type: solarbatterylibrary__site_infrastructure.capital_costModule
+    module_type: solarbatterydesign.solar_battery_plant.site_infra.capital_costModule
     inputs:
       racking_capital_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__total_cost
       electrical_panel_capital_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__total_cost
@@ -307,9 +307,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__capital_cost__capital_cost
 
-  # source: aggregation (solarbatterylibrary__solar_array.capital_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.solar_array.capital_costModule)
   solarbatterydesign__solar_battery_plant__solar_array__capital_cost:
-    module_type: solarbatterylibrary__solar_array.capital_costModule
+    module_type: solarbatterydesign.solar_battery_plant.solar_array.capital_costModule
     inputs:
       pv_module_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__total_cost
       module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
@@ -320,9 +320,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost
 
-  # source: aggregation (solarbatterylibrary__solar_array.raw_material_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.solar_array.raw_material_costModule)
   solarbatterydesign__solar_battery_plant__solar_array__raw_material_cost:
-    module_type: solarbatterylibrary__solar_array.raw_material_costModule
+    module_type: solarbatterydesign.solar_battery_plant.solar_array.raw_material_costModule
     inputs:
       pv_module_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__material_cost
       module_count: float system_design.SolarBatteryDesign__solar_battery_plant__solar_array__module_count
@@ -342,18 +342,18 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__annualized_om__annual_om_cost
 
-  # source: aggregation (solarbatterylibrary__battery_system.idiot_indexModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.battery_system.idiot_indexModule)
   solarbatterydesign__solar_battery_plant__battery_system__idiot_index:
-    module_type: solarbatterylibrary__battery_system.idiot_indexModule
+    module_type: solarbatterydesign.solar_battery_plant.battery_system.idiot_indexModule
     inputs:
       capital_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__capital_cost__capital_cost.root
       raw_material_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__raw_material_cost__raw_material_cost.root
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__battery_system__idiot_index__idiot_index
 
-  # source: aggregation (solarbatterylibrary__solar_battery_plant.fabrication_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.fabrication_costModule)
   solarbatterydesign__solar_battery_plant__fabrication_cost:
-    module_type: solarbatterylibrary__solar_battery_plant.fabrication_costModule
+    module_type: solarbatterydesign.solar_battery_plant.fabrication_costModule
     inputs:
       solar_array_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__fabrication_cost__fabrication_cost.root
       battery_system_fabrication_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__fabrication_cost__fabrication_cost.root
@@ -361,9 +361,9 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__fabrication_cost__fabrication_cost
 
-  # source: aggregation (solarbatterylibrary__solar_battery_plant.installation_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.installation_costModule)
   solarbatterydesign__solar_battery_plant__installation_cost:
-    module_type: solarbatterylibrary__solar_battery_plant.installation_costModule
+    module_type: solarbatterydesign.solar_battery_plant.installation_costModule
     inputs:
       solar_array_installation_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__installation_cost__installation_cost.root
       battery_system_installation_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__installation_cost__installation_cost.root
@@ -371,18 +371,18 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__installation_cost__installation_cost
 
-  # source: aggregation (solarbatterylibrary__site_infrastructure.idiot_indexModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.site_infra.idiot_indexModule)
   solarbatterydesign__solar_battery_plant__site_infra__idiot_index:
-    module_type: solarbatterylibrary__site_infrastructure.idiot_indexModule
+    module_type: solarbatterydesign.solar_battery_plant.site_infra.idiot_indexModule
     inputs:
       capital_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__capital_cost__capital_cost.root
       raw_material_cost: float SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__raw_material_cost.root
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__site_infra__idiot_index__idiot_index
 
-  # source: aggregation (solarbatterylibrary__solar_battery_plant.capital_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.capital_costModule)
   solarbatterydesign__solar_battery_plant__capital_cost:
-    module_type: solarbatterylibrary__solar_battery_plant.capital_costModule
+    module_type: solarbatterydesign.solar_battery_plant.capital_costModule
     inputs:
       solar_array_capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost.root
       battery_system_capital_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__capital_cost__capital_cost.root
@@ -390,18 +390,18 @@ modules:
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__capital_cost__capital_cost
 
-  # source: aggregation (solarbatterylibrary__solar_array.idiot_indexModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.solar_array.idiot_indexModule)
   solarbatterydesign__solar_battery_plant__solar_array__idiot_index:
-    module_type: solarbatterylibrary__solar_array.idiot_indexModule
+    module_type: solarbatterydesign.solar_battery_plant.solar_array.idiot_indexModule
     inputs:
       capital_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost.root
       raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__raw_material_cost.root
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__solar_array__idiot_index__idiot_index
 
-  # source: aggregation (solarbatterylibrary__solar_battery_plant.raw_material_costModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.raw_material_costModule)
   solarbatterydesign__solar_battery_plant__raw_material_cost:
-    module_type: solarbatterylibrary__solar_battery_plant.raw_material_costModule
+    module_type: solarbatterydesign.solar_battery_plant.raw_material_costModule
     inputs:
       solar_array_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__solar_array__raw_material_cost__raw_material_cost.root
       battery_system_raw_material_cost: float SolarBatteryDesign__solar_battery_plant__battery_system__raw_material_cost__raw_material_cost.root
@@ -420,9 +420,9 @@ modules:
       capital_recovery_factor: float SolarBatteryDesign__solar_battery_plant__annualized_financial__capital_recovery_factor
       annualized_capital_cost: float SolarBatteryDesign__solar_battery_plant__annualized_financial__annualized_capital_cost
 
-  # source: aggregation (solarbatterylibrary__solar_battery_plant.idiot_indexModule)
+  # source: aggregation (solarbatterydesign.solar_battery_plant.idiot_indexModule)
   solarbatterydesign__solar_battery_plant__idiot_index:
-    module_type: solarbatterylibrary__solar_battery_plant.idiot_indexModule
+    module_type: solarbatterydesign.solar_battery_plant.idiot_indexModule
     inputs:
       capital_cost: float SolarBatteryDesign__solar_battery_plant__capital_cost__capital_cost.root
       raw_material_cost: float SolarBatteryDesign__solar_battery_plant__raw_material_cost__raw_material_cost.root

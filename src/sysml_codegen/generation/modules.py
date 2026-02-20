@@ -206,8 +206,7 @@ def _build_module_docstring_from_graph(module) -> str:
         lines.append("")
         lines.append("Outputs:")
         for out in module.outputs:
-            # For single-output, field_name is "root" -- use calc_def_name as fallback
-            out_name = out.field_name if out.field_name != "root" else module.calc_def_name
+            out_name = _output_attr_name(out)
             desc = out.description or f"{out_name} result"
             if out.unit and f"[{out.unit}]" not in desc:
                 desc = f"{desc} [{out.unit}]"
@@ -253,7 +252,7 @@ def generate_teax_module_from_graph(
 
     output_attributes = []
     for out in module.outputs:
-        out_name = out.field_name if out.field_name != "root" else module.calc_def_name
+        out_name = _output_attr_name(out)
         output_attributes.append({
             "name": out_name,
             "description": out.description or f"{out_name} output",

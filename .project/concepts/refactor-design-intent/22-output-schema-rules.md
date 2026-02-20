@@ -151,6 +151,23 @@ generation layer should strip it before rendering the schema.
 defaults (outputs are computed, not defaulted), so this rarely triggers.
 When it does (e.g., aggregation totals initialized to 0), it breaks TEAx.
 
+### Bug 11: Confirmed REQ-OSR-05 Violation (2026-02-18)
+
+C22 conformance testing confirmed this bug in the `solar_battery` model.
+`Permitting_Interconnect` has `default=0.0` on 4 output fields:
+`material_cost`, `fab_cost`, `install_cost`, `idiot_index`. These render as
+`Field(default=0.0, ...)` in the generated `MultiOutput` schema, causing
+TEAx to treat them as optional parameters rather than required outputs.
+
+**Root cause**: The schema generator (`generation/schemas.py`) passes
+`AttributeInfo.default_value` through to the template without checking
+whether the field is an output. Outputs should never have defaults regardless
+of what the SysML model declares.
+
+**Fix**: Strip `default_value` from output fields before rendering. The fix
+is small but deferred — tracked as xfail in
+`tests/conformance/test_gen_schemas.py::test_output_fields_have_no_defaults`.
+
 ---
 
 ## Aggregation and Computed Attribute Outputs
