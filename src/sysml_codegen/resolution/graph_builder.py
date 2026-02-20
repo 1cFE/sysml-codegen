@@ -42,7 +42,10 @@ from sysml_codegen.extraction.data_models import (
     ScopedAggregationData,
 )
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.extraction.expression_compiler import Compilability
+from sysml_codegen.extraction.expression_compiler import (
+    CalcDefCompilationResult,
+    Compilability,
+)
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -65,6 +68,83 @@ class MissingCalcDefError(Exception):
     """
 
     pass
+
+
+def _build_auto_impl_context_for_calcusage(
+    compilation_result: CalcDefCompilationResult,
+    output_attr_names: list[str],
+) -> dict:
+    """Build auto-implementation context dict for a FULLY_COMPILABLE CalcUsage module.
+
+    Mirrors the logic in generation/stencils.py:_build_auto_impl_context() but
+    takes output_attr_names directly instead of a CalculationDefinitionData.
+
+    Args:
+        compilation_result: Compilation result with per-output expressions
+        output_attr_names: Ordered output attribute names from calc_def
+    """
+    output_attr_set = set(output_attr_names)
+    result_map = {r.output_name: r for r in compilation_result.output_results}
+
+    has_output_crossrefs = any(
+        set(result_map[name].intermediate_refs) & output_attr_set
+        for name in output_attr_names
+        if name in result_map and result_map[name].intermediate_refs
+    )
+
+    execution_steps = []
+    output_expressions = []
+
+    if has_output_crossrefs:
+        for name in compilation_result.execution_order:
+            r = result_map.get(name)
+            if r and r.python_expression:
+                execution_steps.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+        for name in output_attr_names:
+            if name in result_map:
+                output_expressions.append({
+                    "name": name,
+                    "expression": name,
+                })
+    else:
+        for name in compilation_result.execution_order:
+            r = result_map.get(name)
+            if r and r.python_expression and r.is_undeclared_intermediate:
+                execution_steps.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+        for name in output_attr_names:
+            r = result_map.get(name)
+            if r and r.python_expression:
+                output_expressions.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+
+    return {
+        "execution_steps": execution_steps,
+        "output_expressions": output_expressions,
+        "output_count": len(output_expressions),
+        "single_output_expression": (
+            output_expressions[0]["expression"]
+            if len(output_expressions) == 1
+            else None
+        ),
+    }
+
+
+def _build_simple_auto_impl_context(compiled_expression: str, output_name: str) -> dict:
+    """Build auto-impl context for single-output FORMULA/aggregation modules."""
+    return {
+        "execution_steps": [],
+        "output_expressions": [{"name": output_name, "expression": compiled_expression}],
+        "output_count": 1,
+        "single_output_expression": compiled_expression,
+    }
 
 
 def build_computation_graph(
@@ -146,17 +226,24 @@ def build_computation_graph(
                 f"which was not found in calc_defs. This indicates a model inconsistency."
             )
 
-        module = _build_pipeline_module(
+        module, new_eps = _build_pipeline_module(
             usage=usage,
             calc_def=calc_def,
             entry_points=entry_points,
             execution_order=idx,
             binding_resolutions=result.binding_resolutions,
         )
+        entry_points.update(new_eps)
 
-        # Set compilability from compilation results
+        # Set compilability and auto_impl_context from compilation results
         if compilation_results and usage.calc_def_name in compilation_results:
-            module.compilability = compilation_results[usage.calc_def_name].overall_compilability
+            cr = compilation_results[usage.calc_def_name]
+            module.compilability = cr.overall_compilability
+            if cr.overall_compilability == Compilability.FULLY_COMPILABLE:
+                output_attr_names = [attr.name for attr in calc_def.output_attributes]
+                module.auto_impl_context = _build_auto_impl_context_for_calcusage(
+                    cr, output_attr_names,
+                )
 
         modules.append(module)
 
@@ -167,10 +254,11 @@ def build_computation_graph(
                 ca.classification == ComputedAttributeClassification.FORMULA
                 and ca.compilability == Compilability.FULLY_COMPILABLE
             ):
-                module = _build_computed_attr_module(
+                module, new_eps = _build_computed_attr_module(
                     ca, attr_resolution_map, entry_points,
                     design_attrs, group_deriver,
                 )
+                entry_points.update(new_eps)
                 modules.append(module)
 
     # Step 6.6b: Build EXPOSE_PURE alias map for aggregation LocalTerm resolution.
@@ -189,11 +277,12 @@ def build_computation_graph(
 
     # Step 6.7: Build aggregation modules
     for agg in (aggregation_data or []):
-        agg_module = _build_aggregation_module(
+        agg_module, new_eps = _build_aggregation_module(
             agg, hierarchy_redefinitions or [], output_registry,
             entry_points, group_deriver, expose_aliases,
             usage_type_map or {},
         )
+        entry_points.update(new_eps)
         modules.append(agg_module)
 
     # Step 6.6: Rebuild param_groups with ALL entry points
@@ -662,16 +751,20 @@ def _build_computed_attr_module(
     entry_points: dict[str, EntryPoint],
     design_attrs: dict[Path, list[DesignAttributeData]],
     group_deriver: ParameterGroupDeriver,
-) -> PipelineModule:
+) -> tuple[PipelineModule, dict[str, EntryPoint]]:
     """Build a PipelineModule from a FORMULA ComputedAttributeData.
 
     Args:
         ca: The FORMULA computed attribute (must be FULLY_COMPILABLE)
         resolution_map: Per-part attribute resolution map
-        entry_points: Mutable dict -- new entry points may be added
+        entry_points: Read-only dict of classified entry points
         design_attrs: Design attributes for default value lookup
         group_deriver: For classifying new entry points
+
+    Returns:
+        (PipelineModule, dict of new entry points created by this factory)
     """
+    new_entry_points: dict[str, EntryPoint] = {}
     # Naming per ADR-003
     sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
     module_eqn = sysml_to_python_qualified_name(sysml_qn)
@@ -721,7 +814,7 @@ def _build_computed_attr_module(
             # Create/reuse entry point (literal or unresolved)
             ep_qname = f"{part_eqn}__{input_name}"
 
-            if ep_qname not in entry_points:
+            if ep_qname not in entry_points and ep_qname not in new_entry_points:
                 # Look up default value from design attrs
                 default_value: float | None = None
                 da = design_attr_by_qname.get(ep_qname)
@@ -733,7 +826,7 @@ def _build_computed_attr_module(
 
                 param_group = group_deriver.classify(ep_qname) if group_deriver else None
 
-                entry_points[ep_qname] = EntryPoint(
+                new_entry_points[ep_qname] = EntryPoint(
                     qualified_name=ep_qname,
                     simple_name=input_name,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
@@ -741,7 +834,7 @@ def _build_computed_attr_module(
                     param_group=param_group,
                 )
 
-            ep = entry_points[ep_qname]
+            ep = new_entry_points.get(ep_qname) or entry_points[ep_qname]
             source = InputSource(
                 source_type="entry_point",
                 param_group=ep.param_group,
@@ -771,14 +864,18 @@ def _build_computed_attr_module(
         outputs=[output],
         execution_order=0,  # Assigned during unified toposort
         compilability=Compilability.FULLY_COMPILABLE,
+        compiled_expression=ca.compiled_expression,
         is_computed_attribute=True,
+        auto_impl_context=_build_simple_auto_impl_context(
+            ca.compiled_expression, ca.python_name,
+        ),
         calc_def_name=ca.name,
         calc_def_qualified_name=ca.owning_part_qualified_name,
         doc_comment=getattr(ca, "description", None),
         calc_expressions=[ca.expression_text] if ca.expression_text else None,
         source_file=str(ca.source_file),
         source_line=ca.source_line,
-    )
+    ), new_entry_points
 
 
 
@@ -956,7 +1053,7 @@ def _build_aggregation_module(
     group_deriver: ParameterGroupDeriver | None,
     expose_aliases: dict[tuple[str, str], str] | None = None,
     usage_type_map: dict[tuple[str, str], str] | None = None,
-) -> PipelineModule:
+) -> tuple[PipelineModule, dict[str, EntryPoint]]:
     """Build a PipelineModule from a ScopedAggregationData.
 
     Follows the _build_computed_attr_module() pattern. Creates inputs from
@@ -967,11 +1064,15 @@ def _build_aggregation_module(
         agg: Scoped aggregation expression
         redefinitions: PartDef-level :>> redefinitions for CHAIN resolution
         output_registry: OutputRegistry for channel verification and lookup
-        entry_points: Mutable dict -- new entry points may be added
+        entry_points: Read-only dict of classified entry points
         group_deriver: For classifying new entry points (None in tests)
         expose_aliases: EXPOSE_PURE alias map for LocalTerm resolution
         usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
+
+    Returns:
+        (PipelineModule, dict of new entry points created by this factory)
     """
+    new_entry_points: dict[str, EntryPoint] = {}
     # Naming per ADR-003, using module_eqn property
     module_name = get_module_name(agg.module_eqn)
     module_type = derive_module_type(agg.module_eqn.replace("__", "::"))
@@ -1012,29 +1113,31 @@ def _build_aggregation_module(
                 compilability = Compilability.MANUAL_REQUIRED
 
             ep_qn = f"{agg.module_eqn}__{param_name}"
-            if ep_qn not in entry_points:
+            if ep_qn not in entry_points and ep_qn not in new_entry_points:
                 param_group = group_deriver.classify(ep_qn) if group_deriver else None
-                entry_points[ep_qn] = EntryPoint(
+                new_entry_points[ep_qn] = EntryPoint(
                     qualified_name=ep_qn,
                     simple_name=param_name,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
                     default_value=literal_default,
                     param_group=param_group,
                 )
-            elif literal_default is not None and entry_points[ep_qn].default_value is None:
-                ep = entry_points[ep_qn]
-                entry_points[ep_qn] = EntryPoint(
-                    qualified_name=ep.qualified_name,
-                    simple_name=ep.simple_name,
-                    entry_type=ep.entry_type,
-                    default_value=literal_default,
-                    source_calc_usage=ep.source_calc_usage,
-                    param_group=ep.param_group,
-                )
+            elif literal_default is not None:
+                existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
+                if existing_ep and existing_ep.default_value is None:
+                    new_entry_points[ep_qn] = EntryPoint(
+                        qualified_name=existing_ep.qualified_name,
+                        simple_name=existing_ep.simple_name,
+                        entry_type=existing_ep.entry_type,
+                        default_value=literal_default,
+                        source_calc_usage=existing_ep.source_calc_usage,
+                        param_group=existing_ep.param_group,
+                    )
+            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
             source = InputSource(
                 source_type="entry_point",
                 qualified_name=ep_qn,
-                param_group=entry_points[ep_qn].param_group,
+                param_group=ep.param_group,
             )
 
         inputs.append(ModuleInput(
@@ -1047,9 +1150,9 @@ def _build_aggregation_module(
         # Multiplicity entry point
         if term.multiplicity_attr:
             mult_ep_qn = f"{agg.instance_path}__{term.multiplicity_attr}"
-            if mult_ep_qn not in entry_points:
+            if mult_ep_qn not in entry_points and mult_ep_qn not in new_entry_points:
                 param_group = group_deriver.classify(mult_ep_qn) if group_deriver else None
-                entry_points[mult_ep_qn] = EntryPoint(
+                new_entry_points[mult_ep_qn] = EntryPoint(
                     qualified_name=mult_ep_qn,
                     simple_name=term.multiplicity_attr,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
@@ -1060,7 +1163,7 @@ def _build_aggregation_module(
                     ),
                     param_group=param_group,
                 )
-            ep = entry_points[mult_ep_qn]
+            ep = new_entry_points.get(mult_ep_qn) or entry_points[mult_ep_qn]
             inputs.append(ModuleInput(
                 param_name=term.multiplicity_attr,
                 python_type="float",
@@ -1124,30 +1227,32 @@ def _build_aggregation_module(
                 compilability = Compilability.MANUAL_REQUIRED
 
             ep_qn = f"{agg.module_eqn}__{param_name}"
-            if ep_qn not in entry_points:
+            if ep_qn not in entry_points and ep_qn not in new_entry_points:
                 param_group = group_deriver.classify(ep_qn) if group_deriver else None
-                entry_points[ep_qn] = EntryPoint(
+                new_entry_points[ep_qn] = EntryPoint(
                     qualified_name=ep_qn,
                     simple_name=param_name,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
                     default_value=literal_default,
                     param_group=param_group,
                 )
-            elif literal_default is not None and entry_points[ep_qn].default_value is None:
+            elif literal_default is not None:
                 # Backfill default if entry point was created earlier without it
-                ep = entry_points[ep_qn]
-                entry_points[ep_qn] = EntryPoint(
-                    qualified_name=ep.qualified_name,
-                    simple_name=ep.simple_name,
-                    entry_type=ep.entry_type,
-                    default_value=literal_default,
-                    source_calc_usage=ep.source_calc_usage,
-                    param_group=ep.param_group,
-                )
+                existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
+                if existing_ep and existing_ep.default_value is None:
+                    new_entry_points[ep_qn] = EntryPoint(
+                        qualified_name=existing_ep.qualified_name,
+                        simple_name=existing_ep.simple_name,
+                        entry_type=existing_ep.entry_type,
+                        default_value=literal_default,
+                        source_calc_usage=existing_ep.source_calc_usage,
+                        param_group=existing_ep.param_group,
+                    )
+            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
             s_source = InputSource(
                 source_type="entry_point",
                 qualified_name=ep_qn,
-                param_group=entry_points[ep_qn].param_group,
+                param_group=ep.param_group,
             )
 
         inputs.append(ModuleInput(
@@ -1193,15 +1298,15 @@ def _build_aggregation_module(
         if l_source is None:
             # Genuinely unresolvable → entry point
             ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
-            if ep_qn not in entry_points:
+            if ep_qn not in entry_points and ep_qn not in new_entry_points:
                 param_group = group_deriver.classify(ep_qn) if group_deriver else None
-                entry_points[ep_qn] = EntryPoint(
+                new_entry_points[ep_qn] = EntryPoint(
                     qualified_name=ep_qn,
                     simple_name=l_term.attribute_name,
                     entry_type=EntryPointType.DESIGN_ATTRIBUTE,
                     param_group=param_group,
                 )
-            ep = entry_points[ep_qn]
+            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
             l_source = InputSource(
                 source_type="entry_point",
                 qualified_name=ep_qn,
@@ -1230,6 +1335,12 @@ def _build_aggregation_module(
         channel_name=get_channel_name(agg.module_eqn, agg.expression.attribute_name),
     )
 
+    auto_impl_ctx = None
+    if compilability == Compilability.FULLY_COMPILABLE and compiled_expression:
+        auto_impl_ctx = _build_simple_auto_impl_context(
+            compiled_expression, agg.expression.attribute_name,
+        )
+
     return PipelineModule(
         name=module_name,
         module_type=module_type,
@@ -1239,12 +1350,13 @@ def _build_aggregation_module(
         compilability=compilability,
         compiled_expression=compiled_expression,
         is_aggregation=True,
+        auto_impl_context=auto_impl_ctx,
         calc_def_name=agg.expression.attribute_name,
         calc_def_qualified_name=agg.expression.owning_part_qn,
         calc_expressions=[agg.expression.raw_expression_text] if agg.expression.raw_expression_text else None,
         source_file=str(agg.expression.source_file),
         source_line=agg.expression.source_line,
-    )
+    ), new_entry_points
 
 
 def _unified_topological_sort(modules: list[PipelineModule]) -> list[PipelineModule]:
@@ -1326,7 +1438,7 @@ def _build_pipeline_module(
     entry_points: dict[str, EntryPoint],
     execution_order: int,
     binding_resolutions: dict[str, BindingResolution],
-) -> PipelineModule:
+) -> tuple[PipelineModule, dict[str, EntryPoint]]:
     """Build a single PipelineModule from a CalcUsageData.
 
     ADR-003 Phase 7: Uses binding_resolutions as the SINGLE SOURCE OF TRUTH.
@@ -1343,13 +1455,14 @@ def _build_pipeline_module(
     Args:
         usage: The calc usage to convert
         calc_def: Corresponding calc definition
-        entry_points: All classified entry points
+        entry_points: Read-only dict of classified entry points
         execution_order: Position in topological order
         binding_resolutions: Unified mapping for ALL binding resolutions (REQUIRED).
             Maps "{usage_qn}|{param_name}" -> BindingResolution.
 
     Returns:
-        PipelineModule ready for YAML rendering
+        (PipelineModule, dict of new entry points) — new_entry_points is always
+        empty for CalcUsage factories (they never create EPs).
 
     Raises:
         ValueError: If binding resolution is missing (ADR-003 VIOLATION)
@@ -1444,7 +1557,7 @@ def _build_pipeline_module(
         calc_expressions=calc_def.calc_expressions,
         source_file=str(calc_def.source_file),
         source_line=calc_def.source_line,
-    )
+    ), {}
 
 
 __all__ = [

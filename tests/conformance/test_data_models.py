@@ -399,13 +399,13 @@ def test_req_dm_03_fields_pipeline_module():
     expected = {
         "name", "module_type", "inputs", "outputs", "execution_order",
         "compilability", "compiled_expression",
-        "is_computed_attribute", "is_aggregation",
+        "is_computed_attribute", "is_aggregation", "auto_impl_context",
         "calc_def_name", "calc_def_qualified_name", "doc_comment",
         "calc_expressions", "source_file", "source_line",
     }
     actual = _pydantic_field_names(PipelineModule)
     assert actual == expected
-    assert len(actual) == 15
+    assert len(actual) == 16
 
 
 @pytest.mark.req("REQ-DM-03")

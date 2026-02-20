@@ -40,17 +40,18 @@
         }
       ],
       "execution_order": 0,
-      "compilability": "fully_compilable",
+      "compilability": "unknown",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
+      "auto_impl_context": null,
       "calc_def_name": "AreaCalc",
       "calc_def_qualified_name": "ChainSpikeLibrary::AreaCalc",
       "doc_comment": "",
       "calc_expressions": [
         "area = length * width"
       ],
-      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_spike_model/library.sysml",
+      "source_file": "chain_spike_model/library.sysml",
       "source_line": 4
     },
     {
@@ -93,17 +94,18 @@
         }
       ],
       "execution_order": 1,
-      "compilability": "fully_compilable",
+      "compilability": "unknown",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
+      "auto_impl_context": null,
       "calc_def_name": "CostCalc",
       "calc_def_qualified_name": "ChainSpikeLibrary::CostCalc",
       "doc_comment": "",
       "calc_expressions": [
         "total_cost = area * rate"
       ],
-      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_spike_model/library.sysml",
+      "source_file": "chain_spike_model/library.sysml",
       "source_line": 11
     },
     {
@@ -146,17 +148,18 @@
         }
       ],
       "execution_order": 2,
-      "compilability": "fully_compilable",
+      "compilability": "unknown",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
+      "auto_impl_context": null,
       "calc_def_name": "SummaryCalc",
       "calc_def_qualified_name": "ChainSpikeLibrary::SummaryCalc",
       "doc_comment": "",
       "calc_expressions": [
         "cost_per_area = cost / area"
       ],
-      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_spike_model/library.sysml",
+      "source_file": "chain_spike_model/library.sysml",
       "source_line": 18
     }
   ],

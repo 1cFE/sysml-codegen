@@ -230,8 +230,8 @@ None. All changes exactly matched the build plan.
 **Commit convention**: one commit per component, message references step
 
 - [x] All validation checks above are green
-- [ ] `git add` only the modified/deleted files listed in Build Plan
-- [ ] Commit message format:
+- [x] `git add` only the modified/deleted files listed in Build Plan
+- [x] Commit message format:
   ```
   refactor(7.3): Consolidate naming utilities — delete shims, unify imports to core/
 
@@ -241,7 +241,7 @@ None. All changes exactly matched the build plan.
   - Deferred Issue #5 (BindingInfo): out-of-scope (cross-package concern)
   - Deferred Issue #6 (expression reconstruction): already resolved (single impl)
   ```
-- [ ] Committed successfully
+- [x] Committed successfully (`cdbc7f1`)
 
 ---
 

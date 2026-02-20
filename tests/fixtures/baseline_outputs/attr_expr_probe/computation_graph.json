@@ -41,9 +41,20 @@
       ],
       "execution_order": 0,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.length * inputs.width)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "area",
+            "expression": "(inputs.length * inputs.width)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.length * inputs.width)"
+      },
       "calc_def_name": "area",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -94,9 +105,20 @@
       ],
       "execution_order": 1,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.p_fusion / inputs.p_input)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "q_scientific",
+            "expression": "(inputs.p_fusion / inputs.p_input)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.p_fusion / inputs.p_input)"
+      },
       "calc_def_name": "q_scientific",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -147,9 +169,20 @@
       ],
       "execution_order": 2,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.length + inputs.width)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "total_dim",
+            "expression": "(inputs.length + inputs.width)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.length + inputs.width)"
+      },
       "calc_def_name": "total_dim",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -188,9 +221,20 @@
       ],
       "execution_order": 3,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.length - 1.0)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "net_length",
+            "expression": "(inputs.length - 1.0)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.length - 1.0)"
+      },
       "calc_def_name": "net_length",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -253,9 +297,20 @@
       ],
       "execution_order": 4,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "((inputs.length * inputs.width) * inputs.height)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "volume",
+            "expression": "((inputs.length * inputs.width) * inputs.height)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((inputs.length * inputs.width) * inputs.height)"
+      },
       "calc_def_name": "volume",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -306,9 +361,20 @@
       ],
       "execution_order": 5,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "((2.0 * inputs.length) + (2.0 * inputs.width))",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "perimeter",
+            "expression": "((2.0 * inputs.length) + (2.0 * inputs.width))"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((2.0 * inputs.length) + (2.0 * inputs.width))"
+      },
       "calc_def_name": "perimeter",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -371,9 +437,20 @@
       ],
       "execution_order": 6,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "minor_radius",
+            "expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)"
+      },
       "calc_def_name": "minor_radius",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -448,9 +525,20 @@
       ],
       "execution_order": 7,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "((inputs.eta_thermal * inputs.p_fusion) + (inputs.eta_direct * inputs.p_input))",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "gross_electric_simple",
+            "expression": "((inputs.eta_thermal * inputs.p_fusion) + (inputs.eta_direct * inputs.p_input))"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((inputs.eta_thermal * inputs.p_fusion) + (inputs.eta_direct * inputs.p_input))"
+      },
       "calc_def_name": "gross_electric_simple",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -489,9 +577,20 @@
       ],
       "execution_order": 8,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "((inputs.p_fusion * 3.52) / 17.58)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "p_alpha",
+            "expression": "((inputs.p_fusion * 3.52) / 17.58)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((inputs.p_fusion * 3.52) / 17.58)"
+      },
       "calc_def_name": "p_alpha",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -530,9 +629,20 @@
       ],
       "execution_order": 9,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "((inputs.p_fusion * 14.06) / 17.58)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "p_neutron",
+            "expression": "((inputs.p_fusion * 14.06) / 17.58)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((inputs.p_fusion * 14.06) / 17.58)"
+      },
       "calc_def_name": "p_neutron",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -643,9 +753,20 @@
       ],
       "execution_order": 10,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(((inputs.m_neutron * inputs.p_fusion) + inputs.p_input) + ((inputs.eta_thermal * ((inputs.f_pump * inputs.eta_pump) + inputs.f_subsystem)) * (inputs.m_neutron * inputs.p_fusion)))",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "p_blanket_thermal",
+            "expression": "(((inputs.m_neutron * inputs.p_fusion) + inputs.p_input) + ((inputs.eta_thermal * ((inputs.f_pump * inputs.eta_pump) + inputs.f_subsystem)) * (inputs.m_neutron * inputs.p_fusion)))"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(((inputs.m_neutron * inputs.p_fusion) + inputs.p_input) + ((inputs.eta_thermal * ((inputs.f_pump * inputs.eta_pump) + inputs.f_subsystem)) * (inputs.m_neutron * inputs.p_fusion)))"
+      },
       "calc_def_name": "p_blanket_thermal",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -695,17 +816,18 @@
         }
       ],
       "execution_order": 11,
-      "compilability": "fully_compilable",
+      "compilability": "unknown",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
+      "auto_impl_context": null,
       "calc_def_name": "ScaleCalc",
       "calc_def_qualified_name": "AttrExprProbeLibrary::ScaleCalc",
       "doc_comment": "",
       "calc_expressions": [
         "result = value * factor"
       ],
-      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/attr_expr_probe/library.sysml",
+      "source_file": "attr_expr_probe/library.sysml",
       "source_line": 5
     },
     {
@@ -749,9 +871,20 @@
       ],
       "execution_order": 12,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.area * inputs.rate)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "cost",
+            "expression": "(inputs.area * inputs.rate)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.area * inputs.rate)"
+      },
       "calc_def_name": "cost",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -797,10 +930,11 @@
         }
       ],
       "execution_order": 13,
-      "compilability": "fully_compilable",
+      "compilability": "unknown",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
+      "auto_impl_context": null,
       "calc_def_name": "SplitCalc",
       "calc_def_qualified_name": "AttrExprProbeLibrary::SplitCalc",
       "doc_comment": "",
@@ -808,7 +942,7 @@
         "half = total / LiteralRationalEvaluation()",
         "quarter = total / LiteralRationalEvaluation()"
       ],
-      "source_file": "/home/reid/1cfe/sysml-codegen/tests/fixtures/attr_expr_probe/library.sysml",
+      "source_file": "attr_expr_probe/library.sysml",
       "source_line": 12
     },
     {
@@ -852,9 +986,20 @@
       ],
       "execution_order": 14,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.cost * inputs.markup)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "marked_up_cost",
+            "expression": "(inputs.cost * inputs.markup)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.cost * inputs.markup)"
+      },
       "calc_def_name": "marked_up_cost",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
@@ -905,9 +1050,20 @@
       ],
       "execution_order": 15,
       "compilability": "fully_compilable",
-      "compiled_expression": null,
+      "compiled_expression": "(inputs.cost / inputs.volume)",
       "is_computed_attribute": true,
       "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "cost_density",
+            "expression": "(inputs.cost / inputs.volume)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.cost / inputs.volume)"
+      },
       "calc_def_name": "cost_density",
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,

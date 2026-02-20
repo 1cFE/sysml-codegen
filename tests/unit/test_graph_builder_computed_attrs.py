@@ -334,7 +334,7 @@ class TestComputedAttrModule:
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
-        module = _build_computed_attr_module(
+        module, _new_eps = _build_computed_attr_module(
             ca, attr_resolution_map, entry_points,
             design_attrs, group_deriver,
         )
@@ -380,7 +380,7 @@ class TestComputedAttrModule:
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
-        module = _build_computed_attr_module(
+        module, _new_eps = _build_computed_attr_module(
             ca_cost, attr_resolution_map, entry_points,
             design_attrs, group_deriver,
         )
@@ -428,7 +428,7 @@ class TestComputedAttrModule:
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
-        module = _build_computed_attr_module(
+        module, _new_eps = _build_computed_attr_module(
             ca_formula, attr_resolution_map, entry_points,
             design_attrs, group_deriver,
         )
@@ -450,10 +450,11 @@ class TestComputedAttrModule:
         design_attrs: dict[Path, list[DesignAttributeData]] = {}
         group_deriver = _make_mock_group_deriver()
 
-        _build_computed_attr_module(
+        _module, _new_eps = _build_computed_attr_module(
             ca, {}, entry_points,
             design_attrs, group_deriver,
         )
+        entry_points.update(_new_eps)
 
         # Entry points should have been created for length and width
         assert any("length" in qn for qn in entry_points)
@@ -467,7 +468,7 @@ class TestComputedAttrModule:
         )
 
         entry_points: dict[str, EntryPoint] = {}
-        module = _build_computed_attr_module(
+        module, _new_eps = _build_computed_attr_module(
             ca, {}, entry_points,
             {}, _make_mock_group_deriver(),
         )

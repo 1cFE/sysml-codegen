@@ -148,12 +148,16 @@ def _build_all_formula_modules(
     design_attrs: dict[Path, list],
     group_deriver: ParameterGroupDeriver,
 ) -> list[tuple[PipelineModule, ComputedAttributeData]]:
-    """Build all FORMULA modules and return (module, ca) pairs."""
+    """Build all FORMULA modules and return (module, ca) pairs.
+
+    Merges returned entry points into entry_points dict after each call.
+    """
     results = []
     for ca in formula_cas:
-        module = _build_computed_attr_module(
+        module, new_eps = _build_computed_attr_module(
             ca, resolution_map, entry_points, design_attrs, group_deriver
         )
+        entry_points.update(new_eps)
         results.append((module, ca))
     return results
 
@@ -272,36 +276,30 @@ class TestPipelineModuleConstruction:
                 f"New entry point {ep_key!r} should contain '__' separator"
             )
 
-    def test_entry_points_mutated_by_factory(self, formula_inputs):
-        """FORMULA factory mutates entry_points dict (known deviation from REQ-MF-01).
+    def test_entry_points_returned_by_factory(self, formula_inputs):
+        """FORMULA factory returns new entry points via tuple (REQ-MF-01 pure interface).
 
-        Symmetric to C14's test_no_mutation_of_entry_points which verifies CalcUsage
-        factory does NOT mutate. _build_computed_attr_module() adds new entry points
-        for LITERAL inputs directly to the shared entry_points dict (lines 720-726).
-        Phase 7 will adopt the return-tuple interface to eliminate this mutation.
+        Post-refactor: _build_computed_attr_module() returns (PipelineModule, dict)
+        and does NOT mutate the shared entry_points dict. New EPs are returned in
+        the dict and the caller merges them.
         """
         formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap = (
             formula_inputs
         )
 
-        # Build fresh to isolate mutation tracking
+        # Build fresh to isolate tracking
         fresh = build_formula_factory_inputs_from_snapshot(snap["_model_name"])
         f_cas, f_map, f_eps, f_das, f_gd, _ = fresh
 
         ep_before = copy.deepcopy(f_eps)
 
+        # _build_all_formula_modules merges returned EPs into f_eps
         _build_all_formula_modules(f_cas, f_map, f_eps, f_das, f_gd)
 
-        # Verify mutation occurred: entry_points dict has grown
-        assert set(f_eps.keys()) != set(ep_before.keys()), (
-            "FORMULA factory should mutate entry_points dict (known deviation "
-            "from REQ-MF-01). If this fails, the return-tuple interface may "
-            "have been implemented — update this test accordingly."
-        )
-
+        # After merging returned EPs, entry_points dict should have grown
         new_keys = set(f_eps.keys()) - set(ep_before.keys())
         assert len(new_keys) > 0, (
-            "Expected new entry points created by FORMULA factory"
+            "Expected new entry points returned by FORMULA factory"
         )
 
         # Existing keys must not have been modified

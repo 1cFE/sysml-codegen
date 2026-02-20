@@ -622,35 +622,10 @@ def _build_stub_docstring_from_graph(module) -> str:
     return "\n".join(lines)
 
 
-def generate_implementation_from_graph(
-    module,
-    template_env: jinja2.Environment,
-    output_path: Path,
-    package_name: str = "generated_code",
-) -> str:
-    """Generate implementation stencil from PipelineModule (graph-only variant).
+def _build_stencil_context_from_graph(module, output_path, package_name="generated_code"):
+    """Build shared template context from PipelineModule fields."""
+    output_names = [_output_attr_name(out) for out in module.outputs]
 
-    Produces byte-identical output to generate_implementation() (stub mode)
-    by building the same template context from PipelineModule fields.
-
-    Note: auto-implementation mode requires CalcDefCompilationResult which
-    is not available from the graph. This variant always generates stubs.
-
-    Args:
-        module: PipelineModule with metadata fields populated
-        template_env: Jinja2 environment
-        output_path: Where to write handwritten/ file
-        package_name: Package name for imports
-
-    Returns:
-        Generated Python code
-    """
-    # Derive output names from module outputs
-    output_names = []
-    for out in module.outputs:
-        output_names.append(_output_attr_name(out))
-
-    # Return type
     if len(module.outputs) == 0:
         return_type = "None"
     elif len(module.outputs) == 1:
@@ -659,21 +634,18 @@ def generate_implementation_from_graph(
         return_types = ", ".join(["float"] * len(module.outputs))
         return_type = f"tuple[{return_types}]"
 
-    # Input parameters
     input_params = [
         {"name": inp.param_name, "type": inp.python_type}
         for inp in module.inputs
     ]
 
-    # Calc expressions
     calc_expressions = module.calc_expressions or []
 
-    # ADR-003: Derive namespaced import path
     sqn = SysMLQualifiedName(module.calc_def_qualified_name)
     python_path = PythonModulePath.from_sysml(sqn)
     module_import_path = python_path.import_path
 
-    context = {
+    return {
         "function_name": f"run_{module.calc_def_name.lower()}",
         "calc_name": module.calc_def_name,
         "sysml_source": f"{module.source_file}:{module.source_line}",
@@ -688,15 +660,225 @@ def generate_implementation_from_graph(
         "package_name": package_name,
     }
 
-    template = template_env.get_template("implementation_stencil.py.jinja2")
+
+def generate_implementation_from_graph(
+    module,
+    template_env: jinja2.Environment,
+    output_path: Path,
+    package_name: str = "generated_code",
+) -> str:
+    """Generate implementation from PipelineModule (graph-only variant).
+
+    Dispatches to auto-implementation template when module.auto_impl_context
+    is populated (FULLY_COMPILABLE), or to stub template otherwise.
+
+    Args:
+        module: PipelineModule with metadata fields populated
+        template_env: Jinja2 environment
+        output_path: Where to write handwritten/ file
+        package_name: Package name for imports
+
+    Returns:
+        Generated Python code
+    """
+    context = _build_stencil_context_from_graph(module, output_path, package_name)
+
+    if module.auto_impl_context is not None:
+        context.update(module.auto_impl_context)
+        template = template_env.get_template("auto_implementation.py.jinja2")
+    else:
+        template = template_env.get_template("implementation_stencil.py.jinja2")
+
     code = template.render(**context)
     if not code.endswith('\n'):
         code += '\n'
     return code
 
 
+def generate_backlog_report_from_graph(
+    graph,
+    output_path: Path,
+    package_name: str = "generated_code",
+) -> str:
+    """Generate backlog report from ComputationGraph (graph-only variant).
+
+    Args:
+        graph: ComputationGraph with modules
+        output_path: Where to write IMPLEMENTATION_BACKLOG.md
+        package_name: Package name
+
+    Returns:
+        Generated markdown string
+    """
+    items = []
+    auto_formula_count = 0
+    auto_agg_count = 0
+
+    for module in graph.modules:
+        if module.is_computed_attribute:
+            if module.auto_impl_context is not None:
+                auto_formula_count += 1
+            continue
+        if module.is_aggregation:
+            if module.auto_impl_context is not None:
+                auto_agg_count += 1
+            continue
+
+        # Skip FULLY_COMPILABLE CalcUsage modules
+        if module.auto_impl_context is not None:
+            continue
+
+        # Estimate complexity from calc_expressions
+        total_ops = 0
+        for expr in (module.calc_expressions or []):
+            total_ops += expr.count("+") + expr.count("*") + expr.count("/") + expr.count("-")
+        if total_ops <= 5:
+            complexity = "Low"
+        elif total_ops <= 15:
+            complexity = "Medium"
+        else:
+            complexity = "High"
+
+        source_file = module.source_file or "unknown"
+        source_line = module.source_line or 0
+        source_path = str(source_file)
+        if "models/" in source_path:
+            source_path = "models/" + source_path.split("models/", 1)[1]
+
+        items.append({
+            "module": module.calc_def_name,
+            "function": f"run_{module.calc_def_name.lower()}",
+            "source": f"{source_path}:{source_line}",
+            "complexity": complexity,
+        })
+
+    lines = [
+        "# Implementation Backlog",
+        "",
+        "This document tracks the implementation of SysML calculation definitions.",
+        "Complete all stages in order for a production-ready system.",
+        "",
+        "---",
+        "",
+        "## Stage 1: Implement Calculation Functions",
+        "",
+        "**Objective**: Implement each calculation definition in its handwritten file.",
+        "",
+        f"**Total**: {len(items)} functions to implement",
+        "",
+        "**Instructions for each function**:",
+        "1. Open the SysML source file at the line number shown below",
+        "2. Review the calculation expressions and constraints in SysML",
+        f"3. Open the corresponding `*_impl.py` file in `{package_name}/handwritten/`",
+        "4. Replace `raise NotImplementedError(...)` with actual calculation logic",
+        "5. Ensure the function returns correct type (single float or tuple of floats)",
+        f"6. Test: `python -c \"from {package_name}.modules.<module> import <Module>\"`",
+        "",
+        "**Complexity Guide**:",
+        "- **Low**: Simple arithmetic (1-5 operations)",
+        "- **Medium**: Multiple terms, some conditional logic (6-15 operations)",
+        "- **High**: Complex logic, loops, or external dependencies (15+ operations)",
+        "",
+        "| Status | Module | Function | SysML Source | Complexity |",
+        "|--------|--------|----------|--------------|------------|",
+    ]
+
+    for item in items:
+        lines.append(
+            f"| [ ] | {item['module']} | `{item['function']}` | "
+            f"`{item['source']}` | {item['complexity']} |"
+        )
+
+    if auto_formula_count > 0:
+        lines.extend([
+            "",
+            f"**{auto_formula_count} computed attribute module(s) auto-implemented** "
+            "(not included in manual count above).",
+        ])
+
+    if auto_agg_count > 0:
+        lines.extend([
+            "",
+            f"**{auto_agg_count} aggregation module(s) auto-implemented** "
+            "(not included in manual count above).",
+        ])
+
+    lines.extend([
+        "",
+        "---",
+        "",
+        "## Stage 2: Verification",
+        "",
+        "**Objective**: Verify implementations work correctly.",
+        "",
+        "**Instructions**:",
+        "",
+        "### 2.1 Type Checking",
+        "Run pyright to catch typing errors:",
+        "```bash",
+        f"pyright {package_name}/",
+        "```",
+        "Expected: 0 errors (should stay clean during implementation)",
+        "",
+        "### 2.2 Implementation Tests",
+        "Run verification tests:",
+        "```bash",
+        "pytest tests/test_implementations_runnable.py -v",
+        "```",
+        "All tests should pass (or pytest.skip for NotImplementedError stubs)",
+        "",
+        "**Test Coverage**:",
+        f"- {len(items)} implementation functions",
+        "- Each function tested for: imports, signature, return type",
+        "- Tests tolerate NotImplementedError (pass before implementation)",
+        "- Tests verify return types (pass after implementation)",
+        "",
+        "**Checklist**:",
+        "- [ ] Pyright passes (0 errors)",
+        "- [ ] Verification tests pass",
+        "- [ ] All implementations return correct types",
+        "",
+        "**Note**: Import validation and ruff linting performed separately by maintainers.",
+        "",
+        "---",
+        "",
+        "## Stage 3: Integration Testing",
+        "",
+        "**Objective**: Verify the full pipeline works end-to-end.",
+        "",
+        "**Instructions**:",
+        f"1. Create a test pipeline configuration in `{package_name}/pipelines/`",
+        "2. Run the pipeline with sample inputs",
+        "3. Verify outputs match expected values from SysML models",
+        "4. Document any discrepancies and resolve",
+        "",
+        "**Checklist**:",
+        "- [ ] Test pipeline created",
+        "- [ ] Pipeline runs without errors",
+        "- [ ] Outputs validated against SysML models",
+        "- [ ] All discrepancies resolved",
+        "",
+        "---",
+        "",
+        "## Completion Criteria",
+        "",
+        "The implementation is complete when:",
+        f"- Stage 1: All {len(items)} functions implemented",
+        "- Stage 2: All validations pass",
+        "- Stage 3: Integration tests pass",
+        "",
+        "**Next Steps**: Deploy to production environment or integrate with larger system.",
+    ])
+
+    markdown = "\n".join(lines)
+    if not markdown.endswith('\n'):
+        markdown += '\n'
+    return markdown
+
+
 __all__ = [
     "generate_backlog_report",
+    "generate_backlog_report_from_graph",
     "generate_implementation",
     "generate_implementation_from_graph",
     "generate_implementation_stencil",

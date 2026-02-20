@@ -145,7 +145,7 @@ def _build_all_modules(
         calc_def = calc_def_map.get(usage.calc_def_name)
         if not calc_def:
             continue
-        module = _build_pipeline_module(
+        module, _new_eps = _build_pipeline_module(
             usage=usage,
             calc_def=calc_def,
             entry_points=entry_points,
@@ -234,7 +234,7 @@ class TestPureDataTransformer:
             calc_def = calc_def_map.get(usage.calc_def_name)
             if not calc_def:
                 continue
-            module = _build_pipeline_module(
+            module, _new_eps = _build_pipeline_module(
                 usage=usage,
                 calc_def=calc_def,
                 entry_points=entry_points,
@@ -506,7 +506,7 @@ class TestOutputNaming:
             output_attributes=[original_attr, second_attr],
         )
 
-        module = _build_pipeline_module(
+        module, _new_eps = _build_pipeline_module(
             usage=usage,
             calc_def=modified_calc_def,
             entry_points=entry_points,

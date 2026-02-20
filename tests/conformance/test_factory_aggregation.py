@@ -137,13 +137,13 @@ def build_aggregation_factory_inputs(model_name: str) -> dict:
 def _build_all_agg_modules(
     inputs: dict,
 ) -> list[tuple[PipelineModule, ScopedAggregationData, dict[str, EntryPoint]]]:
-    """Build all aggregation modules, tracking entry_points mutation per module.
+    """Build all aggregation modules, merging returned entry points.
 
     Returns list of (module, agg, entry_points_snapshot_after) tuples.
     """
     results = []
     for agg in inputs["aggregation_data"]:
-        module = _build_aggregation_module(
+        module, new_eps = _build_aggregation_module(
             agg=agg,
             redefinitions=inputs["redefinitions"],
             output_registry=inputs["registry"],
@@ -152,6 +152,7 @@ def _build_all_agg_modules(
             expose_aliases=inputs["expose_aliases"],
             usage_type_map=inputs["usage_type_map"],
         )
+        inputs["entry_points"].update(new_eps)
         results.append((module, agg, inputs["entry_points"]))
     return results
 
@@ -189,7 +190,7 @@ class TestReturnsPipelineModule:
     def test_returns_pipeline_module(self, agg_inputs):
         """Return type is PipelineModule with non-empty name, module_type, outputs."""
         for agg in agg_inputs["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=agg_inputs["redefinitions"],
                 output_registry=agg_inputs["registry"],
@@ -206,7 +207,7 @@ class TestReturnsPipelineModule:
     def test_module_name_format(self, agg_inputs):
         """module.name == get_module_name(agg.module_eqn) for every module."""
         for agg in agg_inputs["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=agg_inputs["redefinitions"],
                 output_registry=agg_inputs["registry"],
@@ -222,13 +223,13 @@ class TestReturnsPipelineModule:
             )
 
     def test_creates_expected_entry_points(self, solar_battery_agg):
-        """Factory adds new entry points to the entry_points dict."""
+        """Factory returns new entry points via tuple (merged by caller)."""
         ep_before = copy.deepcopy(solar_battery_agg["entry_points"])
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
         before_count = len(ep_working)
 
         for agg in solar_battery_agg["aggregation_data"]:
-            _build_aggregation_module(
+            _module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -237,6 +238,7 @@ class TestReturnsPipelineModule:
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
             )
+            ep_working.update(_new_eps)
 
         after_count = len(ep_working)
         assert after_count >= before_count, (
@@ -270,7 +272,7 @@ class TestTermTypeHandling:
 
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -311,7 +313,7 @@ class TestTermTypeHandling:
         found_wired_sum = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -341,7 +343,7 @@ class TestTermTypeHandling:
         found_mult = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -350,6 +352,7 @@ class TestTermTypeHandling:
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
             )
+            ep_working.update(_new_eps)
 
             for term in agg.expression.sum_terms:
                 if term.multiplicity_attr:
@@ -383,7 +386,7 @@ class TestTermTypeHandling:
         ep_working = copy.deepcopy(issue22_agg["entry_points"])
 
         for agg in issue22_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=issue22_agg["redefinitions"],
                 output_registry=issue22_agg["registry"],
@@ -410,7 +413,7 @@ class TestTermTypeHandling:
         found_wired_singleton = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -433,7 +436,7 @@ class TestTermTypeHandling:
         """module.is_aggregation == True for all aggregation modules."""
         ep_working = copy.deepcopy(agg_inputs["entry_points"])
         for agg in agg_inputs["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=agg_inputs["redefinitions"],
                 output_registry=agg_inputs["registry"],
@@ -454,7 +457,7 @@ class TestTermTypeHandling:
         modified_agg = replace(agg, expression=modified_expr)
 
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
-        module = _build_aggregation_module(
+        module, _new_eps = _build_aggregation_module(
             agg=modified_agg,
             redefinitions=solar_battery_agg["redefinitions"],
             output_registry=solar_battery_agg["registry"],
@@ -474,7 +477,7 @@ class TestTermTypeHandling:
         found_compiled = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -521,7 +524,7 @@ class TestInputSourceWiring:
         """Every ModuleInput.source.source_type in {'module_output', 'entry_point'}."""
         ep_working = copy.deepcopy(agg_inputs["entry_points"])
         for agg in agg_inputs["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=agg_inputs["redefinitions"],
                 output_registry=agg_inputs["registry"],
@@ -541,7 +544,7 @@ class TestInputSourceWiring:
         """Every aggregation module has single output with field_name='root'."""
         ep_working = copy.deepcopy(agg_inputs["entry_points"])
         for agg in agg_inputs["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=agg_inputs["redefinitions"],
                 output_registry=agg_inputs["registry"],
@@ -563,7 +566,7 @@ class TestInputSourceWiring:
         """output.channel_name matches get_channel_name(module_eqn, attr)."""
         ep_working = copy.deepcopy(agg_inputs["entry_points"])
         for agg in agg_inputs["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=agg_inputs["redefinitions"],
                 output_registry=agg_inputs["registry"],
@@ -632,7 +635,7 @@ class TestLiteralFallback:
         assert target_agg is not None, "Could not construct SumTerm literal fallback test"
 
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
-        module = _build_aggregation_module(
+        module, _new_eps = _build_aggregation_module(
             agg=target_agg,
             redefinitions=solar_battery_agg["redefinitions"],
             output_registry=solar_battery_agg["registry"],
@@ -641,6 +644,7 @@ class TestLiteralFallback:
             expose_aliases=solar_battery_agg["expose_aliases"],
             usage_type_map=solar_battery_agg["usage_type_map"],
         )
+        ep_working.update(_new_eps)
 
         # Find the SumTerm EP and verify it has the literal default
         for term in target_agg.expression.sum_terms:
@@ -670,7 +674,7 @@ class TestLiteralFallback:
         found_literal_default = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -679,6 +683,7 @@ class TestLiteralFallback:
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
             )
+            ep_working.update(_new_eps)
 
             for s_term in agg.expression.singleton_terms:
                 expected_param = s_term.source_path.replace(".", "_")
@@ -721,7 +726,7 @@ class TestLocalTermResolution:
         found_sibling = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -750,7 +755,7 @@ class TestLocalTermResolution:
         found_alias = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -794,7 +799,7 @@ class TestLocalTermResolution:
         modified_agg = replace(agg, expression=modified_expr)
 
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
-        module = _build_aggregation_module(
+        module, _new_eps = _build_aggregation_module(
             agg=modified_agg,
             redefinitions=solar_battery_agg["redefinitions"],
             output_registry=solar_battery_agg["registry"],
@@ -895,7 +900,7 @@ class TestLocalTermNoLiteralRedef:
         ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -904,6 +909,7 @@ class TestLocalTermNoLiteralRedef:
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
             )
+            ep_working.update(_new_eps)
 
             for l_term in agg.expression.local_terms:
                 for inp in module.inputs:
@@ -972,8 +978,8 @@ class TestDefaultBackfill:
             default_value=None,
         )
 
-        # Call factory -- should backfill the None default
-        _build_aggregation_module(
+        # Call factory -- should backfill the None default via returned EPs
+        _module, _new_eps = _build_aggregation_module(
             agg=target_agg,
             redefinitions=solar_battery_agg["redefinitions"],
             output_registry=solar_battery_agg["registry"],
@@ -982,6 +988,7 @@ class TestDefaultBackfill:
             expose_aliases=solar_battery_agg["expose_aliases"],
             usage_type_map=solar_battery_agg["usage_type_map"],
         )
+        ep_working.update(_new_eps)
 
         # Verify backfill
         assert ep_working[ep_qn].default_value == target_lit, (
@@ -1058,7 +1065,7 @@ class TestCompilability:
         found_fully = False
 
         for agg in solar_battery_agg["aggregation_data"]:
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=solar_battery_agg["redefinitions"],
                 output_registry=solar_battery_agg["registry"],
@@ -1089,7 +1096,7 @@ class TestCompilability:
             # Strip all redefinitions so channel resolution fails for CHAIN-dependent
             # terms, and literal lookup finds nothing
             ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
-            module = _build_aggregation_module(
+            module, _new_eps = _build_aggregation_module(
                 agg=agg,
                 redefinitions=[],  # No redefinitions at all
                 output_registry=solar_battery_agg["registry"],

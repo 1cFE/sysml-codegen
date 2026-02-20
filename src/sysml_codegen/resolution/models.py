@@ -179,6 +179,7 @@ class PipelineModule(BaseModel):
     compiled_expression: str | None = None
     is_computed_attribute: bool = False
     is_aggregation: bool = False
+    auto_impl_context: dict | None = None
     # Metadata from CalcDef / ComputedAttributeData / AggregationExpressionData
     calc_def_name: str | None = None
     calc_def_qualified_name: str | None = None

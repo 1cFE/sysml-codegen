@@ -281,7 +281,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         cost_inputs = [i for i in module.inputs if i.param_name == "pv_module_capital_cost"]
         assert len(cost_inputs) == 1
@@ -304,7 +304,8 @@ class TestBuildAggregationModule:
         registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        entry_points.update(_new_eps)
 
         mult_inputs = [i for i in module.inputs if i.param_name == "module_count"]
         assert len(mult_inputs) == 1
@@ -331,7 +332,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         # Only cost input, no multiplicity
         assert len(module.inputs) == 1
@@ -351,7 +352,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({singleton_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
 
         singleton_inputs = [i for i in module.inputs if "allocation" in i.param_name]
         assert len(singleton_inputs) == 1
@@ -376,7 +377,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({resolved_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
 
         inputs = [i for i in module.inputs if "capital_cost" in i.param_name]
         assert len(inputs) == 1
@@ -394,7 +395,7 @@ class TestBuildAggregationModule:
         )
         registry = self._make_registry({agg_channel: ["plant.array.cost"]})
         entry_points: dict[str, EntryPoint] = {}
-        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
         singleton_inputs = [i for i in module.inputs if "cost" in i.param_name]
         assert len(singleton_inputs) == 1
         assert singleton_inputs[0].source.source_type == "module_output"
@@ -413,7 +414,7 @@ class TestBuildAggregationModule:
         # Register scoped alias (as Phase 2 CHAIN alias registration would)
         registry.register_alias("plant.array.pv_module.capital_cost", expected_channel)
         entry_points: dict[str, EntryPoint] = {}
-        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
         cost_inputs = [i for i in module.inputs if i.param_name == "pv_module_capital_cost"]
         assert len(cost_inputs) == 1
         assert cost_inputs[0].source.source_type == "module_output"
@@ -428,7 +429,8 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        entry_points.update(_new_eps)
 
         local_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
         assert len(local_inputs) == 1
@@ -441,13 +443,13 @@ class TestBuildAggregationModule:
     def test_unsupported_nodes_manual_required(self):
         """has_unsupported_nodes=True -> Compilability.MANUAL_REQUIRED."""
         agg = _make_scoped_agg(has_unsupported_nodes=True, sum_terms=[])
-        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
         assert module.compilability == Compilability.MANUAL_REQUIRED
 
     def test_module_is_aggregation_true(self):
         """PipelineModule.is_aggregation == True."""
         agg = _make_scoped_agg(sum_terms=[])
-        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
         assert module.is_aggregation is True
         assert module.is_computed_attribute is False
 
@@ -459,7 +461,7 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         expected_eqn = "Design__plant__solar_array__capital_cost"
         assert module.name == get_module_name(expected_eqn)
@@ -472,7 +474,7 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         assert len(module.outputs) == 1
         assert module.outputs[0].field_name == "root"
@@ -488,7 +490,7 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
 
         cost_inputs = [i for i in module.inputs if i.param_name == "unknown_part_cost"]
         assert len(cost_inputs) == 1
@@ -511,7 +513,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({sibling_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
 
         cost_inputs = [i for i in module.inputs if i.param_name == "capital_cost"]
         assert len(cost_inputs) == 1
@@ -531,7 +533,8 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        entry_points.update(_new_eps)
 
         local_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
         assert len(local_inputs) == 1
@@ -564,7 +567,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({cc_channel: [], rmc_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
 
         # capital_cost → module_output
         cc_inputs = [i for i in module.inputs if i.param_name == "capital_cost"]
@@ -940,7 +943,7 @@ class TestAggregationExpressionCompilation:
         registry = OutputRegistry()
         registry_register(registry,expected_channel, ["cost_model.total_cost"])
 
-        module = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         assert "inputs.module_count" in module.compiled_expression
@@ -964,7 +967,7 @@ class TestAggregationExpressionCompilation:
         registry = OutputRegistry()
         registry_register(registry,expected_channel, ["cost_model.total_cost"])
 
-        module = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         # Should not raise
@@ -995,7 +998,7 @@ class TestAggregationExpressionCompilation:
         registry_register(registry,cost_channel, ["cost_model.total_cost"])
         registry_register(registry,alloc_channel, [])
 
-        module = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         assert "inputs.allocation_model_total_allocation" in module.compiled_expression
@@ -1009,7 +1012,7 @@ class TestAggregationExpressionCompilation:
             transformed_expression="misc_cost",
         )
 
-        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         assert module.compiled_expression is not None
         assert module.compiled_expression == "inputs.misc_cost"
@@ -1022,7 +1025,7 @@ class TestAggregationExpressionCompilation:
             transformed_expression="unknown()",
         )
 
-        module = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
 
         assert module.compiled_expression is None
 
@@ -1052,7 +1055,7 @@ class TestAggregationExpressionCompilation:
         registry_register(registry,cost_channel, ["cost_model.total_cost"])
         registry_register(registry,inv_channel, ["cost_calc.cost"])
 
-        module = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
 
         assert module.compiled_expression is not None
         assert "inputs.pv_module_capital_cost" in module.compiled_expression

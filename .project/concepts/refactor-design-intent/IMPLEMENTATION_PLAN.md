@@ -642,17 +642,17 @@ the target architecture. This is pure refactoring — no behavior changes.
   - If yes, refactor to pass needed data through ComputationGraph/PipelineModule
   - This is the REQ-PIPE-07 / REQ-GEN-01 endgame
 
-- [ ] **7.7 — Factory entry_points mutation → pure return refactor**
+- [x] **7.7 — Factory entry_points mutation → pure return refactor** ✓ (2026-02-20)
   - All 3 module factories deviate from REQ-MF-01's "pure data transformer" aspiration in the same way:
     - C14 (CalcUsage): reads but does not mutate entry_points (already pure)
     - C15 (FORMULA): mutates entry_points dict in-place (documented deviation)
     - C16 (Aggregation): mutates entry_points dict in-place (documented deviation)
   - **Fix**: Refactor C15 and C16 factories to return `(PipelineModule, dict[str, EntryPoint])` instead of mutating the shared dict. Callers merge returned EPs.
   - **AC**:
-    - [ ] No `entry_points[k] = v` inside any factory function body
-    - [ ] All 3 factories return `(PipelineModule, dict[str, EntryPoint])`
-    - [ ] Callers (`build_computation_graph()`) merge returned dicts into the shared entry_points
-    - [ ] All conformance tests still green (C14: 48, C15: 32, C16: 32)
+    - [x] No `entry_points[k] = v` inside any factory function body
+    - [x] All 3 factories return `(PipelineModule, dict[str, EntryPoint])`
+    - [x] Callers (`build_computation_graph()`) merge returned dicts into the shared entry_points
+    - [x] All conformance tests still green (C14: 48, C15: 34, C16: 32 — 113 total + 3 skipped)
 
 **Final Checkpoint**: [ ] Full test suite green (660+ existing + ~200-250 new conformance tests).
 All baselines match. All 168+ requirements have at least one test. Codebase matches target
@@ -671,7 +671,7 @@ architecture from STRATEGY.md.
 | 4 | Factories + Graph | All module types + graph assembly | 183 (actual: C14: 48, C15: 34, C16: 32, C17: 35, C18: 34) |
 | 5 | Orchestrator | E2E pipeline matches baselines | 55 (actual: C19: 39, 5.2: 16) |
 | 6 | Generation | All generators validated against graph | 167 (actual: C20: 27, C21: 19, C22: 21, C24: 22, C23: 30, C25: 28, X01: 20) |
-| 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26), factory purity (7.7) | ~10 |
+| 7 | Refactor | Structural cleanup, dead code gone, PipelineModule expanded (C26), factory purity (7.7) | 10 (actual: 7.7 purity: 10) |
 
 **Total**: 800+ new conformance tests on top of existing 660 (865 actual through C18; C19-C25 pending).
 
@@ -1196,6 +1196,21 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 4. **Two existing test files needed updating.** `test_gen_module_wrappers.py` (import + `.sysml_type`
    accessor) and `test_gen_schemas.py` (import + unknown-type assertion change).
 
+### 7.7 Factory Purity Refactor (2026-02-20)
+
+1. **Mechanical refactor confirmed — zero behavioral change.** All 7 mutation sites (1 in FORMULA,
+   6 in Aggregation) converted to local `new_entry_points` dict writes. The
+   `test_computation_graph_identical` test confirms byte-identical ComputationGraph output for
+   attr_expr_probe. The backfill pattern (aggregation EP default_value update) worked as planned.
+
+2. **Aggregation factory has most complexity.** 6 mutation sites + 4 read-back sites required a
+   local-first lookup pattern (`new_entry_points.get(key) or entry_points.get(key)`). This is
+   the factory most likely to regress if entry point creation logic changes in the future.
+
+3. **Test count: 1783 → 1791 (+8 net).** 10 new purity conformance tests (9 pass, 1 skip for
+   missing solar_battery baseline). Existing C14/C15/C16 tests (113 total) all still pass after
+   adapting to new tuple return type.
+
 ---
 
 ## Design Doc Amendments
@@ -1255,6 +1270,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 07-graph-assembly.md | Note Step 6.9 (param_group propagation) added after Step 6.8 orphan handling | C20 Bug 9 fix (2026-02-18) | Yes (2026-02-18) — new section with code and rationale added before §ComputationGraph contract |
 | 22-output-schema-rules.md | Note Bug 11 confirmed: Permitting_Interconnect has default=0.0 on 4 output fields | C22 conformance finding #1 (2026-02-18) | Yes (2026-02-19) — §Known Bug note added with root cause, affected fields, and tracking status |
 | 08-generation.md | Update REQ-GEN-06 "Verified by" — remove "Currently VIOLATED", reference `type_mapping.py` | X01 consolidation (2026-02-19) | Yes (2026-02-19) — REQ-GEN-06 updated, Current Gap section amended |
+| 05-module-factory.md | Remove "in the refactored state" qualifier from REQ-MF-01 (it IS the refactored state now) | 7.7 factory purity (2026-02-20) | No |
+| COMPONENT_CHECKLIST.md | Update C15 and C16 entries: remove "gap for Phase 7" notes, check purity AC | 7.7 factory purity (2026-02-20) | No |
 
 ---
 
@@ -1298,3 +1315,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C25 JSON Template + Schema | 1705 | 28 | 1733 (+6 xfail) | 2026-02-18 |
 | X01 Type Mapping Consolidation | 1733 | 20 | 1753 (+6 xfail) | 2026-02-19 |
 | 7.3 Naming Consolidation | 1783 | 0 (structural refactor) | 1783 (+6 xfail) | 2026-02-20 |
+| 7.7 Factory Purity Refactor | 1783 | 10 (9 pass, 1 skip) | 1791 (+6 xfail) | 2026-02-20 |
