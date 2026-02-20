@@ -574,14 +574,15 @@ the target architecture. This is pure refactoring — no behavior changes.
   - Update imports
   - Run full test suite
 
-- [ ] **7.3 — Consolidate naming utilities into `core/`**
-  - Merge `analysis/qualified_names.py` and `core/qualified_names.py`
-  - Remove duplicated identifier_types
-  - Run full test suite
+- [x] **7.3 — Consolidate naming utilities into `core/`** *(2026-02-20)*
+  - Deleted shim files: `analysis/qualified_names.py`, `resolution/identifier_types.py`
+  - Migrated 9 importers from `resolution.identifier_types` → `core.identifier_types`
+  - Cleaned `analysis/__init__.py` and `resolution/__init__.py` re-exports
+  - Deferred Issue #5 (BindingInfo): out-of-scope (cross-package), #6: already resolved (single impl)
   - **AC**:
-    - [ ] Single import path for all naming functions: `from sysml_codegen.core.qualified_names import ...`
-    - [ ] `analysis/qualified_names.py` deleted
-    - [ ] `resolution/identifier_types.py` deleted (merged into `core/identifier_types.py`)
+    - [x] Single import path for all naming functions: `from sysml_codegen.core.qualified_names import ...`
+    - [x] `analysis/qualified_names.py` deleted
+    - [x] `resolution/identifier_types.py` deleted (merged into `core/identifier_types.py`)
     - [ ] No duplicate function definitions across modules
   - **Consolidation candidates** (from Deferred Issues #5, #6):
     - [ ] Two `BindingInfo` classes consolidated
@@ -710,8 +711,8 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | 2 | EXPOSE_COMPUTED pattern deferred | Out of scope | Acknowledged in Doc 16; no model exercises this yet |
 | 3 | agentic-mbse V2 validation rejects valid FORMULA | Out of scope | Upstream fix; tracked in agentic-mbse |
 | 4 | 28+ ADR references point to nonexistent docs | In scope — documentation | Low priority; fix as encountered |
-| 5 | Two BindingInfo classes un-consolidated | Deferred to Phase 7 | Add to 7.3 naming consolidation |
-| 6 | Three expression reconstruction impls | Deferred to Phase 7 | Add to 7.3 or new 7.7 item |
+| 5 | Two BindingInfo classes un-consolidated | Out of scope (7.3 assessed) | Cross-package concern: local `@dataclass` in `extraction/` vs upstream Pydantic `BaseModel` in `agentic-mbse`. Different types, different fields, different purposes. TYPE_CHECKING only. Future cross-package refactor if needed. |
+| 6 | Three expression reconstruction impls | **Resolved** (7.3 assessed) | Already a single impl: `reconstruct_expression()` in `extraction/expression_utils.py`. `compile_expression()` is a different concern (AST→Python source). |
 | 7 | Deeply-nested cross-scope REFERENCE | Partially addressed (C6 probe) | Fixture created (`deep_cross_scope_probe`) with 3 binding patterns. Step 1b normalization drops intermediate QN segments for 5+ segment paths — potential resolution failure. Idiomatic SysML uses import + `.` chain (CHAIN binding), not deep `::` paths (REFERENCE). Snapshot pending SysIDE validation. See PHASE2_AUDIT_ACTIONS.md C6 UPDATE. |
 | 8 | sum() is only recognized aggregation | Out of scope | Feature request, not refactor |
 | 9 | Inherited attribute misclassification in `_classify_attribute_expression` | C05 fix (before Phase 3 recommended) | Classifier assumes flat namespace; SysIDE resolves inherited QNs to supertype. 5 of 6 test patterns affected. Fix requires supertype chain walk in Step 2b + C03 extraction enrichment. See Doc 16 Known Issues. |
@@ -1296,3 +1297,4 @@ Issues from the research retrospective (§7) with explicit scope decisions.
 | C23 Stencil + Smart Regen | 1675 | 30 | 1705 (+6 xfail) | 2026-02-18 |
 | C25 JSON Template + Schema | 1705 | 28 | 1733 (+6 xfail) | 2026-02-18 |
 | X01 Type Mapping Consolidation | 1733 | 20 | 1753 (+6 xfail) | 2026-02-19 |
+| 7.3 Naming Consolidation | 1783 | 0 (structural refactor) | 1783 (+6 xfail) | 2026-02-20 |

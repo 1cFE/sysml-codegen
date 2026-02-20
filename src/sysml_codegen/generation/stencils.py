@@ -17,6 +17,8 @@ from pathlib import Path
 
 import jinja2
 
+from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+
 # UPDATED: Import from sysml_codegen package
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
@@ -29,7 +31,6 @@ from sysml_codegen.extraction.expression_compiler import (
     Compilability,
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
-from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 
 
 def _build_stub_docstring(calc_def: CalculationDefinitionData) -> str:

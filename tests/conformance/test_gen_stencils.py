@@ -43,7 +43,7 @@ from sysml_codegen.generation.preservation import (
     should_regenerate_stencil,
 )
 from sysml_codegen.generation.stencils import generate_implementation
-from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph
 from tests.conformance.test_entry_point_classifier import (
     build_full_graph_from_snapshot,

@@ -19,6 +19,12 @@ from typing import TYPE_CHECKING
 
 import jinja2
 
+from sysml_codegen.core.identifier_types import (
+    PythonModulePath,
+    SysMLQualifiedName,
+    derive_module_type,
+)
+
 # UPDATED: Import from sysml_codegen package
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
@@ -28,11 +34,6 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_rootmodel_wrapper
-from sysml_codegen.resolution.identifier_types import (
-    PythonModulePath,
-    SysMLQualifiedName,
-    derive_module_type,
-)
 
 if TYPE_CHECKING:
     from sysml_codegen.resolution.models import ParameterGroup as ModelParameterGroup

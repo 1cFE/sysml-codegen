@@ -29,7 +29,7 @@ from sysml_codegen.generation.registry import (
     _collect_exit_point_primitive_types,
     generate_registry_function,
 )
-from sysml_codegen.resolution.identifier_types import (
+from sysml_codegen.core.identifier_types import (
     PythonModulePath,
     SysMLQualifiedName,
 )

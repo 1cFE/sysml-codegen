@@ -14,9 +14,10 @@ from pathlib import Path
 
 import jinja2
 
+from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+
 # UPDATED: Import from sysml_codegen package
 from sysml_codegen.extraction.data_models import CalculationDefinitionData
-from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
 
 logger = logging.getLogger(__name__)
 

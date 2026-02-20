@@ -180,8 +180,8 @@ def _generate_modules(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate TEAx module wrappers (ADR-003 namespacing)."""
-    from sysml_codegen.generation import generate_teax_module
     from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+    from sysml_codegen.generation import generate_teax_module
 
     modules_dir = config.output_path / "modules"
     module_count = 0
@@ -615,15 +615,15 @@ def _generate_stencils(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils (ADR-003 namespacing)."""
+    from sysml_codegen.core.identifier_types import (
+        PythonModulePath,
+        SysMLQualifiedName,
+    )
     from sysml_codegen.extraction.expression_compiler import Compilability
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
         should_regenerate_stencil,
-    )
-    from sysml_codegen.core.identifier_types import (
-        PythonModulePath,
-        SysMLQualifiedName,
     )
 
     handwritten_dir = config.output_path / "handwritten"

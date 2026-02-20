@@ -34,7 +34,7 @@ from sysml_codegen.generation.modules import (
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.extraction.data_models import AttributeInfo
-from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph
 
 from tests.conformance.test_entry_point_classifier import (
