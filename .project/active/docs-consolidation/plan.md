@@ -28,9 +28,9 @@ Copy all 27 design docs verbatim to `docs/architecture/reference/`. This establi
 
 ### Changes Required
 
-- [ ] Create `docs/architecture/reference/` directory
-- [ ] Copy `00-pipeline-overview.md` through `27-typed-registry-refactor.md` (28 files) from `.project/concepts/refactor-design-intent/` to `docs/architecture/reference/`
-- [ ] `git add` + commit the exact copies
+- [x] Create `docs/architecture/reference/` directory
+- [x] Copy `00-pipeline-overview.md` through `27-typed-registry-refactor.md` (28 files) from `.project/concepts/refactor-design-intent/` to `docs/architecture/reference/`
+- [x] `git add` + commit the exact copies
 
 ### Validation
 
@@ -93,9 +93,9 @@ Preserve:
 ```
 
 Specific files needing edits (from source analysis):
-- [ ] `reference/05-module-factory.md` — apply REQ-MF-01 amendment
-- [ ] `reference/16-computed-attributes.md` — replace audit reference with inline note
-- [ ] `reference/27-typed-registry-refactor.md` — clean 6 .project/ and IMPLEMENTATION_PLAN references
+- [x] `reference/05-module-factory.md` — apply REQ-MF-01 amendment
+- [x] `reference/16-computed-attributes.md` — replace audit reference with inline note
+- [x] `reference/27-typed-registry-refactor.md` — clean 7 .project/ and IMPLEMENTATION_PLAN references
 
 All other 25 docs: verify clean (no edits expected, but subagent should confirm).
 
@@ -272,14 +272,21 @@ All acceptance criteria from spec are met. `docs/architecture/` is the single au
 ## Implementation Notes
 
 ### Phase 1a Completion
-**Completed:**
+**Completed:** 2026-02-20
 **Actual Changes:**
-**Issues:**
+- Created `docs/architecture/reference/` directory
+- Copied 28 files (00-27) verbatim from `.project/concepts/refactor-design-intent/`
+- Committed as `49c2fde` — exact copies, zero diff against source
+**Issues:** None. Also committed staged .project/active/ and .project/research/ files in same commit.
 
 ### Phase 1b Completion
-**Completed:**
+**Completed:** 2026-02-20
 **Actual Changes:**
-**Issues:**
+- `reference/05-module-factory.md` — removed "in the refactored state" from REQ-MF-01
+- `reference/16-computed-attributes.md` — replaced `PHASE2_AUDIT_ACTIONS.md §C3` reference with inline note
+- `reference/27-typed-registry-refactor.md` — cleaned 7 references: 2× `.project/research/`, 2× `.project/active/`, 1× `IMPLEMENTATION_PLAN.md`, 1× `revision_backlog.md`. Replaced with inline context (spike description, scope summary).
+- All other 25 docs confirmed clean (zero matches for non-migrating file patterns)
+**Issues:** None. All edits were surgical (3 files, 18 lines changed).
 
 ### Phase 2 Completion
 **Completed:**

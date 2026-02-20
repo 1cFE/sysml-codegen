@@ -6,11 +6,11 @@ The OutputRegistry is a `dict[str, str]` with ~12 key formats mashed into one
 namespace. Resolution is a cascade of `dict.get()` calls against this pile. The
 type system enforces nothing: a Key_A string, a canonical channel name, a SysML
 QN, and a bare attribute name are all `str`. The Key_A fallback spike
-(`.project/research/20260217-060000_key-a-fallback-spike.md`) proved that the
+(Key_A fallback spike, Feb 2026) proved that the
 design docs were wrong in multiple places and that 5 key formats have zero
 resolution hits across all 6 models. This document defines the typed replacement.
 
-**Spec**: `.project/active/typed-registry-refactor/spec.md`
+**Scope**: Typed registry refactor — replace untyped `dict[str, str]` with typed registries.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ resolution hits across all 6 models. This document defines the typed replacement
 | FR-6 | If a key must exist, it MUST be unique — no "first registration wins" collision policy for scoped and SysML QN registries | Scoped and SysML QN registries raise on duplicate insertion |
 | NFR-1 | Zero runtime cost — `NewType` wrappers add no overhead | `NewType` used (not dataclass); benchmark confirms identical perf |
 | NFR-2 | `mypy --strict` SHALL pass on all typed registry code | CI gate: `mypy --strict` on modified files |
-| NFR-3 | Incremental adoption — refactor MAY be staged as long as each stage is independently correct | Staged implementation plan in IMPLEMENTATION_PLAN.md Phase TRR |
+| NFR-3 | Incremental adoption — refactor MAY be staged as long as each stage is independently correct | Staged implementation (C08→C11); each stage independently validated |
 
 ## Typed Identifier Types (FR-1)
 
@@ -230,7 +230,7 @@ All claims are supported by the Key_A fallback spike:
 | REQ-BT-08 would break 12 resolutions | Spike: Step 1 raises on `channel is not None`, catching EXPOSE_PURE and SysML QN |
 | REQ-NC-07 factually wrong | Spike: 14 SysML QN keys with `::` registered in attr_expr_probe |
 
-**Source**: `.project/research/20260217-060000_key-a-fallback-spike.md`
+**Source**: Key_A fallback spike (Feb 2026) — tested 6 models, 150+ resolutions.
 
 ## Cross-References
 
@@ -248,11 +248,8 @@ This document amends or is referenced by:
 
 ## Related Documents
 
-- **Spec**: `.project/active/typed-registry-refactor/spec.md`
-- **Evidence**: `.project/research/20260217-060000_key-a-fallback-spike.md`
 - **Data models**: [09-data-models](09-data-models.md) — typed identifier definitions
 - **Registry**: [10-output-registry](10-output-registry.md) — typed registry architecture
 - **Naming**: [15-naming-conventions](15-naming-conventions.md) — format definitions
 - **Backtracker**: [11-analysis-backtracker](11-analysis-backtracker.md) — type-directed dispatch
 - **Input resolver**: [04-input-resolver](04-input-resolver.md) — typed strategy chain
-- **Revision backlog**: `revision_backlog.md` — supersedes RB-01 (CanonicalName type wrappers)
