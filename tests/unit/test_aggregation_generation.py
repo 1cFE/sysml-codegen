@@ -20,9 +20,10 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
-from sysml_codegen.generation.registry import generate_registry_function
+from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
+    ComputationGraph,
     InputSource,
     ModuleInput,
     ModuleOutput,
@@ -78,6 +79,39 @@ def _make_pipeline_module(
         execution_order=0,
         is_computed_attribute=is_computed_attribute,
         is_aggregation=is_aggregation,
+    )
+
+
+def _make_aggregation_module(
+    attribute_name: str = "capital_cost",
+    instance_path: str = "Design__plant__solar_array",
+    owning_part_qn: str = "Lib__Solar_Array",
+    auto_impl: bool = True,
+) -> PipelineModule:
+    """Build a PipelineModule for an aggregation module."""
+    name = f"{instance_path.lower()}__{attribute_name}"
+    module_type = f"{owning_part_qn.split('__')[-1].lower()}.{attribute_name}Module"
+    return PipelineModule(
+        name=name,
+        module_type=module_type,
+        inputs=[],
+        outputs=[ModuleOutput(
+            field_name="root", python_type="float",
+            channel_name=f"{name}__out",
+        )],
+        execution_order=0,
+        is_aggregation=True,
+        calc_def_name=attribute_name,
+        calc_def_qualified_name=owning_part_qn,
+        auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attribute_name, "expression": "sum(...)"}], "output_count": 1, "single_output_expression": "sum(...)"} if auto_impl else None,
+    )
+
+
+def _make_graph(modules: list[PipelineModule]) -> ComputationGraph:
+    return ComputationGraph(
+        modules=modules,
+        entry_point_groups=[],
+        execution_order=[m.name for m in modules],
     )
 
 
@@ -172,59 +206,49 @@ class TestBacklogAggregation:
 
     def test_aggregation_auto_impl_shown_in_summary(self):
         """Backlog contains auto-implemented summary line for aggregation modules."""
-        agg = _make_scoped_agg(attribute_name="capital_cost")
+        module = _make_aggregation_module(attribute_name="capital_cost")
+        graph = _make_graph([module])
 
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-            aggregation_data=[agg],
-        )
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "1 aggregation module(s) auto-implemented" in report
 
     def test_unsupported_nodes_not_counted(self):
-        """has_unsupported_nodes=True not counted as auto-implemented."""
-        agg = _make_scoped_agg(
+        """has_unsupported_nodes=True (no auto_impl_context) not counted as auto-implemented."""
+        module = _make_aggregation_module(
             attribute_name="broken",
-            has_unsupported_nodes=True,
+            auto_impl=False,
         )
+        graph = _make_graph([module])
 
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-            aggregation_data=[agg],
-        )
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "aggregation module(s) auto-implemented" not in report
 
     def test_no_aggregation_data_no_summary(self):
         """No aggregation data -> no aggregation summary line."""
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-        )
+        graph = _make_graph([])
+
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "aggregation" not in report.lower() or "aggregation module(s)" not in report
 
     def test_multiple_aggregation_counted(self):
         """Multiple compilable aggregation modules produce correct count."""
-        aggs = [
-            _make_scoped_agg(attribute_name="capital_cost"),
-            _make_scoped_agg(
+        modules = [
+            _make_aggregation_module(attribute_name="capital_cost"),
+            _make_aggregation_module(
                 attribute_name="operating_cost",
                 instance_path="Design__plant__battery",
             ),
-            _make_scoped_agg(
+            _make_aggregation_module(
                 attribute_name="total_cost",
                 instance_path="Design__plant__wind_turbine",
             ),
         ]
+        graph = _make_graph(modules)
 
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-            aggregation_data=aggs,
-        )
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "3 aggregation module(s) auto-implemented" in report
 
@@ -240,19 +264,17 @@ class TestRegistryAggregation:
     def test_aggregation_module_in_registry(self):
         """Registry imports and registers aggregation module."""
         env = _get_template_env()
-        agg = _make_scoped_agg(
+        module = _make_aggregation_module(
             attribute_name="capital_cost",
             owning_part_qn="Lib__Solar_Array",
         )
+        graph = _make_graph([module])
 
-        code = generate_registry_function(
-            calc_defs=[],
+        code = generate_registry(
+            graph=graph,
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            entry_point_groups=[],
-            exit_point_primitive_types=[],
-            aggregation_data=[agg],
         )
 
         assert "capital_costModule" in code
@@ -261,14 +283,13 @@ class TestRegistryAggregation:
     def test_no_aggregation_data_no_aggregation_in_registry(self):
         """No aggregation data -> no aggregation modules in registry."""
         env = _get_template_env()
+        graph = _make_graph([])
 
-        code = generate_registry_function(
-            calc_defs=[],
+        code = generate_registry(
+            graph=graph,
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            entry_point_groups=[],
-            exit_point_primitive_types=[],
         )
 
         # Only standard imports, no aggregation
@@ -277,26 +298,24 @@ class TestRegistryAggregation:
     def test_multiple_aggregation_modules_in_registry(self):
         """Multiple aggregation modules all appear in registry."""
         env = _get_template_env()
-        aggs = [
-            _make_scoped_agg(
+        modules = [
+            _make_aggregation_module(
                 attribute_name="capital_cost",
                 owning_part_qn="Lib__Solar_Array",
             ),
-            _make_scoped_agg(
+            _make_aggregation_module(
                 attribute_name="operating_cost",
                 owning_part_qn="Lib__Battery_System",
                 instance_path="Design__plant__battery_system",
             ),
         ]
+        graph = _make_graph(modules)
 
-        code = generate_registry_function(
-            calc_defs=[],
+        code = generate_registry(
+            graph=graph,
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            entry_point_groups=[],
-            exit_point_primitive_types=[],
-            aggregation_data=aggs,
         )
 
         assert "capital_costModule" in code

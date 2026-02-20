@@ -36,7 +36,7 @@ from sysml_codegen.extraction.expression_compiler import (
     compile_calc_def,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData, extract_calculation_usages
-from sysml_codegen.generation.initialization import (
+from sysml_codegen.orchestration.pipeline_context import (
     CodeGenerationError,
     PipelineContext,
     SysMLParsingError,

@@ -290,6 +290,11 @@ class TestPhase1Regression:
         )
         assert run_codegen(config), "CATF MFE codegen should succeed"
         impls = find_impl_files(tmp_path / "output")
-        assert len(impls) == 21, (
-            f"Expected 21 impl files (no false-positive computed attrs), got {len(impls)}"
+        # Graph-only pipeline (REQ-PIPE-07): only CalcDefs with usages in the
+        # computation graph get stencils.  CATF MFE has 21 CalcDefs extracted
+        # but 3 (ThermalCycleEfficiency, PlasmaConfinement, TritiumBreedingRatio)
+        # have no calc usages → 18 modules in graph → 18 impl files.
+        assert len(impls) == 18, (
+            f"Expected 18 impl files (graph-only, no false-positive "
+            f"computed attrs), got {len(impls)}"
         )

@@ -3,17 +3,17 @@
 Requirements: REQ-GEN-02
 Design intent: 08-generation.md
 
-Tests verify generate_teax_module() behavior with real extraction snapshots:
+Tests verify generate_teax_module() behavior with real PipelineModule data:
 - REQ-GEN-02: One wrapper per CalcUsage PipelineModule
 - REQ-GEN-02: Generated code is valid Python (ast.parse)
 - REQ-GEN-02: Class name matches PipelineModule.module_type
 - REQ-GEN-02: Impl import path consistency with PythonModulePath
-- REQ-GEN-02: Input names match calc_def input_attributes
-- REQ-GEN-02: Input types match map_sysml_type_to_python() output
+- REQ-GEN-02: Input names match PipelineModule.inputs
+- REQ-GEN-02: Input types match PipelineModule.inputs[i].python_type
 - REQ-GEN-02: Single-output returns Float, multi-output returns named class
 - REQ-GEN-02: Type cross-reference with ComputationGraph
 - REQ-GEN-02: map_sysml_type_to_python() covers all SysML primitive types
-- REQ-GEN-02: Static analysis — modules.py imports from extraction
+- REQ-GEN-02: Static analysis — modules.py has zero extraction imports
 - REQ-GEN-02: Static analysis — stub template is dead code
 - REQ-GEN-02: Wrapper coverage by module type
 
@@ -33,7 +33,6 @@ from sysml_codegen.generation.modules import (
     generate_teax_module,
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
-from sysml_codegen.extraction.data_models import AttributeInfo
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 from sysml_codegen.resolution.models import ComputationGraph
 
@@ -88,43 +87,18 @@ def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _build_calcusage_module_to_calcdef_map(
-    graph: ComputationGraph, inputs: dict
-) -> dict[str, object]:
-    """Map CalcUsage PipelineModule.name -> CalculationDefinitionData.
-
-    Uses required_usages from BacktrackingResult to link module names
-    to their calc_def_name, then looks up the calc_def.
-    """
-    result = inputs["result"]
-    snap = inputs["snap"]
-
-    # Build calc_def lookup: name -> CalculationDefinitionData
-    calc_def_map = {cd.name: cd for cd in snap["calc_defs"]}
-
-    # Build module_name -> calc_def_name mapping via required_usages
-    # Each usage has qualified_name -> get_module_name(qn) == qn.lower() == module.name
-    usage_to_calcdef = {}
-    for usage in result.required_usages:
-        module_name = usage.qualified_name.lower()
-        usage_to_calcdef[module_name] = usage.calc_def_name
-
-    # Filter to CalcUsage modules only (not computed_attribute, not aggregation)
-    mapping = {}
-    for module in graph.modules:
-        if module.is_computed_attribute or module.is_aggregation:
-            continue
-        calc_def_name = usage_to_calcdef.get(module.name)
-        if calc_def_name and calc_def_name in calc_def_map:
-            mapping[module.name] = calc_def_map[calc_def_name]
-
-    return mapping
+def _get_calcusage_modules(graph: ComputationGraph) -> list:
+    """Get CalcUsage PipelineModules from graph (not FORMULA, not aggregation)."""
+    return [
+        m for m in graph.modules
+        if not m.is_computed_attribute and not m.is_aggregation
+    ]
 
 
-def _generate_wrapper(calc_def, template_env, package_name="generated_code") -> str:
-    """Generate wrapper code for a calc_def using a temp output path."""
+def _generate_wrapper(module, template_env, package_name="generated_code") -> str:
+    """Generate wrapper code for a PipelineModule using a temp output path."""
     return generate_teax_module(
-        calc_def=calc_def,
+        module,
         template_env=template_env,
         output_path=Path("/tmp/test_wrapper.py"),
         package_name=package_name,
@@ -167,25 +141,16 @@ class TestOneWrapperPerCalcUsageModule:
     def test_one_wrapper_per_calcusage_module(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
-        # Count CalcUsage modules in graph
-        calcusage_modules = [
-            m for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
-        ]
+        assert len(calcusage_modules) > 0, f"No CalcUsage modules in {model_name}"
 
-        assert len(mapping) == len(calcusage_modules), (
-            f"Mapping covers {len(mapping)} of {len(calcusage_modules)} "
-            f"CalcUsage modules in {model_name}"
-        )
-
-        # Every mapped calc_def produces non-empty wrapper code
-        for module_name, calc_def in mapping.items():
-            code = _generate_wrapper(calc_def, template_env)
+        # Every CalcUsage module produces non-empty wrapper code
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
             assert len(code.strip()) > 0, (
-                f"Empty wrapper for {module_name} in {model_name}"
+                f"Empty wrapper for {module.name} in {model_name}"
             )
 
 
@@ -202,16 +167,16 @@ class TestGeneratedCodeValidPython:
     def test_generated_code_valid_python(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         failures = []
-        for module_name, calc_def in mapping.items():
-            code = _generate_wrapper(calc_def, template_env)
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
             try:
                 ast.parse(code)
             except SyntaxError as e:
-                failures.append(f"  {module_name}: {e}")
+                failures.append(f"  {module.name}: {e}")
 
         assert not failures, (
             f"Invalid Python in {model_name} wrappers:\n" + "\n".join(failures)
@@ -231,23 +196,19 @@ class TestClassNameMatchesModuleType:
     def test_class_name_matches_module_type(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-
-        # Build module_name -> PipelineModule lookup
-        module_lookup = {m.name: m for m in graph.modules}
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
-        for module_name, calc_def in mapping.items():
-            code = _generate_wrapper(calc_def, template_env)
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
             class_names = _extract_class_names_from_code(code)
 
-            pipeline_module = module_lookup[module_name]
-            expected_class = pipeline_module.module_type.split(".")[-1]
+            expected_class = module.module_type.split(".")[-1]
 
             if expected_class not in class_names:
                 mismatches.append(
-                    f"  {module_name}: expected {expected_class}, "
+                    f"  {module.name}: expected {expected_class}, "
                     f"found classes {class_names}"
                 )
 
@@ -269,22 +230,22 @@ class TestImplImportPathConsistency:
     def test_impl_import_path_consistency(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
-        for module_name, calc_def in mapping.items():
-            code = _generate_wrapper(calc_def, template_env)
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
 
-            # Derive expected impl_import_path from calc_def.qualified_name
-            sqn = SysMLQualifiedName(calc_def.qualified_name)
+            # Derive expected impl_import_path from module.calc_def_qualified_name
+            sqn = SysMLQualifiedName(module.calc_def_qualified_name)
             python_path = PythonModulePath.from_sysml(sqn)
             expected_impl_path = python_path.impl_import_path
 
             # Check that the expected path appears in the generated code
             if expected_impl_path not in code:
                 mismatches.append(
-                    f"  {module_name}: expected '{expected_impl_path}' "
+                    f"  {module.name}: expected '{expected_impl_path}' "
                     f"not found in generated code"
                 )
 
@@ -298,31 +259,31 @@ class TestImplImportPathConsistency:
 # REQ-GEN-02: Input names match calc_def
 # ---------------------------------------------------------------------------
 
-class TestInputNamesMatchCalcDef:
-    """Input field names in generated BaseModel match calc_def.input_attributes."""
+class TestInputNamesMatchModule:
+    """Input field names in generated BaseModel match PipelineModule.inputs."""
 
     @pytest.mark.req("REQ-GEN-02")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS[:1]])
-    def test_input_names_match_calc_def(
+    def test_input_names_match_module(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
-        for module_name, calc_def in mapping.items():
-            code = _generate_wrapper(calc_def, template_env)
-            input_class_name = f"{calc_def.name}Input"
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
+            input_class_name = f"{module.calc_def_name}Input"
 
             generated_fields = _extract_field_names_from_input_class(
                 code, input_class_name
             )
-            expected_fields = [attr.name for attr in calc_def.input_attributes]
+            expected_fields = [inp.param_name for inp in module.inputs]
 
             if generated_fields != expected_fields:
                 mismatches.append(
-                    f"  {module_name}: expected {expected_fields}, "
+                    f"  {module.name}: expected {expected_fields}, "
                     f"got {generated_fields}"
                 )
 
@@ -335,44 +296,41 @@ class TestInputNamesMatchCalcDef:
 # REQ-GEN-02: Input types match map_sysml_type_to_python()
 # ---------------------------------------------------------------------------
 
-class TestInputTypesMatchTypeMapping:
-    """Input type hints match map_sysml_type_to_python() output for each attribute."""
+class TestInputTypesMatchModule:
+    """Input type hints in generated code match PipelineModule.inputs[i].python_type."""
 
     @pytest.mark.req("REQ-GEN-02")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS[:1]])
-    def test_input_types_match_type_mapping(
+    def test_input_types_match_module(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
-        for module_name, calc_def in mapping.items():
-            code = _generate_wrapper(calc_def, template_env)
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
 
             # Parse type hints from generated code
             tree = ast.parse(code)
-            input_class_name = f"{calc_def.name}Input"
+            input_class_name = f"{module.calc_def_name}Input"
+
+            # Build expected types from PipelineModule inputs
+            expected_types = {inp.param_name: inp.python_type for inp in module.inputs}
 
             for node in ast.walk(tree):
                 if isinstance(node, ast.ClassDef) and node.name == input_class_name:
                     for item in node.body:
                         if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
                             field_name = item.target.id
-                            # Find corresponding attr
-                            attr = next(
-                                (a for a in calc_def.input_attributes if a.name == field_name),
-                                None,
-                            )
-                            if attr is None:
+                            expected_type = expected_types.get(field_name)
+                            if expected_type is None:
                                 continue
-                            expected_type = map_sysml_type_to_python(attr.sysml_type)
-                            # Get actual type from AST annotation
                             actual_type = ast.unparse(item.annotation)
                             if actual_type != expected_type:
                                 mismatches.append(
-                                    f"  {module_name}.{field_name}: "
+                                    f"  {module.name}.{field_name}: "
                                     f"expected '{expected_type}', got '{actual_type}'"
                                 )
 
@@ -394,28 +352,28 @@ class TestSingleOutputReturnsFloat:
     def test_single_output_returns_float(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         tested = 0
         failures = []
-        for module_name, calc_def in mapping.items():
-            if len(calc_def.output_attributes) != 1:
+        for module in calcusage_modules:
+            if len(module.outputs) != 1:
                 continue
 
-            code = _generate_wrapper(calc_def, template_env)
+            code = _generate_wrapper(module, template_env)
             tested += 1
 
             # Single-output: ModuleBase[InputClass, Float]
             if "ModuleBase[" not in code:
-                failures.append(f"  {module_name}: no ModuleBase[] found")
+                failures.append(f"  {module.name}: no ModuleBase[] found")
                 continue
 
             # Check for Float return type pattern
-            pattern = rf"ModuleBase\[{calc_def.name}Input, Float\]"
+            pattern = rf"ModuleBase\[{module.calc_def_name}Input, Float\]"
             if not re.search(pattern, code):
                 failures.append(
-                    f"  {module_name}: expected ModuleBase[{calc_def.name}Input, Float]"
+                    f"  {module.name}: expected ModuleBase[{module.calc_def_name}Input, Float]"
                 )
 
         assert tested > 0, f"No single-output modules in {model_name}"
@@ -438,31 +396,31 @@ class TestMultiOutputReturnsNamedClass:
     def test_multi_output_returns_named_class(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         tested = 0
         failures = []
-        for module_name, calc_def in mapping.items():
-            if len(calc_def.output_attributes) < 2:
+        for module in calcusage_modules:
+            if len(module.outputs) < 2:
                 continue
 
-            code = _generate_wrapper(calc_def, template_env)
+            code = _generate_wrapper(module, template_env)
             tested += 1
 
-            output_class_name = f"{calc_def.name}Output"
+            output_class_name = f"{module.calc_def_name}Output"
 
             # Multi-output: ModuleBase[InputClass, OutputClass]
-            pattern = rf"ModuleBase\[{calc_def.name}Input, {output_class_name}\]"
+            pattern = rf"ModuleBase\[{module.calc_def_name}Input, {output_class_name}\]"
             if not re.search(pattern, code):
                 failures.append(
-                    f"  {module_name}: expected ModuleBase[{calc_def.name}Input, {output_class_name}]"
+                    f"  {module.name}: expected ModuleBase[{module.calc_def_name}Input, {output_class_name}]"
                 )
 
             # Output class import should be present
             if f"import {output_class_name}" not in code:
                 failures.append(
-                    f"  {module_name}: missing import for {output_class_name}"
+                    f"  {module.name}: missing import for {output_class_name}"
                 )
 
         assert tested > 0, f"No multi-output modules in {model_name}"
@@ -477,8 +435,7 @@ class TestMultiOutputReturnsNamedClass:
 # ---------------------------------------------------------------------------
 
 class TestInputTypeCrossReferenceWithGraph:
-    """map_sysml_type_to_python() output for each calc_def input matches the
-    corresponding PipelineModule.inputs[i].python_type."""
+    """Generated code input types match PipelineModule.inputs[i].python_type."""
 
     @pytest.mark.req("REQ-GEN-02")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
@@ -486,33 +443,36 @@ class TestInputTypeCrossReferenceWithGraph:
     def test_input_type_cross_reference_with_graph(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-        module_lookup = {m.name: m for m in graph.modules}
+        graph, _inputs = all_graph_data[model_name]
+        calcusage_modules = _get_calcusage_modules(graph)
 
         mismatches = []
-        for module_name, calc_def in mapping.items():
-            pipeline_module = module_lookup[module_name]
+        for module in calcusage_modules:
+            code = _generate_wrapper(module, template_env)
+            tree = ast.parse(code)
+            input_class_name = f"{module.calc_def_name}Input"
 
-            # Build param_name -> python_type from PipelineModule inputs
-            graph_types = {inp.param_name: inp.python_type for inp in pipeline_module.inputs}
+            # Build expected types from PipelineModule inputs
+            expected_types = {inp.param_name: inp.python_type for inp in module.inputs}
 
-            for attr in calc_def.input_attributes:
-                wrapper_type = map_sysml_type_to_python(attr.sysml_type)
-                graph_type = graph_types.get(attr.name)
-                if graph_type is not None and wrapper_type != graph_type:
-                    mismatches.append(
-                        f"  {module_name}.{attr.name}: "
-                        f"wrapper='{wrapper_type}', graph='{graph_type}'"
-                    )
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef) and node.name == input_class_name:
+                    for item in node.body:
+                        if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+                            field_name = item.target.id
+                            expected_type = expected_types.get(field_name)
+                            if expected_type is None:
+                                continue
+                            actual_type = ast.unparse(item.annotation)
+                            if actual_type != expected_type:
+                                mismatches.append(
+                                    f"  {module.name}.{field_name}: "
+                                    f"generated='{actual_type}', graph='{expected_type}'"
+                                )
 
-        if mismatches:
-            # Document divergence as a finding (REQ-GEN-06 concern)
-            # but don't fail — this is expected divergence in current code
-            pytest.xfail(
-                f"Type mapping divergence (REQ-GEN-06 concern) in {model_name}:\n"
-                + "\n".join(mismatches)
-            )
+        assert not mismatches, (
+            f"Type mismatches in {model_name}:\n" + "\n".join(mismatches)
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -538,12 +498,7 @@ class TestTypeMappingCoversAllTypes:
         }
 
         for sysml_type, expected_python_type in test_cases.items():
-            # Create a minimal AttributeInfo
-            attr = AttributeInfo(
-                name="test_attr",
-                sysml_type=sysml_type,
-            )
-            result = map_sysml_type_to_python(attr.sysml_type)
+            result = map_sysml_type_to_python(sysml_type)
             assert result == expected_python_type, (
                 f"map_sysml_type_to_python({sysml_type}) = '{result}', "
                 f"expected '{expected_python_type}'"
@@ -552,11 +507,7 @@ class TestTypeMappingCoversAllTypes:
     @pytest.mark.req("REQ-GEN-02")
     def test_type_mapping_passthrough_for_unknown(self):
         """Unknown SysML types pass through unchanged."""
-        attr = AttributeInfo(
-            name="test_attr",
-            sysml_type="PlasmaParams",
-        )
-        result = map_sysml_type_to_python(attr.sysml_type)
+        result = map_sysml_type_to_python("PlasmaParams")
         assert result == "PlasmaParams"
 
 
@@ -564,13 +515,12 @@ class TestTypeMappingCoversAllTypes:
 # REQ-GEN-02: Static analysis — modules.py imports from extraction
 # ---------------------------------------------------------------------------
 
-class TestModulesImportsExtraction:
-    """Static analysis: modules.py imports from extraction.data_models
-    (documents known Phase 7 migration target)."""
+class TestModulesNoExtractionImports:
+    """Static analysis: modules.py has zero extraction imports (7.6 complete)."""
 
     @pytest.mark.req("REQ-GEN-02")
-    def test_modules_py_imports_extraction(self):
-        """modules.py currently imports from extraction — Phase 7 target."""
+    def test_modules_py_zero_extraction_imports(self):
+        """modules.py has zero imports from extraction/ (REQ-PIPE-07 satisfied)."""
         modules_path = SRC_DIR / "generation" / "modules.py"
         source = modules_path.read_text()
         tree = ast.parse(source)
@@ -583,10 +533,9 @@ class TestModulesImportsExtraction:
                         f"  line {node.lineno}: from {node.module}"
                     )
 
-        # This SHOULD find imports (documenting current state)
-        assert len(extraction_imports) > 0, (
-            "modules.py no longer imports from extraction — "
-            "Phase 7 migration may have been completed"
+        assert len(extraction_imports) == 0, (
+            "modules.py still imports from extraction:\n"
+            + "\n".join(extraction_imports)
         )
 
 

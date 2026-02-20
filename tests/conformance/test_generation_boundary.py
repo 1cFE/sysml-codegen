@@ -1,12 +1,10 @@
 """Generation Boundary Enforcement (7.6) — Conformance Tests.
 
-Requirements: REQ-PIPE-07, REQ-GEN-01, REQ-GEN-04, REQ-PMM-05
+Requirements: REQ-PIPE-07, REQ-GEN-01, REQ-GEN-04
 Design intent: 00-pipeline-overview.md, 08-generation.md, 26-pipeline-module-migration.md
 
 This test file enforces that the generation/ package consumes ONLY the
 ComputationGraph — no back-references to extraction/ or analysis/ models.
-It also verifies identity between old CalcDef-consuming functions and new
-graph-only variants for stencils, backlog, test_gen, and preservation.
 
 Tests use real extraction snapshot data — no mocks.
 """
@@ -21,7 +19,6 @@ import pytest
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.resolution.models import (
     ComputationGraph,
-    PipelineModule,
 )
 
 from tests.conformance.test_entry_point_classifier import (
@@ -108,35 +105,6 @@ def _scan_generation_imports(package: str) -> list[str]:
                 violating.append(py_file.name)
                 break
     return violating
-
-
-def _calcusage_modules(graph: ComputationGraph) -> list[PipelineModule]:
-    """Filter to CalcUsage modules (not FORMULA, not aggregation)."""
-    return [
-        m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
-    ]
-
-
-def _build_calcusage_module_to_calcdef_map(
-    graph: ComputationGraph, inputs: dict,
-) -> dict[str, object]:
-    """Map CalcUsage PipelineModule.name -> CalculationDefinitionData."""
-    result = inputs["result"]
-    snap = inputs["snap"]
-    calc_def_map = {cd.name: cd for cd in snap["calc_defs"]}
-
-    usage_to_calcdef = {}
-    for usage in result.required_usages:
-        module_name = usage.qualified_name.lower()
-        usage_to_calcdef[module_name] = usage.calc_def_name
-
-    mapping = {}
-    for module in _calcusage_modules(graph):
-        calc_def_name = usage_to_calcdef.get(module.name)
-        if calc_def_name and calc_def_name in calc_def_map:
-            mapping[module.name] = calc_def_map[calc_def_name]
-    return mapping
 
 
 # ===========================================================================
@@ -337,181 +305,106 @@ class TestAutoImplDispatch:
 
 
 # ===========================================================================
-# C. Identity Tests (REQ-PMM-05)
+# C. Graph-Only Output Validation Tests
 # ===========================================================================
 
-class TestStencilAutoImplIdentity:
-    """REQ-PMM-05: Auto-impl from graph matches old CalcDef path."""
+class TestGraphOnlyBacklog:
+    """Backlog report generates valid output from graph."""
 
-    @pytest.mark.req("REQ-PMM-05")
-    def test_from_graph_stencil_identity_auto_impl(self, solar_battery_graph, template_env):
-        """For FULLY_COMPILABLE CalcUsage modules: old generate_implementation()
-        with compilation_result == new generate_implementation_from_graph()."""
-        from sysml_codegen.generation.stencils import generate_implementation_from_graph
+    @pytest.mark.req("REQ-PIPE-07")
+    def test_backlog_report_from_graph(self, solar_battery_graph):
+        """generate_backlog_report(graph) produces valid markdown with module rows."""
+        from sysml_codegen.generation.stencils import generate_backlog_report
 
-        graph, inputs = solar_battery_graph
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-        snap = inputs["snap"]
+        graph, _inputs = solar_battery_graph
 
-        # Only test modules with compilation results
-        compilation_results = snap.get("compilation_results", {})
-        if not compilation_results:
-            pytest.skip("No compilation_results in snapshot (AST serialization boundary)")
-
-        from sysml_codegen.generation.stencils import generate_implementation
-
-        tested = 0
-        for module_name, calc_def in mapping.items():
-            cr = compilation_results.get(calc_def.name)
-            if cr is None or cr.overall_compilability != Compilability.FULLY_COMPILABLE:
-                continue
-
-            module = next(m for m in graph.modules if m.name == module_name)
-
-            old_output = generate_implementation(
-                calc_def=calc_def,
-                template_env=template_env,
-                output_path=Path("/tmp/test_identity.py"),
-                package_name="generated_code",
-                compilation_result=cr,
-            )
-
-            new_output = generate_implementation_from_graph(
-                module=module,
-                template_env=template_env,
-                output_path=Path("/tmp/test_identity.py"),
-                package_name="generated_code",
-            )
-
-            assert old_output == new_output, (
-                f"Module {module_name}: auto-impl identity mismatch.\n"
-                f"--- Old (CalcDef+CR) ---\n{old_output[:500]}\n"
-                f"--- New (Graph) ---\n{new_output[:500]}"
-            )
-            tested += 1
-
-        # It's OK if no FULLY_COMPILABLE CalcUsage modules in snapshot
-        # (snapshots don't carry compilation_results due to AST serialization)
-
-
-class TestBacklogIdentity:
-    """REQ-PMM-05: Backlog report from graph matches old CalcDef path."""
-
-    @pytest.mark.req("REQ-PMM-05")
-    def test_from_graph_backlog_identity(self, solar_battery_graph):
-        """generate_backlog_report(calc_defs, ...) == generate_backlog_report_from_graph(graph, ...)."""
-        from sysml_codegen.generation.stencils import (
-            generate_backlog_report,
-            generate_backlog_report_from_graph,
-        )
-
-        graph, inputs = solar_battery_graph
-        snap = inputs["snap"]
-
-        old_output = generate_backlog_report(
-            calc_defs=snap["calc_defs"],
-            output_path=Path("/tmp/backlog.md"),
-            package_name="generated_code",
-            compilation_results=None,
-            computed_attributes=snap["computed_attributes"],
-            aggregation_data=snap["aggregation_expressions"],
-        )
-
-        new_output = generate_backlog_report_from_graph(
+        output = generate_backlog_report(
             graph=graph,
             output_path=Path("/tmp/backlog.md"),
             package_name="generated_code",
         )
 
-        assert old_output == new_output, (
-            "Backlog report identity mismatch.\n"
-            f"--- Old (CalcDefs) ---\n{old_output[:500]}\n"
-            f"--- New (Graph) ---\n{new_output[:500]}"
-        )
+        assert output is not None
+        assert "# Implementation Backlog" in output
+        # Should contain table rows for non-auto-impl CalcUsage modules
+        non_auto = [
+            m for m in graph.modules
+            if not m.is_computed_attribute and not m.is_aggregation
+            and m.auto_impl_context is None
+        ]
+        if non_auto:
+            assert "| [ ] |" in output
 
 
-class TestTestGenIdentity:
-    """REQ-PMM-05: Test generation from graph matches old CalcDef path."""
+class TestGraphOnlyTestGen:
+    """Test generation produces valid output from graph."""
 
-    @pytest.mark.req("REQ-PMM-05")
-    def test_from_graph_test_gen_identity(self, solar_battery_graph, template_env):
-        """generate_test_implementations(calc_defs) == generate_test_implementations_from_graph(graph)."""
-        from sysml_codegen.generation.test_gen import (
-            generate_test_implementations,
-            generate_test_implementations_from_graph,
-        )
+    @pytest.mark.req("REQ-PIPE-07")
+    def test_test_gen_from_graph(self, solar_battery_graph, template_env):
+        """generate_test_implementations(graph) produces test classes."""
+        import re
 
-        graph, inputs = solar_battery_graph
-        snap = inputs["snap"]
+        from sysml_codegen.generation.test_gen import generate_test_implementations
 
-        old_output = generate_test_implementations(
-            calc_defs=snap["calc_defs"],
-            package_name="generated_code",
-            template_env=template_env,
-            output_path=Path("/tmp/test_impls.py"),
-        )
+        graph, _inputs = solar_battery_graph
 
-        new_output = generate_test_implementations_from_graph(
+        output = generate_test_implementations(
             graph=graph,
             package_name="generated_code",
             template_env=template_env,
             output_path=Path("/tmp/test_impls.py"),
         )
 
-        assert old_output == new_output, (
-            "Test gen identity mismatch.\n"
-            f"--- Old (CalcDefs) ---\n{old_output[:500]}\n"
-            f"--- New (Graph) ---\n{new_output[:500]}"
+        assert output is not None
+        test_classes = re.findall(r"class (Test\w+Runnable):", output)
+        # Should have test classes for CalcUsage modules
+        calcusage_count = sum(
+            1 for m in graph.modules
+            if not m.is_computed_attribute and not m.is_aggregation
+        )
+        assert len(test_classes) == calcusage_count
+
+
+class TestGraphOnlyPreservation:
+    """Preservation logic works with PipelineModule."""
+
+    @pytest.mark.req("REQ-PIPE-07")
+    def test_preservation_nonexistent_file(self, solar_battery_graph, tmp_path):
+        """should_regenerate_stencil(module, nonexistent) returns (True, reason)."""
+        from sysml_codegen.generation.preservation import should_regenerate_stencil
+
+        graph, _inputs = solar_battery_graph
+        module = graph.modules[0]
+        fake_path = tmp_path / "nonexistent_impl.py"
+
+        result, reason = should_regenerate_stencil(module, fake_path)
+        assert result is True
+        assert "doesn't exist" in reason
+
+    @pytest.mark.req("REQ-PIPE-07")
+    def test_preservation_matching_signature(self, solar_battery_graph, tmp_path):
+        """should_regenerate_stencil(module, matching_file) returns (False, reason)."""
+        from sysml_codegen.generation.preservation import should_regenerate_stencil
+
+        graph, _inputs = solar_battery_graph
+        # Find a CalcUsage module with a single output
+        module = next(
+            m for m in graph.modules
+            if not m.is_computed_attribute and not m.is_aggregation
+            and len(m.outputs) == 1
         )
 
-
-class TestPreservationIdentity:
-    """REQ-PMM-05: Preservation check from graph matches old CalcDef path."""
-
-    @pytest.mark.req("REQ-PMM-05")
-    def test_from_graph_preservation_identity(self, solar_battery_graph, tmp_path):
-        """should_regenerate_stencil(calc_def, path) == should_regenerate_stencil_from_graph(module, path)."""
-        from sysml_codegen.generation.preservation import (
-            should_regenerate_stencil,
-            should_regenerate_stencil_from_graph,
+        func_name = f"run_{module.calc_def_name.lower()}"
+        input_class = f"{module.calc_def_name}Input"
+        impl_path = tmp_path / f"{module.calc_def_name.lower()}_impl.py"
+        impl_path.write_text(
+            f"def {func_name}(inputs: {input_class}) -> float:\n"
+            f"    raise NotImplementedError('{func_name}')\n"
         )
 
-        graph, inputs = solar_battery_graph
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-
-        # Test Case 1: File doesn't exist — both should say regenerate
-        for module_name, calc_def in list(mapping.items())[:1]:
-            module = next(m for m in graph.modules if m.name == module_name)
-            fake_path = tmp_path / "nonexistent_impl.py"
-
-            old_result = should_regenerate_stencil(calc_def, fake_path)
-            new_result = should_regenerate_stencil_from_graph(module, fake_path)
-
-            assert old_result[0] == new_result[0], (
-                f"Module {module_name}: preservation decision differs for nonexistent file. "
-                f"Old: {old_result}, New: {new_result}"
-            )
-
-        # Test Case 2: File exists with matching signature
-        for module_name, calc_def in list(mapping.items())[:1]:
-            module = next(m for m in graph.modules if m.name == module_name)
-
-            # Create a minimal implementation file
-            func_name = f"run_{calc_def.name.lower()}"
-            input_class = f"{calc_def.name}Input"
-            impl_path = tmp_path / f"{calc_def.name.lower()}_impl.py"
-            impl_path.write_text(
-                f"def {func_name}(inputs: {input_class}) -> float:\n"
-                f"    raise NotImplementedError('{func_name}')\n"
-            )
-
-            old_result = should_regenerate_stencil(calc_def, impl_path)
-            new_result = should_regenerate_stencil_from_graph(module, impl_path)
-
-            assert old_result == new_result, (
-                f"Module {module_name}: preservation result differs. "
-                f"Old: {old_result}, New: {new_result}"
-            )
+        result, reason = should_regenerate_stencil(module, impl_path)
+        assert result is False
+        assert "unchanged" in reason.lower()
 
 
 # ===========================================================================

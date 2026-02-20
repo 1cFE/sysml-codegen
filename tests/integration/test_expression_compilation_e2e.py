@@ -222,48 +222,48 @@ class TestCATFMFEValidation:
         assert (catf_mfe_output / "handwritten").exists()
 
     def test_auto_implementation_classification(self, catf_mfe_output: Path):
+        # Graph-only pipeline (REQ-PIPE-07): only CalcDefs with usages in the
+        # computation graph get stencils.  CATF MFE has 21 CalcDefs extracted
+        # but 3 (ThermalCycleEfficiency, PlasmaConfinement, TritiumBreedingRatio)
+        # have no calc usages → 18 modules, all FULLY_COMPILABLE.
         impls = find_impl_files(catf_mfe_output)
-        assert len(impls) == 21, f"Expected 21 impl files, got {len(impls)}"
+        assert len(impls) == 18, f"Expected 18 impl files, got {len(impls)}"
 
         auto_count = sum(1 for p in impls if is_auto_implemented(p))
         stub_count = len(impls) - auto_count
 
-        assert auto_count >= 19, (
-            f"Expected >= 19 auto-implemented, got {auto_count}"
+        assert auto_count == 18, (
+            f"Expected 18 auto-implemented (all graph modules FC), got {auto_count}"
         )
-        assert stub_count == 2, (
-            f"Expected 2 stubs (PlasmaConfinement, TritiumBreedingRatio), "
+        assert stub_count == 0, (
+            f"Expected 0 stubs (unused CalcDefs excluded from graph), "
             f"got {stub_count}"
         )
 
-    def test_partially_compilable_stubs_have_accurate_reasons(
+    def test_unused_calcdefs_excluded_from_graph_output(
         self, catf_mfe_output: Path,
     ):
+        """Graph-only pipeline (REQ-PIPE-07): CalcDefs without calc usages
+        are not in the computation graph and produce no output files.
+
+        PlasmaConfinement and TritiumBreedingRatio are defined in the CATF MFE
+        model but have no usages, so they should NOT appear in generated output.
+        """
         impls = find_impl_files(catf_mfe_output)
-        stubs = [p for p in impls if not is_auto_implemented(p)]
+        impl_names = {p.stem for p in impls}
 
-        stub_names = {p.stem for p in stubs}
-        assert "plasmaconfinement_impl" in stub_names
-        assert "tritiumbreedingratio_impl" in stub_names
+        # These CalcDefs have no usages → not in graph → no stencils
+        assert "plasmaconfinement_impl" not in impl_names, (
+            "PlasmaConfinement has no usages and should not be in graph output"
+        )
+        assert "tritiumbreedingratio_impl" not in impl_names, (
+            "TritiumBreedingRatio has no usages and should not be in graph output"
+        )
 
-        for stub in stubs:
-            content = stub.read_text()
-            assert "NotImplementedError" in content
-            assert "AUTO_IMPLEMENTED = True" not in content
-
-            # Stub error message should mention the CalcDef name
-            if "plasmaconfinement" in stub.name:
-                assert "PlasmaConfinement" in content
-            elif "tritiumbreedingratio" in stub.name:
-                assert "TritiumBreedingRatio" in content
-
-            # Stub should reference SysML source location
-            assert "See SysML source:" in content
-
-        # Backlog should list both
+        # Backlog should NOT list them (they're not in the graph)
         backlog = (catf_mfe_output / "IMPLEMENTATION_BACKLOG.md").read_text()
-        assert "PlasmaConfinement" in backlog
-        assert "TritiumBreedingRatio" in backlog
+        assert "PlasmaConfinement" not in backlog
+        assert "TritiumBreedingRatio" not in backlog
 
     def test_pattern_b_engineering_q_factor(self, catf_mfe_output: Path):
         # Hand-computed from SysML expressions (performance_metrics.sysml:140):
@@ -316,10 +316,15 @@ class TestCATFMFEValidation:
         assert_outputs_match(result, expected)
 
     def test_backlog_lists_only_non_compilable(self, catf_mfe_output: Path):
+        # Graph-only pipeline: all 18 CATF MFE modules in the graph are
+        # FULLY_COMPILABLE → 0 functions to implement in backlog.
         backlog = (catf_mfe_output / "IMPLEMENTATION_BACKLOG.md").read_text()
-        assert "2 functions to implement" in backlog
-        assert "PlasmaConfinement" in backlog
-        assert "TritiumBreedingRatio" in backlog
+        assert "0 functions to implement" in backlog
+
+        # Unused CalcDefs (PlasmaConfinement, TritiumBreedingRatio) are
+        # excluded from the graph and must NOT appear in backlog.
+        assert "PlasmaConfinement" not in backlog
+        assert "TritiumBreedingRatio" not in backlog
 
         # Auto-implemented CalcDefs must NOT appear in backlog
         assert "EngineeringQFactor" not in backlog

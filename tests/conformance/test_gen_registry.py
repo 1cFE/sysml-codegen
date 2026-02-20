@@ -27,7 +27,7 @@ import pytest
 
 from sysml_codegen.generation.registry import (
     _collect_exit_point_primitive_types,
-    generate_registry_function,
+    generate_registry,
 )
 from sysml_codegen.core.identifier_types import (
     PythonModulePath,
@@ -109,20 +109,16 @@ def all_registry_codes(all_graph_data, template_env) -> dict[str, str]:
     """Generate registry code for all models (once per session)."""
     codes = {}
     for model_name, (graph, inputs) in all_graph_data.items():
-        snap = inputs["snap"]
         package_name = MODEL_IDS[model_name]
 
         exit_types = _collect_exit_point_primitive_types(graph.modules)
 
-        code = generate_registry_function(
-            calc_defs=snap["calc_defs"],
+        code = generate_registry(
+            graph=graph,
             package_name=package_name,
             template_env=template_env,
             output_path=Path("/tmp/test_registry.py"),
-            entry_point_groups=graph.entry_point_groups,
             exit_point_primitive_types=exit_types,
-            computed_attributes=snap["computed_attributes"],
-            aggregation_data=snap["aggregation_expressions"],
         )
         codes[model_name] = code
     return codes
@@ -327,30 +323,25 @@ class TestImportPathsMatchFilesystem:
         self, model_name, all_registry_codes, all_graph_data,
     ):
         """Number of modules in registry matches the number of distinct
-        classes from its inputs: unique calc_defs + FORMULA CAs + aggregations.
+        classes from graph modules: unique CalcUsage calc_defs + FORMULA + aggregations.
         (Registry registers classes, not pipeline instances.)"""
         code = all_registry_codes[model_name]
-        _, inputs = all_graph_data[model_name]
-        snap = inputs["snap"]
+        graph, _inputs = all_graph_data[model_name]
 
         module_list = _extract_module_list_from_create_registry(code)
 
-        # Count expected: unique calc_defs (deduplicated by name in registry)
-        from sysml_codegen.extraction.data_models import ComputedAttributeClassification
-        from sysml_codegen.extraction.expression_compiler import Compilability
+        # Count expected from graph: unique calc_def_names per module type
+        unique_calcusage = {
+            m.calc_def_name for m in graph.modules
+            if not m.is_computed_attribute and not m.is_aggregation
+        }
+        formula_count = sum(1 for m in graph.modules if m.is_computed_attribute)
+        agg_count = sum(1 for m in graph.modules if m.is_aggregation)
 
-        unique_calc_def_names = {cd.name for cd in snap["calc_defs"]}
-        formula_count = sum(
-            1 for ca in snap["computed_attributes"]
-            if ca.classification == ComputedAttributeClassification.FORMULA
-            and ca.compilability == Compilability.FULLY_COMPILABLE
-        )
-        agg_count = len(snap["aggregation_expressions"])
-
-        expected = len(unique_calc_def_names) + formula_count + agg_count
+        expected = len(unique_calcusage) + formula_count + agg_count
         assert len(module_list) == expected, (
             f"Registry has {len(module_list)} modules but expected {expected} "
-            f"(calc_defs={len(unique_calc_def_names)}, FORMULA={formula_count}, "
+            f"(calc_defs={len(unique_calcusage)}, FORMULA={formula_count}, "
             f"agg={agg_count}) in {model_name}"
         )
 
@@ -628,15 +619,12 @@ class TestCollisionDetectionBeforeRendering:
         logger.setLevel(logging.DEBUG)
 
         try:
-            code = generate_registry_function(
-                calc_defs=snap["calc_defs"],
+            code = generate_registry(
+                graph=graph,
                 package_name="solar_battery",
                 template_env=template_env,
                 output_path=Path("/tmp/test_registry.py"),
-                entry_point_groups=graph.entry_point_groups,
                 exit_point_primitive_types=exit_types,
-                computed_attributes=snap["computed_attributes"],
-                aggregation_data=snap["aggregation_expressions"],
             )
         finally:
             logger.removeHandler(handler)

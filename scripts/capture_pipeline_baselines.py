@@ -22,7 +22,7 @@ import jinja2
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.generation.registry import (
     _collect_exit_point_primitive_types,
-    generate_registry_function,
+    generate_registry,
 )
 
 FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
@@ -70,15 +70,12 @@ def main() -> None:
         exit_point_types = _collect_exit_point_primitive_types(
             ctx.computation_graph.modules
         )
-        registry_code = generate_registry_function(
-            calc_defs=ctx.calc_defs,
+        registry_code = generate_registry(
+            graph=ctx.computation_graph,
             package_name=model_name,
             template_env=template_env,
             output_path=model_output_dir,
-            entry_point_groups=ctx.computation_graph.entry_point_groups,
             exit_point_primitive_types=exit_point_types,
-            computed_attributes=ctx.computed_attributes,
-            aggregation_data=ctx.aggregation_expressions,
         )
         registry_path = model_output_dir / "registry_init.py"
         registry_path.write_text(registry_code)

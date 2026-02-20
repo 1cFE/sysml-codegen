@@ -6,7 +6,7 @@ can be imported, called with sample inputs, and return correct types.
 Usage:
     from sysml_codegen.generation.test_gen import generate_test_implementations
 
-    code = generate_test_implementations(calc_defs, package_name, template_env, output_path)
+    code = generate_test_implementations(graph, package_name, template_env, output_path)
 """
 
 import logging
@@ -16,24 +16,22 @@ import jinja2
 
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 
-# UPDATED: Import from sysml_codegen package
-from sysml_codegen.extraction.data_models import CalculationDefinitionData
-
 logger = logging.getLogger(__name__)
 
 
 def generate_test_implementations(
-    calc_defs: list[CalculationDefinitionData],
+    graph,
     package_name: str,
     template_env: jinja2.Environment,
     output_path: Path,
 ) -> str:
-    """Generate test file for all implementation stencils.
+    """Generate test file from ComputationGraph.
 
-    ADR-003: Generates test imports using namespaced paths.
+    Only generates tests for CalcUsage modules (not FORMULA or aggregation),
+    matching historical behavior.
 
     Args:
-        calc_defs: All calculation definitions from SysML extraction
+        graph: ComputationGraph with modules
         package_name: Package name (parameterized)
         template_env: Jinja2 environment with templates loaded
         output_path: Output file path (for logging, not written here)
@@ -41,55 +39,53 @@ def generate_test_implementations(
     Returns:
         Generated Python test code string
     """
-    # Build module metadata from calc_defs
     modules = []
-    for calc_def in calc_defs:
-        # Get source path for documentation
-        source_file = calc_def.source_file
-        if isinstance(source_file, Path):
-            try:
-                source_str = str(source_file)
-                if "models/" in source_str:
-                    source_path = "models/" + source_str.split("models/", 1)[1]
-                else:
-                    source_path = source_file.name
-            except Exception:
-                source_path = source_file.name
-        else:
-            source_path = str(source_file)
+    calc_count = 0
 
-        # Determine if multi-output
-        is_multi = len(calc_def.output_attributes) >= 2
-        output_count = len(calc_def.output_attributes)
+    for module in graph.modules:
+        # Skip FORMULA and aggregation modules
+        if module.is_computed_attribute or module.is_aggregation:
+            continue
+
+        calc_count += 1
+
+        # Source path extraction
+        source_file = module.source_file or "unknown"
+        source_path = str(source_file)
+        if "models/" in source_path:
+            source_path = "models/" + source_path.split("models/", 1)[1]
+        else:
+            source_path = Path(source_path).name
+
+        is_multi = len(module.outputs) >= 2
+        output_count = len(module.outputs)
 
         # ADR-003: Derive namespaced import paths
-        sqn = SysMLQualifiedName(calc_def.qualified_name)
+        sqn = SysMLQualifiedName(module.calc_def_qualified_name)
         python_path = PythonModulePath.from_sysml(sqn)
         module_import_path = python_path.import_path
         impl_import_path = python_path.impl_import_path
 
         modules.append(
             {
-                "name": calc_def.name.lower(),  # snake_case module name
-                "class_name": calc_def.name,  # TitleCase class name
-                "function": f"run_{calc_def.name.lower()}",
-                "source": f"{source_path}:{calc_def.source_line}",
+                "name": module.calc_def_name.lower(),
+                "class_name": module.calc_def_name,
+                "function": f"run_{module.calc_def_name.lower()}",
+                "source": f"{source_path}:{module.source_line}",
                 "is_multi_output": is_multi,
                 "output_count": output_count,
-                "module_import_path": module_import_path,  # ADR-003
-                "impl_import_path": impl_import_path,  # ADR-003
+                "module_import_path": module_import_path,
+                "impl_import_path": impl_import_path,
             }
         )
 
-    # Render template
     template = template_env.get_template("test_implementations.py.jinja2")
     content = template.render(
         package_name=package_name,
         modules=modules,
-        calc_count=len(calc_defs),
+        calc_count=calc_count,
     )
 
-    # Ensure final newline
     if not content.endswith("\n"):
         content += "\n"
 
@@ -97,6 +93,11 @@ def generate_test_implementations(
     return content
 
 
+# Keep old name as alias for backward compatibility during transition
+generate_test_implementations_from_graph = generate_test_implementations
+
+
 __all__ = [
     "generate_test_implementations",
+    "generate_test_implementations_from_graph",
 ]

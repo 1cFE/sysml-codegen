@@ -745,10 +745,9 @@ class TestGenerationBoundary:
 
     @pytest.mark.req("REQ-PIPE-07")
     def test_generation_extraction_import_count(self):
-        """Count generation/ files importing from extraction/ (baseline for Phase 7.6).
+        """REQ-PIPE-07: Zero generation/ files import from extraction/ or analysis/.
 
-        Currently expected to be >0 (known violation). This test documents the
-        baseline violation count so Phase 7.6 can track progress toward zero.
+        Phase 7.6 achieved the zero-violation target. This test guards against regression.
         """
         gen_dir = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "generation"
         assert gen_dir.exists(), f"generation/ directory not found at {gen_dir}"
@@ -769,11 +768,7 @@ class TestGenerationBoundary:
                     violating_files.append(py_file.name)
                     break
 
-        # Document the current violation count as a baseline
-        # Phase 7.6 will drive this toward zero
-        assert len(violating_files) > 0, (
-            "No generation/ files import from extraction/analysis — "
-            "REQ-PIPE-07 is already satisfied! Remove this baseline test."
+        assert len(violating_files) == 0, (
+            f"generation/ files importing from extraction/analysis: {violating_files}. "
+            "REQ-PIPE-07 requires zero extraction/analysis imports in generation/."
         )
-        # Record the count for future reference (test message)
-        # This test always passes — it documents the baseline

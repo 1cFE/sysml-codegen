@@ -18,9 +18,10 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.pipeline import _module_to_context
-from sysml_codegen.generation.registry import generate_registry_function
+from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.resolution.models import (
+    ComputationGraph,
     InputSource,
     ModuleInput,
     ModuleOutput,
@@ -73,6 +74,39 @@ def _make_pipeline_module(
         )],
         execution_order=0,
         is_computed_attribute=is_computed_attribute,
+    )
+
+
+def _make_formula_module(
+    attr_name: str = "area",
+    owning_part_qn: str = "Pkg::part",
+    auto_impl: bool = True,
+) -> PipelineModule:
+    """Build a PipelineModule for a FORMULA computed attribute."""
+    owning_part_name = owning_part_qn.split("::")[-1]
+    name = f"{owning_part_qn.replace('::', '__').lower()}__{attr_name}"
+    module_type = f"{owning_part_name.lower()}.{attr_name}Module"
+    return PipelineModule(
+        name=name,
+        module_type=module_type,
+        inputs=[],
+        outputs=[ModuleOutput(
+            field_name="root", python_type="float",
+            channel_name=f"{name}__out",
+        )],
+        execution_order=0,
+        is_computed_attribute=True,
+        calc_def_name=attr_name,
+        calc_def_qualified_name=owning_part_qn.replace("::", "__"),
+        auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attr_name, "expression": f"(inputs.{attr_name}_input)"}], "output_count": 1, "single_output_expression": f"(inputs.{attr_name}_input)"} if auto_impl else None,
+    )
+
+
+def _make_graph(modules: list[PipelineModule]) -> ComputationGraph:
+    return ComputationGraph(
+        modules=modules,
+        entry_point_groups=[],
+        execution_order=[m.name for m in modules],
     )
 
 
@@ -136,53 +170,40 @@ class TestBacklogComputedAttrs:
 
     def test_computed_attrs_shown_as_auto_implemented(self):
         """Backlog contains auto-implemented summary line for computed attrs."""
-        ca = _make_computed_attr("area", "part", "Pkg::part")
+        module = _make_formula_module("area", "Pkg::part")
+        graph = _make_graph([module])
 
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-            computed_attributes=[ca],
-        )
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "1 computed attribute module(s) auto-implemented" in report
 
     def test_manual_required_not_counted(self):
-        """MANUAL_REQUIRED FORMULA not counted as auto-implemented."""
-        ca = _make_computed_attr(
-            "broken", "part", "Pkg::part",
-            compilability=Compilability.MANUAL_REQUIRED,
-        )
+        """MANUAL_REQUIRED FORMULA (no auto_impl_context) not counted as auto-implemented."""
+        module = _make_formula_module("broken", "Pkg::part", auto_impl=False)
+        graph = _make_graph([module])
 
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-            computed_attributes=[ca],
-        )
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "auto-implemented" not in report
 
     def test_no_computed_attrs_no_summary(self):
         """No computed attrs -> no auto-implemented summary line."""
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-        )
+        graph = _make_graph([])
+
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "auto-implemented" not in report
 
     def test_multiple_formula_attrs_counted(self):
         """Multiple FORMULA attrs produce correct count."""
-        cas = [
-            _make_computed_attr("area", "part", "Pkg::part"),
-            _make_computed_attr("cost", "part", "Pkg::part"),
-            _make_computed_attr("volume", "part", "Pkg::part"),
+        modules = [
+            _make_formula_module("area", "Pkg::part"),
+            _make_formula_module("cost", "Pkg::part"),
+            _make_formula_module("volume", "Pkg::part"),
         ]
+        graph = _make_graph(modules)
 
-        report = generate_backlog_report(
-            calc_defs=[],
-            output_path=Path("test.md"),
-            computed_attributes=cas,
-        )
+        report = generate_backlog_report(graph, Path("test.md"))
 
         assert "3 computed attribute module(s) auto-implemented" in report
 
@@ -370,62 +391,55 @@ class TestRegistryInclusion:
     def test_computed_attr_in_registry(self):
         """Registry imports and registers computed attr module."""
         env = _get_template_env()
-        ca = _make_computed_attr(
-            "area", "part", "Pkg::part",
-            compiled_expression="(inputs.length * inputs.width)",
-        )
+        module = _make_formula_module("area", "Pkg::part")
+        graph = _make_graph([module])
 
-        code = generate_registry_function(
-            calc_defs=[],
+        code = generate_registry(
+            graph=graph,
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            entry_point_groups=[],
-            exit_point_primitive_types=[],
-            computed_attributes=[ca],
         )
 
-        # derive_module_type produces lowercase class name from attr name
         assert "areaModule" in code
         assert "from test_pkg.modules." in code
 
     def test_manual_required_excluded_from_registry(self):
-        """MANUAL_REQUIRED FORMULA not included in registry."""
-        env = _get_template_env()
-        ca = _make_computed_attr(
-            "broken", "part", "Pkg::part",
-            compilability=Compilability.MANUAL_REQUIRED,
-        )
+        """MANUAL_REQUIRED FORMULA (no auto_impl_context) still included in registry.
 
-        code = generate_registry_function(
-            calc_defs=[],
+        Note: The registry includes ALL FORMULA modules regardless of compilability.
+        Only EXPOSE_PURE modules were excluded. With graph-only generation, all
+        FORMULA PipelineModules in the graph are included.
+        """
+        env = _get_template_env()
+        module = _make_formula_module("broken", "Pkg::part", auto_impl=False)
+        graph = _make_graph([module])
+
+        code = generate_registry(
+            graph=graph,
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            entry_point_groups=[],
-            exit_point_primitive_types=[],
-            computed_attributes=[ca],
         )
 
-        assert "BrokenModule" not in code
+        # FORMULA modules are always in the graph and thus always in the registry
+        assert "brokenModule" in code
 
     def test_expose_pure_excluded_from_registry(self):
-        """EXPOSE_PURE computed attrs not included in registry (no module)."""
-        env = _get_template_env()
-        ca = _make_computed_attr(
-            "p_alpha_out", "part", "Pkg::part",
-            classification=ComputedAttributeClassification.EXPOSE_PURE,
-            compiled_expression=None,
-        )
+        """EXPOSE_PURE computed attrs not in graph, not in registry.
 
-        code = generate_registry_function(
-            calc_defs=[],
+        Note: EXPOSE_PURE attributes are never added to the ComputationGraph
+        as PipelineModules, so they cannot appear in the registry. An empty
+        graph produces no modules in the registry.
+        """
+        env = _get_template_env()
+        graph = _make_graph([])
+
+        code = generate_registry(
+            graph=graph,
             package_name="test_pkg",
             template_env=env,
             output_path=Path("test_init.py"),
-            entry_point_groups=[],
-            exit_point_primitive_types=[],
-            computed_attributes=[ca],
         )
 
         assert "PAlphaOutModule" not in code

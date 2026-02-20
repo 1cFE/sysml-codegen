@@ -251,22 +251,32 @@ class TestHierarchyCodegenE2E:
         assert success, "Solar battery codegen should succeed"
         return output_path
 
+    @pytest.fixture(scope="class")
+    def codegen_agg_filenames(self) -> set[str]:
+        """Get aggregation module filenames from computation graph metadata."""
+        model_path = FIXTURES_DIR / "solar_battery_model"
+        ctx = build_pipeline_context([model_path])
+        return {
+            m.calc_def_name.lower() + ".py"
+            for m in ctx.computation_graph.modules
+            if m.is_aggregation
+        }
+
     def test_bf3_aggregation_wrappers_have_inputs(
-        self, codegen_output: Path,
+        self, codegen_output: Path, codegen_agg_filenames: set[str],
     ):
         """BF-3: Aggregation module wrapper files should have real inputs
         (not just empty Input classes)."""
         modules_dir = codegen_output / "modules"
         assert modules_dir.exists(), f"modules dir missing: {codegen_output}"
 
-        # Aggregation wrappers are identified by "aggregation" in their content
-        # and containing an Input class (named like capital_costInput)
+        # Identify aggregation wrappers by matching filenames from the
+        # computation graph (graph-only approach per REQ-PIPE-07).
         agg_wrappers = []
         for py_file in modules_dir.rglob("*.py"):
             if py_file.name == "__init__.py":
                 continue
-            content = py_file.read_text()
-            if "aggregation" in content.lower() and "Input(BaseModel)" in content:
+            if py_file.name in codegen_agg_filenames:
                 agg_wrappers.append(py_file)
 
         assert agg_wrappers, (
@@ -288,20 +298,19 @@ class TestHierarchyCodegenE2E:
         )
 
     def test_bf4_bf5_instance_scoped_paths(
-        self, codegen_output: Path,
+        self, codegen_output: Path, codegen_agg_filenames: set[str],
     ):
         """BF-4/5: Module wrapper directories should use design-instance paths
         (contain 'solar_battery_plant'), not library-level PartDef paths."""
         modules_dir = codegen_output / "modules"
         assert modules_dir.exists()
 
-        # Find aggregation-related module files
+        # Find aggregation-related module files via graph metadata
         agg_files = []
         for py_file in modules_dir.rglob("*.py"):
             if py_file.name == "__init__.py":
                 continue
-            content = py_file.read_text()
-            if "aggregation" in content.lower() and "Input(BaseModel)" in content:
+            if py_file.name in codegen_agg_filenames:
                 agg_files.append(py_file)
 
         assert agg_files, "Expected at least one aggregation module file"

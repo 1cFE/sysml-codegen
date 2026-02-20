@@ -25,7 +25,6 @@ import pytest
 
 from sysml_codegen.generation.schemas import (
     generate_multioutput_model,
-    should_use_multioutput,
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.resolution.models import ComputationGraph
@@ -81,58 +80,14 @@ def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _build_calcusage_module_to_calcdef_map(
-    graph: ComputationGraph, inputs: dict
-) -> dict[str, object]:
-    """Map CalcUsage PipelineModule.name -> CalculationDefinitionData.
-
-    Uses required_usages from BacktrackingResult to link module names
-    to their calc_def_name, then looks up the calc_def.
-    """
-    result = inputs["result"]
-    snap = inputs["snap"]
-
-    # Build calc_def lookup: name -> CalculationDefinitionData
-    calc_def_map = {cd.name: cd for cd in snap["calc_defs"]}
-
-    # Build module_name -> calc_def_name mapping via required_usages
-    usage_to_calcdef = {}
-    for usage in result.required_usages:
-        module_name = usage.qualified_name.lower()
-        usage_to_calcdef[module_name] = usage.calc_def_name
-
-    # Filter to CalcUsage modules only (not computed_attribute, not aggregation)
-    mapping = {}
-    for module in graph.modules:
-        if module.is_computed_attribute or module.is_aggregation:
-            continue
-        calc_def_name = usage_to_calcdef.get(module.name)
-        if calc_def_name and calc_def_name in calc_def_map:
-            mapping[module.name] = calc_def_map[calc_def_name]
-
-    return mapping
+def _get_multi_output_modules(graph: ComputationGraph) -> list:
+    """Return PipelineModules with 2+ outputs."""
+    return [m for m in graph.modules if len(m.outputs) >= 2]
 
 
-def _get_multi_output_calc_defs(
-    graph: ComputationGraph, inputs: dict
-) -> list[tuple[str, object]]:
-    """Return (module_name, calc_def) pairs for multi-output CalcUsage modules."""
-    mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-    return [
-        (name, cd) for name, cd in mapping.items()
-        if len(cd.output_attributes) >= 2
-    ]
-
-
-def _get_single_output_calc_defs(
-    graph: ComputationGraph, inputs: dict
-) -> list[tuple[str, object]]:
-    """Return (module_name, calc_def) pairs for single-output CalcUsage modules."""
-    mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-    return [
-        (name, cd) for name, cd in mapping.items()
-        if len(cd.output_attributes) == 1
-    ]
+def _get_single_output_modules(graph: ComputationGraph) -> list:
+    """Return PipelineModules with exactly 1 output."""
+    return [m for m in graph.modules if len(m.outputs) == 1]
 
 
 # ---------------------------------------------------------------------------
@@ -174,36 +129,28 @@ class TestSingleOutputUsesRootField:
 # ---------------------------------------------------------------------------
 
 class TestMultiOutputGenerated:
-    """should_use_multioutput() returns True and generate_multioutput_model()
-    produces non-None code for every calc_def with 2+ outputs."""
+    """generate_multioutput_model() produces non-None code for modules with 2+ outputs."""
 
     @pytest.mark.req("REQ-OSR-02")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS,
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS])
-    def test_multioutput_generated_for_multi_output_calcs(
+    def test_multioutput_generated_for_multi_output_modules(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        multi_output_pairs = _get_multi_output_calc_defs(graph, inputs)
+        graph, _ = all_graph_data[model_name]
+        multi_output_modules = _get_multi_output_modules(graph)
 
-        if not multi_output_pairs:
-            pytest.skip(f"No multi-output CalcUsage modules in {model_name}")
+        if not multi_output_modules:
+            pytest.skip(f"No multi-output modules in {model_name}")
 
         failures = []
-        for module_name, calc_def in multi_output_pairs:
-            if not should_use_multioutput(calc_def):
-                failures.append(
-                    f"  {module_name}: should_use_multioutput() returned False "
-                    f"for {len(calc_def.output_attributes)} outputs"
-                )
-                continue
-
+        for module in multi_output_modules:
             code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
+                module, template_env, Path("/tmp/test_schema.py"),
             )
             if code is None:
                 failures.append(
-                    f"  {module_name}: generate_multioutput_model() returned None"
+                    f"  {module.name}: generate_multioutput_model() returned None"
                 )
 
         assert not failures, (
@@ -215,24 +162,19 @@ class TestMultiOutputGenerated:
     def test_multioutput_not_generated_for_single_output(
         self, all_graph_data, template_env,
     ):
-        """should_use_multioutput() returns False and generate_multioutput_model()
-        returns None for calc_defs with 1 output."""
-        graph, inputs = all_graph_data["solar_battery_model"]
-        single_output_pairs = _get_single_output_calc_defs(graph, inputs)
+        """generate_multioutput_model() returns None for single-output modules."""
+        graph, _ = all_graph_data["solar_battery_model"]
+        single_output_modules = _get_single_output_modules(graph)
 
-        assert len(single_output_pairs) > 0, "No single-output calc_defs found"
+        assert len(single_output_modules) > 0, "No single-output modules found"
 
-        for module_name, calc_def in single_output_pairs:
-            assert not should_use_multioutput(calc_def), (
-                f"{module_name}: should_use_multioutput() returned True "
-                f"for {len(calc_def.output_attributes)} output(s)"
-            )
+        for module in single_output_modules:
             code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
+                module, template_env, Path("/tmp/test_schema.py"),
             )
             assert code is None, (
-                f"{module_name}: generate_multioutput_model() returned code "
-                f"for single-output calc_def"
+                f"{module.name}: generate_multioutput_model() returned code "
+                f"for single-output module"
             )
 
 
@@ -249,22 +191,22 @@ class TestGeneratedSchemaValidPython:
     def test_generated_schema_valid_python(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        multi_output_pairs = _get_multi_output_calc_defs(graph, inputs)
+        graph, _ = all_graph_data[model_name]
+        multi_output_modules = _get_multi_output_modules(graph)
 
-        assert len(multi_output_pairs) > 0, (
-            f"No multi-output calc_defs in {model_name}"
+        assert len(multi_output_modules) > 0, (
+            f"No multi-output modules in {model_name}"
         )
 
         failures = []
-        for module_name, calc_def in multi_output_pairs:
+        for module in multi_output_modules:
             code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
+                module, template_env, Path("/tmp/test_schema.py"),
             )
             try:
                 ast.parse(code)
             except SyntaxError as e:
-                failures.append(f"  {module_name}: {e}")
+                failures.append(f"  {module.name}: {e}")
 
         assert not failures, (
             f"Invalid Python in {model_name} schemas:\n" + "\n".join(failures)
@@ -284,17 +226,17 @@ class TestGeneratedSchemaInheritsMultiOutput:
     def test_generated_schema_class_inherits_multioutput(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        multi_output_pairs = _get_multi_output_calc_defs(graph, inputs)
+        graph, _ = all_graph_data[model_name]
+        multi_output_modules = _get_multi_output_modules(graph)
 
-        assert len(multi_output_pairs) > 0, (
-            f"No multi-output calc_defs in {model_name}"
+        assert len(multi_output_modules) > 0, (
+            f"No multi-output modules in {model_name}"
         )
 
         failures = []
-        for module_name, calc_def in multi_output_pairs:
+        for module in multi_output_modules:
             code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
+                module, template_env, Path("/tmp/test_schema.py"),
             )
             tree = ast.parse(code)
             class_defs = [
@@ -302,14 +244,14 @@ class TestGeneratedSchemaInheritsMultiOutput:
                 if isinstance(node, ast.ClassDef)
             ]
             if not class_defs:
-                failures.append(f"  {module_name}: no class definition found")
+                failures.append(f"  {module.name}: no class definition found")
                 continue
 
             class_def = class_defs[0]
             base_names = [ast.unparse(base) for base in class_def.bases]
             if "MultiOutput" not in base_names:
                 failures.append(
-                    f"  {module_name}: bases are {base_names}, "
+                    f"  {module.name}: bases are {base_names}, "
                     f"expected MultiOutput"
                 )
 
@@ -324,30 +266,29 @@ class TestGeneratedSchemaInheritsMultiOutput:
 # ---------------------------------------------------------------------------
 
 class TestMultiOutputDecisionMatchesGraph:
-    """should_use_multioutput(calc_def) == (len(module.outputs) > 1)
-    for every CalcUsage module."""
+    """generate_multioutput_model returns code only for modules with 2+ outputs."""
 
     @pytest.mark.req("REQ-OSR-01")
     @pytest.mark.req("REQ-OSR-02")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS[:1]])
-    def test_should_use_multioutput_decision_matches_graph(
-        self, model_name, all_graph_data,
+    def test_multioutput_decision_consistent_with_output_count(
+        self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
-        module_lookup = {m.name: m for m in graph.modules}
+        graph, _ = all_graph_data[model_name]
 
         mismatches = []
-        for module_name, calc_def in mapping.items():
-            pipeline_module = module_lookup[module_name]
-            schema_decision = should_use_multioutput(calc_def)
-            graph_multi = len(pipeline_module.outputs) > 1
+        for module in graph.modules:
+            code = generate_multioutput_model(
+                module, template_env, Path("/tmp/test_schema.py"),
+            )
+            expected_multi = len(module.outputs) > 1
+            got_code = code is not None
 
-            if schema_decision != graph_multi:
+            if expected_multi != got_code:
                 mismatches.append(
-                    f"  {module_name}: should_use_multioutput={schema_decision}, "
-                    f"graph outputs={len(pipeline_module.outputs)}"
+                    f"  {module.name}: outputs={len(module.outputs)}, "
+                    f"expected_multi={expected_multi}, got_code={got_code}"
                 )
 
         assert not mismatches, (
@@ -360,48 +301,8 @@ class TestMultiOutputDecisionMatchesGraph:
 # REQ-OSR-03: Output field names match SysML output_attributes
 # ---------------------------------------------------------------------------
 
-class TestFieldNamesMatchOutputAttributes:
-    """Generated MultiOutput field names match calc_def.output_attributes[i].name."""
-
-    @pytest.mark.req("REQ-OSR-03")
-    @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
-                             ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS[:1]])
-    def test_field_names_match_output_attributes(
-        self, model_name, all_graph_data, template_env,
-    ):
-        graph, inputs = all_graph_data[model_name]
-        multi_output_pairs = _get_multi_output_calc_defs(graph, inputs)
-
-        assert len(multi_output_pairs) > 0, (
-            f"No multi-output calc_defs in {model_name}"
-        )
-
-        mismatches = []
-        for module_name, calc_def in multi_output_pairs:
-            code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
-            )
-            tree = ast.parse(code)
-
-            # Extract field names from the generated class
-            generated_fields = []
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ClassDef):
-                    for item in node.body:
-                        if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
-                            generated_fields.append(item.target.id)
-                    break  # Only first class
-
-            expected_fields = [attr.name for attr in calc_def.output_attributes]
-            if generated_fields != expected_fields:
-                mismatches.append(
-                    f"  {module_name}: expected {expected_fields}, "
-                    f"got {generated_fields}"
-                )
-
-        assert not mismatches, (
-            f"Field name mismatches in {model_name}:\n" + "\n".join(mismatches)
-        )
+class TestFieldNamesMatchModuleOutputs:
+    """Generated MultiOutput field names match PipelineModule.outputs[i].field_name."""
 
     @pytest.mark.req("REQ-OSR-03")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:1],
@@ -409,19 +310,17 @@ class TestFieldNamesMatchOutputAttributes:
     def test_field_names_match_pipeline_module_outputs(
         self, model_name, all_graph_data, template_env,
     ):
-        """Generated MultiOutput field names match PipelineModule.outputs[i].field_name."""
-        graph, inputs = all_graph_data[model_name]
-        multi_output_pairs = _get_multi_output_calc_defs(graph, inputs)
-        module_lookup = {m.name: m for m in graph.modules}
+        graph, _ = all_graph_data[model_name]
+        multi_output_modules = _get_multi_output_modules(graph)
 
-        assert len(multi_output_pairs) > 0, (
-            f"No multi-output calc_defs in {model_name}"
+        assert len(multi_output_modules) > 0, (
+            f"No multi-output modules in {model_name}"
         )
 
         mismatches = []
-        for module_name, calc_def in multi_output_pairs:
+        for module in multi_output_modules:
             code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
+                module, template_env, Path("/tmp/test_schema.py"),
             )
             tree = ast.parse(code)
 
@@ -434,12 +333,11 @@ class TestFieldNamesMatchOutputAttributes:
                             generated_fields.append(item.target.id)
                     break
 
-            pipeline_module = module_lookup[module_name]
-            graph_field_names = [o.field_name for o in pipeline_module.outputs]
+            graph_field_names = [o.field_name for o in module.outputs]
 
             if set(generated_fields) != set(graph_field_names):
                 mismatches.append(
-                    f"  {module_name}: schema fields={generated_fields}, "
+                    f"  {module.name}: schema fields={generated_fields}, "
                     f"graph fields={graph_field_names}"
                 )
 
@@ -495,17 +393,17 @@ class TestOutputFieldsHaveNoDefaults:
     def test_output_fields_have_no_defaults(
         self, model_name, all_graph_data, template_env,
     ):
-        graph, inputs = all_graph_data[model_name]
-        multi_output_pairs = _get_multi_output_calc_defs(graph, inputs)
+        graph, _ = all_graph_data[model_name]
+        multi_output_modules = _get_multi_output_modules(graph)
 
-        assert len(multi_output_pairs) > 0, (
-            f"No multi-output calc_defs in {model_name}"
+        assert len(multi_output_modules) > 0, (
+            f"No multi-output modules in {model_name}"
         )
 
         violations = []
-        for module_name, calc_def in multi_output_pairs:
+        for module in multi_output_modules:
             code = generate_multioutput_model(
-                calc_def, template_env, Path("/tmp/test_schema.py"),
+                module, template_env, Path("/tmp/test_schema.py"),
             )
             tree = ast.parse(code)
 
@@ -528,7 +426,7 @@ class TestOutputFieldsHaveNoDefaults:
                                     else "?"
                                 )
                                 violations.append(
-                                    f"  {module_name}.{field_name}: "
+                                    f"  {module.name}.{field_name}: "
                                     f"has default={ast.unparse(keyword.value)}"
                                 )
 
@@ -641,13 +539,12 @@ class TestOutputChannelsUsePQNFormat:
 # REQ-OSR-02: Static analysis — schemas.py imports from extraction
 # ---------------------------------------------------------------------------
 
-class TestSchemasPyImportsExtraction:
-    """Static analysis: schemas.py imports from extraction.data_models
-    (documents known Phase 7 migration target)."""
+class TestSchemasPyNoExtractionImports:
+    """Static analysis: schemas.py has zero extraction imports (Phase 7 complete)."""
 
     @pytest.mark.req("REQ-OSR-02")
-    def test_schemas_py_imports_extraction(self):
-        """schemas.py currently imports from extraction — Phase 7 target."""
+    def test_schemas_py_no_extraction_imports(self):
+        """schemas.py must not import from extraction (boundary enforcement)."""
         schemas_path = SRC_DIR / "generation" / "schemas.py"
         source = schemas_path.read_text()
         tree = ast.parse(source)
@@ -660,8 +557,7 @@ class TestSchemasPyImportsExtraction:
                         f"  line {node.lineno}: from {node.module}"
                     )
 
-        # This SHOULD find imports (documenting current state)
-        assert len(extraction_imports) > 0, (
-            "schemas.py no longer imports from extraction — "
-            "Phase 7 migration may have been completed"
+        assert len(extraction_imports) == 0, (
+            "schemas.py still imports from extraction:\n"
+            + "\n".join(extraction_imports)
         )
