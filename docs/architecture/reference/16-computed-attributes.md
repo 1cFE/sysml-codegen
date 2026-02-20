@@ -246,8 +246,9 @@ Workaround: promote the dependency to a separate CalcDef or use EXPOSE_PURE.
 
 ## Known Issues
 
-> **Changelog**: Added 2026-02-17 from Phase 2 conformance audit findings.
-> Captures inherited attribute misclassification bug and UNRESOLVABLE dead code finding.
+> **Changelog**: Added 2026-02-17 from C3 Phase 2 Audit findings
+> (PHASE2_AUDIT_ACTIONS.md §C3). Captures inherited attribute misclassification
+> bug and UNRESOLVABLE dead code finding.
 
 ### Inherited Attribute Misclassification (Deferred Issue #9)
 
