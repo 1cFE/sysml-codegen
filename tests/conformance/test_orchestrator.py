@@ -31,10 +31,10 @@ from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
     ScopedAggregationData,
 )
-from sysml_codegen.generation.initialization import (
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
+from sysml_codegen.orchestration.pipeline_builder import (
     _remove_formula_from_design_attrs,
     _scope_aggregation_expressions,
-    build_output_registry,
     build_pipeline_context,
 )
 from sysml_codegen.resolution.graph_builder import build_computation_graph
@@ -569,7 +569,7 @@ class TestChainAliasWarning:
         )
         aliases = list(snap.get("channel_aliases", [])) + [fake_alias]
 
-        with caplog.at_level(logging.WARNING, logger="sysml_codegen.generation.initialization"):
+        with caplog.at_level(logging.WARNING, logger="sysml_codegen.orchestration.output_registry_builder"):
             registry = build_output_registry(
                 calc_usages=snap["calc_usages"],
                 calc_defs=snap["calc_defs"],
@@ -600,7 +600,7 @@ class TestChainAliasWarning:
         """Build registry with solar_battery data → no Phase 2 warning logged."""
         snap = extraction_snapshots["solar_battery_model"]
 
-        with caplog.at_level(logging.WARNING, logger="sysml_codegen.generation.initialization"):
+        with caplog.at_level(logging.WARNING, logger="sysml_codegen.orchestration.output_registry_builder"):
             build_output_registry(
                 calc_usages=snap["calc_usages"],
                 calc_defs=snap["calc_defs"],

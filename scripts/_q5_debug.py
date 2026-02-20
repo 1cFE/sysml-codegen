@@ -9,7 +9,7 @@ from sysml_codegen.core.identifier_types import CanonicalChannel, ScopedKey
 from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
 from sysml_codegen.extraction.expression_compiler import Compilability
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from tests.helpers.snapshot_loader import load_extraction_snapshot
 
 snap = load_extraction_snapshot("solar_battery_model")

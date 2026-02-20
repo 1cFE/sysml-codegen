@@ -34,7 +34,7 @@ from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 
 try:
-    from sysml_codegen.generation.initialization import build_output_registry
+    from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 
     HAS_BUILD_REGISTRY = True
 except ImportError:
@@ -667,7 +667,7 @@ class TestBuildOutputRegistryPhases:
 
     def test_real_solar_battery_chain_alias_count(self):
         """Real solar_battery: exact CHAIN alias count matches spec (41)."""
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
         model_path = FIXTURES_DIR / "solar_battery_model"
         ctx = build_pipeline_context([model_path])
@@ -689,7 +689,7 @@ class TestContractRealSolarBattery:
 
     @pytest.fixture(scope="class")
     def pipeline_context(self):
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
         model_path = FIXTURES_DIR / "solar_battery_model"
         return build_pipeline_context([model_path])
@@ -750,7 +750,7 @@ class TestContractRealAttrExprProbe:
 
     @pytest.fixture(scope="class")
     def pipeline_context(self):
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
         model_path = FIXTURES_DIR / "attr_expr_probe"
         return build_pipeline_context([model_path])

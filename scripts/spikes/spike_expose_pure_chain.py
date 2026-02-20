@@ -40,7 +40,7 @@ from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     extract_design_attributes,
 )
-from sysml_codegen.generation.initialization import (
+from sysml_codegen.orchestration.pipeline_builder import (
     _extract_and_filter_computed_attributes,
 )
 from agentic_mbse.sysml.types import BindingType

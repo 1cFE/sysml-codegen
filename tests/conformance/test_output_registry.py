@@ -22,7 +22,7 @@ from sysml_codegen.extraction.data_models import (
     Compilability,
     ComputedAttributeClassification,
 )
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from tests.helpers.snapshot_loader import load_extraction_snapshot
 from tests.helpers.registry_compat import registry_resolve
 

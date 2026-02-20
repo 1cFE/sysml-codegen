@@ -14,7 +14,7 @@ import jinja2
 import pytest
 
 from sysml_codegen.core.models import BindingResolutionType
-from sysml_codegen.generation.initialization import build_pipeline_context
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"

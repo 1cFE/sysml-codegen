@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import jinja2
 
-from sysml_codegen.generation.initialization import build_pipeline_context
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.generation.registry import (
     _collect_exit_point_primitive_types,
     generate_registry_function,

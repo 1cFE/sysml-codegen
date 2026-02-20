@@ -41,7 +41,8 @@ from sysml_codegen.extraction.data_models import (
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.generation.initialization import build_output_registry, _remove_formula_from_design_attrs
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
+from sysml_codegen.orchestration.pipeline_builder import _remove_formula_from_design_attrs
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import (
     EntryPointType,

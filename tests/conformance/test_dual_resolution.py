@@ -24,7 +24,7 @@ from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.core.identifier_types import SysMLQN
 from sysml_codegen.core.models import BindingResolutionType
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
     AttributeResolutionKind,
     _build_attribute_resolution_map,

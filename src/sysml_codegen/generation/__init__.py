@@ -32,7 +32,6 @@ from sysml_codegen.generation.initialization import (
     CodeGenerationError,
     PipelineContext,
     SysMLParsingError,
-    build_pipeline_context,
 )
 from sysml_codegen.generation.modules import (
     generate_teax_module,
@@ -80,7 +79,6 @@ __all__ = [
     "CodeGenerationError",
     "PipelineContext",
     "SysMLParsingError",
-    "build_pipeline_context",
     # modules
     "generate_teax_module",
     "is_multioutput",

@@ -46,8 +46,7 @@ from sysml_codegen.extraction.usage_extractor import (
     CalcUsageData,
     extract_calculation_usages,
 )
-from sysml_codegen.generation.initialization import (
-    _enrich_aliases_from_bindings,
+from sysml_codegen.orchestration.pipeline_builder import (
     _extract_and_filter_computed_attributes,
     _extract_hierarchy_and_rewrite_bindings,
     _scope_aggregation_expressions,

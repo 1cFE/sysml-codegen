@@ -304,7 +304,7 @@ def analyze_wiring(model_path: Path) -> None:
     print("=" * 70)
 
     try:
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
         ctx = build_pipeline_context([model_path])
     except Exception as e:
         print(f"  ERROR building pipeline context: {e}")

@@ -34,7 +34,7 @@ from sysml_codegen.extraction.data_models import (
     SingletonTerm,
     SumTerm,
 )
-from sysml_codegen.generation.initialization import build_pipeline_context
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
 # ---------------------------------------------------------------------------
 # Constants

@@ -21,12 +21,12 @@ from pathlib import Path
 # Add project root to sys.path so tests.helpers is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sysml_codegen.generation.initialization import (
-    build_pipeline_context,
-    extract_calculation_usages,
-    extract_design_attributes,
-    _extract_hierarchy_and_rewrite_bindings,
+from sysml_codegen.analysis.parameter_groups import extract_design_attributes
+from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
+from sysml_codegen.orchestration.pipeline_builder import (
     _extract_and_filter_computed_attributes,
+    _extract_hierarchy_and_rewrite_bindings,
+    build_pipeline_context,
 )
 from tests.helpers.snapshot_serializer import serialize_extraction_snapshot, snapshot_to_json
 

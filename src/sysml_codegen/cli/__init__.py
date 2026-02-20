@@ -181,7 +181,7 @@ def _generate_modules(
 ) -> None:
     """Generate TEAx module wrappers (ADR-003 namespacing)."""
     from sysml_codegen.generation import generate_teax_module
-    from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
+    from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 
     modules_dir = config.output_path / "modules"
     module_count = 0
@@ -621,7 +621,7 @@ def _generate_stencils(
         generate_implementation,
         should_regenerate_stencil,
     )
-    from sysml_codegen.resolution.identifier_types import (
+    from sysml_codegen.core.identifier_types import (
         PythonModulePath,
         SysMLQualifiedName,
     )
@@ -1033,8 +1033,8 @@ def run_codegen(config: GenerationConfig) -> bool:
     from sysml_codegen.generation import (
         CodeGenerationError,
         SysMLParsingError,
-        build_pipeline_context,
     )
+    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
     logger.info(f"Generating code from {config.models_path}")
     logger.info(f"Output to {config.output_path}")

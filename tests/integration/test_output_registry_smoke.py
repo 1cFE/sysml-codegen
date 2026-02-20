@@ -16,7 +16,7 @@ import pytest
 from sysml_codegen.core.identifier_types import make_scoped_key
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import get_channel_name
-from sysml_codegen.generation.initialization import build_pipeline_context
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from tests.helpers.registry_compat import registry_resolve, registry_register
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"

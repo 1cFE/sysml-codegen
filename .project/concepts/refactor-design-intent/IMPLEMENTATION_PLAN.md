@@ -558,15 +558,16 @@ on all fixture models. This proves the refactored components compose correctly.
 **Goal**: Now that everything is tested and proven, restructure the codebase to match
 the target architecture. This is pure refactoring — no behavior changes.
 
-- [ ] **7.1 — Extract orchestration into `orchestration/` package**
+- [x] **7.1 — Extract orchestration into `orchestration/` package** *(completed 2026-02-20)*
   - Move `build_pipeline_context()` and friends from `generation/initialization.py`
-  - Functions moved: `build_pipeline_context()`, `_rewrite_virtual_bindings()`, `_scope_aggregation_expressions()`, `_classify_entry_points()`
-  - Update all imports
-  - Run full test suite — must be green
+  - Functions moved: `build_pipeline_context()`, `_rewrite_virtual_bindings()`, `_scope_aggregation_expressions()`, `build_output_registry()`, `find_instance_paths_for_partdef()`, `_build_chain_aliases()`, `_remove_formula_from_design_attrs()`, `_extract_and_filter_computed_attributes()`, `_extract_hierarchy_and_rewrite_bindings()`
+  - Update all imports (40+ files across src/, tests/, scripts/)
+  - `build_pipeline_context` removed from `generation/__init__.py` re-exports (circular import fix)
+  - Run full test suite — 1783 passed, 0 failures, 2 skipped, 6 xfailed
   - **AC**:
-    - [ ] `generation/initialization.py` line count drops below 200 (currently ~860; only PipelineContext and helpers remain)
-    - [ ] No circular imports between `orchestration/` and `generation/`
-    - [ ] All imports updated; `git grep 'from.*initialization import'` returns only allowed paths
+    - [x] `generation/initialization.py` line count drops below 200 (109 lines; only PipelineContext and exception classes remain)
+    - [x] No circular imports between `orchestration/` and `generation/`
+    - [x] All imports updated; `git grep 'from.*initialization import'` returns only PipelineContext/SysMLParsingError/CodeGenerationError
 
 - [ ] **7.2 — Extract input resolver into `resolution/input_resolver.py`**
   - If `resolve_input()` is currently inline in graph_builder.py, extract it

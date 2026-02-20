@@ -14,7 +14,7 @@ import pytest
 
 from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
 from sysml_codegen.extraction.data_models import RedefinitionType
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.input_resolver import (
     ResolutionContext,
     SysMLQNLookup,
@@ -94,7 +94,7 @@ class TestDeadCodePaths:
     def test_vbr_no_bare_name_fallback(self):
         """_rewrite_virtual_bindings source does NOT contain the bare-name
         fallback (else: leaf = source) — replaced with ValueError."""
-        from sysml_codegen.generation.initialization import _rewrite_virtual_bindings
+        from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
 
         source = inspect.getsource(_rewrite_virtual_bindings)
         # The dead code was: else: leaf = source  # bare name

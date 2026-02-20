@@ -33,7 +33,7 @@ from tests.helpers.registry_compat import registry_resolve
 
 def _build_test_registry(**kwargs):
     """Build OutputRegistry from synthetic test data."""
-    from sysml_codegen.generation.initialization import build_output_registry
+    from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 
     return build_output_registry(
         calc_usages=kwargs.get("calc_usages", []),

@@ -15,7 +15,8 @@ from pathlib import Path
 import pytest
 
 from sysml_codegen.core.models import BindingResolutionType
-from sysml_codegen.generation.initialization import build_output_registry, build_pipeline_context
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from tests.helpers.registry_compat import registry_resolve
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"

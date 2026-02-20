@@ -29,7 +29,7 @@ from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.qualified_names import get_channel_name, get_module_name
 from sysml_codegen.extraction.expression_compiler import Compilability
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import _build_pipeline_module, _classify_entry_points
 from sysml_codegen.resolution.models import (
     EntryPoint,

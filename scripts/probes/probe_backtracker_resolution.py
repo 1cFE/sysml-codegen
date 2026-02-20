@@ -53,7 +53,7 @@ def main() -> None:
 
     print(f"\nLoading model and building pipeline context from: {model_path}")
     try:
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
         ctx = build_pipeline_context([model_path])
         print("  Pipeline context built successfully")
     except Exception as e:

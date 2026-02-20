@@ -31,7 +31,7 @@ from sysml_codegen.extraction.usage_extractor import (
     BindingType,
     CalcUsageData,
 )
-from sysml_codegen.generation.initialization import _rewrite_virtual_bindings
+from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -693,9 +693,9 @@ class TestRewriteOrdering:
 
     def test_rewrite_called_before_downstream_in_build_pipeline_context(self):
         """Static analysis: _rewrite_virtual_bindings called before downstream steps."""
-        from sysml_codegen.generation import initialization
+        from sysml_codegen.orchestration import pipeline_builder
 
-        source = inspect.getsource(initialization)
+        source = inspect.getsource(pipeline_builder)
         tree = ast.parse(source)
 
         # Find build_pipeline_context and extract call line numbers
@@ -734,9 +734,9 @@ class TestRewriteOrdering:
 
     def test_rewrite_called_inside_hierarchy_extraction(self):
         """_rewrite_virtual_bindings called within _extract_hierarchy_and_rewrite_bindings."""
-        from sysml_codegen.generation import initialization
+        from sysml_codegen.orchestration import pipeline_builder
 
-        source = inspect.getsource(initialization)
+        source = inspect.getsource(pipeline_builder)
         tree = ast.parse(source)
 
         target_fn = "_extract_hierarchy_and_rewrite_bindings"

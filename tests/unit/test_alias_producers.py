@@ -548,7 +548,7 @@ class TestFindInstancePathsForPartdef:
 
     def test_direct_match_strategy(self):
         """Virtual CalcUsage on same PartDef → correct dotted path."""
-        from sysml_codegen.generation.initialization import find_instance_paths_for_partdef
+        from sysml_codegen.orchestration.pipeline_builder import find_instance_paths_for_partdef
 
         usages = [
             _make_virtual_calc_usage(
@@ -564,7 +564,7 @@ class TestFindInstancePathsForPartdef:
 
     def test_child_walk_strategy(self):
         """Child PartUsage name match → correct dotted path."""
-        from sysml_codegen.generation.initialization import find_instance_paths_for_partdef
+        from sysml_codegen.orchestration.pipeline_builder import find_instance_paths_for_partdef
 
         usages = [
             _make_virtual_calc_usage(
@@ -583,7 +583,7 @@ class TestFindInstancePathsForPartdef:
 
     def test_no_match_returns_empty(self):
         """No matching CalcUsages → empty list."""
-        from sysml_codegen.generation.initialization import find_instance_paths_for_partdef
+        from sysml_codegen.orchestration.pipeline_builder import find_instance_paths_for_partdef
 
         usages = [
             _make_virtual_calc_usage(
@@ -598,7 +598,7 @@ class TestFindInstancePathsForPartdef:
 
     def test_deduplicates_paths(self):
         """Multiple CalcUsages producing same parent path → deduplicated."""
-        from sysml_codegen.generation.initialization import find_instance_paths_for_partdef
+        from sysml_codegen.orchestration.pipeline_builder import find_instance_paths_for_partdef
 
         usages = [
             _make_virtual_calc_usage(
@@ -626,7 +626,7 @@ class TestBuildChainAliases:
             RedefinitionData,
             RedefinitionType,
         )
-        from sysml_codegen.generation.initialization import _build_chain_aliases
+        from sysml_codegen.orchestration.pipeline_builder import _build_chain_aliases
 
         redef = RedefinitionData(
             owning_part_qn="Lib__Solar_Array",
@@ -665,7 +665,7 @@ class TestBuildChainAliases:
             RedefinitionData,
             RedefinitionType,
         )
-        from sysml_codegen.generation.initialization import _build_chain_aliases
+        from sysml_codegen.orchestration.pipeline_builder import _build_chain_aliases
 
         redef = RedefinitionData(
             owning_part_qn="Lib__Solar_Array",
@@ -697,7 +697,7 @@ class TestBuildChainAliases:
             RedefinitionData,
             RedefinitionType,
         )
-        from sysml_codegen.generation.initialization import _build_chain_aliases
+        from sysml_codegen.orchestration.pipeline_builder import _build_chain_aliases
 
         redef = RedefinitionData(
             owning_part_qn="Lib__Solar_Array",
@@ -730,7 +730,7 @@ class TestBuildChainAliases:
             RedefinitionData,
             RedefinitionType,
         )
-        from sysml_codegen.generation.initialization import _build_chain_aliases
+        from sysml_codegen.orchestration.pipeline_builder import _build_chain_aliases
 
         redef = RedefinitionData(
             owning_part_qn="Lib__Solar_Array",
@@ -772,7 +772,7 @@ class TestBuildChainAliases:
             RedefinitionData,
             RedefinitionType,
         )
-        from sysml_codegen.generation.initialization import _build_chain_aliases
+        from sysml_codegen.orchestration.pipeline_builder import _build_chain_aliases
 
         literal_redef = RedefinitionData(
             owning_part_qn="Lib__Solar_Array",

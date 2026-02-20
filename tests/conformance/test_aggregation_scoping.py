@@ -29,7 +29,7 @@ from sysml_codegen.extraction.data_models import (
     ScopedAggregationData,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
-from sysml_codegen.generation.initialization import (
+from sysml_codegen.orchestration.pipeline_builder import (
     _build_chain_aliases,
     _scope_aggregation_expressions,
     build_output_registry,

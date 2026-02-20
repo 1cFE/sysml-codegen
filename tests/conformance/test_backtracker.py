@@ -37,7 +37,7 @@ from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_name
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from tests.helpers.snapshot_loader import load_extraction_snapshot
 
 

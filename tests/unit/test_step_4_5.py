@@ -69,7 +69,7 @@ class TestFormulaRemovalFromDesignAttrs:
 
     def test_formula_removed_expose_preserved(self):
         """FORMULA attrs removed, EXPOSE_PURE and plain design attrs kept."""
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _remove_formula_from_design_attrs,
         )
 
@@ -100,7 +100,7 @@ class TestFormulaRemovalFromDesignAttrs:
 
     def test_empty_computed_attrs_no_op(self):
         """No computed attrs -> design_attrs unchanged."""
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _remove_formula_from_design_attrs,
         )
 
@@ -122,7 +122,7 @@ class TestFormulaRemovalFromDesignAttrs:
 
         Uses realistic QN format: "Package__Part__attr".
         """
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _remove_formula_from_design_attrs,
         )
 
@@ -149,7 +149,7 @@ class TestFormulaRemovalFromDesignAttrs:
 
     def test_expose_computed_preserved_in_design_attrs(self):
         """EXPOSE_COMPUTED attributes are NOT removed from design_attrs."""
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _remove_formula_from_design_attrs,
         )
 
@@ -172,7 +172,7 @@ class TestFormulaRemovalFromDesignAttrs:
 
     def test_multiple_files_filtered_independently(self):
         """FORMULA removal works across multiple source files."""
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _remove_formula_from_design_attrs,
         )
 
@@ -209,7 +209,7 @@ class TestFormulaRemovalFromDesignAttrs:
         The classification (FORMULA) determines removal, not compilability.
         Even MANUAL_REQUIRED FORMULAs should not create entry points.
         """
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _remove_formula_from_design_attrs,
         )
 

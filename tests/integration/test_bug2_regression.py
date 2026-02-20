@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from sysml_codegen.generation.initialization import build_pipeline_context
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 

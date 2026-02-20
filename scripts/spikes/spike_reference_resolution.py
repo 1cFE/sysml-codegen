@@ -74,7 +74,7 @@ def get_backtracking_result(
     """
     # Try full pipeline first
     try:
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
         print(f"  Attempting build_pipeline_context()...")
         ctx = build_pipeline_context(model_paths)
@@ -96,10 +96,9 @@ def get_backtracking_result(
         )
 
         from sysml_codegen.analysis.parameter_groups import extract_design_attributes
-        from sysml_codegen.generation.initialization import (
+        from sysml_codegen.orchestration.pipeline_builder import (
             _extract_and_filter_computed_attributes,
             _extract_hierarchy_and_rewrite_bindings,
-            _enrich_aliases_from_bindings,
             _scope_aggregation_expressions,
         )
 

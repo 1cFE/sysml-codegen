@@ -11,7 +11,7 @@ from sysml_codegen.extraction.data_models import (
     RedefinitionType,
 )
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
-from sysml_codegen.generation.initialization import _rewrite_virtual_bindings
+from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
 
 
 def _make_virtual_calc_usage(

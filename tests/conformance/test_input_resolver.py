@@ -26,7 +26,7 @@ from sysml_codegen.extraction.data_models import (
     RedefinitionType,
     ScopedAggregationData,
 )
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.models import InputSource
 from tests.helpers.snapshot_loader import load_extraction_snapshot
 

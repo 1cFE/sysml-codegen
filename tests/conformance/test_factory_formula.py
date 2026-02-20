@@ -35,7 +35,7 @@ from sysml_codegen.extraction.data_models import (
     ComputedAttributeData,
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
     AttributeResolution,
     AttributeResolutionKind,

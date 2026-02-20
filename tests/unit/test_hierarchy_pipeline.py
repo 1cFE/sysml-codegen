@@ -20,8 +20,8 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
-from sysml_codegen.generation.initialization import (
-    PipelineContext,
+from sysml_codegen.generation.initialization import PipelineContext
+from sysml_codegen.orchestration.pipeline_builder import (
     _rewrite_virtual_bindings,
     _scope_aggregation_expressions,
 )

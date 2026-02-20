@@ -35,7 +35,7 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
-from sysml_codegen.generation.initialization import build_output_registry
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
     _classify_entry_points,
     _get_library_default,

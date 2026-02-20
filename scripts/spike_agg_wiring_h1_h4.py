@@ -45,7 +45,8 @@ from sysml_codegen.extraction.hierarchy_resolver import (
     _unwrap_invocation,
 )
 from sysml_codegen.core.qualified_names import sanitize_name
-from sysml_codegen.generation.initialization import PipelineContext, build_pipeline_context
+from sysml_codegen.generation.initialization import PipelineContext
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.resolution.graph_builder import _resolve_aggregation_input_channel
 
 # ---------------------------------------------------------------------------
