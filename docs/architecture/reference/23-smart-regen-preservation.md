@@ -13,10 +13,10 @@ changed, and upgrades stubs to auto-implementations when possible.
 |----|-------------|-------------|
 | REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `matches()` at `signature_extractor.py:35-62` |
 | REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `sorted(self.input_fields) == sorted(other.input_fields)` |
-| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [4-case decision tree](#the-4-case-decision-tree) | 4 return paths in `preservation.py:20-61` |
-| REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `FULLY_COMPILABLE` | `cli/__init__.py:659-691` checks all three |
+| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [4-case decision tree](#the-4-case-decision-tree) | 4 return paths in `preservation.py:99-131` |
+| REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `auto_impl_context` available | `_generate_stencils()` in `cli/__init__.py:262-289` checks all three |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `backup_implementation()` called before `write_text()` |
-| REQ-SR-06 | Aggregation and [computed-attribute](16-computed-attributes.md) modules SHALL NOT use smart-regen (always regenerated) | No `smart_regen` references in `_generate_aggregation_stencils()` or `_generate_computed_attr_stencils()` |
+| REQ-SR-06 | Aggregation and [computed-attribute](16-computed-attributes.md) modules are synthetic and always regenerated in practice | The unified `_generate_stencils()` processes all module types; synthetic modules lack handwritten content so the smart-regen path is a no-op |
 | REQ-SR-07 | `--preserve-handwritten` SHALL skip ALL existing handwritten files without comparison | Blanket skip, no signature extraction |
 
 ---
@@ -72,30 +72,37 @@ Uses Python AST to find `run_*` function:
 
 Returns `None` if file doesn't exist, has syntax errors, or lacks `run_*`.
 
-### From SysML Model (lines 195-239)
+### From PipelineModule (preservation.py lines 138-159)
 
-`generate_expected_signature(calc_def:` [`CalculationDefinitionData`](09-data-models.md)`) -> FunctionSignature`
+`_generate_expected_signature_from_module(module) -> FunctionSignature`
+
+The decision tree in `preservation.py` derives the expected signature from
+`PipelineModule` fields, not directly from `CalculationDefinitionData`:
 
 ```python
-func_name = f"run_{calc_def.name.lower()}"
-input_type = f"{calc_def.name}Input"
-output_count = len(calc_def.output_attributes)
+func_name = f"run_{module.calc_def_name.lower()}"
+input_type = f"{module.calc_def_name}Input"
+output_count = len(module.outputs)
 if output_count == 0:
     return_type = "None"
 elif output_count == 1:
     return_type = "float"
 else:  # >= 2
     return_type = f"tuple[{', '.join(['float'] * output_count)}]"
-input_fields = [attr.name for attr in calc_def.input_attributes]
+input_fields = [inp.param_name for inp in module.inputs]
 ```
+
+> **Note**: `analysis/signature_extractor.py` also has a `generate_expected_signature()`
+> that takes `CalculationDefinitionData` directly (lines 195-239). The preservation
+> module's version is the one used by the decision tree at runtime.
 
 ---
 
 ## The 4-Case Decision Tree
 
-**File**: `generation/preservation.py:20-61`
+**File**: `generation/preservation.py:99-131`
 
-`should_regenerate_stencil(calc_def, impl_path) -> tuple[bool, str]`
+`should_regenerate_stencil(module, impl_path) -> tuple[bool, str]`
 
 ```
 impl_path.exists()?
@@ -124,26 +131,26 @@ impl_path.exists()?
 When `should_regenerate_stencil()` returns `False` (signature unchanged),
 a second check determines if a stub can be upgraded:
 
-**File**: `cli/__init__.py:659-691`
+**File**: `cli/__init__.py:274-289` (within `_generate_stencils()`)
 
 ```python
 if not should_regen:
     existing_content = output_path.read_text()
     is_stub = "raise NotImplementedError" in existing_content
-    has_auto_impl = (
-        compilation_result is not None
-        and compilation_result.overall_compilability == Compilability.FULLY_COMPILABLE
-    )
+    has_auto_impl = module.auto_impl_context is not None
     if is_stub and has_auto_impl:
         backup_implementation(output_path, backup_dir)
-        code = generate_implementation(..., compilation_result=result)
-        output_path.write_text(code)
+        code = generate_implementation(
+            module, template_env, output_path, config.package_name,
+        )
+        if code:
+            output_path.write_text(code)
 ```
 
 **Conditions for upgrade**:
 1. Signature unchanged (preserve-worthy)
 2. File contains `"raise NotImplementedError"` (is a stub)
-3. Compilation result is `FULLY_COMPILABLE` (auto-impl available)
+3. `module.auto_impl_context` is not `None` (auto-impl available)
 
 Handwritten implementations (without `NotImplementedError`) are never upgraded.
 
@@ -151,7 +158,7 @@ Handwritten implementations (without `NotImplementedError`) are never upgraded.
 
 ## Backup System
 
-**File**: `generation/preservation.py:64-93`
+**File**: `generation/preservation.py:162-186`
 
 ```python
 def backup_implementation(impl_path: Path, backup_dir: Path) -> Path:
@@ -187,13 +194,14 @@ system. It simply skips generation for any existing `handwritten/*.py` file.
 |------|-----------|--------|
 | A: New file | impl doesn't exist | Generate (auto-impl or stub) |
 | B: Handwritten, unchanged | matches()=True, no NotImplementedError | **Preserve** |
-| C: Stub, compilable | matches()=True, has NotImplementedError, FULLY_COMPILABLE | Backup + upgrade |
+| C: Stub, compilable | matches()=True, has NotImplementedError, `auto_impl_context` present | Backup + upgrade |
 | D: Interface changed | matches()=False (return type or fields differ) | Backup + regenerate |
 
-**Limitation**: Smart-regen only works for CalcUsage modules (which have
-[`CalculationDefinitionData`](09-data-models.md)). [Aggregation](13-aggregation-scoping.md)
-and [computed attribute](16-computed-attributes.md) modules are synthetic — regenerated
-every time (REQ-SR-06).
+**Limitation**: Smart-regen is primarily meaningful for CalcUsage modules
+(which have user-editable handwritten files). [Aggregation](13-aggregation-scoping.md)
+and [computed attribute](16-computed-attributes.md) modules are synthetic --
+they pass through the same unified `_generate_stencils()` loop but in practice
+are always regenerated since they lack handwritten content (REQ-SR-06).
 
 ---
 
@@ -201,9 +209,9 @@ every time (REQ-SR-06).
 
 | Model | File | Role |
 |-------|------|------|
-| `FunctionSignature` | `analysis/signature_extractor.py` | Signature comparison |
-| `CalculationDefinitionData` | `extraction/data_models.py` | Expected signature source |
-| `Compilability` | `extraction/expression_compiler.py` | FULLY_COMPILABLE check ([doc 14](14-expression-compiler.md)) |
+| `FunctionSignature` | `generation/preservation.py` (also in `analysis/signature_extractor.py`) | Signature comparison |
+| `PipelineModule` | `resolution/models.py` | Expected signature source (via `calc_def_name`, `inputs`, `outputs`) |
+| `Compilability` | `extraction/expression_compiler.py` | Upstream enum; stub upgrade checks `module.auto_impl_context` ([doc 14](14-expression-compiler.md)) |
 | `GenerationConfig` | `cli/__init__.py` | smart_regen, preserve_handwritten flags |
 
 ## Related Documents

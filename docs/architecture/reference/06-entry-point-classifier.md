@@ -205,14 +205,13 @@ backtracker.entry_points  →  _classify_entry_points()  →  {qn: EntryPoint(..
 This path handles CalcUsage entry points with correct `entry_type` assignment:
 DESIGN_ATTRIBUTE, LIBRARY_DEFAULT, or USAGE_LITERAL.
 
-> **Coverage note (C17 conformance, 2026-02-17)**: solar_battery has **zero
-> DESIGN_ATTRIBUTE EPs from Path 1** classifier. Design attribute QNs use
+> **Note**: In some models (e.g., solar_battery), Path 1 produces **zero
+> DESIGN_ATTRIBUTE** EPs. This occurs when design attribute QNs use
 > library-qualified names (e.g., `SolarBatteryLibrary__PVModuleCostCalc__cost_per_watt`)
 > while EP QNs use design-qualified names (e.g., `SolarBatteryDesign__solar_battery_plant__...`).
-> The QNs never match in `design_attr_by_qname`, so all solar_battery EPs are
-> classified as LIBRARY_DEFAULT or USAGE_LITERAL. DESIGN_ATTRIBUTE EPs come
-> exclusively from factory construction (Path 2). catf_mfe exercises all 3 types
-> from the classifier.
+> The QNs never match in `design_attr_by_qname`, so all EPs are classified as
+> LIBRARY_DEFAULT or USAGE_LITERAL. DESIGN_ATTRIBUTE EPs come exclusively from
+> factory construction (Path 2) in these models.
 
 ### Path 2: Factory fallback → hardcoded DESIGN_ATTRIBUTE (Steps 6.5, 6.7)
 

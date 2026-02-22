@@ -31,7 +31,7 @@ Source: `src/sysml_codegen/analysis/parameter_groups.py`
 ## Where It Fits in the Pipeline
 
 Constructed at **Step 5** of `build_pipeline_context()` in
-`src/sysml_codegen/generation/initialization.py` ([orchestration](02-orchestration.md)):
+`src/sysml_codegen/orchestration/pipeline_builder.py` ([orchestration](02-orchestration.md)):
 
 ```python
 group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
@@ -127,7 +127,7 @@ Merges results from two internal methods:
 
 **`derive_for_entry_points(entry_points)`** keeps entire groups containing at least one matching parameter (no per-parameter trimming).
 
-**`classify(qualified_name)`** returns the group name for a single parameter by checking each index in precedence order (REQ-PGD-05). Returns `None` if unclaimed. Called during [module construction](05-module-factory.md) for late-discovered entry points.
+**`classify(qualified_name)`** returns the group name for a single parameter by checking each index in precedence order (REQ-PGD-05). Returns `None` if unclaimed. Called during [graph assembly](07-graph-assembly.md) Steps 6.5 and 6.7 for late-discovered entry points from FORMULA and aggregation modules.
 
 **`get_default_value(qualified_name)`** returns the numeric default (REQ-PGD-06). For binding-traced parameters, resolves through `_attr_index` to the source attribute. See [literal value propagation](18-literal-value-propagation.md) for how defaults flow into entry points.
 
@@ -200,9 +200,8 @@ user only edits values they want to override. See [output schema rules](22-outpu
 
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) — grouping happens at Step 4 (classify) and Step 5 (build)
 - **Orchestration**: [02-orchestration](02-orchestration.md) — `build_pipeline_context()` constructs deriver at Step 5
-- **Module factory**: [05-module-factory](05-module-factory.md) — FORMULA/aggregation modules call `classify()` for new EPs
 - **Entry points**: [06-entry-point-classifier](06-entry-point-classifier.md) — 3 entry point types that groups organize
-- **Graph assembly**: [07-graph-assembly](07-graph-assembly.md) — `_convert_derived_groups()` converts to Pydantic models
+- **Graph assembly**: [07-graph-assembly](07-graph-assembly.md) — `_convert_derived_groups()` converts to Pydantic models; FORMULA/aggregation builders call `classify()` for new EPs
 - **Extraction**: [01-extraction](01-extraction.md) — produces `DesignAttributeData` and `CalcUsageData` inputs
 - **Aggregation**: [13-aggregation-scoping](13-aggregation-scoping.md) — aggregation modules create new EPs needing classification
 - **Computed attrs**: [16-computed-attributes](16-computed-attributes.md) — FORMULA modules create new EPs needing classification

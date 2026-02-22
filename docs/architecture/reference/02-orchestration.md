@@ -11,10 +11,9 @@ those layers in the right order and threads data between them:
                    (this layer)
 ```
 
-Today, this logic lives in `generation/initialization.py` (860 lines).
-After the refactor it moves to `orchestration/`, because it is not
-generation code -- it is coordination code that produces the
-[PipelineContext](#pipelinecontext) that [generation](08-generation.md) consumes.
+This logic lives in `orchestration/pipeline_builder.py`. It is coordination
+code (not generation) that produces the [PipelineContext](#pipelinecontext)
+that [generation](08-generation.md) consumes.
 
 ## Requirements
 
@@ -59,7 +58,7 @@ Key ordering constraints (REQ-ORCH-01):
 
 ## build_output_registry() -- the 4-phase lookup table
 
-The [OutputRegistry](10-output-registry.md) uses three [typed registries](27-typed-registry-refactor.md)
+The [OutputRegistry](10-output-registry.md) uses three [typed registries](10-output-registry.md)
 mapping binding references to canonical channel names (`CanonicalChannel`).
 **Why multiple registries?** Extraction produces `source_path` strings in different
 formats depending on AST node type -- a `FeatureChainExpression` produces a scope-relative
@@ -72,7 +71,7 @@ dotted path (queried via `ScopedKey`), while a `REFERENCE` binding uses a SysML 
 
 Registers the actual outputs that pipeline modules produce.
 
-**Phase 1a -- CalcUsage outputs.** Two typed keys per output ([15-naming-conventions](15-naming-conventions.md), [27-typed-registry-refactor](27-typed-registry-refactor.md)):
+**Phase 1a -- CalcUsage outputs.** Two typed keys per output ([15-naming-conventions](15-naming-conventions.md), [10-output-registry](10-output-registry.md)):
 
 ```
 Calc usage: SolarBatteryDesign__solar_battery_plant__solar_array__cost_model
@@ -127,7 +126,7 @@ registry.alias_lookup(ScopedKey("solar_battery_plant.solar_array.total_capex"))
 ```
 
 Both lookups resolve to the same canonical channel via type-directed dispatch.
-See [27-typed-registry-refactor](27-typed-registry-refactor.md) for the full type system.
+See [10-output-registry](10-output-registry.md) for the full type system.
 
 ## Virtual binding rewriting
 
@@ -204,18 +203,19 @@ The `PipelineContext` dataclass carries all pipeline state. Key fields:
 
 See [09-data-models](09-data-models.md) for full field definitions.
 
-## Post-refactor structure
+## Package structure
 
 ```
 orchestration/
-    pipeline_builder.py          -- build_pipeline_context() + PipelineContext
+    pipeline_builder.py          -- build_pipeline_context() + helpers
                                     Steps 1-7 coordination, no business logic
     output_registry_builder.py   -- build_output_registry()
                                     4-phase registration protocol
+    pipeline_context.py          -- PipelineContext dataclass
 ```
 
 Supporting functions (`_rewrite_virtual_bindings`, `_scope_aggregation_expressions`,
-`_build_chain_aliases`, `find_instance_paths_for_partdef`) move into
+`_build_chain_aliases`, `find_instance_paths_for_partdef`) live in
 `pipeline_builder.py` as data-preparation helpers called exclusively by
 the pipeline builder.
 

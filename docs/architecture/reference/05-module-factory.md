@@ -11,7 +11,7 @@ produce a [PipelineModule](09-data-models.md#resolution-models) + new
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-MF-01 | All three factory functions SHALL be pure data transformers in the refactored state: return `(PipelineModule, dict[str, EntryPoint])`, no mutation of shared state. | Type signatures return tuples; no `entry_points[k] = v` inside factory bodies |
+| REQ-MF-01 | All three factory functions SHALL be pure data transformers: return `(PipelineModule, dict[str, EntryPoint])`, no mutation of shared state. | Type signatures return tuples; no `entry_points[k] = v` inside factory bodies |
 | REQ-MF-02 | CalcUsage factory SHALL fail-fast (`ValueError`) on missing `binding_resolutions` key -- no fallback resolution. | `binding_resolutions[mapping_key]` raises `KeyError` wrapped as `ValueError("ADR-003 VIOLATION...")` |
 | REQ-MF-03 | FORMULA factory SHALL set `is_computed_attribute=True` and `compilability=FULLY_COMPILABLE`. | `assert module.is_computed_attribute and module.compilability == FULLY_COMPILABLE` |
 | REQ-MF-04 | Aggregation factory SHALL handle all three [extraction term types](01-extraction.md#aggregation-data-sumterm-singletonterm-localterm): SumTerm, SingletonTerm, LocalTerm. | Code paths exist for each; missing term type = `AttributeError` |
@@ -132,10 +132,10 @@ PipelineModule(
 Additional inputs: `expose_aliases` ([EXPOSE_PURE](16-computed-attributes.md) alias map
 for LocalTerms), `usage_type_map` (type-aware PartDef QN resolution -- see [doc 18](18-literal-value-propagation.md)).
 
-> **C16 conformance finding (2026-02-17)**: The `usage_type_map` (Strategy 1
-> in `_find_literal_redefinition()`) is **essential** when the PartUsage name
-> differs from the PartDef name. In solar_battery, the usage `permitting` types
-> to PartDef `Permitting_Interconnect`. Name-based Strategy 2 fails because
+> **Note**: The `usage_type_map` (Strategy 1 in `_find_literal_redefinition()`)
+> is **essential** when the PartUsage name differs from the PartDef name. For
+> example, the usage `permitting` types to PartDef `Permitting_Interconnect`.
+> Name-based Strategy 2 fails because
 > `sanitize_name("Permitting_Interconnect").lower()` != `"permitting"`.
 > Strategy 1 resolves this via `usage_type_map[("Site_Infrastructure",
 > "permitting")]` → `"Permitting_Interconnect"`.

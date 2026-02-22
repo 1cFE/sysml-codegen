@@ -9,17 +9,19 @@ Every pipeline module produces outputs. The schema depends on output count:
 | 1 | `RootModel[float]` (alias `Float`) | No schema file | `"root"` |
 | 2+ | Named `MultiOutput` subclass | Schema file generated | Attribute names |
 
-**Decision function**: `should_use_multioutput()` at `generation/schemas.py:103-113`.
+**Decision logic**: `generate_multioutput_model()` in `generation/schemas.py` returns
+`None` when `len(module.outputs) < 2`, signaling single-output mode. Callers use this
+to decide whether a schema file is needed.
 
 ## Requirements
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | [graph_builder.py](07-graph-assembly.md): `field_name = "root"` when `len(output_attributes) == 1` |
-| REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `should_use_multioutput()` returns `True` when `len >= 2` |
+| REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `generate_multioutput_model()` returns `None` when `len < 2` |
 | REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | Template: `{{ field.name }}` from `AttributeInfo.name` |
-| REQ-OSR-04 | SysML types SHALL map to Python types per the [type mapping table](#type-mapping) | `_map_output_type()` at `schemas.py:183-202` |
-| REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values (Bug 11) | TEAx `create_registry()` treats defaulted fields as optional, not outputs |
+| REQ-OSR-04 | SysML types SHALL map to Python types per the [type mapping table](#type-mapping) | `map_sysml_type_to_python()` in `generation/type_mapping.py` |
+| REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | TEAx `create_registry()` treats defaulted fields as optional, not outputs |
 | REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | Both hardcode `field_name="root"`, `outputs=[output]` in [graph_builder](07-graph-assembly.md) |
 | REQ-OSR-07 | Output channels SHALL use PQN format via [`get_channel_name()`](15-naming-conventions.md) | All three module types call `get_channel_name(usage_qn, attr_name)` |
 
@@ -107,11 +109,11 @@ Output attribute SysML types are mapped to Python types:
 | `Integer` / `ScalarValues::Integer` | `int` |
 | `Boolean` / `ScalarValues::Boolean` | `bool` |
 | `String` / `ScalarValues::String` | `str` |
-| *(unknown)* | `float` (default fallback) |
+| *(unknown)* | pass-through (warning logged) |
 
-Mapping at `schemas.py:183-202` (`_map_output_type()`). The `ScalarValues::` prefix
-is the SysML standard library namespace; both forms are accepted. Unknown types
-default to `float`.
+Mapping lives in `generation/type_mapping.py` (`map_sysml_type_to_python()`). The
+`ScalarValues::` prefix is the SysML standard library namespace; both forms are
+accepted. Unknown types pass through unchanged with a warning.
 
 ---
 
@@ -127,8 +129,9 @@ default to `float`.
 {% endif %}
 ```
 
-**Source of defaults**: `AttributeInfo.default_value` from extraction. If a
-SysML output attribute has a default value, it flows through to `Field(default=...)`.
+**Source of defaults**: `AttributeInfo.default_value` from extraction. The template
+supports rendering `Field(default=...)` for non-output fields. For output fields,
+the schema generator forces `default=None` so this branch is never taken.
 
 ### Why Defaults on Outputs Can Break TEAx
 
@@ -144,29 +147,13 @@ When `Field(default=0.0)` appears on an output field:
 
 **The rule**: Output fields on `MultiOutput` subclasses MUST NOT have
 `default=...` values. If a SysML output attribute has a default, the
-generation layer should strip it before rendering the schema.
+generation layer strips it before rendering the schema.
 
-**Current status**: The template conditionally adds defaults based on
-`AttributeInfo.default_value`. Most SysML output attributes don't have
-defaults (outputs are computed, not defaulted), so this rarely triggers.
-When it does (e.g., aggregation totals initialized to 0), it breaks TEAx.
-
-### Bug 11: Confirmed REQ-OSR-05 Violation (2026-02-18)
-
-C22 conformance testing confirmed this bug in the `solar_battery` model.
-`Permitting_Interconnect` has `default=0.0` on 4 output fields:
-`material_cost`, `fab_cost`, `install_cost`, `idiot_index`. These render as
-`Field(default=0.0, ...)` in the generated `MultiOutput` schema, causing
-TEAx to treat them as optional parameters rather than required outputs.
-
-**Root cause**: The schema generator (`generation/schemas.py`) passes
-`AttributeInfo.default_value` through to the template without checking
-whether the field is an output. Outputs should never have defaults regardless
-of what the SysML model declares.
-
-**Fix**: Strip `default_value` from output fields before rendering. The fix
-is small but deferred — tracked as xfail in
-`tests/conformance/test_gen_schemas.py::test_output_fields_have_no_defaults`.
+**Enforcement**: The schema generator (`generate_multioutput_model()`) always
+passes `None` for the default field on outputs, regardless of what
+`AttributeInfo.default_value` contains. The template still has a conditional
+`{% if field.default %}` branch for defaults, but it is never reached for
+output fields. This makes the constraint self-enforcing at generation time.
 
 ---
 
@@ -200,4 +187,3 @@ full PQN format. These channels are registered in the [output registry](10-outpu
 - **Registry**: [10-output-registry](10-output-registry.md) — registers output channels for downstream wiring
 - **Naming**: [15-naming-conventions](15-naming-conventions.md) — PQN channel format
 - **Data models**: [09-data-models](09-data-models.md) — `ModuleOutput`, `PipelineModule` definitions
-- **Bug trace**: Bug 11 — `default=0.0` on MultiOutput fields breaks TEAx output detection

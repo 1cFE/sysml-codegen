@@ -16,7 +16,7 @@ compiles FORMULA patterns into Python code via the [expression compiler](14-expr
 | REQ-CA-03 | EXPOSE_PURE SHALL produce `ChannelAlias` only for PartUsage-level (not PartDef) | `not is_part_def` guard before alias creation |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | Returns `LITERAL`; excluded by caller before adding to `ComputedAttributeData` list |
 | REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | Included in list for reporting; no module or alias emitted |
-| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or LITERAL | 3-value enum in `graph_builder.py:526`; `_build_attribute_resolution_map()` assigns one per input |
+| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or LITERAL | 3-value enum in `resolution/graph_builder.py`; `_build_attribute_resolution_map()` assigns one per input |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `input_names = siblings - {self_name}` prevents circular dependency |
 
 ```sysml
@@ -91,17 +91,12 @@ Contains references that cannot be resolved to known siblings or calc outputs.
 **Pipeline effect**: included in the `ComputedAttributeData` list (for reporting)
 but does not generate a module or alias (REQ-CA-05). Logged as a warning.
 
-> **Coverage note (C05 conformance, 2026-02-17)**: UNRESOLVABLE has **zero
-> coverage** in all fixture models. No fixture attribute expression triggers the
-> empty-QN fallback path (Step 2d). See Known Issues §UNRESOLVABLE Likely Dead
-> Code (Deferred Issue #10) below.
-
-> **Note (C3 finding, 2026-02-17)**: UNRESOLVABLE is likely **unreachable for
-> well-formed SysML**. SysIDE always resolves attribute QNs (even inherited ones
-> resolve to the supertype's namespace), so the empty-QN fallback path (Step 2d)
-> is never triggered. This classification may only be reachable through SysIDE
-> parser bugs, partially valid SysML, or synthetic test data. Treat as a
-> defensive fallback, not a primary classification path.
+**Note**: UNRESOLVABLE is likely **unreachable for well-formed SysML**. SysIDE
+always resolves attribute QNs (even inherited ones resolve to the supertype's
+namespace), so the empty-QN fallback path (Step 2d) is never triggered. This
+classification may only be reachable through SysIDE parser bugs, partially valid
+SysML, or synthetic test data. Treat as a defensive fallback, not a primary
+classification path. See Known Issues below.
 
 ---
 
@@ -166,7 +161,7 @@ attr_resolution_map: dict[str, dict[str, AttributeResolution]]
 # owning_part_name -> {attr_name -> AttributeResolution}
 ```
 
-`AttributeResolutionKind` (in `graph_builder.py`, line 526) — REQ-CA-06:
+`AttributeResolutionKind` (in `resolution/graph_builder.py`) — REQ-CA-06:
 
 | Kind | When | Wiring |
 |------|------|--------|
@@ -246,14 +241,10 @@ Workaround: promote the dependency to a separate CalcDef or use EXPOSE_PURE.
 
 ## Known Issues
 
-> **Changelog**: Added 2026-02-17 from C3 Phase 2 Audit findings
-> (PHASE2_AUDIT_ACTIONS.md §C3). Captures inherited attribute misclassification
-> bug and UNRESOLVABLE dead code finding.
+### Inherited Attribute Misclassification
 
-### Inherited Attribute Misclassification (Deferred Issue #9)
-
-**Status**: Confirmed bug. 5 of 6 test patterns affected. Fix deferred to C05
-classifier fix or Phase 7 refactor.
+**Status**: Confirmed bug. 5 of 6 test patterns affected. Fix deferred to a
+future enhancement.
 
 **Root cause**: When a PartDef inherits from a supertype via `:>` (e.g.,
 `part def 'Derived' :> 'Base'`), SysIDE resolves inherited attribute QNs to
@@ -277,23 +268,23 @@ the classification.
 
 **Impact**: Computed attributes referencing inherited attrs silently produce
 **no pipeline module** and **no compiled expression**. They appear in
-`computed_attributes` but EXPOSE_COMPUTED is unhandled (Deferred Issue #2),
+`computed_attributes` but EXPOSE_COMPUTED is currently unhandled,
 so they are silent no-ops in the pipeline.
 
 **Fix scope**: The classifier needs to walk the supertype chain when checking
 QN prefixes. Instead of checking only the immediate `owning_part_qn`, check if
 the QN starts with ANY ancestor PartDef's QN. This requires:
 
-1. **Extraction enrichment (C03)**: Extract supertype chain information from
+1. **Extraction enrichment**: Extract supertype chain information from
    SysIDE during `_extract_part_definitions()`.
-2. **Classifier fix (C05)**: Accept `ancestor_part_qns: set[str]` parameter
+2. **Classifier fix**: Accept `ancestor_part_qns: set[str]` parameter
    and augment the Step 2b prefix check.
 
 **Fixture coverage**: `tests/fixtures/unresolvable_attr_probe/` exercises this
 pattern with 5 xfailed tests in
 `test_computed_attributes.py::TestInheritedAttrClassification`.
 
-### UNRESOLVABLE Likely Dead Code (Deferred Issue #10)
+### UNRESOLVABLE Likely Dead Code
 
 **Status**: Documented. No fix needed — defensive retention recommended.
 
@@ -312,7 +303,7 @@ Do not invest in testing unreachable paths.
 ## Data Models & Source Files
 
 Models: `ComputedAttributeClassification` (enum), `ComputedAttributeData` (`extraction/data_models.py`), `ChannelAlias` (`core/models.py`), `AttributeResolutionKind`/`AttributeResolution` (`resolution/graph_builder.py`).
-Source: `extraction/computed_attribute_extractor.py`, `generation/initialization.py`, `resolution/graph_builder.py`.
+Source: `extraction/computed_attribute_extractor.py`, `orchestration/pipeline_builder.py`, `resolution/graph_builder.py`.
 
 ## Related Documents
 

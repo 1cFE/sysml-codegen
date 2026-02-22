@@ -1,61 +1,66 @@
-# 26 -- PipelineModule Migration: Making REQ-PIPE-07 Achievable
+# 26 -- PipelineModule Migration: Achieving REQ-PIPE-07
 
-## The Problem
+## Motivation
 
 [REQ-PIPE-07](00-pipeline-overview.md) states: "Generation SHALL produce output
 exclusively from `ComputationGraph` — no back-references to extraction models."
-Today, only `pipeline.py` satisfies this. The other 4 generators still consume
-`CalculationDefinitionData` directly:
 
-| Generator | File | Reads from CalcDef | What it needs |
-|-----------|------|-------------------|---------------|
+Before this migration, only `pipeline.py` satisfied this requirement. The other
+four generators consumed `CalculationDefinitionData` directly, which meant the
+`ComputationGraph` was not the single source of truth for generation. Any change
+to how graph building mapped CalcDef data had to be mirrored in the generators --
+a drift hazard.
+
+| Generator | File | Previously read from CalcDef | What it needs |
+|-----------|------|------------------------------|---------------|
 | Module wrapper | `modules.py` | `name`, `qualified_name`, `doc_comment`, inputs, outputs | Class name, docstrings, field descriptions |
 | Stencil | `stencils.py` | `name`, `calc_expressions`, inputs, outputs | Function name, expression comments |
 | Schema | `schemas.py` | `output_attributes` | Field names, types |
 | Registry | `registry.py` | `qualified_name` | Import path derivation |
-| Pipeline YAML | `pipeline.py` | **Nothing** (gold standard) | Already graph-only |
+| Pipeline YAML | `pipeline.py` | Nothing | Already graph-only |
 
-This means the `ComputationGraph` is NOT the single source of truth for generation.
-Any change to how graph building maps CalcDef data must be mirrored in the
-generators — a drift hazard.
+All five generators now consume `PipelineModule` exclusively. No generator
+imports `CalculationDefinitionData`. REQ-PIPE-07 is satisfied.
 
 ## Requirements
 
-| ID | Requirement | Verified by |
-|----|-------------|-------------|
-| REQ-PMM-01 | `PipelineModule` SHALL carry all metadata needed by module wrapper generation (calc def name, qualified name, doc comment). | `generate_teax_module(module: PipelineModule)` signature — no CalcDef arg |
-| REQ-PMM-02 | `ModuleInput` and `ModuleOutput` SHALL carry `description` and `default_value` fields for template rendering. | Template context built from ModuleInput/ModuleOutput fields only |
-| REQ-PMM-03 | `PipelineModule` SHALL carry `calc_expressions` for stencil comment generation. | Stencil template receives expressions from PipelineModule |
-| REQ-PMM-04 | Migration SHALL produce byte-identical output compared to pre-migration baselines. | `diff -r` on full generated output |
-| REQ-PMM-05 | Migration SHALL proceed in phases: add fields → create variants → deprecate → remove. | No CalcDef imports in generators after final phase |
+| ID | Requirement | Status |
+|----|-------------|--------|
+| REQ-PMM-01 | `PipelineModule` SHALL carry all metadata needed by module wrapper generation (calc def name, qualified name, doc comment). | Satisfied: `generate_teax_module(module: PipelineModule)` -- no CalcDef arg |
+| REQ-PMM-02 | `ModuleInput` and `ModuleOutput` SHALL carry `description` and `default_value` fields for template rendering. | Satisfied: template context built from ModuleInput/ModuleOutput fields only |
+| REQ-PMM-03 | `PipelineModule` SHALL carry `calc_expressions` for stencil comment generation. | Satisfied: stencil template receives expressions from PipelineModule |
+| REQ-PMM-04 | Migration SHALL produce byte-identical output compared to pre-migration baselines. | Satisfied: verified by `diff -r` on full generated output |
+| REQ-PMM-05 | Migration SHALL proceed in phases: add fields, create variants, deprecate, remove. | Satisfied: no CalcDef imports remain in generators |
 
-## Missing Fields on PipelineModule
+## Metadata Fields on PipelineModule
 
-| Field | Currently on | Needed by | Proposed location |
-|-------|-------------|-----------|-------------------|
+Six metadata fields were added to enable graph-only generation. These fields do
+not affect pipeline wiring or execution semantics -- they are needed only for
+human-readable output (docstrings, comments, Field descriptions).
+
+| Field | Source | Used by | Location |
+|-------|--------|---------|----------|
 | `calc_def_name` | `CalculationDefinitionData.name` | `modules.py` (class name) | `PipelineModule.calc_def_name` |
-| `qualified_name` | `CalculationDefinitionData.qualified_name` | `registry.py` (import path) | `PipelineModule.qualified_name` |
+| `calc_def_qualified_name` | `CalculationDefinitionData.qualified_name` | `registry.py` (import path) | `PipelineModule.calc_def_qualified_name` |
 | `doc_comment` | `CalculationDefinitionData.doc_comment` | `modules.py` (docstring) | `PipelineModule.doc_comment` |
 | `description` | `BaseAttributeInfo.description` | `modules.py` (field docs) | `ModuleInput.description`, `ModuleOutput.description` |
-| `default_value` | `BaseAttributeInfo.default_value` | `modules.py` (field defaults) | `ModuleInput.default_value` |
+| `default_value` | `BaseAttributeInfo.default_value` | `modules.py` (field defaults) | `ModuleInput.default_value`, `ModuleOutput.default_value` |
 | `calc_expressions` | `CalculationDefinitionData.calc_expressions` | `stencils.py` (comments) | `PipelineModule.calc_expressions` |
 
-All 6 fields are metadata — they do not affect pipeline wiring or execution
-semantics. They are needed only for human-readable output (docstrings, comments,
-Field descriptions).
+These fields are populated during graph building in `_build_pipeline_module()`,
+`_build_computed_attr_module()`, and `_build_aggregation_module()`.
 
-## Migration Strategy
+## How the Migration Was Executed
 
 ### Phase 1: Add fields to PipelineModule / ModuleInput / ModuleOutput
 
-Add the 6 fields as `Optional[str]` / `Optional[list[str]]` with `None`
-defaults. Populate them during graph building in `_build_pipeline_module()`,
-`_build_computed_attr_module()`, and `_build_aggregation_module()`. Existing
-generators continue to use CalcDef directly — no behavior change.
+The 6 fields were added as `Optional[str]` / `Optional[list[str]]` with `None`
+defaults. Graph builder functions populate them at construction time. Existing
+generators continued to use CalcDef directly -- no behavior change.
 
 ### Phase 2: Create `_from_graph()` generator variants
 
-For each generator, create a parallel function that takes `PipelineModule`
+For each generator, a parallel function was created that takes `PipelineModule`
 instead of `CalculationDefinitionData`:
 
 ```python
@@ -63,29 +68,27 @@ def generate_teax_module_from_graph(module: PipelineModule, ...) -> str:
     # Build context dict from PipelineModule fields only
 ```
 
-Both old and new variants produce identical output (verified by diff).
+Both old and new variants produced identical output (verified by diff).
 
-### Phase 3: Deprecate CalcDef-consuming variants
+### Phase 3: Switch call sites and collapse variants
 
-Switch all call sites in the orchestrator to use `_from_graph()` variants.
-Mark old functions with `@deprecated`. Run full baseline comparison.
+All call sites in the orchestrator were switched to the `_from_graph()` variants.
+The old CalcDef-consuming functions were removed, and the `_from_graph` variants
+were renamed to be the primary API. Backward-compatible aliases remain (e.g.,
+`generate_teax_module_from_graph = generate_teax_module`).
 
-### Phase 4: Remove CalculationDefinitionData from PipelineContext
+### Phase 4: Remove CalcDef imports from generators
 
-Remove `calc_defs` from `PipelineContext`. Remove CalcDef imports from all
-generators. REQ-PIPE-07 is now satisfied.
+All `CalculationDefinitionData` imports were removed from the generation package.
+No generator references extraction models. REQ-PIPE-07 is fully satisfied.
 
-## Impact on Other Documents
-
-- [09-data-models](09-data-models.md): PipelineModule, ModuleInput, ModuleOutput
-  field lists need 6 new fields
-- [05-module-factory](05-module-factory.md): Factory functions populate new fields
-- [08-generation](08-generation.md): Generators consume only PipelineModule
-- [00-pipeline-overview](00-pipeline-overview.md): REQ-PIPE-07 fully achieved
+Note: `PipelineContext.calc_defs` still exists because it is consumed by analysis
+and resolution stages (backtracker, graph builder). This is outside the scope of
+REQ-PIPE-07, which constrains only generation.
 
 ## Risk: Metadata Drift
 
-The 6 new fields are copied from CalcDef at graph-build time. If extraction
+The 6 metadata fields are copied from CalcDef at graph-build time. If extraction
 changes field names or semantics, the copy must be updated. Conformance tests
 should verify that `PipelineModule.calc_def_name == calc_def.name` for every
 module in the graph.

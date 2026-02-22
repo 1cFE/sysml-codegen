@@ -75,13 +75,13 @@ generated pipeline. See [17-parameter-group-deriver](17-parameter-group-deriver.
 **Note**: [ComputedAttributeData](16-computed-attributes.md) is also produced
 during extraction (from PartDef attribute expressions). See doc 16 for details.
 
-> **Data gap (C3 finding, 2026-02-17)**: PartDefinitionData does not currently
-> include **supertype chain information** (ancestor PartDef QNs). This data is
-> needed by the downstream computed attribute classifier (C05) to correctly
-> classify inherited attribute references as sibling refs instead of external
-> calc refs. SysIDE provides supertype information via `part_element.types`,
-> but it is not extracted or stored. See [16-computed-attributes](16-computed-attributes.md)
-> Known Issues §Inherited Attribute Misclassification (Deferred Issue #9).
+> **Known limitation**: PartDefinitionData does not currently include
+> **supertype chain information** (ancestor PartDef QNs). This data is needed
+> by the downstream computed attribute classifier to correctly classify
+> inherited attribute references as sibling refs instead of external calc refs.
+> SysIDE provides supertype information via `part_element.types`, but it is not
+> extracted or stored. See [16-computed-attributes](16-computed-attributes.md)
+> Known Issues §Inherited Attribute Misclassification.
 
 ### 4. Hierarchy Data ([HierarchyExtractionResult](09-data-models.md#extraction-models))
 
@@ -123,13 +123,10 @@ in adjusted_cost = base_cost * inflation_factor;
 ```
 `BindingInfo(param_name="adjusted_cost", source_path=None, binding_type=EXPRESSION, expression_ast=<node>)`
 
-> **Coverage note (C03 conformance, 2026-02-17)**: EXPRESSION binding type has
-> **zero coverage** in all natural fixture models (solar_battery, catf_mfe, sample,
-> issue22, attr_expr_probe, alias_agg_probe). No calc usage in any fixture binds
-> a parameter to an inline expression. Coverage is provided by the synthetic
-> `expression_binding_probe` fixture. The backtracker handles EXPRESSION bindings
-> by creating an ENTRY_POINT with a warning (see
-> [11-analysis-backtracker](11-analysis-backtracker.md)).
+> **Note**: EXPRESSION bindings are rare in practice — no natural fixture model
+> contains a calc usage that binds a parameter to an inline expression. The
+> backtracker handles EXPRESSION bindings by creating an ENTRY_POINT with a
+> warning (see [11-analysis-backtracker](11-analysis-backtracker.md)).
 
 **UNBOUND** -- no binding expression at all. These appear in
 `CalcUsageData.unbound_params` as string names (not in the `bindings` list).

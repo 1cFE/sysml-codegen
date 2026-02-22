@@ -13,7 +13,7 @@ Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identi
 | REQ-NC-04 | Module type SHALL use `{namespace}.{ElementName}Module` format | `derive_module_type()` lowercases package, preserves element case, appends `Module` |
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `get_channel_name()` returns `f"{eqn}__{output_attr}"` which is a PQN |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→`_`, collapse `_` runs, strip edge `_`, reserved-word suffix | Unit test on each transform rule |
-| REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see [27-typed-registry-refactor](27-typed-registry-refactor.md) |
+| REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see [10-output-registry](10-output-registry.md) |
 
 ## 1. SysML Qualified Name (SysML QN)
 
@@ -22,7 +22,7 @@ Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identi
 **Example**: `SolarBatteryLibrary::BatteryPackCostCalc`
 
 Used at [extraction](01-extraction.md) boundaries and in the SysML QN typed registry
-([27-typed-registry-refactor](27-typed-registry-refactor.md)). Converted to internal
+([10-output-registry](10-output-registry.md)). Converted to internal
 formats for scoped lookups downstream.
 **Type wrapper**: `SysMLQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 
@@ -91,7 +91,7 @@ Channels ARE PQNs. There is no separate "channel name" concept (REQ-NC-05).
 
 The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps typed lookup keys
 to canonical channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol
-using three typed registries ([27-typed-registry-refactor](27-typed-registry-refactor.md)):
+using three typed registries ([10-output-registry](10-output-registry.md)):
 scoped (`ScopedKey` → `CanonicalChannel`), SysML QN (`SysMLQN` → `CanonicalChannel`),
 and alias (`ScopedKey` → `CanonicalChannel`).
 **Type wrappers**: `ScopedKey` for scoped/alias keys, `SysMLQN` for SysML QN keys,
@@ -106,7 +106,7 @@ and alias (`ScopedKey` → `CanonicalChannel`).
 | Key_B | `CanonicalChannel` | canonical (self-registered) | `SBD__sbp__bs__bp__cost_model__total_cost` |
 | Key_C | `ScopedKey` | dotted hierarchy (strip design prefix) | `solar_battery_plant.battery_system.battery_pack.cost_model.total_cost` |
 
-Key_C derivation (`ScopedKey.from_eqn()`): split EQN on `__`, drop
+Key_C derivation (`make_scoped_key()`): split EQN on `__`, drop
 `segments[0]` (design PartDef prefix), join with `.`, append `.{output_attr}`.
 Key_C is critical: ALL Phase 2 CHAIN aliases resolve exclusively via Key_C.
 See [The Scope Problem](03-resolution-overview.md) for why Key_C is the primary resolution path.
@@ -228,4 +228,3 @@ Key_C to the canonical channel
 - **Registry generation**: [20-module-registry-generation](20-module-registry-generation.md) — import paths from module type
 - **Pipeline YAML**: [21-pipeline-yaml-generation](21-pipeline-yaml-generation.md) — channel format in YAML
 - **Data models**: [09-data-models](09-data-models.md) — field definitions for all named entities
-- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) — typed identifiers and registries

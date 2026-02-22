@@ -51,12 +51,12 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 | `RedefinitionType` | `LITERAL`, `CHAIN`, `EXPRESSION` | `extraction/data_models.py:225` |
 | `ComputedAttributeClassification` | `FORMULA`, `EXPOSE_PURE`, `EXPOSE_COMPUTED`, `LITERAL`, `UNRESOLVABLE` | `extraction/data_models.py:164` | ¹ |
 
-> ¹ **C3 finding (2026-02-17)**: `UNRESOLVABLE` is likely unreachable for
-> well-formed SysML (SysIDE always resolves attribute QNs). Inherited attributes
+> ¹ `UNRESOLVABLE` is likely unreachable for well-formed SysML (SysIDE always
+> resolves attribute QNs). It exists as a defensive fallback. Inherited attributes
 > from supertypes are currently misclassified as `EXPOSE_COMPUTED` instead of
 > `FORMULA` due to Step 2b namespace prefix check failure — see
-> [16-computed-attributes](16-computed-attributes.md) Known Issues (Deferred
-> Issue #9).
+> [16-computed-attributes](16-computed-attributes.md) Known Issues §Inherited
+> Attribute Misclassification.
 | `Compilability` | `FULLY_COMPILABLE`, `PARTIALLY_COMPILABLE`, `MANUAL_REQUIRED`, `UNKNOWN` | `extraction/expression_compiler.py:25` |
 | `ExpressionNodeType` | `BINARY_OP`, `UNARY_OP`, `LITERAL`, `INPUT_REF`, `INTERMEDIATE_REF`, `UNSUPPORTED` | `extraction/expression_compiler.py:38` |
 | `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py:13` |
@@ -80,13 +80,13 @@ ScopedKey = NewType('ScopedKey', str)            # dotted hierarchy — scoped/a
 
 `CanonicalChannel` wraps the PQN-format output channel name (e.g.,
 `SBD__sbp__lcoe__lcoe_per_mwh`). It is the value type for all three typed registries.
-Constructor: `CanonicalChannel.from_eqn(usage_eqn, attr_name)` — replaces `get_channel_name()`.
+Constructor: `make_canonical_channel(usage_eqn, attr_name)` — replaces `get_channel_name()`.
 
 `ScopedKey` wraps the dotted hierarchy key used for scoped and alias registry lookups
-(e.g., `solar_battery_plant.lcoe.lcoe_per_mwh`). Constructor: `ScopedKey.from_eqn(usage_eqn, attr_name)`
+(e.g., `solar_battery_plant.lcoe.lcoe_per_mwh`). Constructor: `make_scoped_key(usage_eqn, attr_name)`
 — replaces `OutputRegistry.derive_key_c()`. Rejects strings containing `::`.
 
-See [27-typed-registry-refactor](27-typed-registry-refactor.md) for full type system specification.
+See [10-output-registry](10-output-registry.md) for the full type system and [15-naming-conventions](15-naming-conventions.md) for identifier format definitions.
 
 **Conversion boundary**: Raw SysML names (`SysMLQN`) are converted to `EQN` at extraction
 time. All downstream indexes, lookups, and registrations use typed names only.
@@ -215,8 +215,7 @@ API: `register_scoped(ScopedKey, CanonicalChannel)`,
 `sysml_qn_lookup(SysMLQN) → CanonicalChannel | None`,
 `alias_lookup(ScopedKey) → CanonicalChannel | None`,
 `canonical_channels → frozenset[CanonicalChannel]`.
-See [10-output-registry](10-output-registry.md) for the 4-phase protocol,
-[27-typed-registry-refactor](27-typed-registry-refactor.md) for type system.
+See [10-output-registry](10-output-registry.md) for the 4-phase protocol and type system.
 
 *Delegated: Identifier types (SysMLQualifiedName, ModuleType, PythonModulePath, ElementQualifiedName) → [15](15-naming-conventions.md), [20](20-module-registry-generation.md).*
 
@@ -252,7 +251,7 @@ Properties: `json_filename`, `schema_filename`.
 
 ## Orchestration Model
 
-**PipelineContext** (dataclass, `generation/initialization.py:75`)
+**PipelineContext** (dataclass, `orchestration/pipeline_context.py:60`)
 `extractor`, `calc_defs`, `calc_usages`, `design_attributes`, `group_deriver`,
 `backtracker`, `backtracking_result`, `computation_graph`, `compilation_results`,
 `computed_attributes`, `hierarchy_data`, `aggregation_expressions: list[ScopedAggregationData]`,
@@ -315,5 +314,4 @@ HierarchyExtractionResult ── redefinitions/design_overrides: [RedefinitionDa
 
 - **Upstream**: [00](00-pipeline-overview.md), [01](01-extraction.md), [02](02-orchestration.md), [03](03-resolution-overview.md)
 - **Delegated**: [13](13-aggregation-scoping.md), [14](14-expression-compiler.md), [15](15-naming-conventions.md), [16](16-computed-attributes.md), [17](17-parameter-group-deriver.md), [23](23-smart-regen-preservation.md), [25](25-hierarchy-resolver.md)
-- **Consumers**: [10](10-output-registry.md), [11](11-analysis-backtracker.md), [07](07-graph-assembly.md), [08](08-generation.md)
-- **Type system**: [27](27-typed-registry-refactor.md)
+- **Consumers**: [10](10-output-registry.md) (typed registries, identifier types), [11](11-analysis-backtracker.md), [07](07-graph-assembly.md), [08](08-generation.md)

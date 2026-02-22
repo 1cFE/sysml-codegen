@@ -1,6 +1,6 @@
 # 19 -- AST Dispatch Invariant: FCE Before OE
 
-## The Problem
+## Design Constraint
 
 SysIDE's type hierarchy has a subtype relationship: `FeatureChainExpression`
 (FCE) is a subtype of `OperatorExpression` (OE). When Python code calls
@@ -20,9 +20,9 @@ Type Hierarchy (SysIDE):
 
 **The invariant**: Always check FCE before OE. No exceptions.
 
-**Root cause of Bug A** (commit `20b720e`): Three dispatch sites checked OE
-before FCE, causing 37 aggregation inputs to be misclassified as LocalTerms
-instead of SingletonTerms. This broke aggregation wiring in the
+**Consequence of violation**: Dispatch sites that check OE before FCE cause
+aggregation inputs to be misclassified as LocalTerms instead of SingletonTerms,
+breaking aggregation wiring in the
 [hierarchy resolver](13-aggregation-scoping.md).
 
 ---
@@ -31,13 +31,13 @@ instead of SingletonTerms. This broke aggregation wiring in the
 
 | ID | Requirement | Traces to | Verified by |
 |----|-------------|-----------|-------------|
-| REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | Bug A (20b720e) | `grep -n` ordering audit across all dispatch sites |
-| REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before OperatorExpression" | Bug A prevention | `grep` for comment at each dual-check site |
-| REQ-AST-03 | The canonical dispatch ordering SHALL be: FCE, OE, FRE, Literal | Bug A prevention | All dispatch sites follow this order |
-| REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | Bug A prevention | Code review checklist |
-| REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` (not `LocalTerm`) | Bug A root cause | `SingletonTerm` count matches FCE node count in aggregation AST |
-| REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "unsupported operator: .") | Bug A symptom | No "unsupported operator: ." in diagnostics |
-| REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(name)"`) | Bug A symptom | Reconstructed expressions match `name.attr` format |
+| REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | Subtype misclassification | `grep -n` ordering audit across all dispatch sites |
+| REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before OperatorExpression" | Prevent regressions | `grep` for comment at each dual-check site |
+| REQ-AST-03 | The canonical dispatch ordering SHALL be: FCE, OE, FRE, Literal | Consistent dispatch | All dispatch sites follow this order |
+| REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | Consistent dispatch | Code review checklist |
+| REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` (not `LocalTerm`) | Correct aggregation wiring | `SingletonTerm` count matches FCE node count in aggregation AST |
+| REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "unsupported operator: .") | Correct diagnostics | No "unsupported operator: ." in diagnostics |
+| REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(name)"`) | Correct reconstruction | Reconstructed expressions match `name.attr` format |
 
 ---
 
@@ -57,19 +57,20 @@ Literals have no subtype overlaps and go last.
 
 ---
 
-## Dispatch Site Audit
+## Dispatch Sites
 
 The codebase has **8 multi-type dispatch functions across 5 files** with
-`is_instance()` dispatch on expression types. Three were the Bug A sites fixed
-in commit `20b720e`.
+`is_instance()` dispatch on expression types.
 
-### Bug A Sites (Fixed)
+### Dual-Check Sites (FCE + OE)
 
-| File | Function | Lines | Invariant comment? | Status |
-|------|----------|-------|--------------------|--------|
-| `expression_utils.py` | `reconstruct_expression` | 48, 51, 54 | Yes | **FIXED** |
-| `expression_compiler.py` | `build_expression_ast` | 316, 323, 381 | Yes | **FIXED** |
-| `hierarchy_resolver.py` | `_walk_aggregation_ast` | 331, 338, 361 | Yes | **FIXED** |
+These three sites check both FCE and OE and include the invariant comment:
+
+| File | Function | Invariant comment? |
+|------|----------|--------------------|
+| `expression_utils.py` | `reconstruct_expression` | Yes |
+| `expression_compiler.py` | `build_expression_ast` | Yes |
+| `hierarchy_resolver.py` | `_walk_aggregation_ast` | Yes |
 
 Example from `expression_utils.py` (the pattern all sites must follow):
 ```python
@@ -83,34 +84,33 @@ if SysideAdapter.is_instance(expr_node, "FeatureReferenceExpression"): # 3rd
     return extract_feature_reference_name(expr_node)
 ```
 
-### Other Sites (Correct)
+### Other Sites
 
-| File | Function | Lines | Checks both FCE+OE? | Status |
-|------|----------|-------|----------------------|--------|
-| `usage_extractor.py` | `_extract_single_binding` | 521-557 | Yes (elif) | CORRECT |
-| `parameter_groups.py` | `_extract_default_value` | 163-191 | Yes (elif) | CORRECT |
-| `hierarchy_resolver.py` | `extract_redefinition_value` | 105-116 | No (FCE+FRE only) | N/A |
-| `hierarchy_resolver.py` | `_unwrap_invocation` | 294-296 | No (FCE+FRE only) | N/A |
-| `extractor.py` | `_parse_expression_to_path` | 276-295 | No (FCE+FRE only) | N/A |
+| File | Function | Checks both FCE+OE? |
+|------|----------|----------------------|
+| `usage_extractor.py` | `_extract_single_binding` | Yes (elif) |
+| `parameter_groups.py` | `_extract_default_value` | Yes (elif) |
+| `hierarchy_resolver.py` | `_extract_single_redefinition` | No (FCE+FRE only) |
+| `hierarchy_resolver.py` | `_unwrap_invocation` | No (FCE+FRE only) |
+| `extractor.py` | `_parse_expression_to_path` | No (FCE+FRE only) |
 
 Sites using `elif` chains (parameter_groups.py, usage_extractor.py) are safe
 because first-match-wins prevents misclassification. However, they should still
 follow canonical ordering for consistency (REQ-AST-03).
 
-> **Note (C07 conformance, 2026-02-17)**: In addition to the 8 multi-type
-> dispatch functions above, 5 single-type helper functions also call
-> `is_instance()` on expression types (e.g., checking only FCE or only FRE).
-> These are not dispatch sites — they check a single type and cannot
-> misclassify. Total `is_instance()` call sites on expression types: **13**
-> across the codebase.
+In addition to the 8 multi-type dispatch functions above, 5 single-type helper
+functions also call `is_instance()` on expression types (e.g., checking only FCE
+or only FRE). These are not dispatch sites -- they check a single type and
+cannot misclassify. Total `is_instance()` call sites on expression types: **13**
+across the codebase.
 
 ---
 
-## Concrete Example: Before and After Bug A Fix
+## Concrete Example: Why Ordering Matters
 
 **SysML aggregation expression**: `pv_module.capital_cost + inverter.capital_cost`
 
-**Before fix** (OE checked first):
+**Wrong ordering** (OE checked first):
 ```
 Node: FCE "pv_module.capital_cost"
   is_instance("OperatorExpression") → True (FCE is subtype!)
@@ -119,7 +119,7 @@ Node: FCE "pv_module.capital_cost"
   Result: LocalTerm(attribute_name="capital_cost")  ← WRONG
 ```
 
-**After fix** (FCE checked first):
+**Correct ordering** (FCE checked first):
 ```
 Node: FCE "pv_module.capital_cost"
   is_instance("FeatureChainExpression") → True

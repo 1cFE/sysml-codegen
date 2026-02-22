@@ -203,7 +203,7 @@ ComputationGraph(
 only). `battery_sizing` reads capacity from `capacity_calc`'s output.
 `cost_rollup` reads from both upstream modules.
 
-## Step 6.9: param_group propagation (added C20, 2026-02-18)
+## Step 6.9: param_group propagation
 
 After Step 6.8 orphan handling ensures every entry point belongs to some
 `ParameterGroup`, Step 6.9 propagates the group name back to `InputSource`

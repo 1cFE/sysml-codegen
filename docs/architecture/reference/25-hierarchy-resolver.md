@@ -93,7 +93,7 @@ cannot be transformed to parametric multiply.
 
 **The SysIDE lower-bound convention** (REQ-HR-04): SysIDE's `cached_upper_bound`
 is exclusive (N+1 for a `[N]` multiplicity), so we use `cached_lower_bound`
-which gives the correct count. This was confirmed by spike Q5.
+which gives the correct count.
 
 For a SysML declaration like:
 ```sysml
@@ -181,14 +181,10 @@ Here `total_capex` becomes an alias for the `capital_cost` aggregation,
 registered in the [output registry](10-output-registry.md) as a Phase 2
 CHAIN alias.
 
-> **Coverage note (C06 conformance + C5 probe, 2026-02-17)**: The positive
-> case for alias detection is exercised by `alias_agg_probe` fixture
-> (`:>> reported_cost = total_cost` → `agg.aliases = ["reported_cost"]`).
-> **Edge case**: The `endswith()` check on `source_path` may false-positive
-> on dotted source_paths (e.g., `parent.capital_cost` would match
-> `attribute_name="capital_cost"`). This is not triggered by any current
-> fixture but could produce spurious aliases for hierarchical CHAIN
-> redefinitions.
+**Edge case**: The `endswith()` check on `source_path` may false-positive
+on dotted source_paths (e.g., `parent.capital_cost` would match
+`attribute_name="capital_cost"`). No current model triggers this, but it
+could produce spurious aliases for hierarchical CHAIN redefinitions.
 
 ## Concrete Example
 

@@ -9,29 +9,23 @@ alone -- no raw extraction data needed. This is the "gold standard" generator
 
 ---
 
-## The Problems: Bugs 9 and 10
+## Design Constraints
 
-Phase 5 validation (fusion-tea e2e) found two pipeline YAML generation bugs:
+Two constraints govern pipeline YAML correctness:
 
-**Bug 9 -- Missing `param_group.` prefix on entry point channels**: Pipeline
-YAML referenced raw channel names (`SolarBatteryDesign__...wattage`) instead
-of `system_design.SolarBatteryDesign__...wattage`. TEAx uses the prefix to
-locate the correct JSON input file. Without it, 28 entry point inputs failed
-to resolve at runtime.
+**Entry point channels require a `param_group.` prefix**: Pipeline YAML must
+reference entry points as `system_design.SolarBatteryDesign__...wattage`, not
+bare `SolarBatteryDesign__...wattage`. TEAx uses the prefix to locate the
+correct JSON input file. `pipeline.py:168-171` applies the prefix from
+`InputSource.param_group`, which must be non-None for every entry point.
+Entry points created during orphan classification (graph_builder.py step 6.8)
+or aggregation module building get their `param_group` from the
+[parameter group deriver](17-parameter-group-deriver.md).
 
-**Root cause**: `pipeline.py:168-171` only applies the prefix when
-`InputSource.param_group` is non-None. Entry points created during orphan
-classification (graph_builder.py step 6.8) or aggregation module building
-may have `param_group=None` if the [parameter group deriver](17-parameter-group-deriver.md)
-fails to classify them.
-
-**Bug 10 -- `int` type for multiplicity counts**: Multiplicity entry points
-(e.g., `module_count`, `inverter_count`) were typed `int` but TEAx expects
-all numeric values as `float`. This broke TEAx input validation.
-
-**Root cause**: `graph_builder.py:1061` hardcoded `python_type="int"` for
-multiplicity inputs -- the ONLY `int` usage in the entire pipeline.
-**Fixed**: C20 (2026-02-18) changed to `"float"`.
+**All numeric types must be `float`**: TEAx expects all numeric pipeline
+values as `float`. This includes multiplicity entry points
+(e.g., `module_count`, `inverter_count`) — `graph_builder.py` uses
+`python_type="float"` for all numeric inputs, with no exceptions.
 
 ---
 
@@ -39,13 +33,13 @@ multiplicity inputs -- the ONLY `int` usage in the entire pipeline.
 
 | ID | Requirement | Traces to | Verified by |
 |----|-------------|-----------|-------------|
-| REQ-PY-01 | ALL entry point sources in pipeline YAML SHALL include a `param_group.` prefix | Bug 9 | No YAML entry point line matches `^\s+\w+: \w+ [A-Z]` (unprefixed QN) |
-| REQ-PY-02 | `InputSource.param_group` SHALL NOT be None for any entry point in the ComputationGraph | Bug 9 | `all(ep.param_group is not None for ep in graph.entry_points)` |
-| REQ-PY-03 | ALL numeric pipeline input types SHALL be `"float"` (including multiplicity counts) | Bug 10 | No `int` type in any YAML `inputs:` line |
+| REQ-PY-01 | ALL entry point sources in pipeline YAML SHALL include a `param_group.` prefix | TEAx JSON resolution | No YAML entry point line matches `^\s+\w+: \w+ [A-Z]` (unprefixed QN) |
+| REQ-PY-02 | `InputSource.param_group` SHALL NOT be None for any entry point in the ComputationGraph | TEAx JSON resolution | `all(ep.param_group is not None for ep in graph.entry_points)` |
+| REQ-PY-03 | ALL numeric pipeline input types SHALL be `"float"` (including multiplicity counts) | TEAx type contract | No `int` type in any YAML `inputs:` line |
 | REQ-PY-04 | MODULE_OUTPUT sources with `field_name == "root"` SHALL append `.root` to the channel name | Channel format | All single-output references in YAML end with `.root` |
 | REQ-PY-05 | `channel_field_map` SHALL contain an entry for every `ModuleOutput` in the graph | Wiring completeness | `len(channel_field_map) == sum(len(m.outputs) for m in graph.modules)` |
 | REQ-PY-06 | Exit point type SHALL be `RootModel[T]` when `field_name == "root"`, else `T` | Schema consistency | Exit point types match their upstream module output types |
-| REQ-PY-07 | Entry point module inputs SHALL list one JSON file per `ParameterGroup` | JSON resolution | `len(entry_fusion.inputs) == len(graph.parameter_groups)` |
+| REQ-PY-07 | Entry point module inputs SHALL list one JSON file per `ParameterGroup` | JSON resolution | `len(entry_fusion.inputs) == len(graph.entry_point_groups)` |
 
 ---
 
@@ -91,7 +85,7 @@ p_net_mw: float Design__plant__p_net_kw__p_net_kw.root
 material_cost: float Design__plant__pv_module__cost_model__material_cost
 ```
 
-### ENTRY_POINT Sources (lines 166-171) -- Bug 9 Fix Site
+### ENTRY_POINT Sources (lines 166-171)
 
 ```python
 # REQ-PY-01: param_group prefix is MANDATORY
@@ -143,13 +137,13 @@ not during YAML generation. The YAML passes through `ModuleInput.python_type`.
 
 | Context | Type | Source | REQ-PY-03 |
 |---------|------|--------|-----------|
-| CalcUsage inputs | `"float"` | graph_builder.py:1359-1365 | Compliant |
-| Computed attribute inputs | `"float"` | graph_builder.py:734-738 | Compliant |
-| Aggregation term inputs | `"float"` | graph_builder.py:1015 | Compliant |
-| Aggregation multiplicity | `"float"` | graph_builder.py:1061 | Fixed (C20, 2026-02-18) |
+| CalcUsage inputs | `"float"` | graph_builder.py:1521 | Compliant |
+| Computed attribute inputs | `"float"` | graph_builder.py:847 | Compliant |
+| Aggregation term inputs | `"float"` | graph_builder.py:1145 | Compliant |
+| Aggregation multiplicity | `"float"` | graph_builder.py:1169 | Compliant |
 
-**Multiplicity was the ONLY `int` type** in the entire pipeline. Fixed in C20
-(2026-02-18): one-line change at `graph_builder.py:1061`, `python_type="int"` to `"float"`.
+Multiplicity counts use `python_type="float"` like all other numeric inputs,
+ensuring uniform type handling across the pipeline.
 
 ---
 
@@ -214,7 +208,7 @@ Comment lines above each pipeline module indicate origin type:
 - **Upstream**: [07-graph-assembly](07-graph-assembly.md) -- builds ComputationGraph consumed here
 - **Upstream**: [04-input-resolver](04-input-resolver.md) -- resolves InputSource for each ModuleInput
 - **Upstream**: [06-entry-point-classifier](06-entry-point-classifier.md) -- assigns param_group (REQ-PY-02)
-- **Bug context**: [20-module-registry-generation](20-module-registry-generation.md) -- registry must use matching module_type strings
-- **Bug context**: [22-output-schema-rules](22-output-schema-rules.md) -- output schema rules (Bug 11)
+- **Related**: [20-module-registry-generation](20-module-registry-generation.md) -- registry must use matching module_type strings
+- **Related**: [22-output-schema-rules](22-output-schema-rules.md) -- output schema rules for MultiOutput vs RootModel
 - **Smart-regen**: [23-smart-regen-preservation](23-smart-regen-preservation.md) -- pipeline.yaml is NOT preserved by smart-regen
 - **Data models**: [09-data-models](09-data-models.md) -- InputSource, ModuleInput, ModuleOutput fields

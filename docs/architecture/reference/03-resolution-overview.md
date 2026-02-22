@@ -37,7 +37,7 @@ a `cost_model`, the string `"cost_model.total_cost"` is ambiguous -- it could
 refer to either one.
 
 The [OutputRegistry](10-output-registry.md) uses three typed registries
-([27-typed-registry-refactor](27-typed-registry-refactor.md)): scoped
+([10-output-registry](10-output-registry.md)): scoped
 (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`),
 and alias (`dict[ScopedKey, CanonicalChannel]`). The scoped registry does not
 contain ambiguous keys — only `ScopedKey` entries derived from the SysML
@@ -63,7 +63,7 @@ Prepending that scope to `source_path` produces a
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `ScopedKey` lookup against the typed scoped registry ([27-typed-registry-refactor](27-typed-registry-refactor.md)). REFERENCE bindings (`::` in source_path) SHALL use `SysMLQN` lookup against the SysML QN registry. Cross-package CHAIN references fall through to the alias registry. | Typed dispatch in backtracker (REQ-BT-08) and typed strategies in `AGG_STRATEGIES` |
+| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `ScopedKey` lookup against the typed scoped registry ([10-output-registry](10-output-registry.md)). REFERENCE bindings (`::` in source_path) SHALL use `SysMLQN` lookup against the SysML QN registry. Cross-package CHAIN references fall through to the alias registry. | Typed dispatch in backtracker (REQ-BT-08) and typed strategies in `AGG_STRATEGIES` |
 | REQ-RES-08 | Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation). | Backtracker: Step 0 (line 512). resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
 
 ## Why Resolution Is Hard
@@ -121,7 +121,7 @@ dependency discovery.
 The backtracker implements type-directed dispatch (REQ-BT-08): CHAIN bindings
 query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`; REFERENCE
 bindings query `sysml_qn_lookup(SysMLQN)` then normalized `scoped_lookup()`.
-See [27-typed-registry-refactor](27-typed-registry-refactor.md) FR-4.
+See [10-output-registry](10-output-registry.md).
 
 FORMULA and Aggregation modules do NOT participate in DFS -- they are built
 after dependency discovery. Their resolution CAN be extracted into a standalone
@@ -221,7 +221,6 @@ instead, but reaches equivalent answers for shared references.
 - **Upstream**: [00-pipeline-overview](00-pipeline-overview.md) (Steps 3-6), [01-extraction](01-extraction.md) (provides bindings and redefinitions), [11-analysis-backtracker](11-analysis-backtracker.md) (CalcUsage resolution + DFS)
 - **Sub-modules**: [04-input-resolver](04-input-resolver.md) (FORMULA/Agg resolution), [05-module-factory](05-module-factory.md), [06-entry-point-classifier](06-entry-point-classifier.md), [07-graph-assembly](07-graph-assembly.md)
 - **Architecture**: [24-dual-resolution-architecture](24-dual-resolution-architecture.md) (why two paths exist)
-- **Registry**: [10-output-registry](10-output-registry.md) (channel lookup), [15-naming-conventions](15-naming-conventions.md) (key formats)
+- **Registry**: [10-output-registry](10-output-registry.md) (channel lookup, typed registries), [15-naming-conventions](15-naming-conventions.md) (key formats, identifier types)
 - **Data models**: [09-data-models](09-data-models.md) -- ComputationGraph, PipelineModule, InputSource, BindingResolution
-- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) -- typed identifiers and registries
 - **Deep dives**: [13-aggregation-scoping](13-aggregation-scoping.md), [16-computed-attributes](16-computed-attributes.md), [18-literal-value-propagation](18-literal-value-propagation.md)

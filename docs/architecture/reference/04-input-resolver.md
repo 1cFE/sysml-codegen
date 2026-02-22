@@ -49,7 +49,7 @@ Immutable frozen dataclass (REQ-IR-04). No strategy mutates it.
 ```python
 @dataclass(frozen=True)
 class ResolutionContext:
-    output_registry: OutputRegistry       # Typed registries (10-output-registry, 27-typed-registry-refactor)
+    output_registry: OutputRegistry       # Typed registries (10-output-registry)
     redefinitions: list[RedefinitionData]  # :>> chain/literal redefs (01-extraction)
     design_attrs: dict[str, DesignAttributeData]  # QN -> design attr (bare-name matching)
     module_eqn: str                       # Current module EQN (self-reference guard)
@@ -103,9 +103,9 @@ channel: CanonicalChannel | None = ctx.output_registry.scoped_lookup(scoped_key)
 ```
 
 `ScopedKey` is unique by construction (derived from the SysML ownership chain via
-`ScopedKey.from_eqn()`). The return type is `CanonicalChannel | None`. This is the
+`make_scoped_key()`). The return type is `CanonicalChannel | None`. This is the
 **correct** resolution path for all CHAIN bindings. See
-[27-typed-registry-refactor](27-typed-registry-refactor.md).
+[10-output-registry](10-output-registry.md).
 
 **Aggregation form**: when `ctx.instance_path` is set, also tries the
 aggregation-scoped key (strips design prefix from `instance_path`, prepends
@@ -135,17 +135,16 @@ channel: CanonicalChannel | None = ctx.output_registry.sysml_qn_lookup(SysMLQN(r
 This handles REFERENCE bindings where extraction produces a SysML qualified name
 (e.g., `"AttrExprProbeDesign::probe_design::area"`). The return type is
 `CanonicalChannel | None`. The SysML QN registry contains Phase 1c FORMULA keys.
-See [27-typed-registry-refactor](27-typed-registry-refactor.md).
+See [10-output-registry](10-output-registry.md).
 
 If the SysML QN lookup misses, falls back to normalization: split on `::`,
 sanitize/lowercase the penultimate segment, construct a `ScopedKey`, and
 retry in the scoped registry.
 
-> **Coverage note (C12 spike, 2026-02-17)**: Strategy B has zero exercise for
-> aggregation scope — no aggregation term ref contains `::` across all fixture
-> models. Implemented for completeness; tested only with constructed data.
-> The backtracker's REFERENCE Step 2 (leaf + parent_part scoped lookup) is more
-> capable than Strategy B's normalization fallback — see
+> **Note**: Strategy B has zero exercise for aggregation scope — no aggregation
+> term ref contains `::` across current fixture models. The backtracker's
+> REFERENCE Step 2 (leaf + parent_part scoped lookup) is more capable than
+> Strategy B's normalization fallback — see
 > [24-dual-resolution-architecture](24-dual-resolution-architecture.md).
 
 ### C: ChainRedefinitionFollow
@@ -163,10 +162,8 @@ Returns the design attribute's QN, which becomes the [entry point](06-entry-poin
 QN. Enables entry point deduplication: multiple modules binding to the same
 design attribute share one entry point.
 
-> **Coverage note (C12 spike, 2026-02-17)**: Strategy D has zero exercise for
-> aggregation scope — no aggregation entry point duplicates a design attribute
-> name across all fixture models. Implemented for completeness; tested only with
-> constructed data.
+> **Note**: Strategy D has zero exercise for aggregation scope — no aggregation
+> entry point duplicates a design attribute name across current fixture models.
 
 ## Truth table
 
@@ -250,7 +247,7 @@ CHAIN `source_path` is a scope-relative reference. The scoped lookup using
 `ScopedKey` is the only correct resolution for models where instance names are
 not globally unique. With typed registries, there is no ambiguity risk — the
 scoped registry contains only `ScopedKey` entries (scope-qualified by
-construction). See [27-typed-registry-refactor](27-typed-registry-refactor.md).
+construction). See [10-output-registry](10-output-registry.md).
 
 `AGG_STRATEGIES` promotes `ChainRedefinitionFollow` to position 2 (REQ-IR-05):
 aggregation inputs ([SumTerms](05-module-factory.md#4a-sumterm)) almost always
@@ -273,6 +270,5 @@ duplicated logic become context construction + a single call.
 - **Upstream**: [03-resolution-overview](03-resolution-overview.md), [01-extraction](01-extraction.md)
 - **Downstream**: [05-module-factory](05-module-factory.md), [06-entry-point-classifier](06-entry-point-classifier.md)
 - **Architecture**: [24-dual-resolution-architecture](24-dual-resolution-architecture.md) -- why two paths
-- **Registry**: [10-output-registry](10-output-registry.md), [15-naming-conventions](15-naming-conventions.md)
-- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) -- typed identifiers and registries
+- **Registry**: [10-output-registry](10-output-registry.md), [15-naming-conventions](15-naming-conventions.md) -- typed identifier definitions
 - **Data models**: [09-data-models](09-data-models.md) -- InputSource, ResolutionContext

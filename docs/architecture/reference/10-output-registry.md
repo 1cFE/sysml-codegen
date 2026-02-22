@@ -24,10 +24,10 @@ regardless of which format the binding used.
 | REQ-OR-02 | Each typed registry SHALL have its own exact-match lookup method — no single `resolve()` method that accepts any string format | `scoped_lookup(ScopedKey)`, `sysml_qn_lookup(SysMLQN)`, `alias_lookup(ScopedKey)` |
 | REQ-OR-03 | Collision policy: scoped and SysML QN registries SHALL raise on duplicate (unique by construction); alias registry SHALL refuse overwrites (first wins, warning logged) | `register_scoped()` and `register_sysml_qn()` raise; `register_alias()` warns |
 | REQ-OR-04 | `register_alias()` SHALL enforce phase ordering — target must already be in `_canonical` | Guard: `if canonical_channel not in self._canonical: return` |
-| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_stripped as `ScopedKey` (Aggregation), SysML QN as `SysMLQN` (FORMULA). Key_A, Key_D, Key_E full, Key_F, and bare keys SHALL NOT be registered. | Key format tables in each sub-phase; see [27-typed-registry-refactor](27-typed-registry-refactor.md) for elimination rationale |
+| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_stripped as `ScopedKey` (Aggregation), SysML QN as `SysMLQN` (FORMULA). Key_A, Key_D, Key_E full, Key_F, and bare keys SHALL NOT be registered. | Key format tables in each sub-phase; see Eliminated Key Formats below for elimination rationale |
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `registry.scoped_lookup(ScopedKey(alias.canonical_name))` precedes `register_alias()` |
-| REQ-OR-07 | Key_C SHALL be constructed via `ScopedKey.from_eqn()` — strip design prefix from EQN, join with dots | `ScopedKey.from_eqn()`: split on `__`, drop `segments[0]`, join with `.` |
-| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no registration, no guard, no diagnostic-only entry. | Key_A registration code removed; see [27-typed-registry-refactor](27-typed-registry-refactor.md) FR-3 |
+| REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join with dots | `make_scoped_key()`: split on `__`, drop `segments[0]`, join with `.` |
+| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no registration, no guard, no diagnostic-only entry. | Key_A registration code removed; see Eliminated Key Formats below |
 
 ## What It Is
 
@@ -48,10 +48,10 @@ to produce a `ScopedKey` lookup that is unambiguous. The registry just needs to 
 the scoped key registered.
 
 A canonical channel name is the PQN-format string produced by
-`CanonicalChannel.from_eqn()` (see [naming conventions](15-naming-conventions.md)):
+`make_canonical_channel()` (see [naming conventions](15-naming-conventions.md)):
 
 ```
-CanonicalChannel.from_eqn("SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_per_mwh")
+make_canonical_channel("SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_per_mwh")
 → CanonicalChannel("SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh")
 ```
 
@@ -61,7 +61,7 @@ The registry's internal state is four fields:
 - `_alias: dict[ScopedKey, CanonicalChannel]` — alias lookups
 - `_canonical: set[CanonicalChannel]` — valid canonical channels (phase-ordering enforcement)
 
-See [27-typed-registry-refactor](27-typed-registry-refactor.md) for the full type system.
+See Design Rationale below for type system design decisions.
 
 ## API
 
@@ -73,8 +73,8 @@ See [27-typed-registry-refactor](27-typed-registry-refactor.md) for the full typ
 | `scoped_lookup(ScopedKey) -> CanonicalChannel \| None` | runtime | Exact-match in scoped registry |
 | `sysml_qn_lookup(SysMLQN) -> CanonicalChannel \| None` | runtime | Exact-match in SysML QN registry |
 | `alias_lookup(ScopedKey) -> CanonicalChannel \| None` | runtime | Exact-match in alias registry |
-| `ScopedKey.from_eqn(usage_eqn, attr_name)` | constructor | Builds the dotted hierarchy key (replaces `derive_key_c()`) |
-| `CanonicalChannel.from_eqn(usage_eqn, attr_name)` | constructor | Builds the canonical channel name (replaces `get_channel_name()`) |
+| `make_scoped_key(usage_eqn, attr_name)` | constructor | Builds the dotted hierarchy key (replaces `derive_key_c()`) |
+| `make_canonical_channel(usage_eqn, attr_name)` | constructor | Builds the canonical channel name (replaces `get_channel_name()`) |
 | `canonical_channels` (property) | read | `frozenset[CanonicalChannel]` of all canonical channel names |
 
 **Collision policy**: Scoped and SysML QN registries are unique by construction
@@ -102,7 +102,7 @@ For each CalcUsage + each output attribute on its CalcDef, two registrations:
 | Canonical | `CanonicalChannel` | PQN (self-registered in `_canonical` set) | `SBD__sbp__lcoe__lcoe_per_mwh` |
 | Scoped key | `ScopedKey` | dotted hierarchy, design prefix stripped | `solar_battery_plant.lcoe.lcoe_per_mwh` |
 
-Scoped key is derived by `ScopedKey.from_eqn()` (REQ-OR-07): split the usage EQN on `__`,
+Scoped key is derived by `make_scoped_key()` (REQ-OR-07): split the usage EQN on `__`,
 drop `segments[0]`, join with `.`, append `.{attr}`. This is the most critical key —
 it is the [scoped key](03-resolution-overview.md#the-scope-problem) that the
 [resolver](04-input-resolver.md) constructs to disambiguate cross-scope references.
@@ -181,11 +181,11 @@ output attribute          = "lcoe_per_mwh"
 **Phase 1a** registers using typed constructors:
 
 ```python
-canonical = CanonicalChannel.from_eqn(
+canonical = make_canonical_channel(
     "SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_per_mwh"
 )  # → CanonicalChannel("SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh")
 
-scoped_key = ScopedKey.from_eqn(
+scoped_key = make_scoped_key(
     "SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_per_mwh"
 )  # → ScopedKey("solar_battery_plant.lcoe.lcoe_per_mwh")
 
@@ -249,13 +249,74 @@ Note this depends on Phase 2 having already registered `solar_battery_plant.leve
 
 ## Construction Site
 
-`build_output_registry()` in `generation/initialization.py` is the sole
+`build_output_registry()` in `orchestration/output_registry_builder.py` is the sole
 constructor. It is called at Step 5.5 of [`build_pipeline_context()`](02-orchestration.md),
 after calc usages, hierarchy data, [aggregation scoping](13-aggregation-scoping.md),
 [computed attributes](16-computed-attributes.md), and [channel aliases](12-virtual-binding-rewrite.md)
 are all available. The populated registry is then passed to the
 [`DependencyBacktracker`](11-analysis-backtracker.md) (Step 6) and
 [`build_computation_graph()`](07-graph-assembly.md) (Step 7) as their shared lookup mechanism.
+
+## Design Rationale
+
+### Conversion Boundary
+
+Raw SysML names (`SysMLQN`) are produced at extraction time. All downstream
+processing uses typed identifiers:
+
+```
+SysMLQN (extraction) → EQN (analysis) → PQN (resolution) → CanonicalChannel (registry value)
+                                                           → ScopedKey (registry key)
+```
+
+### Eliminated Key Formats
+
+The following key formats have zero resolution hits across all 6 model snapshots
+and are NOT registered:
+
+| Key | Format | Resolution hits | Reason for elimination |
+|-----|--------|----------------|----------------------|
+| Key_A | `{instance_name}.{attr}` | **0** across 6 models | Scope-ambiguous; collisions observed in catf_mfe (10+ collisions) |
+| Key_D | `{part_usage}.{attr}` | **0** across 6 models | Same ambiguity as Key_A for aggregations |
+| Key_E full | `{full_dotted_with_design_prefix}` | **0** across 6 models | Redundant with Key_E_stripped; nothing constructs a lookup with design prefix |
+| Key_F | `{owning_part}.{python_name}` | **0** across 6 models | Same ambiguity as Key_A for FORMULAs |
+| bare | `{attr_name}` alone | **0** across 6 models | Maximally ambiguous; already flagged REMOVAL_CANDIDATE |
+
+**FR-6 applies**: if any eliminated key turns out to be load-bearing for a model
+not currently tested, the key MUST be made unique (not re-added as ambiguous).
+
+### Evidence Base
+
+All claims are supported by empirical analysis across the 6 model snapshots:
+
+| Claim | Evidence |
+|-------|---------|
+| Zero Key_A hits | 0/150 backtracker resolutions hit Key_A across 6 models |
+| 12 Step 1 hits are EXPOSE_PURE/SysML QN | 10 catf_mfe EXPOSE_PURE + 2 attr_expr_probe SysML QN |
+| Key_A collisions exist | catf_mfe has 10+ Key_A collisions (pump_load.pump_power, minor_calc.a, etc.) |
+| Zero Key_D hits | 0/46 aggregation term resolutions use Key_D (all scoped) |
+| Zero Key_E/Key_F/bare hits | No code path constructs a lookup that matches these formats |
+| REQ-BT-08 would break 12 resolutions | Step 1 raises on `channel is not None`, catching EXPOSE_PURE and SysML QN |
+| REQ-NC-07 factually wrong | 14 SysML QN keys with `::` registered in attr_expr_probe |
+
+### NewType Zero-Cost Design
+
+All typed identifiers use `NewType` from `typing`, which creates a callable that
+returns its argument unchanged at runtime -- zero overhead. No `isinstance` checks,
+no wrapping cost. This is a type-checker-only construct (NFR-1).
+
+```python
+from typing import NewType
+
+ScopedKey = NewType('ScopedKey', str)
+CanonicalChannel = NewType('CanonicalChannel', str)
+SysMLQN = NewType('SysMLQN', str)
+EQN = NewType('EQN', str)
+PQN = NewType('PQN', str)
+```
+
+See the type wrapper definitions in `core/identifier_types.py` for constructor
+invariants and resolution dispatch design.
 
 ## Related Documents
 
@@ -266,5 +327,4 @@ are all available. The populated registry is then passed to the
 - **Sub-processes**: [13-aggregation-scoping](13-aggregation-scoping.md) — produces `ScopedAggregationData` for Phase 1b
 - **Sub-processes**: [16-computed-attributes](16-computed-attributes.md) — produces `ComputedAttributeData` for Phase 1c
 - **Naming**: [15-naming-conventions](15-naming-conventions.md) — PQN, ScopedKey, CanonicalChannel formats
-- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) — full type system and registry architecture
 - **Data models**: [09-data-models](09-data-models.md) — full field definitions

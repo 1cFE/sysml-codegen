@@ -23,7 +23,7 @@ Source: `src/sysml_codegen/analysis/dependency_backtracker.py`
 | REQ-BT-05 | `binding_resolutions` key format SHALL be `"{usage_qn}\|{param_name}"` (pipe separator) | All `mapping_key` assignments use `f"{usage.qualified_name}\|{param_name}"` |
 | REQ-BT-06 | Topological sort SHALL produce dependency-first ordering or raise on cycles | Kahn's algorithm with cycle detection |
 | REQ-BT-07 | Self-reference guard SHALL prevent a usage from wiring to its own output | `producing_usage_qn == usage.qualified_name` check after each lookup |
-| REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct typed registry. CHAIN bindings query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`. REFERENCE bindings query `sysml_qn_lookup(SysMLQN)` then `scoped_lookup(ScopedKey)`. | Dispatch branches verified; see [27-typed-registry-refactor](27-typed-registry-refactor.md) FR-4 |
+| REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct typed registry. CHAIN bindings query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`. REFERENCE bindings query `sysml_qn_lookup(SysMLQN)` then `scoped_lookup(ScopedKey)`. | Dispatch branches verified; see [10-output-registry](10-output-registry.md) Design Rationale |
 
 ## BacktrackingResult Output Model
 
@@ -54,8 +54,7 @@ separator avoids conflict with SysML's `::` delimiter). See [09-data-models](09-
      ENTRY_POINTs with a warning. These represent inline operator expressions (e.g., `in x = a + b`)
      where the extractor cannot decompose the expression into a single source path. The backtracker
      logs a warning and creates an ENTRY_POINT resolution. No registry lookup is attempted.
-     (C11b typed dispatch, 2026-02-17. Zero EXPRESSION bindings in natural fixture models — covered
-     by `expression_binding_probe`.)
+     Zero EXPRESSION bindings occur in natural fixture models — covered by `expression_binding_probe`.
    - **Non-literal** bindings with a `source_path` go through `_resolve_binding_via_registry()`.
      If the resolution is MODULE_OUTPUT, DFS recurses into the producing usage.
      If ENTRY_POINT, the binding is recorded as an external input.
@@ -157,16 +156,15 @@ scoped_key = ScopedKey(f"{sanitized_part}.{parts[-1]}")
 channel = self._output_registry.scoped_lookup(scoped_key)
 ```
 
-> **Limitation (C6 probe, 2026-02-17)**: Step 2 normalization only extracts
-> the last 2 segments (`parts[-2]` and `parts[-1]`) of the `::` QN, discarding
-> all intermediate hierarchy segments. For a 6-segment path like
-> `A::B::C::D::E::F`, this produces `ScopedKey("e.F")` — but the OutputRegistry
-> ScopedKey includes the full instance path (e.g., `b.c.d.e.F`), so the
-> 2-segment lookup will not match. This is acceptable for current models:
-> idiomatic SysML v2 cross-scope references use `import` + `.` chain (CHAIN
-> binding), not deep `::` paths (REFERENCE). Deep REFERENCE bindings are
-> non-idiomatic and may only arise from programmatic model generation.
-> See C6 deep cross-scope probe findings.
+> **Limitation**: Step 2 normalization only extracts the last 2 segments
+> (`parts[-2]` and `parts[-1]`) of the `::` QN, discarding all intermediate
+> hierarchy segments. For a 6-segment path like `A::B::C::D::E::F`, this
+> produces `ScopedKey("e.F")` — but the OutputRegistry ScopedKey includes the
+> full instance path (e.g., `b.c.d.e.F`), so the 2-segment lookup will not
+> match. This is acceptable for current models: idiomatic SysML v2 cross-scope
+> references use `import` + `.` chain (CHAIN binding), not deep `::` paths
+> (REFERENCE). Deep REFERENCE bindings are non-idiomatic and may only arise
+> from programmatic model generation.
 
 ### Self-Reference Guard
 
@@ -286,30 +284,6 @@ Consumer:  CATFMFEMagnets__catf_tf_system__cryo_load
 This is why the alias registry exists: cross-package references where Step 1
 structurally cannot work.
 
-## Compat-Only Resolution Migration (C11b, 2026-02-17)
-
-Prior to the typed dispatch migration (C11b), 14 MODULE_OUTPUT resolutions across
-2 models required the deprecated `_compat` dict — they could not resolve via typed
-lookups alone. C11b migrated all 14 to typed registries:
-
-**12 catf_mfe cross-scope CHAIN** (`minor_calc.a` pattern): Consumers in different
-radial build layers than the `plasma_region` producer. These resolved via Key_A
-alias format (`instance_name.attr`) in `_compat`. **Fix**: Key_A values registered
-as aliases in Phase 1a (`register_alias(ScopedKey(key_a), canonical)`, first-wins
-collision policy). Now resolve via `alias_lookup()` in CHAIN Step 2.
-
-**2 solar_battery REFERENCE secondary**:
-- `annualized_om|p_net_kw` — resolved via Key_F (`solar_battery_plant.p_net_kw`)
-  in `_compat`. **Fix**: Key_F registered as ScopedKey in Phase 1c
-  (`register_scoped(ScopedKey(key_f), canonical)`). Now resolves via
-  `scoped_lookup()` in REFERENCE Step 2 (normalized scoped fallback).
-- `annualized_financial|total_capex` — resolved via Key_E_stripped in `_compat`.
-  **Fix**: Already registered as ScopedKey in Phase 1b. Was a false positive in
-  the compat-only count (resolved via typed scoped lookup after registration order fix).
-
-After C11b: **zero compat-only resolutions**. The `_compat` dict and `resolve()`
-method are removed from OutputRegistry.
-
 ## Concrete Walkthrough: REFERENCE Resolution
 
 From attr_expr_probe:
@@ -332,5 +306,4 @@ No normalization needed — the SysML QN key is in its own typed registry.
 - **Architecture**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — why CalcUsage resolution stays here
 - **Downstream**: [07-graph-assembly](07-graph-assembly.md) — consumes `BacktrackingResult`, [05-module-factory](05-module-factory.md) — builds modules from resolved bindings
 - **Cross-cutting**: [06-entry-point-classifier](06-entry-point-classifier.md) — classifies EPs discovered here, [15-naming-conventions](15-naming-conventions.md) — ScopedKey/CanonicalChannel formats
-- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) — typed identifiers and dispatch architecture
 - **Data models**: [09-data-models](09-data-models.md) — `BacktrackingResult`, `BindingResolution`, `BindingInfo`

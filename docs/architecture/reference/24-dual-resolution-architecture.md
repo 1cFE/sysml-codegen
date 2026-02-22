@@ -13,7 +13,7 @@ can it know whether to recurse into an upstream module (MODULE_OUTPUT) or stop
 (ENTRY_POINT). Resolution and discovery are inseparable:
 
 ```python
-# dependency_backtracker.py, _trace_dependencies (line 364):
+# dependency_backtracker.py, _trace_dependencies:
 resolution = self._resolve_binding_via_registry(binding, usage)
 if resolution.resolution_type == MODULE_OUTPUT:
     producing_usage = self._find_usage_for_channel(resolution.qualified_name)
@@ -31,9 +31,9 @@ This gives us two resolution paths. Not by accident, but by necessity.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs stop) depends on the resolution result. | `_trace_dependencies` calls `_resolve_binding_via_registry` at line 364; branch on `resolution_type` at line 367 |
+| REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs stop) depends on the resolution result. | `_trace_dependencies` calls `_resolve_binding_via_registry`; branches on `resolution_type` to decide recurse vs stop |
 | REQ-DRA-02 | FORMULA SHALL use pre-computed [attribute resolution map](16-computed-attributes.md). Aggregation SumTerm/SingletonTerm SHALL use [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`. LocalTerm SHALL use factory-specific cascade. | Factory call sites use appropriate resolution mechanism |
-| REQ-DRA-03 | Both paths SHALL use typed registries ([27-typed-registry-refactor](27-typed-registry-refactor.md)): `scoped_lookup(ScopedKey)` for CHAIN bindings, `sysml_qn_lookup(SysMLQN)` for REFERENCE bindings, `alias_lookup(ScopedKey)` for cross-package. No untyped `dict.get()`. | Backtracker: type-directed dispatch (REQ-BT-08). resolve_input(): Strategy A uses `scoped_lookup()`, Strategy B uses `sysml_qn_lookup()`. |
+| REQ-DRA-03 | Both paths SHALL use typed registries ([10-output-registry](10-output-registry.md)): `scoped_lookup(ScopedKey)` for CHAIN bindings, `sysml_qn_lookup(SysMLQN)` for REFERENCE bindings, `alias_lookup(ScopedKey)` for cross-package. No untyped `dict.get()`. | Backtracker: type-directed dispatch (REQ-BT-08). resolve_input(): Strategy A uses `scoped_lookup()`, Strategy B uses `sysml_qn_lookup()`. |
 | REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.total_cost"` in scope `"plant.battery_pack"` SHALL resolve to the same channel regardless of path. | Integration test: same reference through both paths → identical `InputSource` |
 | REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produce `InputSource` objects. Both encode the same two-valued answer (module_output or entry_point). | `BindingResolution.resolution_type` maps to `InputSource.source_type` |
 
@@ -42,14 +42,14 @@ This gives us two resolution paths. Not by accident, but by necessity.
 ## Path 1: CalcUsage Resolution (Backtracker)
 
 **When**: During DFS traversal, before graph construction.
-**File**: `analysis/dependency_backtracker.py`, `_resolve_binding_via_registry()` (line 477).
+**File**: `analysis/dependency_backtracker.py`, `_resolve_binding_via_registry()`.
 **Input**: `BindingInfo` from [CalcUsageData](09-data-models.md#extraction-models).
 **Output**: `BindingResolution` stored in `binding_resolutions` dict.
 
 ### Type-directed dispatch (REQ-BT-08)
 
 Resolution dispatches on the binding's `source_path` format, selecting the
-appropriate typed registry. See [27-typed-registry-refactor](27-typed-registry-refactor.md) FR-4.
+appropriate typed registry. See [10-output-registry](10-output-registry.md) Design Rationale.
 
 **CHAIN bindings** (no `::` in source_path):
 
@@ -144,9 +144,9 @@ reference (REQ-DRA-04). The difference is which strategies are relevant:
 
 Both paths use the same typed [OutputRegistry](10-output-registry.md) with typed
 lookup methods. No untyped `dict.get()` calls remain. See
-[27-typed-registry-refactor](27-typed-registry-refactor.md).
+[10-output-registry](10-output-registry.md).
 
-### Known Asymmetry: REFERENCE Step 2 (X02, 2026-02-17)
+### Known Asymmetry: REFERENCE Step 2
 
 The backtracker's REFERENCE Step 2 (leaf + parent_part scoped lookup) is **more
 capable** than Strategy B's normalization fallback. The backtracker extracts the
@@ -159,7 +159,7 @@ into a `ScopedKey` (e.g., `annualized_om.p_net_kw`), which may not match the
 scoped registry key format. This is **not a consistency violation** — REFERENCE
 bindings are a CalcUsage concern (no aggregation term ref contains `::` in any
 fixture model). The asymmetry only matters for the backtracker path, which has
-its own Step 2 implementation. See X02 conformance tests for verification.
+its own Step 2 implementation.
 
 ---
 
@@ -187,7 +187,7 @@ canonical `"Design__plant__battery_pack__cost_model__total_cost"`.
 |-------|------|------|
 | `BindingResolution` | `core/models.py` | CalcUsage resolution result (backtracker) |
 | `InputSource` | `resolution/models.py` | FORMULA/Agg resolution result (resolve_input) |
-| `BindingInfo` | `extraction/data_models.py` | CalcUsage binding input |
+| `BindingInfo` | `extraction/usage_extractor.py` | CalcUsage binding input |
 | `SumTerm` / `SingletonTerm` / `LocalTerm` | `extraction/data_models.py` | Aggregation term inputs |
 | `ResolutionContext` | `resolution/input_resolver.py` | Immutable context for resolve_input() (holds typed OutputRegistry) |
 | `OutputRegistry` | `core/output_registry.py` | Typed registries: scoped, SysML QN, alias (both paths) |
@@ -203,5 +203,4 @@ canonical `"Design__plant__battery_pack__cost_model__total_cost"`.
 - **Factories**: [05-module-factory](05-module-factory.md) -- how each path feeds module construction
 - **Registry**: [10-output-registry](10-output-registry.md) -- typed O(1) lookup
 - **Scope**: [15-naming-conventions](15-naming-conventions.md) -- ScopedKey format for scoped resolution
-- **Type system**: [27-typed-registry-refactor](27-typed-registry-refactor.md) -- typed identifiers and registries
 - **Data models**: [09-data-models](09-data-models.md) -- BindingResolution, InputSource, BacktrackingResult

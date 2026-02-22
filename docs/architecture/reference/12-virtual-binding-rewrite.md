@@ -53,7 +53,7 @@ downstream steps ([backtracking](11-analysis-backtracker.md),
 
 ## Implementation: `_rewrite_virtual_bindings()`
 
-**File:** `src/sysml_codegen/generation/initialization.py`, lines 260-327.
+**File:** `src/sysml_codegen/orchestration/pipeline_builder.py`.
 
 ### Phase 1 -- Build the Override Index
 

@@ -9,7 +9,7 @@ it says "any Solar_Array instance computes capital_cost this way." But the pipel
 bridges this gap: it discovers which design instances correspond to each PartDef and stamps out
 one scoped aggregation module per instance.
 
-Three functions in `initialization.py` implement this, called during
+Three functions in `orchestration/pipeline_builder.py` implement this, called during
 [Step 3.5](00-pipeline-overview.md) of `build_pipeline_context()`:
 
 1. `find_instance_paths_for_partdef()` — discovers design instance paths
@@ -65,7 +65,7 @@ decomposed into typed terms. Key fields for scoping:
 
 ## find_instance_paths_for_partdef()
 
-**File:** `src/sysml_codegen/generation/initialization.py`, line 331.
+**File:** `src/sysml_codegen/orchestration/pipeline_builder.py`.
 
 Given a PartDef QN, returns dotted, design-prefix-stripped instance paths by scanning virtual
 calc usages. Two strategies:
@@ -85,7 +85,7 @@ stripped. For `"SolarBatteryDesign__solar_battery_plant__solar_array__cost_model
 
 ## _scope_aggregation_expressions()
 
-**File:** `src/sysml_codegen/generation/initialization.py`, line 456.
+**File:** `src/sysml_codegen/orchestration/pipeline_builder.py`.
 
 For each `AggregationExpressionData` in `hierarchy_data.aggregation_expressions`:
 
@@ -99,7 +99,7 @@ scoped modules if the PartDef is instantiated more than once in the design.
 
 ## _build_chain_aliases()
 
-**File:** `src/sysml_codegen/generation/initialization.py`, line 400.
+**File:** `src/sysml_codegen/orchestration/pipeline_builder.py`.
 
 For each `:>>` CHAIN redefinition on a PartDef (filtered: `redefinition_type == CHAIN`,
 not `is_deep_path`, and `source_path` contains a dot):
@@ -140,7 +140,7 @@ these outputs in its [4-phase registration protocol](10-output-registry.md):
 - **Phase 1b:** Each `ScopedAggregationData` registers a canonical channel via
   `get_channel_name(agg.module_eqn, agg.expression.attribute_name)` producing
   a `CanonicalChannel`. Registered with `ScopedKey` in the scoped registry
-  ([15-naming-conventions](15-naming-conventions.md), [27-typed-registry-refactor](27-typed-registry-refactor.md)).
+  ([15-naming-conventions](15-naming-conventions.md), [10-output-registry](10-output-registry.md)).
 - **Phase 2:** Each `ChannelAlias` with `source="redefinition"` is resolved — the registry
   looks up `alias.canonical_name`, and if found, registers `alias.alias_name` as an alias
   pointing to the same canonical channel. This is how downstream modules can wire to
@@ -205,12 +205,12 @@ module binding to `solar_array.total_capex` now resolves correctly.
 |------|----------|
 | `extraction/data_models.py` | `AggregationExpressionData`, `ScopedAggregationData`, `SumTerm`, `SingletonTerm`, `LocalTerm` |
 | `core/models.py` | `ChannelAlias` |
-| `generation/initialization.py` | `find_instance_paths_for_partdef()`, `_scope_aggregation_expressions()`, `_build_chain_aliases()`, `build_output_registry()` |
+| `orchestration/pipeline_builder.py` | `find_instance_paths_for_partdef()`, `_scope_aggregation_expressions()`, `_build_chain_aliases()` |
+| `orchestration/output_registry_builder.py` | `build_output_registry()` |
 
 ## Related Documents
 
 - **Upstream**: [01-extraction](01-extraction.md) — produces `AggregationExpressionData` and `RedefinitionData`, [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — runs just before scoping in Step 3.5
-- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — channel formats, [27-typed-registry-refactor](27-typed-registry-refactor.md) — typed key types
-- **Downstream**: [05-module-factory](05-module-factory.md) — builds aggregation modules from `ScopedAggregationData`, [04-input-resolver](04-input-resolver.md) — resolves aggregation module inputs
+- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — channel formats- **Downstream**: [05-module-factory](05-module-factory.md) — builds aggregation modules from `ScopedAggregationData`, [04-input-resolver](04-input-resolver.md) — resolves aggregation module inputs
 - **Architecture**: [00-pipeline-overview](00-pipeline-overview.md) — Step 3.5 placement, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — aggregation as second resolution path
 - **Data models**: [09-data-models](09-data-models.md) — `AggregationExpressionData`, `ScopedAggregationData`, `ChannelAlias`

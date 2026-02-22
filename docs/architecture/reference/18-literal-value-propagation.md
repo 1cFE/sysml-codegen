@@ -42,19 +42,19 @@ split. The PartDef says so. The JSON template should reflect that:
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-LVP-01 | `_find_literal_redefinition()` SHALL try type-aware resolution (Strategy 1) before name-based fallback (Strategy 2) | `graph_builder.py:870`: type-aware at 898-908, fallback at 910-912 |
-| REQ-LVP-02 | SumTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | `graph_builder.py:975` in `_build_aggregation_module()` |
-| REQ-LVP-03 | SingletonTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | `graph_builder.py:1087` in `_build_aggregation_module()` |
-| REQ-LVP-04 | LocalTerms SHALL NOT use literal redefinition lookup (different resolution path) | No `_find_literal_redefinition` call in LocalTerm handling (lines 1133-1176) |
-| REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered by later terms | Backfill at lines 997-1006 (SumTerm) and 1109-1119 (SingletonTerm) |
-| REQ-LVP-06 | `usage_type_map` SHALL be threaded from [`HierarchyExtractionResult`](09-data-models.md) through [`build_computation_graph()`](07-graph-assembly.md) to `_build_aggregation_module()` | Parameter passing: initialization.py:830 → graph_builder.py:80 → 929 |
+| REQ-LVP-01 | `_find_literal_redefinition()` SHALL try type-aware resolution (Strategy 1) before name-based fallback (Strategy 2) | `_find_literal_redefinition()` in `graph_builder.py`: type-aware match via `target_partdef_qn`, fallback via last-segment name comparison |
+| REQ-LVP-02 | SumTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | SumTerm `else` branch in `_build_aggregation_module()` |
+| REQ-LVP-03 | SingletonTerm fallback SHALL call `_find_literal_redefinition()` when channel resolution fails | SingletonTerm `if s_source is None` branch in `_build_aggregation_module()` |
+| REQ-LVP-04 | LocalTerms SHALL NOT use literal redefinition lookup (different resolution path) | No `_find_literal_redefinition` call in LocalTerm handling within `_build_aggregation_module()` |
+| REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered by later terms | `elif literal_default is not None` backfill blocks in both SumTerm and SingletonTerm handling |
+| REQ-LVP-06 | `usage_type_map` SHALL be threaded from [`HierarchyExtractionResult`](09-data-models.md) through [`build_computation_graph()`](07-graph-assembly.md) to `_build_aggregation_module()` | `pipeline_builder.py` passes `hierarchy_data.usage_type_map` to `build_computation_graph()`, which forwards it to `_build_aggregation_module()` |
 | REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_REQUIRED` | Compilability conditional in `_build_aggregation_module()` |
 
 ---
 
 ## The Solution: `_find_literal_redefinition()`
 
-**File:** `src/sysml_codegen/resolution/graph_builder.py`, line 870.
+**File:** `src/sysml_codegen/resolution/graph_builder.py`.
 
 When a SumTerm or SingletonTerm in `_build_aggregation_module()` fails to
 resolve to an upstream channel, the builder now checks for a LITERAL `:>>`
@@ -118,20 +118,20 @@ type resolution.
 
 ## Where It's Called
 
-**SumTerm fallback** (line 975) and **SingletonTerm fallback** (line 1087) in
+**SumTerm fallback** and **SingletonTerm fallback** in
 `_build_aggregation_module()`. Both follow the same pattern: after channel
 resolution fails, call `_find_literal_redefinition(part_usage, attr, ...)`.
 
 For SumTerms, `part_usage` and `attr` come directly from the term fields.
 For SingletonTerms, they're parsed from `source_path.rsplit(".", 1)`.
 
-> **C16 conformance finding (2026-02-17)**: In solar_battery, the LITERAL
-> redef fallback path is naturally exercised by **SingletonTerms** (permitting
-> costs: raw_material_cost=0.0, fabrication_cost=0.0, installation_cost=0.0),
-> not SumTerms. All SumTerms resolve via upstream channel successfully. The
-> SumTerm fallback path is valid code but requires constructed test data to
-> exercise. This is because Permitting_Interconnect is referenced as
-> SingletonTerms in Site_Infrastructure aggregations, not as SumTerms.
+> **Design note:** In practice, the LITERAL redef fallback path is naturally
+> exercised by **SingletonTerms** (e.g., permitting costs:
+> raw_material_cost=0.0, fabrication_cost=0.0, installation_cost=0.0),
+> not SumTerms. SumTerms typically resolve via upstream channel successfully.
+> The SumTerm fallback path is valid but defensive -- it fires when a
+> component is referenced as a SingletonTerm in parent aggregations rather
+> than as a SumTerm (e.g., Permitting_Interconnect in Site_Infrastructure).
 
 When a literal default is found, the module stays `FULLY_COMPILABLE` (the value
 is known, just user-overridable via JSON). When no literal is found, the entry

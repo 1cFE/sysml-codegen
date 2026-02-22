@@ -67,7 +67,7 @@ target uses the hierarchy path `"solar_battery_plant...cost_model.total_cost"`.
 These are different strings for the **same output**.
 
 The [OutputRegistry](10-output-registry.md) maps each output to a canonical
-channel name (`CanonicalChannel`) via three [typed registries](27-typed-registry-refactor.md):
+channel name (`CanonicalChannel`) via three [typed registries](10-output-registry.md):
 
 ```
 Canonical (PQN):   "SolarBatteryDesign__...cost_model__total_cost"    (CanonicalChannel, unique by construction)
@@ -142,8 +142,10 @@ sysml_codegen/
     hierarchy_resolver.py     Redefinitions, aggregation expressions, design overrides
     data_models.py            CalculationDefinitionData, RedefinitionData, etc.
 
-  generation/       Currently hosts orchestration (refactor target: orchestration/)
-    initialization.py         build_pipeline_context(), build_output_registry()
+  orchestration/    Pipeline coordination: extract, resolve, generate
+    pipeline_builder.py       build_pipeline_context(): multi-step orchestration
+    output_registry_builder.py  build_output_registry(): 4-phase registration
+    pipeline_context.py       PipelineContext dataclass
 
   analysis/         Step 3 -- Dependency backtracking and parameter group derivation
     dependency_backtracker.py DependencyBacktracker: DFS + binding resolution
@@ -159,8 +161,7 @@ sysml_codegen/
   core/             Shared utilities (OutputRegistry, qualified_names, models)
 ```
 
-Note: `orchestration/` does not yet exist. Today, orchestration lives in
-`generation/initialization.py`. See [02-orchestration.md](02-orchestration.md).
+See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 
 ## Navigation index
 
