@@ -307,18 +307,18 @@ This is largely mechanical extraction:
 
 ### Changes Required
 
-- [ ] Script or manual extraction of REQ→test file mapping
-- [ ] Write `docs/architecture/verification-matrix.md` with table grouped by REQ family
-- [ ] Columns: REQ ID | Requirement (short text) | Component | Test File | Status
+- [x] Script or manual extraction of REQ→test file mapping
+- [x] Write `docs/architecture/verification-matrix.md` with table grouped by REQ family
+- [x] Columns: REQ ID | Requirement (short text) | Component | Test File | Status
 
 ### Validation
 
 **Automated:**
-- [ ] Every REQ-* tag from `docs/architecture/reference/*.md` appears in the matrix
-- [ ] Every test file referenced in the matrix exists
+- [x] Every REQ-* tag from `docs/architecture/reference/*.md` appears in the matrix
+- [x] Every test file referenced in the matrix exists
 
 **Manual:**
-- [ ] Spot-check 10 rows: REQ text matches source doc, test file has matching test
+- [x] Spot-check 10 rows: REQ text matches source doc, test file has matching test
 
 **What We Know Works After This Phase:**
 Single-lookup traceability from any REQ-* tag to its test file.
@@ -470,9 +470,27 @@ ADR-003 (signal identifiers), ADR-004 (computed attribute pipeline integration),
 **Issues:** None
 
 ### Phase 3 Completion
-**Completed:**
+**Completed:** 2026-02-22
 **Actual Changes:**
-**Issues:**
+- Created `docs/architecture/verification-matrix.md` (502 lines)
+  - 204 unique REQ-* tags mapped across 29 REQ families
+  - 192 PASS (conformance test exists and passes)
+  - 12 UNTESTED (no dedicated conformance test)
+  - 33 conformance test files referenced
+  - Grouped by REQ family with section headers linking to source design docs
+  - Summary table, family index, untested requirements section, related documents footer
+- Extraction approach: 3-pass priority system for design doc REQ definitions (table rows > bold definitions > inline refs) to handle cross-doc references
+- UNTESTED breakdown: 8 REQ-RES-* (cross-cutting resolution overview principles verified indirectly through component tests), 1 REQ-CA-08 (design constraint, no executable test), 1 REQ-DM-08 (documentation constraint), 2 REQ-GEN-* (generation reqs tested indirectly)
+- Test-originated requirements included: REQ-BASE-01–04 (baseline conformance) and REQ-SNAP-01–07 (extraction snapshot conformance)
+
+**Validation:**
+- Every REQ-* tag from design docs appears in the matrix (193/193)
+- 11 additional REQ tags from test files (BASE, SNAP families) also included
+- All 33 referenced test files verified to exist
+- 10 spot-check rows verified: requirement text matches source doc, test file contains REQ tag
+- `test_dead_code_removal.py` is the only conformance test file not referenced (has no REQ tags)
+
+**Issues:** None
 
 ### Phase 4 Completion
 **Completed:**
