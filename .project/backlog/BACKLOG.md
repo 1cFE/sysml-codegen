@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-02-10
+**Last Updated**: 2026-02-22
 
 ---
 
@@ -17,15 +17,19 @@ Prioritized list of epics and features.
 
 ## In Progress
 
-| Epic | Priority | Status | Started | Notes |
+| Item | Priority | Status | Started | Notes |
 |------|----------|--------|---------|-------|
-| [COST-PATTERN] Costed Component Pattern Support | P1 | In Progress (4/5 items) | 2026-02-10 | Items 1-4 complete. Item 5 (E2E Validation & Documentation) remaining. |
+| generation-boundary | P1 | In Progress (BUILD phase) | 2026-02-20 | Step 7.6 — enforcing generation/ only consumes ComputationGraph. Phases 1-2-4 done. |
+| hierarchical-output | P2 | Draft (spec only) | 2026-02-22 | Convert flat JSON output to hierarchical structure reflecting SysML part hierarchy. |
+| new-pipeline-explainer | P2 | Draft (active) | 2026-02-22 | Interactive HTML explainer for refactored 7-step pipeline architecture. |
 
 ---
 
 ## P1 - High Priority
 
-*No epics -- COST-PATTERN moved to In Progress*
+| Epic | Status | Notes |
+|------|--------|-------|
+| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. See `.project/concepts/agentic-mbse-push-down-design.md`. |
 
 ---
 
@@ -45,6 +49,7 @@ Prioritized list of epics and features.
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
+| [COST-PATTERN] Costed Component Pattern Support | 2026-02-22 | ~12 days | 41 items completed: full conformance test suite (C01-C27, X01-X02), Phase 7 structural refactors, bug fixes (7, 11), docs consolidation. |
 | [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
 | [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
 
