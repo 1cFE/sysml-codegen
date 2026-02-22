@@ -31,7 +31,7 @@ SysML files
 [Step 1] Extract         -- parse .sysml into data models        --> 01, 09
 [Step 2] Build registry   -- catalog outputs for O(1) lookup      --> 10, 15
 [Step 3] Trace deps       -- DFS + CalcUsage binding resolution   --> 11, 03, 24
-[Step 4] Classify entries -- tag entry point types (ADR-001)      --> 06, 17
+[Step 4] Classify entries -- tag entry point types               --> 06, 17
 [Step 5] Build modules    -- construct PipelineModules            --> 05, 04, 13, 16
 [Step 6] Sort modules     -- topological sort + validation        --> 07
 [Step 7] Render code      -- Jinja2 templates produce output      --> 08
@@ -107,7 +107,7 @@ are resolved here; FORMULA/Aggregation bindings are resolved during module build
 
 ### Step 4: Classify entry points ([detail](06-entry-point-classifier.md))
 
-Each entry-point input gets one of [three ADR-001 types](06-entry-point-classifier.md):
+Each entry-point input gets one of [three entry point types](06-entry-point-classifier.md):
 `DESIGN_ATTRIBUTE`, `LIBRARY_DEFAULT`, or `USAGE_LITERAL`. This drives JSON file
 placement and default values. Entry points are grouped into
 [parameter groups](17-parameter-group-deriver.md). Classification runs BEFORE module
@@ -174,7 +174,7 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [03-resolution-overview](03-resolution-overview.md) | Why input resolution is hard (270 combinations) | `BindingResolution` |
 | [04-input-resolver](04-input-resolver.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
 | [05-module-factory](05-module-factory.md) | 3 module types as pure data transformers | `PipelineModule` |
-| [06-entry-point-classifier](06-entry-point-classifier.md) | ADR-001 classification: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL | `EntryPoint`, `EntryPointType` |
+| [06-entry-point-classifier](06-entry-point-classifier.md) | Entry point classification: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL | `EntryPoint`, `EntryPointType` |
 | [07-graph-assembly](07-graph-assembly.md) | Topological sort, validation, ComputationGraph assembly | `ComputationGraph` |
 | [08-generation](08-generation.md) | Jinja2 rendering: Python, YAML, JSON | Templates |
 | [09-data-models](09-data-models.md) | All data models and containment hierarchy | All |
@@ -188,7 +188,7 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) | Template calc usage expansion and virtual binding construction |
 | [13-aggregation-scoping](13-aggregation-scoping.md) | How `sum()` expressions are scoped to design instance paths |
 | [14-expression-compiler](14-expression-compiler.md) | AST-to-Python compilation for calc def outputs |
-| [15-naming-conventions](15-naming-conventions.md) | EQN, PQN, channel names, registry key formats (ADR-003/008) |
+| [15-naming-conventions](15-naming-conventions.md) | EQN, PQN, channel names, registry key formats |
 | [16-computed-attributes](16-computed-attributes.md) | FORMULA and EXPOSE_PURE computed attribute classification |
 | [17-parameter-group-deriver](17-parameter-group-deriver.md) | Grouping entry points into JSON input files |
 | [18-literal-value-propagation](18-literal-value-propagation.md) | Carrying `:>>` literal values into JSON templates |

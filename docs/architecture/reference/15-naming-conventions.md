@@ -1,7 +1,7 @@
 # 15 - Naming Conventions
 
 Definitive reference for every identifier format in sysml-codegen.
-Authoritative sources: ADR-003, ADR-008, `core/qualified_names.py`, `core/identifier_types.py`.
+Authoritative sources: `core/qualified_names.py`, `core/identifier_types.py`.
 
 ## Requirements
 
@@ -47,7 +47,7 @@ strip leading/trailing `_`). Segments are joined with `__`.
 
 Key insight: when a calc input binds to a design attribute at a *different* scope,
 the PQN is the design attribute's EQN, not `{usage_eqn}__{param_name}`. The
-`binding_resolutions` mapping (ADR-003 Phase 7) is the single source of truth.
+`binding_resolutions` mapping is the single source of truth.
 See [input resolver](04-input-resolver.md) for how bindings determine PQN selection.
 **Type wrapper**: `PQN` ([09-data-models](09-data-models.md#name-type-wrappers))
 

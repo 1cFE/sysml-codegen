@@ -266,17 +266,17 @@ Frame as **prerequisites** — what the SysML models MUST look like for the pipe
 
 ### Changes Required
 
-- [ ] Read all 8 ADR files fully to identify unique content
-- [ ] Write `docs/architecture/modeling-assumptions.md` synthesizing the above
-- [ ] Verify all unique ADR content is captured (alternatives analysis, context sections with novel info)
-- [ ] Delete 8 files: `docs/architecture/ADR-001-input-parameter-definition.md` through `ADR-008-output-registry.md`
-- [ ] Check no remaining files in `docs/architecture/` reference ADR files by name
+- [x] Read all 8 ADR files fully to identify unique content
+- [x] Write `docs/architecture/modeling-assumptions.md` synthesizing the above
+- [x] Verify all unique ADR content is captured (alternatives analysis, context sections with novel info)
+- [x] Delete 8 files: `docs/architecture/ADR-001-input-parameter-definition.md` through `ADR-008-output-registry.md`
+- [x] Check no remaining files in `docs/architecture/` reference ADR files by name
 
 ### Validation
 
 **Automated:**
-- [ ] `ls docs/architecture/ADR-*` returns empty
-- [ ] `grep -r 'ADR-00' docs/architecture/` — no broken references (or all are in historical context within modeling-assumptions.md)
+- [x] `ls docs/architecture/ADR-*` returns empty
+- [x] `grep -r 'ADR-00' docs/architecture/` — no broken references
 
 **Manual:**
 - [ ] `modeling-assumptions.md` reads standalone as a modeling guide
@@ -448,9 +448,26 @@ All acceptance criteria from spec are met. `docs/architecture/` is the single au
 **Issues:** None. All validation checks pass: zero matches for dates, .project/ paths, conformance labels, Deferred Issue IDs, Coverage notes, initialization.py refs.
 
 ### Phase 2 Completion
-**Completed:**
+**Completed:** 2026-02-22
 **Actual Changes:**
-**Issues:**
+- Created `docs/architecture/modeling-assumptions.md` (7 sections + validation rules + related docs)
+  - Section 1: Library/Design Separation (from ADR-001, ADR-002)
+  - Section 2: Input Parameter Classification (3 types, value types, units, grouping — from ADR-001)
+  - Section 3: Design Attribute Expression Rules (taxonomy, FORMULA, EXPOSE, operators — from ADR-002)
+  - Section 4: Aggregation via Redefinition (from ADR-002 hierarchy amendment, ADR-007)
+  - Section 5: Template Instantiation Convention (from ADR-006)
+  - Section 6: Uniform-Array Assumption for Aggregation (from ADR-007)
+  - Section 7: Compute Once, Look Up Thereafter (from ADR-003)
+- Deleted 8 ADR files via `git rm`
+- Updated 7 ADR references across 3 reference docs:
+  - `reference/15-naming-conventions.md`: Removed "ADR-003, ADR-008" from authoritative sources line, removed "ADR-003 Phase 7" from binding_resolutions description
+  - `reference/05-module-factory.md`: Removed "ADR-003 VIOLATION" from error message description
+  - `reference/00-pipeline-overview.md`: Replaced 4 ADR references with direct terminology (e.g., "ADR-001 types" → "entry point types")
+
+**Content disposition for ADR-003/004/005/008:**
+ADR-003 (signal identifiers), ADR-004 (computed attribute pipeline integration), ADR-005 (computed attribute classification), and ADR-008 (output registry) contain pipeline architecture details already documented in the reference docs (docs 10, 14, 15, 16, 27). No unique modeling assumptions needed capture — these are implementation decisions, not SysML model prerequisites.
+
+**Issues:** None
 
 ### Phase 3 Completion
 **Completed:**
