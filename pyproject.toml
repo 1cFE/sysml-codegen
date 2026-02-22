@@ -44,6 +44,10 @@ packages = ["src/sysml_codegen"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+    "req(id): map test to requirement ID (e.g., REQ-SNAP-01)",
+    "baseline: pipeline baseline comparison test",
+]
 
 [tool.mypy]
 python_version = "3.12"

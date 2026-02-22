@@ -1,0 +1,36 @@
+"""Auto-generated implementation for {{ calc_name }}.
+
+AUTO_IMPLEMENTED = True
+
+SysML Source: {{ sysml_source }}
+
+SysML Expressions:
+{% for expr in sysml_expressions %}
+    {{ expr }}
+{% endfor %}
+"""
+
+AUTO_IMPLEMENTED = True
+
+from {{ package_name }}.modules.{{ module_import_path }} import {{ input_class_name }}
+
+
+def {{ function_name }}(inputs: {{ input_class_name }}) -> {{ return_type }}:
+    """{{ docstring }}
+    """
+{% for step in execution_steps %}
+    {{ step.name }} = {{ step.expression }}
+{% endfor %}
+{% if output_count == 1 %}
+    return {{ single_output_expression }}
+{% else %}
+    return (
+{% for output in output_expressions %}
+{% if output.expression == output.name %}
+        {{ output.expression }},
+{% else %}
+        {{ output.expression }},  # {{ output.name }}
+{% endif %}
+{% endfor %}
+    )
+{% endif %}

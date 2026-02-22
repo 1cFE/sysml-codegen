@@ -11,17 +11,41 @@ KEY DESIGN DECISIONS:
 """
 
 import logging
+import re
+from collections import deque
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 # UPDATED: Import from sysml_codegen package structure
-from sysml_codegen.analysis.dependency_backtracker import BacktrackingResult
+from sysml_codegen.analysis.dependency_backtracker import (
+    BacktrackingResult,
+    CircularDependencyError,
+)
 from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
 )
-from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.core.identifier_types import ScopedKey, derive_module_type
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
-from sysml_codegen.core.qualified_names import get_channel_name, get_module_name
+from sysml_codegen.core.qualified_names import (
+    get_channel_name,
+    get_module_name,
+    sanitize_name,
+    sysml_to_python_qualified_name,
+)
+from sysml_codegen.extraction.data_models import (
+    ComputedAttributeClassification,
+    ComputedAttributeData,
+    RedefinitionData,
+    RedefinitionType,
+    ScopedAggregationData,
+)
+from sysml_codegen.core.output_registry import OutputRegistry
+from sysml_codegen.extraction.expression_compiler import (
+    CalcDefCompilationResult,
+    Compilability,
+)
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -46,11 +70,94 @@ class MissingCalcDefError(Exception):
     pass
 
 
+def _build_auto_impl_context_for_calcusage(
+    compilation_result: CalcDefCompilationResult,
+    output_attr_names: list[str],
+) -> dict:
+    """Build auto-implementation context dict for a FULLY_COMPILABLE CalcUsage module.
+
+    Mirrors the logic in generation/stencils.py:_build_auto_impl_context() but
+    takes output_attr_names directly instead of a CalculationDefinitionData.
+
+    Args:
+        compilation_result: Compilation result with per-output expressions
+        output_attr_names: Ordered output attribute names from calc_def
+    """
+    output_attr_set = set(output_attr_names)
+    result_map = {r.output_name: r for r in compilation_result.output_results}
+
+    has_output_crossrefs = any(
+        set(result_map[name].intermediate_refs) & output_attr_set
+        for name in output_attr_names
+        if name in result_map and result_map[name].intermediate_refs
+    )
+
+    execution_steps = []
+    output_expressions = []
+
+    if has_output_crossrefs:
+        for name in compilation_result.execution_order:
+            r = result_map.get(name)
+            if r and r.python_expression:
+                execution_steps.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+        for name in output_attr_names:
+            if name in result_map:
+                output_expressions.append({
+                    "name": name,
+                    "expression": name,
+                })
+    else:
+        for name in compilation_result.execution_order:
+            r = result_map.get(name)
+            if r and r.python_expression and r.is_undeclared_intermediate:
+                execution_steps.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+        for name in output_attr_names:
+            r = result_map.get(name)
+            if r and r.python_expression:
+                output_expressions.append({
+                    "name": r.output_name,
+                    "expression": r.python_expression,
+                })
+
+    return {
+        "execution_steps": execution_steps,
+        "output_expressions": output_expressions,
+        "output_count": len(output_expressions),
+        "single_output_expression": (
+            output_expressions[0]["expression"]
+            if len(output_expressions) == 1
+            else None
+        ),
+    }
+
+
+def _build_simple_auto_impl_context(compiled_expression: str, output_name: str) -> dict:
+    """Build auto-impl context for single-output FORMULA/aggregation modules."""
+    return {
+        "execution_steps": [],
+        "output_expressions": [{"name": output_name, "expression": compiled_expression}],
+        "output_count": 1,
+        "single_output_expression": compiled_expression,
+    }
+
+
 def build_computation_graph(
     result: BacktrackingResult,
     calc_defs: list,
     design_attrs: dict[Path, list[DesignAttributeData]],
     group_deriver: ParameterGroupDeriver,
+    output_registry: OutputRegistry,
+    compilation_results: dict | None = None,
+    computed_attributes: list[ComputedAttributeData] | None = None,
+    aggregation_data: list[ScopedAggregationData] | None = None,
+    hierarchy_redefinitions: list[RedefinitionData] | None = None,
+    usage_type_map: dict[tuple[str, str], str] | None = None,
 ) -> ComputationGraph:
     """Build the complete computation graph from backtracking result.
 
@@ -62,6 +169,19 @@ def build_computation_graph(
         calc_defs: All calculation definitions
         design_attrs: Design attributes by file
         group_deriver: Existing ParameterGroupDeriver for entry point grouping
+        output_registry: OutputRegistry for channel resolution and validation
+        compilation_results: Expression compilation results keyed by calc_def.name.
+            If provided, sets each module's compilability field.
+        computed_attributes: Computed attributes from Step 4.5. FORMULA+FULLY_COMPILABLE
+            attrs produce synthetic PipelineModule objects alongside CalcUsage modules.
+        aggregation_data: Scoped aggregation expressions from Step 4.7.
+            Each produces a synthetic aggregation PipelineModule.
+        hierarchy_redefinitions: PartDef-level :>> redefinitions for CHAIN
+            resolution during aggregation input channel wiring.
+        usage_type_map: Maps (owning_part_def_qn, usage_name) → type_part_def_qn.
+            Used to resolve usage names to their type PartDef QNs for LITERAL
+            redefinition lookup (e.g., ("Lib__Site_Infra", "permitting") →
+            "Lib__Permitting_Interconnect").
 
     Returns:
         ComputationGraph ready for YAML and JSON generation
@@ -69,12 +189,15 @@ def build_computation_graph(
     # Step 1: Build calc def lookup
     calc_def_map = {cd.name: cd for cd in calc_defs}
 
-    # Step 2: Build output channel catalog
-    # ADR-003: Module names use full EQN (guaranteed unique), no collision check needed
-    # Uses backtracker's already-resolved bindings, just maps to channel names
-    output_catalog = _build_output_catalog(result.required_usages, calc_def_map)
+    # Step 3: Build attribute resolution map (for FORMULA module input wiring)
+    calc_usage_names = {u.instance_name for u in result.required_usages}
+    attr_resolution_map: dict[str, dict[str, AttributeResolution]] = {}
+    if computed_attributes:
+        attr_resolution_map = _build_attribute_resolution_map(
+            computed_attributes, design_attrs, output_registry, calc_usage_names
+        )
 
-    # Step 3: Classify entry points with full context
+    # Step 4: Classify entry points with full context
     entry_points = _classify_entry_points(
         result.entry_points,
         result.entry_point_sources,
@@ -84,7 +207,7 @@ def build_computation_graph(
         group_deriver,
     )
 
-    # Step 4: Group entry points using EXISTING ParameterGroupDeriver
+    # Step 5: Group entry points using EXISTING ParameterGroupDeriver
     # This reuses the deriver's sophisticated grouping logic
     param_groups = _group_entry_points_via_deriver(
         entry_points=entry_points,
@@ -93,7 +216,7 @@ def build_computation_graph(
         calc_defs=calc_defs,
     )
 
-    # Step 5: Build pipeline modules from required_usages (already sorted!)
+    # Step 6: Build CalcUsage pipeline modules from required_usages
     modules = []
     for idx, usage in enumerate(result.required_usages):
         calc_def = calc_def_map.get(usage.calc_def_name)
@@ -103,18 +226,136 @@ def build_computation_graph(
                 f"which was not found in calc_defs. This indicates a model inconsistency."
             )
 
-        module = _build_pipeline_module(
+        module, new_eps = _build_pipeline_module(
             usage=usage,
             calc_def=calc_def,
-            output_catalog=output_catalog,
             entry_points=entry_points,
-            param_groups=param_groups,
             execution_order=idx,
             binding_resolutions=result.binding_resolutions,
         )
+        entry_points.update(new_eps)
+
+        # Set compilability and auto_impl_context from compilation results
+        if compilation_results and usage.calc_def_name in compilation_results:
+            cr = compilation_results[usage.calc_def_name]
+            module.compilability = cr.overall_compilability
+            if cr.overall_compilability == Compilability.FULLY_COMPILABLE:
+                output_attr_names = [attr.name for attr in calc_def.output_attributes]
+                module.auto_impl_context = _build_auto_impl_context_for_calcusage(
+                    cr, output_attr_names,
+                )
+
         modules.append(module)
 
-    # Step 6: Early validation - verify all channel references resolve
+    # Step 6.5: Build computed attribute modules
+    if computed_attributes:
+        for ca in computed_attributes:
+            if (
+                ca.classification == ComputedAttributeClassification.FORMULA
+                and ca.compilability == Compilability.FULLY_COMPILABLE
+            ):
+                module, new_eps = _build_computed_attr_module(
+                    ca, attr_resolution_map, entry_points,
+                    design_attrs, group_deriver,
+                )
+                entry_points.update(new_eps)
+                modules.append(module)
+
+    # Step 6.6b: Build EXPOSE_PURE alias map for aggregation LocalTerm resolution.
+    # Maps (owning_part_qn, python_name) -> expression_text (e.g., "allocation_model.total_allocation").
+    # Used by _build_aggregation_module() to wire LocalTerms that are computed attribute aliases.
+    # NOTE: ComputedAttributeData.owning_part_qualified_name uses "::" separator with raw names
+    # (e.g., "SolarBatteryLibrary::'Solar Array'"), while AggregationExpressionData.owning_part_qn
+    # uses "__" separator with sanitized names (e.g., "SolarBatteryLibrary__Solar_Array").
+    # We normalize by splitting on "::", sanitizing each segment, and joining with "__".
+    expose_aliases: dict[tuple[str, str], str] = {}
+    for ca in (computed_attributes or []):
+        if ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
+            segments = ca.owning_part_qualified_name.split("::")
+            normalized_qn = "__".join(sanitize_name(seg) for seg in segments)
+            expose_aliases[(normalized_qn, ca.python_name)] = ca.expression_text
+
+    # Step 6.7: Build aggregation modules
+    for agg in (aggregation_data or []):
+        agg_module, new_eps = _build_aggregation_module(
+            agg, hierarchy_redefinitions or [], output_registry,
+            entry_points, group_deriver, expose_aliases,
+            usage_type_map or {},
+        )
+        entry_points.update(new_eps)
+        modules.append(agg_module)
+
+    # Step 6.6: Rebuild param_groups with ALL entry points
+    # FORMULA modules (Step 6.5) and aggregation modules (Step 6.7) may have
+    # added new entry points to the entry_points dict. Rebuild to include them.
+    # param_groups is NOT used during module building (Steps 6 and 6.5 use
+    # entry_points dict and group_deriver.classify() directly), so this is safe.
+    all_ep_names = set(entry_points.keys())
+    raw_groups = group_deriver.derive_groups()
+    for group in raw_groups:
+        group.parameters = [
+            p for p in group.parameters
+            if p.name in all_ep_names
+        ]
+    filtered_groups = [g for g in raw_groups if g.parameters]
+    param_groups = _convert_derived_groups(filtered_groups, entry_points)
+
+    # Step 6.8: Collect orphan entry points not covered by any param group
+    covered_ep_names: set[str] = set()
+    for group in param_groups:
+        for p in group.parameters:
+            covered_ep_names.add(p.qualified_name)
+
+    orphan_eps = {
+        qn: ep for qn, ep in entry_points.items()
+        if qn not in covered_ep_names
+    }
+
+    if orphan_eps:
+        # Build ep_qn -> python_type lookup from ModuleInput sources
+        ep_type_lookup: dict[str, str] = {}
+        for m in modules:
+            for inp in m.inputs:
+                if inp.source.source_type == "entry_point" and inp.source.qualified_name:
+                    ep_type_lookup[inp.source.qualified_name] = inp.python_type
+
+        orphan_params = []
+        for qn, ep in orphan_eps.items():
+            orphan_params.append(EntryPoint(
+                qualified_name=qn,
+                simple_name=ep.simple_name,
+                entry_type=ep.entry_type,
+                default_value=ep.default_value,
+                python_type=ep_type_lookup.get(qn, "float"),
+            ))
+        if orphan_params:
+            param_groups.append(ParameterGroup(
+                name="system_design",
+                class_name="SystemDesign",
+                source_file=Path("hierarchy"),
+                parameters=orphan_params,
+            ))
+
+    # Step 6.9: Propagate param_group to all entry_point InputSources.
+    # After orphan handling, every EP belongs to some ParameterGroup.
+    # Walk module inputs and fill in any InputSource with param_group=None.
+    qn_to_group: dict[str, str] = {}
+    for group in param_groups:
+        for param in group.parameters:
+            qn_to_group[param.qualified_name] = group.name
+    for m in modules:
+        for inp in m.inputs:
+            if (
+                inp.source.source_type == "entry_point"
+                and inp.source.param_group is None
+                and inp.source.qualified_name in qn_to_group
+            ):
+                inp.source.param_group = qn_to_group[inp.source.qualified_name]
+
+    # Step 7: Unified topological sort across ALL modules
+    modules = _unified_topological_sort(modules)
+
+    # Step 8: Early validation - verify all channel references resolve
     # This catches transitive binding resolution bugs before TEAx validation
     _validate_channel_references(modules)
 
@@ -124,56 +365,6 @@ def build_computation_graph(
         execution_order=[m.name for m in modules],
     )
 
-
-def _build_output_catalog(
-    usages: list[CalcUsageData],
-    calc_def_map: dict,
-) -> dict[str, tuple[str, str, str]]:
-    """Build catalog mapping binding sources to (module_name, channel_name, field_name).
-
-    Key insight: The backtracker has ALREADY resolved which usages are in
-    the required set and sorted them. We just need to build the channel
-    name mapping for YAML generation.
-
-    Args:
-        usages: Required usages (already sorted by backtracker)
-        calc_def_map: Calc def lookup by name
-
-    Returns:
-        Dict mapping source patterns to (module_name, channel_name, field_name):
-        - "alpha_neutron_split.p_neutron" -> ("AlphaNeutronSplitModule", "..._p_neutron", "p_neutron")
-        - For single-output modules, field_name is "root"
-        - Qualified pattern also supported for disambiguation
-    """
-    catalog: dict[str, tuple[str, str, str]] = {}
-
-    for usage in usages:
-        calc_def = calc_def_map.get(usage.calc_def_name)
-        if not calc_def:
-            raise MissingCalcDefError(
-                f"Usage '{usage.instance_name}' references calc def '{usage.calc_def_name}' "
-                f"which was not found in calc_def_map. This indicates a model inconsistency."
-            )
-
-        # ADR-003: Derive namespaced module_type from calc def qualified_name
-        module_type = derive_module_type(calc_def.qualified_name)
-
-        # Determine if this is a single-output or multi-output module
-        is_multi_output = len(calc_def.output_attributes) > 1
-
-        for output_attr in calc_def.output_attributes:
-            # ADR-003: Channel name is PQN format (usage EQN + output name)
-            channel_name = get_channel_name(usage.qualified_name, output_attr.name)
-
-            # Field name: "root" for single-output, attr.name for multi-output
-            field_name = output_attr.name if is_multi_output else "root"
-
-            # Key format matches binding.source_path from usage_extractor
-            # (e.g., "alpha_neutron_split.p_neutron")
-            key = f"{usage.instance_name}.{output_attr.name}"
-            catalog[key] = (module_type, channel_name, field_name)
-
-    return catalog
 
 
 def _classify_entry_points(
@@ -313,7 +504,24 @@ def _group_entry_points_via_deriver(
         calc_defs,
     )
 
-    # Convert DerivedParameterGroup -> ParameterGroup (Pydantic)
+    return _convert_derived_groups(derived_groups, entry_points)
+
+
+def _convert_derived_groups(
+    derived_groups: list,
+    entry_points: dict[str, EntryPoint],
+) -> list[ParameterGroup]:
+    """Convert DerivedParameterGroup list to ParameterGroup Pydantic models.
+
+    Shared by _group_entry_points_via_deriver (Step 5) and Step 6.6 rebuild.
+
+    Args:
+        derived_groups: DerivedParameterGroup list (already filtered)
+        entry_points: Classified entry points by qualified name
+
+    Returns:
+        List of ParameterGroup Pydantic models
+    """
     result = []
     for dg in derived_groups:
         # Map parameters to EntryPoint objects
@@ -420,15 +628,817 @@ def _validate_channel_references(modules: list[PipelineModule]) -> None:
                     )
 
 
+class AttributeResolutionKind(str, Enum):
+    """Classification of how an attribute reference should be wired."""
+
+    FORMULA = "formula"
+    EXPOSE_ALIAS = "expose_alias"
+    LITERAL = "literal"
+
+
+@dataclass
+class AttributeResolution:
+    """How an attribute reference in a FORMULA expression should be wired."""
+
+    kind: AttributeResolutionKind
+    channel_name: str | None = None  # For formula and expose_alias
+
+
+
+def _resolve_expose_pure(
+    ca: ComputedAttributeData,
+    calc_usage_names: set[str],
+    output_registry: OutputRegistry,
+) -> str | None:
+    """Resolve an EXPOSE_PURE attribute to its upstream calc output channel.
+
+    An EXPOSE_PURE attribute like ``p_alpha_out = alpha_split.p_alpha`` has
+    references containing both the calc usage instance name and the calc output
+    attribute name. This function separates them and looks up the output registry.
+
+    Returns:
+        channel_name if resolved, None if the registry key is not found.
+    """
+    instance_name: str | None = None
+    output_attr_name: str | None = None
+
+    for ref in ca.references:
+        if ref.name in calc_usage_names:
+            instance_name = ref.name
+        else:
+            output_attr_name = ref.name
+
+    if instance_name is None or output_attr_name is None:
+        logger.warning(
+            "EXPOSE_PURE %s: could not identify instance/output from refs %s",
+            ca.name, [r.name for r in ca.references],
+        )
+        return None
+
+    catalog_key = f"{instance_name}.{output_attr_name}"
+    channel_name = output_registry.scoped_lookup(ScopedKey(catalog_key))
+    if channel_name is None:
+        channel_name = output_registry.alias_lookup(ScopedKey(catalog_key))
+    if channel_name is None:
+        logger.warning(
+            "EXPOSE_PURE %s: key '%s' not found in output registry",
+            ca.name, catalog_key,
+        )
+        return None
+
+    return channel_name
+
+
+def _build_attribute_resolution_map(
+    computed_attrs: list[ComputedAttributeData],
+    design_attrs: dict[Path, list[DesignAttributeData]],
+    output_registry: OutputRegistry,
+    calc_usage_names: set[str],
+) -> dict[str, dict[str, AttributeResolution]]:
+    """Build per-part map: owning_part_name -> {attr_name -> AttributeResolution}.
+
+    This map tells the graph builder how to wire each FORMULA module input.
+
+    Resolution logic per attribute:
+    - FORMULA computed attr -> kind="formula", channel from synthetic module
+    - EXPOSE_PURE computed attr -> kind="expose_alias", channel from upstream calc
+    - Not found -> kind="literal" (conservative: becomes entry point)
+
+    Args:
+        computed_attrs: All computed attributes from Step 4.5
+        design_attrs: Design attributes indexed by file
+        output_registry: OutputRegistry for channel resolution
+        calc_usage_names: CalcUsage instance names for EXPOSE_PURE resolution
+    """
+    result: dict[str, dict[str, AttributeResolution]] = {}
+
+    for ca in computed_attrs:
+        part_name = ca.owning_part_name
+        if part_name not in result:
+            result[part_name] = {}
+
+        if (
+            ca.classification == ComputedAttributeClassification.FORMULA
+            and ca.compilability == Compilability.FULLY_COMPILABLE
+        ):
+            # FORMULA -> wire to synthetic module output channel
+            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+            module_eqn = sysml_to_python_qualified_name(sysml_qn)
+            channel_name = get_channel_name(module_eqn, ca.python_name)
+            result[part_name][ca.python_name] = AttributeResolution(
+                kind=AttributeResolutionKind.FORMULA, channel_name=channel_name,
+            )
+
+        elif ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
+            # EXPOSE_PURE -> resolve through alias to upstream calc output
+            channel = _resolve_expose_pure(ca, calc_usage_names, output_registry)
+            if channel is not None:
+                result[part_name][ca.python_name] = AttributeResolution(
+                    kind=AttributeResolutionKind.EXPOSE_ALIAS, channel_name=channel,
+                )
+            else:
+                # Fallback: treat as literal (entry point)
+                result[part_name][ca.python_name] = AttributeResolution(
+                    kind=AttributeResolutionKind.LITERAL,
+                )
+
+    return result
+
+
+def _build_computed_attr_module(
+    ca: ComputedAttributeData,
+    resolution_map: dict[str, dict[str, AttributeResolution]],
+    entry_points: dict[str, EntryPoint],
+    design_attrs: dict[Path, list[DesignAttributeData]],
+    group_deriver: ParameterGroupDeriver,
+) -> tuple[PipelineModule, dict[str, EntryPoint]]:
+    """Build a PipelineModule from a FORMULA ComputedAttributeData.
+
+    Args:
+        ca: The FORMULA computed attribute (must be FULLY_COMPILABLE)
+        resolution_map: Per-part attribute resolution map
+        entry_points: Read-only dict of classified entry points
+        design_attrs: Design attributes for default value lookup
+        group_deriver: For classifying new entry points
+
+    Returns:
+        (PipelineModule, dict of new entry points created by this factory)
+    """
+    new_entry_points: dict[str, EntryPoint] = {}
+    # Naming per ADR-003
+    sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+    module_eqn = sysml_to_python_qualified_name(sysml_qn)
+    module_name = get_module_name(module_eqn)
+    module_type = derive_module_type(sysml_qn)
+
+    # Extract input names from compiled expression, deduplicate preserving order
+    # compiled_expression is guaranteed non-None for FULLY_COMPILABLE FORMULA attrs
+    if ca.compiled_expression is None:
+        raise ValueError(
+            f"FORMULA attr {ca.name} has no compiled_expression "
+            f"(compilability={ca.compilability})"
+        )
+    raw_inputs = re.findall(r"inputs\.(\w+)", ca.compiled_expression)
+    seen: set[str] = set()
+    input_names: list[str] = []
+    for name in raw_inputs:
+        if name not in seen:
+            seen.add(name)
+            input_names.append(name)
+
+    # Build per-part resolution lookup
+    part_resolutions = resolution_map.get(ca.owning_part_name, {})
+
+    # Build design attr index for default value lookup
+    design_attr_by_qname: dict[str, DesignAttributeData] = {}
+    for attrs in design_attrs.values():
+        for attr in attrs:
+            if attr.qualified_name:
+                design_attr_by_qname[attr.qualified_name] = attr
+
+    part_eqn = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+
+    # Build inputs
+    inputs: list[ModuleInput] = []
+    for input_name in input_names:
+        attr_res = part_resolutions.get(input_name)
+
+        _wirable = (AttributeResolutionKind.FORMULA, AttributeResolutionKind.EXPOSE_ALIAS)
+        if attr_res and attr_res.kind in _wirable and attr_res.channel_name:
+            # Wire to upstream module output
+            source = InputSource(
+                source_type="module_output",
+                producer_channel=attr_res.channel_name,
+            )
+        else:
+            # Create/reuse entry point (literal or unresolved)
+            ep_qname = f"{part_eqn}__{input_name}"
+
+            if ep_qname not in entry_points and ep_qname not in new_entry_points:
+                # Look up default value from design attrs
+                default_value: float | None = None
+                da = design_attr_by_qname.get(ep_qname)
+                if da and da.default_value:
+                    try:
+                        default_value = float(da.default_value)
+                    except (ValueError, TypeError):
+                        pass
+
+                param_group = group_deriver.classify(ep_qname) if group_deriver else None
+
+                new_entry_points[ep_qname] = EntryPoint(
+                    qualified_name=ep_qname,
+                    simple_name=input_name,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=default_value,
+                    param_group=param_group,
+                )
+
+            ep = new_entry_points.get(ep_qname) or entry_points[ep_qname]
+            source = InputSource(
+                source_type="entry_point",
+                param_group=ep.param_group,
+                qualified_name=ep_qname,
+            )
+
+        inputs.append(
+            ModuleInput(
+                param_name=input_name,
+                python_type="float",
+                source=source,
+            )
+        )
+
+    # Build single output
+    output = ModuleOutput(
+        field_name="root",
+        python_type="float",
+        channel_name=get_channel_name(module_eqn, ca.python_name),
+        description=getattr(ca, "description", None),
+    )
+
+    return PipelineModule(
+        name=module_name,
+        module_type=module_type,
+        inputs=inputs,
+        outputs=[output],
+        execution_order=0,  # Assigned during unified toposort
+        compilability=Compilability.FULLY_COMPILABLE,
+        compiled_expression=ca.compiled_expression,
+        is_computed_attribute=True,
+        auto_impl_context=_build_simple_auto_impl_context(
+            ca.compiled_expression, ca.python_name,
+        ),
+        calc_def_name=ca.name,
+        calc_def_qualified_name=ca.owning_part_qualified_name,
+        doc_comment=getattr(ca, "description", None),
+        calc_expressions=[ca.expression_text] if ca.expression_text else None,
+        source_file=str(ca.source_file),
+        source_line=ca.source_line,
+    ), new_entry_points
+
+
+
+def _resolve_aggregation_input_channel(
+    symbolic_ref: str,
+    instance_path: str,
+    redefinitions: list[RedefinitionData],
+    output_registry: OutputRegistry,
+    _visited: set[str] | None = None,
+) -> str | None:
+    """Resolve a symbolic aggregation input to a pipeline channel name.
+
+    Resolution chain:
+    1. Parse "part_usage.attribute" from symbolic ref
+    2. Find CHAIN :>> redefinition on child PartDef for that attribute
+    3. Follow chain to CalcUsage output -> build pipeline channel name
+    4. Fall back to output registry lookup
+
+    Cycle detection: tracks visited (part_usage, attr) pairs. If a CHAIN
+    redefinition leads back to an already-visited pair, logs a warning and
+    returns None (caller should set MANUAL_REQUIRED compilability).
+
+    Args:
+        symbolic_ref: Dotted symbolic reference (e.g., "pv_module.capital_cost")
+        instance_path: Design scope (e.g., "Design__plant__solar_array")
+        redefinitions: PartDef-level :>> redefinitions
+        output_registry: OutputRegistry for channel verification and lookup
+        _visited: Internal cycle guard (set of visited keys)
+
+    Returns:
+        Pipeline channel name if resolved, None otherwise
+    """
+    if _visited is None:
+        _visited = set()
+
+    if "." not in symbolic_ref:
+        return None  # LocalTerm -- handled as entry point, not channel
+
+    part_usage, attr = symbolic_ref.rsplit(".", 1)
+
+    # Cycle guard
+    visit_key = f"{part_usage}.{attr}"
+    if visit_key in _visited:
+        logger.warning(
+            "Circular CHAIN detected: %s already visited in %s", visit_key, _visited
+        )
+        return None
+    _visited.add(visit_key)
+
+    # Capture canonical channels once for O(1) membership checks
+    canonical_channels = output_registry.canonical_channels
+
+    # Find CHAIN redefinition for this attribute on the child PartDef
+    chain_redef = None
+    for redef in redefinitions:
+        if redef.redefinition_type == RedefinitionType.CHAIN and redef.attribute_name == attr:
+            # Extract part name from QN (last segment after __)
+            redef_part_name = redef.owning_part_qn.split("__")[-1]
+            if sanitize_name(redef_part_name).lower() == part_usage.lower():
+                chain_redef = redef
+                break
+
+    if chain_redef and chain_redef.source_path:
+        # Parse chain source "calc_usage.output"
+        if "." in chain_redef.source_path:
+            calc_usage, output = chain_redef.source_path.rsplit(".", 1)
+            channel = get_channel_name(
+                f"{instance_path}__{part_usage}__{calc_usage}", output
+            )
+            # Verify channel exists in registry
+            if channel in canonical_channels:
+                return channel
+        # If channel not found or source has no dot, recurse with cycle guard
+        return _resolve_aggregation_input_channel(
+            chain_redef.source_path, instance_path, redefinitions,
+            output_registry, _visited,
+        )
+
+    # Fall back to output registry lookup with scoped keys.
+    # The instance_path provides full hierarchy scope; stripping the design
+    # prefix (segments[0]) produces the dotted format that Phase 2 CHAIN
+    # aliases and Phase 1b aggregation keys are registered under.
+    instance_parts = instance_path.split("__")
+    if len(instance_parts) > 1:
+        dotted_scope = ".".join(instance_parts[1:])
+        scoped_key = f"{dotted_scope}.{part_usage}.{attr}"
+        channel = output_registry.scoped_lookup(ScopedKey(scoped_key))
+        if channel is None:
+            channel = output_registry.alias_lookup(ScopedKey(scoped_key))
+        if channel is not None:
+            logger.debug(
+                "Aggregation input '%s.%s' resolved via scoped registry key '%s'",
+                part_usage, attr, scoped_key,
+            )
+            return channel
+
+    # Unscoped fallback (e.g., "solar_array.capital_cost")
+    catalog_key = f"{part_usage}.{attr}"
+    channel = output_registry.scoped_lookup(ScopedKey(catalog_key))
+    if channel is None:
+        channel = output_registry.alias_lookup(ScopedKey(catalog_key))
+    if channel is not None:
+        logger.debug(
+            "Aggregation input '%s.%s' resolved via unscoped key '%s'",
+            part_usage, attr, catalog_key,
+        )
+        return channel
+
+    logger.debug(
+        "Aggregation input '%s.%s' unresolved (tried scoped '%s', unscoped '%s')",
+        part_usage, attr,
+        f"{'.'.join(instance_parts[1:])}.{part_usage}.{attr}" if len(instance_parts) > 1 else "N/A",
+        catalog_key,
+    )
+    return None
+
+
+def _find_literal_redefinition(
+    part_usage: str,
+    attr: str,
+    redefinitions: list[RedefinitionData],
+    usage_type_map: dict[tuple[str, str], str] | None = None,
+    owning_part_qn: str | None = None,
+) -> float | None:
+    """Find a LITERAL :>> redefinition value for a part usage attribute.
+
+    Mirrors the CHAIN matching pattern in _resolve_aggregation_input_channel()
+    but for RedefinitionType.LITERAL. Used to propagate default values for
+    entry points when a PartDef sets e.g. `:>> raw_material_cost = 0.0`.
+
+    Matching strategy:
+    1. If usage_type_map is available, resolve (owning_part_qn, part_usage)
+       to the child's type PartDef QN and match redefinitions by owning_part_qn.
+    2. Fall back to the original name-based matching (last segment of owning_part_qn).
+
+    Args:
+        part_usage: Part usage name (e.g., "permitting")
+        attr: Attribute name (e.g., "raw_material_cost")
+        redefinitions: PartDef-level :>> redefinitions
+        usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
+        owning_part_qn: QN of the PartDef that owns the aggregation expression
+
+    Returns:
+        Float value if a matching LITERAL redefinition is found, None otherwise.
+    """
+    # Resolve usage name to its type PartDef QN if possible
+    target_partdef_qn: str | None = None
+    if usage_type_map and owning_part_qn:
+        target_partdef_qn = usage_type_map.get((owning_part_qn, part_usage))
+
+    for redef in redefinitions:
+        if redef.redefinition_type == RedefinitionType.LITERAL and redef.attribute_name == attr:
+            matched = False
+            if target_partdef_qn is not None:
+                # Strategy 1: exact PartDef QN match (handles aliased usage names)
+                matched = redef.owning_part_qn == target_partdef_qn
+            else:
+                # Strategy 2: name-based fallback (last segment match)
+                redef_part_name = redef.owning_part_qn.split("__")[-1]
+                matched = sanitize_name(redef_part_name).lower() == part_usage.lower()
+
+            if matched and redef.literal_value is not None:
+                try:
+                    return float(redef.literal_value)
+                except (ValueError, TypeError):
+                    return None
+    return None
+
+
+def _build_aggregation_module(
+    agg: ScopedAggregationData,
+    redefinitions: list[RedefinitionData],
+    output_registry: OutputRegistry,
+    entry_points: dict[str, EntryPoint],
+    group_deriver: ParameterGroupDeriver | None,
+    expose_aliases: dict[tuple[str, str], str] | None = None,
+    usage_type_map: dict[tuple[str, str], str] | None = None,
+) -> tuple[PipelineModule, dict[str, EntryPoint]]:
+    """Build a PipelineModule from a ScopedAggregationData.
+
+    Follows the _build_computed_attr_module() pattern. Creates inputs from
+    SumTerms (channel + multiplicity EP), SingletonTerms (channel), and
+    LocalTerms (entry point).
+
+    Args:
+        agg: Scoped aggregation expression
+        redefinitions: PartDef-level :>> redefinitions for CHAIN resolution
+        output_registry: OutputRegistry for channel verification and lookup
+        entry_points: Read-only dict of classified entry points
+        group_deriver: For classifying new entry points (None in tests)
+        expose_aliases: EXPOSE_PURE alias map for LocalTerm resolution
+        usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
+
+    Returns:
+        (PipelineModule, dict of new entry points created by this factory)
+    """
+    new_entry_points: dict[str, EntryPoint] = {}
+    # Naming per ADR-003, using module_eqn property
+    module_name = get_module_name(agg.module_eqn)
+    module_type = derive_module_type(agg.module_eqn.replace("__", "::"))
+
+    inputs: list[ModuleInput] = []
+    ref_to_inputs: dict[str, str] = {}
+    compilability = Compilability.FULLY_COMPILABLE
+
+    if agg.expression.has_unsupported_nodes:
+        compilability = Compilability.MANUAL_REQUIRED
+
+    # Process SumTerms (array child costs with multiplicity)
+    for term in agg.expression.sum_terms:
+        symbolic_ref = f"{term.part_usage_name}.{term.attribute_name}"
+        param_name = f"{term.part_usage_name}_{term.attribute_name}"
+
+        channel = _resolve_aggregation_input_channel(
+            symbolic_ref, agg.instance_path, redefinitions, output_registry,
+        )
+
+        if channel:
+            source = InputSource(
+                source_type="module_output",
+                producer_channel=channel,
+            )
+        else:
+            # Check for LITERAL :>> redefinition before falling back (defensive).
+            literal_default = _find_literal_redefinition(
+                term.part_usage_name, term.attribute_name, redefinitions,
+                usage_type_map, agg.expression.owning_part_qn,
+            )
+
+            if literal_default is None:
+                logger.warning(
+                    "Aggregation SumTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                    symbolic_ref, agg.instance_path,
+                )
+                compilability = Compilability.MANUAL_REQUIRED
+
+            ep_qn = f"{agg.module_eqn}__{param_name}"
+            if ep_qn not in entry_points and ep_qn not in new_entry_points:
+                param_group = group_deriver.classify(ep_qn) if group_deriver else None
+                new_entry_points[ep_qn] = EntryPoint(
+                    qualified_name=ep_qn,
+                    simple_name=param_name,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=literal_default,
+                    param_group=param_group,
+                )
+            elif literal_default is not None:
+                existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
+                if existing_ep and existing_ep.default_value is None:
+                    new_entry_points[ep_qn] = EntryPoint(
+                        qualified_name=existing_ep.qualified_name,
+                        simple_name=existing_ep.simple_name,
+                        entry_type=existing_ep.entry_type,
+                        default_value=literal_default,
+                        source_calc_usage=existing_ep.source_calc_usage,
+                        param_group=existing_ep.param_group,
+                    )
+            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
+            source = InputSource(
+                source_type="entry_point",
+                qualified_name=ep_qn,
+                param_group=ep.param_group,
+            )
+
+        inputs.append(ModuleInput(
+            param_name=param_name,
+            python_type="float",
+            source=source,
+        ))
+        ref_to_inputs[f"{term.part_usage_name}.{term.attribute_name}"] = f"inputs.{param_name}"
+
+        # Multiplicity entry point
+        if term.multiplicity_attr:
+            mult_ep_qn = f"{agg.instance_path}__{term.multiplicity_attr}"
+            if mult_ep_qn not in entry_points and mult_ep_qn not in new_entry_points:
+                param_group = group_deriver.classify(mult_ep_qn) if group_deriver else None
+                new_entry_points[mult_ep_qn] = EntryPoint(
+                    qualified_name=mult_ep_qn,
+                    simple_name=term.multiplicity_attr,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=(
+                        float(term.multiplicity_count)
+                        if term.multiplicity_count is not None
+                        else None
+                    ),
+                    param_group=param_group,
+                )
+            ep = new_entry_points.get(mult_ep_qn) or entry_points[mult_ep_qn]
+            inputs.append(ModuleInput(
+                param_name=term.multiplicity_attr,
+                python_type="float",
+                source=InputSource(
+                    source_type="entry_point",
+                    qualified_name=mult_ep_qn,
+                    param_group=ep.param_group,
+                ),
+            ))
+            ref_to_inputs[term.multiplicity_attr] = f"inputs.{term.multiplicity_attr}"
+
+    # Process SingletonTerms (non-multiplied child references)
+    canonical_channels = output_registry.canonical_channels
+    for s_term in agg.expression.singleton_terms:
+        param_name = s_term.source_path.replace(".", "_")
+
+        s_source: InputSource | None = None
+        if "." in s_term.source_path:
+            # Try 1: Registry-first resolution (handles both CalcUsage and
+            # aggregation targets via Phase 1/2 keys and aliases).
+            resolved = _resolve_aggregation_input_channel(
+                s_term.source_path, agg.instance_path, redefinitions, output_registry,
+            )
+            if resolved:
+                s_source = InputSource(
+                    source_type="module_output",
+                    producer_channel=resolved,
+                )
+            else:
+                # Try 2: Direct channel construction (CalcUsage targets only).
+                # Builds instance_path__prefix__output_name — correct for CalcUsage
+                # EQN format but wrong for aggregation outputs (double-attr).
+                prefix, output_name = s_term.source_path.rsplit(".", 1)
+                calc_path = prefix.replace(".", "__")
+                channel = get_channel_name(
+                    f"{agg.instance_path}__{calc_path}", output_name,
+                )
+                if channel in canonical_channels:
+                    s_source = InputSource(
+                        source_type="module_output",
+                        producer_channel=channel,
+                    )
+
+        if s_source is None:
+            # Check for LITERAL :>> redefinition before falling back to entry point.
+            # e.g., Permitting defines `:>> raw_material_cost = 0.0` — the value
+            # becomes the entry point default so the JSON template is pre-populated.
+            literal_default: float | None = None
+            if "." in s_term.source_path:
+                s_part_usage, s_attr = s_term.source_path.rsplit(".", 1)
+                literal_default = _find_literal_redefinition(
+                    s_part_usage, s_attr, redefinitions,
+                    usage_type_map, agg.expression.owning_part_qn,
+                )
+
+            if literal_default is None:
+                logger.warning(
+                    "Aggregation SingletonTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                    s_term.source_path, agg.instance_path,
+                )
+                compilability = Compilability.MANUAL_REQUIRED
+
+            ep_qn = f"{agg.module_eqn}__{param_name}"
+            if ep_qn not in entry_points and ep_qn not in new_entry_points:
+                param_group = group_deriver.classify(ep_qn) if group_deriver else None
+                new_entry_points[ep_qn] = EntryPoint(
+                    qualified_name=ep_qn,
+                    simple_name=param_name,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    default_value=literal_default,
+                    param_group=param_group,
+                )
+            elif literal_default is not None:
+                # Backfill default if entry point was created earlier without it
+                existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
+                if existing_ep and existing_ep.default_value is None:
+                    new_entry_points[ep_qn] = EntryPoint(
+                        qualified_name=existing_ep.qualified_name,
+                        simple_name=existing_ep.simple_name,
+                        entry_type=existing_ep.entry_type,
+                        default_value=literal_default,
+                        source_calc_usage=existing_ep.source_calc_usage,
+                        param_group=existing_ep.param_group,
+                    )
+            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
+            s_source = InputSource(
+                source_type="entry_point",
+                qualified_name=ep_qn,
+                param_group=ep.param_group,
+            )
+
+        inputs.append(ModuleInput(
+            param_name=param_name,
+            python_type="float",
+            source=s_source,
+        ))
+        ref_to_inputs[s_term.source_path] = f"inputs.{param_name}"
+
+    # Process LocalTerms (PartDef-local attribute references)
+    for l_term in agg.expression.local_terms:
+        l_source: InputSource | None = None
+
+        # Try: sibling aggregation output at the same scope.
+        # Aggregation modules use double-attr channel format:
+        #   get_channel_name("{instance_path}__{attr}", attr) → "{ip}__{attr}__{attr}"
+        sibling_eqn = f"{agg.instance_path}__{l_term.attribute_name}"
+        sibling_channel = get_channel_name(sibling_eqn, l_term.attribute_name)
+        if sibling_channel in canonical_channels:
+            l_source = InputSource(
+                source_type="module_output",
+                producer_channel=sibling_channel,
+            )
+
+        if l_source is None and expose_aliases:
+            # Try: EXPOSE_PURE alias resolution.
+            # e.g., misc_hardware_cost = allocation_model.total_allocation
+            # The expression_text is a dotted path that _resolve_aggregation_input_channel
+            # already handles via scoped/unscoped registry lookups.
+            alias_key = (agg.expression.owning_part_qn, l_term.attribute_name)
+            alias_source = expose_aliases.get(alias_key)
+            if alias_source:
+                channel = _resolve_aggregation_input_channel(
+                    alias_source, agg.instance_path,
+                    redefinitions, output_registry,
+                )
+                if channel:
+                    l_source = InputSource(
+                        source_type="module_output",
+                        producer_channel=channel,
+                    )
+
+        if l_source is None:
+            # Genuinely unresolvable → entry point
+            ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
+            if ep_qn not in entry_points and ep_qn not in new_entry_points:
+                param_group = group_deriver.classify(ep_qn) if group_deriver else None
+                new_entry_points[ep_qn] = EntryPoint(
+                    qualified_name=ep_qn,
+                    simple_name=l_term.attribute_name,
+                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+                    param_group=param_group,
+                )
+            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
+            l_source = InputSource(
+                source_type="entry_point",
+                qualified_name=ep_qn,
+                param_group=ep.param_group,
+            )
+
+        inputs.append(ModuleInput(
+            param_name=l_term.attribute_name,
+            python_type="float",
+            source=l_source,
+        ))
+        ref_to_inputs[l_term.attribute_name] = f"inputs.{l_term.attribute_name}"
+
+    # Compile expression: replace symbolic refs with inputs.X form
+    compiled_expression: str | None = None
+    if not agg.expression.has_unsupported_nodes and agg.expression.transformed_expression:
+        compiled = agg.expression.transformed_expression
+        for ref in sorted(ref_to_inputs, key=len, reverse=True):
+            compiled = compiled.replace(ref, ref_to_inputs[ref])
+        compiled_expression = compiled
+
+    # Single output
+    output = ModuleOutput(
+        field_name="root",
+        python_type="float",
+        channel_name=get_channel_name(agg.module_eqn, agg.expression.attribute_name),
+    )
+
+    auto_impl_ctx = None
+    if compilability == Compilability.FULLY_COMPILABLE and compiled_expression:
+        auto_impl_ctx = _build_simple_auto_impl_context(
+            compiled_expression, agg.expression.attribute_name,
+        )
+
+    return PipelineModule(
+        name=module_name,
+        module_type=module_type,
+        inputs=inputs,
+        outputs=[output],
+        execution_order=0,  # Reassigned during unified toposort
+        compilability=compilability,
+        compiled_expression=compiled_expression,
+        is_aggregation=True,
+        auto_impl_context=auto_impl_ctx,
+        calc_def_name=agg.expression.attribute_name,
+        calc_def_qualified_name=agg.expression.owning_part_qn,
+        calc_expressions=[agg.expression.raw_expression_text] if agg.expression.raw_expression_text else None,
+        source_file=str(agg.expression.source_file),
+        source_line=agg.expression.source_line,
+    ), new_entry_points
+
+
+def _unified_topological_sort(modules: list[PipelineModule]) -> list[PipelineModule]:
+    """Sort all modules by their inter-module dependencies using Kahn's algorithm.
+
+    Replaces the assumption that backtracker pre-sort is sufficient once
+    computed attribute modules are interleaved with CalcUsage modules.
+
+    Args:
+        modules: All modules (CalcUsage + computed attribute)
+
+    Returns:
+        Modules sorted in dependency order with execution_order reassigned
+    """
+    if not modules:
+        return modules
+
+    # Build channel -> module_name lookup
+    channel_to_module: dict[str, str] = {}
+    for m in modules:
+        for out in m.outputs:
+            channel_to_module[out.channel_name] = m.name
+
+    # Build adjacency list: module_name -> [dependency module names]
+    graph: dict[str, list[str]] = {m.name: [] for m in modules}
+    in_degree: dict[str, int] = {m.name: 0 for m in modules}
+
+    for m in modules:
+        for inp in m.inputs:
+            if inp.source.source_type == "module_output" and inp.source.producer_channel:
+                dep_module = channel_to_module.get(inp.source.producer_channel)
+                if dep_module and dep_module != m.name:
+                    if dep_module not in graph[m.name]:
+                        graph[m.name].append(dep_module)
+                        in_degree[m.name] += 1
+
+    # Note: graph[m.name] lists dependencies (predecessors), not successors.
+    # For Kahn's we need: for each dependency edge A->B (A must come before B),
+    # track successors: which modules depend on each module.
+    successors: dict[str, list[str]] = {m.name: [] for m in modules}
+    for m_name, deps in graph.items():
+        for dep in deps:
+            successors[dep].append(m_name)
+
+    # Kahn's algorithm
+    queue: deque[str] = deque()
+    for m_name, degree in in_degree.items():
+        if degree == 0:
+            queue.append(m_name)
+
+    sorted_names: list[str] = []
+    while queue:
+        current = queue.popleft()
+        sorted_names.append(current)
+        for successor in successors[current]:
+            in_degree[successor] -= 1
+            if in_degree[successor] == 0:
+                queue.append(successor)
+
+    if len(sorted_names) != len(modules):
+        # Identify the modules involved in the cycle
+        cycle_modules = [m.name for m in modules if m.name not in sorted_names]
+        raise CircularDependencyError(
+            f"Circular dependency detected among modules: {cycle_modules}. "
+            f"Sorted {len(sorted_names)} of {len(modules)} modules."
+        )
+
+    # Reassign execution_order
+    name_to_order = {name: i for i, name in enumerate(sorted_names)}
+    for m in modules:
+        m.execution_order = name_to_order[m.name]
+
+    return sorted(modules, key=lambda m: m.execution_order)
+
+
 def _build_pipeline_module(
     usage: CalcUsageData,
     calc_def,
-    output_catalog: dict[str, tuple[str, str, str]],
     entry_points: dict[str, EntryPoint],
-    param_groups: list[ParameterGroup],
     execution_order: int,
     binding_resolutions: dict[str, BindingResolution],
-) -> PipelineModule:
+) -> tuple[PipelineModule, dict[str, EntryPoint]]:
     """Build a single PipelineModule from a CalcUsageData.
 
     ADR-003 Phase 7: Uses binding_resolutions as the SINGLE SOURCE OF TRUTH.
@@ -445,15 +1455,14 @@ def _build_pipeline_module(
     Args:
         usage: The calc usage to convert
         calc_def: Corresponding calc definition
-        output_catalog: Maps binding sources to (module_name, channel_name, field_name)
-        entry_points: All classified entry points
-        param_groups: All parameter groups (for finding group name)
+        entry_points: Read-only dict of classified entry points
         execution_order: Position in topological order
         binding_resolutions: Unified mapping for ALL binding resolutions (REQUIRED).
             Maps "{usage_qn}|{param_name}" -> BindingResolution.
 
     Returns:
-        PipelineModule ready for YAML rendering
+        (PipelineModule, dict of new entry points) — new_entry_points is always
+        empty for CalcUsage factories (they never create EPs).
 
     Raises:
         ValueError: If binding resolution is missing (ADR-003 VIOLATION)
@@ -466,6 +1475,7 @@ def _build_pipeline_module(
 
     # Build inputs - ADR-003 Phase 7: FAIL FAST, NO FALLBACK
     inputs: list[ModuleInput] = []
+    input_attr_by_name = {a.name: a for a in calc_def.input_attributes}
     for input_attr in calc_def.input_attributes:
         param_name = input_attr.name
         mapping_key = f"{usage.qualified_name}|{param_name}"
@@ -510,6 +1520,8 @@ def _build_pipeline_module(
                 param_name=param_name,
                 python_type="float",  # All numeric for now
                 source=source,
+                description=input_attr.description,
+                default_value=input_attr.default_value,
             )
         )
 
@@ -527,6 +1539,9 @@ def _build_pipeline_module(
                 field_name=field_name,
                 python_type="float",
                 channel_name=channel_name,
+                description=output_attr.description,
+                default_value=output_attr.default_value,
+                unit=output_attr.unit,
             )
         )
 
@@ -536,10 +1551,25 @@ def _build_pipeline_module(
         inputs=inputs,
         outputs=outputs,
         execution_order=execution_order,
-    )
+        calc_def_name=calc_def.name,
+        calc_def_qualified_name=calc_def.qualified_name,
+        doc_comment=calc_def.doc_comment,
+        calc_expressions=calc_def.calc_expressions,
+        source_file=str(calc_def.source_file),
+        source_line=calc_def.source_line,
+    ), {}
 
 
 __all__ = [
+    "AttributeResolution",
+    "AttributeResolutionKind",
     "MissingCalcDefError",
+    "_build_aggregation_module",
+    "_build_attribute_resolution_map",
+    "_build_computed_attr_module",
+    "_find_literal_redefinition",
+    "_resolve_aggregation_input_channel",
+    "_resolve_expose_pure",
+    "_unified_topological_sort",
     "build_computation_graph",
 ]

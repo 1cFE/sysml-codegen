@@ -1,0 +1,26 @@
+Component C10 is complete. Here's a summary of what was done:
+
+## C10 Aggregation Scoping — Complete
+
+### Spike Findings
+- **41 qualifying CHAIN redefinitions** in solar_battery — no constructed test data needed
+- **Output matches snapshot exactly**: 20 `ScopedAggregationData`, 41 `ChannelAlias`
+- **Strategy usage**: 1 PartDef uses Strategy 1 (direct), 3 use Strategy 2 (child-walk)
+- **issue22**: 1 scoped aggregation with correct `module_eqn`
+
+### Deliverables
+1. **`tests/conformance/test_aggregation_scoping.py`** — 47 conformance tests covering REQ-AS-01 through REQ-AS-08
+2. **`src/sysml_codegen/generation/initialization.py`** — 6-line addition for REQ-AS-08 (`logger.warning()` when zero instance paths found)
+
+### Test Results
+- **47/47 conformance tests pass**
+- **1165/1165 full suite pass** — zero regressions
+- **Lint clean**
+
+### Updated Project Files
+- `COMPONENT_CHECKLIST.md` — C10 AC all checked, 47 tests noted
+- `IMPLEMENTATION_PLAN.md` — Step 2.3 marked complete, C10 learnings added, test count table updated (1118→1165)
+- `plan.md` — Status DONE, all gates/validation checkboxes checked, findings and deviations documented
+
+### Ready for Commit
+The plan's section 7 specifies the commit message format. Would you like me to commit these changes?

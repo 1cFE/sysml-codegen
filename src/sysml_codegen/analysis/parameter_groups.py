@@ -178,6 +178,8 @@ def _extract_default_value(expr: Any) -> str | None:
         if ref_path:
             return ref_path
 
+    # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
+    # subtype of OE in SysIDE's type system (doc 19 invariant).
     elif SysideAdapter.is_instance(expr, "FeatureChainExpression"):
         chain_path = _extract_chain_path(expr)
         if chain_path:

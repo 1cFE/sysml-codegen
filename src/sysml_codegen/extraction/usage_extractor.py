@@ -29,6 +29,10 @@ from sysml_codegen.core.qualified_names import (
     sanitize_name,
 )
 from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.extraction.expression_utils import (
+    is_literal_expression as _is_literal_expression,
+    extract_literal_value as _extract_literal_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +68,9 @@ class BindingInfo:
     source_instance_elem: object | None = None
     source_attribute_elem: object | None = None
     literal_value: float | int | str | bool | None = None
+
+    # Raw AST node for EXPRESSION bindings (Phase 2 will use this)
+    expression_ast: Any = None
 
     @property
     def source_instance_name(self) -> str | None:
@@ -107,6 +114,10 @@ class CalcUsageData:
     source_line: int = 0
     parent_part_path: str = ""
     qualified_name: str = ""
+    # Template detection fields (COST-PATTERN Item 2)
+    is_template: bool = False
+    owning_part_def_qn: str | None = None
+    raw_element: object | None = None
 
     @property
     def parameter_bindings(self) -> dict[str, str]:
@@ -130,10 +141,211 @@ class ExtractionReport:
     warnings: list[str] = field(default_factory=list)
 
 
+def _build_part_usage_index(model: Any) -> dict[str, list[Any]]:
+    """Build index mapping PartDef qualified names to their PartUsage elements.
+
+    Iterates all PartUsage elements in the model. For each, resolves its
+    typed PartDefinition via ``usage.types``, computes the PartDef's qualified
+    name, and indexes the PartUsage under that key.
+
+    Args:
+        model: Parsed SysIDE model.
+
+    Returns:
+        Dict mapping PartDef QN to list of PartUsage AST elements.
+    """
+    from collections import defaultdict
+
+    index: dict[str, list[Any]] = defaultdict(list)
+
+    for usage in SysideAdapter.elements_of_type(model, "PartUsage"):
+        try:
+            part_def = next(iter(usage.types))
+        except (StopIteration, TypeError, AttributeError):
+            continue
+        part_def_qn = build_element_qualified_name(part_def)
+        if part_def_qn:
+            index[part_def_qn].append(usage)
+
+    return dict(index)
+
+
+def _find_instantiation_paths(
+    target_part_def_qn: str,
+    part_usage_index: dict[str, list[Any]],
+    _visited: set[str] | None = None,
+) -> list[str]:
+    """Find all design-relative qualified paths to PartUsages of a target PartDef.
+
+    Recursively resolves the instantiation chain from design root through
+    intermediate PartDefs to the target. Returns fully qualified paths using
+    the ``__`` separator per ADR-003.
+
+    Args:
+        target_part_def_qn: QN of the PartDef to find instantiation paths for.
+        part_usage_index: Prebuilt index from :func:`_build_part_usage_index`.
+        _visited: Recursion guard set (internal).
+
+    Returns:
+        List of design-relative qualified name prefixes (deduplicated).
+    """
+    if _visited is None:
+        _visited = set()
+
+    if target_part_def_qn in _visited:
+        return []
+    _visited = _visited | {target_part_def_qn}
+
+    usages = part_usage_index.get(target_part_def_qn, [])
+    if not usages:
+        return []
+
+    seen_paths: set[str] = set()
+    result: list[str] = []
+
+    for usage in usages:
+        owning_type = getattr(usage, "owning_type", None)
+        if owning_type is not None and SysideAdapter.is_instance(
+            owning_type, "PartDefinition"
+        ):
+            # PartUsage inside another PartDef → recurse
+            parent_def_qn = build_element_qualified_name(owning_type)
+            parent_paths = _find_instantiation_paths(
+                parent_def_qn, part_usage_index, _visited
+            )
+            usage_name = sanitize_name(getattr(usage, "name", ""))
+            for parent_path in parent_paths:
+                path = f"{parent_path}__{usage_name}"
+                if path not in seen_paths:
+                    seen_paths.add(path)
+                    result.append(path)
+        else:
+            # Terminal node: owned by Package, PartUsage, or other non-PartDef
+            path = build_element_qualified_name(usage)
+            if path and path not in seen_paths:
+                seen_paths.add(path)
+                result.append(path)
+
+    return result
+
+
+def _create_virtual_calc_usage(
+    template: CalcUsageData,
+    instantiation_path: str,
+) -> CalcUsageData:
+    """Create a virtual CalcUsage for a specific instantiation path.
+
+    Args:
+        template: The template CalcUsageData from the PartDefinition.
+        instantiation_path: Full design-relative path to the PartUsage.
+
+    Returns:
+        New CalcUsageData with design-relative qualified name and
+        bindings copied from the template.
+    """
+    calc_name = sanitize_name(template.instance_name)
+    qualified_name = f"{instantiation_path}__{calc_name}"
+
+    # Build dot-separated parent_part_path from the instantiation path
+    path_segments = instantiation_path.split("__")
+    part_segments = path_segments[1:] if len(path_segments) > 1 else path_segments
+    parent_part_path = ".".join(part_segments)
+
+    return CalcUsageData(
+        instance_name=qualified_name,
+        calc_def_name=template.calc_def_name,
+        calc_def_qualified_name=template.calc_def_qualified_name,
+        module_type=template.module_type,
+        bindings=list(template.bindings),
+        unbound_params=list(template.unbound_params),
+        source_file=template.source_file,
+        source_line=template.source_line,
+        parent_part_path=parent_part_path,
+        qualified_name=qualified_name,
+        is_template=False,
+        owning_part_def_qn=template.owning_part_def_qn,
+        raw_element=template.raw_element,
+    )
+
+
+def _expand_template_calc_usages(
+    model: Any,
+    calc_usages: list[CalcUsageData],
+    warnings: list[str],
+) -> list[CalcUsageData]:
+    """Replace template CalcUsages with virtual per-instance CalcUsages.
+
+    Args:
+        model: Parsed SysIDE model.
+        calc_usages: Extracted CalcUsages (may include templates).
+        warnings: List to append warnings to.
+
+    Returns:
+        Expanded list: concrete CalcUsages unchanged, templates replaced
+        by virtual instances (one per PartUsage instantiation).
+    """
+    index = _build_part_usage_index(model)
+
+    concrete: list[CalcUsageData] = []
+    templates: list[CalcUsageData] = []
+    for usage in calc_usages:
+        if usage.is_template:
+            templates.append(usage)
+        else:
+            concrete.append(usage)
+
+    if templates:
+        template_count = len(templates)
+        logger.info(
+            "Template detection: %d templates, %d concrete CalcUsages",
+            template_count,
+            len(concrete),
+        )
+
+    virtual_usages: list[CalcUsageData] = []
+    seen_qns: set[str] = set()
+
+    for template in templates:
+        if not template.owning_part_def_qn:
+            msg = (
+                f"Template CalcUsage '{template.instance_name}' "
+                f"has is_template=True but no owning_part_def_qn — skipped"
+            )
+            logger.warning(msg)
+            warnings.append(msg)
+            continue
+        paths = _find_instantiation_paths(template.owning_part_def_qn, index)
+        if not paths:
+            msg = (
+                f"Template CalcUsage '{template.instance_name}' "
+                f"(PartDef '{template.owning_part_def_qn}') has no "
+                f"PartUsage instantiations — dropped"
+            )
+            logger.warning(msg)
+            warnings.append(msg)
+            continue
+
+        for path in paths:
+            virtual = _create_virtual_calc_usage(template, path)
+            if virtual.qualified_name not in seen_qns:
+                seen_qns.add(virtual.qualified_name)
+                virtual_usages.append(virtual)
+
+    if virtual_usages:
+        logger.info(
+            "Template expansion: %d templates → %d virtual instances",
+            len(templates),
+            len(virtual_usages),
+        )
+
+    return concrete + virtual_usages
+
+
 def extract_calculation_usages(
     model: Any,
     known_calc_defs: set[str] | None = None,
     calc_defs: list | None = None,
+    expand_templates: bool = True,
 ) -> tuple[list[CalcUsageData], ExtractionReport]:
     """Extract all calculation usages from a SysML model.
 
@@ -141,6 +353,8 @@ def extract_calculation_usages(
         model: Parsed SysIDE model
         known_calc_defs: Set of known calc def names for validation (optional)
         calc_defs: List of CalculationDefinitionData for detecting algorithm params
+        expand_templates: If True, replace template CalcUsages (owned by PartDefs)
+            with virtual per-instance CalcUsages. Default True.
 
     Returns:
         Tuple of (list of CalcUsageData, ExtractionReport with statistics)
@@ -156,6 +370,9 @@ def extract_calculation_usages(
         usage_data = _extract_single_usage(elem, known_calc_defs, warnings, calc_def_map)
         if usage_data:
             usages.append(usage_data)
+
+    if expand_templates:
+        usages = _expand_template_calc_usages(model, usages, warnings)
 
     report = ExtractionReport(
         total_usages=len(usages),
@@ -220,6 +437,16 @@ def _extract_single_usage(
         if algorithm_params:
             unbound_params.extend(sorted(algorithm_params))
 
+    # Template detection: check if owning type is PartDefinition
+    owning_type = getattr(elem, "owning_type", None)
+    is_template = False
+    owning_part_def_qn = None
+    if owning_type is not None and SysideAdapter.is_instance(
+        owning_type, "PartDefinition"
+    ):
+        is_template = True
+        owning_part_def_qn = build_element_qualified_name(owning_type)
+
     return CalcUsageData(
         instance_name=instance_name,
         calc_def_name=calc_def_name,
@@ -231,6 +458,9 @@ def _extract_single_usage(
         source_line=source_line,
         parent_part_path=parent_part_path,
         qualified_name=qualified_name,
+        is_template=is_template,
+        owning_part_def_qn=owning_part_def_qn,
+        raw_element=elem,
     )
 
 
@@ -288,6 +518,8 @@ def _extract_single_binding(
 
     expr = param_elem.feature_value_expression
 
+    # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
+    # subtype of OE in SysIDE's type system (doc 19 invariant).
     if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)
@@ -322,6 +554,15 @@ def _extract_single_binding(
             is_cross_file=False,
             raw_expression=f"LiteralExpression -> {literal_value}",
             literal_value=literal_value,
+        )
+
+    elif SysideAdapter.is_instance(expr, "OperatorExpression"):
+        return BindingInfo(
+            param_name=param_name,
+            source_path=None,
+            binding_type=BindingType.EXPRESSION,
+            raw_expression=f"OperatorExpression: {type(expr).__name__}",
+            expression_ast=expr,
         )
 
     return BindingInfo(
@@ -421,18 +662,3 @@ def _get_parent_part_path(elem: Any) -> str:
     return ".".join(parts)
 
 
-def _is_literal_expression(expr: Any) -> bool:
-    """Check if expression is a literal value."""
-    return (
-        SysideAdapter.is_instance(expr, "LiteralInteger")
-        or SysideAdapter.is_instance(expr, "LiteralRational")
-        or SysideAdapter.is_instance(expr, "LiteralBoolean")
-        or SysideAdapter.is_instance(expr, "LiteralString")
-    )
-
-
-def _extract_literal_value(expr: Any) -> float | int | str | bool | None:
-    """Extract value from literal expression."""
-    if hasattr(expr, "value"):
-        return expr.value
-    return None

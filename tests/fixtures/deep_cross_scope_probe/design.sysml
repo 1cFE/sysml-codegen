@@ -1,0 +1,96 @@
+/*
+ * Deep Cross-Scope Probe — Design Instance
+ *
+ * PURPOSE: Exercise deeply-nested cross-scope bindings with three patterns:
+ *
+ * Pattern A — Deep CHAIN (4-level dot chain):
+ *   `station.array.derived.derived_value`
+ *   Expected: BindingType.CHAIN, source_path = "station.array.derived.derived_value"
+ *   Tests: Deep dotted path resolution through scoped_lookup()
+ *
+ * Pattern B — Deep REFERENCE (6-segment QN with ::):
+ *   `measurement_system::station::array::sensor::core::metric_value`
+ *   Expected: BindingType.REFERENCE, source_path with 6 :: segments
+ *   Tests: Step 1b normalization — only extracts last 2 segments ("core", "metric_value"),
+ *   losing intermediate hierarchy context. Likely fails to resolve.
+ *   NOTE: This syntax navigates parts via ::, not just packages.
+ *   Supported by catf_mfe precedent (catf_physics::p_fusion), but at deeper nesting
+ *   than any existing fixture. SysIDE may reject or parse differently.
+ *
+ * Pattern C — Shallow REFERENCE (2-segment self-ref, control):
+ *   `analyzer::baseline_value`
+ *   Expected: BindingType.REFERENCE, source_path = "...::analyzer::baseline_value"
+ *   Tests: Baseline — this pattern works in catf_mfe (catf_physics::p_fusion)
+ *
+ * EXPECTED OUTCOMES:
+ * - Pattern A: May succeed (deep CHAIN similar to existing patterns) or fail
+ *   if the OutputRegistry ScopedKey doesn't include full dotted path
+ * - Pattern B: Likely fails — Step 1b normalization drops intermediate segments
+ * - Pattern C: Should succeed — 2-segment REFERENCE is a known working pattern
+ *
+ * Created: 2026-02-17
+ * Gap: C6 — Deeply-Nested Cross-Scope REFERENCE (Deferred Issue #7)
+ */
+
+package DeepCrossScopeDesign {
+    private import ScalarValues::Real;
+    private import DeepCrossScopeProducer::*;
+    private import DeepCrossScopeConsumer::*;
+
+    part measurement_system {
+        doc /*
+        Top-level design instance containing both producer and consumer hierarchies.
+
+        Producer nesting: measurement_system > station > array > sensor > core
+        Consumer: measurement_system > analyzer > {chain_analysis, ref_analysis, self_ref_analysis}
+
+        **Source**: C6 deep cross-scope probe
+        **Reference**: PHASE2_AUDIT_ACTIONS.md C6
+        **Last Updated**: 2026-02-17
+        */
+
+        // ===== Producer Side: 3-level deep hierarchy =====
+        part station : 'Monitoring Station' {
+            part array : 'Sensor Array' {
+                part sensor : 'Sensor' {
+                    :>> reading = 10.0;
+                }
+            }
+        }
+
+        // ===== Consumer Side =====
+        part analyzer : 'Analyzer' {
+            :>> baseline_value = 2.0;
+
+            // --- Pattern A: Deep CHAIN (dot notation, 4 levels deep) ---
+            // Accesses: station > array > derived (calc) > derived_value (output)
+            // Expected BindingType: CHAIN
+            // Expected source_path: "station.array.derived.derived_value"
+            calc chain_analysis : 'Analysis Calc' {
+                in data_point = station.array.derived.derived_value;
+                in baseline = baseline_value;
+            }
+
+            // --- Pattern B: Deep REFERENCE (:: notation, 6 segments) ---
+            // Accesses: measurement_system > station > array > sensor > core > metric_value
+            // Uses qualified name syntax (::) instead of feature chain (.)
+            // Expected BindingType: REFERENCE
+            // Expected source_path: "...::measurement_system::station::array::sensor::core::metric_value"
+            // NOTE: If SysIDE rejects this syntax, the model won't parse.
+            // Fallback: Pattern A already exercises deep cross-scope via CHAIN.
+            calc ref_analysis : 'Analysis Calc' {
+                in data_point = measurement_system::station::array::sensor::core::metric_value;
+                in baseline = baseline_value;
+            }
+
+            // --- Pattern C: Shallow REFERENCE (:: notation, 2 segments, control) ---
+            // Self-reference via :: to own parent's attribute
+            // Same pattern as catf_mfe: catf_physics::p_fusion
+            // Expected BindingType: REFERENCE
+            // Expected source_path: "...::analyzer::baseline_value"
+            calc self_ref_analysis : 'Analysis Calc' {
+                in data_point = analyzer::baseline_value;
+            }
+        }
+    }
+}

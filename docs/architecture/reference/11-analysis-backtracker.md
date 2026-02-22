@@ -1,0 +1,309 @@
+# 11 - Analysis: DependencyBacktracker
+
+## Purpose
+
+`DependencyBacktracker` performs depth-first search (DFS) from root calc usages through
+all transitive dependencies, producing a [`BacktrackingResult`](09-data-models.md#analysis-models)
+that tells downstream stages exactly which modules are needed and how every input binding
+is wired. This is the **CalcUsage resolution path** — one of the two resolution architectures
+described in [24-dual-resolution-architecture](24-dual-resolution-architecture.md). The
+backtracker MUST resolve bindings during DFS because the resolution result (MODULE_OUTPUT
+vs ENTRY_POINT) determines whether to recurse or stop.
+
+Source: `src/sysml_codegen/analysis/dependency_backtracker.py`
+
+## Requirements
+
+| ID | Requirement | Verified by |
+|----|-------------|-------------|
+| REQ-BT-01 | Every non-literal binding SHALL be resolved via `_resolve_binding_via_registry()` through the typed [OutputRegistry](10-output-registry.md) | All resolution paths go through this single method |
+| REQ-BT-02 | Resolution SHALL dispatch on binding format: CHAIN bindings (no `::` in source_path) query scoped then alias registries; REFERENCE bindings (`::` in source_path) query SysML QN then scoped registries | Code branches on `"::" in source_path` |
+| REQ-BT-03 | DFS SHALL detect cycles via path tracking and raise `CircularDependencyError` | `if qualified_name in path: raise CircularDependencyError(...)` |
+| REQ-BT-04 | Every binding SHALL resolve to exactly one `BindingResolution` — no binding left dangling | Fallback guarantees resolution for all inputs |
+| REQ-BT-05 | `binding_resolutions` key format SHALL be `"{usage_qn}\|{param_name}"` (pipe separator) | All `mapping_key` assignments use `f"{usage.qualified_name}\|{param_name}"` |
+| REQ-BT-06 | Topological sort SHALL produce dependency-first ordering or raise on cycles | Kahn's algorithm with cycle detection |
+| REQ-BT-07 | Self-reference guard SHALL prevent a usage from wiring to its own output | `producing_usage_qn == usage.qualified_name` check after each lookup |
+| REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct typed registry. CHAIN bindings query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`. REFERENCE bindings query `sysml_qn_lookup(SysMLQN)` then `scoped_lookup(ScopedKey)`. | Dispatch branches verified; see [10-output-registry](10-output-registry.md) Design Rationale |
+
+## BacktrackingResult Output Model
+
+```python
+class BacktrackingResult(BaseModel):
+    required_usages: list[CalcUsageData]       # Topologically sorted (deps first)
+    dependency_graph: dict[str, list[str]]      # qualified_name -> [dep qualified_names]
+    entry_points: set[str]                      # External input qualified names
+    entry_point_sources: dict[str, str]         # qname -> source path or literal value
+    binding_resolutions: dict[str, BindingResolution]  # SINGLE SOURCE OF TRUTH
+    phantom_report: PhantomDetectionReport      # Suspected phantom entry points
+    trace_log: list[str]                        # Debug trace of resolution steps
+    binding_to_entry_point: dict[str, str]      # DEPRECATED - use binding_resolutions
+```
+
+Key format for `binding_resolutions`: `"{usage_qualified_name}|{param_name}"` (pipe
+separator avoids conflict with SysML's `::` delimiter). See [09-data-models](09-data-models.md#analysis-models).
+
+## DFS Tracing Algorithm
+
+`_trace_dependencies(usage, visited, path)` walks the dependency tree:
+
+1. **Cycle detection** — if `qualified_name` is already in `path`, raise `CircularDependencyError`.
+2. **Skip visited** — if `qualified_name` is already in `visited`, return empty dict.
+3. **Process bindings** — for each [`BindingInfo`](09-data-models.md#extraction-models) on the usage:
+   - **LITERAL** bindings become ENTRY_POINTs immediately (no registry lookup).
+   - **EXPRESSION** bindings (`source_path=None`, `BindingType.EXPRESSION`) are handled as
+     ENTRY_POINTs with a warning. These represent inline operator expressions (e.g., `in x = a + b`)
+     where the extractor cannot decompose the expression into a single source path. The backtracker
+     logs a warning and creates an ENTRY_POINT resolution. No registry lookup is attempted.
+     Zero EXPRESSION bindings occur in natural fixture models — covered by `expression_binding_probe`.
+   - **Non-literal** bindings with a `source_path` go through `_resolve_binding_via_registry()`.
+     If the resolution is MODULE_OUTPUT, DFS recurses into the producing usage.
+     If ENTRY_POINT, the binding is recorded as an external input.
+4. **Unbound params** — every item in `usage.unbound_params` becomes an ENTRY_POINT.
+
+The `path` list is copied on each call (`path = path + [qualified_name]`) to avoid
+mutation across sibling branches. The `visited` set is shared across branches to
+prevent re-processing.
+
+## Type-Directed Resolution Dispatch
+
+`_resolve_binding_via_registry(binding, usage)` is the sole resolution path for
+non-literal bindings. It returns a [`BindingResolution`](09-data-models.md#core-models)
+with type MODULE_OUTPUT or ENTRY_POINT. The dispatch is determined by the binding's
+`source_path` format (REQ-BT-08):
+
+### CHAIN Bindings (no `::` in source_path)
+
+CHAIN bindings use dotted local paths (e.g., `"cost_model.total_cost"`). These are
+scope-relative references. Resolution constructs a typed `ScopedKey` and queries
+the appropriate registries:
+
+```
+Step 1: Scoped lookup (primary path)
+  ScopedKey(consumer_scope + "." + source_path) → scoped registry
+  → CanonicalChannel or None
+
+Step 2: Alias lookup (cross-package path)
+  ScopedKey(source_path) → alias registry
+  → CanonicalChannel or None (handles EXPOSE_PURE cross-package refs)
+
+Step 3: Design attribute resolution
+  Match source_path to DesignAttributeData
+  → ENTRY_POINT
+
+Step 4: Fallback entry point
+  → ENTRY_POINT with warning
+```
+
+**Step 1** prepends the consumer scope to produce a
+[ScopedKey](15-naming-conventions.md)-format path for exact match against the
+scoped registry:
+
+```python
+consumer_scope = _consumer_scope_dotted(usage)   # EQN segments[1:-1] joined with "."
+if consumer_scope and source_path:
+    scoped_key = ScopedKey(f"{consumer_scope}.{source_path}")
+    channel = self._output_registry.scoped_lookup(scoped_key)
+```
+
+For a consumer at `Design__plant__subsys__my_calc`, the scope is `"plant.subsys"`. A
+`source_path` of `"other_calc.result"` becomes `ScopedKey("plant.subsys.other_calc.result")`
+— unique by SysML ownership. This is the fix for [The Scope Problem](03-resolution-overview.md#the-scope-problem).
+
+**Step 2** tries the alias registry for cross-package references. When the consumer
+and producer are in different SysML packages, Step 1 structurally cannot work
+(prepending the consumer's scope produces a key that will never exist). The alias
+registry contains Phase 3 EXPOSE_PURE aliases that bridge this gap:
+
+```python
+channel = self._output_registry.alias_lookup(ScopedKey(source_path))
+```
+
+### REFERENCE Bindings (`::` in source_path)
+
+REFERENCE bindings use SysML qualified names (e.g., `"AttrExprProbeDesign::probe_design::area"`).
+These are globally unique identifiers. Resolution constructs typed keys:
+
+```
+Step 1: SysML QN lookup (primary path)
+  SysMLQN(source_path) → SysML QN registry
+  → CanonicalChannel or None
+
+Step 2: Normalized scoped lookup (secondary path)
+  Extract leaf + parent from source_path, construct ScopedKey
+  → scoped registry
+  → CanonicalChannel or None
+
+Step 3: Design attribute resolution
+  → ENTRY_POINT
+
+Step 4: Fallback entry point
+  → ENTRY_POINT with warning
+```
+
+**Step 1** wraps the `::` source_path as a `SysMLQN` and queries the SysML QN registry:
+
+```python
+channel = self._output_registry.sysml_qn_lookup(SysMLQN(source_path))
+```
+
+**Step 2** (if Step 1 misses) extracts the leaf and parent segments for a scoped fallback:
+
+```python
+# "Package::solar_array::capital_cost" -> ScopedKey("solar_array.capital_cost")
+parts = source_path.split("::")
+sanitized_part = sanitize_name(parts[-2]).lower()
+scoped_key = ScopedKey(f"{sanitized_part}.{parts[-1]}")
+channel = self._output_registry.scoped_lookup(scoped_key)
+```
+
+> **Limitation**: Step 2 normalization only extracts the last 2 segments
+> (`parts[-2]` and `parts[-1]`) of the `::` QN, discarding all intermediate
+> hierarchy segments. For a 6-segment path like `A::B::C::D::E::F`, this
+> produces `ScopedKey("e.F")` — but the OutputRegistry ScopedKey includes the
+> full instance path (e.g., `b.c.d.e.F`), so the 2-segment lookup will not
+> match. This is acceptable for current models: idiomatic SysML v2 cross-scope
+> references use `import` + `.` chain (CHAIN binding), not deep `::` paths
+> (REFERENCE). Deep REFERENCE bindings are non-idiomatic and may only arise
+> from programmatic model generation.
+
+### Self-Reference Guard
+
+After each lookup step returns a channel, the resolver checks whether the channel
+belongs to the current usage:
+
+```python
+if channel is not None:
+    producing_usage_qn = channel.rsplit("__", 1)[0]
+    if producing_usage_qn == usage.qualified_name:
+        channel = None  # discard self-reference
+```
+
+This prevents a calc from wiring to its own output when a name happens to match.
+
+### Design Attribute Resolution (Step 3, both paths)
+
+`_resolve_to_design_attribute(source_path, usage)` searches the design attributes
+dictionary for a matching attribute. Handles three `source_path` formats:
+
+- **Dotted path** (`parent_part.attr_name`) — match on both parent and name.
+- **SysML QN** (`Package::Part::attr`) — convert to Python QN and exact match.
+- **Bare name** (`attr_name`) — collect candidates, prefer same-file match.
+
+Returns a design attribute qualified name for shared [entry point](06-entry-point-classifier.md) deduplication.
+
+### Fallback (Step 4, both paths)
+
+If all steps fail, logs a warning and returns an ENTRY_POINT resolution using
+`"{usage_qualified_name}__{param_name}"` as the qualified name. This guarantees
+REQ-BT-04 — every binding always resolves to something.
+
+## Entry Point Discovery
+
+Entry points are discovered in three places during DFS:
+
+| Source | Where | Example QN |
+|--------|-------|------------|
+| Unbound param | `usage.unbound_params` loop | `Design__plant__lcoe__discount_rate` |
+| Literal binding | `BindingType.LITERAL` branch | `Design__plant__battery__cycles__n_cycles` |
+| Unresolvable reference | Steps 3-4 of both paths | `Design__plant__p_fusion` |
+
+`entry_point_sources` maps each entry point QN to either `str(literal_value)` (for
+literals) or the original `source_path` (for design attribute matching in
+[entry point classification](06-entry-point-classifier.md)).
+
+## Topological Sort
+
+`_topological_sort(graph)` implements Kahn's algorithm:
+
+1. Compute in-degree for each node (count of in-graph dependencies).
+2. Seed a queue with all zero-in-degree nodes.
+3. Pop from queue, append to result, decrement in-degrees of dependents.
+4. If `len(result) != len(graph)`, a cycle exists (raises `CircularDependencyError`).
+
+Current implementation uses `queue.pop(0)` which is O(n) per pop, making the overall
+sort O(n^2) for n modules. Adequate for typical pipeline sizes (< 50 modules).
+
+## Concrete Walkthrough: CHAIN Resolution
+
+Consider a pipeline with two calc usages:
+
+```
+Design__solar_battery_plant__battery__component_cost   (ComponentCostCalc)
+  - bindings: [BindingInfo(param="unit_cost", source_path=None, type=LITERAL, literal_value=150.0),
+               BindingInfo(param="capacity", source_path="sizing.nameplate_capacity", type=CHAIN)]
+  - unbound_params: []
+
+Design__solar_battery_plant__battery__sizing            (BatterySizing)
+  - outputs: [nameplate_capacity]
+```
+
+The typed [OutputRegistry](10-output-registry.md) has these entries:
+
+- Scoped: `ScopedKey("solar_battery_plant.battery.sizing.nameplate_capacity")` → `CanonicalChannel("Design__...__sizing__nameplate_capacity")`
+- Alias: `ScopedKey("battery.nameplate_capacity")` → same canonical (from CHAIN redefinition)
+
+**DFS trace for `component_cost`:**
+
+1. Enter `_trace_dependencies(component_cost, visited={}, path=[])`.
+2. `path = ["Design__...__component_cost"]`, `visited = {"Design__...__component_cost"}`.
+3. **Binding 1: `unit_cost`** — `BindingType.LITERAL`. Record as ENTRY_POINT:
+   - `binding_resolutions["...component_cost|unit_cost"]` = `BindingResolution(ENTRY_POINT, ...)`.
+   - `entry_point_sources["...component_cost__unit_cost"]` = `"150.0"`.
+4. **Binding 2: `capacity`** — `BindingType.CHAIN`, `source_path="sizing.nameplate_capacity"`.
+   - Enter `_resolve_binding_via_registry()`.
+   - No `::` in source_path → **CHAIN path**.
+   - **Step 1**: consumer scope = `"solar_battery_plant.battery"`. Scoped key =
+     `ScopedKey("solar_battery_plant.battery.sizing.nameplate_capacity")`.
+     `scoped_lookup()` → `CanonicalChannel("Design__...__sizing__nameplate_capacity")`. **HIT.**
+   - Self-reference guard passes (different usage).
+   - Return `BindingResolution(MODULE_OUTPUT, "Design__...__sizing__nameplate_capacity")`.
+   - **DFS recurse** into `sizing` (new branch, no cycle).
+5. `sizing` has no upstream bindings — returns `{sizing: sizing_usage}`.
+
+**Dependency graph:** `{component_cost: [sizing], sizing: []}`.
+
+**Topological sort:** `[sizing, component_cost]` — sizing runs first (in-degree 0).
+
+## Concrete Walkthrough: Cross-Package CHAIN Resolution
+
+From catf_mfe: consumer in `CATFMFEMagnets` package, producer in `CATFMFERadialBuild`:
+
+```
+Consumer:  CATFMFEMagnets__catf_tf_system__cryo_load
+  consumer_scope = "catf_tf_system"
+  source_path    = "catf_radial_build.magnet_surface_area"
+```
+
+**CHAIN path:**
+
+- **Step 1**: `ScopedKey("catf_tf_system.catf_radial_build.magnet_surface_area")`
+  → `scoped_lookup()` → None (catf_radial_build is NOT a child of catf_tf_system)
+- **Step 2**: `ScopedKey("catf_radial_build.magnet_surface_area")`
+  → `alias_lookup()` → `CanonicalChannel(...)` via Phase 3 EXPOSE_PURE alias. **HIT.**
+
+This is why the alias registry exists: cross-package references where Step 1
+structurally cannot work.
+
+## Concrete Walkthrough: REFERENCE Resolution
+
+From attr_expr_probe:
+
+```
+Consumer:  AttrExprProbeDesign__probe_design__scale_calc
+  source_path = "AttrExprProbeDesign::probe_design::area"
+```
+
+**REFERENCE path** (`::` detected):
+
+- **Step 1**: `SysMLQN("AttrExprProbeDesign::probe_design::area")`
+  → `sysml_qn_lookup()` → `CanonicalChannel(...)` via Phase 1c SysML QN key. **HIT.**
+
+No normalization needed — the SysML QN key is in its own typed registry.
+
+## Related Documents
+
+- **Upstream**: [02-orchestration](02-orchestration.md) — calls `find_required_modules()`, [10-output-registry](10-output-registry.md) — provides the typed registry queried by all steps
+- **Architecture**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — why CalcUsage resolution stays here
+- **Downstream**: [07-graph-assembly](07-graph-assembly.md) — consumes `BacktrackingResult`, [05-module-factory](05-module-factory.md) — builds modules from resolved bindings
+- **Cross-cutting**: [06-entry-point-classifier](06-entry-point-classifier.md) — classifies EPs discovered here, [15-naming-conventions](15-naming-conventions.md) — ScopedKey/CanonicalChannel formats
+- **Data models**: [09-data-models](09-data-models.md) — `BacktrackingResult`, `BindingResolution`, `BindingInfo`

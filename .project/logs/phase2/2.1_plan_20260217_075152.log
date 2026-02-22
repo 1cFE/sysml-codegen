@@ -1,0 +1,30 @@
+The plan is complete at `.project/active/output-registry-conformance/plan.md`.
+
+## Summary
+
+Here's what the plan covers for **Step 2.1 — Output Registry Spike (C08)**:
+
+### Key Findings from Design Consistency Review
+
+1. **Major structural gap**: The current `OutputRegistry` is a flat `dict[str, str]` with a single `resolve()` method. The design intent specifies 3 typed registries with separate typed lookup methods. This is a real refactor, not just adding tests.
+
+2. **Missing type definitions**: The 5 `NewType` wrappers (`SysMLQN`, `EQN`, `PQN`, `CanonicalChannel`, `ScopedKey`) specified in Doc 27 don't exist in the codebase yet. They need to be created as part of C08.
+
+3. **NewType vs method syntax**: Doc 27 uses `ScopedKey.from_eqn()` notation, but `NewType` doesn't support methods. The plan resolves this with standalone constructor functions (`make_scoped_key()`, `make_canonical_channel()`).
+
+4. **Downstream blast radius**: 6+ call sites use `registry.resolve()` in the backtracker and graph builder. The spike must determine whether to keep `resolve()` as a deprecated bridge or update all consumers in C08.
+
+### Decision: SPIKE
+
+Three unknowns need answers before building:
+1. Do `NewType` wrappers work with existing key derivation functions?
+2. What is the full blast radius of removing `resolve()`?
+3. Can `build_output_registry()` be refactored without breaking the 1053 existing tests?
+
+### Test Plan
+
+27 test cases covering all 8 requirements (REQ-OR-01 through REQ-OR-08), using real snapshot data from solar_battery, catf_mfe, attr_expr_probe, and chain_spike models. No mocks.
+
+### Build Plan
+
+6 files to modify: identifier_types.py (new types), output_registry.py (3 typed registries), initialization.py (stop registering dead keys), dependency_backtracker.py (typed lookups), graph_builder.py (typed lookups), existing unit tests (update to new API).

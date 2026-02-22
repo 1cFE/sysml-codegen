@@ -4,7 +4,6 @@ This layer provides analysis capabilities for extracted SysML data:
 - Parameter group derivation for entry point organization
 - Phantom entry point detection for binding validation
 - Dependency backtracking for pipeline ordering
-- Qualified name utilities for identifier handling
 - Signature extraction for implementation preservation
 """
 
@@ -23,11 +22,6 @@ from sysml_codegen.analysis.phantom_detector import (
     PhantomCandidate,
     PhantomDetectionReport,
     PhantomDetector,
-)
-# Re-export from core for backward compatibility
-from sysml_codegen.core.qualified_names import (
-    sanitize_name,
-    sysml_to_python_qualified_name,
 )
 from sysml_codegen.analysis.signature_extractor import (
     FunctionSignature,
@@ -49,9 +43,6 @@ __all__ = [
     "PhantomCandidate",
     "PhantomDetectionReport",
     "PhantomDetector",
-    # qualified_names
-    "sanitize_name",
-    "sysml_to_python_qualified_name",
     # signature_extractor
     "FunctionSignature",
     "extract_signature_from_impl",

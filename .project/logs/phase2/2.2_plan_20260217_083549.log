@@ -1,0 +1,23 @@
+The plan is complete. Here's a summary of the key findings:
+
+## Plan Summary: C09 — Virtual Binding Rewrite
+
+**Deliverable**: `.project/active/virtual-binding-rewrite/plan.md`
+
+### Key Findings from Design Consistency Review
+
+1. **Snapshot data is post-rewrite** — The extraction snapshots are captured after `build_pipeline_context()` runs, which includes `_rewrite_virtual_bindings()`. Tests cannot simply load snapshot data and run the function — they need a strategy to reconstruct pre-rewrite state. **Spike is required** to validate the reconstruction approach.
+
+2. **No CHAIN override fixture coverage** — All 13 design_overrides in solar_battery are LITERAL/deep-path. Zero CHAIN overrides exist in any fixture model's `design_overrides`. REQ-VBR-04 must be tested with constructed data using real component names.
+
+3. **No production code changes needed** — The function already exists at `initialization.py:266-333` with a clean interface. C09 is a conformance testing effort, not a build step. The function extraction to `orchestration/` is deferred to Phase 7.1.
+
+4. **EXPRESSION override silently ignored** — The rewrite function only handles LITERAL and CHAIN override types. EXPRESSION falls through without mutation. This matches the design intent but should be documented.
+
+5. **Cross-component impact** — C10 (Aggregation Scoping) faces the same snapshot-is-post-mutation challenge. This plan documents the approach so C10 can reuse it.
+
+### Decision: SPIKE before BUILD
+The spike must verify three things before tests can be written:
+- Pre-rewrite state reconstruction from snapshot data + design_overrides
+- Idempotency (calling on already-rewritten data returns 0)
+- CHAIN override construction using real fixture names

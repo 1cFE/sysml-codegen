@@ -7,195 +7,168 @@ using Pydantic v2 RootModel wrappers.
 Usage:
     from sysml_codegen.generation.modules import generate_teax_module
 
-    code = generate_teax_module(calc_def, template_env, output_path)
+    code = generate_teax_module(module, template_env, output_path)
 """
 
 from pathlib import Path
 
 import jinja2
 
-# UPDATED: Import from sysml_codegen package
-from sysml_codegen.extraction.data_models import AttributeInfo, CalculationDefinitionData
-from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+
+from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 
 
-def is_multioutput(calc_def: CalculationDefinitionData) -> bool:
-    """Determine if calc def has multiple outputs.
+def _output_attr_name(out) -> str:
+    """Get original output attribute name from ModuleOutput.
 
-    Args:
-        calc_def: Extracted calculation definition data
-
-    Returns:
-        True if calc def has 2+ output attributes
+    For multi-output modules, field_name IS the attribute name.
+    For single-output modules, field_name is "root" -- extract from channel_name.
+    Channel name format: {usage_eqn}__{attr_name} (PQN format).
     """
-    return len(calc_def.output_attributes) >= 2
+    if out.field_name != "root":
+        return out.field_name
+    return out.channel_name.split("__")[-1]
 
 
-def _build_module_docstring(calc_def: CalculationDefinitionData) -> str:
-    """Build comprehensive module docstring with I/O sections.
+def _get_module_sysml_qn(module) -> str:
+    """Get the full SysML qualified name for path/import derivation.
 
-    Args:
-        calc_def: Calculation definition with metadata
-
-    Returns:
-        Formatted module docstring with purpose, I/O, source
+    Module types store calc_def_qualified_name differently:
+    - CalcUsage: full calc def QN (e.g., "Package::CalcDef")
+    - FORMULA: owning part QN only → append "::calc_def_name"
+    - Aggregation: owning part QN with __ separator → use module.name with :: separator
     """
+    if module.is_computed_attribute:
+        return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
+    elif module.is_aggregation:
+        return module.name.replace("__", "::")
+    else:
+        return module.calc_def_qualified_name
+
+
+def _build_module_docstring_from_graph(module) -> str:
+    """Build module docstring from PipelineModule fields."""
     lines = []
 
-    # Add purpose
-    lines.append(f"TEAx module for {calc_def.name} calculation.")
+    lines.append(f"TEAx module for {module.calc_def_name} calculation.")
 
-    # Add detailed description from doc comment
-    if calc_def.doc_comment:
+    if module.doc_comment:
         lines.append("")
-        lines.append(calc_def.doc_comment.strip())
+        lines.append(module.doc_comment.strip())
 
-    # Add inputs section
-    if calc_def.input_attributes:
+    if module.inputs:
         lines.append("")
         lines.append("Inputs:")
-        for attr in calc_def.input_attributes:
-            desc = attr.description or f"{attr.name} parameter"
-            # Add unit if available
-            if attr.unit and f"[{attr.unit}]" not in desc:
-                desc = f"{desc} [{attr.unit}]"
-            lines.append(f"    - {attr.name}: {desc}")
+        for inp in module.inputs:
+            desc = inp.description or f"{inp.param_name} parameter"
+            lines.append(f"    - {inp.param_name}: {desc}")
 
-    # Add outputs section
-    if calc_def.output_attributes:
+    if module.outputs:
         lines.append("")
         lines.append("Outputs:")
-        for attr in calc_def.output_attributes:
-            desc = attr.description or f"{attr.name} result"
-            # Add unit if available
-            if attr.unit and f"[{attr.unit}]" not in desc:
-                desc = f"{desc} [{attr.unit}]"
-            lines.append(f"    - {attr.name}: {desc}")
+        for out in module.outputs:
+            out_name = _output_attr_name(out)
+            desc = out.description or f"{out_name} result"
+            if out.unit and f"[{out.unit}]" not in desc:
+                desc = f"{desc} [{out.unit}]"
+            lines.append(f"    - {out_name}: {desc}")
 
-    # Add source reference
     lines.append("")
-    lines.append(f"SysML Source: {calc_def.source_file}:{calc_def.source_line}")
+    lines.append(f"SysML Source: {module.source_file}:{module.source_line}")
 
     return "\n".join(lines)
 
 
 def generate_teax_module(
-    calc_def: CalculationDefinitionData,
+    module,
     template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",
 ) -> str:
-    """Generate TEAx module wrapper for calculation definition.
+    """Generate TEAx module wrapper from PipelineModule.
 
-    ADR-003: Generates imports from namespaced handwritten files based on
-    the SysML qualified name.
+    Handles all module types: CalcUsage, FORMULA, and aggregation.
+    Derives class names, import paths, and template context from
+    PipelineModule fields.
 
     Args:
-        calc_def: Calculation definition data
+        module: PipelineModule with metadata fields populated
         template_env: Jinja2 environment with templates loaded
         output_path: Path where module will be written (for reference)
-        package_name: Python package name (parameterized, no hardcoded default)
+        package_name: Python package name
 
     Returns:
         Generated Python code string
     """
-    # Determine output pattern
-    multi_output = is_multioutput(calc_def)
+    multi_output = len(module.outputs) > 1
 
-    # Prepare input attributes with type hints
     input_attributes = [
         {
-            "name": attr.name,
-            "type_hint": _map_input_type(attr),
-            "description": attr.description or f"{attr.name} input",
+            "name": inp.param_name,
+            "type_hint": inp.python_type,
+            "description": inp.description or f"{inp.param_name} input",
         }
-        for attr in calc_def.input_attributes
+        for inp in module.inputs
     ]
 
-    # Prepare output attributes
-    output_attributes = [
-        {
-            "name": attr.name,
-            "description": attr.description or f"{attr.name} output",
-        }
-        for attr in calc_def.output_attributes
-    ]
+    output_attributes = []
+    for out in module.outputs:
+        out_name = _output_attr_name(out)
+        output_attributes.append({
+            "name": out_name,
+            "description": out.description or f"{out_name} output",
+        })
 
-    # Collect primitive types used in inputs (for imports)
     primitive_types = set()
     for attr in input_attributes:
         type_hint = attr["type_hint"]
         if type_hint in ["Float", "Int", "String", "Bool"]:
             primitive_types.add(type_hint)
-
-    # Always include Float (used for outputs in single-output modules)
     primitive_types.add("Float")
-
-    # Sort for consistent imports
     primitive_imports = sorted(primitive_types)
 
-    # ADR-003: Derive namespaced import path for handwritten implementation
-    sqn = SysMLQualifiedName(calc_def.qualified_name)
+    # Derive path from full SysML QN (module-type-aware)
+    sysml_qn = _get_module_sysml_qn(module)
+    sqn = SysMLQualifiedName(sysml_qn)
     python_path = PythonModulePath.from_sysml(sqn)
     impl_import_path = python_path.impl_import_path
 
-    # Build template context
+    # Class name from module_type (correct PascalCase for all module types)
+    class_name = module.module_type.split(".")[-1]
+    base_name = class_name.removesuffix("Module")
+
     context = {
-        "class_name": f"{calc_def.name}Module",
-        "input_class_name": f"{calc_def.name}Input",
-        "output_class_name": f"{calc_def.name}Output",
-        "schema_name": calc_def.name.lower() + "_output",
-        "handler_name": calc_def.name.lower(),
-        "impl_import_path": impl_import_path,  # ADR-003: Namespaced handwritten import
-        "doc_comment": _build_module_docstring(calc_def),
+        "class_name": class_name,
+        "input_class_name": f"{base_name}Input",
+        "output_class_name": f"{base_name}Output",
+        "schema_name": base_name.lower() + "_output",
+        "handler_name": module.calc_def_name.lower(),
+        "impl_import_path": impl_import_path,
+        "doc_comment": _build_module_docstring_from_graph(module),
         "package_name": package_name,
         "is_multioutput": multi_output,
         "input_attributes": input_attributes,
         "output_attributes": output_attributes,
-        "calc_expressions": calc_def.calc_expressions or [],
-        "sysml_source": f"{calc_def.source_file}:{calc_def.source_line}",
+        "calc_expressions": module.calc_expressions or [],
+        "sysml_source": f"{module.source_file}:{module.source_line}",
         "primitive_imports": primitive_imports,
     }
 
-    # Render template
     template = template_env.get_template("teax_module.py.jinja2")
     code = template.render(**context)
 
-    # Ensure final newline (PEP 8 compliance)
     if not code.endswith('\n'):
         code += '\n'
 
     return code
 
 
-def _map_input_type(attr: AttributeInfo) -> str:
-    """Map input attribute to Python type hint.
-
-    All primitive types map to raw Python types (float, int, str, bool).
-    Schema types (parameter groups) pass through unchanged.
-
-    Args:
-        attr: Input attribute info
-
-    Returns:
-        Python type hint string (e.g., 'float', 'PlasmaParams')
-    """
-    # Map primitive types to raw Python types (not RootModel[T])
-    mapping = {
-        "Real": "float",
-        "ScalarValues::Real": "float",
-        "Integer": "int",
-        "ScalarValues::Integer": "int",
-        "String": "str",
-        "ScalarValues::String": "str",
-        "Boolean": "bool",
-        "ScalarValues::Boolean": "bool",
-    }
-
-    return mapping.get(attr.sysml_type, attr.sysml_type)  # Pass through schema types
+# Keep old name as alias for backward compatibility during transition
+generate_teax_module_from_graph = generate_teax_module
 
 
 __all__ = [
     "generate_teax_module",
-    "is_multioutput",
+    "generate_teax_module_from_graph",
 ]
