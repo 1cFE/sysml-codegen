@@ -1,8 +1,8 @@
 # Implementation Plan: Architecture Documentation Consolidation
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-02-20
-**Last Updated:** 2026-02-20
+**Last Updated:** 2026-02-22
 
 ## Source Documents
 - **Spec:** `.project/active/docs-consolidation/spec.md` ← See here for requirements FR-1 through FR-9, acceptance criteria, deliverables D1-D6
@@ -223,8 +223,8 @@ Launch subagents per batch, but each subagent MUST have codebase access to verif
 - [x] No "deferred" or "not implemented" claims for things that have been implemented
 
 **Manual:**
-- [ ] Read 3 high-effort docs end-to-end and confirm they read as definitive architecture descriptions
-- [ ] Confirm Bug 11 section in doc 22 reflects the fix
+- [x] Read 3 high-effort docs end-to-end and confirm they read as definitive architecture descriptions
+- [x] Confirm Bug 11 section in doc 22 reflects the fix
 
 **What We Know Works After This Phase:**
 Every document is accurate as of the current codebase state. No stale bug reports, no test-coverage metadata, no false "deferred" claims. Each doc reads as a definitive architectural description that a new developer can trust.
@@ -279,8 +279,8 @@ Frame as **prerequisites** — what the SysML models MUST look like for the pipe
 - [x] `grep -r 'ADR-00' docs/architecture/` — no broken references
 
 **Manual:**
-- [ ] `modeling-assumptions.md` reads standalone as a modeling guide
-- [ ] Spot-check: key decisions from each ADR are captured
+- [x] `modeling-assumptions.md` reads standalone as a modeling guide
+- [x] Spot-check: key decisions from each ADR are captured
 
 **What We Know Works After This Phase:**
 ADR content is consolidated into a single prerequisites document. No orphaned ADR files.
@@ -350,24 +350,24 @@ Write `docs/architecture/overview.md` as the single-page architecture summary wi
 
 ### Changes Required
 
-- [ ] Write `docs/architecture/overview.md`
-- [ ] Write `.project/concepts/refactor-design-intent/ARCHIVED.md` with:
+- [x] Write `docs/architecture/overview.md`
+- [x] Write `.project/concepts/refactor-design-intent/ARCHIVED.md` with:
   - "This folder contains development artifacts from the Feb 2026 refactor"
   - "Canonical documentation is now in `docs/architecture/`"
   - "Preserved for historical reference only"
-- [ ] Verify all links in overview.md resolve to existing files
+- [x] Verify all links in overview.md resolve to existing files
 
 ### Validation
 
 **Automated:**
-- [ ] All markdown links in `overview.md` point to files that exist
-- [ ] `docs/architecture/` contains: `overview.md`, `modeling-assumptions.md`, `verification-matrix.md`, `reference/` (28 files)
-- [ ] No ADR files remain
-- [ ] Existing tests still pass (`uv run pytest tests/`)
+- [x] All markdown links in `overview.md` point to files that exist
+- [x] `docs/architecture/` contains: `overview.md`, `modeling-assumptions.md`, `verification-matrix.md`, `reference/` (27 files)
+- [x] No ADR files remain
+- [x] Existing tests still pass (`uv run pytest tests/`)
 
 **Manual:**
-- [ ] `overview.md` reads standalone — a developer unfamiliar with the project can follow it
-- [ ] `ARCHIVED.md` exists in concept folder
+- [x] `overview.md` reads standalone — a developer unfamiliar with the project can follow it
+- [x] `ARCHIVED.md` exists in concept folder
 
 **What We Know Works After This Phase:**
 All acceptance criteria from spec are met. `docs/architecture/` is the single authoritative source.
@@ -493,10 +493,30 @@ ADR-003 (signal identifiers), ADR-004 (computed attribute pipeline integration),
 **Issues:** None
 
 ### Phase 4 Completion
-**Completed:**
+**Completed:** 2026-02-22
 **Actual Changes:**
-**Issues:**
+- Created `docs/architecture/overview.md` (~215 lines)
+  - Data flow diagram (7-step pipeline with package mapping)
+  - 4 key architectural principles: ComputationGraph as SSOT, typed registries, dual resolution, test-first
+  - Package structure map
+  - Reading guide: newcomer walkthrough (8-doc recommended order) + deep dives by topic (9 topic groups)
+  - Component index: all 29 components (C01-C27, X01-X02) with doc link and package location
+  - 7 known limitations (from deferred issues: EXPOSE_COMPUTED, inherited misclassification, deep REFERENCE, sum()-only aggregation, dual BindingInfo, UNRESOLVABLE dead code, upstream V2 validation)
+  - Verification summary with pointer to verification-matrix.md
+- Created `.project/concepts/refactor-design-intent/ARCHIVED.md`
+  - Points to `docs/architecture/` as canonical location
+  - Lists all 4 deliverables (overview, modeling-assumptions, reference/, verification-matrix)
+- Fixed doc 27 references: doc 27 was merged into doc 10 in Phase 1c (commit dea3579), so reference count is 27 files (00-26), not 28. Updated deep dives table and component index C27 to link to doc 10.
+
+**Validation:**
+- All 30 markdown links in overview.md resolve to existing files
+- docs/architecture/ contains: overview.md, modeling-assumptions.md, verification-matrix.md, reference/ (27 files)
+- No ADR files remain
+- 1812 tests passed, 4 skipped, 5 xfailed (no regressions)
+- ARCHIVED.md exists in concept folder
+
+**Issues:** None
 
 ---
 
-**Status**: Draft → In Progress → Complete
+**Status**: Complete
