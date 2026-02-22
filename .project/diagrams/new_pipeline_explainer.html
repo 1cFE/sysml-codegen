@@ -35,7 +35,7 @@
 
   /* Resolution paths */
   --path-backtracker: #2563EB;
-  --path-resolve-input: #7C3AED;
+  --path-agg-chain: #7C3AED;
 
   /* Structural */
   --edge-color: #94A3B8;
@@ -216,6 +216,16 @@ p { margin-bottom: 0.75rem; color: #475569; }
 .callout.warning {
   border-left-color: #DC2626;
   background: #FEF2F2;
+}
+.req-badge {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: #64748B;
+  background: #F1F5F9;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  margin-left: 0.3rem;
+  white-space: nowrap;
 }
 
 /* Glossary overlay */
@@ -472,6 +482,13 @@ p { margin-bottom: 0.75rem; color: #475569; }
   color: #94A3B8;
   padding: 2rem 0.25rem 0;
   flex-shrink: 0;
+}
+.compile-stat {
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  background: #FFF;
 }
 .step-also {
   font-size: 0.8rem;
@@ -1255,6 +1272,7 @@ p { margin-bottom: 0.75rem; color: #475569; }
   <a href="#step-5" class="nav-step"><span class="step-badge" style="background:var(--step-modules)">5</span> Build Modules</a>
   <a href="#step-55" class="nav-step"><span class="step-badge" style="background:var(--step-modules)">5.5</span> Build Registry</a>
   <a href="#step-6" class="nav-step"><span class="step-badge" style="background:var(--step-sort)">6</span> Sort + Validate</a>
+  <a href="#step-65" class="nav-step"><span class="step-badge" style="background:var(--step-sort)">6.5</span> Compile</a>
   <a href="#step-7" class="nav-step"><span class="step-badge" style="background:var(--step-render)">7</span> Render</a>
 
   <a href="#act3" class="nav-act">3. Why The Hard Parts Work</a>
@@ -1417,6 +1435,17 @@ p { margin-bottom: 0.75rem; color: #475569; }
     <div id="step-6" class="step-section">
       <h3><span class="step-badge" style="background:var(--step-sort)">6</span> Sort + Validate</h3>
       <div class="placeholder">Step 6 content (Phase 3)</div>
+    </div>
+
+    <div id="step-65" class="step-section">
+      <h3><span class="step-badge" style="background:var(--step-sort)">6.5</span> Compile Expressions</h3>
+      <p class="step-explanation">Compile CalcDef expressions to Python. Each CalcDef's output expressions are parsed into an AST and compiled. The compilation verdict (<code>FULLY_COMPILABLE</code>, <code>PARTIALLY_COMPILABLE</code>, <code>MANUAL_REQUIRED</code>) determines whether the module gets auto-generated implementation or a handwritten stencil.</p>
+      <div class="step-io-layout">
+        <div class="data-panel" id="step-65-input"></div>
+        <div class="step-io-arrow">&rarr;</div>
+        <div class="data-panel" id="step-65-output"></div>
+      </div>
+      <div class="callout">Without compilation, every module needs a handwritten implementation file. Compilation makes the pipeline self-sufficient for straightforward calculations — the generated code is complete, not just wiring.</div>
     </div>
 
     <div id="step-7" class="step-section">
@@ -1751,19 +1780,24 @@ const MODEL_DATA = {
     { id: "sa_pv_cost", shortName: "PV Module Cost", fullEQN: P+"solar_array__pv_module__cost_model",
       family: "F1", cluster: "solar_array", tier: 0,
       moduleType: "solarbatterylibrary.PVModuleCostCalcModule",
+      calcDefName: "PVModuleCostCalc",
+      docComment: "Calculates PV module costs: material, fabrication, installation, and total cost with idiot index.",
+      sourceFile: "models/library/solar_battery_library.sysml",
+      sourceLine: 42,
+      compilability: "FULLY_COMPILABLE",
       inputs: [
-        { name: "wattage", type: "float", source: "entry_point", group: "design", qn: P+"solar_array__pv_module__cost_model__wattage" },
-        { name: "efficiency", type: "float", source: "entry_point", group: "design", qn: P+"solar_array__pv_module__cost_model__efficiency" },
-        { name: "cost_per_watt", type: "float", source: "entry_point", group: "library", qn: P+"solar_array__pv_module__cost_model__cost_per_watt" },
-        { name: "fab_factor", type: "float", source: "entry_point", group: "library", qn: P+"solar_array__pv_module__cost_model__fab_factor" },
-        { name: "install_factor", type: "float", source: "entry_point", group: "library", qn: P+"solar_array__pv_module__cost_model__install_factor" }
+        { name: "wattage", type: "float", source: "entry_point", group: "design", qn: P+"solar_array__pv_module__cost_model__wattage", description: "Peak wattage per module", defaultValue: null },
+        { name: "efficiency", type: "float", source: "entry_point", group: "design", qn: P+"solar_array__pv_module__cost_model__efficiency", description: "Module conversion efficiency", defaultValue: null },
+        { name: "cost_per_watt", type: "float", source: "entry_point", group: "library", qn: P+"solar_array__pv_module__cost_model__cost_per_watt", description: "Material cost per watt", defaultValue: 1.07 },
+        { name: "fab_factor", type: "float", source: "entry_point", group: "library", qn: P+"solar_array__pv_module__cost_model__fab_factor", description: "Fabrication cost multiplier", defaultValue: 0.45 },
+        { name: "install_factor", type: "float", source: "entry_point", group: "library", qn: P+"solar_array__pv_module__cost_model__install_factor", description: "Installation cost multiplier", defaultValue: 0.30 }
       ],
       outputs: [
-        { name: "material_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__material_cost" },
-        { name: "fab_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__fab_cost" },
-        { name: "install_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__install_cost" },
-        { name: "total_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__total_cost" },
-        { name: "idiot_index", type: "float", channel: P+"solar_array__pv_module__cost_model__idiot_index" }
+        { name: "material_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__material_cost", description: "Raw material cost", unit: "USD" },
+        { name: "fab_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__fab_cost", description: "Fabrication cost", unit: "USD" },
+        { name: "install_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__install_cost", description: "Installation cost", unit: "USD" },
+        { name: "total_cost", type: "float", channel: P+"solar_array__pv_module__cost_model__total_cost", description: "Total module cost (material + fab + install)", unit: "USD" },
+        { name: "idiot_index", type: "float", channel: P+"solar_array__pv_module__cost_model__idiot_index", description: "Cost markup ratio (total/material)", unit: null }
       ]
     },
     { id: "sa_inv_cost", shortName: "Inverter Cost", fullEQN: P+"solar_array__inverter__cost_model",
@@ -1953,11 +1987,16 @@ const MODEL_DATA = {
     { id: "p_net_kw", shortName: "p_net_kw", fullEQN: P+"p_net_kw",
       family: "F2", cluster: "system", tier: 0,
       moduleType: "solarbatterydesign.solar_battery_plant.p_net_kwModule",
+      calcDefName: null,
+      docComment: "Computed attribute: converts net power from MW to kW",
+      sourceFile: "models/design/solar_battery_design.sysml",
+      sourceLine: null,
+      compilability: "FULLY_COMPILABLE",
       inputs: [
-        { name: "p_net_mw", type: "float", source: "entry_point", group: "design", qn: P+"p_net_mw" }
+        { name: "p_net_mw", type: "float", source: "entry_point", group: "design", qn: P+"p_net_mw", description: "Net power capacity in MW", defaultValue: 0.008 }
       ],
       outputs: [
-        { name: "root", type: "RootModel[float]", channel: P+"p_net_kw__p_net_kw" }
+        { name: "root", type: "RootModel[float]", channel: P+"p_net_kw__p_net_kw", description: "Net power capacity in kW", unit: "kW" }
       ]
     },
 
@@ -1978,16 +2017,21 @@ const MODEL_DATA = {
     { id: "sa_cap_cost", shortName: "SA Capital Cost", fullEQN: P+"solar_array__capital_cost",
       family: "F3", cluster: "solar_array", tier: 1,
       moduleType: "solarbatterylibrary__solar_array.capital_costModule",
+      calcDefName: null,
+      docComment: "Aggregation: sum of all Solar Array component capital costs",
+      sourceFile: "models/design/solar_battery_design.sysml",
+      sourceLine: null,
+      compilability: "FULLY_COMPILABLE",
       inputs: [
-        { name: "pv_module_capital_cost", type: "float", source: "module_output", producerId: "sa_pv_cost", producerChannel: P+"solar_array__pv_module__cost_model__total_cost" },
-        { name: "module_count", type: "int", source: "entry_point", group: "design", qn: P+"solar_array__module_count" },
-        { name: "inverter_capital_cost", type: "float", source: "module_output", producerId: "sa_inv_cost", producerChannel: P+"solar_array__inverter__cost_model__total_cost" },
-        { name: "inverter_count", type: "int", source: "entry_point", group: "design", qn: P+"solar_array__inverter_count" },
-        { name: "array_bos_capital_cost", type: "float", source: "module_output", producerId: "sa_bos_cost", producerChannel: P+"solar_array__array_bos__cost_model__total_cost" },
-        { name: "misc_hardware_cost", type: "float", source: "module_output", producerId: "sa_alloc", producerChannel: P+"solar_array__allocation_model__total_allocation" }
+        { name: "pv_module_capital_cost", type: "float", source: "module_output", producerId: "sa_pv_cost", producerChannel: P+"solar_array__pv_module__cost_model__total_cost", description: "PV module total cost (per unit)", defaultValue: null },
+        { name: "module_count", type: "int", source: "entry_point", group: "design", qn: P+"solar_array__module_count", description: "Number of PV modules", defaultValue: 20 },
+        { name: "inverter_capital_cost", type: "float", source: "module_output", producerId: "sa_inv_cost", producerChannel: P+"solar_array__inverter__cost_model__total_cost", description: "Inverter total cost (per unit)", defaultValue: null },
+        { name: "inverter_count", type: "int", source: "entry_point", group: "design", qn: P+"solar_array__inverter_count", description: "Number of inverters", defaultValue: 4 },
+        { name: "array_bos_capital_cost", type: "float", source: "module_output", producerId: "sa_bos_cost", producerChannel: P+"solar_array__array_bos__cost_model__total_cost", description: "Array BOS total cost", defaultValue: null },
+        { name: "misc_hardware_cost", type: "float", source: "module_output", producerId: "sa_alloc", producerChannel: P+"solar_array__allocation_model__total_allocation", description: "Miscellaneous hardware allocation", defaultValue: null }
       ],
       outputs: [
-        { name: "root", type: "RootModel[float]", channel: P+"solar_array__capital_cost__capital_cost" }
+        { name: "root", type: "RootModel[float]", channel: P+"solar_array__capital_cost__capital_cost", description: "Total Solar Array capital cost", unit: "USD" }
       ]
     },
     { id: "sa_mat_cost", shortName: "SA Material Cost", fullEQN: P+"solar_array__raw_material_cost",
@@ -2238,14 +2282,19 @@ const MODEL_DATA = {
     { id: "ann_fin", shortName: "Annualized Financial", fullEQN: P+"annualized_financial",
       family: "F1", cluster: "system", tier: 3,
       moduleType: "solarbatterylibrary.AnnualizedFinancialCalcModule",
+      calcDefName: "AnnualizedFinancialCalc",
+      docComment: "Annualizes total capital expenditure using discount rate and plant lifetime.",
+      sourceFile: "models/library/solar_battery_library.sysml",
+      sourceLine: null,
+      compilability: "FULLY_COMPILABLE",
       inputs: [
-        { name: "total_capex", type: "float", source: "module_output", producerId: "plant_cap_cost", producerChannel: P+"capital_cost__capital_cost" },
-        { name: "discount_rate", type: "float", source: "entry_point", group: "design", qn: P+"annualized_financial__discount_rate" },
-        { name: "plant_lifetime", type: "float", source: "entry_point", group: "design", qn: P+"annualized_financial__plant_lifetime" }
+        { name: "total_capex", type: "float", source: "module_output", producerId: "plant_cap_cost", producerChannel: P+"capital_cost__capital_cost", description: "Total plant capital expenditure", defaultValue: null },
+        { name: "discount_rate", type: "float", source: "entry_point", group: "design", qn: P+"annualized_financial__discount_rate", description: "Financial discount rate", defaultValue: 0.05 },
+        { name: "plant_lifetime", type: "float", source: "entry_point", group: "design", qn: P+"annualized_financial__plant_lifetime", description: "Plant operational lifetime", defaultValue: 25.0 }
       ],
       outputs: [
-        { name: "capital_recovery_factor", type: "float", channel: P+"annualized_financial__capital_recovery_factor" },
-        { name: "annualized_capital_cost", type: "float", channel: P+"annualized_financial__annualized_capital_cost" }
+        { name: "capital_recovery_factor", type: "float", channel: P+"annualized_financial__capital_recovery_factor", description: "Capital recovery factor from CRF formula", unit: null },
+        { name: "annualized_capital_cost", type: "float", channel: P+"annualized_financial__annualized_capital_cost", description: "Annual capital cost", unit: "USD/year" }
       ]
     },
 
@@ -2253,16 +2302,21 @@ const MODEL_DATA = {
     { id: "lcoe", shortName: "LCOE", fullEQN: P+"lcoe",
       family: "F1", cluster: "system", tier: 4,
       moduleType: "solarbatterylibrary.LCOECalcModule",
+      calcDefName: "LCOECalc",
+      docComment: "Levelized Cost of Electricity: annualized costs divided by annual energy production.",
+      sourceFile: "models/library/solar_battery_library.sysml",
+      sourceLine: null,
+      compilability: "FULLY_COMPILABLE",
       inputs: [
-        { name: "annualized_capital_cost", type: "float", source: "module_output", producerId: "ann_fin", producerChannel: P+"annualized_financial__annualized_capital_cost" },
-        { name: "annual_om_cost", type: "float", source: "module_output", producerId: "ann_om", producerChannel: P+"annualized_om__annual_om_cost" },
-        { name: "annual_fuel_cost", type: "float", source: "module_output", producerId: "ann_fuel", producerChannel: P+"annualized_fuel__annual_fuel_cost" },
-        { name: "yearly_inflation", type: "float", source: "entry_point", group: "design", qn: P+"lcoe__yearly_inflation" },
-        { name: "plant_lifetime", type: "float", source: "entry_point", group: "design", qn: P+"lcoe__plant_lifetime" },
-        { name: "annual_energy_mwh", type: "float", source: "module_output", producerId: "energy_prod", producerChannel: P+"energy_production__annual_energy_mwh" }
+        { name: "annualized_capital_cost", type: "float", source: "module_output", producerId: "ann_fin", producerChannel: P+"annualized_financial__annualized_capital_cost", description: "Annualized capital cost", defaultValue: null },
+        { name: "annual_om_cost", type: "float", source: "module_output", producerId: "ann_om", producerChannel: P+"annualized_om__annual_om_cost", description: "Annual O&M cost", defaultValue: null },
+        { name: "annual_fuel_cost", type: "float", source: "module_output", producerId: "ann_fuel", producerChannel: P+"annualized_fuel__annual_fuel_cost", description: "Annual fuel cost", defaultValue: null },
+        { name: "yearly_inflation", type: "float", source: "entry_point", group: "design", qn: P+"lcoe__yearly_inflation", description: "Yearly inflation rate", defaultValue: 0.0245 },
+        { name: "plant_lifetime", type: "float", source: "entry_point", group: "design", qn: P+"lcoe__plant_lifetime", description: "Plant operational lifetime", defaultValue: 25.0 },
+        { name: "annual_energy_mwh", type: "float", source: "module_output", producerId: "energy_prod", producerChannel: P+"energy_production__annual_energy_mwh", description: "Annual energy production", defaultValue: null }
       ],
       outputs: [
-        { name: "root", type: "RootModel[float]", channel: P+"lcoe__lcoe_per_mwh" }
+        { name: "root", type: "RootModel[float]", channel: P+"lcoe__lcoe_per_mwh", description: "Levelized cost of electricity", unit: "USD/MWh" }
       ]
     }
   ],
@@ -2429,19 +2483,37 @@ const MODEL_DATA = {
       is_computed_attribute: false,
       is_aggregation: false,
       compilability: "FULLY_COMPILABLE",
+      calc_def_name: "PVModuleCostCalc",
+      calc_def_qualified_name: "SolarBatteryLibrary::PVModuleCostCalc",
+      doc_comment: "Calculates PV module costs: material, fabrication, installation, and total cost with idiot index.",
+      source_file: "models/library/solar_battery_library.sysml",
+      source_line: 42,
+      auto_impl_context: {
+        execution_steps: [
+          "material_cost = wattage * cost_per_watt",
+          "fab_cost = material_cost * fab_factor",
+          "install_cost = material_cost * install_factor",
+          "total_cost = material_cost + fab_cost + install_cost",
+          "idiot_index = total_cost / material_cost"
+        ],
+        output_expressions: {
+          material_cost: "wattage * cost_per_watt",
+          total_cost: "material_cost + fab_cost + install_cost"
+        }
+      },
       inputs: [
-        { param: "wattage", source_type: "entry_point", param_group: "design_params", qn: P+"solar_array__pv_module__cost_model__wattage" },
-        { param: "efficiency", source_type: "entry_point", param_group: "design_params", qn: P+"solar_array__pv_module__cost_model__efficiency" },
-        { param: "cost_per_watt", source_type: "entry_point", param_group: "library_params", qn: P+"solar_array__pv_module__cost_model__cost_per_watt" },
-        { param: "fab_factor", source_type: "entry_point", param_group: "library_params", qn: P+"solar_array__pv_module__cost_model__fab_factor" },
-        { param: "install_factor", source_type: "entry_point", param_group: "library_params", qn: P+"solar_array__pv_module__cost_model__install_factor" }
+        { param: "wattage", source_type: "entry_point", param_group: "design_params", qn: P+"solar_array__pv_module__cost_model__wattage", description: "Peak wattage per module", default_value: null },
+        { param: "efficiency", source_type: "entry_point", param_group: "design_params", qn: P+"solar_array__pv_module__cost_model__efficiency", description: "Module conversion efficiency", default_value: null },
+        { param: "cost_per_watt", source_type: "entry_point", param_group: "library_params", qn: P+"solar_array__pv_module__cost_model__cost_per_watt", description: "Material cost per watt", default_value: 1.07 },
+        { param: "fab_factor", source_type: "entry_point", param_group: "library_params", qn: P+"solar_array__pv_module__cost_model__fab_factor", description: "Fabrication cost multiplier", default_value: 0.45 },
+        { param: "install_factor", source_type: "entry_point", param_group: "library_params", qn: P+"solar_array__pv_module__cost_model__install_factor", description: "Installation cost multiplier", default_value: 0.30 }
       ],
       outputs: [
-        { field_name: "material_cost", channel: P+"solar_array__pv_module__cost_model__material_cost" },
-        { field_name: "fab_cost", channel: P+"solar_array__pv_module__cost_model__fab_cost" },
-        { field_name: "install_cost", channel: P+"solar_array__pv_module__cost_model__install_cost" },
-        { field_name: "total_cost", channel: P+"solar_array__pv_module__cost_model__total_cost" },
-        { field_name: "idiot_index", channel: P+"solar_array__pv_module__cost_model__idiot_index" }
+        { field_name: "material_cost", channel: P+"solar_array__pv_module__cost_model__material_cost", description: "Raw material cost", unit: "USD" },
+        { field_name: "fab_cost", channel: P+"solar_array__pv_module__cost_model__fab_cost", description: "Fabrication cost", unit: "USD" },
+        { field_name: "install_cost", channel: P+"solar_array__pv_module__cost_model__install_cost", description: "Installation cost", unit: "USD" },
+        { field_name: "total_cost", channel: P+"solar_array__pv_module__cost_model__total_cost", description: "Total module cost (material + fab + install)", unit: "USD" },
+        { field_name: "idiot_index", channel: P+"solar_array__pv_module__cost_model__idiot_index", description: "Cost markup ratio (total/material)", unit: null }
       ],
       entryPoints: [
         { qn: P+"solar_array__pv_module__cost_model__wattage", type: "DESIGN_ATTRIBUTE", default: 400.0 },
@@ -2450,10 +2522,32 @@ const MODEL_DATA = {
         { qn: P+"solar_array__pv_module__cost_model__fab_factor", type: "LIBRARY_DEFAULT", default: 0.45 },
         { qn: P+"solar_array__pv_module__cost_model__install_factor", type: "LIBRARY_DEFAULT", default: 0.30 }
       ]
+    },
+    step65_compile: {
+      tracedModule: {
+        calcDef: "PVModuleCostCalc",
+        verdict: "FULLY_COMPILABLE",
+        compiledExpression: "wattage * cost_per_watt * (1 + fab_factor) * (1 + install_factor)",
+        outputExpressions: [
+          { name: "material_cost", expression: "wattage * cost_per_watt" },
+          { name: "fab_cost", expression: "material_cost * fab_factor" },
+          { name: "install_cost", expression: "material_cost * install_factor" },
+          { name: "total_cost", expression: "material_cost + fab_cost + install_cost" },
+          { name: "idiot_index", expression: "total_cost / material_cost" }
+        ]
+      },
+      summary: {
+        fullyCompilable: 12,
+        partiallyCompilable: 2,
+        manualRequired: 0,
+        unknown: 22
+      }
     }
   },
 
   // ──── Dual Resolution Examples (Act 3c) ────
+  // Mechanism 3 now shows _resolve_aggregation_input_channel() chain-trace steps
+  // (resolve_input() with AGG_STRATEGIES exists but is not yet wired into the graph builder)
   resolutionExamples: [
     {
       label: "total_capex = capital_cost",
@@ -2467,9 +2561,12 @@ const MODEL_DATA = {
         result: "MODULE_OUTPUT",
         channel: P+"capital_cost__capital_cost"
       },
-      resolveInputPath: {
-        strategies: [
-          { name: "A: ScopedRegistryLookup", key: "solar_battery_plant.capital_cost", result: "HIT" }
+      aggChainPath: {
+        functionName: "_resolve_aggregation_input_channel",
+        steps: [
+          { name: "1: Parse symbolic ref", detail: "\"capital_cost\" \u2192 part_usage=null, attribute=\"capital_cost\"", result: "CONTINUE" },
+          { name: "2: Find CHAIN :>> redefinition", detail: ":>> capital_cost on Solar Battery Plant", result: "FOUND" },
+          { name: "3: Follow chain to output", detail: "chain target \u2192 plant_capital_cost aggregation output", result: "HIT", key: "solar_battery_plant.capital_cost" }
         ],
         result: "module_output",
         channel: P+"capital_cost__capital_cost"
@@ -2487,11 +2584,14 @@ const MODEL_DATA = {
         result: "ENTRY_POINT",
         channel: null
       },
-      resolveInputPath: {
-        strategies: [
-          { name: "A: ScopedRegistryLookup", key: "solar_battery_plant.discount_rate", result: "MISS" },
-          { name: "C: ChainRedefinitionFollow", result: "MISS" },
-          { name: "D: DesignAttributeLookup", key: "discount_rate", result: "HIT" }
+      aggChainPath: {
+        functionName: "_resolve_aggregation_input_channel",
+        steps: [
+          { name: "1: Parse symbolic ref", detail: "\"discount_rate\" \u2192 part_usage=null, attribute=\"discount_rate\"", result: "CONTINUE" },
+          { name: "2: Find CHAIN :>> redefinition", detail: "no :>> redefinition found for discount_rate", result: "MISS" },
+          { name: "3: OutputRegistry scoped lookup", detail: "ScopedKey \"solar_battery_plant.discount_rate\"", result: "MISS", key: "solar_battery_plant.discount_rate" },
+          { name: "4: OutputRegistry alias lookup", detail: "alias \"solar_battery_plant.discount_rate\"", result: "MISS" },
+          { name: "5: Fall back to entry point", detail: "no upstream producer found", result: "ENTRY_POINT" }
         ],
         result: "entry_point",
         channel: null
@@ -3356,6 +3456,7 @@ class PipelineStepRenderer {
     this.renderStep5();
     this.renderStep55();
     this.renderStep6();
+    this.renderStep65();
     this.renderStep7();
   }
 
@@ -3391,7 +3492,8 @@ class PipelineStepRenderer {
     const subs = [
       { n: '3.5', name: 'Hierarchy + Binding Rewrite', href: '#step-35' },
       { n: '4.5', name: 'Computed Attributes', href: '#step-45' },
-      { n: '5.5', name: 'Build OutputRegistry (4-phase)', href: '#step-55' }
+      { n: '5.5', name: 'Build OutputRegistry (4-phase)', href: '#step-55' },
+      { n: '6.5', name: 'Compile Expressions', href: '#step-65' }
     ];
     const constraints = [
       '3.5 \u2192 4: Binding rewrite before entry point classification',
@@ -3563,7 +3665,7 @@ class PipelineStepRenderer {
           <p style="margin:0 0 0.4rem"><strong style="color:#16A34A">ScopedKey</strong> <code>{scope}.{instance}.{attr}</code> \u2014 e.g., <code>solar_battery_plant.solar_array.pv_module.cost_model.total_cost</code>. Hierarchy-qualified, globally unique by SysML ownership semantics. <strong>Primary resolution key</strong> \u2014 registered in <code>_scoped</code> registry (Phases 1a, 1b) and <code>_alias</code> registry (Phases 2\u20134).</p>
           <p style="margin:0 0 0.4rem"><strong style="color:#7C3AED">CanonicalChannel</strong> <code>{usage_EQN}__{output_attr}</code> (PQN format) \u2014 the authoritative identifier for one output. Stored in <code>_canonical</code> membership set for phase-ordering enforcement.</p>
           <p style="margin:0 0 0.4rem"><strong style="color:#0891B2">SysMLQN</strong> <code>Package::Element::attr</code> \u2014 e.g., <code>SolarBatteryLibrary::Solar_Battery_Plant::p_net_kw</code>. Registered in <code>_sysml_qn</code> registry (Phase 1c) for FORMULA outputs and REFERENCE bindings.</p>
-          <p style="margin:0"><strong style="color:#DC2626">Eliminated</strong>: Unscoped keys (the old Key_A, <code>cost_model.total_cost</code>) are <strong>not registered at all</strong>. Empirical evidence: 0/150 resolution hits across 6 models, while causing 10+ collisions. Typed registries make it impossible to accidentally query with the wrong key format.</p>
+          <p style="margin:0"><strong>Note:</strong> Unscoped keys like <code>cost_model.total_cost</code> are <strong>not registered at all</strong>. Nine components have a <code>cost_model</code>, so unscoped keys are inherently ambiguous. Typed registries make it impossible to accidentally query with the wrong key format.</p>
         </div>
       </details>
 
@@ -3658,7 +3760,7 @@ class PipelineStepRenderer {
       </div>
 
       <div class="callout warning">
-        <strong>\u26A0 Ordering constraint:</strong> This MUST happen before Step 4. If you classify entry points before rewriting bindings, <code>wattage</code> would be classified as LIBRARY_DEFAULT (unbound in the template) instead of DESIGN_ATTRIBUTE (literal 400.0 from the design).
+        <strong>\u26A0 Ordering constraint:</strong> This MUST happen before Step 4. <span class="req-badge">REQ-ORCH-02</span> If you classify entry points before rewriting bindings, <code>wattage</code> would be classified as LIBRARY_DEFAULT (unbound in the template) instead of DESIGN_ATTRIBUTE (literal 400.0 from the design).
       </div>
 
       <div class="callout">
@@ -3754,7 +3856,7 @@ class PipelineStepRenderer {
       </div>
 
       <div class="callout warning">
-        <strong>\u26A0 Ordering constraint:</strong> This MUST happen before Step 5. If <code>${ca.name}</code> stays in design_attributes, the module factory would create a DESIGN_ATTRIBUTE entry point for it, when it should actually come from the F2 FORMULA module\u2019s output.
+        <strong>\u26A0 Ordering constraint:</strong> This MUST happen before Step 5. <span class="req-badge">REQ-ORCH-03</span> If <code>${ca.name}</code> stays in design_attributes, the module factory would create a DESIGN_ATTRIBUTE entry point for it, when it should actually come from the F2 FORMULA module\u2019s output.
       </div>
 
       <div class="callout">
@@ -3788,7 +3890,7 @@ class PipelineStepRenderer {
     };
 
     c.insertAdjacentHTML('beforeend', `
-      <p class="step-explanation">Each pipeline module is built by a <strong>pure factory function</strong>. The factory takes extraction-layer data, resolves inputs, and returns a <code>(PipelineModule, dict[str, EntryPoint])</code> tuple. <strong>No side effects, no mutation of shared state.</strong></p>
+      <p class="step-explanation">Each pipeline module is built by a <strong>pure factory function</strong>. <span class="req-badge">REQ-MF-01</span> The factory takes extraction-layer data, resolves inputs, and returns a <code>(PipelineModule, dict[str, EntryPoint])</code> tuple \u2014 verified by conformance tests. <strong>No side effects, no mutation of shared state.</strong> Note: the CalcUsage factory always returns <code>(module, {})</code> \u2014 all its entry points were already classified in Step 4.</p>
 
       <!-- F1: CalcUsage Factory -->
       <div class="factory-card">
@@ -3853,7 +3955,7 @@ class PipelineStepRenderer {
             <div style="border-top:1px solid #E2E8F0;margin:0.3rem 0"></div>
             <div class="field">AggregationExpressionData</div>
             <div class="field">+ OutputRegistry + HierarchyResult</div>
-            <div class="field">+ resolve_input() strategy chain</div>
+            <div class="field">+ _resolve_aggregation_input_channel()</div>
           </div>
           <div style="display:flex;align-items:center;padding:0 0.25rem;font-size:1.2rem;color:#94A3B8">\u2192</div>
           <div class="data-panel" style="font-size:0.72rem;flex:1.3">
@@ -3930,7 +4032,7 @@ class PipelineStepRenderer {
       <table class="registry-phase-table">${tableRows}</table>
 
       <div class="callout warning">
-        <strong>\u26A0 Ordering constraint:</strong> This MUST happen before Step 6. The backtracker (CalcUsage resolution) uses the <code>_scoped</code> registry to resolve bindings. Aggregation factory resolution (via <code>resolve_input()</code>) queries all three registries. FORMULA attribute map resolution also uses the <code>_scoped</code> registry. Without the full registry, references like <code>pv_module.capital_cost</code> (CHAIN alias in <code>_alias</code>) would fail to resolve.
+        <strong>\u26A0 Ordering constraint:</strong> This MUST happen before Step 6. <span class="req-badge">REQ-ORCH-04</span> The backtracker (CalcUsage resolution) uses the <code>_scoped</code> registry to resolve bindings. Aggregation factory resolution (via <code>_resolve_aggregation_input_channel()</code>) queries the scoped and alias registries. FORMULA attribute map resolution also uses the <code>_scoped</code> registry. Without the full registry, references like <code>pv_module.capital_cost</code> (CHAIN alias in <code>_alias</code>) would fail to resolve.
       </div>
 
       <div class="callout">
@@ -4018,11 +4120,60 @@ class PipelineStepRenderer {
         </div>
       </div>
       <p style="font-size:0.85rem;color:#334155;font-weight:500;text-align:center;margin-top:0.5rem">
-        "Generation consumes ONLY the ComputationGraph. No back-references to extraction models."
+        "Generation consumes ONLY the ComputationGraph. No back-references to extraction models."<br>
+        <span style="font-size:0.72rem;font-weight:400;color:#64748B">Enforced by AST analysis test: <code>generation/</code> imports zero classes from <code>extraction/</code> or <code>analysis/</code>. <span class="req-badge">REQ-PIPE-07</span></span>
       </p>
 
       <div class="callout">
-        <strong>Why this step exists:</strong> The topological sort guarantees correct execution order \u2014 no module runs before its inputs are available. The validation pass catches wiring bugs at build time. And the <code>ComputationGraph</code> boundary ensures clean separation: everything generation needs is in one Pydantic model.
+        <strong>Why this step exists:</strong> The topological sort <span class="req-badge">REQ-GA-07</span> guarantees correct execution order \u2014 no module runs before its inputs are available. The validation pass <span class="req-badge">REQ-GA-03</span> catches wiring bugs at build time. And the <code>ComputationGraph</code> boundary ensures clean separation: everything generation needs is in one Pydantic model.
+      </div>
+    `);
+  }
+
+  // ── Step 6.5: Compile Expressions ──
+  renderStep65() {
+    const c = this._prep('step-65');
+    if (!c) return;
+    const t = this.trace.step65_compile;
+
+    const verdictColor = (v) => v === 'FULLY_COMPILABLE' ? '#059669' : v === 'PARTIALLY_COMPILABLE' ? '#CA8A04' : '#DC2626';
+
+    c.insertAdjacentHTML('beforeend', `
+      <div class="step-io-layout">
+        <div class="data-panel">
+          <div class="model-name">Input: CalculationDefinitionData <span class="traced-badge">TRACED</span></div>
+          <div style="border-top:1px solid #E2E8F0;margin:0.4rem 0"></div>
+          <div class="field">name: <span style="color:#0F172A">"${t.tracedModule.calcDef}"</span></div>
+          <div class="field">output_expression_asts: [</div>
+          ${t.tracedModule.outputExpressions.map(e =>
+            `<div class="field" style="padding-left:0.5rem">${e.name}: <code>${e.expression}</code></div>`
+          ).join('')}
+          <div class="field">]</div>
+        </div>
+        <div class="step-io-arrow">\u2192</div>
+        <div class="data-panel">
+          <div class="model-name">Output: CalcDefCompilationResult</div>
+          <div style="border-top:1px solid #E2E8F0;margin:0.4rem 0"></div>
+          <div class="field">calc_def: <span style="color:#0F172A">"${t.tracedModule.calcDef}"</span></div>
+          <div class="field">verdict: <span style="color:${verdictColor(t.tracedModule.verdict)};font-weight:600">${t.tracedModule.verdict}</span></div>
+          <div class="field">compiled_expressions: [</div>
+          ${t.tracedModule.outputExpressions.map(e =>
+            `<div class="field" style="padding-left:0.5rem"><span style="color:#0F172A">${e.name}</span> = <code>${e.expression}</code></div>`
+          ).join('')}
+          <div class="field">]</div>
+        </div>
+      </div>
+
+      <h4 style="font-size:0.9rem;margin:1.25rem 0 0.5rem;color:#334155">Compilation Summary</h4>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem">
+        <div class="compile-stat" style="border-color:#059669"><span style="color:#059669;font-weight:700;font-size:1.1rem">${t.summary.fullyCompilable}</span><br><span style="font-size:0.7rem;color:#64748B">Fully Compilable</span></div>
+        <div class="compile-stat" style="border-color:#CA8A04"><span style="color:#CA8A04;font-weight:700;font-size:1.1rem">${t.summary.partiallyCompilable}</span><br><span style="font-size:0.7rem;color:#64748B">Partially Compilable</span></div>
+        <div class="compile-stat" style="border-color:#DC2626"><span style="color:#DC2626;font-weight:700;font-size:1.1rem">${t.summary.manualRequired}</span><br><span style="font-size:0.7rem;color:#64748B">Manual Required</span></div>
+        <div class="compile-stat" style="border-color:#94A3B8"><span style="color:#94A3B8;font-weight:700;font-size:1.1rem">${t.summary.unknown}</span><br><span style="font-size:0.7rem;color:#64748B">Not Yet Analyzed</span></div>
+      </div>
+
+      <div class="callout">
+        <strong>Why this step exists:</strong> Without compilation, every module needs a handwritten implementation file. For <strong>FULLY_COMPILABLE</strong> modules, the pipeline generates the implementation directly from the compiled expressions \u2014 the generated code is complete, not just wiring. The <code>auto_impl_context</code> field on <code>PipelineModule</code> carries the compiled expressions forward to Step 7.
       </div>
     `);
   }
@@ -4076,6 +4227,32 @@ class PipelineStepRenderer {
       <div class="callout">
         <strong>Why this step exists:</strong> Generation is the payoff. The Jinja2 templates consume the <code>ComputationGraph</code> and produce runnable code: pipeline YAML wires modules together, module wrappers define I/O schemas, and JSON inputs provide default values for every entry point. Every line is traceable to a specific <code>PipelineModule</code> field.
       </div>
+
+      <details class="step-also">
+        <summary><code>_from_graph()</code> generator variants</summary>
+        <div style="padding:0.5rem 0;font-size:0.78rem;color:#64748B">
+          Each generator has a <code>_from_graph()</code> variant that works exclusively from <code>ComputationGraph</code> without requiring source extraction data:
+          <ul style="margin:0.4rem 0 0.2rem;padding-left:1.2rem">
+            <li><code>generate_teax_module_from_graph()</code> \u2014 module wrapper from PipelineModule fields</li>
+            <li><code>generate_multioutput_model_from_graph()</code> \u2014 output schema from PipelineModule outputs</li>
+            <li><code>generate_implementation_from_graph()</code> \u2014 stencil or auto-impl from PipelineModule</li>
+            <li><code>generate_registry_from_graph()</code> \u2014 registry from ComputationGraph.modules</li>
+          </ul>
+          This boundary is enforced by an AST analysis test: <code>generation/</code> imports zero classes from <code>extraction/</code> or <code>analysis/</code>.
+        </div>
+      </details>
+
+      <details class="step-also">
+        <summary>Auto-implementation dispatch</summary>
+        <div style="padding:0.5rem 0;font-size:0.78rem;color:#64748B">
+          For each module, the generator checks <code>module.auto_impl_context</code>:
+          <ul style="margin:0.4rem 0 0.2rem;padding-left:1.2rem">
+            <li>If populated (FULLY_COMPILABLE) \u2192 generate implementation directly from compiled expressions. No handwritten stencil needed.</li>
+            <li>If absent \u2192 generate stub stencil for manual implementation.</li>
+          </ul>
+          The pipeline doesn\u2019t just wire modules \u2014 for compilable modules, it generates the implementation too.
+        </div>
+      </details>
 
       <details class="step-also">
         <summary>Traceability guarantee</summary>
@@ -4429,9 +4606,15 @@ class DualResolutionDemo {
   render() {
     this.el.insertAdjacentHTML('beforeend', `
       <h3 style="margin:0 0 0.5rem 0;font-size:1.05rem">Dual Resolution Architecture</h3>
-      <p style="font-size:0.82rem;color:#475569;margin-bottom:0.75rem">
+      <p style="font-size:0.82rem;color:#475569;margin-bottom:0.5rem">
         The refactored pipeline has <strong>three resolution mechanisms</strong> that must stay separate.
         All resolve references to the same canonical channels via the same typed registries — but they operate in fundamentally different contexts.
+      </p>
+      <p style="font-size:0.78rem;color:#64748B;margin-bottom:0.75rem;padding-left:0.5rem;border-left:2px solid #CBD5E1">
+        The architecture describes two resolution <strong>paths</strong> (DFS-integrated vs. post-DFS).
+        Within the post-DFS path, FORMULA and Aggregation use distinct <strong>mechanisms</strong> —
+        pre-computed attribute map vs. runtime chain tracing. The explainer separates all three because their
+        resolution mechanics differ, even though the architecture overview groups FORMULA + Aggregation as "Path 2."
       </p>
 
       <div style="margin-bottom:0.75rem">
@@ -4446,15 +4629,16 @@ class DualResolutionDemo {
       <div class="dual-equivalence" id="dual-equiv"></div>
 
       <div class="dual-guard-callout">
-        <strong>\u26A0 Self-reference guard:</strong> All mechanisms include a guard that prevents wiring a module to its own output.
+        <strong>\u26A0 Self-reference guard:</strong> <span class="req-badge">REQ-GA-04</span> <span class="req-badge">REQ-IR-03</span> All mechanisms include a guard that prevents wiring a module to its own output.
         Without this, aggregation modules that produce <code>capital_cost</code> and consume <code>capital_cost</code> (from children)
         would create a cycle.
       </div>
 
       <div class="dual-agg-reorder">
-        <strong>AGG_STRATEGIES:</strong> For aggregation inputs, the strategy chain is <code>[A, C, D]</code>:
-        A: ScopedRegistryLookup \u2192 C: ChainRedefinitionFollow \u2192 D: DesignAttributeLookup.
-        ChainRedefinitionFollow is promoted because aggregation inputs almost always resolve through <code>:>></code> redefinition chains.
+        <strong>Chain resolution order:</strong> <code>_resolve_aggregation_input_channel()</code> traces references by:
+        1. Parse symbolic ref \u2192 2. Find CHAIN <code>:>></code> redefinition \u2192 3. Follow chain to CalcUsage output \u2192
+        4. Fall back to OutputRegistry scoped/alias lookup \u2192 5. Cycle detection via visited set.
+        Chain-following dominates because aggregation inputs almost always resolve through <code>:>></code> redefinition chains.
       </div>
 
       <div class="dual-why-section">
@@ -4471,11 +4655,21 @@ class DualResolutionDemo {
           There's no strategy chain to run — the answer is already known from a <strong>pre-computed attribute map</strong>.
         </p>
         <p style="margin-top:0.5rem">
-          <strong>Aggregation</strong> modules use a standalone strategy chain (<code>resolve_input()</code>) because their references
-          span scopes. All three mechanisms query the same typed registries (scoped, SysML QN, alias), ensuring consistency (REQ-DRA-04),
-          but they return different data types (<code>BindingResolution</code> vs <code>InputSource</code>).
+          <strong>Aggregation</strong> modules use <code>_resolve_aggregation_input_channel()</code> which traces <code>:>></code> CHAIN
+          redefinitions and falls back to OutputRegistry lookups. All three mechanisms query the same typed registries (scoped, SysML QN, alias),
+          ensuring consistency <span class="req-badge">REQ-DRA-04</span>, but they return different data types (<code>BindingResolution</code> vs <code>InputSource</code>).
         </p>
       </div>
+
+      <details style="margin-top:0.5rem;font-size:0.75rem;color:#64748B">
+        <summary style="cursor:pointer;color:#475569;font-weight:500">Note: resolve_input() with AGG_STRATEGIES</summary>
+        <div style="padding:0.4rem 0 0.2rem 0.5rem;border-left:2px solid #E2E8F0">
+          <code>resolve_input()</code> with <code>AGG_STRATEGIES</code> (strategies A, C, D) exists in <code>input_resolver.py</code>
+          and is conformance-tested, but is <strong>not yet wired</strong> into the graph builder.
+          The running mechanism for aggregation resolution is <code>_resolve_aggregation_input_channel()</code> in
+          <code>graph_builder.py</code>, which implements equivalent chain-tracing logic directly.
+        </div>
+      </details>
     `);
 
     // Wire dropdown
@@ -4492,7 +4686,7 @@ class DualResolutionDemo {
     const container = document.getElementById('dual-panels-container');
     const equiv = document.getElementById('dual-equiv');
     const bt = ex.backtrackerPath;
-    const ri = ex.resolveInputPath;
+    const ac = ex.aggChainPath;
     const isModuleOutput = bt.result === 'MODULE_OUTPUT';
 
     container.innerHTML = `
@@ -4535,32 +4729,34 @@ class DualResolutionDemo {
         </div>
 
         <div class="dual-panel dual-panel-resolve">
-          <div class="dual-panel-title">Mechanism 3: resolve_input() (Aggregation)</div>
+          <div class="dual-panel-title">Mechanism 3: _resolve_aggregation_input_channel() (Aggregation)</div>
           <div class="dual-context">
-            Context: Post-DFS factory call. Uses strategy chain (<code>AGG_STRATEGIES</code>) to resolve each input reference.
+            Context: Post-DFS factory call. Traces <code>:>></code> CHAIN redefinitions and falls back to OutputRegistry lookups.
           </div>
           <div class="dual-ref">
             <div style="color:#64748B;font-size:0.68rem;margin-bottom:0.2rem">Reference:</div>
             <strong>"${ex.reference}"</strong>
           </div>
           <div class="strategy-chain">
-            <div style="color:#64748B;font-size:0.72rem;margin-bottom:0.3rem">AGG_STRATEGIES [A, C, D]:</div>
-            ${ri.strategies.map(s => {
-              const isHit = s.result === 'HIT';
+            <div style="color:#64748B;font-size:0.72rem;margin-bottom:0.3rem">Chain-trace steps:</div>
+            ${ac.steps.map(s => {
+              const isHit = s.result === 'HIT' || s.result === 'FOUND';
               const isMiss = s.result === 'MISS';
-              const badgeClass = isHit ? 'strat-badge-hit' : (isMiss ? 'strat-badge-miss' : 'strat-badge-skip');
+              const isEP = s.result === 'ENTRY_POINT';
+              const badgeClass = isHit ? 'strat-badge-hit' : (isMiss ? 'strat-badge-miss' : (isEP ? 'strat-badge-miss' : 'strat-badge-skip'));
               return `<div class="strategy-box">
                 <span class="strat-letter">${s.name.charAt(0)}</span>
                 <span class="strat-name">${s.name}</span>
                 ${s.key ? `<span style="color:#94A3B8;font-size:0.68rem">"${s.key}"</span>` : ''}
                 <span class="strat-badge ${badgeClass}">${s.result}</span>
+                <div style="font-size:0.68rem;color:#64748B;padding-left:1.5rem;margin-top:0.15rem">${s.detail}</div>
               </div>`;
             }).join('')}
           </div>
-          <div class="dual-result ${ri.result === 'module_output' ? 'dual-result-module' : 'dual-result-entry'}">
-            Output: InputSource(${ri.result}${ri.channel ? ', producer_channel="..."' : ''})
+          <div class="dual-result ${ac.result === 'module_output' ? 'dual-result-module' : 'dual-result-entry'}">
+            Output: InputSource(${ac.result}${ac.channel ? ', producer_channel="..."' : ''})
             <div style="font-weight:400;font-size:0.72rem;margin-top:0.2rem">
-              ${ri.result === 'module_output' ? 'Wired to upstream module.' : 'Falls through all strategies \u2192 entry point.'}
+              ${ac.result === 'module_output' ? 'Wired to upstream module via chain trace.' : 'All chain-trace steps exhausted \u2192 entry point.'}
             </div>
           </div>
         </div>
@@ -4887,18 +5083,44 @@ class DAGRenderer {
     const panel = document.getElementById('dag-detail');
     if (!panel) return;
 
-    let html = `<h4 style="color:${mod.family === 'F1' ? '#1E40AF' : mod.family === 'F2' ? '#5B21B6' : '#9A3412'}">${mod.shortName} <span style="font-weight:400;font-size:0.72rem;color:#64748B">${mod.family}</span></h4>`;
+    const verdictColor = (v) => !v ? '#94A3B8' : v === 'FULLY_COMPILABLE' ? '#059669' : v === 'PARTIALLY_COMPILABLE' ? '#CA8A04' : '#DC2626';
+    const familyColor = mod.family === 'F1' ? '#1E40AF' : mod.family === 'F2' ? '#5B21B6' : '#9A3412';
+
+    let html = `<h4 style="color:${familyColor}">${mod.shortName} <span style="font-weight:400;font-size:0.72rem;color:#64748B">${mod.family}</span></h4>`;
     html += `<div class="detail-section"><div class="detail-label">Module Type</div><div class="detail-row">${mod.moduleType || mod.fullEQN}</div></div>`;
+
+    // CalcDef name
+    if (mod.calcDefName) {
+      html += `<div class="detail-section"><div class="detail-label">CalcDef</div><div class="detail-row">${mod.calcDefName}</div></div>`;
+    }
+
+    // Doc comment
+    if (mod.docComment) {
+      html += `<div class="detail-section" style="color:#94A3B8;font-style:italic;font-size:0.72rem;padding:0.2rem 0">${mod.docComment}</div>`;
+    }
+
+    // Source location
+    if (mod.sourceFile) {
+      html += `<div class="detail-section"><div class="detail-label">Source</div><div class="detail-row" style="font-size:0.68rem">${mod.sourceFile}${mod.sourceLine ? ':' + mod.sourceLine : ''}</div></div>`;
+    }
+
+    // Compilability badge
+    if (mod.compilability) {
+      html += `<div class="detail-section"><div class="detail-label">Compilability</div><div class="detail-row"><span style="color:${verdictColor(mod.compilability)};font-weight:600;font-size:0.72rem">${mod.compilability}</span></div></div>`;
+    }
 
     // Inputs
     html += `<div class="detail-section"><div class="detail-label">Inputs (${mod.inputs.length})</div>`;
     mod.inputs.forEach(inp => {
       if (inp.source === 'entry_point') {
-        html += `<div class="detail-row detail-source-ep">EP ${inp.name} <span style="color:#94A3B8">${inp.group}</span></div>`;
+        html += `<div class="detail-row detail-source-ep">EP ${inp.name} <span style="color:#94A3B8">${inp.group}</span>`;
       } else {
         const producer = MODEL_DATA.modules.find(m => m.id === inp.producerId);
-        html += `<div class="detail-row detail-source-mod">\u2190 ${inp.name} <span style="color:#94A3B8">from ${producer ? producer.shortName : inp.producerId}</span></div>`;
+        html += `<div class="detail-row detail-source-mod">\u2190 ${inp.name} <span style="color:#94A3B8">from ${producer ? producer.shortName : inp.producerId}</span>`;
       }
+      if (inp.description) html += `<br><span style="color:#94A3B8;font-size:0.62rem;font-style:italic">${inp.description}</span>`;
+      if (inp.defaultValue != null) html += `<br><span style="color:#64748B;font-size:0.62rem">default: ${inp.defaultValue}</span>`;
+      html += '</div>';
     });
     html += '</div>';
 
@@ -4906,7 +5128,10 @@ class DAGRenderer {
     html += `<div class="detail-section"><div class="detail-label">Outputs (${mod.outputs.length})</div>`;
     mod.outputs.forEach(out => {
       const shortChannel = out.channel.replace(P, '');
-      html += `<div class="detail-row">\u2192 ${out.name} <span style="color:#94A3B8">${shortChannel}</span></div>`;
+      html += `<div class="detail-row">\u2192 ${out.name} <span style="color:#94A3B8">${shortChannel}</span>`;
+      if (out.description) html += `<br><span style="color:#94A3B8;font-size:0.62rem;font-style:italic">${out.description}</span>`;
+      if (out.unit) html += ` <span style="color:#7C3AED;font-size:0.62rem">(${out.unit})</span>`;
+      html += '</div>';
     });
     html += '</div>';
 
