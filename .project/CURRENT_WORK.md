@@ -97,6 +97,28 @@ user-model PartDef in `usage.types`, never by list position. Virtual-QN collisio
 tiebreak/warning; retyping fixture + snapshot + conformance tests; 4 pipeline
 baselines byte-identical.
 
+### UPSTREAM-FINDINGS Item 5: Identifier Sanitization (SC-4, + SC-11 riders)
+
+**Status**: Spec revised (spec-review "Revise" applied) — ready for design
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec / Review**: `.project/active/identifier-sanitization/{spec,spec-review}.md`
+
+Quoted SysML calc-def names produce non-importable Python (`class 'Margin
+Calc'Input`, `'margin calc'.py`). Fix at the **derivation layer** — framed as
+item-boundary discipline (name-emission slice now; the both-sides FORMULA registry-key
+sanitization at `output_registry_builder.py:130`/`:595` deferred to Item 7, which owns
+the match sites and must flip `:130` in lockstep). New `sanitize_qualified_name` helper
+at `identifier_types.py` `from_sysml` + FORMULA channel/module_eqn emission sites
+(`output_registry_builder.py:124`, `graph_builder.py:745/789/818`); match sites
+(`dependency_backtracker.py:660`, `parameter_groups.py:439`, `pipeline_builder.py:70`)
+untouched. Duplicate-path fail-fast covers all three write key spaces (modules/stencils
+share filename key; schemas separate `calc_def_name.lower()`). Conformance: `alias_agg_probe`
+full-generation (`ast.parse` + import-name) **plus a new live-captured quoted-owner
+FORMULA fixture** proving the wire resolves (existing 11 snapshots + 4 baselines stay
+byte-identical; new fixture additive). SC-11 closed; post-alias uniqueness re-check IN
+pending a plan-phase static check (WARN-first if a baseline hits the grandparent case),
+AST import-rewrite deferred.
+
 ### REFACTOR: Incremental Pipeline Refactor
 
 **Status**: In Progress (Phases 0–4 complete)
