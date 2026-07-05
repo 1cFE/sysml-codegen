@@ -3,7 +3,7 @@
 **Status:** Draft
 **Owner:** Reid W
 **Created:** 2026-07-05
-**Complexity:** MEDIUM
+**Complexity:** LOW (hardening; ~0.5–1 day)
 **Branch:** upstream-findings-epic
 **Epic:** UPSTREAM-FINDINGS — Item 1
 
@@ -53,15 +53,19 @@ three failures into diagnostics that follow the V1–V6 pattern in `modeling-ass
 
 - [ ] Full test suite passes on `main` — `solar_battery` YAML baseline re-captured via
       `scripts/capture_baseline_yaml.py` and committed.
-- [ ] The baseline stays green across a filesystem/model-discovery-order shift: entry-point group
-      ordering in generated YAML is deterministic and independent of discovery order (see the
-      ordering decision below).
+- [ ] The baseline stays green across a filesystem/model-discovery-order shift: the
+      `entry_point_groups` list is sorted deterministically at ComputationGraph construction, so
+      the graph itself — not just its rendered YAML — is order-independent (see the ordering
+      decision below).
 - [ ] Generating a real constraint-bearing fixture (`catf_mfe_model`, which has dozens of inline
       constraints) emits a single summary WARN of the count plus per-constraint INFO lines —
-      not per-item WARN noise, not silence.
-- [ ] The two EXPOSE_PURE diagnostics state plainly that the derived-attribute *name* is dropped
-      from generated output and name the canonical channel carrying the value. Generating an
-      EXPOSE_PURE-bearing model (shape A / part-def) emits the reworded message.
+      not per-item WARN noise, not silence. `catf_mfe` is the in-repo stand-in for the epic's
+      "WI-014 toy + IFE models" diagnostic-emission evidence: those models live in fusion-tea and
+      are out of this repo; the WI-014 toy arrives as a committed fixture in Item 8.
+- [ ] The `_resolve_expose_pure` "key not found in registry" name-drop warning and the Phase-3
+      registration warning state plainly that the derived-attribute *name* is dropped from
+      generated output and name the canonical channel carrying the value. A minimal shape-A
+      (part-def EXPOSE_PURE) fixture is committed and its generation emits the reworded message.
 - [ ] A calc def that extracts with zero outputs produces a hard, actionable extraction
       diagnostic (V-rule style) that names the likely cause and fix — the run never reaches the
       Jinja template. Verified against a real fixture with a zero-output calc def.
@@ -88,11 +92,12 @@ Proposed REQ IDs below; design finalizes numbering against the verification matr
   `scripts/capture_baseline_yaml.py` with a reviewed diff (R3) — never hand-edited. The re-capture
   requires a live syside license; the license is valid until 2026-08-06 and live capture now is
   in-window.
-- **[NEED]** *(REQ-BASE-06)* Generated pipeline YAML is deterministic and independent of
+- **[NEED]** *(REQ-BASE-06)* The ComputationGraph is deterministic and independent of
   filesystem/model-discovery order, so an order shift between machines cannot redden the baseline
-  again. **Decision (delegated to this spec): fix the ordering at the generation source** — sort
-  the entry-point group list by a stable derived key before emission — and keep the baseline
-  comparison byte-exact. Rationale and the churn guard are in *Decisions Recorded* below.
+  again. **Decision (delegated to this spec): sort `entry_point_groups` by a stable derived key at
+  ComputationGraph construction** (`graph_builder.py:364`), and keep the baseline comparison
+  byte-exact. Sorting the graph (not the YAML) makes the deterministic ordering available to every
+  consumer, including Item 2's snapshot path. Rationale is in *Decisions Recorded* below.
 
 **SC-1 — constraint drop diagnostic**
 
@@ -106,11 +111,13 @@ Proposed REQ IDs below; design finalizes numbering against the verification matr
 
 **SC-7 — EXPOSE_PURE name-drop diagnostic wording**
 
-- **[NEED]** *(REQ-CA-30)* The EXPOSE_PURE diagnostics at both sites
-  (`resolution/graph_builder.py` `_resolve_expose_pure`, and the Phase-3 registration site in
-  `orchestration/output_registry_builder.py`) state plainly that the modeler's alias name is
-  dropped from generated output and name the canonical channel the value flows through. Wording
-  follows the V1–V6 pattern. This is a wording change to the two existing warning sites only.
+- **[NEED]** *(REQ-CA-30)* Two EXPOSE_PURE warnings are reworded to state plainly that the
+  modeler's alias name is dropped from generated output and name the canonical channel the value
+  flows through: the "key not found in output registry" warning in `_resolve_expose_pure`
+  (`graph_builder.py:683-687`) and the Phase-3 registration warning
+  (`output_registry_builder.py:182-186`). The *malformed-refs* warning in `_resolve_expose_pure`
+  (`graph_builder.py:672-675`, "could not identify instance/output") is a different failure and is
+  left unchanged. Wording follows the V1–V6 pattern. This is a wording change only.
 
 **SC-2 — zero-output fail-fast**
 
@@ -130,6 +137,11 @@ Proposed REQ IDs below; design finalizes numbering against the verification matr
 - **[INFERRED]** A new minimal fixture with a single zero-output calc def is required — no existing
   baseline model has one (the research confirms no baseline uses return-style outputs). It must be
   loadable and trigger the fail-fast without depending on Item 3's extraction changes.
+- **[INFERRED]** A new minimal shape-A EXPOSE_PURE fixture is required to fund the REQ-CA-30 test —
+  a part def carrying an attribute and calcs, instantiated separately, so the reworded warning has
+  a real model to fire against. Keep it to a handful of elements; capture via the standard scripts
+  (live license). Fallback (recorded, not the plan): if capture proves disproportionate at
+  implementation, defer the SC-7 warning test to Item 8's WI-014 toy with an explicit note.
 
 ## Non-Goals
 
@@ -155,10 +167,6 @@ Proposed REQ IDs below; design finalizes numbering against the verification matr
 - **Zero-output check placement and aggregation** — fail on the first zero-output calc def versus
   collect all and report together. "Fail-fast" argues for the former; design confirms and picks the
   exact extraction site (right after `output_attributes` is populated, `extractor.py:~164`).
-- **Whether the entry-point-group source sort disturbs the other three baselines** — see the
-  churn guard in *Decisions Recorded*. If it does, design decides whether to accept the reviewed
-  re-capture (ordering is execution-irrelevant) or scope the sort so the currently-green baselines
-  are untouched. This is an empirical check, not a re-opening of the decision.
 - **Exact new REQ numbers and which reference docs get rows** — `01-extraction.md` for the
   zero-output and constraint diagnostics, `16-computed-attributes.md` for the EXPOSE wording,
   the baseline/verification-matrix doc for REQ-BASE-05/06. Design assigns final numbers.
@@ -169,28 +177,29 @@ Proposed REQ IDs below; design finalizes numbering against the verification matr
 
 These are the two spec-time calls the epic delegated to this item (orchestrator guidance).
 
-### D1 — Prevent baseline-ordering recurrence at the generation source
+### D1 — Prevent baseline-ordering recurrence at ComputationGraph construction
 
-**Decision:** Sort the entry-point group list by a stable derived key (the group name) at the
-generation boundary before it is emitted, and keep the baseline comparison byte-exact.
+**Decision:** Sort `entry_point_groups` by a stable derived key (the group name) at ComputationGraph
+construction (`graph_builder.py:364`), scoped to that list only, and keep the baseline comparison
+byte-exact.
 
-**Why this over normalizing the comparison:**
+**Why the graph site, scoped to `entry_point_groups`:**
 
-- It fixes the root cause per R1's "compute once / fix at the source" principle — the ordering is
-  made deterministic where it is produced, not papered over where it is checked.
-- Non-deterministic generated YAML is a latent defect in its own right: it produces spurious diffs
-  across machines and CI runs and would hand fusion-tea different output for the same model. A
-  source-side sort removes that class of problem, not just this one test failure.
+- It fixes the root cause per R1's "compute once / fix at the source" — the ComputationGraph is the
+  sole input to generation, so making the graph deterministic makes every consumer deterministic,
+  not just the YAML renderer. Item 2's snapshot path reads the same graph and inherits the fix for
+  free.
+- Non-deterministic output is a latent defect in its own right: spurious diffs across machines and
+  CI, and different output handed to fusion-tea for the same model. Ordering the graph removes that
+  class of problem, not just this one test failure.
 - It keeps the byte-exact baseline comparison strong. Loosening the comparison to be
   order-insensitive would weaken a test that otherwise catches real ordering regressions.
 
-**Churn guard (verified at design/implementation):** the sort must be a no-op for the three
-currently-green baselines. Any collection whose order feeds YAML and depends on discovery order is
-sorted by a stable key; the change is generation-layer only. If the sort reorders a currently-green
-baseline, that re-capture is reviewed as a deterministic-ordering normalization — `entry_fusion`
-input order does not affect execution — and noted in the diff review. The success criterion "no
-baseline changes beyond the re-captured `solar_battery` YAML" is the target; the churn guard exists
-to hold it.
+**Scope and no-churn:** the review verified this sort is a no-op for the three currently-green
+baselines — the `entry_point_groups`-only scope touches nothing else, and `entry_fusion` input
+order does not affect execution. So the hard success criterion "no baseline changes beyond the
+re-captured `solar_battery` YAML" stands unqualified: no other baseline is re-captured under this
+decision.
 
 ### D2 — Delete `constraints.py` and `constraint_validator.py.jinja2`; keep `constraint_extractor.py`
 
