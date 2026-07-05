@@ -6,6 +6,16 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 1: Baseline Repair & Silent-Failure Diagnostics
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/baseline-diagnostics/spec.md`
+
+Green the suite (solar_battery YAML baseline) and convert three silent failures
+(SC-1 constraints, SC-7 EXPOSE_PURE name drop, SC-2 zero-output Jinja crash) into
+loud diagnostics — no output change for valid models.
+
 ### REFACTOR: Incremental Pipeline Refactor
 
 **Status**: In Progress (Phases 0–4 complete)
