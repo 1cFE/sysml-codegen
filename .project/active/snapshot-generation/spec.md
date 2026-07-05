@@ -57,16 +57,24 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
 
 ## Success Criteria
 
-- [ ] `generate --from-snapshot <solar_battery snapshot>` produces output that is
-      **byte-identical** to live `generate --models <solar_battery>` — verified by
-      generating both into separate directories and diffing the trees recursively
-      (empty diff). (Relies on Item 1's deterministic entry-point-group sort in
-      `graph_builder`, which makes the `ComputationGraph` order-stable; spec
-      against Item 1 landing first.)
-- [ ] A snapshot of an **expression-bearing** model preserves CalcUsage
-      auto-implementation: generated stencils are auto-implemented (not
-      `NotImplementedError`), and `compilability` is set (not `UNKNOWN`) — matching
-      what live generation of the same model produces.
+- [ ] `generate --from-snapshot <solar_battery snapshot>` is **byte-identical** to
+      live `generate --models <solar_battery>`. This is a **claim to prove, not an
+      established fact** — today's evidence is snapshot-vs-committed-baseline
+      self-consistency only; no existing test compares live against snapshot. Verify
+      with a **live-vs-snapshot full recursive tree diff** (empty diff), as a
+      **license-gated** test that skips cleanly when no license is present, and run
+      it **at least once during implementation while the license is live**.
+      Snapshot-vs-snapshot self-consistency does not count. (Relies on Item 1's
+      deterministic entry-point-group sort in `graph_builder`, and on the
+      `source_file` normalization below — without it the embedded `SysML Source:`
+      headers diverge and the diff fails.)
+- [ ] A snapshot of `chain_spike_model` (the SC-10 proving fixture — verified
+      expression-bearing: CalcUsages instantiating calc defs with inline output
+      expressions) preserves CalcUsage auto-implementation: generated stencils are
+      auto-implemented (not `NotImplementedError`) and `compilability` is set (not
+      `UNKNOWN`), matching live generation. **No new license-gated fixture capture is
+      needed for this item** — the proving fixture already exists in the committed
+      corpus.
 - [ ] A snapshot whose format version does not match the current version **fails
       loudly** with a clear, actionable error (recapture instruction), not a silent
       wrong deserialization.
@@ -92,24 +100,41 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
   produces the same `PipelineContext` the live path produces; generation is not
   changed and does not learn about snapshots. (R1)
 - **[HARD]** The snapshot loader/serializer move from `tests/helpers/` to
-  `src/sysml_codegen/snapshot/`. The move must not introduce a syside runtime
-  import into the `src` package (the whole point is a syside-free path). The
-  hard-coded `FIXTURES_DIR` in the loader (`snapshot_loader.py:39`) becomes a
-  parameter — the loader must load from an arbitrary snapshot path, not a
-  fixtures-relative model name.
-- **[HARD]** `build_pipeline_context_from_snapshot()` lives in `orchestration/`
-  and returns a `PipelineContext` equivalent to `build_pipeline_context()`, minus
-  the live extractor. It reuses the proven conformance-helper body
+  `src/sysml_codegen/snapshot/`, and the conformance-helper graph-assembly body
   (`build_full_graph_from_snapshot` and its `build_classifier_inputs_from_snapshot`
-  precursor), not a reimplementation.
+  precursor, `test_entry_point_classifier.py`) is **promoted, not copied**. The move
+  must not introduce a syside runtime import into the `src` package (the whole point
+  is a syside-free path).
+- **[HARD]** The hard-coded `FIXTURES_DIR` in the loader (`snapshot_loader.py:39`)
+  becomes a parameter — the loader must load from an arbitrary snapshot path, not a
+  fixtures-relative model name.
+- **[HARD]** No two copies. All ~26 test files that import the promoted helpers
+  migrate to the `src` module, and the `tests/helpers/` copies are **deleted in the
+  same change**. No transitional re-export shim is left behind — a lingering second
+  copy is exactly the drift the promotion exists to prevent.
+- **[HARD]** `build_pipeline_context_from_snapshot()` lives in `orchestration/` and
+  is **new assembly, not a rename**. The promoted helper returns a `ComputationGraph`
+  + inputs dict and passes `compilation_results=None`; this function must build a
+  full `PipelineContext` (`pipeline_context.py:78-104`, which also requires
+  `backtracker`, `backtracking_result`, `channel_aliases`, `output_registry`, and
+  `extractor`) and thread the deserialized `compilation_results` into
+  `build_computation_graph(...)`. It is **built on** the helper's proven
+  graph-rebuild body; size it as real assembly work, not a one-line reuse. The
+  extraction-only fields (`extractor`, `backtracker`) are set to null-equivalents —
+  safe only because no generation path dereferences them (the fusion-tea harness
+  already runs generation with `extractor=None`). Verifying that no generation site
+  reads `ctx.extractor` / `ctx.backtracker` is in scope.
 
 ### CLI surface
 
-- **[HARD]** `--from-snapshot <path>` on `generate` is mutually exclusive with
-  `--models`; supplying both is a usage error.
-- **[HARD]** `--design-path-filter` combined with `--from-snapshot` is rejected —
-  the filter is applied at capture time and baked into the snapshot, so applying
-  it again at generation is meaningless and must not silently no-op.
+- **[HARD]** `generate` requires **exactly one** of `--models` / `--from-snapshot`
+  — supplying both, or neither, is a hard CLI error. `--models` is currently
+  `required=True` (`cli/__init__.py:513`); that changes. The clean mechanism is an
+  argparse mutually-exclusive group marked required, which gives both-forbidden,
+  neither-forbidden, and exactly-one-required in one construct.
+- **[HARD]** `--design-path-filter` combined with `--from-snapshot` is a hard CLI
+  error — the filter is applied at capture time and baked into the snapshot, so
+  applying it again at generation is meaningless and must not silently no-op.
 - **[HARD]** All other generation config (`--output`, `--package-name`,
   `--schema-class`, `--pipeline-name`, `--overwrite`, `--preserve-handwritten`,
   `--smart-regen`) applies unchanged on a snapshot run — the snapshot replaces only
@@ -122,9 +147,18 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
 ### Format versioning & provenance
 
 - **[HARD]** The snapshot carries a `snapshot_format_version` field. On load, a
-  version that does not match the tool's current version is a **hard error** with a
+  version that does not match the tool's current version — **including a missing
+  version field** (a legacy/pre-versioning snapshot) — is a **hard error** with a
   message naming the fix (recapture with current tooling). (V1–V6 diagnostic
   pattern.)
+- **[HARD]** The loader's hard error on unversioned/mismatched snapshots and the
+  regeneration of all 10 committed fixture snapshots land **atomically in one
+  change** — the suite is never red between them. All 10 committed snapshots are
+  unversioned today, so a loader change that landed first would hard-error every
+  snapshot-loading conformance test. **Item 1 coordination**: Item 1 is concurrently
+  regenerating baselines/snapshots and — because the capture command does not exist
+  yet — emits **unversioned** snapshots; sequence so Item 2's loader does not reject
+  Item 1's fresh captures mid-epic.
 - **[NEED]** A snapshot whose recorded source hash no longer matches the current
   source produces a **freshness warning** and continues. The hashes
   (`source_hash` / `source_file` / `captured_at`) already exist on the extracted
@@ -132,12 +166,27 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
 - **[NEED]** A snapshot run emits a provenance banner identifying the snapshot,
   its capture time, and its source — so a reader of the console/log always knows
   the output did not come from live extraction.
-- **[HARD]** The provenance banner and any freshness/version diagnostics go to the
-  log/console only. **No generated artifact may embed capture-time or run-time
-  provenance** (banner text, `captured_at`, a "generated at" timestamp). This is a
-  precondition of the byte-identical criterion — live and snapshot runs must
-  produce identical files. (Verify current generation already embeds no such
-  timestamp; if it does, that is in scope to remove or normalize.)
+- **[HARD]** The byte-identity hazard is the embedded **source path**, not a
+  timestamp. Generated modules, schemas, and stencils each emit a
+  `SysML Source: {module.source_file}:{module.source_line}` header
+  (`modules.py:78`, `schemas.py:43`, `stencils.py:66`), and `computation_graph.json`
+  serializes `source_file` per module. Live extraction sets `source_file` from the
+  parser's document path (`extractor.py:113`); the serializer bakes it **relative to
+  the fixtures dir** at capture (`snapshot_serializer.py:102-108` — the committed
+  solar_battery snapshot stores `solar_battery_model/design.sysml`). The two paths
+  embed different strings unless normalized. Requirement: the snapshot must preserve
+  or reproduce the **exact** `source_file` strings live generation would emit, with
+  the normalization defined at **capture time** (what the serializer writes), not
+  patched at emission time. Live and snapshot generation of the same model must then
+  embed identical `SysML Source:` headers.
+- **[HARD]** The provenance banner and freshness/version diagnostics go to the
+  log/console only — never into a generated artifact.
+- **[INFERRED]** The only generation-time timestamp (`generation_timestamp` in
+  `templates/pydantic_schema.py.jinja2`) sits in a **dead template** — zero render
+  sites across `src/` or `tests/`, so nothing reaches output today. It is a latent
+  byte-identity trap: wired in, it would break live-vs-snapshot equality. Note it as
+  such — remove it or leave it provably unwired; it is **not** the provenance the
+  guard above polices.
 
 ### SC-10 — compilation_results
 
@@ -154,8 +203,11 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
 - **[INFERRED]** A snapshot lacking a `compilation_results` section (a legacy
   snapshot captured before this item) **degrades to today's behavior** — CalcUsage
   auto-impl is lost — with a warning, rather than crashing. This is the "old
-  snapshots degrade with a warning" behavior from the research; see the version
-  policy in Open Questions for how it interacts with the hard version check.
+  snapshots degrade with a warning" behavior from the research, scoped to the
+  `compilation_results` section only. It is kept distinct from version handling: a
+  wrong/missing version is a hard error (see the resolved version policy in Open
+  Questions), whereas a version-current snapshot missing this additive section
+  degrades.
 
 ### Fixtures, tests, docs (R1/R2)
 
@@ -185,37 +237,35 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
   corpus for this item; return-style / retyping / plant fixtures belong to Items
   3/4/8.
 
-## Open Questions / Deferred to design
+**Resolved at spec-review** (recorded here so design inherits the ruling, not the debate):
 
-- **Version-mismatch vs legacy-degrade policy (the crux — confirm the split).**
-  Two requirements sit close together: a version mismatch is a *hard error*, but an
-  old snapshot without `compilation_results` should *degrade with a warning*. The
-  coherent reconciliation, proposed here as [INFERRED] for the reviewer to confirm:
-  a snapshot whose `snapshot_format_version` is **present but different** from the
-  current version is a hard error (structural incompatibility we can't reason
-  about); a snapshot **missing `compilation_results`** (an additive section)
-  degrades with a warning. The genuinely undecided sub-case is a snapshot with
-  **no version field at all** (every currently-committed one, pre-regen) — treat
-  missing-version as legacy/degrade, or as a hard error demanding recapture? Since
-  all 10 committed snapshots are regenerated by this item and the capture command
-  doesn't exist yet, there are effectively no un-versioned snapshots in the wild;
-  the safe default is to treat missing-version as a hard error ("recapture with
-  current tooling"). Confirm at design / spec-review.
+- **Version-mismatch vs legacy-degrade policy — RESOLVED.** Spec-review confirmed
+  the split coherent with the epic. Three cases, now settled and captured as HARD /
+  INFERRED requirements above: a `snapshot_format_version` that is **present but
+  different**, or **missing entirely**, is a **hard error** (recapture); a snapshot
+  that is version-current but **missing the additive `compilation_results` section**
+  **degrades with a warning** (CalcUsage auto-impl lost — today's behavior). The
+  epic's "old snapshots degrade with a warning" is scoped to the `compilation_results`
+  absence, kept distinct from version handling.
+- **SC-10 proving fixture — RESOLVED: `chain_spike_model`.** Verified
+  expression-bearing — its CalcUsages instantiate calc defs with inline output
+  expressions (`chain_spike_model/library.sysml:8` `out area : Real = length * width`
+  via `design.sysml:12` `calc area_calc : AreaCalc { ... }`), which is exactly the
+  CalcUsage auto-impl path (not FORMULA, not aggregation). No new fixture and **no
+  new license-gated capture** are required. Design confirms only that its regenerated
+  snapshot produces a non-empty `compilation_results` once the serializer is extended.
+
+**Still deferred to design (mechanism choices):**
+
 - **Source-freshness strictness.** Warn-and-continue by default is specified. Whether
   to add a `--strict` flag that promotes the freshness warning to a hard failure
-  (useful in CI to catch stale snapshots) is a mechanism choice — defer to design.
+  (useful in CI to catch stale snapshots) is a mechanism choice — defer.
 - **Capture output path / naming convention.** Where the `snapshot` subcommand
   writes by default, and whether it targets a single file or a per-model directory
-  layout, is a mechanism choice — defer to design.
-- **Which expression-bearing fixture proves SC-10.** The auto-impl-preservation
-  criterion needs a fixture whose CalcUsage carries an inline output expression
-  (solar_battery has none, which is why it is already byte-identical). Candidate
-  from the committed corpus is `attr_expr_probe` or `chain_spike_model` — confirm at
-  design which committed snapshot actually exercises the CalcUsage `compilation_results`
-  path, or whether a minimal expression-bearing fixture must be added.
+  layout — mechanism, defer.
 - **Version field format.** Integer vs semantic string for `snapshot_format_version`,
   and where it sits in the JSON (top-level alongside `model_name`/`captured_at`) —
-  mechanism, defer to design.
+  mechanism, defer.
 
 ---
 
@@ -229,7 +279,7 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
   - `docs/architecture/reference/02-orchestration.md` — the `build_pipeline_context()` 7-step sequence and REQ-ORCH-06 boundary
 - **Code to promote:**
   - `tests/helpers/snapshot_loader.py`, `tests/helpers/snapshot_serializer.py`
-  - `tests/conformance/test_entry_point_classifier.py:136` — `build_full_graph_from_snapshot()` (the proven context-builder body)
+  - `tests/conformance/test_entry_point_classifier.py:136` — `build_full_graph_from_snapshot()` / `build_classifier_inputs_from_snapshot()` (the proven graph-rebuild body to promote and wrap in a `PipelineContext`)
   - `scripts/capture_extraction_snapshots.py` — `_capture_full_pipeline()`
 - **Design:** `.project/active/snapshot-generation/design.md` (to be created)
 
