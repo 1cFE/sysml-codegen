@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "alias_agg_probe",
-  "captured_at": "2026-07-05T20:48:03.280434+00:00",
+  "captured_at": "2026-07-05T23:54:44.069015+00:00",
   "compilation_results": {
     "Unit_Cost_Calc": {
       "calc_def_name": "Unit_Cost_Calc",
@@ -246,7 +246,7 @@
       "instance_name": "AliasAggProbeDesign__plant__assembly__widget__cost_model",
       "calc_def_name": "Unit_Cost_Calc",
       "calc_def_qualified_name": "AliasAggProbeLibrary::'Unit Cost Calc'",
-      "module_type": "aliasaggprobelibrary.'Unit Cost Calc'Module",
+      "module_type": "aliasaggprobelibrary.Unit_Cost_CalcModule",
       "bindings": [
         {
           "param_name": "base_cost",
@@ -277,7 +277,7 @@
       "instance_name": "AliasAggProbeDesign__plant__assembly__margin_calc",
       "calc_def_name": "Margin_Calc",
       "calc_def_qualified_name": "AliasAggProbeLibrary::'Margin Calc'",
-      "module_type": "aliasaggprobelibrary.'Margin Calc'Module",
+      "module_type": "aliasaggprobelibrary.Margin_CalcModule",
       "bindings": [
         {
           "param_name": "cost_basis",
@@ -319,7 +319,7 @@
       "instance_name": "AliasAggProbeDesign__plant__assembly__report_calc",
       "calc_def_name": "Report_Calc",
       "calc_def_qualified_name": "AliasAggProbeLibrary::'Report Calc'",
-      "module_type": "aliasaggprobelibrary.'Report Calc'Module",
+      "module_type": "aliasaggprobelibrary.Report_CalcModule",
       "bindings": [
         {
           "param_name": "cost_input",

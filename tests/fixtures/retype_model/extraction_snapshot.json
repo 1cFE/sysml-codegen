@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "retype_model",
-  "captured_at": "2026-07-05T22:05:38.003483+00:00",
+  "captured_at": "2026-07-05T23:54:44.084493+00:00",
   "compilation_results": {
     "IfeCalc": {
       "calc_def_name": "IfeCalc",
@@ -103,7 +103,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 5,
       "source_hash": "7322460c8c035ceb1ea52637bb09bbeb0d21000b04547074815b041d8474c741",
       "output_expression_asts": null,
@@ -151,7 +151,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 11,
       "source_hash": "7322460c8c035ceb1ea52637bb09bbeb0d21000b04547074815b041d8474c741",
       "output_expression_asts": null,
@@ -199,7 +199,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 19,
       "source_hash": "7322460c8c035ceb1ea52637bb09bbeb0d21000b04547074815b041d8474c741",
       "output_expression_asts": null,
@@ -232,7 +232,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 29,
       "parent_part_path": "retype_design.the_variant.driver",
       "qualified_name": "RetypeDesign__retype_design__the_variant__driver__ife_calc",
@@ -249,7 +249,7 @@
       "unbound_params": [
         "s"
       ],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 50,
       "parent_part_path": "retype_design.the_variant.driver",
       "qualified_name": "RetypeDesign__retype_design__the_variant__driver__shared_calc",
@@ -278,7 +278,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 43,
       "parent_part_path": "retype_design.plain_hif",
       "qualified_name": "RetypeDesign__retype_design__plain_hif__hif_calc",
@@ -307,7 +307,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 43,
       "parent_part_path": "retype_design.the_variant.driver",
       "qualified_name": "RetypeDesign__retype_design__the_variant__driver__hif_calc",
@@ -324,7 +324,7 @@
       "unbound_params": [
         "s"
       ],
-      "source_file": "tests/fixtures/retype_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 50,
       "parent_part_path": "retype_design.plain_hif",
       "qualified_name": "RetypeDesign__retype_design__plain_hif__shared_calc",
@@ -334,13 +334,13 @@
     }
   ],
   "design_attributes": {
-    "tests/fixtures/retype_model/library.sysml": [
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/retype_model/library.sysml": [
       {
         "name": "ife_out",
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/retype_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 7,
         "parent_part": "",
         "qualified_name": "RetypeLibrary__IfeCalc__ife_out"
@@ -350,7 +350,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/retype_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 13,
         "parent_part": "",
         "qualified_name": "RetypeLibrary__HifCalc__hif_out"
@@ -360,7 +360,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/retype_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 21,
         "parent_part": "",
         "qualified_name": "RetypeLibrary__SharedCalc__shared_out"
@@ -370,7 +370,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "tests/fixtures/retype_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 27,
         "parent_part": "",
         "qualified_name": "RetypeLibrary__IFE_Driver__power"
@@ -380,7 +380,7 @@
         "sysml_type": "Real",
         "default_value": "20.0",
         "unit": null,
-        "source_file": "tests/fixtures/retype_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 41,
         "parent_part": "",
         "qualified_name": "RetypeLibrary__HIF_Driver__torque"
@@ -390,7 +390,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "tests/fixtures/retype_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 56,
         "parent_part": "",
         "qualified_name": "RetypeLibrary__Other_Driver__mass"

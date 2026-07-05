@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "quoted_owner_formula",
-  "captured_at": "2026-07-05T22:51:14.492456+00:00",
+  "captured_at": "2026-07-05T23:54:44.089479+00:00",
   "compilation_results": {
     "ScaleCalc": {
       "calc_def_name": "ScaleCalc",
@@ -63,7 +63,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/quoted_owner_formula/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 7,
       "source_hash": "3d07d15a581671cca34fbdd4940afe8a4b25b40f7814b0aacb7464e645341899",
       "output_expression_asts": null,
@@ -76,13 +76,13 @@
   ],
   "calc_usages": [],
   "design_attributes": {
-    "tests/fixtures/quoted_owner_formula/design.sysml": [
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/quoted_owner_formula/design.sysml": [
       {
         "name": "revenue",
         "sysml_type": "Real",
         "default_value": "100.0",
         "unit": null,
-        "source_file": "tests/fixtures/quoted_owner_formula/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 10,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__revenue"
@@ -92,7 +92,7 @@
         "sysml_type": "Real",
         "default_value": "60.0",
         "unit": null,
-        "source_file": "tests/fixtures/quoted_owner_formula/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 11,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__cost"
@@ -102,7 +102,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/quoted_owner_formula/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 16,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__net_margin"
@@ -112,19 +112,19 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/quoted_owner_formula/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 25,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__total_payout"
       }
     ],
-    "tests/fixtures/quoted_owner_formula/library.sysml": [
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/quoted_owner_formula/library.sysml": [
       {
         "name": "result",
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/quoted_owner_formula/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "QuotedOwnerFormulaLibrary__ScaleCalc__result"
@@ -153,12 +153,12 @@
         {
           "name": "revenue",
           "qualified_name": "QuotedOwnerFormulaDesign::'Margin Part'::revenue",
-          "document_path": "file:tests/fixtures/quoted_owner_formula/design.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/quoted_owner_formula/design.sysml"
         },
         {
           "name": "cost",
           "qualified_name": "QuotedOwnerFormulaDesign::'Margin Part'::cost",
-          "document_path": "file:tests/fixtures/quoted_owner_formula/design.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/quoted_owner_formula/design.sysml"
         }
       ],
       "classification": "formula",
@@ -179,7 +179,7 @@
         {
           "name": "net margin",
           "qualified_name": "QuotedOwnerFormulaDesign::'Margin Part'::'net margin'",
-          "document_path": "file:tests/fixtures/quoted_owner_formula/design.sysml"
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/quoted_owner_formula/design.sysml"
         }
       ],
       "classification": "formula",

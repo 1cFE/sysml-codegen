@@ -48,6 +48,11 @@ MODELS = {
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
     "return_styles": FIXTURES_DIR / "return_styles",
     "retype_model": FIXTURES_DIR / "retype_model",
+    # Registered so the capture script can reproduce this snapshot (Item 5
+    # committed it without registering it here — permanent fixture drift). Its
+    # committed paths are repo-relative; re-capture brings it to the canonical
+    # script form (absolute design_attributes keys, model-relative source_file).
+    "quoted_owner_formula": FIXTURES_DIR / "quoted_owner_formula",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
