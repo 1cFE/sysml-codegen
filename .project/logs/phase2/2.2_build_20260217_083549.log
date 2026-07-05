@@ -1,0 +1,39 @@
+C09 Virtual Binding Rewrite is **DONE**. Here's the summary:
+
+## C09 Virtual Binding Rewrite — Complete
+
+### Deliverables
+
+**Test file**: `tests/conformance/test_virtual_binding_rewrite.py` — **38 conformance tests**, all passing
+
+### Requirement Coverage
+
+| REQ | Tests | Approach |
+|-----|-------|----------|
+| REQ-VBR-01 | 3 | Override index structure, specific keys, empty overrides |
+| REQ-VBR-02 | 5 | Deep-path join (all 13 + 3 parametrized), flat override |
+| REQ-VBR-03 | 20 | Single, all-13, 13 parametrized, leaf extraction x3, EXPRESSION skip, count x2 |
+| REQ-VBR-04 | 2 | CHAIN replaces source_path (constructed data) |
+| REQ-VBR-05 | 2 | Template skip, template+virtual mixed |
+| REQ-VBR-06 | 3 | Already-LITERAL, no source_path, idempotency |
+| REQ-VBR-07 | 2 | AST static analysis of call ordering |
+
+### Key Findings
+
+1. **Pre-rewrite reconstruction works** — reversing `owning_part_def_qn` from `__` to `::` produces correct original `source_path` for all 13 solar_battery overrides
+2. **Function is idempotent** — returns 0 on already-rewritten data
+3. **Zero CHAIN overrides in any fixture model** — tested with constructed data only
+4. **EXPRESSION overrides silently skipped** — undocumented but correct behavior
+5. **No production code changes needed** — existing implementation is correct
+
+### Test Suite Status
+- **1118 total tests, 0 failures**
+- Lint clean
+
+### Updated Documents
+- `.project/active/virtual-binding-rewrite/plan.md` — Status: DONE
+- `IMPLEMENTATION_PLAN.md` — C09 marked complete, test count updated (1118), accumulated learnings added
+- `COMPONENT_CHECKLIST.md` — C09 AC all checked
+
+### Ready for Commit
+The plan includes a commit template. Would you like me to commit these changes?

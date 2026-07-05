@@ -1,0 +1,29 @@
+Plan complete. Here's a summary:
+
+## C10 Aggregation Scoping — Plan Summary
+
+**Plan saved to**: `.project/active/aggregation-scoping/plan.md`
+
+### Key Findings from Design Consistency Review
+
+1. **No blocker** — unlike C09, the snapshot data includes both raw inputs (hierarchy_data) and post-scoped outputs, so we can test by comparing function output against snapshot data directly.
+
+2. **One production code change needed**: REQ-AS-08 requires adding a `logger.warning()` in `_scope_aggregation_expressions()` (line ~492) when an aggregation expression produces zero scoped modules. Currently it only logs a total count at INFO level.
+
+3. **IMPLEMENTATION_PLAN has a minor omission**: Step 2.3 says "REQ-AS-01 through REQ-AS-07" but should say "through REQ-AS-08". Flagged for LEARN phase.
+
+4. **Spike needed** to resolve 4 questions before building tests — primarily whether any solar_battery CHAIN redefinitions qualify for `_build_chain_aliases` (determines whether REQ-AS-04 needs constructed test data).
+
+### Test Plan: 21 test cases
+
+- **REQ-AS-01** (one-to-many expansion): 6 tests — snapshot comparison, issue22 edge case, empty input guards
+- **REQ-AS-02** (strategy ordering): 5 tests — Strategy 1 direct match, Strategy 2 fallback, empty inputs
+- **REQ-AS-03** (dotted prefix-stripped paths): 2 tests — parametrized over all 4 PartDefs
+- **REQ-AS-04** (CHAIN alias filters): 3 tests — filter verification, output format, snapshot comparison
+- **REQ-AS-05/06** (registry integration): 2 tests — Phase 1b registration and Phase 2 resolution
+- **REQ-AS-07** (module_eqn format): 2 tests — solar_battery (parametrized over 20) + issue22
+- **REQ-AS-08** (zero-instance warning): 1 test — constructed unmatched PartDef
+
+### Next Steps
+
+Run the spike to answer the 4 open questions, then proceed to TEST phase.

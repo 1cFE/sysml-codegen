@@ -26,6 +26,11 @@ from sysml_codegen.core.identifier_types import (
 from sysml_codegen.core.models import (
     BindingResolution,
     BindingResolutionType,
+    ChannelAlias,
+)
+from sysml_codegen.core.output_registry import (
+    OutputRegistry,
+    is_transitive_default,
 )
 from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
@@ -49,6 +54,10 @@ __all__ = [
     # models
     "BindingResolution",
     "BindingResolutionType",
+    "ChannelAlias",
+    # output_registry
+    "OutputRegistry",
+    "is_transitive_default",
     # qualified_names
     "build_element_qualified_name",
     "build_parameter_qualified_name",

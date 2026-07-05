@@ -129,3 +129,42 @@ def test_calculation_definition_data_fields():
     assert calc_def.qualified_name == "TestPackage::TestCalc"
     assert calc_def.input_attributes == []
     assert calc_def.output_attributes == []
+
+
+def test_calculation_definition_data_has_expression_ast_fields():
+    """New fields exist with correct defaults (backward compat)."""
+    from sysml_codegen.extraction.data_models import CalculationDefinitionData
+
+    cd = CalculationDefinitionData(
+        name="Test",
+        qualified_name="Test",
+        doc_comment="",
+        calc_expressions=[],
+        input_attributes=[],
+        output_attributes=[],
+        references=[],
+        source_file=Path("test.sysml"),
+    )
+    assert cd.output_expression_asts == {}
+    assert cd.all_member_names == set()
+    assert cd.member_expressions == {}
+
+
+def test_binding_info_has_expression_ast_field():
+    """BindingInfo.expression_ast defaults to None (backward compat)."""
+    from sysml_codegen.extraction.usage_extractor import BindingInfo
+    from agentic_mbse.sysml.types import BindingType
+
+    bi = BindingInfo(param_name="x", source_path=None, binding_type=BindingType.UNBOUND)
+    assert bi.expression_ast is None
+
+
+def test_pipeline_module_has_compilability_field():
+    """PipelineModule.compilability defaults to UNKNOWN (backward compat)."""
+    from sysml_codegen.resolution.models import PipelineModule
+    from sysml_codegen.extraction.expression_compiler import Compilability
+
+    m = PipelineModule(
+        name="t", module_type="T", inputs=[], outputs=[], execution_order=0
+    )
+    assert m.compilability == Compilability.UNKNOWN

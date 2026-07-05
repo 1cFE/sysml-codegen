@@ -35,8 +35,11 @@ class FunctionSignature:
     def matches(self, other: "FunctionSignature") -> bool:
         """Check if signatures are compatible.
 
-        Compares function name, input type, and return type to determine
-        if two signatures represent the same interface.
+        Compares function name, input type, return type, and input fields
+        to determine if two signatures represent the same interface.
+
+        When input_fields is None on either side (legacy files or unmodified
+        stubs), field comparison is skipped and only type-level checks apply.
 
         Args:
             other: Signature to compare against
@@ -44,11 +47,19 @@ class FunctionSignature:
         Returns:
             True if signatures match (same interface), False otherwise
         """
-        return (
+        if not (
             self.function_name == other.function_name
             and self.input_type == other.input_type
             and self.return_type == other.return_type
-        )
+        ):
+            return False
+
+        # Field-level comparison when both sides have field info
+        if self.input_fields is not None and other.input_fields is not None:
+            return sorted(self.input_fields) == sorted(other.input_fields)
+
+        # Graceful fallback: no field info on one/both sides
+        return True
 
 
 class FunctionSignatureVisitor(ast.NodeVisitor):
@@ -82,10 +93,14 @@ class FunctionSignatureVisitor(ast.NodeVisitor):
             # Extract return type
             return_type = self._extract_annotation(node.returns)
 
+            # Extract input field references from function body
+            input_fields = self._extract_input_field_refs(node)
+
             self.signature = FunctionSignature(
                 function_name=func_name,
                 input_type=input_type,
                 return_type=return_type,
+                input_fields=input_fields if input_fields else None,
             )
 
         self.generic_visit(node)
@@ -106,6 +121,28 @@ class FunctionSignatureVisitor(ast.NodeVisitor):
             return "Unknown"
 
         return ast.unparse(annotation)
+
+    def _extract_input_field_refs(self, func_node: ast.FunctionDef) -> list[str]:
+        """Extract input field names referenced in function body.
+
+        Walks the function body AST to find ``inputs.X`` attribute accesses,
+        revealing which input fields the implementation actually uses.
+
+        Args:
+            func_node: AST node for the run_* function
+
+        Returns:
+            Sorted list of field names, or empty list if none found
+        """
+        fields: set[str] = set()
+        for node in ast.walk(func_node):
+            if (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id == "inputs"
+            ):
+                fields.add(node.attr)
+        return sorted(fields)
 
 
 def extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None:

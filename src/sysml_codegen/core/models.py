@@ -5,6 +5,7 @@ and are placed here to avoid layer violations.
 """
 
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -67,7 +68,51 @@ class BindingResolution(BaseModel):
     is_transitive: bool = False
 
 
+class ChannelAlias(BaseModel):
+    """An explicit alias for a pipeline output channel.
+
+    Aliases map alternative lookup keys to canonical channel names.
+    They are produced by two sources:
+    - `:>>` CHAIN redefinitions (source="redefinition")
+    - EXPOSE_PURE computed attributes (source="expose_pure")
+
+    All fields use scoped dotted keys -- no bare names, no SYSML_QN (::) format.
+
+    Attributes:
+        alias_name: The alias lookup key. For CHAIN aliases, this is scoped
+            (e.g., "solar_array.total_capex"). For EXPOSE_PURE aliases, this
+            is bare (e.g., "total_capex") -- scoping happens at registration.
+        canonical_name: The dotted target key that resolves to a canonical
+            channel via the OutputRegistry (e.g., "component_cost.total_cost").
+        owning_part_qn: Qualified name of the PartDef/PartUsage where the
+            alias originates (e.g., "SolarBatteryLibrary__Solar_Array").
+        source: Provenance tag: "redefinition" | "expose_pure" | "design_override".
+
+    Example (CHAIN redefinition):
+        ChannelAlias(
+            alias_name="solar_battery_plant.solar_array.total_capex",
+            canonical_name="solar_battery_plant.solar_array.cost_model.total_cost",
+            owning_part_qn="SolarBatteryLibrary__Solar_Array",
+            source="redefinition",
+        )
+
+    Example (EXPOSE_PURE):
+        ChannelAlias(
+            alias_name="total_capex",
+            canonical_name="component_cost.total_cost",
+            owning_part_qn="E2EAttrExprDesign__e2e_plant",
+            source="expose_pure",
+        )
+    """
+
+    alias_name: str
+    canonical_name: str
+    owning_part_qn: str
+    source: Literal["redefinition", "expose_pure", "design_override"]
+
+
 __all__ = [
     "BindingResolution",
     "BindingResolutionType",
+    "ChannelAlias",
 ]

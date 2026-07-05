@@ -96,7 +96,7 @@ class TestBuildPipelineContextDefaults:
 
     def test_entry_points_have_defaults(self, chain_spike_model_path: Path):
         """Entry points from chain spike model should have non-None default values."""
-        from sysml_codegen.generation.initialization import build_pipeline_context
+        from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
         try:
             ctx = build_pipeline_context([chain_spike_model_path])

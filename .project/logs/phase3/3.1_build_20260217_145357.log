@@ -1,0 +1,31 @@
+Component C11 (DependencyBacktracker Conformance) is complete. Here's the summary:
+
+## C11 Backtracker Conformance — Complete
+
+### Deliverables
+- **Test file**: `tests/conformance/test_backtracker.py` — 43 conformance tests
+- **Spike script**: `scripts/spike_backtracker_resolution_paths.py` (diagnostic, not committed)
+- **Updated**: `.project/active/backtracker-conformance/plan.md` (status: DONE)
+- **Updated**: `.project/concepts/refactor-design-intent/IMPLEMENTATION_PLAN.md` (C11 marked complete, learnings added, test count updated)
+
+### Test Coverage (9 requirements)
+| Requirement | Tests | What's verified |
+|-------------|-------|-----------------|
+| REQ-BT-01 | 6 | Every non-literal binding has a resolution |
+| REQ-BT-02 | 3 | CHAIN → scoped/alias, REFERENCE → sysml_qn/scoped |
+| REQ-BT-03 | 3 | Cycle detection + no false positives |
+| REQ-BT-04 | 6 | Total resolution, fields complete, entry_point_sources |
+| REQ-BT-05 | 4 | Pipe separator key format, MODULE_OUTPUT/ENTRY_POINT format |
+| REQ-BT-06 | 6 | Topological ordering, cycle raises, edge cases |
+| REQ-BT-07 | 5 | No self-wiring across all models |
+| REQ-BT-08 | 5 | Typed dispatch outcomes, compat-only baselines documented |
+| REQ-DRA-01 | 2 | Resolution during DFS (static analysis + runtime) |
+
+### Key Spike Findings
+- **41 MODULE_OUTPUT** resolutions across 6 models, **13 compat-only** (C11b migration concern)
+- **12 catf_mfe** cross-scope CHAIN + **1 solar_battery** REFERENCE secondary → all resolve through `_compat` dict
+- **EXPRESSION bindings** silently skipped (not crashed) — gap documented
+- **All models**: valid topological order, correct key format, no self-wiring
+
+### Suite Status
+- **1250 passed, 5 xfailed, 0 failures** (43 new C11 tests added)

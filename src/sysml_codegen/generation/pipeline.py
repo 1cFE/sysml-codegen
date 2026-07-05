@@ -119,7 +119,13 @@ def _module_to_context(
         Dict with name, instance_name, type, inputs, outputs
     """
     return {
-        "name": module.module_type,
+        "name": (
+            f"source: aggregation ({module.module_type})"
+            if module.is_aggregation
+            else f"source: computed_attribute ({module.module_type})"
+            if module.is_computed_attribute
+            else module.module_type
+        ),
         "instance_name": module.name,
         "type": module.module_type,
         "inputs": [_input_to_context(inp, channel_field_map) for inp in module.inputs],

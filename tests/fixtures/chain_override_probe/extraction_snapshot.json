@@ -1,0 +1,270 @@
+{
+  "model_name": "chain_override_probe",
+  "captured_at": "2026-02-17T15:03:00.937032+00:00",
+  "calc_defs": [
+    {
+      "name": "SensorCostCalc",
+      "qualified_name": "ChainOverrideLibrary::SensorCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "total_cost = base_cost * sensitivity"
+      ],
+      "input_attributes": [
+        {
+          "name": "sensitivity",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "base_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "total_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "chain_override_probe/library.sysml",
+      "source_line": 5,
+      "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "base_cost",
+        "sensitivity",
+        "total_cost"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "CalibrationCalc",
+      "qualified_name": "ChainOverrideLibrary::CalibrationCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "calibrated_factor = raw_factor * LiteralRationalEvaluation()"
+      ],
+      "input_attributes": [
+        {
+          "name": "raw_factor",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "calibrated_factor",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "chain_override_probe/library.sysml",
+      "source_line": 13,
+      "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "calibrated_factor",
+        "raw_factor"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "ChainOverrideDesign__instrument_design__sensor__cost_model",
+      "calc_def_name": "SensorCostCalc",
+      "calc_def_qualified_name": "ChainOverrideLibrary::SensorCostCalc",
+      "module_type": "chainoverridelibrary.SensorCostCalcModule",
+      "bindings": [
+        {
+          "param_name": "sensitivity",
+          "source_path": "calibration.calibrated_factor",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> ChainOverrideLibrary::Sensor::cost_model::sensitivity",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "sensitivity"
+        },
+        {
+          "param_name": "base_cost",
+          "source_path": null,
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> ChainOverrideLibrary::Sensor::cost_model::base_cost",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 100.0,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "base_cost"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "chain_override_probe/library.sysml",
+      "source_line": 26,
+      "parent_part_path": "instrument_design.sensor",
+      "qualified_name": "ChainOverrideDesign__instrument_design__sensor__cost_model",
+      "is_template": false,
+      "owning_part_def_qn": "ChainOverrideLibrary__Sensor",
+      "raw_element": null
+    },
+    {
+      "instance_name": "ChainOverrideDesign__instrument_design__calibration",
+      "calc_def_name": "CalibrationCalc",
+      "calc_def_qualified_name": "ChainOverrideLibrary::CalibrationCalc",
+      "module_type": "chainoverridelibrary.CalibrationCalcModule",
+      "bindings": [
+        {
+          "param_name": "raw_factor",
+          "source_path": "1.0",
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "LiteralExpression -> 1.0",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 1.0,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": null
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "chain_override_probe/library.sysml",
+      "source_line": 37,
+      "parent_part_path": "instrument_design",
+      "qualified_name": "ChainOverrideDesign__instrument_design__calibration",
+      "is_template": false,
+      "owning_part_def_qn": "ChainOverrideLibrary__Instrument_Package",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_override_probe/library.sysml": [
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "chain_override_probe/library.sysml",
+        "source_line": 9,
+        "parent_part": "",
+        "qualified_name": "ChainOverrideLibrary__SensorCostCalc__total_cost"
+      },
+      {
+        "name": "calibrated_factor",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "chain_override_probe/library.sysml",
+        "source_line": 16,
+        "parent_part": "",
+        "qualified_name": "ChainOverrideLibrary__CalibrationCalc__calibrated_factor"
+      }
+    ],
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_override_probe/design.sysml": [
+      {
+        "name": "sensor_base_cost",
+        "sysml_type": "Real",
+        "default_value": "100.0",
+        "unit": null,
+        "source_file": "chain_override_probe/design.sysml",
+        "source_line": 8,
+        "parent_part": "instrument_design",
+        "qualified_name": "ChainOverrideDesign__instrument_design__sensor_base_cost"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [
+      {
+        "owning_part_qn": "ChainOverrideDesign__instrument_design__sensor",
+        "attribute_name": "base_cost",
+        "redefinition_type": "literal",
+        "literal_value": 100.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "ChainOverrideDesign__instrument_design__sensor",
+        "attribute_name": "sensitivity",
+        "redefinition_type": "chain",
+        "literal_value": null,
+        "source_path": "calibration.calibrated_factor",
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {
+      "ChainOverrideLibrary__Instrument_Package": [
+        "sensor"
+      ]
+    },
+    "usage_type_map": {
+      "[\"ChainOverrideLibrary__Instrument_Package\", \"sensor\"]": "ChainOverrideLibrary__Sensor"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": []
+}

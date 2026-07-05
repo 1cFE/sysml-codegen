@@ -3,78 +3,99 @@
 Generates handwritten implementation function stubs that preserve SysML
 calc expressions and source file:line references for traceability.
 
-Usage:
-    from sysml_codegen.generation.stencils import generate_implementation_stencil
+Provides unified dispatch between auto-implementation (for FULLY_COMPILABLE
+modules) and NotImplementedError stub templates.
 
-    code = generate_implementation_stencil(calc_def, template_env, output_path)
+Usage:
+    from sysml_codegen.generation.stencils import generate_implementation
+
+    code = generate_implementation(module, template_env, output_path)
 """
 
 from pathlib import Path
 
 import jinja2
 
-# UPDATED: Import from sysml_codegen package
-from sysml_codegen.extraction.data_models import CalculationDefinitionData
-from sysml_codegen.resolution.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 
 
-def _build_stub_docstring(calc_def: CalculationDefinitionData) -> str:
-    """Build comprehensive stub docstring with usage examples.
+def _output_attr_name(out) -> str:
+    """Get original output attribute name from ModuleOutput.
 
-    Args:
-        calc_def: Calculation definition
-
-    Returns:
-        Formatted docstring for implementation function
+    For multi-output modules, field_name IS the attribute name.
+    For single-output modules, field_name is "root" -- extract from channel_name.
+    Channel name format: {usage_eqn}__{attr_name} (PQN format).
     """
+    if out.field_name != "root":
+        return out.field_name
+    return out.channel_name.split("__")[-1]
+
+
+def _get_module_sysml_qn(module) -> str:
+    """Get the full SysML qualified name for path/import derivation.
+
+    Module types store calc_def_qualified_name differently:
+    - CalcUsage: full calc def QN (e.g., "Package::CalcDef")
+    - FORMULA: owning part QN only → append "::calc_def_name"
+    - Aggregation: owning part QN with __ separator → use module.name with :: separator
+    """
+    if module.is_computed_attribute:
+        return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
+    elif module.is_aggregation:
+        return module.name.replace("__", "::")
+    else:
+        return module.calc_def_qualified_name
+
+
+def _build_stub_docstring_from_graph(module) -> str:
+    """Build stub docstring from PipelineModule fields."""
     lines = []
-    output_attrs = calc_def.output_attributes
 
-    # Add purpose
-    lines.append(f"Execute {calc_def.name} calculation.")
+    # Derive output info from module outputs
+    output_names = []
+    for out in module.outputs:
+        output_names.append(_output_attr_name(out))
 
-    # Add description
-    if calc_def.doc_comment:
+    lines.append(f"Execute {module.calc_def_name} calculation.")
+
+    if module.doc_comment:
         lines.append("")
-        lines.append(calc_def.doc_comment.strip())
+        lines.append(module.doc_comment.strip())
 
-    # Add source reference
     lines.append("")
-    lines.append(f"SysML Source: {calc_def.source_file}:{calc_def.source_line}")
+    lines.append(f"SysML Source: {module.source_file}:{module.source_line}")
 
-    # Add SysML expressions
-    if calc_def.calc_expressions:
+    if module.calc_expressions:
         lines.append("")
         lines.append("SysML Expressions:")
-        for expr in calc_def.calc_expressions:
+        for expr in module.calc_expressions:
             lines.append(f"    {expr}")
 
-    # Add Args section
     lines.append("")
     lines.append("Args:")
     lines.append(
-        f"    inputs: Input parameters validated against {calc_def.name}Input schema"
+        f"    inputs: Input parameters validated against {module.calc_def_name}Input schema"
     )
 
-    # Add Returns section
-    if len(output_attrs) == 1:
-        desc = output_attrs[0].description or output_attrs[0].name
+    if len(module.outputs) == 1:
+        out = module.outputs[0]
+        out_name = _output_attr_name(out)
+        desc = out.description or out_name
         lines.append("")
         lines.append("Returns:")
         lines.append(f"    float: {desc}")
-    elif len(output_attrs) > 1:
-        output_names = ", ".join(attr.name for attr in output_attrs)
+    elif len(module.outputs) > 1:
+        names = ", ".join(output_names)
         lines.append("")
         lines.append("Returns:")
-        lines.append(f"    tuple[float, ...]: ({output_names})")
+        lines.append(f"    tuple[float, ...]: ({names})")
 
-    # Add usage example
     lines.append("")
     lines.append("Example:")
-    lines.append(f"    >>> inputs = {calc_def.name}Input(...)")
-    func_name = f"run_{calc_def.name.lower()}"
-    if len(output_attrs) > 1:
-        output_vars = ", ".join(attr.name for attr in output_attrs)
+    lines.append(f"    >>> inputs = {module.calc_def_name}Input(...)")
+    func_name = f"run_{module.calc_def_name.lower()}"
+    if len(module.outputs) > 1:
+        output_vars = ", ".join(output_names)
         lines.append(f"    >>> {output_vars} = {func_name}(inputs)")
     else:
         lines.append(f"    >>> result = {func_name}(inputs)")
@@ -82,154 +103,148 @@ def _build_stub_docstring(calc_def: CalculationDefinitionData) -> str:
     return "\n".join(lines)
 
 
-def generate_implementation_stencil(
-    calc_def: CalculationDefinitionData,
-    template_env: jinja2.Environment,
-    output_path: Path,
-    package_name: str = "generated_code",
-) -> str:
-    """Generate implementation stencil for calc def.
+def _build_stencil_context_from_graph(module, output_path, package_name="generated_code"):
+    """Build shared template context from PipelineModule fields."""
+    output_names = [_output_attr_name(out) for out in module.outputs]
 
-    Args:
-        calc_def: Calculation definition to implement
-        template_env: Jinja2 environment
-        output_path: Where to write handwritten/ file (for future use)
-        package_name: Package name for imports (parameterized)
-
-    Returns:
-        Generated Python code
-    """
-    # Extract output attributes
-    output_attrs = calc_def.output_attributes
-
-    # Determine return type
-    if len(output_attrs) == 0:
+    if len(module.outputs) == 0:
         return_type = "None"
-    elif len(output_attrs) == 1:
+    elif len(module.outputs) == 1:
         return_type = "float"
     else:
-        return_types = ", ".join(["float"] * len(output_attrs))
+        return_types = ", ".join(["float"] * len(module.outputs))
         return_type = f"tuple[{return_types}]"
 
-    # Extract input parameters
     input_params = [
-        {"name": attr.name, "type": _map_input_type(attr.sysml_type)}
-        for attr in calc_def.input_attributes
+        {"name": inp.param_name, "type": inp.python_type}
+        for inp in module.inputs
     ]
 
-    # Extract calc expressions
-    calc_expressions = _extract_calc_expressions(calc_def)
+    calc_expressions = module.calc_expressions or []
 
-    # ADR-003: Derive namespaced import path for module
-    sqn = SysMLQualifiedName(calc_def.qualified_name)
+    # Derive path from full SysML QN (module-type-aware)
+    sysml_qn = _get_module_sysml_qn(module)
+    sqn = SysMLQualifiedName(sysml_qn)
     python_path = PythonModulePath.from_sysml(sqn)
     module_import_path = python_path.import_path
 
-    # Prepare template context
-    context = {
-        "function_name": f"run_{calc_def.name.lower()}",
-        "calc_name": calc_def.name,
-        "sysml_source": f"{calc_def.source_file}:{calc_def.source_line}",
+    # Class name from module_type (correct PascalCase for all module types)
+    class_name = module.module_type.split(".")[-1]
+    base_name = class_name.removesuffix("Module")
+
+    return {
+        "function_name": f"run_{module.calc_def_name.lower()}",
+        "calc_name": module.calc_def_name,
+        "sysml_source": f"{module.source_file}:{module.source_line}",
         "sysml_expressions": calc_expressions,
         "input_params": input_params,
-        "output_names": [attr.name for attr in output_attrs],
+        "output_names": output_names,
         "return_type": return_type,
-        "docstring": _build_stub_docstring(calc_def),
-        "input_class_name": f"{calc_def.name}Input",
-        "module_name": calc_def.name.lower(),
+        "docstring": _build_stub_docstring_from_graph(module),
+        "input_class_name": f"{base_name}Input",
+        "module_name": module.calc_def_name.lower(),
         "module_import_path": module_import_path,
         "package_name": package_name,
     }
 
-    template = template_env.get_template("implementation_stencil.py.jinja2")
-    code = template.render(**context)
 
-    # Ensure final newline (PEP 8 compliance)
-    if not code.endswith('\n'):
-        code += '\n'
-
-    return code
-
-
-def _extract_calc_expressions(calc_def: CalculationDefinitionData) -> list[str]:
-    """Extract SysML calc expressions from calc def.
-
-    Args:
-        calc_def: Calculation definition
-
-    Returns:
-        List of expression strings from SysML
-    """
-    return calc_def.calc_expressions
-
-
-def _map_input_type(sysml_type: str) -> str:
-    """Map SysML input type to Python type for function signature.
-
-    Args:
-        sysml_type: SysML type reference
-
-    Returns:
-        Python type for function parameter
-    """
-    if sysml_type in ["Real", "ScalarValues::Real"]:
-        return "float"
-    elif sysml_type in ["Integer", "ScalarValues::Integer"]:
-        return "int"
-    elif sysml_type in ["String", "ScalarValues::String"]:
-        return "str"
-    elif sysml_type in ["Boolean", "ScalarValues::Boolean"]:
-        return "bool"
-    else:
-        # Assume it's a schema type - pass through
-        return sysml_type
-
-
-def generate_backlog_report(
-    calc_defs: list[CalculationDefinitionData],
+def generate_implementation(
+    module,
+    template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",
 ) -> str:
-    """Generate markdown report of implementation backlog.
+    """Generate implementation from PipelineModule.
+
+    Dispatches to auto-implementation template when module.auto_impl_context
+    is populated (FULLY_COMPILABLE), or to stub template otherwise.
 
     Args:
-        calc_defs: All calculation definitions
-        output_path: Where to write IMPLEMENTATION_BACKLOG.md (for future)
-        package_name: Package name (parameterized)
+        module: PipelineModule with metadata fields populated
+        template_env: Jinja2 environment
+        output_path: Where to write handwritten/ file
+        package_name: Package name for imports
 
     Returns:
-        Generated markdown string with stage-based checklist
+        Generated Python code
     """
-    # Build items with proper source paths
+    context = _build_stencil_context_from_graph(module, output_path, package_name)
+
+    if module.auto_impl_context is not None:
+        context.update(module.auto_impl_context)
+        template = template_env.get_template("auto_implementation.py.jinja2")
+    else:
+        template = template_env.get_template("implementation_stencil.py.jinja2")
+
+    code = template.render(**context)
+    if not code.endswith('\n'):
+        code += '\n'
+    return code
+
+
+# Keep old name as alias for backward compatibility during transition
+generate_implementation_from_graph = generate_implementation
+
+
+def generate_backlog_report(
+    graph,
+    output_path: Path,
+    package_name: str = "generated_code",
+) -> str:
+    """Generate backlog report from ComputationGraph.
+
+    Args:
+        graph: ComputationGraph with modules
+        output_path: Where to write IMPLEMENTATION_BACKLOG.md
+        package_name: Package name
+
+    Returns:
+        Generated markdown string
+    """
     items = []
-    for calc_def in calc_defs:
-        complexity = _estimate_complexity(calc_def)
+    auto_formula_count = 0
+    auto_agg_count = 0
 
-        # Get full relative path from project root
-        source_file = calc_def.source_file
-        if isinstance(source_file, Path):
-            try:
-                source_str = str(source_file)
-                if "models/" in source_str:
-                    source_path = "models/" + source_str.split("models/", 1)[1]
-                else:
-                    source_path = source_file.name
-            except Exception:
-                source_path = source_file.name
+    for module in graph.modules:
+        if module.is_computed_attribute:
+            if module.auto_impl_context is not None:
+                auto_formula_count += 1
+            continue
+        if module.is_aggregation:
+            if module.auto_impl_context is not None:
+                auto_agg_count += 1
+            continue
+
+        # Skip FULLY_COMPILABLE CalcUsage modules
+        if module.auto_impl_context is not None:
+            continue
+
+        # Estimate complexity from calc_expressions
+        total_ops = 0
+        for expr in (module.calc_expressions or []):
+            total_ops += expr.count("+") + expr.count("*") + expr.count("/") + expr.count("-")
+        if total_ops <= 5:
+            complexity = "Low"
+        elif total_ops <= 15:
+            complexity = "Medium"
         else:
-            source_path = str(source_file)
+            complexity = "High"
 
-        items.append(
-            {
-                "module": calc_def.name,
-                "function": f"run_{calc_def.name.lower()}",
-                "source": f"{source_path}:{calc_def.source_line}",
-                "complexity": complexity,
-                "calc_expressions": calc_def.calc_expressions,
-            }
-        )
+        source_file = module.source_file or "unknown"
+        source_line = module.source_line or 0
+        source_path = str(source_file)
+        if "models/" in source_path:
+            source_path = "models/" + source_path.split("models/", 1)[1]
+        else:
+            source_path = Path(source_path).name
 
-    # Generate markdown with stage-based checklist
+        items.append({
+            "module": module.calc_def_name,
+            "function": f"run_{module.calc_def_name.lower()}",
+            "source": f"{source_path}:{source_line}",
+            "complexity": complexity,
+        })
+
     lines = [
         "# Implementation Backlog",
         "",
@@ -267,114 +282,100 @@ def generate_backlog_report(
             f"`{item['source']}` | {item['complexity']} |"
         )
 
-    lines.extend(
-        [
+    if auto_formula_count > 0:
+        lines.extend([
             "",
-            "---",
+            f"**{auto_formula_count} computed attribute module(s) auto-implemented** "
+            "(not included in manual count above).",
+        ])
+
+    if auto_agg_count > 0:
+        lines.extend([
             "",
-            "## Stage 2: Verification",
-            "",
-            "**Objective**: Verify implementations work correctly.",
-            "",
-            "**Instructions**:",
-            "",
-            "### 2.1 Type Checking",
-            "Run pyright to catch typing errors:",
-            "```bash",
-            f"pyright {package_name}/",
-            "```",
-            "Expected: 0 errors (should stay clean during implementation)",
-            "",
-            "### 2.2 Implementation Tests",
-            "Run verification tests:",
-            "```bash",
-            "pytest tests/test_implementations_runnable.py -v",
-            "```",
-            "All tests should pass (or pytest.skip for NotImplementedError stubs)",
-            "",
-            "**Test Coverage**:",
-            f"- {len(items)} implementation functions",
-            "- Each function tested for: imports, signature, return type",
-            "- Tests tolerate NotImplementedError (pass before implementation)",
-            "- Tests verify return types (pass after implementation)",
-            "",
-            "**Checklist**:",
-            "- [ ] Pyright passes (0 errors)",
-            "- [ ] Verification tests pass",
-            "- [ ] All implementations return correct types",
-            "",
-            "**Note**: Import validation and ruff linting performed separately by maintainers.",
-            "",
-            "---",
-            "",
-            "## Stage 3: Integration Testing",
-            "",
-            "**Objective**: Verify the full pipeline works end-to-end.",
-            "",
-            "**Instructions**:",
-            f"1. Create a test pipeline configuration in `{package_name}/pipelines/`",
-            "2. Run the pipeline with sample inputs",
-            "3. Verify outputs match expected values from SysML models",
-            "4. Document any discrepancies and resolve",
-            "",
-            "**Checklist**:",
-            "- [ ] Test pipeline created",
-            "- [ ] Pipeline runs without errors",
-            "- [ ] Outputs validated against SysML models",
-            "- [ ] All discrepancies resolved",
-            "",
-            "---",
-            "",
-            "## Completion Criteria",
-            "",
-            "The implementation is complete when:",
-            f"- Stage 1: All {len(items)} functions implemented",
-            "- Stage 2: All validations pass",
-            "- Stage 3: Integration tests pass",
-            "",
-            "**Next Steps**: Deploy to production environment or integrate with larger system.",
-        ]
-    )
+            f"**{auto_agg_count} aggregation module(s) auto-implemented** "
+            "(not included in manual count above).",
+        ])
+
+    lines.extend([
+        "",
+        "---",
+        "",
+        "## Stage 2: Verification",
+        "",
+        "**Objective**: Verify implementations work correctly.",
+        "",
+        "**Instructions**:",
+        "",
+        "### 2.1 Type Checking",
+        "Run pyright to catch typing errors:",
+        "```bash",
+        f"pyright {package_name}/",
+        "```",
+        "Expected: 0 errors (should stay clean during implementation)",
+        "",
+        "### 2.2 Implementation Tests",
+        "Run verification tests:",
+        "```bash",
+        "pytest tests/test_implementations_runnable.py -v",
+        "```",
+        "All tests should pass (or pytest.skip for NotImplementedError stubs)",
+        "",
+        "**Test Coverage**:",
+        f"- {len(items)} implementation functions",
+        "- Each function tested for: imports, signature, return type",
+        "- Tests tolerate NotImplementedError (pass before implementation)",
+        "- Tests verify return types (pass after implementation)",
+        "",
+        "**Checklist**:",
+        "- [ ] Pyright passes (0 errors)",
+        "- [ ] Verification tests pass",
+        "- [ ] All implementations return correct types",
+        "",
+        "**Note**: Import validation and ruff linting performed separately by maintainers.",
+        "",
+        "---",
+        "",
+        "## Stage 3: Integration Testing",
+        "",
+        "**Objective**: Verify the full pipeline works end-to-end.",
+        "",
+        "**Instructions**:",
+        f"1. Create a test pipeline configuration in `{package_name}/pipelines/`",
+        "2. Run the pipeline with sample inputs",
+        "3. Verify outputs match expected values from SysML models",
+        "4. Document any discrepancies and resolve",
+        "",
+        "**Checklist**:",
+        "- [ ] Test pipeline created",
+        "- [ ] Pipeline runs without errors",
+        "- [ ] Outputs validated against SysML models",
+        "- [ ] All discrepancies resolved",
+        "",
+        "---",
+        "",
+        "## Completion Criteria",
+        "",
+        "The implementation is complete when:",
+        f"- Stage 1: All {len(items)} functions implemented",
+        "- Stage 2: All validations pass",
+        "- Stage 3: Integration tests pass",
+        "",
+        "**Next Steps**: Deploy to production environment or integrate with larger system.",
+    ])
 
     markdown = "\n".join(lines)
-
-    # Ensure final newline
     if not markdown.endswith('\n'):
         markdown += '\n'
-
     return markdown
 
 
-def _estimate_complexity(calc_def: CalculationDefinitionData) -> str:
-    """Estimate implementation complexity.
-
-    Returns:
-        'Low', 'Medium', or 'High'
-    """
-    output_attrs = calc_def.output_attributes
-    if not output_attrs:
-        return "Low"
-
-    # Count operators in expressions
-    total_ops = 0
-    for expr in calc_def.calc_expressions:
-        ops = (
-            expr.count("+")
-            + expr.count("*")
-            + expr.count("/")
-            + expr.count("-")
-        )
-        total_ops += ops
-
-    if total_ops <= 5:
-        return "Low"
-    elif total_ops <= 15:
-        return "Medium"
-    else:
-        return "High"
+# Keep old name as alias for backward compatibility during transition
+generate_backlog_report_from_graph = generate_backlog_report
 
 
 __all__ = [
     "generate_backlog_report",
-    "generate_implementation_stencil",
+    "generate_backlog_report_from_graph",
+    "generate_implementation",
+    "generate_implementation_from_graph",
 ]

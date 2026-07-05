@@ -1,0 +1,12 @@
+# Generated Pipeline Configuration for sample_model
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for sample_model"
+  output_folder: "sample_model_results"
+
+modules:
+
+

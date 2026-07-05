@@ -2,9 +2,74 @@
 
 Provides data classes and functions for transforming SysML qualified names
 to Python identifiers (module types, file paths, EQNs).
+
+Typed identifier wrappers (NewType over str) for the typed registry refactor:
+- SysMLQN: SysML qualified name with :: separator
+- EQN: Execution qualified name with __ separator
+- PQN: Parameter qualified name (EQN__param)
+- CanonicalChannel: PQN-format output channel name
+- ScopedKey: Dotted hierarchy key (design prefix stripped)
+
+See: 27-typed-registry-refactor.md
 """
 
 from dataclasses import dataclass
+from typing import NewType
+
+# ---------------------------------------------------------------------------
+# Typed identifier wrappers (FR-1, NFR-1: zero runtime cost via NewType)
+# ---------------------------------------------------------------------------
+SysMLQN = NewType("SysMLQN", str)
+"""SysML qualified name with ``::`` separator (e.g., ``Package::Element``)."""
+
+EQN = NewType("EQN", str)
+"""Execution qualified name with ``__`` separator (e.g., ``Design__plant__calc``)."""
+
+PQN = NewType("PQN", str)
+"""Parameter qualified name: ``EQN__param`` (e.g., ``Design__plant__calc__output``)."""
+
+CanonicalChannel = NewType("CanonicalChannel", str)
+"""PQN-format output channel name. Rejects ``::`` and ``.``."""
+
+ScopedKey = NewType("ScopedKey", str)
+"""Dotted hierarchy key with design prefix stripped. Rejects ``::``."""
+
+
+def make_scoped_key(usage_eqn: str, attr_name: str) -> ScopedKey:
+    """Derive a ScopedKey from a usage EQN and attribute name.
+
+    Replaces ``OutputRegistry.derive_key_c()``. Splits EQN on ``__``,
+    drops ``segments[0]`` (design prefix), joins remaining with ``.``,
+    appends ``.{attr_name}``.
+
+    Args:
+        usage_eqn: The CalcUsage EQN
+            (e.g., ``"SolarBatteryDesign__solar_battery_plant__lcoe"``).
+        attr_name: The output attribute name (e.g., ``"lcoe_per_mwh"``).
+
+    Returns:
+        ScopedKey in dotted format
+        (e.g., ``"solar_battery_plant.lcoe.lcoe_per_mwh"``).
+    """
+    segments = usage_eqn.split("__")
+    return ScopedKey(".".join(segments[1:]) + "." + attr_name)
+
+
+def make_canonical_channel(usage_eqn: str, attr_name: str) -> CanonicalChannel:
+    """Derive a CanonicalChannel from a usage EQN and attribute name.
+
+    Wraps ``get_channel_name()`` output in the ``CanonicalChannel`` type.
+
+    Args:
+        usage_eqn: The CalcUsage EQN
+            (e.g., ``"SolarBatteryDesign__solar_battery_plant__lcoe"``).
+        attr_name: The output attribute name (e.g., ``"lcoe_per_mwh"``).
+
+    Returns:
+        CanonicalChannel in PQN format
+        (e.g., ``"SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh"``).
+    """
+    return CanonicalChannel(f"{usage_eqn}__{attr_name}")
 
 
 @dataclass(frozen=True)
@@ -123,4 +188,11 @@ __all__ = [
     "ElementQualifiedName",
     "derive_module_type",
     "derive_python_path",
+    "SysMLQN",
+    "EQN",
+    "PQN",
+    "CanonicalChannel",
+    "ScopedKey",
+    "make_scoped_key",
+    "make_canonical_channel",
 ]
