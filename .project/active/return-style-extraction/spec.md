@@ -29,7 +29,10 @@ Consequences, all verified in the deep-research SC-2 section:
 - A calc def written with a named `return` extracts with **zero output
   attributes**. Before Item 1 this crashed deep inside the Jinja module template
   (`teax_module.py.jinja2`). Item 1 added the zero-output fail-fast (REQ-EXT-08,
-  V7), so it now raises a clear error — but the calc still can't be used.
+  V7), so it now raises a clear error — but the calc still can't be used. Item 1's
+  V7 message (and the matching modeling-assumptions.md text) names return-style
+  and bare-`in` as "not yet extracted (Item 3)"; this item makes that wording
+  false and must revise it (see Known Requirements).
 - A calc def written fully bare (`in x : Real; return y : Real = expr;`) extracts
   as an empty shell.
 - The repo's own docs teach the crashing pattern. `docs/architecture/reference/01-extraction.md:27-32`
@@ -72,9 +75,22 @@ actionable diagnostic instead.
 - [ ] `docs/architecture/reference/01-extraction.md` canonical example is now
       true, and the newly legal forms + the anonymous-return diagnostic are
       documented with REQ tags and verification-matrix rows.
+- [ ] The V7 zero-output diagnostic (`extractor.py`) and the matching
+      modeling-assumptions.md V7 row no longer claim return-style / bare-`in` are
+      "not yet extracted (Item 3)". Post-Item-3 wording points at the one shape
+      still genuinely rejected — anonymous `return` (→ V8) — as the likely cause
+      of a zero-output calc def.
 - [ ] The six converted IFE calc defs are confirmed to extract in their original
-      `return` form (see verification procedure under Open Questions — the
-      fusion-tea models are not readable from this workspace).
+      `return` form. **Evidence gathered at spec-review** (fusion-tea checked
+      directly): all six (`fusion_cycle` f_recirc; `ife_lcoe` lcoe;
+      `hif_economics` Meier Driver Cost / Reactor Cost / Total Capital / COE)
+      currently use `out attribute x : Real = expr`; their original form (fusion-tea
+      commit `8852afcf`) was **inline** `return x : Real = <expr>` (e.g.
+      `ife_lcoe.sysml:122`). None used the body-assignment form. So the filter
+      relaxation delivers both extraction and auto-impl for every one of them, and
+      "work in original return form" — correct I/O plus auto-implementation — is
+      satisfied by design. A live re-run stays as a confirmation step, no longer
+      load-bearing.
 - [ ] agentic-mbse impact recorded: the A-2 stencil fix is specified exactly, and
       the Level-6 output-style check is recorded for Item 12.
 
@@ -96,9 +112,16 @@ actionable diagnostic instead.
   research risk note).
 
 - **[HARD]** Anonymous `return` (a direction-Out/Return member with no usable
-  name after `sanitize_name`) MUST raise a diagnostic naming the fix, before the
-  generic REQ-EXT-08 zero-output error fires. *Forced by:* no name → no PQN
-  channel; the pipeline cannot synthesize one.
+  name after `sanitize_name`) MUST raise a diagnostic naming the fix (V8), and it
+  MUST fire **before** the generic REQ-EXT-08 zero-output error (V7). *Forced by:*
+  no name → no PQN channel; the pipeline cannot synthesize one. *Mechanism
+  constraint:* `_extract_attribute` returns `None` for a nameless member, so an
+  anonymous return never reaches `output_attributes` — the V8 detection therefore
+  MUST scan the raw calc-def members for a direction-Out/Return member whose
+  sanitized name is empty. It cannot key off `output_attributes` (that set is
+  already empty, which is exactly what makes V7's message wrong here). V8-before-V7
+  ordering is a requirement so the modeler gets the precise fix, not the generic
+  one.
 
 - **[HARD]** Existing behavior for `out attribute` / `in attribute` members and
   for all 10 committed fixtures is unchanged: every existing extraction snapshot
@@ -119,12 +142,16 @@ actionable diagnostic instead.
   no-double-ingestion assertion (fold into REQ-EXT-10 or a REQ-EXT-12 — design's
   call). V8 is added to the modeling-assumptions Validation Rules table.
 
-- **[INFERRED]** The new fixture is captured via `scripts/capture_extraction_snapshots.py`
-  (registered in its `MODELS` or `EXTRACTION_ONLY_MODELS` map) and added to the
-  `MODELS` list in `tests/conformance/test_extraction_snapshots.py`, following the
-  established fixture pattern. Capture requires a live syside license — fine now
-  (license live until 2026-08-06, R3), and this is exactly the window R3 says to
-  use.
+- **[INFERRED]** The new fixture is captured with **whatever capture surface
+  exists at implementation time** and added to the `MODELS` list in
+  `tests/conformance/test_extraction_snapshots.py`. Item 2 (snapshot-driven
+  generation) runs on a parallel track and may have landed its versioned snapshot
+  format and a `snapshot` capture subcommand by the time this item implements — if
+  present, use it; otherwise use `scripts/capture_extraction_snapshots.py`
+  (registered in its `MODELS` / `EXTRACTION_ONLY_MODELS` map). Do **not** pin a
+  snapshot format here — follow whatever format the capture surface produces.
+  Capture requires a live syside license — fine now (license live until
+  2026-08-06, R3), and this is exactly the window R3 says to use.
 
 ## Non-Goals
 
@@ -155,26 +182,19 @@ actionable diagnostic instead.
 
 ## Open Questions / Deferred to design
 
-- **IFE calc-def verification procedure (fusion-tea not readable here).** The
-  epic asks to confirm the six converted IFE calc defs work in original `return`
-  form. `~/1cfe/fusion-tea` is outside this workspace's sandbox and cannot be
-  read. Spec'd procedure for whoever has repo access (before 2026-08-06, license
-  live):
-  1. Locate the six IFE calc defs in their **original** `return`-style form
-     (pre-workaround; fusion-tea converted them to `out attribute` to dodge SC-2).
-     If only the converted forms remain, reconstruct the `return` form from the
-     conversion diff.
-  2. Run each through extraction on the fixed extractor; assert each yields the
-     expected `input_attributes` / `output_attributes` and a non-empty
-     `output_expression_asts` for the inline-return ones.
-  3. Cross-check inputs/outputs/expressions against the current `out attribute`
-     converted forms — they must match.
-  4. Record the result (pass/fail per calc def) in the Item 3 close-out. If the
-     models can't be reached in the license window, capture a small transcribed
-     fixture of the same shapes and mark the IFE cross-check as carried to Item 8
-     (plant fixtures) / Item 12.
-  Design should decide whether this is a live-run gate on Item 3 close or a
-  recorded procedure executed opportunistically.
+- **IFE calc-def confirmation (evidence already gathered; run is optional).**
+  Spec-review checked fusion-tea directly and settled the premise: the six IFE
+  calc defs were originally inline `return x : Real = <expr>` (commit `8852afcf`;
+  e.g. `ife_lcoe.sysml:122`), none body-assignment, now converted to
+  `out attribute` to dodge SC-2. The filter relaxation therefore delivers both
+  extraction and auto-impl for all six by construction (see the Success Criteria
+  bullet). The confirmation run is now a nice-to-have, not a gate. Procedure if
+  run (before 2026-08-06, license live): reconstruct each original `return` form
+  from the conversion diff, extract on the fixed extractor, and assert each yields
+  the expected `input_attributes` / `output_attributes` plus a non-empty
+  `output_expression_asts`, matching the current converted form. Design decides
+  whether to run it or rely on the four-styles fixture (which covers the same
+  inline-return shape).
 
 - **Fixture capture mode: full-pipeline vs extraction-only.** The new
   four-styles fixture needs an extraction snapshot regardless. Whether it also
@@ -184,12 +204,13 @@ actionable diagnostic instead.
   it flows the full pipeline and proves auto-impl end-to-end; fall back to
   extraction-only if binding the bare `in` params is awkward.
 
-- **Anonymous-return detection site and exact V8 wording.** Whether the
-  diagnostic fires inside the member loop (on first sight of a nameless
-  direction-Out member) or in a pre-check, and the precise message text (must
-  follow the V1–V7 pattern and name the fix, e.g. *"Anonymous `return` has no
-  name, so no output channel can be built. Give the result a name:
-  `return result : Real = expr`."*). Left to design.
+- **Exact V8 wording and detection site.** The raw-member scan and V8-before-V7
+  ordering are now settled requirements (see Known Requirements). What remains for
+  design: whether the scan runs inline in the member loop (raise on first sight of
+  a nameless direction-Out/Return member) or as a pre-check pass, and the precise
+  message text — which must follow the V1–V7 pattern and name the fix, e.g.
+  *"Anonymous `return` has no name, so no output channel can be built. Give the
+  result a name: `return result : Real = expr`."*
 
 - **Second-pass `member_expressions` predicate.** The second pass currently
   captures expressions for non-input/non-output members (intermediate locals). It
