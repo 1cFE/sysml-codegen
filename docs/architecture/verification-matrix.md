@@ -9,7 +9,6 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | Total requirements | 209 |
 | PASS (test exists and passes) | 195 |
 | UNTESTED (no dedicated test) | 12 |
-| PENDING RE-CAPTURE | 1 |
 | DEFERRED | 1 |
 | REQ families | 29 |
 | Conformance test files | 33 |
@@ -17,7 +16,6 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
 - **UNTESTED**: No conformance test directly references this requirement
-- **PENDING RE-CAPTURE**: Verified once the solar_battery + catf_mfe baselines are re-captured via the capture scripts (REQ-BASE-05)
 - **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (REQ-CA-09 → Item 8)
 
 UNTESTED requirements are either cross-cutting architectural principles verified
@@ -28,7 +26,7 @@ the documentation rather than executable code.
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
 - [AST — AST Dispatch Invariant](#ast) (7/7 pass)
-- [BASE — Baseline Conformance](#base) (5/6 pass, 1 pending re-capture)
+- [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (8/8 pass)
 - [CA — Computed Attributes](#ca) (7/9 pass, 1 deferred to Item 8)
 - [DM — Data Models](#dm) (7/8 pass)
@@ -99,7 +97,7 @@ the documentation rather than executable code.
 | REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | `test_baselines.py` | PASS |
 | REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | `test_baselines.py` | PASS |
 | REQ-BASE-04 | execution_order length equals modules length in every baseline | `test_baselines.py` | PASS |
-| REQ-BASE-05 | solar_battery (YAML + graph + registry) and catf_mfe (graph + registry) re-captured via scripts, ordering-only, reviewed | `test_gen_pipeline_yaml.py`, `test_pipeline_e2e.py`, `test_e2e_output_registry.py` | PENDING RE-CAPTURE |
+| REQ-BASE-05 | solar_battery (YAML + graph + registry) and catf_mfe (graph + registry) re-captured via scripts, ordering-only, reviewed | `test_gen_pipeline_yaml.py`, `test_pipeline_e2e.py`, `test_e2e_output_registry.py` | PASS |
 | REQ-BASE-06 | `entry_point_groups` SHALL be name-sorted in every ComputationGraph, so a model-discovery-order shift cannot redden a byte-exact baseline | `test_graph_assembly.py` | PASS |
 
 ### BT

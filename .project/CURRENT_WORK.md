@@ -8,19 +8,22 @@
 
 ### UPSTREAM-FINDINGS Item 1: Baseline Repair & Silent-Failure Diagnostics
 
-**Status**: Implementation code-complete (Phases 0–2, 4); **Phase 3 baseline re-capture pending
-orchestrator** (this session's harness gates all writes and `uv run`).
+**Status**: **Audited CONDITIONAL** (2026-07-05, commit 3c42dd1) — implementation certifiable; clears
+to PASS on a 3-item fix list (see `audit.md`). All five phases complete and committed.
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Plan**: `.project/active/baseline-diagnostics/plan.md` (Phase 3 Completion has the exact capture commands)
+**Audit**: `.project/active/baseline-diagnostics/audit.md`
+**Plan**: `.project/active/baseline-diagnostics/plan.md`
 
 Done: D1 sort (`entry_point_groups` name-sorted) + I1 test; D2 constraint-drop diagnostic
 (`report_dropped_constraints`, REQ-EXT-09); D3 zero-output fail-fast (REQ-EXT-08); D4 EXPOSE_PURE
 wording reword (REQ-CA-09 test deferred to Item 8 — shape-A fires malformed-refs, not the reworded
-warnings); dead-code deletion; Phase 4 docs + verification matrix.
+warnings); dead-code deletion; Phase 3 re-capture (solar_battery ×3 + catf_mfe ×2, ordering-only) +
+two stale-registry corrections; Phase 4 docs + verification matrix.
 
-**Remaining (orchestrator):** run `scripts/capture_baseline_yaml.py` + `scripts/capture_pipeline_baselines.py`,
-review the ordering-only diff (solar_battery ×3 + catf_mfe ×2; three other models untouched), commit.
-Closes the 5 ordering-only baseline reds → full suite green.
+**To clear CONDITIONAL → PASS:** (1) reconfirm suite/ruff/mypy green on 3c42dd1 — auditor was
+harness-blocked from running them; (2) flip verification-matrix REQ-BASE-05 from "PENDING RE-CAPTURE"
+to PASS (the re-capture is already committed); (3) optional — the Item-2 `snapshot-generation/design-review.md`
+was bundled into the Item-1 commit (harmless doc, scope-hygiene note).
 
 ### UPSTREAM-FINDINGS Item 2: Snapshot-Driven Generation (SC-9 + SC-10)
 

@@ -53,11 +53,11 @@ three failures into diagnostics that follow the V1–V6 pattern in `modeling-ass
 
 - [ ] Full test suite passes on `main` — `solar_battery` YAML baseline re-captured via
       `scripts/capture_baseline_yaml.py` and committed.
-- [ ] The baseline stays green across a filesystem/model-discovery-order shift: the
+- [x] The baseline stays green across a filesystem/model-discovery-order shift: the
       `entry_point_groups` list is sorted deterministically at ComputationGraph construction, so
       the graph itself — not just its rendered YAML — is order-independent (see the ordering
-      decision below).
-- [ ] Generating a real constraint-bearing fixture (`catf_mfe_model`, which has dozens of inline
+      decision below). *(Audit 2026-07-05: verified in code `graph_builder.py:362-366` + I1 test.)*
+- [x] Generating a real constraint-bearing fixture (`catf_mfe_model`, which has dozens of inline
       constraints) emits a single summary WARN of the count plus per-constraint INFO lines —
       not per-item WARN noise, not silence. `catf_mfe` is the in-repo stand-in for the epic's
       "WI-014 toy + IFE models" diagnostic-emission evidence: those models live in fusion-tea and
@@ -66,21 +66,21 @@ three failures into diagnostics that follow the V1–V6 pattern in `modeling-ass
       registration warning state plainly that the derived-attribute *name* is dropped from
       generated output and name the canonical channel carrying the value. A minimal shape-A
       (part-def EXPOSE_PURE) fixture is committed and its generation emits the reworded message.
-- [ ] A calc def that extracts with zero outputs produces a hard, actionable extraction
+- [x] A calc def that extracts with zero outputs produces a hard, actionable extraction
       diagnostic (V-rule style) that names the likely cause and fix — the run never reaches the
-      Jinja template. Verified against a real fixture with a zero-output calc def.
+      Jinja template. Verified against a real fixture with a zero-output calc def. *(Audit: `extractor.py:264-276` + `zero_output_calc` fixture + REQ-EXT-08 test.)*
 - [ ] No baseline changes beyond the re-captured `solar_battery` YAML — the other three pipeline
       baselines and all extraction snapshots are byte-identical (valid models' output unchanged).
-- [ ] `modeling-assumptions.md` gains a "constraints are not executable" section; the zero-output
-      rule is added to the "Validation Rules" table.
-- [ ] Dead constraint code removed: `extraction/constraints.py` and
-      `templates/constraint_validator.py.jinja2` (see dead-code decision below).
+- [x] `modeling-assumptions.md` gains a "constraints are not executable" section; the zero-output
+      rule is added to the "Validation Rules" table. *(Audit: §8 + V7 row verified.)*
+- [x] Dead constraint code removed: `extraction/constraints.py` and
+      `templates/constraint_validator.py.jinja2` (see dead-code decision below). *(Audit: both files deleted, deletion assertions added.)*
 - [ ] Every new/changed behavior carries a REQ-* tag, a verification-matrix row, and an update to
       the relevant `docs/architecture/reference/` doc (R1).
 - [ ] Each new diagnostic is locked in by a conformance test using a real SysML fixture, never a
       mock (R1).
-- [ ] agentic-mbse impact recorded — expected: endorse the A-1 constraint-non-executability WARN
-      check (see the closing section).
+- [x] agentic-mbse impact recorded — expected: endorse the A-1 constraint-non-executability WARN
+      check (see the closing section). *(Audit: recorded in plan Phase 4 + spec §agentic-mbse impact for Item 12.)*
 
 ## Known Requirements
 
