@@ -57,7 +57,7 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
 
 ## Success Criteria
 
-- [ ] `generate --from-snapshot <solar_battery snapshot>` is **byte-identical** to
+- [x] `generate --from-snapshot <solar_battery snapshot>` is **byte-identical** to
       live `generate --models <solar_battery>`. This is a **claim to prove, not an
       established fact** — today's evidence is snapshot-vs-committed-baseline
       self-consistency only; no existing test compares live against snapshot. Verify
@@ -68,28 +68,28 @@ the capture command must be usable **now** to bank snapshots before 2026-08-06.
       deterministic entry-point-group sort in `graph_builder`, and on the
       `source_file` normalization below — without it the embedded `SysML Source:`
       headers diverge and the diff fails.)
-- [ ] A snapshot of `chain_spike_model` (the SC-10 proving fixture — verified
+- [x] A snapshot of `chain_spike_model` (the SC-10 proving fixture — verified
       expression-bearing: CalcUsages instantiating calc defs with inline output
       expressions) preserves CalcUsage auto-implementation: generated stencils are
       auto-implemented (not `NotImplementedError`) and `compilability` is set (not
       `UNKNOWN`), matching live generation. **No new license-gated fixture capture is
       needed for this item** — the proving fixture already exists in the committed
       corpus.
-- [ ] A snapshot whose format version does not match the current version **fails
+- [x] A snapshot whose format version does not match the current version **fails
       loudly** with a clear, actionable error (recapture instruction), not a silent
       wrong deserialization.
-- [ ] A snapshot whose recorded source hash no longer matches the on-disk source
+- [x] A snapshot whose recorded source hash no longer matches the on-disk source
       **warns** (stale-source), and the run continues.
-- [ ] Every snapshot run prints a **provenance banner** (which snapshot, when
+- [x] Every snapshot run prints a **provenance banner** (which snapshot, when
       captured, from what source) to the log/console — and this banner never
       appears inside any generated artifact.
-- [ ] A `snapshot` capture subcommand produces a versioned snapshot from live
+- [x] A `snapshot` capture subcommand produces a versioned snapshot from live
       models through the supported CLI (no dev script required).
-- [ ] The 10 committed fixture snapshots are regenerated to the versioned format;
+- [x] The 10 committed fixture snapshots are regenerated to the versioned format;
       the full conformance suite passes against them.
-- [ ] The snapshot format is documented as a reference doc (new doc or an
+- [x] The snapshot format is documented as a reference doc (new doc or an
       extension of doc 02), with REQ-* tags and verification-matrix rows.
-- [ ] agentic-mbse impact recorded (expected: none, or a docs pointer).
+- [x] agentic-mbse impact recorded (expected: none, or a docs pointer).
 
 ## Known Requirements
 

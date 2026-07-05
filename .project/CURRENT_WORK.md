@@ -27,9 +27,11 @@ was bundled into the Item-1 commit (harmless doc, scope-hygiene note).
 
 ### UPSTREAM-FINDINGS Item 2: Snapshot-Driven Generation (SC-9 + SC-10)
 
-**Status**: Implementation COMPLETE (all 6 phases) — pending audit/PR
+**Status**: **Audited CONDITIONAL** (2026-07-05, commit b9f9b82) — substance certified;
+clears to PASS on one item: re-run suite/mypy/ruff (auditor was harness-blocked from `uv run`).
 **Epic**: `.project/backlog/epic_upstream_findings.md`
 **Spec / Design / Plan**: `.project/active/snapshot-generation/{spec,design,plan}.md`
+**Audit**: `.project/active/snapshot-generation/audit.md`
 
 Supported `--from-snapshot` generation path + `snapshot` capture command, so
 generation/debug/CI decouple from the syside license (expires 2026-08-06).
@@ -41,8 +43,11 @@ auto-impl survives); `source_file` relativize-at-capture / lexical-re-absolutize
 chain_spike stencils auto-implement from the committed snapshot. Reference doc:
 `docs/architecture/reference/27-snapshot-generation.md` (REQ-SNAP-08..19).
 One deviation: completed Item 1's deterministic entry-point sort by also sorting
-parameters within each group (`graph_builder.py:367`) — required for SC-1 byte-identity.
-Suite 1837 passed; mypy 109 / ruff 21 (== baseline). Not committed (orchestrator commits).
+parameters within each group (`graph_builder.py:375`) — required for SC-1 byte-identity.
+Suite 1837 passed; mypy 109 / ruff 21 (== baseline, recorded — not re-run by auditor).
+**Audit findings (all low-severity, non-blocking):** deviation #2 undercount (4 new
+`# type: ignore`, not two — all scoped/sound); dead `out` var in a test; plan Phase 3/4/5
+checkboxes unfilled though deliverables landed. See `audit.md`.
 
 ### UPSTREAM-FINDINGS Item 3: Return-Style & Bare-Parameter Extraction (SC-2)
 

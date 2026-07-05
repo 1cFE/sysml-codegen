@@ -139,11 +139,11 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 - Any remote/licensing workaround beyond the snapshot path
 
 **Success Criteria**:
-- [ ] `generate --from-snapshot` on the solar_battery snapshot is byte-identical to live generation
-- [ ] A snapshot of an expression-bearing model preserves CalcUsage auto-impl (stencils not NotImplementedError; `compilability` set)
-- [ ] Version-mismatched snapshot fails loudly; stale-source snapshot warns
-- [ ] Snapshot format documented (new reference doc or extension of doc 02)
-- [ ] agentic-mbse impact recorded (expected: none, or docs pointer)
+- [x] `generate --from-snapshot` on the solar_battery snapshot is byte-identical to live generation
+- [x] A snapshot of an expression-bearing model preserves CalcUsage auto-impl (stencils not NotImplementedError; `compilability` set)
+- [x] Version-mismatched snapshot fails loudly; stale-source snapshot warns
+- [x] Snapshot format documented (new reference doc or extension of doc 02)
+- [x] agentic-mbse impact recorded (expected: none, or docs pointer)
 
 **Deliverables**: `.project/active/snapshot-generation/{spec,design,plan}.md`, new `snapshot/` package, CLI additions, regenerated fixture snapshots
 
