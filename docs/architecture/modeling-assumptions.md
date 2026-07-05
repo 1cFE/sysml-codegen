@@ -347,7 +347,8 @@ The extraction phase enforces these rules to catch modeling violations early:
 | V4 | Unknown operator | "Unsupported operator in static expression. Use calc def for complex calculations." |
 | V5 | Unbound input without default | Add default to calc def OR add binding in usage |
 | V6 | Binding to undefined attribute | Fix the binding path |
-| V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: return-style or bare `in` parameters (not yet extracted, Item 3); anonymous `return` is unsupported. Declare an `out attribute`." |
+| V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. `out attribute y : Real = <expr>` or `return y : Real = <expr>`. (An anonymous `return` is reported separately.)" |
+| V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
 
 ---
 

@@ -46,6 +46,7 @@ MODELS = {
     "chain_spike_model": FIXTURES_DIR / "chain_spike_model",
     "issue22_model": FIXTURES_DIR / "issue22_model",
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
+    "return_styles": FIXTURES_DIR / "return_styles",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types

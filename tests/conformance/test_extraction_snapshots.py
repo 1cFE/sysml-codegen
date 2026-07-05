@@ -46,6 +46,7 @@ MODELS = [
     "attr_expr_probe",
     "chain_spike_model",
     "issue22_model",
+    "return_styles",
 ]
 
 

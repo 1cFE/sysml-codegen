@@ -201,7 +201,7 @@ class SysMLDataExtractor:
         calc_expressions: list[str] = []
 
         for member in elem.owned_members:
-            if not self.adapter.is_instance(member, "AttributeUsage"):
+            if not self._is_parameter_member(member):
                 continue
 
             attr_info = self._extract_attribute(member)
@@ -239,7 +239,7 @@ class SysMLDataExtractor:
 
         # Second pass: capture member_expressions for non-input/non-output members
         for member in elem.owned_members:
-            if not self.adapter.is_instance(member, "AttributeUsage"):
+            if not self._is_parameter_member(member):
                 continue
             member_name = sanitize_name(member.name)
             if not member_name or member_name in input_names or member_name in output_names:
@@ -264,7 +264,27 @@ class SysMLDataExtractor:
         qualified_name = str(getattr(elem, 'qualified_name', None) or name)
         references: list[str] = []
 
-        # REQ-EXT-08: fail fast on a calc def with no output channel. Zero
+        # REQ-EXT-11 (V8): an anonymous `return` (a result parameter the modeler
+        # left unnamed) has no name to build a PQN output channel from. syside
+        # synthesizes the name 'result' (from the redefined base
+        # Calculation::result), so the relaxed filter would otherwise admit it as
+        # a garbage-named output; the raw member carries an empty declared_name.
+        # Scan the raw members for a ReturnParameterMembership whose declared_name
+        # is empty and raise before the generic V7 zero-output guard, so the
+        # modeler sees the precise fix (name the result) rather than V7's message
+        # (I3; detection key probe-confirmed in Phase 0).
+        for member in elem.owned_members:
+            owning_membership = getattr(member, "owning_membership", None)
+            if type(owning_membership).__name__ != "ReturnParameterMembership":
+                continue
+            if not sanitize_name(getattr(member, "declared_name", None)):
+                raise ValueError(
+                    f"Calc def '{name}' has an anonymous `return` (a result with "
+                    "no name), so no output channel can be built. Give the result "
+                    "a name, e.g. `return result : Real = <expr>`."
+                )
+
+        # REQ-EXT-08 (V7): fail fast on a calc def with no output channel. Zero
         # outputs slip past extraction and crash deep in the Jinja module
         # template (teax_module.py.jinja2 indexes output_attributes[0]); raise
         # here with an actionable message instead.
@@ -272,9 +292,9 @@ class SysMLDataExtractor:
             raise ValueError(
                 f"Calc def '{name}' extracted with zero output attributes. "
                 "A pipeline module needs at least one output channel. Likely cause: "
-                "return-style ('return y : Real = expr') or bare 'in' parameters, "
-                "which are not yet extracted (Item 3); anonymous 'return' is "
-                "unsupported. Declare an 'out attribute'."
+                "the calc def declares no result — add one, e.g. "
+                "'out attribute y : Real = <expr>' or 'return y : Real = <expr>'. "
+                "(An anonymous 'return' is reported separately.)"
             )
 
         return CalculationDefinitionData(
@@ -292,6 +312,24 @@ class SysMLDataExtractor:
             all_member_names=all_member_names,
             member_expressions=member_expressions,
         )
+
+    def _is_parameter_member(self, member: Any) -> bool:
+        """Is this calc-def member a parameter (input/output channel)?
+
+        The real question the member filter must ask. An `AttributeUsage` is
+        always a parameter. A `ReferenceUsage` is a parameter only when it
+        carries a direction — named `return` (Out) and bare `in` (In) do; the
+        direction-None body-assignment target of the `return attribute y; y =
+        expr;` form does not, so it stays out of the attribute lists and does
+        not double-ingest as a second `y` (I2). Attributes and reference usages
+        are syside siblings, so the two branches never overlap.
+        """
+        if self.adapter.is_instance(member, "AttributeUsage"):
+            return True
+        if self.adapter.is_instance(member, "ReferenceUsage"):
+            is_input, is_output = self._get_direction(member)
+            return is_input or is_output
+        return False
 
     def _get_direction(self, member) -> tuple[bool, bool]:
         """Get input/output direction from member."""

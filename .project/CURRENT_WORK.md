@@ -51,15 +51,32 @@ checkboxes unfilled though deliverables landed. See `audit.md`.
 
 ### UPSTREAM-FINDINGS Item 3: Return-Style & Bare-Parameter Extraction (SC-2)
 
-**Status**: Spec in progress
+**Status**: **Implemented** (2026-07-05, uncommitted — orchestrator commits). All 4
+plan phases complete; ready for `/_my_audit`.
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Spec**: `.project/active/return-style-extraction/spec.md`
+**Spec / Design / Plan**: `.project/active/return-style-extraction/{spec,design,plan}.md`
 
-Relax the calc-def member filter (`extractor.py`, both passes) so named `return`
-and bare `in` ReferenceUsage params extract instead of vanishing; anonymous
-`return` gets a specific diagnostic (V8). New four-styles fixture + snapshot +
-conformance tests; reconcile `01-extraction.md`; fix the A-2 skill stencil inline.
-Body-assignment expression capture deferred to a follow-up (rationale in spec).
+Relaxed the calc-def member filter to a shared `_is_parameter_member` predicate at
+both passes (`extractor.py`): named `return` and bare `in` (direction-carrying
+ReferenceUsage) now extract; named inline `return` auto-implements. Anonymous
+`return` raises the new V8 diagnostic before V7 (V7 reworded — no more "not yet
+extracted (Item 3)"). New `return_styles` fixture (4 styles + design part) +
+committed snapshot + `anonymous_return` live fixture; `test_return_style_extraction.py`
+(11 tests, live + offline). Docs lockstep: REQ-EXT-10/11/12 in 01-extraction +
+verification-matrix, V7/V8 rows in modeling-assumptions. Body-assignment capture
+deferred (BACKLOG.md, P3). **A-2 stencil fix applied in `~/1cfe/agentic-mbse`
+(uncommitted — report to orchestrator).**
+
+**Phase 0 deviation (key finding):** the design's primary V8 rule ("direction-Out +
+empty `sanitize_name`") was REFUTED live — an anonymous `return` gets a
+syside-synthesized name `result` (non-empty), so V8 keys off the probe-evidenced B4
+fallback instead: an owned `ReturnParameterMembership` whose `declared_name` is empty.
+Plain `out attribute` calc defs carry no such membership → existing fixtures safe.
+
+**I1 gate:** re-capture diff was `captured_at`-timestamp-only across all 10 existing
+snapshots (zero semantic change); baselines byte-identical. Reverted the
+timestamp-only rewrites — only `return_styles` + `anonymous_return` added.
+Suite 1857 passed / 4 skipped / 5 xfailed; mypy 109, ruff 21 (== baseline).
 
 ### UPSTREAM-FINDINGS Item 4: Part-Usage Type Indexing (SC-3)
 
