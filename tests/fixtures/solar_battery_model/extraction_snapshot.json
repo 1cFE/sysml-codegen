@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "solar_battery_model",
-  "captured_at": "2026-07-05T20:48:03.073071+00:00",
+  "captured_at": "2026-07-05T23:55:28.628529+00:00",
   "compilation_results": {
     "PVModuleCostCalc": {
       "calc_def_name": "PVModuleCostCalc",
@@ -880,9 +880,9 @@
       "qualified_name": "SolarBatteryLibrary::PVModuleCostCalc",
       "doc_comment": "Cost calculation for photovoltaic modules.\nMaterial cost driven by wattage and cost per watt.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 1.07",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = wattage * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1048,9 +1048,9 @@
       "qualified_name": "SolarBatteryLibrary::InverterCostCalc",
       "doc_comment": "Cost calculation for string inverters.\nMaterial cost driven by power rating.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 0.286",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = power_rating * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1202,10 +1202,10 @@
       "qualified_name": "SolarBatteryLibrary::ArrayBOSCostCalc",
       "doc_comment": "Cost calculation for solar array balance-of-system.\nIncludes combiners, disconnects, conduit per string and per panel.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_string = LiteralRationalEvaluation()",
-        "cost_per_panel_bos = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_string = 150.0",
+        "cost_per_panel_bos = 30.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = string_count * cost_per_string + panel_count * cost_per_panel_bos",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1385,9 +1385,9 @@
       "qualified_name": "SolarBatteryLibrary::BatteryPackCostCalc",
       "doc_comment": "Cost calculation for battery packs.\nMaterial cost driven by capacity and chemistry factor.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_kwh = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_kwh = 171.5",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = capacity_kwh * cost_per_kwh * chemistry_factor",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1553,9 +1553,9 @@
       "qualified_name": "SolarBatteryLibrary::HybridInverterCostCalc",
       "doc_comment": "Cost calculation for hybrid (bidirectional) inverters.\nMaterial cost driven by power rating.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 0.1714",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = power_rating * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1707,9 +1707,9 @@
       "qualified_name": "SolarBatteryLibrary::BatteryBOSCostCalc",
       "doc_comment": "Cost calculation for battery balance-of-system.\nIncludes management system, wiring, thermal management per pack.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_pack_bos = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_pack_bos = 71.5",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = pack_count * cost_per_pack_bos",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1861,9 +1861,9 @@
       "qualified_name": "SolarBatteryLibrary::RackingCostCalc",
       "doc_comment": "Cost calculation for racking and mounting hardware.\nMaterial cost driven by panel count. Tilt angle is a design parameter\nbut does not affect cost in this simplified model.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_panel_rack = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_panel_rack = 57.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = panel_count * cost_per_panel_rack",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -2029,10 +2029,10 @@
       "qualified_name": "SolarBatteryLibrary::ElectricalPanelCostCalc",
       "doc_comment": "Cost calculation for electrical panel and breakers.\nBase cost plus per-circuit cost.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "base_cost = LiteralRationalEvaluation()",
-        "cost_per_circuit = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "base_cost = 150.0",
+        "cost_per_circuit = 34.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = base_cost + circuit_count * cost_per_circuit",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -2198,12 +2198,12 @@
       "qualified_name": "SolarBatteryLibrary::PermittingCostCalc",
       "doc_comment": "Cost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_kw = LiteralRationalEvaluation()",
-        "material_cost = LiteralRationalEvaluation()",
-        "fab_cost = LiteralRationalEvaluation()",
-        "install_cost = LiteralRationalEvaluation()",
+        "cost_per_kw = 187.5",
+        "material_cost = 0.0",
+        "fab_cost = 0.0",
+        "install_cost = 0.0",
         "total_cost = system_capacity_kw * cost_per_kw",
-        "idiot_index = LiteralRationalEvaluation()",
+        "idiot_index = 0.0",
         "\nDocumentation:\nCost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -2322,14 +2322,14 @@
       "qualified_name": "SolarBatteryLibrary::AllocationCostCalc",
       "doc_comment": "Bundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "fastener_cost_per_child = LiteralRationalEvaluation()",
-        "seal_cost_per_child = LiteralRationalEvaluation()",
-        "wiring_cost_per_kg = LiteralRationalEvaluation()",
+        "fastener_cost_per_child = 0.5",
+        "seal_cost_per_child = 0.3",
+        "wiring_cost_per_kg = 2.0",
         "fastener_cost = child_count * fastener_cost_per_child",
         "seal_cost = child_count * seal_cost_per_child",
         "wiring_cost = total_child_mass * wiring_cost_per_kg",
         "total_allocation = fastener_cost + seal_cost + wiring_cost",
-        "material_portion = total_allocation * LiteralRationalEvaluation()",
+        "material_portion = total_allocation * 0.8",
         "\nDocumentation:\nBundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -2490,7 +2490,7 @@
       "qualified_name": "SolarBatteryLibrary::EnergyProductionCalc",
       "doc_comment": "Annual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "annual_energy_mwh = LiteralRationalEvaluation() * p_net_mw * n_mod * plant_availability",
+        "annual_energy_mwh = 8760.0 * p_net_mw * n_mod * plant_availability",
         "\nDocumentation:\nAnnual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -2693,7 +2693,7 @@
       "qualified_name": "SolarBatteryLibrary::AnnualizedFinancialCalc",
       "doc_comment": "Annualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "capital_recovery_factor = discount_rate * LiteralRationalEvaluation() + discount_rate ** plant_lifetime / LiteralRationalEvaluation() + discount_rate ** plant_lifetime - LiteralRationalEvaluation()",
+        "capital_recovery_factor = discount_rate * (1.0 + discount_rate) ** plant_lifetime / ((1.0 + discount_rate) ** plant_lifetime - 1.0)",
         "annualized_capital_cost = capital_recovery_factor * total_capex",
         "\nDocumentation:\nAnnualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01"
       ],
@@ -2785,7 +2785,7 @@
       "qualified_name": "SolarBatteryLibrary::LCOECalc",
       "doc_comment": "Levelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "lcoe_per_mwh = annualized_capital_cost + annual_om_cost + annual_fuel_cost * LiteralRationalEvaluation() + yearly_inflation ** plant_lifetime / annual_energy_mwh",
+        "lcoe_per_mwh = (annualized_capital_cost + (annual_om_cost + annual_fuel_cost) * (1.0 + yearly_inflation) ** plant_lifetime) / annual_energy_mwh",
         "\nDocumentation:\nLevelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -7294,7 +7294,7 @@
       "owning_part_name": "solar_battery_plant",
       "owning_part_qualified_name": "SolarBatteryDesign::solar_battery_plant",
       "expression_ast": null,
-      "expression_text": "p_net_mw * LiteralRationalEvaluation()",
+      "expression_text": "p_net_mw * 1000.0",
       "references": [
         {
           "name": "p_net_mw",

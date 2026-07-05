@@ -8,6 +8,7 @@ Provides:
 
 from __future__ import annotations
 
+import functools
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,6 +18,28 @@ if TYPE_CHECKING:
     from sysml_codegen.extraction.extractor import SysMLDataExtractor
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+@functools.lru_cache(maxsize=1)
+def _license_available() -> bool:
+    """True if a live syside license can load a model (else license-gated tests skip).
+
+    Cached so the probe runs one live ``load_models()`` per session. Shared by every
+    ``@requires_license`` test — do not copy it, a second copy runs a second probe.
+    """
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+    try:
+        extractor = SysMLDataExtractor([REPO_ROOT / "tests/fixtures/chain_spike_model"])
+        return bool(extractor.load_models())
+    except ImportError:
+        return False
+
+
+requires_license = pytest.mark.skipif(
+    not _license_available(), reason="no live syside license"
+)
 
 
 def snapshot_fixture(model_name: str) -> Path:

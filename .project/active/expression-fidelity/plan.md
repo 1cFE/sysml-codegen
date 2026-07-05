@@ -523,16 +523,190 @@ bug is filed, not lost; the PUSH-DOWN move inherits correct code.
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 1 Completion
-**Completed:**
+**Completed:** 2026-07-05
 **Actual Changes:**
-**Issues:**
+- `src/sysml_codegen/extraction/expression_utils.py`:
+  - `reconstruct_expression` — moved the five `Literal*`, `LiteralInfinity`, and
+    `NullExpression` branches above the invocation catch-all; converted each from
+    `type(...).__name__` to `SysideAdapter.is_instance` (D2). Catch-all is now last
+    before `str(node)`. Added `LiteralInfinity → "*"` (D3); kept `NullExpression → "null"`.
+    Removed the now-unused `node_type` local.
+  - Added `RANK` (KerML Table 6, smaller=tighter), `UNARY_RANK=2`, `RIGHT_ASSOC`,
+    plus `binary_op_of()` and `needs_parens()` module functions (C2 polarity per the
+    design; RANK-membership guard makes FCE `"."`/invocations fall through to None).
+  - `reconstruct_operator_expression` — binary branch wraps left/right per
+    `needs_parens`; unary branch wraps a binary operand (C3); n-ary left-fold wraps a
+    looser child but not a same-operator child.
+  - `is_literal_expression` — added `LiteralInfinity` and `NullExpression` clauses.
+- `tests/unit/test_expression_paren_helper.py` (NEW) — residual stub check +
+  five hand-traces + C2 both sides + C3 both operators + tighter-child/nested-unary.
+
+**Validation:**
+- `test_expression_paren_helper.py` → 11 passed.
+- `test_ast_dispatch_invariant.py` (REQ-AST-03/-04) + `test_hierarchy_resolver.py` → 77 passed.
+- ruff 21, mypy 109 — held exactly.
+- Full suite: 1890 passed / 1 failed / 4 skipped / 5 xfailed. The 1 failure is
+  `test_live_vs_snapshot_byte_identical` — live extraction now emits corrected
+  `calc_expressions` while committed snapshots are stale. Confirmed the diff is
+  display-only (`LiteralRationalEvaluation()` → value, inside the `SysML Expressions:`
+  docstring block; no executable code changed). This is the expected Phase-3 regen
+  signal; it returns to green after regen.
+
+**Issues:** None.
 **Deviations:**
+- `needs_parens` takes `(parent_rank, parent_right_assoc, child, side)` rather than
+  the design's `(parent_op, child, side)`. Reason: binary `-` (rank 5) and unary `-`
+  (rank 2) share an operator string, so parent rank cannot be derived from the op
+  string alone. Passing the resolved rank keeps one clean signature and lets the
+  unary branch supply `UNARY_RANK`. All five hand-traces still render exactly.
 
 ### Phase 2 Completion
+**Completed:** 2026-07-05
+**Actual Changes:**
+- `tests/conftest.py` — added `REPO_ROOT`, `_license_available` (lru_cache), and
+  `requires_license` (m2). `test_snapshot_generation.py` now imports `requires_license`
+  from conftest (dropped its local copy + the now-unused `functools` import).
+- `tests/fixtures/expr_paren_probe/probe.sysml` (NEW, source only, no snapshot) —
+  one calc def covering all four helper branches.
+- `tests/conformance/test_expression_reconstruction_fidelity.py` (NEW,
+  `@requires_license`) — live parse, asserts each reconstructed string exactly and
+  no `Literal*Evaluation`.
+
+**Live parse output (all seven render exactly):**
+```
+repro = capacity * rate + capacity * (rate / 2.0) * 3.0
+add_left = (a + b) * c
+add_right = a * (b + c)
+neg_group = -(a + b)
+bool_group = not (flag_x and flag_y)
+pow_flat = a ** b ** c
+pow_forced = (a ** b) ** c
+```
+
+**Issues / key finding:**
+- On real SysIDE nodes `.operator` is an `Operator` enum, not a `str`. My initial
+  helper keyed `RANK`/`RIGHT_ASSOC`/`== "-"` off strings, so every binary paren
+  silently dropped on the live AST (stubs use strings and masked it — exactly the
+  mock-masking the spec warns about). Fix: normalize `operator = str(...)` in both
+  `reconstruct_operator_expression` and `binary_op_of`. `str(enum)` yields the SysML
+  symbol ("+", "**", "and", ...). This also revived `OPERATOR_MAP` (dead on real
+  nodes before, since the enum never matched a string key) with byte-identical
+  output — `f" {operator} "` already produced the same symbol via `str(enum)`.
+- Also materialize `.operands` (a LazyIterator on real nodes) before `len()` in
+  `binary_op_of`.
+- Unary rendering on real nodes changes: the old code's `operator == "-"` never
+  matched the enum, so every unary minus hit the generic `f"{op}({operand})"`
+  fallback → always-parens `-(x)`. With str-normalization the unary branch now runs
+  and `-x` renders flat, `-(a + b)` wrapped (the intended C3 behavior). Watch for
+  `-(x)` → `-x` display churn at regen (expected class: unary rendering correction).
+
+**Deviations:** None beyond the Phase-1 signature note.
 
 ### Phase 3 Completion
+**Status:** DECISIONS RESOLVED (below); regen EXECUTION BLOCKED by environment.
+The first run's HARD gates PASSED and surfaced two non-Item-6 issues; the owner
+decided the resolution (two-step staged re-capture + erratum). On resume, Python
+execution was **gated in the environment** (`uv run` / `python3` / venv python all
+require interactive approval, unavailable in this orchestrated session), so the
+two-step regen and final gate could not run here. The tree holds the proven
+Phase 1/2 code + Phase 4 docs; baselines are at HEAD.
+
+**Owner decisions (applied to plan/docs; regen still to run):**
+- **Decision 1 — two-step staged re-capture (NOT field-overlay).** Field-overlay
+  (my option A) would produce committed artifacts no capture script can reproduce —
+  the fixture drift this epic exists to kill. Instead: **Step 1** re-captures ONLY
+  the non-Item-6 staleness with the **pre-Item-6 reconstructor** (a separate
+  "stale-fixture refresh" commit, attributed to the originating items); **Step 2**
+  is Item-6's display-only regen on top. R3 one-item isolation is honored by commit
+  separation, not by freezing stale fields.
+- **Decision 2 — Appendix-A #4 erratum accepted** (recorded in design.md Appendix A
+  and BACKLOG): constraint text is not snapshot-captured; M1 for catf_mfe relies on
+  its real snapshot paren gains; constraint-reconstruction coverage filed to BACKLOG.
+
+**Canonical path form confirmed (determines the reproducible target).** The capture
+script produces: **absolute** `design_attributes` keys + **model-relative**
+`source_file` (exactly what `solar_battery_model` has). `retype_model` and
+`quoted_owner_formula` committed with repo-relative keys — the actual drift; the
+Step-1 re-capture brings them to this canonical form. `quoted_owner_formula` is now
+registered in `capture_extraction_snapshots.py` so the script can reproduce it.
+
+**Regen procedure to run on resume (Python-enabled env, license):**
+1. `cp` current `expression_utils.py` aside; restore HEAD's version
+   (`git show HEAD:...expression_utils.py > ...`).
+2. **Step 1:** `uv run --env-file ~/1cfe/agentic-mbse/.env python scripts/capture_extraction_snapshots.py`.
+   Expect real (non-captured_at) changes in exactly: `alias_agg_probe` (module_type ×3,
+   Item-5 sanitization), `retype_model` (source_file + design_attributes re-key),
+   `quoted_owner_formula` (paths). Verify ZERO `expression_text`/`calc_expressions`
+   changes (pre-Item-6 reconstructor). Revert captured_at-only files. → **Step-1 commit**.
+3. Restore the Item-6 `expression_utils.py` (from the `cp` backup).
+4. **Step 2:** re-run the capture script + `capture_pipeline_baselines.py`. Diff vs
+   Step-1 must be PURELY display (literal→value, parens; captured_at reverts). Re-verify
+   executable byte-identity vs HEAD (compiled_expression / compilation_results /
+   auto_impl_context / compilability / registry_init / YAML / channel names). → **Step-2 commit**.
+5. Add the offline totality guard test (zero `Literal*Evaluation`; the three verifiable
+   paren-restorers present) — GREEN only after Step 2.
+6. Full gate: `uv run pytest tests/` (expect `test_live_vs_snapshot_byte_identical`
+   GREEN post-regen), ruff 21, mypy 109.
+
+**First run's verified evidence (pre-decision, then reverted):** executable
+byte-identity PASS (0 exec-field diffs; every `registry_init.py` byte-identical);
+INV-2 zero `Literal*Evaluation`; three of four named paren-restorers present +
+catf_mfe's real gains.
+
+**What the regen proved (all green):**
+- Executable byte-identity (INV-1, HARD): PASS — zero changes to
+  `compiled_expression`/`compilation_results`/`auto_impl_context`/`compilability`
+  across all 16 files. Tier-2 rewrote every `registry_init.py` byte-identically (not
+  in `git status`) → channel names / wiring / registry unchanged.
+- INV-2: PASS — zero `Literal*Evaluation` in all regenerated snapshots + baselines.
+- Display changes correct: literals → values everywhere; real paren groups restored
+  (attr_expr_probe `(r_inner + r_outer)`, `(f_pump * eta_pump + f_subsystem)`;
+  expression_binding_probe `(1.0 + tax_rate)`; catf_mfe gains many, e.g.
+  `(magnet_surface_area / first_wall_area)`, `(300.0 / carnot_efficiency)`,
+  `(1.0 - f_recirculating)`, `(t_hot - t_cold)`).
+
+**BLOCKER 1 — R3 contamination (full re-capture folds in prior items' churn):**
+- `alias_agg_probe`: `module_type` ×3 sanitized (`'Unit Cost Calc'Module` →
+  `Unit_Cost_CalcModule`) — Item-5 identifier sanitization; committed snapshot
+  predates Item 5. Structural/naming field, not display.
+- `retype_model`: `source_file` re-normalized (`tests/fixtures/retype_model/library.sysml`
+  → `library.sysml`, the model-relative convention the other snapshots use). Re-keys
+  the `design_attributes` dict, inflating the diff. Latent path-format staleness, not
+  Item-6.
+- `quoted_owner_formula`: capturing it via the script's absolute `FIXTURES_DIR`
+  produced absolute paths; capturing with a relative path yields ONLY the 2
+  legitimate literal→value changes (verified). Its identifiers (`Margin_Part`,
+  `net_margin`) stayed sanitized — no identifier delta.
+
+**BLOCKER 2 — Design Appendix-A paren-restorer #4 unverifiable as specified:**
+- `(target_plates.surface_area_inner + target_plates.surface_area_outer)` is a
+  **constraint** (`divertor.sysml:222`); constraint text is NOT snapshot-captured (0
+  occurrences in HEAD or regen). The fix is correct — catf_mfe gains other real paren
+  groups. Only the design's specific enumerated string is unlocatable in a snapshot.
 
 ### Phase 4 Completion
+**Status:** DONE (docs are independent of the pending regen — they describe proven
+code behavior and requirements).
+**Actual Changes:**
+- `docs/architecture/reference/19-ast-dispatch-invariant.md` — revised REQ-AST-03
+  (FCE<OE<FRE among reference/operator branches; literal/null before the invocation
+  catch-all); added REQ-AST-08 and -09; revised the Canonical Dispatch Ordering block
+  (literals now branch 4, invocation catch-all last) with the rationale; added the
+  `_walk_aggregation_ast` known-deviation note.
+- `docs/architecture/verification-matrix.md` — revised REQ-AST-03 row; added REQ-AST-08
+  and -09 rows pointing at the real-AST test, the offline totality guard, and the
+  hand-trace unit tests.
+- `.project/backlog/BACKLOG.md` — filed the aggregation-literal dispatch bug and the
+  constraint-reconstruction-coverage follow-up (Decision 2).
+- `.project/concepts/agentic-mbse-push-down-design.md` — PUSH-DOWN sequencing note
+  (Item 6 lands first; the fix + new helpers travel with the move).
+- `.project/active/expression-fidelity/design.md` — Appendix-A #4 erratum.
+- **agentic-mbse impact: none** (R2, Item-12 list) — internal display fix; no
+  MODELING_GUIDE / sysml-conventions / validator change.
+
+**Note:** REQ-AST-08/-09 matrix rows are marked PASS on the strength of the offline
+hand-trace unit tests + the license-gated real-AST test (both green this session).
+The totality-guard row becomes fully backed once the Phase-3 regen runs.
 
 ---
 

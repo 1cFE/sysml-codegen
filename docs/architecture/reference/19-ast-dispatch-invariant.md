@@ -33,8 +33,10 @@ breaking aggregation wiring in the
 |----|-------------|-----------|-------------|
 | REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | Subtype misclassification | `grep -n` ordering audit across all dispatch sites |
 | REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before OperatorExpression" | Prevent regressions | `grep` for comment at each dual-check site |
-| REQ-AST-03 | The canonical dispatch ordering SHALL be: FCE, OE, FRE, Literal | Consistent dispatch | All dispatch sites follow this order |
+| REQ-AST-03 | Among the reference/operator branches the ordering SHALL be FCE, OE, FRE; and in `reconstruct_expression` all literal/null branches SHALL dispatch **before** the invocation catch-all | Consistent dispatch; literals must not hit the `.function` catch-all | `test_canonical_ordering_fce_oe_fre` (FCE<OE<FRE); real-AST + totality guard (literal-before-invocation) |
 | REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | Consistent dispatch | Code review checklist |
+| REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal and `NullExpression` branches (via `is_instance`) before the invocation catch-all | Every node carries a derived `.function`, so the catch-all must not precede literals | License-gated real-AST test + offline literal-totality guard |
+| REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand (binary or unary) iff it binds looser than its parent, or equal and on the associativity-unfavored side (precedence-aware) | Preserve meaning-changing grouping in displayed math | Real-AST repro + branch fixture; offline hand-trace unit tests |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` (not `LocalTerm`) | Correct aggregation wiring | `SingletonTerm` count matches FCE node count in aggregation AST |
 | REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "unsupported operator: .") | Correct diagnostics | No "unsupported operator: ." in diagnostics |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(name)"`) | Correct reconstruction | Reconstructed expressions match `name.attr` format |
@@ -47,13 +49,25 @@ breaking aggregation wiring in the
 1. FeatureChainExpression   -- most specific (subtype of OE)
 2. OperatorExpression       -- generic operator (+, *, -)
 3. FeatureReferenceExpression  -- bare name reference
-4. InvocationExpression     -- function call (e.g., sum())
-5. Literal*                 -- concrete values
+4. Literal* / NullExpression -- concrete values (via is_instance)
+5. InvocationExpression     -- function call (e.g., sum()) -- catch-all, LAST
 ```
 
 Why this order: FCE must precede OE due to the subtype relationship. FRE is
 independent (no overlap with FCE or OE) but placed after both by convention.
-Literals have no subtype overlaps and go last.
+The literal/null branches MUST dispatch **before** the invocation catch-all
+(REQ-AST-08): every SysIDE node carries a derived KerML `.function`, so the
+catch-all (`hasattr(expr_node, "function")`) matches every literal. Placed after
+it, the literal branches are dead code and each literal stringifies to
+`LiteralRationalEvaluation()`. The catch-all is therefore the last branch.
+
+**Known deviation — `_walk_aggregation_ast`.** `hierarchy_resolver._walk_aggregation_ast`
+(`hierarchy_resolver.py:372,431`) keeps the old literal-after-invocation ordering
+and carries the same latent bug: an aggregation literal is mis-dispatched to the
+invocation catch-all and marked unsupported, so its `reconstruct_expression`
+delegation (`:433`) is dead. It is **not** fixed here — that touches an executable
+aggregation path (out of the display-only scope of REQ-AST-08/-09). Filed to
+BACKLOG.
 
 ---
 

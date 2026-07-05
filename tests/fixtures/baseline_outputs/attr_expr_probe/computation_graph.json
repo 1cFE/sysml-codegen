@@ -239,7 +239,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "length - LiteralRationalEvaluation()"
+        "length - 1.0"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -379,7 +379,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "LiteralRationalEvaluation() * length + LiteralRationalEvaluation() * width"
+        "2.0 * length + 2.0 * width"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -455,7 +455,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "r_inner + r_outer / LiteralRationalEvaluation() - r_major"
+        "(r_inner + r_outer) / 2.0 - r_major"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -595,7 +595,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "p_fusion * LiteralRationalEvaluation() / LiteralRationalEvaluation()"
+        "p_fusion * 3.52 / 17.58"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -647,7 +647,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "p_fusion * LiteralRationalEvaluation() / LiteralRationalEvaluation()"
+        "p_fusion * 14.06 / 17.58"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -771,7 +771,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "m_neutron * p_fusion + p_input + eta_thermal * f_pump * eta_pump + f_subsystem * m_neutron * p_fusion"
+        "m_neutron * p_fusion + p_input + eta_thermal * (f_pump * eta_pump + f_subsystem) * (m_neutron * p_fusion)"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -963,8 +963,8 @@
       "calc_def_qualified_name": "AttrExprProbeLibrary::SplitCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "half = total / LiteralRationalEvaluation()",
-        "quarter = total / LiteralRationalEvaluation()"
+        "half = total / 2.0",
+        "quarter = total / 4.0"
       ],
       "source_file": "library.sysml",
       "source_line": 12

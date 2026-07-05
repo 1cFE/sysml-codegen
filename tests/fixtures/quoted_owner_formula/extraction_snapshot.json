@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "quoted_owner_formula",
-  "captured_at": "2026-07-05T23:54:44.089479+00:00",
+  "captured_at": "2026-07-05T23:55:28.857662+00:00",
   "compilation_results": {
     "ScaleCalc": {
       "calc_def_name": "ScaleCalc",
@@ -30,7 +30,7 @@
       "qualified_name": "QuotedOwnerFormulaLibrary::ScaleCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "result = value * LiteralRationalEvaluation()"
+        "result = value * 2.0"
       ],
       "input_attributes": [
         {
@@ -174,7 +174,7 @@
       "owning_part_name": "Margin_Part",
       "owning_part_qualified_name": "QuotedOwnerFormulaDesign::'Margin Part'",
       "expression_ast": null,
-      "expression_text": "net margin * LiteralRationalEvaluation()",
+      "expression_text": "net margin * 2.0",
       "references": [
         {
           "name": "net margin",

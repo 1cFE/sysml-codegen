@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "retype_model",
-  "captured_at": "2026-07-05T23:54:44.084493+00:00",
+  "captured_at": "2026-07-05T23:55:28.853159+00:00",
   "compilation_results": {
     "IfeCalc": {
       "calc_def_name": "IfeCalc",
@@ -70,7 +70,7 @@
       "qualified_name": "RetypeLibrary::IfeCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "ife_out = p * LiteralRationalEvaluation()"
+        "ife_out = p * 2.0"
       ],
       "input_attributes": [
         {
@@ -118,7 +118,7 @@
       "qualified_name": "RetypeLibrary::HifCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "hif_out = q * LiteralRationalEvaluation()"
+        "hif_out = q * 3.0"
       ],
       "input_attributes": [
         {
@@ -166,7 +166,7 @@
       "qualified_name": "RetypeLibrary::SharedCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "shared_out = s + LiteralRationalEvaluation()"
+        "shared_out = s + 1.0"
       ],
       "input_attributes": [
         {

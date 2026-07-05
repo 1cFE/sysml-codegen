@@ -13,7 +13,6 @@ Requirements: REQ-SNAP-13 through REQ-SNAP-18.
 
 from __future__ import annotations
 
-import functools
 import os
 import shutil
 import subprocess
@@ -22,30 +21,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.conftest import snapshot_fixture
+from tests.conftest import requires_license, snapshot_fixture
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CLI = str(Path(sys.executable).parent / "sysml-codegen")
 CHAIN_SNAPSHOT = "tests/fixtures/chain_spike_model/extraction_snapshot.json"
 
 _LICENSE_VARS = ("SYSIDE_LICENSE_KEY", "SYSIDE_LICENSE", "SYSIDE_LICENSE_FILE")
-
-
-@functools.lru_cache(maxsize=1)
-def _license_available() -> bool:
-    """True if a live syside license can load a model (else the test skips)."""
-    from sysml_codegen.extraction.extractor import SysMLDataExtractor
-
-    try:
-        extractor = SysMLDataExtractor([REPO_ROOT / "tests/fixtures/chain_spike_model"])
-        return bool(extractor.load_models())
-    except ImportError:
-        return False
-
-
-requires_license = pytest.mark.skipif(
-    not _license_available(), reason="no live syside license"
-)
 
 
 def _tree_diff(a: Path, b: Path) -> list[str]:

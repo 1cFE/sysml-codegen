@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "chain_override_probe",
-  "captured_at": "2026-07-05T20:48:03.291836+00:00",
+  "captured_at": "2026-07-05T23:55:28.867823+00:00",
   "compilation_results": {},
   "calc_defs": [
     {
@@ -71,7 +71,7 @@
       "qualified_name": "ChainOverrideLibrary::CalibrationCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "calibrated_factor = raw_factor * LiteralRationalEvaluation()"
+        "calibrated_factor = raw_factor * 1.1"
       ],
       "input_attributes": [
         {

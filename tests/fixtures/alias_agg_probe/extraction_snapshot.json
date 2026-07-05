@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "alias_agg_probe",
-  "captured_at": "2026-07-05T23:54:44.069015+00:00",
+  "captured_at": "2026-07-05T23:55:28.839518+00:00",
   "compilation_results": {
     "Unit_Cost_Calc": {
       "calc_def_name": "Unit_Cost_Calc",
@@ -72,7 +72,7 @@
       "qualified_name": "AliasAggProbeLibrary::'Unit Cost Calc'",
       "doc_comment": "",
       "calc_expressions": [
-        "markup = LiteralRationalEvaluation()",
+        "markup = 1.5",
         "unit_cost = base_cost * markup"
       ],
       "input_attributes": [

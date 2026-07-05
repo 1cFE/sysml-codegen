@@ -520,7 +520,7 @@ these are the verified floor.
 | `attr_expr_probe/design.sysml:62` | `(r_inner + r_outer) / 2.0 - r_major` | `(r_inner + r_outer)` | `+` is the left child of `/`; looser → wrap |
 | `attr_expr_probe/design.sysml:77-78` | `eta_thermal * (f_pump * eta_pump + f_subsystem) * (m_neutron * p_fusion)` | `(f_pump * eta_pump + f_subsystem)` and `(m_neutron * p_fusion)` | a `+` inside `*` (looser); and a `*` right-child of `*` (equal-prec, unfavored) |
 | `expression_binding_probe/library.sysml:8` | `combined_input * (1.0 + tax_rate)` | `(1.0 + tax_rate)` | `+` right-child of `*`; looser → wrap |
-| `catf_mfe_model/library/components/divertor.sysml:222` | `... * (surface_area_inner + surface_area_outer) * ...` (constraint) | `(surface_area_inner + surface_area_outer)` | `+` group inside a `*` chain; `reconstruct_expression` serves constraint text |
+| ~~`catf_mfe_model/library/components/divertor.sysml:222`~~ | ~~`... * (surface_area_inner + surface_area_outer) * ...` (constraint)~~ | ~~`(surface_area_inner + surface_area_outer)`~~ | **ERRATUM (Item-6 impl):** constraint text is **not** captured in extraction snapshots (0 occurrences in HEAD or regen), so this group cannot appear in the catf_mfe snapshot. The reconstruct fix does apply to constraint text, but there is no snapshot-level coverage. M1 for catf_mfe is instead satisfied by its real snapshot paren gains — e.g. `(f_pump * eta_pump + f_subsystem)`, `(magnet_surface_area / first_wall_area)`, `(300.0 / carnot_efficiency)`, `(1.0 - f_recirculating)`. Constraint-reconstruction coverage filed to BACKLOG. |
 
 Committed snapshots currently store all of these *flattened* (the group gone),
 which is the visible display defect. After the fix they render with the group

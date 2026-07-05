@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "expression_binding_probe",
-  "captured_at": "2026-07-05T20:48:03.286053+00:00",
+  "captured_at": "2026-07-05T23:55:28.862756+00:00",
   "compilation_results": {},
   "calc_defs": [
     {
@@ -9,7 +9,7 @@
       "qualified_name": "ExpressionBindingLibrary::CombinedCostCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "total_with_tax = combined_input * LiteralRationalEvaluation() + tax_rate"
+        "total_with_tax = combined_input * (1.0 + tax_rate)"
       ],
       "input_attributes": [
         {

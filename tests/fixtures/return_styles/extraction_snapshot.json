@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "return_styles",
-  "captured_at": "2026-07-05T21:31:52.597538+00:00",
+  "captured_at": "2026-07-05T23:55:28.845596+00:00",
   "compilation_results": {
     "ControlA": {
       "calc_def_name": "ControlA",
@@ -70,7 +70,7 @@
       "qualified_name": "ReturnStylesLibrary::ControlA",
       "doc_comment": "",
       "calc_expressions": [
-        "y = a * LiteralIntegerEvaluation()"
+        "y = a * 2"
       ],
       "input_attributes": [
         {
@@ -118,7 +118,7 @@
       "qualified_name": "ReturnStylesLibrary::NamedReturnB",
       "doc_comment": "",
       "calc_expressions": [
-        "y = b * LiteralIntegerEvaluation()"
+        "y = b * 3"
       ],
       "input_attributes": [
         {
@@ -166,7 +166,7 @@
       "qualified_name": "ReturnStylesLibrary::BareInC",
       "doc_comment": "",
       "calc_expressions": [
-        "y = x * LiteralIntegerEvaluation()"
+        "y = x * 4"
       ],
       "input_attributes": [
         {

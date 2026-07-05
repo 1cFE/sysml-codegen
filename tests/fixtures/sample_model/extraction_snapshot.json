@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "sample_model",
-  "captured_at": "2026-07-05T20:48:03.004822+00:00",
+  "captured_at": "2026-07-05T23:55:28.558913+00:00",
   "compilation_results": {
     "MultiOutputCalc": {
       "calc_def_name": "MultiOutputCalc",
@@ -232,7 +232,7 @@
       "qualified_name": "TestModels::FirstCalc",
       "doc_comment": "\nFirst calculation in dependency chain.",
       "calc_expressions": [
-        "doubled = base_value * LiteralRationalEvaluation()",
+        "doubled = base_value * 2.0",
         "\nDocumentation:\n\nFirst calculation in dependency chain."
       ],
       "input_attributes": [

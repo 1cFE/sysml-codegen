@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "issue22_model",
-  "captured_at": "2026-07-05T20:48:03.273382+00:00",
+  "captured_at": "2026-07-05T23:55:28.832794+00:00",
   "compilation_results": {
     "WidgetCostCalc": {
       "calc_def_name": "WidgetCostCalc",
@@ -52,7 +52,7 @@
       "qualified_name": "Issue22Library::WidgetCostCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "markup_factor = LiteralRationalEvaluation()",
+        "markup_factor = 1.75",
         "cost = base_cost * markup_factor"
       ],
       "input_attributes": [

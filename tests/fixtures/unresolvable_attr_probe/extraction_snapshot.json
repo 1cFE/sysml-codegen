@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "unresolvable_attr_probe",
-  "captured_at": "2026-07-05T20:48:03.296574+00:00",
+  "captured_at": "2026-07-05T23:55:28.872942+00:00",
   "compilation_results": {},
   "calc_defs": [
     {
@@ -9,7 +9,7 @@
       "qualified_name": "UnresolvableAttrProbeLibrary::SimpleCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "result = x * LiteralRationalEvaluation()"
+        "result = x * 2.0"
       ],
       "input_attributes": [
         {

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "attr_expr_probe",
-  "captured_at": "2026-07-05T20:48:03.259572+00:00",
+  "captured_at": "2026-07-05T23:55:28.819295+00:00",
   "compilation_results": {
     "ScaleCalc": {
       "calc_def_name": "ScaleCalc",
@@ -125,8 +125,8 @@
       "qualified_name": "AttrExprProbeLibrary::SplitCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "half = total / LiteralRationalEvaluation()",
-        "quarter = total / LiteralRationalEvaluation()"
+        "half = total / 2.0",
+        "quarter = total / 4.0"
       ],
       "input_attributes": [
         {
@@ -598,7 +598,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "length - LiteralRationalEvaluation()",
+      "expression_text": "length - 1.0",
       "references": [
         {
           "name": "length",
@@ -650,7 +650,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "LiteralRationalEvaluation() * length + LiteralRationalEvaluation() * width",
+      "expression_text": "2.0 * length + 2.0 * width",
       "references": [
         {
           "name": "length",
@@ -676,7 +676,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "r_inner + r_outer / LiteralRationalEvaluation() - r_major",
+      "expression_text": "(r_inner + r_outer) / 2.0 - r_major",
       "references": [
         {
           "name": "r_inner",
@@ -743,7 +743,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "p_fusion * LiteralRationalEvaluation() / LiteralRationalEvaluation()",
+      "expression_text": "p_fusion * 3.52 / 17.58",
       "references": [
         {
           "name": "p_fusion",
@@ -764,7 +764,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "p_fusion * LiteralRationalEvaluation() / LiteralRationalEvaluation()",
+      "expression_text": "p_fusion * 14.06 / 17.58",
       "references": [
         {
           "name": "p_fusion",
@@ -785,7 +785,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "m_neutron * p_fusion + p_input + eta_thermal * f_pump * eta_pump + f_subsystem * m_neutron * p_fusion",
+      "expression_text": "m_neutron * p_fusion + p_input + eta_thermal * (f_pump * eta_pump + f_subsystem) * (m_neutron * p_fusion)",
       "references": [
         {
           "name": "m_neutron",
@@ -924,7 +924,7 @@
       "owning_part_name": "probe_design",
       "owning_part_qualified_name": "AttrExprProbeDesign::probe_design",
       "expression_ast": null,
-      "expression_text": "scale_calc.result * LiteralRationalEvaluation()",
+      "expression_text": "scale_calc.result * 2.0",
       "references": [
         {
           "name": "result",

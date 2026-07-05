@@ -1,6 +1,6 @@
 # Spec: Expression Reconstruction Fidelity (SC-6)
 
-**Status:** Draft
+**Status:** Implementation In Progress (Phases 1, 2, 4 complete; Phase 3 regen pending — see plan)
 **Owner:** Reid W
 **Created:** 2026-07-05
 **Complexity:** MEDIUM

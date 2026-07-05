@@ -58,6 +58,23 @@ Prioritized list of epics and features.
 
 ## Ideas / Future Considerations
 
+- **Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**
+  `hierarchy_resolver._walk_aggregation_ast` (`hierarchy_resolver.py:372,431`) keeps the
+  old literal-after-invocation ordering: a literal operand in an aggregation expression is
+  mis-dispatched to the invocation catch-all, marked `has_unsupported`, and its
+  `reconstruct_expression` delegation (`:433`) is dead. Item 6 fixed the twin in
+  `reconstruct_expression` (display path) but left this one — it touches an executable
+  aggregation path (`transformed_expression` → `compiled_expression` → `auto_impl_context`),
+  so it needs its own item with a byte-identity gate. Inert on today's corpus (no
+  literal-bearing aggregation fixture); a future one would expose it. Documented as a
+  known deviation from revised REQ-AST-03 in doc 19.
+- **Constraint-reconstruction coverage (from UPSTREAM-FINDINGS Item 6, SC-6).**
+  `reconstruct_expression` also serves constraint text, but constraint expressions are not
+  captured in extraction snapshots (the Item-6 design's Appendix-A #4 wrongly assumed the
+  catf_mfe divertor constraint `(surface_area_inner + surface_area_outer)` would appear in
+  the snapshot; it does not — 0 occurrences). The paren/literal fix applies to constraint
+  text too but has no snapshot-level regression coverage. Add a test that exercises
+  constraint reconstruction directly if that coverage is wanted.
 - InvocationExpression / function call support (sqrt, min, max whitelist)
 - SelectExpression / if-then-else support (piecewise functions)
 - EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
