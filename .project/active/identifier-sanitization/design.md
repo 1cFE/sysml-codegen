@@ -33,8 +33,9 @@ gated post-alias uniqueness re-check.
 ## Research Findings
 
 **The split that causes the leak.** `name` is sanitized at capture
-(`usage_extractor.py:573` — `sanitize_name(get_calc_def_name(elem))`), but
-`qualified_name` is stored raw. The ADR-003 derivation layer then builds identifiers
+(`usage_extractor.py:573` on current HEAD `cecc76c` — `sanitize_name(get_calc_def_name(elem))`;
+the review's `:399` was against pre-Item-4 `35e54cb`, Item 4's `82b70b8` shifted it — this
+file is Item 4's; re-anchor at implement), but `qualified_name` is stored raw. The ADR-003 derivation layer then builds identifiers
 straight from the raw QN with **no** per-segment sanitize:
 
 - `ModuleType.from_sysml` (`identifier_types.py:104-108`) → `f"{sqn.element_name}Module"`
@@ -138,10 +139,13 @@ orchestrator (`cli/__init__.py:717-749`, where the fail-fast pre-pass slots in),
 - **D3. Collapse the `graph_builder.py:271-275` EXPOSE_PURE ad-hoc into a helper call.**
   *Rejected: leave the duplication and file a follow-up — the expression is character-for-
   character the helper; leaving it invites drift.*
-- **D4. FORMULA channel `module_eqn` sites call the helper; `from_sysml` sanitizes inline.**
-  *Rejected: route `from_sysml` through the helper too — it can't, because `from_sysml`
-  lowercases package segments and appends `Module`, so it needs `sanitize_name` per
-  segment, not the `__`-joining helper.*
+- **D4. FORMULA `module_eqn` = `sanitize_qualified_name(owner)` + `ca.python_name` leaf;
+  `from_sysml` sanitizes inline.** The helper does the owner-QN segments; the leaf comes
+  from `ca.python_name` directly (M1), never from re-sanitizing `ca.name`. *Rejected:
+  re-sanitize `ca.name` through the helper at the consumer — diverges from the producer's
+  `python_name` on keyword names (two-sanitizer gap, B2). Also rejected: route `from_sysml`
+  through the helper — it lowercases packages and appends `Module`, so it needs
+  `sanitize_name` per segment, not the `__`-joining helper.*
 - **D5. SC-11 post-alias re-check lands as fail-fast IF the static scan is clean, else
   WARN-first.** *Rejected: unconditional fail-fast (risks B4) or unconditional WARN (leaves
   a silent collision hole the spec wants closed).*
@@ -290,11 +294,18 @@ REQ-REG-07, V-rules at V8 (V9/V10 reserved by Item 4). Assign **REQ-NC-08** (der
 sanitize), **REQ-NC-09** or a generation-layer REQ (duplicate-path), **REQ-REG-08** (SC-11
 re-check). **V11** only if the duplicate-path guard is framed as a model-validation rule —
 but it is more naturally a generation-time invariant; recommend a generation REQ, not a V.
+**Re-verify at implement (m5):** Item 4 lands V9/V10 and edits docs 15/20 concurrently, so
+re-confirm these free slots against docs 15/20 at implement time — same churn risk as the
+`usage_extractor.py` line anchor.
 
 ## Potential Risks
 
-- **A missed FORMULA site** yields a sanitized-but-mismatched wire (B2). *Mitigation:* the
-  new fixture's produced==consumed assertion; enumerate all four sites in the plan.
+- **A missed FORMULA site** yields a sanitized-but-mismatched wire — now the *only* B2
+  failure mode (M1 made the keyword edge structural). *Mitigation:* the fixture's
+  resolved==registered channel assertion; enumerate all four sites in the plan.
+- **The two divergent sanitizers** (`core.sanitize_name` vs `expression_compiler._sanitize_name`)
+  drift further. *Mitigation:* M1 avoids depending on their agreement; flag both for
+  consolidation as a follow-up (out of Item 5 scope).
 - **`from_sysml` sanitize accidentally changes an unquoted baseline** if the sanitize/lower
   order differs from today for some segment. *Mitigation:* INV-1 + the byte-identical
   snapshot/baseline gate is the hard stop; run the full suite before and after.
@@ -320,11 +331,25 @@ coordinated (reviewed) retirement, not dropped by us.
   Assert (1) every generated file `ast.parse`s; (2) each class name the registry imports is
   declared by the module file it imports from (import-name match). Locks the CalcUsage
   class-name / module-path leak. R1: real fixture, no mocks.
-- **New quoted-owner FORMULA fixture:** minimal model — a quoted-named part def owning a
-  FORMULA computed attribute wired to a consumer. Live extraction capture → new committed
-  `extraction_snapshot.json` (additive). Conformance test asserts the FORMULA channel is
-  **produced and consumed under the identical name** (INV-5), not merely parseable. This is
-  the R1 lock for SC #2 — the leak was code-inferred until now.
+- **New quoted-owner FORMULA fixture (topology pinned — M2):** a **same-part** FORMULA→
+  consumer model — a quoted-named part def owning a FORMULA computed attribute consumed by a
+  calc usage **in the same part**. This resolves through the in-memory `resolution_map`
+  (`graph_builder.py:739-749`, consumed at `:823`) / the `ScopedKey` `key_f`
+  (`output_registry_builder.py:137`, per-segment clean via `python_name`) — the
+  **Item-7-independent** path. It MUST NOT use a cross-part REFERENCE consumer, which routes
+  through the raw `SysMLQN` key at `:130` / lookup at `:595` — Item 7's territory, and the
+  raw-to-raw match Item 5 must not depend on. The test comment names the cross-part variant
+  as Item 7's.
+  - **Assertion (path, not outcome):** the resolved input channel on the consumer module
+    **equals the registered canonical channel** for the FORMULA output — proving the
+    `resolution_map`/`ScopedKey` path actually resolved, not just that two derivations are
+    string-equal or that the files `ast.parse`. This is the R1 lock for SC #2.
+  - **Fixture QN constraint (M3):** the quoted owner QN uses segments that sanitize
+    **non-trivially on purpose** (e.g. `'Margin Part'` → `Margin_Part`) — that is the point
+    of the fixture. Its **unquoted** segments (package, consumer, attr) MUST avoid
+    accidental-change forms (`value_`, `_x`, `a__b`, keywords), or the no-op / B2 reasoning
+    would break on the very fixture being added.
+  - Live extraction capture → new committed `extraction_snapshot.json` (additive).
 - **Invariance gate:** the full suite + a byte-diff of all 11 snapshots and all 4 baselines
   shows zero change (existing `_tree_diff` pattern, `test_snapshot_generation.py:50`).
 - **Fail-fast tests:** three tests, one per key space (module, stencil-via-module, schema),
@@ -344,8 +369,9 @@ FORMULA fixture.
 REQ vs V11 (recommend REQ); the fixture's concrete SysML (quoted part def + one FORMULA attr
 + one consumer).
 
-**De-risk first:** the FORMULA wire (B2/INV-5) — build the fixture and its produced==consumed
-assertion before touching the four derivation sites, so the wire is proven, not assumed.
+**De-risk first:** the FORMULA wire (B2/INV-5) — build the same-part fixture and its
+resolved-channel==registered-channel assertion before touching the four derivation sites,
+so the wire is proven, not assumed.
 
 **⚠️ ITEM 7 LOCKSTEP OBLIGATION (must survive to Item 7's spec author).** When Item 7
 sanitizes the REFERENCE lookup at `dependency_backtracker.py:595` (reusing
@@ -381,10 +407,16 @@ FORMULA attr on owner `QuotedOwnerLib::'Margin Part'`, `name='net margin'`,
 
 | Site | Before | After |
 |---|---|---|
-| `output_registry_builder.py:124` module_eqn | `QuotedOwnerLib__'Margin Part'__net_margin` | `QuotedOwnerLib__Margin_Part__net_margin` |
-| `graph_builder.py:745` module_eqn | `QuotedOwnerLib__'Margin Part'__'net margin'` | `QuotedOwnerLib__Margin_Part__net_margin` |
-| `graph_builder.py:789` module_eqn / `:791` module_type | same leak / via `derive_module_type` | sanitized / via sanitized `from_sysml` |
+| `output_registry_builder.py:124` module_eqn (producer) | `QuotedOwnerLib__'Margin Part'__net_margin` | `sanitize_qualified_name(owner)__python_name` = `QuotedOwnerLib__Margin_Part__net_margin` |
+| `graph_builder.py:745/789` module_eqn (consumer) — **M1: leaf from `python_name`** | `QuotedOwnerLib__'Margin Part'__'net margin'` | `sanitize_qualified_name(owner)__python_name` = `QuotedOwnerLib__Margin_Part__net_margin` (identical to producer by construction) |
+| `graph_builder.py:791` module_type | via `derive_module_type` on `ca.name` (raw) | via sanitized `from_sysml` — separate identifier, need not equal `python_name` |
 | `graph_builder.py:818` part_eqn | `QuotedOwnerLib__'Margin Part'` | `QuotedOwnerLib__Margin_Part` |
+
+**M1 keyword edge (why leaf-from-`python_name` matters).** For a FORMULA attr named
+`'class'`: producer `python_name` = `class` (no suffix), consumer via
+`core.sanitize_name('class')` = `class_`. The old spec (re-sanitize `ca.name`) would wire
+`...__class_` against a produced `...__class` — a silent break. Leaf-from-`python_name`
+gives `...__class` on both sides.
 
 **Match sites (UNCHANGED, raw on all models):** `output_registry_builder.py:130`
 (`SysMLQN(f"{owner}::{ca.name}")`), `dependency_backtracker.py:595` (`SysMLQN(source_path)`),

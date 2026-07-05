@@ -239,8 +239,37 @@ implementer about *why* they hold (M1/M3) — a precision problem, fixed by rest
 
 ## Resolutions
 
-*Filled in during Stage 4 with the user. One entry per resolved issue — this is what the design agent
-reads to incorporate the review.*
+All applied to `design.md` (verified against current HEAD `cecc76c`, post-Item-4 `82b70b8`).
+
+- **M1 — ACCEPTED.** Build the consumer FORMULA `module_eqn` leaf from `ca.python_name`
+  directly at `graph_builder.py:745/789` (`sanitize_qualified_name(owner) + "__" + python_name`),
+  not by re-sanitizing `ca.name`. Producer/consumer coincidence is now structural. B2, D4,
+  Component Overview, Implementation Notes, the appendix, and Potential Risks all rewritten
+  to name the two-sanitizer divergence (`core.sanitize_name` vs
+  `expression_compiler._sanitize_name` at `:167`, drops reserved-word suffix per `:174-175`,
+  verified) and the keyword edge (`'class'` → producer `class` vs old-consumer `class_`).
+  Two sanitizers flagged for follow-up consolidation.
+- **M2 — ACCEPTED.** Fixture pinned to **same-part** FORMULA→consumer topology
+  (`resolution_map`/`ScopedKey` `key_f`, Item-7-independent). Test asserts resolved input
+  channel == registered canonical channel (path, not outcome); cross-part REFERENCE variant
+  named as Item 7's in the test comment.
+- **M3 — ACCEPTED.** INV-1 restated as corpus-scoped (identity on the 11 committed snapshots
+  by scan; NOT algebraic on `[A-Za-z0-9_]+` — `value_`/`_x`/`a__b`/`class` counter-examples).
+  New fixture constrained: quoted owner segments sanitize non-trivially on purpose; unquoted
+  segments avoid accidental-change forms.
+- **m1 — RESOLVED (evidence-based).** The review's `:399` was against pre-Item-4 `35e54cb`;
+  current HEAD `cecc76c` has the sanitize back at `usage_extractor.py:573` (Item 4's
+  `82b70b8` shifted it). Design keeps `:573` with an explicit churn caveat and "re-anchor at
+  implement" note — anchoring to verified HEAD rather than the stale review number.
+- **m2 — ACCEPTED.** Duplicate-path pre-pass moved ahead of `_clear_output_directory`
+  (`cli/__init__.py:709`), not just ahead of `_generate_schemas`.
+- **m3 — RESOLVED.** FORMULA modules populate `calc_def_qualified_name=ca.owning_part_qualified_name`
+  and `calc_def_name=ca.name` (both raw, verified at the FORMULA `PipelineModule(...)` in
+  `graph_builder.py` ~`:890-892`); raw-name provenance for the error text documented.
+- **m4 — RESOLVED (no change needed).** Stencil writes are at `:271/:285/:299` on current
+  HEAD (the review's `:298` was stale); design already matches.
+- **m5 — ACCEPTED.** Added an explicit "re-verify V/REQ numbering at implement" note (Item 4
+  lands V9/V10 and edits docs 15/20 concurrently).
 
 ---
 
