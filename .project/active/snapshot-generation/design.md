@@ -37,8 +37,12 @@ the snapshot needs to be a real generation contract.
   `build_classifier_inputs_from_snapshot` / `build_full_graph_from_snapshot`
   (`test_entry_point_classifier.py:56,136`) rebuild an OutputRegistry →
   backtracker → `ComputationGraph` from a snapshot, passing
-  `compilation_results=None`. They import only `analysis/`, `resolution/`,
-  `orchestration/` — no syside.
+  `compilation_results=None`. They run the snapshot path without ever invoking
+  the syside adapter/parser (the whole conformance suite does this license-free).
+  Note: `import agentic_mbse.sysml.syside_adapter` is itself license-free
+  (verified: `env -u SYSIDE_LICENSE* uv run python -c "import ..."` succeeds) —
+  the license is only needed to *invoke* the parser, so "no license" is a
+  runtime-behavior property, not an import-graph property.
 - **Generation already consumes only the graph.** `run_codegen`
   (`cli/__init__.py:600`) reads `ctx.computation_graph` exclusively; stencil
   auto-impl reads `module.auto_impl_context` (`stencils.py:173`), which
@@ -77,6 +81,8 @@ item **promotes them into `src`**, wraps the rebuilt graph in a full
 now-serialized `compilation_results` through `build_computation_graph(...)` so
 CalcUsage auto-impl survives. Two syside-only context fields — `extractor`,
 `backtracker` — are set to `None`, safe because no generation path reads them.
+The snapshot path may transitively import syside modules; it must never *invoke*
+the adapter or parser — that is what makes it license-free at runtime.
 
 Three additions turn the machinery into a contract:
 
@@ -102,11 +108,12 @@ same resolution/generation code the live run does.
   read `module.auto_impl_context`; fusion-tea already generates with
   `extractor=None`. Verifying this exhaustively is in scope (grep + a
   null-fields generation test).
-- **B2 — The parser's `source_file` for a document equals that document's
-  absolute on-disk path, so `(snapshot_dir / stored_relative).resolve()`
+- **B2 — The parser's `source_file` for a document equals the lexical absolute
+  path of that document beside the snapshot, so a lexical join of
+  `snapshot_dir` with the stored relative (no symlink resolution, D8)
   reproduces it byte-for-byte.** *If false → SC-1's tree diff fails on the
   `SysML Source:` header lines and byte-identity is unproven.* This is the
-  riskiest bet; de-risk first (see Handoff).
+  riskiest bet; de-risk first on a symlinked path (see Handoff).
 - **B3 — `compilation_results` is entirely pre-lowered strings and plain
   dataclasses, with no live AST field.** *If false → the serializer nullifies
   real data and SC-10 auto-impl is silently lost.* Evidence:
@@ -116,12 +123,18 @@ same resolution/generation code the live run does.
 ## Key Decisions
 
 - **D1 — `source_file` normalization: relativize at capture, re-absolutize at
-  load, against the snapshot's own directory.** Capture writes paths relative to
-  the models-root (which is the directory the snapshot file is written into);
-  the loader computes `source_file = (snapshot_path.parent / relative).resolve()`.
-  *Rejected:* storing the absolute path verbatim (machine-specific, uncommittable);
-  normalizing live emission to relative (forbidden — alters live output, spec
-  Non-Goal); stripping `source_file` from output (alters output, loses provenance).
+  load, both against the snapshot file's own directory (`output_path.parent`).**
+  Capture writes each `source_file` relative to `output_path.parent` (the
+  directory the snapshot is written into — not the models-root, which may differ
+  from `--output`); the loader rebuilds `source_file` by a **lexical** absolute
+  join of `snapshot_path.parent` with the stored relative — no `.resolve()`, so
+  symlinks are preserved (see M2/D8). Because capture and load use the same
+  anchor, the round-trip is exact by construction for any `--output` destination.
+  *Rejected:* anchoring on the models-root (diverges from the snapshot location
+  when `--output` points elsewhere); storing the absolute path verbatim
+  (machine-specific, uncommittable); normalizing live emission to relative
+  (forbidden — alters live output, spec Non-Goal); stripping `source_file` from
+  output (alters output, loses provenance).
 - **D2 — `build_pipeline_context_from_snapshot()` is new assembly in
   `orchestration/snapshot_context.py`, built on the promoted graph-rebuild body.**
   *Rejected:* renaming the helper (it returns a `ComputationGraph` + inputs dict,
@@ -129,7 +142,9 @@ same resolution/generation code the live run does.
   `pipeline_builder.py` (risks an import tangle with the promoted `snapshot/`
   package — a separate module keeps the dependency one-directional).
 - **D3 — New package `sysml_codegen/snapshot/` owns loader, serializer, capture,
-  and the promoted graph-rebuild helpers; it imports no syside.** The public API
+  and the promoted graph-rebuild helpers; it never invokes syside on the load
+  path.** (It may transitively import syside modules — that import is
+  license-free; the constraint is behavioral, not import-graph.) The public API
   re-exports every promoted name so each test migrates with a one-line import
   swap. *Rejected:* leaving a re-export shim in `tests/helpers/` (spec HARD: no
   two copies).
@@ -140,9 +155,12 @@ same resolution/generation code the live run does.
   is exactly enough).
 - **D5 — Capture CLI: `sysml-codegen snapshot --models <path>
   [--output <file>] [--design-path-filter S]`; default output
-  `<models-root>/extraction_snapshot.json`.** *Rejected:* a per-model directory
-  layout (models are already directories; a single file beside the sources
-  matches the committed layout and makes D1's re-absolutization trivial).
+  `<models-root>/extraction_snapshot.json`.** `source_file` is relativized
+  against the chosen `--output` location (D1), so the default and any custom
+  `--output` both round-trip exactly. *Rejected:* a per-model directory layout
+  (models are already directories; a single file beside the sources matches the
+  committed layout and keeps the default re-absolutization anchor next to the
+  source files).
 - **D6 — Source-freshness is warn-and-continue only; no `--strict` flag this
   item.** *Rejected:* adding `--strict` now (YAGNI — add it when a concrete CI
   consumer needs a stale snapshot to fail the build).
@@ -150,6 +168,13 @@ same resolution/generation code the live run does.
   doc 02's PipelineContext section.** *Rejected:* extending doc 02 (a different
   concern — doc 02 is the live 7-step sequence; the snapshot format is its own
   schema/versioning/provenance story).
+- **D8 — Re-absolutize by a lexical join, not `.resolve()`.** The loader builds
+  `source_file = Path(os.path.abspath(snapshot_path.parent / stored))` — lexical
+  normalization of `.`/`..`, made absolute — and does **not** resolve symlinks.
+  *Rejected:* `Path.resolve()` (it canonicalizes symlinks — if the parser reports
+  the symlinked path but `.resolve()` returns the real path, SC-1's header diff
+  fails). B2's de-risk probe must run on a **symlinked** source path specifically,
+  since that is where the two forms diverge.
 
 ## Architecture
 
@@ -168,23 +193,30 @@ identical:
 
 - **Capture (write path):** `snapshot.capture_snapshot()` runs the live
   `build_pipeline_context()` once, then `serialize_extraction_snapshot()` with
-  `compilation_results` added and `source_file` relativized to the models-root.
+  `compilation_results` added and `source_file` relativized to `output_path.parent`.
   This is the only license-requiring code in the new package; it is lifted from
   `scripts/capture_extraction_snapshots.py:_capture_full_pipeline`.
 - **Load (read path):** `load_extraction_snapshot(snapshot_path)` — version
   guard first, then deserialize, re-absolutize `source_file`, deserialize or
-  degrade `compilation_results`, emit the freshness warning.
+  degrade `compilation_results`, emit per-file freshness warnings and record how
+  many files were stale (so the caller can log one end-of-run summary).
 - **Assemble:** `build_pipeline_context_from_snapshot()` rebuilds the graph from
   the loaded snapshot (promoted helper), threads `compilation_results` into
   `build_computation_graph`, wraps a `PipelineContext` with `extractor=None`,
-  `backtracker=None`, and logs the provenance banner once.
+  `backtracker=None`, logs the provenance banner once, and — if the loader
+  flagged any stale-source files — logs one end-of-run freshness summary
+  ("N of M source files no longer match; recapture to refresh") in addition to
+  the per-file warnings.
 - **Generate:** `run_codegen` is unchanged; the CLI picks the builder by which
   flag was supplied.
 
 ## Required Invariants
 
-- **INV-1** `import sysml_codegen.snapshot` pulls in no syside runtime (guarded
-  by a test that imports it with syside unavailable, or a static import grep).
+- **INV-1** `generate --from-snapshot` completes with **no license available at
+  runtime** — verified by an env-scrubbed subprocess conformance test (scrub
+  `SYSIDE_LICENSE_KEY` and siblings before invoking generation). The package may
+  transitively import syside modules; it must never invoke the adapter/parser on
+  the snapshot path. (Not a static import-grep — module import is license-free.)
 - **INV-2** A snapshot with a `snapshot_format_version` that is missing or ≠
   `SNAPSHOT_FORMAT_VERSION` raises `SnapshotFormatError` **before** any
   field deserialization.
@@ -209,7 +241,7 @@ identical:
 - **`snapshot/serializer.py`** — moved `snapshot_serializer.py`. Adds:
   `snapshot_format_version` + provenance fields to the top-level dict; a
   `compilation_results` block; `source_file` relativization to a passed
-  `models_root` (replacing the fixtures-dir assumption).
+  `output_dir` = `output_path.parent` (replacing the fixtures-dir assumption).
 - **`snapshot/loader.py`** — moved `snapshot_loader.py`, signature changed to
   `load_extraction_snapshot(snapshot_path: Path)`. Adds: version guard,
   `source_file` re-absolutization, `compilation_results` deserialize-or-degrade,
@@ -217,7 +249,7 @@ identical:
   `_deserialize_calc_def_compilation_result`.
 - **`snapshot/graph_rebuild.py`** — promoted `build_classifier_inputs_from_snapshot`
   and `build_full_graph_from_snapshot`, taking a loaded snapshot dict (or a
-  `snapshot_path`). No syside imports.
+  `snapshot_path`). Never invokes syside (transitive imports are fine).
 - **`snapshot/capture.py`** — `capture_snapshot(model_paths, output_path,
   design_path_filter)` lifted from `_capture_full_pipeline`.
 - **`orchestration/snapshot_context.py`** — `build_pipeline_context_from_snapshot(
@@ -226,7 +258,8 @@ identical:
   group; `--from-snapshot` guard against `--design-path-filter`; `cmd_snapshot`
   subcommand; `GenerationConfig` gains `from_snapshot: Path | None`.
 - **`docs/architecture/reference/27-snapshot-generation.md`** — format schema,
-  REQ-SNAP-* table, version/provenance/freshness policy.
+  REQ-SNAP-* table (numbering starts at **REQ-SNAP-08** — 01–07 are taken),
+  version/provenance/freshness policy.
 - **Deleted:** `tests/helpers/snapshot_loader.py`,
   `tests/helpers/snapshot_serializer.py`. `scripts/capture_extraction_snapshots.py`
   is rewritten to call `snapshot.capture_snapshot` (or removed in favor of the CLI).
@@ -246,19 +279,22 @@ identical:
 - **Version guard runs first.** In `load_extraction_snapshot`, read
   `raw.get("snapshot_format_version")` and raise `SnapshotFormatError` before
   touching any other key. This and the 10-snapshot regeneration land in **one
-  change** (INV-2 would redden every snapshot test otherwise). Sequence after
-  Item 1's re-captures so the versioned loader never meets an unversioned fresh
-  capture mid-epic (spec L3-2).
+  change** (INV-2 would redden every snapshot test otherwise) — this landing
+  stands on its own; Item 1 committed no extraction snapshots (see Integration
+  Strategy).
 - **`compilation_results` shape.** Serialize under a top-level
   `"compilation_results"` key as `{calc_def_name: <CalcDefCompilationResult
   dict>}`. The generic `_serialize_value` already handles the nested dataclasses.
   Loader: if the key is absent → `logger.warning(...)` + `{}` (degrade, SC-10
   lost, today's behavior); if present → deserialize to
   `dict[str, CalcDefCompilationResult]`.
-- **`source_file` re-absolutization (D1).** Loader converts each deserialized
-  `source_file` via `(snapshot_path.parent / stored).resolve()`. Keep the
-  `"unknown"` / `"hierarchy"` sentinels untouched (they are not real paths).
-  Capture must relativize against the **models-root**, not `FIXTURES_DIR`.
+- **`source_file` re-absolutization (D1, D8).** Loader converts each deserialized
+  `source_file` via a lexical join `Path(os.path.abspath(snapshot_path.parent /
+  stored))` — **no `.resolve()`** (symlinks stay as the parser reports them).
+  Keep the `"unknown"` / `"hierarchy"` sentinels untouched (they are not real
+  paths). Capture relativizes against `output_path.parent`, not `FIXTURES_DIR` —
+  the same anchor the loader re-absolutizes against, so the round-trip is exact
+  by construction.
 - **Signature change fan-out.** `load_extraction_snapshot(model_name)` →
   `load_extraction_snapshot(snapshot_path)`. Test call sites pass a fixtures
   path via a single conftest helper (see Appendix B) — mechanical, regex-able.
@@ -289,15 +325,19 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
 
 ## Potential Risks
 
-- **B2 wrong (highest).** If `.resolve()` does not reproduce the parser's exact
-  string (symlinks, `file://` URI, case, trailing form), SC-1 fails. Mitigation:
-  de-risk first — capture solar_battery, run one live-vs-snapshot diff while the
-  license is live, and adjust the re-absolutization (e.g. don't `resolve()`
-  symlinks, or match the parser's exact rendering) before building the rest.
-- **Item 1 collision.** Item 1 emits unversioned snapshots concurrently. If the
-  versioned loader lands before Item 1's captures are re-run, they hard-error.
-  Mitigation: land Item 2's loader + 10-snapshot regeneration atomically, after
-  Item 1's re-captures (Handoff sequencing).
+- **B2 wrong (highest).** If the lexical join does not reproduce the parser's
+  exact string (`file://` URI, case, trailing form, or a symlink the parser
+  canonicalizes differently), SC-1 fails. Mitigation: de-risk first — capture
+  solar_battery **on a symlinked source path**, run one live-vs-snapshot diff
+  while the license is live, and adjust the re-absolutization to match the
+  parser's exact rendering before building the rest.
+- **Pipeline-baseline regeneration.** Item 1 rewrote
+  `scripts/capture_pipeline_baselines.py` to rebuild graphs from committed
+  snapshots via `build_full_graph_from_snapshot`. When Item 2 promotes that
+  helper body and adds `compilation_results`, the pipeline baselines regenerate
+  deliberately (the script docstring already flags this). Mitigation: migrate
+  the baseline-capture script to the promoted `sysml_codegen.snapshot` module and
+  re-run it as part of this item; expect and review the baseline diff.
 - **Import cycle.** `snapshot/graph_rebuild.py` imports `orchestration/
   output_registry_builder`; `orchestration/snapshot_context.py` imports
   `snapshot/`. Keep the context builder in its own module (D2) so the edge is
@@ -317,14 +357,25 @@ the same functions, now imported from `src` (INV-3). The capture command
 supersedes `scripts/capture_extraction_snapshots.py`, which becomes a thin
 wrapper or is retired.
 
+**Item 1 interaction.** Item 1 committed **no extraction snapshots** (its landed
+commit added only `baseline_yaml`, `baseline_outputs`, and the `zero_output_calc`
+fixture sources) — so there is no concurrent-unversioned-capture hazard, and the
+loader-guard + 10-snapshot regeneration land on their own. The one real coupling
+is `scripts/capture_pipeline_baselines.py`, which Item 1 rewrote to rebuild
+graphs from committed snapshots via `build_full_graph_from_snapshot`; when Item 2
+promotes that helper and adds `compilation_results`, the pipeline baselines
+regenerate deliberately (Potential Risks), and the script migrates to the
+promoted module.
+
 ## Validation Approach
 
 - **SC-1 (byte-identical), license-gated.** A test that runs live
   `generate --models <abs solar_battery>` and `generate --from-snapshot`,
   then does a recursive tree diff of the two output dirs (empty diff).
   Skips cleanly on `ImportError` from `load_models` (no license). Run it at
-  least once while the license is live. Feed live an **absolute** `--models`
-  path so the parser emits the absolute form D1 reconstructs.
+  least once while the license is live, **including once on a symlinked source
+  path** (D8/B2). Feed live an **absolute** `--models` path so the parser emits
+  the absolute form D1 reconstructs.
 - **SC-10 (auto-impl preserved).** Against a re-captured `chain_spike_model`
   snapshot: assert `compilation_results` non-empty (INV-5), stencils
   auto-implemented, `compilability` set — matching live. License-free once the
@@ -335,7 +386,10 @@ wrapper or is retired.
   a version-current snapshot lacking `compilation_results` → warning + degrade.
 - **CLI (INV-7).** Both flags → error; neither → error; `--from-snapshot` +
   `--design-path-filter` → error.
-- **No-two-copies / syside-free (INV-1, INV-3).** Import grep + import-under-no-syside test.
+- **No-two-copies (INV-3).** `grep -r "tests.helpers.snapshot"` returns zero.
+- **License-free runtime (INV-1).** An env-scrubbed subprocess test runs
+  `generate --from-snapshot` with `SYSIDE_LICENSE_KEY` et al. unset and asserts
+  success — proving the snapshot path never invokes the parser.
 - **Provenance never in output (INV-6).** Assert generated files contain no
   banner/`captured_at`/version text.
 - **Full suite green** against the 10 regenerated versioned snapshots.
@@ -348,13 +402,13 @@ wrapper or is retired.
 - **Open (plan decides ordering):** exact conftest helper name for fixtures-path
   resolution; whether `scripts/capture_extraction_snapshots.py` is retired or
   wrapped; error-text wording (Appendix A is the starting catalog).
-- **De-risk first (do before anything else):** B2 — capture solar_battery and
-  run the live-vs-snapshot diff on the `SysML Source:` headers while the license
-  is live. If `.resolve()` doesn't match, fix the re-absolutization before
-  building capture/CLI/migration on top of it. Everything else is mechanical
-  once `source_file` reconstruction is proven.
+- **De-risk first (do before anything else):** B2 — capture solar_battery **on a
+  symlinked source path** and run the live-vs-snapshot diff on the `SysML Source:`
+  headers while the license is live. If the lexical join doesn't match, fix the
+  re-absolutization before building capture/CLI/migration on top of it. Everything
+  else is mechanical once `source_file` reconstruction is proven.
 - **Atomicity constraint:** loader version-guard + 10-snapshot regeneration in
-  one change; sequence after Item 1's re-captures.
+  one change (no external sequencing dependency — Item 1 shipped no snapshots).
 
 ## agentic-mbse impact
 
@@ -363,6 +417,32 @@ path; the executable SysML subset, the auditor, and what models should look like
 are unchanged. If `27-snapshot-generation.md` is useful to agentic-mbse
 consumers running generation from snapshots in CI, note it as a docs pointer at
 close-out (R2). Confirm "none vs docs pointer" then.
+
+## Design-Review Resolutions
+
+Applied from `design-review.md` (verdict: Revise):
+
+- **C1 (critical) — accepted, empirically settled.** `import
+  agentic_mbse.sysml.syside_adapter` is license-free; only invoking the parser
+  needs a license. Dropped the "syside-free imports" claim and the static-grep
+  INV-1. INV-1 is now behavioral: `generate --from-snapshot` completes with no
+  license at runtime, verified by an env-scrubbed subprocess test. The package
+  may transitively import syside; it must never *invoke* the adapter/parser on
+  the load path.
+- **M1 — accepted.** `source_file` relativizes against the snapshot's own output
+  location (`output_path.parent`), not the models-root — exact by construction
+  for any `--output` (D1, D5).
+- **M2 — accepted.** Re-absolutization is a lexical absolute join, no symlink
+  resolution (new **D8**); B2's de-risk probe must run on a symlinked path.
+- **M3 — accepted.** Deleted the "Item 1 emits unversioned snapshots" premise
+  (Item 1 committed no extraction snapshots). Recorded the real coupling: Item 1's
+  `scripts/capture_pipeline_baselines.py` rebuilds graphs from committed snapshots
+  via the promoted helper, so pipeline baselines regenerate deliberately and the
+  script migrates to `sysml_codegen.snapshot`.
+- **M4 — accepted.** Conftest fixtures helper kept (Appendix B).
+- **M5 — accepted.** REQ-SNAP numbering starts at **08** (01–07 taken).
+- **M6 — accepted.** Freshness warnings also summarized once at end of run
+  (V3, Architecture Assemble step).
 
 ---
 
@@ -375,8 +455,10 @@ close-out (R2). Confirm "none vs docs pointer" then.
 - **V2 (hard, wrong version).** `SnapshotFormatError`: "Snapshot <path> is format
   version {found}, tool expects {SNAPSHOT_FORMAT_VERSION}. Recapture with
   `sysml-codegen snapshot`."
-- **V3 (warn, stale source).** "Snapshot <path> source hash for <file> no longer
-  matches on-disk source — snapshot may be stale. Continuing; recapture to refresh."
+- **V3 (warn, stale source).** Per file: "Snapshot <path> source hash for <file>
+  no longer matches on-disk source — snapshot may be stale. Continuing; recapture
+  to refresh." Plus one end-of-run summary: "N of M snapshot source files no
+  longer match on-disk source; recapture to refresh."
 - **V4 (warn, degrade).** "Snapshot <path> has no compilation_results section
   (captured before SC-10). CalcUsage auto-implementation will be lost; stencils
   fall back to NotImplementedError. Recapture to restore."
