@@ -54,33 +54,33 @@ actionable diagnostic instead.
 
 ## Success Criteria
 
-- [ ] A calc def using named `return y : Real = expr;` extracts with `y` in
+- [x] A calc def using named `return y : Real = expr;` extracts with `y` in
       `output_attributes` and its expression AST in `output_expression_asts`
       (so CalcUsage auto-impl works, not just a stencil).
-- [ ] A calc def using bare `in x : Real;` extracts with `x` in
+- [x] A calc def using bare `in x : Real;` extracts with `x` in
       `input_attributes`.
-- [ ] The `return attribute y : Real;` + body-assignment form extracts `y` as a
+- [x] The `return attribute y : Real;` + body-assignment form extracts `y` as a
       single output with **no double-ingestion** (the direction-None
       ReferenceUsage that carries the body assignment stays out of the attribute
       lists; `y` appears once).
-- [ ] `out attribute y : Real = expr;` is unchanged (control style).
-- [ ] Anonymous `return : Real = expr;` raises a specific diagnostic (new rule
+- [x] `out attribute y : Real = expr;` is unchanged (control style).
+- [x] Anonymous `return : Real = expr;` raises a specific diagnostic (new rule
       V8) that names the fix — give the result a name — rather than the generic
       zero-output message or a crash.
-- [ ] A new fixture covering all four legal styles plus the anonymous negative
+- [x] A new fixture covering all four legal styles plus the anonymous negative
       case has a captured extraction snapshot and conformance tests.
-- [ ] All existing extraction snapshots and the 4 pipeline baselines are
+- [x] All existing extraction snapshots and the 4 pipeline baselines are
       **byte-identical** after the change (all existing fixtures are
       AttributeUsage-based — the relaxation adds no members for them).
-- [ ] `docs/architecture/reference/01-extraction.md` canonical example is now
+- [x] `docs/architecture/reference/01-extraction.md` canonical example is now
       true, and the newly legal forms + the anonymous-return diagnostic are
       documented with REQ tags and verification-matrix rows.
-- [ ] The V7 zero-output diagnostic (`extractor.py`) and the matching
+- [x] The V7 zero-output diagnostic (`extractor.py`) and the matching
       modeling-assumptions.md V7 row no longer claim return-style / bare-`in` are
       "not yet extracted (Item 3)". Post-Item-3 wording points at the one shape
       still genuinely rejected — anonymous `return` (→ V8) — as the likely cause
       of a zero-output calc def.
-- [ ] The six converted IFE calc defs are confirmed to extract in their original
+- [x] The six converted IFE calc defs are confirmed to extract in their original
       `return` form. **Evidence gathered at spec-review** (fusion-tea checked
       directly): all six (`fusion_cycle` f_recirc; `ife_lcoe` lcoe;
       `hif_economics` Meier Driver Cost / Reactor Cost / Total Capital / COE)
@@ -91,8 +91,10 @@ actionable diagnostic instead.
       "work in original return form" — correct I/O plus auto-implementation — is
       satisfied by design. A live re-run stays as a confirmation step, no longer
       load-bearing.
-- [ ] agentic-mbse impact recorded: the A-2 stencil fix is specified exactly, and
-      the Level-6 output-style check is recorded for Item 12.
+- [x] agentic-mbse impact recorded: the A-2 stencil fix is specified exactly, and
+      the Level-6 output-style check is recorded for Item 12. *(Recording verified
+      in spec/plan; the A-2 edit landing in agentic-mbse was not read directly —
+      sandbox-blocked — and is re-verified by Item 12. See audit.md.)*
 
 ## Known Requirements
 

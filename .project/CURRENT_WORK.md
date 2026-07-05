@@ -51,10 +51,15 @@ checkboxes unfilled though deliverables landed. See `audit.md`.
 
 ### UPSTREAM-FINDINGS Item 3: Return-Style & Bare-Parameter Extraction (SC-2)
 
-**Status**: **Implemented** (2026-07-05, uncommitted — orchestrator commits). All 4
-plan phases complete; ready for `/_my_audit`.
+**Status**: **Audited PASS / Certify** (2026-07-05, commit 559a0bb). All 4 plan
+phases verified; spec criteria met on committed evidence. Two non-blocking
+verification limits (see audit): tests not re-run (harness-blocked) — green rests on
+recorded gate + direct snapshot/code inspection; A-2 stencil fix not read directly
+(agentic-mbse outside session sandbox) — verified against plan/commit evidence, and
+Item 12 re-verifies it as an explicit gate.
 **Epic**: `.project/backlog/epic_upstream_findings.md`
 **Spec / Design / Plan**: `.project/active/return-style-extraction/{spec,design,plan}.md`
+**Audit**: `.project/active/return-style-extraction/audit.md`
 
 Relaxed the calc-def member filter to a shared `_is_parameter_member` predicate at
 both passes (`extractor.py`): named `return` and bare `in` (direction-carrying

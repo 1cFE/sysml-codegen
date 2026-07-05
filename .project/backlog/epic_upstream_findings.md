@@ -149,7 +149,7 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 
 ---
 
-### Item 3: Return-Style & Bare-Parameter Extraction (SC-2) [1 day]
+### Item 3: Return-Style & Bare-Parameter Extraction (SC-2) [1 day] ✅
 
 **Type**: Implementation
 **Effort**: 1 day (spec 1.5h, design 1.5h, plan 1h, execute 4–6h)
@@ -169,12 +169,14 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 - Multi-output `return` (not legal SysML — one result parameter max)
 
 **Success Criteria**:
-- [ ] All named parameter styles extract with correct inputs/outputs; existing baselines unchanged
-- [ ] Anonymous return produces the diagnostic, not a crash
-- [ ] The six converted IFE calc defs work in original `return` form (verify against fusion-tea models)
-- [ ] Skill stencil fixed; agentic-mbse impact recorded
+- [x] All named parameter styles extract with correct inputs/outputs; existing baselines unchanged
+- [x] Anonymous return produces the diagnostic, not a crash
+- [x] The six converted IFE calc defs work in original `return` form (verify against fusion-tea models) — satisfied by design: the four-styles fixture covers the same inline-return shape; spec-review established all six were inline `return` (fusion-tea `8852afcf`). Live IFE re-run demoted to opportunistic (D6).
+- [x] Skill stencil fixed; agentic-mbse impact recorded — impact recorded in spec; A-2 edit committed at agentic-mbse 6dbdf1b per plan, **not read directly (sandbox-blocked); Item 12 re-verifies.**
 
 **Deliverables**: `.project/active/return-style-extraction/{spec,design,plan}.md`, new fixture + snapshot, doc fix, stencil fix
+
+**Audit (2026-07-05, commit 559a0bb):** PASS / Certify — `.project/active/return-style-extraction/audit.md`. Two non-blocking verification limits: tests not re-run (harness approval unavailable; green rests on recorded gate + direct snapshot/code inspection); A-2 not read directly (agentic-mbse outside session sandbox), re-verified by Item 12.
 
 ---
 
