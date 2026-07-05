@@ -165,6 +165,44 @@ before the PUSH-DOWN epic moves `expression_utils.py`. Owner doc: 19
 regen is two-tier: extraction snapshots need live license, pipeline baselines
 rebuild offline.
 
+### UPSTREAM-FINDINGS Item 7: Resolution Matcher Fixes & Warning Reconciliation (SC-8)
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/warning-reconciliation/spec.md`
+
+Two matcher bugs behind the benign "Registry unresolved" noise (per-segment
+sanitizing QN conversion on the REFERENCE path — executes Item 5's `:130`
+lockstep flip; and usage-name-aware / QN-suffix matching for part-def-owned
+design attributes with empty `parent_part`). Behavioral: entry points
+reclassify (`USAGE_LITERAL` → `DESIGN_ATTRIBUTE`), Step-3 dedup returns —
+baselines and params-JSON keys churn and are reviewed deliberately. Step-4
+fallback warnings demote to DEBUG + a post-assembly reconciliation summary;
+new V11 params-coverage hard error (sibling to `_validate_channel_references`)
+catches the catf_mfe dangling `magnet_volume`. **Decision:** xfail catf_mfe's
+E2E generation (do not alter the fixture — `magnet_volume_total = tf_coil.volume`
+is a real cross-part EXPOSE for Items 9–11); prove the check with a seeded
+fixture. Baseline sequencing runs against whatever Item 6 has committed.
+
+### UPSTREAM-FINDINGS Item 8: Plant-Idiom Conformance Fixtures
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/plant-fixtures/spec.md`
+
+Closes the fixture blind spot for the plant idiom before SC-5 (Items 9–11)
+begins. Fixtures/captures only — no `src/` production code. Two fixtures:
+`wi014_toy` (imported from fusion-tea; part-def EXPOSE_PURE / shape A +
+REFERENCE-binding warning paths; carries the REQ-CA-09 shape-A test Item 1
+deferred) and an authored `ife_plant` (generic plant def with def-declared
+attributes, `:>>`-valued specialized subsystem defs, retyped nested parts,
+cross-part calc chains, plain-usage `:>>` overrides, one self-named-binding
+trap). Captures extraction snapshots + CURRENT known-incomplete pipeline
+baselines via the graph-level/collector path (does not trip Item 7's strict
+V11), so Items 9–10 land as reviewed baseline diffs. Needs live syside license
+(R3 — before 2026-08-06). Source dirs sandbox-blocked from spec session → import
+procedure specified.
+
 ### REFACTOR: Incremental Pipeline Refactor
 
 **Status**: In Progress (Phases 0–4 complete)
