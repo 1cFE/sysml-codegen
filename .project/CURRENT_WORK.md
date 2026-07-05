@@ -186,22 +186,27 @@ fixture. Baseline sequencing runs against whatever Item 6 has committed.
 
 ### UPSTREAM-FINDINGS Item 8: Plant-Idiom Conformance Fixtures
 
-**Status**: Spec in progress
+**Status**: Spec revised (post spec-review; verdict was Revise, six rulings applied)
 **Epic**: `.project/backlog/epic_upstream_findings.md`
 **Spec**: `.project/active/plant-fixtures/spec.md`
+**Review**: `.project/active/plant-fixtures/spec-review.md`
 
 Closes the fixture blind spot for the plant idiom before SC-5 (Items 9–11)
-begins. Fixtures/captures only — no `src/` production code. Two fixtures:
+begins. Fixtures/captures only — no `src/` production code. Three fixtures:
 `wi014_toy` (imported from fusion-tea; part-def EXPOSE_PURE / shape A +
 REFERENCE-binding warning paths; carries the REQ-CA-09 shape-A test Item 1
-deferred) and an authored `ife_plant` (generic plant def with def-declared
-attributes, `:>>`-valued specialized subsystem defs, retyped nested parts,
-cross-part calc chains, plain-usage `:>>` overrides, one self-named-binding
-trap). Captures extraction snapshots + CURRENT known-incomplete pipeline
-baselines via the graph-level/collector path (does not trip Item 7's strict
-V11), so Items 9–10 land as reviewed baseline diffs. Needs live syside license
-(R3 — before 2026-08-06). Source dirs sandbox-blocked from spec session → import
-procedure specified.
+deferred); an authored `ife_plant` (def-declared attribute literals with a ≥14
+richness floor, `:>>`-valued specialized subsystem defs, retyped nested parts,
+cross-part calc chains, plain-usage `:>>` overrides, **two same-type sibling
+parts** for Item 10's instance-ambiguity SC); and an **isolated**
+`self_named_binding_trap` (mechanism D, own dir + timeout guard so a possible
+syside recursion can't poison ife_plant). Captures extraction snapshots + CURRENT
+known-incomplete pipeline baselines via the graph-build path (order-independent;
+strict-generate V11 is expected/xfailed, not the bar). **Decoupled from Item 7:**
+the collector-pin conformance assertion is conditional, no HARD requirement
+depends on unlanded Item 7 code. Needs live syside license (R3 — before
+2026-08-06). Source dirs sandbox-blocked from spec session → import procedure
+specified.
 
 ### REFACTOR: Incremental Pipeline Refactor
 
