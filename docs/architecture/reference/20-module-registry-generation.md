@@ -33,6 +33,16 @@ Since `module_type_override` is a dict keyed by class name, unresolved
 collisions cause silent overwrites. The registry uses aliased imports to
 disambiguate (see `_resolve_class_name_collisions()` in `generation/registry.py`).
 
+The alias keys on the **parent** segment only, so two scopes with the same class
+name and parent but different grandparents (e.g. `a.pump.Pump` and `b.pump.Pump`)
+would alias identically — a residual hole (SC-11). This is now closed: after
+aliasing, the registry re-checks uniqueness and **fails fast** on any residual
+collision (REQ-REG-08). SC-11 itself is confirmed intended, documented, and
+tested (REQ-REG-03/04/07 PASS, aliased baseline parseable); a static scan proved
+no committed model hits the grandparent case, so the re-check is a hard error,
+not a warning. The AST-based import rewrite (substring, first-match) remains a
+filed follow-up.
+
 ---
 
 ## Requirements
@@ -46,6 +56,7 @@ disambiguate (see `_resolve_class_name_collisions()` in `generation/registry.py`
 | REQ-REG-05 | CalcUsage, computed attribute, and aggregation modules SHALL all derive paths from design-scoped qualified names | Path consistency | Same `SysMLQualifiedName` derivation for all three module types |
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | TEAx integration | Schema type registration covers all output types |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | Fail-fast diagnostics | Warning emitted when two modules produce same class name |
+| REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | Fail-fast diagnostics | `_resolve_class_name_collisions()` raises when two modules alias identically (same class + parent, different grandparents); conformance: `test_sc11_recheck` |
 
 ---
 

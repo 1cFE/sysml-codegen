@@ -126,6 +126,23 @@ def _resolve_class_name_collisions(
                     imports[j] = f"{imp} as {alias}"
                     break
 
+    # REQ-REG-08: post-alias uniqueness re-check. The alias keys on the parent
+    # segment only (above), so two modules with the same class name AND parent
+    # but different grandparents alias identically -- a residual SC-11 collision
+    # the aliasing cannot resolve. The Item-5 static scan proved no committed
+    # model hits this, so it lands as a hard fail-fast (a silent import
+    # overwrite is worse than a clear error).
+    post_alias: dict[str, list[str]] = defaultdict(list)
+    for module in all_modules:
+        post_alias[module["class_name"]].append(module["module_type"])
+    residual = {name: mts for name, mts in post_alias.items() if len(mts) > 1}
+    if residual:
+        raise ValueError(
+            "Module class name collision survives aliasing (grandparent collision): "
+            + "; ".join(f"{name!r} <- {sorted(mts)}" for name, mts in sorted(residual.items()))
+            + ". The parent-segment alias cannot disambiguate these; rename one scope."
+        )
+
     return all_modules, imports
 
 

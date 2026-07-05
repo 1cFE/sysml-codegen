@@ -18,7 +18,7 @@ from sysml_codegen.core.identifier_types import (
 )
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
-from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import get_channel_name, sanitize_qualified_name
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeClassification,
@@ -121,7 +121,7 @@ def build_output_registry(
             continue
         if ca.compilability != Compilability.FULLY_COMPILABLE:
             continue
-        part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+        part_qn_python = sanitize_qualified_name(ca.owning_part_qualified_name)
         module_eqn = f"{part_qn_python}__{ca.python_name}"
         canonical = CanonicalChannel(get_channel_name(module_eqn, ca.python_name))
 

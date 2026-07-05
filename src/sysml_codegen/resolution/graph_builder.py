@@ -32,7 +32,7 @@ from sysml_codegen.core.qualified_names import (
     get_channel_name,
     get_module_name,
     sanitize_name,
-    sysml_to_python_qualified_name,
+    sanitize_qualified_name,
 )
 from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
@@ -267,12 +267,12 @@ def build_computation_graph(
     # NOTE: ComputedAttributeData.owning_part_qualified_name uses "::" separator with raw names
     # (e.g., "SolarBatteryLibrary::'Solar Array'"), while AggregationExpressionData.owning_part_qn
     # uses "__" separator with sanitized names (e.g., "SolarBatteryLibrary__Solar_Array").
-    # We normalize by splitting on "::", sanitizing each segment, and joining with "__".
+    # sanitize_qualified_name does the per-segment "::"-> "__" normalization (D3: this was an
+    # inline "__".join(sanitize_name(seg) ...) -- character-for-character the helper body).
     expose_aliases: dict[tuple[str, str], str] = {}
     for ca in (computed_attributes or []):
         if ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
-            segments = ca.owning_part_qualified_name.split("::")
-            normalized_qn = "__".join(sanitize_name(seg) for seg in segments)
+            normalized_qn = sanitize_qualified_name(ca.owning_part_qualified_name)
             expose_aliases[(normalized_qn, ca.python_name)] = ca.expression_text
 
     # Step 6.7: Build aggregation modules
@@ -740,9 +740,14 @@ def _build_attribute_resolution_map(
             ca.classification == ComputedAttributeClassification.FORMULA
             and ca.compilability == Compilability.FULLY_COMPILABLE
         ):
-            # FORMULA -> wire to synthetic module output channel
-            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-            module_eqn = sysml_to_python_qualified_name(sysml_qn)
+            # FORMULA -> wire to synthetic module output channel.
+            # M1: build the module_eqn leaf from python_name (never re-sanitize
+            # ca.name), so the produced (registry) and consumed (here) channels
+            # are identical by construction -- see design B2/INV-5.
+            module_eqn = (
+                f"{sanitize_qualified_name(ca.owning_part_qualified_name)}"
+                f"__{ca.python_name}"
+            )
             channel_name = get_channel_name(module_eqn, ca.python_name)
             result[part_name][ca.python_name] = AttributeResolution(
                 kind=AttributeResolutionKind.FORMULA, channel_name=channel_name,
@@ -784,9 +789,14 @@ def _build_computed_attr_module(
         (PipelineModule, dict of new entry points created by this factory)
     """
     new_entry_points: dict[str, EntryPoint] = {}
-    # Naming per ADR-003
+    # Naming per ADR-003. M1: module_eqn leaf from python_name (identical to the
+    # registry producer by construction); module_type is a *different*
+    # identifier derived from ca.name via from_sysml (sanitized in Phase 2), so
+    # it keeps the raw sysml_qn.
     sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-    module_eqn = sysml_to_python_qualified_name(sysml_qn)
+    module_eqn = (
+        f"{sanitize_qualified_name(ca.owning_part_qualified_name)}__{ca.python_name}"
+    )
     module_name = get_module_name(module_eqn)
     module_type = derive_module_type(sysml_qn)
 
@@ -815,7 +825,7 @@ def _build_computed_attr_module(
             if attr.qualified_name:
                 design_attr_by_qname[attr.qualified_name] = attr
 
-    part_eqn = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+    part_eqn = sanitize_qualified_name(ca.owning_part_qualified_name)
 
     # Build inputs
     inputs: list[ModuleInput] = []

@@ -16,6 +16,8 @@ See: 27-typed-registry-refactor.md
 from dataclasses import dataclass
 from typing import NewType
 
+from sysml_codegen.core.qualified_names import sanitize_name
+
 # ---------------------------------------------------------------------------
 # Typed identifier wrappers (FR-1, NFR-1: zero runtime cost via NewType)
 # ---------------------------------------------------------------------------
@@ -102,9 +104,14 @@ class ModuleType:
 
     @classmethod
     def from_sysml(cls, sqn: SysMLQualifiedName) -> "ModuleType":
-        """Create ModuleType from SysML qualified name."""
-        namespace = ".".join(s.lower() for s in sqn.package_segments)
-        class_name = f"{sqn.element_name}Module"
+        """Create ModuleType from SysML qualified name.
+
+        Sanitizes each segment before lowercasing (order is load-bearing: the
+        reserved-word guard must see the pre-lowercased form, matching
+        build_element_qualified_name). Class name preserves case.
+        """
+        namespace = ".".join(sanitize_name(s).lower() for s in sqn.package_segments)
+        class_name = f"{sanitize_name(sqn.element_name)}Module"
         return cls(f"{namespace}.{class_name}" if namespace else class_name)
 
 
@@ -138,9 +145,13 @@ class PythonModulePath:
 
     @classmethod
     def from_sysml(cls, sqn: SysMLQualifiedName) -> "PythonModulePath":
-        """Create PythonModulePath from SysML qualified name."""
-        directory = "/".join(s.lower() for s in sqn.package_segments)
-        return cls(directory, sqn.element_name.lower())
+        """Create PythonModulePath from SysML qualified name.
+
+        Sanitizes each segment before lowercasing (sanitize-then-lower, matching
+        ModuleType.from_sysml and build_element_qualified_name).
+        """
+        directory = "/".join(sanitize_name(s).lower() for s in sqn.package_segments)
+        return cls(directory, sanitize_name(sqn.element_name).lower())
 
 
 @dataclass(frozen=True)

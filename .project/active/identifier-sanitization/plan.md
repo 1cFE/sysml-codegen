@@ -1,6 +1,6 @@
 # Implementation Plan: Identifier Sanitization (SC-4 + SC-11 riders)
 
-**Status:** Draft
+**Status:** Complete (implementation; awaiting audit)
 **Created:** 2026-07-05
 **Last Updated:** 2026-07-05
 **Epic:** UPSTREAM-FINDINGS — Item 5 (1-day item)
@@ -120,7 +120,7 @@ def test_no_committed_model_hits_grandparent_collision():
 ### Changes Required
 **See `design.md#required-invariants` (INV-1) and `design.md#key-decisions` (D5) for the reasoning.**
 
-- [ ] `tests/conformance/test_sanitize_invariance.py` (NEW) — the two scans above. The INV-1 scan
+- [x] `tests/conformance/test_sanitize_invariance.py` (NEW) — the two scans above. The INV-1 scan
       enumerates **all** QN-bearing fields across every committed snapshot (calc-def `qualified_name`,
       `owning_part_qualified_name`, computed-attr QNs, part-def QNs).
 - [ ] The grandparent scan mirrors the alias scheme exactly (`registry.py:103-108` — alias uses only
@@ -443,24 +443,149 @@ needs the syside license (expires 2026-08-06 — R3; window open now).
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**SC-11 gate decision (WARN vs FAIL):** [record here]
-**Confirmed REQ IDs (docs 15/20):** [record here]
-**Completed:** — **Issues:** — **Deviations:** —
+**SC-11 gate decision (WARN vs FAIL):** **FAIL (hard fail-fast).** The grandparent-collision
+scan (`_residual_grandparent_collisions`, mirroring `registry.py:98-116`) is **CLEAN** on all
+12 committed snapshots — zero residual post-alias collisions. So the Phase 3 SC-11 re-check
+lands as `raise`, not WARN.
+**Confirmed REQ IDs (docs 15/20):** doc 15 stops at REQ-NC-07, doc 20 at REQ-REG-07, V-rules at
+V10. Assigned: **REQ-NC-08** (derivation sanitize), **REQ-NC-09** (duplicate-path fail-fast —
+generation REQ, **not** V11 per design recommendation), **REQ-REG-08** (SC-11 post-alias re-check).
+**Completed:** 2026-07-05.
+**Changes Made:**
+- Added `tests/conformance/test_sanitize_invariance.py` (NEW) — 3 scans: INV-1 accidental-form
+  guard, INV-1 quoted-name corollary, SC-11 grandparent gate. All pass (0.09s, license-free).
+**Anchors re-verified at implement (HEAD `0a6383a`):** all plan-table anchors confirmed unchanged
+— `qualified_names.py:13/103/124`, `identifier_types.py:104-108/140-143`, `output_registry_builder.py:124-125/130/136-137`,
+`graph_builder.py:744-746/788-791/818/273-276/879-897 (calc_def_name :891, calc_def_qualified_name :892)`,
+`cli/__init__.py:149/177/215/258-260/710-712`, `registry.py:60-129`.
+**Issues:** None.
+**Deviations:**
+- **INV-1 scan reformulated (probe contradicted the literal stencil).** The plan/design stencil
+  asserts `sanitize_name(seg) == seg` for *every* segment. That is literally false on the corpus:
+  9 segments change under sanitize, all quoted SysML names (`alias_agg_probe` calc defs
+  `'Margin Calc'`/`'Report Calc'`/`'Unit Cost Calc'`; `solar_battery` `'Solar Array'`;
+  `unresolvable_attr_probe` `'Derived Component'`/`'Design Derived'`). The invariant that actually
+  underpins INV-4 byte-identity is narrower and *does* hold: **no already-identifier-safe segment
+  changes** (the dangerous accidental forms — edge underscore, `__` run, keyword — are absent;
+  accidental set is empty), and every changed segment is a quoted name that either never reaches
+  generation (`alias_agg_probe` — first generated in Phase 2, the intended change) or is
+  already-normalized (`solar_battery` `'Solar Array'` is EXPOSE_PURE, sanitized today via the
+  `graph_builder.py:273-276` ad-hoc the D3 collapse replaces char-for-char). The test proves this
+  faithfully rather than spuriously failing. The end-to-end byte-identity gate (Phases 1-3 tree_diff)
+  remains the authoritative proof.
+- **Extra byte-identity precheck (recorded, not a code change):** all FORMULA attrs in the 3
+  generating FORMULA models (attr_expr_probe, catf_mfe, solar_battery) have **unquoted owners**
+  AND `name == python_name`, so the Phase 1 M1 leaf-from-`python_name` change is byte-identical on
+  every existing model.
 
 ### Phase 1 Completion
-**Completed:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-05.
+**Changes Made:**
+- `core/qualified_names.py`: added `sanitize_qualified_name(sysml_qname)` beside
+  `sysml_to_python_qualified_name`; exported in `__all__`.
+- `orchestration/output_registry_builder.py:124`: producer owner via helper (import swapped
+  `sysml_to_python_qualified_name` → `sanitize_qualified_name`; it was the only use).
+- `resolution/graph_builder.py`: import swapped to `sanitize_qualified_name`; resolution_map
+  consumer (:744-746) and module-identity consumer (:788-791) now build `module_eqn =
+  f"{sanitize_qualified_name(owner)}__{ca.python_name}"` (M1 leaf from python_name); `part_eqn`
+  (:818) straight helper swap; module-identity keeps raw `sysml_qn` for `derive_module_type` at
+  :791 (separate identifier, sanitized in Phase 2). D3 collapse: the EXPOSE_PURE ad-hoc
+  `"__".join(sanitize_name(seg) ...)` (:273-276) → `sanitize_qualified_name(...)`.
+- **Left raw (INV-3):** `output_registry_builder.py:130` and the three match sites untouched.
+- New tests: `tests/conformance/test_formula_quoted_owner.py` (red→green lock); new fixture
+  `tests/fixtures/quoted_owner_formula/` (design.sysml + library.sysml + committed
+  `extraction_snapshot.json`, live capture).
+**Red→green proof:** on raw code the test failed with consumer-resolved
+`QuotedOwnerFormulaDesign__'Margin Part'__net margin__net_margin` vs registry-registered
+`...__net_margin__net_margin`; after the helper + M1 both are
+`QuotedOwnerFormulaDesign__Margin_Part__net_margin__net_margin` — assertion `resolved == registered`
+passes.
+**Validation:** full suite **1874 passed** / 4 skipped / 5 xfailed (1870 baseline + 4 new tests);
+baseline byte-identity conformance (test_baselines / test_pipeline_e2e / test_gen_pipeline_yaml) all
+green; ruff 21, mypy 109 (both unchanged).
+**Issues:** None after the fixture-topology correction below.
+**Deviations:**
+- **Fixture consumer is a computed attribute, not a calc usage (design prose corrected; INV-5
+  intact).** The design *prose* (design.md:335) said "consumed by a calc usage in the same part."
+  A probe proved that path wrong: a calc-usage input binding to a same-part computed attribute
+  produces a `::`-qualified REFERENCE source_path, so it routes through
+  `dependency_backtracker._resolve_reference_dispatch` — `sysml_qn_lookup` (raw `:130`/`:595` key)
+  then a leaf+parent scoped lookup whose leaf is extracted **raw** (`:473`). For a *quoted* owner
+  both fail (raw key/leaf `'net margin'` vs registered python_name `net_margin`), and **those are
+  Item 7's match sites — untouched by Item 5** — so a calc-usage consumer stays unresolved after
+  Phase 1. The design's own **appendix + site list** (graph_builder `:745/:789`, the
+  `resolution_map`) actually describe the **computed-attribute consumer** path, which *is* an
+  Item-5 site. The design explicitly left "the fixture's concrete SysML" open for the plan
+  (design.md:369), and INV-5 (producer channel == consumer channel via `resolution_map`) is proven
+  exactly by this fixture. So the consumer is a second same-part FORMULA attribute
+  (`total_payout = 'net margin' * 2.0`); a minimal calc def (`ScaleCalc`, no usage) satisfies the
+  "model has calc defs" generation precondition without touching the tested wire. This is a
+  correction of imprecise design prose, not a change to any invariant.
 
 ### Phase 2 Completion
-**Completed:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-05.
+**Changes Made:**
+- `core/identifier_types.py`: imported `sanitize_name` from `core.qualified_names` (no circular
+  import — `qualified_names` imports only `re`). `ModuleType.from_sysml`: namespace
+  `".".join(sanitize_name(s).lower() ...)`, class_name `f"{sanitize_name(element_name)}Module"`
+  (case preserved). `PythonModulePath.from_sysml`: directory `"/".join(sanitize_name(s).lower() ...)`,
+  filename `sanitize_name(element_name).lower()`. Sanitize-then-lower throughout (order pinned to
+  `build_element_qualified_name`).
+- New test `tests/conformance/test_alias_agg_probe_generation.py` (red→green).
+**Red→green proof:** before the fix, generation emitted
+`from aap.modules.aliasaggprobelibrary.'margin calc' import Margin_CalcModule` — a SyntaxError on
+`ast.parse` (module path leaked the quoted name while the class name was already sanitized, the
+exact registry/module inconsistency). After the fix all files parse and every imported class is
+declared by its module.
+**Validation:** full suite **1875 passed** / 4 skipped / 5 xfailed; baseline byte-identity holds
+(from_sysml sanitize is a no-op on unquoted segments — INV-1); ruff 21, mypy 109 (unchanged).
+**Issues:** None. **Deviations:** None.
 
 ### Phase 3 Completion
-**Completed:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-05.
+**Changes Made:**
+- `cli/__init__.py`: added `_raw_source_name(module)` (raw provenance — FORMULA:
+  `owner_qn::ca.name`; calc-usage: `calc_def_qualified_name`) and
+  `_check_duplicate_output_paths(modules)` (two key spaces: module/stencil python path, schema
+  `calc_def_name.lower()`; only multi-output modules for schemas). Wired as **Step 1.5** in
+  `run_codegen`, after the graph-built log, **before `_clear_output_directory`**. Raises
+  `CodeGenerationError` naming both raw sources + shared path. Error keyed on raw-source identity,
+  so multiple usages of one calc def (same path, same source) do NOT false-positive — only
+  distinct raw names colliding do.
+- `generation/registry.py`: `_resolve_class_name_collisions` post-alias re-check (REQ-REG-08) —
+  re-group by aliased class_name, `raise ValueError("...grandparent collision...")` on any residual
+  >1 group. **Hard fail-fast** per the Phase 0 CLEAN gate.
+- New tests: `tests/unit/test_duplicate_path_failfast.py` (3: module-path, schema-key,
+  same-source-no-collision) and `tests/unit/test_sc11_recheck.py` (2: grandparent raises, distinct
+  parents alias cleanly).
+**Validation:** full suite **1880 passed** / 4 skipped / 5 xfailed (1870 + 10 new). Invariance gate
+holds — the pre-pass raises on **no** committed model and the SC-11 re-check fires on none (Phase 0
+proved both absent). ruff 21; mypy **109** (added `PipelineModule` to the TYPE_CHECKING block and
+annotated the two new functions to hold the baseline — an interim run hit 112 before annotation).
+**Issues:** mypy rose to 112 on first pass (untyped `module`/`modules` params → Any); fixed by
+annotating. **Deviations:** the fail-fast raises `CodeGenerationError` (the established zero-output
+precedent, `pipeline_context.py:47`), not a literal `GenerationError` — the plan stencil's
+`GenerationError` was a loose name; `CodeGenerationError` is the real class. SC-11 re-check raises
+`ValueError` (matches the surrounding `registry.py` collision-handling convention).
 
 ### Phase 4 Completion
-**Completed:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-05.
+**Changes Made:**
+- **Doc 15** (`15-naming-conventions.md`): added REQ-NC-08 (derivation sanitize) + REQ-NC-09
+  (duplicate-path fail-fast) to the table; §8 now notes the FORMULA module_eqn sites use
+  `sanitize_qualified_name` (not a bare replace) and the leaf comes from `python_name`.
+- **Doc 20** (`20-module-registry-generation.md`): added REQ-REG-08 (post-alias re-check) to the
+  table; Design-Constraints §now records SC-11 as confirmed/documented/tested with the residual
+  grandparent hole closed as a hard fail-fast, AST rewrite deferred.
+- **Close-out** (`close-out.md`, NEW): verification matrix, SC-11 closure, ⚠️ Item 7 lockstep
+  obligation, fusion-tea retirement note, agentic-mbse impact (Item 12), deviations.
+**Validation:** docs render (markdown tables well-formed); REQ IDs unique (NC-08/09, REG-08); full
+suite green; ruff 21 / mypy 109 unchanged.
+**Issues:** None. **Deviations:** None (carry-through obligations recorded, not executed — Item 12
+owns the agentic-mbse edits; the orchestrator commits).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Complete
 </content>
 </invoke>

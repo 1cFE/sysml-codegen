@@ -14,6 +14,8 @@ Authoritative sources: `core/qualified_names.py`, `core/identifier_types.py`.
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `get_channel_name()` returns `f"{eqn}__{output_attr}"` which is a PQN |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→`_`, collapse `_` runs, strip edge `_`, reserved-word suffix | Unit test on each transform rule |
 | REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see [10-output-registry](10-output-registry.md) |
+| REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `ModuleType.from_sysml` / `PythonModulePath.from_sysml` sanitize per segment; FORMULA module_eqn sites use `sanitize_qualified_name()`; conformance: `test_alias_agg_probe_generation`, `test_formula_quoted_owner` |
+| REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path, across all three write key spaces (modules, stencils, schemas) | `_check_duplicate_output_paths()` runs before `_clear_output_directory`; conformance: `test_duplicate_path_failfast` |
 
 ## 1. SysML Qualified Name (SysML QN)
 
@@ -148,6 +150,17 @@ Reverse: `python_to_sysml_qualified_name()`: `replace("__", "::")`.
 - Append `_` to Python reserved words (`class`, `def`, `import`, `from`, `return`, `yield`)
 
 The `__` separator is applied *after* sanitization, so it is never collapsed.
+
+`sysml_to_python_qualified_name()` itself does **not** sanitize — it is a bare
+separator swap kept for the QN-**matching** sites that compare against raw keys.
+The name-**emission** sites (the FORMULA module_eqn: `output_registry_builder.py`
+producer + `graph_builder.py` consumer/`part_eqn`, and the EXPOSE_PURE
+normalization) use `sanitize_qualified_name()` — split on `::`, `sanitize_name`
+each segment, join with `__` — so a quoted owner (`Lib::'Margin Part'`) emits a
+valid identifier (`Lib__Margin_Part`) instead of leaking quotes (REQ-NC-08). The
+FORMULA module_eqn leaf is built from `ca.python_name`, never by re-sanitizing
+`ca.name`, so the registry-produced and graph-consumed channels are identical by
+construction.
 
 ## 9. Concrete Trace Example
 

@@ -105,6 +105,22 @@ def sysml_to_python_qualified_name(sysml_qname: str) -> str:
     return sysml_qname.replace("::", "__")
 
 
+def sanitize_qualified_name(sysml_qname: str) -> str:
+    """Per-segment sanitize a ``::`` qualified name into a ``__`` EQN.
+
+    Splits on ``::``, applies ``sanitize_name`` to each segment, and joins with
+    the ADR-003 ``__`` separator. Unlike ``sysml_to_python_qualified_name`` (a
+    bare separator swap), this sanitizes each segment, so quoted SysML names
+    (``Lib::'Margin Part'`` -> ``Lib__Margin_Part``) become valid identifiers.
+
+    Apply exactly ONCE, at the ``::``-form -> ``__``-form boundary. It is NOT
+    re-entrant on a ``__``-joined string: ``sanitize_name``'s ``_+`` collapse
+    would eat the ``__`` separator. Idempotence holds per-segment, not across
+    the join.
+    """
+    return "__".join(sanitize_name(seg) for seg in sysml_qname.split("::"))
+
+
 def python_to_sysml_qualified_name(python_qname: str) -> str:
     """Convert Python-safe qualified name ('__' separator) to SysML ('::' separator)."""
     return python_qname.replace("__", "::")
@@ -128,6 +144,7 @@ __all__ = [
     "get_module_name",
     "get_channel_name",
     "sysml_to_python_qualified_name",
+    "sanitize_qualified_name",
     "python_to_sysml_qualified_name",
     "extract_simple_name",
 ]
