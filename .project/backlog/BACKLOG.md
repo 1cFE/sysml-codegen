@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-02-22
+**Last Updated**: 2026-07-05
 
 ---
 
@@ -29,7 +29,8 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. See `.project/concepts/agentic-mbse-push-down-design.md`. |
+| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | Draft | Fix the 11 fusion-tea findings (SC-1–SC-11) + 6 research-discovered defects: baseline repair, silent-failure diagnostics, return-style/retyping/quoted-name support, snapshot CLI (license mitigation, expires 2026-08-06), staged cross-part wiring (gates fusion-tea MFE epic), agentic-mbse sync throughout. 12 items, ~13–16 days. See `epic_upstream_findings.md`. Items: [ ] 1 baseline+diagnostics [ ] 2 snapshot CLI [ ] 3 SC-2 [ ] 4 SC-3 [ ] 5 SC-4 [ ] 6 SC-6 [ ] 7 SC-8 [ ] 8 plant fixtures [ ] 9 SC-5 pre-fill [ ] 10 SC-5 wiring [ ] 11 SC-7 surfacing [ ] 12 agentic-mbse sync |
+| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing note: UPSTREAM-FINDINGS Item 6 (expression reconstruction fix) must land before Phase 1 moves expression_utils.** See `.project/concepts/agentic-mbse-push-down-design.md`. |
 
 ---
 
