@@ -85,9 +85,14 @@ Suite 1857 passed / 4 skipped / 5 xfailed; mypy 109, ruff 21 (== baseline).
 
 ### UPSTREAM-FINDINGS Item 4: Part-Usage Type Indexing (SC-3)
 
-**Status**: **Implementation Complete** (2026-07-05, uncommitted — orchestrator commits). Pending audit.
+**Status**: **Audited PASS / Certify** (2026-07-05, commit 82b70b8). All 3 plan phases verified;
+all 9 spec success criteria met on committed evidence. FIX 2 fallback deviation verified sound
+(fires only when owned FeatureTyping is absent → cannot reach retyped usages). Two verification
+limits: suite/mypy/ruff not re-run (sandbox blocked `uv run`) — green rests on recorded gate
+(1870/4/5; ruff 21; mypy 109 == baseline) + direct snapshot inspection; live-layer tests skip
+without a license (offline mirrors all verified against the committed snapshot).
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Spec / Design / Plan**: `.project/active/type-indexing/{spec,design,plan}.md`
+**Spec / Design / Plan / Audit**: `.project/active/type-indexing/{spec,design,plan,audit}.md`
 
 Retyped part usages (`part :>> x : Subtype`) now instantiate their subtype's template
 calcs instead of silently dropping them. Fixed the first-type bug in two places

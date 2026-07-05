@@ -180,7 +180,7 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 
 ---
 
-### Item 4: Part-Usage Type Indexing (SC-3) [1 day]
+### Item 4: Part-Usage Type Indexing (SC-3) [1 day] ✅
 
 **Type**: Implementation
 **Effort**: 1 day (spec 1.5h, design 1.5h, plan 1h, execute 4–6h)
@@ -199,10 +199,10 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 - Inherited templates reaching *plain* subtype-typed usages (needs a supertype-chain walk; record as a note for the MFE epic, not this item)
 
 **Success Criteria**:
-- [ ] `part :>> driver : 'HIF Driver'` instantiates HIF-owned template calcs (verified on fusion-tea models or the new fixture)
-- [ ] Existing baselines byte-identical
-- [ ] Collision case covered by a test (warning or deterministic tiebreak)
-- [ ] agentic-mbse impact recorded
+- [x] `part :>> driver : 'HIF Driver'` instantiates HIF-owned template calcs (verified on fusion-tea models or the new fixture)
+- [x] Existing baselines byte-identical
+- [x] Collision case covered by a test (warning or deterministic tiebreak)
+- [x] agentic-mbse impact recorded
 
 **Deliverables**: `.project/active/type-indexing/{spec,design,plan}.md`, retyping fixture, doc updates (doc 25, modeling-assumptions §5)
 

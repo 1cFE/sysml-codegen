@@ -98,11 +98,23 @@ orchestrator (`cli/__init__.py:717-749`, where the fail-fast pre-pass slots in),
 - **B1.** A per-segment sanitize is a no-op on every segment without quotes or special
   characters. *If false → existing snapshots/baselines change, breaking the invariance
   claim the whole direction rests on.*
-- **B2.** `sanitize_name(ca.name) == ca.python_name` for FORMULA computed attributes —
-  the channel *produced* at `output_registry_builder.py:124` (built from `python_name`)
-  and *consumed* at `graph_builder.py:745` (built from `ca.name` via the helper) coincide
-  only under this equality. *If false → a "sanitized-but-mismatched" wire that `ast.parse`
-  passes but never resolves; the new fixture's produced≠consumed assertion catches it.*
+- **B2.** With M1 applied, producer/consumer channel coincidence is **structural, not a
+  bet**: both the *produced* channel (`output_registry_builder.py:124`) and the *consumed*
+  channel (`graph_builder.py:745/789`) build the module_eqn leaf from the same
+  `ca.python_name`. The residual bet is only **"no derivation site was missed."** *If false
+  → a "sanitized-but-mismatched" wire that `ast.parse` passes but never resolves; the new
+  fixture's resolved-channel==registered-channel assertion catches it.*
+  - **Why this replaces the old bet.** `ca.python_name` is produced by a *second*,
+    divergent sanitizer — `expression_compiler._sanitize_name`
+    (`expression_compiler.py:167`, consumed at `computed_attribute_extractor.py:226`) —
+    which **drops the reserved-word suffix** that `core.sanitize_name` applies
+    (`expression_compiler.py:174-175` says so explicitly). So for a FORMULA attr whose name
+    sanitizes to a keyword (`class/def/import/from/return/yield`), `core.sanitize_name(name)`
+    → `class_` but `python_name` → `class`. Re-sanitizing `ca.name` through the helper at
+    the consumer would produce `class_`, mismatching the producer's `class` — a wire that
+    matches *today* (both raw) and would **break after the fix**. Building the leaf directly
+    from `python_name` (M1) makes the two sides identical by construction and erases the
+    keyword edge. The two sanitizers are flagged for eventual consolidation (out of scope).
 - **B3.** The `::` raw QN is the sole extraction-boundary form; no downstream consumer
   reads an emitted identifier expecting the raw quoted spelling. *If false → sanitizing
   emission breaks a consumer that matched on the raw form (this is the Item 7 boundary —
@@ -153,16 +165,22 @@ the already-sanitized identifiers.
 2. **Extraction.** No capture code runs; no snapshot is re-captured. The one new fixture
    is an *additive* live capture, not a re-capture of the 11 existing snapshots.
 
-**The fail-fast pre-pass** sits in the generation orchestrator (`cli/__init__.py`),
-after the computation graph is built (`:707`) and before `_generate_schemas` (`:723`).
-It iterates `ctx.computation_graph.modules` once, derives every output path in both key
-spaces, and raises on the first collision — before any file is written.
+**The fail-fast pre-pass** sits in the generation orchestrator (`cli/__init__.py`), after
+the computation graph is built (`:707`) and **before `_clear_output_directory` (`:709`)** —
+so a collision error fires before any existing output is wiped or any file is written. It
+iterates `ctx.computation_graph.modules` once, derives every output path in both key
+spaces, and raises on the first collision.
 
 ## Required Invariants
 
-- **INV-1.** For any QN whose every segment matches `[A-Za-z0-9_]+` (no quotes, no
-  specials), `sanitize_qualified_name(qn) == sysml_to_python_qualified_name(qn)`. (This is
-  what keeps all baselines byte-identical.)
+- **INV-1 (corpus-scoped, not algebraic).** `sanitize_name` is the **identity** on every
+  segment appearing in the 11 committed snapshots — verified by scan, not by regex. It is
+  NOT identity on all of `[A-Za-z0-9_]+`: `value_`, `_x`, `a__b`, and `class` all match
+  that regex yet `sanitize_name` changes them (edge-underscore strip, `_+` collapse,
+  reserved-word suffix). The byte-identical guarantee holds because no committed segment has
+  a leading/trailing underscore, an internal `__` run, or is a Python keyword. The plan MUST
+  re-run this scan (Item 4 churn) and the new FORMULA fixture's *unquoted* segments MUST
+  avoid these accidental-change forms (see M3 in Validation Approach).
 - **INV-2.** `sanitize_qualified_name` is applied **exactly once**, at the `::`-form → `__`-
   form boundary. It is NOT re-entrant on a `__`-joined string (the `_+`→`_` collapse in
   `sanitize_name` would eat the separator). Idempotence holds per-segment
@@ -173,8 +191,10 @@ spaces, and raises on the first collision — before any file is written.
 - **INV-4.** No EXISTING snapshot (all 11) or baseline (all 4) changes — including
   `alias_agg_probe`'s own snapshot, which holds raw quoted QNs the fix never re-captures.
 - **INV-5.** For a FORMULA computed attribute, the channel produced by the registry
-  builder equals the channel consumed by the graph builder (B2). The new fixture asserts
-  this by name equality, not just `ast.parse`.
+  builder equals the channel consumed by the graph builder — structural under M1 (both
+  build the leaf from `ca.python_name`). The new fixture asserts the *resolved* input
+  channel equals the *registered canonical* channel (the path resolved, not just two
+  strings compared).
 
 ## Component Overview
 
@@ -184,12 +204,18 @@ spaces, and raises on the first collision — before any file is written.
 - **`ModuleType.from_sysml` / `PythonModulePath.from_sysml`** (`core/identifier_types.py`)
   — sanitize element name and package segments inline (`sanitize_name` per segment, then
   `.lower()` for path/namespace). Class name preserves case: `f"{sanitize_name(elem)}Module"`.
-- **FORMULA module_eqn sites** — `output_registry_builder.py:124`,
-  `graph_builder.py:745/789/818`: swap `sysml_to_python_qualified_name(...)` →
-  `sanitize_qualified_name(...)`. `graph_builder.py:271-275` collapses to a helper call.
+- **FORMULA module_eqn sites** — the **owner-QN** segments go through
+  `sanitize_qualified_name`; the **leaf** is built from `ca.python_name` **directly** (M1),
+  not by re-sanitizing `ca.name`. So `output_registry_builder.py:124` (already uses
+  `python_name`) and `graph_builder.py:745/789` become
+  `f"{sanitize_qualified_name(owner)}__{ca.python_name}"` — identical by construction.
+  `graph_builder.py:818` (`part_eqn`, no leaf) is a straight helper swap.
+  `graph_builder.py:271-275` collapses to a helper call. The module_type/class-name at
+  `:791` (via `derive_module_type`→`from_sysml` on `ca.name`) is a *different* identifier
+  and need not equal `python_name` — it stays sanitized through `from_sysml`.
 - **`_check_duplicate_output_paths(modules)`** — new pre-pass in `cli/__init__.py`, called
-  from the generate flow between `:707` and `:723`. Raises with both source names + shared
-  path on collision.
+  **before `_clear_output_directory` (`:709`)** so a collision never wipes existing output
+  first (m2). Raises with both raw source names + shared path on collision.
 - **SC-11 re-check** — extends `_resolve_class_name_collisions` (`registry.py:60-129`):
   after aliasing, re-group by aliased class name; if any group still has >1 member, WARN or
   raise per the static-scan gate (B4).
@@ -221,14 +247,18 @@ guard sees the pre-lowercased form — matching `build_element_qualified_name`'s
 per-segment behavior (`qualified_names.py:57`). Do not lower-then-sanitize; it changes the
 reserved-word branch for names like `Class`.
 
-**The two FORMULA module_eqn constructions differ and must stay consistent (B2/INV-5):**
-- `output_registry_builder.py:124`: `sanitize_qualified_name(owner) + "__" + ca.python_name`
-- `graph_builder.py:745`: `sanitize_qualified_name(f"{owner}::{ca.name}")`
-  = `sanitize_qualified_name(owner) + "__" + sanitize_name(ca.name)`
+**Build the FORMULA module_eqn leaf from `ca.python_name`, never from `ca.name` (M1).**
+Make producer and consumer identical by construction:
+- `output_registry_builder.py:124` (producer): already
+  `f"{sanitize_qualified_name(owner)}__{ca.python_name}"`.
+- `graph_builder.py:745/789` (consumer / module identity): build the **same** way —
+  `f"{sanitize_qualified_name(owner)}__{ca.python_name}"`. Do **not** write
+  `sanitize_qualified_name(f"{owner}::{ca.name}")`; that routes the leaf through
+  `core.sanitize_name(ca.name)`, which diverges from `python_name` on keyword names (see
+  B2). Only the owner segments go through the helper; the leaf is `python_name`.
 
-They coincide iff `sanitize_name(ca.name) == ca.python_name`. The fixture locks this; a
-missed derivation site or a `python_name`≠`sanitize_name(name)` drift breaks the wire
-silently under `ast.parse`.
+This makes B2 structural: a missed site (not a keyword collision) is the only remaining
+failure mode, and the fixture's resolved==registered channel assertion is the lock.
 
 **Fail-fast key spaces (two, three write paths):**
 - **Modules + stencils** — one key: `_get_python_path(module).full_path` (equivalently the
@@ -236,9 +266,18 @@ silently under `ast.parse`.
   `_get_python_path` output (`cli/__init__.py:258/260`), so a module-key collision implies
   a stencil collision — one check covers both. Verify no stencil path is derived elsewhere.
 - **Schemas** — separate key: `module.calc_def_name.lower()`, only for modules with ≥2
-  outputs (`:175` skip). `calc_def_name` is sanitized at extraction (`usage_extractor.py:573`),
-  so the filename itself is clean; the collision is that `.lower()` maps `Margin_Calc` and
-  `margin_calc` to one `margin_calc_output.py` even when module paths differ.
+  outputs (`:175` skip). For calc-usage modules `calc_def_name` is sanitized at extraction
+  (`usage_extractor.py:573` on current HEAD — Item 4 churn, re-anchor at implement), so the
+  filename is clean; the collision is that `.lower()` maps `Margin_Calc` and `margin_calc`
+  to one `margin_calc_output.py` even when module paths differ. (FORMULA modules carry raw
+  `calc_def_name=ca.name` but are single-output, so they never reach the schema pass.)
+
+**Raw-name provenance for the error text (m3).** After sanitize the colliding modules share
+an identifier, so the message must recover each raw spelling from `PipelineModule`:
+`calc_def_qualified_name` (raw) for calc-usage modules, and for FORMULA modules
+`calc_def_qualified_name=ca.owning_part_qualified_name` + `calc_def_name=ca.name` (both raw,
+verified populated at the FORMULA `PipelineModule(...)` construction in `graph_builder.py`
+~`:890-892`). Both fields are non-None for every colliding module type.
 
 **Error text (V-style, names BOTH sources):**
 ```

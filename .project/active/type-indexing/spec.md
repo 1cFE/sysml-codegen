@@ -1,6 +1,6 @@
 # Spec: Part-Usage Type Indexing (SC-3)
 
-**Status:** Implementation Complete (2026-07-05) — all 3 plan phases landed; suite 1870 passed, baseline content zero-diff. Pending audit.
+**Status:** Audited PASS / Certify (2026-07-05, commit 82b70b8) — all 3 plan phases landed; suite 1870 passed, baseline content zero-diff. All 9 success criteria verified.
 **Owner:** Reid W
 **Created:** 2026-07-05
 **Complexity:** MEDIUM
@@ -47,34 +47,34 @@ tested pattern.
 
 ## Success Criteria
 
-- [ ] A retyping fixture where `part :>> driver : 'HIF Driver'` (with `HIF Driver :> IFE Driver`)
+- [x] A retyping fixture where `part :>> driver : 'HIF Driver'` (with `HIF Driver :> IFE Driver`)
       instantiates the **HIF-owned** template calcs — verified end-to-end through the
       pipeline on the new fixture. (fusion-tea models at `~/1cfe/fusion-tea` are readable
       for reference shapes.)
-- [ ] The retyped usage still instantiates any **supertype-owned** template calcs it
+- [x] The retyped usage still instantiates any **supertype-owned** template calcs it
       instantiated before — supertype-template flow is preserved, *except* where a same-QN
       collision triggers the tiebreak below (see Collision & Multi-Type Policy).
-- [ ] The `usage_type_map` fix resolves a retyped usage's redefinition defaults against the
+- [x] The `usage_type_map` fix resolves a retyped usage's redefinition defaults against the
       correct (declared) PartDef, so the type-aware literal-default branch of
       `_find_literal_redefinition` (`graph_builder.py`, REQ-LVP-01 Strategy 1) matches.
-- [ ] The 4 pipeline baselines (`attr_expr_probe`, `catf_mfe`, `chain_spike`,
+- [x] The 4 pipeline baselines (`attr_expr_probe`, `catf_mfe`, `chain_spike`,
       `solar_battery`) produce a **zero-diff** result when re-run through generation after
       the fix — proven by an actual runtime re-run, not by inspection. (No existing model
       carries a retyping shape, so all-types indexing adds no consequential keys — but this
       must be *shown*, since reasoning-by-inspection is exactly what let SC-3 survive 1,500
       tests.)
-- [ ] The same-named collision case (supertype and subtype own a template calc that
+- [x] The same-named collision case (supertype and subtype own a template calc that
       resolves to the same virtual QN) is covered by a test asserting **both** the
       deterministic winner (most-specific owner) **and** the warning naming both candidates.
-- [ ] The differently-named case (supertype and subtype own differently-named template
+- [x] The differently-named case (supertype and subtype own differently-named template
       calcs) is covered by a test asserting **both instantiate** — this is the intended,
       faithful outcome, not a defect.
-- [ ] New lookup keys are unique by construction and consumer-scope-prefixed (R1 / doc 10);
+- [x] New lookup keys are unique by construction and consumer-scope-prefixed (R1 / doc 10);
       no ambiguous string keys are introduced.
-- [ ] `docs/architecture/reference/25-hierarchy-resolver.md`, `01-extraction.md` (as
+- [x] `docs/architecture/reference/25-hierarchy-resolver.md`, `01-extraction.md` (as
       touched), `modeling-assumptions.md` §5, and the verification matrix are updated with
       the REQ tags below.
-- [ ] "agentic-mbse impact" recorded (see final section).
+- [x] "agentic-mbse impact" recorded (see final section).
 
 ## Known Requirements
 

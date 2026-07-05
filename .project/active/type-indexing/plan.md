@@ -488,4 +488,4 @@ Level-6 "instantiated" now includes retyped usages) — Item 12 executes; no inl
 
 ---
 
-**Status:** Draft → In Progress → **Complete** (all 3 phases landed 2026-07-05; not committed — orchestrator commits).
+**Status:** Draft → In Progress → Complete → **Audited PASS / Certify** (2026-07-05, commit 82b70b8; all 3 phases verified — see `audit.md`).
