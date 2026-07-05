@@ -36,6 +36,18 @@ generation/debug/CI decouple from the syside license (expires 2026-08-06).
 Format versioning + provenance guards; serialize `compilation_results` (SC-10)
 so CalcUsage auto-impl survives a snapshot. Byte-identical to live generation.
 
+### UPSTREAM-FINDINGS Item 3: Return-Style & Bare-Parameter Extraction (SC-2)
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/return-style-extraction/spec.md`
+
+Relax the calc-def member filter (`extractor.py`, both passes) so named `return`
+and bare `in` ReferenceUsage params extract instead of vanishing; anonymous
+`return` gets a specific diagnostic (V8). New four-styles fixture + snapshot +
+conformance tests; reconcile `01-extraction.md`; fix the A-2 skill stencil inline.
+Body-assignment expression capture deferred to a follow-up (rationale in spec).
+
 ### REFACTOR: Incremental Pipeline Refactor
 
 **Status**: In Progress (Phases 0–4 complete)
