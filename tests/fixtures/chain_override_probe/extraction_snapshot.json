@@ -1,6 +1,8 @@
 {
+  "snapshot_format_version": 1,
   "model_name": "chain_override_probe",
-  "captured_at": "2026-02-17T15:03:00.937032+00:00",
+  "captured_at": "2026-07-05T20:48:03.291836+00:00",
+  "compilation_results": {},
   "calc_defs": [
     {
       "name": "SensorCostCalc",
@@ -53,7 +55,7 @@
         }
       ],
       "references": [],
-      "source_file": "chain_override_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 5,
       "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
       "output_expression_asts": null,
@@ -102,7 +104,7 @@
         }
       ],
       "references": [],
-      "source_file": "chain_override_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 13,
       "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
       "output_expression_asts": null,
@@ -148,7 +150,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "chain_override_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 26,
       "parent_part_path": "instrument_design.sensor",
       "qualified_name": "ChainOverrideDesign__instrument_design__sensor__cost_model",
@@ -177,7 +179,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "chain_override_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 37,
       "parent_part_path": "instrument_design",
       "qualified_name": "ChainOverrideDesign__instrument_design__calibration",
@@ -187,13 +189,25 @@
     }
   ],
   "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_override_probe/design.sysml": [
+      {
+        "name": "sensor_base_cost",
+        "sysml_type": "Real",
+        "default_value": "100.0",
+        "unit": null,
+        "source_file": "design.sysml",
+        "source_line": 8,
+        "parent_part": "instrument_design",
+        "qualified_name": "ChainOverrideDesign__instrument_design__sensor_base_cost"
+      }
+    ],
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_override_probe/library.sysml": [
       {
         "name": "total_cost",
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "chain_override_probe/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "ChainOverrideLibrary__SensorCostCalc__total_cost"
@@ -203,22 +217,10 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "chain_override_probe/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 16,
         "parent_part": "",
         "qualified_name": "ChainOverrideLibrary__CalibrationCalc__calibrated_factor"
-      }
-    ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/chain_override_probe/design.sysml": [
-      {
-        "name": "sensor_base_cost",
-        "sysml_type": "Real",
-        "default_value": "100.0",
-        "unit": null,
-        "source_file": "chain_override_probe/design.sysml",
-        "source_line": 8,
-        "parent_part": "instrument_design",
-        "qualified_name": "ChainOverrideDesign__instrument_design__sensor_base_cost"
       }
     ]
   },

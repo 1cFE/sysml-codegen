@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 # All models with extraction snapshots
 SNAPSHOT_MODELS = [
@@ -36,7 +37,7 @@ def pytest_configure(config):
 def extraction_snapshots():
     """Load all extraction snapshots once per session."""
     return {
-        name: load_extraction_snapshot(name)
+        name: load_extraction_snapshot(snapshot_fixture(name))
         for name in SNAPSHOT_MODELS
     }
 

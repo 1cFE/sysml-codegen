@@ -21,14 +21,19 @@ from pathlib import Path
 # Add project root to sys.path so tests.helpers is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import json
+
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
 from sysml_codegen.orchestration.pipeline_builder import (
     _extract_and_filter_computed_attributes,
     _extract_hierarchy_and_rewrite_bindings,
-    build_pipeline_context,
 )
-from tests.helpers.snapshot_serializer import serialize_extraction_snapshot, snapshot_to_json
+from sysml_codegen.snapshot import (
+    capture_snapshot,
+    serialize_extraction_snapshot,
+    snapshot_to_json,
+)
 
 FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 
@@ -90,32 +95,14 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         aggregation_expressions=scoped_agg_data,
         computed_attributes=computed_attrs,
         channel_aliases=all_aliases,
-        fixtures_dir=FIXTURES_DIR,
+        compilation_results={},  # extraction-only: no graph, no compilation
+        output_dir=model_path,
     )
 
 
-def _capture_full_pipeline(model_name: str, model_path: Path) -> dict:
-    """Capture extraction data via the full pipeline context."""
-    ctx = build_pipeline_context([model_path])
-
-    return serialize_extraction_snapshot(
-        model_name=model_name,
-        calc_defs=ctx.calc_defs,
-        calc_usages=ctx.calc_usages,
-        design_attributes=ctx.design_attributes,
-        hierarchy_data=ctx.hierarchy_data,
-        aggregation_expressions=ctx.aggregation_expressions,
-        computed_attributes=ctx.computed_attributes,
-        channel_aliases=ctx.channel_aliases,
-        fixtures_dir=FIXTURES_DIR,
-    )
-
-
-def _save_and_report(model_name: str, model_path: Path, snapshot: dict) -> None:
-    """Save snapshot to disk and print summary."""
+def _report(model_path: Path, snapshot: dict) -> None:
+    """Print a one-model capture summary."""
     output_path = model_path / "extraction_snapshot.json"
-    output_path.write_text(snapshot_to_json(snapshot))
-
     n_calc_defs = len(snapshot["calc_defs"])
     n_calc_usages = len(snapshot["calc_usages"])
     n_bindings = sum(len(cu["bindings"]) for cu in snapshot["calc_usages"])
@@ -135,15 +122,20 @@ def _save_and_report(model_name: str, model_path: Path, snapshot: dict) -> None:
 
 
 def main() -> None:
+    # Full-pipeline models go through the promoted, supported capture path so
+    # there is no second copy of the capture logic (INV-3 spirit).
     for model_name, model_path in MODELS.items():
         print(f"Processing {model_name} from {model_path}...")
-        snapshot = _capture_full_pipeline(model_name, model_path)
-        _save_and_report(model_name, model_path, snapshot)
+        out = capture_snapshot([model_path], model_path / "extraction_snapshot.json")
+        _report(model_path, json.loads(out.read_text()))
 
+    # Extraction-only fixtures cannot build the full pipeline; capture directly
+    # and write the summary here.
     for model_name, model_path in EXTRACTION_ONLY_MODELS.items():
         print(f"Processing {model_name} (extraction-only) from {model_path}...")
         snapshot = _capture_extraction_only(model_name, model_path)
-        _save_and_report(model_name, model_path, snapshot)
+        (model_path / "extraction_snapshot.json").write_text(snapshot_to_json(snapshot))
+        _report(model_path, snapshot)
 
     print(f"\nDone. Snapshots saved to {FIXTURES_DIR}/*/extraction_snapshot.json")
 

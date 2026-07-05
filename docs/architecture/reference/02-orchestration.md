@@ -188,6 +188,10 @@ See [13-aggregation-scoping](13-aggregation-scoping.md) for full detail.
 
 ## PipelineContext
 
+> A `PipelineContext` can also be rebuilt from a captured JSON snapshot instead of
+> live extraction (`build_pipeline_context_from_snapshot`), enabling license-free
+> `generate --from-snapshot`. See [27-snapshot-generation](27-snapshot-generation.md).
+
 The `PipelineContext` dataclass carries all pipeline state. Key fields:
 
 | Field | Type | Source step |

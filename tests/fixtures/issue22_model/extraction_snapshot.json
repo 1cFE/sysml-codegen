@@ -1,6 +1,51 @@
 {
+  "snapshot_format_version": 1,
   "model_name": "issue22_model",
-  "captured_at": "2026-02-17T15:03:00.920891+00:00",
+  "captured_at": "2026-07-05T20:48:03.273382+00:00",
+  "compilation_results": {
+    "WidgetCostCalc": {
+      "calc_def_name": "WidgetCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.base_cost * inputs.markup_factor)",
+          "input_refs": [
+            "base_cost",
+            "markup_factor"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "cost"
+      ]
+    },
+    "MarginCalc": {
+      "calc_def_name": "MarginCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "margin",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.component_total * inputs.margin_rate)",
+          "input_refs": [
+            "component_total",
+            "margin_rate"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "margin"
+      ]
+    }
+  },
   "calc_defs": [
     {
       "name": "WidgetCostCalc",
@@ -54,7 +99,7 @@
         }
       ],
       "references": [],
-      "source_file": "issue22_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 11,
       "source_hash": "671bee7095c1fde952da6ac5999bcb714fcb21535440275020a209d8e363e82e",
       "output_expression_asts": null,
@@ -116,7 +161,7 @@
         }
       ],
       "references": [],
-      "source_file": "issue22_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 19,
       "source_hash": "671bee7095c1fde952da6ac5999bcb714fcb21535440275020a209d8e363e82e",
       "output_expression_asts": null,
@@ -152,7 +197,7 @@
       "unbound_params": [
         "markup_factor"
       ],
-      "source_file": "issue22_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 30,
       "parent_part_path": "plant.assembly.widget",
       "qualified_name": "Issue22Design__plant__assembly__widget__cost_model",
@@ -194,7 +239,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "issue22_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 46,
       "parent_part_path": "plant.assembly",
       "qualified_name": "Issue22Design__plant__assembly__margin_calc",
@@ -210,7 +255,7 @@
         "sysml_type": "Real",
         "default_value": "1.75",
         "unit": null,
-        "source_file": "issue22_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 13,
         "parent_part": "",
         "qualified_name": "Issue22Library__WidgetCostCalc__markup_factor"
@@ -220,7 +265,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "issue22_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 15,
         "parent_part": "",
         "qualified_name": "Issue22Library__WidgetCostCalc__cost"
@@ -230,7 +275,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "issue22_model/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 23,
         "parent_part": "",
         "qualified_name": "Issue22Library__MarginCalc__margin"

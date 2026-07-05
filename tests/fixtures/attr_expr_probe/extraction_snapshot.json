@@ -1,6 +1,62 @@
 {
+  "snapshot_format_version": 1,
   "model_name": "attr_expr_probe",
-  "captured_at": "2026-02-17T15:03:00.897912+00:00",
+  "captured_at": "2026-07-05T20:48:03.259572+00:00",
+  "compilation_results": {
+    "ScaleCalc": {
+      "calc_def_name": "ScaleCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "result",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.value * inputs.factor)",
+          "input_refs": [
+            "value",
+            "factor"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "result"
+      ]
+    },
+    "SplitCalc": {
+      "calc_def_name": "SplitCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "half",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.total / 2.0)",
+          "input_refs": [
+            "total"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "quarter",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.total / 4.0)",
+          "input_refs": [
+            "total"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "half",
+        "quarter"
+      ]
+    }
+  },
   "calc_defs": [
     {
       "name": "ScaleCalc",
@@ -53,7 +109,7 @@
         }
       ],
       "references": [],
-      "source_file": "attr_expr_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 5,
       "source_hash": "f60a8b6e1f5d98caa440ccacaa252ce099249c6110ab16534d460ba431d6421a",
       "output_expression_asts": null,
@@ -116,7 +172,7 @@
         }
       ],
       "references": [],
-      "source_file": "attr_expr_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 12,
       "source_hash": "f60a8b6e1f5d98caa440ccacaa252ce099249c6110ab16534d460ba431d6421a",
       "output_expression_asts": null,
@@ -163,7 +219,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "attr_expr_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 98,
       "parent_part_path": "",
       "qualified_name": "AttrExprProbeDesign__probe_design__scale_calc",
@@ -192,7 +248,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "attr_expr_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 110,
       "parent_part_path": "",
       "qualified_name": "AttrExprProbeDesign__probe_design__split",
@@ -202,45 +258,13 @@
     }
   ],
   "design_attributes": {
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/attr_expr_probe/library.sysml": [
-      {
-        "name": "result",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "attr_expr_probe/library.sysml",
-        "source_line": 8,
-        "parent_part": "",
-        "qualified_name": "AttrExprProbeLibrary__ScaleCalc__result"
-      },
-      {
-        "name": "half",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "attr_expr_probe/library.sysml",
-        "source_line": 14,
-        "parent_part": "",
-        "qualified_name": "AttrExprProbeLibrary__SplitCalc__half"
-      },
-      {
-        "name": "quarter",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "attr_expr_probe/library.sysml",
-        "source_line": 15,
-        "parent_part": "",
-        "qualified_name": "AttrExprProbeLibrary__SplitCalc__quarter"
-      }
-    ],
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/attr_expr_probe/design.sysml": [
       {
         "name": "length",
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 10,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__length"
@@ -250,7 +274,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 11,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__width"
@@ -260,7 +284,7 @@
         "sysml_type": "Real",
         "default_value": "3.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 12,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__height"
@@ -270,7 +294,7 @@
         "sysml_type": "Real",
         "default_value": "12.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 13,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__rate"
@@ -280,7 +304,7 @@
         "sysml_type": "Real",
         "default_value": "1.15",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 14,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__markup"
@@ -290,7 +314,7 @@
         "sysml_type": "Real",
         "default_value": "2600.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 17,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__p_fusion"
@@ -300,7 +324,7 @@
         "sysml_type": "Real",
         "default_value": "50.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 18,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__p_input"
@@ -310,7 +334,7 @@
         "sysml_type": "Real",
         "default_value": "0.46",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 19,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__eta_thermal"
@@ -320,7 +344,7 @@
         "sysml_type": "Real",
         "default_value": "0.85",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 20,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__eta_direct"
@@ -330,7 +354,7 @@
         "sysml_type": "Real",
         "default_value": "1.1",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 21,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__m_neutron"
@@ -340,7 +364,7 @@
         "sysml_type": "Real",
         "default_value": "0.06",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 22,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__f_pump"
@@ -350,7 +374,7 @@
         "sysml_type": "Real",
         "default_value": "0.5",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 23,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__eta_pump"
@@ -360,7 +384,7 @@
         "sysml_type": "Real",
         "default_value": "0.03",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 24,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__f_subsystem"
@@ -370,7 +394,7 @@
         "sysml_type": "Real",
         "default_value": "4.2",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 27,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__r_inner"
@@ -380,7 +404,7 @@
         "sysml_type": "Real",
         "default_value": "4.4",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 28,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__r_outer"
@@ -390,7 +414,7 @@
         "sysml_type": "Real",
         "default_value": "3.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 29,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__r_major"
@@ -400,7 +424,7 @@
         "sysml_type": "Real",
         "default_value": "3.0",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 30,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__kappa"
@@ -410,7 +434,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 104,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__scaled_area"
@@ -420,7 +444,7 @@
         "sysml_type": "Real",
         "default_value": "scale_calc.result",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 107,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__scale_result"
@@ -430,7 +454,7 @@
         "sysml_type": "Real",
         "default_value": "split.half",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 113,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__half_vol"
@@ -440,10 +464,42 @@
         "sysml_type": "Real",
         "default_value": "split.quarter",
         "unit": null,
-        "source_file": "attr_expr_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 114,
         "parent_part": "probe_design",
         "qualified_name": "AttrExprProbeDesign__probe_design__quarter_vol"
+      }
+    ],
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/attr_expr_probe/library.sysml": [
+      {
+        "name": "result",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 8,
+        "parent_part": "",
+        "qualified_name": "AttrExprProbeLibrary__ScaleCalc__result"
+      },
+      {
+        "name": "half",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 14,
+        "parent_part": "",
+        "qualified_name": "AttrExprProbeLibrary__SplitCalc__half"
+      },
+      {
+        "name": "quarter",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 15,
+        "parent_part": "",
+        "qualified_name": "AttrExprProbeLibrary__SplitCalc__quarter"
       }
     ]
   },

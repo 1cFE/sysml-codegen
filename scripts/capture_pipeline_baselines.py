@@ -7,12 +7,18 @@ These baselines sit alongside the existing YAML baselines.
 Baselines are captured through the SNAPSHOT serialization boundary — the same
 path the byte-exact conformance tests use (test_factory_purity rebuilds graphs
 from committed extraction snapshots and compares raw model_dump against these
-files). Snapshot-flavored output differs from a live build in two known ways:
-`source_file` is fixtures-relative (not parser-absolute) and
-`compilation_results` is absent, so `compilability` stays "unknown" and
-`auto_impl_context` stays null. Item 2 (snapshot-driven generation) will add
-compilation_results to the snapshot format; regenerating these baselines then
-is a deliberate, reviewed rev.
+files).
+
+Item 2 (snapshot-driven generation) revved the snapshot format: the loader now
+re-absolutizes `source_file` and deserializes `compilation_results`. Two
+deliberate, reviewed effects on these baselines follow, and are EXPECTED when
+regenerating after re-capturing the extraction snapshots:
+  - `compilability` flips from "unknown" to its real value and `auto_impl_context`
+    becomes non-null for expression-bearing CalcUsage modules (SC-10).
+  - `source_file` is relativized to the snapshot's own directory (basenames),
+    stripped of the machine-specific absolute prefix so baselines stay portable.
+Any OTHER field changing is an unintended output shift — investigate before
+committing.
 
 Requires no syside license (reads committed extraction snapshots).
 
@@ -36,9 +42,7 @@ from sysml_codegen.generation.registry import (
     generate_registry,
 )
 
-from tests.conformance.test_entry_point_classifier import (
-    build_full_graph_from_snapshot,
-)
+from sysml_codegen.snapshot import build_full_graph_from_snapshot
 
 FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 OUTPUT_DIR = FIXTURES_DIR / "baseline_outputs"
@@ -67,7 +71,8 @@ def main() -> None:
 
     for model_name, snapshot_name in MODELS.items():
         print(f"Processing {model_name} from snapshot {snapshot_name}...")
-        graph, _inputs = build_full_graph_from_snapshot(snapshot_name)
+        snapshot_path = FIXTURES_DIR / snapshot_name / "extraction_snapshot.json"
+        graph, _inputs = build_full_graph_from_snapshot(snapshot_path)
 
         # Create output directory
         model_output_dir = OUTPUT_DIR / model_name
@@ -75,6 +80,12 @@ def main() -> None:
 
         # 1. ComputationGraph JSON
         graph_json = graph.model_dump_json(indent=2) + "\n"
+        # The loader re-absolutizes source_file to a machine-specific absolute
+        # path (Item 2 D1). Strip the snapshot's own-directory prefix so the
+        # committed baseline stays portable — relative basenames matching the
+        # snapshot's stored form (no /home/... paths). source_file is the only
+        # absolute path in the graph.
+        graph_json = graph_json.replace(str(snapshot_path.parent) + "/", "")
         graph_path = model_output_dir / "computation_graph.json"
         graph_path.write_text(graph_json)
 

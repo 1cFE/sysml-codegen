@@ -10,9 +10,10 @@ from sysml_codegen.core.qualified_names import get_channel_name, sysml_to_python
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
-snap = load_extraction_snapshot("solar_battery_model")
+snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
 
 # Show all FORMULA computed attributes and their Key_F
 print("=== FORMULA computed attributes ===")

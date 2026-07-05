@@ -40,18 +40,28 @@
         }
       ],
       "execution_order": 0,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "area",
+            "expression": "(inputs.length * inputs.width)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.length * inputs.width)"
+      },
       "calc_def_name": "AreaCalc",
       "calc_def_qualified_name": "ChainSpikeLibrary::AreaCalc",
       "doc_comment": "",
       "calc_expressions": [
         "area = length * width"
       ],
-      "source_file": "chain_spike_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 4
     },
     {
@@ -94,18 +104,28 @@
         }
       ],
       "execution_order": 1,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "total_cost",
+            "expression": "(inputs.area * inputs.rate)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.area * inputs.rate)"
+      },
       "calc_def_name": "CostCalc",
       "calc_def_qualified_name": "ChainSpikeLibrary::CostCalc",
       "doc_comment": "",
       "calc_expressions": [
         "total_cost = area * rate"
       ],
-      "source_file": "chain_spike_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 11
     },
     {
@@ -148,18 +168,28 @@
         }
       ],
       "execution_order": 2,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "cost_per_area",
+            "expression": "(inputs.cost / inputs.area)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.cost / inputs.area)"
+      },
       "calc_def_name": "SummaryCalc",
       "calc_def_qualified_name": "ChainSpikeLibrary::SummaryCalc",
       "doc_comment": "",
       "calc_expressions": [
         "cost_per_area = cost / area"
       ],
-      "source_file": "chain_spike_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 18
     }
   ],

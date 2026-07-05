@@ -359,11 +359,20 @@ def build_computation_graph(
     # This catches transitive binding resolution bugs before TEAx validation
     _validate_channel_references(modules)
 
-    # Step 9: Sort entry-point groups by name (REQ-BASE-06). Groups are derived
-    # in model-discovery order, which shifts between capture machines and reddens
-    # byte-exact baselines. Sorting the graph — not just the rendered YAML — makes
-    # every entry_point_groups consumer deterministic. Group names are unique per
-    # design file, so the sort is total.
+    # Step 9: Sort entry-point groups by name, and the parameters within each
+    # group by qualified_name (REQ-BASE-06). Both the group order and the
+    # within-group parameter order are derived in model-discovery order, which
+    # shifts between runs/machines and reddens byte-exact baselines — and, for
+    # Item 2, breaks live-vs-snapshot byte-identity (SC-1) since the two paths
+    # discover design attributes in different orders. Sorting the graph — not just
+    # the rendered YAML — makes every entry_point_groups consumer deterministic.
+    # Group names are unique per design file and parameter qualified_names are
+    # unique within a group, so both sorts are total.
+    for group in param_groups:  # type: ignore[assignment]
+        # param_groups is the converted ParameterGroup list (params have
+        # qualified_name); the variable is typed from its earlier
+        # DerivedParameterGroup binding, so mypy needs the hints here.
+        group.parameters.sort(key=lambda p: p.qualified_name)  # type: ignore[attr-defined]
     param_groups = sorted(param_groups, key=lambda g: g.name)
 
     return ComputationGraph(

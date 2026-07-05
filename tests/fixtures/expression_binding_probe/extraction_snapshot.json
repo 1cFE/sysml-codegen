@@ -1,6 +1,8 @@
 {
+  "snapshot_format_version": 1,
   "model_name": "expression_binding_probe",
-  "captured_at": "2026-02-17T15:03:00.929037+00:00",
+  "captured_at": "2026-07-05T20:48:03.286053+00:00",
+  "compilation_results": {},
   "calc_defs": [
     {
       "name": "CombinedCostCalc",
@@ -53,7 +55,7 @@
         }
       ],
       "references": [],
-      "source_file": "expression_binding_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 4,
       "source_hash": "d171819a32c036ac1c664c5c8a954e105592e3e0b2d90cb5a7255da36a9d3d61",
       "output_expression_asts": null,
@@ -115,7 +117,7 @@
         }
       ],
       "references": [],
-      "source_file": "expression_binding_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 11,
       "source_hash": "d171819a32c036ac1c664c5c8a954e105592e3e0b2d90cb5a7255da36a9d3d61",
       "output_expression_asts": null,
@@ -164,7 +166,7 @@
         }
       ],
       "references": [],
-      "source_file": "expression_binding_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 18,
       "source_hash": "d171819a32c036ac1c664c5c8a954e105592e3e0b2d90cb5a7255da36a9d3d61",
       "output_expression_asts": null,
@@ -210,7 +212,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "expression_binding_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 18,
       "parent_part_path": "",
       "qualified_name": "ExpressionBindingDesign__expr_probe__cost_calc",
@@ -252,7 +254,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "expression_binding_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 28,
       "parent_part_path": "",
       "qualified_name": "ExpressionBindingDesign__expr_probe__adjusted_calc",
@@ -294,7 +296,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "expression_binding_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 38,
       "parent_part_path": "",
       "qualified_name": "ExpressionBindingDesign__expr_probe__full_cost_calc",
@@ -336,7 +338,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "expression_binding_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 49,
       "parent_part_path": "",
       "qualified_name": "ExpressionBindingDesign__expr_probe__delta_calc",
@@ -365,7 +367,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "expression_binding_probe/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 59,
       "parent_part_path": "",
       "qualified_name": "ExpressionBindingDesign__expr_probe__net_calc",
@@ -375,45 +377,13 @@
     }
   ],
   "design_attributes": {
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/expression_binding_probe/library.sysml": [
-      {
-        "name": "total_with_tax",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "expression_binding_probe/library.sysml",
-        "source_line": 8,
-        "parent_part": "",
-        "qualified_name": "ExpressionBindingLibrary__CombinedCostCalc__total_with_tax"
-      },
-      {
-        "name": "delta",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "expression_binding_probe/library.sysml",
-        "source_line": 15,
-        "parent_part": "",
-        "qualified_name": "ExpressionBindingLibrary__DeltaCalc__delta"
-      },
-      {
-        "name": "result",
-        "sysml_type": "Real",
-        "default_value": "x",
-        "unit": null,
-        "source_file": "expression_binding_probe/library.sysml",
-        "source_line": 21,
-        "parent_part": "",
-        "qualified_name": "ExpressionBindingLibrary__PassthroughCalc__result"
-      }
-    ],
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/expression_binding_probe/design.sysml": [
       {
         "name": "material_cost",
         "sysml_type": "Real",
         "default_value": "100.0",
         "unit": null,
-        "source_file": "expression_binding_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 8,
         "parent_part": "expr_probe",
         "qualified_name": "ExpressionBindingDesign__expr_probe__material_cost"
@@ -423,7 +393,7 @@
         "sysml_type": "Real",
         "default_value": "50.0",
         "unit": null,
-        "source_file": "expression_binding_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 9,
         "parent_part": "expr_probe",
         "qualified_name": "ExpressionBindingDesign__expr_probe__labor_cost"
@@ -433,7 +403,7 @@
         "sysml_type": "Real",
         "default_value": "25.0",
         "unit": null,
-        "source_file": "expression_binding_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 10,
         "parent_part": "expr_probe",
         "qualified_name": "ExpressionBindingDesign__expr_probe__overhead"
@@ -443,10 +413,42 @@
         "sysml_type": "Real",
         "default_value": "0.08",
         "unit": null,
-        "source_file": "expression_binding_probe/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 11,
         "parent_part": "expr_probe",
         "qualified_name": "ExpressionBindingDesign__expr_probe__tax_rate"
+      }
+    ],
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/expression_binding_probe/library.sysml": [
+      {
+        "name": "total_with_tax",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 8,
+        "parent_part": "",
+        "qualified_name": "ExpressionBindingLibrary__CombinedCostCalc__total_with_tax"
+      },
+      {
+        "name": "delta",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 15,
+        "parent_part": "",
+        "qualified_name": "ExpressionBindingLibrary__DeltaCalc__delta"
+      },
+      {
+        "name": "result",
+        "sysml_type": "Real",
+        "default_value": "x",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 21,
+        "parent_part": "",
+        "qualified_name": "ExpressionBindingLibrary__PassthroughCalc__result"
       }
     ]
   },

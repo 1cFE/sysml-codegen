@@ -27,14 +27,22 @@ was bundled into the Item-1 commit (harmless doc, scope-hygiene note).
 
 ### UPSTREAM-FINDINGS Item 2: Snapshot-Driven Generation (SC-9 + SC-10)
 
-**Status**: Spec in progress
+**Status**: Implementation COMPLETE (all 6 phases) — pending audit/PR
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Spec**: `.project/active/snapshot-generation/spec.md`
+**Spec / Design / Plan**: `.project/active/snapshot-generation/{spec,design,plan}.md`
 
 Supported `--from-snapshot` generation path + `snapshot` capture command, so
 generation/debug/CI decouple from the syside license (expires 2026-08-06).
-Format versioning + provenance guards; serialize `compilation_results` (SC-10)
-so CalcUsage auto-impl survives a snapshot. Byte-identical to live generation.
+Delivered: promoted `sysml_codegen.snapshot` package; format versioning +
+provenance/freshness guards; `compilation_results` serialized (SC-10 — CalcUsage
+auto-impl survives); `source_file` relativize-at-capture / lexical-re-absolutize-at-load.
+**SC-1 proven live**: `generate --from-snapshot` byte-identical to
+`generate --models` incl. a symlinked run (empty tree diff). **SC-10 proven**:
+chain_spike stencils auto-implement from the committed snapshot. Reference doc:
+`docs/architecture/reference/27-snapshot-generation.md` (REQ-SNAP-08..19).
+One deviation: completed Item 1's deterministic entry-point sort by also sorting
+parameters within each group (`graph_builder.py:367`) — required for SC-1 byte-identity.
+Suite 1837 passed; mypy 109 / ruff 21 (== baseline). Not committed (orchestrator commits).
 
 ### UPSTREAM-FINDINGS Item 3: Return-Style & Bare-Parameter Extraction (SC-2)
 
@@ -47,6 +55,20 @@ and bare `in` ReferenceUsage params extract instead of vanishing; anonymous
 `return` gets a specific diagnostic (V8). New four-styles fixture + snapshot +
 conformance tests; reconcile `01-extraction.md`; fix the A-2 skill stencil inline.
 Body-assignment expression capture deferred to a follow-up (rationale in spec).
+
+### UPSTREAM-FINDINGS Item 4: Part-Usage Type Indexing (SC-3)
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/type-indexing/spec.md`
+
+Retyped part usages (`part :>> x : Subtype`) instantiate their subtype's template
+calcs instead of silently dropping them. Fix the first-type bug in two places
+(`usage_extractor.py` `_build_part_usage_index`, `hierarchy_resolver.py`
+`usage_type_map`): index/resolve by owned FeatureTyping target plus every
+user-model PartDef in `usage.types`, never by list position. Virtual-QN collision
+tiebreak/warning; retyping fixture + snapshot + conformance tests; 4 pipeline
+baselines byte-identical.
 
 ### REFACTOR: Incremental Pipeline Refactor
 

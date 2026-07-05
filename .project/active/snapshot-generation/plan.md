@@ -162,8 +162,8 @@ print('IMPORT OK license-absent')"
 
 ### Validation
 **Manual (license live):**
-- [ ] B2 symlink diff → `SysML Source:` headers byte-identical.
-- [ ] C1 scrubbed-env import → succeeds.
+- [x] B2 symlink diff → `SysML Source:` headers byte-identical.
+- [x] C1 scrubbed-env import → succeeds.
 
 **What We Know Works After This Phase:**
 The `source_file` reconstruction primitive reproduces the parser's path on a
@@ -236,9 +236,9 @@ def test_no_tests_helpers_snapshot_copies():
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/` → full suite green (same count as before, refactor-only).
-- [ ] `grep -r "tests.helpers.snapshot" src tests scripts` → empty (INV-3).
-- [ ] `uv run mypy src/` and `uv run ruff check src/` → pass.
+- [x] `uv run pytest tests/` → full suite green (1822 passed, 4 skipped, 5 xfailed).
+- [x] `grep -r "tests.helpers.snapshot" src tests scripts` → empty (INV-3).
+- [x] `uv run mypy src/` (109) and `uv run ruff check src/` (21) → == baseline.
 
 **What We Know Works After This Phase:**
 The snapshot machinery lives in `src`, loads from an arbitrary path, and every
@@ -330,16 +330,16 @@ Appendix A (V1/V2/V4 wording).
 
 ### Validation
 **Automated:**
-- [ ] New guard tests (stencil) → pass; error messages name the recapture fix.
-- [ ] `chain_spike` snapshot `compilation_results` non-empty (INV-5).
-- [ ] Freshness/degrade unit tests: mutated source-hash → warning, run continues
+- [x] New guard tests (stencil) → pass; error messages name the recapture fix.
+- [x] `chain_spike` snapshot `compilation_results` non-empty (INV-5).
+- [x] Freshness/degrade unit tests: mutated source-hash → warning, run continues
       (V3); version-current snapshot with no `compilation_results` → warning +
       degrade (V4).
-- [ ] `uv run pytest tests/` → **full suite green** against regenerated snapshots
+- [x] `uv run pytest tests/` → **full suite green** against regenerated snapshots
       + baselines (the atomic gate).
 
 **Manual (license live):**
-- [ ] Review the pipeline-baseline diff: only `compilability` / `auto_impl_context`
+- [x] Review the pipeline-baseline diff: only `compilability` / `auto_impl_context`
       changes (SC-10), no `source_file` absolute-path leakage, no unexpected churn.
 
 **What We Know Works After This Phase:**
@@ -575,26 +575,169 @@ live-license session; Phases 1, 3, 5 are license-free.
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Completed:** —
-**B2 result (exact re-absolutization form proven):** —
-**C1 result (license-absent import):** —
+**Completed:** 2026-07-05
+**B2 result (exact re-absolutization form proven):** PASS. Probe `/tmp/b2_probe.py`
+ran live extraction on a symlinked absolute `--models` path
+(`/tmp/sb_symlink -> tests/fixtures/solar_battery_model`). The parser emits
+`source_file` **preserving the symlink name** (`/tmp/sb_symlink/design.sysml`,
+`/tmp/sb_symlink/library.sysml` — "sb_symlink present: True"). The proven
+re-absolutization form is `Path(os.path.abspath(snapshot_dir / stored))` with
+**no `.resolve()`** — it reproduced both paths byte-for-byte (MATCH: True).
+`.resolve()` would have canonicalized to the real fixtures path and failed the
+byte diff. D8 confirmed. Anchor = the snapshot's own dir (= models-root under
+default `--output`, D5), relativize/re-absolutize against the same dir → exact by
+construction.
+**C1 result (license-absent import):** PASS. `env -u SYSIDE_LICENSE_KEY
+-u SYSIDE_LICENSE -u SYSIDE_LICENSE_FILE uv run python -c "import
+sysml_codegen.analysis.parameter_groups, sysml_codegen.extraction.usage_extractor,
+sysml_codegen.analysis.dependency_backtracker, agentic_mbse.sysml.syside_adapter"`
+→ "IMPORT OK license-absent". The transitive import chain the promoted package
+pulls in is license-free; only *invoking* the parser needs a license.
 
 ### Phase 1 Completion
-**Completed:** —
-**Actual Changes / Issues / Deviations:** —
+**Completed:** 2026-07-05
+**Actual Changes:**
+- New package `src/sysml_codegen/snapshot/`: `__init__.py` (public re-exports;
+  `SNAPSHOT_FORMAT_VERSION = 1`; `SnapshotFormatError` — both **defined**, guard
+  not yet enforced), `serializer.py` (git-moved verbatim), `loader.py` (git-moved,
+  signature `load_extraction_snapshot(snapshot_path: Path)` — FIXTURES_DIR removed;
+  behavior otherwise identical), `graph_rebuild.py` (promoted
+  `build_full_graph_from_snapshot` / `build_classifier_inputs_from_snapshot`,
+  path-based). graph_rebuild already threads `snap.get("compilation_results")`
+  (None in Phase 1 → unchanged behavior; Phase 2 fills it — forward-compatible).
+- `tests/conftest.py`: added module-level `snapshot_fixture(model_name) -> Path`.
+- Migrated 29 files (25 tests + 4 scripts) via `/tmp/migrate.py`: import swaps to
+  `sysml_codegen.snapshot` + call-site wrapping in `snapshot_fixture(...)`.
+  `test_entry_point_classifier.py` had its two helper defs deleted (now imported);
+  `capture_pipeline_baselines.py` import migrated + path built from FIXTURES_DIR
+  (Phase 1 portion; source_file normalization is Phase 2);
+  `capture_extraction_snapshots.py` serializer import swapped.
+- Deleted `tests/helpers/snapshot_loader.py` + `snapshot_serializer.py` (git mv).
+- New guard test `tests/conformance/test_snapshot_contract.py::test_no_tests_helpers_snapshot_copies`
+  (INV-3, REQ-SNAP-08). Greps the *import* form to avoid self-match.
+
+**Issues / Deviations:**
+- Promoting `loader.py` into gated `src/` surfaced 5 ruff + 1 mypy issue that were
+  invisible in `tests/`. Fixed the 3 E501 (wrapped ternaries), auto-fixed I001/UP017.
+  The `agentic_mbse.sysml.types` import-untyped error (mypy) is the same class the
+  13 sibling `src` agentic_mbse imports tolerate in the 109 baseline; scoped a
+  `# type: ignore[import-untyped]` on that one line to hold the gate at 109 (a
+  repo-wide mypy override would be an out-of-scope drive-by).
+
+**Green gate:** `pytest tests/` 1822 passed, 4 skipped, 5 xfailed. `mypy src/` 109
+(== baseline). `ruff check src/` 21 (== baseline). INV-3 grep empty.
 
 ### Phase 2 Completion
-**Completed:** —
-**Pipeline-baseline diff review (SC-10 effect):** —
-**source_file gotcha resolution:** —
+**Completed:** 2026-07-05
+**Actual Changes:**
+- `serializer.py`: top-level `snapshot_format_version` + `compilation_results`
+  block; `fixtures_dir` param renamed `output_dir` (relativize anchor = snapshot's
+  own dir, D1/M1).
+- `loader.py`: version guard first (V1/V2 → `SnapshotFormatError`);
+  `compilation_results` deserialize-or-degrade (V4); centralized `source_file`
+  re-absolutization post-pass (`_reabsolutize_source_files`, lexical `os.path.abspath`,
+  no `.resolve()`, sentinels untouched — D8); source freshness (`_check_source_freshness`,
+  V3) returning `stale_sources` for the Phase-3 summary. Added `compilation_results`
+  and `stale_sources` keys to the returned dict.
+- `capture_extraction_snapshots.py`: passes `output_dir=model_path` and
+  `compilation_results=ctx.compilation_results` (full pipeline) / `{}` (extraction-only).
+- `capture_pipeline_baselines.py`: strips the snapshot-dir prefix from the dumped
+  graph JSON so committed baselines keep portable relative `source_file`; docstring
+  updated to document the deliberate SC-10 + source_file rev.
+- `test_factory_purity.py`: source_file normalized in the baseline comparison
+  (mirrors `test_graph_assembly`) — the load-bearing gotcha.
+- `test_generation_boundary.py::test_from_graph_stencil_stub_dispatch`: its premise
+  (snapshot CalcUsage = UNKNOWN) is void now that compilation_results is threaded;
+  rewrote to synthesize a non-FC module via `model_copy` and assert stub dispatch.
+- Re-captured all 10 extraction snapshots (license) and regenerated 5 pipeline
+  baselines (license-free) via the capture scripts.
+- New tests in `test_snapshot_contract.py`: missing/wrong version hard-error (INV-2),
+  chain_spike compilation_results non-empty (INV-5), missing-section degrade (V4),
+  stale-hash warn (V3).
+
+**Pipeline-baseline diff review (SC-10 effect):** Reviewed all 5 baselines.
+Changed keys are exactly: `compilability` (unknown → real), `auto_impl_context`
+(null → populated, bringing its nested `single_output_expression` /
+`output_expressions` / `output_count` / `execution_steps` fields) — the deliberate
+SC-10 effect — plus `source_file` relativized to basenames. **No other field
+changed.** No `/home` machine-path leaked: the only `/home` in
+`solar_battery/computation_graph.json` is the model-authored PyFECONS doc-comment
+citations (`/home/reid/PyFECONS/...`), present identically in the old baseline
+(net diff 0). Registry `__init__.py` baselines: source-path-free; changes only
+where compilability affects generation.
+
+**source_file gotcha resolution:** Re-absolutization makes `source_file`
+machine-specific at load; committed artifacts stay portable two ways —
+(1) snapshots store the relative form (`design.sysml`, not
+`solar_battery_model/design.sysml` — D1 anchor is the model dir now);
+(2) pipeline baselines strip the snapshot-dir prefix at capture. `test_factory_purity`
+normalizes `source_file` away before comparison. Verified: **no committed snapshot
+or baseline embeds a `/home/...` `source_file`** (extraction snapshots' remaining
+`/home` strings are pre-existing `document_path` / doc-comment content, byte-identical
+old-vs-new, out of Item-2 scope).
 
 ### Phase 3 Completion
-**Completed:** —
+**Completed:** 2026-07-05
+**Actual Changes:**
+- `orchestration/snapshot_context.py`: `build_pipeline_context_from_snapshot` —
+  rebuilds graph via the promoted helper (single load, reuses `inputs["snap"]`),
+  threads `compilation_results`, wraps `PipelineContext` with `extractor=None`,
+  `backtracker=None` (INV-4; `# type: ignore[arg-type]` on the one typed field),
+  logs the V5 banner once and the V3/M6 freshness summary if stale.
+- `snapshot/capture.py`: `capture_snapshot(model_paths, output_path,
+  design_path_filter="")` — the only license-requiring code (function-local
+  `build_pipeline_context` import). Exported from the package.
+- `cli/__init__.py`: `GenerationConfig` gains `from_snapshot`, `models_path`
+  now `Path | None` (field order fixed for the dataclass default rule; all
+  callers use kwargs); required mutually-exclusive `--models`/`--from-snapshot`
+  group (INV-7); V6 guard on `--from-snapshot` + `--design-path-filter`;
+  `run_codegen` selects the context builder by flag; `cmd_snapshot` subcommand.
+- `scripts/capture_extraction_snapshots.py`: full-pipeline models now delegate to
+  the promoted `capture_snapshot` (no second copy of capture logic); extraction-only
+  models keep their direct path.
+- Tests `test_snapshot_generation.py` (8): INV-4/B1 null-fields generation;
+  INV-1 license-scrubbed subprocess generation; INV-6 provenance-not-in-output;
+  INV-7/V6 CLI route errors (neither/both/filter); SC-10 chain_spike auto-impl
+  from snapshot; dead-template guard.
+
+**Manual evidence:**
+- `generate --from-snapshot chain_spike` with `SYSIDE_LICENSE_*` scrubbed →
+  success; V5 banner logged; no provenance in output (INV-1/INV-6).
+- chain_spike stencils auto-implemented: `AUTO_IMPLEMENTED = True`,
+  `return (inputs.length * inputs.width)`, zero `NotImplementedError` (SC-10).
+- `sysml-codegen snapshot --models chain_spike --output /tmp/...` (license) wrote
+  a versioned snapshot; content identical to committed except `source_file`
+  (expected — different `--output` anchor + relative `--models` path, per D1).
+
+**Green gate:** `pytest tests/` 1835 passed. `mypy src/` 109. `ruff src/` 21.
 
 ### Phase 4 Completion
-**Completed:** —
-**SC-1 evidence (empty diff, incl. symlinked run):** —
-**SC-10 evidence (chain_spike auto-impl):** —
+**Completed:** 2026-07-05
+**SC-1 evidence (empty diff, incl. symlinked run):** PASS (license-live).
+`test_live_vs_snapshot_byte_identical` and `..._symlinked` both green —
+`_tree_diff(live_out, snap_out) == []` (empty recursive byte diff). Live fed an
+absolute `--models` path; the symlinked variant copies the sources, symlinks the
+copy, captures a snapshot through the link, and drives both paths through it —
+the parser preserves the symlink name and the lexical re-absolutization reproduces
+it (B2 at integration scale). Both tests skip cleanly with no license
+(`requires_license` skipif).
+**SC-10 evidence (chain_spike auto-impl):** PASS.
+`test_chain_spike_autoimpl_from_snapshot` (license-free) — all CalcUsage stencils
+`AUTO_IMPLEMENTED = True`, zero `NotImplementedError`, matching live.
+
+**DEVIATION (load-bearing, surfaced by SC-1):** the first SC-1 run failed on one
+file — `schemas/system_design.py` had the **same entry-point fields with the same
+values in a different order** between live and snapshot. Root cause: Item 1's
+deterministic sort (`graph_builder.py:367`) sorts entry-point **groups** by name
+but not the **parameters within** each group; that within-group order is
+model-discovery order, which differs between the live and snapshot design-attribute
+iteration (and is already non-deterministic run-to-run — `test_graph_assembly`
+sorts params to compare). Fix: sort each group's `parameters` by `qualified_name`
+alongside the existing group sort. This completes the deterministic-sort mechanism
+SC-1 explicitly relies on. It reorders entry-point fields in the live schema too,
+but stabilizes an already-non-deterministic order (same fields/values) — the
+enabler of byte-identity, not a semantic change. Pipeline baselines regenerated
+(license-free); full suite green (1837 passed).
 
 ### Phase 5 Completion
 **Completed:** —

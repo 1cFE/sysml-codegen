@@ -21,7 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 from agentic_mbse.sysml.types import BindingType
 from sysml_codegen.extraction.data_models import (
@@ -55,14 +56,14 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-01")
     def test_snapshot_loads(self, model_name: str) -> None:
         """Snapshot file exists and deserializes without error."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
         assert snapshot is not None
         assert snapshot["model_name"] == model_name
 
     @pytest.mark.req(id="REQ-SNAP-02")
     def test_calc_defs_have_fields(self, model_name: str) -> None:
         """Every CalculationDefinitionData has required fields populated."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
         for cd in snapshot["calc_defs"]:
             assert isinstance(cd, CalculationDefinitionData)
             assert cd.name
@@ -74,7 +75,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-03")
     def test_calc_usages_have_bindings(self, model_name: str) -> None:
         """Every CalcUsageData has typed bindings."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
         for cu in snapshot["calc_usages"]:
             assert isinstance(cu, CalcUsageData)
             assert cu.instance_name
@@ -86,7 +87,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-04")
     def test_hierarchy_data_round_trips(self, model_name: str) -> None:
         """HierarchyExtractionResult round-trips with correct types."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
         hd = snapshot["hierarchy_data"]
         assert isinstance(hd, HierarchyExtractionResult)
 
@@ -106,7 +107,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-05")
     def test_ast_fields_are_none(self, model_name: str) -> None:
         """AST fields are None (not serialized Java objects)."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
 
         for cd in snapshot["calc_defs"]:
             assert cd.output_expression_asts == {}, \
@@ -126,7 +127,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-06")
     def test_path_fields_are_paths(self, model_name: str) -> None:
         """Path fields are Path instances, not strings."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
 
         for cd in snapshot["calc_defs"]:
             assert isinstance(cd.source_file, Path), \
@@ -138,7 +139,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-07")
     def test_enum_fields_are_typed(self, model_name: str) -> None:
         """Enum fields are typed enum instances, not raw strings."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
 
         for cu in snapshot["calc_usages"]:
             for b in cu.bindings:
@@ -155,7 +156,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-02")
     def test_aggregation_expressions_round_trip(self, model_name: str) -> None:
         """ScopedAggregationData round-trips with correct types."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
         for sa in snapshot["aggregation_expressions"]:
             assert isinstance(sa, ScopedAggregationData)
             assert isinstance(sa.expression, AggregationExpressionData)
@@ -164,7 +165,7 @@ class TestExtractionSnapshotRoundTrip:
     @pytest.mark.req(id="REQ-SNAP-01")
     def test_channel_aliases_round_trip(self, model_name: str) -> None:
         """ChannelAlias round-trips through Pydantic validation."""
-        snapshot = load_extraction_snapshot(model_name)
+        snapshot = load_extraction_snapshot(snapshot_fixture(model_name))
         for ca in snapshot["channel_aliases"]:
             assert isinstance(ca, ChannelAlias)
             assert ca.alias_name

@@ -62,8 +62,9 @@ def get_commands_dir() -> Path:
 class GenerationConfig:
     """Configuration for code generation."""
 
-    models_path: Path
     output_path: Path
+    models_path: Path | None = None  # None when generating from a snapshot
+    from_snapshot: Path | None = None  # snapshot to generate from (else live)
     package_name: str = "generated_code"  # Parameterized, was: fusion_simkit
     schema_class_name: str = "Params"  # Parameterized, was: FusionParams
     pipeline_name: str = "pipeline"  # Parameterized, was: catf_fusion
@@ -444,8 +445,18 @@ def cmd_generate(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
+    # --design-path-filter is baked into the snapshot at capture, so re-applying
+    # it at generation is meaningless — reject rather than silently no-op (V6).
+    if args.from_snapshot is not None and args.design_path_filter:
+        logger.error(
+            "--design-path-filter cannot be combined with --from-snapshot "
+            "(the filter is baked into the snapshot at capture)."
+        )
+        return 1
+
     config = GenerationConfig(
         models_path=args.models,
+        from_snapshot=args.from_snapshot,
         output_path=args.output,
         package_name=args.package_name,
         schema_class_name=args.schema_class,
@@ -458,6 +469,28 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
     success = run_codegen(config)
     return 0 if success else 1
+
+
+def cmd_snapshot(args: argparse.Namespace) -> int:
+    """Capture a versioned extraction snapshot from live models."""
+    level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+
+    try:
+        import agentic_mbse  # noqa: F401
+    except ImportError:
+        logger.error("agentic-mbse is not installed. Please install it first.")
+        return 1
+
+    from sysml_codegen.snapshot import capture_snapshot
+
+    models_path: Path = args.models
+    output_path: Path = args.output or (models_path / "extraction_snapshot.json")
+    out = capture_snapshot(
+        [models_path], output_path, design_path_filter=args.design_path_filter
+    )
+    logger.info(f"Wrote snapshot to {out}")
+    return 0
 
 
 def cmd_install_commands(args: argparse.Namespace) -> int:
@@ -507,11 +540,18 @@ def main() -> None:
         "generate",
         help="Generate Python code from SysML v2 models"
     )
-    gen_parser.add_argument(
+    # Exactly one extraction input: live --models or a captured --from-snapshot
+    # (both-forbidden / neither-forbidden come free from a required group — INV-7).
+    gen_input = gen_parser.add_mutually_exclusive_group(required=True)
+    gen_input.add_argument(
         "--models", "-m",
         type=Path,
-        required=True,
-        help="Path to SysML model directory or file"
+        help="Path to SysML model directory or file (live extraction)"
+    )
+    gen_input.add_argument(
+        "--from-snapshot",
+        type=Path,
+        help="Path to a captured extraction snapshot (license-free generation)"
     )
     gen_parser.add_argument(
         "--output", "-o",
@@ -565,6 +605,36 @@ def main() -> None:
     )
     gen_parser.set_defaults(func=cmd_generate)
 
+    # Snapshot subcommand — capture a versioned snapshot from live models (D5)
+    snap_parser = subparsers.add_parser(
+        "snapshot",
+        help="Capture a versioned extraction snapshot from live models"
+    )
+    snap_parser.add_argument(
+        "--models", "-m",
+        type=Path,
+        required=True,
+        help="Path to SysML model directory or file"
+    )
+    snap_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        default=None,
+        help="Snapshot output path (default: <models>/extraction_snapshot.json)"
+    )
+    snap_parser.add_argument(
+        "--design-path-filter",
+        type=str,
+        default="",
+        help="Substring filter for design file paths (baked into the snapshot)"
+    )
+    snap_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose logging"
+    )
+    snap_parser.set_defaults(func=cmd_snapshot)
+
     # Install-commands subcommand
     install_parser = subparsers.add_parser(
         "install-commands",
@@ -612,17 +682,27 @@ def run_codegen(config: GenerationConfig) -> bool:
     )
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
-    logger.info(f"Generating code from {config.models_path}")
+    source = config.from_snapshot if config.from_snapshot is not None else config.models_path
+    logger.info(f"Generating code from {source}")
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
     try:
-        # Step 1: Build pipeline context (7-step initialization)
+        # Step 1: Build pipeline context — from a snapshot (license-free) or from
+        # live extraction (7-step initialization). Both converge on PipelineContext.
         logger.info("Building pipeline context...")
-        ctx = build_pipeline_context(
-            [config.models_path],
-            design_path_filter=config.design_path_filter,
-        )
+        if config.from_snapshot is not None:
+            from sysml_codegen.orchestration.snapshot_context import (
+                build_pipeline_context_from_snapshot,
+            )
+
+            ctx = build_pipeline_context_from_snapshot(config.from_snapshot)
+        else:
+            assert config.models_path is not None  # guaranteed by the CLI group
+            ctx = build_pipeline_context(
+                [config.models_path],
+                design_path_filter=config.design_path_filter,
+            )
         logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
         logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
 

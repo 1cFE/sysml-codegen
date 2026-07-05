@@ -39,7 +39,8 @@ from sysml_codegen.core.qualified_names import sanitize_name, get_channel_name, 
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 MODELS = [
     "solar_battery_model",
@@ -51,7 +52,7 @@ MODELS = [
 
 def build_all(model_name: str):
     """Load snapshot + build registry + run backtracker."""
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],
@@ -178,7 +179,7 @@ def question_2():
 
     results = {}
     for model_name in MODELS:
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -232,7 +233,7 @@ def question_3():
 
     results = {}
     for model_name in MODELS:
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
 
         # Build instance_attr_to_channel map (proposed Option B helper)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
@@ -331,7 +332,7 @@ def question_4():
 
     results = {}
     for model_name in MODELS:
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
 
         # Build instance_attr_to_channel (Option B helper)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
@@ -511,7 +512,7 @@ def question_6():
 
     for model_name in MODELS:
         print(f"\n  --- {model_name} ---")
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
 
         # Build instance_attr_to_channel (Option B)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}

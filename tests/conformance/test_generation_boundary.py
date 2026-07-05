@@ -21,9 +21,10 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
 )
 
-from tests.conformance.test_entry_point_classifier import (
+from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +68,7 @@ def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
     """Build ComputationGraphs + inputs for all 4 models (once per session)."""
     data = {}
     for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(model_name)
+        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         data[model_name] = (graph, inputs)
     return data
 
@@ -246,17 +247,17 @@ class TestAutoImplDispatch:
 
         graph, _inputs = solar_battery_graph
 
-        # Find a non-FULLY_COMPILABLE CalcUsage module
-        # (CalcUsage from snapshots have UNKNOWN compilability since
-        # compilation_results=None in build_full_graph_from_snapshot)
-        non_fc = [
+        # With compilation_results threaded from the snapshot (SC-10), solar_battery
+        # CalcUsage modules are FULLY_COMPILABLE and auto-implement. Synthesize the
+        # non-FC case to exercise the generator's stub dispatch directly: take a
+        # CalcUsage module and force it non-compilable.
+        calc_usage = next(
             m for m in graph.modules
-            if m.compilability != Compilability.FULLY_COMPILABLE
-            and not m.is_computed_attribute and not m.is_aggregation
-        ]
-        assert len(non_fc) > 0, "No non-FC CalcUsage modules in solar_battery"
-
-        module = non_fc[0]
+            if not m.is_computed_attribute and not m.is_aggregation
+        )
+        module = calc_usage.model_copy(
+            update={"compilability": Compilability.UNKNOWN, "auto_impl_context": None}
+        )
         code = generate_implementation_from_graph(
             module=module,
             template_env=template_env,

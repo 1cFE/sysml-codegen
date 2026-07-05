@@ -23,7 +23,8 @@ from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
 )
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 from tests.helpers.registry_compat import registry_resolve
 
 
@@ -88,21 +89,21 @@ def build_registry_from_snapshot(snapshot: dict) -> OutputRegistry:
 @pytest.fixture(scope="session")
 def solar_battery_registry():
     """Session-scoped OutputRegistry built from solar_battery snapshot."""
-    snap = load_extraction_snapshot("solar_battery_model")
+    snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
     return build_registry_from_snapshot(snap)
 
 
 @pytest.fixture(scope="session")
 def catf_mfe_registry():
     """Session-scoped OutputRegistry built from catf_mfe snapshot."""
-    snap = load_extraction_snapshot("catf_mfe_model")
+    snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
     return build_registry_from_snapshot(snap)
 
 
 @pytest.fixture(scope="session")
 def attr_expr_probe_registry():
     """Session-scoped OutputRegistry built from attr_expr_probe snapshot."""
-    snap = load_extraction_snapshot("attr_expr_probe")
+    snap = load_extraction_snapshot(snapshot_fixture("attr_expr_probe"))
     return build_registry_from_snapshot(snap)
 
 
@@ -159,7 +160,7 @@ class TestReqOR01:
     def test_all_reference_formats_resolve(self, model_name):
         """All CalcUsage outputs resolve via scoped_lookup; FORMULA outputs
         resolve via sysml_qn_lookup; CHAIN aliases resolve via alias_lookup."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
 
@@ -213,7 +214,7 @@ class TestReqOR01:
     @pytest.mark.req("REQ-OR-01")
     def test_chain_alias_count_solar_battery(self, solar_battery_registry):
         """Build from solar_battery; count Phase 2 aliases; verify == 41."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         chain_aliases = [
             a for a in snap.get("channel_aliases", [])
             if a.source == "redefinition"
@@ -260,7 +261,7 @@ class TestReqOR02:
     @needs_typed_methods
     def test_typed_lookups_return_canonical_channel(self, model_name):
         """Typed lookup methods return CanonicalChannel | None."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
 
@@ -401,7 +402,7 @@ class TestReqOR05:
     @needs_typed_methods
     def test_no_dead_keys_registered(self, model_name):
         """Key_A, Key_D, Key_E full, Key_F, bare NOT in any registry."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
 
@@ -429,7 +430,7 @@ class TestReqOR05:
     def test_only_key_c_and_key_e_stripped_in_scoped(self, model_name):
         """Every scoped key is Key_C or Key_E_stripped format: dotted path,
         no '::', no '__'."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_registry_from_snapshot(snap)
 
         # Access internal _scoped dict to verify format
@@ -443,7 +444,7 @@ class TestReqOR05:
     def test_aggregation_key_e_stripped(self):
         """Aggregation Key_E_stripped (design prefix stripped, dotted) is
         in scoped registry for solar_battery."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         registry = build_registry_from_snapshot(snap)
 
         # solar_battery has aggregation expressions with instance_path like
@@ -463,7 +464,7 @@ class TestReqOR05:
     @pytest.mark.req("REQ-OR-05")
     def test_formula_sysml_qn_registered(self):
         """FORMULA SysML QN keys are in registry for attr_expr_probe."""
-        snap = load_extraction_snapshot("attr_expr_probe")
+        snap = load_extraction_snapshot(snapshot_fixture("attr_expr_probe"))
         registry = build_registry_from_snapshot(snap)
 
         formula_qn_count = 0
@@ -496,7 +497,7 @@ class TestReqOR06:
     def test_phase2_alias_resolves_through_scoped(self):
         """Each Phase 2 CHAIN alias has its canonical resolved via scoped
         lookup before alias registration."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         registry = build_registry_from_snapshot(snap)
 
         for alias in snap.get("channel_aliases", []):
@@ -519,7 +520,7 @@ class TestReqOR06:
         canonical_name is Key_A format (instance.attr); Phase 1a now
         registers Key_A as alias, making it reachable via alias_lookup.
         """
-        snap = load_extraction_snapshot("attr_expr_probe")
+        snap = load_extraction_snapshot(snapshot_fixture("attr_expr_probe"))
         registry = build_registry_from_snapshot(snap)
 
         expose_pure_count = 0
@@ -540,7 +541,7 @@ class TestReqOR06:
     @needs_typed_methods
     def test_expose_pure_alias_resolves(self):
         """alias_lookup for EXPOSE_PURE alias resolves to correct channel."""
-        snap = load_extraction_snapshot("attr_expr_probe")
+        snap = load_extraction_snapshot(snapshot_fixture("attr_expr_probe"))
         registry = build_registry_from_snapshot(snap)
 
         # attr_expr_probe has EXPOSE_PURE aliases
@@ -561,7 +562,7 @@ class TestReqOR06:
     @pytest.mark.req("REQ-OR-06")
     def test_phase4_transitive_alias(self):
         """Transitive design attr aliases registered in solar_battery."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         registry = build_registry_from_snapshot(snap)
 
         # Check if there are transitive defaults
@@ -623,7 +624,7 @@ class TestReqOR07:
     @pytest.mark.req("REQ-OR-07")
     def test_scoped_key_in_registry(self):
         """For every CalcUsage in solar_battery, make_scoped_key is in scoped registry."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
 
@@ -650,7 +651,7 @@ class TestReqOR08:
     @needs_typed_methods
     def test_key_a_not_in_scoped(self, model_name):
         """Key_A format (instance_name.attr) not in scoped registry."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}
 

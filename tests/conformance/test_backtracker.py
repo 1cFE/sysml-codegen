@@ -38,7 +38,8 @@ from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +59,7 @@ def build_backtracker_from_snapshot(
     Returns:
         (BacktrackingResult, OutputRegistry, snapshot_dict)
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],
@@ -1107,8 +1108,8 @@ class TestC11bConsumerScopeDotted:
         )
 
         # Create minimal usage objects for testing
-        from tests.helpers.snapshot_loader import load_extraction_snapshot
-        snap = load_extraction_snapshot("solar_battery_model")
+        from sysml_codegen.snapshot import load_extraction_snapshot
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
 
         # Find a usage with known QN
         for usage in snap["calc_usages"]:
@@ -1120,7 +1121,7 @@ class TestC11bConsumerScopeDotted:
                 break
 
         # Test a deeper scope from catf_mfe
-        snap2 = load_extraction_snapshot("catf_mfe_model")
+        snap2 = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
         for usage in snap2["calc_usages"]:
             if "catf_radial_build__vacuum_gap__volume_calc" in usage.qualified_name:
                 result = backtracker._consumer_scope_dotted(usage)
@@ -1141,7 +1142,7 @@ class TestC11bPhaseRegistration:
         """Phase 2 CHAIN alias registration resolves canonical_name via
         scoped_lookup() (not resolve()). Verified by registry content equality:
         same aliases registered before and after migration."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -1167,7 +1168,7 @@ class TestC11bPhaseRegistration:
     def test_c11b_phase3_expose_pure_no_resolve(self):
         """Phase 3 EXPOSE_PURE alias registration resolves canonical_name
         without resolve(). Same aliases registered."""
-        snap = load_extraction_snapshot("catf_mfe_model")
+        snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -1202,7 +1203,7 @@ class TestC11bPhaseRegistration:
         Same aliases registered."""
         from sysml_codegen.core.output_registry import is_transitive_default
 
-        snap = load_extraction_snapshot("catf_mfe_model")
+        snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],

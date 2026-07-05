@@ -21,7 +21,8 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
 )
 from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport
-from tests.helpers.snapshot_loader import load_extraction_snapshot  # noqa: I001
+from sysml_codegen.snapshot import load_extraction_snapshot  # noqa: I001
+from tests.conftest import snapshot_fixture
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -55,19 +56,19 @@ def _collect_all_index_keys(deriver: ParameterGroupDeriver) -> dict[str, set[str
 
 @pytest.fixture(scope="session")
 def solar_battery_deriver():
-    snap = load_extraction_snapshot("solar_battery_model")
+    snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
     return build_deriver_from_snapshot(snap), snap
 
 
 @pytest.fixture(scope="session")
 def catf_mfe_deriver():
-    snap = load_extraction_snapshot("catf_mfe_model")
+    snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
     return build_deriver_from_snapshot(snap), snap
 
 
 @pytest.fixture(scope="session")
 def chain_spike_deriver():
-    snap = load_extraction_snapshot("chain_spike_model")
+    snap = load_extraction_snapshot(snapshot_fixture("chain_spike_model"))
     return build_deriver_from_snapshot(snap), snap
 
 

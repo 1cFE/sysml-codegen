@@ -44,7 +44,8 @@ from sysml_codegen.resolution.models import (
     EntryPoint,
     PipelineModule,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +56,7 @@ def _build_full_pipeline_inputs(model_name: str) -> dict:
 
     Returns dict with all components needed for pipeline + individual factories.
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
 
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
@@ -505,6 +506,16 @@ class TestComputationGraphIdentity:
             baseline = json.load(f)
 
         graph_dict = graph.model_dump(mode="json")
+
+        # Normalize source_file: the loader re-absolutizes to a machine-specific
+        # absolute path (Item 2 D1), while the committed baseline stores the
+        # portable relative form. Mirror test_graph_assembly — copy the graph's
+        # source_file onto the baseline before the full-dict comparison.
+        graph_by_name = {m["name"]: m for m in graph_dict["modules"]}
+        for bm in baseline["modules"]:
+            gm = graph_by_name.get(bm["name"])
+            if gm and gm.get("source_file") and bm.get("source_file"):
+                bm["source_file"] = gm["source_file"]
 
         assert graph_dict == baseline, (
             f"ComputationGraph for {model_name} differs from baseline. "

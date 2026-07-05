@@ -1,6 +1,71 @@
 {
+  "snapshot_format_version": 1,
   "model_name": "alias_agg_probe",
-  "captured_at": "2026-02-17T16:00:57.456265+00:00",
+  "captured_at": "2026-07-05T20:48:03.280434+00:00",
+  "compilation_results": {
+    "Unit_Cost_Calc": {
+      "calc_def_name": "Unit_Cost_Calc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "unit_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.base_cost * inputs.markup)",
+          "input_refs": [
+            "base_cost",
+            "markup"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "unit_cost"
+      ]
+    },
+    "Margin_Calc": {
+      "calc_def_name": "Margin_Calc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "margin",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.cost_basis * inputs.margin_rate)",
+          "input_refs": [
+            "cost_basis",
+            "margin_rate"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "margin"
+      ]
+    },
+    "Report_Calc": {
+      "calc_def_name": "Report_Calc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "report_value",
+          "compilability": "fully_compilable",
+          "python_expression": "inputs.cost_input",
+          "input_refs": [
+            "cost_input"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "report_value"
+      ]
+    }
+  },
   "calc_defs": [
     {
       "name": "Unit_Cost_Calc",
@@ -54,7 +119,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 6,
       "source_hash": "d8e8ff99c49405aa63cea4e24769ec7928ea4a17f0fda51b9f746464d03767c4",
       "output_expression_asts": null,
@@ -116,7 +181,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 14,
       "source_hash": "d8e8ff99c49405aa63cea4e24769ec7928ea4a17f0fda51b9f746464d03767c4",
       "output_expression_asts": null,
@@ -165,7 +230,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 22,
       "source_hash": "d8e8ff99c49405aa63cea4e24769ec7928ea4a17f0fda51b9f746464d03767c4",
       "output_expression_asts": null,
@@ -200,7 +265,7 @@
       "unbound_params": [
         "markup"
       ],
-      "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 40,
       "parent_part_path": "plant.assembly.widget",
       "qualified_name": "AliasAggProbeDesign__plant__assembly__widget__cost_model",
@@ -242,7 +307,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 67,
       "parent_part_path": "plant.assembly",
       "qualified_name": "AliasAggProbeDesign__plant__assembly__margin_calc",
@@ -271,7 +336,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 74,
       "parent_part_path": "plant.assembly",
       "qualified_name": "AliasAggProbeDesign__plant__assembly__report_calc",
@@ -281,13 +346,13 @@
     }
   ],
   "design_attributes": {
-    "tests/fixtures/alias_agg_probe/library.sysml": [
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/alias_agg_probe/library.sysml": [
       {
         "name": "markup",
         "sysml_type": "Real",
         "default_value": "1.5",
         "unit": null,
-        "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 8,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Unit_Cost_Calc__markup"
@@ -297,7 +362,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 10,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Unit_Cost_Calc__unit_cost"
@@ -307,7 +372,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 18,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Margin_Calc__margin"
@@ -317,7 +382,7 @@
         "sysml_type": "Real",
         "default_value": "cost_input",
         "unit": null,
-        "source_file": "tests/fixtures/alias_agg_probe/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 25,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Report_Calc__report_value"

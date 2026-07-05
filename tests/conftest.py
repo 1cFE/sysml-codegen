@@ -16,6 +16,18 @@ import pytest
 if TYPE_CHECKING:
     from sysml_codegen.extraction.extractor import SysMLDataExtractor
 
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+def snapshot_fixture(model_name: str) -> Path:
+    """Return the committed extraction-snapshot path for a fixture model.
+
+    The promoted loader takes a snapshot path (not a fixtures-relative model
+    name); this resolves ``model_name`` to
+    ``tests/fixtures/<model_name>/extraction_snapshot.json`` for test call sites.
+    """
+    return FIXTURES_DIR / model_name / "extraction_snapshot.json"
+
 
 @pytest.fixture
 def fixtures_path() -> Path:

@@ -29,9 +29,10 @@ from sysml_codegen.generation.schemas import (
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.resolution.models import ComputationGraph
 
-from tests.conformance.test_entry_point_classifier import (
+from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +72,7 @@ def all_graph_data() -> dict[str, tuple[ComputationGraph, dict]]:
     """Build ComputationGraphs + inputs for all models (once per session)."""
     data = {}
     for model_name in PARAMETRIZED_MODELS:
-        graph, inputs = build_full_graph_from_snapshot(model_name)
+        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         data[model_name] = (graph, inputs)
     return data
 
