@@ -44,24 +44,41 @@ that proves executable content is byte-identical.
    (`expression_utils.py:82-111`) emits `f"{left}{op_str}{right}"` with no parens
    (line 96), so a meaning-changing group is lost.
 
-**Paren-churn evidence (settles the algorithm choice).** I pulled every
-operator `expression_text` from the 11 committed snapshots. The mixed-precedence
-ones all follow natural precedence — e.g. `eta_thermal * p_fusion + eta_direct *
-p_input`, `r_inner + r_outer / 2.0 - r_major`, `p_fusion * 2.0 / 3.0`
-(`attr_expr_probe`), and the additive chains in `solar_battery_model`. **None**
-has a grouping that overrides precedence (no `(a + b) * c`, no same-precedence
-right-child). So under **precedence-aware** parenthesization, **zero** baseline
-expressions gain a paren — only literal substitution churns the text. Under
-**always-paren**, every one of the ~30+ multi-operator expressions gains nested
-parens (`((a + b) + c)`), churning text with no fidelity gain. Precedence-aware
-wins decisively. (Full sample list in Appendix A.)
+**Paren-churn evidence — read from source, not from buggy output (C1).** The
+committed snapshot strings were produced by the no-paren reconstructor
+(`expression_utils.py:96`), so a source group like `(a + b) * c` is *already
+erased* to `a + b * c` in them. They cannot tell you whether the source had a
+meaning-changing group — reading them was my original mistake. Re-deriving from
+the `.sysml` **sources**, at least four committed baselines carry real groups the
+fix will (correctly) restore:
+
+- `attr_expr_probe/design.sysml:62` — `(r_inner + r_outer) / 2.0 - r_major`
+  (a `+` as the left child of `/`, looser → parens).
+- `attr_expr_probe/design.sysml:77-78` — `eta_thermal * (f_pump * eta_pump +
+  f_subsystem) * (m_neutron * p_fusion)` (two groups: a `+` inside `*`, and a `*`
+  right-child of `*` at equal precedence).
+- `expression_binding_probe/library.sysml:8` — `combined_input * (1.0 +
+  tax_rate)` (a `+` right-child of `*`).
+- `catf_mfe_model/library/components/divertor.sysml:222` — constraint
+  `... * (target_plates.surface_area_inner + target_plates.surface_area_outer) *
+  ...` (a `+` group inside a `*` chain; `reconstruct_expression` serves constraint
+  text too).
+
+So under **precedence-aware** parenthesization these ~4 groups reappear exactly —
+that is the fix working. Under **always-paren**, every one of the ~30+
+multi-operator baseline expressions *also* gains redundant nesting
+(`((a + b) + c)`), burying the four real groups in noise with no fidelity gain.
+Precedence-aware wins decisively. The exact paren-gainer set is confirmed at
+Tier-1 regen; the enumerated four are the floor. (Full source list in Appendix A.)
 
 **The repro needs a genuine grouping.** `capacity * rate + capacity * (rate /
 2.0) * 3.0` parses so that `(rate / 2.0)` is the **right** child of a `*` node.
 `/` and `*` share precedence and are left-associative, so a right child at equal
 precedence *does* require parens (`capacity * rate / 2.0` would mean
 `(capacity * rate) / 2.0`). Precedence-aware rules reproduce the group exactly.
-No existing fixture exercises this shape — hence a new fixture (see Component 4).
+The corpus has meaning-changing groups of the *unequal*-precedence kind
+(Appendix A), but no fixture exercises this **equal-precedence,
+associativity-unfavored** shape — hence a new fixture (see Component 4).
 
 **Aggregation executable path is the real risk, not the calc path.** Confirmed
 `_walk_aggregation_ast` (`hierarchy_resolver.py:432-433`) delegates literal
@@ -114,10 +131,14 @@ converts "empirically safe" into "checked safe."
 
 ## Key Decisions
 
-- **D1. Precedence-aware parenthesization.** *Rejected: always-paren* — churns
-  every multi-operator baseline expression for zero fidelity gain (evidence
-  above; Appendix A). Precedence-aware adds parens only where a group overrides
-  natural precedence, which is zero existing baselines and exactly the repro.
+- **D1. Precedence-aware parenthesization.** *Rejected: always-paren* — it would
+  bury the ~4 real source groups (Appendix A) under ~30+ redundant nestings
+  (`((a + b) + c)` on every additive chain), churning text with no fidelity gain.
+  Precedence-aware restores exactly the source's meaning-bearing parens and adds
+  nothing where precedence already reads correctly. (The earlier "zero baselines
+  gain a paren" claim was wrong — it read the paren-erased output strings; the
+  corrected evidence *strengthens* D1: it restores real groups the always-paren
+  option would drown.)
 - **D2. `is_instance` dispatch for all literal/null branches**, replacing
   `type(expr_node).__name__`. *Rejected: keep name-based checks* — inconsistent
   with the rest of the function (FCE/OE/FRE already use `is_instance`) and with
@@ -127,14 +148,23 @@ converts "empirically safe" into "checked safe."
   literal; `inf` is invented notation. These strings land in engineer-facing
   docstrings, so textual-notation fidelity wins. `"null"` matches the existing
   branch (`:76-77`) and KerML notation. Neither appears in the current corpus, so
-  both are defensive branches with no baseline churn.
+  both are defensive branches with no baseline churn. *Recorded trade (m1):* in a
+  rendered docstring `x * *` (multiply-then-infinity) is genuinely ambiguous to
+  read; we accept that cost for notation fidelity since the branch is
+  defensive-only and never fires on today's corpus. Revisit if a real
+  infinity-bearing value expression ever appears.
 - **D4. New source-only fixture for the real-AST test**, parsed live, no
   committed snapshot. *Rejected: extend `attr_expr_probe`* — would couple the
   regression proof to that fixture's snapshot regen and add grouping churn to an
   unrelated fixture. A dedicated fixture isolates the repro and adds zero regen
-  burden. *Rejected: drive the assertion from a committed snapshot* — a snapshot
-  is stored text, not an AST; it cannot exercise the `.function`-bearing node
-  that caused the bug.
+  burden. It earns its place because no existing fixture exercises the
+  **equal-precedence, associativity-unfavored** shape (a same-precedence operator
+  as the unfavored child, e.g. `a * (b / c)`) — the corpus *does* contain
+  meaning-changing groups of the unequal-precedence kind (Appendix A), so the
+  claim is "no fixture covers the equal-precedence case," not "no fixture has
+  groups" (m4). *Rejected: drive the assertion from a committed snapshot* — a
+  snapshot is stored text, not an AST; it cannot exercise the `.function`-bearing
+  node that caused the bug.
 - **D5. Revise REQ-AST-03 in place AND add new IDs (REQ-AST-08, -09).**
   *Rejected: supersede REQ-AST-03 with a new ID* — its FCE<OE<FRE ordering is
   still canonical and correct; only its "...Literal" tail (implying literal-last,
@@ -207,16 +237,34 @@ filed to BACKLOG.
 3. **`is_literal_expression` alignment** (`expression_utils.py:168-180`). Add
    `LiteralInfinity` and `NullExpression` (one `is_instance` clause each).
 
-4. **Real-AST regression fixture + test.** New `tests/fixtures/expr_paren_probe/`
-   (source only) with a calc def whose output expression is the repro shape. New
-   license-gated test parses it live, asserts the reconstructed text and absence
-   of `Literal*Evaluation`.
+4. **Real-AST regression fixture + test (license-gated).** New
+   `tests/fixtures/expr_paren_probe/` (source only) with calc-def output
+   expressions covering **all four helper branches**, so a C2/C3-class bug cannot
+   ship silently (M2): the equal-precedence repro (`capacity * rate + capacity *
+   (rate / 2.0) * 3.0`); an unequal-precedence gain on **each** side
+   (`(a + b) * c` and `a * (b + c)`); a unary-over-binary case (`-(a + b)` and
+   `not (a and b)`); and power right-associativity (`a ** b ** c` renders flat,
+   `(a ** b) ** c` gains parens). The test parses live, asserts each reconstructed
+   string exactly, and asserts no `Literal*Evaluation`. This is the spec's HARD
+   real-parsed-AST proof (mocks masked the dispatch bug).
 
-5. **Offline literal-totality guard.** New conformance test greps committed
-   snapshots + baselines for `Literal*Evaluation` and asserts zero. Runs without a
-   license; guards INV-2 continuously after regen.
+5. **Branch-coverage unit tests (no license).** Because the fixture test skips
+   without a license (expiry risk), add no-license unit tests on
+   `reconstruct_operator_expression` using the existing named-type stub pattern
+   (`test_ast_dispatch_invariant.py:106-125` — class names carry the type so
+   `is_instance`'s name fallback fires). These do not need `.function` because the
+   parens logic is precedence-only, not dispatch. They pin the same five
+   hand-traces (a-(b-c), a/(b*c), -(a+b), a**(b**c), (a**b)**c) so C2/C3 stay
+   caught even offline. (Dispatch-ordering correctness still needs the real-AST
+   test — that is the part mocks cannot cover.)
 
-6. **Doc + matrix updates.** Revise REQ-AST-03; add REQ-AST-08/-09; note
+6. **Offline literal-totality guard.** New conformance test greps committed
+   snapshots + baselines for `Literal*Evaluation` and asserts zero, **and**
+   asserts the four enumerated paren-restorers (Appendix A) are present in the
+   regenerated snapshots. Runs without a license; guards INV-2 and the M1 paren
+   expectation continuously after regen.
+
+7. **Doc + matrix updates.** Revise REQ-AST-03; add REQ-AST-08/-09; note
    `_walk_aggregation_ast` deviation in doc 19; add matrix rows; BACKLOG entry;
    PUSH-DOWN note.
 
@@ -245,22 +293,54 @@ Two KerML-specific facts the reconstructor must honor:
   b` = `(-a) ** b`. (No current corpus expression exercises this; the table is
   pinned so a future one renders right.)
 
-**Paren rule (pseudocode, ≤10 lines):**
+**Polarity convention (C2), stated once and explicitly.** `RANK[op]` is the rank
+number straight from the table above: **smaller = binds tighter**. Do *not* build
+a separate "tightness" number — all comparisons below are written against the
+rank directly, so "child binds looser than parent" is `RANK[child] > RANK[parent]`.
+(The earlier draft's `prec()` silently required the *inverse* of the rank column,
+which would invert every unequal-precedence decision — exactly the `(a + b) * c`
+category the fix targets. This convention removes that trap.)
+
+**Paren rule (pseudocode):**
 
 ```
-def needs_parens(parent_op, child_node, side):   # side ∈ {"left","right"}
-    if child_node is not an OperatorExpression with a binary operator: return False
-    cp, pp = prec(child_op), prec(parent_op)
-    if cp < pp:  return True          # child binds looser → must group
-    if cp > pp:  return False         # child binds tighter → safe
-    # equal precedence: group the associativity-unfavored side
-    return side == ("left" if right_assoc(parent_op) else "right")
+def binary_op_of(child):        # None unless child is a 2-operand OperatorExpression
+    return child.operator if is_binary_operator_expr(child) else None
+    # → None for literals, FRE, FCE, invocations, AND unary operator expressions
+
+def needs_parens(parent_op, child, side):   # side ∈ {"left","right"}
+    cop = binary_op_of(child)
+    if cop is None: return False            # atomic / unary child → never wrap
+    cr, pr = RANK[cop], RANK[parent_op]
+    if cr > pr: return True                 # child binds looser → must group
+    if cr < pr: return False                # child binds tighter → safe
+    return side == ("left" if right_assoc(parent_op) else "right")  # equal → unfavored side
 ```
 
-Unary operands and function-call/FCE/FRE children never need wrapping (they bind
-tighter than any binary or are atomic). For n-ary operator nodes (>2 operands),
-treat as a left fold of the same operator: same-operator children never need
-parens; a looser-precedence child still does.
+**Unary operands DO need wrapping (C3).** KerML puts unary `-`/`not` at rank 2,
+tighter than *every* binary (including power). So the unary branch runs the *same*
+helper on its operand with the unary op as parent: `needs_parens(unary_op,
+operand, side="operand")`. Any binary operand (rank ≥3 > 2) wraps; a nested unary
+operand is atomic (`binary_op_of` → None) so it doesn't — `- -a` stays flat.
+Result: `-(a + b)` renders with parens, not the wrong `-a + b`. This corrects the
+prior draft's false "unary operands never need wrapping."
+
+Function-call/FCE/FRE children are atomic (`binary_op_of` → None). For n-ary
+operator nodes (>2 operands of the *same* operator), treat as a left fold: same-
+operator children never wrap; a looser-precedence child still does.
+
+**Hand-traces (part of the artifact — these five must render exactly):**
+
+| Input (source group) | Parent / child / side | `cr` vs `pr` | Decision | Renders |
+|---|---|---|---|---|
+| `a - (b - c)` | `-`(5) L / `-`(5) / right | `cr==pr`, L→unfavored=right | wrap | `a - (b - c)` |
+| `a / (b * c)` | `/`(4) L / `*`(4) / right | `cr==pr`, L→unfavored=right | wrap | `a / (b * c)` |
+| `-(a + b)` | unary `-`(2) / `+`(5) / operand | `cr=5 > pr=2` | wrap | `-(a + b)` |
+| `a ** (b ** c)` | `**`(3) R / `**`(3) / right | `cr==pr`, R→unfavored=left | no wrap | `a ** b ** c` |
+| `(a ** b) ** c` | `**`(3) R / `**`(3) / left | `cr==pr`, R→unfavored=left | wrap | `(a ** b) ** c` |
+
+The last two prove right-associativity is handled: natural right-nesting stays
+flat, forced left-nesting gets parens.
 
 ## Regen Procedure (R1/R2/R3)
 
@@ -284,10 +364,15 @@ from the committed snapshots. Corrected display text flows into `calc_expression
 1. **Byte-identity gate (INV-1, HARD).** Diff `compiled_expression`,
    `compilation_results`, `auto_impl_context`, `compilability`, YAML wiring,
    channel names. Any change → **hard stop**, investigate, report. No commit.
-2. **Expected display classes only.** Accept: `Literal*Evaluation()` → value;
-   added parens (expected: none, per Appendix A). Fields:
-   `expression_text`, `raw_expression_text`, `calc_expressions`, derived
-   docstrings.
+2. **Expected display classes only.** Accept: `Literal*Evaluation()` → value; and
+   **added parens on the enumerated group-restorers** — at minimum the four in
+   Appendix A (`attr_expr_probe` ×2, `expression_binding_probe`, `catf_mfe_model`),
+   plus any others Tier-1 surfaces. These parens are the fix working, *not* churn
+   to reject. Fields: `expression_text`, `raw_expression_text`,
+   `calc_expressions`, derived docstrings. **The reviewer must positively confirm
+   each enumerated paren appears** — because a C2-class polarity bug would drop
+   exactly these parens, and a reviewer primed to "expect none" could wave the bug
+   through. Missing an expected paren is a hard stop, same as a surprise one.
 3. **Unexpected-class rule (HARD).** Any diff that is neither an expected display
    class nor in the executable set → **hard stop**. If found benign, add it to
    the expected classes (with a note) before committing; never wave through.
@@ -329,8 +414,10 @@ assertion green (it only checks FCE<OE<FRE; unaffected).
 *Verified by:* the license-gated real-AST test + offline totality guard.
 
 **Add REQ-AST-09** — `reconstruct_operator_expression` SHALL parenthesize a child
-operand iff it binds looser than its parent, or equal and on the associativity-
-unfavored side (precedence-aware). *Verified by:* real-AST repro test (INV-3).
+operand (binary or unary) iff it binds looser than its parent, or equal and on the
+associativity-unfavored side (precedence-aware; polarity per the C2 convention;
+unary operands per C3). *Verified by:* real-AST repro + branch fixture (INV-3,
+license-gated) and the offline branch-coverage unit tests (the five hand-traces).
 
 **Known deviation note (HARD).** In doc 19, note `_walk_aggregation_ast`
 (`hierarchy_resolver.py:372,431`) as a documented deviation from revised
@@ -374,51 +461,79 @@ untouched by the reorder.
 
 ## Validation Approach
 
-- **INV-3 (license-gated):** real-AST repro test → exact string + no
-  `Literal*Evaluation`.
-- **INV-2 (offline):** totality guard over committed snapshots/baselines → zero
-  occurrences.
+- **INV-3 (license-gated, real AST):** repro + all four branch shapes render
+  exactly; no `Literal*Evaluation` (Component 4).
+- **Helper branches (offline unit tests):** the five hand-traces pinned without a
+  license (Component 5) so C2/C3 stay caught when the fixture test skips.
+- **INV-2 (offline):** totality guard → zero `Literal*Evaluation` **and** the four
+  enumerated paren-restorers present in regenerated snapshots (Component 6).
 - **INV-1 (review gate):** byte-identity diff on executable fields during regen.
 - **INV-4 / dispatch:** existing `test_ast_dispatch_invariant.py` REQ-AST-03
   suite stays green; new REQ-AST-08/-09 rows added.
+- **Guard-count check (m3):** the plan asserts (not assumes) that `REQ-AST-04`'s
+  exact dispatch-function counts (`test_ast_dispatch_invariant.py:252-276`) stay
+  green after literals switch to `is_instance`, and that no `is_literal_expression`
+  caller misbehaves when `LiteralInfinity`/`NullExpression` now return `True`.
+- **License marker (m2):** factor `requires_license` / `_license_available` out of
+  `test_snapshot_generation.py:35-47` into `tests/conftest.py` (or a shared
+  helper) and import it from both tests — do not copy `_license_available`, which
+  would run a second live `load_models()` probe per run.
 - **Regression safety:** full `uv run pytest tests/` green pre-commit.
 
 ## Next-Stage Handoff
 
 **Fixed:** precedence-aware (D1); `is_instance` dispatch (D2); `"null"` / `"*"`
 renderings (D3); new source-only fixture (D4); REQ-AST-03 revised in place +
-REQ-AST-08/-09 added (D5). The precedence table is pinned from KerML Table 6.
+REQ-AST-08/-09 added (D5). The precedence table is pinned from KerML Table 6, and
+the `needs_parens` polarity + unary-operand handling are pinned by the five
+hand-traces (implement them exactly — those traces are the acceptance test for
+the helper).
 
 **Open (plan-time):** exact per-file occurrence counts (shift with prior regens);
 final fixture directory name; whether the offline guard lives in a new test file
 or an existing conformance module.
 
-**De-risk first:** write the paren helper + real-AST test *before* touching
-snapshots — the test is the cheapest proof the two fixes are correct, and it needs
-only the new fixture (license-gated), not the full regen. Regen is mechanical once
-the code is proven.
+**De-risk first:** write the paren helper + the offline branch-coverage unit tests
+(the five hand-traces) *before* touching snapshots — those unit tests are the
+cheapest proof the helper is correct and run without a license, so they de-risk
+C2/C3 immediately. The license-gated real-AST fixture test then proves dispatch +
+parens end-to-end on `.function`-bearing nodes. Regen is mechanical once the code
+is proven.
 
 ---
 
-## Appendix A — Paren-Churn Evidence (Baseline Operator Expressions)
+## Appendix A — Paren-Restorers, Read From Source Models (C1)
 
-Distinct multi-operator `expression_text` values pulled from committed snapshots.
-None has a meaning-changing group; under precedence-aware rules none gains a
-paren. Under always-paren all would.
+**Why this appendix was rewritten.** The first draft read the committed snapshot
+strings and concluded "no baseline has a meaning-changing group." That inference
+is unsound: those strings were produced by the no-paren reconstructor
+(`expression_utils.py:96`), which *structurally erases* source groups — a source
+`(a + b) * c` is already stored as `a + b * c`. So the buggy output cannot be a
+census of source groups. The evidence must come from the `.sysml` **sources** (or
+re-parsed ASTs), enumerated below. The exact set is confirmed at Tier-1 regen;
+these are the verified floor.
 
-From `attr_expr_probe`:
-- `eta_thermal * p_fusion + eta_direct * p_input`
-- `m_neutron * p_fusion + p_input + eta_thermal * f_pump * eta_pump + f_subsystem * m_neutron * p_fusion`
-- `p_fusion * <lit> / <lit>`  ( `*`/`/` same precedence, left-assoc → flat)
-- `r_inner + r_outer / <lit> - r_major`  ( `/` binds tighter → flat)
-- `<lit> * length + <lit> * width`
-- `length * width * height`, `length + width`, `area * rate`, `cost * markup`
+**Groups the fix will restore (verified against source + committed snapshot):**
 
-From `solar_battery_model` (representative): additive chains only, e.g.
-`racking.capital_cost + electrical_panel.capital_cost + permitting.capital_cost`,
-`sum(pv_module.capital_cost) + sum(inverter.capital_cost) + array_bos.capital_cost + misc_hardware_cost`.
+| Source | Expression (source form) | Group that reappears | Why |
+|---|---|---|---|
+| `attr_expr_probe/design.sysml:62` | `(r_inner + r_outer) / 2.0 - r_major` | `(r_inner + r_outer)` | `+` is the left child of `/`; looser → wrap |
+| `attr_expr_probe/design.sysml:77-78` | `eta_thermal * (f_pump * eta_pump + f_subsystem) * (m_neutron * p_fusion)` | `(f_pump * eta_pump + f_subsystem)` and `(m_neutron * p_fusion)` | a `+` inside `*` (looser); and a `*` right-child of `*` (equal-prec, unfavored) |
+| `expression_binding_probe/library.sysml:8` | `combined_input * (1.0 + tax_rate)` | `(1.0 + tax_rate)` | `+` right-child of `*`; looser → wrap |
+| `catf_mfe_model/library/components/divertor.sysml:222` | `... * (surface_area_inner + surface_area_outer) * ...` (constraint) | `(surface_area_inner + surface_area_outer)` | `+` group inside a `*` chain; `reconstruct_expression` serves constraint text |
 
-**Repro (new fixture) — the one shape that legitimately needs a paren:**
+Committed snapshots currently store all of these *flattened* (the group gone),
+which is the visible display defect. After the fix they render with the group
+restored — that churn is the fix working (regen checklist item 2, M1).
+
+**By contrast, most baseline expressions have no group** and stay flat under
+precedence-aware rules — e.g. `attr_expr_probe`'s `eta_thermal * p_fusion +
+eta_direct * p_input`, `p_fusion * 2.0 / 3.0`, and `solar_battery_model`'s
+additive chains (`racking.capital_cost + electrical_panel.capital_cost + ...`).
+Under **always-paren** all ~30+ of these would gain redundant nesting, which is
+why D1 rejects it.
+
+**Repro (new fixture) — the equal-precedence shape the corpus lacks:**
 `capacity * rate + capacity * (rate / 2.0) * 3.0` — `(rate / 2.0)` is the right
 child of a `*` at equal precedence, left-associative → parens required.
 
