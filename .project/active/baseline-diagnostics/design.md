@@ -47,16 +47,26 @@ fixes must live** — both inside the authority the spec's Open Questions delega
   baseline calc def carries a constraint on the *part-def* path — so both new hard checks are
   no-ops for the current green corpus.
 
-**Finding 1 — the constraint drop is on the calc-def path, not the part-def stub.**
-The spec names `_extract_part_definition` (`extractor.py:106`, `constraints = []`) as the drop
-site. But `extract_part_definitions()` is **called nowhere on the live generation path**
-(`pipeline_builder.py` only calls `extract_calculation_definitions()` at line 482). Meanwhile
-`catf_mfe`'s dozens of constraints all live **inside calc defs** (e.g. `ThermalCycleEfficiency`,
-`TorusMinorRadius` in `library/physics/*.sysml`), and `_extract_calculation_definition` skips them
-silently — its member loop `continue`s on anything that is not an `AttributeUsage`
-(`extractor.py:151-153`), and `CalculationDefinitionData` has no constraints field at all. So the
-diagnostic that funds the `catf_mfe` success criterion **must detect ConstraintUsage members in
-the calc-def path**. The part-def stub stays as-is (off the live path; harmless).
+**Finding 1 — constraints drop from BOTH calc defs and part defs; the spec's part-def stub is the
+wrong site for the fix.** The spec names `_extract_part_definition` (`extractor.py:106`,
+`constraints = []`) as the drop site, but that method is **called nowhere on the live generation
+path** — so a diagnostic added there never fires. `catf_mfe`'s constraints live in two owner
+kinds, both reached on the live path:
+
+- **Calc-def-owned** (most of them — e.g. `ThermalCycleEfficiency`, `TorusMinorRadius`): dropped
+  silently by `_extract_calculation_definition`, whose member loop `continue`s on anything that is
+  not an `AttributeUsage` (`extractor.py:151-153`); `CalculationDefinitionData` has no constraints
+  field at all.
+- **Part-def-owned** (e.g. `RadiusConsistency` in `part def 'Radial Build Layer'`,
+  `radial_build.sysml:55`): part-def *elements* are visited on the live path by
+  `_extract_and_filter_computed_attributes` (`pipeline_builder.py:115`, iterating
+  `PartDefinition` + `PartUsage`), but only for computed attributes — their `ConstraintUsage`
+  members are ignored, and again dropped silently.
+
+So an honest "no silent constraint drops" summary must count constraints across **both owner
+kinds** (and part usages), not just one path. The design uses a single dedicated detection pass
+(see D2) so the summary count is the true model-wide total. The part-def stub at `extractor.py:106`
+stays as-is (off the live path; harmless).
 
 **Finding 2 — which EXPOSE_PURE warning a shape-A fixture fires is unverified.** The research says
 shape A trips the key-not-found warning via a simple-name-vs-EQN mismatch. But by the code,
@@ -93,9 +103,10 @@ source" — the same reason the sort goes in the graph, not the template.
 
 ## Key Bets
 
-- **B1.** `catf_mfe`'s constraint usages are reachable as `ConstraintUsage` members of the calc-def
-  element during extraction (same `owned_members` loop that today yields `AttributeUsage`).
-  *If false → the summary WARN never fires against `catf_mfe` and SC-1 has no real-fixture test.*
+- **B1.** `catf_mfe`'s constraint usages are reachable as `ConstraintUsage` members of their owner
+  elements (calc defs and part defs) during model traversal (same `owned_members` idiom that yields
+  `AttributeUsage`). *If false → the summary WARN never fires against `catf_mfe` and SC-1 has no
+  real-fixture test.*
 - **B2.** A minimal shape-A EXPOSE_PURE fixture fires one of the two reworded name-drop warnings
   (683 or Phase-3), not only the malformed-refs one. *If false → REQ-CA-09's real-fixture test is
   unfundable in Item 1 and defers to Item 8 (recorded fallback).*
@@ -109,12 +120,17 @@ source" — the same reason the sort goes in the graph, not the template.
   `ComputationGraph(...)` (line 364), scoped to that list only. *Rejected: sorting in
   `generation/pipeline.py:66` (spec's original cite) — leaves the graph itself discovery-ordered,
   so Item 2's snapshot rebuild stays non-deterministic; contradicts "fix at the source."*
-- **D2.** Detect dropped constraints in `_extract_calculation_definition` (live path); emit
-  per-constraint INFO inline and one summary WARN after the loop in
-  `extract_calculation_definitions()`. *Rejected: detecting in `_extract_part_definition` per the
-  spec's literal cite — that method is off the live generation path, so the diagnostic would never
-  fire against `catf_mfe`. Rejected: an orchestration-time summary — needs cross-method plumbing
-  for no gain, since all live constraints are calc-def-owned.*
+- **D2.** Detect dropped constraints in one dedicated pass over the loaded model — a single method
+  `SysMLDataExtractor.report_dropped_constraints()` that finds every `ConstraintUsage` (across
+  calc-def, part-def, and part-usage owners), logs one INFO per constraint, and emits one summary
+  WARN with the model-wide total. Called once from orchestration after load
+  (`pipeline_builder.py`, near the calc-def extraction step). *Rejected: detecting inline inside
+  `_extract_calculation_definition` only — misses part-def-owned constraints (M1;
+  `radial_build.sysml:55`), so the summary would under-count and the drop would stay partly silent.
+  Rejected: threading a shared counter across `_extract_calculation_definition` and the
+  part-def loop in `pipeline_builder.py:115` — those are different modules; a dedicated pass is one
+  collector by construction and keeps the diagnostic off the extraction return path. Rejected:
+  scoping the message down to "calc-def constraints" — SC-1's intent is no silent drops, period.*
 - **D3.** Zero-output check raises `ValueError` right after `output_attributes` is populated, before
   the `CalculationDefinitionData(...)` return (`extractor.py:~214`); fail on the first offender.
   *Rejected: collect-all-then-report — "fail-fast" is the spec's word and the crash it replaces is
@@ -134,40 +150,52 @@ Four independent edits, no shared state beyond one per-extractor counter:
 ```
 graph_builder.build_computation_graph
   └─ sort param_groups by name ───────────────► deterministic entry_point_groups (D1)
+       consumed by 5 sites (see Implementation Notes) → all serialization deterministic
+       ⇒ re-capture solar_battery: YAML + computation_graph.json + registry_init.py (C1)
 
-extractor.extract_calculation_definitions        (loop)
-  └─ _extract_calculation_definition
-        ├─ count ConstraintUsage members ──────► logger.info per constraint (D2)
-        │     accumulate → self._dropped_constraint_count
-        └─ if not output_attributes: raise ValueError (V-rule) ──► fail-fast (D3)
-  └─ after loop: if count: logger.warning(summary) (D2)
+pipeline_builder (after load)
+  └─ extractor.report_dropped_constraints()  ── dedicated pass over the model (D2)
+        ├─ for each ConstraintUsage (calc-def / part-def / part-usage owners):
+        │     logger.info per constraint
+        └─ logger.warning(summary) with model-wide total
+
+extractor._extract_calculation_definition
+  └─ if not output_attributes: raise ValueError (V-rule) ──► fail-fast (D3)
 
 graph_builder._resolve_expose_pure  (key-not-found branch) ──► reworded WARN (D4)
 output_registry_builder  (Phase-3 branch) ──────────────────► reworded WARN (D4)
 ```
 
-Data flow is otherwise unchanged. The constraint counter is a private `int` initialized in
-`SysMLDataExtractor.__init__` and reset per extraction run; nothing downstream reads it.
+Data flow is otherwise unchanged. The constraint pass reads only `self.model`; it holds no state
+and nothing downstream reads its result — it is purely diagnostic.
 
 ## Required Invariants
 
 - **I1.** `entry_point_groups` is sorted by `group.name` in every `ComputationGraph`. Testable:
   assert the list equals its name-sorted copy for every baseline.
-- **I2.** The three currently-green YAML baselines (chain_spike, attr_expr_probe, sample_model) and
-  all extraction snapshots are byte-identical after the change. Only `solar_battery.yaml` is
-  re-captured. This is the hard "no behavioral change" gate.
+- **I2 (per-model, not per-file).** All baseline artifacts for the three other models (chain_spike,
+  attr_expr_probe, sample_model) and every extraction snapshot are byte-identical after the change.
+  **solar_battery is re-captured across three files** — `baseline_yaml/solar_battery.yaml`,
+  `baseline_outputs/solar_battery/computation_graph.json`, and
+  `baseline_outputs/solar_battery/registry_init.py` — all ordering-only diffs (C1). The success
+  criterion "no baseline changes beyond solar_battery" is read **per model**: solar_battery's files
+  may change (reviewed, ordering-only); no other model's may. This is the hard "no behavioral
+  change" gate.
 - **I3.** A calc def with zero output attributes never reaches generation — it raises at
   extraction. Testable on the zero-output fixture.
-- **I4.** Generating `catf_mfe` emits exactly one constraint summary WARN plus N INFO lines
-  (N = constraint count), and no per-constraint WARN.
+- **I4.** Generating `catf_mfe` emits exactly **one** constraint summary WARN, and the number of
+  per-constraint INFO lines equals the number of `ConstraintUsage` members the test independently
+  counts from the loaded model — asserted structurally, never against a hardcoded N. No
+  per-constraint WARN.
 
 ## Component Overview
 
 - **Sort (D1)** — `resolution/graph_builder.py`, ~1 line before line 364. `param_groups` reassigned
   to `sorted(param_groups, key=lambda g: g.name)`.
-- **Constraint diagnostic (D2)** — `extraction/extractor.py`. A counter field + a member-type branch
-  in `_extract_calculation_definition` that INFO-logs each `ConstraintUsage` by name and increments
-  the counter; a summary WARN after the loop in `extract_calculation_definitions()`.
+- **Constraint diagnostic (D2)** — a new `report_dropped_constraints()` method on
+  `SysMLDataExtractor` (`extraction/extractor.py`) that scans the loaded model for every
+  `ConstraintUsage`, INFO-logs each by `owner.name` + constraint name, and WARN-summarizes the
+  total; invoked once from `orchestration/pipeline_builder.py` after `load_models()`.
 - **Zero-output fail-fast (D3)** — `extraction/extractor.py`, guard before the calc-def return.
 - **EXPOSE wording (D4)** — two `logger.warning` string edits, no logic change.
 - **Fixtures** — `tests/fixtures/zero_output_calc/` (minimal, funds D3) and
@@ -193,25 +221,41 @@ Data flow is otherwise unchanged. The constraint counter is a private `int` init
   - **Zero-output (D3), `ValueError`:**
     `"Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: return-style ('return y : Real = expr') or bare 'in' parameters, which are not yet extracted (Item 3); anonymous 'return' is unsupported. Declare an 'out attribute'."`
   - **Constraint per-item (D2), `logger.info`:**
-    `"Constraint '{constraint_name}' on calc def '{calc_def_name}' is not executable and was dropped (constraints are not compiled to pipeline modules; see modeling-assumptions.md)."`
+    `"Constraint '{constraint_name}' on {owner_kind} '{owner_name}' is not executable and was dropped (constraints are not compiled to pipeline modules; see modeling-assumptions.md)."` (`owner_kind` = "calc def" | "part def" | "part usage")
   - **Constraint summary (D2), `logger.warning`:**
     `"Dropped {n} constraint usage(s) across the model; constraint predicates are not executable and do not appear in generated output. See the 'Constraints are not executable' section of modeling-assumptions.md."`
   - **EXPOSE key-not-found (D4), reworded `logger.warning`:**
     `"EXPOSE_PURE %s: derived-attribute name is dropped from generated output — no alias is emitted. Its value was expected on canonical channel '%s', which is not registered (name-form mismatch; part-def shape-A resolution is Item 10/11)."` (`ca.name`, `catalog_key`)
   - **EXPOSE Phase-3 (D4), reworded `logger.warning`:**
     `"Phase 3: EXPOSE_PURE alias '%s' is dropped from generated output — canonical channel '%s' is not in the registry, so no named alias is emitted."` (`scoped_key`, `alias.canonical_name`)
-- **Constraint metaclass string.** Detect via `self.adapter.is_instance(member, "ConstraintUsage")`.
-  Confirm the exact SysIDE type name with a one-line probe before wiring (the member loop already
-  uses `is_instance` with metaclass strings). If inline `constraint` bodies surface as a different
-  metaclass, adjust the string only.
+- **Constraint detection mechanism.** Prefer `self.adapter.elements_of_type(self.model,
+  "ConstraintUsage")` if it enumerates every constraint usage in the model (owner reachable via the
+  node's owner attribute) — one call, honest total. If it does not recurse into calc-def/part-def
+  bodies, fall back to scanning `owned_members` of each `CalculationDefinition`, `PartDefinition`,
+  and `PartUsage` element for `is_instance(member, "ConstraintUsage")` (the existing member-loop
+  idiom). Confirm the exact SysIDE metaclass string and the enumeration behavior with the same
+  one-line probe used for SC-7. Either way it is one collector, model-wide.
 - **Sort stability.** `group.name` is unique per design file (one group per file), so the sort is
   total and stable. Do not sort module inputs, modules, or exit points — scope creep would churn
   the other baselines (spec review L3-2).
-- **Counter reset.** Initialize `self._dropped_constraint_count = 0` in `__init__`; the summary
-  reads it after the calc-def loop. No global state.
-- **Baseline re-capture.** `uv run python scripts/capture_baseline_yaml.py` regenerates all four;
-  commit only the `solar_battery.yaml` diff (the other three must show no change — that is I2's
-  guard). Requires the live syside license (valid to 2026-08-06, in window). Never hand-edit (R3).
+- **`entry_point_groups` consumers (why C1's re-capture set is what it is).** The sorted list feeds
+  five sites, and the sort makes all of them deterministic in one place — this is D1's whole point:
+  1. pipeline YAML entry points — `generation/pipeline.py:56` (`_build_entry_points`);
+  2. **registry `group_names` order** — `generation/registry.py:185` → `registry_init.py`;
+  3. Pydantic schema file generation — `generation/entry_point.py:238`;
+  4. JSON input file generation — `generation/entry_point.py:293`;
+  5. the CLI driver that calls 3 & 4 — `cli/__init__.py:372-383`.
+  Consumers 1 and 2 are what change solar_battery's `pipeline.yaml` and `registry_init.py`; the
+  list itself changes `computation_graph.json`. Schema/JSON file *contents* are per-group and
+  order-independent, but their generation order is now stable too.
+- **Baseline re-capture (C1).** Two scripts, both live-license (valid to 2026-08-06, in window;
+  never hand-edit, R3): `scripts/capture_baseline_yaml.py` regenerates the four
+  `baseline_yaml/*.yaml`; `scripts/capture_pipeline_baselines.py` regenerates
+  `baseline_outputs/<model>/{computation_graph.json,registry_init.py}`. Commit **only** the three
+  solar_battery diffs; the other three models must show no change across either script — that is
+  I2's guard. `test_computation_graph_identical` (`test_factory_purity.py:509`) compares the graph
+  dict exactly with no ordering normalization, which is why the graph JSON must be re-captured, not
+  just the YAML.
 
 ## Potential Risks
 
@@ -237,15 +281,22 @@ Real-fixture conformance tests, no mocks (R1). Verification-matrix rows:
 
 | REQ | Behavior | Test | Fixture |
 |-----|----------|------|---------|
-| REQ-BASE-05 | solar_battery YAML re-captured via script | `test_baselines.py` / `test_gen_pipeline_yaml.py` | solar_battery_model |
+| REQ-BASE-05 | solar_battery YAML + graph + registry re-captured via scripts (ordering-only) | `test_baselines.py`, `test_factory_purity.py`, `test_gen_pipeline_yaml.py` | solar_battery_model |
 | REQ-BASE-06 | `entry_point_groups` name-sorted in every graph (I1) | `test_graph_assembly.py` | all baselines |
 | REQ-EXT-08 | zero-output calc def raises at extraction (I3) | `test_extractor.py` | `zero_output_calc` (new) |
-| REQ-EXT-09 | dropped constraints → 1 summary WARN + N INFO (I4) | `test_extractor.py` (caplog) | catf_mfe_model |
+| REQ-EXT-09 | dropped constraints (calc-def + part-def) → 1 summary WARN + structural INFO count (I4) | `test_extractor.py` (caplog) | catf_mfe_model |
 | REQ-CA-09 | EXPOSE_PURE name-drop warning reworded | `test_computed_attributes.py` (caplog) | `expose_pure_shape_a` (new) |
 
-- **Full suite green** on the branch after re-capture (top success criterion).
-- **I2 byte-identical guard**: the three green YAML baselines + all extraction snapshots unchanged;
-  assert in the baseline test that only solar_battery differs.
+- **Full suite green** on the branch after re-capture (top success criterion) — includes
+  `test_factory_purity.py::test_computation_graph_identical`, which fails until solar_battery's
+  `computation_graph.json` is re-captured.
+- **I2 byte-identical guard (per model)**: after both capture scripts run, only the three
+  solar_battery files change; the other three models' YAML, `computation_graph.json`,
+  `registry_init.py`, and all extraction snapshots are byte-identical. Verify via `git diff --stat`
+  on the re-capture commit — it should touch solar_battery paths only.
+- **Constraint test (REQ-EXT-09)** asserts structurally: load `catf_mfe`, independently count
+  `ConstraintUsage` nodes, then assert exactly one summary WARN and that INFO count equals that
+  number — covering both a calc-def-owned and a part-def-owned constraint. No hardcoded N.
 - **Fixtures** — `zero_output_calc`: one calc def with an `in` attribute and **no** `out attribute`
   (e.g. a body-only or empty calc def), instantiated once; must load and trigger D3 without Item 3.
   `expose_pure_shape_a`: a library part def owning a calc usage plus an EXPOSE attribute
@@ -264,18 +315,40 @@ fires. Branch on the result:
 - Fires only 672 (malformed-refs) → invoke the fallback: keep the wording edits, defer REQ-CA-09's
   real-fixture test to Item 8, record it in the matrix. Do not touch the malformed-refs warning.
 
-**Fixed** (do not relitigate): D1 sort site and scope; D2 calc-def detection path; D3 fail-fast at
-extraction; D4 two-warning rewording; D5 sequential REQ numbers; the dead-code deletion; the
-byte-identical baseline guard (only solar_battery re-captured).
+**Fixed** (do not relitigate): D1 sort site and scope; D2 single dedicated constraint pass covering
+calc-def **and** part-def (and part-usage) owners; D3 fail-fast at extraction; D4 two-warning
+rewording; D5 sequential REQ numbers; the dead-code deletion; the per-model baseline guard
+(solar_battery re-captured across YAML + `computation_graph.json` + `registry_init.py`; no other
+model changes).
 
-**Open** for the plan/implementer: the exact SysIDE metaclass string for inline constraints
-(probe); the precise line for the zero-output guard within the return-building block; final fixture
-file contents.
+**Open** for the plan/implementer: the exact SysIDE metaclass string for constraint usages and
+whether `elements_of_type` enumerates them model-wide vs. the owned_members fallback (one probe,
+shared with SC-7); the precise line for the zero-output guard within the return-building block;
+final fixture file contents.
 
 **Risky:** B2 (above) is the only thing that can shrink scope. Everything else is mechanical and
 guarded by I2's byte-identical assertion.
 
 ---
+
+## Design-Review Resolutions (round 1)
+
+- **C1 (critical) — resolved.** The graph-level sort changes solar_battery's
+  `computation_graph.json` and `registry_init.py` (via `entry_point_groups` and the derived
+  `group_names` order), and `test_computation_graph_identical` (`test_factory_purity.py:509`)
+  compares the graph dict exactly. Re-capture set is now solar_battery's YAML **+ graph JSON +
+  registry** via both `capture_baseline_yaml.py` and `capture_pipeline_baselines.py` (all
+  ordering-only, reviewed). Success criterion reinterpreted **per model** (I2, Implementation
+  Notes, validation matrix).
+- **M1 (major) — resolved.** Constraint detection extended to part-def-owned constraints
+  (`radial_build.sysml:55`, visited on the live path at `pipeline_builder.py:115`). D2 redesigned as
+  a single dedicated model-wide pass with one collector across calc-def, part-def, and part-usage
+  owners; detection-only; message not scoped down (Finding 1, D2, B1, Architecture, Component
+  Overview, wording).
+- **Minor — I4's N.** Test now asserts structurally (independently counted `ConstraintUsage`
+  total), not a magic number (I4, validation).
+- **Minor — consumer enumeration.** All five `entry_point_groups` consumers listed with file:line
+  (Implementation Notes), which also grounds C1's re-capture set.
 
 Next Step: After approval → `/_my_plan` (several fixtures + a probe + doc updates make a short plan
 worthwhile over going straight to `/_my_implement`).
