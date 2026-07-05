@@ -367,9 +367,72 @@ coverage corrected.
 
 ---
 
-**Overall:** Revise
-**Next Steps:** Once resolutions are recorded here, re-run `/_my_design` (or return
-to the design-agent session) and point it at this review to incorporate. The
-reviewer does not edit the design. The three Critical items (C1 evidence, C2
-polarity, C3 unary) are wrong-math / wrong-evidence and must be resolved before
-`/_my_plan`; the approach itself is sound and does not need rework.
+## Verification Round (2026-07-05)
+
+Targeted re-check of the four applied areas. All pass; no residual blockers.
+
+**1. `needs_parens` polarity + five hand-traces — PASS.** The doc now states one
+convention (`design.md:296-302`): `RANK[op]` from the table, smaller = tighter,
+all comparisons written against the rank directly ("child looser" =
+`RANK[child] > RANK[parent]`). The pseudocode (`design.md:311-317`) matches it.
+I re-traced all five rows of the hand-trace table (`design.md:334-340`)
+*independently*, using ranks unary=2, `**`/`^`=3, `*`/`/`=4, `+`/`-`=5:
+
+| Case | My trace | Design row | Match |
+|---|---|---|---|
+| `a-(b-c)` | `-`(5)/`-`(5)/right, equal, left-assoc→unfavored=right → wrap | wrap | ✓ |
+| `a/(b*c)` | `/`(4)/`*`(4)/right, equal, left-assoc→right → wrap | wrap | ✓ |
+| `-(a+b)` | unary`-`(2)/`+`(5)/operand, `5>2`→looser → wrap | wrap | ✓ |
+| `a**(b**c)` | `**`(3)/`**`(3)/right, equal, right-assoc→unfavored=left; side=right → no wrap | no wrap | ✓ |
+| `(a**b)**c` | `**`(3)/`**`(3)/left, equal, right-assoc→left; side=left → wrap | wrap | ✓ |
+
+Every row matches, and each renders the mathematically correct grouping. The C2
+inversion trap is closed — feeding rank numbers straight into the pseudocode now
+gives right answers, and the doc explicitly forbids building a separate tightness
+number.
+
+**2. Appendix A source-verification — PASS.** Spot-checked all four restorers
+against the actual `.sysml` (not the design's prose):
+- `attr_expr_probe/design.sysml:62` → `(r_inner + r_outer) / 2.0 - r_major` ✓
+- `expression_binding_probe/library.sysml:8` → `combined_input * (1.0 + tax_rate)` ✓
+- `catf_mfe_model/library/components/divertor.sysml:222` → the constraint
+  `total_heat_load <= n_divertor_modules * (target_plates.surface_area_inner +
+  target_plates.surface_area_outer) * target_plates.heat_flux_capability` ✓
+  (correctly noted as constraint text, which `reconstruct_expression` also serves).
+- `attr_expr_probe/design.sysml:77-78` (verified prior round) ✓
+
+All four file:line references are accurate and each is a genuine looser-or-equal-
+unfavored child that the fix restores.
+
+**3. Unary branch — PASS.** The unary operand now runs the same helper
+(`design.md:320-326`): `-(a + b)` wraps; `- -a` stays flat (nested unary operand
+is atomic, `binary_op_of → None`); and the KerML-specific `-(a ** b)` wraps while
+`(-a) ** b` renders flat as `-a ** b` (unary tighter than power). Correct in both
+directions.
+
+**4. Regen checklist positive-confirm — PASS.** Checklist item 2
+(`design.md:367-375`) now requires the reviewer to *positively confirm each
+enumerated paren appears*, with a missing one a hard stop "same as a surprise one"
+— explicitly because a C2-class bug would silently drop exactly these parens. The
+offline totality guard (Component 6, `design.md:261-265`) independently asserts the
+four restorers are present in regenerated snapshots. M1 is resolved with a genuine
+double-check, not a relabel.
+
+**Residual (non-blocking, plan-time):** Component 5's offline unit tests rely on a
+named-type stub driving `reconstruct_operator_expression`'s type checks
+(`design.md:251-259`). The design flags the right caveat itself — stubs cover the
+parens/precedence logic but *not* dispatch ordering, which still needs the
+real-AST test. The plan should just confirm the stub actually exercises the
+helper's `is_binary_operator_expr` check (trivial if the helper keys off
+`hasattr(operator)` + operand count; needs the name-fallback if it keys off
+`is_instance`). Low risk, no design change required.
+
+---
+
+**Overall:** Approve
+**Next Steps:** Proceed to `/_my_plan`. The three Criticals (C1 evidence, C2
+polarity, C3 unary), both Majors (M1 regen expectation, M2 test coverage), and all
+four Minors are resolved in `design.md`, verified against source and re-traced
+independently. The five hand-traces are the acceptance test for the helper —
+implement them exactly. One low-risk plan-time confirmation on the Component 5 stub
+mechanism; nothing blocking.
