@@ -142,6 +142,30 @@ def real_graph(request):
 
 
 # ===========================================================================
+# REQ-BASE-06: entry_point_groups sorted by name (I1)
+# ===========================================================================
+ALL_BASELINE_MODELS = [
+    "solar_battery_model",
+    "catf_mfe_model",
+    "chain_spike_model",
+    "attr_expr_probe",
+    "sample_model",
+]
+
+
+@pytest.mark.req("REQ-BASE-06")
+@pytest.mark.parametrize("model_name", ALL_BASELINE_MODELS)
+def test_entry_point_groups_sorted_by_name(model_name):
+    """I1: every ComputationGraph's entry_point_groups is name-sorted, so a
+    model-discovery-order shift can never redden a byte-exact baseline again."""
+    graph, _inputs = build_full_graph_from_snapshot(model_name)
+    names = [g.name for g in graph.entry_point_groups]
+    assert names == sorted(names), (
+        f"{model_name}: entry_point_groups not name-sorted: {names}"
+    )
+
+
+# ===========================================================================
 # REQ-GA-01: Topological sort validity
 # ===========================================================================
 class TestTopologicalSortValid:

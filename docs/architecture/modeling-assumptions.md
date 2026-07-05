@@ -311,6 +311,30 @@ For the full identifier taxonomy and naming rules, see [15-naming-conventions.md
 
 ---
 
+## 8. Constraints Are Not Executable
+
+> **Constraint predicates are dropped. They are not compiled to pipeline modules and never appear in generated output.**
+
+SysML lets a modeler attach `constraint` usages to calc defs, part defs, and part usages — for
+example a physical-consistency check like `outer_radius == inner_radius + thickness`, or a
+plausibility bound like `0.0 < efficiency`. These express intent, but sysml-codegen has no execution
+path for them today: there is no boolean-output module, no assertion channel, and nothing downstream
+reads a constraint. So every constraint usage in the model is **dropped**.
+
+**Why the drop is loud, not silent.** A dropped constraint is a real modeling gap — the modeler may
+believe a viability gate is being enforced when it is not. At orchestration time the pipeline scans
+the whole model for constraint usages and reports them (REQ-EXT-09): one `INFO` per constraint naming
+its owner, and one summary `WARNING` with the model-wide total. `catf_mfe` has dozens of benign inline
+constraints, so the report is a single summary WARN plus per-constraint INFO — never per-constraint
+WARN noise.
+
+**What a modeler needing an enforced gate should do.** There is no in-model mechanism yet. Encode the
+check as a calc def that outputs the quantity you care about (e.g. a margin or a boolean-as-Real), so
+it flows through the pipeline as a normal output channel, and gate on that value downstream. Compiling
+`constraint`/`assert` predicates into boolean-output modules is a deferred epic.
+
+---
+
 ## Validation Rules
 
 The extraction phase enforces these rules to catch modeling violations early:
@@ -323,6 +347,7 @@ The extraction phase enforces these rules to catch modeling violations early:
 | V4 | Unknown operator | "Unsupported operator in static expression. Use calc def for complex calculations." |
 | V5 | Unbound input without default | Add default to calc def OR add binding in usage |
 | V6 | Binding to undefined attribute | Fix the binding path |
+| V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: return-style or bare `in` parameters (not yet extracted, Item 3); anonymous `return` is unsupported. Declare an `out attribute`." |
 
 ---
 

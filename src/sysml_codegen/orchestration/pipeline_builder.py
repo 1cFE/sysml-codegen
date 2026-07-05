@@ -486,6 +486,10 @@ def build_pipeline_context(
             "Ensure library models contain calc definitions."
         )
 
+    # Step 2.5: Report dropped constraint usages (REQ-EXT-09). Detection only —
+    # constraints are not executable, so this makes the silent drop loud.
+    extractor.report_dropped_constraints()
+
     # Step 3: Extract calculation usages with enhanced algorithm param detection
     calc_usages, _report = extract_calculation_usages(
         extractor.model,

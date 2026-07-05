@@ -173,14 +173,26 @@ and nothing downstream reads its result — it is purely diagnostic.
 
 - **I1.** `entry_point_groups` is sorted by `group.name` in every `ComputationGraph`. Testable:
   assert the list equals its name-sorted copy for every baseline.
-- **I2 (per-model, not per-file).** All baseline artifacts for the three other models (chain_spike,
-  attr_expr_probe, sample_model) and every extraction snapshot are byte-identical after the change.
-  **solar_battery is re-captured across three files** — `baseline_yaml/solar_battery.yaml`,
-  `baseline_outputs/solar_battery/computation_graph.json`, and
-  `baseline_outputs/solar_battery/registry_init.py` — all ordering-only diffs (C1). The success
-  criterion "no baseline changes beyond solar_battery" is read **per model**: solar_battery's files
-  may change (reviewed, ordering-only); no other model's may. This is the hard "no behavioral
-  change" gate.
+- **I2 (per-model, not per-file).** **Re-capture set = solar_battery + catf_mfe, ordering-only,
+  reviewed; chain_spike, attr_expr_probe, sample_model byte-identical.** All baseline artifacts for
+  those three byte-identical models and every extraction snapshot are unchanged after the sort.
+  - **solar_battery** re-captured across three files — `baseline_yaml/solar_battery.yaml`,
+    `baseline_outputs/solar_battery/computation_graph.json`,
+    `baseline_outputs/solar_battery/registry_init.py`.
+  - **catf_mfe** re-captured across two files — `baseline_outputs/catf_mfe/computation_graph.json`
+    and `baseline_outputs/catf_mfe/registry_init.py` (catf_mfe has no baseline YAML).
+
+  All diffs are entry-group reorderings only. The success criterion "no behavioral change" is read
+  **per model**: solar_battery's and catf_mfe's serialized order may change (reviewed, ordering-only);
+  no model's semantics may. This is the hard gate.
+
+  > **Deviation (2026-07-05, implementation).** The original I2 said only solar_battery re-captures
+  > and named "the three other models (chain_spike, attr_expr_probe, sample_model)" as
+  > byte-identical — it under-counted catf_mfe, which has **8** entry-point groups committed in
+  > model-discovery order. The name-sort reorders them too. Proven ordering-only at implementation:
+  > catf_mfe's `modules`, `execution_order`, and per-group content are byte-identical; only the
+  > `entry_point_groups` list order changes (B3 holds). Approved (option 1) to expand the re-capture
+  > set to solar_battery + catf_mfe. The three named models remain genuinely byte-identical.
 - **I3.** A calc def with zero output attributes never reaches generation — it raises at
   extraction. Testable on the zero-output fixture.
 - **I4.** Generating `catf_mfe` emits exactly **one** constraint summary WARN, and the number of
@@ -281,7 +293,7 @@ Real-fixture conformance tests, no mocks (R1). Verification-matrix rows:
 
 | REQ | Behavior | Test | Fixture |
 |-----|----------|------|---------|
-| REQ-BASE-05 | solar_battery YAML + graph + registry re-captured via scripts (ordering-only) | `test_baselines.py`, `test_factory_purity.py`, `test_gen_pipeline_yaml.py` | solar_battery_model |
+| REQ-BASE-05 | solar_battery (YAML + graph + registry) **and catf_mfe (graph + registry)** re-captured via scripts (ordering-only) | `test_gen_pipeline_yaml.py`, `test_pipeline_e2e.py`, `test_e2e_output_registry.py`, `test_graph_assembly.py` | solar_battery_model, catf_mfe_model |
 | REQ-BASE-06 | `entry_point_groups` name-sorted in every graph (I1) | `test_graph_assembly.py` | all baselines |
 | REQ-EXT-08 | zero-output calc def raises at extraction (I3) | `test_extractor.py` | `zero_output_calc` (new) |
 | REQ-EXT-09 | dropped constraints (calc-def + part-def) → 1 summary WARN + structural INFO count (I4) | `test_extractor.py` (caplog) | catf_mfe_model |
@@ -290,10 +302,11 @@ Real-fixture conformance tests, no mocks (R1). Verification-matrix rows:
 - **Full suite green** on the branch after re-capture (top success criterion) — includes
   `test_factory_purity.py::test_computation_graph_identical`, which fails until solar_battery's
   `computation_graph.json` is re-captured.
-- **I2 byte-identical guard (per model)**: after both capture scripts run, only the three
-  solar_battery files change; the other three models' YAML, `computation_graph.json`,
-  `registry_init.py`, and all extraction snapshots are byte-identical. Verify via `git diff --stat`
-  on the re-capture commit — it should touch solar_battery paths only.
+- **I2 byte-identical guard (per model)**: after both capture scripts run, only solar_battery's
+  three files **and catf_mfe's two files** change (ordering-only); chain_spike, attr_expr_probe,
+  sample_model — YAML, `computation_graph.json`, `registry_init.py` — and all extraction snapshots
+  are byte-identical. Verify via `git diff` on the re-capture commit — it should touch only
+  solar_battery and catf_mfe baseline paths, and each diff must be an entry-group reorder.
 - **Constraint test (REQ-EXT-09)** asserts structurally: load `catf_mfe`, independently count
   `ConstraintUsage` nodes, then assert exactly one summary WARN and that INFO count equals that
   number — covering both a calc-def-owned and a part-def-owned constraint. No hardcoded N.
@@ -330,6 +343,19 @@ final fixture file contents.
 guarded by I2's byte-identical assertion.
 
 ---
+
+## Implementation Deviations (round 2)
+
+- **Capture-script flavor fix.** `capture_pipeline_baselines.py` rebuilt graphs live, but every
+  byte-exact baseline consumer rebuilds from committed snapshots; live-flavored captures
+  (absolute `source_file`, populated `auto_impl_context`) can never match. The script now captures
+  through the snapshot boundary (`build_full_graph_from_snapshot`) and needs no license. Item 2
+  will trigger a deliberate baseline regen when snapshots gain `compilation_results`.
+- **Stale registry baselines.** `sample_model/registry_init.py` and `catf_mfe/registry_init.py`
+  were stale relative to their committed graphs (unasserted by any test); regenerated as part of
+  the Phase 3 capture. Details + evidence in plan.md Phase 3 notes.
+- **solar_battery param reorder.** The group sort also reorders `system_design`'s 19 parameters
+  (multiset-equal). Ordering-only class, covered by the same reviewed-diff evidence.
 
 ## Design-Review Resolutions (round 1)
 

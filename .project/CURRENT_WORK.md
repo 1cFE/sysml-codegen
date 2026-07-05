@@ -8,13 +8,19 @@
 
 ### UPSTREAM-FINDINGS Item 1: Baseline Repair & Silent-Failure Diagnostics
 
-**Status**: Spec in progress
+**Status**: Implementation code-complete (Phases 0–2, 4); **Phase 3 baseline re-capture pending
+orchestrator** (this session's harness gates all writes and `uv run`).
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Spec**: `.project/active/baseline-diagnostics/spec.md`
+**Plan**: `.project/active/baseline-diagnostics/plan.md` (Phase 3 Completion has the exact capture commands)
 
-Green the suite (solar_battery YAML baseline) and convert three silent failures
-(SC-1 constraints, SC-7 EXPOSE_PURE name drop, SC-2 zero-output Jinja crash) into
-loud diagnostics — no output change for valid models.
+Done: D1 sort (`entry_point_groups` name-sorted) + I1 test; D2 constraint-drop diagnostic
+(`report_dropped_constraints`, REQ-EXT-09); D3 zero-output fail-fast (REQ-EXT-08); D4 EXPOSE_PURE
+wording reword (REQ-CA-09 test deferred to Item 8 — shape-A fires malformed-refs, not the reworded
+warnings); dead-code deletion; Phase 4 docs + verification matrix.
+
+**Remaining (orchestrator):** run `scripts/capture_baseline_yaml.py` + `scripts/capture_pipeline_baselines.py`,
+review the ordering-only diff (solar_battery ×3 + catf_mfe ×2; three other models untouched), commit.
+Closes the 5 ordering-only baseline reds → full suite green.
 
 ### UPSTREAM-FINDINGS Item 2: Snapshot-Driven Generation (SC-9 + SC-10)
 

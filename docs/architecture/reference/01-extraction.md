@@ -16,6 +16,8 @@ Source: `src/sysml_codegen/extraction/`
 | REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual [CalcUsageData](09-data-models.md#extraction-models) per PartUsage that instantiates the owning PartDef. | Count virtual usages == count of design-level PartUsage instances of that PartDef |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | Static import analysis of `extraction/` package |
 | REQ-EXT-07 | `output_expression_asts` SHALL preserve raw SysIDE AST nodes for downstream [expression compilation](14-expression-compiler.md). | Nodes are stored as `Any` and passed unchanged to `compile_calc_def()` |
+| REQ-EXT-08 | A `calc def` that extracts with zero output attributes SHALL raise a `ValueError` at extraction (V7), never reaching generation. | `extract_calculation_definitions()` on the `zero_output_calc` fixture raises before the Jinja module template runs |
+| REQ-EXT-09 | Every `ConstraintUsage` in the model (calc-def, part-def, and part-usage owners) SHALL be reported as a dropped, non-executable predicate: one INFO per constraint, one summary WARN with the model-wide total. | `report_dropped_constraints()` on `catf_mfe` emits exactly one summary WARN and one INFO per `ConstraintUsage` (counted structurally) |
 
 ## The 4 Things Extracted
 

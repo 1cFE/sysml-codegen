@@ -64,4 +64,4 @@ def create_solar_battery_registry() -> PipelineModuleRegistry:
 
 # Custom schema types for TEAx pipeline registration
 # Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
-CUSTOM_SCHEMA_TYPES = [    LibraryParams,    DesignParams,    SystemDesign,    Float,]
+CUSTOM_SCHEMA_TYPES = [    DesignParams,    LibraryParams,    SystemDesign,    Float,]

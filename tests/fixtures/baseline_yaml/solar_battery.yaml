@@ -12,8 +12,8 @@ modules:
   entry_fusion:
     module_type: EntryPoint
     inputs:
-      library_params: LibraryParams ../inputs/library_params.json
       design_params: DesignParams ../inputs/design_params.json
+      library_params: LibraryParams ../inputs/library_params.json
       system_design: SystemDesign ../inputs/system_design.json
 
 

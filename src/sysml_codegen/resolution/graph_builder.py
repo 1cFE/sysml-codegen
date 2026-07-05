@@ -359,6 +359,13 @@ def build_computation_graph(
     # This catches transitive binding resolution bugs before TEAx validation
     _validate_channel_references(modules)
 
+    # Step 9: Sort entry-point groups by name (REQ-BASE-06). Groups are derived
+    # in model-discovery order, which shifts between capture machines and reddens
+    # byte-exact baselines. Sorting the graph — not just the rendered YAML — makes
+    # every entry_point_groups consumer deterministic. Group names are unique per
+    # design file, so the sort is total.
+    param_groups = sorted(param_groups, key=lambda g: g.name)
+
     return ComputationGraph(
         modules=modules,
         entry_point_groups=param_groups,
@@ -681,7 +688,10 @@ def _resolve_expose_pure(
         channel_name = output_registry.alias_lookup(ScopedKey(catalog_key))
     if channel_name is None:
         logger.warning(
-            "EXPOSE_PURE %s: key '%s' not found in output registry",
+            "EXPOSE_PURE %s: derived-attribute name is dropped from generated "
+            "output — no alias is emitted. Its value was expected on canonical "
+            "channel '%s', which is not registered (name-form mismatch; part-def "
+            "shape-A resolution is Item 10/11).",
             ca.name, catalog_key,
         )
         return None

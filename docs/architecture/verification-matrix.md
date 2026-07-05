@@ -6,15 +6,19 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 204 |
-| PASS (test exists and passes) | 192 |
+| Total requirements | 209 |
+| PASS (test exists and passes) | 195 |
 | UNTESTED (no dedicated test) | 12 |
+| PENDING RE-CAPTURE | 1 |
+| DEFERRED | 1 |
 | REQ families | 29 |
 | Conformance test files | 33 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
 - **UNTESTED**: No conformance test directly references this requirement
+- **PENDING RE-CAPTURE**: Verified once the solar_battery + catf_mfe baselines are re-captured via the capture scripts (REQ-BASE-05)
+- **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (REQ-CA-09 → Item 8)
 
 UNTESTED requirements are either cross-cutting architectural principles verified
 indirectly through component-level tests, or design-only requirements that constrain
@@ -24,14 +28,14 @@ the documentation rather than executable code.
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
 - [AST — AST Dispatch Invariant](#ast) (7/7 pass)
-- [BASE — Baseline Conformance](#base) (4/4 pass)
+- [BASE — Baseline Conformance](#base) (5/6 pass, 1 pending re-capture)
 - [BT — Backtracker](#bt) (8/8 pass)
-- [CA — Computed Attributes](#ca) (7/8 pass)
+- [CA — Computed Attributes](#ca) (7/9 pass, 1 deferred to Item 8)
 - [DM — Data Models](#dm) (7/8 pass)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
-- [EXT — Extraction](#ext) (7/7 pass)
+- [EXT — Extraction](#ext) (9/9 pass)
 - [GA — Graph Assembly](#ga) (7/7 pass)
 - [GEN — Generation](#gen) (5/7 pass)
 - [HR — Hierarchy Resolver](#hr) (7/7 pass)
@@ -95,6 +99,8 @@ the documentation rather than executable code.
 | REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | `test_baselines.py` | PASS |
 | REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | `test_baselines.py` | PASS |
 | REQ-BASE-04 | execution_order length equals modules length in every baseline | `test_baselines.py` | PASS |
+| REQ-BASE-05 | solar_battery (YAML + graph + registry) and catf_mfe (graph + registry) re-captured via scripts, ordering-only, reviewed | `test_gen_pipeline_yaml.py`, `test_pipeline_e2e.py`, `test_e2e_output_registry.py` | PENDING RE-CAPTURE |
+| REQ-BASE-06 | `entry_point_groups` SHALL be name-sorted in every ComputationGraph, so a model-discovery-order shift cannot redden a byte-exact baseline | `test_graph_assembly.py` | PASS |
 
 ### BT
 
@@ -125,6 +131,7 @@ the documentation rather than executable code.
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or ... | `test_computed_attributes.py` | PASS |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | — | UNTESTED |
+| REQ-CA-09 | The two EXPOSE_PURE name-drop warnings (key-not-found + Phase-3) SHALL state that the derived-attribute name is dropped and name the canonical channel; malformed-refs unchanged | `test_computed_attributes.py` | DEFERRED TO ITEM 8 |
 
 ### DM
 
@@ -195,6 +202,8 @@ the documentation rather than executable code.
 | REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual CalcUsageData per Par... | `test_extractor.py` | PASS |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | `test_extractor.py` | PASS |
 | REQ-EXT-07 | `output_expression_asts` SHALL preserve raw SysIDE AST nodes for downstream expression co... | `test_extractor.py` | PASS |
+| REQ-EXT-08 | A `calc def` extracting with zero output attributes SHALL raise `ValueError` at extraction (V7), never reaching generation | `test_extractor.py` | PASS |
+| REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) SHALL be reported dropped: one INFO each + one summary WARN with the model-wide total | `test_extractor.py` | PASS |
 
 ### GA
 

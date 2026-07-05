@@ -4,6 +4,18 @@
 Captures deterministic pipeline output for diff-based regression detection.
 These baselines sit alongside the existing YAML baselines.
 
+Baselines are captured through the SNAPSHOT serialization boundary — the same
+path the byte-exact conformance tests use (test_factory_purity rebuilds graphs
+from committed extraction snapshots and compares raw model_dump against these
+files). Snapshot-flavored output differs from a live build in two known ways:
+`source_file` is fixtures-relative (not parser-absolute) and
+`compilation_results` is absent, so `compilability` stays "unknown" and
+`auto_impl_context` stays null. Item 2 (snapshot-driven generation) will add
+compilation_results to the snapshot format; regenerating these baselines then
+is a deliberate, reviewed rev.
+
+Requires no syside license (reads committed extraction snapshots).
+
 Usage:
     uv run python scripts/capture_pipeline_baselines.py
 """
@@ -14,26 +26,30 @@ import ast as python_ast
 import sys
 from pathlib import Path
 
-# Add project root to sys.path for template access
+# Add project root to sys.path for template + tests package access
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import jinja2
 
-from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.generation.registry import (
     _collect_exit_point_primitive_types,
     generate_registry,
 )
 
+from tests.conformance.test_entry_point_classifier import (
+    build_full_graph_from_snapshot,
+)
+
 FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 OUTPUT_DIR = FIXTURES_DIR / "baseline_outputs"
 
+# baseline dir name -> extraction snapshot name
 MODELS = {
-    "solar_battery": FIXTURES_DIR / "solar_battery_model",
-    "catf_mfe": FIXTURES_DIR / "catf_mfe_model",
-    "attr_expr_probe": FIXTURES_DIR / "attr_expr_probe",
-    "chain_spike": FIXTURES_DIR / "chain_spike_model",
-    "sample_model": FIXTURES_DIR / "sample_model",
+    "solar_battery": "solar_battery_model",
+    "catf_mfe": "catf_mfe_model",
+    "attr_expr_probe": "attr_expr_probe",
+    "chain_spike": "chain_spike_model",
+    "sample_model": "sample_model",
 }
 
 
@@ -49,29 +65,27 @@ def _get_template_env() -> jinja2.Environment:
 def main() -> None:
     template_env = _get_template_env()
 
-    for model_name, model_path in MODELS.items():
-        print(f"Processing {model_name} from {model_path}...")
-        ctx = build_pipeline_context([model_path])
+    for model_name, snapshot_name in MODELS.items():
+        print(f"Processing {model_name} from snapshot {snapshot_name}...")
+        graph, _inputs = build_full_graph_from_snapshot(snapshot_name)
 
         # Create output directory
         model_output_dir = OUTPUT_DIR / model_name
         model_output_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. ComputationGraph JSON
-        graph_json = ctx.computation_graph.model_dump_json(indent=2)
+        graph_json = graph.model_dump_json(indent=2) + "\n"
         graph_path = model_output_dir / "computation_graph.json"
         graph_path.write_text(graph_json)
 
-        n_modules = len(ctx.computation_graph.modules)
-        n_exec = len(ctx.computation_graph.execution_order)
+        n_modules = len(graph.modules)
+        n_exec = len(graph.execution_order)
         print(f"  -> computation_graph.json ({n_modules} modules, {n_exec} exec_order)")
 
         # 2. Registry __init__.py
-        exit_point_types = _collect_exit_point_primitive_types(
-            ctx.computation_graph.modules
-        )
+        exit_point_types = _collect_exit_point_primitive_types(graph.modules)
         registry_code = generate_registry(
-            graph=ctx.computation_graph,
+            graph=graph,
             package_name=model_name,
             template_env=template_env,
             output_path=model_output_dir,

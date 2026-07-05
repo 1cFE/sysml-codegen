@@ -180,7 +180,9 @@ def build_output_registry(
             phase3_count += 1
         else:
             logger.warning(
-                "Phase 3: EXPOSE_PURE alias '%s' canonical '%s' not in registry",
+                "Phase 3: EXPOSE_PURE alias '%s' is dropped from generated "
+                "output — canonical channel '%s' is not in the registry, so no "
+                "named alias is emitted.",
                 scoped_key,
                 alias.canonical_name,
             )

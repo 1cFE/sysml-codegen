@@ -1,6 +1,6 @@
 # Implementation Plan: Baseline Repair & Silent-Failure Diagnostics
 
-**Status:** Draft
+**Status:** Code complete (Phases 0–2, 4); Phase 3 re-capture pending orchestrator
 **Created:** 2026-07-05
 **Last Updated:** 2026-07-05
 **Epic:** UPSTREAM-FINDINGS — Item 1
@@ -66,19 +66,19 @@ print(len(cu), [ (c.owner.name, c.name) for c in cu ])    # does it reach Radius
 
 **See `design.md` for:** fixture shape (`design.md#validation-approach`, "Fixtures"), the probe branch (`design.md#next-stage-handoff`), constraint mechanism (`design.md#implementation-notes`).
 
-- [ ] Author `tests/fixtures/expose_pure_shape_a/` — a library part def owning a calc usage plus an EXPOSE attribute (`attribute total_cost : Real = cost_calc.total_cost;`), instantiated by a separate design part. Model on `tests/fixtures/chain_spike_model/`'s library/design split.
-- [ ] Author `tests/fixtures/zero_output_calc/` — one calc def with an `in` attribute and **no** `out attribute` (body-only or empty), instantiated once. Must load and reach the zero-output condition without Item 3.
-- [ ] Run Probe 1 (SC-7) and Probe 2 (constraints) against the live models.
-- [ ] Capture extraction snapshots this session via `scripts/capture_extraction_snapshots.py` where applicable. **Note:** `zero_output_calc` extraction *raises* once D3 lands (Phase 1), so it may have no committed snapshot — its REQ-EXT-08 test invokes the extractor live and asserts `ValueError`. Decide and record whether a pre-D3 snapshot is committed (implementer's call per `design.md#next-stage-handoff` "final fixture file contents").
-- [ ] Record both probe outcomes in this plan's Implementation Notes (Phase 0) **and** confirm/adjust the constraint-detection code path and the final `ConstraintUsage` metaclass string in `design.md#implementation-notes`.
+- [x] Author `tests/fixtures/expose_pure_shape_a/` — authored, probed, then **removed** (fired the 672 malformed-refs warning, not a reworded one → funds no Item-1 test; see Phase 0 notes).
+- [x] Author `tests/fixtures/zero_output_calc/` — one calc def with an `in` attribute and **no** `out attribute`, instantiated once. Loads and reaches the zero-output condition (probe 3: inputs=1, outputs=0).
+- [x] Run Probe 1 (SC-7) and Probe 2 (constraints) against the live models. (`scripts/probes/probe_item1_phase0.py`, throwaway.)
+- [x] Capture extraction snapshots — **no snapshot committed** for either new fixture. `zero_output_calc` raises once D3 lands; its REQ-EXT-08 test invokes the extractor live and asserts `ValueError`. `expose_pure_shape_a` removed.
+- [x] Record both probe outcomes in this plan's Implementation Notes (Phase 0). Constraint mechanism = primary path (`elements_of_type("ConstraintUsage")`), metaclass string `"ConstraintUsage"` — matches `design.md#implementation-notes`; no adjustment needed.
 
 ### Validation
 **Automated:**
-- [ ] Full suite still green (no source changed) → confirms fixtures load and don't perturb the corpus.
+- [x] Full suite still green (no source changed) → confirms fixtures load and don't perturb the corpus. (New fixtures are not in any snapshot/baseline enumeration, so the corpus is untouched.)
 
 **Manual:**
-- [ ] Probe 1 result recorded → SC-7 branch chosen (primary vs. fallback).
-- [ ] Probe 2 result recorded → constraint mechanism chosen (`elements_of_type` vs. `owned_members`) and metaclass string pinned.
+- [x] Probe 1 result recorded → SC-7 **FALLBACK** chosen (shape A fires 672 malformed-refs).
+- [x] Probe 2 result recorded → constraint mechanism = **primary** `elements_of_type("ConstraintUsage")` (65 model-wide, owner always reachable); metaclass string pinned to `"ConstraintUsage"`.
 
 **What We Know Works After This Phase:**
 The two hardest uncertainties are settled in writing. Phase 1's D4 sub-task and D2 mechanism are now deterministic.
@@ -124,21 +124,21 @@ def test_expose_pure_name_drop_warning_reworded(caplog):
 
 **See `design.md` for:** final diagnostic strings (`design.md#implementation-notes`), decisions D2/D3/D4, invariants I3/I4.
 
-- [ ] **D3 zero-output fail-fast** — guard raising `ValueError` right after `output_attributes` is populated, before the calc-def return (`extraction/extractor.py`, ~line 214). Message is the D3 string verbatim from `design.md#implementation-notes`.
-- [ ] **D2 constraint pass** — new `SysMLDataExtractor.report_dropped_constraints()` (`extraction/extractor.py`): scan the loaded model for every `ConstraintUsage` (mechanism per Phase 0 outcome), `logger.info` per constraint (`owner_kind` = calc def | part def | part usage), one `logger.warning` summary with the model-wide total. Call it once from `orchestration/pipeline_builder.py` after `load_models()`, near the calc-def extraction step. Strings verbatim from `design.md#implementation-notes`. No per-constraint WARN.
-- [ ] **D4 EXPOSE wording** — reword the two name-drop warnings only: `resolution/graph_builder.py:683-687` (key-not-found) and `orchestration/output_registry_builder.py:182-186` (Phase-3). **Leave `graph_builder.py:672-675` (malformed-refs) untouched.** Strings verbatim from `design.md#implementation-notes`.
-  - If Phase 0 chose the **fallback**: still apply both wording edits (correct regardless), but defer the REQ-CA-09 real-fixture test to Item 8 and note the deferral in the verification matrix (Phase 4). Do **not** reword malformed-refs to force a green test.
-- [ ] **Dead-code deletion** — remove `extraction/constraints.py` and `templates/constraint_validator.py.jinja2`; keep `constraint_extractor.py` and `PartDefinitionData.constraints` (`design.md#non-goals`, spec D2). Update `tests/conformance/test_dead_code_removal.py` if it references the deleted paths.
-- [ ] Tag new behavior with REQ-EXT-08, REQ-EXT-09, REQ-CA-09 in code/test docstrings (matrix rows land in Phase 4).
+- [x] **D3 zero-output fail-fast** — guard raising `ValueError` before the calc-def return (`extraction/extractor.py`, after `references` is set / before `CalculationDefinitionData(...)`). Message is the D3 string verbatim.
+- [x] **D2 constraint pass** — new `SysMLDataExtractor.report_dropped_constraints()` + `_constraint_owner_kind()` helper (`extraction/extractor.py`): enumerates every `ConstraintUsage` via `elements_of_type` (primary path, Phase 0), `logger.info` per constraint (owner_kind = calc def | part def | part usage), one `logger.warning` summary with the model-wide total. Called once from `pipeline_builder.py` as **Step 2.5** (after calc-def extraction). Strings verbatim. No per-constraint WARN.
+- [x] **D4 EXPOSE wording** — reworded the two name-drop warnings: `graph_builder.py` key-not-found and `output_registry_builder.py` Phase-3. Malformed-refs (`graph_builder.py:672`) untouched. Strings verbatim.
+  - Phase 0 chose the **fallback**: both wording edits applied; **no** REQ-CA-09 real-fixture test in Item 1 (deferred to Item 8, marked in Phase 4 matrix). Malformed-refs not reworded.
+- [x] **Dead-code deletion** — `git rm` of `extraction/constraints.py` and `templates/constraint_validator.py.jinja2`; kept `constraint_extractor.py` and `PartDefinitionData.constraints`. Added two deletion assertions to `test_dead_code_removal.py::TestDeadFileRemoval`.
+- [x] Tag new behavior with REQ-EXT-08, REQ-EXT-09 in code/test docstrings (REQ-CA-09 wording present, its fixture test deferred; matrix rows land in Phase 4).
 
 ### Validation
 **Automated:**
-- [ ] New D3/D2/D4 tests pass.
-- [ ] Full suite green (no baseline touched by this phase).
-- [ ] `mypy src/` and `ruff check src/` clean.
+- [x] New D3/D2 tests pass (REQ-EXT-08, REQ-EXT-09). REQ-CA-09 fixture test deferred (fallback).
+- [x] Full suite: 1815 passed, 4 skipped, 5 xfailed, **1 failed** — the single failure is the pre-existing `solar_battery` YAML baseline (`test_e2e_output_registry.py[solar_battery]`), the item's repair target (Phases 2–3). Phase 1 added no new failures and touched no baseline.
+- [x] `mypy`/`ruff` — repo baseline is already non-clean (21 ruff + 109 mypy errors on HEAD before this work). My edits introduce **zero** new ruff/mypy findings (verified per-file and by stash-compare). New code matches the file's existing untyped-`elem` convention.
 
 **Manual:**
-- [ ] Run generation on `catf_mfe` → eyeball exactly one summary WARN + the per-constraint INFO lines; confirm no per-constraint WARN noise (`design.md#validation-approach`, "Manual").
+- [x] Constraint diagnostic verified structurally against live `catf_mfe` (65 constraints → exactly 1 summary WARN + 65 INFO, spanning calc-def and part-def owners); no per-constraint WARN.
 
 **What We Know Works After This Phase:**
 All three silent/opaque failures now emit V-rule-style diagnostics against real fixtures. B1 confirmed. Suite green.
@@ -168,9 +168,9 @@ def test_entry_point_groups_sorted_by_name(model_name):
 
 **See `design.md` for:** D1 site/scope (`design.md#component-overview`), the five consumers this stabilizes (`design.md#implementation-notes`, "entry_point_groups consumers").
 
-- [ ] `resolution/graph_builder.py` — reassign `param_groups = sorted(param_groups, key=lambda g: g.name)` immediately before `ComputationGraph(...)` (line ~364), scoped to that list only. Do **not** sort modules, module inputs, or exit points (spec review L3-2).
-- [ ] Add the I1 parametrized test above.
-- [ ] Tag REQ-BASE-06.
+- [x] `resolution/graph_builder.py` — added `param_groups = sorted(param_groups, key=lambda g: g.name)` as "Step 9" immediately before `ComputationGraph(...)`, scoped to that list only. Modules/inputs/exit points untouched.
+- [x] Add the I1 parametrized test (`test_graph_assembly.py::test_entry_point_groups_sorted_by_name`, 5 baseline models). Passes.
+- [x] Tag REQ-BASE-06.
 
 ### Validation
 **Automated:**
@@ -185,7 +185,7 @@ The graph is deterministic (I1 holds corpus-wide). The only remaining red is the
 
 ---
 
-## Phase 3: Baseline Re-Capture (reviewed diff, live license)
+## Phase 3: Baseline Re-Capture (reviewed diff, live license) — set = solar_battery + catf_mfe
 
 ### Goal
 Re-capture `solar_battery`'s three baseline artifacts via the capture scripts and prove — by reviewed diff — that nothing else changed. Closes the Phase 2 red; suite goes fully green.
@@ -197,20 +197,21 @@ Re-capture `solar_battery`'s three baseline artifacts via the capture scripts an
 
 **See `design.md` for:** the re-capture set and why (`design.md#implementation-notes`, "Baseline re-capture (C1)").
 
-- [ ] Run `scripts/capture_baseline_yaml.py` (regenerates the four `baseline_yaml/*.yaml`).
-- [ ] Run `scripts/capture_pipeline_baselines.py` (regenerates `baseline_outputs/<model>/{computation_graph.json,registry_init.py}`).
-- [ ] **Reviewed-diff gate.** Inspect `git diff`:
-  - `baseline_yaml/solar_battery.yaml`, `baseline_outputs/solar_battery/computation_graph.json`, `baseline_outputs/solar_battery/registry_init.py` → **ordering-only** diffs (entry-group reorder), no content change.
-  - Every other model (`attr_expr_probe`, `chain_spike`, `sample_model`, `catf_mfe`) across both scripts → **no diff**.
-- [ ] Stage and commit **only** the three `solar_battery` files (never hand-edit — R3).
+- [ ] **BLOCKED (harness):** Run `scripts/capture_baseline_yaml.py` (regenerates the four `baseline_yaml/*.yaml`).
+- [ ] **BLOCKED (harness):** Run `scripts/capture_pipeline_baselines.py` (regenerates `baseline_outputs/<model>/{computation_graph.json,registry_init.py}`).
+- [ ] **Reviewed-diff gate (expanded set — approved option 1).** Inspect `git diff`:
+  - solar_battery: `baseline_yaml/solar_battery.yaml`, `baseline_outputs/solar_battery/computation_graph.json`, `baseline_outputs/solar_battery/registry_init.py` → **ordering-only**.
+  - catf_mfe: `baseline_outputs/catf_mfe/computation_graph.json`, `baseline_outputs/catf_mfe/registry_init.py` → **ordering-only**.
+  - `attr_expr_probe`, `chain_spike`, `sample_model` across both scripts → **no diff**.
+- [ ] Stage the five ordering-only files (solar_battery ×3 + catf_mfe ×2). Never hand-edit — R3. **Orchestrator/user runs the capture + commit.**
 
 ### Validation
-**Automated:**
-- [ ] `git diff --stat` on the re-capture commit touches `solar_battery` paths only.
-- [ ] **Full suite green**, including `test_factory_purity.py::test_computation_graph_identical`.
+**Automated (pending orchestrator capture):**
+- [ ] `git diff` on the re-capture commit touches only solar_battery (3 files) + catf_mfe (2 files).
+- [ ] **Full suite green** after re-capture (closes the 5 ordering-only reds).
 
 **Manual:**
-- [ ] Read the three `solar_battery` diffs — confirm reorder-only (same keys/values, different order).
+- [ ] Read the solar_battery (×3) and catf_mfe (×2) diffs — confirm reorder-only (same keys/values, different order).
 
 **What We Know Works After This Phase:**
 The item's #1 success criterion — full suite green — is met. No valid model's output changed except `solar_battery`'s reviewed ordering.
@@ -229,12 +230,12 @@ None (documentation). This phase exists so the doc/matrix work is not dropped.
 
 **See `design.md` for:** the exact doc targets (`design.md#component-overview`, "Docs") and the matrix rows (`design.md#validation-approach`).
 
-- [ ] `docs/architecture/modeling-assumptions.md` — add a "Constraints are not executable" section (what's dropped, why, what a modeler needing a viability gate should do). Add the zero-output rule as a **V7** row in the "Validation Rules" table.
-- [ ] `docs/architecture/reference/01-extraction.md` — rows for REQ-EXT-08 (zero-output fail-fast) and REQ-EXT-09 (constraint drop diagnostic).
-- [ ] `docs/architecture/reference/16-computed-attributes.md` — row for REQ-CA-09 (EXPOSE_PURE name-drop wording).
-- [ ] `docs/architecture/verification-matrix.md` — five rows: REQ-BASE-05, REQ-BASE-06, REQ-EXT-08, REQ-EXT-09, REQ-CA-09 (mapping the table in `design.md#validation-approach`). If Phase 0 chose the SC-7 fallback, mark REQ-CA-09's fixture test as deferred to Item 8 with a note.
-- [ ] Confirm every new REQ tag in code/tests matches its matrix row.
-- [ ] **agentic-mbse impact** — record in the item close-out: endorse the A-1 constraint-non-executability WARN check; the new "Constraints are not executable" section becomes the canonical reference the agentic-mbse guidance points at. **No agentic-mbse code change in this item** (executed in Item 12). Nothing else in this item changes what models should look like (`spec.md#agentic-mbse-impact`).
+- [x] `docs/architecture/modeling-assumptions.md` — added "## 8. Constraints Are Not Executable" (what's dropped, why, what a modeler needing a viability gate should do) and a **V7** row (zero-output) in the Validation Rules table.
+- [x] `docs/architecture/reference/01-extraction.md` — added REQ-EXT-08 and REQ-EXT-09 rows.
+- [x] `docs/architecture/reference/16-computed-attributes.md` — added REQ-CA-09 row with the Item-8 deferral note.
+- [x] `docs/architecture/verification-matrix.md` — added five rows (BASE-05 PENDING RE-CAPTURE, BASE-06 PASS, EXT-08 PASS, EXT-09 PASS, CA-09 DEFERRED TO ITEM 8); updated summary counts + index.
+- [x] Confirmed new REQ tags in code/tests match matrix rows: `@pytest.mark.req` on REQ-EXT-08, REQ-EXT-09, REQ-BASE-06; code comments cite REQ-EXT-08/09, REQ-BASE-06, REQ-CA-09.
+- [x] **agentic-mbse impact** recorded (Phase 4 Completion below). No agentic-mbse code change in this item.
 
 ### Validation
 **Automated:**
@@ -271,29 +272,168 @@ The contract docs state the new rules, traceability is complete, and the agentic
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Probe 1 (SC-7) result:** _(record: which warning fired → primary or fallback)_
-**Probe 2 (constraints) result:** _(record: metaclass string; elements_of_type model-wide? or owned_members fallback)_
-**Fixture decisions:** _(zero_output_calc snapshot committed? shape-A final contents)_
-**Completed:** _
-**Deviations:** _
+**Completed:** 2026-07-05
+
+**Probe 1 (SC-7) result → FALLBACK.** The shape-A fixture (`total_cost : Real = cost_calc.total_cost`
+in a library part def owning the `cost_calc` usage) fired **only** the malformed-refs warning at
+`graph_builder.py:672` — `"EXPOSE_PURE total_cost: could not identify instance/output from refs
+['total_cost', 'cost_calc']"`. Neither the key-not-found (683) nor the Phase-3 warning fired. This
+is exactly the Finding-2 mechanism: `ca.references` carry simple names (`cost_calc`), but
+`calc_usage_names` holds backtracker EQNs (`ExposePureShapeADesign__costed__cost_calc`), so
+`cost_calc ∉ calc_usage_names` → `instance_name` stays `None` → 672. (Part-def shape-A binding
+resolution is Item 10/11; the backtracker also logged the cost_calc inputs as unresolved.)
+→ **Invoke the recorded fallback:** apply both wording edits (683 + Phase-3, correct regardless),
+write **no** Item-1 real-fixture test for REQ-CA-09, defer it to Item 8's WI-014 toy, and mark that
+deferral in the verification matrix. Do **not** reword 672.
+
+**Probe 2 (constraints) result → PRIMARY mechanism.** `adapter.elements_of_type(model,
+"ConstraintUsage")` enumerated **65** constraint usages model-wide for catf_mfe with the `owner`
+attribute always reachable (0 unowned): 51 calc-def-owned, 5 part-def-owned, 9 part-usage-owned.
+It reached both `RadiusConsistency` (part-def-owned, `radial_build.sysml:55`) and calc-def-owned
+constraints (e.g. `PositiveInputs` on `MagnetCryogenicLoad`). No `owned_members` fallback needed;
+metaclass string is `"ConstraintUsage"`.
+
+**Fixture decisions:**
+- `zero_output_calc` — committed (library.sysml + design.sysml). **No** extraction snapshot: once
+  D3 lands, extraction raises, so REQ-EXT-08 invokes the extractor live and asserts `ValueError`.
+  Probe 3 confirmed it extracts inputs=1, outputs=0.
+- `expose_pure_shape_a` — authored to run Probe 1, then **removed**. Under the fallback it funds no
+  Item-1 test, and it does *not* emit the reworded message (it emits 672), so committing it would be
+  dead and misleading. Item 8 brings its own toy for the deferred REQ-CA-09 test.
+
+**Deviations:** SC-7 took the recorded fallback branch (a pre-authorized contingency in
+spec/design/plan, not an improvisation). Removing `expose_pure_shape_a` is the one implementation
+call not spelled out verbatim by the fallback text — rationale above.
 
 ### Phase 1 Completion
-**Completed:** _
-**Actual Changes:** _
-**Issues / Deviations:** _
+**Completed:** 2026-07-05
+**Actual Changes:**
+- `extraction/extractor.py`: D3 zero-output `ValueError` guard before the calc-def return; `report_dropped_constraints()` + `_constraint_owner_kind()` (D2).
+- `orchestration/pipeline_builder.py`: Step 2.5 calls `extractor.report_dropped_constraints()`.
+- `resolution/graph_builder.py`: reworded key-not-found EXPOSE_PURE warning (D4).
+- `orchestration/output_registry_builder.py`: reworded Phase-3 EXPOSE_PURE warning (D4).
+- Deleted `extraction/constraints.py`, `templates/constraint_validator.py.jinja2` (`git rm`).
+- Tests: `test_extractor.py` gains `_load_live_extractor` helper + REQ-EXT-08/09 classes; `test_dead_code_removal.py` gains two deletion assertions.
+**Issues / Deviations:** REQ-CA-09 real-fixture test deferred to Item 8 (Phase 0 fallback). The one red at the Phase-1 boundary is the pre-existing solar_battery YAML baseline, owned by Phases 2–3.
 
 ### Phase 2 Completion
-**Completed:** _
-**Confirmed red set:** _(should be exactly the two solar_battery byte-exact comparisons)_
+**Completed:** 2026-07-05 (code); **BLOCKED at the Phase 2→3 boundary pending a re-capture-set decision.**
+
+**Confirmed red set after the sort (5 failures):**
+1. `test_gen_pipeline_yaml.py::...[solar_battery]` — solar YAML byte-exact ✓ expected
+2. `test_graph_assembly.py::TestBaselineComparison::test_baseline_comparison_solar_battery` — solar graph ✓ expected
+3. `test_pipeline_e2e.py::...test_baseline_comparison_solar_battery` — solar graph ✓ expected
+4. `test_pipeline_e2e.py::...test_baseline_comparison_catf_mfe` — **catf_mfe graph — NOT anticipated by the plan**
+5. `test_e2e_output_registry.py::...[solar_battery]` — solar YAML (pre-existing) ✓ expected
+
+**Deviation found — catf_mfe entry_point_groups also reorder (ordering-only).** The design's I2 named
+"the three other models (chain_spike, attr_expr_probe, sample_model)" as must-stay-byte-identical and
+the success criterion says "no baseline changes beyond solar_battery." But catf_mfe has **8**
+entry-point groups committed in discovery order (heating, magnets, blanket, physics, system, tritium,
+vacuum, radial_build); the sort reorders them alphabetically. Proven ordering-only:
+- same set of 8 group names; per-group content byte-identical
+- `modules` identical (order + content); `execution_order` identical
+- graphs equal after sorting entry_point_groups on both sides
+So B3 (semantic no-op) **holds** — the design merely under-counted which models reorder.
+`chain_spike`, `attr_expr_probe`, `sample_model` are byte-identical as the design claimed (they stayed green).
+
+**Corrected re-capture set (pending approval):** solar_battery (YAML + graph + registry, 3 files) **and**
+catf_mfe (graph + registry, 2 files — catf_mfe has no baseline_yaml; its `registry_init.py` group order
+also follows `entry_point_groups` via `registry.py:185`, though no test asserts it). Three other models
+unchanged. Per the plan's own Risk Management ("if a second baseline moves, stop and re-examine before
+committing") and the orchestration rule, execution paused here to confirm expanding the committed set to
+catf_mfe before running the capture scripts.
 
 ### Phase 3 Completion
-**Completed:** _
-**Diff review:** _(solar_battery ordering-only across 3 files; all other models byte-identical — confirm)_
+**Status:** BLOCKED on capture-script execution — the harness gates all filesystem writes and all
+`uv run` invocations this session, so `scripts/capture_*.py` cannot be run from here and 400 KB of
+byte-exact baselines cannot be reconstructed through the Write tool. **The orchestrator/user must run
+the two capture commands and commit the reviewed diff.**
+
+**Exact commands:**
+```
+uv run --env-file ~/1cfe/agentic-mbse/.env python scripts/capture_baseline_yaml.py
+uv run --env-file ~/1cfe/agentic-mbse/.env python scripts/capture_pipeline_baselines.py
+```
+
+**Diff review (verified in-memory this session — the capture will reproduce it):**
+- solar_battery: YAML + `computation_graph.json` + `registry_init.py` — ordering-only (entry-group reorder).
+- catf_mfe: `computation_graph.json` + `registry_init.py` — ordering-only. Proven: `modules`,
+  `execution_order`, and per-group content are byte-identical; only the `entry_point_groups` list order
+  changes (discovery → alphabetical). New sorted order: blanket, heating, magnets, physics,
+  radial_build, system, tritium, vacuum.
+- attr_expr_probe, chain_spike, sample_model: **no diff** (stayed green through the sort).
+
+**Post-capture expectation:** the 5 currently-red byte-exact baseline tests go green; full suite green.
+Reds to clear: `test_gen_pipeline_yaml.py[solar_battery]`, `test_e2e_output_registry.py[solar_battery]`,
+`test_graph_assembly.py::...solar_battery`, `test_pipeline_e2e.py::...solar_battery`,
+`test_pipeline_e2e.py::...catf_mfe`.
 
 ### Phase 4 Completion
-**Completed:** _
-**agentic-mbse impact recorded:** _
+**Completed:** 2026-07-05
+**Docs landed:** modeling-assumptions.md (§8 Constraints Are Not Executable + V7 row);
+01-extraction.md (REQ-EXT-08/09 rows); 16-computed-attributes.md (REQ-CA-09 row, Item-8 deferral);
+verification-matrix.md (5 rows + summary/index updates).
+
+**agentic-mbse impact recorded:** Endorse A-1 — sysml-codegen now warns at extraction when constraints
+are dropped (REQ-EXT-09), so agentic-mbse should carry the matching Level-6 (or equivalent) check that
+constraints are not executable, with a negative fixture. The new "Constraints Are Not Executable"
+section of `modeling-assumptions.md` is the canonical reference that guidance points at. **No
+agentic-mbse code change in this item** — that lands in Item 12 (the epic's agentic-mbse sync item).
+Nothing else in Item 1 changes what models should look like, so no MODELING_GUIDE / skill-stencil change
+is triggered.
+
+### Quality Gate (measured 2026-07-05, before the `uv run` lockout)
+- Full suite: 1816 passed, 4 skipped, 5 xfailed, **5 failed** — all five are the ordering-only
+  byte-exact baseline comparisons (solar_battery ×4 + catf_mfe ×1) that Phase 3's re-capture closes.
+  No other failures. New tests (REQ-EXT-08/09, REQ-BASE-06 I1, dead-code deletion) all green.
+- mypy / ruff: repo baseline is already non-clean (109 mypy + 21 ruff errors on HEAD before this work);
+  this item's edits introduce **zero** new findings (verified per-file and by stash-compare). New code
+  follows the file's existing untyped-`elem` convention.
+- Phase 4 changes are docs/artifacts only; no test references the matrix or modeling-assumptions docs,
+  so the suite state is unchanged from the measurement above.
+
+### Session note — harness write/`uv run` lockout
+The resume session gates **all** filesystem writes (Bash `write_text`/`open(w)`/redirects, even to
+/tmp), all `uv run` invocations (including read-only), and Write-tool writes under `.claude/`. Read-only
+Bash (`git`, `grep`) and Write/Edit to project files work. Consequences: (1) the capture scripts and the
+`pytest/mypy/ruff` re-run could not be executed this session — the gate figures above are from the prior
+session; (2) Phase 3 re-capture is handed to the orchestrator (commands in Phase 3 Completion).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Code complete; Phase 3 baseline re-capture pending orchestrator (harness write lockout)**
+
+**Phase 3 completed (2026-07-05, orchestrator-executed).** The orchestrator approved the expanded
+re-capture set and ran the captures directly (the resume-session harness blocked writes/`uv run`).
+Two further deviations surfaced and were resolved:
+
+1. **`capture_pipeline_baselines.py` captured the wrong flavor.** The script built graphs LIVE via
+   `build_pipeline_context`, producing absolute `source_file` paths, `compilability=fully_compilable`,
+   and populated `auto_impl_context` — but the byte-exact consumers (`test_factory_purity` et al.)
+   rebuild graphs **from committed snapshots** (`compilation_results=None` until Item 2), so live
+   captures can never match, and the suite went red on attr_expr_probe. **Fix:** the script now
+   captures through the snapshot serialization boundary via
+   `build_full_graph_from_snapshot` — baselines are by construction what the tests compare. The
+   flavor choice (and Item 2's planned deliberate regen when snapshots gain `compilation_results`)
+   is documented in the script docstring. The script no longer needs a syside license.
+2. **Two stale registry baselines corrected.** `sample_model/registry_init.py` (committed with 5
+   modules; the committed graph and YAML both have 0) and `catf_mfe/registry_init.py` (committed
+   with 21 modules incl. PlasmaConfinement/TritiumBreedingRatio/ThermalCycleEfficiency — none of
+   which exist in the committed 42-module graph) predated the current graphs. No test asserts
+   either file. Regenerated from the current graphs; recorded here as stale-baseline repair.
+
+**Reviewed-diff evidence (structural comparison, old vs new JSON):**
+- solar_battery: modules identical (order+content), execution_order identical, group set equal,
+  groups now name-sorted; within `system_design` the 19 parameters are multiset-equal, reordered
+  (assembly-iteration side effect of the group sort). Ordering-only. ✓
+- catf_mfe: modules identical, execution_order identical, group set equal, per-group content
+  byte-identical, groups name-sorted. Ordering-only. ✓
+- attr_expr_probe, chain_spike: byte-identical after the trailing-newline convention fix. ✓
+- sample_model: graph gains only the trailing newline; registry corrected per (2). ✓
+
+**Quality gate:** 1821 passed / 4 skipped / 5 xfailed — fully green. ruff: 21 findings (identical
+count on main — none new). mypy: 109 errors (main: 109 — none new).
+
+**Probe file ruling:** `scripts/probes/probe_item1_phase0.py` kept — `scripts/probes/` is an
+established convention with a README.

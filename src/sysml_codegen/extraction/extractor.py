@@ -89,6 +89,58 @@ class SysMLDataExtractor:
 
         return calc_defs
 
+    def report_dropped_constraints(self) -> None:
+        """Report every ConstraintUsage in the model as a dropped predicate (REQ-EXT-09).
+
+        Constraint predicates are not compiled to pipeline modules, and the
+        extraction paths that build calc-def and part-def data ignore them
+        silently. This dedicated pass makes the drop loud: one INFO per
+        constraint naming its owner, and one summary WARN with the model-wide
+        total. Detection only — nothing downstream reads the result.
+
+        Enumerates model-wide via ``elements_of_type("ConstraintUsage")``, which
+        reaches constraints on calc-def, part-def, and part-usage owners alike.
+        """
+        if not self.model:
+            return
+
+        constraints = list(
+            self.adapter.elements_of_type(self.model, "ConstraintUsage")
+        )
+        for constraint in constraints:
+            constraint_name = sanitize_name(constraint.name) or "<anonymous>"
+            owner = getattr(constraint, "owner", None)
+            owner_name = sanitize_name(getattr(owner, "name", None) or "") or "<unknown>"
+            logger.info(
+                "Constraint '%s' on %s '%s' is not executable and was dropped "
+                "(constraints are not compiled to pipeline modules; see "
+                "modeling-assumptions.md).",
+                constraint_name,
+                self._constraint_owner_kind(owner),
+                owner_name,
+            )
+
+        if constraints:
+            logger.warning(
+                "Dropped %d constraint usage(s) across the model; constraint "
+                "predicates are not executable and do not appear in generated "
+                "output. See the 'Constraints are not executable' section of "
+                "modeling-assumptions.md.",
+                len(constraints),
+            )
+
+    def _constraint_owner_kind(self, owner) -> str:
+        """Human-readable owner kind for a constraint usage diagnostic."""
+        if owner is None:
+            return "model"
+        if self.adapter.is_instance(owner, "CalculationDefinition"):
+            return "calc def"
+        if self.adapter.is_instance(owner, "PartDefinition"):
+            return "part def"
+        if self.adapter.is_instance(owner, "PartUsage"):
+            return "part usage"
+        return "element"
+
     def _extract_part_definition(self, elem) -> PartDefinitionData | None:
         """Extract data from single part definition element."""
         name = sanitize_name(elem.name)
@@ -211,6 +263,19 @@ class SysMLDataExtractor:
         source_hash = self._compute_file_hash(source_file) if source_file.exists() else ""
         qualified_name = str(getattr(elem, 'qualified_name', None) or name)
         references: list[str] = []
+
+        # REQ-EXT-08: fail fast on a calc def with no output channel. Zero
+        # outputs slip past extraction and crash deep in the Jinja module
+        # template (teax_module.py.jinja2 indexes output_attributes[0]); raise
+        # here with an actionable message instead.
+        if not output_attributes:
+            raise ValueError(
+                f"Calc def '{name}' extracted with zero output attributes. "
+                "A pipeline module needs at least one output channel. Likely cause: "
+                "return-style ('return y : Real = expr') or bare 'in' parameters, "
+                "which are not yet extracted (Item 3); anonymous 'return' is "
+                "unsupported. Declare an 'out attribute'."
+            )
 
         return CalculationDefinitionData(
             name=name,

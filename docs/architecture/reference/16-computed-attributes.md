@@ -18,6 +18,7 @@ compiles FORMULA patterns into Python code via the [expression compiler](14-expr
 | REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | Included in list for reporting; no module or alias emitted |
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or LITERAL | 3-value enum in `resolution/graph_builder.py`; `_build_attribute_resolution_map()` assigns one per input |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `input_names = siblings - {self_name}` prevents circular dependency |
+| REQ-CA-09 | The two EXPOSE_PURE name-drop warnings — the key-not-found warning in `_resolve_expose_pure` (`resolution/graph_builder.py`) and the Phase-3 registration warning (`orchestration/output_registry_builder.py`) — SHALL state plainly that the derived-attribute name is dropped from generated output and name the canonical channel carrying the value. Wording-only; the malformed-refs warning is unchanged. | Warning strings reworded per `modeling-assumptions.md` V-rule shape. **Real-fixture test deferred to Item 8** (a minimal shape-A part-def EXPOSE fixture fires the malformed-refs path, not the reworded warnings — see verification matrix). |
 
 ```sysml
 part def Solar_Array {
