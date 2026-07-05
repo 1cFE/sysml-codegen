@@ -25,6 +25,7 @@ consumption. It does NOT resolve bindings or build modules.
 | REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression` per [AST dispatch invariant](19-ast-dispatch-invariant.md) | Lines 331-338: FCE check precedes OE check |
 | REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_lookup` dict | Lines 382-391: multiplicity_attr from mult_lookup |
 | REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added as aliases | Lines 550-557: `source_path.endswith(agg.attribute_name)` |
+| REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the usage's **most-specific owned FeatureTyping target**, not `next(iter(member.types))`; incomparable multi-typings resolve deterministically (sorted-first) with a V10 warning | `test_type_indexing.py` — `(Variant, driver) → HIF Driver` (declared subtype); `(MultiHolder, multi) → IFE Driver` (sorted-first) + V10 |
 
 ## The 4 Extraction Phases
 
@@ -39,7 +40,7 @@ consumption. It does NOT resolve bindings or build modules.
 
 Additionally, the orchestrator builds two lookup structures:
 - `part_usage_names: dict[str, set[str]]` — child PartUsage names per PartDef, used by [aggregation scoping](13-aggregation-scoping.md) for instance discovery
-- `usage_type_map: dict[tuple[str, str], str]` — `(owning_qn, usage_name) → type_partdef_qn`, used by [literal value propagation](18-literal-value-propagation.md) to find redefinition defaults
+- `usage_type_map: dict[tuple[str, str], str]` — `(owning_qn, usage_name) → type_partdef_qn`, used by [literal value propagation](18-literal-value-propagation.md) to find redefinition defaults. The type is the usage's **most-specific owned FeatureTyping target** (REQ-LVP-08), read from the owned typing relationship — not `next(iter(member.types))`, whose first entry is a *supertype* for a retyped `part :>> driver : 'HIF Driver'`. So a retyped usage resolves its defaults against the declared subtype (the type-aware `target_partdef_qn` branch of `_find_literal_redefinition`, the one behavioral consumer). When a usage has multiple incomparable owned types the pick is the sorted-first QN plus a V10 warning. A usage with **no** owned FeatureTyping (an untyped `part x {}`, implicit library `Part`, or a redefinition that inherits its typing) keeps the position-0 type — there is nothing to compare, and this holds existing output identical.
 
 ## Phase 1: Redefinition Classification
 

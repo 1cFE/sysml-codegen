@@ -42,6 +42,11 @@ from sysml_codegen.extraction.expression_utils import (
     is_literal_expression,
     reconstruct_expression,
 )
+from sysml_codegen.extraction.usage_extractor import (
+    most_specific,
+    owned_feature_typing_targets,
+    user_partdef_lookup,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -506,6 +511,8 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     warnings: list[str] = []
     part_usage_names: dict[str, set[str]] = {}
     usage_type_map: dict[tuple[str, str], str] = {}
+    # {__-form QN: PartDefElement} for the most-specific-owned-typing pick (FIX 2).
+    qn_to_partdef = user_partdef_lookup(model)
 
     for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
         redefs = extract_redefinitions(part_def)
@@ -523,14 +530,36 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                 name = sanitize_name(getattr(member, "name", ""))
                 if name:
                     names.add(name)
-                    # Extract the type PartDef QN via .types attribute
-                    try:
-                        type_def = next(iter(member.types))
-                        type_qn = build_element_qualified_name(type_def)
-                        if type_qn:
-                            usage_type_map[(owning_qn, name)] = type_qn
-                    except (StopIteration, TypeError, AttributeError):
-                        pass
+                    # Resolve the usage's type to its MOST-SPECIFIC owned FeatureTyping
+                    # target — not next(iter(member.types)), whose first entry is a
+                    # supertype for a retyped usage (REQ-LVP-08). Incomparable multi-
+                    # typings resolve to sorted-first with a V10 warning.
+                    target_qns = [
+                        qn
+                        for target in owned_feature_typing_targets(member)
+                        if (qn := build_element_qualified_name(target))
+                    ]
+                    winner, incomparable = most_specific(target_qns, qn_to_partdef)
+                    if winner is None:
+                        # No owned FeatureTyping to compare — an untyped part (implicit
+                        # library `Part`) or a redefinition that inherits its typing.
+                        # There is nothing for the most-specific pick to change, so
+                        # keep the historical position-0 type. This is the case the
+                        # retyping fix does NOT touch, and it holds baselines identical.
+                        try:
+                            winner = build_element_qualified_name(next(iter(member.types)))
+                        except (StopIteration, TypeError, AttributeError):
+                            winner = None
+                    if winner:
+                        usage_type_map[(owning_qn, name)] = winner
+                        if incomparable:
+                            msg = (
+                                f"Usage '{owning_qn}.{name}' has multiple incomparable "
+                                f"owned types {sorted(target_qns)}; resolved defaults "
+                                f"against '{winner}' (first in stable order)."
+                            )
+                            logger.warning(msg)
+                            warnings.append(msg)
         if names:
             part_usage_names[owning_qn] = names
 

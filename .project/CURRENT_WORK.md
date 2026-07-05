@@ -85,17 +85,33 @@ Suite 1857 passed / 4 skipped / 5 xfailed; mypy 109, ruff 21 (== baseline).
 
 ### UPSTREAM-FINDINGS Item 4: Part-Usage Type Indexing (SC-3)
 
-**Status**: Spec in progress
+**Status**: **Implementation Complete** (2026-07-05, uncommitted — orchestrator commits). Pending audit.
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Spec**: `.project/active/type-indexing/spec.md`
+**Spec / Design / Plan**: `.project/active/type-indexing/{spec,design,plan}.md`
 
-Retyped part usages (`part :>> x : Subtype`) instantiate their subtype's template
-calcs instead of silently dropping them. Fix the first-type bug in two places
-(`usage_extractor.py` `_build_part_usage_index`, `hierarchy_resolver.py`
-`usage_type_map`): index/resolve by owned FeatureTyping target plus every
-user-model PartDef in `usage.types`, never by list position. Virtual-QN collision
-tiebreak/warning; retyping fixture + snapshot + conformance tests; 4 pipeline
-baselines byte-identical.
+Retyped part usages (`part :>> x : Subtype`) now instantiate their subtype's template
+calcs instead of silently dropping them. Fixed the first-type bug in two places
+(`usage_extractor.py` `_build_part_usage_index`, `hierarchy_resolver.py` `usage_type_map`):
+index/resolve by **owned FeatureTyping target(s)** plus every user-model PartDef in
+`usage.types`, never by list position. Shared helpers in `usage_extractor.py`
+(`owned_feature_typing_targets`, `user_partdef_types`, `user_partdef_lookup`,
+`most_specific`). Virtual-QN collision tiebreak (most-specific owner + **V9**) at the
+`seen_qns` dedup; incomparable multi-typing → sorted-first + **V10**.
+
+**Probe (Phase 0):** B1 (heritage owned-only) and B2-plain (plain `.types` excludes user
+supertype) both CONFIRMED; Q4 (`elements_of_type(PartDefinition)` excludes `Part`) confirmed
+→ intersection is the whole user filter. No hard stops.
+
+**Delivered:** 3 shared helpers + `most_specific` (unit test, 6 cases); 6-shape `retype_model`
+fixture + committed snapshot; `test_type_indexing.py` (7 tests, offline+live), tagged
+REQ-EXT-13/14 + REQ-LVP-08. Docs: modeling-assumptions §5 + V9/V10; ref 01/25; verification
+matrix. Suite **1870 passed** / 4 skipped / 5 xfailed; mypy 109 / ruff 21 (== baseline).
+
+**Key deviation (baseline invariance):** the Phase-3 re-run caught that FIX 2's most-specific
+pick dropped dead `Parts__Part` `usage_type_map` entries for **untyped** inline parts
+(`part x {}`) in catf_mfe. Added a fallback: no owned FeatureTyping → keep position-0 `.types`
+(nothing to compare). Baseline **content zero-diff** confirmed (excl. `captured_at`);
+`test_factory_purity` green. `agentic_mbse` untouched (Item 12 executes the recorded impact).
 
 ### UPSTREAM-FINDINGS Item 5: Identifier Sanitization (SC-4, + SC-11 riders)
 

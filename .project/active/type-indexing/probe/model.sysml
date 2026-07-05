@@ -1,13 +1,15 @@
 package ProbePkg {
+    private import ScalarValues::Real;
+
     part def 'IFE Driver' {
-        attr power : Real;
+        attribute power : Real;
     }
     part def 'HIF Driver' :> 'IFE Driver' {
-        attr torque : Real;
+        attribute torque : Real;
     }
     // Unrelated to 'IFE Driver' — used for the multi-owned-typing shape (Q2b).
     part def 'Other Driver' {
-        attr mass : Real;
+        attribute mass : Real;
     }
 
     part def Facility {

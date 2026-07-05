@@ -47,6 +47,7 @@ MODELS = {
     "issue22_model": FIXTURES_DIR / "issue22_model",
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
     "return_styles": FIXTURES_DIR / "return_styles",
+    "retype_model": FIXTURES_DIR / "retype_model",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types

@@ -348,23 +348,144 @@ needs the syside license: prefix with `uv run --env-file ~/1cfe/agentic-mbse/.en
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion (probe outcomes — record verbatim)
-**Q1:** …
-**Q2:** …
-**Q2b:** …
-**Q3:** … (only if Q2 showed heritage climbs the chain)
-**Q4:** …
-**B1 / B2-plain verdict:** …
-**Chosen heritage accessor / user-filter mechanism:** …
+**Completed:** 2026-07-05. Probe model needed a syntax fix first (`attr`→`attribute`,
+`private import ScalarValues::Real;`) — the shapes are unchanged. Live run output:
+
+**Q1:**
+- `Variant.driver` (retyped) `usage.types` order:
+  `['IFE Driver', 'Part', 'Item', 'Object', 'Occurrence', 'Anything', 'HIF Driver']`
+  — declared type `HIF Driver` is **LAST**, user supertype `IFE Driver` **present** (confirms B2a).
+- `plain_hif` (plain subtype) `usage.types` order:
+  `['HIF Driver', 'Part', 'Item', 'Object', 'Occurrence', 'Anything']`
+  — **EXCLUDES `IFE Driver`** → **B2-plain CONFIRMED** (no hard stop).
+
+**Q2:**
+- `Facility.driver` heritage FeatureTyping targets: `[('IFE Driver', 'ProbePkg__IFE_Driver')]` (one).
+- `Variant.driver` heritage FeatureTyping targets: `[('HIF Driver', 'ProbePkg__HIF_Driver')]`
+  — **`HIF Driver` ONLY**, NOT also `IFE Driver` via inheritance → **B1 CONFIRMED** (heritage
+  is owned-only). No hard stop; Q3 not promoted.
+
+**Q2b:**
+- `multi` heritage FeatureTyping targets:
+  `[('IFE Driver', 'ProbePkg__IFE_Driver'), ('Other Driver', 'ProbePkg__Other_Driver')]`
+  — two owned typings in declaration order. Sorted-by-QN first =
+  `ProbePkg__IFE_Driver` (< `ProbePkg__Other_Driver`). Locks D2 incomparable branch + V10.
+
+**Q3:** Not gating (Q2 showed heritage owned-only). Note: `owned_relationships`,
+`owned_specializations`, `owned_typings` accessors all present on the usage if ever needed.
+
+**Q4:**
+- `elements_of_type(PartDefinition)` = `['Facility', 'HIF Driver', 'IFE Driver', 'Other Driver',
+  'Probe', 'Variant']`; **includes library base 'Part'? → False**. Standard library is excluded
+  → **`user_qn_set` intersection is the whole filter** (no source-document fallback needed).
+
+**B1 / B2-plain verdict:** Both **CONFIRMED**. No hard stops. Proceed.
+**Chosen heritage accessor / user-filter mechanism:** raw `usage.heritage` filtered to
+`FeatureTyping` (B1 held on it — the `_get_calc_def_name` precedent shape); user filter =
+intersection against `user_qn_set` from `elements_of_type(model, "PartDefinition")`.
 
 ### Phase 1 Completion
-**Completed:** …
+**Completed:** 2026-07-05.
+**Changes Made:**
+- `src/sysml_codegen/extraction/usage_extractor.py` — added four helpers before
+  `_build_part_usage_index`: `owned_feature_typing_targets(usage)` (heritage FeatureTyping
+  walk, B1 owned-only), `user_partdef_types(usage, user_qn_set)` (`.types` ∩ user QNs),
+  `_supertype_closure(qn, qn_to_partdef)` (transitive `Subclassification` walk), and
+  `most_specific(qns, qn_to_partdef) -> (winner, incomparable)` (maximal-element pick;
+  sorted-first tiebreak on incomparable). All keys/values are `__`-form `str` (D4).
+- `tests/unit/test_type_indexing_helpers.py` (NEW) — 6 cases: chain sink, order-independence,
+  incomparable→sorted-first, single, zero→(None,False), dedup of repeated target. Builds
+  `qn_to_partdef` live from the probe model; skips without a license (`_load_live_extractor`
+  convention).
+
+**Design note (supertype-closure mechanism, live-confirmed).** A PartDef's supertypes are
+reachable via `heritage` as `Subclassification` relationships (`HIF Driver` → Subclassification
+→ `IFE Driver` → Subclassification → `Parts__Part`). `most_specific` uses a **maximal-element**
+rule (a candidate wins iff no other candidate specializes it = it is in no other's closure),
+which is cleaner than pairwise reduction and provably returns the chain sink; incomparable ⇔ more
+than one maximal element. Library supertype QNs in a closure are harmless (membership is only
+tested against user QNs).
+
+**Validation:** `pytest tests/unit/test_type_indexing_helpers.py` → 6 passed (live). Full suite
+`pytest tests/` → **1863 passed, 4 skipped, 5 xfailed** (baseline 1857 + 6 new; no regressions —
+helpers are additive, no call site changed yet). mypy 109 / ruff 21 (== baseline; new code clean).
 
 ### Phase 2 Completion
-**Completed:** …
+**Completed:** 2026-07-05.
+**Changes Made:**
+- `tests/fixtures/retype_model/{library,design}.sysml` (NEW) — six-shape retype fixture.
+  Library: `IfeCalc`/`HifCalc`/`SharedCalc` calc defs; `IFE Driver` owns `ife_calc` +
+  `shared_calc`; `HIF Driver :> IFE Driver` owns `hif_calc` + redefines `shared_calc`
+  (`calc :>> shared_calc : SharedCalc;` — binding inherited, since overriding a bound
+  value is illegal SysML); `Variant :> Facility` retypes `:>> driver : 'HIF Driver'`;
+  `MultiHolder.multi : 'IFE Driver', 'Other Driver'` for V10. Design instantiates
+  `the_variant : Variant` + a plain `plain_hif : 'HIF Driver'` sibling (shape 5).
+- `tests/fixtures/retype_model/extraction_snapshot.json` (NEW, committed) — live capture.
+- `src/.../usage_extractor.py` — FIX 1 (`_build_part_usage_index` now keys under the set
+  union of owned typings ∪ user `.types`, via `user_partdef_lookup`) and FIX 3 (collision
+  tiebreak: `seen_qns` set→dict, most-specific owner keeps the shared virtual QN, V9 once
+  per collision class).
+- `src/.../hierarchy_resolver.py` — FIX 2 (`usage_type_map` = most-specific owned typing;
+  V10 on incomparable; **fallback to position-0 `.types` when there is no owned
+  FeatureTyping** — see baseline note below).
+- `tests/conformance/test_type_indexing.py` (NEW) — 7 tests (5 offline snapshot + 2 live),
+  tagged REQ-EXT-13/14, REQ-LVP-08.
+- `tests/unit/test_template_detection.py` — `_mock_elements_of_type` now serves
+  `PartDefinition` queries (index derives `user_qn_set` from them); two call sites pass
+  `[part_def]`.
+- `scripts/capture_extraction_snapshots.py` — added `retype_model` to `MODELS`.
+
+**Live-captured behavior (all six shapes verified):** `the_variant__driver__{ife_calc,
+hif_calc}` both present (shapes 1/2/4); `the_variant__driver__shared_calc` owned by **HIF**
+only (shape 3, collision→HIF + V9); **no** `plain_hif__ife_calc` (shape 5); `usage_type_map`
+`(Variant, driver)→HIF` (FIX 2 mirror fix), `(Facility, driver)→IFE`, `(MultiHolder,
+multi)→IFE` + V10.
+
+**Deviation from plan — FIX 2 fallback (baseline-invariance fix).** The plan/design assumed
+usage_type_map's most-specific pick matches the old first-`.types` for every non-retyped
+usage. The Phase-3 baseline re-run disproved this: catf_mfe has **untyped** inline parts
+(`part neutron_shield {}`, implicit library `Part`) whose old value was `Parts__Part`
+(first `.types`) but which have **no owned FeatureTyping** — so `most_specific([])` returned
+None and dropped the entry. Those `Parts__Part` entries are dead (a library QN never matches
+a user redef's `owning_part_qn`), but the spec hard-requires byte-identical baselines. FIX 2
+now falls back to `next(iter(member.types))` **only when there is no owned FeatureTyping to
+compare** — the untyped/inherited-typing case, which the retyping fix never targets. This
+restores every historical entry byte-for-byte while still fixing retyped usages (they carry
+an owned typing → the fix path). Verified: baseline content zero-diff (below).
+
+**Validation:** `pytest tests/conformance/test_type_indexing.py` → 7 passed (live).
+Full suite 1870 passed / 4 skipped / 5 xfailed. mypy 109, ruff 21 (== baseline).
 
 ### Phase 3 Completion
-**Completed:** …
+**Completed:** 2026-07-05.
+
+**Baseline zero-diff (hard gate — runtime re-run, PASS).** Re-captured all 4 pipeline
+baselines (`attr_expr_probe`, `catf_mfe_model`, `chain_spike_model`, `solar_battery_model`)
+live to their real fixture paths (so `source_file` relativization matches the committed
+capture), then `git diff`. **Content diff excluding `captured_at` = 0 lines** across all 4.
+The first re-run (before the FIX 2 fallback) surfaced the catf_mfe `Parts__Part`
+usage_type_map regression; the fallback fixed it; the second re-run is content-clean. The
+committed baseline snapshots were then **restored** (`git checkout`) — their content is
+proven invariant, so no baseline file is churned. `test_factory_purity` → 9 passed / 1
+skipped (offline graphs byte-identical). Note: `captured_at` and `document_path`/`source_file`
+relativization differ on any re-capture regardless of code change (timestamp + capture-CWD
+artifacts); neither is touched by this item.
+
+**Docs / matrix / REQ tags:**
+- `docs/architecture/modeling-assumptions.md` — §5 gained a "Type Redefinition (Retyping)"
+  subsection + a Type row in the Redefinition Types table; Validation table gained **V9, V10**
+  (after V8, which is Item 3's).
+- `docs/architecture/reference/01-extraction.md` — REQ-EXT-13/14 rows + an index/collision
+  paragraph under Calculation Usages.
+- `docs/architecture/reference/25-hierarchy-resolver.md` — REQ-LVP-08 row + the most-specific
+  `usage_type_map` rule (including the untyped-usage fallback) in the lookup-structure note.
+- `docs/architecture/verification-matrix.md` — REQ-EXT-13, REQ-EXT-14, REQ-LVP-08 → PASS,
+  mapped to `test_type_indexing.py`.
+**agentic-mbse impact:** confirmed recorded in spec §"agentic-mbse impact" (teach retyping;
+Level-6 "instantiated" now includes retyped usages) — Item 12 executes; no inline change.
+
+**Final quality gate:** see below.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete** (all 3 phases landed 2026-07-05; not committed — orchestrator commits).

@@ -1,6 +1,6 @@
 # Spec: Part-Usage Type Indexing (SC-3)
 
-**Status:** Draft (revised after spec-review 2026-07-05)
+**Status:** Implementation Complete (2026-07-05) — all 3 plan phases landed; suite 1870 passed, baseline content zero-diff. Pending audit.
 **Owner:** Reid W
 **Created:** 2026-07-05
 **Complexity:** MEDIUM

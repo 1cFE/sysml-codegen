@@ -264,6 +264,32 @@ This generates a virtual CalcUsage: `solar_array__pv_module__cost_model` with `w
 | LITERAL | `:>> wattage = 400.0` | Becomes a DESIGN_ATTRIBUTE entry point |
 | CHAIN | `:>> capital_cost = cost_model.total_cost` | Wired as MODULE_OUTPUT in the pipeline |
 | Deep-path | `:>> pv_module.wattage = 400.0` | Traversed through hierarchy to leaf attribute |
+| Type (retyping) | `:>> driver : 'HIF Driver'` (where `'HIF Driver' :> 'IFE Driver'`) | Pulls in the subtype's template calcs; supertype templates continue to flow (see below) |
+
+### Type Redefinition (Retyping)
+
+A usage may **retype** to a subtype: `part :>> driver : 'HIF Driver'` where
+`part def 'HIF Driver' :> 'IFE Driver'`. The retyped usage instantiates **both** its
+subtype's template calcs **and** the supertype-owned templates it already carried — it is
+indexed under every user-model PartDefinition it carries (its owned FeatureTyping target plus
+the user supertypes present in its flattened type list). A usage's declared type is read from
+its **owned FeatureTyping relationship**, never from a position in the type list (that list is
+order-unstable and, for a retyped usage, lists the supertype first and the declared subtype
+last).
+
+Two rules govern a subtype template that meets a supertype template on the same instantiation:
+
+- **Same name (redefinition).** A calc that *replaces* an inherited one reuses its name — the
+  two resolve to the same virtual QN. The most-specific owner (the subtype) wins; a **V9**
+  warning names both owners and the winner. This is how the modeler signals "override".
+- **Different names.** Both instantiate — retyping *adds* the subtype's calcs while the
+  supertype's continue to flow. No warning (there is no signal that a differently-named calc
+  was meant as a replacement).
+
+**Not covered:** a *plain* `part x : 'HIF Driver'` (no `:>>`) does **not** pull supertype
+templates — its type list carries only the declared type, so the supertype-owned template
+finds no instantiation path to it. Supertype-chain template inheritance for plain usages needs
+a deliberate specialization walk (deferred; MFE-epic note).
 
 ---
 
@@ -349,6 +375,8 @@ The extraction phase enforces these rules to catch modeling violations early:
 | V6 | Binding to undefined attribute | Fix the binding path |
 | V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. `out attribute y : Real = <expr>` or `return y : Real = <expr>`. (An anonymous `return` is reported separately.)" |
 | V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
+| V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | "Template collision on '{virtual_qn}': owners '{owner_a}' and '{owner_b}' both define calc '{calc_name}'; kept most-specific owner '{winner}'." |
+| V10 | A usage has multiple incomparable owned types (neither specializes the other) | "Usage '{owning_qn}.{name}' has multiple incomparable owned types {sorted_qns}; resolved defaults against '{winner}' (first in stable order)." |
 
 ---
 
