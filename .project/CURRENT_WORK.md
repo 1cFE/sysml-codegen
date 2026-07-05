@@ -16,6 +16,17 @@ Green the suite (solar_battery YAML baseline) and convert three silent failures
 (SC-1 constraints, SC-7 EXPOSE_PURE name drop, SC-2 zero-output Jinja crash) into
 loud diagnostics — no output change for valid models.
 
+### UPSTREAM-FINDINGS Item 2: Snapshot-Driven Generation (SC-9 + SC-10)
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/snapshot-generation/spec.md`
+
+Supported `--from-snapshot` generation path + `snapshot` capture command, so
+generation/debug/CI decouple from the syside license (expires 2026-08-06).
+Format versioning + provenance guards; serialize `compilation_results` (SC-10)
+so CalcUsage auto-impl survives a snapshot. Byte-identical to live generation.
+
 ### REFACTOR: Incremental Pipeline Refactor
 
 **Status**: In Progress (Phases 0–4 complete)
