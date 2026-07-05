@@ -60,12 +60,18 @@ at 160/181/283 (threading) and at 1044-1046 inside `_find_literal_redefinition` 
 type-aware `target_partdef_qn` match, REQ-LVP-01 Strategy 1). Only 1044-1046 changes an output. The
 rest thread or serialize the value. Confirmed: no other reader depends on the old first-type value.
 
-**NewType discipline (doc 10).** `core/identifier_types.py` defines `SysMLQN = NewType("SysMLQN", str)`
-and friends (zero runtime cost). Index keys and `usage_type_map` values are PartDef qualified names —
-i.e. `SysMLQN`. Current code types them as bare `str`.
+**Key form (doc 10).** `core/identifier_types.py:22` defines `SysMLQN` as the **`::`-separated** QN
+form. The index keys and `usage_type_map` values here are produced by `build_element_qualified_name`,
+whose default yields the **`__`-separated** (EQN) form — and the one behavioral consumer compares them
+against `redef.owning_part_qn`, which is also `__`-form (`graph_builder.py:1053,1056` splits on `__`).
+So these keys **must stay `__`-form `str`** — `SysMLQN` is the wrong wrapper and would mislabel the
+separator. Doc-10 discipline asks for "unique-by-construction, no ambiguous string keys" (satisfied:
+PartDef QNs are globally unique); it does **not** mandate the `SysMLQN` NewType at these sites, and the
+established convention at both sites is already the bare `__`-form string.
 
-**Warning convention.** `modeling-assumptions.md:344-350` numbers validation messages V1–V7. Next
-free are **V8, V9**.
+**Warning convention.** `modeling-assumptions.md:344-350` numbers validation messages V1–V7. Item 3
+lands first and claims **V8** (anonymous-return diagnostic). So this item's next free numbers are
+**V9** (collision tiebreak) and **V10** (incomparable multi-typing).
 
 **Baseline diff harness.** `scripts/capture_extraction_snapshots.py` re-captures extraction snapshots
 (live license); `test_factory_purity` rebuilds graphs offline from committed snapshots and compares
@@ -90,7 +96,7 @@ two fix sites consume that primitive with different projections:
   preserves the supertype-template flow retyped usages rely on today, and adds the subtype key that was
   missing. For plain usages the set is a single declared type — identical to today's behavior.
 - **`usage_type_map`** picks the **single most-specific** owned FeatureTyping target (deterministic-first
-  + V8 warning if incomparable), because literal-default resolution needs exactly one PartDef per usage.
+  + V10 warning if incomparable), because literal-default resolution needs exactly one PartDef per usage.
 
 The collision tiebreak is not new machinery — it is a rule applied at the existing `seen_qns` dedup:
 when two *different* owners produce the same virtual QN, keep the most-specific owner and emit V9.
@@ -105,15 +111,21 @@ Nothing else moves. No backtracker, no generation, no template-detection change.
   all, or (if heritage climbs the chain) a plain `part x : Subtype` resolves through its own typing up to
   a supertype, silently contradicting the Non-Goal and changing baseline output.* **Gated by probe Q2.**
 
-- **B2. For a retyped usage, the user supertype is present in `usage.types`; for a plain usage, user
-  supertypes are absent (only the declared type).** This is what makes "index under all user types in
-  `usage.types`" preserve supertype flow for retyped usages *without* leaking it to plain ones. *If false
-  → the preservation contract and the Non-Goal both break: plain usages would start pulling supertype
-  templates, changing baselines.* Confirmed by the research live probe; **re-confirmed by probe Q1.**
+- **B2. Two halves. (a) For a retyped usage the user supertype is present in `usage.types`. (b) For a
+  plain `part x : Subtype` usage, user supertypes are *absent* — `.types` carries only the declared
+  type.** Half (a) makes superset indexing preserve supertype flow for retyped usages; half (b),
+  **B2-plain, is the load-bearing bet for baseline invariance** — it is what stops superset indexing from
+  adding a supertype key to the plain subtype-typed usages that existing baselines very likely already
+  contain. *If (a) false → the preservation contract breaks. If (b) false → every plain `part x : Subtype`
+  in the 4 baselines gains a supertype key and output shifts; the Non-Goal also leaks.* Half (a) confirmed
+  by the research live probe; **half (b) is gated by probe Q1's plain-usage shape (`plain_hif`) — it is
+  probed, not assumed.**
 
-- **B3. No existing baseline model carries a retyping shape, so indexing under all user-model types adds
-  no consequential keys to any current model.** *If false → the 4 baselines shift and the zero-diff SC
-  fails.* Verified statically in spec-review; **proven by the live re-capture (Validation).**
+- **B3. No existing baseline model carries a *retyping* (`:>>`) shape.** *If false → a baseline's retyped
+  usage gains its subtype key and output could shift.* Verified statically in spec-review. **Necessary but
+  not sufficient for baseline invariance** — B2-plain is the bet that actually covers the common plain
+  subtype-typed usage; B3 only covers the retyping shape. The live zero-diff re-capture (Validation) is
+  the backstop that proves both together.
 
 - **B4. Same-named templates on both owners are the only case that collides on one virtual QN;
   differently-named templates never collide.** The tiebreak's correctness depends on this being the
@@ -135,19 +147,28 @@ Nothing else moves. No backtracker, no generation, no template-detection change.
 
 - **D2. Most-specific comparison is a specialization-chain walk over PartDef heritage.** Given two user
   PartDef QNs, A is more specific than B iff B is in A's supertype closure. Reuse the same
-  `heritage`/`Specialization` walk. Incomparable (neither in the other's closure) → deterministic
-  first-in-stable-order (sorted by QN) + V8. *Rejected: relying on `usage.types` ordering to rank
+  `heritage`/`Specialization` walk. The walk needs the PartDef *element* for a QN string: build a
+  **`{qn: PartDefElement}` lookup once** from `elements_of_type(model,"PartDefinition")` and pass it into
+  `most_specific` — not an O(partdefs) scan per comparison. Incomparable (neither in the other's closure)
+  → deterministic first-in-stable-order (sorted by QN) + V10. For 3+ owners on a chain, reduce
+  **pairwise**, which converges to the chain sink. *Rejected: relying on `usage.types` ordering to rank
   specificity* — that ordering is the unstable thing we are removing.
 
 - **D3. Collision tiebreak lives at the `seen_qns` dedup, comparing template owners' specificity.**
-  Replace the `set` with a `dict[str, CalcUsageData]` (QN → winning virtual) so a second arrival can be
-  compared, not blindly dropped. Same owner re-arriving (idempotent multi-path) stays silent; different
-  owners → keep most-specific + V9. *Rejected: a separate post-pass that regroups virtual instances by QN*
-  — more code, same result, and it would re-derive owner specificity the dedup already has in hand.
+  Replace the `set` with a `dict[str, CalcUsageData]` (`__`-form QN → winning virtual) so a second arrival
+  can be compared, not blindly dropped. The specificity comparison uses the **stored virtual's**
+  `owning_part_def_qn` (`_create_virtual_calc_usage`, line 266) vs the incoming one — do not re-derive it.
+  Same owner re-arriving (idempotent multi-path) stays silent; different owners → keep most-specific + V9.
+  *Rejected: a separate post-pass that regroups virtual instances by QN* — more code, same result, and it
+  would re-derive owner specificity the dedup already has in hand.
 
-- **D4. New/changed keys and map values typed as `SysMLQN` (doc 10).** Zero runtime cost; matches the
-  typed-registry discipline. *Rejected: leaving them bare `str`* — the SC calls for doc-10-clean keys and
-  the NewType is free. Not a broad refactor: only the touched signatures.
+- **D4. New/changed keys and map values stay plain `__`-form `str` (not `SysMLQN`).** `SysMLQN` is the
+  `::`-form (`identifier_types.py:22`); these keys are `__`-form and the consumer compares them `__`-form
+  (`graph_builder.py:1053,1056`), so `SysMLQN` would mislabel the separator and the runtime form must not
+  change to `::`. Doc-10's ask (unique-by-construction, no ambiguous keys) is met by PartDef-QN
+  uniqueness — it does not mandate `SysMLQN` here. *Rejected: typing them `SysMLQN`* — factually wrong
+  separator, and it would break the `__`-split consumer. *Rejected: coining a new `__`-form NewType* —
+  out of scope for a 1-day item; the bare `__`-form string is the established convention at both sites.
 
 - **D5. One fixture model holds shapes 1–5; shape 6 is the existing 4 baselines (no new fixture).**
   Shapes 1–4 compose in a single Facility/Variant retype design; shape 5 (plain-subtype negative) is a
@@ -160,14 +181,14 @@ Data flow, unchanged except at the two picks and the dedup:
 
 ```
 elements_of_type(PartUsage) ─┐
-                             ├─► _build_part_usage_index ──► index: SysMLQN → [PartUsage]   (FIX 1: all user types)
+                             ├─► _build_part_usage_index ──► index: str(__QN) → [PartUsage]  (FIX 1: all user types)
 user PartDef QN set ─────────┘                                     │
                                                                    ▼
 templates (is_template) ──► _expand_template_calc_usages ──► _find_instantiation_paths
                                                                    │
                                         seen dedup (FIX 3: tiebreak + V9) ──► virtual CalcUsages
 
-PartDefinition.owned_members ──► extract_hierarchy_data ──► usage_type_map (FIX 2: most-specific + V8)
+PartDefinition.owned_members ──► extract_hierarchy_data ──► usage_type_map (FIX 2: most-specific + V10)
                                                                    │
                                             graph_builder._find_literal_redefinition (unchanged consumer)
 ```
@@ -176,10 +197,13 @@ The shared heritage-walk helper sits under both FIX 1 and FIX 2. FIX 3 is local 
 
 ## Required Invariants
 
-- **INV-1.** For every PartUsage, `index` contains an entry under each user-model PartDef the usage
-  carries (owned FeatureTyping targets ∪ user PartDefs in `usage.types`), and under no library type.
+- **INV-1.** For every PartUsage, `index` contains an entry under each user-model PartDef in the **set
+  union** (owned FeatureTyping targets ∪ user PartDefs in `usage.types`), and under no library type. Build
+  the per-usage key set as a `set` — the declared type is *both* an owned FeatureTyping target and a
+  `usage.types` member, so naive concatenation would list the usage twice under that key.
 - **INV-2.** For a plain (non-retyped) usage the key set is exactly its one declared type — byte-identical
-  to today. (This is what B2 buys and what keeps baselines invariant.)
+  to today. This rests on **B2-plain** (plain `.types` excludes user supertypes) and is what keeps
+  baselines invariant.
 - **INV-3.** `usage_type_map[(owning_qn, name)]` is the usage's most-specific owned FeatureTyping target;
   single-valued per usage.
 - **INV-4.** Two templates share a virtual QN ⇔ same instantiation path ∧ same calc instance name. The
@@ -192,15 +216,16 @@ The shared heritage-walk helper sits under both FIX 1 and FIX 2. FIX 3 is local 
 - **`owned_feature_typing_targets(usage) → list[FeatureTyping target elems]`** — new shared helper
   (`usage_extractor.py`, importable by `hierarchy_resolver.py`). Walks `usage.heritage`, filters
   `FeatureTyping`, returns targets in heritage order. The single primitive both sites use.
-- **`user_partdef_types(usage, user_qn_set) → list[SysMLQN]`** — new shared helper. Maps `usage.types`
-  to QNs, keeps those in `user_qn_set`. Used by the index only.
-- **`most_specific(qns, model) → (winner, incomparable: bool)`** — new shared helper. Specialization-chain
-  comparison (D2). Used by `usage_type_map` (V8) and the collision tiebreak (V9).
-- **`_build_part_usage_index`** — FIX 1. Builds `user_qn_set` once from
-  `elements_of_type(model,"PartDefinition")`, then keys each usage under the union of the two helpers'
-  results. Return type → `dict[SysMLQN, list[Any]]`.
+- **`user_partdef_types(usage, user_qn_set) → list[str]`** — new shared helper. Maps `usage.types`
+  to `__`-form QNs, keeps those in `user_qn_set`. Used by the index only.
+- **`most_specific(qns, qn_to_partdef) → (winner, incomparable: bool)`** — new shared helper.
+  Specialization-chain comparison (D2), driven by a prebuilt `{qn: PartDefElement}` lookup (built once, not
+  per call). Used by `usage_type_map` (V10) and the collision tiebreak (V9).
+- **`_build_part_usage_index`** — FIX 1. Builds `user_qn_set` (and the `qn_to_partdef` lookup) once from
+  `elements_of_type(model,"PartDefinition")`, then keys each usage under the **set union** of the two
+  helpers' results. Return type → `dict[str, list[Any]]` (`__`-form keys).
 - **`extract_hierarchy_data` (usage_type_map block, lines 526-533)** — FIX 2. Replaces
-  `next(iter(member.types))` with `most_specific(owned_feature_typing_targets(member) targets)`; V8 on
+  `next(iter(member.types))` with `most_specific(owned_feature_typing_targets(member) targets)`; V10 on
   incomparable.
 - **`_expand_template_calc_usages`** — FIX 3. `seen_qns` set → `dict` keyed by virtual QN; on a second
   arrival with a different owner, `most_specific` decides the keeper and V9 is emitted once per collision
@@ -217,27 +242,38 @@ The shared heritage-walk helper sits under both FIX 1 and FIX 2. FIX 3 is local 
 ## Implementation Notes
 
 - **Probe first (de-risk #1).** Run `probe/probe.py` (a live-license run — the design could not execute
-  it in the sandbox). It answers, against a synthetic retype model:
-  - **Q1** — `usage.types` order for the Variant's retyped `driver`: expect `['IFE Driver', …, 'HIF Driver']`,
-    declared type last (research confirmed on fusion-tea; re-confirm here). Locks B2.
-  - **Q2** — heritage FeatureTyping targets on the retyped usage: **how many**, and are they **owned-only**?
-    Compare the plain `Facility.driver` (expect one owned typing → `IFE Driver`) against `Variant.driver`
-    (expect its own typing → `HIF Driver`, *not* also `IFE Driver` via inheritance). If heritage climbs the
-    chain, B1 is false and the Non-Goal leaks — stop and revisit. Locks B1 and the multi-typing ordering
-    for D2.
-  - **Q3** — whether any accessor gives owned typings directly (`owned_relationships`/`declared_type`),
-    which would simplify the helper. Nice-to-have, not gating.
-  - **Q4 (add to probe)** — does `elements_of_type(model,"PartDefinition")` exclude the standard library
-    (no `Part`)? If yes, the `user_qn_set` intersection is the whole filter (cheap, unique-by-construction).
-    If it includes library defs, fall back to source-document filtering (type defined under a loaded
-    user-model path). Decides the D1 user-filter mechanism.
+  it in the sandbox; `uv run` needs an approval the non-interactive sandbox can't grant). It answers,
+  against the synthetic model in `probe/model.sysml`:
+  - **Q1** — `usage.types` order and membership. For `Variant.driver` (retyped) expect
+    `['IFE Driver', …, 'HIF Driver']`, declared type last (research confirmed on fusion-tea). For the added
+    plain `plain_hif : 'HIF Driver'` expect `.types` to **exclude** `IFE Driver` — this is the direct test
+    of **B2-plain**, on which baseline invariance rests. Locks B2 (both halves).
+  - **Q2** — heritage FeatureTyping targets, owned-only check. Compare `Facility.driver` (one owned typing
+    → `IFE Driver`) against `Variant.driver` (its own typing → `HIF Driver`, *not* also `IFE Driver` via
+    inheritance). If heritage climbs the chain, **B1 is false → hard stop** (see below). Locks B1.
+  - **Q2b (multi-typing)** — the added `multi : 'IFE Driver', 'Other Driver'` usage (two unrelated user
+    typings): print its heritage FeatureTyping targets to confirm multiple owned typings exist and in what
+    order. This locks D2's incomparable branch and the V10 warning — otherwise written blind.
+  - **Q3** — whether any accessor gives owned typings directly (`owned_relationships`/`declared_type`).
+    **Promoted to gating iff Q2 shows heritage climbs the chain** — it becomes the only concrete owned-only
+    mechanism at that point. Otherwise informational.
+  - **Q4** — does `elements_of_type(model,"PartDefinition")` exclude the standard library (no `Part`)? If
+    yes, the `user_qn_set` intersection is the whole filter (cheap, unique-by-construction). If it includes
+    library defs, fall back to source-document filtering (type defined under a loaded user-model path).
+    Decides the D1 user-filter mechanism.
+- **B1-false is a hard stop, not a fallback.** If Q2 shows heritage is not owned-only and Q3 finds no
+  owned-only accessor, there is no in-budget path — **report and halt the item pending a new approach**;
+  do not improvise a heritage filter. The precedent (`_get_calc_def_name`) plus the research make B1 likely
+  true, so this branch is contained, but it is a stop.
 - **Warning texts (V-style), dedup, placement.** Both are appended to the existing `warnings` lists and
   logged (`logger.warning`), matching `usage_extractor.py:314-315`.
   - **V9 (collision tiebreak, `_expand_template_calc_usages`):**
     `"Template collision on '{virtual_qn}': owners '{owner_a}' and '{owner_b}' both define calc "
     `'{calc_name}'; kept most-specific owner '{winner}'."` Dedup by `(owner_a, owner_b, calc_name)` so a
-    usage instantiated N times warns **once**, not N times.
-  - **V8 (incomparable multi-typing, `usage_type_map`):**
+    usage instantiated N times warns **once**, not N times. *Known limitation:* a 3-owner chain colliding
+    on one QN reduces pairwise to the right winner, but this pair-keyed dedup may emit more than one line;
+    out of the pinned 2-owner fixture matrix — do not build for it.
+  - **V10 (incomparable multi-typing, `usage_type_map`):**
     `"Usage '{owning_qn}.{name}' has multiple incomparable owned types {sorted_qns}; resolved defaults "
     `"against '{winner}' (first in stable order)."` Dedup is natural — one entry per `(owning_qn, name)`.
 - **`most_specific` edge cases.** Zero targets → skip (usage keyed only by `usage.types` user entries; map
@@ -248,13 +284,16 @@ The shared heritage-walk helper sits under both FIX 1 and FIX 2. FIX 3 is local 
 
 ## Potential Risks
 
-- **Heritage climbs the chain (B1 false).** Highest risk; fully gated by probe Q2 before any code. If true,
-  the helper must use an owned-only accessor (probe Q3) instead of raw `heritage`, or filter heritage to
-  direct/owned relationships. Design does not proceed past the probe on this point.
+- **Heritage climbs the chain (B1 false).** Highest risk; fully gated by probe Q2 before any code. This is
+  a **hard stop**: if Q2 shows heritage is not owned-only and Q3 finds no owned-only accessor, report and
+  halt — do not improvise a heritage filter (there is no defined mechanism to tell an owned FeatureTyping
+  from an inherited one in the `heritage` iterable).
 - **`elements_of_type` includes library defs (Q4).** Would make the naive intersection admit `Part`.
   Mitigation: source-document filter fallback, decided at the probe, before implementation.
-- **A baseline model does carry a retyping shape after all (B3 false).** The live re-capture catches it as
-  a non-empty `git diff`; investigate before committing rather than force-recapture.
+- **A baseline's plain subtype-typed usage gains a supertype key (B2-plain false).** The real
+  baseline-invariance risk (not B3): superset indexing adds a supertype key to any plain `part x : Subtype`
+  whose `.types` includes the supertype. Gated by probe Q1's `plain_hif` shape *and* caught by the live
+  re-capture as a non-empty `git diff`; investigate before committing rather than force-recapture.
 - **Non-determinism in tie ordering.** Any deterministic pick must sort by QN string, never rely on
   `heritage`/`types` iteration order, or snapshots become machine-dependent.
 
@@ -279,17 +318,18 @@ in-flight Items 2 (snapshot, landed) and 3 (extractor.py member filter): differe
    key set = `{IFE Driver, HIF Driver}` for the retyped usage; virtual instances present per shapes 1/2/4;
    tiebreak winner + V9 text per shape 3; negative assertion per shape 5; `usage_type_map` for the retyped
    usage resolves to `HIF Driver`.
-4. **Baseline zero-diff (runtime re-run — L3-3, B3).** Re-run `capture_extraction_snapshots.py` and
-   `capture_pipeline_baselines.py` on the 4 pipeline baselines with a live license; **`git diff` on their
-   snapshot/baseline files must be empty.** Then `test_factory_purity` (offline) confirms generated graphs
-   are byte-identical. Inspection is not accepted as proof.
-5. **Unit test for `most_specific`** on comparable and incomparable pairs (guards D2/V8 without a license).
+4. **Baseline zero-diff (runtime re-run — L3-3; backstops B2-plain + B3).** Re-run
+   `capture_extraction_snapshots.py` and `capture_pipeline_baselines.py` on the 4 pipeline baselines with a
+   live license; **`git diff` on their snapshot/baseline files must be empty.** Then `test_factory_purity`
+   (offline) confirms generated graphs are byte-identical. Inspection is not accepted as proof.
+5. **Unit test for `most_specific`** on comparable and incomparable pairs (guards D2/V10 without a license).
 
 ## Docs / Matrix Plan
 
 - **`modeling-assumptions.md` §5** — add retyping to the Redefinition Types framing: a `:>>` retype to a
   subtype pulls the subtype's template calcs while supertype templates continue to flow; a calc *replacing*
-  an inherited one must reuse its name (same-QN redefinition). Add **V8, V9** to the Validation table.
+  an inherited one must reuse its name (same-QN redefinition). Add **V9, V10** to the Validation table
+  (V8 belongs to Item 3).
 - **`reference/25-hierarchy-resolver.md`** — document the `usage_type_map` most-specific rule (REQ-LVP-08)
   and its one behavioral consumer.
 - **`reference/01-extraction.md`** — document the all-user-types index rule (REQ-EXT-13) and the collision
@@ -302,11 +342,13 @@ in-flight Items 2 (snapshot, landed) and 3 (extractor.py member filter): differe
 ## Next-Stage Handoff
 
 - **Fixed:** the two fix sites and their projections (D1); tiebreak location and semantics (D3);
-  fixture shape matrix (D5); warning texts and dedup keys; REQ tags EXT-13/14, LVP-08; V8/V9.
+  fixture shape matrix (D5); warning texts and dedup keys; REQ tags EXT-13/14, LVP-08; V9/V10.
 - **Open until the probe runs:** the exact heritage accessor (raw `heritage` vs owned-only, Q2/Q3) and the
   user-package filter mechanism (intersection vs source-document, Q4). Both are gated, both cheap to settle.
-- **De-risk first:** run `probe/probe.py` (Q1–Q4) before writing any fix — B1 is the load-bearing bet and a
-  five-minute live probe settles it. Do not write the helper until Q2 confirms heritage is owned-only.
+- **De-risk first:** run `probe/probe.py` (Q1, Q2, Q2b, Q3, Q4) before writing any fix — B1 (heritage
+  owned-only) and B2-plain (plain `.types` excludes supertypes) are the load-bearing bets, and D2's
+  incomparable branch (Q2b multi-typing) is otherwise written blind. Do not write the helper until Q2
+  confirms heritage is owned-only; **a false B1 is a hard stop**, not a fallback.
 
 ---
 Next Step: After approval → `/_my_plan`.
