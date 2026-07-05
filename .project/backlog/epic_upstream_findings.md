@@ -208,7 +208,7 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 
 ---
 
-### Item 5: Identifier Sanitization (SC-4, + SC-11 riders) [1 day]
+### Item 5: Identifier Sanitization (SC-4, + SC-11 riders) [1 day] ✅
 
 **Type**: Implementation
 **Effort**: 1 day (spec 1.5h, design 1.5h, plan 1h, execute 4–6h)
@@ -228,10 +228,12 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 - Channel-name changes (PQN path is already sanitized — verify, don't touch)
 
 **Success Criteria**:
-- [ ] `alias_agg_probe` generates an importable package; quoted-name leak reproduction from the research is gone
-- [ ] All existing baselines byte-identical (no baseline model has a quoted calc def)
-- [ ] Duplicate-path collision fails fast with a clear message
-- [ ] agentic-mbse impact + fusion-tea coordination note recorded
+- [x] `alias_agg_probe` generates an importable package; quoted-name leak reproduction from the research is gone
+- [x] All existing baselines byte-identical (no baseline model has a quoted calc def)
+- [x] Duplicate-path collision fails fast with a clear message
+- [x] agentic-mbse impact + fusion-tea coordination note recorded
+
+**Audited PASS / Certify** (2026-07-05, commit 4b19e4d) — see `.project/active/identifier-sanitization/audit.md`. Suite gate (1880/21/109) rests on recorded evidence; auditor harness-blocked from re-running `uv run`.
 
 **Deliverables**: `.project/active/identifier-sanitization/{spec,design,plan}.md`, conformance tests, doc 15/20 updates
 

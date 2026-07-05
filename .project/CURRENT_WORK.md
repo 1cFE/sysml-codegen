@@ -120,9 +120,16 @@ pick dropped dead `Parts__Part` `usage_type_map` entries for **untyped** inline 
 
 ### UPSTREAM-FINDINGS Item 5: Identifier Sanitization (SC-4, + SC-11 riders)
 
-**Status**: Spec revised (spec-review "Revise" applied) — ready for design
+**Status**: **Audited PASS / Certify** (2026-07-05, commit 4b19e4d, 18 files). All 5 plan
+phases verified; all 6 spec success criteria met on committed evidence; both recorded
+deviations (INV-1 corpus-honest reformulation; FORMULA fixture consumer = computed attribute
+on the resolution_map path) verified sound. INV-3 match sites + `:130` confirmed untouched
+by diff-scope; schema key-space check verified against the real `_generate_schemas`
+condition. One verification limit (same as Items 1–4): suite not re-run — harness-blocked
+from `uv run`; 1880/21/109 gate rests on recorded evidence + direct inspection.
 **Epic**: `.project/backlog/epic_upstream_findings.md`
-**Spec / Review**: `.project/active/identifier-sanitization/{spec,spec-review}.md`
+**Audit**: `.project/active/identifier-sanitization/audit.md`
+**Spec / Design / Plan / Close-out**: `.project/active/identifier-sanitization/{spec,design,plan,close-out}.md`
 
 Quoted SysML calc-def names produce non-importable Python (`class 'Margin
 Calc'Input`, `'margin calc'.py`). Fix at the **derivation layer** — framed as
@@ -139,6 +146,24 @@ FORMULA fixture** proving the wire resolves (existing 11 snapshots + 4 baselines
 byte-identical; new fixture additive). SC-11 closed; post-alias uniqueness re-check IN
 pending a plan-phase static check (WARN-first if a baseline hits the grandparent case),
 AST import-rewrite deferred.
+
+### UPSTREAM-FINDINGS Item 6: Expression Reconstruction Fidelity (SC-6)
+
+**Status**: Spec in progress
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec**: `.project/active/expression-fidelity/spec.md`
+
+Docstrings/stencils show corrupted math (`LiteralRationalEvaluation()` for
+literals, dropped parens) while executable bodies are correct. Root cause
+(research-corrected): branch ordering in `reconstruct_expression`
+(`expression_utils.py`) — the invocation catch-all precedes the literal branches,
+and every SysIDE node carries a derived `.function`, so literals never reach their
+branch; plus no parenthesization in `reconstruct_operator_expression`. Fix is
+display-path-only (executable text comes from a separate compiler path). Must land
+before the PUSH-DOWN epic moves `expression_utils.py`. Owner doc: 19
+(ast-dispatch-invariant, REQ-AST family — revises REQ-AST-03's ordering). Baseline
+regen is two-tier: extraction snapshots need live license, pipeline baselines
+rebuild offline.
 
 ### REFACTOR: Incremental Pipeline Refactor
 

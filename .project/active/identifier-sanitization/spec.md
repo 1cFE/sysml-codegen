@@ -43,29 +43,30 @@ with a downstream `sanitize_names.py` post-processor.
 
 ## Success Criteria
 
-- [ ] `alias_agg_probe` generates a full registry + module package that `ast.parse`
+- [x] `alias_agg_probe` generates a full registry + module package that `ast.parse`
       accepts, and every name the registry imports matches a class the corresponding
       module file declares. The research reproduction (quoted-name CalcUsage leak) is gone.
-- [ ] The FORMULA channel/module_eqn path produces sanitized identifiers for a
+- [x] The FORMULA channel/module_eqn path produces sanitized identifiers for a
       quoted-named owner, **proven by a real fixture** — a minimal quoted-owner FORMULA
       computed-attribute fixture (new fixture + committed extraction snapshot, live
       capture) whose generated FORMULA channel is *produced and consumed under the
       identical name* (the wire resolves, not merely `ast.parse`s). R1: no new behavior
       without a real fixture; the leak was only code-inferred until now.
-- [ ] **No EXISTING snapshot or baseline changes.** All 4 pipeline baselines and all 11
+- [x] **No EXISTING snapshot or baseline changes.** All 4 pipeline baselines and all 11
       committed extraction snapshots are byte-identical — a per-segment sanitize is a
       no-op on every model without a quoted calc def, which is all of them.
       `alias_agg_probe`'s own committed snapshot holds raw quoted QNs and stays
       byte-identical under the derivation-layer choice — that is load-bearing evidence for
       the direction, not a footnote. The new FORMULA fixture is **additive** and does not
       touch the invariance claim.
-- [ ] Silent output-file overwrites fail fast across **all three write key spaces** —
+- [x] Silent output-file overwrites fail fast across **all three write key spaces** —
       modules, stencils, and schemas — each with a clear message naming the colliding
       source names and the shared path. See the duplicate-path requirement for why one
-      check per key space is required.
-- [ ] SC-11 is formally closed as "confirmed intended, documented, tested," recorded in
+      check per key space is required. (Modules + stencils share one path key; schemas a
+      separate `calc_def_name.lower()` key — two checks, three write paths.)
+- [x] SC-11 is formally closed as "confirmed intended, documented, tested," recorded in
       the Item 5 close-out.
-- [ ] agentic-mbse impact recorded, including the fusion-tea `sanitize_names.py`
+- [x] agentic-mbse impact recorded, including the fusion-tea `sanitize_names.py`
       retirement coordination note and the Item 7 registration-key lockstep obligation.
 
 ## Known Requirements
