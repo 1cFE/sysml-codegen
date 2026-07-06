@@ -59,12 +59,6 @@ class BacktrackingResult(BaseModel):
             For literal bindings: str(literal_value) (for default value propagation).
         phantom_report: Report of suspected phantom entry points
         trace_log: Debug trace of resolution steps (for troubleshooting)
-        binding_to_entry_point: DEPRECATED - Use binding_resolutions instead.
-            Authoritative mapping from (usage_qn, param) -> entry_point_qn.
-            Key format: "{usage_qualified_name}|{param_name}" (uses | to avoid conflict with SysML's ::).
-            Value: The entry point qualified name to use for this binding.
-            Graph builder uses this for lookup instead of constructing identifiers.
-            Will be removed after all consumers updated.
         binding_resolutions: Unified mapping for ALL binding resolutions (entry_point OR module_output).
             Key format: "{usage_qualified_name}|{param_name}".
             Value: Complete BindingResolution describing how the binding is wired.
@@ -77,8 +71,6 @@ class BacktrackingResult(BaseModel):
     entry_point_sources: dict[str, str]
     phantom_report: PhantomDetectionReport
     trace_log: list[str] = Field(default_factory=list)
-    # DEPRECATED: Keep for backward compatibility during migration
-    binding_to_entry_point: dict[str, str] = Field(default_factory=dict)
     # Unified mapping for ALL binding resolutions
     binding_resolutions: dict[str, BindingResolution] = Field(default_factory=dict)
     # Step-4 fall-through entry point QNs: bound bindings that matched no
@@ -173,10 +165,7 @@ class DependencyBacktracker:
 
         # Authoritative mapping from (usage_qn, param) -> entry_point_qn
         # Key format: "{usage_qualified_name}|{param_name}"
-        # DEPRECATED: Use _binding_resolutions instead
-        self._binding_to_entry_point: dict[str, str] = {}
-
-        # Unified binding resolutions (replaces _binding_to_entry_point)
+        # Unified binding resolutions
         # Key format: "{usage_qualified_name}|{param_name}"
         # Value: BindingResolution describing how binding is wired
         self._binding_resolutions: dict[str, BindingResolution] = {}
@@ -215,7 +204,6 @@ class DependencyBacktracker:
         self._trace_log = []
         self._entry_point_context = {}
         self._entry_point_sources = {}
-        self._binding_to_entry_point = {}
         self._binding_resolutions = {}
         # Step-4 fall-through entry points (bound bindings that matched no
         # resolution strategy and no design attribute). Item 7 / D4: the V11
@@ -301,7 +289,6 @@ class DependencyBacktracker:
             entry_point_sources=self._entry_point_sources,
             phantom_report=phantom_report,
             trace_log=self._trace_log,
-            binding_to_entry_point=self._binding_to_entry_point,  # DEPRECATED
             binding_resolutions=self._binding_resolutions,
             fallback_entry_points=self._fallback_entry_points,
         )
@@ -369,8 +356,6 @@ class DependencyBacktracker:
                     is_transitive=False,
                 )
 
-                # DEPRECATED: Keep for backward compat
-                self._binding_to_entry_point[mapping_key] = entry_point_qn
                 self._entry_point_context[entry_point_qn] = usage
 
                 # Carry literal value for entry point classification
@@ -401,8 +386,6 @@ class DependencyBacktracker:
                     self._entry_point_context[resolution.qualified_name] = usage
                     if resolution.source_path:
                         self._entry_point_sources[resolution.qualified_name] = resolution.source_path
-                    # DEPRECATED: Keep for backward compat
-                    self._binding_to_entry_point[mapping_key] = resolution.qualified_name
 
             elif binding.binding_type == BindingType.EXPRESSION:
                 # EXPRESSION bindings: no dispatch path, treat as entry point
@@ -418,7 +401,6 @@ class DependencyBacktracker:
                     is_transitive=False,
                 )
                 self._entry_point_context[entry_point_qn] = usage
-                self._binding_to_entry_point[mapping_key] = entry_point_qn
 
         # Also track unbound params as entry points (Case 1: use qualified name)
         for param in usage.unbound_params:
@@ -435,9 +417,6 @@ class DependencyBacktracker:
                 source_path=None,
                 is_transitive=False,
             )
-
-            # DEPRECATED: Keep for backward compat
-            self._binding_to_entry_point[mapping_key] = qualified_param_name
 
         return dependencies
 

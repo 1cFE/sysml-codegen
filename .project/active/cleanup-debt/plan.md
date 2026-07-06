@@ -103,35 +103,35 @@ grep -rn "\.binding_to_entry_point\b" src/ tests/     # expect: field def + writ
 **See `spec.md` §A, §B (rows map/binding), §F (dead helpers, D1-F5), §H.**
 
 #### §A — Dead templates (DELETE)
-- [ ] `src/sysml_codegen/templates/pydantic_schema.py.jinja2` — re-confirm 0 `get_template(...)` render sites, delete.
-- [ ] `src/sysml_codegen/templates/entry_point_schema.py.jinja2` — re-confirm 0 render sites (only `parameter_group_schema.py.jinja2` is rendered by `generation/entry_point.py`), delete.
+- [x] `src/sysml_codegen/templates/pydantic_schema.py.jinja2` — re-confirm 0 `get_template(...)` render sites, delete.
+- [x] `src/sysml_codegen/templates/entry_point_schema.py.jinja2` — re-confirm 0 render sites (only `parameter_group_schema.py.jinja2` is rendered by `generation/entry_point.py`), delete.
 
 #### §B — `map_sysml_type_to_rootmodel_wrapper` (DELETE — no fork; `modules.py` imports the sibling `map_sysml_type_to_python`)
-- [ ] Delete the function (`generation/type_mapping.py:~60`).
-- [ ] Delete the module-docstring bullet (`type_mapping.py:~9` — `- map_sysml_type_to_rootmodel_wrapper(): ...`) **[R1 — spec-review L1-1]**.
-- [ ] Delete the `__all__` entry (`:~81`).
-- [ ] Delete the dedicated test cases in `test_type_mapping_consolidation.py` (incl. the `hasattr` assertion `:242`); **keep the sibling-function tests** (`map_sysml_type_to_python`). Record deleted test names for Phase 6.
+- [x] Delete the function (`generation/type_mapping.py:~60`).
+- [x] Delete the module-docstring bullet (`type_mapping.py:~9` — `- map_sysml_type_to_rootmodel_wrapper(): ...`) **[R1 — spec-review L1-1]**.
+- [x] Delete the `__all__` entry (`:~81`).
+- [x] Delete the dedicated test cases in `test_type_mapping_consolidation.py` (incl. the `hasattr` assertion `:242`); **keep the sibling-function tests** (`map_sysml_type_to_python`). Record deleted test names for Phase 6.
 
 #### §B — `binding_to_entry_point` dual-write (DEPRECATED — DELETE; no consumer reads it)
-- [ ] Delete the `BacktrackingResult` field (`dependency_backtracker.py:~81`) and its DEPRECATED docstring line (`:~62`).
-- [ ] Delete the `_binding_to_entry_point` backing dict + every init/reset/write/construct site (re-grep — HEAD shows `:177,218,304,373,405,421,440`; line numbers drift).
-- [ ] Delete the `:~179` naming comment `# Unified binding resolutions (replaces _binding_to_entry_point)` — it names the deleted dict **[R1 — spec-review L1-1]**.
-- [ ] Delete the `test_data_models.py:~361` field-name assertion. Record for Phase 6.
+- [x] Delete the `BacktrackingResult` field (`dependency_backtracker.py:~81`) and its DEPRECATED docstring line (`:~62`).
+- [x] Delete the `_binding_to_entry_point` backing dict + every init/reset/write/construct site (re-grep — HEAD shows `:177,218,304,373,405,421,440`; line numbers drift).
+- [x] Delete the `:~179` naming comment `# Unified binding resolutions (replaces _binding_to_entry_point)` — it names the deleted dict **[R1 — spec-review L1-1]**.
+- [x] Delete the `test_data_models.py:~361` field-name assertion. Record for Phase 6.
 
 #### §F — dead helper (DELETE)
-- [ ] `_check_semantic_match` (`analysis/phantom_detector.py:~263`) — re-grep def-only, delete. (Note: `_deserialize_constraint_info` in `snapshot/loader.py` is **OUT OF SCOPE** — Item 4 deletes it. Do not touch.)
+- [x] `_check_semantic_match` (`analysis/phantom_detector.py:~263`) — re-grep def-only, delete. (Note: `_deserialize_constraint_info` in `snapshot/loader.py` is **OUT OF SCOPE** — Item 4 deletes it. Do not touch.)
 
 #### §F — D1-F5 (verify + bookkeeping, likely no code)
-- [ ] Re-grep `subprocess` across `src/` and `scripts/` (spec-time spot-grep found **zero** — the dead `out = subprocess.run` var appears already removed). If present, delete it. Either way, **flip the unflipped plan checkboxes the finding names** in `snapshot-generation/audit.md:120-123`. Record disposition (done / already-gone) for Phase 6.
+- [x] Re-grep `subprocess` across `src/` and `scripts/` (spec-time spot-grep found **zero** — the dead `out = subprocess.run` var appears already removed). If present, delete it. Either way, **flip the unflipped plan checkboxes the finding names** in `snapshot-generation/audit.md:120-123`. Record disposition (done / already-gone) for Phase 6.
 
 #### §H — 4 vacuous skipif guards (SIMPLIFY)
-- [ ] `tests/conformance/test_output_registry.py` — remove the 4 `skipif` guards (`:114, :119, :141, :146`; the typed API exists at HEAD, so they never fire). Tests run unconditionally.
+- [x] `tests/conformance/test_output_registry.py` — remove the 4 `skipif` guards (`:114, :119, :141, :146`; the typed API exists at HEAD, so they never fire). Tests run unconditionally.
 
 ### Validation
 **Automated:**
-- [ ] Re-grep each deleted symbol across `src/ tests/ scripts/ docs/` → **zero hits** (SC-G).
-- [ ] `uv run pytest tests/` → green; count **decreased** vs Phase 0 by exactly the deleted self-tests.
-- [ ] ruff ≤ 21, mypy ≤ 109.
+- [x] Re-grep each deleted symbol across `src/ tests/ scripts/ docs/` → **zero hits** (SC-G).
+- [x] `uv run pytest tests/` → green; count **decreased** vs Phase 0 by exactly the deleted self-tests.
+- [x] ruff ≤ 21, mypy ≤ 109.
 
 **What We Know Works After This Phase:**
 The un-forked dead surface is gone, the four skipifs run unconditionally, and D1-F5 is dispositioned — all with zero grep residue and a green suite.
@@ -403,6 +403,20 @@ Every success criterion has a written, auditable answer; no disposition stops on
 **Note on gate numbers:** the plan text records a 21/109 baseline (pre-Items 4/6). The live baseline is **20/105**; the SC-G gate is enforced as *not worse than 20/105* for the rest of this item.
 
 ### Phase 1 Completion
+**Completed:** 2026-07-06
+**Deletions (all re-greped zero-hit across `src/ tests/ scripts/ docs/`):**
+- §A — `templates/pydantic_schema.py.jinja2`, `templates/entry_point_schema.py.jinja2` (git rm; 0 render sites re-confirmed).
+- §B-map — `map_sysml_type_to_rootmodel_wrapper` (`type_mapping.py`): function, module-docstring bullet, `__all__` entry. **Consequence-of-deletion:** its only consumer was the now-orphaned `PYTHON_TO_ROOTMODEL_WRAPPER` dict — deleted too (dict + `__all__` entry). R1 doc fix: `docs/architecture/reference/08-generation.md:21` (REQ-GEN-06) no longer names the deleted function (this doc site was **not** in the spec's grep — caught at implement).
+- §B-binding — `binding_to_entry_point` field + DEPRECATED docstring; `_binding_to_entry_point` backing dict + init/reset/construct + all 4 write sites + the `# Unified ... (replaces _binding_to_entry_point)` naming comment. R1 doc fixes: `09-data-models.md:192`, `11-analysis-backtracker.md:42` (both named the deleted field).
+- §F — `_check_semantic_match` (`phantom_detector.py`) + its only-consumer private helper `_extract_keywords`; the `domain_keywords` ctor param + `self.domain_keywords` assignment (only that dead method read it); module + class docstrings fixed from "three strategies" (a pre-existing lie — the semantic strategy was already uncalled) to the true two. **Left in place (out of catalog scope):** the public `DomainKeywords` export — now export-only; candidate for a future public-surface cleanup, recorded not deleted (removing a public export exceeds this catalog).
+- §D1-F5 — dead `out = subprocess.run` var removed from `test_snapshot_generation.py::test_generation_timestamp_has_no_render_site` (it was still present, not already-gone as the spec's spot-grep guessed); `snapshot-generation/audit.md` #2/#3 dispositioned; Phase 3/4/5 checkboxes flipped + Phase-5 note filled in `snapshot-generation/plan.md`.
+- §H — all 4 vacuous skipif guards removed from `test_output_registry.py` (+ their 19 decorator applications, the now-dead availability flags/predicates, and the try/except stub fallbacks → plain imports, per FAIL-LOUDLY). `needs_typed_api` was already applied nowhere.
+
+**Modified (not deleted) tests:** `test_type_mapping_module_exists` (dropped the wrapper `hasattr` assertion, kept `map_sysml_type_to_python`); `test_req_dm_03_fields_backtracking_result` (dropped `binding_to_entry_point` from the pinned field set — the test pins the live model, kept).
+**Deleted tests (6, all self-tests of the deleted wrapper fn/dict):** `TestWrapperMapping::test_wrapper_{real_to_Float,integer_to_Int,boolean_to_Bool,string_to_String,unknown_passthrough}` + `TestSharedModuleAPI::test_python_to_rootmodel_dict_has_4_entries`.
+**BACKLOG:** `[DOCS-SCRUB-F1]` marked Absorbed into Item 8.
+**Gate:** ruff src 20 → **19** (improved), mypy src **105** (held). Suite: **1999 passed / 4 skipped / 5 xfailed** — exactly −6 vs Phase 0 (the 6 deleted wrapper self-tests), no other coverage lost; §H skipif removal changed no counts (the guards never fired at HEAD). Test-file ruff (not in the src gate): the two touched files had 11 pre-existing errors at HEAD, now 7 — improved, no new unused import from my edits.
+
 ### Phase 2 Completion  (fork taken: __ )
 ### Phase 3 Completion
 ### Phase 4 Completion  (D1-F2 decision: __ ; SC-11 verdict: __ )

@@ -189,7 +189,7 @@ See [13](13-aggregation-scoping.md), [25](25-hierarchy-resolver.md) for semantic
 `required_usages: list[CalcUsageData]`, `dependency_graph: dict[str, list[str]]`,
 `entry_points: set[str]`, `entry_point_sources: dict[str, str]`,
 `binding_resolutions: dict[str, BindingResolution]`, `phantom_report: PhantomDetectionReport`,
-`trace_log: list[str]`, `binding_to_entry_point: dict[str, str]` *(deprecated)*,
+`trace_log: list[str]`,
 `fallback_entry_points: set[str]` (Item 7 / D4 — Step-4 fall-through entry-point QNs;
 carried onto the ComputationGraph for the V11 `collect_uncovered_params` collector).
 Key format: `"{usage_qualified_name}|{param_name}"`.

@@ -30,43 +30,14 @@ from tests.helpers.registry_compat import registry_resolve
 
 
 # ---------------------------------------------------------------------------
-# Typed identifier imports — these don't exist yet; tests will FAIL until
-# BUILD phase creates them in core/identifier_types.py.
+# Typed identifier API — present at HEAD (core/identifier_types.py).
 # ---------------------------------------------------------------------------
-try:
-    from sysml_codegen.core.identifier_types import (
-        CanonicalChannel,
-        ScopedKey,
-        SysMLQN,
-    )
-
-    TYPED_API_AVAILABLE = True
-except ImportError:
-    # Stub types so test file parses — tests will be skipped/xfail
-    from typing import NewType
-
-    ScopedKey = NewType("ScopedKey", str)
-    CanonicalChannel = NewType("CanonicalChannel", str)
-    SysMLQN = NewType("SysMLQN", str)
-    TYPED_API_AVAILABLE = False
-
-# Try importing typed constructor functions
-try:
-    from sysml_codegen.core.identifier_types import (
-        make_canonical_channel,
-        make_scoped_key,
-    )
-
-    CONSTRUCTORS_AVAILABLE = True
-except ImportError:
-    CONSTRUCTORS_AVAILABLE = False
-
-    def make_scoped_key(usage_eqn: str, attr_name: str) -> ScopedKey:
-        segments = usage_eqn.split("__")
-        return ScopedKey("." .join(segments[1:]) + "." + attr_name)
-
-    def make_canonical_channel(usage_eqn: str, attr_name: str) -> CanonicalChannel:
-        return CanonicalChannel(f"{usage_eqn}__{attr_name}")
+from sysml_codegen.core.identifier_types import (
+    CanonicalChannel,
+    ScopedKey,
+    SysMLQN,
+    make_scoped_key,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -108,47 +79,6 @@ def attr_expr_probe_registry():
     return build_registry_from_snapshot(snap)
 
 
-# ---------------------------------------------------------------------------
-# Typed API availability check — skip tests that need typed API
-# ---------------------------------------------------------------------------
-needs_typed_api = pytest.mark.skipif(
-    not TYPED_API_AVAILABLE,
-    reason="Typed API (ScopedKey, CanonicalChannel, SysMLQN) not yet created",
-)
-
-needs_constructors = pytest.mark.skipif(
-    not CONSTRUCTORS_AVAILABLE,
-    reason="Constructor functions (make_scoped_key, make_canonical_channel) not yet created",
-)
-
-
-def _has_typed_methods(registry: OutputRegistry) -> bool:
-    """Check if registry has typed lookup methods."""
-    return all(
-        hasattr(registry, m)
-        for m in ("scoped_lookup", "sysml_qn_lookup", "alias_lookup")
-    )
-
-
-def _has_typed_registration(registry: OutputRegistry) -> bool:
-    """Check if registry has typed registration methods."""
-    return all(
-        hasattr(registry, m)
-        for m in ("register_scoped", "register_sysml_qn")
-    )
-
-
-needs_typed_methods = pytest.mark.skipif(
-    not _has_typed_methods(OutputRegistry()),
-    reason="Typed lookup methods not yet implemented on OutputRegistry",
-)
-
-needs_typed_registration = pytest.mark.skipif(
-    not _has_typed_registration(OutputRegistry()),
-    reason="Typed registration methods not yet implemented on OutputRegistry",
-)
-
-
 # ===================================================================
 # REQ-OR-01: All reference formats resolve
 # ===================================================================
@@ -157,7 +87,6 @@ class TestReqOR01:
 
     @pytest.mark.req("REQ-OR-01")
     @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"])
-    @needs_typed_methods
     def test_all_reference_formats_resolve(self, model_name):
         """All CalcUsage outputs resolve via scoped_lookup; FORMULA outputs
         resolve via sysml_qn_lookup; CHAIN aliases resolve via alias_lookup."""
@@ -251,7 +180,6 @@ class TestReqOR02:
     """REQ-OR-02: Each typed registry SHALL have its own lookup method."""
 
     @pytest.mark.req("REQ-OR-02")
-    @needs_typed_methods
     def test_no_single_resolve_method(self):
         """OutputRegistry has scoped_lookup, sysml_qn_lookup, alias_lookup."""
         registry = OutputRegistry()
@@ -264,7 +192,6 @@ class TestReqOR02:
 
     @pytest.mark.req("REQ-OR-02")
     @pytest.mark.parametrize("model_name", ["solar_battery_model"])
-    @needs_typed_methods
     def test_typed_lookups_return_canonical_channel(self, model_name):
         """Typed lookup methods return CanonicalChannel | None."""
         snap = load_extraction_snapshot(snapshot_fixture(model_name))
@@ -283,7 +210,6 @@ class TestReqOR02:
             assert isinstance(result, str)
 
     @pytest.mark.req("REQ-OR-02")
-    @needs_typed_methods
     def test_scoped_lookup_miss_returns_none(self, solar_battery_registry):
         """scoped_lookup with nonexistent key returns None."""
         result = solar_battery_registry.scoped_lookup(
@@ -292,7 +218,6 @@ class TestReqOR02:
         assert result is None
 
     @pytest.mark.req("REQ-OR-02")
-    @needs_typed_methods
     def test_sysml_qn_lookup_miss_returns_none(self, solar_battery_registry):
         """sysml_qn_lookup with nonexistent key returns None."""
         result = solar_battery_registry.sysml_qn_lookup(
@@ -301,7 +226,6 @@ class TestReqOR02:
         assert result is None
 
     @pytest.mark.req("REQ-OR-02")
-    @needs_typed_methods
     def test_alias_lookup_miss_returns_none(self, solar_battery_registry):
         """alias_lookup with nonexistent key returns None."""
         result = solar_battery_registry.alias_lookup(
@@ -317,7 +241,6 @@ class TestReqOR03:
     """REQ-OR-03: Collision policy per registry type."""
 
     @pytest.mark.req("REQ-OR-03")
-    @needs_typed_registration
     def test_scoped_duplicate_raises(self):
         """Registering same ScopedKey with different channel raises."""
         registry = OutputRegistry()
@@ -329,7 +252,6 @@ class TestReqOR03:
             registry.register_scoped(sk, cc2)
 
     @pytest.mark.req("REQ-OR-03")
-    @needs_typed_registration
     def test_sysml_qn_duplicate_raises(self):
         """Registering same SysMLQN with different channel raises."""
         registry = OutputRegistry()
@@ -341,7 +263,6 @@ class TestReqOR03:
             registry.register_sysml_qn(qn, cc2)
 
     @pytest.mark.req("REQ-OR-03")
-    @needs_typed_registration
     def test_alias_duplicate_warns_first_wins(self, caplog):
         """Re-registering alias with different channel keeps first value."""
         registry = OutputRegistry()
@@ -383,7 +304,6 @@ class TestReqOR04:
         assert "phase ordering" in caplog.text.lower() or "unregistered" in caplog.text.lower()
 
     @pytest.mark.req("REQ-OR-04")
-    @needs_typed_registration
     def test_alias_after_canonical_succeeds(self):
         """Register canonical via register_scoped, then register_alias succeeds."""
         registry = OutputRegistry()
@@ -405,7 +325,6 @@ class TestReqOR05:
 
     @pytest.mark.req("REQ-OR-05")
     @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"])
-    @needs_typed_methods
     def test_no_dead_keys_registered(self, model_name):
         """Key_A, Key_D, Key_E full, Key_F, bare NOT in any registry."""
         snap = load_extraction_snapshot(snapshot_fixture(model_name))
@@ -432,7 +351,6 @@ class TestReqOR05:
 
     @pytest.mark.req("REQ-OR-05")
     @pytest.mark.parametrize("model_name", ["solar_battery_model"])
-    @needs_typed_methods
     def test_only_key_c_and_key_e_stripped_in_scoped(self, model_name):
         """Every scoped key is Key_C or Key_E_stripped format: dotted path,
         no '::', no '__'."""
@@ -503,7 +421,6 @@ class TestReqOR06:
     """REQ-OR-06: Phase 2-4 aliases resolve through typed lookup."""
 
     @pytest.mark.req("REQ-OR-06")
-    @needs_typed_methods
     def test_phase2_alias_resolves_through_scoped(self):
         """Each Phase 2 CHAIN alias has its canonical resolved via scoped
         lookup before alias registration."""
@@ -523,7 +440,6 @@ class TestReqOR06:
             )
 
     @pytest.mark.req("REQ-OR-06")
-    @needs_typed_methods
     def test_phase3_alias_resolves_through_registry(self):
         """EXPOSE_PURE aliases' canonical_name resolves via alias_lookup.
 
@@ -548,7 +464,6 @@ class TestReqOR06:
         assert expose_pure_count > 0, "No EXPOSE_PURE aliases found"
 
     @pytest.mark.req("REQ-OR-06")
-    @needs_typed_methods
     def test_expose_pure_alias_resolves(self):
         """alias_lookup for EXPOSE_PURE alias resolves to correct channel."""
         snap = load_extraction_snapshot(snapshot_fixture("attr_expr_probe"))
@@ -604,7 +519,6 @@ class TestReqOR07:
     """REQ-OR-07: ScopedKey.from_eqn() strips design prefix, joins with dots."""
 
     @pytest.mark.req("REQ-OR-07")
-    @needs_constructors
     def test_scoped_key_from_eqn_derivation(self):
         """Parametrize over known EQN+attr pairs; verify dotted format."""
         test_cases = [
@@ -658,7 +572,6 @@ class TestReqOR08:
 
     @pytest.mark.req("REQ-OR-08")
     @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"])
-    @needs_typed_methods
     def test_key_a_not_in_scoped(self, model_name):
         """Key_A format (instance_name.attr) not in scoped registry."""
         snap = load_extraction_snapshot(snapshot_fixture(model_name))

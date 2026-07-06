@@ -231,10 +231,6 @@ def test_live_vs_snapshot_byte_identical_symlinked(tmp_path):
 @pytest.mark.req("REQ-SNAP-18")
 def test_generation_timestamp_has_no_render_site():
     """generation_timestamp is a latent byte-identity trap — must stay unwired."""
-    out = subprocess.run(
-        ["grep", "-rn", "generation_timestamp", "src"],
-        cwd=REPO_ROOT, capture_output=True, text=True,
-    )
     # The only permitted mention is the template variable itself (never rendered
     # from Python): no .py passes it into a render() call.
     py_render = subprocess.run(

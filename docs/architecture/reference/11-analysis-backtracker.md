@@ -39,7 +39,6 @@ class BacktrackingResult(BaseModel):
     binding_resolutions: dict[str, BindingResolution]  # SINGLE SOURCE OF TRUTH
     phantom_report: PhantomDetectionReport      # Suspected phantom entry points
     trace_log: list[str]                        # Debug trace of resolution steps
-    binding_to_entry_point: dict[str, str]      # DEPRECATED - use binding_resolutions
     fallback_entry_points: set[str]             # Step-4 fall-through entry point QNs
 ```
 

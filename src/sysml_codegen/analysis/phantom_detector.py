@@ -1,10 +1,9 @@
 """Phantom entry point detection for dependency backtracking.
 
 Detects parameters incorrectly classified as entry points ("phantoms") using
-three strategies:
+two strategies:
 1. Direct output name match (highest confidence)
 2. Binding context check (high confidence)
-3. Semantic keyword overlap (medium confidence)
 """
 
 from __future__ import annotations
@@ -134,29 +133,24 @@ class PhantomDetector:
     - Binding resolution failed (couldn't find source usage)
     - But the source actually exists in the model (just wasn't found)
 
-    Detection achieves >95% recall through three strategies:
+    Detection matches parameters against calc outputs through two strategies:
     1. Direct output match: param name matches an output in the model
-    2. Semantic match: param name has keyword overlap with outputs
-    3. Binding context: param had a binding that failed to resolve
+    2. Binding context: param had a binding that failed to resolve
     """
 
     def __init__(
         self,
         all_usages: list[CalcUsageData],
         calc_defs: list,
-        domain_keywords: DomainKeywords | None = None,
     ):
         """Initialize with model context.
 
         Args:
             all_usages: All CalcUsageData from usage_extractor
             calc_defs: All CalculationDefinitionData from model
-            domain_keywords: Optional domain-specific keywords for semantic matching.
-                            Defaults to DomainKeywords.for_domain("fusion").
         """
         self.all_usages = all_usages
         self.calc_defs = calc_defs
-        self.domain_keywords = domain_keywords or DomainKeywords.for_domain("fusion")
 
         # Build output name catalog for matching
         self._output_names: set[str] = set()
@@ -259,39 +253,3 @@ class PhantomDetector:
                 if binding.source_path and param_name in usage.unbound_params:
                     return binding.source_path
         return None
-
-    def _check_semantic_match(
-        self,
-        param_name: str,
-    ) -> tuple[str, float] | None:
-        """Check for semantic similarity to outputs using keyword overlap."""
-        param_keywords = self._extract_keywords(param_name)
-
-        best_match: str | None = None
-        best_score: float = 0.0
-
-        for output_name in self._output_names:
-            output_keywords = self._extract_keywords(output_name)
-
-            overlap = param_keywords & output_keywords
-            if not overlap:
-                continue
-
-            score = len(overlap) / max(len(param_keywords), len(output_keywords))
-
-            domain_overlap = overlap & self.domain_keywords.all_keywords
-            if domain_overlap:
-                score = min(1.0, score + 0.2 * len(domain_overlap))
-
-            if score > best_score:
-                best_score = score
-                best_match = self._output_to_source.get(output_name)
-
-        if best_match and best_score >= 0.4:
-            return (best_match, best_score)
-        return None
-
-    def _extract_keywords(self, name: str) -> set[str]:
-        """Extract keywords from a parameter/output name."""
-        parts = name.lower().replace("_", " ").split()
-        return {p for p in parts if len(p) > 2}

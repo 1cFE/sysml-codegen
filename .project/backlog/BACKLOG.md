@@ -105,6 +105,11 @@ its warning. Opportunistic — cheap to add in sysml-codegen's test suite.
 
 ### [DOCS-SCRUB-F1] Delete the two dead templates (+ dead-code candidates nearby)
 
+**Absorbed into PIPELINE-TRUTH Item 8** (`.project/active/cleanup-debt/`), 2026-07-06. Both dead
+templates deleted; `map_sysml_type_to_rootmodel_wrapper` (+ its now-orphaned
+`PYTHON_TO_ROOTMODEL_WRAPPER` dict) and `binding_to_entry_point` dual-write deleted in Phase 1;
+`get_default_value` / `generate_derived_group_json` resolved in Phase 2 (see close-out).
+
 **Source**: docs-scrub (post-UPSTREAM-FINDINGS docs pass), 2026-07-06. Zero render sites
 each (re-confirm with grep before deleting):
 - `src/sysml_codegen/templates/pydantic_schema.py.jinja2` (carries `generation_timestamp`;
