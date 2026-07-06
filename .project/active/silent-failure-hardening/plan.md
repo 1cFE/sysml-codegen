@@ -362,6 +362,15 @@ That every touched component's reference doc and matrix row can move in this cha
 - `deep_cross_scope_probe` (D3-2): the truncated CHAIN bindings (`data_point` `source_path="station"`, plus `sensor`, `base_metric` — all 3+-seg chains) are gone; those params are now unbound entry points. Consequence: the uncovered-offender set collapses to empty (silent valueless-wired offenders → clean warned EPs). Three committed pins updated to the new (better) truth; the truncation pin flipped to a fires-on-shape warning pin.
 - `d38_caret` (D3-8): captured fresh (new fixture). No committed aggregation snapshot uses `^`, so the corpus is byte-identical for the D3-8 change (vacuous carve-out, as designed).
 
+### Phase 2 Completion (Family 2 — Gated-Report Silences)
+**Completed:** 2026-07-06
+**Gates:** suite 2012 passed; ruff 17; mypy 104. Clean sweep GREEN (new sentinels are INFO / WARN-only-when->0, so clean fixtures stay zero-WARNING).
+**Per-finding:**
+- **D3-4** (`pipeline_builder.py`): `_render_extraction_report` helper surfaces the previously-discarded usage-extraction report — an always-present INFO summary + one WARN per collected diagnostic. This is what makes the Family-1 dispatch warnings actually reach the user on the live path. **DEVIATION from INV-2 (parity):** the usage-extraction warnings are computed at extraction time and are NOT serialized into the snapshot (only hierarchy warnings + the constraint manifest are), so the from-snapshot path has no usage-report to replay. Full parity would need a snapshot-format field + re-capture of every fixture (byte-identity churn) — out of proportion for this stage; deferred. Tests: `test_d34_report_with_warnings_surfaces_each`, `test_d34_clean_report_no_warn`.
+- **D3-5** (`output_registry_builder.py`): the Phase-1a `if not calc_def: continue` now WARNS (naming calc def + usage) — the skip registered zero channels silently. Test deferred (needs full registry scaffolding); fix is a direct log add, code-reviewed.
+- **D3-13** (`phantom_detector.py`): catalog zero-found sentinel — INFO breakdown (scanned/cataloged/skipped) always; WARN when a usage's calc def is unknown (the blind spot). Tests: `test_d313_unknown_calc_def_warns_catalog_blind`, `test_d313_all_known_no_warn`.
+- **Pattern-3 sentinels DEFERRED:** the scoped-alias / self-named-rescue / design-override / template-detection / empty-render INFO sentinels (all [NEED]/[INFERRED], INFO-level noise discipline) are not landed in this stage — lowest value-per-dollar against the remaining HARD findings (Families 3/4, SC-4/SC-5). Documented for follow-on. The three CONFIRMED headline silences (D3-4, D3-5, D3-13) are fixed.
+
 ---
 
 **Status:** Draft → In Progress → Complete

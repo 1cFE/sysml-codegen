@@ -37,7 +37,11 @@ from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
     compile_calc_def,
 )
-from sysml_codegen.extraction.usage_extractor import CalcUsageData, extract_calculation_usages
+from sysml_codegen.extraction.usage_extractor import (
+    CalcUsageData,
+    ExtractionReport,
+    extract_calculation_usages,
+)
 from sysml_codegen.orchestration.pipeline_context import (
     CodeGenerationError,
     PipelineContext,
@@ -47,6 +51,27 @@ from sysml_codegen.orchestration.output_registry_builder import build_output_reg
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 
 logger = logging.getLogger(__name__)
+
+
+def _render_extraction_report(report: ExtractionReport) -> None:
+    """Surface the usage-extraction report (D3-4), Item-4 house style.
+
+    Emits an always-present INFO summary (scanned/bindings/unbound), then one
+    WARN per collected diagnostic — but only when there is at least one, so a
+    clean model stays zero-WARNING (INV-6). The report was previously bound and
+    discarded, silencing every Family-1 dispatch diagnostic it carries.
+    """
+    logger.info(
+        "Usage extraction: %d usages, %d bindings, %d unbound params, "
+        "%d cross-file bindings, %d warning(s).",
+        report.total_usages,
+        report.total_bindings,
+        report.unbound_params,
+        report.cross_file_bindings,
+        len(report.warnings),
+    )
+    for warning in report.warnings:
+        logger.warning("Extraction: %s", warning)
 
 
 def _remove_formula_from_design_attrs(
@@ -690,10 +715,18 @@ def build_pipeline_context(
     constraint_manifest = extractor.report_dropped_constraints()
 
     # Step 3: Extract calculation usages with enhanced algorithm param detection
-    calc_usages, _report = extract_calculation_usages(
+    calc_usages, extraction_report = extract_calculation_usages(
         extractor.model,
         calc_defs=calc_defs,
     )
+    # D3-4: surface the usage-extraction report instead of discarding it. The
+    # report carries the Family-1 dispatch diagnostics (dropped usages,
+    # unresolved calc defs, unhandled/over-long bindings); discarding it defeated
+    # its purpose. Rendered on the live path here. (INV-2 parity to the
+    # from-snapshot path is limited: the usage-extraction warnings are computed at
+    # extraction time and are not serialized into the snapshot, so the offline
+    # path has no report to replay — see 27-snapshot-generation.md.)
+    _render_extraction_report(extraction_report)
 
     # Step 3.5: Extract hierarchy + rewrite bindings + scope aggregation + build CHAIN aliases
     hierarchy_data, scoped_agg_data, chain_aliases = _extract_hierarchy_and_rewrite_bindings(

@@ -157,6 +157,7 @@ class PhantomDetector:
         self._output_to_source: dict[str, str] = {}
 
         calc_def_map = {c.name: c for c in calc_defs}
+        skipped = 0
         for usage in all_usages:
             calc_def = calc_def_map.get(usage.calc_def_name)
             if calc_def:
@@ -165,6 +166,28 @@ class PhantomDetector:
                     self._output_to_source[attr.name] = (
                         f"{usage.instance_name}.{attr.name}"
                     )
+            else:
+                skipped += 1
+
+        # D3-13 zero-found sentinel (Item-4 house style): the catalog drives
+        # phantom matching, so an empty/incomplete catalog makes a broken scan
+        # ("couldn't build the catalog") indistinguishable from a clean scan
+        # ("no phantoms"). Emit an always-present INFO breakdown; WARN only when a
+        # usage's calc def was missing (the actual blind spot), so a clean build
+        # stays zero-WARNING (INV-6).
+        logger.info(
+            "Phantom catalog: scanned %d usage(s), cataloged %d output name(s), "
+            "%d usage(s) skipped (unknown calc def).",
+            len(all_usages),
+            len(self._output_names),
+            skipped,
+        )
+        if skipped:
+            logger.warning(
+                "Phantom catalog: %d usage(s) had an unknown calc def and were "
+                "not cataloged — phantom detection is blind to their outputs.",
+                skipped,
+            )
 
     def detect_phantoms(
         self,

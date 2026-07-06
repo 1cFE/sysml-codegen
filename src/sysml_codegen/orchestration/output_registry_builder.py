@@ -165,6 +165,16 @@ def build_output_registry(
     for usage in calc_usages:
         calc_def = calc_def_by_name.get(usage.calc_def_name)
         if not calc_def:
+            # D3-5: an unknown calc def means this usage registers ZERO output
+            # channels — a real gap (every CalcUsage should register its outputs,
+            # doc 10-output-registry.md Phase 1a). The bare `continue` hid it;
+            # warn so the missing channels are visible, not silently absent.
+            logger.warning(
+                "OutputRegistry Phase 1a: calc def '%s' for usage '%s' not "
+                "found — skipping; its output channels are NOT registered.",
+                usage.calc_def_name,
+                usage.instance_name,
+            )
             continue
         for attr in calc_def.output_attributes:
             canonical = make_canonical_channel(usage.qualified_name, attr.name)
