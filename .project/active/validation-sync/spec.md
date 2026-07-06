@@ -35,9 +35,11 @@ model the auditor passes is a model codegen accepts.
 
 ## Success Criteria
 
-- [ ] **The consolidated impact list is built and dispositioned** — one deduplicated,
+- [x] **The consolidated impact list is built and dispositioned** — one deduplicated,
   sourced table (item → impact → disposition), with nothing from any per-item recording
   silently dropped. (This spec delivers the table; the plan/execute honors it.)
+  *(Audit 2026-07-06: verified in-repo — close-out Table 1 has all 23 rows dispositioned,
+  no drop; 5-row spot-check clean.)*
 - [ ] **Every floor check exists with a negative fixture and catches its trap** on the
   WI-014 toy / plant fixture shapes: L2 self-named-binding (FAIL); L6 return-style output
   check, constraint non-executability (WARN), calc-bearing-part-def-no-instantiation (FAIL);

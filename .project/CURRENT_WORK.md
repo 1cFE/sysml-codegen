@@ -8,7 +8,14 @@
 
 ### UPSTREAM-FINDINGS Item 12: agentic-mbse Sync — Guidance & Validation
 
-**Status**: **COMPLETE** (2026-07-06). Close-out: `.project/active/validation-sync/close-out.md`
+**Status**: **Audited CONDITIONAL** (2026-07-06). Audit: `.project/active/validation-sync/audit.md`.
+R2 traceability core gate certified (both tables complete, no dropped row; 5-row spot-check
+clean; C1 reframe + C7/C8 file recorded and sound; F3/F4/F5 filed). Agentic-mbse code-side
+verifications (checks wired, fixtures, docs, backlog, suite re-run, cross-repo run_all_checks,
+five-commit scope) are recorded-but-unverified — this audit session's sandbox is pinned to
+sysml-codegen and cannot read `~/1cfe/agentic-mbse`. Cleared by the orchestrator's designated
+code-side pass (audit §"Designated clearing path"); flips to PASS when recorded green.
+Close-out: `.project/active/validation-sync/close-out.md`
 (two traceability tables — every impact row and every fusion-tea trap dispositioned).
 Executed in `~/1cfe/agentic-mbse` (branch `upstream-findings-sync`), four commits
 `9db5ede`→`08cd595`. This is the epic's final item — the validated-subset contract is

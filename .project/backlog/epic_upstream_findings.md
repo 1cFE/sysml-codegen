@@ -432,11 +432,20 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 - The syside vendor report for self-named-binding recursion (register A-1 vendor note — file separately with Sensmetry if desired)
 
 **Success Criteria**:
-- [ ] Every impact list item implemented or filed; none silently dropped
-- [ ] Each new validation check has a negative fixture and catches its trap on the WI-014 toy / plant fixture shapes
-- [ ] fusion-tea's RAW_LEARNINGS traps are covered by checks or documented rules (traceability table in the close-out)
+- [ ] Every impact list item implemented or filed; none silently dropped *(in-repo half verified: close-out Table 1 disposition of all 23 rows, none dropped; "implemented" half is code-side — see audit)*
+- [ ] Each new validation check has a negative fixture and catches its trap on the WI-014 toy / plant fixture shapes *(code-side — recorded, unverified this session)*
+- [ ] fusion-tea's RAW_LEARNINGS traps are covered by checks or documented rules (traceability table in the close-out) *(table present + complete in-repo; coverage-by-real-checks is code-side)*
 
 **Deliverables**: agentic-mbse `.project/active/validation-sync/{spec,plan}.md`, checks + fixtures, guide updates
+
+**Audit (2026-07-06, close-out `bbb32ad`):** CONDITIONAL — `.project/active/validation-sync/audit.md`.
+R2 traceability core gate certified in-repo (both tables complete, no dropped row; 5-row
+spot-check clean; C1 reframe + C7/C8 file recorded and sound; F3/F4/F5 filed here). The
+agentic-mbse code-side verifications (checks wired, fixtures, docs, backlog, suite re-run,
+cross-repo `run_all_checks`, five-commit scope) could not be run — this audit session's
+sandbox is pinned to sysml-codegen. Cleared by the orchestrator's designated code-side pass
+(audit §"Designated clearing path"); flips to PASS when recorded green. Checkboxes and the
+Item-12 heading ✅ left unmarked pending that pass.
 
 ---
 
