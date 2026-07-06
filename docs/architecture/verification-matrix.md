@@ -376,9 +376,9 @@ the documentation rather than executable code.
 | REQ-PGD-03 | Grouping SHALL mirror SysML source file structure (one group per file) | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-04 | `derive_groups_filtered()` SHALL remove parameters not in `backtracking_result.entry_poin... | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | `test_parameter_group_deriver.py` | PASS |
-| REQ-PGD-06 | `get_default_value()` SHALL resolve through binding index to source attribute | `test_parameter_group_deriver.py` | PASS |
+| REQ-PGD-06 | The deriver SHALL resolve each entry point's numeric default from its owning index (attr / binding / unbound / literal) | *(pinning tests removed with the dead accessor in Item 8 — re-frame/retire pending)* | PENDING-ITEM7 · `[ITEM7-PGD06]` |
 | REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | `test_parameter_group_deriver.py` | PASS |
-| REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed `classify`/`get_default_value` resolve grouping and default automatically | `test_matcher_fixes_item7.py` (backtracker propagation), `test_parameter_group_deriver.py` | PASS |
+| REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed classification and inline default resolution handle grouping and default automatically | `test_matcher_fixes_item7.py` (backtracker propagation), `test_parameter_group_deriver.py` | PASS |
 
 ### PIPE
 

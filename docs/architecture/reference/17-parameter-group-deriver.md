@@ -23,9 +23,9 @@ Source: `src/sysml_codegen/analysis/parameter_groups.py`
 | REQ-PGD-03 | Grouping SHALL mirror SysML source file structure (one group per file) | `_generate_group_names()` derives from `source_file.stem` |
 | REQ-PGD-04 | `derive_groups_filtered()` SHALL remove parameters not in `backtracking_result.entry_points` | Filter loop retains only names present in entry_points dict |
 | REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | 4-index cascade with early return; `None` if unclaimed |
-| REQ-PGD-06 | `get_default_value()` SHALL resolve through binding index to source attribute | Binding-traced params look up `_attr_index` for the resolved attribute |
+| REQ-PGD-06 | The deriver SHALL resolve each entry point's numeric default from its owning index (attr / binding / unbound / literal) | Defaults are resolved inline during group derivation via `_parse_default_value` on the source attribute; a binding-traced param resolves through `_binding_index` to the source attr's default. *(Re-framed by PIPELINE-TRUTH Item 8: the standalone accessor this row cited was dead — zero production callers — and was removed; the live inline resolution is unchanged. Matrix PASS-row reconciliation is Item 7's, tracked in BACKLOG `[ITEM7-PGD06]`.)* |
 | REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | `_generate_group_names()` output verified in test |
-| REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed `classify`/`get_default_value` resolve grouping and default automatically | `_attr_index` is keyed by qualified name, so a def-owned attr QN hits it directly; backtracker propagation covered in Item 7 matcher tests |
+| REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed classification and inline default resolution handle grouping and default automatically | `_attr_index` is keyed by qualified name, so a def-owned attr QN hits it directly; backtracker propagation covered in Item 7 matcher tests |
 
 ---
 
@@ -140,7 +140,7 @@ Merges results from two internal methods:
 
 **`classify(qualified_name)`** returns the group name for a single parameter by checking each index in precedence order (REQ-PGD-05). Returns `None` if unclaimed. Called during [graph assembly](07-graph-assembly.md) Steps 6.5 and 6.7 for late-discovered entry points from FORMULA and aggregation modules.
 
-**`get_default_value(qualified_name)`** returns the numeric default (REQ-PGD-06). For binding-traced parameters, resolves through `_attr_index` to the source attribute. See [literal value propagation](18-literal-value-propagation.md) for how defaults flow into entry points.
+**Default resolution (REQ-PGD-06)** happens inline while groups are derived: each entry point's numeric default is read from its owning index via `_parse_default_value` on the source attribute (a binding-traced param resolves through `_binding_index` to the source attr's default). There is no standalone accessor — the one this section previously described was dead and removed (PIPELINE-TRUTH Item 8). See [literal value propagation](18-literal-value-propagation.md) for how defaults flow into entry points.
 
 **`_generate_group_names(base_name)`** converts a file stem to `(group_name, class_name)` (REQ-PGD-07):
 ```

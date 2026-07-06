@@ -530,28 +530,6 @@ class ParameterGroupDeriver:
 
         return None
 
-    def get_default_value(self, qualified_name: str) -> float | None:
-        """Get default value for any parameter type using qualified name."""
-        if qualified_name in self._attr_index:
-            _, attr_data = self._attr_index[qualified_name]
-            return self._parse_default_value(attr_data.default_value)
-
-        if qualified_name in self._binding_index:
-            _, source_attr = self._binding_index[qualified_name]
-            for qname, (_, attr) in self._attr_index.items():
-                if attr.name == source_attr:
-                    return self._parse_default_value(attr.default_value)
-            return None
-
-        if qualified_name in self._unbound_index:
-            return None
-
-        if qualified_name in self._literal_index:
-            _, literal_value = self._literal_index[qualified_name]
-            return literal_value
-
-        return None
-
     def _derive_from_unbound_params_v2(
         self,
         unbound_index: dict[str, tuple[Path, str]],

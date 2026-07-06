@@ -160,28 +160,28 @@ grep -rn "generate_derived_group_json" src/ tests/    # expect: def + __all__ :3
 **See `spec.md` §B (get_default_value / generate_derived_group_json rows), §Coordination.**
 
 #### `get_default_value` (`analysis/parameter_groups.py:~533`) — verify-then-delete with recorded fork
-- [ ] Confirm the fork (dead vs live). **Record which fork was taken in the close-out** (spec §B).
-- [ ] **If DEAD → delete** the method + its dedicated tests in `test_parameter_group_deriver.py`. In the **same change** (R1/R4 step 4):
-  - [ ] Update **doc-17** (`reference/17-parameter-group-deriver.md`): retire/rewrite the REQ table row `:26` (REQ-PGD-06), the REQ-PGD-08 prose `:28`, and the method prose `:143` — no doc-line may name the deleted symbol.
-  - [ ] Leave a **visible breadcrumb** on `verification-matrix.md:379`: `PASS → PENDING-ITEM7` pointing at the `[ITEM7-PGD06]` BACKLOG entry, so the transient "PASS pins a deleted test" gap is not silent.
-  - [ ] **Activate** the existing `[ITEM7-PGD06]` BACKLOG entry (`BACKLOG.md:170`, conditional — "only fires if Item 8 deleted `get_default_value`"): flip its condition to fired, so Item 7's required reading picks up the matrix PASS-row re-frame. Only the matrix PASS-row re-frame is handed to Item 7 — the doc-17 updates land **here**.
-  - [ ] Record the deleted test names for Phase 6.
-- [ ] **If LIVE → keep** the method and file the observation; `[ITEM7-PGD06]` becomes a no-op Item 7 retires. Record the fork.
+- [x] Confirm the fork (dead vs live). **Record which fork was taken in the close-out** (spec §B).
+- [x] **If DEAD → delete** the method + its dedicated tests in `test_parameter_group_deriver.py`. In the **same change** (R1/R4 step 4):
+  - [x] Update **doc-17** (`reference/17-parameter-group-deriver.md`): retire/rewrite the REQ table row `:26` (REQ-PGD-06), the REQ-PGD-08 prose `:28`, and the method prose `:143` — no doc-line may name the deleted symbol.
+  - [x] Leave a **visible breadcrumb** on `verification-matrix.md:379`: `PASS → PENDING-ITEM7` pointing at the `[ITEM7-PGD06]` BACKLOG entry, so the transient "PASS pins a deleted test" gap is not silent.
+  - [x] **Activate** the existing `[ITEM7-PGD06]` BACKLOG entry (`BACKLOG.md:170`, conditional — "only fires if Item 8 deleted `get_default_value`"): flip its condition to fired, so Item 7's required reading picks up the matrix PASS-row re-frame. Only the matrix PASS-row re-frame is handed to Item 7 — the doc-17 updates land **here**.
+  - [x] Record the deleted test names for Phase 6.
+- [x] **If LIVE → keep** the method and file the observation; `[ITEM7-PGD06]` becomes a no-op Item 7 retires. Record the fork.
 
 #### `generate_derived_group_json` (`generation/entry_point.py:~188`) — DELETE (dead twin emits null-default keys; live path is `generate_all_derived_jsons`)
-- [ ] Re-grep: def + `__all__` (`:~326`) + `generation/__init__.py` re-export (`:~20,67`); **verify no external (fusion-tea) import** at implement.
-- [ ] Delete the function + both export sites (`__all__` + the `__init__` re-export).
-- [ ] Update any docstring/reference doc rendered stale by the delete in the same change (R1).
+- [x] Re-grep: def + `__all__` (`:~326`) + `generation/__init__.py` re-export (`:~20,67`); **verify no external (fusion-tea) import** at implement.
+- [x] Delete the function + both export sites (`__all__` + the `__init__` re-export).
+- [x] Update any docstring/reference doc rendered stale by the delete in the same change (R1).
 
 ### Validation
 **Automated:**
-- [ ] Re-grep both symbols across `src/ tests/ docs/` → zero code hits; doc-17 and matrix:379 no longer name a deleted symbol as live.
-- [ ] `uv run pytest tests/` → green; count decreased.
-- [ ] ruff ≤ 21, mypy ≤ 109.
+- [x] Re-grep both symbols across `src/ tests/ docs/` → zero code hits; doc-17 and matrix:379 no longer name a deleted symbol as live.
+- [x] `uv run pytest tests/` → green; count decreased.
+- [x] ruff ≤ 21, mypy ≤ 109.
 
 **Manual:**
-- [ ] Read doc-17 rows `:26/:28/:143` → describe reality (or are retired), not the deleted method.
-- [ ] `matrix:379` carries the `PENDING-ITEM7` breadcrumb; `[ITEM7-PGD06]` is activated.
+- [x] Read doc-17 rows `:26/:28/:143` → describe reality (or are retired), not the deleted method.
+- [x] `matrix:379` carries the `PENDING-ITEM7` breadcrumb; `[ITEM7-PGD06]` is activated.
 
 **What We Know Works After This Phase:**
 Both forks are resolved on evidence with the decision recorded, the delete-fork's reference doc is truthful in the same change, and the one matrix re-frame that legitimately waits for Item 7 has a durable, breadcrumbed home.
@@ -417,7 +417,19 @@ Every success criterion has a written, auditable answer; no disposition stops on
 **BACKLOG:** `[DOCS-SCRUB-F1]` marked Absorbed into Item 8.
 **Gate:** ruff src 20 → **19** (improved), mypy src **105** (held). Suite: **1999 passed / 4 skipped / 5 xfailed** — exactly −6 vs Phase 0 (the 6 deleted wrapper self-tests), no other coverage lost; §H skipif removal changed no counts (the guards never fired at HEAD). Test-file ruff (not in the src gate): the two touched files had 11 pre-existing errors at HEAD, now 7 — improved, no new unused import from my edits.
 
-### Phase 2 Completion  (fork taken: __ )
+### Phase 2 Completion  (fork taken: **DEAD → DELETE** for `get_default_value`)
+**Completed:** 2026-07-06
+**`get_default_value` fork — DEAD → DELETED.** Evidence at implement: zero production callers (grep: only its def + `test_parameter_group_deriver.py` REQ-PGD-06 tests + doc-17/matrix). The live default path resolves inline in `_derive_from_unbound_params_v2` and siblings via direct `self._parse_default_value(...)` calls (`parameter_groups.py:573/600/629`); the method only duplicated those lookups for its own tests. Deleted the method + the whole dedicated `TestReqPgd06DefaultValueResolution` class (5 tests).
+- **R1 doc obligations landed in-commit:** doc-17 rows `:26` (REQ-PGD-06 re-framed to the live inline mechanism), `:28` (REQ-PGD-08 prose — dropped the method name), `:143` (method prose retired) — no doc-17 line names the deleted symbol.
+- **Matrix breadcrumb:** `verification-matrix.md:379` REQ-PGD-06 `PASS → PENDING-ITEM7 · [ITEM7-PGD06]`; `:381` REQ-PGD-08 text de-named the method (still PASS via `test_matcher_fixes_item7.py`).
+- **`[ITEM7-PGD06]` ACTIVATED** (condition fired) — Item 7 owns only the matrix PASS-row reconciliation; the doc-17 updates landed here.
+- **SC-G note:** the test-file retirement comment was reworded so no `get_default_value` token survives in `src/ tests/` (literal zero-hit gate).
+
+**`generate_derived_group_json` — DELETED** (dead twin emitting null-default keys; live path is `generate_all_derived_jsons`). Removed the function (`entry_point.py`) + both export sites (`entry_point.py __all__`, `generation/__init__.py` import + `__all__`). No external (fusion-tea) import found. No doc mentions (R1 clean). `json` import retained (still used).
+
+**Deleted tests (5, all self-tests of the dead `get_default_value`):** `TestReqPgd06DefaultValueResolution::test_req_pgd_06_default_value_{direct_attr,binding_resolution,literal,unbound_returns_none,unknown_returns_none}`.
+**Gate:** ruff src **19** held; mypy src 105 → **104** (improved — one error left with the deleted method). Suite: **1994 passed / 4 skipped / 5 xfailed** — exactly −5 vs Phase 1 (the deleted REQ-PGD-06 self-tests), no other coverage lost.
+
 ### Phase 3 Completion
 ### Phase 4 Completion  (D1-F2 decision: __ ; SC-11 verdict: __ )
 ### Phase 5 Completion  (probe red-before/green-after: __ ; byte-identity: __ )

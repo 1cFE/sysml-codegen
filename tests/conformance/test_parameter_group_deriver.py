@@ -437,80 +437,12 @@ class TestReqPgd05Classify:
 
 
 # ===========================================================================
-# REQ-PGD-06: Default Value Resolution
+# REQ-PGD-06: Default Value Resolution — retired.
+# The standalone default-value accessor these tests pinned was deleted by
+# PIPELINE-TRUTH Item 8 (dead: zero production callers; the live default path
+# resolves inline via `_parse_default_value` in `_derive_from_*`). Matrix PASS-row
+# re-frame handed to Item 7 via BACKLOG `[ITEM7-PGD06]`.
 # ===========================================================================
-
-
-class TestReqPgd06DefaultValueResolution:
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_direct_attr(self, solar_battery_deriver):
-        """get_default_value() for a known design attr qname returns correct float."""
-        deriver, _ = solar_battery_deriver
-        # SolarBatteryDesign__solar_battery_plant__p_net_mw has default "0.008"
-        qname = "SolarBatteryDesign__solar_battery_plant__p_net_mw"
-        result = deriver.get_default_value(qname)
-        assert result == pytest.approx(0.008), f"Expected 0.008, got {result}"
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_binding_resolution(
-        self, solar_battery_deriver
-    ):
-        """get_default_value() resolves a binding-traced qname to its design-attr value.
-
-        Former body drew a binding qname and asserted only ``None or isinstance float``
-        (no value pinned, and it skipped when the index was empty). Anchor a named
-        binding qname to the transcribed design-attr default it traces to.
-        """
-        deriver, _ = solar_battery_deriver
-        # provenance: energy_production.p_net_mw binds to design attr p_net_mw = 0.008
-        #   (design.sysml:53, bound at design.sysml:69).
-        qname = "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw"
-        assert deriver.get_default_value(qname) == pytest.approx(0.008)
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_literal(self, solar_battery_deriver):
-        """get_default_value() returns the transcribed literal for literal-indexed qnames.
-
-        Former body read ``_, expected = _literal_index[qname]`` then asserted
-        get_default_value(qname) equalled that same dict value -- a tautology. Anchor to
-        hand-transcribed literals.
-        """
-        deriver, _ = solar_battery_deriver
-        # provenance: library.sysml:608 (child_count = 25.0), :609 (total_child_mass = 50.0).
-        child_count = (
-            "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model"
-            "__child_count"
-        )
-        total_child_mass = (
-            "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model"
-            "__total_child_mass"
-        )
-        assert deriver.get_default_value(child_count) == pytest.approx(25.0)
-        assert deriver.get_default_value(total_child_mass) == pytest.approx(50.0)
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_unbound_returns_none(
-        self, solar_battery_deriver
-    ):
-        """get_default_value() for an unbound-indexed qname returns None."""
-        deriver, _ = solar_battery_deriver
-
-        if not deriver._unbound_index:
-            pytest.skip("No unbound index entries")
-
-        qname = next(iter(deriver._unbound_index.keys()))
-        result = deriver.get_default_value(qname)
-        assert result is None
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_unknown_returns_none(
-        self, solar_battery_deriver
-    ):
-        """get_default_value() for unknown qname returns None."""
-        deriver, _ = solar_battery_deriver
-        result = deriver.get_default_value("nonexistent__qname__here")
-        assert result is None
 
 
 # ===========================================================================

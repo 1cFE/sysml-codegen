@@ -179,7 +179,12 @@ REQ-mirroring prose untouched pending this reconciliation.
 ### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — CONDITIONAL, Item 7 consumes
 
 **Source**: PIPELINE-TRUTH Item 8 (`.project/active/cleanup-debt/spec.md`, row B), filed
-2026-07-06. **Conditional — only fires if Item 8 deleted `get_default_value`.** Item 8's
+2026-07-06. **FIRED (2026-07-06) — Item 8 confirmed `get_default_value` DEAD and deleted it**
+(zero production callers; the live default path resolves inline via `_parse_default_value` in
+`_derive_from_*`). Item 8 landed the doc-17 re-frame (rows `:26`/`:28`/`:143`) and the matrix
+breadcrumb (`verification-matrix.md:379` now `PENDING-ITEM7 · [ITEM7-PGD06]`). **Item 7's remaining
+job:** reconcile/retire the `verification-matrix.md:379` REQ-PGD-06 PASS row (its pinning tests are
+gone) and confirm REQ-PGD-08's `:28` mention was cleared (it was). Item 8's
 fork-B deletes `ParameterGroupDeriver.get_default_value()` when the method is confirmed
 dead (only its own conformance tests call it). When that happens, Item 8 updates the
 reference doc in the same change (doc-17 rows `:26`/`:28` + prose `:143`, per R1) and

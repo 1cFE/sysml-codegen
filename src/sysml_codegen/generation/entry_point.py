@@ -185,38 +185,6 @@ def generate_derived_group_schema(
     return schema_code
 
 
-def generate_derived_group_json(
-    group,  # DerivedParameterGroup
-    output_path: Path,
-) -> str:
-    """Generate JSON input file for a derived parameter group.
-
-    Args:
-        group: DerivedParameterGroup with parameters and defaults
-        output_path: Output file path (for reference/logging)
-
-    Returns:
-        JSON string with all parameters and their defaults
-    """
-    # Build dictionary from parameters
-    data = {}
-    for param in group.parameters:
-        data[param.name] = param.default_value
-
-    # Render JSON with sorted keys for deterministic output
-    json_content = json.dumps(data, indent=2, sort_keys=True)
-
-    # Ensure final newline
-    if not json_content.endswith("\n"):
-        json_content += "\n"
-
-    logger.info(
-        f"Generated derived JSON '{group.name}' with {len(data)} parameters: {output_path}"
-    )
-
-    return json_content
-
-
 def generate_all_derived_schemas(
     entry_point_groups: list,  # list[models.ParameterGroup]
     template_env: jinja2.Environment,
@@ -323,7 +291,6 @@ __all__ = [
     "generate_all_derived_jsons_from_graph",
     "generate_all_derived_schemas",
     "generate_all_derived_schemas_from_graph",
-    "generate_derived_group_json",
     "generate_derived_group_schema",
     "generate_inputs_readme",
 ]
