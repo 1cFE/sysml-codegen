@@ -27,6 +27,27 @@ reconciliation summary so a genuinely uncovered input fails loudly and precisely
 
 ---
 
+## Design-Review Resolutions (design-review.md)
+
+- **C1 — narrow V11.** Applied. V11's population is `fallback_entry_points` ∩
+  valueless ∩ wired, not "wired + null-default." A null default is the user-fill
+  signature (schema-required, JSON-omitted), so it never enters V11 unless the
+  binding also *fell through* resolution. Verified from code that catf_mfe
+  `magnet_volume` fell through (dotted CHAIN miss → Step-3 miss → Step-4), is
+  valueless, and is wired — still caught. See Research Findings crux, D4, Concept.
+- **M1 — partition V11 vs. summary.** Applied. Added the partition table
+  (Architecture): wired → V11 (abort), unwired + residue → summary (WARNING); every
+  fell-through-valueless EP in exactly one bucket.
+- **C2 — drop the QN-suffix guard.** Applied. The QN segment is the part-**def**
+  name for def-owned attrs, so the usage-name suffix guard was dead. Cascade is now
+  exact `parent_part` → leaf-unique → refuse (same-file tiebreak removed). See D2,
+  B1, INV-2, the pseudo-code, and the worksheet uniqueness check.
+- **m1 — verbatim capture → Phase 0.** Applied. The before-baseline warning/JSON
+  capture is now the plan's Phase 0 (Validation, Handoff, worksheet).
+- **m2 — README null-key claim.** Applied. `entry_point.py:118` misstates that
+  null keys appear in the JSON; the generator omits them. Correction added to the
+  docs plan and Component Overview; it grounds the C1 rationale.
+
 ## Research Findings
 
 Line numbers are HEAD (88115b8); re-verify at implement against Item 6's commit.
@@ -83,28 +104,39 @@ raises on a `module_output` input whose `producer_channel` is undeclared. V11's
 collector is its sibling for the `entry_point` input case: the referenced params
 key is `f"{param_group}.{qualified_name}"` (`generation/pipeline.py:167-168`).
 
-**The real V11 gap is null-default filtering, not group membership (crux).**
-`build_computation_graph` Step 6.8 (`graph_builder.py:303-337`) sweeps any entry
-point not covered by a derived group into a synthetic `system_design` group, and
-Step 6.9 back-fills `inp.source.param_group`. So within the graph every
-`entry_point` input names a group that exists **and is a member of it** — group
-membership can never be the gap. The gap is downstream: the JSON generator emits
-a key **only when `ep.default_value is not None`** (`generation/entry_point.py:297`,
-key = `ep.qualified_name`). The catf_mfe `magnet_volume` EP is a full member of
-`magnets_params` in the graph (`computation_graph.json:3537-3586`,
-`entry_type: usage_literal`, `default_value: null`), so its JSON key is silently
-skipped, while the pipeline still emits
-`magnets_params.CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume`
-(`pipeline.py:167-168`) — a reference to a key the JSON declined to mint. That is
-the runtime failure.
+**V11 keys off fallthrough, not null-default (crux).** Two facts constrain the
+predicate:
+- *Group membership can never be the gap.* `build_computation_graph` Step 6.8
+  (`graph_builder.py:303-337`) sweeps any orphan EP into a synthetic
+  `system_design` group and Step 6.9 back-fills `inp.source.param_group`, so
+  every `entry_point` input names a group it belongs to.
+- *A null default is the normal user-fill signature, not a defect.* The JSON
+  generator omits a key when `ep.default_value is None`
+  (`generation/entry_point.py:297`); the Pydantic schema still declares it
+  required. That is the documented mechanism for "user must supply this before
+  running" — a legitimate required LIBRARY_DEFAULT or unset design attribute is
+  null-default-and-wired and is *working as intended*. (README `entry_point.py:118`
+  misstates this — it says null keys appear in the JSON awaiting values; they are
+  omitted. Correct it, per m2.)
 
-So **the V11 collector must mirror the JSON filter**: compare each module input's
-`{param_group}.{qualified_name}` against the set of EPs whose `default_value is
-not None` (the keys actually written). Comparing against param-group *membership*
-would report catf_mfe as covered and miss the real gap.
-`catf_radial_build__magnet_volume_total` (the FORMULA source) is a computed
-attribute, never an entry point, so it is in no group and no JSON — it is not what
-the input references; the input references the null-default `cryo_load` EP.
+So V11 cannot fire on "null-default + wired" — that would redden every
+user-supplied parameter. What makes catf_mfe `magnet_volume` a defect is that it
+**fell through resolution**: a bound binding
+(`magnet_volume = catf_radial_build.magnet_volume_total`, a removed FORMULA) that
+matched no strategy and dropped to the Step-4 fallback, has no literal value, and
+is still wired into the `cryo_load` module input. The pipeline emits
+`magnets_params.CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume`
+(`pipeline.py:167-168`); the JSON omits it (null default); no value can
+legitimately fill it (it should have been an upstream output). That is a
+guaranteed runtime `KeyError`, and the user cannot fix it by editing JSON.
+
+So **V11's population is `fallback_entry_points` ∩ valueless ∩ wired** — bound
+bindings that failed all resolution, carry no default, and are referenced by a
+surviving module input. Verified for catf_mfe: `magnet_volume`'s source_path
+`catf_radial_build.magnet_volume_total` is dotted → CHAIN dispatch misses
+(cross-part FORMULA, unregistered) → Step-3 design-attr miss (the FORMULA source
+was removed from `design_attrs`) → **Step-4 fallback**, `default_value=null`,
+wired to `cryo_load`. All three hold.
 
 ---
 
@@ -127,17 +159,14 @@ on a broken one. The fix works in the same order the defects compound:
    partway. An implement-time grep for any leftover bare-swap or raw
    `sysml_qn_lookup` key is a hard stop.
 
-3. **Make the residue loud and precise.** With the benign noise gone, two loud
-   signals remain: **V11** (hard error, aborts) — a wired module input references
-   a `*_params.X` key the JSON never mints (its EP has a null default); and the
-   **reconciliation summary** (WARNING, does not abort) — the operator digest of
-   every Step-4 fall-through that still lacks a value. They overlap on the
-   catf_mfe case (both fire) but play different roles: V11 is the hard
-   runtime-safety backstop at the wiring level; the summary is the non-fatal "here
-   is what didn't resolve" digest that replaces the demoted per-binding lines and
-   also covers fall-throughs V11 doesn't abort on. The per-binding Step-4 line
-   demotes to DEBUG; the repetitive alias-collision lines collapse to one
-   count-summary.
+3. **Make the residue loud and precise.** With the benign noise gone, the
+   fall-through population (`fallback_entry_points`) that still lacks a value
+   **partitions** by whether pipeline wiring references it: the **wired** half is
+   a guaranteed runtime `KeyError` and raises **V11** (hard error, aborts); the
+   **unwired** half plus any other tracked residue is the **reconciliation
+   summary** (WARNING, does not abort). No fall-through EP is in both. The
+   per-binding Step-4 line demotes to DEBUG; the repetitive alias-collision lines
+   collapse to one count-summary.
 
 The key insight: the warnings are worthless because one text covers three
 different situations. The fix separates them by *stage and severity* — resolve
@@ -146,16 +175,14 @@ known-unresolved-and-tracked — rather than tuning a log level.
 
 ## Key Bets
 
-- **B1.** The resolved `qualified_name` of a def-owned design attribute contains
-  the owning part-**usage** name as a segment (`...__{usage}__{leaf}`), so a
-  binding's dotted `parent_part` (that same usage name) plus leaf uniquely picks
-  it via QN suffix — the backtracker needs no part-usage→part-def map.
-  *(Agent-verified on solar_battery: `...__battery_system__pack_count`,
-  `...__solar_battery_plant__p_net_mw`.) If false → the QN-suffix guard misses
-  (falls back to leaf-only/same-file, then refuses — safe miss, V11/summary catch
-  it) or, worst case, two defs share a usage-segment+leaf and cross-wire (a silent
-  wrong value).* De-risk first (Handoff): the guard **refuses to match on
-  ambiguity**, so the bad branch is "miss," never "cross-wire."
+- **B1.** A design-attribute leaf name that a binding fails to match by exact
+  `parent_part` is **unique across the model's design attributes** — so leaf name
+  alone identifies the def-owned target. *If false (two design attrs share the
+  leaf) → the matcher refuses and the EP falls through to V11/summary (a safe
+  miss, never a cross-wire).* The design cannot key off the QN segment (it is the
+  part-**def** name for def-owned attrs, not the binding's usage name), so
+  leaf-uniqueness is the identifying signal; verify it holds for the corpus dedup
+  cases in the worksheet (Appendix B). De-risk first (Handoff).
 - **B2.** Every quoted-owner FORMULA REFERENCE match runs through exactly the six
   enumerated sites; no seventh raw site exists. *If false → a leftover raw site
   silently re-breaks matching on quoted models.* De-risked by the [HARD]
@@ -181,24 +208,21 @@ known-unresolved-and-tracked — rather than tuning a log level.
   graph classification with no deriver change; a parallel deriver matcher would
   be redundant.* REQ-PGD-08 is reframed to "confirmed no deriver change required"
   (or retired) — see Handoff.
-- **D2. Def-owned match = exact-first, then QN-suffix keyed on the binding's
-  usage segment, else same-file, else refuse.** Precedence: try the existing
-  `parent_part == parent_part` exact match first (preserves per-usage `:>>`
-  overrides, which extract as usage-owned attrs with their own value); only on a
-  miss consult def-owned candidates (`attr.name == leaf and attr.parent_part ==
-  ''`). Disambiguate primarily by the QN suffix: the resolved
-  `attr.qualified_name` contains the owning part-**usage** name as a segment even
-  for def-owned attrs (agent-verified: `...__battery_system__pack_count`,
-  `...__solar_battery_plant__p_net_mw`), so
-  `attr.qualified_name.endswith(f"__{parent_part}__{leaf}")` uses the binding's
-  own usage name as the guard. Exactly one such candidate → use it; a different
-  parent usage yields a different suffix, so two defs cannot cross-wire. Fall
-  back: one leaf-only candidate → use; same-file tiebreak → use; else return None
-  (fall to Step-4, caught loudly). *Rejected: bare QN-suffix `endswith("__leaf")`
-  with no usage-segment guard — over-matches sibling attrs across defs and can
-  cross-wire (B1's bad branch). Rejected: resolving usage→part-def — the
-  backtracker holds no part-usage→def map, and the QN suffix already carries the
-  usage name.*
+- **D2. Def-owned match = exact-first, then leaf-unique, else refuse.**
+  Precedence: try the existing `parent_part == parent_part` exact match first
+  (preserves per-usage `:>>` overrides, which extract as usage-owned attrs with
+  their own value); only on a miss gather candidates by leaf name across all
+  design attributes (`attr.name == attr_name`). **Exactly one candidate → use it;
+  otherwise return None** (fall to Step-4, kept loud by V11/summary). Uniqueness
+  is the whole guarantee: if one design attribute in the model carries the leaf,
+  it is unambiguously the target; if two do, we refuse rather than guess.
+  *Rejected: a QN-suffix guard `endswith("__{parent_part}__{leaf}")` — for a
+  **def**-owned attribute `build_element_qualified_name` walks the def's ownership
+  chain, so the segment is the part-**def** name, not the binding's usage name;
+  the guard would never fire (C2). Rejected: a same-file tiebreak on multiple
+  candidates — two same-named design attrs in one design file would cross-wire.
+  Rejected: resolving usage→part-def — the backtracker holds no part-usage→def
+  map.*
 - **D3. Lockstep flip mechanism = `sanitize_qualified_name` on both registry
   producer and every consumer/twin.** Registration wraps the `::`-form key in
   `sanitize_qualified_name`; every lookup sanitizes its `source_path`/`ref`
@@ -207,19 +231,19 @@ known-unresolved-and-tracked — rather than tuning a log level.
   `parameter_groups.py:439` on the old form (Item 5's under-count) — a registry
   whose key form changes cannot leave a consumer on the old form; both flip or
   the invariant is a lie.*
-- **D4. V11 collector compares wired references against MINTED JSON keys
-  (non-null default), at the generation boundary.** A pure collector returns the
-  violation list from a `ComputationGraph`; a violation is a module `entry_point`
-  input whose `{param_group}.{qualified_name}` names an EP with `default_value is
-  None` (mirroring the JSON filter, `entry_point.py:297`). The CLI (`run_codegen`)
-  calls it and raises V11 on any non-empty result — **always strict, no
-  escape-hatch flag**. *Rejected: comparing against param-group membership — Step
-  6.8 makes every EP a member, so membership can never fail and catf_mfe reads as
-  covered (the crux finding); the true gap is the null-default filter. Also
-  rejected: enforcing inside `build_computation_graph` — the invariant is
-  cross-artifact (graph EPs vs. generated JSON) and conformance tests that only
-  build the graph must call the collector and assert on the list without tripping
-  strict enforcement (keeps catf_mfe's 42-module coverage green).*
+- **D4. V11 collector = fell-through ∩ valueless ∩ wired, at the generation
+  boundary.** A pure collector returns the violation list from a
+  `ComputationGraph`: a module `entry_point` input is a violation when its
+  `qualified_name` is in `fallback_entry_points` (Step-4 fall-through), its EP
+  `default_value is None`, and a surviving module input references it. The CLI
+  (`run_codegen`) calls it and raises V11 on any non-empty result — **always
+  strict, no escape-hatch flag**. *Rejected: "wired + null-default" alone — a null
+  default is the user-fill signature (schema-required, JSON-omitted), so this
+  reddens every user-supplied parameter (C1). Rejected: comparing against
+  param-group membership — Step 6.8 makes every EP a member, so membership can
+  never fail. Rejected: enforcing inside `build_computation_graph` — the invariant
+  is cross-artifact and collector-only conformance tests must assert the list
+  without tripping strict enforcement (keeps catf_mfe's 42-module coverage green).*
 - **D5. Reconciliation summary and alias-collision summary computed post-assembly,
   logged at WARNING when non-empty; per-binding lines demote to DEBUG.**
   *Rejected: blanket-demoting all Step-4/alias lines to DEBUG/INFO — buries the
@@ -244,16 +268,31 @@ Four seams, in pipeline order:
    DESIGN_ATTRIBUTE — the churn originates here as a consequence of seam 2.
 
 4. **Generation boundary (CLI).** After `build_pipeline_context` returns `ctx`,
-   `run_codegen` calls the **params-coverage collector** on
-   `ctx.computation_graph` and raises **V11** on any violation, and computes the
-   **reconciliation summary** from `ctx` (fall-through EPs whose final
-   `default_value is None`), logging WARNING when non-empty. Both sit beside the
-   existing `_check_duplicate_output_paths` fail-fast (`cli/__init__.py:773`).
+   `run_codegen` calls `collect_uncovered_params(ctx.computation_graph)` and raises
+   **V11** on any violation (the wired fall-through-valueless set), and logs the
+   **reconciliation summary** at WARNING for the unwired remainder plus tracked
+   residue. Both sit beside the existing `_check_duplicate_output_paths` fail-fast
+   (`cli/__init__.py:773`). Ordering: log the summary first, then raise V11, so the
+   digest reaches the operator even when generation aborts.
 
 Data flow for one binding: `binding → _resolve_binding → (Step-3 match → design
 attr QN | Step-4 fallback QN) → entry_points/binding_resolutions →
 _classify_entry_points → EntryPoint(kind,default) → ParameterGroup → module input
-source "group.qn" → [V11 collector: is "qn" minted (non-null default)?] → pipeline YAML`.
+source "group.qn" → [V11: fell-through ∧ valueless ∧ wired?] → pipeline YAML`.
+
+**V11 vs. reconciliation summary — a partition of the fell-through-valueless set
+(M1).** Every EP in `fallback_entry_points` with `default_value is None` lands in
+exactly one bucket, keyed on whether a surviving module input references it:
+
+| Predicate | Fate | Level | Rationale |
+|---|---|---|---|
+| fell-through ∧ valueless ∧ **wired** | **V11**, generation aborts | ERROR | JSON omits the key, pipeline references it → guaranteed runtime `KeyError` |
+| fell-through ∧ valueless ∧ **unwired** | reconciliation summary | WARNING | tracked residue; no runtime `KeyError` (nothing references it), but not silently benign |
+| *(other tracked residue, e.g. demoted per-binding notes rolled up)* | reconciliation summary | WARNING | operator digest, replaces the DEBUG'd per-binding lines |
+
+Fell-through EPs that *do* carry a value (a bound literal parsed to a float) are
+minted normally and are in neither bucket. Non-fall-through null-default EPs
+(legitimate user-fill) are in neither.
 
 ## Required Invariants
 
@@ -261,10 +300,9 @@ source "group.qn" → [V11 collector: is "qn" minted (non-null default)?] → pi
   consumers use `sanitize_qualified_name`; grep for bare `sysml_to_python_qualified_name`
   on a comparison-bound QN and for raw `sysml_qn_lookup(SysMLQN(...))` returns
   zero hits at the six sites. (Completeness stop.)
-- **INV-2.** The def-owned matcher never returns a QN whose leaf ≠ the binding's
-  attribute leaf, and never picks among >1 def-owned candidates unless the
-  QN-suffix (`__{parent_part}__{leaf}`) or same-file guard resolves to exactly
-  one; otherwise it returns None. (No cross-wire.)
+- **INV-2.** The def-owned matcher returns a QN only when exactly one design
+  attribute carries the binding's leaf name; on 0 or >1 it returns None. It never
+  picks among ambiguous candidates. (No cross-wire.)
 - **INV-3.** The V11 collector is pure: it returns a (possibly empty) list and
   raises nothing. Only the generation boundary raises. Collector-only conformance
   tests never trip strict enforcement.
@@ -278,16 +316,21 @@ source "group.qn" → [V11 collector: is "qn" minted (non-null default)?] → pi
 
 - **`sanitize_qualified_name`** (`core/qualified_names.py:108`) — existing Item-5
   helper; the flip's single tool. No change.
-- **Def-owned match** — new branch inside `_resolve_to_design_attribute`
-  (`dependency_backtracker.py:642`). Pure function over `self._design_attributes`
-  and the consuming usage.
+- **Def-owned match** — new leaf-unique branch inside
+  `_resolve_to_design_attribute` (`dependency_backtracker.py:642`). Pure over
+  `self._design_attributes`.
 - **`fallback_entry_points`** — new set field on `BacktrackingResult`
-  (`dependency_backtracker.py:74`), populated at the Step-4 site.
+  (`dependency_backtracker.py:74`), populated at the Step-4 site; propagated onto
+  `ComputationGraph` in `build_computation_graph` so the collector is pure over
+  the graph alone.
 - **Alias-collision accumulator** — collisions recorded on `OutputRegistry`
   (`core/output_registry.py`), summarized once by `output_registry_builder`.
 - **`collect_uncovered_params(graph) -> list[UncoveredInput]`** — new pure
-  collector, sibling to `_validate_channel_references` (`graph_builder.py`). Each
-  item names module, input, and missing key.
+  collector, sibling to `_validate_channel_references` (`graph_builder.py`). Reads
+  `graph.fallback_entry_points`, EP defaults, and module-input wiring; each item
+  names module, input, and missing key.
+- **README null-key note** — correct `entry_point.py:118` (m2): the JSON template
+  **omits** null-default keys; the schema declares them required for user fill.
 - **V11 enforcement + reconciliation summary** — new calls in `run_codegen`
   (`cli/__init__.py`), after context build, before output clear.
 - **Seeded fixture** — new minimal SysML model producing one uncovered
@@ -304,51 +347,49 @@ source "group.qn" → [V11 collector: is "qn" minted (non-null default)?] → pi
 ## Implementation Notes
 
 - **Six lockstep sites (exact before → after):** see the Lockstep appendix.
-- **Def-owned branch shape** (pseudo, ~10 lines):
+- **Def-owned branch shape** (pseudo, ~6 lines):
   ```
   # dotted branch, after the existing exact-match loop returns nothing:
   cands = [a for attrs in self._design_attributes.values() for a in attrs
-           if a.name == attr_name and a.parent_part == ""]
-  suffixed = [a for a in cands
-              if a.qualified_name.endswith(f"__{parent_part}__{attr_name}")]
-  if len(suffixed) == 1: return suffixed[0].qualified_name
-  if len(cands) == 1:    return cands[0].qualified_name
-  same_file = [a for a in cands if a.source_file == usage_file]
-  if len(same_file) == 1: return same_file[0].qualified_name
-  return None   # ambiguous or none: fall to Step-4, caught loudly
+           if a.name == attr_name]          # leaf match across all design attrs
+  if len(cands) == 1:
+      return cands[0].qualified_name         # unique leaf → unambiguous target
+  return None                                # 0 or >1: fall to Step-4, kept loud
   ```
 - **V11 message (V-style):** name the module, the input param, and the missing
   key; state the fix. E.g. `V11: module '<name>' input '<param>' references params
-  key '<group>.<qn>', which no parameter JSON provides (its entry point has no
-  default value, so the key is never minted). Cause: an unresolved cross-part
-  reference not yet wired (Items 9–11) or a resolution bug.`
+  key '<group>.<qn>', but that binding fell through resolution with no value — the
+  JSON never mints the key, so the pipeline will KeyError at load. Cause: an
+  unresolved cross-part reference not yet wired (Items 9–11) or a resolution bug.`
 - **Reconciliation summary format:** one WARNING line —
-  `Unresolved after assembly: N entry point(s) fell through and still lack a
-  value: [<usage|param source_path>, ...]`.
+  `Unresolved after assembly: N entry point(s) fell through and still lack a value
+  (unwired): [<usage|param source_path>, ...]`.
 - **Alias-collision count-summary:** one WARNING line —
   `OutputRegistry: N alias collision(s) resolved first-wins (M distinct keys).`
-- **Seeded fixture shape (real SysML, R1):** the trigger is a *wired module input
-  whose entry point has a null default* (so the JSON skips its key). Minimal
-  model: one calc def with one input and one output; one calc usage that binds
-  that input (non-literal) to a reference the resolver cannot give a numeric
-  default — the reliable, cross-part-free trigger is a binding to an attribute
-  whose `feature_value_expression` is symbolic/non-numeric (so `float(...)` →
-  None), or a design-attribute reference with no default. Result: one EP,
-  `default_value=None`, referenced by the module input → `collect_uncovered_params`
-  returns exactly `[that input]` and strict generation raises V11. Keep it to two
-  or three definitions so the assertion is unambiguous. Confirm the null-default
-  path at implement (the design session could not run codegen).
+- **Seeded fixture shape (real SysML, R1):** the trigger is a binding that
+  **falls through resolution** (Step-4), carries no value, and stays wired — the
+  three V11 conditions. Minimal model: one calc def with one input and one output;
+  one calc usage that binds the input (non-literal) to a dotted reference matching
+  no resolution strategy and no design attribute (a dangling reference to a
+  name/attribute that resolves to no channel and no design default). Result: one
+  EP in `fallback_entry_points`, `default_value=None`, referenced by the module
+  input → `collect_uncovered_params` returns exactly `[that input]` and strict
+  generation raises V11. Keep it to two or three definitions so the assertion is
+  unambiguous. It must NOT collide with the leaf-unique matcher — the referenced
+  leaf must not name a real design attribute. Confirm the fall-through path at
+  implement (the design session could not run codegen).
 - **V11 diagnostic number:** confirm V11 still free at implement (V1–V10 at
   `modeling-assumptions.md:370-379`); Item 5 did not consume it.
 
 ## Potential Risks
 
-- **Under-count of the def-owned mechanism.** If a real fixture has two def-owned
-  attrs with the same leaf and no same-file discriminator, D2 refuses (safe miss),
-  but the intended resolution won't happen. Mitigation: the seeded fixture and the
-  reclassification worksheet exercise the real shapes; if ambiguity appears,
-  escalate the guard to a usage→def resolution (needs new data plumbing) — flagged
-  in Handoff as the risk to de-risk first.
+- **Under-count of the def-owned mechanism.** If a real model has two design
+  attributes sharing a leaf, D2 refuses (safe miss) and the intended resolution
+  won't happen — the EP falls to Step-4 and stays loud, so a correctness
+  regression is impossible, but a benign miss could persist. Mitigation: the
+  reclassification worksheet confirms leaf-uniqueness for the corpus dedup cases;
+  if a real collision appears, escalate to usage→def resolution (new data
+  plumbing) — flagged in Handoff as the risk to de-risk first.
 - **Item 6 baseline drift.** This item's files don't overlap Item 6's
   (`expression_utils`), but committed baselines churn under Item 6. Re-anchor
   baseline expectations to Item 6's commit at implement; regenerate via capture
@@ -378,8 +419,8 @@ verification-matrix rows for REQ-BT-09/10, OR-09, PGD-08, GA-08, V11.
   attr_expr_probe (models with no known cross-part gap). Capture the log at
   WARNING level over a full `run_codegen` and assert no line emitted.
   *(Confirm the clean-fixture set against live output in the worksheet — a fixture
-  is "clean" only if it has zero fell-through-and-valueless EPs and zero uncovered
-  keys.)*
+  is "clean" only if, after the matcher fixes, it has zero fell-through-and-valueless
+  EPs, zero uncovered keys, and zero alias collisions.)*
 - **catf_mfe E2E xfail set** (enumerate at implement, spec-review L2-1):
   `test_computed_attributes_e2e.py::test_catf_mfe_still_works`, and each test
   consuming the class-scoped `catf_mfe_output` fixture in
@@ -389,6 +430,11 @@ verification-matrix rows for REQ-BT-09/10, OR-09, PGD-08, GA-08, V11.
 - **Reclassification review worksheet** (R3, keys AND values before/after): the
   appendix worksheet is the audit deliverable; regenerate baselines via capture
   scripts and diff key sets and values.
+- **Plan Phase 0 — verbatim before-baseline capture (m1).** The first plan phase
+  runs `run_codegen` on solar_battery and catf_mfe against Item 6's committed
+  state and captures the verbatim "Registry unresolved" lines, the alias-collision
+  count, and the current params-JSON key/value sets. This is the "before" half of
+  the review worksheet; the design session's sandbox blocked it.
 - **Gate:** full suite green except the enumerated catf_mfe xfails; ruff/mypy at
   or better than the pre-item baseline.
 
@@ -401,12 +447,12 @@ verification-matrix rows for REQ-BT-09/10, OR-09, PGD-08, GA-08, V11.
 - **Open for plan:** exact xfail test list (enumerate live); the seeded fixture's
   concrete SysML; whether to restructure the check so catf_mfe's unrelated E2E
   assertions stay live vs. xfail-each; REQ-PGD-08 reframe vs. retire.
-- **De-risk first:** B1 / the def-owned guard (D2). Before writing the matcher,
-  confirm from the reclassification worksheet whether any corpus fixture presents
-  >1 def-owned candidate for one leaf. If yes and same-file doesn't disambiguate,
-  the refuse-branch leaves it for V11/summary — acceptable, but decide whether to
-  add usage→def plumbing. This is the one place the design could be wrong in a way
-  that matters (cross-wire vs. safe miss).
+- **De-risk first:** B1 / leaf-uniqueness (D2). In Phase 0, confirm from the
+  captured design-attribute set that the dedup-target leaves (`pack_count`, and
+  any others that reclassify) are unique across the model's design attributes. If
+  a real leaf collision appears, the refuse-branch keeps it loud (safe), but
+  decide whether to add usage→def plumbing. This is the one place the design could
+  be wrong in a way that matters (a benign miss, never a cross-wire).
 
 ---
 
@@ -442,31 +488,36 @@ regression-catch (B3). Capture via the R3 scripts, never hand-edit.
 its `design_attribute` share one value today and should collapse to the single
 design-attribute key after the fix:
 
-| Before (two keys) | Values | After (one key) | Value | Bug fixed |
+| Before (two keys) | Values | After (one key) | Value | Path fixed |
 |---|---|---|---|---|
-| `...energy_production__p_net_mw` (usage_literal) + `...solar_battery_plant__p_net_mw` (design_attribute) | 0.008 / 0.008 | `...solar_battery_plant__p_net_mw` | 0.008 | dotted / def-owned (B) |
-| `...battery_bos__cost_model__pack_count` (usage_literal) + `...battery_system__pack_count` (design_attribute) | 8.0 / 8.0 | `...battery_system__pack_count` | 8.0 | dotted / def-owned (B) |
+| `...battery_bos__cost_model__pack_count` (usage_literal) + `...battery_system__pack_count` (design_attribute) | 8.0 / 8.0 | `...battery_system__pack_count` | 8.0 | **Bug B** def-owned dotted (leaf-unique) |
+| `...energy_production__p_net_mw` (usage_literal) + `...solar_battery_plant__p_net_mw` (design_attribute) | 0.008 / 0.008 | `...solar_battery_plant__p_net_mw` | 0.008 | bare-name path (existing `:668`), not Bug A/B — confirm at implement |
 
 (Prefix `SolarBatteryDesign__solar_battery_plant__`; groups `design_params` /
 `system_design` respectively.) Values match, so B3 holds for these — no value
-moves. The review must confirm the same for every reclassified key at implement.
+moves. **Leaf-uniqueness check (D2/B1):** the dedup targets `pack_count` and
+`p_net_mw` each appear as exactly one *design attribute* — the twins
+(`battery_bos__cost_model__pack_count`, `energy_production__p_net_mw`) are calc
+input params (`usage_literal`), not design attributes, so they do not count
+against uniqueness. Confirm at implement (Phase 0). The `p_net_mw` binding is a
+**bare name**, so it flows through the pre-existing bare-name branch, not the
+def-owned dotted fix; the def-owned dotted fix (Bug B, leaf-unique) is proven by
+`pack_count`.
 
 **catf_mfe V11 target (INV-4).** The collector returns exactly one uncovered
 input: module `cryo_load`, input `magnet_volume`, referencing
 `magnets_params.CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume` — a
-null-default EP (Items 9–11 cross-part gap). This is a genuine dangle, not a
-reclassification target.
+fell-through, valueless, wired EP (Items 9–11 cross-part gap). A genuine dangle,
+not a reclassification target.
 
-**Bug attribution (from source, agent-verified):**
-- **Bug A** (`::`-QN sanitize) does not appear in solar_battery's plain bindings;
-  it is exercised by quoted-owner fixtures (`quoted_owner_formula`, catf quoted
-  magnet parts). The FORMULA REFERENCE path is where it bites.
-- **Bug B** (def-owned dotted) is the solar_battery dedup driver above.
+**Bug A** (`::`-QN sanitize) does not appear in solar_battery's plain bindings; it
+is exercised by quoted-owner fixtures (`quoted_owner_formula`, catf quoted magnet
+parts) via the FORMULA REFERENCE path.
 
-**To fill at implement:** the verbatim ~10 solar_battery "Registry unresolved"
-lines; the catf_mfe 25/29 alias-collision count; the complete before→after key
-set and value diff for every affected model; confirmation that no clean-fixture
-value moved.
+**To fill at implement (Phase 0):** verbatim ~10 solar_battery "Registry
+unresolved" lines; catf_mfe 25/29 alias-collision count; complete before→after key
+set and value diff per model; confirmation that no clean-fixture value moved; and
+leaf-uniqueness of every reclassified design-attribute leaf.
 
 ---
 Next Step: After approval → `/_my_plan`
