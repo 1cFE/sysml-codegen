@@ -8,14 +8,33 @@
 
 ### UPSTREAM-FINDINGS Item 9: Plant-Idiom Literal Pre-Fill (SC-5 stage 1)
 
-**Status**: **Spec in progress** — `.project/active/plant-prefill/spec.md` (Draft). Literal
-values reach the generated input JSONs for plant-idiom models: capture `:>>` overrides on
-plain part usages (relax the `owned_redefinitions` guard), propagate RedefinitionData
-literals to CalcUsage entry-point defaults (classifier-path mirror of REQ-LVP), and fix the
-shared-mutable `BindingInfo` bug (deep-copy — precondition for Item 10). Spec-time question
-answered: scope 1+2 **does** cover the bare-name `:>> widget.base_cost` class → flips
-`alias_agg_probe` + `issue22_model` back to clean generation (literal pre-fill, not Item 10
-channel wiring). Depends on Item 8 fixtures.
+**Status**: **Audited CONDITIONAL** (2026-07-05, commit `5140432`) — substance fully
+verified by static trace against the commit; clears to PASS on two items. **Audit:**
+`.project/active/plant-prefill/audit.md`.
+
+Verified static: the three one-function edits match the design exactly (guard relax +
+`_keep_plain_usage_override` LITERAL filter; bare-name raise → DEBUG-skip; `copy.copy` per
+`BindingInfo`); the CHAIN/EXPRESSION exclusion (catf_mfe counter-case → byte-identical,
+stays V11-pinned); the four snapshot deltas' semantic content; file-level INV-5 (exactly
+four snapshots changed, no `baseline_outputs/` churn); every pin flip + the two V11
+re-anchors (catf_mfe strict raise, ife_plant shape-4 strict abort); the divergent-sibling
+regression test genuinely catches the shared-object bug (traced the key match — without
+`copy.copy` iB reads 50.0 and `==100.0` fails); docs 12/25, matrix +3 rows, BACKLOG chore
+(names the quoted_owner_formula reclassification question), release-notes, agentic-mbse
+impact.
+
+**Two conditions to clear to PASS:**
+1. **Gate re-run** — `uv run pytest tests/` / `mypy` / `ruff` (expect 1932/4/11; 109; 21).
+   Auditor was `uv run`-blocked (same block as Items 1/2/6/7/8). Two re-anchors are
+   static-only: ife_plant must trip **strict** V11 at generation, and ife_plant
+   `baseline_outputs` byte-identity — both confirmed by the run.
+2. **ife_plant snapshot path-drift** — the committed ife_plant snapshot absorbed ~90 lines
+   of environmental path canonicalization (source_file relativized on calc_defs AND
+   calc_usages, design_attributes keys → absolute, document_path → `file:///`), the same
+   drift class *reverted* on three other fixtures. Breaks no test, but makes the
+   release-notes "calc_usages unchanged / every other snapshot byte-identical" claim
+   inaccurate for ife_plant. Strip it, or amend release-notes + BACKLOG to record the
+   migration. Depends on Item 8 fixtures.
 
 ### UPSTREAM-FINDINGS Item 8: Plant-Idiom Conformance Fixtures
 

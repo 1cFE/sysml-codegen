@@ -39,7 +39,12 @@ New test file: `tests/unit/test_virtual_binding_rewrite.py` — divergent-siblin
 
 Live re-capture (`scripts/capture_extraction_snapshots.py`, license) changed exactly:
 - `ife_plant` — `design_overrides` gains `baseline_plant.capacity_factor = 0.95`
-  (bare-name LITERAL); `calc_usages` unchanged (unconsumed).
+  (bare-name LITERAL). The re-capture also migrated ife_plant to the canonical
+  path convention (~90 lines: `source_file` relativized incl. calc_usages,
+  `design_attributes` keys absolute, `document_path` file:///) — the same class
+  as the deferred drift chore; ife_plant is now script-reproducible and is
+  REMOVED from that chore's fixture list. Semantic delta remains only
+  capacity_factor.
 - `alias_agg_probe` — deep-path `base_cost` override captured; virtual `cost_model.base_cost`
   binding → LITERAL 50.0, `source_path: null`.
 - `issue22_model` — same, 100.0.

@@ -82,6 +82,8 @@ Prioritized list of epics and features.
   not dropped. Run as one stale-fixture-refresh chore in the Item 6 Step-1 style: own
   commit, reviewed diff, and any test updates that assert the stale form. Execute at
   epic close-out.
+  - (`ife_plant` was migrated to the canonical form in Item 9's re-capture — no longer
+    in this chore's scope.)
   - `wi014_toy`, `self_named_binding_trap` — **path canonicalization only.** Last captured
     at Item 8 (`84ae948`) under the old convention; re-capture normalizes `source_file`
     (repo-relative → model-relative), `design_attributes` keys (repo-relative → absolute),
