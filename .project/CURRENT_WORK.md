@@ -1,10 +1,31 @@
 # Current Work
 
-**Last Updated**: 2026-02-17
+**Last Updated**: 2026-07-05
 
 ---
 
 ## Active Work
+
+### UPSTREAM-FINDINGS Item 7: Resolution Matcher Fixes & Warning Reconciliation (SC-8)
+
+**Status**: **Audited CONDITIONAL** (2026-07-05, commit `7aec029`) — implementation
+sound and faithful to design; clears to PASS on two items:
+1. **Add a retype_model reclassification pin** — the item's central behavioral churn
+   (3 EPs USAGE_LITERAL → DESIGN_ATTRIBUTE, values 10.0/20.0/20.0 via Bug A) is the only
+   real reclassification in the corpus, is enumerated in release notes but asserted by
+   no test and has no committed baseline, and its values are Phase-0-computed /
+   gate-unconfirmed. The mechanism is unit-tested (synthetic); the corpus instance is
+   not. Fix: a snapshot-driven test asserting retype_model's 3 EPs' kind+values, or
+   commit its pipeline baseline.
+2. **Re-run the suite gate** — auditor was harness-blocked from `uv run` (same block as
+   Items 1/2/6). Recorded gate: 1909 passed / 4 skipped / 11 xfailed; ruff 21; mypy 109.
+**Verified static**: six-site flip clean (INV-1); V11 collector pure + predicated
+fell-through ∩ valueless ∩ wired; catf_mfe pinned exact; five-fixture V11 surface;
+warning demotions + count-summary + zero-WARNING (scoped per DEV-3); DEV-4 --from-snapshot
+parity tested; docs/matrix/README/release-notes complete; no mocks.
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec / Design / Plan**: `.project/active/warning-reconciliation/{spec,design,plan}.md`
+**Audit**: `.project/active/warning-reconciliation/audit.md`
 
 ### UPSTREAM-FINDINGS Item 6: Expression Reconstruction Fidelity (SC-6)
 
