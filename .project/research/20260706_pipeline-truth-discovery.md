@@ -85,11 +85,11 @@ Top findings by blast radius (all verified with file:line by the agent):
 | D3-6 | Snapshot loader `except (JSONDecodeError, IndexError): pass` drops `usage_type_map` entries → retype falls to base def, offline-only mis-wire | `snapshot/loader.py:424-429` | FIXED (usage_type_map malformed-key drop logged) |
 | D3-7 | **RECLASSIFIED → closed-by-construction (Item 5).** The reachable silent-cross-wire shape (two FORMULA `Widget.result`) is loud-rejected by the OutputRegistry scoped-key collision guard (`core/output_registry.py:72`, raises `ValueError`) BEFORE the resolution-map merge. Any silent cross-wire needs two channel-bearing entries at one `(bare part_name, python_name)`; every such FORMULA entry registers the colliding key so the guard raises first. EXPOSE resolutions are LITERAL/no-channel. Invariant stated at `graph_builder._build_attribute_resolution_map`; guard-pinned (`test_silent_failure_family3.py::test_d37_scoped_key_collision_raises_loudly`). Bare→QN re-key deferred (optional defense-in-depth, no reachable silent failure). | `graph_builder.py:984,1102` / `output_registry.py:72` | closed-by-construction |
 | D3-8 | Aggregation `transformed_expression` uses SysML-text `OPERATOR_MAP` (`^`→XOR, unknown ops pass through) instead of `PYTHON_OPERATOR_MAP`, no `has_unsupported` | `hierarchy_resolver.py:370,382` | FIXED (AGG_PYTHON_OPS `^`→`**`; enum-operator root cause) |
-| D3-9 | Empty `refs` from a blind ref-extractor indistinguishable from genuine literal → attribute silently dropped as constant | `computed_attribute_extractor.py:92-94` | Item 5 (tripwire) |
+| D3-9 | Empty `refs` from a blind ref-extractor indistinguishable from genuine literal → attribute silently dropped as constant | `computed_attribute_extractor.py:92-94` | reclassified → tripwire (non-literal AST root + empty refs warns; classification unchanged) |
 | D3-10 | Redefinition matched by leaf name first-wins across all partdefs | `graph_builder.py:1246-1250,1349` | FIXED (leaf-redef collision warns; first-wins preserved) |
 | D3-11 | `_usage_by_name` first-wins ambiguous target index (D3-11b, CONFIRMED-conditional). ~~`.output` half never validated~~ (D3-11a — **NOT-REPRODUCED**: live probe shows the target lookup raises `TargetNotFoundError` on a bad output) | `dependency_backtracker.py:248,151-164` | D3-11b FIXED (user-facing ambiguous-target warn); D3-11a NOT-REPRODUCED |
 | D3-12 | Default-expression eval `except Exception: return None` → param silently absent from its group | `parameter_groups.py:188-193` | FIXED (eval except narrowed; SC-5 emission-time hazard warn) |
-| D3-13 | Phantom detector blindness reads as "no phantoms" (shared failure mode) | `phantom_detector.py:165-173` | Item 5 (sentinel) |
+| D3-13 | Phantom detector blindness reads as "no phantoms" (shared failure mode) | `phantom_detector.py:165-173` | reclassified → sentinel (catalog scanned/cataloged/skipped; WARN on unknown calc def) |
 | D3-14 | `--smart-regen`: transient read error on a valid handwritten impl → silently regenerated to stub (DEBUG-only log) | `preservation.py:95-96`, `cli:397` | FIXED (preserve-on-transient; empty-only regenerate) |
 | D3-15 | `design_prefix` from first virtual usage, first-wins; two designs in one model mis-key aggregations | `pipeline_builder.py:590-598` | FIXED (design-prefix >1 collision warn) |
 | D3-16 | EXPOSE_PURE classification and alias production disagree silently (cross-part chain leaves `instance_name=None`, alias skipped, no warning) | `computed_attribute_extractor.py:305-322` | FIXED (cross-part single-hop EXPOSE_PURE else-warn + fixture) |
@@ -99,15 +99,18 @@ mode — the SC-1 silence shape): scoped-alias registration (`pipeline_builder.p
 self-named rescue (`:564-571`), design-override rewrite key-format drift (`:177-187`),
 template detection INFO gates (`usage_extractor.py:439-445`), hierarchy_resolver
 getattr-default scans (whole module), `_extract_bindings`/`_is_input_parameter`
-direction-string matches, empty-render success INFO (`cli:432-442`). → Item 5
-(zero-found sentinels: "scanned N candidates, matched 0").
+direction-string matches, empty-render success INFO (`cli:432-442`). → **FIXED/PARTIAL (Item 5):**
+scoped-alias registration now carries a "scanned N, registered K" zero-found sentinel +
+WARN-on-gap; design-override rewrite and self-named rescue already carried count-summaries
+(pipeline_builder INFO). Remaining single-INFO sites (template detection, empty-render) are
+low-value noise-discipline follow-on, not landed.
 
 **Hygiene tail** (~20 sites: loader `.get` defaults on load-bearing fields, naive
 substring `.replace()` in aggregation compile, `str(expr)` fallbacks feeding channel
 names, Phase-4 silent skip where siblings warn, registry alias-rewrite no-not-found
-branch, `type_map` "Any" exit-point skip, dead `_check_semantic_match`): → Item 5
-triages at spec; whatever it drops gets FILED as one BACKLOG hygiene entry at Item 5
-close (nothing silently dropped).
+branch, `type_map` "Any" exit-point skip, dead `_check_semantic_match`): → **FILED
+(Item 5 close):** one consolidated `[D3-HYGIENE-TAIL]` BACKLOG entry (`.project/backlog/BACKLOG.md`).
+Dead `_check_semantic_match` cross-referenced to Item 8's dead-code sweep, not filed twice.
 
 **Cross-repo pointer**: `extract_feature_refs` traversal coverage and `str(direction)`
 repr stability bottom out in agentic-mbse. → Item 9 (companion audit).

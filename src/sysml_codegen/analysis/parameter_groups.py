@@ -801,6 +801,20 @@ class ParameterGroupDeriver:
         try:
             return float(value_str)
         except (ValueError, TypeError):
+            # D3-12 numeric-leg decision (Item 5 audit cure): a value that fails
+            # float() stays DEBUG here, NOT a WARN. The loud SC-5 hazard is raised
+            # later, hazard-scoped, at JSON emission (_warn_nonfloat_entry_points),
+            # and only for a NON-numeric-typed entry point (bool/string/enum) that
+            # can never be a float EP and has no other resolution path. A
+            # NUMERIC-typed attribute with an unparseable *expression* default
+            # (e.g. `Real = 1.0 / q_eng`, or `half_vol = split.half`) is a
+            # SUPPORTED deferred shape: it resolves through the computed-attribute
+            # / expression-aware path, not as a silently-omitted float EP (verified
+            # — such params do not land in None-default groups). Promoting this leg
+            # to WARN would fire on every legitimate expression default and break
+            # INV-6; the disposition of unresolved numeric expression defaults is
+            # owned by the expression-aware-codegen epic, not silent-failure
+            # hardening. So DEBUG is correct here.
             logger.debug(f"Could not parse default value '{value_str}' as float")
             return None
 
