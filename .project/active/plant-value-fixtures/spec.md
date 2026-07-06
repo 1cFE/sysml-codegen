@@ -16,12 +16,21 @@ at V11 on exactly 10 plain subsystem-attribute → plant-calc-input references. 
 references decompose into three value-provision mechanisms (discovery §D6):
 
 - **(a) subtype-def literal `:>>` consumed cross-part through a usage-level retype** — 5
-  of 10 refs (`hif_driver.sysml:81,83,84`). No fixture wires this end-to-end.
+  of 10 refs (`designs/hif_ife/hif_driver.sysml:81,83,84`). No fixture wires this
+  end-to-end.
 - **(b) bare `part :>> name { :>> attr = literal; }` override block, no retype** — 4 of
-  10 refs (`hif_plant.sysml:36-49,51-65`). **Zero fixtures contain a no-retype `part
-  :>>` block at all** — every existing fixture `part :>>` carries a type.
+  10 refs (`designs/hif_ife/hif_plant.sysml:36-49,51-65`, e.g. `part :>>
+  target_factory`/`part :>> chamber` blocks with literal `:>>`s incl. quoted-enum
+  `wall_type`). **Zero fixtures contain a no-retype `part :>>` block at all** — every
+  existing fixture `part :>>` carries a type.
 - **(c) `driver.cost_per_joule`** — 1 ref; the shape `spec_chain_twolevel` already
   covers (calc-output-valued variant only).
+
+> Label note: this spec's (a)/(b)/(c) are the discovery-§D6 value-provision mechanisms.
+> They are NOT the memory note `plant-idiom-fixtures`' A/B/C/D, which partition the
+> `ife_plant` fixture's shapes differently (mech A = `:>>`-valued specialized def, B =
+> cross-part chain, C = plain-usage override, D = self-named binding). Do not mis-map the
+> two during execution.
 
 `spec_chain_twolevel` covers exactly one of ten; the `ife_plant` fixture covers none
 (its lcoe binds plant-local literals). So there is no in-repo fixture that reproduces
@@ -44,19 +53,32 @@ fixtures instead of invented shapes.
 
 ## Success Criteria
 
-- [ ] A headline fixture (`plant_values`) loads, captures an extraction snapshot, builds
-  its graph, and **trips V11 today** — its `collect_uncovered_params` result is a
-  non-empty offender set that reproduces all three value-provision mechanisms (subtype-def
-  literal via usage-level retype; bare no-retype `part :>>` override block; the
-  `spec_chain_twolevel`-style chain), pinned by a test that fails if the offender set
-  changes. This is the pinned "before" state Item 2 flips.
-- [ ] `spec_chain_twolevel` is extended with the plain cross-part-attribute shape (the P1
-  acceptance note), including one attribute consumed by **two** modules (the fan-out
-  collapse case the bridge never exercised); its snapshot re-captures as a reviewed diff
-  and its existing pins still hold.
-- [ ] The high-value secondary shapes (subset decided below) load and capture; **each
-  shape's current behavior — correct, degraded, or diagnostic — is pinned by a test,
-  determined empirically at capture, not assumed.**
+- [ ] **SC-1**: A headline fixture (`plant_values`) loads, captures an extraction
+  snapshot, builds its graph, and **trips V11 today** — its `collect_uncovered_params`
+  result is a non-empty offender set that reproduces all three value-provision mechanisms
+  (subtype-def literal via usage-level retype; bare no-retype `part :>>` override block;
+  its own `spec_chain_twolevel`-style chain), pinned by a test that fails if the offender
+  set changes. The V11 trip is **contingent on cross-part consumption**, not automatic
+  (see [HARD] below and Decision D6): each mechanism's literal must feed a plant-calc
+  input whose entry point stays valueless, so it is not reached by the Item-9 plain-usage
+  pre-fill. A capture-time probe gates acceptance — the fixture is accepted only when the
+  offender set is non-empty AND covers all three mechanisms; if a mechanism does not
+  surface, the fixture layout is reworked, never the criterion relaxed. This is the pinned
+  "before" state Item 2 flips, asserted over the headline **alone**.
+- [ ] **SC-2**: `spec_chain_twolevel` is extended with the plain cross-part-attribute
+  shape (the P1 acceptance note), including one attribute consumed by **two** modules (the
+  fan-out collapse case the bridge never exercised); its snapshot re-captures as a reviewed
+  diff and its existing pins still hold. This fixture additionally carries mechanism (c)
+  with fan-out — it is the substrate for Item 2's SC-B tolerance test, distinct from the
+  headline's V11-trip role.
+- [ ] **SC-3**: The high-value secondary shapes (subset decided below) load and capture;
+  **each shape's current behavior — correct, degraded, or diagnostic — is pinned by a test
+  asserting a specific observed property** (e.g. "shape X yields entry point Y with
+  `default_value is None`", or "shape X is dropped — no module input references it"), NOT a
+  whole-snapshot byte-equality. A bare `snapshot == committed snapshot` pin is the epic-R1
+  banned REQ-EXT-09 anti-pattern (expectation is the bytes the code just produced) and
+  documents nothing about the shape. The property is determined empirically at capture,
+  following the `ife_plant` shape-by-shape labeling precedent.
 - [ ] The assert-constraint shape carrying cross-part + self-named + unbound-defaulted
   bindings exists in a fixture and is recorded as Item 4's fires-on-shape substrate (it
   is invisible to the drop report today — the CONSTRAINT-SILENCE bug).
@@ -67,7 +89,9 @@ fixtures instead of invented shapes.
 - [ ] All captures are script-reproducible via `scripts/capture_*.py`; every existing
   baseline **not deliberately touched by this item** stays byte-identical.
 - [ ] The fixture-gap register records the deferred D6 shapes (pointer to discovery §D6),
-  and the plant-value fixture shapes are recorded for Item 9's agentic-mbse impact list.
+  and the plant-value fixture shapes are recorded for Item 9's agentic-mbse impact list in
+  the concrete artifact named below (the "agentic-mbse impact" block), so Item 9 has a
+  specific list to accumulate — not a vague "record it."
 
 ## Known Requirements
 
@@ -82,13 +106,32 @@ fixtures instead of invented shapes.
   `sub.<plain_attr>`; a plant part USAGE containing both (a) a bare no-retype `part :>> sub
   { :>> attr = <literal>; }` block — the shape zero fixtures contain — and (b) a
   usage-level retype whose subtype def supplies other attrs via literal `:>>`. Mechanism
-  (c) is present via a `driver.cost_per_joule`-style chain (reuse the twolevel shape).
-- **[HARD]** The fixture trips V11 today. Concretely: `build_full_graph_from_snapshot`
-  builds the graph (V11 fires at the generation boundary, not at graph build — like
-  `chain_override_probe`), and `collect_uncovered_params(graph)` returns a non-empty
-  offender set covering the three mechanisms. The test pins the exact offender set (the
-  `chain_override_probe` / `ife_plant` pattern in `test_uncovered_params.py` and
-  `test_ife_plant.py`). Item 2 flips this pin as it wires.
+  (c) is present as the headline's **own** `driver.cost_per_joule`-style chain (a copy of
+  the twolevel shape, not a dependency on the `spec_chain_twolevel` fixture) — so the
+  headline is self-contained on all three mechanisms and Item 2's before/after diff is
+  legible on one fixture (D1's rationale applied consistently).
+- **[HARD]** Cross-part consumption is what makes V11 trip — this is the crux, not an
+  incidental detail. `collect_uncovered_params` (`graph_builder.py:810`) flags only an
+  entry point that is **valueless** (`default_value is None`); a bound literal parsed to a
+  float is excluded. After the prior epic's Items 9/10, the plain-usage LITERAL class is
+  pre-filled and the two cross-part CHAIN pins are wired, so `chain_override_probe` is the
+  *only* committed fixture that still fires the collector. Therefore each mechanism's
+  literal MUST be consumed **cross-part** — it feeds a plant-calc input whose entry point
+  stays valueless because the current pipeline cannot wire it (exactly the path Item 2
+  builds). A literal placed where the Item-9 plain-usage pre-fill reaches it gets a value
+  and does NOT trip V11. Mechanisms (a) and (b) are literal-valued, so a naive layout
+  generates clean and leaves Item 2 an empty pin to flip; the fixture must route those
+  literals through cross-part consumption.
+- **[HARD]** The fixture trips V11 today, verified at capture, not assumed. Concretely:
+  `build_full_graph_from_snapshot` builds the graph (V11 fires at the generation boundary,
+  not at graph build — like `chain_override_probe`), and `collect_uncovered_params(graph)`
+  returns a non-empty offender set covering all three mechanisms. A **capture-time probe
+  gate** (Decision D6) accepts the fixture only when that holds; if a mechanism does not
+  surface as an offender, the fixture layout is reworked to route it cross-part — the
+  criterion is never relaxed (the D6 recipe confirms fusion-tea's real shapes DO trip V11,
+  so a non-tripping layout means the fixture diverged from the exemplars). The test pins
+  the exact offender set (the `chain_override_probe` / `ife_plant` pattern in
+  `test_uncovered_params.py` and `test_ife_plant.py`). Item 2 flips this pin as it wires.
 - **[HARD]** The assert constraint carries three binding sub-shapes in one place: a
   cross-part binding, a self-named binding (`in x = x`), and an unbound defaulted param.
   These are visible to the binding resolver and are the substrate Item 5 hardens; the
@@ -113,13 +156,20 @@ fixtures instead of invented shapes.
 
 ### Secondary shapes (the high-value subset — Decision D4)
 
-- **[HARD]** Cover, with a test pinning each shape's **observed** current behavior:
-  attribute-def-typed attribute with nested `:>>` (the 14-econ-params shape); bare
-  `default 10.0` (no `:=`); doc bodies inside calc usages and on `:>>` redefinitions; an
-  in-binding referencing an inherited attr the same def redefines below it; a 5-deep
-  specialization chain with abstract ends; quoted enum def + usage-level quoted enum `:>>`;
-  a quoted OUTPUT parameter name (`out attribute 'net cost'`); Style-E calc def (mixed `out
-  attribute` + `return` in one def, inside a quoted def) and a return-in-quoted-def row.
+- **[HARD]** Cover, with a test pinning each shape's **observed** current behavior as a
+  specific property (per SC-3, not a byte-pin): attribute-def-typed attribute with nested
+  `:>>` (the 14-econ-params shape); bare `default 10.0` (no `:=`); doc bodies inside calc
+  usages and on `:>>` redefinitions; an in-binding referencing an inherited attr the same
+  def redefines below it; a 5-deep specialization chain with abstract ends; quoted enum def
+  + usage-level quoted enum `:>>`; a quoted OUTPUT parameter name (`out attribute 'net
+  cost'`); Style-E calc def (mixed `out attribute` + `return` in one def, inside a quoted
+  def) and a return-in-quoted-def row.
+- **[HARD]** Scope escape hatch: a secondary shape that cannot be captured without a
+  production-code change — e.g. one that crashes the extractor rather than merely degrading
+  (the exotic `out attribute 'net cost'` and Style-E rows are the likely candidates) — is
+  **FILED to the fixture-gap register** with the crash evidence, not fixed here (matching
+  D4's filing discipline). "Load and capture" is empirically not guaranteed for every named
+  shape; a captured degrade/diagnostic is the win, a required code change is out of scope.
 - **[NEED]** Non-float entry-point literal shapes exist so Item 5 has a substrate: a
   bool/string/enum-valued attribute one hop from an entry point (fusion-tea's `wall_type`
   enum shape). Recorded for Item 5; its current behavior (silent `None`-omission per
@@ -137,8 +187,9 @@ fixtures instead of invented shapes.
   `self_named_binding_trap` (path canonicalization only) and `quoted_owner_formula` (path
   canonicalization + the `net_margin`/`total_payout` design-attr → computed-attr
   reclassification). Own commit, reviewed diff. The reclassification is reviewed
-  deliberately against post-Item-7 computed-attribute behavior — confirmed correct or
-  filed, never waved through.
+  deliberately against UPSTREAM-FINDINGS Item 7 (the prior epic's already-landed
+  computed-attribute classification, per D3) — confirmed correct or filed, never waved
+  through.
 
 ### Cross-cutting
 
@@ -146,10 +197,27 @@ fixtures instead of invented shapes.
   syside license is used for capture (available, monthly renewal). Every existing baseline
   not deliberately touched stays byte-identical. Deliberately-touched set is enumerated
   below and nowhere else changes.
-- **[HARD]** Zero production-code changes. Fixtures, snapshots, baselines, tests, and the
-  capture-script registration lists only.
+- **[HARD]** Selective capture must be *checkable*, not just asserted (Decision D7). Both
+  capture scripts today loop over all registered fixtures with no filter
+  (`capture_extraction_snapshots.py:159`, `capture_pipeline_baselines.py:73`), so a full
+  run rewrites every snapshot/baseline — and the rider's own "path canonicalization" proves
+  a fresh full run *does* change committed bytes. Add a `--fixtures` name-filter argument to
+  both scripts (see D7); each capture step names exactly the fixtures it touches, and a
+  `git status` gate confirms nothing outside the deliberately-touched set changed.
+- **[HARD]** Zero **production**-code changes (src/). Fixtures, snapshots, baselines,
+  tests, and the capture-script registration lists only. The D7 `--fixtures` filter is a
+  test-tooling change under `scripts/`, which the zero-production-code constraint does not
+  cover — it is explicitly allowed.
 - **[INFERRED]** New fixtures follow ADR-002 SysML conventions and the plant-idiom
   provenance-doc-comment style already in `ife_plant` (source, reference, last-updated).
+
+### agentic-mbse impact (recorded for Item 9)
+
+- **[HARD]** This item makes no agentic-mbse code change. It records the plant-value
+  fixture shapes as reference examples in a concrete block at the end of this spec
+  ("agentic-mbse impact — Item 9 accumulation list"), one line per shape naming the shape
+  and where it lives (fixture + purpose). Item 9 reads that block, not the prose. The block
+  is the artifact — a bare "recorded for Item 9" is not sufficient (L3-3).
 
 ## Non-Goals
 
@@ -183,10 +251,14 @@ cross-part + fan-out shapes.
 as a candidate rider decided at this spec. We hold a live license and are running a
 live-capture session anyway; running the refresh now ends the committed corpus
 script-reproducible in one pass. Own commit, reviewed diff, per the BACKLOG entry. The
-`quoted_owner_formula` reclassification (two attrs move design-attr → computed) is a
-snapshot-content change reflecting already-landed post-Item-7 behavior, not a code change,
-so it is in scope; it is reviewed deliberately and filed if it turns out to hide a real
-question rather than confirmed.
+`quoted_owner_formula` reclassification (two attrs — `net_margin`, `total_payout` — move
+design-attr → computed) is a snapshot-content change reflecting behavior that **already
+landed in the PRIOR epic (UPSTREAM-FINDINGS Item 7)**, NOT a forward dependency on this
+epic's Item 7 (matrix reconciliation, which runs after Item 1). This matches the BACKLOG
+stale-fixture-refresh entry ("post-Item-7 computed-attribute classification behavior
+reaching this Item-6-vintage snapshot `346cf47`"). It is a snapshot-content change, not a
+code change, so it is in scope; it is reviewed deliberately and filed if it turns out to
+hide a real question rather than confirmed.
 
 **D4 — High-value secondary subset = the eight shapes the epic Item 1 §3 names, plus the
 adversarial-pass rows (Style-E / quoted-return, quoted-output param, bool/string/enum
@@ -208,8 +280,35 @@ EP).** The remaining D6 shapes are FILED to the fixture-gap register (pointer to
 **D5 — Per-shape behavior labels are determined empirically at capture, not pre-judged.**
 Following the `ife_plant` precedent (capture current-incomplete first; label
 correct/degraded/diagnostic from the observed snapshot). The spec requires a pinning test
-per shape; the plan records the observed label. This is the R4-flavored discipline applied
-to fixtures — the "before" is measured, not assumed.
+per shape that asserts a **specific observed property** (SC-3), not a whole-snapshot
+byte-equality — the latter is the epic-R1 banned REQ-EXT-09 anti-pattern. The plan records
+the observed label. This is the R4-flavored discipline applied to fixtures — the "before"
+is measured, not assumed.
+
+**D6 — Capture-time probe gate for the headline V11 trip (L1-1 crux).** The headline
+fixture's whole point is to trip V11, and that is contingent on cross-part consumption, not
+automatic (`collect_uncovered_params` flags only valueless EPs; the prior epic's Item-9
+plain-usage pre-fill values any literal it reaches). So the fixture is authored so each
+mechanism's literal feeds a plant-calc input the current pipeline cannot wire (valueless
+EP), and acceptance is **gated by a probe**: build the graph from the captured snapshot,
+run `collect_uncovered_params`, and accept only when the offender set is non-empty AND
+covers all three mechanisms. Fallback when a mechanism does not surface: **rework the
+fixture layout to route that literal cross-part — never relax the criterion**. The D6
+recipe confirms fusion-tea's real shapes DO trip V11, so a non-tripping layout means the
+fixture diverged from the exemplars, not that V11 is unreachable. This reconciles SC-1's
+"all three in the offender set" (the accepted end state) with D5's "measured, not assumed"
+(the probe is how it is measured).
+
+**D7 — Selective capture via a `--fixtures` name-filter on the capture scripts (L3-1).**
+Byte-identity of untouched baselines must be *checkable*, but both capture scripts loop
+over all registered fixtures with no filter, so a full run rewrites everything (and the
+rider's path-canonicalization proves a full run changes committed bytes). Chosen: add a
+`--fixtures NAME[,NAME...]` argument to `capture_extraction_snapshots.py` and
+`capture_pipeline_baselines.py` so each step captures exactly the fixtures it touches; a
+`git status` gate then confirms nothing outside the deliberately-touched set changed.
+Preferred over run-all-then-`git checkout` because it is reusable by Items 2/3 (each does
+its own scoped regen) and makes R3 discipline durable. This is a `scripts/` change, outside
+the zero-**production**-code (src/) constraint — explicitly allowed.
 
 ## Deliberately-touched baseline set (everything else byte-identical)
 
@@ -239,16 +338,23 @@ to fixtures — the "before" is measured, not assumed.
   `(module, input, missing_key)` tuples are read from the captured graph, not predicted
   here (independently-anchored, per R1).
 
-## Known limitation
+## Fusion-tea exemplars (verified)
 
-The fusion-tea exemplar files (`ife_plant.sysml`, `hif_plant.sysml`, `hif_driver.sysml`,
-`ife_cost_parameters.sysml`) live outside this session's allowed working directory and
-could not be read directly. The fixture shapes are copied from discovery §D6, which
-carries each shape with its fusion-tea `file:line` exemplar, and from the existing
-`ife_plant` / `spec_chain_twolevel` fixtures (already shaped after those files). At
-execution, when the live-capture session runs, spot-verify the authored shapes against the
-live fusion-tea files so the fixtures are copied from reality, not from the register's
-paraphrase.
+The orchestrator read the live fusion-tea files and confirmed the register's shapes, so the
+fixtures are copied from reality. Exact paths:
+
+- `~/1cfe/fusion-tea/models/designs/hif_ife/hif_plant.sysml` — mechanism (b): bare
+  no-retype `part :>> target_factory` / `part :>> chamber` blocks with literal `:>>`s,
+  including the quoted-enum `wall_type` override.
+- `~/1cfe/fusion-tea/models/designs/hif_ife/hif_driver.sysml` — mechanism (a): subtype-def
+  literal `:>>`s at lines 81, 83, 84.
+- `~/1cfe/fusion-tea/models/designs/generic_ife/ife_plant.sysml` — the base plant with the
+  10 V11 offenders and the assert-constraint shape.
+- `~/1cfe/fusion-tea/models/library/cost_structure/ife_cost_parameters.sysml` — the
+  attribute-def-typed nested-`:>>` (14-econ-params) shape.
+
+At execution, re-read these files in the live-capture session (broader sandbox) and diff
+the authored fixtures against them before committing.
 
 ---
 
@@ -260,8 +366,10 @@ paraphrase.
   `docs/architecture/reference/25-hierarchy-resolver.md` (the epic cites it as
   `25-hierarchy-extraction.md` — renamed; same doc); `docs/architecture/modeling-assumptions.md`
   §5; memory note `plant-idiom-fixtures`; BACKLOG stale-fixture-refresh + CONSTRAINT-SILENCE.
-- **Fusion-tea exemplars (register-cited, not directly readable this session):**
-  `~/1cfe/fusion-tea/models/{ife_plant,hif_plant,hif_driver,ife_cost_parameters}.sysml`.
+- **Fusion-tea exemplars (verified — see the "Fusion-tea exemplars" section above for the
+  full paths):** `~/1cfe/fusion-tea/models/designs/hif_ife/{hif_plant,hif_driver}.sysml`,
+  `~/1cfe/fusion-tea/models/designs/generic_ife/ife_plant.sysml`,
+  `~/1cfe/fusion-tea/models/library/cost_structure/ife_cost_parameters.sysml`.
 - **Research:** `.project/research/20260706_pipeline-truth-discovery.md`
 - **Downstream:** Item 2 (`whole-plant-resolution`), Item 5 (`silent-failure-hardening`),
   Item 4 (`subtype-enumeration`, assert-constraint substrate), Item 9 (agentic-mbse impact).
@@ -272,3 +380,30 @@ paraphrase.
 
 **Next Steps:** After approval, proceed to `/_my_plan` (the Item-8 plant-fixtures plan is
 the template). No `/_my_design` — fixtures + captures carry no design surface.
+
+---
+
+## agentic-mbse impact — Item 9 accumulation list
+
+No agentic-mbse code change in this item. The plant-value fixture shapes below become the
+reference examples Item 9 folds into agentic-mbse's MODELING_GUIDE + reference fixtures
+(one line per shape; the plan finalizes exact fixture names/locations at capture):
+
+- **Mechanism (a)** — subtype-def literal `:>>` consumed cross-part through a usage-level
+  retype. Lives in `plant_values`. Reference example for the whole-plant value idiom.
+- **Mechanism (b)** — bare no-retype `part :>> name { :>> attr = literal; }` override
+  block (incl. a quoted-enum `:>>`). Lives in `plant_values`. The shape no fixture
+  previously contained.
+- **Mechanism (c)** — plain cross-part-attribute chain with fan-out (one attr → two
+  consumers). Lives in `plant_values` (self-contained copy) and the extended
+  `spec_chain_twolevel`.
+- **Assert-constraint binding shapes** — cross-part + self-named + unbound-defaulted
+  bindings on an `assert constraint`. Lives in `plant_values`. Substrate for Item 4's
+  constraint-report truth and the agentic-mbse constraint-visibility check.
+- **Secondary syntactic shapes** — attribute-def-typed nested `:>>`, bare `default 10.0`,
+  quoted enum def + usage-level quoted `:>>`, quoted output-parameter name, Style-E calc
+  def, 5-deep specialization chain, inherited-attr-redefined-below. Live in
+  `plant_value_shapes`. Reference examples for the supported-subset guide.
+- **Non-float entry-point shape** — bool/string/enum-valued attribute one hop from an
+  entry point (`wall_type` idiom). Substrate for Item 5's non-float-EP diagnostic and the
+  agentic-mbse D-F expression-RHS warning (Item 9 §2).

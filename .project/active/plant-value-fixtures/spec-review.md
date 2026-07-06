@@ -193,7 +193,50 @@ the rest are tightenings.
 
 ## Resolutions
 
-*Filled in during Stage 5, keyed by finding ID, as the user resolves each.*
+All 8 must-fixes incorporated into `spec.md` (2026-07-06). Keyed by finding ID.
+
+- **L1-1 (V11-trip crux) — RESOLVED.** Added a dedicated `[HARD]` requirement making
+  cross-part consumption the explicit precondition for the trip: each mechanism's literal
+  must feed a plant-calc input whose EP stays valueless (not a plain-usage EP the prior
+  epic's Item-9 pre-fill reaches), citing `graph_builder.py:810`'s valueless-only test and
+  `chain_override_probe` as the sole surviving corpus firer. Added the capture-time probe
+  gate as **Decision D6** and rewrote **SC-1**: the fixture is accepted only when
+  `collect_uncovered_params` returns a non-empty offender set covering all three
+  mechanisms; the fallback is to rework the layout, never relax the criterion (the D6
+  recipe confirms fusion-tea's real shapes trip V11). SC-1 vs D5 reconciled — the probe is
+  how "all three" is measured.
+- **L1-2 (stale limitation + paths) — RESOLVED.** Replaced "Known limitation" with a
+  "Fusion-tea exemplars (verified)" section carrying the orchestrator's discharge and the
+  corrected `models/designs/hif_ife/…`, `models/designs/generic_ife/…`,
+  `models/library/cost_structure/…` paths. Corrected the Problem-section file:line refs and
+  the Related Artifacts entry.
+- **L1-3 (which Item 7) — RESOLVED** per orchestrator: named **UPSTREAM-FINDINGS Item 7
+  (the prior epic, already landed)** in both D3 and the Capture-hygiene requirement,
+  explicitly contrasting it with this epic's Item 7 (matrix reconciliation, runs after
+  Item 1); verified against the BACKLOG stale-fixture-refresh entry.
+- **L2-1 (vacuous pin) — RESOLVED.** Rewrote **SC-3** and the secondary-shape `[HARD]`
+  requirement (and D5) to require each pin assert a *specific observed property* (e.g. EP
+  with `default_value is None`, or shape dropped — no module input references it), not a
+  whole-snapshot byte-equality, naming the REQ-EXT-09 ban.
+- **L2-2 (scope escape hatch) — RESOLVED.** Added a `[HARD]` escape hatch: a secondary
+  shape that cannot be captured without a production-code change (extractor crash, not mere
+  degrade — the quoted-output and Style-E rows are the likely candidates) is FILED to the
+  fixture-gap register with crash evidence, not fixed.
+- **L3-1 (byte-identity not checkable) — RESOLVED.** Added **Decision D7**: a `--fixtures`
+  name-filter on both capture scripts (`capture_extraction_snapshots.py:159`,
+  `capture_pipeline_baselines.py:73`) plus a `git status` gate; noted `scripts/` is outside
+  the zero-production-code (src/) constraint. Chosen over run-all-then-revert because Items
+  2/3 reuse it.
+- **L3-2 (headline self-containment) — RESOLVED** per orchestrator: the headline carries
+  its **own** mechanism-(c) chain (self-contained on all three); SC-1's offender set is
+  asserted over the headline alone; the extended `spec_chain_twolevel` additionally covers
+  (c) with fan-out for Item 2's SC-B tolerance test. Updated the headline `[HARD]`, SC-1,
+  and SC-2.
+- **L3-3 (agentic-mbse impact vague) — RESOLVED.** Added a concrete "agentic-mbse impact —
+  Item 9 accumulation list" block at the end of the spec (one line per shape: name +
+  fixture + purpose) and a `[HARD]` requirement pointing Item 9 at that block.
+- **L4-1 (mechanism-label collision) — RESOLVED.** Added a label note after the (a)/(b)/(c)
+  list stating they are the §D6 mechanisms, NOT the memory note's A/B/C/D partition.
 
 ---
 
