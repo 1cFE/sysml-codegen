@@ -18,39 +18,52 @@ found the divergences; this item closes them.
 
 The failures are not uniform. They fall into seven groups, worst first.
 
-**1. F4 — the whole Input Resolver family pins dead code.** `resolve_input()` /
-`AGG_STRATEGIES` (`src/sysml_codegen/resolution/input_resolver.py`) has **zero
-production callers** — verified: the only references in `src/` are inside the module
-that defines them. The live aggregation path is `_resolve_aggregation_input_channel`
-in `resolution/graph_builder.py:1194`. Yet the 7 IR rows (REQ-IR-01..07) read PASS,
-pinned by 24 skipif-gated tests in `test_input_resolver.py` that call the bypassed
-function directly, and REQ-DRA-02/04/05 partly pin it too (DRA-04 compares the live
-backtracker against a function that never runs in production). REQ-RES-02 names the
-dead path in its text. This is not a dead-code-deletion call: docs 03/04/05 present
-`resolve_input()` as the **intended** consolidated architecture with recorded design
-rationale (doc 03's "What Changed vs. What Stayed" table; doc 04's whole existence).
-Git-verified: the module and its call site were born in one COST-PATTERN commit
-(`d6c725f`); only the final rewire of the factory call sites was skipped, so it
-replaced nothing and nothing broke. The matrix, the code, and the docs disagree about
-whether this module is the architecture or a corpse.
+**1. F4 — the whole Input Resolver family pins dead code.**
+- *The claim.* `resolve_input()` / `AGG_STRATEGIES`
+  (`src/sysml_codegen/resolution/input_resolver.py`) have **zero production callers** —
+  verified: the only `src/` references are inside the module that defines them. The live
+  aggregation path is `_resolve_aggregation_input_channel` (`graph_builder.py:1194`).
+- *What the matrix claims anyway.* The 7 IR rows (REQ-IR-01..07) read PASS, pinned by 22
+  skipif-gated tests in `test_input_resolver.py` (recount at implement) that call the
+  bypassed function directly. REQ-DRA-02/04/05 partly pin it too — DRA-04 compares the
+  live backtracker against a function that never runs. REQ-RES-02 names the dead path in
+  its text.
+- *Why it's stuck, not a deletion call.* Docs 03/04/05 present `resolve_input()` as the
+  **intended** consolidated architecture with recorded rationale (doc 03's "What Changed
+  vs. What Stayed" table; doc 04's whole existence). Git-verified: the module and its
+  call site were born in one COST-PATTERN commit (`d6c725f`); only the final rewire of
+  the factory call sites was skipped, so it replaced nothing and nothing broke. The
+  matrix, the code, and the docs disagree about whether this module is the architecture
+  or a corpse.
 
 **2. F2 — the registry contract text contradicts the code, and a test was weakened to
-hide it.** REQ-OR-05/08 and doc 10's "Eliminated Key Formats" say Key_A and Key_F are
-never registered. The code registers both: Phase 1a registers Key_A via
-`register_alias()`, Phase 1c registers Key_F via `register_scoped()`; Phases 3–4 also
-consult a construction-time `instance_attr_to_channel` Key_A-format dict before typed
-lookups (vs REQ-OR-06's "through typed lookup"). The rows read PASS because
-`test_output_registry.py::TestReqOR08` narrowed its own reading (an inline NOTE in the
-matrix admits it), and REQ-ORCH-04's phase-order assertion was weakened to
-`min(phase1) < min(alias)` (first-call-only) to accommodate the divergence. Two test
-docstrings misstate their own bodies.
+hide it.**
+- *The contradiction.* REQ-OR-05/08 and doc 10's "Eliminated Key Formats" say Key_A and
+  Key_F are never registered. The code registers both: Phase 1a registers Key_A via
+  `register_alias()`, Phase 1c registers Key_F via `register_scoped()`; Phases 3–4 also
+  consult a construction-time `instance_attr_to_channel` Key_A-format dict before typed
+  lookups (vs REQ-OR-06's "through typed lookup").
+- *Why the rows still read PASS.* `test_output_registry.py::TestReqOR08` narrowed its own
+  reading (an inline NOTE in the matrix admits it consciously), and REQ-ORCH-04's
+  phase-order assertion was weakened to `min(phase1) < min(alias)` (first-call-only) to
+  accommodate the divergence. Two test docstrings misstate their own bodies.
 
 **3. Divergent-PASS rows — PASS that pins less than the text.** The D7 list: REQ-CA-05
 (vacuous on empty coverage), REQ-PY-01/03/05 (blacklist / rebuilt-map weaknesses),
 REQ-GEN-02 (CalcUsage-only, in-memory, no filesystem check), REQ-SR-07 (source-text
 grep, no behavior), REQ-DM-06/07 (test something categorically different), REQ-GA-07
 (identifier grep), REQ-PGD-08 (cited file doesn't cover the claim), REQ-EXT-09's
-part-usage-owner leg (Item 4 may have landed it — verify).
+part-usage-owner leg. Two of these have moved since the D7 sweep and must be re-verified
+against the **current** matrix row before acting, not treated as settled:
+- **REQ-EXT-09** — Item 4 landed the part-usage leg (`test_extractor.py:888-934`, a new
+  anti-pattern-free class spanning calc-def / part-def / part-usage owners). This leg is
+  DONE; confirm and mark at implement.
+- **REQ-PGD-08** — its row now cites `test_matcher_fixes_item7.py` (backtracker
+  propagation) + `test_parameter_group_deriver.py`, both post-dating the D7 verdict.
+  Re-verify coverage against that current row. One disposition (this resolves the §5
+  double-listing too): if real coverage is absent, the row needs a genuine test or a
+  re-frame — **not** a marker, since you cannot tag a test that does not pin the claim.
+  Decided at implement on fresh evidence.
 
 **4. UNTESTED-12 undispositioned.** Twelve rows carry `— | UNTESTED`. Some are
 risky-cheap to convert (REQ-CA-08, REQ-GEN-07); one is the riskiest row in the item
@@ -67,10 +80,13 @@ block, per the memory note) surfaces live drift:
 - The footer says **"33 test files"**; `tests/conformance/` holds **57**. The index's
   "54 distinct test files cited" is a third, different number. 9 cited files live
   outside `tests/conformance/`, straining the matrix's own PASS definition.
-- D7 named 7 PASS rows with no REQ marker binding row→test (BASE-05, BT-11, CA-10,
-  LVP-09, OR-09, PGD-08, VBR-11). Their matrix test-file cells are populated; the
-  missing marker is the `# REQ-*` tag in the test **source** that the traceability
-  generator greps. Verify and add.
+- D7 named 7 PASS rows with no REQ marker binding row→test. **Six get markers**
+  (BASE-05, BT-11, CA-10, LVP-09, OR-09, VBR-11): their matrix test-file cells are
+  populated; the missing piece is the `# REQ-*` tag in the test **source** that the
+  traceability generator greps — verify and add. **PGD-08 is excluded here** and routed
+  through the §3 divergent-row disposition instead: D7 found it has neither a marker nor
+  real coverage, so a marker cannot be added to a test that does not pin the claim. It
+  needs a genuine test or a re-frame (decided at implement, §3).
 
 **6. The 5 xfails lock a misclassification in as "expected."** `test_computed_attributes.py:787`
 xfails an inherited-attr classification (EXPOSE_COMPUTED where FORMULA is correct; a
@@ -92,12 +108,13 @@ Two prior epics staged this: UPSTREAM-FINDINGS left F2/F4 as filed residue
 - [ ] **F2 and F4 closed by recorded decision.** BACKLOG DOCS-SCRUB-F2, DOCS-SCRUB-F4,
   and [ITEM7-PGD06] retired. The decision and its evidence live in the docs, not just
   in chat.
-- [ ] **The F4 verdict is reached by running the three kill-condition probes**, and
+- [ ] **The F4 verdict is reached by running the three kill-condition probes**, each of
+  which produces a named evidence artifact the verdict cites (see the HARD-F4 block), and
   whichever outcome lands, the full consequence set moves in **one change**: the 7 IR
-  rows, REQ-DRA-02/04/05, REQ-RES-02/07/08 text, the 24 `test_input_resolver.py`
-  skipifs, `test_dual_resolution.py`, and docs 03/04/05 prose all end mutually
-  consistent. No row pins a module the code doesn't call; no doc describes an
-  architecture the code doesn't have.
+  rows, REQ-DRA-02/03/04/05, REQ-BT-09, REQ-RES-02/07/08 text, the 22
+  `test_input_resolver.py` skipifs (recount at implement), `test_dual_resolution.py`, and
+  docs 03/04/05 prose all end mutually consistent. No row pins a module the code doesn't
+  call; no doc describes an architecture the code doesn't have.
 - [ ] **Zero divergent-PASS rows from the D7 list remain.** Each is fixed (test
   strengthened or REQ re-framed) or, if it surfaces new feature work, filed with a
   matrix pointer. No PASS row pins less than its text.
@@ -129,31 +146,61 @@ Two prior epics staged this: UPSTREAM-FINDINGS left F2/F4 as filed residue
 
 - **[HARD]** F4 lands as an atomic, mutually-consistent change across its whole
   consequence set. The set is fixed regardless of outcome: 7 IR rows (REQ-IR-01..07),
-  REQ-DRA-02/04/05, REQ-RES-02/07/08 text, 24 skipifs in `test_input_resolver.py`,
-  `test_dual_resolution.py` (the 12-test parity suite), and the REQ-mirroring prose in
-  docs 03/04/05. A partial move (rows without docs, or docs without skipifs) fails.
+  REQ-DRA-02/03/04/05, REQ-BT-09, REQ-RES-02/07/08 text, the 22 skipifs in
+  `test_input_resolver.py` (recount at implement — the epic's "24" was never recounted;
+  the count adds no precision since the set is "all of them"), `test_dual_resolution.py`
+  (the parity suite), and the REQ-mirroring prose in docs 03/04/05. DRA-03 and BT-09 are
+  in the set because they **also cite `test_dual_resolution.py`** (`matrix:166`,
+  `matrix:120`): either outcome rewrites or removes that file (cutover deletes the inline
+  comparand; excise deletes the module), so a citation left behind dangles. A partial
+  move (rows without docs, docs without skipifs, or a moving test file with a stale
+  citation) fails.
 
-- **[HARD]** If F4 lands as the cutover (a), three preconditions gate the swap, in
-  order: (1) extend the `test_dual_resolution.py` parity suite over Item 1's plant
-  fixtures and any shapes beyond the committed corpus, and it must pass **before** the
-  factory call sites are rewired; (2) implement-or-delete Strategy D
-  (`DesignAttributeLookup`, a documented no-op at `input_resolver.py:208`) explicitly —
-  its promised aggregation-EP dedup churns params-JSON key sets, so it lands with
-  reviewed baselines; (3) diff `input_resolver.py` against the live
-  `_resolve_aggregation_input_channel` path both directions to confirm the module
-  carries every post-COST-PATTERN / UPSTREAM-FINDINGS fix the live path got.
+- **[HARD]** Each F4 kill probe produces a **named evidence artifact** that the
+  design-time verdict must cite by name. This is the guard against the presumption
+  winning by inertia: the verdict rests on evidence a reviewer can open, not on a design
+  agent waving a soft probe through. Presumption stays "land the cutover (a)"; it flips
+  to excise (b) only if a probe fires a kill.
+  - **Probe (i) — parity extended.** Extend the `test_dual_resolution.py` parity suite
+    over an **enumerated** fixture set: `plant_values`, `plant_value_shapes`, and the
+    extended `spec_chain_twolevel` (Item 1's landed fixtures; no open-ended "shapes
+    beyond the corpus" hole). The suite runs and passes **before** any factory call site
+    is rewired. *Artifact:* the extended parity run log. *Pass bar / kill:* 100% parity
+    on the extended corpus; any per-fixture value-or-wiring disagreement is a kill (the
+    module has diverged from the live path's correctness).
+  - **Probe (ii) — Strategy D dedup.** Implement-or-delete Strategy D
+    (`DesignAttributeLookup`, a documented no-op at `input_resolver.py:208`) explicitly;
+    its promised aggregation-EP dedup churns params-JSON key sets. *Artifact:* the actual
+    key-set diff computed against the `catf_mfe` and `solar_battery` params-JSON
+    baselines, plus a one-paragraph behavior-change review. *Kill:* the diff collapses
+    keys a consumer depends on, or the review judges the change otherwise unwanted.
+  - **Probe (iii) — module drift.** Diff `input_resolver.py` against the live
+    `_resolve_aggregation_input_channel` path **both directions**. *Artifact:* a
+    commit-list comparison — the inventory of live-path fixes landed since the module's
+    COST-PATTERN birth (`d6c725f`). *Threshold / kill:* any post-COST-PATTERN live-path
+    fix absent from the module counts as material drift (a kill).
+  - The design-time F4 verdict cites all three artifacts.
 
-- **[HARD]** The three F4 kill conditions each have a defined test, and the verdict
-  turns on their result (presumption: land the cutover; flip to excise only on a kill):
-  - **(i) parity fails when extended** — the precondition-1 suite over the plant
-    fixtures is the probe. If the two implementations disagree on any new shape, that
-    is a kill (the module has diverged from the live path's correctness).
-  - **(ii) Strategy D dedup is an unwanted behavior change** — reviewing the
-    params-JSON key-set diff Strategy D produces is the probe. If the dedup collapses
-    keys a consumer depends on (or is otherwise unwanted), that is a kill.
-  - **(iii) the module drifted materially** — the both-directions diff is the probe. If
-    re-syncing `input_resolver.py` to the live path's fixes costs more than the cutover
-    buys, that is a kill.
+- **[HARD]** F2 lands by **fixing the text to the code** (orchestrator ruling). The
+  inline matrix NOTE admits the Key_A/Key_F divergence consciously; construction-time
+  registration is corpus-proven; and — unlike F4 — no parity suite proves a typed-lookup
+  alternative was ever built. So REQ-OR-05/06/08 text and doc 10's "Eliminated Key
+  Formats" are corrected to describe the actual registrations (Phase 1a Key_A alias,
+  Phase 1c Key_F scoped, the construction-time `instance_attr_to_channel` consult). The
+  presumption flips to fixing the *code* only if design finds the construction-time dict
+  genuinely bypasses the typed-registry validation contract — check `output_registry.py`'s
+  guards at design. **Non-negotiable either way:** REQ-ORCH-04's real phase-order
+  assertion is RESTORED (the `min(phase1) < min(alias)` weakening was accommodation, not
+  intent), and the two test docstrings that misstate their own bodies are fixed.
+
+- **[HARD]** The ~175-row deep-read sweep is leashed, not open-ended (the item budgets
+  1.5–2 days total). Concrete D7 heuristics — a row qualifies for deep-read if: its text
+  contains a strong word (SHALL / ALL / every / never / exactly), OR it asserts a
+  diagnostic fires (a warning/error on a shape), OR it asserts a structural/numeric count.
+  Stopping rule: sweep until EITHER the qualifying list is exhausted OR 0 new findings in
+  40 consecutive rows after the first 60 examined. Whatever stays unswept is **named in
+  the close-out with its count** (register discipline — silent truncation reads as "swept
+  everything"). Findings are fixed or filed with a matrix pointer.
 
 - **[HARD]** REQ-PGD-06 (matrix:380, `PENDING-ITEM7 · [ITEM7-PGD06]`): Item 8 confirmed
   `get_default_value` dead and deleted it (verified: zero hits in `src/` and `tests/`),
@@ -205,9 +252,11 @@ Two prior epics staged this: UPSTREAM-FINDINGS left F2/F4 as filed residue
   design rationale was deliberate, doc 24 defines the structural boundary it honors
   (post-DFS resolution is consolidatable), the 12-test parity suite is the safety net,
   and excising enshrines the less-clean inline implementation at greater doc-surgery
-  cost. The verdict is **recorded at design, after the three kill-condition probes run**
-  (the parity-suite extension is testable now, over Item 1's fixtures). This spec fixes
-  the presumption and the probes; design fixes the answer.
+  cost. The verdict is **recorded at design, after the three kill-condition probes run
+  and produce their named artifacts** (parity run log; Strategy-D key-set diff vs
+  catf_mfe/solar_battery; module-drift commit-list), which the verdict cites. The
+  parity-suite extension is testable now, over Item 1's fixtures. This spec fixes the
+  presumption, the probes, and the artifacts; design fixes the answer.
 - **Whether the cutover splits into its own item.** The epic budgets Item 7 at 1.5–2
   days and allows design to split the F4 cutover out if it grows past that. Decide at
   design once the both-directions diff sizes the rewire.
@@ -217,14 +266,17 @@ Two prior epics staged this: UPSTREAM-FINDINGS left F2/F4 as filed residue
   vs the Step-2b prefix check) is out of proportion to a matrix-truth item. Re-frame the
   REQ + document the xfails as a known contract, and file the classifier fix as its own
   backlog item. Confirm at design.
-- **F2's three-way.** Fix REQ text, fix code, or both, for the Key_A/Key_F
-  registration contract — decide at design against doc 10's intent (is the
-  construction-time `instance_attr_to_channel` dict a deliberate optimization to
-  document, or a divergence to remove?). REQ-ORCH-04's weakened assertion is restored
-  regardless.
+- **F2 is no longer open — presumption fix-text-to-code (orchestrator ruling), see the
+  HARD requirement above.** The one thing design still checks: does the construction-time
+  `instance_attr_to_channel` dict genuinely bypass the typed-registry validation contract
+  (`output_registry.py`'s guards)? If yes, the presumption flips to fixing the code; if
+  no (the expected case), the text is corrected to describe the registrations. ORCH-04's
+  assertion is restored and the two lying docstrings fixed regardless.
 - **Per-row disposition of the ~175 unswept PASS rows.** The sweep runs at implement
-  using the D7 heuristics; each finding is fixed or filed. The count and character of
-  what it finds cannot be known until the sweep runs.
+  under the leash (concrete heuristics + the 40-in-60 stopping rule, see the HARD
+  requirement). What it finds is fixed or filed; the unswept residue is named with its
+  count in the close-out. The exact findings cannot be known until the sweep runs — the
+  leash bounds the effort regardless.
 
 ---
 
@@ -239,7 +291,8 @@ Two prior epics staged this: UPSTREAM-FINDINGS left F2/F4 as filed residue
   - `docs/architecture/reference/03-resolution-overview.md`,
     `04-input-resolver.md`, `05-module-factory.md` (F4 intent prose — deliberately left
     pending this reconciliation)
-  - `tests/conformance/test_input_resolver.py` (24 skipifs), `test_dual_resolution.py`
+  - `tests/conformance/test_input_resolver.py` (22 skipifs, recount at implement),
+    `test_dual_resolution.py`
     (the 12-test parity suite)
   - BACKLOG: DOCS-SCRUB-F2, DOCS-SCRUB-F4, [ITEM7-PGD06]
   - memory notes `verification-matrix-drift-modes`, `verify-then-fix-protocol`

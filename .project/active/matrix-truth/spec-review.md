@@ -83,13 +83,40 @@ None material. The spec follows the contract's section shape, the tags are prese
 
 *(To be filled in during Stage 5 as the reviewer resolves each finding, keyed by ID. The spec agent reads this section to incorporate the review; the reviewer does not edit the spec directly.)*
 
-- **[L2-1]**
-- **[L3-1]**
-- **[L3-2]**
-- **[L3-3]**
-- **[L1-1]**
-- **[L1-2]**
-- **[L2-2]**
+- **[L2-1]** ADOPTED. Each of the three F4 kill probes must produce a **named evidence
+  artifact** the design-time verdict cites: (i) the extended parity-suite run log over
+  `plant_values` + `plant_value_shapes` + extended `spec_chain_twolevel` (pass bar: 100%
+  parity on the extended corpus); (ii) the Strategy-D key-set diff computed against the
+  `catf_mfe` and `solar_battery` params-JSON baselines, plus a one-paragraph
+  behavior-change review; (iii) the module-vs-live-path both-directions diff, drift
+  threshold stated as "any post-COST-PATTERN live-path fix absent from the module =
+  material drift," artifact = the commit-list comparison. The verdict at design cites all
+  three. Spec HARD-F4-probes block rewritten.
+- **[L3-1]** ADOPTED. Sweep leashed: the three D7 heuristics are operationalized
+  (strong-word REQs = text contains SHALL/ALL/every/never/exactly; diagnostics = rows
+  asserting a warning/error fires; structural counts = rows asserting a numeric count).
+  Stopping rule: sweep until EITHER the list is done OR 0 new findings in 40 consecutive
+  rows after the first 60. Unswept residue is named in the close-out with its count
+  (register discipline). Spec sweep requirement + Open-Questions bullet updated.
+- **[L3-2]** ADOPTED. DRA-03 and BT-09 added to the F4 consequence set (both cite
+  `test_dual_resolution.py`).
+- **[L3-3]** RESOLVED (one disposition). PGD-08 routed through the divergent-row fix
+  only, and pulled out of the "add markers to all 7" instruction: if coverage is absent
+  the marker claim is moot, so the row needs a genuine test or a re-frame — decided at
+  implement on fresh evidence. Same "re-verify at implement" caveat as EXT-09 (see L1-2).
+- **[L1-1]** ADOPTED. "24 skipifs" corrected to 22 everywhere, with "recount at
+  implement" noted (the consequence set is "all of them" regardless).
+- **[L1-2]** RULED (orchestrator): yes — PGD-08 gets the EXT-09 "re-verify against the
+  current row at implement" caveat; its row moved since discovery. Merged with L3-3.
+- **[L2-2]** RULED (orchestrator): **F2 presumption = FIX THE TEXT TO THE CODE.** The
+  inline NOTE admits the divergence consciously; construction-time registration is
+  corpus-proven; no parity suite proves a typed-lookup alternative was ever built (unlike
+  F4). Flips only if design finds the construction-time `instance_attr_to_channel` dict
+  genuinely bypasses the typed-registry validation contract (check `output_registry.py`
+  guards at design). Non-negotiable either way: REQ-ORCH-04's real phase-order assertion
+  is RESTORED (the weakening was accommodation, not intent), and the two lying test
+  docstrings are fixed. Spec Open-Questions F2 bullet + a new HARD requirement updated.
+- **[L5-1]** ADOPTED (minor): Problem groups 1 and 2 broken into short sub-points.
 
 ---
 
