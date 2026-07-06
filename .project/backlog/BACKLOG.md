@@ -176,6 +176,40 @@ REQ-mirroring prose untouched pending this reconciliation.
 - `tests/conformance/test_graph_assembly.py` section header/class docstring still say
   "exactly 3 fields" (the test body pins 5).
 
+### [SANITIZER-MERGE] Two-sanitizer consolidation (D1-F2) — P3, load-bearing divergence
+
+**Filed by PIPELINE-TRUTH Item 8 (D1-F2), 2026-07-06.** `core.sanitize_name`
+(`core/qualified_names.py:13`) vs `expression_compiler._sanitize_name`
+(`extraction/expression_compiler.py:167`) diverge deliberately: the compiler drops the
+reserved-word suffix `core.sanitize_name` applies, and the FORMULA REFERENCE wire matches *by
+construction* on that difference. **Assessed → FILE (not merged):** a naive shared core risks
+breaking the FORMULA REFERENCE match, and the byte-identity discipline makes a speculative merge
+high-risk for near-zero gain. Implement a shared core only if it falls out safely with the
+byte-identity gate green. Not forced in a cleanup pass.
+
+### [SC11-IMPORT-REWRITE] AST-based import rewrite (D1-F1 / SC-11) — P3, not small
+
+**Filed by PIPELINE-TRUTH Item 8 (§G), 2026-07-06.** `identifier-sanitization/close-out.md:31`
+claimed the AST-based import rewrite (substring, first-match) was a "filed follow-up" — it was
+filed **nowhere**; the false claim is now corrected in that close-out. **Assessed → FILE:** the
+size judgment is *not small*. Compared against the registry alias-rewrite's no-not-found branch (a
+D3 hygiene site, a 1–2-site local change), a correct substring/first-match import rewrite is a
+cross-module AST rework. Build it as its own scoped change, not opportunistically. This entry is
+the SC-11 assessment-verdict artifact.
+
+### [GB-PARAMGROUPS-TYPING] graph_builder `param_groups` type-ignore cluster (D1-F4) — P3
+
+**Filed by PIPELINE-TRUTH Item 8 (D1-F4), 2026-07-06.** The 2-ignore cluster
+(`resolution/graph_builder.py:408/412`, `[assignment]` + `[attr-defined]`) guards a genuine mypy
+narrowing: `param_groups` is bound twice (Step-5 `_group_entry_points_via_deriver`, then the
+Step-6.6 rebuild via `_convert_derived_groups`) and mypy keeps a `DerivedParameterGroup` typing at
+the sort site. **Assessed at implement:** removing the ignores raised mypy 104→106 (real errors,
+not stale); a root annotation at the first binding did **not** clear it — the fix needs splitting
+the double-binding into two distinctly-named variables (the Step-5 result is discarded by the
+Step-6.6 rebuild anyway, so it is likely a removable dead computation). Deferred rather than churn
+graph_builder's group-assembly flow in a cleanup pass. **Constraint honored: mypy stayed at 104
+(ignores retained).**
+
 ### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — CONDITIONAL, Item 7 consumes
 
 **Source**: PIPELINE-TRUTH Item 8 (`.project/active/cleanup-debt/spec.md`, row B), filed
