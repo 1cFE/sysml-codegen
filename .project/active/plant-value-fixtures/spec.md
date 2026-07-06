@@ -53,7 +53,7 @@ fixtures instead of invented shapes.
 
 ## Success Criteria
 
-- [ ] **SC-1**: A headline fixture (`plant_values`) loads, captures an extraction
+- [x] **SC-1**: A headline fixture (`plant_values`) loads, captures an extraction
   snapshot, builds its graph, and **trips V11 today** — its `collect_uncovered_params`
   result is a non-empty offender set that reproduces all three value-provision mechanisms
   (subtype-def literal via usage-level retype; bare no-retype `part :>>` override block;
@@ -65,13 +65,13 @@ fixtures instead of invented shapes.
   offender set is non-empty AND covers all three mechanisms; if a mechanism does not
   surface, the fixture layout is reworked, never the criterion relaxed. This is the pinned
   "before" state Item 2 flips, asserted over the headline **alone**.
-- [ ] **SC-2**: `spec_chain_twolevel` is extended with the plain cross-part-attribute
+- [x] **SC-2**: `spec_chain_twolevel` is extended with the plain cross-part-attribute
   shape (the P1 acceptance note), including one attribute consumed by **two** modules (the
   fan-out collapse case the bridge never exercised); its snapshot re-captures as a reviewed
   diff and its existing pins still hold. This fixture additionally carries mechanism (c)
   with fan-out — it is the substrate for Item 2's SC-B tolerance test, distinct from the
   headline's V11-trip role.
-- [ ] **SC-3**: The high-value secondary shapes (subset decided below) load and capture;
+- [x] **SC-3**: The high-value secondary shapes (subset decided below) load and capture;
   **each shape's current behavior — correct, degraded, or diagnostic — is pinned by a test
   asserting a specific observed property** (e.g. "shape X yields entry point Y with
   `default_value is None`", or "shape X is dropped — no module input references it"), NOT a
@@ -79,16 +79,16 @@ fixtures instead of invented shapes.
   banned REQ-EXT-09 anti-pattern (expectation is the bytes the code just produced) and
   documents nothing about the shape. The property is determined empirically at capture,
   following the `ife_plant` shape-by-shape labeling precedent.
-- [ ] The assert-constraint shape carrying cross-part + self-named + unbound-defaulted
+- [x] The assert-constraint shape carrying cross-part + self-named + unbound-defaulted
   bindings exists in a fixture and is recorded as Item 4's fires-on-shape substrate (it
   is invisible to the drop report today — the CONSTRAINT-SILENCE bug).
-- [ ] `deep_cross_scope_probe` gains a committed snapshot and a drift-pin test.
-- [ ] The stale-fixture-refresh rider is executed in the same live-capture session (own
+- [x] `deep_cross_scope_probe` gains a committed snapshot and a drift-pin test.
+- [x] The stale-fixture-refresh rider is executed in the same live-capture session (own
   commit, reviewed diff) — including the `quoted_owner_formula` reclassification, reviewed
   deliberately.
-- [ ] All captures are script-reproducible via `scripts/capture_*.py`; every existing
+- [x] All captures are script-reproducible via `scripts/capture_*.py`; every existing
   baseline **not deliberately touched by this item** stays byte-identical.
-- [ ] The fixture-gap register records the deferred D6 shapes (pointer to discovery §D6),
+- [x] The fixture-gap register records the deferred D6 shapes (pointer to discovery §D6),
   and the plant-value fixture shapes are recorded for Item 9's agentic-mbse impact list in
   the concrete artifact named below (the "agentic-mbse impact" block), so Item 9 has a
   specific list to accumulate — not a vague "record it."

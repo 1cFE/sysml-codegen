@@ -62,18 +62,18 @@ Reproduce every CONFIRMED-BLIND site with a live probe **before touching any cod
 B1 (subtype sweep + hierarchy-aware `is_instance`) and B2 (the three type names are absent from `TYPE_MAP` today, so `is_instance` no-ops silently). Both must be confirmed live before the design's mechanism is safe to build.
 
 ### Steps
-- [ ] **Create the agentic-mbse companion branch:** `git -C /home/reid/1cfe/agentic-mbse checkout -b pipeline-truth-item4 7f77510` (from `upstream-findings-sync` HEAD, clean tree). Confirm the two unrelated untracked docs are untouched.
-- [ ] **Re-verify all agentic-mbse line numbers live** (design R4 note; spec §agentic-mbse landing): adapter method (register said `:214`; orchestrator says classmethod at `syside_adapter.py:196` — **re-confirm**), `TYPE_MAP` (`~:244–246`), `level3_dataflow.py:48`, `level4_constraints.py:113`, `level6_architecture.py:602` + swallow `~:601`. Record the actual lines; the register line numbers are approximate.
-- [ ] **Re-read the adapter shape** (design §Potential Risks): decorator on `elements_of_type`/`is_instance` (staticmethod vs classmethod — must serve both `SysideAdapter.x(...)` and `self.adapter.x(...)`), that `nodes` accepts `include_subtypes`, the exact `TYPE_MAP` dict shape, and confirm the three names (`AssertConstraintUsage`, `RequirementUsage`, `SatisfyRequirementUsage`) are **absent** (B2).
-- [ ] **Run `_probe.py` live** (codegen, license-gated) — confirm rows 1–2: exact `ConstraintUsage` count = 0, `is_instance(assert, "ConstraintUsage")` = True, `report_dropped_constraints()` emits **0** records, `extract_all_constraints()` total = 0.
-- [ ] **Run the agentic-mbse probes** for rows 3/5/6/7 (level3 abstract-`Import` → empty graph → circular check always passes; level4/level6 exact-type `ConstraintUsage` undercounts asserts; level6 `:601` swallow collapses errors to `[]`). Seed the minimal fixtures needed to fire each (these become the Phase 2 test fixtures).
-- [ ] **Re-run the zero-caller grep** for `extract_all_constraints` and `_deserialize_constraint_info` (D4) — confirm still zero real consumers before Phase 3 deletes them.
-- [ ] **Update the design R4 table** (rows 1–5) from "Live run deferred" to CONFIRMED-live (or RECLASSIFIED with evidence if any does not reproduce). **Update register §D4 in place** with the live results.
+- [x] **Create the agentic-mbse companion branch:** `git -C /home/reid/1cfe/agentic-mbse checkout -b pipeline-truth-item4 7f77510` (from `upstream-findings-sync` HEAD, clean tree). Confirm the two unrelated untracked docs are untouched. → DONE; branch at `7f77510`, the two untracked docs untouched.
+- [x] **Re-verify all agentic-mbse line numbers live** — recorded in `register-update-pending.md`. Corrections: adapter `elements_of_type` classmethod `:196` (not `:214`); no module-level `TYPE_MAP` — map is `_get_type_map()` dict literal `:131-156` (register's `:244-246` = the `is_instance` lookup); `level3:48` ✓, `level4:113` ✓, `level6:602` + swallow `:603-604` (design said `:601`).
+- [x] **Re-read the adapter shape** — methods are **`@classmethod`** (not staticmethod), serve both call forms. `include_subtypes` **is** a real param on the Python `Model.elements`/`nodes` wrapper (`syside/_loading.py:213`), default `False` → `all_nodes` vs `nodes`. The three names are **ABSENT** from the map (B2 false-today, confirmed live). **Discrepancy:** `elements_of_type` raises `KeyError`, NOT `ValueError` as the design claimed — Phase 1 must switch to ValueError.
+- [x] **Run `_probe.py` live** — rows 1–2 CONFIRMED: exact `ConstraintUsage` = 0; swept (include_subtypes) = 1 = `AssertConstraintUsage` `affordable`; `is_instance(assert,"ConstraintUsage")` = True; `report_dropped_constraints()` emitted **0** records; `extract_all_constraints()` total = 0.
+- [x] **Run the agentic-mbse probes** for rows 3/5/6/7 — CONFIRMED: `circular_import.sysml` → exact `Import` = 0, swept = 2 NamespaceImports, `build_dependency_graph` = `{}`, `detect_cycles` = `[]` (passes on a circular model); assert model → exact CU = 0, swept = 1; swallow present at `level6:603-604`. `MembershipImport` exposes `imported_membership` not `imported_namespace` (the `:58` guard bug).
+- [x] **Re-run the zero-caller grep** — `extract_all_constraints`: only self-ref is `__all__` at `constraint_extractor.py:260`; `_deserialize_constraint_info`: zero references (dead). Safe to delete in Phase 3.
+- [x] **Update the design R4 table + register §D4** — written to `register-update-pending.md` (sysml-codegen is read-only this session; Item 1 owns its commits). Rows 1–5 all CONFIRMED (live).
 
 ### Validation
-- [ ] `_probe.py` output pasted into the R4 table update; every row is CONFIRMED (or reclassified with evidence, per R4 — a finding that does not reproduce is reclassified, not fixed).
-- [ ] Companion branch exists, clean except the (empty) new branch; dirty-workstream files untouched.
-- [ ] Both suites green (baseline — no code changed yet).
+- [x] Probe output recorded in `register-update-pending.md`; every row CONFIRMED live (none reclassified).
+- [x] Companion branch exists at `7f77510`; dirty-workstream untracked docs untouched.
+- [x] agentic-mbse baseline: **1212 passed, 1 skipped, 10 pre-existing infra failures** (5 shell out to a bare `python` binary absent from PATH; 3 need the `agentic-mbse` console script; 2 are pre-existing level2/level3 baseline-metric mismatches on `sample_models`). None caused by Item 4 (zero code changed at this point). This is the phase-boundary bar: no NEW failures beyond these 10.
 
 **What We Know Works After This Phase:** the blindness is reproduced live at every site; the adapter's real shape is known; B2 is confirmed false-today (so D6 is load-bearing, not belt-and-suspenders).
 
@@ -109,17 +109,17 @@ def test_is_droppable_excludes_requirement(adapter, req_model):
 ### Changes Required
 **See `design.md` for:** D6 (§Key Decisions), D1 (policy single-sourcing), §Architecture "Boundaries", INV-D/INV-F, Component Overview.
 
-- [ ] `syside_adapter.py` — `elements_of_type` gains keyword-only `include_subtypes: bool = False` (pass-through to `nodes`) and `exclude: Collection[str] = ()` (drops any element `is_instance` of a named type). Preserve the current decorator (confirmed Phase 0).
-- [ ] `syside_adapter.py` — **D6:** `TYPE_MAP` gains `AssertConstraintUsage`, `RequirementUsage`, `SatisfyRequirementUsage` (exact syside classes). Both `elements_of_type` and `is_instance` **hard-error (`ValueError` + valid-names list) on an unknown name**. The `is_instance` hard error is gated on **"name not in `TYPE_MAP`" checked BEFORE the documented mock string-match fallback**, so the mock path survives (D6).
-- [ ] `syside_adapter.py` — new module-level `EXCLUDED_CONSTRAINT_TYPES = ("RequirementUsage",)` and `is_droppable_constraint(elem)` (built on `is_instance`). This is the **single production location** of the string `"RequirementUsage"` (INV-D).
-- [ ] `syside_adapter.py` docstring — teach the decision table + point at the (Phase 6) published table (D4 docs home is the adapter).
+- [x] `syside_adapter.py` — `elements_of_type` gains keyword-only `include_subtypes: bool = False` (pass-through to `model.elements`) and `exclude: Collection[str] = ()` (subtype-aware `is_instance` filter). Preserved `@classmethod` (Phase-0 confirmed, not staticmethod).
+- [x] `syside_adapter.py` — **D6:** `_get_type_map()` gains `AssertConstraintUsage`, `RequirementUsage`, `SatisfyRequirementUsage` **plus `InvocationExpression`** (used-but-unmapped, found via the C5 regression). Both methods raise `ValueError` on unknown name; shared `_require_known_type` helper; `elements_of_type` KeyError→ValueError; `is_instance` gate before the mock fallback (and after the `ImportError`/no-syside path).
+- [x] `syside_adapter.py` — module-level `EXCLUDED_CONSTRAINT_TYPES = ("RequirementUsage",)` + `is_droppable_constraint(elem)`. Single production location of `"RequirementUsage"` (INV-D).
+- [x] `syside_adapter.py` class docstring — teaches the subtype-enumeration decision table + D6.
 
 ### Validation
-- [ ] Fires-on-unknown-name pin passes (both methods).
-- [ ] `include_subtypes=True` sweep includes the assert; default (False) unchanged.
-- [ ] `exclude=EXCLUDED_CONSTRAINT_TYPES` drops requirements but keeps asserts/plain.
-- [ ] Every pre-existing adapter call site behaves identically (INV-A regression sweep — run the full agentic-mbse suite).
-- [ ] agentic-mbse suite green. Commit on `pipeline-truth-item4` ("adapter: subtype-aware enumeration + hard-error on unknown type name (D1/D6)").
+- [x] Fires-on-unknown-name pin passes (both methods) + unknown-exclude-name pin.
+- [x] `include_subtypes=True` sweep includes the assert; default (False) sees only the plain constraint.
+- [x] `exclude=EXCLUDED_CONSTRAINT_TYPES` drops the requirement, keeps assert+plain; `is_droppable_constraint` == the exclude filter (INV-D cross-check).
+- [x] INV-A regression sweep: full suite back to the 10 pre-existing failures (1220 passed, +8 new). One transient regression (`test_c5_function_invocation_warns`) caught + fixed by mapping `InvocationExpression`. ruff clean; mypy delta zero (4 pre-existing `no-any-return` at the syside boundary, unchanged).
+- [x] Commit `64a097e` on `pipeline-truth-item4`.
 
 **What We Know Works After This Phase:** the choke point exists, is opt-in, and fails loud on an unmapped name. B2 is closed. Downstream (Phases 2–4) can build on it.
 
@@ -152,17 +152,17 @@ def test_level6_error_injection_fails_loud(broken_model):   # D7
 ### Changes Required
 **See `design.md` for:** row 5 (§Implementation Notes "agentic-mbse row 5"), D7 (§Key Decisions), rows 6/7 (spec decision table), INV-F.
 
-- [ ] `level3_dataflow.py` — row 5: `elements_of_type("Import", include_subtypes=True)` (Import already in TYPE_MAP; no new name needed) **and** fix the `imported_namespace` guard that skips `MembershipImport`s once the type is fixed.
-- [ ] `level4_constraints.py` — row 6: `include_subtypes=True, exclude=EXCLUDED_CONSTRAINT_TYPES` (mirror row 1). Import the policy from the adapter.
-- [ ] `level6_architecture.py` — row 7: same `include_subtypes=True, exclude=...`; **D7:** narrow/remove the `:601 except Exception: constraints = []` swallow so failure is loud, not `[]`.
-- [ ] Fixtures (from Phase 0 seeds): seeded circular-import, acyclic import, assert-bearing (level4/level6 fire), clean (silent), error-injection (level6 loud), enum-bearing (row 8 keep-exact-type pin).
-- [ ] Row 8 pin: assert the 4 `AttributeUsage` enum sites stay exact-type (opt-OUT, mirror row 3) on the enum fixture.
+- [x] `level3_dataflow.py` — row 5: `elements_of_type("Import", include_subtypes=True)`, `imported_membership` guard for MembershipImports, **AND** re-keyed the graph by importing package (`import_owning_namespace`) not doc URL — the design missed that URL-keyed graphs can never match package-name values, so cycles were undetectable even with a non-empty graph. This is the real row-5 fix.
+- [x] `level4_constraints.py` — row 6 (`:113`): `include_subtypes=True, exclude=EXCLUDED_CONSTRAINT_TYPES`, policy imported from adapter.
+- [x] `level6_architecture.py` — row 7 (`:602`): same; **D7:** removed the `:603-604 except Exception: constraints = []` swallow (fails loud).
+- [x] Fixtures: `circular_imports.sysml`, `acyclic_imports.sysml`, `l4_constraints/` + `l4_clean/`, `enum_attr.sysml` (row 8). (constraints.sysml from Phase 1 reused for level6.)
+- [x] Row 8 pin: exact-type AttributeUsage excludes EnumerationUsage members; include_subtypes would sweep them.
 
 ### Validation
-- [ ] Level 3: seeded circular FAILS + non-empty graph; acyclic PASSES + non-empty graph, no false cycle.
-- [ ] Level 4 / Level 6: assert fixture fires; clean fixture silent; level6 error-injection **fails loud, not `[]`** (D7).
-- [ ] Row 8 enum pin passes.
-- [ ] agentic-mbse suite green. Commit on `pipeline-truth-item4` ("validators: subtype-aware sweeps + remove level6 swallow (rows 5/6/7, D7)"). **Record D7 as absorbing one D3-family site — note for Item 5's ledger so level6 is not double-counted** (carried to Phase 7).
+- [x] Level 3: circular FAILS + `{PkgOne:[PkgTwo],PkgTwo:[PkgOne]}`; acyclic PASSES + `{PkgApp:[PkgLib]}`, no false cycle.
+- [x] Level 4 / Level 6: assert counted (total 2, req excluded); level6 warns affordable+positive_cost, not widget_budget; clean silent; D7 error-injection raises RuntimeError (not `[]`).
+- [x] Row 8 enum pin passes.
+- [x] Suite: 1228 passed, 10 pre-existing failures. Commit `cc64b1d`. Two behavior-encoding tests updated to the fixed behavior: `test_l3_circular_import_detected` (was asserting the bug — level3 passes on a circular model), and `level3_baseline.txt` regenerated (was the blind `0 docs/0 cycles/✅` output → now `3 docs/1 cycle/❌`). Verified via `_extract_metrics` that the baseline matches real level3 output (the subprocess baseline test can't run in this sandbox: no `python` binary, `/tmp` noexec). D7-absorbs-one-D3-site noted in the commit for Item 5's ledger (Phase 7).
 
 **What We Know Works After This Phase:** all three agentic-mbse validators can fire on the shapes they claim; the swallow is gone. The agentic-mbse side of the coordinated pair is complete except docs.
 
@@ -339,8 +339,63 @@ Record the cross-repo residue so nothing is lost or double-counted, and close th
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
+**Completed:** 2026-07-06
+
+**Probe verdicts (all live, this session):**
+- Row 1 (codegen report silent on assert): CONFIRMED. wi014_toy exact `ConstraintUsage`=0, swept=1 (`AssertConstraintUsage` `affordable`), report emitted 0 records.
+- Row 2 (`extract_all_constraints` blind): CONFIRMED. total=0; zero real callers.
+- Row 3/5 (level3 abstract-`Import` → empty graph → circular check always passes): CONFIRMED on `circular_import.sysml` — exact `Import`=0, swept=2, graph=`{}`, cycles=`[]`.
+- Row 4/6 (level4 exact-type undercount): CONFIRMED — exact CU=0, swept=1 on assert model.
+- Row 7 (level6 undercount + `:603-604 except Exception: constraints=[]` swallow): CONFIRMED.
+- B1 (subtype sweep + hierarchy-aware `is_instance`): CONFIRMED live. B2 (three names absent): CONFIRMED false-today. B3 (hierarchy): CONFIRMED by stub read.
+
+**Artifacts:** `register-update-pending.md` (full R4 table + register §D4 update + adapter-shape corrections, to be applied at Phase 3+ by the sysml-codegen committer).
+
+**Key discrepancies carried to Phase 1 (design assumed wrong):**
+1. `elements_of_type` raises **`KeyError`**, not `ValueError` — Phase 1 changes it to ValueError for D6.
+2. Methods are **`@classmethod`**, not staticmethod — preserve classmethod.
+3. No module-level `TYPE_MAP`; add the 3 names to the `_get_type_map()` dict literal (`:131-156`).
+4. Subtype mechanism = `model.elements(kind, include_subtypes=True)` (real param on the Python wrapper), not a bare `nodes(...)`.
+
+**Issues:** agentic-mbse suite has 10 pre-existing infra failures (bare-`python`/console-script subprocess tests + 2 sample_models baseline mismatches) — unrelated to Item 4. A `python` shim (`/tmp/shimbin/python` → python3) lets the subprocess validation tests run for Phase 2.
+
 ### Phase 1 Completion
+**Completed:** 2026-07-06 · Commit `64a097e` on `pipeline-truth-item4`.
+
+**Changes:** `syside_adapter.py` (params + D6 hard-error + policy source + docstring),
+`tests/test_adapter.py` (8 new tests + KeyError→ValueError flip), new fixture
+`tests/fixtures/item4_subtype/constraints.sysml`.
+
+**Deviation from design (recorded in `register-update-pending.md`):** D6 needed a **4th** TYPE_MAP
+name, `InvocationExpression` — used by the C5 check via `is_instance` and previously relying on the
+silent string-match. The Phase-0 single-line grep missed it (multi-line call). Mapping it is
+required by D6's own principle and makes the check hierarchy-aware. No other used-but-unmapped names
+(multi-line-aware scan confirms).
+
+**Suite:** 1220 passed, 1 skipped, 10 pre-existing infra/baseline failures. No new failures.
+
 ### Phase 2 Completion
+**Completed:** 2026-07-06 · Commit `cc64b1d` on `pipeline-truth-item4`.
+
+**Changes:** `level3_dataflow.py` (row 5 + graph re-key), `level4_constraints.py` (row 6),
+`level6_architecture.py` (row 7 + D7), new `tests/test_validation/test_item4_subtype.py` (8 tests),
+`test_sysml_quality_checks.py` (l3 circular test flipped to detected), regenerated
+`level3_baseline.txt`, 5 new fixtures under `tests/fixtures/item4_subtype/`.
+
+**Deviation from design (row 5 was under-specified):** making the circular check able to fail
+needed more than `include_subtypes` — the graph was keyed by document URL but valued by package
+name, so `detect_cycles` could never match endpoints. Re-keyed the source node to the importing
+package (`import_owning_namespace.qualified_name`). Without this, "seeded circular FAILS" is
+impossible. Recorded here and in the commit.
+
+**Two behavior-encoding tests flipped to the fixed behavior** (both anticipated by their own
+comments/docstrings): the distinctness circular-import test and the sample_models level3 baseline.
+Not regressions — they were asserting the blind-validator bug.
+
+**Suite:** 1228 passed, 1 skipped, 10 pre-existing infra failures (unchanged set; the 2
+baseline-comparison subprocess tests among them can't run in this sandbox but the level3 baseline
+content is verified correct via `_extract_metrics`).
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 ### Phase 5 Completion
