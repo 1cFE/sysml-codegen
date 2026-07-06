@@ -555,6 +555,43 @@ names). agentic-mbse impact is recorded here, executed in Item 12: the MODELING_
 - **Escalation (M4):** if stage (b) exceeds a single day at implement, STOP and report for a
   split-out ruling — do not push through.
 
+## Round-3 Amendment (D-C, applied at implement — offline==live parity, APPROVED)
+
+**Problem the design did not anticipate.** M6 says serialize the POST-confirm `EXPOSE_PURE` state; the
+Phase-3b confirm walk (the only code that resolves a multi-hop chain to its correct transitive channel)
+runs only on `EXPOSE_CHAIN_TENTATIVE` CAs. Those two facts contradict D9's stated intent ("`reference_chain`
+is captured so the walk can run on the offline path"). On snapshot reload a multi-hop pin arrives already
+`EXPOSE_PURE`, the confirm walk skips it, and the naive Phase-3 alias path resolves the ambiguous terminal
+through the first-wins-corrupted flat `_alias` — the exact B2 false-positive. Result: catf's
+`cryo_load.magnet_volume` wired LIVE to the correct `tf_coil__volume_calc__volume` but OFFLINE to the wrong
+`plasma_region__volume_calc__volume` (a lying sim, not a crash). The live path never hits this because the CA
+is still tentative when Phase 3 runs.
+
+**Amendment (D-C).** `build_output_registry` (`output_registry_builder.py`) reconstructs the pre-confirm
+tentative state, before Phase 3, for exactly the multi-hop candidates: an already-`EXPOSE_PURE` CA whose
+`reference_chain` is a part-rooted chain of ≥2 segments (`reference_chain[0]` is not a calc-usage short name
+— the durable INV-E signal; the AST is None on replay, but `EXPOSE_PURE` already encodes the pure-FeatureChain
+root the live leaf-tag checked). The existing confirm pass then reproduces the live registration order
+identically on both paths. Live CAs are still tentative here → this is a no-op on the live path.
+
+**Why this and not "serialize the tentative marker" (the rejected alternative).** Serializing
+`EXPOSE_CHAIN_TENTATIVE` would leak an *unconfirmed* classification across the snapshot format boundary — a
+worse contract than reconstructing it deterministically at load from the durable `reference_chain`. M6's
+serialized state stays `EXPOSE_PURE`; no reader ever sees a tentative (the confirm pass always finalizes
+before any reader, and INV-F's terminal raise still guards a survivor). This reconciles M6 with D9 rather
+than overriding either.
+
+**Verification evidence (offline == live, both pin shapes):**
+- catf (alias-terminal hop): OFFLINE and LIVE both → `CATFMFERadialBuild__catf_radial_build__tf_coil__volume_calc__volume`.
+- ife (direct calc-output): OFFLINE and LIVE both → `IfePlantSubsystems__radial_build__tf_coil__volume_calc__volume`.
+- Pinned by the regenerated catf pipeline baseline (`cryo_load` module's `producer_channel` is the tf_coil channel)
+  and the full green gate (1947 passed; ruff src/ 21; mypy src/ 109).
+- Implementation gotcha: `CalcUsageData.instance_name` is short in some fixtures but the full QN in others —
+  derive short calc-usage names from `qualified_name.rsplit("__", 1)[-1]`.
+
+**Invariant impact:** none broken. INV-D (confirm-or-revert), INV-F (no tentative escapes), INV-G (phase
+order) all hold; D-C only reconstructs the input state the confirm pass was always meant to consume offline.
+
 ---
 Next Step: After approval → `/_my_plan`. Stage (a): red-first tests + leaf tag + confirm pass + #4
 + #1 + baseline flips (with the M1 churn table). Stage (b): precedence resolver + three companion
