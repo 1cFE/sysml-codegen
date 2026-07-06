@@ -381,8 +381,12 @@ class MockLiteralInteger:
         self.value = value
 
 
-class MockLiteralReal:
-    """Mock LiteralReal — is_instance fallback matches."""
+class MockLiteralRational:
+    """Mock LiteralRational — is_instance fallback matches.
+
+    A float literal like ``400.0`` parses to ``LiteralRational`` in syside;
+    there is no ``LiteralReal`` metaclass (Item 4 name-inventory).
+    """
 
     def __init__(self, value: float):
         self.value = value
@@ -486,7 +490,7 @@ def _make_literal_redef_member(
     redefined = MockRedefinedFeature(name=attr_name)
     redef = MockRedefinition(redefined_feature=redefined)
     if isinstance(value, float):
-        expr = MockLiteralReal(value)
+        expr = MockLiteralRational(value)
     else:
         expr = MockLiteralInteger(value)
     return MockReferenceUsage(
@@ -540,7 +544,7 @@ def _make_deep_path_redef_member(
     chaining = [MockChainingFeature(name=p) for p in path]
     redefined = MockRedefinedFeature(name=None, chaining_features=chaining)
     redef = MockRedefinition(redefined_feature=redefined)
-    expr = MockLiteralReal(value)
+    expr = MockLiteralRational(value)
     return MockReferenceUsage(
         name=None,  # deep-path overrides have name=None
         owned_redefinitions=[redef],
