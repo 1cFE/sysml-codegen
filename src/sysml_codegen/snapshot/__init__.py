@@ -9,7 +9,10 @@ invoke the parser; only ``capture_snapshot`` needs a live license.
 
 from __future__ import annotations
 
-SNAPSHOT_FORMAT_VERSION = 1
+# v2 (PIPELINE-TRUTH Item 4): adds the top-level ``dropped_constraints`` manifest.
+# The loader hard-gates on this version (INV-E) — there is no v1/v2 coexistence, so
+# every committed snapshot is re-captured at v2 in the same change.
+SNAPSHOT_FORMAT_VERSION = 2
 
 
 class SnapshotFormatError(Exception):

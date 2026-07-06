@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "deep_cross_scope_probe",
-  "captured_at": "2026-07-06T17:44:33.311023+00:00",
+  "captured_at": "2026-07-06T19:03:24.561430+00:00",
   "compilation_results": {
     "Core_Metric": {
       "calc_def_name": "Core_Metric",
@@ -551,5 +551,6 @@
       ]
     }
   ],
-  "channel_aliases": []
+  "channel_aliases": [],
+  "dropped_constraints": []
 }

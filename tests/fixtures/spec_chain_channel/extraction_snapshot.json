@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "spec_chain_channel",
-  "captured_at": "2026-07-06T07:44:24.470159+00:00",
+  "captured_at": "2026-07-06T19:03:24.514749+00:00",
   "compilation_results": {
     "MeierCost": {
       "calc_def_name": "MeierCost",
@@ -84,7 +84,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 7,
       "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
       "output_expression_asts": null,
@@ -132,7 +132,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 22,
       "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
       "output_expression_asts": null,
@@ -165,7 +165,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 33,
       "parent_part_path": "spec_chain_plant.driver",
       "qualified_name": "SpecChainDesign__spec_chain_plant__driver__meier_cost",
@@ -194,7 +194,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 58,
       "parent_part_path": "spec_chain_plant",
       "qualified_name": "SpecChainDesign__spec_chain_plant__lcoe_calc",
@@ -204,13 +204,13 @@
     }
   ],
   "design_attributes": {
-    "tests/fixtures/spec_chain_channel/library.sysml": [
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/spec_chain_channel/library.sysml": [
       {
         "name": "gamma",
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 17,
         "parent_part": "",
         "qualified_name": "SpecChainLib__MeierCost__gamma"
@@ -220,7 +220,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 24,
         "parent_part": "",
         "qualified_name": "SpecChainLib__LcoeCalc__lcoe"
@@ -230,7 +230,7 @@
         "sysml_type": "Real",
         "default_value": "50.0",
         "unit": null,
-        "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 30,
         "parent_part": "",
         "qualified_name": "SpecChainLib__IFE_Driver__drive_power"
@@ -272,5 +272,6 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": []
+  "channel_aliases": [],
+  "dropped_constraints": []
 }

@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "issue22_model",
-  "captured_at": "2026-07-06T03:28:22.800191+00:00",
+  "captured_at": "2026-07-06T19:03:24.455027+00:00",
   "compilation_results": {
     "WidgetCostCalc": {
       "calc_def_name": "WidgetCostCalc",
@@ -415,5 +415,6 @@
       "owning_part_qn": "Issue22Library__Widget",
       "source": "redefinition"
     }
-  ]
+  ],
+  "dropped_constraints": []
 }

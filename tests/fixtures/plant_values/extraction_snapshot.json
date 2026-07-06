@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "plant_values",
-  "captured_at": "2026-07-06T18:20:24.131962+00:00",
+  "captured_at": "2026-07-06T19:03:24.540912+00:00",
   "compilation_results": {
     "PlantCostCalc": {
       "calc_def_name": "PlantCostCalc",
@@ -93,7 +93,7 @@
       "references": [],
       "source_file": "library.sysml",
       "source_line": 20,
-      "source_hash": "d0a0c3a5c71293406d6bca312fb93badfb225e34ec98b7e583ad760ba18ec191",
+      "source_hash": "4239c91b3c10768efe0c9ca0bbe444cf58d58c36911fa489d1ae629612704492",
       "output_expression_asts": null,
       "all_member_names": [
         "chamber_cost",
@@ -153,7 +153,7 @@
       ],
       "unbound_params": [],
       "source_file": "library.sysml",
-      "source_line": 91,
+      "source_line": 92,
       "parent_part_path": "plant",
       "qualified_name": "PlantValuesDesign__plant__cost_calc",
       "is_template": false,
@@ -189,7 +189,7 @@
         "default_value": "40.0",
         "unit": null,
         "source_file": "library.sysml",
-        "source_line": 88,
+        "source_line": 89,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Power_Plant__gain"
       },
@@ -199,7 +199,7 @@
         "default_value": "cost_calc.plant_cost",
         "unit": null,
         "source_file": "library.sysml",
-        "source_line": 97,
+        "source_line": 98,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Power_Plant__plant_cost"
       }
@@ -302,5 +302,15 @@
       ]
     }
   ],
-  "channel_aliases": []
+  "channel_aliases": [],
+  "dropped_constraints": [
+    {
+      "owner_kind": "part_def",
+      "owner_name": "Power_Plant",
+      "owner_qualified_name": "PlantValuesLib::'Power Plant'",
+      "constraint_name": "viability",
+      "constraint_kind": "assert",
+      "source_line": 105
+    }
+  ]
 }

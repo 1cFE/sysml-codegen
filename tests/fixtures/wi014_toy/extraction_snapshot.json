@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "wi014_toy",
-  "captured_at": "2026-07-06T17:46:14.608016+00:00",
+  "captured_at": "2026-07-06T19:03:24.482993+00:00",
   "compilation_results": {
     "Panel_Area": {
       "calc_def_name": "Panel_Area",
@@ -378,5 +378,15 @@
       ]
     }
   ],
-  "channel_aliases": []
+  "channel_aliases": [],
+  "dropped_constraints": [
+    {
+      "owner_kind": "part_def",
+      "owner_name": "Toy_Plant",
+      "owner_qualified_name": "toy_plant::'Toy Plant'",
+      "constraint_name": "affordable",
+      "constraint_kind": "assert",
+      "source_line": 51
+    }
+  ]
 }

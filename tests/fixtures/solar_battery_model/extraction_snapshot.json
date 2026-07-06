@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "solar_battery_model",
-  "captured_at": "2026-07-06T10:13:34.654178+00:00",
+  "captured_at": "2026-07-06T19:03:24.237788+00:00",
   "compilation_results": {
     "PVModuleCostCalc": {
       "calc_def_name": "PVModuleCostCalc",
@@ -7562,5 +7562,6 @@
       "owning_part_qn": "SolarBatteryLibrary__Permitting_Interconnect",
       "source": "redefinition"
     }
-  ]
+  ],
+  "dropped_constraints": []
 }

@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "alias_agg_probe",
-  "captured_at": "2026-07-06T03:28:22.807267+00:00",
+  "captured_at": "2026-07-06T19:03:24.462488+00:00",
   "compilation_results": {
     "Unit_Cost_Calc": {
       "calc_def_name": "Unit_Cost_Calc",
@@ -539,5 +539,6 @@
       "owning_part_qn": "AliasAggProbeLibrary__Widget",
       "source": "redefinition"
     }
-  ]
+  ],
+  "dropped_constraints": []
 }

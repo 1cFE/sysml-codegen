@@ -149,6 +149,10 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         computed_attributes=computed_attrs,
         channel_aliases=all_aliases,
         compilation_results={},  # extraction-only: no graph, no compilation
+        # Manifest is model-wide and does not need the graph, so the
+        # extraction-only path must carry it too — otherwise a constraint-bearing
+        # extraction-only fixture would diverge live-vs-snapshot (INV-B, Item 4).
+        constraint_manifest=extractor.collect_constraint_manifest(),
         output_dir=model_path,
     )
 
