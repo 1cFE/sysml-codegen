@@ -139,18 +139,18 @@ def test_unknown_fixture_name_errors():
 **No `src/` change — `scripts/` only (spec D7, explicitly outside the zero-production-code
 constraint).**
 
-- [ ] `scripts/capture_extraction_snapshots.py` — add an `argparse` `--fixtures` option
+- [x] `scripts/capture_extraction_snapshots.py` — add an `argparse` `--fixtures` option
       (comma-split into a name set). In `main()`, filter both `MODELS` and
       `EXTRACTION_ONLY_MODELS` by the set before the capture loops. Unknown name → exit
       non-zero naming the offender (fail loud, do not silently no-op). No arg → current
       all-fixtures behavior (backward compatible).
-- [ ] `scripts/capture_pipeline_baselines.py` — same `--fixtures` option filtering `MODELS`
+- [x] `scripts/capture_pipeline_baselines.py` — same `--fixtures` option filtering `MODELS`
       (baseline-dir → snapshot-name) before the loop. Unknown name → exit non-zero. No arg →
       current behavior.
-- [ ] Factor the name-matching so a name can address either script's dict keys consistently
+- [x] Factor the name-matching so a name can address either script's dict keys consistently
       (extraction keys are model names; baseline keys are baseline-dir names — document the
       distinction in `--help` so Phase 2 names the right key per script).
-- [ ] `tests/unit/test_capture_fixtures_filter.py` (NEW) — the stencils above, plus a test
+- [x] `tests/unit/test_capture_fixtures_filter.py` (NEW) — the stencils above, plus a test
       that no-arg invocation still enumerates all fixtures (guards backward compatibility).
       Use a committed fixture that is stable under re-capture; assert byte-identity after a
       filtered re-capture. If no committed fixture is byte-stable under re-capture (path
@@ -648,10 +648,38 @@ capture are `xfail`-guarded until the snapshot lands (or written in Phase 4).
 [TO BE FILLED DURING IMPLEMENTATION — Leave empty now]
 
 ### Phase 0 Completion
-**Completed:**
+**Completed:** 2026-07-06
 **Actual Changes:**
-**Issues:**
-**Deviations:**
+- NEW `scripts/capture_filter.py` — pure `select_fixtures(available, requested)`: returns the
+  name set to capture (all names if `requested is None`), raises `ValueError` naming unknown
+  names. Factored out so both scripts share one decision and it is unit-testable license-free.
+- `scripts/capture_extraction_snapshots.py` — `--fixtures` argparse option; `main(requested)`
+  filters `MODELS` + `EXTRACTION_ONLY_MODELS` by the selected set (validated against the union
+  of both key spaces); unknown name → `sys.exit(2)` with the offender in stderr. No arg → all.
+- `scripts/capture_pipeline_baselines.py` — same `--fixtures` option filtering `MODELS`
+  (baseline-dir keys). `--help` on each script documents which key space `--fixtures` addresses.
+- NEW `tests/unit/test_capture_fixtures_filter.py` — 4 pure-selection tests (all/subset/
+  whitespace/unknown-raises), 2 subprocess fail-loud tests (both scripts, license-free —
+  validation precedes any model load), and 1 `@requires_license` byte-identity test that
+  re-captures `sample_model` and asserts `git status` names only sample_model paths, then
+  restores the bytes.
+**License finding (IMPORTANT — corrects a false start):** the syside license is NOT visible to
+a bare `uv run python -c "... SysMLDataExtractor ..."` probe (that path never loads
+`../agentic-mbse/.env`), but IS available through the real capture scripts and under a full
+`uv run pytest` session — `uv run python scripts/capture_extraction_snapshots.py --fixtures
+chain_spike_model` produced real extraction data (3 calc_defs/3 usages/6 bindings) and the
+`@requires_license` byte-identity test ran (not skipped) and passed. Conclusion: **captures work;
+Phases 1–3 are unblocked.** Always verify license via the actual capture path, not an isolated
+extractor import.
+**Issues:** The `sys.path`-hack import pattern tripped ruff I001 in the test; resolved by
+importing `scripts.capture_filter` as a namespace package (repo root is pytest's rootdir) — no
+path hack, test file ruff-clean. The two capture scripts retain 2 pre-existing-pattern I001
+warnings each from the `sys.path.insert`-then-import idiom (scripts/ is at a 493-error ruff
+baseline, outside the src-only 21-error gate; not worsened in kind).
+**Deviations:** None. Filter factored into a shared `capture_filter.py` module (plan said
+"factor the name-matching"); implemented as a pure function rather than duplicated per script.
+**Validation:** `uv run pytest tests/` → 1996 passed, 4 skipped, 5 xfailed (green). Test file
+ruff-clean; src/ untouched (mypy/ruff src baseline unchanged).
 
 ### Phase 1 Completion
 **Completed:**

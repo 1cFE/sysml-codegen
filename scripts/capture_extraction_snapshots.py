@@ -11,10 +11,16 @@ capture via _capture_extraction_only().
 
 Usage:
     uv run python scripts/capture_extraction_snapshots.py
+    uv run python scripts/capture_extraction_snapshots.py --fixtures NAME[,NAME...]
+
+``--fixtures`` restricts the run to the named fixtures (keyed by MODEL NAME — the
+keys of MODELS / EXTRACTION_ONLY_MODELS), so each capture step touches exactly the
+fixtures it names and byte-identity of the rest is checkable via ``git status``.
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -22,6 +28,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
+
+from scripts.capture_filter import select_fixtures
 
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
@@ -156,10 +164,15 @@ def _report(model_path: Path, snapshot: dict) -> None:
     )
 
 
-def main() -> None:
+def main(requested: str | None = None) -> None:
+    # `--fixtures` restricts the run; unknown names fail loud before any capture.
+    selected = select_fixtures(list(MODELS) + list(EXTRACTION_ONLY_MODELS), requested)
+
     # Full-pipeline models go through the promoted, supported capture path so
     # there is no second copy of the capture logic (INV-3 spirit).
     for model_name, model_path in MODELS.items():
+        if model_name not in selected:
+            continue
         print(f"Processing {model_name} from {model_path}...")
         out = capture_snapshot([model_path], model_path / "extraction_snapshot.json")
         _report(model_path, json.loads(out.read_text()))
@@ -167,6 +180,8 @@ def main() -> None:
     # Extraction-only fixtures cannot build the full pipeline; capture directly
     # and write the summary here.
     for model_name, model_path in EXTRACTION_ONLY_MODELS.items():
+        if model_name not in selected:
+            continue
         print(f"Processing {model_name} (extraction-only) from {model_path}...")
         snapshot = _capture_extraction_only(model_name, model_path)
         (model_path / "extraction_snapshot.json").write_text(snapshot_to_json(snapshot))
@@ -176,4 +191,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fixtures",
+        help="comma-separated fixture MODEL names to capture (default: all)",
+    )
+    args = parser.parse_args()
+    try:
+        main(args.fixtures)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(2)

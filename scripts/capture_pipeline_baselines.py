@@ -24,10 +24,17 @@ Requires no syside license (reads committed extraction snapshots).
 
 Usage:
     uv run python scripts/capture_pipeline_baselines.py
+    uv run python scripts/capture_pipeline_baselines.py --fixtures NAME[,NAME...]
+
+``--fixtures`` restricts the run to the named baselines (keyed by BASELINE-DIR name
+— the keys of MODELS, not the extraction snapshot names), so each capture step
+touches exactly the baselines it names and byte-identity of the rest is checkable
+via ``git status``.
 """
 
 from __future__ import annotations
 
+import argparse
 import ast as python_ast
 import sys
 from pathlib import Path
@@ -36,6 +43,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import jinja2
+
+from scripts.capture_filter import select_fixtures
 
 from sysml_codegen.generation.registry import (
     _collect_exit_point_primitive_types,
@@ -70,10 +79,15 @@ def _get_template_env() -> jinja2.Environment:
     )
 
 
-def main() -> None:
+def main(requested: str | None = None) -> None:
     template_env = _get_template_env()
 
+    # `--fixtures` restricts the run; unknown names fail loud before any capture.
+    selected = select_fixtures(list(MODELS), requested)
+
     for model_name, snapshot_name in MODELS.items():
+        if model_name not in selected:
+            continue
         print(f"Processing {model_name} from snapshot {snapshot_name}...")
         snapshot_path = FIXTURES_DIR / snapshot_name / "extraction_snapshot.json"
         graph, _inputs = build_full_graph_from_snapshot(snapshot_path)
@@ -122,4 +136,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fixtures",
+        help="comma-separated baseline-dir names to capture (default: all)",
+    )
+    args = parser.parse_args()
+    try:
+        main(args.fixtures)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(2)
