@@ -52,19 +52,29 @@
         }
       ],
       "execution_order": 0,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "annual_energy_mwh",
+            "expression": "(((8760.0 * inputs.p_net_mw) * inputs.n_mod) * inputs.plant_availability)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(((8760.0 * inputs.p_net_mw) * inputs.n_mod) * inputs.plant_availability)"
+      },
       "calc_def_name": "EnergyProductionCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::EnergyProductionCalc",
       "doc_comment": "Annual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "annual_energy_mwh = LiteralRationalEvaluation() * p_net_mw * n_mod * plant_availability",
+        "annual_energy_mwh = 8760.0 * p_net_mw * n_mod * plant_availability",
         "\nDocumentation:\nAnnual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 267
     },
     {
@@ -107,19 +117,29 @@
         }
       ],
       "execution_order": 1,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "annual_fuel_cost",
+            "expression": "(inputs.fuel_unit_cost * inputs.fuel_consumption)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.fuel_unit_cost * inputs.fuel_consumption)"
+      },
       "calc_def_name": "AnnualizedFuelCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::AnnualizedFuelCalc",
-      "doc_comment": "Annualized fuel cost.\nFor solar: fuel_unit_cost = 0, fuel_consumption = 0 \u2192 annual_fuel_cost = 0.\nIncluded for pipeline completeness (fusion plants have non-zero fuel costs).\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas80_annualized_fuel.py:14\n*Last Updated**: 2026-02-01",
+      "doc_comment": "Annualized fuel cost.\nFor solar: fuel_unit_cost = 0, fuel_consumption = 0 → annual_fuel_cost = 0.\nIncluded for pipeline completeness (fusion plants have non-zero fuel costs).\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas80_annualized_fuel.py:14\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
         "annual_fuel_cost = fuel_unit_cost * fuel_consumption",
-        "\nDocumentation:\nAnnualized fuel cost.\nFor solar: fuel_unit_cost = 0, fuel_consumption = 0 \u2192 annual_fuel_cost = 0.\nIncluded for pipeline completeness (fusion plants have non-zero fuel costs).\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas80_annualized_fuel.py:14\n*Last Updated**: 2026-02-01"
+        "\nDocumentation:\nAnnualized fuel cost.\nFor solar: fuel_unit_cost = 0, fuel_consumption = 0 → annual_fuel_cost = 0.\nIncluded for pipeline completeness (fusion plants have non-zero fuel costs).\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas80_annualized_fuel.py:14\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 298
     },
     {
@@ -230,18 +250,65 @@
         }
       ],
       "execution_order": 2,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "(inputs.wattage * inputs.cost_per_watt)"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "PVModuleCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::PVModuleCostCalc",
       "doc_comment": "Cost calculation for photovoltaic modules.\nMaterial cost driven by wattage and cost per watt.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 1.07",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = wattage * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -249,7 +316,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for photovoltaic modules.\nMaterial cost driven by wattage and cost per watt.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 27
     },
     {
@@ -348,18 +415,65 @@
         }
       ],
       "execution_order": 3,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "(inputs.power_rating * inputs.cost_per_watt)"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "InverterCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::InverterCostCalc",
       "doc_comment": "Cost calculation for string inverters.\nMaterial cost driven by power rating.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 0.286",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = power_rating * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -367,7 +481,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for string inverters.\nMaterial cost driven by power rating.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 50
     },
     {
@@ -490,19 +604,66 @@
         }
       ],
       "execution_order": 4,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "((inputs.string_count * inputs.cost_per_string) + (inputs.panel_count * inputs.cost_per_panel_bos))"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "ArrayBOSCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::ArrayBOSCostCalc",
       "doc_comment": "Cost calculation for solar array balance-of-system.\nIncludes combiners, disconnects, conduit per string and per panel.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_string = LiteralRationalEvaluation()",
-        "cost_per_panel_bos = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_string = 150.0",
+        "cost_per_panel_bos = 30.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = string_count * cost_per_string + panel_count * cost_per_panel_bos",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -510,7 +671,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for solar array balance-of-system.\nIncludes combiners, disconnects, conduit per string and per panel.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 72
     },
     {
@@ -621,18 +782,65 @@
         }
       ],
       "execution_order": 5,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "((inputs.capacity_kwh * inputs.cost_per_kwh) * inputs.chemistry_factor)"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "BatteryPackCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::BatteryPackCostCalc",
       "doc_comment": "Cost calculation for battery packs.\nMaterial cost driven by capacity and chemistry factor.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_kwh = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_kwh = 171.5",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = capacity_kwh * cost_per_kwh * chemistry_factor",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -640,7 +848,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for battery packs.\nMaterial cost driven by capacity and chemistry factor.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 96
     },
     {
@@ -739,18 +947,65 @@
         }
       ],
       "execution_order": 6,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "(inputs.power_rating * inputs.cost_per_watt)"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "HybridInverterCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::HybridInverterCostCalc",
       "doc_comment": "Cost calculation for hybrid (bidirectional) inverters.\nMaterial cost driven by power rating.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 0.1714",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = power_rating * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -758,7 +1013,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for hybrid (bidirectional) inverters.\nMaterial cost driven by power rating.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 119
     },
     {
@@ -857,18 +1112,65 @@
         }
       ],
       "execution_order": 7,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "(inputs.pack_count * inputs.cost_per_pack_bos)"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "BatteryBOSCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::BatteryBOSCostCalc",
       "doc_comment": "Cost calculation for battery balance-of-system.\nIncludes management system, wiring, thermal management per pack.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_pack_bos = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_pack_bos = 71.5",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = pack_count * cost_per_pack_bos",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -876,7 +1178,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for battery balance-of-system.\nIncludes management system, wiring, thermal management per pack.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 141
     },
     {
@@ -987,18 +1289,65 @@
         }
       ],
       "execution_order": 8,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "(inputs.panel_count * inputs.cost_per_panel_rack)"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "RackingCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::RackingCostCalc",
       "doc_comment": "Cost calculation for racking and mounting hardware.\nMaterial cost driven by panel count. Tilt angle is a design parameter\nbut does not affect cost in this simplified model.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_panel_rack = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_panel_rack = 57.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = panel_count * cost_per_panel_rack",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1006,7 +1355,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for racking and mounting hardware.\nMaterial cost driven by panel count. Tilt angle is a design parameter\nbut does not affect cost in this simplified model.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 163
     },
     {
@@ -1117,19 +1466,66 @@
         }
       ],
       "execution_order": 9,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "material_cost",
+            "expression": "(inputs.base_cost + (inputs.circuit_count * inputs.cost_per_circuit))"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "(material_cost * inputs.fab_factor)"
+          },
+          {
+            "name": "install_cost",
+            "expression": "(material_cost * inputs.install_factor)"
+          },
+          {
+            "name": "total_cost",
+            "expression": "((material_cost + fab_cost) + install_cost)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "(total_cost / material_cost)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "material_cost"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "fab_cost"
+          },
+          {
+            "name": "install_cost",
+            "expression": "install_cost"
+          },
+          {
+            "name": "total_cost",
+            "expression": "total_cost"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "idiot_index"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "ElectricalPanelCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::ElectricalPanelCostCalc",
       "doc_comment": "Cost calculation for electrical panel and breakers.\nBase cost plus per-circuit cost.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "base_cost = LiteralRationalEvaluation()",
-        "cost_per_circuit = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "base_cost = 150.0",
+        "cost_per_circuit = 34.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = base_cost + circuit_count * cost_per_circuit",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1137,7 +1533,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for electrical panel and breakers.\nBase cost plus per-circuit cost.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 187
     },
     {
@@ -1212,24 +1608,50 @@
         }
       ],
       "execution_order": 10,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "material_cost",
+            "expression": "0.0"
+          },
+          {
+            "name": "fab_cost",
+            "expression": "0.0"
+          },
+          {
+            "name": "install_cost",
+            "expression": "0.0"
+          },
+          {
+            "name": "total_cost",
+            "expression": "(inputs.system_capacity_kw * inputs.cost_per_kw)"
+          },
+          {
+            "name": "idiot_index",
+            "expression": "0.0"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "PermittingCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::PermittingCostCalc",
-      "doc_comment": "Cost calculation for permitting and interconnection.\nSoft cost \u2014 no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
+      "doc_comment": "Cost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_kw = LiteralRationalEvaluation()",
-        "material_cost = LiteralRationalEvaluation()",
-        "fab_cost = LiteralRationalEvaluation()",
-        "install_cost = LiteralRationalEvaluation()",
+        "cost_per_kw = 187.5",
+        "material_cost = 0.0",
+        "fab_cost = 0.0",
+        "install_cost = 0.0",
         "total_cost = system_capacity_kw * cost_per_kw",
-        "idiot_index = LiteralRationalEvaluation()",
-        "\nDocumentation:\nCost calculation for permitting and interconnection.\nSoft cost \u2014 no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
+        "idiot_index = 0.0",
+        "\nDocumentation:\nCost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 210
     },
     {
@@ -1340,26 +1762,73 @@
         }
       ],
       "execution_order": 11,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "fastener_cost",
+            "expression": "(inputs.child_count * inputs.fastener_cost_per_child)"
+          },
+          {
+            "name": "seal_cost",
+            "expression": "(inputs.child_count * inputs.seal_cost_per_child)"
+          },
+          {
+            "name": "wiring_cost",
+            "expression": "(inputs.total_child_mass * inputs.wiring_cost_per_kg)"
+          },
+          {
+            "name": "total_allocation",
+            "expression": "((fastener_cost + seal_cost) + wiring_cost)"
+          },
+          {
+            "name": "material_portion",
+            "expression": "(total_allocation * 0.8)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "fastener_cost",
+            "expression": "fastener_cost"
+          },
+          {
+            "name": "seal_cost",
+            "expression": "seal_cost"
+          },
+          {
+            "name": "wiring_cost",
+            "expression": "wiring_cost"
+          },
+          {
+            "name": "total_allocation",
+            "expression": "total_allocation"
+          },
+          {
+            "name": "material_portion",
+            "expression": "material_portion"
+          }
+        ],
+        "output_count": 5,
+        "single_output_expression": null
+      },
       "calc_def_name": "AllocationCostCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::AllocationCostCalc",
-      "doc_comment": "Bundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) \u2014 not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01",
+      "doc_comment": "Bundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "fastener_cost_per_child = LiteralRationalEvaluation()",
-        "seal_cost_per_child = LiteralRationalEvaluation()",
-        "wiring_cost_per_kg = LiteralRationalEvaluation()",
+        "fastener_cost_per_child = 0.5",
+        "seal_cost_per_child = 0.3",
+        "wiring_cost_per_kg = 2.0",
         "fastener_cost = child_count * fastener_cost_per_child",
         "seal_cost = child_count * seal_cost_per_child",
         "wiring_cost = total_child_mass * wiring_cost_per_kg",
         "total_allocation = fastener_cost + seal_cost + wiring_cost",
-        "material_portion = total_allocation * LiteralRationalEvaluation()",
-        "\nDocumentation:\nBundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) \u2014 not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01"
+        "material_portion = total_allocation * 0.8",
+        "\nDocumentation:\nBundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 235
     },
     {
@@ -1409,7 +1878,7 @@
       "calc_def_qualified_name": "SolarBatteryDesign::solar_battery_plant",
       "doc_comment": null,
       "calc_expressions": [
-        "p_net_mw * LiteralRationalEvaluation()"
+        "p_net_mw * 1000.0"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -2534,11 +3003,21 @@
         }
       ],
       "execution_order": 25,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "annual_om_cost",
+            "expression": "(inputs.om_rate_per_kw_year * inputs.p_net_kw)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.om_rate_per_kw_year * inputs.p_net_kw)"
+      },
       "calc_def_name": "AnnualizedOMCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::AnnualizedOMCalc",
       "doc_comment": "Annualized operations and maintenance cost.\nMatches PyFECONS cas70_annualized_om.py: om_rate * p_net_kw.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas70_annualized_om.py:10\n*Last Updated**: 2026-02-01",
@@ -2546,7 +3025,7 @@
         "annual_om_cost = om_rate_per_kw_year * p_net_kw",
         "\nDocumentation:\nAnnualized operations and maintenance cost.\nMatches PyFECONS cas70_annualized_om.py: om_rate * p_net_kw.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas70_annualized_om.py:10\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 283
     },
     {
@@ -3105,20 +3584,43 @@
         }
       ],
       "execution_order": 33,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [
+          {
+            "name": "capital_recovery_factor",
+            "expression": "((inputs.discount_rate * ((1.0 + inputs.discount_rate) ** inputs.plant_lifetime)) / (((1.0 + inputs.discount_rate) ** inputs.plant_lifetime) - 1.0))"
+          },
+          {
+            "name": "annualized_capital_cost",
+            "expression": "(capital_recovery_factor * inputs.total_capex)"
+          }
+        ],
+        "output_expressions": [
+          {
+            "name": "capital_recovery_factor",
+            "expression": "capital_recovery_factor"
+          },
+          {
+            "name": "annualized_capital_cost",
+            "expression": "annualized_capital_cost"
+          }
+        ],
+        "output_count": 2,
+        "single_output_expression": null
+      },
       "calc_def_name": "AnnualizedFinancialCalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::AnnualizedFinancialCalc",
       "doc_comment": "Annualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "capital_recovery_factor = discount_rate * LiteralRationalEvaluation() + discount_rate ** plant_lifetime / LiteralRationalEvaluation() + discount_rate ** plant_lifetime - LiteralRationalEvaluation()",
+        "capital_recovery_factor = discount_rate * (1.0 + discount_rate) ** plant_lifetime / ((1.0 + discount_rate) ** plant_lifetime - 1.0)",
         "annualized_capital_cost = capital_recovery_factor * total_capex",
         "\nDocumentation:\nAnnualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 314
     },
     {
@@ -3273,133 +3775,168 @@
         }
       ],
       "execution_order": 35,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "lcoe_per_mwh",
+            "expression": "((inputs.annualized_capital_cost + ((inputs.annual_om_cost + inputs.annual_fuel_cost) * ((1.0 + inputs.yearly_inflation) ** inputs.plant_lifetime))) / inputs.annual_energy_mwh)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((inputs.annualized_capital_cost + ((inputs.annual_om_cost + inputs.annual_fuel_cost) * ((1.0 + inputs.yearly_inflation) ** inputs.plant_lifetime))) / inputs.annual_energy_mwh)"
+      },
       "calc_def_name": "LCOECalc",
       "calc_def_qualified_name": "SolarBatteryLibrary::LCOECalc",
       "doc_comment": "Levelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "lcoe_per_mwh = annualized_capital_cost + annual_om_cost + annual_fuel_cost * LiteralRationalEvaluation() + yearly_inflation ** plant_lifetime / annual_energy_mwh",
+        "lcoe_per_mwh = (annualized_capital_cost + (annual_om_cost + annual_fuel_cost) * (1.0 + yearly_inflation) ** plant_lifetime) / annual_energy_mwh",
         "\nDocumentation:\nLevelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 335
     }
   ],
   "entry_point_groups": [
+    {
+      "name": "design_params",
+      "class_name": "DesignParams",
+      "source_file": "design.sysml",
+      "parameters": [
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate",
+          "simple_name": "discount_rate",
+          "entry_type": "usage_literal",
+          "default_value": 0.05,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime",
+          "simple_name": "plant_lifetime",
+          "entry_type": "usage_literal",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption",
+          "simple_name": "fuel_consumption",
+          "entry_type": "usage_literal",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost",
+          "simple_name": "fuel_unit_cost",
+          "entry_type": "usage_literal",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year",
+          "simple_name": "om_rate_per_kw_year",
+          "entry_type": "usage_literal",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__n_mod",
+          "simple_name": "n_mod",
+          "entry_type": "usage_literal",
+          "default_value": 1.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw",
+          "simple_name": "p_net_mw",
+          "entry_type": "usage_literal",
+          "default_value": 0.008,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability",
+          "simple_name": "plant_availability",
+          "entry_type": "usage_literal",
+          "default_value": 0.159,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime",
+          "simple_name": "plant_lifetime",
+          "entry_type": "usage_literal",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation",
+          "simple_name": "yearly_inflation",
+          "entry_type": "usage_literal",
+          "default_value": 0.0245,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw",
+          "simple_name": "p_net_mw",
+          "entry_type": "design_attribute",
+          "default_value": 0.008,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        }
+      ]
+    },
     {
       "name": "library_params",
       "class_name": "LibraryParams",
       "source_file": "library.sysml",
       "parameters": [
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count",
-          "simple_name": "child_count",
-          "entry_type": "usage_literal",
-          "default_value": 25.0,
-          "source_calc_usage": null,
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass",
-          "simple_name": "total_child_mass",
-          "entry_type": "usage_literal",
-          "default_value": 50.0,
-          "source_calc_usage": null,
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt",
-          "simple_name": "cost_per_watt",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos",
+          "simple_name": "cost_per_pack_bos",
           "entry_type": "library_default",
-          "default_value": 1.07,
-          "source_calc_usage": "PVModuleCostCalc",
+          "default_value": 71.5,
+          "source_calc_usage": "BatteryBOSCostCalc",
           "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor",
           "simple_name": "fab_factor",
           "entry_type": "library_default",
           "default_value": 0.45,
-          "source_calc_usage": "PVModuleCostCalc",
+          "source_calc_usage": "BatteryBOSCostCalc",
           "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor",
           "simple_name": "install_factor",
           "entry_type": "library_default",
           "default_value": 0.3,
-          "source_calc_usage": "PVModuleCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt",
-          "simple_name": "cost_per_watt",
-          "entry_type": "library_default",
-          "default_value": 0.286,
-          "source_calc_usage": "InverterCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor",
-          "simple_name": "fab_factor",
-          "entry_type": "library_default",
-          "default_value": 0.45,
-          "source_calc_usage": "InverterCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor",
-          "simple_name": "install_factor",
-          "entry_type": "library_default",
-          "default_value": 0.3,
-          "source_calc_usage": "InverterCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos",
-          "simple_name": "cost_per_panel_bos",
-          "entry_type": "library_default",
-          "default_value": 30.0,
-          "source_calc_usage": "ArrayBOSCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string",
-          "simple_name": "cost_per_string",
-          "entry_type": "library_default",
-          "default_value": 150.0,
-          "source_calc_usage": "ArrayBOSCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor",
-          "simple_name": "fab_factor",
-          "entry_type": "library_default",
-          "default_value": 0.45,
-          "source_calc_usage": "ArrayBOSCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor",
-          "simple_name": "install_factor",
-          "entry_type": "library_default",
-          "default_value": 0.3,
-          "source_calc_usage": "ArrayBOSCostCalc",
+          "source_calc_usage": "BatteryBOSCostCalc",
           "param_group": "library_params",
           "python_type": "float"
         },
@@ -3458,60 +3995,6 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__cost_per_pack_bos",
-          "simple_name": "cost_per_pack_bos",
-          "entry_type": "library_default",
-          "default_value": 71.5,
-          "source_calc_usage": "BatteryBOSCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor",
-          "simple_name": "fab_factor",
-          "entry_type": "library_default",
-          "default_value": 0.45,
-          "source_calc_usage": "BatteryBOSCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor",
-          "simple_name": "install_factor",
-          "entry_type": "library_default",
-          "default_value": 0.3,
-          "source_calc_usage": "BatteryBOSCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack",
-          "simple_name": "cost_per_panel_rack",
-          "entry_type": "library_default",
-          "default_value": 57.0,
-          "source_calc_usage": "RackingCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor",
-          "simple_name": "fab_factor",
-          "entry_type": "library_default",
-          "default_value": 0.45,
-          "source_calc_usage": "RackingCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor",
-          "simple_name": "install_factor",
-          "entry_type": "library_default",
-          "default_value": 0.3,
-          "source_calc_usage": "RackingCostCalc",
-          "param_group": "library_params",
-          "python_type": "float"
-        },
-        {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost",
           "simple_name": "base_cost",
           "entry_type": "library_default",
@@ -3557,6 +4040,42 @@
           "python_type": "float"
         },
         {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack",
+          "simple_name": "cost_per_panel_rack",
+          "entry_type": "library_default",
+          "default_value": 57.0,
+          "source_calc_usage": "RackingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "RackingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "RackingCostCalc",
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count",
+          "simple_name": "child_count",
+          "entry_type": "usage_literal",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child",
           "simple_name": "fastener_cost_per_child",
           "entry_type": "library_default",
@@ -3575,6 +4094,15 @@
           "python_type": "float"
         },
         {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass",
+          "simple_name": "total_child_mass",
+          "entry_type": "usage_literal",
+          "default_value": 50.0,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg",
           "simple_name": "wiring_cost_per_kg",
           "entry_type": "library_default",
@@ -3582,111 +4110,95 @@
           "source_calc_usage": "AllocationCostCalc",
           "param_group": "library_params",
           "python_type": "float"
-        }
-      ]
-    },
-    {
-      "name": "design_params",
-      "class_name": "DesignParams",
-      "source_file": "design.sysml",
-      "parameters": [
+        },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw",
-          "simple_name": "p_net_mw",
-          "entry_type": "design_attribute",
-          "default_value": 0.008,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos",
+          "simple_name": "cost_per_panel_bos",
+          "entry_type": "library_default",
+          "default_value": 30.0,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw",
-          "simple_name": "p_net_mw",
-          "entry_type": "usage_literal",
-          "default_value": 0.008,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string",
+          "simple_name": "cost_per_string",
+          "entry_type": "library_default",
+          "default_value": 150.0,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__n_mod",
-          "simple_name": "n_mod",
-          "entry_type": "usage_literal",
-          "default_value": 1.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability",
-          "simple_name": "plant_availability",
-          "entry_type": "usage_literal",
-          "default_value": 0.159,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "ArrayBOSCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year",
-          "simple_name": "om_rate_per_kw_year",
-          "entry_type": "usage_literal",
-          "default_value": 20.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt",
+          "simple_name": "cost_per_watt",
+          "entry_type": "library_default",
+          "default_value": 0.286,
+          "source_calc_usage": "InverterCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost",
-          "simple_name": "fuel_unit_cost",
-          "entry_type": "usage_literal",
-          "default_value": 0.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "InverterCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption",
-          "simple_name": "fuel_consumption",
-          "entry_type": "usage_literal",
-          "default_value": 0.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "InverterCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate",
-          "simple_name": "discount_rate",
-          "entry_type": "usage_literal",
-          "default_value": 0.05,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt",
+          "simple_name": "cost_per_watt",
+          "entry_type": "library_default",
+          "default_value": 1.07,
+          "source_calc_usage": "PVModuleCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime",
-          "simple_name": "plant_lifetime",
-          "entry_type": "usage_literal",
-          "default_value": 25.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor",
+          "simple_name": "fab_factor",
+          "entry_type": "library_default",
+          "default_value": 0.45,
+          "source_calc_usage": "PVModuleCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation",
-          "simple_name": "yearly_inflation",
-          "entry_type": "usage_literal",
-          "default_value": 0.0245,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime",
-          "simple_name": "plant_lifetime",
-          "entry_type": "usage_literal",
-          "default_value": 25.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor",
+          "simple_name": "install_factor",
+          "entry_type": "library_default",
+          "default_value": 0.3,
+          "source_calc_usage": "PVModuleCostCalc",
+          "param_group": "library_params",
           "python_type": "float"
         }
       ]
@@ -3697,91 +4209,10 @@
       "source_file": "hierarchy",
       "parameters": [
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
-          "simple_name": "panel_count",
-          "entry_type": "usage_literal",
-          "default_value": 20.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
-          "simple_name": "circuit_count",
-          "entry_type": "usage_literal",
-          "default_value": 4.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
-          "simple_name": "string_count",
-          "entry_type": "usage_literal",
-          "default_value": 4.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
-          "simple_name": "tilt_angle",
-          "entry_type": "usage_literal",
-          "default_value": 30.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__pack_count",
           "simple_name": "pack_count",
           "entry_type": "usage_literal",
           "default_value": 8.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw",
-          "simple_name": "system_capacity_kw",
-          "entry_type": "usage_literal",
-          "default_value": 8.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
-          "simple_name": "chemistry_factor",
-          "entry_type": "usage_literal",
-          "default_value": 1.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
-          "simple_name": "panel_count",
-          "entry_type": "usage_literal",
-          "default_value": 20.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
-          "simple_name": "power_rating",
-          "entry_type": "usage_literal",
-          "default_value": 2000.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
-          "simple_name": "power_rating",
-          "entry_type": "usage_literal",
-          "default_value": 10000.0,
           "source_calc_usage": null,
           "param_group": null,
           "python_type": "float"
@@ -3796,37 +4227,19 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
-          "simple_name": "wattage",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
+          "simple_name": "chemistry_factor",
           "entry_type": "usage_literal",
-          "default_value": 400.0,
+          "default_value": 1.0,
           "source_calc_usage": null,
           "param_group": null,
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
-          "simple_name": "efficiency",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
+          "simple_name": "power_rating",
           "entry_type": "usage_literal",
-          "default_value": 0.21,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
-          "simple_name": "module_count",
-          "entry_type": "design_attribute",
-          "default_value": 20.0,
-          "source_calc_usage": null,
-          "param_group": null,
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
-          "simple_name": "inverter_count",
-          "entry_type": "design_attribute",
-          "default_value": 4.0,
+          "default_value": 10000.0,
           "source_calc_usage": null,
           "param_group": null,
           "python_type": "float"
@@ -3841,10 +4254,10 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost",
-          "simple_name": "permitting_raw_material_cost",
-          "entry_type": "design_attribute",
-          "default_value": 0.0,
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
+          "simple_name": "circuit_count",
+          "entry_type": "usage_literal",
+          "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": null,
           "python_type": "float"
@@ -3863,6 +4276,105 @@
           "simple_name": "permitting_installation_cost",
           "entry_type": "design_attribute",
           "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw",
+          "simple_name": "system_capacity_kw",
+          "entry_type": "usage_literal",
+          "default_value": 8.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
+          "simple_name": "panel_count",
+          "entry_type": "usage_literal",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
+          "simple_name": "tilt_angle",
+          "entry_type": "usage_literal",
+          "default_value": 30.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost",
+          "simple_name": "permitting_raw_material_cost",
+          "entry_type": "design_attribute",
+          "default_value": 0.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
+          "simple_name": "panel_count",
+          "entry_type": "usage_literal",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
+          "simple_name": "string_count",
+          "entry_type": "usage_literal",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
+          "simple_name": "power_rating",
+          "entry_type": "usage_literal",
+          "default_value": 2000.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
+          "simple_name": "inverter_count",
+          "entry_type": "design_attribute",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
+          "simple_name": "module_count",
+          "entry_type": "design_attribute",
+          "default_value": 20.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
+          "simple_name": "efficiency",
+          "entry_type": "usage_literal",
+          "default_value": 0.21,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
+          "simple_name": "wattage",
+          "entry_type": "usage_literal",
+          "default_value": 400.0,
           "source_calc_usage": null,
           "param_group": null,
           "python_type": "float"
@@ -3907,5 +4419,13 @@
     "solarbatterydesign__solar_battery_plant__annualized_financial",
     "solarbatterydesign__solar_battery_plant__idiot_index",
     "solarbatterydesign__solar_battery_plant__lcoe"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "misc_hardware_cost",
+      "canonical_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation",
+      "instance_path": "solar_battery_plant.solar_array",
+      "shape": "part_def"
+    }
   ]
 }

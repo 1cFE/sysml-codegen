@@ -280,21 +280,29 @@ class TestPhase1Regression:
             "All chain spike impls should be auto-implemented"
         )
 
-    def test_catf_mfe_still_works(
-        self, catf_mfe_model_path: Path, tmp_path: Path,
+    def test_catf_mfe_wired_after_item10(
+        self, catf_mfe_model_path: Path, tmp_path: Path, caplog,
     ):
+        """catf_mfe generation succeeds — Item 10 wired the cross-part pin (SC-1).
+
+        ``cryo_load.magnet_volume`` binds the cross-part EXPOSE
+        ``catf_radial_build.magnet_volume_total`` (= ``tf_coil.volume``). Before
+        Item 10 that fell through with no value and V11 aborted strict generation.
+        The multi-hop EXPOSE confirm pass now resolves it transitively to the
+        ``tf_coil.volume_calc.volume`` channel and registers the alias, so the
+        consumer wires and generation is clean — no V11 diagnostic.
+        """
+        import logging
+
         config = GenerationConfig(
             models_path=catf_mfe_model_path,
             output_path=tmp_path / "output",
             package_name="catf_mfe",
         )
-        assert run_codegen(config), "CATF MFE codegen should succeed"
-        impls = find_impl_files(tmp_path / "output")
-        # Graph-only pipeline (REQ-PIPE-07): only CalcDefs with usages in the
-        # computation graph get stencils.  CATF MFE has 21 CalcDefs extracted
-        # but 3 (ThermalCycleEfficiency, PlasmaConfinement, TritiumBreedingRatio)
-        # have no calc usages → 18 modules in graph → 18 impl files.
-        assert len(impls) == 18, (
-            f"Expected 18 impl files (graph-only, no false-positive "
-            f"computed attrs), got {len(impls)}"
+        with caplog.at_level(logging.ERROR):
+            assert run_codegen(config) is True, (
+                "catf_mfe generation must succeed after Item 10 wires magnet_volume"
+            )
+        assert not any("V11" in r.message for r in caplog.records), (
+            "no V11 diagnostic — the cross-part magnet_volume pin is wired"
         )

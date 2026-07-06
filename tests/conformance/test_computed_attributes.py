@@ -105,13 +105,20 @@ class TestReqCa01Classification:
             )
 
     def test_all_five_values_defined(self):
-        """The ComputedAttributeClassification enum has exactly 5 members."""
+        """The ComputedAttributeClassification enum has exactly 6 members.
+
+        Item 10 added EXPOSE_CHAIN_TENTATIVE (the leaf's structural multi-hop
+        candidate, finalized by the confirm pass).
+        """
         members = list(ComputedAttributeClassification)
-        assert len(members) == 5, (
-            f"Expected 5 ComputedAttributeClassification members, got {len(members)}: "
+        assert len(members) == 6, (
+            f"Expected 6 ComputedAttributeClassification members, got {len(members)}: "
             f"{[m.value for m in members]}"
         )
-        expected_values = {"formula", "expose_pure", "expose_computed", "literal", "unresolvable"}
+        expected_values = {
+            "formula", "expose_pure", "expose_computed",
+            "expose_chain_tentative", "literal", "unresolvable",
+        }
         actual_values = {m.value for m in members}
         assert actual_values == expected_values, (
             f"Enum values mismatch: missing={expected_values - actual_values}, "

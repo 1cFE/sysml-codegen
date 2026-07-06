@@ -28,7 +28,8 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.models import InputSource
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 # ---------------------------------------------------------------------------
 # Import resolve_input and friends — these don't exist yet; tests will FAIL
@@ -91,7 +92,7 @@ SKIP_REASON = "resolve_input() not yet implemented"
 
 def _build_registry_from_snapshot(model_name: str):
     """Load snapshot and build OutputRegistry."""
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],

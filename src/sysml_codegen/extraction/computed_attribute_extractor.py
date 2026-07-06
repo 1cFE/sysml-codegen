@@ -27,9 +27,37 @@ from .expression_compiler import (
     build_expression_ast,
     compile_expression,
 )
-from .expression_utils import reconstruct_expression
+from .expression_utils import (
+    extract_feature_chain_segments,
+    reconstruct_expression,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _is_wellformed_multihop_chain(
+    expression_ast: Any,
+    reference_chain: list[str] | None,
+    calc_usage_names: set[str],
+) -> bool:
+    """INV-E gate: is this a well-formed multi-hop EXPOSE candidate?
+
+    True when the root is a pure FeatureChainExpression whose captured segments
+    (reference_chain) form a chain of >= 2 segments rooted at a part waypoint
+    (segment[0] is NOT a calc-usage instance — that is the simple EXPOSE_PURE
+    ``calc.output`` case handled elsewhere). A linear FeatureChainExpression has
+    a single terminal leaf by construction, so the "single terminal" arm of INV-E
+    is implied by the root-node type check.
+
+    Deciding EXPOSE-ness here is impossible (the leaf lacks the registry, B5) —
+    this only detects the STRUCTURE. Over-tagging is safe: the confirm pass
+    reverts an unresolvable candidate to FORMULA (INV-D).
+    """
+    if not SysideAdapter.is_instance(expression_ast, "FeatureChainExpression"):
+        return False
+    if reference_chain is None or len(reference_chain) < 2:
+        return False
+    return reference_chain[0] not in calc_usage_names
 
 
 def _classify_attribute_expression(
@@ -38,6 +66,7 @@ def _classify_attribute_expression(
     calc_usage_names: set[str],
     sibling_attr_names: set[str],
     expression_ast: Any,
+    reference_chain: list[str] | None,
 ) -> ComputedAttributeClassification:
     """Classify an attribute expression by analyzing its feature references.
 
@@ -54,6 +83,8 @@ def _classify_attribute_expression(
         sibling_attr_names: All AttributeUsage names on this part.
         expression_ast: Raw syside AST root node (for EXPOSE_PURE vs
             EXPOSE_COMPUTED distinction).
+        reference_chain: Full dotted segments of a FeatureChainExpression (D9),
+            or None. Drives the multi-hop EXPOSE_CHAIN_TENTATIVE gate (INV-E).
 
     Returns:
         Classification enum value.
@@ -97,7 +128,18 @@ def _classify_attribute_expression(
         return ComputedAttributeClassification.UNRESOLVABLE
 
     if not calc_refs:
-        # Only sibling refs (or no refs after filtering)
+        # Only sibling refs (or no refs after filtering). This is where a
+        # multi-hop chain like `tf_coil.volume_calc.volume` lands today — its
+        # part-typed waypoint (tf_coil) is a sibling ref and `references` is
+        # truncated to the root, so calc_refs is empty (C4). Before dropping to
+        # FORMULA, tag a well-formed multi-hop chain as a tentative EXPOSE for
+        # the confirm pass to finalize (D6/INV-E). An arithmetic-over-chain root
+        # is an OperatorExpression, not a FeatureChainExpression, so it fails the
+        # gate and stays FORMULA (INV-D negative).
+        if _is_wellformed_multihop_chain(
+            expression_ast, reference_chain, calc_usage_names
+        ):
+            return ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE
         return ComputedAttributeClassification.FORMULA
 
     # calc_refs present → EXPOSE variant
@@ -160,6 +202,11 @@ def extract_computed_attributes(
         # Extract refs
         refs = extract_feature_refs(expr, ignore_std_lib=True)
 
+        # Full chain segments for a FeatureChainExpression (Item 10, D9). The
+        # multi-hop EXPOSE confirm walk reads this; None for non-chain exprs.
+        # Computed before classification because the INV-E tentative gate reads it.
+        reference_chain = extract_feature_chain_segments(expr) or None
+
         # Classify
         classification = _classify_attribute_expression(
             refs=refs,
@@ -167,6 +214,7 @@ def extract_computed_attributes(
             calc_usage_names=calc_usage_names,
             sibling_attr_names=sibling_attr_names,
             expression_ast=expr,
+            reference_chain=reference_chain,
         )
 
         # Skip LITERAL
@@ -238,6 +286,7 @@ def extract_computed_attributes(
                 compilability=compilability,
                 compiled_expression=compiled_expression,
                 is_on_part_definition=is_part_def,
+                reference_chain=reference_chain,
             )
         )
 

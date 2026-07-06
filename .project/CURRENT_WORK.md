@@ -1,43 +1,25 @@
 # Current Work
 
-**Last Updated**: 2026-02-17
+**Last Updated**: 2026-07-06
 
 ---
 
 ## Active Work
 
-### REFACTOR: Incremental Pipeline Refactor
+### UPSTREAM-FINDINGS Epic — COMPLETE (awaiting PR review/merge)
 
-**Status**: In Progress (Phases 0–4 complete)
-**Plan**: `.project/concepts/refactor-design-intent/IMPLEMENTATION_PLAN.md`
-**Checklist**: `.project/concepts/refactor-design-intent/COMPONENT_CHECKLIST.md`
-**Branch**: `cost-pattern-refactor`
+All 12 items landed and audited PASS on branch `upstream-findings-epic`
+(orchestrated run, 2026-07-05..06). PR: https://github.com/1cFE/sysml-codegen/pull/3
 
-**Objective**: Bottom-up, test-first refactor of the pipeline. Lock down every component with conformance tests using real data, then restructure the codebase to match target architecture.
+**One action for the human**: the companion agentic-mbse PR. Branch
+`upstream-findings-sync` is pushed to origin (6 commits); the prepared PR body is
+committed at `.project/active/AGENTIC_MBSE_PR_BODY.md` — create with:
+`gh pr create --repo 1cFE/agentic-mbse --base main --head upstream-findings-sync --title "UPSTREAM-FINDINGS sync: validation checks + guidance for the newly supported subset" --body-file .project/active/AGENTIC_MBSE_PR_BODY.md`
 
-**Completed Phases**:
-- [x] Phase 0: Test Infrastructure & Baselines (70 tests, 6 extraction snapshots, 4 pipeline baselines)
-- [x] Phase 1: Foundation & Extraction Components (C01-C07, 311 conformance tests)
-- [x] Phase TRR: Typed Registry Refactor design doc updates (8 docs updated)
-- [x] Phase 2: Core Infrastructure Spikes (C08-C10, 117 conformance tests)
-- [x] Phase 3: Analysis Components (C11a/b, C12, C13, X02, 136 conformance tests)
-- [x] Phase 4: Module Factory + Graph Assembly (C14-C18, 183 conformance tests, Checkpoint 4 passed)
-- [x] Phase 5: Orchestrator Integration (C19 + 5.2, 55 conformance tests, Checkpoint 5 passed)
+Post-merge follow-ups already filed: BACKLOG P1 (remaining 10 fusion-tea
+cross-part bindings), the stale-fixture drift chore, C7/C8/F6 in agentic-mbse's
+backlog, and the fusion-tea coordination notes in the three release-notes files.
 
-**Current Phase**: Phase 6 — Generation Layer Validation (C20-C25, X01)
-
-**Test Suite**: 1587 tests passing (920 conformance + 667 existing), 5 xfailed
-
-**Key Decisions**:
-- Typed Registry Refactor complete — 3 typed registries, zero `_compat`, zero `resolve()`
-- Backtracker typed dispatch (C11b) migrated all 14 compat-only resolutions to typed lookups
-- Input Resolver (C12) proven equivalent to old function; graph_builder integration deferred to C16
-
-**Blockers**: None
-
-**Audit**: Phase 3 audit complete — see `.project/concepts/refactor-design-intent/PHASE3_AUDIT_ACTIONS.md`
-
----
 
 ## Recently Completed
 

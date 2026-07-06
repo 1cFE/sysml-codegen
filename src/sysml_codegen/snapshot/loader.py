@@ -9,12 +9,16 @@ Reverses the serialization performed by snapshot_serializer.py:
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
+import os
 from pathlib import Path
 from typing import Any
 
-from agentic_mbse.sysml.types import BindingType, ExpressionRef
+from agentic_mbse.sysml.types import BindingType, ExpressionRef  # type: ignore[import-untyped]
 
+from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
@@ -32,18 +36,30 @@ from sysml_codegen.extraction.data_models import (
     SingletonTerm,
     SumTerm,
 )
-from sysml_codegen.extraction.expression_compiler import Compilability
+from sysml_codegen.extraction.expression_compiler import (
+    CalcDefCompilationResult,
+    Compilability,
+    CompilationResult,
+)
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
-from sysml_codegen.analysis.parameter_groups import DesignAttributeData
+from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION, SnapshotFormatError
 
-FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
+logger = logging.getLogger(__name__)
+
+# source_file values that are not real paths — passed through untouched.
+_SOURCE_SENTINELS = frozenset({"unknown", "hierarchy"})
 
 
-def load_extraction_snapshot(model_name: str) -> dict[str, Any]:
-    """Load a model's extraction snapshot and reconstruct typed instances.
+def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
+    """Load an extraction snapshot from a path and reconstruct typed instances.
 
     Args:
-        model_name: Name of the fixture model (e.g., "solar_battery_model").
+        snapshot_path: Path to the ``extraction_snapshot.json`` file.
+
+    Raises:
+        SnapshotFormatError: if ``snapshot_format_version`` is missing or does
+            not match ``SNAPSHOT_FORMAT_VERSION`` (INV-2) — checked before any
+            field deserialization.
 
     Returns:
         Dict with typed instances:
@@ -54,11 +70,30 @@ def load_extraction_snapshot(model_name: str) -> dict[str, Any]:
             aggregation_expressions: list[ScopedAggregationData]
             computed_attributes: list[ComputedAttributeData]
             channel_aliases: list[ChannelAlias]
+            compilation_results: dict[str, CalcDefCompilationResult] (SC-10;
+                empty if the snapshot predates the section — degrades with a warning)
+            stale_sources: list[str] of re-absolutized source files whose on-disk
+                hash no longer matches the snapshot (freshness, V3)
     """
-    snapshot_path = FIXTURES_DIR / model_name / "extraction_snapshot.json"
     raw = json.loads(snapshot_path.read_text())
 
-    return {
+    # Version guard runs first (INV-2, V1/V2) — before any field deserialization.
+    version = raw.get("snapshot_format_version")
+    if version is None:
+        raise SnapshotFormatError(
+            f"Snapshot {snapshot_path} has no snapshot_format_version — it "
+            "predates versioned snapshots. Recapture with `sysml-codegen "
+            f"snapshot --models <sources>` (current tooling writes version "
+            f"{SNAPSHOT_FORMAT_VERSION})."
+        )
+    if version != SNAPSHOT_FORMAT_VERSION:
+        raise SnapshotFormatError(
+            f"Snapshot {snapshot_path} is format version {version}, tool expects "
+            f"{SNAPSHOT_FORMAT_VERSION}. Recapture with `sysml-codegen snapshot`."
+        )
+
+    snapshot_dir = snapshot_path.parent
+    snap: dict[str, Any] = {
         "model_name": raw["model_name"],
         "captured_at": raw["captured_at"],
         "calc_defs": [_deserialize_calc_def(d) for d in raw["calc_defs"]],
@@ -77,7 +112,142 @@ def load_extraction_snapshot(model_name: str) -> dict[str, Any]:
         "channel_aliases": [
             ChannelAlias.model_validate(d) for d in raw["channel_aliases"]
         ],
+        "compilation_results": _load_compilation_results(raw, snapshot_path),
     }
+
+    # source_file re-absolutization (D1/D8): lexical absolute join against the
+    # snapshot's own directory, no symlink resolution. Sentinels pass through.
+    _reabsolutize_source_files(snap, snapshot_dir)
+
+    # Source freshness (V3): warn per stale file, record the set for a one-line
+    # end-of-run summary the caller logs.
+    snap["stale_sources"] = _check_source_freshness(snap, snapshot_path)
+
+    return snap
+
+
+# --- Format-contract helpers (version / compilation_results / source_file) ---
+
+
+def _load_compilation_results(
+    raw: dict, snapshot_path: Path
+) -> dict[str, CalcDefCompilationResult]:
+    """Deserialize the compilation_results block, or degrade with a warning (V4)."""
+    block = raw.get("compilation_results")
+    if not block:
+        # Absent or empty. A version-current snapshot may legitimately lack it
+        # (captured before SC-10) — degrade to today's behavior with a warning.
+        if "compilation_results" not in raw:
+            logger.warning(
+                "Snapshot %s has no compilation_results section (captured before "
+                "SC-10). CalcUsage auto-implementation will be lost; stencils fall "
+                "back to NotImplementedError. Recapture to restore.",
+                snapshot_path,
+            )
+        return {}
+    return {
+        name: _deserialize_calc_def_compilation_result(cr)
+        for name, cr in block.items()
+    }
+
+
+def _deserialize_compilation_result(d: dict) -> CompilationResult:
+    """Reconstruct a CompilationResult (one output's lowered expression)."""
+    return CompilationResult(
+        output_name=d["output_name"],
+        compilability=Compilability(d["compilability"]),
+        python_expression=d.get("python_expression"),
+        input_refs=d.get("input_refs", []),
+        intermediate_refs=d.get("intermediate_refs", []),
+        unsupported_reason=d.get("unsupported_reason"),
+        is_undeclared_intermediate=d.get("is_undeclared_intermediate", False),
+    )
+
+
+def _deserialize_calc_def_compilation_result(d: dict) -> CalcDefCompilationResult:
+    """Reconstruct a CalcDefCompilationResult from a serialized dict."""
+    return CalcDefCompilationResult(
+        calc_def_name=d["calc_def_name"],
+        overall_compilability=Compilability(d["overall_compilability"]),
+        output_results=[_deserialize_compilation_result(r) for r in d["output_results"]],
+        execution_order=d["execution_order"],
+    )
+
+
+def _reabsolutize_source_file(source_file: Path, snapshot_dir: Path) -> Path:
+    """Rebuild an absolute source_file by a lexical join against snapshot_dir (D8).
+
+    Uses ``os.path.abspath`` (no ``.resolve()``) so a symlinked source path is
+    reproduced exactly as the parser reports it (B2). Sentinels pass through.
+    """
+    stored = str(source_file)
+    if stored in _SOURCE_SENTINELS:
+        return source_file
+    return Path(os.path.abspath(snapshot_dir / stored))
+
+
+def _reabsolutize_source_files(snap: dict[str, Any], snapshot_dir: Path) -> None:
+    """Re-absolutize every real source_file field in place against snapshot_dir."""
+
+    def fix(obj: Any) -> None:
+        sf = getattr(obj, "source_file", None)
+        if isinstance(sf, Path):
+            obj.source_file = _reabsolutize_source_file(sf, snapshot_dir)
+
+    for cd in snap["calc_defs"]:
+        fix(cd)
+    for cu in snap["calc_usages"]:
+        fix(cu)
+    for attrs in snap["design_attributes"].values():
+        for da in attrs:
+            fix(da)
+    hierarchy = snap["hierarchy_data"]
+    for redef in hierarchy.redefinitions:
+        fix(redef)
+    for override in hierarchy.design_overrides:
+        fix(override)
+    for agg in hierarchy.aggregation_expressions:
+        fix(agg)
+    for scoped in snap["aggregation_expressions"]:
+        fix(scoped.expression)
+    for ca in snap["computed_attributes"]:
+        fix(ca)
+
+
+def _compute_source_hash(file_path: Path) -> str:
+    """SHA256 of file contents — matches SysMLDataExtractor._compute_file_hash."""
+    if not file_path.exists() or file_path.is_dir():
+        return ""
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+
+def _check_source_freshness(snap: dict[str, Any], snapshot_path: Path) -> list[str]:
+    """Warn per calc_def whose on-disk source hash no longer matches (V3).
+
+    Returns the sorted list of stale source files so the caller can log one
+    end-of-run summary. calc_defs are the only objects carrying source_hash.
+    """
+    stale: set[str] = set()
+    for cd in snap["calc_defs"]:
+        stored_hash = getattr(cd, "source_hash", "")
+        source_file = getattr(cd, "source_file", None)
+        if not stored_hash or not isinstance(source_file, Path):
+            continue
+        if str(source_file) in _SOURCE_SENTINELS or not source_file.exists():
+            continue
+        if _compute_source_hash(source_file) != stored_hash:
+            stale.add(str(source_file))
+            logger.warning(
+                "Snapshot %s source hash for %s no longer matches on-disk source "
+                "— snapshot may be stale. Continuing; recapture to refresh.",
+                snapshot_path,
+                source_file,
+            )
+    return sorted(stale)
 
 
 # --- Individual deserializers ---
@@ -89,7 +259,9 @@ def _deserialize_attribute_info(d: dict) -> AttributeInfo:
         name=d["name"],
         sysml_type=d.get("sysml_type"),
         default_value=d.get("default_value"),
-        binding_type=BindingType(d["binding_type"]) if d.get("binding_type") else BindingType.UNBOUND,
+        binding_type=(
+            BindingType(d["binding_type"]) if d.get("binding_type") else BindingType.UNBOUND
+        ),
         is_input=d.get("is_input", False),
         is_output=d.get("is_output", False),
         python_type=d.get("python_type", "Any"),
@@ -235,7 +407,9 @@ def _deserialize_aggregation_expression(d: dict) -> AggregationExpressionData:
         local_terms=[_deserialize_local_term(t) for t in d["local_terms"]],
         input_channels=d["input_channels"],
         entry_points=d["entry_points"],
-        compilability=Compilability(d["compilability"]) if d.get("compilability") else Compilability.UNKNOWN,
+        compilability=(
+            Compilability(d["compilability"]) if d.get("compilability") else Compilability.UNKNOWN
+        ),
         has_unsupported_nodes=d.get("has_unsupported_nodes", False),
         aliases=d.get("aliases", []),
         source_file=Path(d.get("source_file", "unknown")),
@@ -301,9 +475,15 @@ def _deserialize_computed_attribute(d: dict) -> ComputedAttributeData:
         expression_text=d["expression_text"],
         references=[_deserialize_expression_ref(r) for r in d["references"]],
         classification=ComputedAttributeClassification(d["classification"]),
-        compilability=Compilability(d["compilability"]) if d.get("compilability") else Compilability.UNKNOWN,
+        compilability=(
+            Compilability(d["compilability"]) if d.get("compilability") else Compilability.UNKNOWN
+        ),
         compiled_expression=d.get("compiled_expression"),
         is_on_part_definition=d.get("is_on_part_definition", False),
         source_file=Path(d.get("source_file", "unknown")),
         source_line=d.get("source_line", 0),
+        # Additive-optional (Item 10, D9): old snapshots lack it → None. No
+        # SNAPSHOT_FORMAT_VERSION bump; absent chain leaves classification at
+        # today's FORMULA behavior.
+        reference_chain=d.get("reference_chain"),
     )

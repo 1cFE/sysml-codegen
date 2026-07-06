@@ -25,7 +25,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
     sanitize_name,
-    sysml_to_python_qualified_name,
+    sanitize_qualified_name,
 )
 
 logger = logging.getLogger(__name__)
@@ -436,7 +436,10 @@ class ParameterGroupDeriver:
 
     def _find_source_file(self, source_path: str) -> Path | None:
         """Find source file for an attribute by qualified name."""
-        python_qname = sysml_to_python_qualified_name(source_path)
+        # Site 6 of the FORMULA sysml-QN lockstep flip (Item 7 / INV-1): this twin
+        # looks up _attr_index, whose keys are per-segment-sanitized QNs; sanitize
+        # here too so a quoted-owner source_path resolves.
+        python_qname = sanitize_qualified_name(source_path)
 
         if python_qname in self._attr_index:
             file_path, attr = self._attr_index[python_qname]

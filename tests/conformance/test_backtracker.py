@@ -38,7 +38,8 @@ from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +59,7 @@ def build_backtracker_from_snapshot(
     Returns:
         (BacktrackingResult, OutputRegistry, snapshot_dict)
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],
@@ -276,9 +277,11 @@ class TestReqBT02:
                 alias_hit_count += 1
 
         # After C11b: Key_A registered as alias in Phase 1a, so all cross-scope
-        # CHAIN bindings resolve via alias_lookup (was 10 before Key_A aliases)
-        assert alias_hit_count == 18, (
-            f"Expected 18 cross-package alias hits in catf_mfe, got {alias_hit_count}"
+        # CHAIN bindings resolve via alias_lookup (was 10 before Key_A aliases).
+        # Item 10 stage (a): +1 (18→19) — the recaptured catf snapshot now wires the
+        # cross-part multi-hop EXPOSE (cryo_load.magnet_volume) via the alias-terminal hop.
+        assert alias_hit_count == 19, (
+            f"Expected 19 cross-package alias hits in catf_mfe, got {alias_hit_count}"
         )
 
 
@@ -724,7 +727,12 @@ class TestResultBaselines:
 
     @pytest.mark.req("REQ-BT-04")
     def test_catf_mfe_counts(self, catf_mfe_bt):
-        """catf_mfe: 42 usages, 136 resolutions, 30 MODULE_OUTPUT."""
+        """catf_mfe: 42 usages, 136 resolutions, 31 MODULE_OUTPUT.
+
+        Item 10 stage (a): MODULE_OUTPUT 30→31 — the recaptured snapshot wires the
+        cross-part multi-hop EXPOSE (cryo_load.magnet_volume), turning one fell-through
+        fallback into a resolved module output.
+        """
         result, _, _ = catf_mfe_bt
         assert len(result.required_usages) == 42
         assert len(result.binding_resolutions) == 136
@@ -732,7 +740,7 @@ class TestResultBaselines:
             1 for r in result.binding_resolutions.values()
             if r.resolution_type == BindingResolutionType.MODULE_OUTPUT
         )
-        assert mo_count == 30
+        assert mo_count == 31
 
     @pytest.mark.req("REQ-BT-04")
     def test_attr_expr_probe_counts(self, attr_expr_probe_bt):
@@ -1107,8 +1115,8 @@ class TestC11bConsumerScopeDotted:
         )
 
         # Create minimal usage objects for testing
-        from tests.helpers.snapshot_loader import load_extraction_snapshot
-        snap = load_extraction_snapshot("solar_battery_model")
+        from sysml_codegen.snapshot import load_extraction_snapshot
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
 
         # Find a usage with known QN
         for usage in snap["calc_usages"]:
@@ -1120,7 +1128,7 @@ class TestC11bConsumerScopeDotted:
                 break
 
         # Test a deeper scope from catf_mfe
-        snap2 = load_extraction_snapshot("catf_mfe_model")
+        snap2 = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
         for usage in snap2["calc_usages"]:
             if "catf_radial_build__vacuum_gap__volume_calc" in usage.qualified_name:
                 result = backtracker._consumer_scope_dotted(usage)
@@ -1141,7 +1149,7 @@ class TestC11bPhaseRegistration:
         """Phase 2 CHAIN alias registration resolves canonical_name via
         scoped_lookup() (not resolve()). Verified by registry content equality:
         same aliases registered before and after migration."""
-        snap = load_extraction_snapshot("solar_battery_model")
+        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -1167,7 +1175,7 @@ class TestC11bPhaseRegistration:
     def test_c11b_phase3_expose_pure_no_resolve(self):
         """Phase 3 EXPOSE_PURE alias registration resolves canonical_name
         without resolve(). Same aliases registered."""
-        snap = load_extraction_snapshot("catf_mfe_model")
+        snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -1202,7 +1210,7 @@ class TestC11bPhaseRegistration:
         Same aliases registered."""
         from sysml_codegen.core.output_registry import is_transitive_default
 
-        snap = load_extraction_snapshot("catf_mfe_model")
+        snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -1226,8 +1234,11 @@ class TestC11bPhaseRegistration:
                     phase4_registered += 1
 
         assert phase4_total > 0, "No transitive candidates in catf_mfe"
-        assert phase4_registered == 44, (
-            f"Expected 44 Phase 4 transitive aliases, got {phase4_registered}"
+        # Item 10 stage (a): 44→46 — the recaptured snapshot flips catf's two multi-hop
+        # exposes (magnet_volume_total, blanket_volume_total) FORMULA→EXPOSE_PURE, so both
+        # now appear as design_attributes with transitive defaults and register in Phase 4.
+        assert phase4_registered == 46, (
+            f"Expected 46 Phase 4 transitive aliases, got {phase4_registered}"
         )
 
 

@@ -1,15 +1,888 @@
 {
+  "snapshot_format_version": 1,
   "model_name": "solar_battery_model",
-  "captured_at": "2026-02-17T15:03:00.595068+00:00",
+  "captured_at": "2026-07-06T10:13:34.654178+00:00",
+  "compilation_results": {
+    "PVModuleCostCalc": {
+      "calc_def_name": "PVModuleCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.wattage * inputs.cost_per_watt)",
+          "input_refs": [
+            "wattage",
+            "cost_per_watt"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "InverterCostCalc": {
+      "calc_def_name": "InverterCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.power_rating * inputs.cost_per_watt)",
+          "input_refs": [
+            "power_rating",
+            "cost_per_watt"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "ArrayBOSCostCalc": {
+      "calc_def_name": "ArrayBOSCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((inputs.string_count * inputs.cost_per_string) + (inputs.panel_count * inputs.cost_per_panel_bos))",
+          "input_refs": [
+            "string_count",
+            "cost_per_string",
+            "panel_count",
+            "cost_per_panel_bos"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "BatteryPackCostCalc": {
+      "calc_def_name": "BatteryPackCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((inputs.capacity_kwh * inputs.cost_per_kwh) * inputs.chemistry_factor)",
+          "input_refs": [
+            "capacity_kwh",
+            "cost_per_kwh",
+            "chemistry_factor"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "HybridInverterCostCalc": {
+      "calc_def_name": "HybridInverterCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.power_rating * inputs.cost_per_watt)",
+          "input_refs": [
+            "power_rating",
+            "cost_per_watt"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "BatteryBOSCostCalc": {
+      "calc_def_name": "BatteryBOSCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.pack_count * inputs.cost_per_pack_bos)",
+          "input_refs": [
+            "pack_count",
+            "cost_per_pack_bos"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "RackingCostCalc": {
+      "calc_def_name": "RackingCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.panel_count * inputs.cost_per_panel_rack)",
+          "input_refs": [
+            "panel_count",
+            "cost_per_panel_rack"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "ElectricalPanelCostCalc": {
+      "calc_def_name": "ElectricalPanelCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.base_cost + (inputs.circuit_count * inputs.cost_per_circuit))",
+          "input_refs": [
+            "base_cost",
+            "circuit_count",
+            "cost_per_circuit"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_cost / material_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ]
+    },
+    "PermittingCostCalc": {
+      "calc_def_name": "PermittingCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "fab_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "0.0",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "idiot_index",
+          "compilability": "fully_compilable",
+          "python_expression": "0.0",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "install_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "0.0",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "material_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "0.0",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.system_capacity_kw * inputs.cost_per_kw)",
+          "input_refs": [
+            "system_capacity_kw",
+            "cost_per_kw"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "fab_cost",
+        "idiot_index",
+        "install_cost",
+        "material_cost",
+        "total_cost"
+      ]
+    },
+    "AllocationCostCalc": {
+      "calc_def_name": "AllocationCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "fastener_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.child_count * inputs.fastener_cost_per_child)",
+          "input_refs": [
+            "child_count",
+            "fastener_cost_per_child"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "seal_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.child_count * inputs.seal_cost_per_child)",
+          "input_refs": [
+            "child_count",
+            "seal_cost_per_child"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "wiring_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.total_child_mass * inputs.wiring_cost_per_kg)",
+          "input_refs": [
+            "total_child_mass",
+            "wiring_cost_per_kg"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "total_allocation",
+          "compilability": "fully_compilable",
+          "python_expression": "((fastener_cost + seal_cost) + wiring_cost)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "fastener_cost",
+            "seal_cost",
+            "wiring_cost"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "material_portion",
+          "compilability": "fully_compilable",
+          "python_expression": "(total_allocation * 0.8)",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_allocation"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "fastener_cost",
+        "seal_cost",
+        "wiring_cost",
+        "total_allocation",
+        "material_portion"
+      ]
+    },
+    "EnergyProductionCalc": {
+      "calc_def_name": "EnergyProductionCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "annual_energy_mwh",
+          "compilability": "fully_compilable",
+          "python_expression": "(((8760.0 * inputs.p_net_mw) * inputs.n_mod) * inputs.plant_availability)",
+          "input_refs": [
+            "p_net_mw",
+            "n_mod",
+            "plant_availability"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "annual_energy_mwh"
+      ]
+    },
+    "AnnualizedOMCalc": {
+      "calc_def_name": "AnnualizedOMCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "annual_om_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.om_rate_per_kw_year * inputs.p_net_kw)",
+          "input_refs": [
+            "om_rate_per_kw_year",
+            "p_net_kw"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "annual_om_cost"
+      ]
+    },
+    "AnnualizedFuelCalc": {
+      "calc_def_name": "AnnualizedFuelCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "annual_fuel_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.fuel_unit_cost * inputs.fuel_consumption)",
+          "input_refs": [
+            "fuel_unit_cost",
+            "fuel_consumption"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "annual_fuel_cost"
+      ]
+    },
+    "AnnualizedFinancialCalc": {
+      "calc_def_name": "AnnualizedFinancialCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "capital_recovery_factor",
+          "compilability": "fully_compilable",
+          "python_expression": "((inputs.discount_rate * ((1.0 + inputs.discount_rate) ** inputs.plant_lifetime)) / (((1.0 + inputs.discount_rate) ** inputs.plant_lifetime) - 1.0))",
+          "input_refs": [
+            "discount_rate",
+            "plant_lifetime"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        },
+        {
+          "output_name": "annualized_capital_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(capital_recovery_factor * inputs.total_capex)",
+          "input_refs": [
+            "total_capex"
+          ],
+          "intermediate_refs": [
+            "capital_recovery_factor"
+          ],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "capital_recovery_factor",
+        "annualized_capital_cost"
+      ]
+    },
+    "LCOECalc": {
+      "calc_def_name": "LCOECalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "lcoe_per_mwh",
+          "compilability": "fully_compilable",
+          "python_expression": "((inputs.annualized_capital_cost + ((inputs.annual_om_cost + inputs.annual_fuel_cost) * ((1.0 + inputs.yearly_inflation) ** inputs.plant_lifetime))) / inputs.annual_energy_mwh)",
+          "input_refs": [
+            "annualized_capital_cost",
+            "annual_om_cost",
+            "annual_fuel_cost",
+            "yearly_inflation",
+            "plant_lifetime",
+            "annual_energy_mwh"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "lcoe_per_mwh"
+      ]
+    }
+  },
   "calc_defs": [
     {
       "name": "PVModuleCostCalc",
       "qualified_name": "SolarBatteryLibrary::PVModuleCostCalc",
       "doc_comment": "Cost calculation for photovoltaic modules.\nMaterial cost driven by wattage and cost per watt.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 1.07",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = wattage * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -152,7 +1025,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 27,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -175,9 +1048,9 @@
       "qualified_name": "SolarBatteryLibrary::InverterCostCalc",
       "doc_comment": "Cost calculation for string inverters.\nMaterial cost driven by power rating.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 0.286",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = power_rating * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -307,7 +1180,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 50,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -329,10 +1202,10 @@
       "qualified_name": "SolarBatteryLibrary::ArrayBOSCostCalc",
       "doc_comment": "Cost calculation for solar array balance-of-system.\nIncludes combiners, disconnects, conduit per string and per panel.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_string = LiteralRationalEvaluation()",
-        "cost_per_panel_bos = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_string = 150.0",
+        "cost_per_panel_bos = 30.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = string_count * cost_per_string + panel_count * cost_per_panel_bos",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -488,7 +1361,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 72,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -512,9 +1385,9 @@
       "qualified_name": "SolarBatteryLibrary::BatteryPackCostCalc",
       "doc_comment": "Cost calculation for battery packs.\nMaterial cost driven by capacity and chemistry factor.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_kwh = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_kwh = 171.5",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = capacity_kwh * cost_per_kwh * chemistry_factor",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -657,7 +1530,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 96,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -680,9 +1553,9 @@
       "qualified_name": "SolarBatteryLibrary::HybridInverterCostCalc",
       "doc_comment": "Cost calculation for hybrid (bidirectional) inverters.\nMaterial cost driven by power rating.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_watt = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_watt = 0.1714",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = power_rating * cost_per_watt",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -812,7 +1685,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 119,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -834,9 +1707,9 @@
       "qualified_name": "SolarBatteryLibrary::BatteryBOSCostCalc",
       "doc_comment": "Cost calculation for battery balance-of-system.\nIncludes management system, wiring, thermal management per pack.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_pack_bos = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_pack_bos = 71.5",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = pack_count * cost_per_pack_bos",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -966,7 +1839,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 141,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -988,9 +1861,9 @@
       "qualified_name": "SolarBatteryLibrary::RackingCostCalc",
       "doc_comment": "Cost calculation for racking and mounting hardware.\nMaterial cost driven by panel count. Tilt angle is a design parameter\nbut does not affect cost in this simplified model.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_panel_rack = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "cost_per_panel_rack = 57.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = panel_count * cost_per_panel_rack",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1133,7 +2006,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 163,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1156,10 +2029,10 @@
       "qualified_name": "SolarBatteryLibrary::ElectricalPanelCostCalc",
       "doc_comment": "Cost calculation for electrical panel and breakers.\nBase cost plus per-circuit cost.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "base_cost = LiteralRationalEvaluation()",
-        "cost_per_circuit = LiteralRationalEvaluation()",
-        "fab_factor = LiteralRationalEvaluation()",
-        "install_factor = LiteralRationalEvaluation()",
+        "base_cost = 150.0",
+        "cost_per_circuit = 34.0",
+        "fab_factor = 0.45",
+        "install_factor = 0.3",
         "material_cost = base_cost + circuit_count * cost_per_circuit",
         "fab_cost = material_cost * fab_factor",
         "install_cost = material_cost * install_factor",
@@ -1302,7 +2175,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 187,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1325,12 +2198,12 @@
       "qualified_name": "SolarBatteryLibrary::PermittingCostCalc",
       "doc_comment": "Cost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "cost_per_kw = LiteralRationalEvaluation()",
-        "material_cost = LiteralRationalEvaluation()",
-        "fab_cost = LiteralRationalEvaluation()",
-        "install_cost = LiteralRationalEvaluation()",
+        "cost_per_kw = 187.5",
+        "material_cost = 0.0",
+        "fab_cost = 0.0",
+        "install_cost = 0.0",
         "total_cost = system_capacity_kw * cost_per_kw",
-        "idiot_index = LiteralRationalEvaluation()",
+        "idiot_index = 0.0",
         "\nDocumentation:\nCost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -1429,7 +2302,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 210,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1449,14 +2322,14 @@
       "qualified_name": "SolarBatteryLibrary::AllocationCostCalc",
       "doc_comment": "Bundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "fastener_cost_per_child = LiteralRationalEvaluation()",
-        "seal_cost_per_child = LiteralRationalEvaluation()",
-        "wiring_cost_per_kg = LiteralRationalEvaluation()",
+        "fastener_cost_per_child = 0.5",
+        "seal_cost_per_child = 0.3",
+        "wiring_cost_per_kg = 2.0",
         "fastener_cost = child_count * fastener_cost_per_child",
         "seal_cost = child_count * seal_cost_per_child",
         "wiring_cost = total_child_mass * wiring_cost_per_kg",
         "total_allocation = fastener_cost + seal_cost + wiring_cost",
-        "material_portion = total_allocation * LiteralRationalEvaluation()",
+        "material_portion = total_allocation * 0.8",
         "\nDocumentation:\nBundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -1594,7 +2467,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 235,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1617,7 +2490,7 @@
       "qualified_name": "SolarBatteryLibrary::EnergyProductionCalc",
       "doc_comment": "Annual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "annual_energy_mwh = LiteralRationalEvaluation() * p_net_mw * n_mod * plant_availability",
+        "annual_energy_mwh = 8760.0 * p_net_mw * n_mod * plant_availability",
         "\nDocumentation:\nAnnual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -1677,7 +2550,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 267,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1741,7 +2614,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 283,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1804,7 +2677,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 298,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1820,7 +2693,7 @@
       "qualified_name": "SolarBatteryLibrary::AnnualizedFinancialCalc",
       "doc_comment": "Annualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "capital_recovery_factor = discount_rate * LiteralRationalEvaluation() + discount_rate ** plant_lifetime / LiteralRationalEvaluation() + discount_rate ** plant_lifetime - LiteralRationalEvaluation()",
+        "capital_recovery_factor = discount_rate * (1.0 + discount_rate) ** plant_lifetime / ((1.0 + discount_rate) ** plant_lifetime - 1.0)",
         "annualized_capital_cost = capital_recovery_factor * total_capex",
         "\nDocumentation:\nAnnualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01"
       ],
@@ -1894,7 +2767,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 314,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1912,7 +2785,7 @@
       "qualified_name": "SolarBatteryLibrary::LCOECalc",
       "doc_comment": "Levelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01",
       "calc_expressions": [
-        "lcoe_per_mwh = annualized_capital_cost + annual_om_cost + annual_fuel_cost * LiteralRationalEvaluation() + yearly_inflation ** plant_lifetime / annual_energy_mwh",
+        "lcoe_per_mwh = (annualized_capital_cost + (annual_om_cost + annual_fuel_cost) * (1.0 + yearly_inflation) ** plant_lifetime) / annual_energy_mwh",
         "\nDocumentation:\nLevelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01"
       ],
       "input_attributes": [
@@ -2011,7 +2884,7 @@
         }
       ],
       "references": [],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 335,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2075,7 +2948,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "solar_battery_model/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 68,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production",
@@ -2117,7 +2990,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "solar_battery_model/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 74,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om",
@@ -2159,7 +3032,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "solar_battery_model/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 79,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel",
@@ -2214,7 +3087,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "solar_battery_model/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 84,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial",
@@ -2308,7 +3181,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "solar_battery_model/design.sysml",
+      "source_file": "design.sysml",
       "source_line": 90,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe",
@@ -2354,7 +3227,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 378,
       "parent_part_path": "solar_battery_plant.solar_array.pv_module",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model",
@@ -2387,7 +3260,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 403,
       "parent_part_path": "solar_battery_plant.solar_array.inverter",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model",
@@ -2434,7 +3307,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 427,
       "parent_part_path": "solar_battery_plant.solar_array.array_bos",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model",
@@ -2480,7 +3353,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 452,
       "parent_part_path": "solar_battery_plant.battery_system.battery_pack",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model",
@@ -2513,7 +3386,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 476,
       "parent_part_path": "solar_battery_plant.battery_system.hybrid_inverter",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model",
@@ -2546,7 +3419,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 499,
       "parent_part_path": "solar_battery_plant.battery_system.battery_bos",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model",
@@ -2592,7 +3465,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 523,
       "parent_part_path": "solar_battery_plant.site_infra.racking",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model",
@@ -2626,7 +3499,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 547,
       "parent_part_path": "solar_battery_plant.site_infra.electrical_panel",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model",
@@ -2657,7 +3530,7 @@
       "unbound_params": [
         "cost_per_kw"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 571,
       "parent_part_path": "solar_battery_plant.site_infra.permitting",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model",
@@ -2703,7 +3576,7 @@
         "seal_cost_per_child",
         "wiring_cost_per_kg"
       ],
-      "source_file": "solar_battery_model/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 607,
       "parent_part_path": "solar_battery_plant.solar_array",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model",
@@ -2713,915 +3586,13 @@
     }
   ],
   "design_attributes": {
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/solar_battery_model/library.sysml": [
-      {
-        "name": "cost_per_watt",
-        "sysml_type": "Real",
-        "default_value": "1.07",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 39,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__cost_per_watt"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 40,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 41,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 43,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 44,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 45,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 46,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 47,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_watt",
-        "sysml_type": "Real",
-        "default_value": "0.286",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 61,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__cost_per_watt"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 62,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 63,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 65,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 66,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 67,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 68,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 69,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_string",
-        "sysml_type": "Real",
-        "default_value": "150.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 84,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__cost_per_string"
-      },
-      {
-        "name": "cost_per_panel_bos",
-        "sysml_type": "Real",
-        "default_value": "30.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 85,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__cost_per_panel_bos"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 86,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 87,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 89,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 90,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 91,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 92,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 93,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_kwh",
-        "sysml_type": "Real",
-        "default_value": "171.5",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 108,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__cost_per_kwh"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 109,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 110,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 112,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 113,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 114,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 115,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 116,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_watt",
-        "sysml_type": "Real",
-        "default_value": "0.1714",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 130,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__cost_per_watt"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 131,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 132,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 134,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 135,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 136,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 137,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 138,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_pack_bos",
-        "sysml_type": "Real",
-        "default_value": "71.5",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 152,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__cost_per_pack_bos"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 153,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 154,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 156,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 157,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 158,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 159,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 160,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_panel_rack",
-        "sysml_type": "Real",
-        "default_value": "57.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 176,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__cost_per_panel_rack"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 177,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 178,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 180,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 181,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 182,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 183,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 184,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__idiot_index"
-      },
-      {
-        "name": "base_cost",
-        "sysml_type": "Real",
-        "default_value": "150.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 198,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__base_cost"
-      },
-      {
-        "name": "cost_per_circuit",
-        "sysml_type": "Real",
-        "default_value": "34.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 199,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__cost_per_circuit"
-      },
-      {
-        "name": "fab_factor",
-        "sysml_type": "Real",
-        "default_value": "0.45",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 200,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__fab_factor"
-      },
-      {
-        "name": "install_factor",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 201,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__install_factor"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 203,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 204,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 205,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 206,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 207,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__idiot_index"
-      },
-      {
-        "name": "cost_per_kw",
-        "sysml_type": "Real",
-        "default_value": "187.5",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 222,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__cost_per_kw"
-      },
-      {
-        "name": "material_cost",
-        "sysml_type": "Real",
-        "default_value": "0.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 224,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__material_cost"
-      },
-      {
-        "name": "fab_cost",
-        "sysml_type": "Real",
-        "default_value": "0.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 225,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__fab_cost"
-      },
-      {
-        "name": "install_cost",
-        "sysml_type": "Real",
-        "default_value": "0.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 226,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__install_cost"
-      },
-      {
-        "name": "total_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 227,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__total_cost"
-      },
-      {
-        "name": "idiot_index",
-        "sysml_type": "Real",
-        "default_value": "0.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 228,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__idiot_index"
-      },
-      {
-        "name": "fastener_cost_per_child",
-        "sysml_type": "Real",
-        "default_value": "0.5",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 251,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__fastener_cost_per_child"
-      },
-      {
-        "name": "seal_cost_per_child",
-        "sysml_type": "Real",
-        "default_value": "0.3",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 252,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__seal_cost_per_child"
-      },
-      {
-        "name": "wiring_cost_per_kg",
-        "sysml_type": "Real",
-        "default_value": "2.0",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 253,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__wiring_cost_per_kg"
-      },
-      {
-        "name": "fastener_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 255,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__fastener_cost"
-      },
-      {
-        "name": "seal_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 256,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__seal_cost"
-      },
-      {
-        "name": "wiring_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 257,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__wiring_cost"
-      },
-      {
-        "name": "total_allocation",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 258,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__total_allocation"
-      },
-      {
-        "name": "material_portion",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 260,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__material_portion"
-      },
-      {
-        "name": "annual_energy_mwh",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 280,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__EnergyProductionCalc__annual_energy_mwh"
-      },
-      {
-        "name": "annual_om_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 295,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AnnualizedOMCalc__annual_om_cost"
-      },
-      {
-        "name": "annual_fuel_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 311,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AnnualizedFuelCalc__annual_fuel_cost"
-      },
-      {
-        "name": "capital_recovery_factor",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 329,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AnnualizedFinancialCalc__capital_recovery_factor"
-      },
-      {
-        "name": "annualized_capital_cost",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 332,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__AnnualizedFinancialCalc__annualized_capital_cost"
-      },
-      {
-        "name": "lcoe_per_mwh",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 352,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__LCOECalc__lcoe_per_mwh"
-      },
-      {
-        "name": "module_count",
-        "sysml_type": "Integer",
-        "default_value": "20",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 598,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__Solar_Array__module_count"
-      },
-      {
-        "name": "inverter_count",
-        "sysml_type": "Integer",
-        "default_value": "4",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 599,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__Solar_Array__inverter_count"
-      },
-      {
-        "name": "misc_hardware_cost",
-        "sysml_type": "Real",
-        "default_value": "allocation_model.total_allocation",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 612,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__Solar_Array__misc_hardware_cost"
-      },
-      {
-        "name": "pack_count",
-        "sysml_type": "Integer",
-        "default_value": "8",
-        "unit": null,
-        "source_file": "solar_battery_model/library.sysml",
-        "source_line": 651,
-        "parent_part": "",
-        "qualified_name": "SolarBatteryLibrary__Battery_System__pack_count"
-      }
-    ],
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/solar_battery_model/design.sysml": [
       {
         "name": "p_net_mw",
         "sysml_type": "Real",
         "default_value": "0.008",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 53,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw"
@@ -3631,7 +3602,7 @@
         "sysml_type": "Real",
         "default_value": "1.0",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 54,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__n_mod"
@@ -3641,7 +3612,7 @@
         "sysml_type": "Real",
         "default_value": "0.159",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 55,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_availability"
@@ -3651,7 +3622,7 @@
         "sysml_type": "Real",
         "default_value": "25.0",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 56,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_lifetime"
@@ -3661,7 +3632,7 @@
         "sysml_type": "Real",
         "default_value": "0.0245",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 57,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__yearly_inflation"
@@ -3671,7 +3642,7 @@
         "sysml_type": "Real",
         "default_value": "0.05",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 58,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__discount_rate"
@@ -3681,7 +3652,7 @@
         "sysml_type": "Real",
         "default_value": "20.0",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 59,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year"
@@ -3691,7 +3662,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 61,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost"
@@ -3701,10 +3672,912 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "solar_battery_model/design.sysml",
+        "source_file": "design.sysml",
         "source_line": 62,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_consumption"
+      }
+    ],
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/solar_battery_model/library.sysml": [
+      {
+        "name": "cost_per_watt",
+        "sysml_type": "Real",
+        "default_value": "1.07",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 39,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__cost_per_watt"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 40,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 41,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 43,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 44,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 45,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 46,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 47,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_watt",
+        "sysml_type": "Real",
+        "default_value": "0.286",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 61,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__cost_per_watt"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 62,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 63,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 65,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 66,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 67,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 68,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 69,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__InverterCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_string",
+        "sysml_type": "Real",
+        "default_value": "150.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 84,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__cost_per_string"
+      },
+      {
+        "name": "cost_per_panel_bos",
+        "sysml_type": "Real",
+        "default_value": "30.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 85,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__cost_per_panel_bos"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 86,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 87,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 89,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 90,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 91,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 92,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 93,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_kwh",
+        "sysml_type": "Real",
+        "default_value": "171.5",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 108,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__cost_per_kwh"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 109,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 110,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 112,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 113,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 114,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 115,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 116,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_watt",
+        "sysml_type": "Real",
+        "default_value": "0.1714",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 130,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__cost_per_watt"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 131,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 132,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 134,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 135,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 136,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 137,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 138,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_pack_bos",
+        "sysml_type": "Real",
+        "default_value": "71.5",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 152,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__cost_per_pack_bos"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 153,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 154,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 156,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 157,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 158,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 159,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 160,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_panel_rack",
+        "sysml_type": "Real",
+        "default_value": "57.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 176,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__cost_per_panel_rack"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 177,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 178,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 180,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 181,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 182,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 183,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 184,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__RackingCostCalc__idiot_index"
+      },
+      {
+        "name": "base_cost",
+        "sysml_type": "Real",
+        "default_value": "150.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 198,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__base_cost"
+      },
+      {
+        "name": "cost_per_circuit",
+        "sysml_type": "Real",
+        "default_value": "34.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 199,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__cost_per_circuit"
+      },
+      {
+        "name": "fab_factor",
+        "sysml_type": "Real",
+        "default_value": "0.45",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 200,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__fab_factor"
+      },
+      {
+        "name": "install_factor",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 201,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__install_factor"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 203,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 204,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 205,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 206,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 207,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__idiot_index"
+      },
+      {
+        "name": "cost_per_kw",
+        "sysml_type": "Real",
+        "default_value": "187.5",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 222,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__cost_per_kw"
+      },
+      {
+        "name": "material_cost",
+        "sysml_type": "Real",
+        "default_value": "0.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 224,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__material_cost"
+      },
+      {
+        "name": "fab_cost",
+        "sysml_type": "Real",
+        "default_value": "0.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 225,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__fab_cost"
+      },
+      {
+        "name": "install_cost",
+        "sysml_type": "Real",
+        "default_value": "0.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 226,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__install_cost"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 227,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__total_cost"
+      },
+      {
+        "name": "idiot_index",
+        "sysml_type": "Real",
+        "default_value": "0.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 228,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__idiot_index"
+      },
+      {
+        "name": "fastener_cost_per_child",
+        "sysml_type": "Real",
+        "default_value": "0.5",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 251,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__fastener_cost_per_child"
+      },
+      {
+        "name": "seal_cost_per_child",
+        "sysml_type": "Real",
+        "default_value": "0.3",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 252,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__seal_cost_per_child"
+      },
+      {
+        "name": "wiring_cost_per_kg",
+        "sysml_type": "Real",
+        "default_value": "2.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 253,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__wiring_cost_per_kg"
+      },
+      {
+        "name": "fastener_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 255,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__fastener_cost"
+      },
+      {
+        "name": "seal_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 256,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__seal_cost"
+      },
+      {
+        "name": "wiring_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 257,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__wiring_cost"
+      },
+      {
+        "name": "total_allocation",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 258,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__total_allocation"
+      },
+      {
+        "name": "material_portion",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 260,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__material_portion"
+      },
+      {
+        "name": "annual_energy_mwh",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 280,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__EnergyProductionCalc__annual_energy_mwh"
+      },
+      {
+        "name": "annual_om_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 295,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AnnualizedOMCalc__annual_om_cost"
+      },
+      {
+        "name": "annual_fuel_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 311,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AnnualizedFuelCalc__annual_fuel_cost"
+      },
+      {
+        "name": "capital_recovery_factor",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 329,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AnnualizedFinancialCalc__capital_recovery_factor"
+      },
+      {
+        "name": "annualized_capital_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 332,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__AnnualizedFinancialCalc__annualized_capital_cost"
+      },
+      {
+        "name": "lcoe_per_mwh",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 352,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__LCOECalc__lcoe_per_mwh"
+      },
+      {
+        "name": "module_count",
+        "sysml_type": "Integer",
+        "default_value": "20",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 598,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__Solar_Array__module_count"
+      },
+      {
+        "name": "inverter_count",
+        "sysml_type": "Integer",
+        "default_value": "4",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 599,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__Solar_Array__inverter_count"
+      },
+      {
+        "name": "misc_hardware_cost",
+        "sysml_type": "Real",
+        "default_value": "allocation_model.total_allocation",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 612,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__Solar_Array__misc_hardware_cost"
+      },
+      {
+        "name": "pack_count",
+        "sysml_type": "Integer",
+        "default_value": "8",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 651,
+        "parent_part": "",
+        "qualified_name": "SolarBatteryLibrary__Battery_System__pack_count"
       }
     ]
   },
@@ -6413,7 +7286,11 @@
       "compiled_expression": null,
       "is_on_part_definition": true,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "allocation_model",
+        "total_allocation"
+      ]
     },
     {
       "name": "p_net_kw",
@@ -6421,7 +7298,7 @@
       "owning_part_name": "solar_battery_plant",
       "owning_part_qualified_name": "SolarBatteryDesign::solar_battery_plant",
       "expression_ast": null,
-      "expression_text": "p_net_mw * LiteralRationalEvaluation()",
+      "expression_text": "p_net_mw * 1000.0",
       "references": [
         {
           "name": "p_net_mw",
@@ -6434,7 +7311,8 @@
       "compiled_expression": "(inputs.p_net_mw * 1000.0)",
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": null
     }
   ],
   "channel_aliases": [

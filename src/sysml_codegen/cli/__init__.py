@@ -21,6 +21,7 @@ import jinja2
 
 if TYPE_CHECKING:
     from sysml_codegen.generation import PipelineContext
+    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
 
 # Note: Heavy imports moved inside run_codegen to avoid loading generation
 # module at CLI import time. This keeps CLI startup fast.
@@ -62,8 +63,9 @@ def get_commands_dir() -> Path:
 class GenerationConfig:
     """Configuration for code generation."""
 
-    models_path: Path
     output_path: Path
+    models_path: Path | None = None  # None when generating from a snapshot
+    from_snapshot: Path | None = None  # snapshot to generate from (else live)
     package_name: str = "generated_code"  # Parameterized, was: fusion_simkit
     schema_class_name: str = "Params"  # Parameterized, was: FusionParams
     pipeline_name: str = "pipeline"  # Parameterized, was: catf_fusion
@@ -157,6 +159,115 @@ def _get_python_path(module):
         sysml_qn = module.calc_def_qualified_name
     sqn = SysMLQualifiedName(sysml_qn)
     return PythonModulePath.from_sysml(sqn)
+
+
+def _raw_source_name(module: PipelineModule) -> str:
+    """Raw SysML spelling of a module, for duplicate-path provenance.
+
+    After sanitize the colliding modules share a derived identifier, so the
+    error must recover each raw name. For a FORMULA module that is the owner QN
+    plus the raw attribute name; for a calc-usage module the raw calc-def QN.
+    Both are raw (never sanitized) on every module type that can collide.
+    """
+    if module.is_computed_attribute:
+        return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
+    return module.calc_def_qualified_name or module.name
+
+
+def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
+    """Fail fast when two distinct SysML names sanitize to one output file.
+
+    Run BEFORE _clear_output_directory so a collision never wipes or silently
+    overwrites existing output. Covers the two write key spaces a
+    sanitize-collision spans (D2):
+
+    - Modules + stencils share the derived python path (stencils are
+      `{filename}_impl.py` from the same _get_python_path output), so one path
+      check covers both.
+    - Schemas are keyed on `calc_def_name.lower()` (only multi-output modules
+      reach the schema pass), a *different* key space: two calc defs whose names
+      lower to one identifier collide on `x_output.py` even when module paths
+      differ.
+
+    Only a collision between *different* raw sources is an error -- multiple
+    usages of one calc def legitimately derive the same path.
+    """
+    from sysml_codegen.generation import CodeGenerationError
+
+    module_paths: dict[str, str] = {}
+    for module in modules:
+        path = _get_python_path(module).full_path
+        raw = _raw_source_name(module)
+        prior = module_paths.get(path)
+        if prior is not None and prior != raw:
+            raise CodeGenerationError(
+                f"Duplicate output path: SysML names {prior!r} and {raw!r} both "
+                f"derive modules/{path}. Rename one, or this would silently overwrite."
+            )
+        module_paths[path] = raw
+
+    schema_sources: dict[str, str] = {}
+    for module in modules:
+        if len(module.outputs) < 2 or not module.calc_def_name:
+            continue
+        schema_file = f"{module.calc_def_name.lower()}_output.py"
+        raw = _raw_source_name(module)
+        prior = schema_sources.get(schema_file)
+        if prior is not None and prior != raw:
+            raise CodeGenerationError(
+                f"Duplicate output path: SysML names {prior!r} and {raw!r} both "
+                f"derive schemas/{schema_file}. Rename one, or this would silently "
+                f"overwrite."
+            )
+        schema_sources[schema_file] = raw
+
+
+def _reconcile_params_coverage(graph: ComputationGraph) -> None:
+    """Reconcile the fell-through-valueless entry points (Item 7 / D4, M1).
+
+    Runs at the generation boundary, BEFORE output is cleared, beside
+    ``_check_duplicate_output_paths``. Partitions the fell-through, valueless
+    entry points by whether pipeline wiring references them:
+
+    - **unwired** remainder → one WARNING reconciliation summary (tracked
+      residue; no runtime ``KeyError``). Logged FIRST so the digest reaches the
+      operator even when generation aborts.
+    - **wired** half → V11 hard error, generation aborts. The JSON never mints
+      the key but the pipeline references it → guaranteed runtime ``KeyError``.
+
+    Always strict (no escape-hatch flag). Raises ``CodeGenerationError`` on any
+    wired violation, matching the ``_check_duplicate_output_paths`` fail-fast
+    idiom (caught by ``run_codegen``, aborts the run).
+    """
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.resolution.graph_builder import (
+        collect_uncovered_params,
+        collect_unwired_fallthrough,
+    )
+
+    # Reconciliation summary first (unwired remainder), so the operator sees the
+    # digest even if the V11 raise below aborts the run.
+    unwired = collect_unwired_fallthrough(graph)
+    if unwired:
+        logger.warning(
+            "Unresolved after assembly: %d entry point(s) fell through and still "
+            "lack a value (unwired): %s",
+            len(unwired), unwired,
+        )
+
+    uncovered = collect_uncovered_params(graph)
+    if uncovered:
+        details = "; ".join(
+            f"module '{u.module}' input '{u.input}' -> params key '{u.missing_key}'"
+            for u in uncovered
+        )
+        raise CodeGenerationError(
+            f"V11: {len(uncovered)} module input(s) reference a params key that no "
+            f"parameter group provides — the JSON never mints the key, so the "
+            f"pipeline will KeyError at load. Cause: an unresolved cross-part "
+            f"reference not yet wired (Items 9-11) or a resolution bug. "
+            f"Offenders: {details}"
+        )
 
 
 def _generate_schemas(
@@ -444,8 +555,18 @@ def cmd_generate(args: argparse.Namespace) -> int:
         logger.error("agentic-mbse is not installed. Please install it first.")
         return 1
 
+    # --design-path-filter is baked into the snapshot at capture, so re-applying
+    # it at generation is meaningless — reject rather than silently no-op (V6).
+    if args.from_snapshot is not None and args.design_path_filter:
+        logger.error(
+            "--design-path-filter cannot be combined with --from-snapshot "
+            "(the filter is baked into the snapshot at capture)."
+        )
+        return 1
+
     config = GenerationConfig(
         models_path=args.models,
+        from_snapshot=args.from_snapshot,
         output_path=args.output,
         package_name=args.package_name,
         schema_class_name=args.schema_class,
@@ -458,6 +579,28 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
     success = run_codegen(config)
     return 0 if success else 1
+
+
+def cmd_snapshot(args: argparse.Namespace) -> int:
+    """Capture a versioned extraction snapshot from live models."""
+    level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+
+    try:
+        import agentic_mbse  # noqa: F401
+    except ImportError:
+        logger.error("agentic-mbse is not installed. Please install it first.")
+        return 1
+
+    from sysml_codegen.snapshot import capture_snapshot
+
+    models_path: Path = args.models
+    output_path: Path = args.output or (models_path / "extraction_snapshot.json")
+    out = capture_snapshot(
+        [models_path], output_path, design_path_filter=args.design_path_filter
+    )
+    logger.info(f"Wrote snapshot to {out}")
+    return 0
 
 
 def cmd_install_commands(args: argparse.Namespace) -> int:
@@ -507,11 +650,18 @@ def main() -> None:
         "generate",
         help="Generate Python code from SysML v2 models"
     )
-    gen_parser.add_argument(
+    # Exactly one extraction input: live --models or a captured --from-snapshot
+    # (both-forbidden / neither-forbidden come free from a required group — INV-7).
+    gen_input = gen_parser.add_mutually_exclusive_group(required=True)
+    gen_input.add_argument(
         "--models", "-m",
         type=Path,
-        required=True,
-        help="Path to SysML model directory or file"
+        help="Path to SysML model directory or file (live extraction)"
+    )
+    gen_input.add_argument(
+        "--from-snapshot",
+        type=Path,
+        help="Path to a captured extraction snapshot (license-free generation)"
     )
     gen_parser.add_argument(
         "--output", "-o",
@@ -565,6 +715,36 @@ def main() -> None:
     )
     gen_parser.set_defaults(func=cmd_generate)
 
+    # Snapshot subcommand — capture a versioned snapshot from live models (D5)
+    snap_parser = subparsers.add_parser(
+        "snapshot",
+        help="Capture a versioned extraction snapshot from live models"
+    )
+    snap_parser.add_argument(
+        "--models", "-m",
+        type=Path,
+        required=True,
+        help="Path to SysML model directory or file"
+    )
+    snap_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        default=None,
+        help="Snapshot output path (default: <models>/extraction_snapshot.json)"
+    )
+    snap_parser.add_argument(
+        "--design-path-filter",
+        type=str,
+        default="",
+        help="Substring filter for design file paths (baked into the snapshot)"
+    )
+    snap_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose logging"
+    )
+    snap_parser.set_defaults(func=cmd_snapshot)
+
     # Install-commands subcommand
     install_parser = subparsers.add_parser(
         "install-commands",
@@ -612,19 +792,38 @@ def run_codegen(config: GenerationConfig) -> bool:
     )
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
-    logger.info(f"Generating code from {config.models_path}")
+    source = config.from_snapshot if config.from_snapshot is not None else config.models_path
+    logger.info(f"Generating code from {source}")
     logger.info(f"Output to {config.output_path}")
     logger.info(f"Package name: {config.package_name}")
 
     try:
-        # Step 1: Build pipeline context (7-step initialization)
+        # Step 1: Build pipeline context — from a snapshot (license-free) or from
+        # live extraction (7-step initialization). Both converge on PipelineContext.
         logger.info("Building pipeline context...")
-        ctx = build_pipeline_context(
-            [config.models_path],
-            design_path_filter=config.design_path_filter,
-        )
+        if config.from_snapshot is not None:
+            from sysml_codegen.orchestration.snapshot_context import (
+                build_pipeline_context_from_snapshot,
+            )
+
+            ctx = build_pipeline_context_from_snapshot(config.from_snapshot)
+        else:
+            assert config.models_path is not None  # guaranteed by the CLI group
+            ctx = build_pipeline_context(
+                [config.models_path],
+                design_path_filter=config.design_path_filter,
+            )
         logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
         logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
+
+        # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
+        # duplicate path never wipes or silently overwrites existing files.
+        _check_duplicate_output_paths(ctx.computation_graph.modules)
+
+        # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
+        # strict — logs the unwired-remainder summary, then raises V11 on any
+        # wired fell-through-valueless input. Before output clear, like 1.5.
+        _reconcile_params_coverage(ctx.computation_graph)
 
         # Step 2: Clear and setup output directories
         if config.overwrite:

@@ -239,7 +239,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "length - LiteralRationalEvaluation()"
+        "length - 1.0"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -379,7 +379,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "LiteralRationalEvaluation() * length + LiteralRationalEvaluation() * width"
+        "2.0 * length + 2.0 * width"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -455,7 +455,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "r_inner + r_outer / LiteralRationalEvaluation() - r_major"
+        "(r_inner + r_outer) / 2.0 - r_major"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -595,7 +595,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "p_fusion * LiteralRationalEvaluation() / LiteralRationalEvaluation()"
+        "p_fusion * 3.52 / 17.58"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -647,7 +647,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "p_fusion * LiteralRationalEvaluation() / LiteralRationalEvaluation()"
+        "p_fusion * 14.06 / 17.58"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -771,7 +771,7 @@
       "calc_def_qualified_name": "AttrExprProbeDesign::probe_design",
       "doc_comment": null,
       "calc_expressions": [
-        "m_neutron * p_fusion + p_input + eta_thermal * f_pump * eta_pump + f_subsystem * m_neutron * p_fusion"
+        "m_neutron * p_fusion + p_input + eta_thermal * (f_pump * eta_pump + f_subsystem) * (m_neutron * p_fusion)"
       ],
       "source_file": "unknown",
       "source_line": 0
@@ -816,18 +816,28 @@
         }
       ],
       "execution_order": 11,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "result",
+            "expression": "(inputs.value * inputs.factor)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.value * inputs.factor)"
+      },
       "calc_def_name": "ScaleCalc",
       "calc_def_qualified_name": "AttrExprProbeLibrary::ScaleCalc",
       "doc_comment": "",
       "calc_expressions": [
         "result = value * factor"
       ],
-      "source_file": "attr_expr_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 5
     },
     {
@@ -930,19 +940,33 @@
         }
       ],
       "execution_order": 13,
-      "compilability": "unknown",
+      "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
       "is_aggregation": false,
-      "auto_impl_context": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "half",
+            "expression": "(inputs.total / 2.0)"
+          },
+          {
+            "name": "quarter",
+            "expression": "(inputs.total / 4.0)"
+          }
+        ],
+        "output_count": 2,
+        "single_output_expression": null
+      },
       "calc_def_name": "SplitCalc",
       "calc_def_qualified_name": "AttrExprProbeLibrary::SplitCalc",
       "doc_comment": "",
       "calc_expressions": [
-        "half = total / LiteralRationalEvaluation()",
-        "quarter = total / LiteralRationalEvaluation()"
+        "half = total / 2.0",
+        "quarter = total / 4.0"
       ],
-      "source_file": "attr_expr_probe/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 12
     },
     {
@@ -1081,19 +1105,46 @@
       "source_file": "design.sysml",
       "parameters": [
         {
-          "qualified_name": "AttrExprProbeDesign__probe_design__length",
-          "simple_name": "length",
+          "qualified_name": "AttrExprProbeDesign__probe_design__eta_direct",
+          "simple_name": "eta_direct",
           "entry_type": "design_attribute",
-          "default_value": 10.0,
+          "default_value": 0.85,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "AttrExprProbeDesign__probe_design__width",
-          "simple_name": "width",
+          "qualified_name": "AttrExprProbeDesign__probe_design__eta_pump",
+          "simple_name": "eta_pump",
           "entry_type": "design_attribute",
-          "default_value": 5.0,
+          "default_value": 0.5,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "AttrExprProbeDesign__probe_design__eta_thermal",
+          "simple_name": "eta_thermal",
+          "entry_type": "design_attribute",
+          "default_value": 0.46,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "AttrExprProbeDesign__probe_design__f_pump",
+          "simple_name": "f_pump",
+          "entry_type": "design_attribute",
+          "default_value": 0.06,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "AttrExprProbeDesign__probe_design__f_subsystem",
+          "simple_name": "f_subsystem",
+          "entry_type": "design_attribute",
+          "default_value": 0.03,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
@@ -1108,10 +1159,19 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "AttrExprProbeDesign__probe_design__rate",
-          "simple_name": "rate",
+          "qualified_name": "AttrExprProbeDesign__probe_design__length",
+          "simple_name": "length",
           "entry_type": "design_attribute",
-          "default_value": 12.0,
+          "default_value": 10.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "AttrExprProbeDesign__probe_design__m_neutron",
+          "simple_name": "m_neutron",
+          "entry_type": "design_attribute",
+          "default_value": 1.1,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
@@ -1144,64 +1204,19 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "AttrExprProbeDesign__probe_design__eta_thermal",
-          "simple_name": "eta_thermal",
-          "entry_type": "design_attribute",
-          "default_value": 0.46,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "AttrExprProbeDesign__probe_design__eta_direct",
-          "simple_name": "eta_direct",
-          "entry_type": "design_attribute",
-          "default_value": 0.85,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "AttrExprProbeDesign__probe_design__m_neutron",
-          "simple_name": "m_neutron",
-          "entry_type": "design_attribute",
-          "default_value": 1.1,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "AttrExprProbeDesign__probe_design__f_pump",
-          "simple_name": "f_pump",
-          "entry_type": "design_attribute",
-          "default_value": 0.06,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "AttrExprProbeDesign__probe_design__eta_pump",
-          "simple_name": "eta_pump",
-          "entry_type": "design_attribute",
-          "default_value": 0.5,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "AttrExprProbeDesign__probe_design__f_subsystem",
-          "simple_name": "f_subsystem",
-          "entry_type": "design_attribute",
-          "default_value": 0.03,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
           "qualified_name": "AttrExprProbeDesign__probe_design__r_inner",
           "simple_name": "r_inner",
           "entry_type": "design_attribute",
           "default_value": 4.2,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "AttrExprProbeDesign__probe_design__r_major",
+          "simple_name": "r_major",
+          "entry_type": "design_attribute",
+          "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
@@ -1216,10 +1231,19 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "AttrExprProbeDesign__probe_design__r_major",
-          "simple_name": "r_major",
+          "qualified_name": "AttrExprProbeDesign__probe_design__rate",
+          "simple_name": "rate",
           "entry_type": "design_attribute",
-          "default_value": 3.0,
+          "default_value": 12.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "AttrExprProbeDesign__probe_design__width",
+          "simple_name": "width",
+          "entry_type": "design_attribute",
+          "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
@@ -1244,5 +1268,25 @@
     "attrexprprobedesign__probe_design__split",
     "attrexprprobedesign__probe_design__marked_up_cost",
     "attrexprprobedesign__probe_design__cost_density"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "half_vol",
+      "canonical_channel": "AttrExprProbeDesign__probe_design__split__half",
+      "instance_path": "probe_design",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "quarter_vol",
+      "canonical_channel": "AttrExprProbeDesign__probe_design__split__quarter",
+      "instance_path": "probe_design",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "scale_result",
+      "canonical_channel": "AttrExprProbeDesign__probe_design__scale_calc__result",
+      "instance_path": "probe_design",
+      "shape": "part_usage"
+    }
   ]
 }

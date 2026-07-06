@@ -27,9 +27,10 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     EntryPointType,
 )
-from tests.conformance.test_entry_point_classifier import (
+from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
+from tests.conftest import snapshot_fixture
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -141,28 +142,28 @@ def _compare_graph_to_baseline(graph: ComputationGraph, baseline: dict):
 @pytest.fixture(scope="session")
 def solar_battery_graph():
     """Full ComputationGraph for solar_battery_model."""
-    graph, _inputs = build_full_graph_from_snapshot("solar_battery_model")
+    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture("solar_battery_model"))
     return graph
 
 
 @pytest.fixture(scope="session")
 def catf_mfe_graph():
     """Full ComputationGraph for catf_mfe_model."""
-    graph, _inputs = build_full_graph_from_snapshot("catf_mfe_model")
+    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture("catf_mfe_model"))
     return graph
 
 
 @pytest.fixture(scope="session")
 def chain_spike_graph():
     """Full ComputationGraph for chain_spike_model."""
-    graph, _inputs = build_full_graph_from_snapshot("chain_spike_model")
+    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture("chain_spike_model"))
     return graph
 
 
 @pytest.fixture(scope="session")
 def attr_expr_probe_graph():
     """Full ComputationGraph for attr_expr_probe."""
-    graph, _inputs = build_full_graph_from_snapshot("attr_expr_probe")
+    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture("attr_expr_probe"))
     return graph
 
 

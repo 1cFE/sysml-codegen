@@ -13,6 +13,7 @@ from typing import Any
 
 from sysml_codegen.core.identifier_types import (
     CanonicalChannel,
+    ScopedAliasKey,
     ScopedKey,
     SysMLQN,
 )
@@ -41,7 +42,16 @@ class OutputRegistry:
         self._scoped: dict[ScopedKey, CanonicalChannel] = {}
         self._sysml_qn: dict[SysMLQN, CanonicalChannel] = {}
         self._alias: dict[ScopedKey, CanonicalChannel] = {}
+        # Item 10 (D7): structured (scope, leaf) alias namespace for part-def
+        # EXPOSE (and stage-b consumer-scoped) aliases. Kept distinct from the
+        # flat string ``_alias`` so a tuple key can never collapse or collide
+        # with a string one (INV-B).
+        self._scoped_alias: dict[ScopedAliasKey, CanonicalChannel] = {}
         self._canonical: set[CanonicalChannel] = set()
+        # Item 7 / D5: first-wins alias collisions, recorded for one WARNING
+        # count-summary (emitted by output_registry_builder) instead of one
+        # WARNING line per collision. Keys are the colliding alias keys.
+        self._alias_collisions: list[ScopedKey] = []
 
     # ------------------------------------------------------------------
     # Typed registration methods (REQ-OR-03)
@@ -108,7 +118,10 @@ class OutputRegistry:
             return
         if alias in self._alias:
             if self._alias[alias] != canonical_channel:
-                logger.warning(
+                # Item 7 / D5: per-collision line demoted to DEBUG and recorded;
+                # output_registry_builder emits one WARNING count-summary.
+                self._alias_collisions.append(alias)
+                logger.debug(
                     "OutputRegistry alias collision: '%s' already maps to '%s', "
                     "refusing to overwrite with '%s'",
                     alias,
@@ -118,9 +131,51 @@ class OutputRegistry:
             return
         self._alias[alias] = canonical_channel
 
+    def register_scoped_alias(
+        self, key: ScopedAliasKey, channel: CanonicalChannel
+    ) -> None:
+        """Register a structured ``(scope, leaf)`` alias (Item 10, D7 / REQ-CA-03).
+
+        The channel MUST already be canonical (same phase-ordering rule as
+        ``register_alias``). Unique by construction — the scope carries the
+        instance path — so a duplicate key with a different channel is a
+        key-derivation bug and raises.
+        """
+        if channel not in self._canonical:
+            logger.warning(
+                "OutputRegistry scoped alias %s targets unregistered channel "
+                "'%s' (possible phase ordering violation)",
+                key,
+                channel,
+            )
+            return
+        if key in self._scoped_alias:
+            if self._scoped_alias[key] != channel:
+                raise ValueError(
+                    f"OutputRegistry scoped-alias key collision: {key} already "
+                    f"maps to '{self._scoped_alias[key]}', cannot overwrite with "
+                    f"'{channel}'"
+                )
+            return
+        self._scoped_alias[key] = channel
+
     # ------------------------------------------------------------------
     # Typed lookup methods (REQ-OR-02)
     # ------------------------------------------------------------------
+
+    def scoped_alias_lookup(self, key: ScopedAliasKey) -> CanonicalChannel | None:
+        """Exact-match lookup in the structured ``(scope, leaf)`` alias registry."""
+        return self._scoped_alias.get(key)
+
+    def scoped_alias_items(self) -> list[tuple[ScopedAliasKey, CanonicalChannel]]:
+        """Read view of the structured ``(scope, leaf) → channel`` alias pairs.
+
+        The shape-A source for Item 11's ``output_aliases`` (part-def EXPOSE_PURE,
+        expanded per instance). A public accessor keeps ``_build_output_aliases``
+        off the private ``_scoped_alias`` attribute. Insertion order is
+        deterministic (dict), so the caller's stable sort is total.
+        """
+        return list(self._scoped_alias.items())
 
     def scoped_lookup(self, key: ScopedKey) -> CanonicalChannel | None:
         """Exact-match lookup in the scoped registry."""
@@ -134,6 +189,16 @@ class OutputRegistry:
         """Exact-match lookup in the alias registry."""
         return self._alias.get(key)
 
+    @property
+    def alias_collision_count(self) -> int:
+        """Total first-wins alias collisions recorded (Item 7 / D5)."""
+        return len(self._alias_collisions)
+
+    @property
+    def alias_collision_distinct_keys(self) -> int:
+        """Distinct alias keys that collided (for the count-summary)."""
+        return len(set(self._alias_collisions))
+
     # ------------------------------------------------------------------
     # Properties and diagnostics
     # ------------------------------------------------------------------
@@ -142,7 +207,7 @@ class OutputRegistry:
         """Total number of lookup keys across all registries."""
         return (
             len(self._scoped) + len(self._sysml_qn) + len(self._alias)
-            + len(self._canonical)
+            + len(self._scoped_alias) + len(self._canonical)
         )
 
     def __repr__(self) -> str:

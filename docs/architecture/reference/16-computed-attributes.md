@@ -13,11 +13,13 @@ compiles FORMULA patterns into Python code via the [expression compiler](14-expr
 |----|-------------|-------------|
 | REQ-CA-01 | Classification SHALL produce exactly one of 5 values per attribute expression | `_classify_attribute_expression()` returns single `ComputedAttributeClassification` enum |
 | REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expression()` | Compilation path in extractor; compilability set to `FULLY_COMPILABLE` on success |
-| REQ-CA-03 | EXPOSE_PURE SHALL produce `ChannelAlias` only for PartUsage-level (not PartDef) | `not is_part_def` guard before alias creation |
+| REQ-CA-03 | PartUsage-level EXPOSE_PURE SHALL produce a Phase-3 `ChannelAlias`; PartDef-level EXPOSE_PURE (shape A, `total_cost = cost_calc.cost` on a `part def`) SHALL be expanded per design instance into the structured `_scoped_alias` namespace by `_register_partdef_expose_scoped_aliases` (Item 10 #4), not silently skipped | `test_wi014_toy.py::test_wi014_toy_shape_a_resolves_offline_via_scoped_alias` — `("demo_plant","total_cost")` maps to the `demo_plant__…__cost_calc__cost` channel |
+| REQ-CA-10 | A well-formed multi-hop feature chain (part-typed waypoints, `reference_chain` ≥ 2 segments) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE` at the leaf (INV-E gate), then finalized in the registry confirm pass (Phase 3b) — resolved to a canonical channel → `EXPOSE_PURE` + alias, else reverted to `FORMULA`. No downstream reader may observe a surviving tentative (INV-F) | Leaf tag: `test_computed_attribute_extraction.py::test_multihop_chain_tagged_tentative`; confirm-pass flips: `test_ife_plant.py::test_cross_part_inputs_pinned_or_baseline` (direct-calc-output terminal) and `test_computed_attributes_e2e.py::test_catf_mfe_wired_after_item10` (alias-terminal hop) |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | Returns `LITERAL`; excluded by caller before adding to `ComputedAttributeData` list |
 | REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | Included in list for reporting; no module or alias emitted |
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or LITERAL | 3-value enum in `resolution/graph_builder.py`; `_build_attribute_resolution_map()` assigns one per input |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `input_names = siblings - {self_name}` prevents circular dependency |
+| REQ-CA-09 | The two EXPOSE_PURE name-drop warnings — the key-not-found warning in `_resolve_expose_pure` (`resolution/graph_builder.py`) and the Phase-3 registration warning (`orchestration/output_registry_builder.py`) — SHALL state plainly that the derived-attribute name is dropped from generated output and name the canonical channel carrying the value. Wording-only; the malformed-refs warning is unchanged. | Warning strings reworded per `modeling-assumptions.md` V-rule shape. **Real-fixture test deferred to Item 8** (a minimal shape-A part-def EXPOSE fixture fires the malformed-refs path, not the reworded warnings — see verification matrix). |
 
 ```sysml
 part def Solar_Array {
@@ -67,8 +69,10 @@ attribute p_alpha_out = alpha_split.p_alpha;
 [OutputRegistry](10-output-registry.md) (Phase 3). Downstream bindings to `p_alpha_out` resolve
 transparently through the alias. See [naming conventions](15-naming-conventions.md) for Phase 3 key format.
 
-Filter: only PartUsage-level EXPOSE_PURE attributes produce aliases (REQ-CA-03).
-PartDefinition-level ones are skipped (`is_on_part_definition` guard).
+Filter: PartUsage-level EXPOSE_PURE attributes produce a Phase-3 `ChannelAlias`.
+PartDef-level ones (shape A) are handled separately — expanded per design instance
+into the `_scoped_alias` namespace (REQ-CA-03, see [Part-Def EXPOSE Scoped Aliases](#part-def-expose-scoped-aliases-shape-a-req-ca-03)),
+not dropped.
 
 ### EXPOSE_COMPUTED
 
@@ -150,6 +154,68 @@ For EXPOSE_PURE attributes on PartUsages (not PartDefs):
 
 ---
 
+## Multi-Hop EXPOSE: Tentative Leaf Tag + Confirm Pass (REQ-CA-10)
+
+A cross-part chain like `magnet_volume_total = tf_coil.volume_calc.volume` names a
+calc output *through* a nested part. The single-hop EXPOSE_PURE path cannot classify
+it: the leaf extractor has instance names, not calc-def output sets, and catf_mfe's
+alias terminal (`tf_coil.volume` is itself an EXPOSE alias) is undecidable without the
+whole registry. So the decision is split across two layers.
+
+**Leaf tags a tentative (INV-E gate).** `_classify_attribute_expression`
+(`extraction/computed_attribute_extractor.py`) returns a sixth, transient enum value
+`EXPOSE_CHAIN_TENTATIVE` when the root is a pure `FeatureChainExpression` AND
+`reference_chain` (the full dotted segments captured at extraction by
+`extract_feature_chain_segments`, `extraction/expression_utils.py`) has ≥ 2 segments
+rooted at a part-typed waypoint (`reference_chain[0]` is not a calc-usage short name).
+It does **not** decide EXPOSE-ness. Over-tagging is safe — an unresolvable tentative
+reverts (INV-D).
+
+**Confirm pass finalizes (Phase 3b).** `build_output_registry`
+(`orchestration/output_registry_builder.py`) walks each tentative's `reference_chain`
+against the registry via `_resolve_reference_chain` (the transitive N-segment walk,
+with a `visited` cycle guard, the recursive analog of the aggregation input walker).
+It runs after Phase 3 single-hop aliases, before Phase 4. Two outcomes, mutating the
+shared CA in place:
+
+- **Resolves** to a canonical channel (direct calc-output for ife_plant; one alias hop
+  further for catf_mfe) → register the cross-part alias, set `EXPOSE_PURE`.
+- **Does not resolve** → revert to `FORMULA` — byte-identical to pre-Item-10 behavior.
+
+**No tentative escapes (INV-F).** The confirm loop raises if any tentative survives,
+and the three post-confirm readers in `resolution/graph_builder.py` (module build,
+aggregation alias map, attribute resolution map) each carry an `elif tentative: raise`.
+
+**Offline parity (D-C).** On snapshot reload a multi-hop CA arrives already
+`EXPOSE_PURE` (M6 serializes the post-confirm state), so the confirm walk would skip
+it and Phase 3's naive 2-segment path would resolve the ambiguous terminal through the
+first-wins-corrupted flat `_alias` (the wrong channel — a lying sim). Before Phase 3,
+`build_output_registry` reconstructs the pre-confirm tentative state for exactly the
+multi-hop candidates (an `EXPOSE_PURE` CA whose `reference_chain` is a part-rooted chain
+of ≥ 2 segments), so the confirm pass reproduces the live registration order on both
+paths. Live CAs are still tentative here → no-op on the live path.
+
+## Part-Def EXPOSE Scoped Aliases (Shape A) (REQ-CA-03)
+
+A derived `total_cost = cost_calc.cost` on a `part def` (not a usage) has no instances
+at extraction, so it cannot register a scoped alias directly. Item 10 #4 expands it per
+design instance. `_register_partdef_expose_scoped_aliases`
+(`orchestration/pipeline_builder.py`, Step 5.55) iterates the EXPOSE_PURE CAs carrying
+`is_on_part_definition`, resolves the calc-output channel per instance path via
+`find_instance_paths_for_partdef` + `scoped_lookup`, and writes
+`(instance_path, python_name) → channel` into the structured `_scoped_alias` namespace
+on the [OutputRegistry](10-output-registry.md). The consumer-side reader is
+`dependency_backtracker._resolve_chain_dispatch` Step 1c (REQ-BT-11, see
+[11-analysis-backtracker](11-analysis-backtracker.md)). The same helper runs on the
+offline path from `snapshot/graph_rebuild.py`, so shape A resolves without a license.
+
+The extraction-time `not is_part_def` guard on the ChannelAlias is deliberately kept —
+dropping it would emit a template alias Phase 3 cannot register (warning noise). The CA
+itself carries `is_on_part_definition`, so the helper iterates `computed_attrs` directly
+for the same D7 outcome.
+
+---
+
 ## AttributeResolution Map (graph_builder.py)
 
 When building FORMULA modules, the graph builder needs to know how each input
@@ -175,6 +241,42 @@ class AttributeResolution:
     kind: AttributeResolutionKind
     channel_name: str | None = None  # For FORMULA and EXPOSE_ALIAS
 ```
+
+### Shape-A EXPOSE_PURE reroute + warning retirement (REQ-CA-11)
+
+`_build_attribute_resolution_map` splits the EXPOSE_PURE branch on
+`ca.is_on_part_definition`:
+
+- **Part usage (shape B)** — unchanged. It still calls `_resolve_expose_pure`, so a
+  genuinely unresolvable shape-B EXPOSE still warns at `graph_builder.py:796`.
+- **Part def (shape A)** — does **not** call the refs parser. On a part def the
+  calc-usage instance names are absent from `calc_usage_names`, so `_resolve_expose_pure`
+  could not split the refs and would fire the malformed-refs warning at `:796` — the
+  Item-1 interim warning. Item 10 resolves shape A per instance through the
+  `_scoped_alias` namespace instead, and this per-def map is structurally
+  instance-blind, so shape A takes a LITERAL fallback (identical to the old
+  post-warning behavior — no in-repo FORMULA consumes a shape-A exposed name). The map
+  then consults `_scoped_alias` only to decide the warning: a registered leaf means the
+  name resolved (Item 10) and now surfaces (Item 11) → **silent**; an unregistered leaf
+  warns naming the real cause, not "Item 10/11."
+
+This retires the Item-1 malformed-refs warning for the resolvable case
+(`test_wi014_toy.py`, previously pinning the warning, now asserts silence + the
+surfaced name).
+
+### EXPOSE_PURE → surfaced name (Item 11 / SC-7)
+
+The value already flows on its canonical channel; Item 10 computed the name→channel
+mapping for both shapes and stored it with provenance. Item 11 reads those two sources
+(`_scoped_alias` for shape A, `expose_pure` `ChannelAlias` objects for shape B) at the
+end of graph construction and normalizes them into
+[`ComputationGraph.output_aliases`](09-data-models.md) (a list of `OutputAlias`), then
+renders each as the output filename on its channel's exit line in the pipeline YAML
+([doc 21](21-pipeline-yaml-generation.md), REQ-PY-08). So `total_cost` (shape A,
+`wi014_toy`) and `scale_result` / `half_vol` / `quarter_vol` (shape B,
+`attr_expr_probe`) now reach generated output as named captures. EXPOSE_COMPUTED is
+**not** surfaced — it stays rejected per [modeling-assumptions §3](../modeling-assumptions.md),
+and its warning stays.
 
 ---
 

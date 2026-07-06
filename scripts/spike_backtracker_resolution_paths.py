@@ -30,14 +30,15 @@ from sysml_codegen.core.models import BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 def build_backtracker_from_snapshot(
     model_name: str,
 ) -> tuple[BacktrackingResult, OutputRegistry, dict]:
     """Build and run backtracker from an extraction snapshot."""
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],

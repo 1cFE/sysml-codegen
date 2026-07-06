@@ -80,6 +80,13 @@ codegen-specific logic, all in the same directory.
 
 ### Tier 1: Pure SysML (zero codegen concepts referenced)
 
+> **Sequencing (UPSTREAM-FINDINGS Item 6 lands first).** The expression-reconstruction
+> fidelity fix (literal-before-invocation dispatch + precedence-aware parens, plus the new
+> `RANK`/`binary_op_of`/`needs_parens` helpers and the `str(operator)` enum-normalization)
+> travels with this move. Landing Item 6 before Phase 1 means the pushed-down
+> `reconstruct_expression` / `reconstruct_operator_expression` are born correct and the mass
+> baseline churn was reviewed once, in Item 6 — not re-litigated during the move.
+
 #### expression_utils.py (201 lines) -- ALL MOVES
 
 ```

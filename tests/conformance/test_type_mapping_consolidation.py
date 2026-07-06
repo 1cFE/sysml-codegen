@@ -23,9 +23,10 @@ from sysml_codegen.generation.type_mapping import (
     map_sysml_type_to_rootmodel_wrapper,
 )
 
-from tests.conformance.test_entry_point_classifier import (
+from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +177,7 @@ class TestCrossGeneratorConsistency:
     def test_all_generators_use_shared_function(self, model_name, extraction_snapshots):
         """For each CalcUsage module, all type annotations are consistent
         with map_sysml_type_to_python() output for the same SysML type."""
-        graph, inputs = build_full_graph_from_snapshot(model_name)
+        graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         snap = inputs["snap"]
         calc_defs = snap["calc_defs"]
 

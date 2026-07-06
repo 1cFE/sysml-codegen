@@ -35,7 +35,8 @@ from sysml_codegen.resolution.models import (
     EntryPoint,
     PipelineModule,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +58,7 @@ def build_factory_inputs_from_snapshot(
     Returns:
         (BacktrackingResult, entry_points, calc_def_map, snapshot_dict)
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
 
     # Build registry (Steps 3.5 of build_pipeline_context)
     registry = build_output_registry(

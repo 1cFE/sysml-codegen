@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-02-22
+**Last Updated**: 2026-07-05
 
 ---
 
@@ -29,13 +29,33 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. See `.project/concepts/agentic-mbse-push-down-design.md`. |
+| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | Draft | Fix the 11 fusion-tea findings (SC-1–SC-11) + 6 research-discovered defects: baseline repair, silent-failure diagnostics, return-style/retyping/quoted-name support, snapshot CLI (license mitigation, expires 2026-08-06), staged cross-part wiring (gates fusion-tea MFE epic), agentic-mbse sync throughout. 12 items, ~13–16 days. See `epic_upstream_findings.md`. Items: [ ] 1 baseline+diagnostics [ ] 2 snapshot CLI [ ] 3 SC-2 [ ] 4 SC-3 [ ] 5 SC-4 [ ] 6 SC-6 [ ] 7 SC-8 [ ] 8 plant fixtures [ ] 9 SC-5 pre-fill [ ] 10 SC-5 wiring [ ] 11 SC-7 surfacing [ ] 12 agentic-mbse sync |
+| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing note: UPSTREAM-FINDINGS Item 6 (expression reconstruction fix) must land before Phase 1 moves expression_utils.** See `.project/concepts/agentic-mbse-push-down-design.md`. |
 
 ---
 
 ## P2 - Medium Priority
 
-*No epics yet*
+### [SYNC-F3] Shape-B leaf-collision filename edge (UPSTREAM-FINDINGS Item 12, F3)
+
+**Source**: alias-surfacing (Item 11) audit Obs. 2. Two distinct shape-B owning parts that
+share a leaf name and expose the same alias to different channels produce the same output
+filename `{instance_path}__{alias}.json` — a collision codegen does not yet disambiguate.
+Not triggered by any in-repo fixture. File to disambiguate (e.g. qualify by owning-part
+path) before a real model hits it.
+
+### [SYNC-F4] Redefinition / design_override name surfacing (UPSTREAM-FINDINGS Item 12, F4)
+
+**Source**: alias-surfacing (Item 11) release-notes §impact. `:>>` and design-override names
+resolve as channels but are not EXPOSE_PURE-sourced, so they do not surface as named
+outputs. Decide whether these names should surface (mirror of D6/EXPOSE surfacing) or stay
+internal.
+
+### [SYNC-F5] Positive unresolvable-warning test (UPSTREAM-FINDINGS Item 12, F5)
+
+**Source**: alias-surfacing (Item 11) audit Obs. 1. Item 11's INV-6 "unresolvable refs still
+warn" leg has no positive live assertion. Add a test that asserts an unresolvable ref emits
+its warning. Opportunistic — cheap to add in sysml-codegen's test suite.
 
 ---
 
@@ -57,7 +77,73 @@ Prioritized list of epics and features.
 
 ## Ideas / Future Considerations
 
+- **Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**
+  `hierarchy_resolver._walk_aggregation_ast` (`hierarchy_resolver.py:372,431`) keeps the
+  old literal-after-invocation ordering: a literal operand in an aggregation expression is
+  mis-dispatched to the invocation catch-all, marked `has_unsupported`, and its
+  `reconstruct_expression` delegation (`:433`) is dead. Item 6 fixed the twin in
+  `reconstruct_expression` (display path) but left this one — it touches an executable
+  aggregation path (`transformed_expression` → `compiled_expression` → `auto_impl_context`),
+  so it needs its own item with a byte-identity gate. Inert on today's corpus (no
+  literal-bearing aggregation fixture); a future one would expose it. Documented as a
+  known deviation from revised REQ-AST-03 in doc 19.
+- **Constraint-reconstruction coverage (from UPSTREAM-FINDINGS Item 6, SC-6).**
+  `reconstruct_expression` also serves constraint text, but constraint expressions are not
+  captured in extraction snapshots (the Item-6 design's Appendix-A #4 wrongly assumed the
+  catf_mfe divertor constraint `(surface_area_inner + surface_area_outer)` would appear in
+  the snapshot; it does not — 0 occurrences). The paren/literal fix applies to constraint
+  text too but has no snapshot-level regression coverage. Add a test that exercises
+  constraint reconstruction directly if that coverage is wanted.
+- **Stale-fixture snapshot refresh (from UPSTREAM-FINDINGS Item 9).** Three committed
+  extraction snapshots drift from current live output but were left untouched by Item 9
+  (its live re-capture reverted them to keep INV-5's "exactly four fixtures change"). They
+  must be refreshed so the committed corpus ends the epic script-reproducible — deferred,
+  not dropped. Run as one stale-fixture-refresh chore in the Item 6 Step-1 style: own
+  commit, reviewed diff, and any test updates that assert the stale form. Execute at
+  epic close-out.
+  - (`ife_plant` was migrated to the canonical form in Item 9's re-capture — no longer
+    in this chore's scope.)
+  - `wi014_toy`, `self_named_binding_trap` — **path canonicalization only.** Last captured
+    at Item 8 (`84ae948`) under the old convention; re-capture normalizes `source_file`
+    (repo-relative → model-relative), `design_attributes` keys (repo-relative → absolute),
+    and `document_path` (`file:…` → `file:///home/…`). No `design_overrides` / binding
+    change — provably orthogonal to Item 9 (0 diff lines on those surfaces).
+  - `quoted_owner_formula` — **path canonicalization + a classification shift.** Re-capture
+    also drops two `design_attributes` (`net_margin`, `total_payout`), which now classify as
+    computed attributes instead. Likely cause: post-Item-7 computed-attribute classification
+    behavior reaching this Item-6-vintage snapshot (`346cf47`). The refresher should review
+    this reclassification deliberately — confirm `net_margin`/`total_payout` SHOULD be
+    computed, not design attributes — rather than wave the diff through. The repo already
+    flags this fixture's path drift in `scripts/capture_extraction_snapshots.py:56-60`.
 - InvocationExpression / function call support (sqrt, min, max whitelist)
 - SelectExpression / if-then-else support (piecewise functions)
 - EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
 - Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
+- Body-assignment expression capture (P3, M-lift; deferred from UPSTREAM-FINDINGS Item 3 / SC-2). For the `return attribute y : Real; y = expr;` form, wire the direction-None `member_expressions[y]` (the body assignment) into `output_expression_asts[y]` so `y` auto-implements instead of degrading to a `NotImplementedError` stencil. Inline `return y : Real = expr` already auto-implements, and the A-2 stencil fix steers modelers to the inline form, so this is low value — it restores auto-impl only for the deprecated body-assignment pattern.
+- **fusion-tea whole-plant cross-part wiring (P1; from UPSTREAM-FINDINGS Item 10, SC-2 follow-up).**
+  Item 10 wired the `gamma → lcoe` edge for the two-level `hif_plant` shape (the WI-015
+  headline): `hif_plant__lcoe_calc` input `driver_cost_constant` now resolves to the Meier
+  `gamma` channel from generated wiring alone, and left the V11 offender list (count 11 → 10).
+  But `generate --models ~/1cfe/fusion-tea/models` still ABORTS at V11 on **10 other** unresolved
+  cross-part inputs on `lcoe_calc`/`recirc_calc` — `driver.efficiency`, `driver.energy`,
+  `driver.lifetime_shots`, `chamber.blanket_energy_multiple`, `chamber.yield_cost_constant`,
+  `target_factory.cost_per_target`, plus the separate `hif_driver_instance` driver's inputs.
+  These are plain cross-part attribute references (subsystem attribute → plant calc input),
+  a different shape than Item 10's specialized-`:>>`-chain and multi-hop-EXPOSE cases; they
+  are pre-existing and untouched by Item 10 (INV-A additive). Until they resolve, the generated
+  pipeline cannot replace the fusion-tea hand-plumbing, so the `hif_driver_instance` scaffold
+  and the two-pass gamma feedback in `run_anchors.py` STAY upstream (not yet deletable).
+  **Acceptance test:** `tests/fixtures/spec_chain_twolevel` extended with the plain
+  subsystem-attribute cross-part bindings, plus a fusion-tea `generate` that emits the full
+  YAML with zero V11 offenders and reproduces run-C's lcoe ($270.12/MWh) within tolerance.
+  This is the remainder of SC-5 (Items 9–11 plant wiring), scoped out of Item 10 per the
+  C-then-B ruling.
+- **Two-level specialization — `attribute :>>` extraction gap (P3; from UPSTREAM-FINDINGS Item 10,
+  D-F).** A value-carrying redefinition authored as `attribute :>> attr = <expression>` (an
+  AttributeUsage) is silently dropped at extraction — `_extract_single_redefinition`
+  (`hierarchy_resolver.py`) only scans ReferenceUsage members — so `hierarchy_data.redefinitions`
+  comes back empty and the specialized-def resolver has nothing to read. Item 10 did NOT relax
+  this: fusion-tea uses only the bare `:>> attr = value` form (86 occurrences, zero
+  `attribute :>>`; the real gamma edge is `hif_driver.sysml:82 :>> cost_per_joule = meier_cost.gamma`).
+  Recorded as an agentic-mbse guidance/validation candidate for Item 12 (teach the bare form; warn
+  when an `attribute :>>` carries an expression RHS), not a codegen change.

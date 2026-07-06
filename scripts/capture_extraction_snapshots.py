@@ -21,14 +21,19 @@ from pathlib import Path
 # Add project root to sys.path so tests.helpers is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import json
+
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
 from sysml_codegen.orchestration.pipeline_builder import (
     _extract_and_filter_computed_attributes,
     _extract_hierarchy_and_rewrite_bindings,
-    build_pipeline_context,
 )
-from tests.helpers.snapshot_serializer import serialize_extraction_snapshot, snapshot_to_json
+from sysml_codegen.snapshot import (
+    capture_snapshot,
+    serialize_extraction_snapshot,
+    snapshot_to_json,
+)
 
 FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 
@@ -41,6 +46,37 @@ MODELS = {
     "chain_spike_model": FIXTURES_DIR / "chain_spike_model",
     "issue22_model": FIXTURES_DIR / "issue22_model",
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
+    "return_styles": FIXTURES_DIR / "return_styles",
+    "retype_model": FIXTURES_DIR / "retype_model",
+    # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS). Both build the
+    # full graph — the unresolved cross-part inputs fall to Step-4 fallbacks rather
+    # than stopping assembly (like catf_mfe's dangling cryo_load.magnet_volume).
+    "wi014_toy": FIXTURES_DIR / "wi014_toy",
+    "ife_plant": FIXTURES_DIR / "ife_plant",
+    # Registered so the capture script can reproduce this snapshot (Item 5
+    # committed it without registering it here — permanent fixture drift). Its
+    # committed paths are repo-relative; re-capture brings it to the canonical
+    # script form (absolute design_attributes keys, model-relative source_file).
+    "quoted_owner_formula": FIXTURES_DIR / "quoted_owner_formula",
+    # Stage-(b) companion fixtures (Item 10, UPSTREAM-FINDINGS). Each isolates one
+    # cross-part channel mechanism the Phase-7 precedence resolver flips (D8):
+    #   spec_chain_channel      — specialized-def :>> nested calc output -> cross-part
+    #                             consumer (the gamma -> lcoe edge, SC-2)
+    #   sibling_channel_ambiguity — two same-type siblings; consumer disambiguates to
+    #                             the correct instance-scoped channel (SC-3)
+    #   self_named_rescue       — self-named `in x = x` with a resolvable upstream (SC-4)
+    # Captured current-incomplete FIRST (Item 8 pattern) so each Phase-7 flip is a
+    # separately-attributable diff. They carry `reference_chain` (recapture set, M6).
+    "spec_chain_channel": FIXTURES_DIR / "spec_chain_channel",
+    "sibling_channel_ambiguity": FIXTURES_DIR / "sibling_channel_ambiguity",
+    "self_named_rescue": FIXTURES_DIR / "self_named_rescue",
+    # Two-level specialization fixture (Item 10 Phase 8, C-then-B ruling). Reproduces
+    # the REAL fusion-tea hif_plant shape: a part USAGE typed by the BASE def
+    # ('IFE Power Plant') with an inline `part :>> driver : 'HIF Driver'` retype on the
+    # usage; lcoe_calc inherited from the base. The usage-level retype is NOT indexed in
+    # usage_type_map (keyed by part-DEF QN), so the declaring-base-def type-select misses
+    # 'HIF Driver' -> the gamma -> lcoe edge stays unwired. This is the WI-015 gap.
+    "spec_chain_twolevel": FIXTURES_DIR / "spec_chain_twolevel",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
@@ -49,6 +85,10 @@ EXTRACTION_ONLY_MODELS = {
     "expression_binding_probe": FIXTURES_DIR / "expression_binding_probe",
     "chain_override_probe": FIXTURES_DIR / "chain_override_probe",
     "unresolvable_attr_probe": FIXTURES_DIR / "unresolvable_attr_probe",
+    # Self-named-binding trap (Item 8, mechanism D). Extraction-only: the degenerate
+    # self-reference is fully visible in extraction; no pipeline baseline is needed.
+    # Kept isolated (own fixture dir) so its failure mode cannot poison ife_plant.
+    "self_named_binding_trap": FIXTURES_DIR / "self_named_binding_trap",
 }
 
 
@@ -90,32 +130,14 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         aggregation_expressions=scoped_agg_data,
         computed_attributes=computed_attrs,
         channel_aliases=all_aliases,
-        fixtures_dir=FIXTURES_DIR,
+        compilation_results={},  # extraction-only: no graph, no compilation
+        output_dir=model_path,
     )
 
 
-def _capture_full_pipeline(model_name: str, model_path: Path) -> dict:
-    """Capture extraction data via the full pipeline context."""
-    ctx = build_pipeline_context([model_path])
-
-    return serialize_extraction_snapshot(
-        model_name=model_name,
-        calc_defs=ctx.calc_defs,
-        calc_usages=ctx.calc_usages,
-        design_attributes=ctx.design_attributes,
-        hierarchy_data=ctx.hierarchy_data,
-        aggregation_expressions=ctx.aggregation_expressions,
-        computed_attributes=ctx.computed_attributes,
-        channel_aliases=ctx.channel_aliases,
-        fixtures_dir=FIXTURES_DIR,
-    )
-
-
-def _save_and_report(model_name: str, model_path: Path, snapshot: dict) -> None:
-    """Save snapshot to disk and print summary."""
+def _report(model_path: Path, snapshot: dict) -> None:
+    """Print a one-model capture summary."""
     output_path = model_path / "extraction_snapshot.json"
-    output_path.write_text(snapshot_to_json(snapshot))
-
     n_calc_defs = len(snapshot["calc_defs"])
     n_calc_usages = len(snapshot["calc_usages"])
     n_bindings = sum(len(cu["bindings"]) for cu in snapshot["calc_usages"])
@@ -135,15 +157,20 @@ def _save_and_report(model_name: str, model_path: Path, snapshot: dict) -> None:
 
 
 def main() -> None:
+    # Full-pipeline models go through the promoted, supported capture path so
+    # there is no second copy of the capture logic (INV-3 spirit).
     for model_name, model_path in MODELS.items():
         print(f"Processing {model_name} from {model_path}...")
-        snapshot = _capture_full_pipeline(model_name, model_path)
-        _save_and_report(model_name, model_path, snapshot)
+        out = capture_snapshot([model_path], model_path / "extraction_snapshot.json")
+        _report(model_path, json.loads(out.read_text()))
 
+    # Extraction-only fixtures cannot build the full pipeline; capture directly
+    # and write the summary here.
     for model_name, model_path in EXTRACTION_ONLY_MODELS.items():
         print(f"Processing {model_name} (extraction-only) from {model_path}...")
         snapshot = _capture_extraction_only(model_name, model_path)
-        _save_and_report(model_name, model_path, snapshot)
+        (model_path / "extraction_snapshot.json").write_text(snapshot_to_json(snapshot))
+        _report(model_path, snapshot)
 
     print(f"\nDone. Snapshots saved to {FIXTURES_DIR}/*/extraction_snapshot.json")
 

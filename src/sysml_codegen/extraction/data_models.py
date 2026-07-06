@@ -168,6 +168,11 @@ class ComputedAttributeClassification(str, Enum):
     - FORMULA: all refs are sibling attributes (generates synthetic module)
     - EXPOSE_PURE: single FeatureChainExpression to calc output (channel alias)
     - EXPOSE_COMPUTED: FeatureChainExpression inside arithmetic (deferred)
+    - EXPOSE_CHAIN_TENTATIVE: a well-formed multi-hop chain (reference_chain >= 2
+      segments rooted at a part waypoint) that MIGHT be a multi-hop EXPOSE. The
+      leaf cannot decide (it lacks the registry); the confirm pass finalizes it
+      to EXPOSE_PURE or reverts it to FORMULA. Item 10, D6 — NO downstream
+      consumer may read this value (INV-F); a survivor is a bug and must raise.
     - LITERAL: pure constant, no feature references (not a computed attribute)
     - UNRESOLVABLE: contains references that cannot be resolved
     """
@@ -175,6 +180,7 @@ class ComputedAttributeClassification(str, Enum):
     FORMULA = "formula"
     EXPOSE_PURE = "expose_pure"
     EXPOSE_COMPUTED = "expose_computed"
+    EXPOSE_CHAIN_TENTATIVE = "expose_chain_tentative"
     LITERAL = "literal"
     UNRESOLVABLE = "unresolvable"
 
@@ -200,6 +206,11 @@ class ComputedAttributeData:
         compiled_expression: Python expr string (FORMULA only, None otherwise)
         source_file: Path to source SysML file
         source_line: Line number in source file
+        reference_chain: Full dotted segments of a FeatureChainExpression
+            (e.g. ["tf_coil", "volume_calc", "volume"]), else None. The input the
+            multi-hop EXPOSE confirm walk reads (Item 10, D9). Additive-optional:
+            old snapshots lacking it deserialize to None (no version bump), which
+            leaves classification at today's FORMULA behavior.
     """
 
     name: str
@@ -215,6 +226,7 @@ class ComputedAttributeData:
     is_on_part_definition: bool = False  # True if owning element is a PartDefinition
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
+    reference_chain: list[str] | None = None
 
 
 # ---------------------------------------------------------------------------

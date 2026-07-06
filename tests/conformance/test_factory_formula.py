@@ -48,7 +48,8 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     PipelineModule,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -79,7 +80,7 @@ def build_formula_factory_inputs_from_snapshot(
     Returns:
         (formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap)
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     snap["_model_name"] = model_name
 
     # Build registry

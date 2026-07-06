@@ -181,6 +181,45 @@ canonical `"Design__plant__battery_pack__cost_model__total_cost"`.
 
 ---
 
+## Cross-Part Wiring: Two Cooperating Resolvers (Item 10)
+
+A cross-part binding — a consumer that references a calc output through a nested part —
+is wired by two mechanisms that run at different pipeline stages, not by one lookup. They
+stay in their existing homes; nothing new is unified.
+
+**Resolver A — the pre-resolution rewrite (`orchestration/pipeline_builder.py`).** Before
+the backtracker runs, `_rewrite_virtual_bindings` rewrites a `part_usage.attr` binding
+through the retyped part usage's specialized-def `:>>` redefinition (the three-tier merge,
+REQ-VBR-10/REQ-VBR-11, [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md)), and
+`_rescue_self_named_bindings` redirects a self-named `in x = x` to its upstream EXPOSE. Both
+mutate `source_path` in place, so the backtracker sees an already-corrected binding.
+
+**Resolver B — the backtracker dispatch (`analysis/dependency_backtracker.py`).**
+`_resolve_chain_dispatch` Step 1c then resolves the (possibly rewritten) CHAIN binding
+against the structured `_scoped_alias` namespace (REQ-BT-11,
+[11-analysis-backtracker](11-analysis-backtracker.md)), which the registry builder populated
+for part-def EXPOSE consumers (REQ-CA-03) and confirmed multi-hop aliases (REQ-CA-10,
+[16-computed-attributes](16-computed-attributes.md)).
+
+They compose: Resolver A turns `driver.cost_per_joule` into `driver.meier_cost.gamma` or a
+self-named binding into `{instance}.{leaf}`; Resolver B's Step 1c wires the result to the
+canonical channel. Each is additive (INV-A) — it only adds a hit where the old ladder fell
+through to a fallback entry point.
+
+### Offline == Live Parity (D-C)
+
+Both resolvers must produce the same wiring from a committed snapshot as from a live
+extraction (REQ-DRA-04 extended to the offline path). The multi-hop EXPOSE confirm walk is
+the risk: M6 serializes the post-confirm `EXPOSE_PURE` state, but the confirm walk gates on
+the transient tentative marker, so on reload it would skip the CA and Phase 3's naive
+2-segment path would resolve the ambiguous terminal through the first-wins-corrupted flat
+`_alias` — the wrong channel, a lying sim. `build_output_registry` reconstructs the
+pre-confirm tentative state for exactly the multi-hop candidates before Phase 3
+(see [16-computed-attributes](16-computed-attributes.md#multi-hop-expose-tentative-leaf-tag--confirm-pass-req-ca-10)),
+so the confirm pass reproduces the live registration order on both paths. The specialized-def
+and self-named rewrites (Resolver A) run at extraction/hierarchy time only, so their result
+is baked into the recaptured snapshot rather than re-run offline.
+
 ## Data Models
 
 | Model | File | Role |

@@ -1,5 +1,6 @@
 {
   "modules": [],
   "entry_point_groups": [],
-  "execution_order": []
+  "execution_order": [],
+  "output_aliases": []
 }

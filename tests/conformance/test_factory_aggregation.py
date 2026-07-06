@@ -49,7 +49,8 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     PipelineModule,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +69,7 @@ def build_aggregation_factory_inputs(model_name: str) -> dict:
 
     Returns dict with all components.
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
 
     # Build registry
     registry = build_output_registry(

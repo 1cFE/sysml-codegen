@@ -24,6 +24,7 @@ Source: `src/sysml_codegen/analysis/dependency_backtracker.py`
 | REQ-BT-06 | Topological sort SHALL produce dependency-first ordering or raise on cycles | Kahn's algorithm with cycle detection |
 | REQ-BT-07 | Self-reference guard SHALL prevent a usage from wiring to its own output | `producing_usage_qn == usage.qualified_name` check after each lookup |
 | REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct typed registry. CHAIN bindings query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`. REFERENCE bindings query `sysml_qn_lookup(SysMLQN)` then `scoped_lookup(ScopedKey)`. | Dispatch branches verified; see [10-output-registry](10-output-registry.md) Design Rationale |
+| REQ-BT-11 | CHAIN dispatch SHALL, after both scoped steps and before the unscoped alias step, query the structured `_scoped_alias` namespace with `ScopedAliasKey((prefix, leaf))` split from `source_path` at the last dot — trying the consumer-scope-prefixed key `(consumer_scope + "." + prefix, leaf)` first (D-D sibling disambiguation), then the bare `(prefix, leaf)`. Additive only (INV-A): it adds a hit where the ladder fell through, never overrides one. | Sibling disambiguation: `test_sibling_channel_ambiguity.py::test_chamber_power_disambiguated_to_chamber_b`; part-def EXPOSE consumer: `test_wi014_toy.py::test_wi014_toy_shape_a_resolves_offline_via_scoped_alias` |
 
 ## BacktrackingResult Output Model
 
@@ -117,6 +118,44 @@ registry contains Phase 3 EXPOSE_PURE aliases that bridge this gap:
 ```python
 channel = self._output_registry.alias_lookup(ScopedKey(source_path))
 ```
+
+#### Structured Scoped-Alias Lookup — Step 1c (REQ-BT-11)
+
+Between the scoped steps and the unscoped alias step (Step 2) sits a structured lookup
+against the `_scoped_alias` namespace — a tuple-keyed registry (`ScopedAliasKey =
+(prefix, leaf)`) distinct from the flat `_alias` dict. It reaches two things a flat
+string key cannot construct:
+
+- **Part-def EXPOSE consumers** (shape A). `_register_partdef_expose_scoped_aliases`
+  writes `(instance_path, leaf) → channel` per design instance (Item 10 #4,
+  [16-computed-attributes](16-computed-attributes.md#part-def-expose-scoped-aliases-shape-a-req-ca-03)).
+  A consumer of `demo_plant.total_cost` splits to `("demo_plant", "total_cost")` and
+  hits it. Registration and lookup derive the tuple from the *same* last-dot split, so
+  they meet by construction.
+
+- **Sibling disambiguation** (D-D). Two same-type siblings both expose `power`, so #4
+  registers `("twin_plant.chamber_a", "power")` and `("twin_plant.chamber_b", "power")`.
+  The consumer binds `chamber_b.power`; the bare split `("chamber_b", "power")` misses
+  the instance-scoped key, and the def-level `power` name first-wins-collides. Step 1c
+  therefore tries the consumer-scope-prefixed key first — `("twin_plant.chamber_b",
+  "power")` — mirroring Step 1's `consumer_scope + "." + source_path` prepend, then
+  falls back to the bare key.
+
+```python
+if "." in source_path:
+    prefix, leaf = source_path.rsplit(".", 1)
+    channel = None
+    if consumer_scope:
+        channel = self._output_registry.scoped_alias_lookup(
+            ScopedAliasKey((f"{consumer_scope}.{prefix}", leaf)))
+    if channel is None:
+        channel = self._output_registry.scoped_alias_lookup(
+            ScopedAliasKey((prefix, leaf)))
+```
+
+Ordered after both scoped steps and before Step 2, this is additive (INV-A): it only
+adds a hit where the ladder previously fell through to a fallback entry point. The
+self-reference guard applies as in every other step.
 
 ### REFERENCE Bindings (`::` in source_path)
 

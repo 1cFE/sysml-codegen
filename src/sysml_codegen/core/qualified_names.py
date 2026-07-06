@@ -105,6 +105,22 @@ def sysml_to_python_qualified_name(sysml_qname: str) -> str:
     return sysml_qname.replace("::", "__")
 
 
+def sanitize_qualified_name(sysml_qname: str) -> str:
+    """Per-segment sanitize a ``::`` qualified name into a ``__`` EQN.
+
+    Splits on ``::``, applies ``sanitize_name`` to each segment, and joins with
+    the ADR-003 ``__`` separator. Unlike ``sysml_to_python_qualified_name`` (a
+    bare separator swap), this sanitizes each segment, so quoted SysML names
+    (``Lib::'Margin Part'`` -> ``Lib__Margin_Part``) become valid identifiers.
+
+    Apply exactly ONCE, at the ``::``-form -> ``__``-form boundary. It is NOT
+    re-entrant on a ``__``-joined string: ``sanitize_name``'s ``_+`` collapse
+    would eat the ``__`` separator. Idempotence holds per-segment, not across
+    the join.
+    """
+    return "__".join(sanitize_name(seg) for seg in sysml_qname.split("::"))
+
+
 def python_to_sysml_qualified_name(python_qname: str) -> str:
     """Convert Python-safe qualified name ('__' separator) to SysML ('::' separator)."""
     return python_qname.replace("__", "::")
@@ -121,6 +137,27 @@ def extract_simple_name(qualified_path: str) -> str:
     return qualified_path
 
 
+def owning_part_leaf(owning_part_qn: str) -> str:
+    """Return the leaf (last segment) of a PartDef/PartUsage qualified name.
+
+    Handles both separator forms an ``owning_part_qn`` can carry: SysML ``::``
+    (e.g. ``"AttrExprProbeDesign::probe_design"``) and Python ``__`` (e.g.
+    ``"SolarBatteryLibrary__Solar_Array"``). A ``::``-form QN splits on ``::``
+    only — a ``__`` inside a sanitized segment must not be mistaken for the
+    separator, which is why this is not ``split`` on both at once. Unlike
+    ``extract_simple_name`` it never splits on ``.``, so a dotted nested scope
+    stays intact where the caller passes one.
+
+    Single rule for the three sites that derive an instance scope from an
+    ``owning_part_qn``: the two EXPOSE_PURE alias registrations in
+    ``output_registry_builder`` and ``_build_output_aliases`` — so shape A and
+    shape B can never drift on a ``::``-form QN.
+    """
+    if "::" in owning_part_qn:
+        return owning_part_qn.rsplit("::", 1)[-1]
+    return owning_part_qn.split("__")[-1]
+
+
 __all__ = [
     "sanitize_name",
     "build_element_qualified_name",
@@ -128,6 +165,8 @@ __all__ = [
     "get_module_name",
     "get_channel_name",
     "sysml_to_python_qualified_name",
+    "sanitize_qualified_name",
     "python_to_sysml_qualified_name",
     "extract_simple_name",
+    "owning_part_leaf",
 ]

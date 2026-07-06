@@ -178,6 +178,19 @@ part subsystem {
 
 This is permitted because it introduces no new computation -- it is pure value forwarding. Consumers bind to `subsystem.exposed_name` without knowing the internal calc structure.
 
+**What "exposed_name" means concretely (Item 5 / Item 11).** The name a consumer
+binds to is the derived, *sanitized* `python_name`, not the raw SysML name. Item 5
+derives every identifier once at extraction (`_sanitize_name`, REQ-NC-06) and looks it
+up thereafter; for a spaced name `'total cost'` the bound form is `total_cost`. As of
+Item 11 (SC-7 / REQ-DM-09 / REQ-PY-08) that sanitized name **surfaces into generated
+output**: it lands on `ComputationGraph.output_aliases` and, in the pipeline YAML,
+becomes the output filename on the exposed channel's exit line
+(`{instance_path}__{exposed_name}.json`). Both EXPOSE_PURE shapes surface — a part-def
+EXPOSE (shape A, e.g. `total_cost` on a `part def`) via the `_scoped_alias` registry,
+and a part-usage EXPOSE (shape B) via its `expose_pure` `ChannelAlias`. See
+[16-computed-attributes](reference/16-computed-attributes.md) and
+[21-pipeline-yaml-generation](reference/21-pipeline-yaml-generation.md).
+
 **EXPOSE_COMPUTED (deferred):** Combining a calc output reference with arithmetic (e.g., `= calc.output * 1.15`) is NOT supported. Create a CalcDef for the adjustment instead -- the pipeline auto-implements simple arithmetic CalcDefs, so no handwritten `_impl.py` is needed.
 
 ### Dynamic Expressions (Error)
@@ -264,6 +277,32 @@ This generates a virtual CalcUsage: `solar_array__pv_module__cost_model` with `w
 | LITERAL | `:>> wattage = 400.0` | Becomes a DESIGN_ATTRIBUTE entry point |
 | CHAIN | `:>> capital_cost = cost_model.total_cost` | Wired as MODULE_OUTPUT in the pipeline |
 | Deep-path | `:>> pv_module.wattage = 400.0` | Traversed through hierarchy to leaf attribute |
+| Type (retyping) | `:>> driver : 'HIF Driver'` (where `'HIF Driver' :> 'IFE Driver'`) | Pulls in the subtype's template calcs; supertype templates continue to flow (see below) |
+
+### Type Redefinition (Retyping)
+
+A usage may **retype** to a subtype: `part :>> driver : 'HIF Driver'` where
+`part def 'HIF Driver' :> 'IFE Driver'`. The retyped usage instantiates **both** its
+subtype's template calcs **and** the supertype-owned templates it already carried — it is
+indexed under every user-model PartDefinition it carries (its owned FeatureTyping target plus
+the user supertypes present in its flattened type list). A usage's declared type is read from
+its **owned FeatureTyping relationship**, never from a position in the type list (that list is
+order-unstable and, for a retyped usage, lists the supertype first and the declared subtype
+last).
+
+Two rules govern a subtype template that meets a supertype template on the same instantiation:
+
+- **Same name (redefinition).** A calc that *replaces* an inherited one reuses its name — the
+  two resolve to the same virtual QN. The most-specific owner (the subtype) wins; a **V9**
+  warning names both owners and the winner. This is how the modeler signals "override".
+- **Different names.** Both instantiate — retyping *adds* the subtype's calcs while the
+  supertype's continue to flow. No warning (there is no signal that a differently-named calc
+  was meant as a replacement).
+
+**Not covered:** a *plain* `part x : 'HIF Driver'` (no `:>>`) does **not** pull supertype
+templates — its type list carries only the declared type, so the supertype-owned template
+finds no instantiation path to it. Supertype-chain template inheritance for plain usages needs
+a deliberate specialization walk (deferred; MFE-epic note).
 
 ---
 
@@ -311,6 +350,30 @@ For the full identifier taxonomy and naming rules, see [15-naming-conventions.md
 
 ---
 
+## 8. Constraints Are Not Executable
+
+> **Constraint predicates are dropped. They are not compiled to pipeline modules and never appear in generated output.**
+
+SysML lets a modeler attach `constraint` usages to calc defs, part defs, and part usages — for
+example a physical-consistency check like `outer_radius == inner_radius + thickness`, or a
+plausibility bound like `0.0 < efficiency`. These express intent, but sysml-codegen has no execution
+path for them today: there is no boolean-output module, no assertion channel, and nothing downstream
+reads a constraint. So every constraint usage in the model is **dropped**.
+
+**Why the drop is loud, not silent.** A dropped constraint is a real modeling gap — the modeler may
+believe a viability gate is being enforced when it is not. At orchestration time the pipeline scans
+the whole model for constraint usages and reports them (REQ-EXT-09): one `INFO` per constraint naming
+its owner, and one summary `WARNING` with the model-wide total. `catf_mfe` has dozens of benign inline
+constraints, so the report is a single summary WARN plus per-constraint INFO — never per-constraint
+WARN noise.
+
+**What a modeler needing an enforced gate should do.** There is no in-model mechanism yet. Encode the
+check as a calc def that outputs the quantity you care about (e.g. a margin or a boolean-as-Real), so
+it flows through the pipeline as a normal output channel, and gate on that value downstream. Compiling
+`constraint`/`assert` predicates into boolean-output modules is a deferred epic.
+
+---
+
 ## Validation Rules
 
 The extraction phase enforces these rules to catch modeling violations early:
@@ -323,6 +386,31 @@ The extraction phase enforces these rules to catch modeling violations early:
 | V4 | Unknown operator | "Unsupported operator in static expression. Use calc def for complex calculations." |
 | V5 | Unbound input without default | Add default to calc def OR add binding in usage |
 | V6 | Binding to undefined attribute | Fix the binding path |
+| V7 | Calc def extracts with zero output attributes | "Calc def '{name}' extracted with zero output attributes. A pipeline module needs at least one output channel. Likely cause: the calc def declares no result — add one, e.g. `out attribute y : Real = <expr>` or `return y : Real = <expr>`. (An anonymous `return` is reported separately.)" |
+| V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
+| V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | "Template collision on '{virtual_qn}': owners '{owner_a}' and '{owner_b}' both define calc '{calc_name}'; kept most-specific owner '{winner}'." |
+| V10 | A usage has multiple incomparable owned types (neither specializes the other) | "Usage '{owning_qn}.{name}' has multiple incomparable owned types {sorted_qns}; resolved defaults against '{winner}' (first in stable order)." |
+| V11 | A module input references a params key no parameter group provides — its entry point fell through resolution (Step-4), carries no value, and is still wired (Item 7 / SC-8) | "V11: {n} module input(s) reference a params key that no parameter group provides — the JSON never mints the key, so the pipeline will KeyError at load. Cause: an unresolved cross-part reference not yet wired (Items 9-11) or a resolution bug. Offenders: module '{name}' input '{param}' -> params key '{group}.{qn}'" |
+
+**V11 note (SC-8).** Unlike V1–V10 (extraction-time), V11 fires at the
+**generation boundary** (`run_codegen`), where the computation graph and derived
+parameter groups both exist. It is the wired half of the fell-through-valueless
+partition (M1): the **unwired** half is a WARNING reconciliation summary
+(`Unresolved after assembly: …`), not a hard error. A null-default entry point
+that did *not* fall through is the legitimate user-fill signature and never trips
+V11. Behavioral note: Item 7 also fixed two resolution matcher bugs (the FORMULA
+`::`-QN per-segment sanitize and def-owned dotted leaf-unique match), which
+reclassify some entry points `USAGE_LITERAL` → `DESIGN_ATTRIBUTE` and switch their
+default-value source; see the Item 7 release notes.
+
+**No V12/V13 (Item 10 note).** The Item-10 design tentatively proposed V12 (multi-hop
+EXPOSE coverage) and V13 (specialization-chain channel coverage) as new diagnostic codes.
+They were not added: Item 10's mechanisms are **positive resolution** (they wire cross-part
+channels that previously fell through), not new abort diagnostics, so a V12/V13 code would
+emit nothing. The coverage is instead tracked as requirements — REQ-CA-10 (multi-hop
+EXPOSE), REQ-LVP-09 + REQ-VBR-11 (specialization chain), REQ-BT-11 (scoped-alias sibling
+disambiguation) — in the [verification matrix](verification-matrix.md). A model that still
+fails to wire a cross-part input surfaces through the existing **V11** boundary.
 
 ---
 

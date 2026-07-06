@@ -372,7 +372,7 @@ class TestContractReferenceSecondaryKeys:
     def test_formula_sysml_qn_resolves(self, registry):
         """FORMULA SysML qualified name also registered."""
         result = registry_resolve(registry,
-            "SolarBatteryDesign::solar_battery_plant::p_net_kw"
+            "SolarBatteryDesign__solar_battery_plant__p_net_kw"
         )
         assert result is not None
 
@@ -1006,8 +1006,8 @@ class TestResolveBindingViaRegistry:
         assert result.resolution_type == BindingResolutionType.ENTRY_POINT
         assert "missing_param" in result.qualified_name
 
-    def test_unresolved_binding_logs_warning(self, caplog):
-        """Unresolved binding in new path produces logger.warning()."""
+    def test_unresolved_binding_logs_debug(self, caplog):
+        """Unresolved binding emits the per-binding line at DEBUG (Item 7 / D5)."""
         import logging
 
         registry = build_output_registry(
@@ -1020,9 +1020,13 @@ class TestResolveBindingViaRegistry:
         binding = _make_binding(
             "missing_param", "nonexistent.source", BindingType.CHAIN
         )
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             bt._resolve_binding_via_registry(binding, usage)
-        assert any("Registry unresolved" in r.message for r in caplog.records)
+        unresolved = [r for r in caplog.records if "Registry unresolved" in r.message]
+        assert unresolved, "expected a 'Registry unresolved' per-binding line"
+        assert all(r.levelno == logging.DEBUG for r in unresolved), (
+            "per-binding line must be DEBUG (D5), not WARNING"
+        )
 
     def test_expose_pure_resolves_via_reference_secondary(self):
         """Bug 2: EXPOSE_PURE total_capex resolves via REFERENCE secondary."""

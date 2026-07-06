@@ -9,6 +9,7 @@ Key features:
 - Unbound parameter identification for entry point candidates
 """
 
+import copy
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -141,12 +142,145 @@ class ExtractionReport:
     warnings: list[str] = field(default_factory=list)
 
 
+def owned_feature_typing_targets(usage: Any) -> list[Any]:
+    """Return the target elements of a usage's *owned* FeatureTyping relationships.
+
+    A part usage's declared type(s) are the targets of ``FeatureTyping`` relationships
+    it owns via ``heritage`` — not a position in ``usage.types`` (which is an
+    order-unstable, flattened view mixing declared, library, and inherited types).
+    Walks ``usage.heritage`` and keeps FeatureTyping targets in heritage order.
+
+    Probe-confirmed (SC-3 Phase 0, B1): ``heritage`` yields owned typings only, not
+    typings inherited up the supertype chain — so a retyped ``part :>> driver : Sub``
+    yields ``Sub`` alone, and a plain ``part x : Sub`` yields ``Sub`` alone. Mirrors the
+    heritage walk in ``extractor.py`` ``_get_calc_def_name`` (which returns the first
+    name); this returns all targets.
+    """
+    targets: list[Any] = []
+    if not hasattr(usage, "heritage"):
+        return targets
+    for relationship, target in usage.heritage:
+        if SysideAdapter.is_instance(relationship, "FeatureTyping") and target is not None:
+            targets.append(target)
+    return targets
+
+
+def user_partdef_types(usage: Any, user_qn_set: set[str]) -> list[str]:
+    """Return the ``__``-form QNs of the user-model PartDefinitions in ``usage.types``.
+
+    Maps every entry of ``usage.types`` to its ``__``-form qualified name and keeps
+    those present in ``user_qn_set`` (the QNs of user-model PartDefinitions). Library
+    types (``Part``, ISQ bases) are absent from ``user_qn_set`` and thereby filtered
+    out. Index projection only — the map is single-valued per usage elsewhere.
+
+    Probe-confirmed (SC-3 Phase 0, Q4): ``elements_of_type(model, "PartDefinition")``
+    excludes the standard library, so the ``user_qn_set`` intersection is the whole
+    user filter.
+    """
+    result: list[str] = []
+    try:
+        types = list(usage.types)
+    except (TypeError, AttributeError):
+        return result
+    for type_elem in types:
+        qn = build_element_qualified_name(type_elem)
+        if qn in user_qn_set:
+            result.append(qn)
+    return result
+
+
+def _supertype_closure(qn: str, qn_to_partdef: dict[str, Any]) -> set[str]:
+    """Return the transitive ``__``-form QNs of a PartDef's supertypes.
+
+    Walks the PartDef's ``Subclassification`` relationships (``part def Sub :> Super``)
+    via ``heritage``, transitively. Library supertypes (e.g. ``Parts__Part``) appear in
+    the set but are harmless — membership is only ever tested against user QNs.
+    """
+    closure: set[str] = set()
+    stack = [qn]
+    while stack:
+        current = stack.pop()
+        part_def = qn_to_partdef.get(current)
+        if part_def is None or not hasattr(part_def, "heritage"):
+            continue
+        for relationship, target in part_def.heritage:
+            if not SysideAdapter.is_instance(relationship, "Subclassification"):
+                continue
+            super_qn = build_element_qualified_name(target)
+            if super_qn and super_qn not in closure:
+                closure.add(super_qn)
+                stack.append(super_qn)
+    return closure
+
+
+def most_specific(
+    qns: list[str], qn_to_partdef: dict[str, Any]
+) -> tuple[str | None, bool]:
+    """Pick the most-specific PartDef QN among a usage's owned typings.
+
+    ``A`` is more specific than ``B`` iff ``B`` is in ``A``'s supertype closure. The
+    most-specific PartDef is the one no other candidate specializes — the sink of a
+    specialization chain. Returns ``(winner, incomparable)``:
+
+    - Empty list → ``(None, False)`` (caller skips: no type).
+    - Single QN → ``(qn, False)``.
+    - All comparable (one chain) → ``(chain sink, False)``.
+    - Two or more mutually incomparable maxima → ``(sorted-first, True)``; the caller
+      emits V10. Sorting by QN string keeps the pick machine-independent — never rely
+      on ``heritage``/``types`` iteration order.
+
+    ``qn_to_partdef`` is a prebuilt ``{qn: PartDefElement}`` lookup (built once per
+    extraction pass), so supertype-closure walks never scan all PartDefs per call.
+    """
+    if not qns:
+        return None, False
+    unique = sorted(set(qns))
+    if len(unique) == 1:
+        return unique[0], False
+
+    closures = {qn: _supertype_closure(qn, qn_to_partdef) for qn in unique}
+    # Maximal = not specialized by any other candidate = not in any other's closure.
+    maximal = [
+        qn
+        for qn in unique
+        if not any(qn in closures[other] for other in unique if other != qn)
+    ]
+    return maximal[0], len(maximal) > 1
+
+
+def user_partdef_lookup(model: Any) -> dict[str, Any]:
+    """Return a ``{__-form QN: PartDefElement}`` lookup for all user-model PartDefs.
+
+    Probe-confirmed (SC-3 Phase 0, Q4): ``elements_of_type(model, "PartDefinition")``
+    excludes the standard library, so this is exactly the user PartDef set. Its keys
+    are the ``user_qn_set`` used to filter index keys to user types; its values drive
+    ``most_specific``'s supertype-closure walk. Built once per extraction pass.
+    """
+    lookup: dict[str, Any] = {}
+    for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
+        qn = build_element_qualified_name(part_def)
+        if qn:
+            lookup[qn] = part_def
+    return lookup
+
+
 def _build_part_usage_index(model: Any) -> dict[str, list[Any]]:
     """Build index mapping PartDef qualified names to their PartUsage elements.
 
-    Iterates all PartUsage elements in the model. For each, resolves its
-    typed PartDefinition via ``usage.types``, computes the PartDef's qualified
-    name, and indexes the PartUsage under that key.
+    Iterates all PartUsage elements. Keys each usage under **every user-model
+    PartDefinition it carries** — the set union of its owned FeatureTyping targets
+    and the user PartDefs in ``usage.types`` (both projected to ``__``-form QNs and
+    filtered to ``user_qn_set``, so library types like ``Part`` are excluded). This
+    is a superset of the old first-``.types`` key (REQ-EXT-13):
+
+    - A plain ``part x : Sub`` carries only ``Sub`` (B2-plain) → one key, identical to
+      before.
+    - A retyped ``part :>> driver : Sub`` carries both ``Sub`` (owned typing) and its
+      user supertype (present in ``.types``) → keyed under both, so the subtype's
+      template calcs and the preserved supertype flow both find an instantiation path.
+
+    The per-usage key set is a ``set``: the declared type is both an owned typing and
+    a ``.types`` member, so the union dedups it (INV-1).
 
     Args:
         model: Parsed SysIDE model.
@@ -156,15 +290,16 @@ def _build_part_usage_index(model: Any) -> dict[str, list[Any]]:
     """
     from collections import defaultdict
 
+    user_qn_set = set(user_partdef_lookup(model))
     index: dict[str, list[Any]] = defaultdict(list)
 
     for usage in SysideAdapter.elements_of_type(model, "PartUsage"):
-        try:
-            part_def = next(iter(usage.types))
-        except (StopIteration, TypeError, AttributeError):
-            continue
-        part_def_qn = build_element_qualified_name(part_def)
-        if part_def_qn:
+        key_qns: set[str] = set(user_partdef_types(usage, user_qn_set))
+        for target in owned_feature_typing_targets(usage):
+            target_qn = build_element_qualified_name(target)
+            if target_qn in user_qn_set:
+                key_qns.add(target_qn)
+        for part_def_qn in key_qns:
             index[part_def_qn].append(usage)
 
     return dict(index)
@@ -256,7 +391,12 @@ def _create_virtual_calc_usage(
         calc_def_name=template.calc_def_name,
         calc_def_qualified_name=template.calc_def_qualified_name,
         module_type=template.module_type,
-        bindings=list(template.bindings),
+        # Shallow-copy each BindingInfo so sibling instances never share a binding
+        # object (REQ-VBR-08 / D2). The rewrite reassigns only scalar fields, so a
+        # shallow copy gives each instance independent scalars while the read-only
+        # AST-node references stay shared (copy.deepcopy would recurse into the
+        # SysIDE parse subgraph — slow and possibly cyclic).
+        bindings=[copy.copy(b) for b in template.bindings],
         unbound_params=list(template.unbound_params),
         source_file=template.source_file,
         source_line=template.source_line,
@@ -285,6 +425,8 @@ def _expand_template_calc_usages(
         by virtual instances (one per PartUsage instantiation).
     """
     index = _build_part_usage_index(model)
+    # Lookup for the collision tiebreak's most-specific-owner comparison (FIX 3).
+    lookup = user_partdef_lookup(model)
 
     concrete: list[CalcUsageData] = []
     templates: list[CalcUsageData] = []
@@ -303,10 +445,16 @@ def _expand_template_calc_usages(
         )
 
     virtual_usages: list[CalcUsageData] = []
-    seen_qns: set[str] = set()
+    # Virtual QN -> the winning virtual stored under it. A dict (not a set) so a
+    # second template resolving to the same QN can be compared, not blindly dropped.
+    seen_qns: dict[str, CalcUsageData] = {}
+    # Collision classes already warned, keyed (owner_a, owner_b, calc_name), so a
+    # usage instantiated N times warns once, not N times (V9 dedup).
+    collisions_warned: set[tuple[str, str, str]] = set()
 
     for template in templates:
-        if not template.owning_part_def_qn:
+        owner_qn = template.owning_part_def_qn
+        if not owner_qn:
             msg = (
                 f"Template CalcUsage '{template.instance_name}' "
                 f"has is_template=True but no owning_part_def_qn — skipped"
@@ -314,11 +462,11 @@ def _expand_template_calc_usages(
             logger.warning(msg)
             warnings.append(msg)
             continue
-        paths = _find_instantiation_paths(template.owning_part_def_qn, index)
+        paths = _find_instantiation_paths(owner_qn, index)
         if not paths:
             msg = (
                 f"Template CalcUsage '{template.instance_name}' "
-                f"(PartDef '{template.owning_part_def_qn}') has no "
+                f"(PartDef '{owner_qn}') has no "
                 f"PartUsage instantiations — dropped"
             )
             logger.warning(msg)
@@ -327,9 +475,41 @@ def _expand_template_calc_usages(
 
         for path in paths:
             virtual = _create_virtual_calc_usage(template, path)
-            if virtual.qualified_name not in seen_qns:
-                seen_qns.add(virtual.qualified_name)
+            existing = seen_qns.get(virtual.qualified_name)
+            if existing is None:
+                seen_qns[virtual.qualified_name] = virtual
                 virtual_usages.append(virtual)
+                continue
+
+            existing_owner = existing.owning_part_def_qn
+            assert existing_owner is not None  # virtuals always carry their owner
+            if existing_owner == owner_qn:
+                # Same owner arriving via another instantiation path — idempotent.
+                continue
+
+            # Genuine collision: two different owners resolve to the same virtual QN
+            # (same instantiation path + same calc instance name). Keep the
+            # most-specific owner; emit V9 once per collision class.
+            winner_qn, _incomparable = most_specific([existing_owner, owner_qn], lookup)
+            if winner_qn == owner_qn:
+                for i, stored in enumerate(virtual_usages):
+                    if stored is existing:
+                        virtual_usages[i] = virtual
+                        break
+                seen_qns[virtual.qualified_name] = virtual
+
+            owner_a, owner_b = sorted([existing_owner, owner_qn])
+            calc_name = sanitize_name(template.instance_name)
+            dedup_key = (owner_a, owner_b, calc_name)
+            if dedup_key not in collisions_warned:
+                collisions_warned.add(dedup_key)
+                msg = (
+                    f"Template collision on '{virtual.qualified_name}': owners "
+                    f"'{owner_a}' and '{owner_b}' both define calc '{calc_name}'; "
+                    f"kept most-specific owner '{winner_qn}'."
+                )
+                logger.warning(msg)
+                warnings.append(msg)
 
     if virtual_usages:
         logger.info(

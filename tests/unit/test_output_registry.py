@@ -157,23 +157,32 @@ class TestCollisionHandling:
         registry_register(reg,"channel_B", ["shared.key"])
         assert registry_resolve(reg,"shared.key") == "channel_A"  # first wins
 
-    def test_collision_logs_warning(self, caplog):
+    def test_collision_logs_debug(self, caplog):
+        """First-wins alias collision logs the per-collision line at DEBUG (D5)."""
         reg = OutputRegistry()
         registry_register(reg,"channel_A", ["shared.key"])
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             registry_register(reg,"channel_B", ["shared.key"])
-        assert "collision" in caplog.text.lower()
+        collision = [r for r in caplog.records if "collision" in r.message.lower()]
+        assert collision, "expected a per-collision line"
+        assert all(r.levelno == logging.DEBUG for r in collision), (
+            "Item 7 / D5: per-collision line is DEBUG (count-summary is the WARNING)"
+        )
         assert "shared.key" in caplog.text
         assert "channel_A" in caplog.text
         assert "channel_B" in caplog.text
+        # Accumulator records it for the builder's count-summary.
+        assert reg.alias_collision_count == 1
+        assert reg.alias_collision_distinct_keys == 1
 
     def test_nine_virtual_calc_usage_collision(self, caplog):
-        """Key_A 'cost_model.total_cost' from 9 virtual CalcUsages: first wins, 8 warnings."""
+        """Key_A 'cost_model.total_cost' from 9 virtual CalcUsages: first wins,
+        8 collisions recorded (DEBUG per-line; one WARNING summary at build)."""
         reg = OutputRegistry()
         first_canonical = "Design__part1__cost_model__total_cost"
         registry_register(reg,first_canonical, ["cost_model.total_cost"])
 
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             for i in range(2, 10):
                 registry_register(reg,
                     f"Design__part{i}__cost_model__total_cost",
@@ -181,12 +190,16 @@ class TestCollisionHandling:
                 )
 
         assert registry_resolve(reg,"cost_model.total_cost") == first_canonical
-        # 8 collisions (parts 2-9)
-        collision_warnings = [
+        # 8 collisions (parts 2-9), each a DEBUG per-collision line (D5).
+        collision_records = [
             r for r in caplog.records
             if "collision" in r.message.lower()
         ]
-        assert len(collision_warnings) == 8
+        assert len(collision_records) == 8
+        assert all(r.levelno == logging.DEBUG for r in collision_records)
+        # The accumulator drives the single WARNING count-summary.
+        assert reg.alias_collision_count == 8
+        assert reg.alias_collision_distinct_keys == 1
 
 
 # ---------------------------------------------------------------------------
@@ -218,9 +231,12 @@ class TestRegisterAlias:
         # Register alias for shared.key -> channel_A
         reg.register_alias("shared.key", "channel_A")
         # Attempt to re-register same alias key -> channel_B
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             reg.register_alias("shared.key", "channel_B")
-        assert "collision" in caplog.text.lower()
+        # Item 7 / D5: per-collision line is DEBUG, and the collision is recorded.
+        collision = [r for r in caplog.records if "collision" in r.message.lower()]
+        assert collision and all(r.levelno == logging.DEBUG for r in collision)
+        assert reg.alias_collision_count == 1
         assert registry_resolve(reg,"shared.key") == "channel_A"  # first wins
 
 

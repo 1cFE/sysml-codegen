@@ -26,9 +26,10 @@ from sysml_codegen.generation.entry_point import (
 )
 from sysml_codegen.resolution.models import ComputationGraph
 
-from tests.conformance.test_entry_point_classifier import (
+from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +68,7 @@ def all_graphs() -> dict[str, ComputationGraph]:
     """Build ComputationGraphs for all parametrized models (once per session)."""
     graphs = {}
     for model_name in PARAMETRIZED_MODELS:
-        graph, _ = build_full_graph_from_snapshot(model_name)
+        graph, _ = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         graphs[model_name] = graph
     return graphs
 
@@ -251,10 +252,8 @@ class TestJsonExcludesNoneDefaults:
         file_lookup = {Path(f).name: Path(f) for f in json_files}
 
         violations = []
-        none_eps_found = 0
         for group in graph.entry_point_groups:
             none_eps = [ep for ep in group.parameters if ep.default_value is None]
-            none_eps_found += len(none_eps)
 
             if not none_eps:
                 continue
@@ -269,12 +268,13 @@ class TestJsonExcludesNoneDefaults:
                         f"but appears in JSON with value={data[ep.qualified_name]}"
                     )
 
-        # catf_mfe has at least one None-default EP (magnets_params.magnet_volume)
-        if model_name == "catf_mfe_model":
-            assert none_eps_found > 0, (
-                "Expected at least one None-default EP in catf_mfe"
-            )
-
+        # Non-vacuity note: pre-Item-10 catf_mfe carried a None-default EP
+        # (magnets_params.magnet_volume) that this test used to prove the exclusion
+        # path actually runs. Item 10 stage (a) WIRED that gap, so catf no longer has
+        # a None-default EP — the guard is dropped rather than asserted-false. The
+        # ``not violations`` check below still fires on every None EP the corpus has;
+        # it is vacuously true only when a model has none (which is now the healthy
+        # state for both parametrized models).
         assert not violations, (
             f"None-default violations in {model_name}:\n" + "\n".join(violations)
         )

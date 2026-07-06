@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.conftest import FIXTURES_DIR, requires_license
+
 
 # ---------------------------------------------------------------------------
 # Phase 1: Data model tests
@@ -23,6 +25,7 @@ class TestComputedAttributeClassification:
             ComputedAttributeClassification.FORMULA,
             ComputedAttributeClassification.EXPOSE_PURE,
             ComputedAttributeClassification.EXPOSE_COMPUTED,
+            ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE,
             ComputedAttributeClassification.LITERAL,
             ComputedAttributeClassification.UNRESOLVABLE,
         }
@@ -226,6 +229,7 @@ class TestClassifyAttributeExpression:
             calc_usage_names=set(),
             sibling_attr_names={"length", "width", "area"},
             expression_ast=expr,
+            reference_chain=None,
         )
         assert result == ComputedAttributeClassification.FORMULA
 
@@ -254,6 +258,7 @@ class TestClassifyAttributeExpression:
             calc_usage_names={"alpha_split"},
             sibling_attr_names={"p_alpha_out", "some_attr"},
             expression_ast=expr,
+            reference_chain=None,
         )
         assert result == ComputedAttributeClassification.EXPOSE_PURE
 
@@ -284,6 +289,7 @@ class TestClassifyAttributeExpression:
             calc_usage_names={"scale_calc"},
             sibling_attr_names={"scaled_area"},
             expression_ast=expr,
+            reference_chain=None,
         )
         assert result == ComputedAttributeClassification.EXPOSE_COMPUTED
 
@@ -303,6 +309,7 @@ class TestClassifyAttributeExpression:
             calc_usage_names=set(),
             sibling_attr_names={"length"},
             expression_ast=expr,
+            reference_chain=None,
         )
         assert result == ComputedAttributeClassification.LITERAL
 
@@ -333,6 +340,7 @@ class TestClassifyAttributeExpression:
             calc_usage_names=set(),
             sibling_attr_names={"length", "broken"},
             expression_ast=expr,
+            reference_chain=None,
         )
         assert result == ComputedAttributeClassification.UNRESOLVABLE
 
@@ -364,6 +372,7 @@ class TestClassifyAttributeExpression:
             # p_alpha exists as a sibling! But QN says it's from CalcDef namespace.
             sibling_attr_names={"p_alpha", "p_alpha_out", "some_other"},
             expression_ast=expr,
+            reference_chain=None,
         )
         # Must be EXPOSE (calc_ref), NOT FORMULA (sibling_ref)
         assert result == ComputedAttributeClassification.EXPOSE_PURE
@@ -713,3 +722,187 @@ class TestExtractComputedAttributes:
         assert out.classification == ComputedAttributeClassification.EXPOSE_PURE
         assert out.compiled_expression is None
         assert out.compilability == Compilability.MANUAL_REQUIRED
+
+
+# ---------------------------------------------------------------------------
+# Item 10 (D9): reference_chain full-segment capture
+# ---------------------------------------------------------------------------
+
+
+class TestReferenceChainCapture:
+    """The additive full-chain-segments field the multi-hop confirm walk reads.
+
+    Phase-0 probe (D-A) established that a 3-deep chain stores its deeper
+    segments in target_feature.chaining_features — the design's named helper
+    (operands[0] + target_feature.name) truncates it. These tests pin the
+    corrected capture and the additive-degrade of old snapshots.
+    """
+
+    def test_segments_helper_non_chain_returns_empty(self):
+        # A non-FeatureChainExpression node yields no segments (→ None on the CAD).
+        from sysml_codegen.extraction.expression_utils import (
+            extract_feature_chain_segments,
+        )
+
+        assert extract_feature_chain_segments(SimpleNamespace()) == []
+
+    def test_old_snapshot_degrades_to_none(self):
+        # A committed pre-Item-10 snapshot lacks the field → None, no version fail.
+        # Anchored on unresolvable_attr_probe: 6 computed attributes, none EXPOSE,
+        # committed without ``reference_chain`` — exercises the additive-degrade
+        # path (D9). solar_battery can no longer serve here: Item 11's approved
+        # recapture gave its shape-A EXPOSE the field.
+        from sysml_codegen.snapshot import load_extraction_snapshot
+        from tests.conftest import snapshot_fixture
+
+        snap = load_extraction_snapshot(snapshot_fixture("unresolvable_attr_probe"))
+        cas = snap["computed_attributes"]
+        assert cas, "expected computed attributes in the committed snapshot"
+        assert all(ca.reference_chain is None for ca in cas)
+
+    def test_reference_chain_serialization_roundtrip(self):
+        # Serializer auto-includes the field; loader reads it back unchanged.
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+            ComputedAttributeData,
+        )
+        from sysml_codegen.extraction.expression_compiler import Compilability
+        from sysml_codegen.snapshot.loader import _deserialize_computed_attribute
+        from sysml_codegen.snapshot.serializer import _serialize_value
+
+        ca = ComputedAttributeData(
+            name="magnet_volume_total",
+            python_name="magnet_volume_total",
+            owning_part_name="radial_build",
+            owning_part_qualified_name="IfePlantSubsystems::radial_build",
+            expression_ast=None,
+            expression_text="tf_coil.volume_calc.volume",
+            references=[],
+            classification=ComputedAttributeClassification.FORMULA,
+            compilability=Compilability.MANUAL_REQUIRED,
+            source_file=Path("subsystems.sysml"),
+            source_line=12,
+            reference_chain=["tf_coil", "volume_calc", "volume"],
+        )
+        d = _serialize_value(ca, None)
+        assert d["reference_chain"] == ["tf_coil", "volume_calc", "volume"]
+
+        ca2 = _deserialize_computed_attribute(d)
+        assert ca2.reference_chain == ["tf_coil", "volume_calc", "volume"]
+
+    @requires_license
+    def test_reference_chain_captured_live_both_pin_shapes(self):
+        # The D-A fix: both pin shapes capture their FULL segments, including the
+        # 3-deep ife chain whose deeper segments live in chaining_features.
+        from sysml_codegen.extraction.usage_extractor import (
+            extract_calculation_usages,
+        )
+        from sysml_codegen.orchestration.pipeline_builder import (
+            _extract_and_filter_computed_attributes,
+        )
+
+        def _chain_for(model_dir, part, attr):
+            from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+            extractor = SysMLDataExtractor([FIXTURES_DIR / model_dir])
+            assert extractor.load_models()
+            calc_defs = extractor.extract_calculation_definitions()
+            calc_usages, _ = extract_calculation_usages(
+                extractor.model, calc_defs=calc_defs
+            )
+            cas, _ = _extract_and_filter_computed_attributes(
+                extractor.model, calc_usages, {}
+            )
+            match = [
+                c for c in cas
+                if c.name == attr and c.owning_part_name == part
+            ]
+            assert match, f"{part}.{attr} not found among computed attrs"
+            return match[0].reference_chain
+
+        # ife_plant: direct-calc-output terminal, 3-deep — the D-A case.
+        assert _chain_for("ife_plant", "radial_build", "magnet_volume_total") == [
+            "tf_coil",
+            "volume_calc",
+            "volume",
+        ]
+        # catf_mfe: alias terminal, 2-deep.
+        assert _chain_for(
+            "catf_mfe_model", "catf_radial_build", "magnet_volume_total"
+        ) == ["tf_coil", "volume"]
+
+
+class TestMultiHopTentativeGate:
+    """Item 10 (D6/INV-E): the leaf tags a well-formed multi-hop chain tentative."""
+
+    def test_multihop_chain_tagged_tentative(self, mock_syside_adapter):
+        # tf_coil.volume_calc.volume: FeatureChainExpression root, 3 segments
+        # rooted at the part waypoint tf_coil (truncated refs → calc_refs empty).
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            _classify_attribute_expression,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+
+        expr = MockFeatureChainExpression()
+        refs = _make_refs(("tf_coil", "Pkg::radial_build::tf_coil"))
+        result = _classify_attribute_expression(
+            refs=refs,
+            owning_part_qualified_name="Pkg::radial_build",
+            calc_usage_names=set(),
+            sibling_attr_names={"magnet_volume_total"},
+            expression_ast=expr,
+            reference_chain=["tf_coil", "volume_calc", "volume"],
+        )
+        assert result == ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE
+
+    def test_arithmetic_over_chain_stays_formula(self, mock_syside_adapter):
+        # OperatorExpression root fails the FeatureChainExpression gate → FORMULA
+        # even with a >=2 segment chain present (INV-D negative).
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            _classify_attribute_expression,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+
+        expr = MockOperatorExpression("*", [
+            MockFeatureChainExpression(),
+            MockLiteralRational(2.0),
+        ])
+        refs = _make_refs(("tf_coil", "Pkg::radial_build::tf_coil"))
+        result = _classify_attribute_expression(
+            refs=refs,
+            owning_part_qualified_name="Pkg::radial_build",
+            calc_usage_names=set(),
+            sibling_attr_names={"scaled"},
+            expression_ast=expr,
+            reference_chain=["tf_coil", "volume_calc", "volume"],
+        )
+        assert result == ComputedAttributeClassification.FORMULA
+
+    def test_calc_rooted_chain_not_tentative(self, mock_syside_adapter):
+        # volume_calc.volume: root IS a calc usage → the simple EXPOSE_PURE path,
+        # never the multi-hop tentative (INV-E root-is-part guard).
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            _classify_attribute_expression,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+
+        expr = MockFeatureChainExpression()
+        refs = _make_refs(
+            ("volume", "Library::CoilVolume::volume"),
+            ("volume_calc", "Pkg::Part::volume_calc"),
+        )
+        result = _classify_attribute_expression(
+            refs=refs,
+            owning_part_qualified_name="Pkg::Part",
+            calc_usage_names={"volume_calc"},
+            sibling_attr_names={"volume"},
+            expression_ast=expr,
+            reference_chain=["volume_calc", "volume"],
+        )
+        assert result == ComputedAttributeClassification.EXPOSE_PURE

@@ -19,18 +19,20 @@ from sysml_codegen.resolution.input_resolver import (
     ResolutionContext,
     SysMLQNLookup,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen" / "templates"
+SRC_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen"
+TEMPLATES_DIR = SRC_DIR / "templates"
 
 
 def _build_registry_from_snapshot(model_name: str):
     """Load snapshot and build OutputRegistry."""
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],
@@ -64,6 +66,20 @@ class TestDeadFileRemoval:
         stub_path = TEMPLATES_DIR / "teax_module_stub.py.jinja2"
         assert not stub_path.exists(), (
             f"Dead template still exists: {stub_path}"
+        )
+
+    def test_constraints_module_absent(self):
+        """extraction/constraints.py is deleted (dead: nothing imports it; it
+        only loaded the constraint_validator template). Item 1 / spec D2."""
+        assert not (SRC_DIR / "extraction" / "constraints.py").exists(), (
+            "Dead module still exists: extraction/constraints.py"
+        )
+
+    def test_constraint_validator_template_absent(self):
+        """templates/constraint_validator.py.jinja2 is deleted (dead: referenced
+        only by the removed constraints.py). Item 1 / spec D2."""
+        assert not (TEMPLATES_DIR / "constraint_validator.py.jinja2").exists(), (
+            "Dead template still exists: templates/constraint_validator.py.jinja2"
         )
 
 

@@ -1,0 +1,428 @@
+{
+  "snapshot_format_version": 1,
+  "model_name": "retype_model",
+  "captured_at": "2026-07-05T23:55:28.853159+00:00",
+  "compilation_results": {
+    "IfeCalc": {
+      "calc_def_name": "IfeCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "ife_out",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.p * 2.0)",
+          "input_refs": [
+            "p"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "ife_out"
+      ]
+    },
+    "HifCalc": {
+      "calc_def_name": "HifCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "hif_out",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.q * 3.0)",
+          "input_refs": [
+            "q"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "hif_out"
+      ]
+    },
+    "SharedCalc": {
+      "calc_def_name": "SharedCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "shared_out",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.s + 1.0)",
+          "input_refs": [
+            "s"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "shared_out"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "IfeCalc",
+      "qualified_name": "RetypeLibrary::IfeCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "ife_out = p * 2.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "p",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "ife_out",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 5,
+      "source_hash": "7322460c8c035ceb1ea52637bb09bbeb0d21000b04547074815b041d8474c741",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "ife_out",
+        "p"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "HifCalc",
+      "qualified_name": "RetypeLibrary::HifCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "hif_out = q * 3.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "q",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "hif_out",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 11,
+      "source_hash": "7322460c8c035ceb1ea52637bb09bbeb0d21000b04547074815b041d8474c741",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "hif_out",
+        "q"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "SharedCalc",
+      "qualified_name": "RetypeLibrary::SharedCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "shared_out = s + 1.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "s",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "shared_out",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 19,
+      "source_hash": "7322460c8c035ceb1ea52637bb09bbeb0d21000b04547074815b041d8474c741",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "s",
+        "shared_out"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "RetypeDesign__retype_design__the_variant__driver__ife_calc",
+      "calc_def_name": "IfeCalc",
+      "calc_def_qualified_name": "RetypeLibrary::IfeCalc",
+      "module_type": "retypelibrary.IfeCalcModule",
+      "bindings": [
+        {
+          "param_name": "p",
+          "source_path": "RetypeLibrary::'IFE Driver'::power",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> RetypeLibrary::'IFE Driver'::power",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "power"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "library.sysml",
+      "source_line": 29,
+      "parent_part_path": "retype_design.the_variant.driver",
+      "qualified_name": "RetypeDesign__retype_design__the_variant__driver__ife_calc",
+      "is_template": false,
+      "owning_part_def_qn": "RetypeLibrary__IFE_Driver",
+      "raw_element": null
+    },
+    {
+      "instance_name": "RetypeDesign__retype_design__the_variant__driver__shared_calc",
+      "calc_def_name": "SharedCalc",
+      "calc_def_qualified_name": "RetypeLibrary::SharedCalc",
+      "module_type": "retypelibrary.SharedCalcModule",
+      "bindings": [],
+      "unbound_params": [
+        "s"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 50,
+      "parent_part_path": "retype_design.the_variant.driver",
+      "qualified_name": "RetypeDesign__retype_design__the_variant__driver__shared_calc",
+      "is_template": false,
+      "owning_part_def_qn": "RetypeLibrary__HIF_Driver",
+      "raw_element": null
+    },
+    {
+      "instance_name": "RetypeDesign__retype_design__plain_hif__hif_calc",
+      "calc_def_name": "HifCalc",
+      "calc_def_qualified_name": "RetypeLibrary::HifCalc",
+      "module_type": "retypelibrary.HifCalcModule",
+      "bindings": [
+        {
+          "param_name": "q",
+          "source_path": "RetypeLibrary::'HIF Driver'::torque",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> RetypeLibrary::'HIF Driver'::torque",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "torque"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "library.sysml",
+      "source_line": 43,
+      "parent_part_path": "retype_design.plain_hif",
+      "qualified_name": "RetypeDesign__retype_design__plain_hif__hif_calc",
+      "is_template": false,
+      "owning_part_def_qn": "RetypeLibrary__HIF_Driver",
+      "raw_element": null
+    },
+    {
+      "instance_name": "RetypeDesign__retype_design__the_variant__driver__hif_calc",
+      "calc_def_name": "HifCalc",
+      "calc_def_qualified_name": "RetypeLibrary::HifCalc",
+      "module_type": "retypelibrary.HifCalcModule",
+      "bindings": [
+        {
+          "param_name": "q",
+          "source_path": "RetypeLibrary::'HIF Driver'::torque",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> RetypeLibrary::'HIF Driver'::torque",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "torque"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "library.sysml",
+      "source_line": 43,
+      "parent_part_path": "retype_design.the_variant.driver",
+      "qualified_name": "RetypeDesign__retype_design__the_variant__driver__hif_calc",
+      "is_template": false,
+      "owning_part_def_qn": "RetypeLibrary__HIF_Driver",
+      "raw_element": null
+    },
+    {
+      "instance_name": "RetypeDesign__retype_design__plain_hif__shared_calc",
+      "calc_def_name": "SharedCalc",
+      "calc_def_qualified_name": "RetypeLibrary::SharedCalc",
+      "module_type": "retypelibrary.SharedCalcModule",
+      "bindings": [],
+      "unbound_params": [
+        "s"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 50,
+      "parent_part_path": "retype_design.plain_hif",
+      "qualified_name": "RetypeDesign__retype_design__plain_hif__shared_calc",
+      "is_template": false,
+      "owning_part_def_qn": "RetypeLibrary__HIF_Driver",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/retype_model/library.sysml": [
+      {
+        "name": "ife_out",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 7,
+        "parent_part": "",
+        "qualified_name": "RetypeLibrary__IfeCalc__ife_out"
+      },
+      {
+        "name": "hif_out",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 13,
+        "parent_part": "",
+        "qualified_name": "RetypeLibrary__HifCalc__hif_out"
+      },
+      {
+        "name": "shared_out",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 21,
+        "parent_part": "",
+        "qualified_name": "RetypeLibrary__SharedCalc__shared_out"
+      },
+      {
+        "name": "power",
+        "sysml_type": "Real",
+        "default_value": "10.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 27,
+        "parent_part": "",
+        "qualified_name": "RetypeLibrary__IFE_Driver__power"
+      },
+      {
+        "name": "torque",
+        "sysml_type": "Real",
+        "default_value": "20.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 41,
+        "parent_part": "",
+        "qualified_name": "RetypeLibrary__HIF_Driver__torque"
+      },
+      {
+        "name": "mass",
+        "sysml_type": "Real",
+        "default_value": "5.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 56,
+        "parent_part": "",
+        "qualified_name": "RetypeLibrary__Other_Driver__mass"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [
+      "Usage 'RetypeLibrary__MultiHolder.multi' has multiple incomparable owned types ['RetypeLibrary__IFE_Driver', 'RetypeLibrary__Other_Driver']; resolved defaults against 'RetypeLibrary__IFE_Driver' (first in stable order)."
+    ],
+    "part_usage_names": {
+      "RetypeLibrary__MultiHolder": [
+        "multi"
+      ],
+      "RetypeLibrary__Facility": [
+        "driver"
+      ],
+      "RetypeLibrary__Variant": [
+        "driver"
+      ]
+    },
+    "usage_type_map": {
+      "[\"RetypeLibrary__MultiHolder\", \"multi\"]": "RetypeLibrary__IFE_Driver",
+      "[\"RetypeLibrary__Facility\", \"driver\"]": "RetypeLibrary__IFE_Driver",
+      "[\"RetypeLibrary__Variant\", \"driver\"]": "RetypeLibrary__HIF_Driver"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": []
+}

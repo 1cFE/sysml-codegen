@@ -18,20 +18,19 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from agentic_mbse.sysml.types import BindingType
 
+from sysml_codegen.core.qualified_names import build_element_qualified_name
 from sysml_codegen.extraction.usage_extractor import (
     BindingInfo,
     CalcUsageData,
-    _extract_single_usage,
     _build_part_usage_index,
-    _find_instantiation_paths,
     _create_virtual_calc_usage,
     _expand_template_calc_usages,
+    _extract_single_usage,
+    _find_instantiation_paths,
     extract_calculation_usages,
 )
-from sysml_codegen.core.qualified_names import build_element_qualified_name
-from agentic_mbse.sysml.types import BindingType
-
 
 # ---------------------------------------------------------------------------
 # Mock AST Elements
@@ -301,12 +300,20 @@ def _build_mock_hierarchy():
     }
 
 
-def _mock_elements_of_type(part_usages):
-    """Create a mock for SysideAdapter.elements_of_type that returns PartUsages."""
+def _mock_elements_of_type(part_usages, part_defs=None):
+    """Mock ``SysideAdapter.elements_of_type`` returning PartUsages and PartDefs.
+
+    ``_build_part_usage_index`` now derives its ``user_qn_set`` from a
+    ``"PartDefinition"`` query (probe Q4: that query excludes the standard library),
+    so the mock must serve the fixture's PartDefinitions too — otherwise every usage
+    filters to zero user types and nothing is indexed.
+    """
 
     def _elements(model, type_name):
         if type_name == "PartUsage":
             return part_usages
+        if type_name == "PartDefinition":
+            return list(part_defs) if part_defs else []
         return []
 
     return _elements
@@ -325,7 +332,9 @@ class TestPartUsageIndex:
         hierarchy = _build_mock_hierarchy()
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type(hierarchy["part_usages"]),
+            side_effect=_mock_elements_of_type(
+                hierarchy["part_usages"], list(hierarchy["part_defs"].values())
+            ),
         ):
             index = _build_part_usage_index("mock_model")
         # Each PartDef should have exactly one PartUsage in our mock
@@ -343,7 +352,7 @@ class TestPartUsageIndex:
 
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type([usage_a, usage_b]),
+            side_effect=_mock_elements_of_type([usage_a, usage_b], [part_def]),
         ):
             index = _build_part_usage_index("mock_model")
         widget_qn = build_element_qualified_name(part_def)
@@ -375,7 +384,9 @@ class TestInstantiationPaths:
         hierarchy = _build_mock_hierarchy()
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type(hierarchy["part_usages"]),
+            side_effect=_mock_elements_of_type(
+                hierarchy["part_usages"], list(hierarchy["part_defs"].values())
+            ),
         ):
             index = _build_part_usage_index("mock_model")
 
@@ -391,7 +402,9 @@ class TestInstantiationPaths:
         hierarchy = _build_mock_hierarchy()
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type(hierarchy["part_usages"]),
+            side_effect=_mock_elements_of_type(
+                hierarchy["part_usages"], list(hierarchy["part_defs"].values())
+            ),
         ):
             index = _build_part_usage_index("mock_model")
 
@@ -407,7 +420,9 @@ class TestInstantiationPaths:
         hierarchy = _build_mock_hierarchy()
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type(hierarchy["part_usages"]),
+            side_effect=_mock_elements_of_type(
+                hierarchy["part_usages"], list(hierarchy["part_defs"].values())
+            ),
         ):
             index = _build_part_usage_index("mock_model")
 
@@ -435,7 +450,7 @@ class TestInstantiationPaths:
 
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type([usage_lib, usage_design]),
+            side_effect=_mock_elements_of_type([usage_lib, usage_design], [part_def]),
         ):
             index = _build_part_usage_index("mock_model")
 
@@ -603,7 +618,9 @@ class TestTemplateExpansionIntegration:
         warnings: list[str] = []
         with patch(
             "sysml_codegen.extraction.usage_extractor.SysideAdapter.elements_of_type",
-            side_effect=_mock_elements_of_type(hierarchy["part_usages"]),
+            side_effect=_mock_elements_of_type(
+                hierarchy["part_usages"], list(hierarchy["part_defs"].values())
+            ),
         ):
             result = _expand_template_calc_usages(
                 "mock_model", [template, concrete], warnings

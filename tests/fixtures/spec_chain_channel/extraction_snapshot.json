@@ -1,0 +1,276 @@
+{
+  "snapshot_format_version": 1,
+  "model_name": "spec_chain_channel",
+  "captured_at": "2026-07-06T07:44:24.470159+00:00",
+  "compilation_results": {
+    "MeierCost": {
+      "calc_def_name": "MeierCost",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "gamma",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.drive_power * 0.02)",
+          "input_refs": [
+            "drive_power"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "gamma"
+      ]
+    },
+    "LcoeCalc": {
+      "calc_def_name": "LcoeCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "lcoe",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.cost_per_joule * 100.0)",
+          "input_refs": [
+            "cost_per_joule"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "lcoe"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "MeierCost",
+      "qualified_name": "SpecChainLib::MeierCost",
+      "doc_comment": "Nested producer calc for the gamma -> lcoe analog (SC-2). `gamma` is the\nspecialized-nested-part calc OUTPUT that a cross-part consumer must reach\nthrough the redefinition chain (usage override > specialized-def :>> > base).\n*Source**: authored fixture (Item 10, UPSTREAM-FINDINGS stage (b))\n*Reference**: spec.md SC-2 (def/specialization channel idiom)\n*Last Updated**: 2026-07-05",
+      "calc_expressions": [
+        "gamma = drive_power * 0.02",
+        "\nDocumentation:\nNested producer calc for the gamma -> lcoe analog (SC-2). `gamma` is the\nspecialized-nested-part calc OUTPUT that a cross-part consumer must reach\nthrough the redefinition chain (usage override > specialized-def :>> > base).\n*Source**: authored fixture (Item 10, UPSTREAM-FINDINGS stage (b))\n*Reference**: spec.md SC-2 (def/specialization channel idiom)\n*Last Updated**: 2026-07-05"
+      ],
+      "input_attributes": [
+        {
+          "name": "drive_power",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "gamma",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_line": 7,
+      "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "drive_power",
+        "gamma"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "LcoeCalc",
+      "qualified_name": "SpecChainLib::LcoeCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "lcoe = cost_per_joule * 100.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "cost_per_joule",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "lcoe",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_line": 22,
+      "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "cost_per_joule",
+        "lcoe"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "SpecChainDesign__spec_chain_plant__driver__meier_cost",
+      "calc_def_name": "MeierCost",
+      "calc_def_qualified_name": "SpecChainLib::MeierCost",
+      "module_type": "specchainlib.MeierCostModule",
+      "bindings": [
+        {
+          "param_name": "drive_power",
+          "source_path": "SpecChainLib::'IFE Driver'::meier_cost::drive_power",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> SpecChainLib::'IFE Driver'::meier_cost::drive_power",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "drive_power"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_line": 33,
+      "parent_part_path": "spec_chain_plant.driver",
+      "qualified_name": "SpecChainDesign__spec_chain_plant__driver__meier_cost",
+      "is_template": false,
+      "owning_part_def_qn": "SpecChainLib__IFE_Driver",
+      "raw_element": null
+    },
+    {
+      "instance_name": "SpecChainDesign__spec_chain_plant__lcoe_calc",
+      "calc_def_name": "LcoeCalc",
+      "calc_def_qualified_name": "SpecChainLib::LcoeCalc",
+      "module_type": "specchainlib.LcoeCalcModule",
+      "bindings": [
+        {
+          "param_name": "cost_per_joule",
+          "source_path": "driver.meier_cost.gamma",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> driver.cost_per_joule",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "driver",
+          "source_attribute_name": "cost_per_joule"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+      "source_line": 58,
+      "parent_part_path": "spec_chain_plant",
+      "qualified_name": "SpecChainDesign__spec_chain_plant__lcoe_calc",
+      "is_template": false,
+      "owning_part_def_qn": "SpecChainLib__Variant",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "tests/fixtures/spec_chain_channel/library.sysml": [
+      {
+        "name": "gamma",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+        "source_line": 17,
+        "parent_part": "",
+        "qualified_name": "SpecChainLib__MeierCost__gamma"
+      },
+      {
+        "name": "lcoe",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+        "source_line": 24,
+        "parent_part": "",
+        "qualified_name": "SpecChainLib__LcoeCalc__lcoe"
+      },
+      {
+        "name": "drive_power",
+        "sysml_type": "Real",
+        "default_value": "50.0",
+        "unit": null,
+        "source_file": "tests/fixtures/spec_chain_channel/library.sysml",
+        "source_line": 30,
+        "parent_part": "",
+        "qualified_name": "SpecChainLib__IFE_Driver__drive_power"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [
+      {
+        "owning_part_qn": "SpecChainLib__HIF_Driver",
+        "attribute_name": "cost_per_joule",
+        "redefinition_type": "chain",
+        "literal_value": null,
+        "source_path": "meier_cost.gamma",
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "design_overrides": [],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {
+      "SpecChainLib__Facility": [
+        "driver"
+      ],
+      "SpecChainLib__Variant": [
+        "driver"
+      ]
+    },
+    "usage_type_map": {
+      "[\"SpecChainLib__Facility\", \"driver\"]": "SpecChainLib__IFE_Driver",
+      "[\"SpecChainLib__Variant\", \"driver\"]": "SpecChainLib__HIF_Driver"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": []
+}

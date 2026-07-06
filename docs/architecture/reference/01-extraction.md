@@ -16,6 +16,13 @@ Source: `src/sysml_codegen/extraction/`
 | REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual [CalcUsageData](09-data-models.md#extraction-models) per PartUsage that instantiates the owning PartDef. | Count virtual usages == count of design-level PartUsage instances of that PartDef |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | Static import analysis of `extraction/` package |
 | REQ-EXT-07 | `output_expression_asts` SHALL preserve raw SysIDE AST nodes for downstream [expression compilation](14-expression-compiler.md). | Nodes are stored as `Any` and passed unchanged to `compile_calc_def()` |
+| REQ-EXT-08 | A `calc def` that extracts with zero output attributes SHALL raise a `ValueError` at extraction (V7), never reaching generation. | `extract_calculation_definitions()` on the `zero_output_calc` fixture raises before the Jinja module template runs |
+| REQ-EXT-09 | Every `ConstraintUsage` in the model (calc-def, part-def, and part-usage owners) SHALL be reported as a dropped, non-executable predicate: one INFO per constraint, one summary WARN with the model-wide total. | `report_dropped_constraints()` on `catf_mfe` emits exactly one summary WARN and one INFO per `ConstraintUsage` (counted structurally) |
+| REQ-EXT-10 | A calc-def member that is a direction-carrying `ReferenceUsage` — a named `return y` (Out) or a bare `in x` (In) — SHALL be extracted as a parameter; a named inline `return y : Real = expr` SHALL populate `output_expression_asts` so the output auto-implements. | `test_return_style_extraction.py` — `NamedReturnB` yields output `y` with a captured AST; `BareInC` yields input `x`; offline snapshot I/O confirms both |
+| REQ-EXT-11 | A calc def with an anonymous `return` (a result whose `declared_name` is empty) SHALL raise a `ValueError` naming the fix (V8), before the generic zero-output error (V7). | `test_return_style_extraction.py` — extraction of `anonymous_return` raises V8 ("Give the result a name"), not V7's zero-output text |
+| REQ-EXT-12 | The `return attribute y : Real; y = expr;` form SHALL extract `y` exactly once, with the direction-None body-assignment `ReferenceUsage` excluded from the attribute lists and `member_expressions` (no double-ingestion). | `test_return_style_extraction.py` — `StyleD` has `y` once, no phantom member; offline snapshot confirms single output |
+| REQ-EXT-13 | `_build_part_usage_index` SHALL index each PartUsage under **all** of its owned FeatureTyping targets and every user-model PartDefinition in `usage.types` (filtered to user packages), never by list position. | `test_type_indexing.py` — the retyped `Variant.driver` is keyed under both `IFE Driver` and `HIF Driver`; the plain sibling under `HIF Driver` only |
+| REQ-EXT-14 | When two template calcs from different owners in a retyped usage's type set resolve to the same virtual QN, expansion SHALL keep the most-specific owner's (deterministic tiebreak) and emit a warning (V9) naming both candidates and the winner. Differently-named templates SHALL both instantiate with no warning. | `test_type_indexing.py` — same-named `shared_calc` resolves to one HIF-owned virtual + V9; `ife_calc`/`hif_calc` both instantiate |
 
 ## The 4 Things Extracted
 
@@ -65,6 +72,15 @@ Key fields:
 Template calc usages (REQ-EXT-05) are expanded: for each PartUsage instantiating
 the owning PartDef, a virtual CalcUsageData is created with a design-relative
 qualified name. See [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md).
+
+The instantiation index keys each PartUsage under **every user-model PartDefinition it
+carries** — its owned FeatureTyping target(s) plus the user PartDefs in its (order-unstable)
+type list, filtered to user packages (REQ-EXT-13). This is what lets a **retyped** usage
+(`part :>> driver : 'HIF Driver'`) instantiate both the subtype's templates and the
+supertype templates it already carried. When a subtype and its supertype own a **same-named**
+template, both resolve to the same virtual QN; the most-specific owner wins and a **V9**
+warning is emitted (REQ-EXT-14). Differently-named templates simply both instantiate. See
+[modeling-assumptions §5](../modeling-assumptions.md#5-template-instantiation-convention).
 
 ### 3. Part Definitions ([PartDefinitionData](09-data-models.md#extraction-models))
 

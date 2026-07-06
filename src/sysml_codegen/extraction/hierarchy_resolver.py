@@ -42,6 +42,11 @@ from sysml_codegen.extraction.expression_utils import (
     is_literal_expression,
     reconstruct_expression,
 )
+from sysml_codegen.extraction.usage_extractor import (
+    most_specific,
+    owned_feature_typing_targets,
+    user_partdef_lookup,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -159,14 +164,33 @@ def extract_redefinitions(part_element: Any) -> list[RedefinitionData]:
     return results
 
 
+def _keep_plain_usage_override(redef_data: RedefinitionData) -> bool:
+    """Keep a newly-scanned plain-usage :>> override only when its RHS is LITERAL.
+
+    CHAIN/EXPRESSION overrides on plain usages (e.g. catf_mfe's cross-part refs,
+    ife_plant shape 4) are Item 10's job; keeping them out of design_overrides
+    means they never reach the literal-rewrite path and never churn a baseline
+    (REQ-HR-08 / D3, INV-1).
+    """
+    return redef_data.redefinition_type is RedefinitionType.LITERAL
+
+
 def extract_design_overrides(
     part_usages: Iterable[Any],
 ) -> list[RedefinitionData]:
     """Scan design-level PartUsages for :>> overrides.
 
-    Design PartUsages with non-empty owned_redefinitions are 'part redefines'
-    instances. Their owned_members may contain deep-path :>> overrides like
-    :>> pv_module.wattage = 400.0.
+    Two shapes carry a :>> override:
+    - A 'part redefines' usage (non-empty owned_redefinitions on the usage
+      itself). Its owned_members may hold deep-path overrides like
+      :>> pv_module.wattage = 400.0. All RHS types are captured (INV-4).
+    - A plain typed usage (empty owned_redefinitions). The override lives on a
+      member ReferenceUsage — e.g. :>> widget.base_cost = 50.0. These are
+      captured too (REQ-HR-08) but filtered to LITERAL RHS (D3); CHAIN/EXPRESSION
+      plain overrides are Item 10's job and stay out of design_overrides (INV-1).
+
+    Members are scanned regardless of the usage kind; ``_extract_single_redefinition``
+    returns None for non-ReferenceUsage / value-less members, so the scan is cheap.
 
     Args:
         part_usages: Iterable of PartUsage elements to scan. The caller
@@ -179,15 +203,17 @@ def extract_design_overrides(
     results: list[RedefinitionData] = []
 
     for usage in part_usages:
-        if not getattr(usage, "owned_redefinitions", None):
-            continue  # Not a 'part redefines'
+        is_part_redefines = bool(getattr(usage, "owned_redefinitions", None))
 
         usage_qn = build_element_qualified_name(usage)
 
         for member in getattr(usage, "owned_members", []):
             redef_data = _extract_single_redefinition(member, usage_qn)
-            if redef_data is not None:
-                results.append(redef_data)
+            if redef_data is None:
+                continue
+            if not is_part_redefines and not _keep_plain_usage_override(redef_data):
+                continue  # plain-usage CHAIN/EXPRESSION override — Item 10's job
+            results.append(redef_data)
 
     return results
 
@@ -487,6 +513,64 @@ def build_aggregation_expression(
     )
 
 
+def _index_usage_level_retypes(
+    part_usages: Iterable[Any],
+    base_type_map: dict[tuple[str, str], str],
+    qn_to_partdef: dict[str, Any],
+) -> dict[tuple[str, str], str]:
+    """Index genuine usage-level retypes of inherited part usages, keyed by the
+    CONTAINER usage's instance QN (Item 10 two-level specialization, Phase 8).
+
+    The def-level ``usage_type_map`` keys retypes by the declaring PartDef. But a
+    two-level specialization retypes an inherited part usage ON A PART USAGE — e.g.
+    fusion-tea's ``part hif_plant : 'IFE Power Plant' { part :>> driver : 'HIF Driver' }``,
+    where the retype lives on the ``hif_plant`` usage, not on any def. A type-select
+    keyed on the consumer's declaring def then sees only the base type (``'IFE Driver'``)
+    and misses the retype.
+
+    This indexes ``(container_usage_qn, member_name) -> retyped_def`` for exactly the
+    members that are a GENUINE retype: a ``:>>`` redefinition (``owned_redefinitions``)
+    whose most-specific owned type DIFFERS from the base def's declared type for that
+    member. A value-only ``:>>`` override that keeps the same type (e.g. solar_battery's
+    ``:>> solar_array {...}``) is excluded, so no non-two-level fixture gains an entry —
+    committed snapshots stay byte-identical.
+
+    ``base_type_map`` is the fully-built def-level ``usage_type_map`` (read-only here).
+    """
+    new_entries: dict[tuple[str, str], str] = {}
+    for usage in part_usages:
+        container_targets = [
+            qn
+            for target in owned_feature_typing_targets(usage)
+            if (qn := build_element_qualified_name(target))
+        ]
+        container_def, _ = most_specific(container_targets, qn_to_partdef)
+        if not container_def:
+            continue
+        for member in getattr(usage, "owned_members", []):
+            if not SysideAdapter.is_instance(member, "PartUsage"):
+                continue
+            if not getattr(member, "owned_redefinitions", None):
+                continue  # plain typed usage, not a :>> redefinition
+            name = sanitize_name(getattr(member, "name", ""))
+            if not name:
+                continue
+            target_qns = [
+                qn
+                for target in owned_feature_typing_targets(member)
+                if (qn := build_element_qualified_name(target))
+            ]
+            winner, _ = most_specific(target_qns, qn_to_partdef)
+            if not winner:
+                continue
+            if winner != base_type_map.get((container_def, name)):
+                # Genuine retype-of-inherited-usage: the target type differs from the
+                # base-declared type. Key by the container usage's instance QN so the
+                # resolver's instance-aware type-select reaches the specialized def.
+                new_entries[(build_element_qualified_name(usage), name)] = winner
+    return new_entries
+
+
 def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     """Top-level orchestrator: extract all hierarchy data from the model.
 
@@ -506,6 +590,8 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     warnings: list[str] = []
     part_usage_names: dict[str, set[str]] = {}
     usage_type_map: dict[tuple[str, str], str] = {}
+    # {__-form QN: PartDefElement} for the most-specific-owned-typing pick (FIX 2).
+    qn_to_partdef = user_partdef_lookup(model)
 
     for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
         redefs = extract_redefinitions(part_def)
@@ -523,14 +609,36 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                 name = sanitize_name(getattr(member, "name", ""))
                 if name:
                     names.add(name)
-                    # Extract the type PartDef QN via .types attribute
-                    try:
-                        type_def = next(iter(member.types))
-                        type_qn = build_element_qualified_name(type_def)
-                        if type_qn:
-                            usage_type_map[(owning_qn, name)] = type_qn
-                    except (StopIteration, TypeError, AttributeError):
-                        pass
+                    # Resolve the usage's type to its MOST-SPECIFIC owned FeatureTyping
+                    # target — not next(iter(member.types)), whose first entry is a
+                    # supertype for a retyped usage (REQ-LVP-08). Incomparable multi-
+                    # typings resolve to sorted-first with a V10 warning.
+                    target_qns = [
+                        qn
+                        for target in owned_feature_typing_targets(member)
+                        if (qn := build_element_qualified_name(target))
+                    ]
+                    winner, incomparable = most_specific(target_qns, qn_to_partdef)
+                    if winner is None:
+                        # No owned FeatureTyping to compare — an untyped part (implicit
+                        # library `Part`) or a redefinition that inherits its typing.
+                        # There is nothing for the most-specific pick to change, so
+                        # keep the historical position-0 type. This is the case the
+                        # retyping fix does NOT touch, and it holds baselines identical.
+                        try:
+                            winner = build_element_qualified_name(next(iter(member.types)))
+                        except (StopIteration, TypeError, AttributeError):
+                            winner = None
+                    if winner:
+                        usage_type_map[(owning_qn, name)] = winner
+                        if incomparable:
+                            msg = (
+                                f"Usage '{owning_qn}.{name}' has multiple incomparable "
+                                f"owned types {sorted(target_qns)}; resolved defaults "
+                                f"against '{winner}' (first in stable order)."
+                            )
+                            logger.warning(msg)
+                            warnings.append(msg)
         if names:
             part_usage_names[owning_qn] = names
 
@@ -560,9 +668,16 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                             agg.aliases.append(sibling.attribute_name)
                     all_aggregations.append(agg)
 
-    # Design-level overrides from PartUsages
-    part_usages = SysideAdapter.elements_of_type(model, "PartUsage")
+    # Design-level overrides from PartUsages (materialized: iterated twice below).
+    part_usages = list(SysideAdapter.elements_of_type(model, "PartUsage"))
     design_overrides = extract_design_overrides(part_usages)
+
+    # Item 10 two-level specialization (Phase 8): index usage-level retypes of inherited
+    # part usages, keyed by the container usage's instance QN. usage_type_map now carries
+    # def-level entries only; pass it as the read-only base-type source before extending.
+    usage_type_map.update(
+        _index_usage_level_retypes(part_usages, usage_type_map, qn_to_partdef)
+    )
 
     return HierarchyExtractionResult(
         redefinitions=all_redefinitions,

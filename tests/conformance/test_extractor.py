@@ -1,15 +1,18 @@
 """C03: SysMLDataExtractor conformance tests.
 
-Verifies that extraction output conforms to REQ-EXT-01 through REQ-EXT-07
-from design intent doc 01-extraction.md. All tests use real snapshot data
-captured in Phase 0 -- no mocks.
+Verifies that extraction output conforms to REQ-EXT-01 through REQ-EXT-09
+from design intent doc 01-extraction.md. Most tests use real snapshot data
+captured in Phase 0 -- no mocks. REQ-EXT-08/09 exercise the two silent-failure
+diagnostics (zero-output fail-fast, constraint-drop reporting) and must load a
+real fixture live, so they skip when syside is unavailable (no license).
 
-Requirements: REQ-EXT-01 through REQ-EXT-07.
+Requirements: REQ-EXT-01 through REQ-EXT-09.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import logging
 from pathlib import Path
 
 import pytest
@@ -21,6 +24,7 @@ from sysml_codegen.extraction.data_models import (
     SingletonTerm,
     SumTerm,
 )
+from sysml_codegen.extraction.extractor import SysMLDataExtractor
 
 # ---------------------------------------------------------------------------
 # Expected counts from Phase 0 snapshot capture
@@ -832,3 +836,86 @@ class TestExpressionBindingType:
             f"Expected 9 total bindings (6 EXPRESSION + 3 REFERENCE), "
             f"got {total_bindings}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Live-fixture helper (REQ-EXT-08/09)
+#
+# The silent-failure diagnostics fire during live extraction, not against a
+# committed snapshot (zero_output_calc has no snapshot -- it raises once D3
+# lands). These tests load a real fixture and skip when syside is unavailable.
+# ---------------------------------------------------------------------------
+FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
+
+
+def _load_live_extractor(model_name: str) -> SysMLDataExtractor:
+    """Load a fixture model with a live extractor.
+
+    Skips (does not fail) when syside cannot load -- e.g. no license in CI --
+    mirroring the ``sample_extractor`` fixture convention.
+    """
+    extractor = SysMLDataExtractor([FIXTURES_DIR / model_name])
+    try:
+        loaded = extractor.load_models()
+    except ImportError as exc:  # syside license not configured
+        pytest.skip(f"syside unavailable: {exc}")
+    if not loaded:
+        pytest.skip(f"Could not load {model_name}")
+    return extractor
+
+
+# ---------------------------------------------------------------------------
+# REQ-EXT-08: Zero-output calc def fails fast at extraction (I3)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-EXT-08")
+class TestReqExt08ZeroOutputFailFast:
+    """A calc def with zero output attributes raises at extraction, never
+    reaching the Jinja module template."""
+
+    def test_zero_output_calc_def_raises(self):
+        extractor = _load_live_extractor("zero_output_calc")
+        with pytest.raises(ValueError, match="zero output attributes"):
+            extractor.extract_calculation_definitions()
+
+
+# ---------------------------------------------------------------------------
+# REQ-EXT-09: Dropped constraints reported once, structurally (I4)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.req("REQ-EXT-09")
+class TestReqExt09ConstraintDropDiagnostic:
+    """Dropped constraint usages produce one summary WARN plus one INFO per
+    constraint, counted structurally against the loaded model (no magic N)."""
+
+    def test_dropped_constraints_reported(self, caplog):
+        extractor = _load_live_extractor("catf_mfe_model")
+        expected = sum(
+            1 for _ in extractor.adapter.elements_of_type(
+                extractor.model, "ConstraintUsage"
+            )
+        )
+        assert expected > 0, "catf_mfe_model must carry constraint usages"
+
+        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
+            extractor.report_dropped_constraints()
+
+        warns = [
+            r for r in caplog.records
+            if r.levelno == logging.WARNING and "constraint usage" in r.getMessage()
+        ]
+        infos = [
+            r for r in caplog.records
+            if r.levelno == logging.INFO and "is not executable" in r.getMessage()
+        ]
+        assert len(warns) == 1, f"expected exactly one summary WARN, got {len(warns)}"
+        assert len(infos) == expected, (
+            f"expected one INFO per constraint ({expected}), got {len(infos)}"
+        )
+        # I4: the count spans both owner kinds -- a calc-def-owned and a
+        # part-def-owned constraint are both reported.
+        info_text = "\n".join(r.getMessage() for r in infos)
+        assert "calc def" in info_text, "no calc-def-owned constraint reported"
+        assert "part def" in info_text, "no part-def-owned constraint reported"

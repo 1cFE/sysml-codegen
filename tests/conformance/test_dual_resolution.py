@@ -23,6 +23,7 @@ import pytest
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.core.identifier_types import SysMLQN
 from sysml_codegen.core.models import BindingResolutionType
+from sysml_codegen.core.qualified_names import sanitize_qualified_name
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
@@ -35,7 +36,8 @@ from sysml_codegen.resolution.input_resolver import (
     ResolutionContext,
     resolve_input,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -46,7 +48,7 @@ def _build_backtracker_from_snapshot(model_name: str):
 
     Returns (BacktrackingResult, OutputRegistry, snapshot_dict).
     """
-    snap = load_extraction_snapshot(model_name)
+    snap = load_extraction_snapshot(snapshot_fixture(model_name))
     registry = build_output_registry(
         calc_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],
@@ -261,7 +263,7 @@ class TestFormulaExposePureChannelsMatchRegistry:
     ])
     def test_formula_expose_pure_channels_match_registry(self, model_name):
         """EXPOSE_PURE resolution map channels are reachable via typed registry."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -323,7 +325,7 @@ class TestFormulaChannelExistsInSysMLQNRegistry:
     ])
     def test_formula_channel_exists_in_sysml_qn_registry(self, model_name):
         """FORMULA channels are registered as SysML QN keys."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],
@@ -368,7 +370,10 @@ class TestFormulaChannelExistsInSysMLQNRegistry:
                 ]
                 if matching_ca:
                     ca = matching_ca[0]
-                    sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+                    # Item 7 lockstep flip: key registered per-segment sanitized.
+                    sysml_qn = sanitize_qualified_name(
+                        f"{ca.owning_part_qualified_name}::{ca.name}"
+                    )
                     qn_result = registry.sysml_qn_lookup(SysMLQN(sysml_qn))
                     if qn_result is None:
                         not_in_registry.append(
@@ -401,7 +406,7 @@ class TestAggModuleOutputChannelsMatchBacktracker:
     def test_agg_module_output_channels_match_backtracker(self, model_name):
         """For every aggregation MODULE_OUTPUT, the channel exists in the
         scoped or alias registry (backtracker would find it too)."""
-        snap = load_extraction_snapshot(model_name)
+        snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_output_registry(
             calc_usages=snap["calc_usages"],
             calc_defs=snap["calc_defs"],

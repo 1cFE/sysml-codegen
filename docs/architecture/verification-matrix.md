@@ -6,15 +6,17 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 204 |
-| PASS (test exists and passes) | 192 |
+| Total requirements | 233 |
+| PASS (test exists and passes) | 221 |
 | UNTESTED (no dedicated test) | 12 |
+| DEFERRED | 0 |
 | REQ families | 29 |
-| Conformance test files | 33 |
+| Conformance test files | 34 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
 - **UNTESTED**: No conformance test directly references this requirement
+- **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (none open — REQ-CA-09 discharged by Item 10)
 
 UNTESTED requirements are either cross-cutting architectural principles verified
 indirectly through component-level tests, or design-only requirements that constrain
@@ -24,14 +26,14 @@ the documentation rather than executable code.
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
 - [AST — AST Dispatch Invariant](#ast) (7/7 pass)
-- [BASE — Baseline Conformance](#base) (4/4 pass)
+- [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (8/8 pass)
-- [CA — Computed Attributes](#ca) (7/8 pass)
-- [DM — Data Models](#dm) (7/8 pass)
+- [CA — Computed Attributes](#ca) (10/11 pass, 1 untested)
+- [DM — Data Models](#dm) (8/9 pass)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
-- [EXT — Extraction](#ext) (7/7 pass)
+- [EXT — Extraction](#ext) (9/9 pass)
 - [GA — Graph Assembly](#ga) (7/7 pass)
 - [GEN — Generation](#gen) (5/7 pass)
 - [HR — Hierarchy Resolver](#hr) (7/7 pass)
@@ -45,7 +47,7 @@ the documentation rather than executable code.
 - [PGD — Parameter Group Deriver](#pgd) (7/7 pass)
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
-- [PY — Pipeline YAML](#py) (7/7 pass)
+- [PY — Pipeline YAML](#py) (8/8 pass)
 - [REG — Module Registry](#reg) (7/7 pass)
 - [RES — Resolution Overview](#res) (0/8 pass)
 - [SNAP — Extraction Snapshots](#snap) (7/7 pass)
@@ -79,11 +81,13 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | `test_ast_dispatch_invariant.py`, `test_expression_compiler.py` | PASS |
 | REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before Ope... | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-03 | The canonical dispatch ordering SHALL be: FCE, OE, FRE, Literal | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-03 | Among reference/operator branches ordering SHALL be FCE, OE, FRE; literal/null branches SHALL dispatch before the invocation catch-all | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "uns... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(n... | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal/`NullExpression` branches (via `is_instance`) before the invocation catch-all | `test_expression_reconstruction_fidelity.py`, offline totality guard | PASS |
+| REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand iff it binds looser than its parent, or equal and on the associativity-unfavored side | `test_expression_reconstruction_fidelity.py`, `test_expression_paren_helper.py` | PASS |
 
 ### BASE
 
@@ -95,6 +99,8 @@ the documentation rather than executable code.
 | REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | `test_baselines.py` | PASS |
 | REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | `test_baselines.py` | PASS |
 | REQ-BASE-04 | execution_order length equals modules length in every baseline | `test_baselines.py` | PASS |
+| REQ-BASE-05 | solar_battery (YAML + graph + registry) and catf_mfe (graph + registry) re-captured via scripts, ordering-only, reviewed | `test_gen_pipeline_yaml.py`, `test_pipeline_e2e.py`, `test_e2e_output_registry.py` | PASS |
+| REQ-BASE-06 | `entry_point_groups` SHALL be name-sorted in every ComputationGraph, so a model-discovery-order shift cannot redden a byte-exact baseline | `test_graph_assembly.py` | PASS |
 
 ### BT
 
@@ -110,6 +116,9 @@ the documentation rather than executable code.
 | REQ-BT-06 | Topological sort SHALL produce dependency-first ordering or raise on cycles | `test_backtracker.py` | PASS |
 | REQ-BT-07 | Self-reference guard SHALL prevent a usage from wiring to its own output | `test_backtracker.py` | PASS |
 | REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct... | `test_backtracker.py` | PASS |
+| REQ-BT-09 | The FORMULA `::`-QN REFERENCE path SHALL per-segment sanitize (`sanitize_qualified_name`) before comparison/lookup so a quoted-owner QN matches the sanitized design-attribute QN (Bug A; six-site lockstep flip, INV-1) | `test_matcher_fixes_item7.py`, `test_dual_resolution.py` | PASS |
+| REQ-BT-10 | A design attribute owned by a part **def** (empty `parent_part`) SHALL match its binding via a leaf-unique fallback over design-part attributes (calc-def I/O excluded), returning a QN only when exactly one candidate exists, else None (Bug B; INV-2, no cross-wire) | `test_matcher_fixes_item7.py` | PASS |
+| REQ-BT-11 | `_resolve_chain_dispatch` SHALL query the structured `_scoped_alias` namespace (Step 1c) by splitting `source_path` at the last dot, trying the consumer-scope-prefixed key `(consumer_scope.prefix, leaf)` before the bare `(prefix, leaf)` (Item 10 #1 / D-D sibling disambiguation), ordered after Step 1b and before the unscoped Step 2 (INV-A: additive, only where the ladder fell through) | `test_sibling_channel_ambiguity.py`, `test_wi014_toy.py` | PASS |
 
 ### CA
 
@@ -119,12 +128,15 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-CA-01 | Classification SHALL produce exactly one of 5 values per attribute expression | `test_computed_attributes.py` | PASS |
 | REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
-| REQ-CA-03 | EXPOSE_PURE SHALL produce `ChannelAlias` only for PartUsage-level (not PartDef) | `test_computed_attributes.py` | PASS |
+| REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
+| REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | `test_computed_attributes.py` | PASS |
 | REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | `test_computed_attributes.py` | PASS |
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or ... | `test_computed_attributes.py` | PASS |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | — | UNTESTED |
+| REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
+| REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`graph_builder.py:796`) for the resolvable case | `test_wi014_toy.py` | PASS |
 
 ### DM
 
@@ -140,6 +152,7 @@ the documentation rather than executable code.
 | REQ-DM-06 | Models with dedicated docs SHALL link to those docs, not duplicate detail | `test_data_models.py` | PASS |
 | REQ-DM-07 | The data flow diagram SHALL show all pipeline stages and their primary I/O models | `test_data_models.py` | PASS |
 | REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | — | UNTESTED |
+| REQ-DM-09 | `ComputationGraph.output_aliases: list[OutputAlias]` SHALL be a serialized field (no `exclude`, contrast `fallback_entry_points`) carrying each EXPOSE_PURE modeler name, its canonical channel (validated to exist — INV-3), instance path, and `shape`; stable-sorted by `(instance_path, alias_name)` (INV-5) so regen yields no ordering-only diff | `test_data_models.py`, `test_graph_assembly.py` | PASS |
 
 ### DRA
 
@@ -195,6 +208,13 @@ the documentation rather than executable code.
 | REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual CalcUsageData per Par... | `test_extractor.py` | PASS |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | `test_extractor.py` | PASS |
 | REQ-EXT-07 | `output_expression_asts` SHALL preserve raw SysIDE AST nodes for downstream expression co... | `test_extractor.py` | PASS |
+| REQ-EXT-08 | A `calc def` extracting with zero output attributes SHALL raise `ValueError` at extraction (V7), never reaching generation | `test_extractor.py` | PASS |
+| REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) SHALL be reported dropped: one INFO each + one summary WARN with the model-wide total | `test_extractor.py` | PASS |
+| REQ-EXT-10 | A direction-carrying `ReferenceUsage` member (named `return`, bare `in`) SHALL extract as a parameter; a named inline `return y : Real = expr` SHALL auto-implement | `test_return_style_extraction.py` | PASS |
+| REQ-EXT-11 | A calc def with an anonymous `return` (empty `declared_name`) SHALL raise the V8 diagnostic before V7 | `test_return_style_extraction.py` | PASS |
+| REQ-EXT-12 | The `return attribute y; y = expr` form SHALL extract `y` once with no double-ingestion (direction-None body ref excluded) | `test_return_style_extraction.py` | PASS |
+| REQ-EXT-13 | `_build_part_usage_index` SHALL index each PartUsage under all its owned FeatureTyping targets and every user-model PartDef in `usage.types` (user-filtered), never by list position | `test_type_indexing.py` | PASS |
+| REQ-EXT-14 | Same-named templates from a retyped usage's super/subtype (same virtual QN) SHALL keep the most-specific owner + emit V9; differently-named templates SHALL both instantiate | `test_type_indexing.py` | PASS |
 
 ### GA
 
@@ -209,6 +229,7 @@ the documentation rather than executable code.
 | REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly: sorted `modules`, `entry_point_gro... | `test_graph_assembly.py` | PASS |
 | REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module orderi... | `test_graph_assembly.py` | PASS |
 | REQ-GA-07 | The topological sort SHALL run in O(V + E) time using Kahn's algorithm with `deque`. | `test_graph_assembly.py` | PASS |
+| REQ-GA-08 | A two-layer params-coverage check SHALL exist: a pure collector `collect_uncovered_params(graph)` returning the wired fell-through-valueless violations (sibling to REQ-GA-03), and an always-strict generation boundary raising V11 on any violation. `ComputationGraph.fallback_entry_points` (in-memory, `exclude=True`) feeds it | `test_uncovered_params.py`, `test_graph_assembly.py`, `test_data_models.py` | PASS |
 
 ### GEN
 
@@ -237,6 +258,7 @@ the documentation rather than executable code.
 | REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression... | `test_hierarchy_resolver.py` | PASS |
 | REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_loo... | `test_hierarchy_resolver.py` | PASS |
 | REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added ... | `test_hierarchy_resolver.py` | PASS |
+| REQ-HR-08 | `extract_design_overrides()` SHALL scan `:>>` overrides on plain part usages (not only `part redefines`), keeping a newly-scanned plain-usage override only when its RHS is LITERAL; `part redefines` keeps all RHS types | `test_virtual_binding_rewrite.py`, `test_uncovered_params.py` | PASS |
 
 ### IR
 
@@ -264,6 +286,8 @@ the documentation rather than executable code.
 | REQ-LVP-04 | LocalTerms SHALL NOT use literal redefinition lookup (different resolution path) | `test_factory_aggregation.py` | PASS |
 | REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered... | `test_factory_aggregation.py` | PASS |
 | REQ-LVP-06 | `usage_type_map` SHALL be threaded from `HierarchyExtractionResult` through `build_comput... | `test_factory_aggregation.py` | PASS |
+| REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the most-specific owned FeatureTyping target (not `next(iter(member.types))`); incomparable multi-typings resolve sorted-first with V10 | `test_type_indexing.py` | PASS |
+| REQ-LVP-09 | `_index_usage_level_retypes` SHALL index usage-level retypes of inherited part usages (`part hif_plant : Base { part :>> driver : Subtype }`) into `usage_type_map` keyed by the CONTAINER usage's instance QN, limited to GENUINE retypes (a `:>>` redefinition whose most-specific owned type differs from the base def's declared type for that member) so value-only `:>>` overrides are excluded and non-two-level snapshots stay byte-identical (REQ-HR-09 released) | `test_spec_chain_twolevel.py` | PASS |
 | REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_... | `test_factory_aggregation.py` | PASS |
 
 ### MF
@@ -309,6 +333,7 @@ the documentation rather than executable code.
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `test_output_registry.py` | PASS |
 | REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join w... | `test_output_registry.py` | PASS |
 | REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no regis... | `test_output_registry.py` | PASS |
+| REQ-OR-09 | The FORMULA sysml-QN key SHALL be registered per-segment sanitized (`sanitize_qualified_name`), and the per-collision alias line SHALL be DEBUG with one WARNING count-summary at build (Item 7 / D5, lockstep site 1) | `test_output_registry.py`, `test_output_registry_construction.py`, `test_warning_reconciliation.py` | PASS |
 
 ### ORCH
 
@@ -351,6 +376,7 @@ the documentation rather than executable code.
 | REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-06 | `get_default_value()` SHALL resolve through binding index to source attribute | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | `test_parameter_group_deriver.py` | PASS |
+| REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed `classify`/`get_default_value` resolve grouping and default automatically | `test_matcher_fixes_item7.py` (backtracker propagation), `test_parameter_group_deriver.py` | PASS |
 
 ### PIPE
 
@@ -391,6 +417,7 @@ the documentation rather than executable code.
 | REQ-PY-05 | `channel_field_map` SHALL contain an entry for every `ModuleOutput` in the graph | `test_gen_pipeline_yaml.py` | PASS |
 | REQ-PY-06 | Exit point type SHALL be `RootModel[T]` when `field_name == "root"`, else `T` | `test_gen_pipeline_yaml.py` | PASS |
 | REQ-PY-07 | Entry point module inputs SHALL list one JSON file per `ParameterGroup` | `test_gen_json_templates.py`, `test_gen_pipeline_yaml.py` | PASS |
+| REQ-PY-08 | An aliased channel's exit line SHALL render the modeler's instance-qualified name as its output filename (`{instance_path}__{alias_name}.json`); the exit **key** stays the canonical channel and the type token is unchanged (REQ-PY-06 holds), so simkit's key-is-a-channel check still passes | `test_gen_pipeline_yaml.py` | PASS |
 
 ### REG
 
@@ -462,6 +489,10 @@ the documentation rather than executable code.
 | REQ-VBR-05 | Template copies (`is_template=True`) SHALL be skipped during rewriting | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-06 | Bindings already LITERAL or with no `source_path` SHALL be skipped (no double-rewrite) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | `test_virtual_binding_rewrite.py` | PASS |
+| REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` so no two virtual instances share a binding object (divergent-sibling rewrite correctness; Item 10 precondition) | `test_virtual_binding_rewrite.py` | PASS |
+| REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path`; it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py` | PASS |
+| REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py` | PASS |
+| REQ-VBR-11 | The `_rewrite_specialized_chain` type-select SHALL be instance-aware: it SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`, `part_usage`) in `usage_type_map` before the declaring-def key, so a two-level specialization (usage-level `:>> driver : Subtype` on an inherited part usage) selects the specialized def where the declaring-def key sees only the base type | `test_spec_chain_twolevel.py` | PASS |
 
 ---
 

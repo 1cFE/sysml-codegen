@@ -1,0 +1,42 @@
+# Generated Pipeline Configuration for wi014_toy
+#
+# Auto-generated from SysML calc def dependency analysis
+# DO NOT EDIT - Regenerate using code generator
+
+metadata:
+  run_description: "Generated pipeline for wi014_toy"
+  output_folder: "wi014_toy_results"
+
+modules:
+  # Entry point - load inputs from JSON
+  entry_fusion:
+    module_type: EntryPoint
+    inputs:
+      toy_plant_params: ToyPlantParams ../inputs/toy_plant_params.json
+
+
+  # toy_library.Panel_AreaModule
+  toy_plant__demo_plant__area_calc:
+    module_type: toy_library.Panel_AreaModule
+    inputs:
+      length: float toy_plant_params.toy_plant__Toy_Plant__plant_length
+      width: float toy_plant_params.toy_plant__Toy_Plant__plant_width
+    outputs:
+      root: RootModel[float] toy_plant__demo_plant__area_calc__area
+
+  # toy_library.Panel_CostModule
+  toy_plant__demo_plant__cost_calc:
+    module_type: toy_library.Panel_CostModule
+    inputs:
+      area: float toy_plant__demo_plant__area_calc__area.root
+      unit_cost: float toy_plant_params.toy_plant__Toy_Plant__plant_unit_cost
+    outputs:
+      root: RootModel[float] toy_plant__demo_plant__cost_calc__cost
+
+
+  # Exit point - capture all results
+  exit_point:
+    module_type: ExitPoint
+    outputs:
+      toy_plant__demo_plant__area_calc__area: RootModel[float] toy_plant__demo_plant__area_calc__area.json
+      toy_plant__demo_plant__cost_calc__cost: RootModel[float] demo_plant__total_cost.json

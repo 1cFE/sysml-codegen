@@ -10,7 +10,29 @@ from __future__ import annotations
 
 import pytest
 
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from sysml_codegen.snapshot import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
+
+
+def offline_input_sources(model_name: str) -> dict[tuple[str, str], object]:
+    """Build a fixture's ComputationGraph offline (license-free) and return a map
+    from ``(module_name, param_name)`` to that input's ``InputSource``.
+
+    Used by the stage-(b) companion-fixture conformance tests (Item 10) to assert
+    whether a consumer input is currently an entry point (the incomplete pin) or
+    wired to an upstream producer channel (post Phase-7 resolver). Reads only the
+    committed extraction snapshot, so it needs no syside license.
+    """
+    from sysml_codegen.orchestration.snapshot_context import (
+        build_pipeline_context_from_snapshot,
+    )
+
+    ctx = build_pipeline_context_from_snapshot(snapshot_fixture(model_name))
+    return {
+        (m.name, inp.param_name): inp.source
+        for m in ctx.computation_graph.modules
+        for inp in m.inputs
+    }
 
 # All models with extraction snapshots
 SNAPSHOT_MODELS = [
@@ -24,6 +46,10 @@ SNAPSHOT_MODELS = [
     "chain_override_probe",
     "unresolvable_attr_probe",
     "alias_agg_probe",
+    # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS).
+    "wi014_toy",
+    "ife_plant",
+    "self_named_binding_trap",
 ]
 
 
@@ -36,7 +62,7 @@ def pytest_configure(config):
 def extraction_snapshots():
     """Load all extraction snapshots once per session."""
     return {
-        name: load_extraction_snapshot(name)
+        name: load_extraction_snapshot(snapshot_fixture(name))
         for name in SNAPSHOT_MODELS
     }
 

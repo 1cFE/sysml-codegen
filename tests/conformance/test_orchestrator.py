@@ -43,10 +43,11 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     PipelineModule,
 )
-from tests.conformance.test_entry_point_classifier import (
+from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
-from tests.helpers.snapshot_loader import load_extraction_snapshot
+from tests.conftest import snapshot_fixture
+from sysml_codegen.snapshot import load_extraction_snapshot
 
 
 # ---------------------------------------------------------------------------
@@ -55,28 +56,28 @@ from tests.helpers.snapshot_loader import load_extraction_snapshot
 @pytest.fixture(scope="session")
 def solar_battery_graph():
     """Full ComputationGraph for solar_battery_model."""
-    graph, inputs = build_full_graph_from_snapshot("solar_battery_model")
+    graph, inputs = build_full_graph_from_snapshot(snapshot_fixture("solar_battery_model"))
     return graph
 
 
 @pytest.fixture(scope="session")
 def catf_mfe_graph():
     """Full ComputationGraph for catf_mfe_model."""
-    graph, inputs = build_full_graph_from_snapshot("catf_mfe_model")
+    graph, inputs = build_full_graph_from_snapshot(snapshot_fixture("catf_mfe_model"))
     return graph
 
 
 @pytest.fixture(scope="session")
 def chain_spike_graph():
     """Full ComputationGraph for chain_spike_model."""
-    graph, inputs = build_full_graph_from_snapshot("chain_spike_model")
+    graph, inputs = build_full_graph_from_snapshot(snapshot_fixture("chain_spike_model"))
     return graph
 
 
 @pytest.fixture(scope="session")
 def attr_expr_probe_graph():
     """Full ComputationGraph for attr_expr_probe."""
-    graph, inputs = build_full_graph_from_snapshot("attr_expr_probe")
+    graph, inputs = build_full_graph_from_snapshot(snapshot_fixture("attr_expr_probe"))
     return graph
 
 
@@ -86,7 +87,7 @@ def attr_expr_probe_graph():
 )
 def pipeline_graph(request):
     """Parametrized ComputationGraph across 4 models."""
-    graph, _inputs = build_full_graph_from_snapshot(request.param)
+    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture(request.param))
     return graph
 
 
@@ -123,11 +124,13 @@ class TestStepOrdering:
     def test_step_ordering_call_sequence(self):
         """Call sites in build_pipeline_context appear in strict DAG order.
 
-        Expected order:
+        Expected order (Item 10 / INV-G: ParameterGroupDeriver moved AFTER
+        build_output_registry so it consumes design_attrs with the confirm pass's
+        final classifications):
         extract_calculation_definitions → extract_calculation_usages →
         _extract_hierarchy_and_rewrite_bindings → extract_design_attributes →
-        _extract_and_filter_computed_attributes → ParameterGroupDeriver →
-        build_output_registry → DependencyBacktracker → compile_calc_def →
+        _extract_and_filter_computed_attributes → build_output_registry →
+        ParameterGroupDeriver → DependencyBacktracker → compile_calc_def →
         build_computation_graph
         """
         ordered_calls = [
@@ -136,8 +139,8 @@ class TestStepOrdering:
             "_extract_hierarchy_and_rewrite_bindings",
             "extract_design_attributes",
             "_extract_and_filter_computed_attributes",
-            "ParameterGroupDeriver",
             "build_output_registry",
+            "ParameterGroupDeriver",
             "DependencyBacktracker",
             "compile_calc_def",
             "build_computation_graph",

@@ -45,11 +45,13 @@ def _build_pipeline_with_log_capture(model_path: Path):
     Returns (pipeline_context, list[LogRecord]).
     """
     capture = _LogCapture()
-    capture.setLevel(logging.WARNING)
+    # DEBUG so the Item 7 / D5-demoted per-binding "Registry unresolved" line is
+    # visible (divergence tests filter by message, so the extra records are inert).
+    capture.setLevel(logging.DEBUG)
     bt_logger = logging.getLogger("sysml_codegen.analysis.dependency_backtracker")
     bt_logger.addHandler(capture)
     original_level = bt_logger.level
-    bt_logger.setLevel(logging.WARNING)
+    bt_logger.setLevel(logging.DEBUG)
     try:
         ctx = build_pipeline_context([model_path])
     finally:
@@ -127,18 +129,22 @@ class TestParallelValidationSolarBattery:
             "Phase 1b Key_E_stripped scoped registration"
         )
 
-    def test_unresolved_bindings_produce_warnings(self, log_records):
-        """Unresolved bindings in new path produce logger.warning().
+    def test_unresolved_bindings_logged_at_debug(self, log_records):
+        """Unresolved bindings emit a per-binding line at DEBUG (Item 7 / D5).
 
-        solar_battery has self-referential SysML QN bindings (e.g., FeatureReferenceExpression
-        pointing to the usage's own part) that legitimately resolve to ENTRY_POINT. These
-        produce "Registry unresolved" warnings because the registry's self-reference guard
-        rejects them. If a future registry improvement resolves all bindings, this test
-        should be updated to assert == 0 instead.
+        solar_battery has self-referential SysML QN bindings (e.g.,
+        FeatureReferenceExpression pointing to the usage's own part) that
+        legitimately resolve to ENTRY_POINT via the self-reference guard. These
+        emit the "Registry unresolved" per-binding line — now DEBUG, not WARNING
+        (the post-assembly reconciliation summary + V11 are the operator digest).
         """
         unresolved = [r for r in log_records if "Registry unresolved" in r.getMessage()]
         assert len(unresolved) > 0, (
-            "Expected 'Registry unresolved' warnings for self-referential entry point bindings"
+            "Expected per-binding 'Registry unresolved' lines for self-referential "
+            "entry point bindings"
+        )
+        assert all(r.levelno == logging.DEBUG for r in unresolved), (
+            "per-binding 'Registry unresolved' line must be DEBUG (D5), not WARNING"
         )
 
 

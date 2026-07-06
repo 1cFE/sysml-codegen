@@ -40,6 +40,7 @@ values as `float`. This includes multiplicity entry points
 | REQ-PY-05 | `channel_field_map` SHALL contain an entry for every `ModuleOutput` in the graph | Wiring completeness | `len(channel_field_map) == sum(len(m.outputs) for m in graph.modules)` |
 | REQ-PY-06 | Exit point type SHALL be `RootModel[T]` when `field_name == "root"`, else `T` | Schema consistency | Exit point types match their upstream module output types |
 | REQ-PY-07 | Entry point module inputs SHALL list one JSON file per `ParameterGroup` | JSON resolution | `len(entry_fusion.inputs) == len(graph.entry_point_groups)` |
+| REQ-PY-08 | An aliased channel's exit line SHALL render the modeler's instance-qualified name as its output filename (`{instance_path}__{alias_name}.json`); the exit key stays the canonical channel | EXPOSE_PURE name surfacing (Item 11) | Aliased channel's exit line filename token equals `OutputAlias.output_filename`; key + type unchanged |
 
 ---
 
@@ -167,6 +168,50 @@ outputs:
   material_cost: float Design__plant__pv_module__cost_model__material_cost
   fab_cost: float Design__plant__pv_module__cost_model__fab_cost
 ```
+
+---
+
+## Exit Point Filename Override (REQ-PY-08)
+
+Every module output becomes an exit-point line. The default line reuses the channel
+name for both the capture key and the output filename:
+
+```yaml
+    outputs:
+      Design__plant__cost_calc__cost: RootModel[float] Design__plant__cost_calc__cost.json
+```
+
+When a modeler names a calc output with an EXPOSE_PURE derived attribute
+(`attribute total_cost = cost_calc.cost`), Item 11 surfaces that name onto the
+channel's exit line as the **output filename** — the key and type tokens are
+untouched:
+
+```yaml
+    outputs:
+      toy_plant__demo_plant__cost_calc__cost: RootModel[float] demo_plant__total_cost.json
+```
+
+The filename is `{instance_path}__{alias_name}.json` (`OutputAlias.output_filename`),
+so two instances exposing the same name land on distinct files
+(`chamber_a__power.json`, `chamber_b__power.json` — INV-4). Only aliased channels
+change; every other exit line keeps `{channel}.json`.
+
+**Why the filename, not a new line.** The exit grammar the TEAx consumer (simkit,
+`pipeline_schema.py` `_parse_exit_outputs`) accepts is `<key>: <Type> <filename>`,
+where the **key must be an existing channel** and the value is strictly
+`<Type> <filename>` (no directories), with a duplicate-filename check across the
+exit module. A new line keyed by the alias would fail simkit's key-is-a-channel
+validation; putting the channel in the filename slot would be a bogus filename. The
+filename-rename form is the one the grammar accepts, and it keeps the exit key a
+channel — so REQ-PY-06 and the existing conformance tests need no change, and
+simkit's key validation is a consumer-side backstop for INV-3.
+
+**Mechanism.** `generate_pipeline_yaml` builds a `canonical_channel → filename` map
+from `graph.output_aliases` (`_build_alias_filename_map`, first-wins over the
+INV-5-sorted list if one channel carries two names — M4) and passes it to
+`_build_exit_points`, which applies the override per channel (`pipeline.py:208-266`).
+The map is policy at the call site; `_build_exit_points` just applies it. Template:
+`pipeline_yaml.jinja2:47` renders `{{ exit.name }}: {{ exit.type }} {{ exit.filename }}`.
 
 ---
 
