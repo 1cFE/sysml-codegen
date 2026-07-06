@@ -1,6 +1,6 @@
 # Design: Plant-Idiom Literal Pre-Fill (SC-5 stage 1)
 
-**Status:** Draft
+**Status:** Draft (revised after design-review — `design-review.md`, verdict Revise; C1/M1/M2/m1/m2 resolved)
 **Owner:** Reid W
 **Created:** 2026-07-05
 **Complexity:** MEDIUM (~0.5–1 day)
@@ -18,6 +18,7 @@ so it stays correct once those overrides flow through it. Three small, targeted 
 
 - **Spec (the contract):** `.project/active/plant-prefill/spec.md`
 - **Spec review + probe:** `.project/active/plant-prefill/spec-review.md`
+- **Design review (this revision resolves it):** `.project/active/plant-prefill/design-review.md`
 - **Epic:** `.project/backlog/epic_upstream_findings.md` (Item 9 + R1/R2/R3, Item 10)
 - **Required Reading:** `.project/research/20260705_upstream-findings-deep-research.md` (SC-5,
   four mechanisms; D → Item 10); `docs/architecture/modeling-assumptions.md` (§5, V1–V11);
@@ -58,8 +59,8 @@ in place, reassigning only the *scalar* fields (`:249–254`).
 classifies entry points. It never calls `_rewrite_virtual_bindings`. The rewrite runs only in
 the **live** capture (`build_pipeline_context` → `_extract_hierarchy_and_rewrite_bindings`),
 and its result is frozen into the snapshot's `calc_usages`. **Consequence:** the committed
-collector-pin and generation tests read the snapshot's stored bindings — flipping them
-requires regenerating three snapshots (see Decision D1).
+collector-pin, generation, and V11-proof tests read the snapshot's stored bindings — flipping
+them requires regenerating the four affected snapshots (see the B2 sweep and Decision D1).
 
 **`capacity_factor` (ife_plant shape 5) is consumed by no calc.** `lcoe_calc` binds 14 plant
 literals; `capacity_factor` is not among them, and it appears nowhere in the committed
@@ -89,10 +90,13 @@ plain overrides — Item 10's job — inert.
   yields the deep-path `base_cost` override and the rewrite plants `50.0`. *If false → the
   regenerated snapshots (or the offline patch encoding the probe result) misrepresent live
   output, and the committed gate tests a fiction.*
-- **B2.** Relaxing the guard captures no plain-usage LITERAL override in any committed fixture
-  besides `capacity_factor` (ife_plant) and `base_cost` (alias_agg_probe, issue22). *If false →
-  a fixture whose baseline this item promises is byte-identical churns; the byte-exact suite
-  catches it, but the promise breaks.*
+- **B2 (corrected after review — the sweep was run).** The guard relaxation touches *exactly
+  four* committed-snapshot fixtures: `ife_plant`, `alias_agg_probe`, `issue22_model`, and
+  `unresolvable_attr_probe` (the license-free `:>>` sweep, tabulated under Architecture →
+  B2 sweep). Every other committed snapshot's extraction output is byte-identical. *If false →
+  a fixture this item promises stays byte-identical churns; the full re-capture sweep is the
+  guard.* (The original design asserted three fixtures and marked this bet settled without
+  running the sweep — the review refuted it; `unresolvable_attr_probe` is the fourth. Now run.)
 - **B3.** The rewrite mutates only scalar `BindingInfo` fields, never the shared AST-node
   references. *If false → a shallow per-instance copy is insufficient and a deeper copy is
   needed (but deep-copying AST nodes is itself unsafe — see D2).*
@@ -100,18 +104,32 @@ plain overrides — Item 10's job — inert.
 ## Key Decisions
 
 - **D1 — snapshot regeneration path (pivotal; needs sign-off).** The guard relaxation is a
-  change to *live* extraction; the committed collector-pins / generation / shape-5 tests read
-  the snapshot's baked bindings, so they only flip once the three snapshots
-  (alias_agg_probe, issue22_model, ife_plant) are regenerated.
+  change to *live* extraction; the committed collector-pins / generation / shape-5 / V11-proof
+  tests read the snapshot's baked bindings, so they only flip once the **four** affected
+  snapshots (alias_agg_probe, issue22_model, ife_plant, **unresolvable_attr_probe**) are
+  regenerated.
   - **Chosen:** regenerate by **live re-capture if a license is available at implement time**
-    (faithful — `capture_snapshot`); **else apply a deterministic offline patch** to the three
-    snapshot JSONs encoding the known delta (design_overrides entry + `base_cost` binding →
-    LITERAL), validated against the recorded live probe, with live re-capture tracked as
-    opportunistic follow-up. This mirrors Item 3's D6 (committed fixture = executable gate,
+    (faithful — `capture_snapshot`); **else apply a deterministic offline patch** to the four
+    snapshot JSONs encoding the known delta (design_overrides entries + affected `reference`
+    bindings → LITERAL), validated against the recorded live probe, with live re-capture tracked
+    as opportunistic follow-up. This mirrors Item 3's D6 (committed fixture = executable gate,
     live run = opportunistic), the precedent the spec itself cites.
   - *Rejected: live re-capture as a hard gate* — blocks the item on license availability, which
     the epic treats as a blocker. *Rejected: offline patch only, no live intent* — leaves the
     snapshot unverified against true live output on the multiplicity (`widget [3]`) expansion.
+  - **Do NOT skip `unresolvable_attr_probe` from the regen set.** If it is not regenerated, its
+    offline collector pin keeps passing on stale bindings while live extraction diverges — the
+    latent-snapshot hazard the review flagged (C1, way 2). All four regenerate together.
+- **D5 — `unresolvable_attr_probe`'s `my_calc.x` IS pre-filled; the V11 proof re-anchors
+  (settled by review C1).** Filling `x` from `:>> local_val = 5.0` is correct — its
+  valueless-ness was itself the dropped-plain-usage-override bug Item 9 fixes; keeping it broken
+  to preserve a test would be backwards. So the "dedicated committed V11 proof" role moves off
+  this fixture to the two genuinely cross-part inputs that *stay* wired-valueless until Item 10:
+  **catf_mfe's `[cryo_load.magnet_volume]`** and **ife_plant's shape-4 `magnet_volume`** (both
+  CHAIN — the LITERAL filter keeps them out, so they remain valueless and keep tripping V11).
+  *Rejected: narrow the guard predicate so this fixture is untouched* — the LITERAL filter alone
+  can't (these are literals), and it would mean deliberately not fixing a real instance of the
+  bug. *Rejected: hold the fixture constant* — same objection.
 - **D2 — shallow per-instance copy, not `copy.deepcopy`.** In `_create_virtual_calc_usage`, mint
   each instance's bindings as `[copy.copy(b) for b in template.bindings]`. The rewrite reassigns
   only scalar fields (B3), so a shallow copy gives each instance independent scalars while the
@@ -151,6 +169,27 @@ rewrite plants `LITERAL 50.0` on each virtual `cost_model` binding, clears `sour
 `base_cost` never becomes a valueless entry point → V11 clean. The result is frozen into the
 snapshot; offline tests then read it.
 
+### B2 sweep — the definitive affected set (license-free `:>>` grep, run at design)
+
+A static grep for plain-usage (non-`redefines`) LITERAL `:>>` across every committed-snapshot
+fixture settles B2 deterministically. Result: **four** fixtures change under the relaxed guard.
+
+| Fixture | Plain-usage LITERAL `:>>` | Committed snapshot | Affected |
+|---|---|---|---|
+| `ife_plant` | `capacity_factor = 0.95` | yes | **yes** (shape-5 capture) |
+| `alias_agg_probe` | `widget.base_cost = 50.0` | yes | **yes** (base_cost → literal) |
+| `issue22_model` | `widget.base_cost = 100.0` | yes | **yes** (base_cost → literal) |
+| `unresolvable_attr_probe` | `base_rate`, `base_factor`, `local_multiplier` (derived_instance); `base_rate`, `base_factor`, `local_val` (design_derived_instance) | yes | **yes** (`local_val=5.0` fills `my_calc.x`; V11 proof re-anchors — D5) |
+| `deep_cross_scope_probe` | `reading = 10.0`, `baseline_value = 2.0` | **no** | live-only; no test asserts it (m2) |
+| `solar_battery_model` | `pv_module.wattage = 400.0`, … | yes | no — overrides sit on a `part redefines` usage, already captured today |
+| `chain_override_probe` | `base_cost = 100.0` | yes | no — on a `part redefines` usage; `sensitivity` is CHAIN |
+| `catf_mfe_model` | (CHAIN only) | yes | no — LITERAL filter keeps it out; stays V11-pinned |
+| `wi014_toy` and all others | none | yes | no |
+
+`deep_cross_scope_probe` has plain-usage LITERAL `:>>` but **no committed snapshot and no test
+reference** — its live extraction changes with nothing asserting it. Flagged (m2) so a future
+snapshot capture is not a surprise.
+
 ## Required Invariants
 
 - **INV-1.** CHAIN/EXPRESSION overrides on plain usages never enter `design_overrides`
@@ -160,8 +199,12 @@ snapshot; offline tests then read it.
 - **INV-3.** `_rewrite_virtual_bindings` raises on no input (bare-name source paths are skipped).
 - **INV-4.** The existing `part redefines` capture path is behaviorally unchanged (all RHS types
   still captured; same objects, same order).
-- **INV-5.** The four byte-exact baselines (solar_battery, attr_expr_probe, chain_spike,
-  sample_model) and every snapshot except the three named stay byte-identical.
+- **INV-5 (restated).** Exactly the four fixtures enumerated in the B2 sweep
+  (`ife_plant`, `alias_agg_probe`, `issue22_model`, `unresolvable_attr_probe`) change their
+  extraction output; **every other committed snapshot is byte-identical**, including the four
+  byte-exact baselines (solar_battery, attr_expr_probe, chain_spike, sample_model) and catf_mfe.
+  Verified by the full re-capture sweep at implement (not deferred as a bet — the static `:>>`
+  grep already settled it; the sweep confirms).
 
 ## Component Overview
 
@@ -205,9 +248,24 @@ scope-2 LVP backfill (cut). This design adds no V-rule and no schema field.
 |---|---|
 | `test_uncovered_params.py::test_collector_pins_alias_agg_probe` | `[("base_cost","cost_model")]` → `[]` |
 | `test_uncovered_params.py::test_collector_pins_issue22_model` | `[("base_cost","cost_model")]` → `[]` |
+| `test_uncovered_params.py::test_collector_pins_unresolvable_attr_probe` (`:104`) | `[("x","my_calc")]` → `[]` — `local_val=5.0` fills `x` (traced empty below) |
+| `test_uncovered_params.py::test_reconcile_raises_v11_on_wired_gap` (`:129`) | feeds `unresolvable_attr_probe`, asserts V11 raise → **re-anchor to `catf_mfe_model`** (still wired-valueless → still raises) |
+| `test_uncovered_params.py::test_seeded_strict_generation_aborts_independently_of_catf_mfe` (`:139`) | feeds `unresolvable_attr_probe` → **re-anchor to `ife_plant`** (a non-catf_mfe fixture that still trips strict V11 on shape-4 `magnet_volume`, preserving the "independent of catf_mfe" purpose) |
+| `test_uncovered_params.py` module docstring (`:9–19`) + `test_collector_pins_unresolvable_attr_probe` docstring | drop "the only committed real-fixture / dedicated V11 proof" wording — that title moves to catf_mfe + ife_plant shape-4 (D5) |
 | `test_alias_agg_probe_generation.py::test_alias_agg_probe_aborts_with_v11...` | raises-V11 → clean, `ast.parse`-valid, importable package (restores REQ-NC-08 file-parse coverage); rename to drop "aborts" |
 | `test_ife_plant.py::test_shape5_plain_usage_override_dropped` | asserts `design_attributes` absence → asserts `design_overrides` **capture** (see correction) |
 | **new** `test_issue22_generates_clean` (D4) | issue22 generates a clean, parseable package |
+| optional: `unresolvable_attr_probe` clean-generation | `run_codegen` on it now returns `True` (x filled, everything resolves) — an added assertion, restoring its file-parse coverage |
+
+**`unresolvable_attr_probe` violation list traced (not assumed).** Its only wired binding is
+`my_calc.x = local_val` (`'Design Derived'` is the only def with a calc; `'Derived Component'`
+has computed attributes but no calc). `:>> local_val = 5.0` on the plain `design_derived_instance`
+is a non-deep-path LITERAL → override key `(…design_derived_instance, local_val)`; the `my_calc`
+binding's parent is `…design_derived_instance`, leaf `local_val` (via `::` rsplit) → match →
+`x` rewritten to `LITERAL 5.0`, `source_path` cleared. No other calc, no other unresolved
+binding, so the collector list goes to **`[]`** and strict generation is **clean**. The other
+captured overrides (`base_rate`, `base_factor`, `local_multiplier`) feed only FORMULA computed
+attributes, which the collector never counted — they add no violation.
 
 **Shape-5 correction (flag for sign-off).** The spec SC reads "capacity_factor reaches params
 as 0.95." It does not — `capacity_factor` is consumed by no calc and appears nowhere in the
@@ -228,12 +286,19 @@ Without the copy, iA's rewrite mutates the shared object to LITERAL, iB is then 
 already-LITERAL, and iB reads 50.0 — the test fails. This asserts the *rewrite* respects the
 instance boundary, not mere object distinctness.
 
-**Bare-name crash-safety (REQ-VBR-09).** No committed fixture combines a non-empty index with a
-bare-name source path: ife_plant's self-named bindings are qualified (`::`), and
-self_named_binding_trap has no plain-usage literal override (its index stays empty). Cover it
-with a constructed unit test: a calc_usage with a bare-name `source_path` binding + a
-`HierarchyExtractionResult` carrying one override (to populate the index) → assert
-`_rewrite_virtual_bindings` does not raise, logs DEBUG, and leaves the binding unchanged.
+**Bare-name crash-safety (REQ-VBR-09).** The raise at `pipeline_builder.py:242` fires only when a
+binding has a **bare-name** `source_path` (no `::`, no `.`) *and* the index is non-empty. After
+relaxation, `unresolvable_attr_probe` and ife_plant both have a **non-empty** index — so the
+"empty index shields the raise" reasoning no longer holds for them. What actually shields the
+raise is that their reachable bindings are all `::`-qualified (`unresolvable_attr_probe`'s
+`my_calc.x` source_path is `UnresolvableAttrProbeDesign::'Design Derived'::local_val`; ife_plant's
+`lcoe_calc` self-named bindings are `IfePlantLib::'Ife Power Plant'::…`) — they take the `::`
+branch, never the bare-name `else`. And `self_named_binding_trap` has no plain-usage literal
+override, so *its* index stays empty. So no committed fixture reaches the bare-name `else`; the
+guarantee holds by branch, not by empty index. Cover it with a constructed unit test: a
+calc_usage with a bare-name `source_path` binding + a `HierarchyExtractionResult` carrying one
+override (non-empty index) → assert `_rewrite_virtual_bindings` does not raise, logs DEBUG, and
+leaves the binding unchanged.
 
 **Baseline regen (enumerate the diff classes):**
 
@@ -245,8 +310,15 @@ with a constructed unit test: a calc_usage with a bare-name `source_path` bindin
   `base_cost` override; each virtual `cost_model` `base_cost` binding → `LITERAL 50.0`,
   `source_path: null`. (No `baseline_outputs` dir for this fixture.)
 - **issue22_model `extraction_snapshot.json`** — same with `100.0`.
+- **unresolvable_attr_probe `extraction_snapshot.json`** — `design_overrides` gains ≥6 entries
+  (`base_rate`, `base_factor`, `local_multiplier` on `derived_instance`; `base_rate`,
+  `base_factor`, `local_val` on `design_derived_instance`); the `my_calc.x` binding → `LITERAL
+  5.0`, `source_path: null`. (No `baseline_outputs` dir.) **Must be regenerated** — omitting it
+  leaves the offline pins passing on stale bindings (D1 caveat).
 - **Everything else** — byte-identical (the 4 byte-exact baselines, catf_mfe, wi014_toy, all
   other snapshots). The deep-copy alone churns nothing (value-based serialization).
+- **`deep_cross_scope_probe`** — no committed snapshot; its live extraction changes but nothing
+  asserts it (m2). No committed artifact to regenerate; noted for a future capture.
 
 ## Docs / Matrix
 
@@ -269,10 +341,19 @@ with a constructed unit test: a calc_usage with a bare-name `source_path` bindin
   recorded probe minted a single design-level key; confirm the instance count when patching.
   Mitigation: prefer live re-capture; the constructed unit tests prove the code independent of
   the snapshot.
-- **Unintended capture (B2).** A plain-usage literal override in another fixture would churn a
-  baseline. Mitigation: the byte-exact suite + a full baseline sweep is the guard.
-- **Bare-name reachability.** REQ-VBR-09 is defensive (no committed fixture triggers it).
-  Documented as such; constructed test is the coverage.
+- **Unintended capture (B2) — now bounded.** The `:>>` sweep enumerated the affected set as
+  exactly four fixtures (Architecture → B2 sweep). The residual risk is a fixture the static grep
+  missed (e.g. a literal `:>>` on a plain usage whose enclosing kind the grep misjudged);
+  mitigation: the full re-capture / byte-exact sweep at implement is the deterministic guard.
+- **V11 proof re-anchor (from C1).** `unresolvable_attr_probe` stops being a V11 case once `x`
+  fills; the strict-boundary raise proof must move to catf_mfe (`test_reconcile_raises_v11...`)
+  and ife_plant (`test_seeded_strict_generation...`). Risk: ife_plant shape-4 must actually trip
+  V11 at *strict generation* (not just the in-memory collector) to serve the independent-of-
+  catf_mfe role — implement verifies this; if it does not, author a minimal genuinely-unbound
+  seeded fixture instead. This keeps a live V11 raise proof committed.
+- **Bare-name reachability.** REQ-VBR-09 is defensive: no committed fixture reaches the bare-name
+  `else` (guaranteed by branch — reachable bindings are `::`-qualified — not by an empty index;
+  see m1 correction). Constructed test is the coverage.
 
 ## Integration Strategy
 
@@ -284,20 +365,24 @@ fixtures (the diff base) and sets Item 10's precondition (per-instance-safe rewr
 
 1. Constructed unit tests (divergent-sibling REQ-VBR-08; bare-name REQ-VBR-09) — license-free,
    prove the code.
-2. Regenerate the three snapshots (D1); run the pin-flip checklist — the executable gate.
-3. Full baseline / byte-exact sweep — proves INV-5 (nothing else churns).
-4. `mypy src/` + `ruff check src/`.
-5. Opportunistic: live fusion-tea IFE re-run (license-blocked) recorded if run.
+2. Regenerate the **four** affected snapshots (D1: ife_plant, alias_agg_probe, issue22_model,
+   unresolvable_attr_probe); run the full pin-flip checklist — the executable gate.
+3. Full baseline / byte-exact sweep — proves INV-5 (exactly the four change, nothing else).
+4. Confirm the re-anchored V11 raise proof fires (catf_mfe strict raise; ife_plant strict abort).
+5. `mypy src/` + `ruff check src/`.
+6. Opportunistic: live fusion-tea IFE re-run (license-blocked) recorded if run.
 
 ## Next-Stage Handoff
 
 - **Fixed:** the three edits (guard relax + LITERAL filter, shallow copy, bare-name skip); D2/D3/D4;
-  the pin-flip checklist; scope-2 cut; self-named rescue → Item 10.
+  D5 (unresolvable_attr_probe pre-fills; V11 proof re-anchors — settled by review C1); the
+  four-fixture affected set (B2 sweep); the full pin-flip checklist; scope-2 cut; self-named
+  rescue → Item 10.
 - **Open (needs sign-off):** D1 (live re-capture vs offline patch) and the shape-5 correction
-  (capture-only, not "reaches params"). Both are surfaced in the presentation below.
-- **De-risk first:** D1 — confirm license availability and the `widget [3]` instance count before
-  touching the alias_agg_probe / issue22 snapshots. Land the constructed unit tests first (they
-  need no snapshot), then the snapshots, then the sweep.
+  (capture-only, not "reaches params").
+- **De-risk first:** D1 — confirm license availability, the `widget [3]` instance count, and that
+  ife_plant shape-4 trips *strict* V11 (the re-anchor). Land the constructed unit tests first
+  (they need no snapshot), then regenerate the four snapshots, then the sweep.
 
 ## Appendix — Evidence
 
