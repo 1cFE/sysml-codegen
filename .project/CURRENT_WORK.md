@@ -42,6 +42,13 @@ passed; ruff src 21 / mypy 109 (baseline unchanged). `/_my_audit` suggested next
 - **Known degradation surfaced (filed):** multi-hop CHAIN `source_path` truncates to the
   first segment (why (c) is one-hop; `deep_cross_scope_probe` Pattern A pins it).
 
+### PIPELINE-TRUTH Item 2 — Whole-Plant Cross-Part Value Resolution — spec in progress
+Track A headline (gates fusion-tea); depends on Item 1 fixtures. Resolve the three
+cross-part value mechanisms on `plant_values` so the headline generates zero-offender;
+design decides value-propagation vs channel-wiring. Anchor: `plant_cost=(10+7)/0.35=48.571`.
+Spec: `.project/active/whole-plant-resolution/spec.md`. Implement runs AFTER Item 4
+(snapshot format v2 re-capture).
+
 ### PIPELINE-TRUTH Item 4 — Subtype-Aware Enumeration & Constraint-Report Truth — spec in progress
 Track B head (no deps). Coordinated pair with agentic-mbse (R2): one adapter choke
 point (`include_subtypes`), per-call-site decision table, constraint drop report fires
