@@ -136,4 +136,7 @@ def test_spec_chain_twolevel_loads_live() -> None:
     assert {c.qualified_name for c in calc_defs} == {
         "TwoLevelLib::MeierCost",
         "TwoLevelLib::LcoeCalc",
+        # Item-1 SC-2 additions: plain cross-part attr consumer + fan-out consumer.
+        "TwoLevelLib::MaintCalc",
+        "TwoLevelLib::ScaleCalc",
     }

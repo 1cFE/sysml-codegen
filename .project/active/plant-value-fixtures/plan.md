@@ -228,7 +228,7 @@ assert offenders, "V11 does not trip — layout is wrong, route the literal cros
 ### Changes Required
 
 **Headline `plant_values` (spec "The headline fixture", [HARD] items):**
-- [ ] `tests/fixtures/plant_values/{library.sysml,design.sysml}` (NEW; add a subsystems file
+- [x] `tests/fixtures/plant_values/{library.sysml,design.sysml}` (NEW; add a subsystems file
       if a cross-package half is needed, as `ife_plant` does). Carry, in one parseable model:
   - Mechanism **(a)**: a usage-level retype whose subtype def supplies attrs via literal
     `:>>`, consumed cross-part by a plant-calc input.
@@ -241,17 +241,17 @@ assert offenders, "V11 does not trip — layout is wrong, route the literal cros
   - The **assert constraint** carrying three binding sub-shapes in one place: a cross-part
     binding, a self-named binding (`in x = x`), and an unbound defaulted param (Item 4/5
     substrate; invisible to the drop report today — the CONSTRAINT-SILENCE bug).
-- [ ] **Cross-part consumption is the crux, not incidental** (spec [HARD] / D6): each
+- [x] **Cross-part consumption is the crux, not incidental** (spec [HARD] / D6): each
       mechanism's literal MUST feed a plant-calc input whose EP stays valueless. Author so,
       parse-iterate, and run the rehearsal probe until all three surface as offenders. If one
       does not, **rework the layout** (route it cross-part) — never relax.
-- [ ] Follow ADR-002 conventions and the `ife_plant` provenance-doc-comment style (source,
+- [x] Follow ADR-002 conventions and the `ife_plant` provenance-doc-comment style (source,
       reference, last-updated). Record **hand-computed expected values** for the headline's
       calc chain in the Phase-1 notes (spec [INFERRED]) so Item 2's after-state is anchorable
       independently of the resolver (SC-B lineage).
 
 **Secondary `plant_value_shapes` (spec "Secondary shapes", D4):**
-- [ ] `tests/fixtures/plant_value_shapes/{library.sysml,design.sysml}` (NEW). Carry the
+- [x] `tests/fixtures/plant_value_shapes/{library.sysml,design.sysml}` (NEW). Carry the
       high-value subset, each authored to load and capture (correct/degrade/diagnostic is
       empirically fine — SC-3): attribute-def-typed attr with nested `:>>` (the 14-econ-params
       shape); bare `default 10.0` (no `:=`); doc bodies inside calc usages and on `:>>`
@@ -261,17 +261,17 @@ assert offenders, "V11 does not trip — layout is wrong, route the literal cros
       Style-E calc def (mixed `out attribute` + `return` inside a quoted def) and a
       return-in-quoted-def row; and the non-float EP shape (bool/string/enum-valued attr one
       hop from an EP — the `wall_type` idiom, Item 5 substrate).
-- [ ] **Split only if forced** (spec [INFERRED] / Open Question): if the quoted-enum, Style-E,
+- [x] **Split only if forced** (spec [INFERRED] / Open Question): if the quoted-enum, Style-E,
       and 5-deep-chain shapes cannot co-exist in one parseable model, split into a second
       fixture; record the reason. Prefer one fixture for legibility.
-- [ ] **Escape hatch (spec L2-2 [HARD]):** if a shape (likely `out attribute 'net cost'` or
+- [x] **Escape hatch (spec L2-2 [HARD]):** if a shape (likely `out attribute 'net cost'` or
       Style-E) **crashes the extractor** rather than degrading, do NOT fix it here — remove it
       from the fixture, capture the crash evidence, and mark it for the Phase-5 fixture-gap
       register filing. A captured degrade/diagnostic is the win; a required `src/` change is
       out of scope.
 
 **Extend `spec_chain_twolevel` (spec "Extend `spec_chain_twolevel`", D2):**
-- [ ] `tests/fixtures/spec_chain_twolevel/{library.sysml,design.sysml}` — ADD the plain
+- [x] `tests/fixtures/spec_chain_twolevel/{library.sysml,design.sysml}` — ADD the plain
       cross-part-attribute shape (a subsystem attr referenced by a plant-calc input, no
       calc-output in the chain — the P1 acceptance note, distinct from the existing
       calc-output-valued `driver.cost_per_joule`), and **one attribute consumed by two
@@ -280,23 +280,23 @@ assert offenders, "V11 does not trip — layout is wrong, route the literal cros
       Item 3's SNAP-19 parity run against.
 
 **`deep_cross_scope_probe` (spec "Capture hygiene", [HARD]):**
-- [ ] Confirm `tests/fixtures/deep_cross_scope_probe/{library,design}.sysml` still parse (no
+- [x] Confirm `tests/fixtures/deep_cross_scope_probe/{library,design}.sysml` still parse (no
       authoring change unless parse-broken). It has no committed snapshot today (D1-F6 drift);
       Phase 2 commits one.
 
 ### Validation
 
 **Automated:**
-- [ ] `uv run pytest tests/` → no regressions (snapshot-reading tests for the new fixtures do
+- [x] `uv run pytest tests/` → no regressions (snapshot-reading tests for the new fixtures do
       not exist yet — they land in Phase 4).
 
 **Manual (iterative, license-gated):**
-- [ ] Load each new/extended fixture live via `SysMLDataExtractor`; parse→fix→parse until it
+- [x] Load each new/extended fixture live via `SysMLDataExtractor`; parse→fix→parse until it
       loads with no structural errors.
-- [ ] **Rehearsal probe** on a provisional `plant_values` capture: `collect_uncovered_params`
+- [x] **Rehearsal probe** on a provisional `plant_values` capture: `collect_uncovered_params`
       returns a non-empty set covering all three mechanisms. Record the mechanism→offender
       map in the Phase-1 notes. Discard the provisional capture (Phase 2 commits the real one).
-- [ ] Diff the authored `plant_values` / `plant_value_shapes` shapes against the fusion-tea
+- [x] Diff the authored `plant_values` / `plant_value_shapes` shapes against the fusion-tea
       exemplars; note any deliberate divergence.
 
 **What We Know Works After This Phase:** Every fixture parses clean; the headline's three
@@ -682,13 +682,76 @@ baseline, outside the src-only 21-error gate; not worsened in kind).
 ruff-clean; src/ untouched (mypy/ruff src baseline unchanged).
 
 ### Phase 1 Completion
-**Completed:**
-**Actual Changes:**
-**Rehearsal probe — mechanism→offender map (all three present?):**
+**Completed:** 2026-07-06
+**Actual Changes (source only — no committed snapshots, per phasing):**
+- NEW `tests/fixtures/plant_values/{library,design}.sysml` — headline. `PlantCostCalc`
+  reads three subsystem attrs cross-part; the 'Power Plant' base owns the calc + an
+  `assert constraint viability : 'Viability Threshold'` (copied from fusion-tea
+  fusion_cycle.sysml:29). Design is a part USAGE of the base with usage-level
+  overrides/retypes (fusion-tea hif_plant shape).
+- NEW `tests/fixtures/plant_value_shapes/{library,design}.sysml` — 9 secondary shapes.
+- MODIFIED `tests/fixtures/deep_cross_scope_probe/{library,design}.sysml` — renamed the
+  calc usage `derived` → `derived_calc` (parse-broken fix: `derived` is a reserved KerML
+  feature modifier; the plan permits authoring changes when parse-broken). Now loads.
+- MODIFIED `tests/fixtures/spec_chain_twolevel/library.sysml` — SC-2 extension: `MaintCalc`
+  (plain cross-part attr, no calc output) + two `ScaleCalc` instances (fan-out) reading one
+  shared `scale` attr; existing MeierCost→gamma→lcoe retype shape preserved untouched.
+- MODIFIED `tests/conformance/test_spec_chain_twolevel.py` — the live-load calc-def-set
+  guard now includes `MaintCalc` + `ScaleCalc` (the only existing pin the source growth
+  touched; the retype/gamma-channel pins are unchanged and still pass).
+- NEW `scripts/probes/_plant_values_rehearsal.py` — parametric rehearsal probe (kept
+  uncommitted this phase; used again for the Phase-2 committed gate).
+
+**Rehearsal probe — mechanism→offender map (ALL THREE PRESENT — gate de-risked):**
+`plant_values` provisional capture → `collect_uncovered_params` = 3 offenders, all on module
+`plantvaluesdesign__plant__cost_calc`, each a valueless (`default=None`) fallback EP:
+- **(a)** input `driver_efficiency` → EP `PlantValuesDesign__plant__cost_calc__driver_efficiency`
+  — subtype-def literal `:>> efficiency = 0.35` on 'Hif Driver', consumed cross-part via the
+  usage-level retype `part :>> driver : 'Hif Driver'`.
+- **(b)** input `target_cost` → EP `PlantValuesDesign__plant__cost_calc__target_cost` — bare
+  no-retype override block `part :>> target_factory { :>> cost_per_target = 10.0; }`.
+- **(c)** input `chamber_cost` → EP `PlantValuesDesign__plant__cost_calc__chamber_cost` —
+  two-hop plain cross-part chain `chamber.liner.cost_per_unit`, value 7.0 supplied via a nested
+  override block (distinct from (b)'s one-hop block; the plain-attribute twolevel variant).
+
+Design iteration on (c): a base-def literal (`cost_per_unit = 7.0`) resolved to a VALUED EP
+(didn't trip); an attr-reference redefinition (`:>> cost_per_unit = liner_rate`) also resolved
+(to 7.0). Only usage-level values the current pipeline cannot propagate to an inherited calc
+input stay valueless. The two-hop nested-override chain both carries a value (Item 2 wires it)
+and stays valueless today → trips. Criterion never relaxed (D6).
+
 **Hand-computed headline expected values (Item 2 SC-B anchor):**
-**Escape-hatch removals (shape + crash evidence):**
-**Issues:**
-**Deviations:**
+`plant_cost = (target_cost + chamber_cost) / driver_efficiency = (10.0 + 7.0) / 0.35 = 48.5714…`
+Assert constraint `viability`: `eta * gain >= threshold` → `0.35 * 40.0 = 14.0 >= 10.0` → holds.
+(eta = driver.efficiency = 0.35 cross-part; gain = 40.0 self-named; threshold = 10.0 default.)
+
+**Capture-surface findings (Phase-2 registration inputs):**
+- `plant_values`: full graph (3 modules incl. cost_calc), 3 V11 offenders → MODELS + pipeline baseline.
+- `plant_value_shapes`: full graph, 6 modules, NO crash (even `out attribute 'net cost'` and the
+  Style-E `Mixed Output Style` loaded) → MODELS + pipeline baseline. Observed valueless EPs:
+  `rated_cost.rate` (shape-1 nested `:>>` doesn't reach the cross-part input), `flow_calc.flow_rate`
+  (shape-4 inherited-attr-redefined-below), `chamber_unit.select.wall` (shape-9 non-float enum EP,
+  Item 5 substrate). `revenue=200`, `base=4`, `amount=6`, `footprint=12` valued.
+- `deep_cross_scope_probe`: full graph after the rename, 5 modules, 2 V11 offenders → MODELS +
+  pipeline baseline (Open Question resolved: full-pipeline).
+- `spec_chain_twolevel` extended: 5 modules, 0 offenders; fan-out CONFIRMED collapsed — both
+  `scale_a.s` and `scale_b.s` wire to the one EP `TwoLevelLib__IFE_Power_Plant__scale`;
+  `maint_calc.rate` → the plain `maintenance_rate` attr; `lcoe_calc.cost_per_joule` → module_output
+  (retype shape preserved).
+
+**Assert-constraint substrate (Item 4/5):** authored in the `plant_values` source; its usage
+bindings (eta/gain) are currently ABSENT from the extraction snapshot (constraints are not
+serialized — the CONSTRAINT-SILENCE bug). Phase 4 pins this observed absence; Item 4 flips it.
+
+**Escape-hatch removals (shape + crash evidence):** NONE. No secondary shape crashed the
+extractor — the two only parse fixes were reserved-keyword collisions (`flow` param, `derived`
+usage name) and an over-a-bound-value `:>>` (base attr made valueless), not extractor crashes.
+**Issues:** `flow` and `derived` are reserved KerML tokens; `:>>` cannot override an already-bound
+value. All fixed in the fixture source (no `src/` change).
+**Deviations:** (c) is a two-hop nested-override chain rather than a one-hop plain attr, chosen so
+it both trips today and carries an Item-2-wireable value (the plain one-hop base-def literal
+resolved to a value and did not trip). Faithful to the plan's "plain cross-part-attribute chain,
+no calc output" intent.
 
 ### Phase 2 Completion
 **Completed:**

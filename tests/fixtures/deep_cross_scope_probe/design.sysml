@@ -4,8 +4,8 @@
  * PURPOSE: Exercise deeply-nested cross-scope bindings with three patterns:
  *
  * Pattern A — Deep CHAIN (4-level dot chain):
- *   `station.array.derived.derived_value`
- *   Expected: BindingType.CHAIN, source_path = "station.array.derived.derived_value"
+ *   `station.array.derived_calc.derived_value`
+ *   Expected: BindingType.CHAIN, source_path = "station.array.derived_calc.derived_value"
  *   Tests: Deep dotted path resolution through scoped_lookup()
  *
  * Pattern B — Deep REFERENCE (6-segment QN with ::):
@@ -63,11 +63,11 @@ package DeepCrossScopeDesign {
             :>> baseline_value = 2.0;
 
             // --- Pattern A: Deep CHAIN (dot notation, 4 levels deep) ---
-            // Accesses: station > array > derived (calc) > derived_value (output)
+            // Accesses: station > array > derived_calc (calc) > derived_value (output)
             // Expected BindingType: CHAIN
-            // Expected source_path: "station.array.derived.derived_value"
+            // Expected source_path: "station.array.derived_calc.derived_value"
             calc chain_analysis : 'Analysis Calc' {
-                in data_point = station.array.derived.derived_value;
+                in data_point = station.array.derived_calc.derived_value;
                 in baseline = baseline_value;
             }
 
