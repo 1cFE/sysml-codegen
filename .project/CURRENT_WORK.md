@@ -8,9 +8,23 @@
 
 ### UPSTREAM-FINDINGS Item 8: Plant-Idiom Conformance Fixtures
 
-**Status**: **Implementation Complete** (2026-07-05) — awaiting `/_my_audit`. Fixtures,
-captures, conformance tests, and agentic-mbse validation all landed. No `src/` changes
-(spec Non-Goal). **Not committed** per orchestration.
+**Status**: **Audited CONDITIONAL** (2026-07-05, commit `84ae948`) — substance fully
+verified by static trace against the committed snapshots/baselines; clears to PASS on
+one environmental item: **re-run the suite gate** (`uv run pytest tests/`), auditor was
+harness-blocked from `uv run` (same block as Items 1/2/6/7). The one HARD assertion not
+statically traceable is the collector pin `test_cross_part_inputs_pinned_or_baseline`
+(rebuilds the graph at runtime; `fallback_entry_points` is not serialized into the
+committed baseline) — only execution confirms it returns exactly `EXPECTED_UNCOVERED`.
+Verified static: all 7 consumer shapes present + each pinned; shape-3 retype / shape-7
+siblings correct in snapshot; shape-2 captured / shape-5 dropped; ≥14-literal floor (=16);
+collector pin against ife_plant's OWN names (deliberate catf mirror, not conflation);
+trap self-reference source_path; no `src/` changes; additive registration; 16 real-fixture
+no-mock tests; snapshots v1. Recorded-not-re-executed: agentic-mbse run (repo outside
+sandbox), WI-014 verbatim diff (fusion-tea sandbox-blocked). One non-blocking note: the
+REQ-CA-09 malformed-refs pin is `@requires_license`, so it does not run in license-free CI
+— an offline caplog pin was feasible. **Audit**: `.project/active/plant-fixtures/audit.md`.
+Fixtures, captures, conformance tests, and agentic-mbse validation all landed. No `src/`
+changes (spec Non-Goal). **Not committed** per orchestration.
 
 **Gate**: 1928 passed / 4 skipped / 11 xfailed (was 1912 + 16 new); ruff src/ 21; mypy
 src/ 109 (both unchanged). New fixtures reddened no existing test.
