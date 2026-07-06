@@ -59,43 +59,43 @@ resolvable case and retire.
 
 ## Success Criteria
 
-- [ ] A graph-level alias field (`output_aliases` or equivalent) exists on
+- [x] A graph-level alias field (`output_aliases` or equivalent) exists on
   `ComputationGraph`, populated from the EXPOSE_PURE typed alias registrations for
   **both** shapes, each entry carrying the modeler's name, the canonical channel it
   aliases, and enough instance qualification to be unique.
-- [ ] `total_cost`-style names appear in generated **pipeline YAML** as named
+- [x] `total_cost`-style names appear in generated **pipeline YAML** as named
   exit-point captures wired to the correct canonical channel, demonstrated
   end-to-end for both shapes: shape A via `wi014_toy` (`total_cost` on a part def),
   shape B via `attr_expr_probe` (`scale_result`, `half_vol`, `quarter_vol` on a part
   usage).
-- [ ] Two instances that expose the same name produce distinct output-capture keys
+- [x] Two instances that expose the same name produce distinct output-capture keys
   — no duplicate YAML keys, no collision — **demonstrated by committed coverage**
   (the Item-10 `sibling_channel_ambiguity` fixture already carries this shape:
   `attribute power = power_calc.power` on `part def Chamber`, instantiated as
   `chamber_a` and `chamber_b`; both expose `power`).
-- [ ] The ComputationGraph schema rev is documented per R1: doc 09 field list
+- [x] The ComputationGraph schema rev is documented per R1: doc 09 field list
   updated, REQ-* tags allocated, verification-matrix rows added, and a conformance
   field-set test asserting the new field's presence and shape.
-- [ ] `output_aliases` serializes in a **deterministic order** (sorted by a stable
+- [x] `output_aliases` serializes in a **deterministic order** (sorted by a stable
   key), so regen never produces an ordering-only baseline diff — the exact failure
   class Item 1 was created to kill.
-- [ ] Every `output_aliases` entry's canonical channel is **validated to exist** as a
+- [x] Every `output_aliases` entry's canonical channel is **validated to exist** as a
   declared output channel in the graph (precedent: `_validate_channel_references`,
   `graph_builder.py:627`), so a dropped module can't leave a dangling alias.
-- [ ] The warning **case-matrix** holds after this item:
+- [x] The warning **case-matrix** holds after this item:
   - *resolvable and surfaced* (both shapes, incl. shape A via `_scoped_alias`) →
     **silent**, the name is emitted;
   - *unresolvable refs* (`_resolve_expose_pure` cannot identify instance/output) →
     the malformed-refs warning at `:796` **stays**;
   - *EXPOSE_COMPUTED* → **rejected** per modeling-assumptions §3, its warning stays.
-- [ ] `test_wi014_toy.py`'s recorded-deferral assertion (`:28-40`) flips from pinning
+- [x] `test_wi014_toy.py`'s recorded-deferral assertion (`:28-40`) flips from pinning
   the malformed-refs warning to asserting shape-A resolution **and** the surfaced
   `total_cost` alias — closing the deferral it hands to "Items 10/11."
-- [ ] All 7 committed `computation_graph.json` baselines regenerated (field-addition
+- [x] All 7 committed `computation_graph.json` baselines regenerated (field-addition
   review class — see Baseline Regeneration); `attr_expr_probe`'s YAML baseline gains
   the alias captures; a new `wi014_toy` YAML baseline is committed. No extraction
   snapshot changes (they carry no graph).
-- [ ] agentic-mbse impact recorded: the EXPOSE-pattern docs describe what the
+- [x] agentic-mbse impact recorded: the EXPOSE-pattern docs describe what the
   exposed name now does downstream (it surfaces as a named output capture).
 
 ## Known Requirements

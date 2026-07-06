@@ -8,7 +8,13 @@
 
 ### UPSTREAM-FINDINGS Item 11: Derived-Attribute Alias Surfacing (SC-7)
 
-**Status**: COMPLETE — all 5 phases landed (feat commit `4f6ba40`). Surfaces
+**Status**: **AUDITED — PASS/Certify** (2026-07-06, commits `4f6ba40`+`0672cae`;
+audit: `.project/active/alias-surfacing/audit.md`). All 5 phases landed and certified;
+all 10 spec success criteria verified against committed baselines/YAML/tests (no mocks).
+Three non-blocking observations (INV-6 positive-warning coverage gap; documented shape-B
+leaf-collision edge; inherited catf first-wins collapse) — none gate close. Gate
+1989/4/5, ruff 21, mypy 109 rests on the recorded value + static inspection (`uv run`
+approval-gated this session). Ready for `/_my_pre_pr` → `/_my_close`. Surfaces
 Item 10's typed EXPOSE_PURE alias registrations into a new serialized `output_aliases`
 ComputationGraph field + named exit-point captures in pipeline YAML, both shapes
 (wi014_toy shape A `total_cost`, attr_expr_probe shape B `scale_result`/`half_vol`/

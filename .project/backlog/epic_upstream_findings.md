@@ -382,7 +382,7 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 
 ---
 
-### Item 11: Derived-Attribute Alias Surfacing (SC-7) [1–1.5 days]
+### Item 11: Derived-Attribute Alias Surfacing (SC-7) [1–1.5 days] ✅
 
 **Type**: Implementation
 **Effort**: 1–1.5 days (spec 1.5h, design 2h, plan 1h, execute 5–7h)
@@ -399,9 +399,12 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 **Out of Scope**:
 - EXPOSE_COMPUTED (calc output + arithmetic — remains rejected per modeling-assumptions §3)
 
-**Success Criteria**:
-- [ ] `total_cost`-style names appear in generated YAML/outputs wired to the correct channel, both shapes
-- [ ] Schema rev documented (doc 09) with REQ tags and verification-matrix rows
+**Success Criteria** (audited 2026-07-06, commit `4f6ba40`+`0672cae` — verdict PASS/Certify, see `active/alias-surfacing/audit.md`):
+- [x] `total_cost`-style names appear in generated YAML/outputs wired to the correct channel, both shapes
+  — verified in committed baselines: wi014_toy shape A (`total_cost`), attr_expr_probe shape B
+  (`scale_result`/`half_vol`/`quarter_vol`), solar_battery shape A (`misc_hardware_cost`).
+- [x] Schema rev documented (doc 09) with REQ tags and verification-matrix rows
+  — REQ-DM-09/PY-08/CA-11 in doc 09/16/21 + matrix (counts reconciled 233/221/12).
 
 **Deliverables**: `.project/active/alias-surfacing/{spec,design,plan}.md`
 
