@@ -39,7 +39,10 @@ refer to either one.
 The [OutputRegistry](10-output-registry.md) uses three typed registries
 ([10-output-registry](10-output-registry.md)): scoped
 (`dict[ScopedKey, CanonicalChannel]`), SysML QN (`dict[SysMLQN, CanonicalChannel]`),
-and alias (`dict[ScopedKey, CanonicalChannel]`). The scoped registry does not
+and alias (`dict[ScopedKey, CanonicalChannel]`), plus a structured
+`_scoped_alias` namespace (`dict[ScopedAliasKey, CanonicalChannel]`, a
+`(scope, leaf)` tuple key) that holds part-def EXPOSE aliases expanded per
+design instance. The scoped registry does not
 contain ambiguous keys — only `ScopedKey` entries derived from the SysML
 ownership chain. But the registry still has no concept of which module is asking.
 
@@ -64,7 +67,7 @@ Prepending that scope to `source_path` produces a
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `ScopedKey` lookup against the typed scoped registry ([10-output-registry](10-output-registry.md)). REFERENCE bindings (`::` in source_path) SHALL use `SysMLQN` lookup against the SysML QN registry. Cross-package CHAIN references fall through to the alias registry. | Typed dispatch in backtracker (REQ-BT-08) and typed strategies in `AGG_STRATEGIES` |
-| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation). | Backtracker: Step 0 (line 512). resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
+| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation). | Backtracker: `_consumer_scope_dotted()` in `dependency_backtracker.py`. resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
 
 ## Why Resolution Is Hard
 
@@ -95,9 +98,12 @@ full breakdown.
 
 1. **Three resolution implementations.** Same question answered by three paths
    with different strategies and error handling.
-2. **Shared mutable state.** `entry_points` mutated as side effect. (Violates REQ-RES-03.)
-3. **Untestable resolution.** Cannot test "does input X resolve to channel Y?"
-   without constructing a full module.
+2. **Shared mutable state.** `entry_points` was mutated as a side effect.
+   (Violated REQ-RES-03; since fixed -- all three factories now return
+   `(module, new_entry_points)` per REQ-MF-01.)
+3. **Untestable resolution.** Could not test "does input X resolve to channel Y?"
+   without constructing a full module. (Since fixed for `resolve_input()`, which
+   is unit-tested in isolation.)
 
 ## Why CalcUsage Resolution Stays in the Backtracker
 
@@ -118,10 +124,25 @@ a MODULE_OUTPUT, trace the producer) or stop (it's an ENTRY_POINT, nothing to
 trace). This makes CalcUsage resolution **structurally inseparable** from
 dependency discovery.
 
-The backtracker implements type-directed dispatch (REQ-BT-08): CHAIN bindings
-query `scoped_lookup(ScopedKey)` then `alias_lookup(ScopedKey)`; REFERENCE
-bindings query `sysml_qn_lookup(SysMLQN)` then normalized `scoped_lookup()`.
-See [10-output-registry](10-output-registry.md).
+The backtracker implements type-directed dispatch (REQ-BT-08, in
+`_resolve_binding_via_registry` in `dependency_backtracker.py`). CHAIN bindings
+try, in order: consumer-scoped `scoped_lookup(ScopedKey)`, direct
+`scoped_lookup` on the bare path, a scoped-alias lookup
+(`scoped_alias_lookup(ScopedAliasKey)`, splitting the path at the last dot --
+this reaches part-def EXPOSE channels expanded per design instance, and tries
+the consumer-scope-prefixed key first for sibling disambiguation, REQ-BT-11),
+then cross-scope `alias_lookup(ScopedKey)`. REFERENCE bindings (`::` paths)
+try `sysml_qn_lookup(SysMLQN)` with the key per-segment sanitized via
+`sanitize_qualified_name` (so quoted-owner QNs match, REQ-BT-09), then a
+leaf + parent-scope secondary lookup (`_resolve_reference_via_registry`).
+Either dispatch then falls back to design-attribute matching
+(`_resolve_to_design_attribute`) and finally an entry point; the per-binding
+"Registry unresolved" line is DEBUG, with a single post-assembly WARNING
+summary for genuine residue. Some cross-part CHAIN bindings are rewritten
+before the backtracker sees them: `_rewrite_specialized_chain` (in
+`orchestration/pipeline_builder.py`) rewrites `part_usage.attr` chains through
+a retyped part's specialized-def `:>>` chain. See
+[10-output-registry](10-output-registry.md).
 
 FORMULA and Aggregation modules do NOT participate in DFS -- they are built
 after dependency discovery. Their resolution CAN be extracted into a standalone
@@ -142,30 +163,33 @@ The code structure:
 analysis/
   dependency_backtracker.py   -- DFS + CalcUsage resolution (existing)   --> 11
 resolution/
-  graph_builder.py            -- orchestrator (< 100 lines)              --> 07
-  input_resolver.py           -- resolve_input() for FORMULA/Agg         --> 04
-  module_factory.py           -- THREE pure construction functions        --> 05
-  entry_point_classifier.py   -- entry point collection + classify       --> 06
+  graph_builder.py            -- orchestrator + the three factory functions
+                                 + entry point classification            --> 05, 06, 07
+  input_resolver.py           -- resolve_input() consolidated resolver   --> 04
   models.py                   -- ComputationGraph (unchanged)            --> 09
 ```
+
+The factory functions and `_classify_entry_points()` live in
+`graph_builder.py` (they were not split into separate files); docs 05 and 06
+describe them.
 
 ### The Orchestrator (REQ-RES-05)
 
 ```python
 def build_computation_graph(result, calc_defs, design_attrs, ...) -> ComputationGraph:
-    entry_points = classify_entry_points(...)              # 06 -- from backtracker results
+    entry_points = _classify_entry_points(...)             # 06 -- from backtracker results
     modules = []
     for usage in result.required_usages:
-        module, new_eps = build_calc_usage_module(         # 05 -- lookup binding_resolutions
+        module, new_eps = _build_pipeline_module(          # 05 -- lookup binding_resolutions
             usage, binding_resolutions=result.binding_resolutions)
         modules.append(module); entry_points.update(new_eps)
     for ca in computed_attributes:
-        module, new_eps = build_formula_module(             # 05 -- uses attr resolution map
-            ca, attr_resolution_map=...)
+        module, new_eps = _build_computed_attr_module(      # 05 -- uses attr resolution map
+            ca, resolution_map=...)
         modules.append(module); entry_points.update(new_eps)
     for agg in aggregation_data:
-        module, new_eps = build_aggregation_module(         # 05 -- calls resolve_input()
-            agg, ctx=ResolutionContext(...))
+        module, new_eps = _build_aggregation_module(        # 05
+            agg, redefinitions=..., output_registry=...)
         modules.append(module); entry_points.update(new_eps)
     param_groups = rebuild_groups(entry_points)             # 17
     modules = topological_sort(modules)                     # 07
@@ -186,7 +210,7 @@ with `AGG_STRATEGIES`. All factory functions return
 | CalcUsage resolution | Backtracker 5-step cascade against flat `dict[str, str]` | Backtracker [type-directed dispatch](11-analysis-backtracker.md#type-directed-resolution-dispatch): CHAIN/REFERENCE paths with typed registries |
 | FORMULA resolution | Ad-hoc regex + attr map + mutation | Pre-computed [attribute resolution map](16-computed-attributes.md) (no registry lookup) |
 | Aggregation resolution | 3 term-type-specific functions + mutation | `resolve_input()` with `AGG_STRATEGIES` using typed registries |
-| Registry | `dict[str, str]` with 12+ key formats | 3 typed registries: `dict[ScopedKey, CanonicalChannel]`, `dict[SysMLQN, CanonicalChannel]`, `dict[ScopedKey, CanonicalChannel]` |
+| Registry | `dict[str, str]` with 12+ key formats | 3 typed registries: `dict[ScopedKey, CanonicalChannel]`, `dict[SysMLQN, CanonicalChannel]`, `dict[ScopedKey, CanonicalChannel]` -- plus the structured `_scoped_alias` namespace (`dict[ScopedAliasKey, CanonicalChannel]`) for part-def EXPOSE aliases |
 | Entry point creation | Side-effect mutation of shared dict | Returned as tuple second element |
 | Testability | Full module construction required | `resolve_input()` testable in isolation |
 

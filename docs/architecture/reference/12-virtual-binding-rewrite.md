@@ -20,13 +20,13 @@ virtual (non-template) copies become pipeline modules.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-VBR-01 | Override index SHALL be keyed by `(full_parent_path, leaf_attribute_name)` | `override_index: dict[tuple[str, str], RedefinitionData]` at line 273 |
-| REQ-VBR-02 | Deep-path overrides SHALL join intermediate `target_path` segments with `__` to form `full_parent` | `f"{owning_part_qn}__{intermediate}"` at line 279 |
-| REQ-VBR-03 | LITERAL override SHALL set `binding_type=LITERAL`, copy `literal_value`, clear `source_path=None` | Three mutations at lines 319-321 |
-| REQ-VBR-04 | CHAIN override SHALL replace `source_path` with the redefinition's `source_path` | `binding.source_path = matched.source_path` at line 324 |
-| REQ-VBR-05 | Template copies (`is_template=True`) SHALL be skipped during rewriting | `if usage.is_template: continue` at line 291 |
-| REQ-VBR-06 | Bindings already LITERAL or with no `source_path` SHALL be skipped (no double-rewrite) | Guard at lines 300-303 |
-| REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | Called at line 736 in `build_pipeline_context()`, before Steps 4-7 |
+| REQ-VBR-01 | Override index SHALL be keyed by `(full_parent_path, leaf_attribute_name)` | `override_index: dict[tuple[str, str], RedefinitionData]` in `_rewrite_virtual_bindings` (Phase 1a) |
+| REQ-VBR-02 | Deep-path overrides SHALL join intermediate `target_path` segments with `__` to form `full_parent` | `f"{override.owning_part_qn}__{intermediate}"` in the deep-path branch of `_rewrite_virtual_bindings` Phase 1a |
+| REQ-VBR-03 | LITERAL override SHALL set `binding_type=LITERAL`, copy `literal_value`, clear `source_path=None` | Three mutations in the tier-1 LITERAL branch of `_rewrite_virtual_bindings` |
+| REQ-VBR-04 | CHAIN override SHALL replace `source_path` with the redefinition's `source_path` | `binding.source_path = matched.source_path` in the tier-1 CHAIN branch of `_rewrite_virtual_bindings` |
+| REQ-VBR-05 | Template copies (`is_template=True`) SHALL be skipped during rewriting | `if usage.is_template: continue` in `_rewrite_virtual_bindings` Phase 2 |
+| REQ-VBR-06 | Bindings already LITERAL or with no `source_path` SHALL be skipped (no double-rewrite) | The LITERAL / empty-`source_path` guards at the top of the `_rewrite_virtual_bindings` binding loop |
+| REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | Called from `_extract_hierarchy_and_rewrite_bindings` (Step 3.5) in `build_pipeline_context()`, before Steps 4-7 |
 | REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` (`[copy.copy(b) for b in template.bindings]`) so no two virtual instances share a binding object; the rewrite mutates only scalar fields, so a shallow copy suffices | `test_virtual_binding_rewrite.py::test_rewrite_respects_instance_boundary_for_divergent_siblings` — two instances given different overrides read 50.0 and 100.0 independently |
 | REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path` (no `::`, no `.`); it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py::test_rewrite_skips_bare_name_source_path_without_raising` — non-empty index, bare-name binding, no raise, DEBUG logged, binding unchanged |
 | REQ-VBR-10 | A `part_usage.attr` CHAIN binding whose retyped part usage's specialized def carries a `:>> attr = calc.output` redefinition SHALL be rewritten through it (tier 2 of the three-tier merge, `_rewrite_specialized_chain`). A self-named binding (`in x = x`, resolved to a full-QN self-reference) whose outer same-named EXPOSE resolves to a real channel SHALL be rewritten to that upstream channel (mechanism D, `_rescue_self_named_bindings`, a separate step); no resolvable upstream → left as-is | Specialized-def resolver: `test_spec_chain_channel.py::test_cost_per_joule_wired_to_gamma`; self-named rescue: `test_self_named_rescue.py::test_self_named_binding_rescued_to_upstream` |
@@ -43,11 +43,15 @@ source_path = "Lib::Solar_Array::wattage"
 But at the design level, a `:>>` redefinition may override that attribute:
 
 ```sysml
-part solar_array : Solar_Array {
+part redefines solar_array : Solar_Array {
     :>> wattage = 400.0;              // LITERAL override
     :>> efficiency = tracker.eta;     // CHAIN override
 }
 ```
+
+(On a *plain* typed usage — `part solar_array : Solar_Array { ... }` — only the LITERAL
+member override would be captured; a plain-usage CHAIN/EXPRESSION override is filtered
+out at extraction, REQ-HR-08. The `part redefines` shape keeps all RHS types.)
 
 Without rewriting, the virtual CalcUsage would still look up `Lib::Solar_Array::wattage`,
 missing the design-specific value `400.0`. The rewrite step patches each virtual
@@ -80,7 +84,10 @@ The key is `(full_target_parent_path, leaf_attribute_name)`.
 - `full_parent = owning_part_qn`
 - `leaf_attr = attribute_name`
 
-If the index is empty, the function returns `0` immediately.
+This is Phase 1a (tier 1). Phase 1b builds a second index over
+`hierarchy_data.redefinitions` for the tier-2 specialized-chain rewrite (see the
+three-tier merge section below). If **both** indexes are empty, the function returns
+`0` immediately.
 
 ### Phase 2 -- Match and Rewrite Bindings
 
@@ -99,9 +106,10 @@ For each `CalcUsageData` where `is_template = False`:
      models. The relaxed capture guard (REQ-HR-08) can now make the index non-empty, so
      the branch is reachable and is made crash-safe. No committed fixture reaches it —
      the reachable bindings in `unresolvable_attr_probe` / ife_plant are all
-     `::`-qualified (they take the `::` branch), and `self_named_binding_trap` has no
-     plain-usage literal so its index stays empty — the guarantee holds by branch, not
-     by empty index; the constructed unit test is the coverage.
+     `::`-qualified (they take the `::` branch), and `self_named_binding_trap`'s
+     self-named binding arrives as a full `::`-QN (mechanism D, below), so it takes
+     the `::` branch too — the guarantee holds by branch, not by empty index; the
+     constructed unit test is the coverage.
 4. Lookup `(parent_path, leaf)` in the override index
 
 ### The Three Mutation Cases
@@ -110,7 +118,7 @@ For each `CalcUsageData` where `is_template = False`:
 |------|-----------|-----------|-------------------|
 | **LITERAL override** | `matched.redefinition_type == RedefinitionType.LITERAL` | `binding_type = LITERAL`, `literal_value = matched.literal_value`, `source_path = None` | Becomes [DESIGN_ATTRIBUTE entry point](06-entry-point-classifier.md) |
 | **CHAIN override** | `matched.redefinition_type == RedefinitionType.CHAIN` | `source_path = matched.source_path` (e.g., `"tracker.eta"`) | Resolved via [OutputRegistry](10-output-registry.md) as MODULE_OUTPUT |
-| **No match** | Key not in override index | Binding unchanged | Original template binding used |
+| **No match** | Key not in override index | Falls to tier 2 (`_rewrite_specialized_chain`, next section); if that also declines, binding unchanged | Tier-2 rewrite, or original template binding used |
 
 ## Three-Tier Merge: Specialized-Def `:>>` Precedence (REQ-VBR-10, REQ-VBR-11)
 
@@ -178,17 +186,19 @@ implementation site is a dedicated function.
 Design PartDef `SolarBatteryDesign` instantiates it as `solar_array` with overrides:
 
 ```sysml
-part solar_array : Solar_Array {
+part redefines solar_array : Solar_Array {
     :>> wattage = 400.0;
     :>> efficiency = tracker.eta;
 }
 ```
 
-This produces two `design_overrides`:
-- `RedefinitionData(owning_part_qn="SolarBatteryDesign", target_path=["solar_array","wattage"], is_deep_path=True, redefinition_type=LITERAL, literal_value=400.0)`
-- `RedefinitionData(owning_part_qn="SolarBatteryDesign", target_path=["solar_array","efficiency"], is_deep_path=True, redefinition_type=CHAIN, source_path="tracker.eta")`
+This produces two `design_overrides` — flat member overrides owned by the
+`solar_array` usage (a `part redefines` usage, so both RHS types are kept,
+REQ-HR-08):
+- `RedefinitionData(owning_part_qn="SolarBatteryDesign__solar_array", attribute_name="wattage", is_deep_path=False, redefinition_type=LITERAL, literal_value=400.0)`
+- `RedefinitionData(owning_part_qn="SolarBatteryDesign__solar_array", attribute_name="efficiency", is_deep_path=False, redefinition_type=CHAIN, source_path="tracker.eta")`
 
-**Override index after Phase 1:**
+**Override index after Phase 1** (flat key: `(owning_part_qn, attribute_name)`):
 ```
 ("SolarBatteryDesign__solar_array", "wattage")   -> LITERAL(400.0)
 ("SolarBatteryDesign__solar_array", "efficiency") -> CHAIN("tracker.eta")
@@ -233,8 +243,8 @@ The `efficiency` binding kept its type but `source_path` was rewritten to `"trac
 at **Step 3.5** of [`build_pipeline_context()`](00-pipeline-overview.md), which runs **before**:
 
 - Step 4 -- `extract_design_attributes()` ([parameter group derivation](17-parameter-group-deriver.md))
-- Step 5 -- `ParameterGroupDeriver` construction
-- Step 5.5 -- [`build_output_registry()`](10-output-registry.md) (channel registration)
+- Step 5.5 -- [`build_output_registry()`](10-output-registry.md) (channel registration, including the Phase 3b confirm pass)
+- Step 5.7 -- `ParameterGroupDeriver` construction (moved after the registry's confirm pass, INV-G)
 - Step 6 -- [`DependencyBacktracker.find_required_modules()`](11-analysis-backtracker.md) (dependency analysis)
 - Step 7 -- [`build_computation_graph()`](07-graph-assembly.md) (graph assembly)
 

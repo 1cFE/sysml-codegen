@@ -61,11 +61,11 @@ catch-all (`hasattr(expr_node, "function")`) matches every literal. Placed after
 it, the literal branches are dead code and each literal stringifies to
 `LiteralRationalEvaluation()`. The catch-all is therefore the last branch.
 
-**Known deviation — `_walk_aggregation_ast`.** `hierarchy_resolver._walk_aggregation_ast`
-(`hierarchy_resolver.py:372,431`) keeps the old literal-after-invocation ordering
+**Known deviation — `_walk_aggregation_ast`.** `_walk_aggregation_ast` in
+`extraction/hierarchy_resolver.py` keeps the old literal-after-invocation ordering
 and carries the same latent bug: an aggregation literal is mis-dispatched to the
-invocation catch-all and marked unsupported, so its `reconstruct_expression`
-delegation (`:433`) is dead. It is **not** fixed here — that touches an executable
+invocation catch-all and marked unsupported, so its trailing `reconstruct_expression`
+delegation (the `is_literal_expression` branch) is dead. It is **not** fixed here — that touches an executable
 aggregation path (out of the display-only scope of REQ-AST-08/-09). Filed to
 BACKLOG.
 
@@ -73,8 +73,8 @@ BACKLOG.
 
 ## Dispatch Sites
 
-The codebase has **8 multi-type dispatch functions across 5 files** with
-`is_instance()` dispatch on expression types.
+The codebase has **8 multi-type dispatch functions across 6 files** that check
+two or more of FCE / OE / FRE via `is_instance()`.
 
 ### Dual-Check Sites (FCE + OE)
 
@@ -112,11 +112,14 @@ Sites using `elif` chains (parameter_groups.py, usage_extractor.py) are safe
 because first-match-wins prevents misclassification. However, they should still
 follow canonical ordering for consistency (REQ-AST-03).
 
-In addition to the 8 multi-type dispatch functions above, 5 single-type helper
-functions also call `is_instance()` on expression types (e.g., checking only FCE
-or only FRE). These are not dispatch sites -- they check a single type and
-cannot misclassify. Total `is_instance()` call sites on expression types: **13**
-across the codebase.
+In addition to the 8 multi-type dispatch functions above, single-type helper
+functions also call `is_instance()` on expression types (checking only FCE,
+only FRE, or only OE — e.g. `extract_feature_chain_segments` and `binary_op_of`
+in `expression_utils.py`). These are not dispatch sites -- they check a single
+type and cannot misclassify. Item 6's literal branches added further
+`is_instance()` calls, so this doc no longer tracks a total call-site count;
+the audited dual-check inventory is `DUAL_CHECK_SITES` in
+`tests/conformance/test_ast_dispatch_invariant.py`.
 
 ---
 

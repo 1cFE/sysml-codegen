@@ -21,31 +21,41 @@ regardless of which format the binding used.
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-OR-01 | Registry SHALL map every reference format (FCE dotted path, FRE qualified name, redefinition target) to a canonical [CanonicalChannel](09-data-models.md) | All Phase 1 key formats present in typed registries |
-| REQ-OR-02 | Each typed registry SHALL have its own exact-match lookup method — no single `resolve()` method that accepts any string format | `scoped_lookup(ScopedKey)`, `sysml_qn_lookup(SysMLQN)`, `alias_lookup(ScopedKey)` |
+| REQ-OR-02 | Each typed registry SHALL have its own exact-match lookup method — no single `resolve()` method that accepts any string format | `scoped_lookup(ScopedKey)`, `sysml_qn_lookup(SysMLQN)`, `alias_lookup(ScopedKey)`, `scoped_alias_lookup(ScopedAliasKey)` |
 | REQ-OR-03 | Collision policy: scoped and SysML QN registries SHALL raise on duplicate (unique by construction); alias registry SHALL refuse overwrites (first wins, warning logged) | `register_scoped()` and `register_sysml_qn()` raise; `register_alias()` warns |
 | REQ-OR-04 | `register_alias()` SHALL enforce phase ordering — target must already be in `_canonical` | Guard: `if canonical_channel not in self._canonical: return` |
-| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_stripped as `ScopedKey` (Aggregation), SysML QN as `SysMLQN` (FORMULA). Key_A, Key_D, Key_E full, Key_F, and bare keys SHALL NOT be registered. | Key format tables in each sub-phase; see Eliminated Key Formats below for elimination rationale |
+| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_stripped as `ScopedKey` (Aggregation), SysML QN as `SysMLQN` (FORMULA). Key_A, Key_D, Key_E full, Key_F, and bare keys SHALL NOT be registered. | Key format tables in each sub-phase; **code at HEAD diverges — see the Known divergence note under Eliminated Key Formats (DOCS-SCRUB-F2)** |
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `registry.scoped_lookup(ScopedKey(alias.canonical_name))` precedes `register_alias()` |
 | REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join with dots | `make_scoped_key()`: split on `__`, drop `segments[0]`, join with `.` |
-| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no registration, no guard, no diagnostic-only entry. | Key_A registration code removed; see Eliminated Key Formats below |
+| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no registration, no guard, no diagnostic-only entry. | Narrowed in practice: Key_A is absent from the *scoped* registry but IS registered as an alias — see the Known divergence note below (DOCS-SCRUB-F2) |
+| REQ-OR-09 | The FORMULA sysml-QN key SHALL be registered per-segment sanitized (`sanitize_qualified_name`), and the per-collision alias line SHALL be DEBUG with one WARNING count-summary at build (Item 7 / D5, lockstep site 1) | Phase 1c wraps the key in `sanitize_qualified_name()`; `register_alias()` logs collisions at DEBUG; `build_output_registry()` emits the count-summary |
 
 ## What It Is
 
 The `OutputRegistry` (in `core/output_registry.py`) provides **typed, scoped**
 lookup from reference keys to **canonical channel names** ([CanonicalChannel](09-data-models.md)).
-Three separate typed registries replace the former flat `dict[str, str]`:
+Four separate typed registries replace the former flat `dict[str, str]` — three
+keyed by flat strings, plus a structured tuple-keyed namespace added by Item 10:
 
 | Registry | Key type | Value type | Contents |
 |----------|----------|------------|----------|
 | **Scoped** | `ScopedKey` | `CanonicalChannel` | Key_C (CalcUsage outputs), Key_E_stripped (Aggregation outputs) |
 | **SysML QN** | `SysMLQN` | `CanonicalChannel` | Phase 1c `::` keys from FORMULA outputs |
-| **Alias** | `ScopedKey` | `CanonicalChannel` | Phase 2 CHAIN aliases, Phase 3 EXPOSE_PURE aliases, Phase 4 transitive aliases |
+| **Alias** | `ScopedKey` | `CanonicalChannel` | Phase 2 CHAIN aliases, Phase 3/3b EXPOSE_PURE aliases, Phase 4 transitive aliases |
+| **Scoped alias** | `ScopedAliasKey` | `CanonicalChannel` | Part-def (shape A) EXPOSE aliases, expanded per design instance (see Step 5.55 below) |
+
+The scoped-alias namespace keeps its keys as unjoined `(scope, leaf)` tuples so
+a tuple key can never collapse into or collide with a flat string key — the
+scope carries the full instance path, making the key unique by construction.
 
 **The registry has no concept of scope.** It does not know which module is asking.
 Scope-awareness is the [resolver's](04-input-resolver.md) responsibility. The
 resolver [prepends the consumer's scope](03-resolution-overview.md#the-scope-problem)
 to produce a `ScopedKey` lookup that is unambiguous. The registry just needs to have
-the scoped key registered.
+the scoped key registered. The scoped-alias namespace follows the same rule: its
+keys carry an instance path as data, but the caller (the
+[backtracker's](11-analysis-backtracker.md) chain dispatch) supplies that scope
+when it builds the lookup key.
 
 A canonical channel name is the PQN-format string produced by
 `make_canonical_channel()` (see [naming conventions](15-naming-conventions.md)):
@@ -55,11 +65,13 @@ make_canonical_channel("SolarBatteryDesign__solar_battery_plant__lcoe", "lcoe_pe
 → CanonicalChannel("SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh")
 ```
 
-The registry's internal state is four fields:
+The registry's internal state is six fields:
 - `_scoped: dict[ScopedKey, CanonicalChannel]` — scoped key lookups
 - `_sysml_qn: dict[SysMLQN, CanonicalChannel]` — SysML qualified name lookups
 - `_alias: dict[ScopedKey, CanonicalChannel]` — alias lookups
+- `_scoped_alias: dict[ScopedAliasKey, CanonicalChannel]` — structured `(scope, leaf)` alias lookups
 - `_canonical: set[CanonicalChannel]` — valid canonical channels (phase-ordering enforcement)
+- `_alias_collisions: list[ScopedKey]` — first-wins alias collisions, recorded for the one WARNING count-summary the builder emits (per-collision lines are DEBUG)
 
 See Design Rationale below for type system design decisions.
 
@@ -70,23 +82,35 @@ See Design Rationale below for type system design decisions.
 | `register_scoped(ScopedKey, CanonicalChannel)` | 1a, 1b | Register a scoped key (Key_C, Key_E_stripped) |
 | `register_sysml_qn(SysMLQN, CanonicalChannel)` | 1c | Register a SysML QN key |
 | `register_alias(ScopedKey, CanonicalChannel)` | 2-4 | Register an alias pointing to an already-registered canonical |
+| `register_scoped_alias(ScopedAliasKey, CanonicalChannel)` | Step 5.55 | Register a structured `(scope, leaf)` alias; same phase-ordering guard as `register_alias()` |
 | `scoped_lookup(ScopedKey) -> CanonicalChannel \| None` | runtime | Exact-match in scoped registry |
 | `sysml_qn_lookup(SysMLQN) -> CanonicalChannel \| None` | runtime | Exact-match in SysML QN registry |
 | `alias_lookup(ScopedKey) -> CanonicalChannel \| None` | runtime | Exact-match in alias registry |
+| `scoped_alias_lookup(ScopedAliasKey) -> CanonicalChannel \| None` | runtime | Exact-match in scoped-alias registry |
+| `scoped_alias_items()` | read | `(ScopedAliasKey, CanonicalChannel)` pairs — the shape-A source for [Item 11 `output_aliases`](09-data-models.md) |
 | `make_scoped_key(usage_eqn, attr_name)` | constructor | Builds the dotted hierarchy key (replaces `derive_key_c()`) |
 | `make_canonical_channel(usage_eqn, attr_name)` | constructor | Builds the canonical channel name (replaces `get_channel_name()`) |
 | `canonical_channels` (property) | read | `frozenset[CanonicalChannel]` of all canonical channel names |
+| `alias_collision_count` / `alias_collision_distinct_keys` (properties) | read | Collision totals backing the builder's WARNING count-summary |
 
-**Collision policy**: Scoped and SysML QN registries are unique by construction
-(ScopedKey derives from the SysML ownership chain; SysML QN is globally unique in
-the model). Duplicate insertion raises — this indicates a bug in key construction.
-Alias registry retains first-wins with warning, since different alias sources may
-legitimately produce the same key.
+**Collision policy**: Scoped, SysML QN, and scoped-alias registries are unique by
+construction (ScopedKey derives from the SysML ownership chain; SysML QN is
+globally unique in the model; ScopedAliasKey carries the instance path in its
+scope element). Duplicate insertion with a different channel raises — this
+indicates a bug in key construction. The alias registry retains first-wins,
+since different alias sources may legitimately produce the same key. Each
+collision is logged at DEBUG and recorded; after all phases run,
+`build_output_registry()` emits a single WARNING count-summary
+(`"OutputRegistry: N alias collision(s) resolved first-wins (M distinct
+key(s))."`) — a collision-free build stays silent (Item 7 / D5, REQ-OR-09).
 
 ## The 4-Phase Registration Protocol
 
-Phases must execute in order. `register_alias()` enforces this: the target canonical channel
-must already exist in `_canonical`, or the alias is rejected with a warning.
+Phases must execute in order. `register_alias()` and `register_scoped_alias()`
+enforce this: the target canonical channel must already exist in `_canonical`,
+or the alias is rejected with a warning. Item 10 added a confirm pass (Phase 3b)
+between Phases 3 and 4, and a post-build expansion step (Step 5.55) that
+populates the structured scoped-alias namespace; both are described below.
 
 ### Phase 1 -- Canonical Channels
 
@@ -116,6 +140,9 @@ For each [`ScopedAggregationData`](09-data-models.md), one registration:
 |---|---|---|---|
 | Scoped key (Key_E_stripped) | `ScopedKey` | dotted instance path, design prefix stripped | `sbp.solar_array.total_capex` |
 
+Alias names carried on the aggregation expression register additional scoped keys
+in the same Key_E_stripped format (BF-7), all pointing at the same canonical channel.
+
 **Phase 1c: FORMULA outputs** (`build_output_registry`)
 
 For each [`ComputedAttributeData`](09-data-models.md) with classification `FORMULA` and
@@ -123,7 +150,12 @@ For each [`ComputedAttributeData`](09-data-models.md) with classification `FORMU
 
 | Registration | Type | Format | Example |
 |---|---|---|---|
-| SysML QN | `SysMLQN` | `{owning_part_qn}::{name}` | `SolarBatteryLibrary::Solar_Array::panel_cost` |
+| SysML QN | `SysMLQN` | `{owning_part_qn}::{name}`, per-segment sanitized | `SolarBatteryLibrary::Solar_Array::panel_cost` |
+
+The key is passed through `sanitize_qualified_name()` (`core/qualified_names.py`)
+before registration, so a quoted-owner QN registers in its sanitized form and
+matches the REFERENCE consumer, which sanitizes its lookup key the same way
+(REQ-OR-09, Item 7 lockstep site 1).
 
 ### Phase 2 -- CHAIN Aliases (source="redefinition")
 
@@ -151,6 +183,52 @@ resolved = registry.scoped_lookup(ScopedKey(alias.canonical_name))
 registry.register_alias(scoped_key, resolved)
 ```
 
+The owning part's short name comes from `owning_part_leaf()`
+(`core/qualified_names.py`), which accepts either `::` or `__` separators.
+
+### Phase 3b -- Confirm Multi-Hop EXPOSE Tentatives
+
+**Phase 3b is a registry-build phase** — it runs inside `build_output_registry()`
+(`orchestration/output_registry_builder.py`), after Phase 3 and before Phase 4.
+It is NOT a [backtracker](11-analysis-backtracker.md) phase.
+
+A derived attribute that is a pure multi-hop FeatureChainExpression (e.g.
+`radial_build.magnet_volume_total = tf_coil.volume_calc.volume`) is classified
+`EXPOSE_CHAIN_TENTATIVE` at extraction (see
+[computed attributes](16-computed-attributes.md), REQ-CA-10): the extraction leaf
+can see the chain is structurally pure but cannot decide whether it reaches a real
+output channel. Phase 3b decides. With Phase 1 channels and Phase 2/3 aliases
+registered, it walks each tentative's `reference_chain`
+(`_resolve_reference_chain` in the same file):
+
+- Prefix the owning part's short name and try `scoped_lookup` on the full dotted
+  chain — the direct calc-output terminal.
+- On a miss, if the terminal segment names an attribute that is itself an EXPOSE
+  alias, substitute that attribute's own `reference_chain` and recurse (with a
+  visited-set cycle guard). Resolution always lands on a **scoped** calc-output
+  channel, never the flat alias registry (whose same-named-sibling entries are
+  first-wins).
+
+Each tentative then takes exactly one of two exits:
+
+- **Resolved** → the transitive channel is registered as an alias
+  (`{owning_part_short}.{python_name}` → channel) and the computed attribute is
+  finalized to `EXPOSE_PURE` in place.
+- **Unresolvable** → the computed attribute reverts to `FORMULA` in place
+  (the pre-Item-10 behavior).
+
+After the pass, **INV-F** is enforced: if any `EXPOSE_CHAIN_TENTATIVE`
+classification survives, `build_output_registry()` raises `ValueError` rather
+than let a tentative leak to a downstream reader. When the pass processed any
+tentatives, one INFO line reports the confirmed/reverted counts.
+
+**Offline parity**: snapshots serialize the post-confirm `EXPOSE_PURE` state, so
+a re-tag pre-pass at the top of `build_output_registry()` reconstructs the
+tentative state for multi-hop candidates (an `EXPOSE_PURE` computed attribute
+whose `reference_chain` is part-rooted with 2+ segments) before Phase 1 runs.
+Snapshot rebuilds therefore run the same confirm walk as live extraction; on the
+live path the pre-pass is a no-op because those attributes are still tentative.
+
 ### Phase 4 -- Transitive Design Attribute Aliases
 
 For each `DesignAttributeData` whose `default_value` is a dotted path (checked via
@@ -166,6 +244,37 @@ registry.register_alias(key, resolved)
 
 This handles the rare case where a design attribute's default is a reference to a module
 output rather than a literal value.
+
+### After the Phases -- Part-Def EXPOSE Scoped Aliases (Step 5.55)
+
+The structured `_scoped_alias` namespace is populated after `build_output_registry()`
+returns, by `_register_partdef_expose_scoped_aliases()`
+(`orchestration/pipeline_builder.py`), on BOTH build paths (live, and snapshot
+rebuild in `snapshot/graph_rebuild.py`).
+
+A derived attribute like `total_cost = cost_calc.cost` on a part **definition**
+(shape A) is a template — the part def has no instances at extraction time. Step
+5.55 expands it per design instance (REQ-CA-03 revised): for each `EXPOSE_PURE`
+computed attribute with `is_on_part_definition` and a 2+ segment
+`reference_chain`, every instance path of the owning part def (via
+`find_instance_paths_for_partdef()`) gets one registration:
+
+```python
+channel = registry.scoped_lookup(ScopedKey(f"{inst}.{rel}"))  # rel = joined reference_chain
+registry.register_scoped_alias(ScopedAliasKey((inst, ca.python_name)), channel)
+```
+
+The consumer-side reader is the backtracker's `_resolve_chain_dispatch()`
+(`analysis/dependency_backtracker.py`): it splits the consumer's `source_path` at
+the last dot into `(prefix, leaf)`, then tries the consumer-scope-prepended key
+`(consumer_scope.prefix, leaf)` before the bare `(prefix, leaf)` — the
+consumer-scope prepend is what disambiguates same-named siblings (REQ-BT-11).
+Part *usage* exposes (shape B) are untouched by this step.
+
+The same namespace also backs the self-named-binding rescue
+(`_rescue_self_named_bindings()`, Step 5.56): an `in x = x` binding is rewritten
+to the instance-scoped attribute path only when a scoped alias proves an outer
+EXPOSE channel exists; otherwise it is left as-is (a genuine modeling error).
 
 ## Concrete Example
 
@@ -240,8 +349,9 @@ Note this depends on Phase 2 having already registered `solar_battery_plant.leve
 
 | Type | Location | Role |
 |---|---|---|
-| `OutputRegistry` | `core/output_registry.py` | The registry itself (3 typed dicts + canonical set) |
+| `OutputRegistry` | `core/output_registry.py` | The registry itself (4 typed dicts + canonical set + collision record) |
 | `ScopedKey` | `core/identifier_types.py` | Typed wrapper for dotted hierarchy keys |
+| `ScopedAliasKey` | `core/identifier_types.py` | `NewType` over `tuple[str, str]` — structured `(scope, leaf)` alias key |
 | `CanonicalChannel` | `core/identifier_types.py` | Typed wrapper for PQN-format channel names |
 | `SysMLQN` | `core/identifier_types.py` | Typed wrapper for SysML qualified names |
 | `ChannelAlias` | `core/models.py` | Alias descriptor with `alias_name: ScopedKey`, `canonical_name: CanonicalChannel`, `owning_part_qn`, `source` |
@@ -250,10 +360,14 @@ Note this depends on Phase 2 having already registered `solar_battery_plant.leve
 ## Construction Site
 
 `build_output_registry()` in `orchestration/output_registry_builder.py` is the sole
-constructor. It is called at Step 5.5 of [`build_pipeline_context()`](02-orchestration.md),
+constructor. On the live path it is called at Step 5.5 of
+[`build_pipeline_context()`](02-orchestration.md),
 after calc usages, hierarchy data, [aggregation scoping](13-aggregation-scoping.md),
 [computed attributes](16-computed-attributes.md), and [channel aliases](12-virtual-binding-rewrite.md)
-are all available. The populated registry is then passed to the
+are all available; the snapshot path (`snapshot/graph_rebuild.py`) calls the same
+function from serialized data. Both paths then run the Step 5.55 part-def EXPOSE
+scoped-alias expansion and the Step 5.56 self-named-binding rescue (see above)
+before the populated registry is passed to the
 [`DependencyBacktracker`](11-analysis-backtracker.md) (Step 6) and
 [`build_computation_graph()`](07-graph-assembly.md) (Step 7) as their shared lookup mechanism.
 
@@ -285,6 +399,19 @@ and are NOT registered:
 **FR-6 applies**: if any eliminated key turns out to be load-bearing for a model
 not currently tested, the key MUST be made unique (not re-added as ambiguous).
 
+**Known divergence at HEAD (DOCS-SCRUB-F2).** The elimination table above is the
+design intent, but the code currently diverges on two rows: Phase 1a registers
+Key_A into the **alias** registry (`register_alias`, first-wins, "for cross-scope
+CHAIN resolution") and Phase 1c registers Key_F as a **scoped** key ("REFERENCE
+secondary resolution, spike Q5") — both in `build_output_registry()`
+(`orchestration/output_registry_builder.py`). Phases 3–4 also consult a
+construction-time Key_A-format dict (`instance_attr_to_channel`) before the typed
+lookups. The conformance test (`test_output_registry.py::TestReqOR08`) pins the
+weaker reading ("not in the *scoped* registry"). Reconciling REQ-OR-05/06/08 with
+these registrations — either land the elimination or re-frame the REQs — is filed
+as `DOCS-SCRUB-F2` in the backlog. Until then, read this section as intent, not
+behavior.
+
 ### Evidence Base
 
 All claims are supported by empirical analysis across the 6 model snapshots:
@@ -313,7 +440,12 @@ CanonicalChannel = NewType('CanonicalChannel', str)
 SysMLQN = NewType('SysMLQN', str)
 EQN = NewType('EQN', str)
 PQN = NewType('PQN', str)
+ScopedAliasKey = NewType('ScopedAliasKey', tuple[str, str])
 ```
+
+`ScopedAliasKey` is the one non-string wrapper: an unjoined `(scope, leaf)` tuple,
+so `("a.b", "c")` and `("a", "b.c")` can never collapse into the same key (the
+leaf is always a single segment, so the second form cannot even arise).
 
 See the type wrapper definitions in `core/identifier_types.py` for constructor
 invariants and resolution dispatch design.

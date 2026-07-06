@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 233 |
-| PASS (test exists and passes) | 221 |
+| Total requirements | 248 |
+| PASS (test exists and passes) | 236 |
 | UNTESTED (no dedicated test) | 12 |
 | DEFERRED | 0 |
 | REQ families | 29 |
-| Conformance test files | 34 |
+| Distinct test files cited | 54 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -25,34 +25,34 @@ the documentation rather than executable code.
 ## Index
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
-- [AST — AST Dispatch Invariant](#ast) (7/7 pass)
+- [AST — AST Dispatch Invariant](#ast) (9/9 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
-- [BT — Backtracker](#bt) (8/8 pass)
+- [BT — Backtracker](#bt) (11/11 pass)
 - [CA — Computed Attributes](#ca) (10/11 pass, 1 untested)
 - [DM — Data Models](#dm) (8/9 pass)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
-- [EXT — Extraction](#ext) (9/9 pass)
-- [GA — Graph Assembly](#ga) (7/7 pass)
+- [EXT — Extraction](#ext) (14/14 pass)
+- [GA — Graph Assembly](#ga) (8/8 pass)
 - [GEN — Generation](#gen) (5/7 pass)
-- [HR — Hierarchy Resolver](#hr) (7/7 pass)
+- [HR — Hierarchy Resolver](#hr) (8/8 pass)
 - [IR — Input Resolver](#ir) (7/7 pass)
-- [LVP — Literal Value Propagation](#lvp) (7/7 pass)
+- [LVP — Literal Value Propagation](#lvp) (9/9 pass)
 - [MF — Module Factory](#mf) (8/8 pass)
-- [NC — Naming Conventions](#nc) (7/7 pass)
-- [OR — Output Registry](#or) (8/8 pass)
+- [NC — Naming Conventions](#nc) (9/9 pass)
+- [OR — Output Registry](#or) (9/9 pass)
 - [ORCH — Orchestration](#orch) (7/7 pass)
 - [OSR — Output Schema Rules](#osr) (7/7 pass)
-- [PGD — Parameter Group Deriver](#pgd) (7/7 pass)
+- [PGD — Parameter Group Deriver](#pgd) (8/8 pass)
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
 - [PY — Pipeline YAML](#py) (8/8 pass)
-- [REG — Module Registry](#reg) (7/7 pass)
+- [REG — Module Registry](#reg) (8/8 pass)
 - [RES — Resolution Overview](#res) (0/8 pass)
-- [SNAP — Extraction Snapshots](#snap) (7/7 pass)
+- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (19/19 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
-- [VBR — Virtual Binding Rewrite](#vbr) (7/7 pass)
+- [VBR — Virtual Binding Rewrite](#vbr) (11/11 pass)
 
 ---
 
@@ -126,7 +126,7 @@ the documentation rather than executable code.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-CA-01 | Classification SHALL produce exactly one of 5 values per attribute expression | `test_computed_attributes.py` | PASS |
+| REQ-CA-01 | Classification SHALL produce exactly one of the 5 stable values per attribute expression (the transient sixth, `EXPOSE_CHAIN_TENTATIVE`, never survives the Phase-3b confirm pass to a reader — INV-F) | `test_computed_attributes.py` | PASS |
 | REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
 | REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
 | REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
@@ -136,7 +136,7 @@ the documentation rather than executable code.
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | — | UNTESTED |
 | REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
-| REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`graph_builder.py:796`) for the resolvable case | `test_wi014_toy.py` | PASS |
+| REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure` in `graph_builder.py`) for the resolvable case | `test_wi014_toy.py` | PASS |
 
 ### DM
 
@@ -226,7 +226,7 @@ the documentation rather than executable code.
 | REQ-GA-02 | If a cycle exists, `_unified_topological_sort` SHALL raise `CircularDependencyError` list... | `test_graph_assembly.py` | PASS |
 | REQ-GA-03 | Every `module_output` `producer_channel` SHALL resolve to a declared output channel. | `test_graph_assembly.py` | PASS |
 | REQ-GA-04 | A module SHALL NOT depend on itself, even if its own output channel name appears in its i... | `test_graph_assembly.py` | PASS |
-| REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly: sorted `modules`, `entry_point_gro... | `test_graph_assembly.py` | PASS |
+| REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly the reviewed field set: sorted `modules`, `entry_point_groups`, `execution_order`, in-memory `fallback_entry_points` (REQ-GA-08), serialized `output_aliases` (REQ-DM-09); any field-set change is a deliberate reviewed rev (the exact-set test flips red) | `test_graph_assembly.py` | PASS |
 | REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module orderi... | `test_graph_assembly.py` | PASS |
 | REQ-GA-07 | The topological sort SHALL run in O(V + E) time using Kahn's algorithm with `deque`. | `test_graph_assembly.py` | PASS |
 | REQ-GA-08 | A two-layer params-coverage check SHALL exist: a pure collector `collect_uncovered_params(graph)` returning the wired fell-through-valueless violations (sibling to REQ-GA-03), and an always-strict generation boundary raising V11 on any violation. `ComputationGraph.fallback_entry_points` (in-memory, `exclude=True`) feeds it | `test_uncovered_params.py`, `test_graph_assembly.py`, `test_data_models.py` | PASS |
@@ -318,6 +318,8 @@ the documentation rather than executable code.
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `test_naming_conventions.py` | PASS |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→... | `test_naming_conventions.py` | PASS |
 | REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dott... | `test_naming_conventions.py` | PASS |
+| REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `test_alias_agg_probe_generation.py` | PASS |
+| REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path | `test_duplicate_path_failfast.py` | PASS |
 
 ### OR
 
@@ -329,10 +331,10 @@ the documentation rather than executable code.
 | REQ-OR-02 | Each typed registry SHALL have its own exact-match lookup method — no single `resolve()` ... | `test_output_registry.py` | PASS |
 | REQ-OR-03 | Collision policy: scoped and SysML QN registries SHALL raise on duplicate (unique by cons... | `test_output_registry.py` | PASS |
 | REQ-OR-04 | `register_alias()` SHALL enforce phase ordering — target must already be in `_canonical` | `test_output_registry.py` | PASS |
-| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_s... | `test_output_registry.py` | PASS |
+| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_s... (NOTE: code at HEAD diverges — Key_A registers as an alias, Key_F as scoped; the test pins the weaker no-scoped-Key_A reading; reconciliation filed DOCS-SCRUB-F2) | `test_output_registry.py` | PASS |
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `test_output_registry.py` | PASS |
 | REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join w... | `test_output_registry.py` | PASS |
-| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no regis... | `test_output_registry.py` | PASS |
+| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no regis... (NOTE: code at HEAD diverges — Key_A registers as an alias, Key_F as scoped; the test pins the weaker no-scoped-Key_A reading; reconciliation filed DOCS-SCRUB-F2) | `test_output_registry.py` | PASS |
 | REQ-OR-09 | The FORMULA sysml-QN key SHALL be registered per-segment sanitized (`sanitize_qualified_name`), and the per-collision alias line SHALL be DEBUG with one WARNING count-summary at build (Item 7 / D5, lockstep site 1) | `test_output_registry.py`, `test_output_registry_construction.py`, `test_warning_reconciliation.py` | PASS |
 
 ### ORCH
@@ -432,6 +434,7 @@ the documentation rather than executable code.
 | REQ-REG-05 | CalcUsage, computed attribute, and aggregation modules SHALL all derive paths from design... | `test_gen_registry.py` | PASS |
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | `test_gen_registry.py` | PASS |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | `test_gen_registry.py` | PASS |
+| REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | `test_sc11_recheck.py` | PASS |
 
 ### RES
 
@@ -461,6 +464,18 @@ the documentation rather than executable code.
 | REQ-SNAP-05 | AST fields are None (not serialized Java objects) | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-06 | Path fields are Path instances, not strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-07 | Enum fields are typed enum instances, not raw strings | `test_extraction_snapshots.py` | PASS |
+| REQ-SNAP-08 | Promoted snapshot helpers live only in `src`; no second copy (INV-3) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` is a hard error before deserialization (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-10 | Re-captured expression-bearing snapshot carries `compilation_results` (INV-5) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-11 | Version-current snapshot missing `compilation_results` degrades with a warning (V4) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-12 | Stale source hash warns; run continues (V3) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-13 | Snapshot context has null extractor/backtracker and still generates (INV-4/B1) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-14 | `generate --from-snapshot` completes with no license at runtime (INV-1) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-15 | No provenance/version text appears in a generated artifact (INV-6) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-16 | CLI accepts exactly one extraction input; rejects `--design-path-filter` + snapshot (INV-7/V6) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-17 | CalcUsage auto-implements from a snapshot (SC-10) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-18 | The lone `generation_timestamp` template var has zero render sites | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-19 | Live generation is byte-identical to snapshot generation, incl. symlinked models (license-gated; skips cleanly without a license, verified live during Item 2) | `test_snapshot_generation.py` | PASS |
 
 ### SR
 

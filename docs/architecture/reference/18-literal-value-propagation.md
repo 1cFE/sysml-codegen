@@ -49,6 +49,8 @@ split. The PartDef says so. The JSON template should reflect that:
 | REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered by later terms | `elif literal_default is not None` backfill blocks in both SumTerm and SingletonTerm handling |
 | REQ-LVP-06 | `usage_type_map` SHALL be threaded from [`HierarchyExtractionResult`](09-data-models.md) through [`build_computation_graph()`](07-graph-assembly.md) to `_build_aggregation_module()` | `pipeline_builder.py` passes `hierarchy_data.usage_type_map` to `build_computation_graph()`, which forwards it to `_build_aggregation_module()` |
 | REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_REQUIRED` | Compilability conditional in `_build_aggregation_module()` |
+| REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the most-specific owned FeatureTyping target (not `next(iter(member.types))`); incomparable multi-typings resolve sorted-first with a V10 warning | `most_specific()` selection in `extract_hierarchy_data()` (`extraction/hierarchy_resolver.py`) |
+| REQ-LVP-09 | `_index_usage_level_retypes` SHALL index usage-level retypes of inherited part usages (`part hif_plant : Base { part :>> driver : Subtype }`) into `usage_type_map`, keyed by the CONTAINER usage's instance QN, limited to GENUINE retypes (a `:>>` whose most-specific owned type differs from the base def's declared type for that member) so value-only `:>>` overrides are excluded | `_index_usage_level_retypes()` in `extraction/hierarchy_resolver.py` |
 
 ---
 
@@ -152,6 +154,20 @@ in the shared `entry_points` dict. The orchestrator sees the default when groupi
 
 ---
 
+## Related Path: Design-Override Literals on Calc-Usage Bindings
+
+Aggregation terms are not the only place modeled literals reach entry-point
+defaults. Design-level `:>>` LITERAL overrides -- including those declared on a
+plain typed usage's members, kept only when the RHS is a literal (REQ-HR-08) --
+are captured by `extract_design_overrides()` (`extraction/hierarchy_resolver.py`)
+and applied by `_rewrite_virtual_bindings()` (`orchestration/pipeline_builder.py`),
+which rewrites the matching CalcUsage binding to a LITERAL binding carrying the
+value. Those literals then surface as entry-point defaults through normal
+binding classification. That path is separate from the
+`_find_literal_redefinition()` lookup this document describes.
+
+---
+
 ## The usage_type_map
 
 `HierarchyExtractionResult.usage_type_map: dict[tuple[str, str], str]`
@@ -162,6 +178,18 @@ in the shared `entry_points` dict. The orchestrator sees the default when groupi
 {("Lib__Site_Infrastructure", "permitting"): "Lib__Permitting_Interconnect",
  ("Lib__Solar_Array", "pv_module"):          "Lib__PV_Module"}
 ```
+
+Two later refinements changed how the map is built (both in
+`extraction/hierarchy_resolver.py`):
+
+- The type recorded for each usage is the **most-specific owned FeatureTyping
+  target**, not an arbitrary first entry from `member.types`; incomparable
+  multi-typings pick sorted-first and warn (V10). (REQ-LVP-08)
+- **Usage-level retypes** of inherited part usages
+  (`part hif_plant : Base { part :>> driver : Subtype }`) are also indexed,
+  keyed by the container usage's instance QN instead of a PartDef QN --
+  `_index_usage_level_retypes()`, genuine retypes only, so value-only `:>>`
+  overrides stay out of the map. (REQ-LVP-09)
 
 Threaded: `HierarchyExtractionResult` -> `build_pipeline_context()` ->
 `build_computation_graph()` -> `_build_aggregation_module()`.

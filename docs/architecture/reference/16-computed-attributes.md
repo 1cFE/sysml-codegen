@@ -19,7 +19,8 @@ compiles FORMULA patterns into Python code via the [expression compiler](14-expr
 | REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | Included in list for reporting; no module or alias emitted |
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or LITERAL | 3-value enum in `resolution/graph_builder.py`; `_build_attribute_resolution_map()` assigns one per input |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `input_names = siblings - {self_name}` prevents circular dependency |
-| REQ-CA-09 | The two EXPOSE_PURE name-drop warnings — the key-not-found warning in `_resolve_expose_pure` (`resolution/graph_builder.py`) and the Phase-3 registration warning (`orchestration/output_registry_builder.py`) — SHALL state plainly that the derived-attribute name is dropped from generated output and name the canonical channel carrying the value. Wording-only; the malformed-refs warning is unchanged. | Warning strings reworded per `modeling-assumptions.md` V-rule shape. **Real-fixture test deferred to Item 8** (a minimal shape-A part-def EXPOSE fixture fires the malformed-refs path, not the reworded warnings — see verification matrix). |
+| REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` |
+| REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure`, `resolution/graph_builder.py`) for the resolvable case | `test_wi014_toy.py` |
 
 ```sysml
 part def Solar_Array {
@@ -38,10 +39,15 @@ Source: `src/sysml_codegen/extraction/computed_attribute_extractor.py`
 
 ---
 
-## The 5 Classifications
+## The Classifications: 5 Stable + 1 Transient
 
 `ComputedAttributeClassification` (in `extraction/data_models.py`, see [data models](09-data-models.md)) classifies
-each attribute expression by analyzing its feature references (REQ-CA-01):
+each attribute expression by analyzing its feature references (REQ-CA-01). Five
+values are stable — they are what downstream readers observe. The enum carries a
+sixth, transient value, `EXPOSE_CHAIN_TENTATIVE` (Item 10): it exists only between
+the extraction-time leaf tag and the Phase-3b confirm pass, which finalizes it to
+`EXPOSE_PURE` or reverts it to `FORMULA`. No reader ever observes it (INV-F). See
+[Multi-Hop EXPOSE](#multi-hop-expose-tentative-leaf-tag--confirm-pass-req-ca-10).
 
 ### FORMULA
 
@@ -81,6 +87,17 @@ A `FeatureChainExpression` mixed with arithmetic (e.g., `cost_model.total * 1.1`
 **Pipeline effect**: deferred. Currently no module or alias is generated.
 Future work: decompose into a FORMULA module that reads the exposed output.
 
+### EXPOSE_CHAIN_TENTATIVE (transient)
+
+A pure `FeatureChainExpression` whose `reference_chain` has ≥ 2 segments rooted at
+a part-typed waypoint (e.g., `tf_coil.volume_calc.volume`) — a *candidate* multi-hop
+EXPOSE.
+
+**Pipeline effect**: none directly. The Phase-3b confirm pass finalizes it to
+EXPOSE_PURE (registering the transitive channel) or reverts it to FORMULA before
+any reader runs. See
+[Multi-Hop EXPOSE](#multi-hop-expose-tentative-leaf-tag--confirm-pass-req-ca-10).
+
 ### LITERAL
 
 Pure constant, no feature references (e.g., `attribute pi = 3.14159`).
@@ -119,7 +136,10 @@ Step 2: For each ref, classify by QN:
       ⚠ Likely unreachable for valid SysML (see UNRESOLVABLE note above)
 Step 3: Decision:
   - any unresolvable_refs                             → UNRESOLVABLE
-  - no calc_refs (only sibling refs)                  → FORMULA
+  - no calc_refs (only sibling refs):
+      well-formed multi-hop chain (INV-E gate,
+      _is_wellformed_multihop_chain)                  → EXPOSE_CHAIN_TENTATIVE
+      otherwise                                       → FORMULA
   - calc_refs + pure FeatureChainExpression + no siblings → EXPOSE_PURE
   - calc_refs + anything else                         → EXPOSE_COMPUTED
 ```
@@ -248,10 +268,11 @@ class AttributeResolution:
 `ca.is_on_part_definition`:
 
 - **Part usage (shape B)** — unchanged. It still calls `_resolve_expose_pure`, so a
-  genuinely unresolvable shape-B EXPOSE still warns at `graph_builder.py:796`.
+  genuinely unresolvable shape-B EXPOSE still warns from `_resolve_expose_pure`
+  (`resolution/graph_builder.py`).
 - **Part def (shape A)** — does **not** call the refs parser. On a part def the
   calc-usage instance names are absent from `calc_usage_names`, so `_resolve_expose_pure`
-  could not split the refs and would fire the malformed-refs warning at `:796` — the
+  could not split the refs and would fire its malformed-refs warning — the
   Item-1 interim warning. Item 10 resolves shape A per instance through the
   `_scoped_alias` namespace instead, and this per-def map is structurally
   instance-blind, so shape A takes a LITERAL fallback (identical to the old

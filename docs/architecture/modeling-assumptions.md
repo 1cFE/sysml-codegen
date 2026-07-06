@@ -129,6 +129,7 @@ Design attributes may contain several kinds of expressions, each with different 
 | `= 3.14159 * 2.0` | 0 | True Static | PASS |
 | `= length * width` (sibling attrs only) | >=1 (siblings) | FORMULA | PASS (generates pipeline module) |
 | `= my_calc.output` | 1 (EXPOSE) | EXPOSE Pattern | PASS (channel alias) |
+| `= tf_coil.volume_calc.volume` (multi-hop chain) | 1 (EXPOSE, confirmed transitively) | EXPOSE Pattern | PASS (channel alias to the transitive channel) |
 | `= my_calc.output * 0.95` | 1+ (calc output + arithmetic) | Derived expression | FAIL (requires CalcDef) |
 | `= calc1.output + calc2.output` | >=1 (calc output refs) | Derived expression | FAIL (requires CalcDef) |
 
@@ -177,6 +178,20 @@ part subsystem {
 ```
 
 This is permitted because it introduces no new computation -- it is pure value forwarding. Consumers bind to `subsystem.exposed_name` without knowing the internal calc structure.
+
+**Multi-hop chains (Item 10 / REQ-CA-10).** The exposed reference may reach through
+nested parts: `attribute magnet_volume_total : Real = tf_coil.volume_calc.volume`.
+Extraction alone cannot tell whether such a chain lands on a calc output, so it is
+classified tentatively (`EXPOSE_CHAIN_TENTATIVE`) and confirmed during registry build
+(the Phase 3b confirm walk): a chain that resolves transitively to a canonical channel
+becomes an EXPOSE alias of that channel; one that does not reverts to FORMULA
+treatment. The confirm walk is reconstructed when generating from a snapshot, so
+offline and live runs wire the same channel.
+
+**Part-def EXPOSE (shape A).** The EXPOSE attribute may also live on a `part def`
+(REQ-CA-03). It then expands per design instance: each instance's consumers resolve to
+that instance's own channel, so two siblings of the same type never share (or collide
+on) an exposed name. The part-usage form shown above is shape B.
 
 **What "exposed_name" means concretely (Item 5 / Item 11).** The name a consumer
 binds to is the derived, *sanitized* `python_name`, not the raw SysML name. Item 5
@@ -304,6 +319,20 @@ templates — its type list carries only the declared type, so the supertype-own
 finds no instantiation path to it. Supertype-chain template inheritance for plain usages needs
 a deliberate specialization walk (deferred; MFE-epic note).
 
+**Values through the specialization chain.** A retyped part's specialized-def `:>>`
+values participate in binding resolution with a fixed precedence: **usage override >
+specialized-def `:>>` > base def** (REQ-VBR-10). This holds whether the retype sits on
+the def or on a part usage (the two-level shape, REQ-VBR-11) — it is how a consumer calc
+declared on a base def reaches a value or channel supplied by the subtype (e.g. the
+`gamma → lcoe` wiring).
+
+**Value-carrying redefinitions use the bare member form.** Every `:>>` shown above is
+the bare form (`:>> attr = value`), which parses as a ReferenceUsage member and is
+captured — on template-instantiating usages (all RHS kinds) and on plain typed usages
+(literal RHS only; Item 9 / REQ-HR-08). The `attribute :>> attr = <expression>` form
+(an AttributeUsage redefinition) is **not captured** — it is currently dropped at
+extraction without a diagnostic. Use the bare form.
+
 ---
 
 ## 6. Uniform-Array Assumption for Aggregation
@@ -376,7 +405,8 @@ it flows through the pipeline as a normal output channel, and gate on that value
 
 ## Validation Rules
 
-The extraction phase enforces these rules to catch modeling violations early:
+The pipeline enforces these rules to catch modeling violations early. V1–V10 fire at
+extraction time; V11 fires at the generation boundary (see the V11 note below):
 
 | Rule | Condition | Error |
 |------|-----------|-------|

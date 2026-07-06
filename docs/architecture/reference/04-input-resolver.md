@@ -81,7 +81,7 @@ instance path + attribute), so `consumer_scope` is always non-empty.
 Example: `module_eqn = "SolarBatteryDesign__solar_array__capital_cost"` →
 `consumer_scope = "solar_array"`.
 
-## The five strategies
+## The four strategies
 
 Each strategy is a callable: `(ref, ctx) -> CanonicalChannel | None`. Returns a
 canonical channel on success, `None` to defer to the next strategy (REQ-IR-02).
@@ -107,22 +107,23 @@ channel: CanonicalChannel | None = ctx.output_registry.scoped_lookup(scoped_key)
 **correct** resolution path for all CHAIN bindings. See
 [10-output-registry](10-output-registry.md).
 
-**Aggregation form**: when `ctx.instance_path` is set, also tries the
-aggregation-scoped key (strips design prefix from `instance_path`, prepends
-to `ref` as a `ScopedKey`). This handles aggregation term resolution within
-the owning part hierarchy.
+At each form, if the scoped registry misses, the same key is retried against
+the alias registry (`alias_lookup`) -- this is what resolves EXPOSE_PURE
+cross-package references.
 
-**Cross-package form**: if scoped lookup misses, tries the alias registry for
-EXPOSE_PURE cross-package references:
+**Unscoped fallback**: if the consumer-scoped lookup misses, tries `ref`
+directly as a `ScopedKey` (e.g., `"solar_array.capital_cost"` referenced at
+plant level), again querying the scoped registry then the alias registry:
 
 ```python
-channel: CanonicalChannel | None = ctx.output_registry.alias_lookup(ScopedKey(ref))
+catalog_key = ScopedKey(ref)
+channel = ctx.output_registry.scoped_lookup(catalog_key)
+if channel is None:
+    channel = ctx.output_registry.alias_lookup(catalog_key)
 ```
 
-**Secondary form**: extract leaf name from `ref` (after last `.` or `::`),
-combine with parent part name from `ctx.consumer_scope` as a `ScopedKey`, retry.
-Handles REFERENCE bindings where the ref is a fully-qualified SysML path but the
-relevant output is registered under the parent part's short name.
+Refs without a dot return `None` immediately -- Strategy A only handles
+dotted paths.
 
 ### B: SysMLQNLookup
 
@@ -137,33 +138,37 @@ This handles REFERENCE bindings where extraction produces a SysML qualified name
 `CanonicalChannel | None`. The SysML QN registry contains Phase 1c FORMULA keys.
 See [10-output-registry](10-output-registry.md).
 
-If the SysML QN lookup misses, falls back to normalization: split on `::`,
-sanitize/lowercase the penultimate segment, construct a `ScopedKey`, and
-retry in the scoped registry.
+The lookup key is per-segment sanitized via `sanitize_qualified_name` before
+the query, matching the per-segment-sanitized registration key (so
+quoted-owner QNs match). On a miss, Strategy B returns `None` and defers to
+the next strategy -- there is no fallback lookup inside it.
 
 > **Note**: Strategy B has zero exercise for aggregation scope — no aggregation
 > term ref contains `::` across current fixture models. The backtracker's
-> REFERENCE Step 2 (leaf + parent_part scoped lookup) is more capable than
-> Strategy B's normalization fallback — see
+> REFERENCE Step 2 (leaf + parent_part scoped lookup,
+> `_resolve_reference_via_registry`) is more capable than Strategy B's single
+> direct lookup — see
 > [24-dual-resolution-architecture](24-dual-resolution-architecture.md).
 
 ### C: ChainRedefinitionFollow
 
 Search `ctx.redefinitions` for a CHAIN (`:>>`) [redefinition](01-extraction.md#redefinitions-redefinitiondata)
-matching the attribute in `ref`. If found, construct a `ScopedKey` from the
-chain's target and resolve through the scoped registry. Includes cycle detection
+matching the attribute in `ref`. If found, construct the candidate channel from
+the chain's target (via `get_channel_name` under `ctx.instance_path`) and verify
+it exists in the registry's canonical channels; if it does not, recurse on the
+chain's target. Includes cycle detection
 via a visited set. This connects [aggregation](13-aggregation-scoping.md) inputs
 to CalcUsage outputs through part hierarchy redefinitions.
 
 ### D: DesignAttributeLookup
 
-Match `ref` against `ctx.design_attrs` by name (bare, dotted, or SysML QN).
-Returns the design attribute's QN, which becomes the [entry point](06-entry-point-classifier.md)
-QN. Enables entry point deduplication: multiple modules binding to the same
-design attribute share one entry point.
-
-> **Note**: Strategy D has zero exercise for aggregation scope — no aggregation
-> entry point duplicates a design attribute name across current fixture models.
+Documented design intent: match `ref` against `ctx.design_attrs` so that
+multiple modules binding the same design attribute share one
+[entry point](06-entry-point-classifier.md). **At HEAD it is a no-op**: it
+returns `None` for every ref -- design attributes are entry points, not module
+outputs, so there is no `CanonicalChannel` for a strategy to return. An
+unresolved ref falls through to the [fallback](#fallback), which builds the
+entry point QN from `ctx.module_eqn` (not from the design attribute's QN).
 
 ## Truth table
 
@@ -173,7 +178,7 @@ design attribute share one entry point.
 | `"catf_radial_build.magnet_surface_area"` (cross-package CHAIN) | `"catf_tf_system"` | **A** (alias) | scoped miss → `alias_lookup(ScopedKey("catf_radial_build.magnet_surface_area"))` → EXPOSE_PURE alias → `module_output` |
 | `"AttrExprProbeDesign::probe_design::area"` (REFERENCE) | `"probe_design"` | **B** | `sysml_qn_lookup(SysMLQN("AttrExprProbeDesign::probe_design::area"))` → Phase 1c key → `module_output` |
 | `"pv_module.capital_cost"` (`:>> calc_cost.total`) | `"plant.solar_array"` (agg) | **C** | follows CHAIN redef → `ScopedKey` → `scoped_lookup()` → upstream channel |
-| `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | **D** | `entry_point`, QN `"SolarArray__panel_efficiency"` |
+| `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | fallback (D is a no-op) | `entry_point`, QN `"<module_eqn>__panel_efficiency"` |
 | `"unknown_param"` | `"plant.battery_pack"` | fallback | `entry_point`, QN `"<module_eqn>__unknown_param"` |
 
 Row 1 is the critical case: a bare CHAIN `source_path` disambiguated by prepending
@@ -207,9 +212,10 @@ falls through to create an entry point.
 If no strategy matches (REQ-IR-06):
 
 ```python
+param_name = ref.rsplit(".", 1)[-1] if "." in ref else ref
 return InputSource(
     source_type="entry_point",
-    qualified_name=f"{ctx.module_eqn}__{extract_param_name(ref)}",
+    qualified_name=f"{ctx.module_eqn}__{param_name}",
 )
 ```
 

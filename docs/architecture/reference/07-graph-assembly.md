@@ -4,9 +4,12 @@ After [resolution](03-resolution-overview.md), [module construction](05-module-f
 and [entry point classification](06-entry-point-classifier.md), every piece of the
 pipeline exists as a separate data structure. Graph assembly is the final step: it
 sorts the modules into a valid execution order, validates that every wire connects
-to something real, and packs everything into the
+to something real, surfaces EXPOSE_PURE modeler names as output aliases, and packs
+everything into the
 [`ComputationGraph`](09-data-models.md#resolution-models) -- the single artifact
-the [generation layer](08-generation.md) consumes.
+the [generation layer](08-generation.md) consumes. Assembly also carries the
+Step-4 fall-through entry points onto the graph so the generation boundary can
+run the params-coverage check (V11) without reaching back into analysis data.
 
 ## Requirements
 
@@ -15,10 +18,11 @@ the [generation layer](08-generation.md) consumes.
 | REQ-GA-01 | `execution_order` SHALL be a valid topological sort: no module reads from a module that executes later. | `for m in modules: for i in m.inputs: if i.source.source_type == "module_output": assert producer.execution_order < m.execution_order` |
 | REQ-GA-02 | If a cycle exists, `_unified_topological_sort` SHALL raise `CircularDependencyError` listing the participating modules. | `len(sorted_names) != len(modules)` triggers `CircularDependencyError(cycle_modules)` |
 | REQ-GA-03 | Every `module_output` `producer_channel` SHALL resolve to a declared output channel. | `_validate_channel_references()` raises `ValueError` if any channel is missing |
-| REQ-GA-04 | A module SHALL NOT depend on itself, even if its own output channel name appears in its inputs. | Self-reference guard: `dep_module != m.name` (line 1248) |
-| REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly: sorted `modules`, `entry_point_groups`, and `execution_order` names list. | `ComputationGraph` Pydantic model has exactly 3 fields |
-| REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module ordering). | Assembly: `execution_order=[m.name for m in modules]` (line 259) |
+| REQ-GA-04 | A module SHALL NOT depend on itself, even if its own output channel name appears in its inputs. | Self-reference guard: `dep_module != m.name` in `_unified_topological_sort` |
+| REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly the reviewed field set: sorted `modules`, `entry_point_groups`, `execution_order`, in-memory `fallback_entry_points` (REQ-GA-08), serialized `output_aliases` (REQ-DM-09); any field-set change is a deliberate reviewed rev. | Exact-set conformance test flips red on any field change -- see the model section below |
+| REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module ordering). | Assembly: `execution_order=[m.name for m in modules]` in `build_computation_graph` |
 | REQ-GA-07 | The topological sort SHALL run in O(V + E) time using Kahn's algorithm with `deque`. | Implementation uses `collections.deque` with `popleft()` |
+| REQ-GA-08 | A two-layer params-coverage check SHALL exist: a pure collector `collect_uncovered_params(graph)` returning the wired fell-through-valueless violations (sibling to REQ-GA-03), and an always-strict generation boundary raising V11 on any violation. `ComputationGraph.fallback_entry_points` (in-memory, `exclude=True`) feeds it. | `test_uncovered_params.py`, `test_graph_assembly.py`, `test_data_models.py` |
 
 ---
 
@@ -54,7 +58,8 @@ Kahn's algorithm produces a deterministic order based on insertion sequence.
 
 ## Kahn's algorithm in `_unified_topological_sort`
 
-The implementation lives in `graph_builder.py` (line 1218). It operates on
+The implementation is `_unified_topological_sort` in
+`src/sysml_codegen/resolution/graph_builder.py`. It operates on
 the fully-constructed list of [PipelineModule](09-data-models.md#resolution-models)
 objects -- [CalcUsage, FORMULA, and aggregation](05-module-factory.md) modules
 all together.
@@ -81,8 +86,9 @@ for m in modules:
         if inp.source.source_type == "module_output" and inp.source.producer_channel:
             dep_module = channel_to_module.get(inp.source.producer_channel)
             if dep_module and dep_module != m.name:  # self-reference guard
-                graph[m.name].append(dep_module)
-                in_degree[m.name] += 1
+                if dep_module not in graph[m.name]:  # dedupe repeated edges
+                    graph[m.name].append(dep_module)
+                    in_degree[m.name] += 1
 ```
 
 **3. Invert to get successors.** Kahn's needs to know "which modules become
@@ -166,6 +172,48 @@ transitive [binding resolution](04-input-resolver.md) failures -- before any
 code is generated. Without this, bad wiring would surface as mysterious
 runtime errors in TEAx.
 
+## Step 8.5: Surfacing EXPOSE names as output aliases (REQ-DM-09)
+
+After channel validation, `_build_output_aliases` (called at the end of
+`build_computation_graph` in `src/sysml_codegen/resolution/graph_builder.py`)
+turns every resolvable EXPOSE_PURE modeler name into an
+[`OutputAlias`](09-data-models.md#resolution-models) on the graph. An alias
+says: this canonical output channel also carries a modeler-chosen name on a
+specific instance, and the generated pipeline should write its capture file
+under that name (`{instance_path}__{alias_name}.json` via the
+`OutputAlias.output_filename` property in `resolution/models.py`).
+
+Two sources feed it, matching the two EXPOSE shapes:
+
+- **Shape A (part-def EXPOSE)**: read from the registry's structured
+  `_scoped_alias` namespace, already expanded per design instance and keyed
+  `(instance_path, python_name) -> channel`.
+- **Shape B (part-usage EXPOSE)**: read from the `expose_pure`
+  `ChannelAlias` objects threaded in via the `channel_aliases` argument, each
+  resolved to its canonical channel through the registry.
+
+Both build sites must thread `channel_aliases`, and both do: the live path
+(`build_pipeline_context` in `src/sysml_codegen/orchestration/pipeline_builder.py`)
+and the snapshot path (`build_full_graph_from_snapshot` in
+`src/sysml_codegen/snapshot/graph_rebuild.py`). If a caller omitted it, shape B
+would silently not surface -- which is why the parameter is wired at both sites
+rather than defaulted away.
+
+Two invariants hold on the result:
+
+- **Every alias points at a real output.** An alias whose channel is not a
+  declared graph output is a wiring regression on a full run
+  (`include_all=True`, raises `ValueError`); on a targeted run the channel may
+  be legitimately pruned, so the alias is dropped with a DEBUG log.
+- **Deterministic order.** The list is stable-sorted by
+  `(instance_path, alias_name)` so regeneration never produces an
+  ordering-only diff in committed baselines.
+
+The alias list is consumed by [pipeline YAML
+generation](21-pipeline-yaml-generation.md) (`_build_alias_filename_map` /
+`_build_exit_points` in `src/sysml_codegen/generation/pipeline.py`): the exit
+point stays keyed by the canonical channel; only its capture filename changes.
+
 ## ComputationGraph: the final data model (REQ-GA-05)
 
 The assembly step returns a [`ComputationGraph`](09-data-models.md#resolution-models)
@@ -176,7 +224,27 @@ class ComputationGraph(BaseModel):
     modules: list[PipelineModule]             # in execution order
     entry_point_groups: list[ParameterGroup]  # from 06-entry-point-classifier
     execution_order: list[str]                # module names in order
+    fallback_entry_points: set[str] = Field(default_factory=set, exclude=True)
+    output_aliases: list[OutputAlias] = Field(default_factory=list)
 ```
+
+The three core fields (REQ-GA-05) describe the pipeline itself. The two later
+additions differ deliberately in serialization:
+
+- `fallback_entry_points` is **in-memory only** (`exclude=True`). It records
+  the QNs of Step-4 fall-through entry points -- bound bindings that matched no
+  resolution strategy and no design attribute -- so the params-coverage check
+  (below) can run over the graph alone. It is an analysis artifact consumed at
+  the generation boundary; excluding it keeps committed graph baselines from
+  churning.
+- `output_aliases` is a **serialized** schema field (REQ-DM-09). It describes
+  real generated output (the named exit-point captures), so it appears in every
+  serialized graph and in committed baselines.
+
+Before the graph is returned, entry-point groups are sorted by name and the
+parameters within each group by qualified name (Step 9, REQ-BASE-06). Discovery
+order shifts between runs and between the live and snapshot paths; sorting the
+graph itself, not just the rendered YAML, keeps every consumer deterministic.
 
 ### Concrete example
 
@@ -202,6 +270,39 @@ ComputationGraph(
 `capacity_calc` runs first (reads from [entry points](06-entry-point-classifier.md)
 only). `battery_sizing` reads capacity from `capacity_calc`'s output.
 `cost_rollup` reads from both upstream modules.
+
+## The params-coverage check (V11, REQ-GA-08)
+
+Some entry points fall through Step-4 binding resolution: the binding is bound,
+but no resolution strategy and no design attribute produced a value for it.
+Assembly copies their QNs onto `graph.fallback_entry_points`. If such an entry
+point also carries no default value AND a module input is wired to it, the
+generated JSON never mints the params key while the pipeline still references
+it -- a guaranteed `KeyError` when TEAx loads the inputs. V11 exists to catch
+that at generation time instead.
+
+The check is two-layered:
+
+- **Pure collector.** `collect_uncovered_params` in
+  `src/sysml_codegen/resolution/graph_builder.py` walks the graph and returns
+  an `UncoveredInput` per violation. A module `entry_point` input is a
+  violation when all three hold: its QN is in `fallback_entry_points`
+  (fell through), its entry point's `default_value is None` (valueless), and a
+  surviving module input references it (wired). Fell-through entry points that
+  got a value, and non-fall-through null-default entry points (legitimate
+  user-fill), are not violations. The collector raises nothing -- it just
+  reports.
+- **Always-strict generation boundary.** `_reconcile_params_coverage` in
+  `src/sysml_codegen/cli/__init__.py` runs before the output directory is
+  cleared, beside the duplicate-output-path check. Any wired violation raises
+  `CodeGenerationError` (the V11 message) and aborts the run. There is no
+  escape-hatch flag.
+
+The unwired remainder gets softer treatment. `collect_unwired_fallthrough`
+(same module) returns the fell-through, valueless entry points that no module
+input references. Nothing will `KeyError` at runtime, so the boundary logs them
+as a single WARNING reconciliation summary -- and logs it before the V11 check,
+so the digest reaches the operator even when generation aborts.
 
 ## Step 6.9: param_group propagation
 

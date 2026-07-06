@@ -5,18 +5,20 @@ The generation layer takes the [ComputationGraph](09-data-models.md#resolution-m
 Python code, pipeline YAML, and JSON input templates via Jinja2 templates.
 
 Source: `generation/pipeline.py`, `modules.py`, `schemas.py`, `stencils.py`,
-`entry_point.py`, `registry.py`, and 12 Jinja2 templates in `templates/`.
+`entry_point.py`, `registry.py`, `test_gen.py`, and the Jinja2 templates in
+`templates/` (10 template files, 8 of which have render sites -- see Template
+System below).
 
 ## Requirements
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-GEN-01 | [Pipeline YAML generation](21-pipeline-yaml-generation.md) SHALL consume only `ComputationGraph` -- no [extraction models](01-extraction.md). | `generate_pipeline_yaml(graph, package_name, template_env)` signature has no `CalculationDefinitionData` |
-| REQ-GEN-02 | Every [PipelineModule](09-data-models.md#resolution-models) SHALL produce exactly one module wrapper file in `modules/`. | One `generate_teax_module()` call per calc def |
-| REQ-GEN-03 | Multi-output modules (2+ outputs) SHALL get a `MultiOutput` schema in `schemas/`; single-output modules SHALL use `RootModel[float]` directly. | `should_use_multioutput(calc_def)` gates schema generation |
-| REQ-GEN-04 | FULLY_COMPILABLE calc defs SHALL produce auto-implemented stencils; all others SHALL produce `NotImplementedError` stubs. | `generate_implementation()` dispatches on `CalcDefCompilationResult.compilability` |
+| REQ-GEN-02 | Every [PipelineModule](09-data-models.md#resolution-models) SHALL produce exactly one module wrapper file in `modules/`. | One `generate_teax_module(module, ...)` call per `PipelineModule` (`modules.py`) |
+| REQ-GEN-03 | Multi-output modules (2+ outputs) SHALL get a `MultiOutput` schema in `schemas/`; single-output modules SHALL use `RootModel[float]` directly. | `generate_multioutput_model()` (`schemas.py`) returns `None` when a module has fewer than 2 outputs |
+| REQ-GEN-04 | FULLY_COMPILABLE calc defs SHALL produce auto-implemented stencils; all others SHALL produce `NotImplementedError` stubs. | `generate_implementation()` (`stencils.py`) dispatches on `module.auto_impl_context`, which is populated only for FULLY_COMPILABLE modules |
 | REQ-GEN-05 | Each [ParameterGroup](09-data-models.md#resolution-models) SHALL produce one JSON template (`inputs/`) and one Pydantic schema (`schemas/`). | `generate_all_derived_jsons_from_graph()` and `generate_all_derived_schemas_from_graph()` iterate groups |
-| REQ-GEN-06 | SysML type mapping (`Real`->`float`, `Integer`->`int`, `Boolean`->`bool`, `String`->`str`) SHALL be consistent across all generators. | `generation/type_mapping.py` provides shared `map_sysml_type_to_python()` and `map_sysml_type_to_rootmodel_wrapper()`. Generators working with raw SysML types (modules.py, entry_point.py) call these functions; graph-consuming generators (pipeline.py, schemas.py) use pre-resolved `python_type` from `PipelineModule`. 20 conformance tests in `tests/conformance/test_type_mapping_consolidation.py`. |
+| REQ-GEN-06 | SysML type mapping (`Real`->`float`, `Integer`->`int`, `Boolean`->`bool`, `String`->`str`) SHALL be consistent across all generators. | `generation/type_mapping.py` provides shared `map_sysml_type_to_python()` and `map_sysml_type_to_rootmodel_wrapper()`. `entry_point.py` calls `map_sysml_type_to_python()` for raw SysML types; graph-consuming generators (pipeline.py, modules.py, schemas.py, stencils.py) use pre-resolved `python_type` from `PipelineModule`. Conformance tests in `tests/conformance/test_type_mapping_consolidation.py`. |
 | REQ-GEN-07 | Every generated module SHALL be registered in `__init__.py` for TEAx framework discovery. | `generate_registry_function()` produces `MODULE_REGISTRY` dict |
 
 ---
@@ -149,38 +151,33 @@ is a series of transformations from graph objects to template dicts:
 2. Convert [ParameterGroup](09-data-models.md#resolution-models) list to entry point dicts.
 3. Convert each [PipelineModule](09-data-models.md#resolution-models) to a
    context dict with typed inputs/outputs.
-4. Collect all output channels as exit points.
+4. Collect all output channels as exit points (`_build_exit_points`). An
+   aliased channel's output filename is overridden to
+   `{instance_path}__{alias_name}.json` via `_build_alias_filename_map`
+   (first-wins per channel over the sorted `graph.output_aliases` -- REQ-PY-08);
+   the exit **key** stays the canonical channel, and unaliased channels keep
+   `{channel}.json`.
 5. Render `pipeline_yaml.jinja2`.
 
 This is the target architecture for all generators.
 
-## Current Gap (REQ-PIPE-07 — see [26](26-pipeline-module-migration.md))
+## Generator Migration Status (REQ-PIPE-07 — see [26](26-pipeline-module-migration.md))
 
-Type mapping is consolidated into `generation/type_mapping.py`. Generators
-that work with raw `CalculationDefinitionData` (modules.py, entry_point.py) call
-the shared functions. Graph-consuming generators read pre-resolved `python_type`
-from `PipelineModule` fields.
-
-The other generators still consume raw [CalculationDefinitionData](09-data-models.md#extraction-models):
+The migration to graph-only generation is complete (REQ-PIPE-07 verified in the
+[verification matrix](../verification-matrix.md)). All generators consume
+`PipelineModule` / `ComputationGraph`:
 
 ```python
-def generate_teax_module(calc_def: CalculationDefinitionData, ...)     # modules.py
-def generate_multioutput_model(calc_def: CalculationDefinitionData, ...) # schemas.py
-def generate_implementation(calc_def: CalculationDefinitionData, ...)   # stencils.py
+def generate_teax_module(module, ...)        # modules.py
+def generate_multioutput_model(module, ...)  # schemas.py
+def generate_implementation(module, ...)     # stencils.py
 ```
 
-They re-derive information the graph already contains (REQ-PIPE-07 gap — target: Phase 7.6).
-
-Problems:
-- **Duplicated logic** -- type mapping, [naming](15-naming-conventions.md),
-  output pattern detection repeated across files.
-- **Drift risk** -- [graph builder](05-module-factory.md) changes may not propagate.
-- **Missing graph context** -- wrappers do not see wiring information; they only
-  see the calc def's abstract parameter list.
-
-Ideal end state: all generators accept `PipelineModule` or the full
-`ComputationGraph` as primary input (like `pipeline.py`). Raw extraction
-data only for documentation metadata (doc comments, source locations).
+Type mapping is consolidated into `generation/type_mapping.py`; graph-consuming
+generators read pre-resolved `python_type` from `PipelineModule` fields, and
+`entry_point.py` maps raw SysML types via `map_sysml_type_to_python()`. The old
+`*_from_graph` names survive as backward-compatibility aliases (e.g.,
+`generate_implementation_from_graph` in `stencils.py`).
 
 ## Template System
 
@@ -188,16 +185,17 @@ data only for documentation metadata (doc comments, source locations).
 |---|---|---|
 | `pipeline_yaml.jinja2` | `pipeline.py` | Pipeline YAML |
 | `teax_module.py.jinja2` | `modules.py` | Module wrappers |
-| `teax_module_stub.py.jinja2` | `modules.py` | Module stub wrappers |
 | `implementation_stencil.py.jinja2` | `stencils.py` | Stub stencils |
 | `auto_implementation.py.jinja2` | `stencils.py` | Auto-impl stencils |
 | `multioutput_model.py.jinja2` | `schemas.py` | Multi-output schemas |
-| `pydantic_schema.py.jinja2` | `schemas.py` | Pydantic schemas |
-| `entry_point_schema.py.jinja2` | `entry_point.py` | Entry point schemas |
 | `parameter_group_schema.py.jinja2` | `entry_point.py` | Parameter group schemas |
-| `constraint_validator.py.jinja2` | `schemas.py` | Constraint validators |
 | `registry_function.py.jinja2` | `registry.py` | Module registry |
-| `test_implementations.py.jinja2` | `stencils.py` | Test scaffolding |
+| `test_implementations.py.jinja2` | `test_gen.py` | Test scaffolding |
+
+Two further template files exist in `templates/` but have **no render sites**
+and produce no output: `pydantic_schema.py.jinja2` and
+`entry_point_schema.py.jinja2`. They are dead files -- nothing calls
+`get_template()` on them; removal is a filed cleanup, not a generation feature.
 
 The rendering flow (pipeline YAML as example):
 
@@ -213,17 +211,25 @@ write to disk.
 
 ### Template context variables (key generators)
 
-**`teax_module.py.jinja2`** (via `modules.py`):
-`module_name`, `class_name`, `input_class_name`, `input_attributes[]` (name,
-type_hint, description, default), `output_attributes[]`, `output_type_name`,
-`num_outputs`, `is_multi_output`, `implementation_function_name`, `package_name`.
+**`teax_module.py.jinja2`** (via `generate_teax_module` in `modules.py`):
+`class_name`, `input_class_name`, `output_class_name`, `schema_name`,
+`handler_name`, `impl_import_path`, `doc_comment`, `package_name`,
+`is_multioutput`, `input_attributes[]` (name, type_hint, description),
+`output_attributes[]` (name, description), `calc_expressions`, `sysml_source`,
+`primitive_imports`.
 
-**`implementation.py.jinja2`** (via `stencils.py`):
-`function_name`, `input_fields[]` (name, type), `output_fields[]` (name, type),
-`return_type`, `compiled_expression | None`, `calc_expressions[]`.
+**`implementation_stencil.py.jinja2` / `auto_implementation.py.jinja2`**
+(via `generate_implementation` in `stencils.py`, shared context from
+`_build_stencil_context_from_graph`):
+`function_name`, `calc_name`, `sysml_source`, `sysml_expressions`,
+`input_params[]` (name, type), `output_names`, `return_type`, `docstring`,
+`input_class_name`, `module_name`, `module_import_path`, `package_name`.
+The auto-impl template additionally receives the keys of
+`module.auto_impl_context`.
 
-**`entry_point_schema.py.jinja2`** (via `entry_point.py`):
-`class_name`, `fields[]` (name, type, default_value, description), `package_name`.
+**`parameter_group_schema.py.jinja2`** (via `generate_derived_group_schema` in
+`entry_point.py`):
+`class_name`, `description`, `fields[]` (name, type, description, default).
 
 ## Related Documents
 

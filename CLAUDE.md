@@ -24,8 +24,11 @@ uv run mypy src/
 # Lint
 uv run ruff check src/
 
-# Run code generation
+# Run code generation (live extraction; needs the syside license)
 uv run sysml-codegen generate --models path/to/models --output path/to/output --package-name my_package
+
+# Run code generation from a captured snapshot (license-free; mutually exclusive with --models)
+uv run sysml-codegen generate --from-snapshot path/to/snapshot --output path/to/output --package-name my_package
 ```
 
 ## Architecture
@@ -44,6 +47,12 @@ uv run sysml-codegen generate --models path/to/models --output path/to/output --
    - Pipeline YAML (`pipelines/`)
    - Parameter group schemas and JSON templates (`schemas/`, `inputs/`)
    - Module registry (`__init__.py`)
+
+5. **Snapshot** (`snapshot/`) - Serialized extraction snapshots decouple generation from
+   the syside license: `generate --from-snapshot` rebuilds the pipeline context from a
+   captured snapshot (versioned format with `snapshot_format_version`; CalcUsage
+   auto-implementation preserved via serialized `compilation_results`). See
+   `docs/architecture/reference/27-snapshot-generation.md`.
 
 ### Key Data Models
 

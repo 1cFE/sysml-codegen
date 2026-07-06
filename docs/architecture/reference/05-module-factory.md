@@ -2,8 +2,9 @@
 
 After the refactoring, module construction is decoupled from ad-hoc inline
 resolution. CalcUsage factories receive pre-resolved data (from the
-[backtracker](11-analysis-backtracker.md)). FORMULA and Aggregation factories
-delegate resolution to [`resolve_input()`](04-input-resolver.md). All three
+[backtracker](11-analysis-backtracker.md)). FORMULA factories use the
+pre-computed [attribute resolution map](16-computed-attributes.md); Aggregation
+factories delegate resolution to [`resolve_input()`](04-input-resolver.md). All three
 produce a [PipelineModule](09-data-models.md#resolution-models) + new
 [entry points](06-entry-point-classifier.md#two-entry-point-creation-paths).
 
@@ -12,7 +13,7 @@ produce a [PipelineModule](09-data-models.md#resolution-models) + new
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-MF-01 | All three factory functions SHALL be pure data transformers: return `(PipelineModule, dict[str, EntryPoint])`, no mutation of shared state. | Type signatures return tuples; no `entry_points[k] = v` inside factory bodies |
-| REQ-MF-02 | CalcUsage factory SHALL fail-fast (`ValueError`) on missing `binding_resolutions` key -- no fallback resolution. | `binding_resolutions[mapping_key]` raises `KeyError` wrapped as `ValueError` |
+| REQ-MF-02 | CalcUsage factory SHALL fail-fast (`ValueError`) on missing `binding_resolutions` key -- no fallback resolution. | `if mapping_key not in binding_resolutions: raise ValueError(...)` in `_build_pipeline_module()` |
 | REQ-MF-03 | FORMULA factory SHALL set `is_computed_attribute=True` and `compilability=FULLY_COMPILABLE`. | `assert module.is_computed_attribute and module.compilability == FULLY_COMPILABLE` |
 | REQ-MF-04 | Aggregation factory SHALL handle all three [extraction term types](01-extraction.md#aggregation-data-sumterm-singletonterm-localterm): SumTerm, SingletonTerm, LocalTerm. | Code paths exist for each; missing term type = `AttributeError` |
 | REQ-MF-05 | Every [ModuleInput](09-data-models.md#resolution-models) SHALL have exactly one [InputSource](04-input-resolver.md#inputsource-output-model) with `source_type` in {`module_output`, `entry_point`}. | `all(mi.source.source_type in {"module_output","entry_point"} for mi in module.inputs)` |
@@ -157,7 +158,7 @@ Resolution chain ([input resolver](04-input-resolver.md) with `AGG_STRATEGIES`):
 3. Entry point (no default) + `MANUAL_REQUIRED` compilability.
 
 When `multiplicity_attr` is present, adds a second input for the count
-(entry point, default = `multiplicity_count`, `python_type="int"`).
+(entry point, default = `multiplicity_count`, `python_type="float"`).
 
 ### 4b. SingletonTerm -- `child.attr` (no multiplication)
 
@@ -233,8 +234,8 @@ a shared dict. But the three types differ in HOW they resolve:
 | Aggregation | [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES` | Factory calls resolver |
 
 CalcUsage factories are truly pure data transformers -- lookup only, no
-resolution logic. FORMULA and Aggregation factories delegate to
-`resolve_input()` but own no resolution logic themselves. Entry points
+resolution logic. FORMULA factories read the pre-computed map; Aggregation
+factories delegate to `resolve_input()`. Entry points
 created by FORMULA/Aggregation factories are hardcoded to DESIGN_ATTRIBUTE;
 CalcUsage entry points receive full 3-strategy classification. See
 [06-entry-point-classifier](06-entry-point-classifier.md#two-entry-point-creation-paths).

@@ -6,6 +6,17 @@
 
 ## Active Work
 
+### docs-scrub — CERTIFIED (awaiting PR after the epic merges)
+Post-epic coherence pass over `docs/architecture/` on branch `docs-scrub` (off
+`upstream-findings-epic`): 31 docs verified/corrected against HEAD; matrix now
+248 = 236 PASS + 12 UNTESTED (SNAP/NC/REG rows added); thin docs 07/10/11/17/24
+closed; 22/23 verified live, 26 marked Historical; gate byte-identical
+(1989/4/5, ruff 21, mypy 109). Independent audit: Certify (3 gaps found+cured).
+Follow-ups filed: BACKLOG DOCS-SCRUB-F1..F4 (F4 = resolve_input() has zero
+production callers while its REQs are marked PASS). Artifacts:
+`.project/active/docs-scrub/{spec,plan,fact-sheet,audit}.md`. PR this branch
+separately once PR #3 merges.
+
 ### UPSTREAM-FINDINGS Epic — COMPLETE (awaiting PR review/merge)
 
 All 12 items landed and audited PASS on branch `upstream-findings-epic`

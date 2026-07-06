@@ -19,7 +19,7 @@ to decide whether a schema file is needed.
 |----|-------------|-------------|
 | REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | [graph_builder.py](07-graph-assembly.md): `field_name = "root"` when `len(output_attributes) == 1` |
 | REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `generate_multioutput_model()` returns `None` when `len < 2` |
-| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | Template: `{{ field.name }}` from `AttributeInfo.name` |
+| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | Template: `{{ field.name }}` from `ModuleOutput.field_name`, set from the output attribute name in [graph_builder](07-graph-assembly.md) |
 | REQ-OSR-04 | SysML types SHALL map to Python types per the [type mapping table](#type-mapping) | `map_sysml_type_to_python()` in `generation/type_mapping.py` |
 | REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | TEAx `create_registry()` treats defaulted fields as optional, not outputs |
 | REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | Both hardcode `field_name="root"`, `outputs=[output]` in [graph_builder](07-graph-assembly.md) |
@@ -30,13 +30,14 @@ to decide whether a schema file is needed.
 ## Single-Output Modules
 
 Return `Float` (`RootModel[float]`). The `Float` alias is defined in a **generated**
-`primitives.py` file (written by `cli/__init__.py:120-134`, not in source control):
+`primitives.py` file (written by `_generate_primitives()` in `cli/__init__.py`, not in
+source control):
 
 ```python
 Float = RootModel[float]
 ```
 
-Module wrapper template (`teax_module.py.jinja2:36`):
+Module wrapper template (`teax_module.py.jinja2`):
 ```python
 class EnergyProductionCalcModule(ModuleBase[EnergyProductionInput, Float]):
     def run(self, ...) -> ModuleResult[Float]:
@@ -119,7 +120,7 @@ accepted. Unknown types pass through unchanged with a warning.
 
 ## The Default Value Constraint
 
-**Template** (`multioutput_model.py.jinja2:12-16`):
+**Template** (`multioutput_model.py.jinja2`):
 
 ```jinja2
 {% if field.default %}

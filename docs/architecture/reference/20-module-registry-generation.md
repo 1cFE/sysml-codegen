@@ -86,8 +86,8 @@ class ModuleType:
 
     @classmethod
     def from_sysml(cls, sqn: SysMLQualifiedName) -> "ModuleType":
-        namespace = ".".join(s.lower() for s in sqn.package_segments)
-        class_name = f"{sqn.element_name}Module"
+        namespace = ".".join(sanitize_name(s).lower() for s in sqn.package_segments)
+        class_name = f"{sanitize_name(sqn.element_name)}Module"
         return cls(f"{namespace}.{class_name}" if namespace else class_name)
 
 @dataclass(frozen=True)
@@ -97,12 +97,15 @@ class PythonModulePath:
 
     @classmethod
     def from_sysml(cls, sqn: SysMLQualifiedName) -> "PythonModulePath":
-        directory = "/".join(s.lower() for s in sqn.package_segments)
-        return cls(directory, sqn.element_name.lower())
+        directory = "/".join(sanitize_name(s).lower() for s in sqn.package_segments)
+        return cls(directory, sanitize_name(sqn.element_name).lower())
 ```
 
 These classes are pure transformations -- correctness depends entirely on
-feeding them the right QN (design-scoped EQN, not library-scoped QN).
+feeding them the right QN (design-scoped EQN, not library-scoped QN). Each
+segment passes through `sanitize_name()` before lowercasing (Item 5 /
+REQ-NC-08), so a quoted SysML name emits a valid identifier instead of
+leaking quotes into class names or file paths.
 
 ---
 
