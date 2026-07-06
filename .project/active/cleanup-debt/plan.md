@@ -453,6 +453,21 @@ Every success criterion has a written, auditable answer; no disposition stops on
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** In Progress — **Phases 0–4 COMPLETE & committed; Phases 5–6 REMAINING** (budget-stopped 2026-07-06).
+
+### Session hand-off (budget stop)
+Phases 0–4 landed on `pipeline-truth-epic` (commits `3314264`, `d5032c3`, `529dc74`, `3ec4efa`, `024028b`).
+Tree GREEN: **suite 1999 passed / 4 skipped / 5 xfailed; ruff src 19; mypy src 104** (both ≤ the 20/105 gate).
+
+**Phase 5 (R4 aggregation-literal dispatch fix) — NOT STARTED.** Deferred intact so R4 is honored — the fix must NOT land without its reproduce-first probe. Remaining steps, in order:
+1. Author `tests/fixtures/agg_literal_probe/{library,design}.sysml` — an aggregation `:>>` whose RHS mixes a `sum(...)`/FCE term with a numeric literal (e.g. `sum(module.cost) + 5.0`).
+2. Register it in `scripts/capture_extraction_snapshots.py` MODELS; **capture at v2** via `--fixtures agg_literal_probe` (license path).
+3. Write `tests/conformance/test_agg_literal_dispatch.py` and **run it RED** (literal mis-dispatched to the invocation catch-all in `_walk_aggregation_ast`, `extraction/hierarchy_resolver.py`).
+4. Hoist the `is_literal_expression` branch above the invocation catch-all (mirror the Item-6 `reconstruct_expression` fix) → probe GREEN.
+5. Byte-identity gate: `git status` shows only the new `agg_literal_probe` files (v2 corpus otherwise identical).
+6. Add REQ-AST-10 to doc-19 + a `verification-matrix.md` row (verified-by the fixture); note in Item 7 ledger via BACKLOG.
+7. Retire the doc-19 "Known deviation" note (hand to Item 10); close the BACKLOG aggregation entry (`.project/backlog/BACKLOG.md:~204`, "Absorbed into ... Item 8") → Completed/struck.
+
+**Phase 6 (close-out) — NOT STARTED.** Assemble the count story (net −11 tests so far: 6 wrapper + 5 get_default_value; suite 2005→1999 with the +5 dotted-leaf pin and +? Phase-5 probe), SC-G final gate, D1 residue ledger (all FILE/NO-OP, in BACKLOG), `[ITEM7-PGD06]` activated, update `CURRENT_WORK.md`, suggest `/_my_audit`.
 </content>
 </invoke>
