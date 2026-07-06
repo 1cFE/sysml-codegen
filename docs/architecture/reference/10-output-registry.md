@@ -24,10 +24,10 @@ regardless of which format the binding used.
 | REQ-OR-02 | Each typed registry SHALL have its own exact-match lookup method — no single `resolve()` method that accepts any string format | `scoped_lookup(ScopedKey)`, `sysml_qn_lookup(SysMLQN)`, `alias_lookup(ScopedKey)`, `scoped_alias_lookup(ScopedAliasKey)` |
 | REQ-OR-03 | Collision policy: scoped and SysML QN registries SHALL raise on duplicate (unique by construction); alias registry SHALL refuse overwrites (first wins, warning logged) | `register_scoped()` and `register_sysml_qn()` raise; `register_alias()` warns |
 | REQ-OR-04 | `register_alias()` SHALL enforce phase ordering — target must already be in `_canonical` | Guard: `if canonical_channel not in self._canonical: return` |
-| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_stripped as `ScopedKey` (Aggregation), SysML QN as `SysMLQN` (FORMULA). Key_A, Key_D, Key_E full, Key_F, and bare keys SHALL NOT be registered. | Key format tables in each sub-phase; see Eliminated Key Formats below for elimination rationale |
+| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_stripped as `ScopedKey` (Aggregation), SysML QN as `SysMLQN` (FORMULA). Key_A, Key_D, Key_E full, Key_F, and bare keys SHALL NOT be registered. | Key format tables in each sub-phase; **code at HEAD diverges — see the Known divergence note under Eliminated Key Formats (DOCS-SCRUB-F2)** |
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `registry.scoped_lookup(ScopedKey(alias.canonical_name))` precedes `register_alias()` |
 | REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join with dots | `make_scoped_key()`: split on `__`, drop `segments[0]`, join with `.` |
-| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no registration, no guard, no diagnostic-only entry. | Key_A registration code removed; see Eliminated Key Formats below |
+| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no registration, no guard, no diagnostic-only entry. | Narrowed in practice: Key_A is absent from the *scoped* registry but IS registered as an alias — see the Known divergence note below (DOCS-SCRUB-F2) |
 | REQ-OR-09 | The FORMULA sysml-QN key SHALL be registered per-segment sanitized (`sanitize_qualified_name`), and the per-collision alias line SHALL be DEBUG with one WARNING count-summary at build (Item 7 / D5, lockstep site 1) | Phase 1c wraps the key in `sanitize_qualified_name()`; `register_alias()` logs collisions at DEBUG; `build_output_registry()` emits the count-summary |
 
 ## What It Is
@@ -398,6 +398,19 @@ and are NOT registered:
 
 **FR-6 applies**: if any eliminated key turns out to be load-bearing for a model
 not currently tested, the key MUST be made unique (not re-added as ambiguous).
+
+**Known divergence at HEAD (DOCS-SCRUB-F2).** The elimination table above is the
+design intent, but the code currently diverges on two rows: Phase 1a registers
+Key_A into the **alias** registry (`register_alias`, first-wins, "for cross-scope
+CHAIN resolution") and Phase 1c registers Key_F as a **scoped** key ("REFERENCE
+secondary resolution, spike Q5") — both in `build_output_registry()`
+(`orchestration/output_registry_builder.py`). Phases 3–4 also consult a
+construction-time Key_A-format dict (`instance_attr_to_channel`) before the typed
+lookups. The conformance test (`test_output_registry.py::TestReqOR08`) pins the
+weaker reading ("not in the *scoped* registry"). Reconciling REQ-OR-05/06/08 with
+these registrations — either land the elimination or re-frame the REQs — is filed
+as `DOCS-SCRUB-F2` in the backlog. Until then, read this section as intent, not
+behavior.
 
 ### Evidence Base
 

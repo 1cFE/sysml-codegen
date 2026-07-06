@@ -1,6 +1,6 @@
 # Implementation Plan: docs/ Full Scrub After UPSTREAM-FINDINGS
 
-**Status:** Complete (audit pending)
+**Status:** Complete — audited (Certify)
 **Created:** 2026-07-06
 **Last Updated:** 2026-07-06
 
@@ -278,4 +278,4 @@ Mechanical checks that don't belong to any one doc, plus the unchanged-gate proo
 
 ---
 
-**Status**: Complete (audit pending)
+**Status**: Complete — audited (Certify). Independent audit found 3 docs-only gaps (doc-10 Key_A/Key_F divergence uncaveated; overview counts contradicting the matrix; script-level license split missing) — all cured and re-verified; see audit.md.

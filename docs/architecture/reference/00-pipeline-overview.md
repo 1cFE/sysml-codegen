@@ -46,7 +46,11 @@ Generated package (modules/, schemas/, inputs/, pipelines/, handwritten/)
 versioned extraction snapshot from live models (this capture needs the live
 syside license), and `generate --from-snapshot` (mutually exclusive with
 `--models`) rebuilds the same `PipelineContext` from that JSON, license-free --
-Steps 2-7 run unchanged. See [27-snapshot-generation](27-snapshot-generation.md).
+Steps 2-7 run unchanged. The same split holds for the capture scripts: only
+`scripts/capture_extraction_snapshots.py` needs the license;
+`scripts/capture_pipeline_baselines.py` and `scripts/capture_baseline_yaml.py`
+regenerate baselines from committed snapshots, license-free. See
+[27-snapshot-generation](27-snapshot-generation.md).
 
 ## Running example: battery_pack cost_model
 

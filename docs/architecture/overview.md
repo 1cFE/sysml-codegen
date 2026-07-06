@@ -67,7 +67,7 @@ Both paths produce the same answer format: each input resolves to either `module
 
 ### Test-First with Real SysML Data
 
-Conformance tests use real SysML fixture models (extracted via SysIDE) and verify pipeline behavior against extraction snapshots. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. The test suite covers 233 requirements across 49 conformance test files. See [verification-matrix.md](verification-matrix.md).
+Conformance tests use real SysML fixture models (extracted via SysIDE) and verify pipeline behavior against extraction snapshots. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. Every tracked requirement maps to its conformance tests in [verification-matrix.md](verification-matrix.md), which carries the authoritative counts.
 
 ---
 
@@ -215,7 +215,7 @@ The following open issues are documented in the codebase. None block current pip
 
 ## Verification
 
-233 requirements (REQ-* tags) are tracked across 29 requirement families. 221 have dedicated conformance tests; 12 are untested (design-only constraints or cross-cutting principles verified indirectly).
+REQ-* tags are tracked across 29 requirement families; the [verification matrix](verification-matrix.md) summary carries the authoritative counts. A small remainder is marked UNTESTED there (design-only constraints or cross-cutting principles verified indirectly).
 
 See [verification-matrix.md](verification-matrix.md) for the full REQ-to-test traceability matrix.
 

@@ -70,6 +70,14 @@ committed. Sentinels (`unknown`, `hierarchy`) pass through untouched.
   license-free generation. `--models` and `--from-snapshot` are mutually exclusive
   and exactly one is required.
 
+**Capture scripts.** Only `scripts/capture_extraction_snapshots.py` runs live
+extraction (needs the syside license). `scripts/capture_pipeline_baselines.py`
+and `scripts/capture_baseline_yaml.py` regenerate the graph/registry and YAML
+baselines **from the committed snapshots** — license-free; the YAML script moved
+off the live path in Item 11, so the YAML and graph baselines are rendered from
+the same graph and can never disagree. The script docstrings are the source of
+truth for this split.
+
 ## Requirements & verification matrix
 
 REQ-SNAP-01..07 (round-trip / typed-fields / AST-None) are the prior family; this

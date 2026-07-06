@@ -331,10 +331,10 @@ the documentation rather than executable code.
 | REQ-OR-02 | Each typed registry SHALL have its own exact-match lookup method — no single `resolve()` ... | `test_output_registry.py` | PASS |
 | REQ-OR-03 | Collision policy: scoped and SysML QN registries SHALL raise on duplicate (unique by cons... | `test_output_registry.py` | PASS |
 | REQ-OR-04 | `register_alias()` SHALL enforce phase ordering — target must already be in `_canonical` | `test_output_registry.py` | PASS |
-| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_s... | `test_output_registry.py` | PASS |
+| REQ-OR-05 | Phase 1 SHALL register only non-ambiguous keys: Key_C as `ScopedKey` (CalcUsage), Key_E_s... (NOTE: code at HEAD diverges — Key_A registers as an alias, Key_F as scoped; the test pins the weaker no-scoped-Key_A reading; reconciliation filed DOCS-SCRUB-F2) | `test_output_registry.py` | PASS |
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `test_output_registry.py` | PASS |
 | REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join w... | `test_output_registry.py` | PASS |
-| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no regis... | `test_output_registry.py` | PASS |
+| REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no regis... (NOTE: code at HEAD diverges — Key_A registers as an alias, Key_F as scoped; the test pins the weaker no-scoped-Key_A reading; reconciliation filed DOCS-SCRUB-F2) | `test_output_registry.py` | PASS |
 | REQ-OR-09 | The FORMULA sysml-QN key SHALL be registered per-segment sanitized (`sanitize_qualified_name`), and the per-collision alias line SHALL be DEBUG with one WARNING count-summary at build (Item 7 / D5, lockstep site 1) | `test_output_registry.py`, `test_output_registry_construction.py`, `test_warning_reconciliation.py` | PASS |
 
 ### ORCH

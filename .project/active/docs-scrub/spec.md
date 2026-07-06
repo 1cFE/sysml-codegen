@@ -1,6 +1,6 @@
 # Spec: docs/ Full Scrub After UPSTREAM-FINDINGS
 
-**Status:** Draft
+**Status:** Complete — audited (Certify)
 **Owner:** Reid W
 **Created:** 2026-07-06 06:44
 **Complexity:** MEDIUM
@@ -28,29 +28,29 @@ code as it exists.
 
 ## Success Criteria
 
-- [ ] Every file in `docs/architecture/` (overview, modeling-assumptions,
+- [x] Every file in `docs/architecture/` (overview, modeling-assumptions,
       verification-matrix, reference 00–27) has been read against epic HEAD and either
       verified accurate or corrected.
-- [ ] The verification-matrix summary counts are recomputed from the actual table rows,
+- [x] The verification-matrix summary counts are recomputed from the actual table rows,
       not the existing summary block.
-- [ ] `modeling-assumptions.md` reads as one coherent contract end-to-end; in
+- [x] `modeling-assumptions.md` reads as one coherent contract end-to-end; in
       particular the EXPOSE story across §3, §5, and the V-table tells one story.
-- [ ] Reference docs 07/10/11/17/24 prose bodies describe the current behavior (Item 7's
+- [x] Reference docs 07/10/11/17/24 prose bodies describe the current behavior (Item 7's
       known gap closed), consistent with the REQ rows that carry the authoritative text.
-- [ ] No doc uses pre-epic names for renamed/new concepts: `ConsumerScopedKey` is gone
+- [x] No doc uses pre-epic names for renamed/new concepts: `ConsumerScopedKey` is gone
       (now `ScopedAliasKey`); `reference_chain`, `EXPOSE_CHAIN_TENTATIVE`/Phase 3b,
       `fallback_entry_points` (in-memory only) vs `output_aliases` (serialized) are used
       consistently where those subsystems are described.
-- [ ] Docs describing the capture workflow say which scripts are snapshot-driven
+- [x] Docs describing the capture workflow say which scripts are snapshot-driven
       (license-free) vs live-license (`capture_extraction_snapshots.py` only), matching
       the script docstrings.
-- [ ] Docs 22/23/26 are each either verified live, corrected, or explicitly marked with
+- [x] Docs 22/23/26 are each either verified live, corrected, or explicitly marked with
       their status after checking whether they still describe current code.
-- [ ] Repo-root `CLAUDE.md` architecture section mentions the `snapshot/` package and
+- [x] Repo-root `CLAUDE.md` architecture section mentions the `snapshot/` package and
       `--from-snapshot`.
-- [ ] Code anchors in touched docs use symbol names, not `file:line` (new convention;
+- [x] Code anchors in touched docs use symbol names, not `file:line` (new convention;
       applied where docs are edited, and stale line anchors are removed wherever found).
-- [ ] The gate is unchanged: 1989 passed / 4 skipped / 5 xfailed; ruff src/ 21;
+- [x] The gate is unchanged: 1989 passed / 4 skipped / 5 xfailed; ruff src/ 21;
       mypy src/ 109. No code, test, or fixture changes.
 
 ## Known Requirements
