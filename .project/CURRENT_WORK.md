@@ -6,7 +6,29 @@
 
 ## Active Work
 
-### docs-scrub — CERTIFIED (awaiting PR after the epic merges)
+### PIPELINE-TRUTH epic — DEFINED (Draft, awaiting scope review)
+Shaped 2026-07-06 from `.project/active/NEXT_EPIC_PROMPT.md` via `/_my_epic_plan` with
+the mandated 8-agent discovery sweep. Mission: the generated package is the truth —
+fusion-tea generates/wires/executes end-to-end, zero bridges; every diagnostic fires on
+the shape it claims; zero self-referential tests; REQ/matrix truth. 10 items,
+~10.5–13.5 days, two tracks (headline: Items 1–3 fixtures → whole-plant resolution →
+fusion-tea acceptance; truth track: Items 4–8 parallel; 9–10 close).
+- Epic: `.project/backlog/epic_pipeline_truth.md`
+- Evidence base: `.project/research/20260706_pipeline-truth-discovery.md` (D1–D7 +
+  adversarial; 16 silent-failure sites, 25 tests-that-cannot-fail, the D6 fixture
+  recipe reproducing 9/10 V11 offenders, subtype-blind enumeration verdict table incl.
+  agentic-mbse's always-passing Level-3 validator)
+- BACKLOG updated: PIPELINE-TRUTH added (P1), whole-plant item promoted out of Ideas,
+  [CONSTRAINT-SILENCE] filed (P1, absorbed into Item 4), UPSTREAM-FINDINGS moved to
+  Completed, PUSH-DOWN sequencing ruling recorded (after Items 5+8).
+- Notable corrections made during discovery: the fusion-tea report's line-74
+  capture-path claim is wrong (capture DOES run the constraint report; the silence was
+  the assert bug itself), and constraints are NOT serialized into snapshots (the
+  NEXT_EPIC_PROMPT claim was wrong; `_deserialize_constraint_info` is dead code).
+- Next: user reviews scope/decomposition; then spec Item 1 (fixtures) and Item 4
+  (subtype enumeration) — the two no-dependency track heads.
+
+### docs-scrub — CERTIFIED and MERGED (PR #4, 2026-07-06)
 Post-epic coherence pass over `docs/architecture/` on branch `docs-scrub` (off
 `upstream-findings-epic`): 31 docs verified/corrected against HEAD; matrix now
 248 = 236 PASS + 12 UNTESTED (SNAP/NC/REG rows added); thin docs 07/10/11/17/24
@@ -14,10 +36,13 @@ closed; 22/23 verified live, 26 marked Historical; gate byte-identical
 (1989/4/5, ruff 21, mypy 109). Independent audit: Certify (3 gaps found+cured).
 Follow-ups filed: BACKLOG DOCS-SCRUB-F1..F4 (F4 = resolve_input() has zero
 production callers while its REQs are marked PASS). Artifacts:
-`.project/active/docs-scrub/{spec,plan,fact-sheet,audit}.md`. PR this branch
-separately once PR #3 merges.
+`.project/active/docs-scrub/{spec,plan,fact-sheet,audit}.md`.
 
-### UPSTREAM-FINDINGS Epic — COMPLETE (awaiting PR review/merge)
+### Next-epic definition — EXECUTED (2026-07-06)
+`.project/active/NEXT_EPIC_PROMPT.md` was executed; deliverables are the
+PIPELINE-TRUTH entry above. The prompt file is kept for provenance.
+
+### UPSTREAM-FINDINGS Epic — MERGED (PR #3, 2026-07-06)
 
 All 12 items landed and audited PASS on branch `upstream-findings-epic`
 (orchestrated run, 2026-07-05..06). PR: https://github.com/1cFE/sysml-codegen/pull/3

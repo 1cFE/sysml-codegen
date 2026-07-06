@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-05
+**Last Updated**: 2026-07-06
 
 ---
 
@@ -29,10 +29,48 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | Draft | Fix the 11 fusion-tea findings (SC-1–SC-11) + 6 research-discovered defects: baseline repair, silent-failure diagnostics, return-style/retyping/quoted-name support, snapshot CLI (license mitigation, expires 2026-08-06), staged cross-part wiring (gates fusion-tea MFE epic), agentic-mbse sync throughout. 12 items, ~13–16 days. See `epic_upstream_findings.md`. Items: [ ] 1 baseline+diagnostics [ ] 2 snapshot CLI [ ] 3 SC-2 [ ] 4 SC-3 [ ] 5 SC-4 [ ] 6 SC-6 [ ] 7 SC-8 [ ] 8 plant fixtures [ ] 9 SC-5 pre-fill [ ] 10 SC-5 wiring [ ] 11 SC-7 surfacing [ ] 12 agentic-mbse sync |
-| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing note: UPSTREAM-FINDINGS Item 6 (expression reconstruction fix) must land before Phase 1 moves expression_utils.** See `.project/concepts/agentic-mbse-push-down-design.md`. |
+| [PIPELINE-TRUTH] The Generated Package Is the Truth | Draft | Finish what UPSTREAM-FINDINGS staged: fusion-tea's models generate/wire/execute end-to-end with zero bridges (the 10 V11 offenders — promoted from Ideas), every diagnostic fires on the shape it claims (assert-constraint silence + the subtype-blind enumeration pattern), zero self-referential tests, REQ/matrix truth (F2/F4), silent-failure hardening (16 sites), cleanup debt, agentic-mbse lockstep, closing docs+explainer-prompt pass. 10 items, ~10.5–13.5 days. Evidence: `.project/research/20260706_pipeline-truth-discovery.md`. See `epic_pipeline_truth.md`. Items: [ ] 1 plant-value fixtures [ ] 2 whole-plant resolution [ ] 3 fusion-tea acceptance+retirement [ ] 4 subtype enumeration [ ] 5 silent-failure hardening [ ] 6 self-referential tests [ ] 7 matrix reconciliation [ ] 8 cleanup debt [ ] 9 agentic-mbse sync [ ] 10 docs+explainer close |
+| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing: the UPSTREAM-FINDINGS Item 6 prerequisite has landed (PR #3); new ruling — start after PIPELINE-TRUTH Items 5 (silent-failure hardening) and 8 (cleanup debt) land, since both modify the same extraction/ surfaces the push-down would move.** See `.project/concepts/agentic-mbse-push-down-design.md`. |
 
 ---
+
+### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report (P1; SC-1 regression-in-effect)
+
+**Absorbed into PIPELINE-TRUTH Item 4** (`epic_pipeline_truth.md`) — entry kept as the
+finding of record until that item closes.
+
+**Source**: fusion-tea upstream-fix verification, 2026-07-06
+(`~/1cfe/fusion-tea/work/active/20260706_upstream-fix-verification/report.md`); verified
+in-repo 2026-07-06. `report_dropped_constraints` (`extraction/extractor.py:92`) enumerates
+`elements_of_type("ConstraintUsage")`; syside's `model.elements()` is exact-type, so
+`assert constraint` (`AssertConstraintUsage`, a subtype) is invisible. Both the per-item
+INFO loop and the summary WARN gate on a non-empty list (`extractor.py:123`), so the report
+is **completely silent** for exactly the shape fusion-tea uses (`ife_plant.sysml:155`
+`assert constraint viability`) — live probe: 0 ConstraintUsage, 1 AssertConstraintUsage.
+Compounding factors the fix must address, not just the query:
+- The REQ-EXT-09 test (`tests/conformance/test_extractor.py::TestReqExt09`, line 895)
+  computes its expected count **with the same query the implementation uses** —
+  self-referential, structurally unable to catch this. Re-anchor independently.
+- Its fixture (catf_mfe) has only plain constraints; `tests/fixtures/wi014_toy/toy_plant.sysml:51`
+  already carries an `assert constraint` but nothing asserts the report against it —
+  Item 1's "WI-014 toy emits the constraint diagnostics" criterion was never true for it.
+- `extraction/constraint_extractor.py:4` docstring claims "constraint, assert constraint,
+  and require constraint" support while using the same blind query (line 50) — check
+  `require constraint` (`RequireConstraintUsage`?) too.
+- Snapshot-path split (corrects the fusion-tea report's line-74 observation): `snapshot`
+  *capture* DOES run the report (`capture.py:42` → `build_pipeline_context` →
+  `pipeline_builder.py:685`) — it was silent there only because of this very bug — but
+  `generate --from-snapshot` (`snapshot_context.py:24`) does NOT, and cannot: constraint
+  data is **never serialized** (serializer writes no constraint fields;
+  `_deserialize_constraint_info`, `loader.py:275`, has zero callers — dead code). A
+  snapshot-first workflow loses constraint info permanently — decide whether to serialize
+  constraints (prerequisite for any from-snapshot report AND for the deferred
+  constraint-execution epic).
+- Docs impact: modeling-assumptions §8 ("scans the whole model for constraint usages and
+  reports them") overclaims until the fix lands.
+- Owner split: the exact-type behavior lives in agentic-mbse's `SysideAdapter.elements_of_type`
+  / syside `model.elements()`; the consumers are in this repo. Meta-item: audit every
+  `elements_of_type` call site for the same subtype-blindness pattern.
 
 ## P2 - Medium Priority
 
@@ -83,6 +121,9 @@ Same-cleanup candidates found during the scrub (verify, then delete or wire up):
 
 ### [DOCS-SCRUB-F2] Reconcile REQ-OR-05/06/08 with the Key_A/Key_F registrations at HEAD
 
+**Absorbed into PIPELINE-TRUTH Item 7** (with D7 refinements: REQ-ORCH-04's test was
+weakened to fit the divergence; two test docstrings misstate their own bodies).
+
 **Source**: docs-scrub doc-10 pass, 2026-07-06. The REQ text and doc 10's "Eliminated Key
 Formats" section say Key_A and Key_F are not registered at all, but `build_output_registry()`
 Phase 1a registers Key_A via `register_alias()` (cross-scope CHAIN, first-wins) and Phase 1c
@@ -93,6 +134,12 @@ already narrowed its own reading. Decide the intended contract, then fix REQ tex
 (possibly) code together — not a docs-only fix.
 
 ### [DOCS-SCRUB-F4] `resolve_input()` cutover divergence (REQ-IR-05/07, REQ-RES-02)
+
+**Absorbed into PIPELINE-TRUTH Item 7**, extended by D7 (the whole IR family + parts
+of DRA-02/04/05 pin the dead module) and reframed per R4: docs 03/04/24 record the
+*intended* architecture with rationale — the module and its call site shipped in one
+commit (`d6c725f`) with only the final rewire skipped. **Presumption: land the
+cutover**; kill-criteria and preconditions in the epic item.
 
 **Source**: docs-scrub docs-03/04/05/06 pass, 2026-07-06. `resolve_input()` /
 `AGG_STRATEGIES` (`analysis/input_resolver.py`) has **zero production call sites** — only
@@ -126,6 +173,7 @@ REQ-mirroring prose untouched pending this reconciliation.
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
+| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into PIPELINE-TRUTH. See `epic_upstream_findings.md`. |
 | [COST-PATTERN] Costed Component Pattern Support | 2026-02-22 | ~12 days | 41 items completed: full conformance test suite (C01-C27, X01-X02), Phase 7 structural refactors, bug fixes (7, 11), docs consolidation. |
 | [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
 | [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
@@ -135,6 +183,7 @@ REQ-mirroring prose untouched pending this reconciliation.
 ## Ideas / Future Considerations
 
 - **Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**
+  *→ Absorbed into PIPELINE-TRUTH Item 8 (byte-identity gate + literal-bearing fixture).*
   `hierarchy_resolver._walk_aggregation_ast` (`hierarchy_resolver.py:372,431`) keeps the
   old literal-after-invocation ordering: a literal operand in an aggregation expression is
   mis-dispatched to the invocation catch-all, marked `has_unsupported`, and its
@@ -151,7 +200,8 @@ REQ-mirroring prose untouched pending this reconciliation.
   the snapshot; it does not — 0 occurrences). The paren/literal fix applies to constraint
   text too but has no snapshot-level regression coverage. Add a test that exercises
   constraint reconstruction directly if that coverage is wanted.
-- **Stale-fixture snapshot refresh (from UPSTREAM-FINDINGS Item 9).** Three committed
+- **Stale-fixture snapshot refresh (from UPSTREAM-FINDINGS Item 9).**
+  *→ Candidate rider for PIPELINE-TRUTH Item 1 (same live-capture session); decide at its spec.* Three committed
   extraction snapshots drift from current live output but were left untouched by Item 9
   (its live re-capture reverted them to keep INV-5's "exactly four fixtures change"). They
   must be refreshed so the committed corpus ends the epic script-reproducible — deferred,
@@ -177,26 +227,16 @@ REQ-mirroring prose untouched pending this reconciliation.
 - EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
 - Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
 - Body-assignment expression capture (P3, M-lift; deferred from UPSTREAM-FINDINGS Item 3 / SC-2). For the `return attribute y : Real; y = expr;` form, wire the direction-None `member_expressions[y]` (the body assignment) into `output_expression_asts[y]` so `y` auto-implements instead of degrading to a `NotImplementedError` stencil. Inline `return y : Real = expr` already auto-implements, and the A-2 stencil fix steers modelers to the inline form, so this is low value — it restores auto-impl only for the deprecated body-assignment pattern.
-- **fusion-tea whole-plant cross-part wiring (P1; from UPSTREAM-FINDINGS Item 10, SC-2 follow-up).**
-  Item 10 wired the `gamma → lcoe` edge for the two-level `hif_plant` shape (the WI-015
-  headline): `hif_plant__lcoe_calc` input `driver_cost_constant` now resolves to the Meier
-  `gamma` channel from generated wiring alone, and left the V11 offender list (count 11 → 10).
-  But `generate --models ~/1cfe/fusion-tea/models` still ABORTS at V11 on **10 other** unresolved
-  cross-part inputs on `lcoe_calc`/`recirc_calc` — `driver.efficiency`, `driver.energy`,
-  `driver.lifetime_shots`, `chamber.blanket_energy_multiple`, `chamber.yield_cost_constant`,
-  `target_factory.cost_per_target`, plus the separate `hif_driver_instance` driver's inputs.
-  These are plain cross-part attribute references (subsystem attribute → plant calc input),
-  a different shape than Item 10's specialized-`:>>`-chain and multi-hop-EXPOSE cases; they
-  are pre-existing and untouched by Item 10 (INV-A additive). Until they resolve, the generated
-  pipeline cannot replace the fusion-tea hand-plumbing, so the `hif_driver_instance` scaffold
-  and the two-pass gamma feedback in `run_anchors.py` STAY upstream (not yet deletable).
-  **Acceptance test:** `tests/fixtures/spec_chain_twolevel` extended with the plain
-  subsystem-attribute cross-part bindings, plus a fusion-tea `generate` that emits the full
-  YAML with zero V11 offenders and reproduces run-C's lcoe ($270.12/MWh) within tolerance.
-  This is the remainder of SC-5 (Items 9–11 plant wiring), scoped out of Item 10 per the
-  C-then-B ruling.
+- **fusion-tea whole-plant cross-part wiring — PROMOTED (2026-07-06).** This P1 item was
+  mis-shelved under Ideas; it is now **PIPELINE-TRUTH Items 1–3** (`epic_pipeline_truth.md`):
+  the 10 remaining V11 offenders, the extended `spec_chain_twolevel` acceptance fixture,
+  zero-offender fusion-tea generation, and the run-C ($270.12/MWh) reproduction + workaround
+  retirement. Mechanism evidence (offenders reconciled 1:1, bridge reproduction bit-exact):
+  `~/1cfe/fusion-tea/work/active/20260706_upstream-fix-verification/report.md` and
+  `.project/research/20260706_pipeline-truth-discovery.md` §D6.
 - **Two-level specialization — `attribute :>>` extraction gap (P3; from UPSTREAM-FINDINGS Item 10,
-  D-F).** A value-carrying redefinition authored as `attribute :>> attr = <expression>` (an
+  D-F).** *→ The validation WARNING half is built by PIPELINE-TRUTH Item 9; the extraction
+  relaxation itself stays deferred.* A value-carrying redefinition authored as `attribute :>> attr = <expression>` (an
   AttributeUsage) is silently dropped at extraction — `_extract_single_redefinition`
   (`hierarchy_resolver.py`) only scans ReferenceUsage members — so `hierarchy_data.redefinitions`
   comes back empty and the specialized-def resolver has nothing to read. Item 10 did NOT relax
