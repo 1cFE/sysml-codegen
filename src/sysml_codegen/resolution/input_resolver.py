@@ -21,7 +21,11 @@ from sysml_codegen.core.identifier_types import (
     SysMLQN,
 )
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.core.qualified_names import get_channel_name, sanitize_name
+from sysml_codegen.core.qualified_names import (
+    get_channel_name,
+    sanitize_name,
+    sanitize_qualified_name,
+)
 from sysml_codegen.extraction.data_models import RedefinitionData, RedefinitionType
 from sysml_codegen.resolution.models import InputSource
 
@@ -117,7 +121,10 @@ def SysMLQNLookup(ref: str, ctx: ResolutionContext) -> CanonicalChannel | None: 
     if "::" not in ref:
         return None
 
-    channel = ctx.output_registry.sysml_qn_lookup(SysMLQN(ref))
+    # Site 5 of the FORMULA sysml-QN lockstep flip (Item 7 / INV-1): the second
+    # sysml_qn_lookup consumer of the same registry; sanitize its key to match the
+    # per-segment-sanitized registration key.
+    channel = ctx.output_registry.sysml_qn_lookup(SysMLQN(sanitize_qualified_name(ref)))
     if channel is not None:
         logger.debug("Strategy B: '%s' resolved via SysML QN lookup", ref)
         return channel

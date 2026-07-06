@@ -280,21 +280,30 @@ class TestPhase1Regression:
             "All chain spike impls should be auto-implemented"
         )
 
-    def test_catf_mfe_still_works(
-        self, catf_mfe_model_path: Path, tmp_path: Path,
+    def test_catf_mfe_aborts_with_v11(
+        self, catf_mfe_model_path: Path, tmp_path: Path, caplog,
     ):
+        """catf_mfe generation aborts with V11 (Item 7 / D4) — tracked to Items 9-11.
+
+        ``cryo_load.magnet_volume`` binds the cross-part EXPOSE
+        ``catf_radial_build.magnet_volume_total`` (= ``tf_coil.volume``), which
+        falls through resolution with no value and stays wired → a guaranteed
+        runtime ``KeyError``. Strict generation refuses it. Items 9-11 wire the
+        ``tf_coil.volume`` cross-part shape and flip this back to clean
+        generation. The exact gap is pinned green in
+        ``tests/unit/test_uncovered_params.py`` (``[cryo_load.magnet_volume]``).
+        """
+        import logging
+
         config = GenerationConfig(
             models_path=catf_mfe_model_path,
             output_path=tmp_path / "output",
             package_name="catf_mfe",
         )
-        assert run_codegen(config), "CATF MFE codegen should succeed"
-        impls = find_impl_files(tmp_path / "output")
-        # Graph-only pipeline (REQ-PIPE-07): only CalcDefs with usages in the
-        # computation graph get stencils.  CATF MFE has 21 CalcDefs extracted
-        # but 3 (ThermalCycleEfficiency, PlasmaConfinement, TritiumBreedingRatio)
-        # have no calc usages → 18 modules in graph → 18 impl files.
-        assert len(impls) == 18, (
-            f"Expected 18 impl files (graph-only, no false-positive "
-            f"computed attrs), got {len(impls)}"
+        with caplog.at_level(logging.ERROR):
+            assert run_codegen(config) is False, (
+                "V11 must abort catf_mfe generation (magnet_volume cross-part gap)"
+            )
+        assert any("V11" in r.message for r in caplog.records), (
+            "strict generation must log the V11 diagnostic"
         )

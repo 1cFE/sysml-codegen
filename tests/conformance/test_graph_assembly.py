@@ -356,11 +356,17 @@ class TestComputationGraphShape:
 
     @pytest.mark.req("REQ-GA-05")
     def test_computation_graph_has_exactly_three_fields(self):
-        """ComputationGraph model has exactly 3 fields."""
+        """ComputationGraph model has exactly 4 fields.
+
+        Item 7 (REQ-GA-08) adds ``fallback_entry_points`` — an in-memory
+        analysis artifact (``exclude=True``, kept out of the serialized graph)
+        that the V11 collector reads.
+        """
         assert set(ComputationGraph.model_fields.keys()) == {
             "modules",
             "entry_point_groups",
             "execution_order",
+            "fallback_entry_points",
         }
 
     @pytest.mark.req("REQ-GA-05")

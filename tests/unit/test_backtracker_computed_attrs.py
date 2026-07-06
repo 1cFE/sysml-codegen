@@ -116,10 +116,10 @@ class TestComputedAttrRegistration:
 
         # ScopedKey (Key_F) resolves
         assert registry_resolve(registry,"plant.p_net_kw") is not None
-        # SysML QN resolves
-        assert registry_resolve(registry,"Pkg::plant::p_net_kw") is not None
+        # SysML QN resolves (sanitized __ form — Item 7 lockstep flip)
+        assert registry_resolve(registry,"Pkg__plant__p_net_kw") is not None
         # Both resolve to the same canonical channel
-        assert registry_resolve(registry,"plant.p_net_kw") == registry_resolve(registry,"Pkg::plant::p_net_kw")
+        assert registry_resolve(registry,"plant.p_net_kw") == registry_resolve(registry,"Pkg__plant__p_net_kw")
         # Bare key does NOT resolve in typed registries
         assert registry_resolve(registry,"p_net_kw") is None
 
@@ -474,12 +474,12 @@ class TestSysmlQualifiedNameRegistration:
         ca = _make_computed_attr("power_mw", "e2e_plant", "E2EDesign::e2e_plant")
         registry = _build_test_registry(computed_attributes=[ca])
 
-        # SysML QN resolves
-        assert registry_resolve(registry,"E2EDesign::e2e_plant::power_mw") is not None
+        # SysML QN resolves (sanitized __ form — Item 7 lockstep flip)
+        assert registry_resolve(registry,"E2EDesign__e2e_plant__power_mw") is not None
         # ScopedKey (Key_F) resolves
         assert registry_resolve(registry,"e2e_plant.power_mw") is not None
         # Both point to the same canonical channel
-        assert registry_resolve(registry,"E2EDesign::e2e_plant::power_mw") == registry_resolve(registry,"e2e_plant.power_mw")
+        assert registry_resolve(registry,"E2EDesign__e2e_plant__power_mw") == registry_resolve(registry,"e2e_plant.power_mw")
         # Bare key does NOT resolve in typed registries
         assert registry_resolve(registry,"power_mw") is None
 

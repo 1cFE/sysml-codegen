@@ -127,7 +127,12 @@ def build_output_registry(
 
         # Typed: SysML QN (REQ-OR-05)
         if ca.owning_part_qualified_name:
-            sysml_qn_key = SysMLQN(f"{ca.owning_part_qualified_name}::{ca.name}")
+            # Site 1 of the FORMULA sysml-QN lockstep flip (Item 7 / INV-1):
+            # register the key per-segment sanitized so a quoted-owner REFERENCE
+            # consumer (which now sanitizes its lookup key) matches.
+            sysml_qn_key = SysMLQN(
+                sanitize_qualified_name(f"{ca.owning_part_qualified_name}::{ca.name}")
+            )
             registry.register_sysml_qn(sysml_qn_key, canonical)
         else:
             registry._canonical.add(canonical)
@@ -218,6 +223,17 @@ def build_output_registry(
         phase4_count,
         len(registry),
     )
+
+    # Item 7 / D5: one WARNING count-summary for the first-wins alias collisions
+    # (the per-collision lines are DEBUG). Non-empty only — a clean model stays
+    # silent. Keeps the SC-5 cross-part signal loud without the per-key noise.
+    if registry.alias_collision_count:
+        logger.warning(
+            "OutputRegistry: %d alias collision(s) resolved first-wins "
+            "(%d distinct key(s)).",
+            registry.alias_collision_count,
+            registry.alias_collision_distinct_keys,
+        )
 
     return registry
 

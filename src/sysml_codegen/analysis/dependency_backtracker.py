@@ -25,7 +25,7 @@ from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, Phan
 from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import sanitize_qualified_name
 
 if TYPE_CHECKING:
     from agentic_mbse.sysml.types import BindingInfo
@@ -81,6 +81,10 @@ class BacktrackingResult(BaseModel):
     binding_to_entry_point: dict[str, str] = Field(default_factory=dict)
     # Unified mapping for ALL binding resolutions
     binding_resolutions: dict[str, BindingResolution] = Field(default_factory=dict)
+    # Step-4 fall-through entry point QNs: bound bindings that matched no
+    # resolution strategy and no design attribute (Item 7 / D4). The V11 collector
+    # intersects this with valueless + wired to find genuinely-uncovered inputs.
+    fallback_entry_points: set[str] = Field(default_factory=set)
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -133,6 +137,11 @@ class DependencyBacktracker:
         # Build lookup tables
         self._calc_def_by_name: dict[str, object] = {c.name: c for c in calc_defs}
 
+        # Sanitized calc-def QNs, for filtering calc-def I/O attributes out of the
+        # leaf-unique design-attribute matcher (Bug B / A1; see _is_calc_def_owned).
+        # Built lazily on first use.
+        self._calc_def_qns: set[str] | None = None
+
         # Primary index: qualified name (unique, no collisions)
         self._usage_by_qualified: dict[str, CalcUsageData] = {
             u.qualified_name: u for u in all_usages
@@ -172,6 +181,11 @@ class DependencyBacktracker:
         # Value: BindingResolution describing how binding is wired
         self._binding_resolutions: dict[str, BindingResolution] = {}
 
+        # Step-4 fall-through entry points (Item 7 / D4). Initialized here so
+        # direct callers of _resolve_binding_via_registry (unit tests) work
+        # without find_required_modules; reset per run in find_required_modules.
+        self._fallback_entry_points: set[str] = set()
+
     def find_required_modules(
         self,
         target_outputs: list[str],
@@ -203,6 +217,10 @@ class DependencyBacktracker:
         self._entry_point_sources = {}
         self._binding_to_entry_point = {}
         self._binding_resolutions = {}
+        # Step-4 fall-through entry points (bound bindings that matched no
+        # resolution strategy and no design attribute). Item 7 / D4: the V11
+        # collector reads this to find genuinely-uncovered wired inputs.
+        self._fallback_entry_points = set()
 
         # Handle --all flag
         # Use dict keyed by instance_name since CalcUsageData is not hashable
@@ -285,6 +303,7 @@ class DependencyBacktracker:
             trace_log=self._trace_log,
             binding_to_entry_point=self._binding_to_entry_point,  # DEPRECATED
             binding_resolutions=self._binding_resolutions,
+            fallback_entry_points=self._fallback_entry_points,
         )
 
     def _trace_dependencies(
@@ -550,14 +569,22 @@ class DependencyBacktracker:
                 is_transitive=False,
             )
 
-        # Step 4: Fallback entry point with warning
-        logger.warning(
+        # Step 4: Fallback entry point. Item 7 / D5: the per-binding line is
+        # DEBUG, not WARNING — it fired per binding and was the primary benign
+        # noise. The post-assembly reconciliation summary (unwired remainder) and
+        # V11 (wired remainder) are now the operator digest for genuine residue.
+        logger.debug(
             "Registry unresolved: %s|%s source_path='%s'",
             usage.qualified_name, param_name, source_path,
         )
+        fallback_qn = f"{usage.qualified_name}__{param_name}"
+        # Record the fall-through so the V11 collector can find genuinely
+        # uncovered wired inputs (Item 7 / D4). Only bound bindings that failed
+        # every resolution strategy reach here.
+        self._fallback_entry_points.add(fallback_qn)
         return BindingResolution(
             resolution_type=BindingResolutionType.ENTRY_POINT,
-            qualified_name=f"{usage.qualified_name}__{param_name}",
+            qualified_name=fallback_qn,
             source_path=source_path,
             is_transitive=False,
         )
@@ -591,8 +618,13 @@ class DependencyBacktracker:
         self, source_path: str, usage: CalcUsageData
     ) -> str | None:
         """REFERENCE dispatch: sysml_qn_lookup, then normalization, then leaf+parent."""
-        # Step 1: Direct SysML QN lookup
-        channel = self._output_registry.sysml_qn_lookup(SysMLQN(source_path))
+        # Step 1: Direct SysML QN lookup.
+        # Site 2 of the FORMULA sysml-QN lockstep flip (Item 7 / INV-1): the
+        # registry key is registered per-segment sanitized, so the lookup key
+        # must be too, or a quoted-owner REFERENCE never matches.
+        channel = self._output_registry.sysml_qn_lookup(
+            SysMLQN(sanitize_qualified_name(source_path))
+        )
         if channel is not None and not self._is_self_reference(channel, usage):
             return channel
 
@@ -650,14 +682,35 @@ class DependencyBacktracker:
                     if attr.name == attr_name and attr.parent_part == parent_part:
                         return attr.qualified_name
 
-            # No matching design attribute found for dotted path
+            # Bug B (REQ-BT-10): a design attribute owned by a part *def* extracts
+            # with parent_part='' (get_parent_part_name is empty for def owners),
+            # so the exact parent_part match above never fires for it. Fall back to
+            # a leaf-unique match: gather design-part attributes carrying this leaf
+            # name; use it only when exactly one exists (unambiguous target), else
+            # refuse (return None -> Step-4, kept loud). Never guesses among
+            # ambiguous candidates (INV-2, no cross-wire).
+            cands = [
+                attr
+                for attrs in self._design_attributes.values()
+                for attr in attrs
+                if attr.name == attr_name
+                and not self._is_calc_def_owned(attr.qualified_name)
+            ]
+            if len(cands) == 1:
+                return cands[0].qualified_name
+
+            # 0 or >1 design-part candidates: fall to Step-4, kept loud.
             return None
 
         # Handle SysML qualified names (contain '::' separator)
         # These come from REFERENCE bindings using expr.referent.qualified_name
         # Convert to Python format and do exact qualified name match
         if "::" in source_path:
-            python_qname = sysml_to_python_qualified_name(source_path)
+            # Bug A (REQ-BT-09) / lockstep site 3: per-segment sanitize so a
+            # quoted-owner QN (Lib::'Magnet Part'::attr) matches the design
+            # attribute's per-segment-sanitized qualified_name. A bare ::->__ swap
+            # keeps the quotes and never matches.
+            python_qname = sanitize_qualified_name(source_path)
             for file_path, attrs in self._design_attributes.items():
                 for attr in attrs:
                     if attr.qualified_name == python_qname:
@@ -691,6 +744,27 @@ class DependencyBacktracker:
             f"Using {candidates[0][1].qualified_name}"
         )
         return candidates[0][1].qualified_name
+
+    def _is_calc_def_owned(self, attr_qualified_name: str) -> bool:
+        """True when a "design attribute" QN is really a calc-def I/O attribute.
+
+        ``_design_attributes`` is extracted from every AttributeUsage carrying a
+        value expression, which includes calc-def ``out attribute y = expr``
+        outputs, not just user design-part attributes. The leaf-unique matcher
+        (Bug B) must exclude these: matching a dotted calc-output reference by leaf
+        name would cross-wire a module-output binding into a DESIGN_ATTRIBUTE entry
+        point with a library default (A1 ruling; INV-2). An attribute is
+        calc-def-owned when its QN, minus the leaf segment, equals a calc def's
+        sanitized qualified name.
+        """
+        if self._calc_def_qns is None:
+            self._calc_def_qns = {
+                sanitize_qualified_name(cd.qualified_name)
+                for cd in self.calc_defs
+                if getattr(cd, "qualified_name", "")
+            }
+        owner = attr_qualified_name.rsplit("__", 1)[0]
+        return owner in self._calc_def_qns
 
     def _build_dependency_graph(
         self,

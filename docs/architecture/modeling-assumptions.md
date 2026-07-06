@@ -377,6 +377,18 @@ The extraction phase enforces these rules to catch modeling violations early:
 | V8 | Calc def has an anonymous `return` (a result with no name) | "Calc def '{name}' has an anonymous `return` (a result with no name), so no output channel can be built. Give the result a name, e.g. `return result : Real = <expr>`." |
 | V9 | Two template calcs from different owners (a retyped usage's super- and subtype) resolve to the same virtual QN | "Template collision on '{virtual_qn}': owners '{owner_a}' and '{owner_b}' both define calc '{calc_name}'; kept most-specific owner '{winner}'." |
 | V10 | A usage has multiple incomparable owned types (neither specializes the other) | "Usage '{owning_qn}.{name}' has multiple incomparable owned types {sorted_qns}; resolved defaults against '{winner}' (first in stable order)." |
+| V11 | A module input references a params key no parameter group provides — its entry point fell through resolution (Step-4), carries no value, and is still wired (Item 7 / SC-8) | "V11: {n} module input(s) reference a params key that no parameter group provides — the JSON never mints the key, so the pipeline will KeyError at load. Cause: an unresolved cross-part reference not yet wired (Items 9-11) or a resolution bug. Offenders: module '{name}' input '{param}' -> params key '{group}.{qn}'" |
+
+**V11 note (SC-8).** Unlike V1–V10 (extraction-time), V11 fires at the
+**generation boundary** (`run_codegen`), where the computation graph and derived
+parameter groups both exist. It is the wired half of the fell-through-valueless
+partition (M1): the **unwired** half is a WARNING reconciliation summary
+(`Unresolved after assembly: …`), not a hard error. A null-default entry point
+that did *not* fall through is the legitimate user-fill signature and never trips
+V11. Behavioral note: Item 7 also fixed two resolution matcher bugs (the FORMULA
+`::`-QN per-segment sanitize and def-owned dotted leaf-unique match), which
+reclassify some entry points `USAGE_LITERAL` → `DESIGN_ATTRIBUTE` and switch their
+default-value source; see the Item 7 release notes.
 
 ---
 

@@ -42,6 +42,10 @@ class OutputRegistry:
         self._sysml_qn: dict[SysMLQN, CanonicalChannel] = {}
         self._alias: dict[ScopedKey, CanonicalChannel] = {}
         self._canonical: set[CanonicalChannel] = set()
+        # Item 7 / D5: first-wins alias collisions, recorded for one WARNING
+        # count-summary (emitted by output_registry_builder) instead of one
+        # WARNING line per collision. Keys are the colliding alias keys.
+        self._alias_collisions: list[ScopedKey] = []
 
     # ------------------------------------------------------------------
     # Typed registration methods (REQ-OR-03)
@@ -108,7 +112,10 @@ class OutputRegistry:
             return
         if alias in self._alias:
             if self._alias[alias] != canonical_channel:
-                logger.warning(
+                # Item 7 / D5: per-collision line demoted to DEBUG and recorded;
+                # output_registry_builder emits one WARNING count-summary.
+                self._alias_collisions.append(alias)
+                logger.debug(
                     "OutputRegistry alias collision: '%s' already maps to '%s', "
                     "refusing to overwrite with '%s'",
                     alias,
@@ -133,6 +140,16 @@ class OutputRegistry:
     def alias_lookup(self, key: ScopedKey) -> CanonicalChannel | None:
         """Exact-match lookup in the alias registry."""
         return self._alias.get(key)
+
+    @property
+    def alias_collision_count(self) -> int:
+        """Total first-wins alias collisions recorded (Item 7 / D5)."""
+        return len(self._alias_collisions)
+
+    @property
+    def alias_collision_distinct_keys(self) -> int:
+        """Distinct alias keys that collided (for the count-summary)."""
+        return len(set(self._alias_collisions))
 
     # ------------------------------------------------------------------
     # Properties and diagnostics

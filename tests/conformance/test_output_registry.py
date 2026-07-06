@@ -16,6 +16,7 @@ import pytest
 from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
+    sanitize_qualified_name,
     sysml_to_python_qualified_name,
 )
 from sysml_codegen.extraction.data_models import (
@@ -184,7 +185,12 @@ class TestReqOR01:
             if ca.compilability != Compilability.FULLY_COMPILABLE:
                 continue
             if ca.owning_part_qualified_name:
-                qn_key = SysMLQN(f"{ca.owning_part_qualified_name}::{ca.name}")
+                # Item 7 lockstep flip: registered per-segment sanitized.
+                qn_key = SysMLQN(
+                    sanitize_qualified_name(
+                        f"{ca.owning_part_qualified_name}::{ca.name}"
+                    )
+                )
                 result = registry.sysml_qn_lookup(qn_key)
                 assert result is not None, (
                     f"sysml_qn_lookup({qn_key}) returned None"
@@ -474,7 +480,11 @@ class TestReqOR05:
             if ca.compilability != Compilability.FULLY_COMPILABLE:
                 continue
             if ca.owning_part_qualified_name:
-                sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+                # Item 7 lockstep flip: the key is registered per-segment
+                # sanitized, so the consumer sanitizes before lookup.
+                sysml_qn = sanitize_qualified_name(
+                    f"{ca.owning_part_qualified_name}::{ca.name}"
+                )
                 result = registry.sysml_qn_lookup(SysMLQN(sysml_qn))
                 assert result is not None, (
                     f"FORMULA SysML QN '{sysml_qn}' not found in sysml_qn registry"

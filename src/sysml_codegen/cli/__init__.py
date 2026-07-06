@@ -21,7 +21,7 @@ import jinja2
 
 if TYPE_CHECKING:
     from sysml_codegen.generation import PipelineContext
-    from sysml_codegen.resolution.models import PipelineModule
+    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
 
 # Note: Heavy imports moved inside run_codegen to avoid loading generation
 # module at CLI import time. This keeps CLI startup fast.
@@ -220,6 +220,54 @@ def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:
                 f"overwrite."
             )
         schema_sources[schema_file] = raw
+
+
+def _reconcile_params_coverage(graph: ComputationGraph) -> None:
+    """Reconcile the fell-through-valueless entry points (Item 7 / D4, M1).
+
+    Runs at the generation boundary, BEFORE output is cleared, beside
+    ``_check_duplicate_output_paths``. Partitions the fell-through, valueless
+    entry points by whether pipeline wiring references them:
+
+    - **unwired** remainder → one WARNING reconciliation summary (tracked
+      residue; no runtime ``KeyError``). Logged FIRST so the digest reaches the
+      operator even when generation aborts.
+    - **wired** half → V11 hard error, generation aborts. The JSON never mints
+      the key but the pipeline references it → guaranteed runtime ``KeyError``.
+
+    Always strict (no escape-hatch flag). Raises ``CodeGenerationError`` on any
+    wired violation, matching the ``_check_duplicate_output_paths`` fail-fast
+    idiom (caught by ``run_codegen``, aborts the run).
+    """
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.resolution.graph_builder import (
+        collect_uncovered_params,
+        collect_unwired_fallthrough,
+    )
+
+    # Reconciliation summary first (unwired remainder), so the operator sees the
+    # digest even if the V11 raise below aborts the run.
+    unwired = collect_unwired_fallthrough(graph)
+    if unwired:
+        logger.warning(
+            "Unresolved after assembly: %d entry point(s) fell through and still "
+            "lack a value (unwired): %s",
+            len(unwired), unwired,
+        )
+
+    uncovered = collect_uncovered_params(graph)
+    if uncovered:
+        details = "; ".join(
+            f"module '{u.module}' input '{u.input}' -> params key '{u.missing_key}'"
+            for u in uncovered
+        )
+        raise CodeGenerationError(
+            f"V11: {len(uncovered)} module input(s) reference a params key that no "
+            f"parameter group provides — the JSON never mints the key, so the "
+            f"pipeline will KeyError at load. Cause: an unresolved cross-part "
+            f"reference not yet wired (Items 9-11) or a resolution bug. "
+            f"Offenders: {details}"
+        )
 
 
 def _generate_schemas(
@@ -771,6 +819,11 @@ def run_codegen(config: GenerationConfig) -> bool:
         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
         # duplicate path never wipes or silently overwrites existing files.
         _check_duplicate_output_paths(ctx.computation_graph.modules)
+
+        # Step 1.6: Params-coverage reconciliation (Item 7 / D4, M1). Always
+        # strict — logs the unwired-remainder summary, then raises V11 on any
+        # wired fell-through-valueless input. Before output clear, like 1.5.
+        _reconcile_params_coverage(ctx.computation_graph)
 
         # Step 2: Clear and setup output directories
         if config.overwrite:

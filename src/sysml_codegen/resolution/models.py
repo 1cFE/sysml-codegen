@@ -13,7 +13,7 @@ Key Design Principles:
 from enum import Enum
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Import shared types from core for re-export (backward compatibility)
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
@@ -199,11 +199,18 @@ class ComputationGraph(BaseModel):
         modules: All pipeline modules in execution order
         entry_point_groups: Entry points grouped by source file
         execution_order: Module names in topological order
+        fallback_entry_points: QNs of Step-4 fall-through entry points — bound
+            bindings that matched no resolution strategy and no design attribute
+            (Item 7 / D4). Carried onto the graph so ``collect_uncovered_params``
+            is pure over the graph alone. In-memory analysis artifact consumed at
+            the generation boundary; ``exclude=True`` keeps it out of the
+            serialized graph so committed baselines do not churn.
     """
 
     modules: list[PipelineModule]
     entry_point_groups: list[ParameterGroup]
     execution_order: list[str]
+    fallback_entry_points: set[str] = Field(default_factory=set, exclude=True)
 
 
 __all__ = [

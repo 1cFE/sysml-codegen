@@ -22,7 +22,7 @@ from sysml_codegen.analysis.parameter_groups import (
     extract_design_attributes,
 )
 from sysml_codegen.core.models import ChannelAlias
-from sysml_codegen.core.qualified_names import sysml_to_python_qualified_name
+from sysml_codegen.core.qualified_names import sanitize_qualified_name
 from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
     ComputedAttributeData,
@@ -67,7 +67,10 @@ def _remove_formula_from_design_attrs(
     formula_qns: set[str] = set()
     for ca in computed_attrs:
         if ca.classification == ComputedAttributeClassification.FORMULA:
-            part_qn_python = sysml_to_python_qualified_name(ca.owning_part_qualified_name)
+            # Site 4 of the FORMULA sysml-QN lockstep flip (Item 7 / INV-1):
+            # this twin builds the FORMULA-removal match set; it must derive the
+            # part QN the same per-segment-sanitized way the registration side does.
+            part_qn_python = sanitize_qualified_name(ca.owning_part_qualified_name)
             formula_qns.add(f"{part_qn_python}__{ca.python_name}")
 
     if not formula_qns:

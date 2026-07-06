@@ -356,6 +356,8 @@ def test_req_dm_03_fields_backtracking_result():
         "required_usages", "dependency_graph", "entry_points",
         "entry_point_sources", "binding_resolutions",
         "phantom_report", "trace_log", "binding_to_entry_point",
+        # Item 7 (REQ-GA-08 / D4): Step-4 fall-through set for the V11 collector.
+        "fallback_entry_points",
     }
     actual = _pydantic_field_names(BacktrackingResult)
     assert actual == expected
@@ -383,13 +385,20 @@ def test_req_dm_03_fields_channel_alias():
 
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_computation_graph():
-    """ComputationGraph has exactly 3 fields."""
+    """ComputationGraph has exactly 4 fields.
+
+    Item 7 (REQ-GA-08) adds ``fallback_entry_points`` (in-memory analysis
+    artifact, ``exclude=True`` — not serialized) for the V11 collector.
+    """
     from sysml_codegen.resolution.models import ComputationGraph
 
-    expected = {"modules", "entry_point_groups", "execution_order"}
+    expected = {
+        "modules", "entry_point_groups", "execution_order",
+        "fallback_entry_points",
+    }
     actual = _pydantic_field_names(ComputationGraph)
     assert actual == expected
-    assert len(actual) == 3
+    assert len(actual) == 4
 
 
 @pytest.mark.req("REQ-DM-03")

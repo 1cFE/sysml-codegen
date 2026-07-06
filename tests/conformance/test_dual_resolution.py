@@ -23,6 +23,7 @@ import pytest
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.core.identifier_types import SysMLQN
 from sysml_codegen.core.models import BindingResolutionType
+from sysml_codegen.core.qualified_names import sanitize_qualified_name
 from sysml_codegen.extraction.data_models import ComputedAttributeClassification
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
@@ -369,7 +370,10 @@ class TestFormulaChannelExistsInSysMLQNRegistry:
                 ]
                 if matching_ca:
                     ca = matching_ca[0]
-                    sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
+                    # Item 7 lockstep flip: key registered per-segment sanitized.
+                    sysml_qn = sanitize_qualified_name(
+                        f"{ca.owning_part_qualified_name}::{ca.name}"
+                    )
                     qn_result = registry.sysml_qn_lookup(SysMLQN(sysml_qn))
                     if qn_result is None:
                         not_in_registry.append(

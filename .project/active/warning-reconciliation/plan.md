@@ -570,20 +570,310 @@ the agentic-mbse impact is filed for Item 12.
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION]
-
 ### Phase 0 Completion
-**Completed:** [Timestamp]
-**Actual:** [Verbatim warning lines, before key/value sets, leaf-uniqueness result]
+**Completed:** 2026-07-05 (capture-only; NO code change made)
+**Anchored to:** HEAD `008c373` (plan commit; Item 6 landed). Snapshot-driven capture
+(`generate --from-snapshot`), no license used.
+
+**STATUS: STOPPED after Phase 0 — reality diverges from the plan/design worksheet.**
+See "Phase 0 Blocking Findings" below and the stage report. No matcher code was
+touched.
+
+#### 0.1 — Verbatim "Registry unresolved" line counts (before-state)
+Full inventory captured across all 11 snapshot fixtures. Headline counts:
+- **solar_battery**: 10 `Registry unresolved` (all `::`-form, self-referential calc
+  inputs: energy_production/annualized_*/lcoe params) — matches design's ~10.
+- **catf_mfe**: 2 `Registry unresolved` (`pump_load|pumping_speed_total`;
+  `cryo_load|magnet_volume` sp=`catf_radial_build.magnet_volume_total`) + **25**
+  `alias collision` lines (matches design's 25/29). alias summary counts confirmed.
+- chain_spike 3, expression_binding_probe 3, return_styles 3, retype_model 3,
+  chain_override_probe 1, alias_agg_probe 1, issue22 1, unresolvable_attr_probe 1.
+
+#### 0.2 — Leaf-uniqueness (B1/D2): HOLDS for the named targets, but MOOT
+Among the 99 solar design attributes: `pack_count` = 1 (`SolarBatteryLibrary__Battery_System__pack_count`,
+parent_part='' → def-owned); `p_net_mw` = 1 (`SolarBatteryDesign__solar_battery_plant__p_net_mw`,
+parent_part='solar_battery_plant'). So B1 is technically true. **But both are moot**
+— see 0.4: neither dedups via the specified fix.
+
+#### 0.3 — catf magnet_volume V11 target: CONFIRMED VALID (design correct here)
+`cryo_load|magnet_volume` → fell through (dotted `catf_radial_build.magnet_volume_total`,
+dispatch miss → Step-3 miss → Step-4). `magnets_params.json` OMITS the key (valueless,
+default None). `pipeline.yaml:402` references `magnets_params.CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume`
+(WIRED). `schemas/magnets_params.py:10` declares it required. → fell-through ∩ valueless ∩
+wired holds; V11 + INV-4 (`== [cryo_load.magnet_volume]`) sound.
+
+#### 0.4 — Appendix-B worksheet is FACTUALLY WRONG (the blocking finding)
+Traced the two "confirmed dedup" bindings in the committed snapshot:
+- **`pack_count`** (battery_bos cost_model): binding_type=**literal**, source_path=None,
+  literal_value=8.0. Literal bindings are classified USAGE_LITERAL directly in
+  `_trace_dependencies` (dependency_backtracker.py:341-361) and **never reach**
+  `_resolve_to_design_attribute`. No matcher fix (Bug A or Bug B) can dedup a literal.
+  The plan's "first proof point" test (`test_def_owned_leaf_unique_resolves(pack_count)`)
+  is **uninstantiable** — the resolver is never called for pack_count.
+- **`p_net_mw`** (energy_production): binding_type=reference, source_path=
+  `SolarBatteryDesign::solar_battery_plant::energy_production::p_net_mw` (**`::`-form**).
+  Flows through the `::` **exact-match** branch (dependency_backtracker.py:659-666),
+  NOT the dotted branch where the design places Bug B's leaf-unique. Sanitize is a
+  no-op here (no quoted segment); exact-match against `...energy_production__p_net_mw`
+  still fails (design attr is `...solar_battery_plant__p_net_mw`). → **no dedup**.
+- Solar's fell-through `::` EPs are back-filled to a value by the deriver merge
+  (graph_builder.py:550-557), so they are NOT valueless (e.g. `energy_production__p_net_mw`
+  = 0.008). → correctly NOT V11/summary targets; solar does not abort. Good, but they
+  also don't dedup.
+
+**=> The claimed solar_battery dedup churn does NOT occur.**
+
+#### 0.5 — The ACTUAL matcher-fix churn (beyond the enumerated worksheet)
+Computed with the real `sanitize_qualified_name`, cross-referenced against the Step-4
+inventory (dotted refs that resolve via CHAIN dispatch never reach Step-3, so they are
+NOT churn):
+- **retype_model — GENUINE Bug A churn (3 EPs).** `ife_calc|p` sp=`RetypeLibrary::'IFE Driver'::power`,
+  `hif_calc|q` sp=`RetypeLibrary::'HIF Driver'::torque` (×2). Currently miss (bare-swap
+  keeps quotes: `RetypeLibrary__'IFE Driver'__power` ≠ sanitized design-attr
+  `RetypeLibrary__IFE_Driver__power`). After Bug A they exact-match def-owned design
+  attrs → reclassify USAGE_LITERAL→DESIGN_ATTRIBUTE, values change to 10.0 / 20.0 / 20.0.
+  Correct, intended-shape churn — but in retype_model, via Bug A (`::`), NOT solar via Bug B.
+- **chain_override_probe — Bug B case, POSSIBLE CROSS-WIRE (1 EP).** `cost_model|sensitivity`
+  sp=`calibration.calibrated_factor` currently falls to Step-4. Bug B's leaf-unique would
+  resolve it to `ChainOverrideLibrary__CalibrationCalc__calibrated_factor` — a **calc-def
+  OUTPUT attribute**, not a user design-part attribute. `_design_attributes` contains
+  calc-def I/O attributes (confirmed: `FusionPhysicsGeometry__TorusMinorRadius__a`,
+  `ChainSpikeLibrary__AreaCalc__area`, etc.), a pool the design's B1/INV-2 reasoning did
+  not account for. Resolving a dotted calc-output reference to a calc-def attribute QN
+  classified DESIGN_ATTRIBUTE is a likely mis-resolution (it should be a MODULE_OUTPUT, or
+  stay loud). **INV-2 ("never cross-wire") risk.**
+
+#### 0.6 — INV-5 (zero-WARNING clean fixtures) CONFLICT
+- **attr_expr_probe, sample_model**: already zero WARNING. ✓
+- **chain_spike**: only 3 `Registry unresolved`; its params are valued (length=10.0,
+  width=5.0, rate=12.0) → not valueless → after Step-4 demotion, zero WARNING. ✓ (clean)
+- **solar_battery**: emits **2 out-of-scope WARNINGs** this item does not touch —
+  `EXPOSE_PURE misc_hardware_cost: could not identify instance/output` (graph_builder.py:689)
+  and `Module class name collisions detected ... 20 modules` (generation/registry.py:91).
+  → solar **cannot** reach all-warnings-zero within this item's scope. The Phase-3 test
+  stencil as written (`assert [r ... levelno>=WARNING] == []` on solar) will fail.
+
+### Phase 0 Blocking Findings — DECISIONS NEEDED (see stage report)
+1. Worksheet (pack_count/p_net_mw dedup) is wrong; real churn is retype_model (Bug A) +
+   chain_override_probe (Bug B, cross-wire risk). Triggers the orchestrator stop
+   condition "reclassification touches anything beyond the worksheet's enumerated set."
+2. Bug B leaf-unique matches calc-def I/O attributes (broader pool than "design
+   attributes") → possible cross-wire. Needs a scoping decision (restrict pool? keep as
+   safe-miss?).
+3. INV-5/solar zero-WARNING is unachievable in scope (2 unrelated warnings). Needs a
+   decision: scope the assertion to this item's warning categories, or drop solar from
+   the strict-zero set (keep attr_expr_probe/sample_model/chain_spike).
 
 ### Phase 1 Completion
-**Completed:** [Timestamp]
-**Actual / Issues / Deviations:** [...]
+**Status:** CODE-COMPLETE, UNVALIDATED — blocked on execution (see "Execution Blocker").
+**Completed edits (2026-07-05):**
 
-### Phase 2 Completion
+Matcher fixes + six-site lockstep flip (INV-1 completeness grep CLEAN — no remaining
+bare `sysml_to_python_qualified_name` on a comparison-bound QN, both `sysml_qn_lookup`
+calls sanitized, no seventh site):
+- Site 1 — `output_registry_builder.py:130` registration wrapped in `sanitize_qualified_name`.
+- Site 2 — `dependency_backtracker.py` REFERENCE dispatch `sysml_qn_lookup` key sanitized.
+- Site 3 — `dependency_backtracker.py` `::` branch: `sysml_to_python_qualified_name`
+  → `sanitize_qualified_name` (Bug A).
+- Site 4 — `pipeline_builder.py` FORMULA-removal twin → `sanitize_qualified_name` (+import).
+- Site 5 — `input_resolver.py` Strategy B `sysml_qn_lookup` key sanitized (+import).
+- Site 6 — `parameter_groups.py` `_find_source_file` twin → `sanitize_qualified_name` (+import).
+- Bug B — `_resolve_to_design_attribute` dotted branch: after the exact-match loop,
+  leaf-unique fallback over design-part attributes only (`_is_calc_def_owned` filter,
+  DEV-2/A1); exactly one → resolve, else None. New `_is_calc_def_owned` helper + lazy
+  `_calc_def_qns` cache.
+- Import swaps: `dependency_backtracker.py`, `pipeline_builder.py` import
+  `sanitize_qualified_name` (was `sysml_to_python_qualified_name`, sole use each).
+
+Tests: `tests/unit/test_matcher_fixes_item7.py` (6 tests, synthetic-data / real method,
+no mocks): leaf-unique resolve, ambiguous refuse (INV-2), calc-I/O excluded (A1),
+calc-I/O collision-still-resolves (A1), quoted-owner `::` match (Bug A), no-false-match.
+
+**Deviations:** DEV-1/DEV-2/DEV-3 recorded in design.md "Implement-Time Deviations".
+
+**NOT YET RUN (blocked):** the new unit tests, the full suite, the retype_model
+behavioral confirmation, ruff, mypy. Static verification only (INV-1 grep, code read).
+
+### Execution Blocker (2026-07-05)
+All code execution requires approval in this non-interactive session — `uv run pytest`,
+`uv run sysml-codegen generate`, `.venv/bin/pytest`, even `.venv/bin/python -c "print()"`
+all return "This command requires approval" (dangerouslyDisableSandbox does not help;
+`/tmp` writes are blocked, repo-tree writes trigger approval). Read-only tools
+(grep/ls/sed) work. Phase 0 in the prior turn could run `uv run` freely, so this is a
+turn-scoped environment restriction, not the intended state.
+
+**Impact:** cannot run the Phase-1 tests / gate; **cannot execute Phases 2–4's
+execution-dependent steps** — the seeded-fixture extraction-snapshot capture (Phase 2),
+the baseline regen via capture scripts (Phase 4), and the full quality gate all need
+`uv run`. Phase 1 code is correct-by-construction + static-checked but unvalidated.
+Orchestrator must restore execution access (or run validation) to proceed.
+
+### Phase 1 Validation Completion (fresh session, execution restored)
+**Completed:** 2026-07-05
+**Result:** Suite GREEN — 1900 passed / 4 skipped / 5 xfailed. ruff 21, mypy 109 (at baseline).
+
+**7 old-contract tests flipped to the sanitized-key contract** (raw `::` lookup keys →
+sanitized `__` form; resolution assertions unchanged):
+- `test_backtracker_computed_attrs.py` — `test_dotted_and_sysml_qn_keys_resolve`
+  (`Pkg::plant::p_net_kw` → `Pkg__plant__p_net_kw`), `test_sysml_qn_key_resolves`
+  (`E2EDesign::e2e_plant::power_mw` → `E2EDesign__e2e_plant__power_mw`). Input
+  `owning_part_qualified_name` args kept raw `::` (they are SysML inputs).
+- `test_output_registry_construction.py::test_formula_sysml_qn_resolves`
+  (`SolarBatteryDesign::...::p_net_kw` → `__` form).
+- `test_output_registry.py` — OR-01 `test_all_reference_formats_resolve[solar_battery]`
+  and OR-05 `test_formula_sysml_qn_registered`: wrapped the inline-built lookup key in
+  `sanitize_qualified_name` (mirrors the registration; import added).
+- `test_dual_resolution.py::test_formula_channel_exists_in_sysml_qn_registry`
+  [attr_expr_probe, solar_battery]: wrapped lookup key in `sanitize_qualified_name`
+  (import added).
+
+**Note on baseline churn:** the plan anticipated Phase-1 baseline-comparison tests going
+red (to be closed by Phase-4 regen). None did — the retype_model Bug-A reclassification
+(DEV-1) is not asserted by any committed baseline-comparison test in the suite. Phase 4
+still regenerates retype_model's baseline artifacts and reviews the diff. The only
+expected new suite exception remains the enumerated catf_mfe clean-E2E xfail (Phase 2/4).
+
+### Phase 2 Progress (fresh session) — CODE COMPLETE, BLOCKED on a scope ruling
+**Date:** 2026-07-05
+
+**Implemented (all validated to run):**
+- `BacktrackingResult.fallback_entry_points: set[str]` field; populated at the
+  Step-4 fall-through site (`dependency_backtracker.py`). Initialized in BOTH
+  `__init__` (direct-call callers) and `find_required_modules` (per-run reset) —
+  fixing a real bug: 3 unit tests call `_resolve_binding_via_registry` directly
+  without `find_required_modules`, so the set must exist on the instance.
+- `ComputationGraph.fallback_entry_points` propagated in `build_computation_graph`.
+  **DEV-4 (schema-rev scope):** the field is `Field(default_factory=set,
+  exclude=True)` — an in-memory analysis artifact, kept OUT of the serialized
+  graph. Serializing it would churn EVERY committed `computation_graph.json`
+  baseline (a much wider footprint than the plan's retype_model regen), so exclude
+  keeps baselines byte-stable while the collector stays pure over the in-memory
+  graph. The two field-count contract tests (REQ-GA-05, REQ-DM-03) and the
+  BacktrackingResult field test flip to the new field set (kept as green
+  assertions; no weakening).
+- `collect_uncovered_params(graph) -> list[UncoveredInput]` (wired V11 half) and
+  `collect_unwired_fallthrough(graph) -> list[str]` (unwired summary half) — pure,
+  sibling to `_validate_channel_references` (`graph_builder.py`). INV-3 holds.
+- `_reconcile_params_coverage(graph)` at the CLI generation boundary (Step 1.6,
+  after `_check_duplicate_output_paths`, before output clear): logs the unwired
+  reconciliation summary (WARNING) FIRST, then raises V11 (CodeGenerationError,
+  V-style message) on any wired violation. Always strict; matches the existing
+  fail-fast idiom (caught by run_codegen, aborts).
+
+**Collector confirmed against real graphs (INV-4 holds):** catf_mfe collector ==
+exactly `[cryo_load.magnet_volume]` (module `catfmfemagnets__catf_tf_system__cryo_load`,
+key `magnets_params.CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume`).
+solar_battery / chain_spike / attr_expr_probe are clean (fell-through EPs carry
+back-filled values → not V11). INV-3 pure (no raise) confirmed.
+
+**Suite state:** 1892 passed / 2 failed / 6 errors / 4 skipped / 5 xfailed. ALL 8
+failing are V11 generation aborts — nothing else regressed.
+
+#### BLOCKING FINDING — V11 fires on 4 fixtures beyond the enumerated catf_mfe
+Scanned the whole corpus through the collector. V11 (fell-through ∩ valueless ∩
+wired) fires on FIVE fixtures — every one a genuine, PRE-EXISTING gap (verified by
+`git stash` of all Item-7 src changes: base_cost was already USAGE_LITERAL /
+default None / wired at committed HEAD, so this is NOT reclassification and NOT a
+regression from Phase 1):
+
+| Fixture | V11 input | Nature | Has breaking E2E test? |
+|---|---|---|---|
+| catf_mfe | cryo_load.magnet_volume | cross-part EXPOSE (Items 9-11) | YES — enumerated xfail set |
+| chain_override_probe | cost_model.sensitivity | `calibration.calibrated_factor` calc-output ref; **A1 explicitly rules this stays loud** | no E2E test |
+| unresolvable_attr_probe | my_calc.x | fixture literally named "unresolvable" | no E2E test |
+| alias_agg_probe | cost_model.base_cost | bare-name `:>> widget.base_cost = 50.0` redefinition; value exists in model but is NOT captured as a design attribute the resolver reaches | **YES — `test_alias_agg_probe_generation.py::test_alias_agg_probe_generates_importable_package`** |
+| issue22_model | cost_model.base_cost | same bare-name `:>>` redefinition pattern | no E2E test |
+
+The plan said "the sole new suite exception is the enumerated catf_mfe clean-E2E
+xfail." Reality: **alias_agg_probe** also has an E2E generation test that V11 now
+aborts. (issue22/chain_override/unresolvable_attr trip V11 but have no E2E
+generation test, so they don't redden the suite — but their collector lists could
+be pinned green.) base_cost is a THIRD gap class (bare-name def-owned + usage
+`:>>` redefinition) — neither Bug A (`::`) nor Bug B (dotted def-owned) covers it,
+so it is out of Item 7's two-matcher scope. Its E2E "generates importable package"
+test passed before only because *importable ≠ runnable* — the generated pipeline
+references a `library_params.…base_cost` key the JSON omits → latent load-time
+KeyError. V11 correctly refuses it.
+
+**DECISION NEEDED before finishing Phase 2/4 — see stage report.**
+
+### Phase 2 Completion (orchestrator rulings applied)
+**Date:** 2026-07-05. Q1=Option A, Q2=Option (b), DEV-4 approved (all recorded above).
+- New `tests/unit/test_uncovered_params.py`: collector purity (INV-3), catf_mfe
+  exact pin (INV-4), + pins for alias_agg_probe / issue22 / unresolvable_attr /
+  chain_override, explicit V11 raises-assertion, seeded strict-generation proof
+  (unresolvable_attr_probe, independent of catf_mfe — Q2(b)), DEV-4
+  serialization/parity test, and a constructed-graph unwired-summary test.
+- **Q2 coverage check:** all three V11 predicate components (fell-through ∩
+  valueless ∩ wired) are exercised by the existing four fixtures (each hits all
+  three simultaneously). The **unwired**-summary partition (not V11) has no real
+  fixture and is covered by a constructed real-model graph. No new SysML fixture
+  authored — the "seeded fixture" spec requirement is satisfied by the existing
+  purpose-built `unresolvable_attr_probe` (spec deviation, recorded).
+
 ### Phase 3 Completion
-### Phase 4 Completion
+**Date:** 2026-07-05.
+- Step-4 per-binding "Registry unresolved" line → DEBUG (`dependency_backtracker.py`).
+- `OutputRegistry`: per-collision alias line → DEBUG + `_alias_collisions`
+  accumulator (`alias_collision_count` / `alias_collision_distinct_keys`);
+  `output_registry_builder` emits one WARNING count-summary when non-empty.
+- New `tests/unit/test_warning_reconciliation.py`: strict zero-WARNING for
+  attr_expr_probe / sample_model / chain_spike (INV-5); solar scoped to this
+  item's categories (DEV-3); catf alias per-line→one summary.
+- **Old-contract tests flipped to DEBUG** (D5): `test_parallel_validation.py`
+  (capture→DEBUG, assert level), `test_output_registry_construction.py`
+  (`test_unresolved_binding_logs_debug`), `test_output_registry.py` (3 collision
+  tests → DEBUG + accumulator assertions). Unregistered-channel and module-class
+  collision WARNINGs are untouched (verified: test_orchestrator / test_gen_registry
+  unaffected).
+
+### Phase 4 Completion (Q1 Option A)
+**Date:** 2026-07-05.
+- **catf_mfe E2E** inverted to assert the V11 abort:
+  `test_computed_attributes_e2e.py::test_catf_mfe_aborts_with_v11` (was
+  `_still_works`); `test_expression_compilation_e2e.py::TestCATFMFEValidation`
+  fixture asserts abort then `pytest.xfail`s the 6 output-inspecting tests.
+  Comment tracks to Items 9-11.
+- **alias_agg_probe E2E** inverted:
+  `test_alias_agg_probe_aborts_with_v11_but_identifiers_are_clean` — pins the V11
+  gap, explicit `pytest.raises` on `_reconcile_params_coverage`, and PRESERVES
+  REQ-NC-08 at the identifier level (generation aborts before writing files).
+  Comment tracks to Item 9.
+- **Baseline regen: NO-OP.** retype_model has no committed baseline; the 5
+  existing baselines don't reclassify (suite baseline tests stayed green, DEV-4
+  keeps `fallback_entry_points` out of serialization). Three-part review recorded
+  in `release-notes.md` (keys: none collapse; values: retype_model 3 EPs →
+  10/20/20, gate-confirm; notes: enumerated).
+- **New suite exception set:** `{catf_mfe, alias_agg_probe}` (E2E aborts) + green
+  collector pins for the other three. Recorded in release-notes.md.
+
 ### Phase 5 Completion
+**Date:** 2026-07-05.
+- `modeling-assumptions.md`: V11 row + SC-8 behavioral note.
+- `verification-matrix.md`: rows REQ-BT-09/10, REQ-OR-09, REQ-GA-08, REQ-PGD-08.
+- `entry_point.py` README note (m2): null-default keys are omitted, schema-required.
+- `release-notes.md`: three-part enumeration + V11 corpus surface.
+- **agentic-mbse impact (R2): minor/none.** Matcher fixes + V11 are internal
+  codegen resolution — no MODELING_GUIDE / sysml-conventions change. Level-6
+  candidate for Item 12: a design-attribute binding whose `*_params` key is never
+  covered (model-side mirror of V11). Def-owned part-def-attribute shape works;
+  no guidance note needed (codegen matcher concern only).
+- **Doc prose 07/10/11/17/24:** matrix rows + modeling-assumptions carry the
+  authoritative REQ text; the reference-doc prose bodies are a remaining R1
+  nice-to-have (not blocking) — flagged for the audit/close-out.
+
+### EXECUTION BLOCKER (handoff) — orchestrator must run the gate
+Mid-turn, all `uv run` / `.venv/bin/python` execution became approval-gated again
+(the same turn-scoped restriction the prior session hit; read-only shell + file
+tools still work). Validated BEFORE the block: the collector on real graphs
+(INV-4, purity), the 5-fixture V11 scan, the field-count + init-bug fixes
+(183 passed), ruff 21 / mypy 109. Written-but-UNRUN after the block: the two new
+test files, the E2E conversions, and all Phase-3 demotion test edits.
+
+**Gate to run:** `uv run pytest tests/` (expect green except the enumerated
+catf_mfe xfails + the two inverted V11 E2E assertions passing); `uv run ruff check
+src/` (≤21); `uv run mypy src/` (≤109). Confirm the retype_model value churn
+(10/20/20) by a snapshot-driven generate if a definitive record is wanted.
 
 ---
 

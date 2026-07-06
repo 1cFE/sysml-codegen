@@ -207,6 +207,16 @@ class TestCATFMFEValidation:
 
     @pytest.fixture(scope="class")
     def catf_mfe_output(self, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        """catf_mfe generation now aborts with V11 (Item 7 / D4).
+
+        The cross-part ``cryo_load.magnet_volume`` EXPOSE gap makes strict
+        generation refuse (guaranteed runtime ``KeyError``). This fixture pins
+        the abort, then ``xfail``s every downstream output-inspecting test in the
+        class — there is no generated output to validate until Items 9-11 wire
+        the ``tf_coil.volume`` cross-part shape and flip generation back to clean.
+        The exact gap is pinned green in
+        ``tests/unit/test_uncovered_params.py`` (``[cryo_load.magnet_volume]``).
+        """
         model_path = FIXTURES_DIR / "catf_mfe_model"
         output_path = tmp_path_factory.mktemp("catf_mfe")
         config = GenerationConfig(
@@ -215,8 +225,11 @@ class TestCATFMFEValidation:
             package_name="catf_mfe",
         )
         success = run_codegen(config)
-        assert success, "CATF MFE codegen should succeed"
-        return output_path
+        assert success is False, "V11 must abort catf_mfe generation (magnet_volume gap)"
+        pytest.xfail(
+            "catf_mfe magnet_volume cross-part EXPOSE gap — Items 9-11 wire "
+            "tf_coil.volume; V11 aborts generation by design until then"
+        )
 
     def test_codegen_succeeds(self, catf_mfe_output: Path):
         assert (catf_mfe_output / "handwritten").exists()

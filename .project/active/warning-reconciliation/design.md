@@ -27,6 +27,51 @@ reconciliation summary so a genuinely uncovered input fails loudly and precisely
 
 ---
 
+## Implement-Time Deviations (Item 7, applied 2026-07-05)
+
+Phase 0 ran `run_codegen` against the committed snapshots (which the design session
+could not) and found the Appendix-B worksheet mis-modeled the corpus. Orchestrator
+rulings A1/B1/C1 resolve these. Full evidence: plan.md "Phase 0 Completion".
+
+- **DEV-1 (worksheet correction; B1 ruling).** The two "confirmed dedup collapses"
+  (pack_count, p_net_mw in solar_battery) **do not occur** and are removed:
+  - `pack_count` is a **literal** binding (`source_path=None`); literals are
+    classified USAGE_LITERAL directly (`dependency_backtracker.py:341-361`) and never
+    reach `_resolve_to_design_attribute`. No matcher fix can dedup a literal.
+  - `p_net_mw` is a **`::`-form reference** → the `::` exact-match branch, not the
+    dotted branch of Bug B. Sanitize is a no-op (unquoted); exact-match still fails.
+  The **actual** Bug-A churn is in **retype_model** (3 EPs: `ife_calc|p`, `hif_calc|q`
+  ×2 — quoted-owner `::` refs to def-owned design attrs `RetypeLibrary__IFE_Driver__power`
+  = 10.0, `RetypeLibrary__HIF_Driver__torque` = 20.0; USAGE_LITERAL→DESIGN_ATTRIBUTE,
+  values change). This is the deliberate Phase-4 regen churn.
+
+- **DEV-2 (Bug B pool restriction; A1 ruling; corrects B1/INV-2).** `_design_attributes`
+  is populated from every AttributeUsage with a value expression, so it **includes
+  calc-def `out attribute y = expr` outputs**, not only user design-part attributes
+  (confirmed: `FusionPhysicsGeometry__TorusMinorRadius__a`,
+  `ChainOverrideLibrary__CalibrationCalc__calibrated_factor`, etc.). The leaf-unique
+  matcher (Bug B) therefore **filters the candidate pool to design-part attributes**,
+  excluding calc-def I/O (`_is_calc_def_owned`: an attr is calc-def-owned when its QN
+  minus the leaf equals a calc def's sanitized QN). Without this, a dotted calc-output
+  reference (e.g. chain_override_probe `calibration.calibrated_factor`) would cross-wire
+  into a DESIGN_ATTRIBUTE entry point with a library default — the silent mis-wiring
+  this epic exists to kill. With it, that reference stays unresolved and LOUD
+  (V11/summary), correct for an Items-9–11 cross-part/chained reference. Consequence:
+  Bug B may have **zero corpus effect** (acceptable per A1); the seeded fixture proves
+  the mechanism, the pool restriction is the safety property. B1 is reformulated:
+  leaf-uniqueness is asserted over **design-part** attributes, not the raw pool.
+
+- **DEV-3 (INV-5 scope; C1 ruling).** solar_battery emits two out-of-scope WARNINGs
+  this item does not own — `EXPOSE_PURE misc_hardware_cost` (`graph_builder.py:689`)
+  and `Module class name collisions` (`generation/registry.py:91`). They are real
+  signals owned elsewhere (Item 11 / registry design) and are **not** silenced. INV-5's
+  strict zero-WARNING assertion therefore applies to **attr_expr_probe, sample_model,
+  chain_spike** only; for solar_battery the assertion is scoped to this item's
+  categories (no Registry-unresolved noise, no reconciliation summary, alias collisions
+  summarized).
+
+---
+
 ## Design-Review Resolutions (design-review.md)
 
 - **C1 — narrow V11.** Applied. V11's population is `fallback_entry_points` ∩

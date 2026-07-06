@@ -116,6 +116,8 @@ the documentation rather than executable code.
 | REQ-BT-06 | Topological sort SHALL produce dependency-first ordering or raise on cycles | `test_backtracker.py` | PASS |
 | REQ-BT-07 | Self-reference guard SHALL prevent a usage from wiring to its own output | `test_backtracker.py` | PASS |
 | REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct... | `test_backtracker.py` | PASS |
+| REQ-BT-09 | The FORMULA `::`-QN REFERENCE path SHALL per-segment sanitize (`sanitize_qualified_name`) before comparison/lookup so a quoted-owner QN matches the sanitized design-attribute QN (Bug A; six-site lockstep flip, INV-1) | `test_matcher_fixes_item7.py`, `test_dual_resolution.py` | PASS |
+| REQ-BT-10 | A design attribute owned by a part **def** (empty `parent_part`) SHALL match its binding via a leaf-unique fallback over design-part attributes (calc-def I/O excluded), returning a QN only when exactly one candidate exists, else None (Bug B; INV-2, no cross-wire) | `test_matcher_fixes_item7.py` | PASS |
 
 ### CA
 
@@ -223,6 +225,7 @@ the documentation rather than executable code.
 | REQ-GA-05 | The returned `ComputationGraph` SHALL contain exactly: sorted `modules`, `entry_point_gro... | `test_graph_assembly.py` | PASS |
 | REQ-GA-06 | `execution_order` list SHALL equal `[m.name for m in modules]` (names match module orderi... | `test_graph_assembly.py` | PASS |
 | REQ-GA-07 | The topological sort SHALL run in O(V + E) time using Kahn's algorithm with `deque`. | `test_graph_assembly.py` | PASS |
+| REQ-GA-08 | A two-layer params-coverage check SHALL exist: a pure collector `collect_uncovered_params(graph)` returning the wired fell-through-valueless violations (sibling to REQ-GA-03), and an always-strict generation boundary raising V11 on any violation. `ComputationGraph.fallback_entry_points` (in-memory, `exclude=True`) feeds it | `test_uncovered_params.py`, `test_graph_assembly.py`, `test_data_models.py` | PASS |
 
 ### GEN
 
@@ -324,6 +327,7 @@ the documentation rather than executable code.
 | REQ-OR-06 | Phase 2-4 aliases SHALL resolve through typed lookup before registering | `test_output_registry.py` | PASS |
 | REQ-OR-07 | Key_C SHALL be constructed via `make_scoped_key()` — strip design prefix from EQN, join w... | `test_output_registry.py` | PASS |
 | REQ-OR-08 | Key_A SHALL NOT be registered. The ambiguous key format is eliminated entirely — no regis... | `test_output_registry.py` | PASS |
+| REQ-OR-09 | The FORMULA sysml-QN key SHALL be registered per-segment sanitized (`sanitize_qualified_name`), and the per-collision alias line SHALL be DEBUG with one WARNING count-summary at build (Item 7 / D5, lockstep site 1) | `test_output_registry.py`, `test_output_registry_construction.py`, `test_warning_reconciliation.py` | PASS |
 
 ### ORCH
 
@@ -366,6 +370,7 @@ the documentation rather than executable code.
 | REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-06 | `get_default_value()` SHALL resolve through binding index to source attribute | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-07 | Group names SHALL follow `{snake_case_stem}_params` / `{PascalCaseStem}Params` convention | `test_parameter_group_deriver.py` | PASS |
+| REQ-PGD-08 | No deriver change is required for def-owned design-attribute matching (D1): once the backtracker (REQ-BT-10) returns the design-attr QN, the deriver's `_attr_index`-keyed `classify`/`get_default_value` resolve grouping and default automatically | `test_matcher_fixes_item7.py` (backtracker propagation), `test_parameter_group_deriver.py` | PASS |
 
 ### PIPE
 
