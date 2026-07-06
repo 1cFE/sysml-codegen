@@ -41,17 +41,28 @@ half-done.
 
 - [ ] **Zero grep hits** for every deleted symbol across `src/` and `tests/`; the full
   suite is green; ruff/mypy counts are not worse than the 21/109 baseline (SC-G).
+- [ ] **Suite green with the count story told, not assumed.** The net test count
+  **decreases** (self-tests of deleted dead symbols go with them); the close-out names
+  each deleted test and the symbol it solely pinned, and confirms no non-self-test lost
+  coverage — so "green" is auditable, not achieved by silently dropping an orphan (the
+  test-deletion rule below).
 - [ ] **Aggregation-literal fix reproduced then fixed** (R4): a failing probe on a new
   literal-bearing aggregation fixture demonstrates the mis-dispatch *before* the fix;
   after the fix that fixture shows the corrected dispatch; **all existing corpora stay
-  byte-identical** (the fix is inert on today's fixtures).
-- [ ] **doc-19 known-deviation note retired** and the dotted-leaf alias edge pinned by
-  a unit test, retiring doc-25's "no current model triggers this" hedge.
-- [ ] **Every D1 finding (F1–F5) ends dispositioned** — deleted, fixed, filed with a
-  real BACKLOG entry, or handed off to its owning item — with the disposition recorded
+  byte-identical** against the baseline set fixed by the Item-4 sequencing requirement
+  (v1 if this lands before Item 4's bump, v2 if after — see the [HARD] sequencing req).
+- [ ] **The fixed dispatch has a REQ home.** A new/extended REQ-AST row governs
+  literal-before-invocation ordering in `_walk_aggregation_ast`, verified-by the new
+  fixture; its matrix row is added in this item (R1: rows move with code).
+- [ ] **doc-19 known-deviation note retired**, its BACKLOG entry (`BACKLOG.md:185`)
+  closed, and the dotted-leaf alias edge pinned by a unit test, retiring doc-25's "no
+  current model triggers this" hedge.
+- [ ] **Every D1 finding (D1-F1…D1-F5) ends dispositioned** — deleted, fixed, filed with
+  a real BACKLOG entry, or handed off to its owning item — with the disposition recorded
   here. Nothing left "filed" only in a plan file.
 - [ ] **The 4 vacuous skipif guards removed**; their tests run unconditionally.
-- [ ] Every touched component's docstring/reference doc updated in the same change (R1).
+- [ ] Every touched component's docstring/reference doc updated in the same change (R1) —
+  including doc-17 when `get_default_value` is deleted.
 
 ## Scope: the cleanup catalog
 
@@ -72,19 +83,30 @@ test_gen/modules/pipeline only).
 ### B. Verify-then-delete dead functions (DOCS-SCRUB-F1b)
 
 - **`map_sysml_type_to_rootmodel_wrapper`** (`generation/type_mapping.py:60`) — callers:
-  its own def, the `__all__` entry (`:81`), and one conformance test
+  its own def, the module-docstring bullet (`type_mapping.py:9` — `- map_sysml_type_to_rootmodel_wrapper(): ...`),
+  the `__all__` entry (`:81`), and one conformance test
   (`test_type_mapping_consolidation.py`, incl. a `hasattr` assertion at `:242`). **No
   production caller** — `modules.py` imports the sibling `map_sysml_type_to_python`, not
-  this. DELETE the function, the `__all__` entry, and the test assertions that pin it
-  (drop the dedicated test cases; keep the sibling-function tests).
+  this. DELETE the function, the docstring bullet, the `__all__` entry, and the test
+  assertions that pin it (drop the dedicated test cases; keep the sibling-function tests).
 
 - **`get_default_value`** (`analysis/parameter_groups.py:533`) — callers: its own def
-  and `test_parameter_group_deriver.py` only; pins REQ-PGD-06. **Verify-then-delete with
+  and `test_parameter_group_deriver.py` only; documented at doc-17 rows `:26` (REQ-PGD-06)
+  and `:28` (REQ-PGD-08 prose) + method prose `:143`; matrix PASS row at
+  `verification-matrix.md:379` (verified-by those very tests). **Verify-then-delete with
   a recorded fork:** at implement, confirm the lookup it performs is duplicated by live
-  production code (i.e. the method only wraps `_attr_index` for the test). If yes →
-  DELETE method + its tests, and **hand the REQ-PGD-06 re-frame to Item 7** (matrix
-  owner; runs after this item). If the method is the sole implementation of a live
-  requirement → keep it and file the observation instead. Record which fork was taken.
+  production code (i.e. the method only wraps `_attr_index` for the test).
+  - **If dead → DELETE** method + its tests. **In the same change, per R1/R4 step 4,
+    this item updates doc-17** (retire/rewrite rows `:26`/`:28` prose and method prose
+    `:143` so no doc-line names a deleted symbol) **and leaves a visible breadcrumb on
+    `verification-matrix.md:379`** (e.g. `PASS → PENDING-ITEM7`, pointing at the BACKLOG
+    entry) so the transient "PASS pins a deleted test" gap is not silent. **Only the
+    matrix PASS-row re-frame itself is handed to Item 7** — recorded durably in BACKLOG
+    (`[ITEM7-PGD06]`, conditional on this deletion), because `matrix-truth/` (Item 7) is
+    still an empty directory and would never see an in-spec note.
+  - **If the method is the sole implementation of a live requirement → keep it** and file
+    the observation. `[ITEM7-PGD06]` becomes a no-op Item 7 retires.
+  - Record which fork was taken in the close-out.
 
 - **`generate_derived_group_json`** (`generation/entry_point.py:188`) — callers: its own
   def, `__all__` (`:326`), and the `generation/__init__.py` re-export (`:20,67`). **No
@@ -96,11 +118,13 @@ test_gen/modules/pipeline only).
 - **`binding_to_entry_point`** dual-write (DEPRECATED) — the `BacktrackingResult` field
   (`dependency_backtracker.py:81`) and its `_binding_to_entry_point` backing dict, kept
   in lockstep at ~7 init/reset/write/construct sites (register cited 62/80/176/304/372/
-  404/439; spot-grep at HEAD shows the machinery at 62/81/177/218/304/373/405/421/440 —
-  **re-grep at implement**). **No consumer reads `.binding_to_entry_point`** (grep: only
-  the field def, the writes, and `test_data_models.py:361` which asserts the field name
-  exists). DELETE the field, the backing dict, all dual-write/init/reset/construct sites,
-  and the `test_data_models.py` field-name assertion.
+  404/439; spot-grep at HEAD shows the machinery at 62/81/177/218/304/373/405/421/440,
+  plus the naming comment at `:179` — `# Unified binding resolutions (replaces
+  _binding_to_entry_point)` — which references the deleted dict; **re-grep at implement**).
+  **No consumer reads `.binding_to_entry_point`** (grep: only the field def, the writes,
+  and `test_data_models.py:361` which asserts the field name exists). DELETE the field,
+  the backing dict, all dual-write/init/reset/construct sites, the `:179` comment, and
+  the `test_data_models.py` field-name assertion.
 
 ### C. Stale docstrings (DOCS-SCRUB-F3) — one-line fixes, verify against body
 
@@ -135,10 +159,23 @@ test_gen/modules/pipeline only).
   catch-all, matching REQ-AST-03/-08 canonical ordering (mirror the Item-6 fix). Root
   fix, house style — the dispatch-ordering family.
 - **Gate.** Existing corpora **byte-identical** (no committed fixture has a
-  literal-bearing aggregation, so the reorder changes nothing for them); the new fixture
-  shows corrected dispatch.
+  literal-bearing aggregation, so the reorder changes nothing for them) — judged against
+  the baseline set fixed by the [HARD] Item-4 sequencing requirement (v1 before Item 4's
+  bump, v2 after); the new fixture shows corrected dispatch.
+- **REQ home (R1: rows move with code).** The fix moves `_walk_aggregation_ast` from
+  "documented-as-deviation" to "documented-as-conforming" — but no existing REQ-AST row
+  covers it: REQ-AST-03/-08 are scoped to `reconstruct_expression` by their own text,
+  and REQ-AST-05 governs this function only for FCE→SingletonTerm classification, not
+  literals. So **add a new REQ row** (recommend **REQ-AST-10**: "`_walk_aggregation_ast`
+  SHALL dispatch all literal/null branches before the invocation catch-all"),
+  verified-by the new literal-bearing fixture. **Add its matrix row in this item** —
+  matrix additions are allowed in-item per R1 ("REQ tags + docs + matrix rows move with
+  code"); only Item-7's *PASS-row reconciliation* waits. Note the addition in Item 7's
+  ledger via BACKLOG so the sweep sees it.
 - **Docs (R4 step 4).** Retire the doc-19 "Known deviation — `_walk_aggregation_ast`"
-  note and reconcile REQ-AST-03/-05 verified-by; **coordinate the doc-19 retirement with
+  note (and add REQ-AST-10 to doc-19's requirements table); **close the BACKLOG entry
+  that tracks this bug** (`BACKLOG.md:185`, currently tagged "Absorbed into ... Item 8" —
+  move it to Completed / strike it on landing). **Coordinate the doc-19 retirement with
   Item 10** (which sweeps retired caveats at epic close).
 
 ### E. Dotted-leaf alias unit pin (retires doc-25 hedge)
@@ -151,9 +188,9 @@ an aggregation attr but references a different part) and asserts the current beh
 then rewrite the hedge to point at the pin. This is a pin + doc edit, not a behavior
 change.
 
-### F. D1 unfiled residue (F1–F5 + two dead helpers)
+### F. D1 unfiled residue (D1-F1…D1-F5 + two dead helpers)
 
-- **F-2 — two-sanitizer consolidation.** `core.sanitize_name`
+- **D1-F2 — two-sanitizer consolidation.** `core.sanitize_name`
   (`core/qualified_names.py:13`) vs `expression_compiler._sanitize_name`
   (`extraction/expression_compiler.py:167`). The divergence is **load-bearing**: the
   compiler deliberately drops the reserved-word suffix that `core.sanitize_name`
@@ -162,17 +199,17 @@ change.
   rather than force-consolidate in a cleanup pass — a naive merge risks the FORMULA
   REFERENCE match. Implement only if a safe shared core falls out with the byte-identity
   gate green. Record the decision.
-- **F-3 — catf fallback-EP chore** (`pumping_speed_total`). Per
+- **D1-F3 — catf fallback-EP chore** (`pumping_speed_total`). Per
   `cross-part-wiring/plan.md:819-823`: catf's remaining fallback EP is a
   `USAGE_LITERAL 200.0` — fell-through but **valued**, so the collector correctly skips
   it; it is a benign pre-existing catf gap, **not a bug**. Assess whether it is still
   present; disposition = file-or-no-op (do not "fix" a non-bug). Record.
-- **F-4 — snapshot/graph `param_groups` type-ignore.** The four-line `# type: ignore`
+- **D1-F4 — snapshot/graph `param_groups` type-ignore.** The four-line `# type: ignore`
   cluster is in `resolution/graph_builder.py:408-412` (the `param_groups` loop:
   `[assignment]` + `[attr-defined]`), per `snapshot-generation/audit.md:186`. Annotate
   or rename `param_groups` at its root so the cluster deletes cleanly; mypy count must
   not rise.
-- **F-5 — dead `out = subprocess.run` var + unflipped plan checkboxes.** Spot-grep found
+- **D1-F5 — dead `out = subprocess.run` var + unflipped plan checkboxes.** Spot-grep found
   **zero** `subprocess` occurrences in `src/` or `scripts/` — the var appears already
   removed. VERIFY at implement (against `snapshot-generation/audit.md:120-123`); if gone,
   mark done; either way flip the unflipped plan checkboxes the finding names.
@@ -183,13 +220,21 @@ change.
   design deletes it (it will either wire a real deserializer or remove the stub). Left
   in place so it dies once, in Item 4. Recorded so it is not orphaned.
 
-### G. SC-11 AST-based import rewrite (D1-F1) — assess/implement/file
+### G. SC-11 AST-based import rewrite (D1-F1) — assess-then-decide, verdict recorded
 
 `identifier-sanitization/close-out.md:31` claims the AST-based import rewrite (substring,
-first-match) is a "filed follow-up" — but it is filed **nowhere**. Assess it against the
-registry alias-rewrite no-not-found branch (a D3 hygiene site). Implement if small; else
-**file it properly** as a P3 BACKLOG entry (closing the false close-out claim). Record
-the decision.
+first-match) is a "filed follow-up" — but it is filed **nowhere**. This is a real
+assess-then-decide, and **the assessment verdict is a recorded artifact either way** — so
+"file" is a reasoned outcome, not the path of least resistance:
+
+- **Assess** the rewrite against the registry alias-rewrite no-not-found branch (a D3
+  hygiene site); record what the comparison showed and the size judgment (what "small"
+  meant here — roughly, a one-to-two-site local change vs. a cross-module rework).
+- **If small → implement**; the commit is the artifact.
+- **If not → file** a P3 BACKLOG entry that carries the size argument, and correct the
+  false "filed follow-up" claim in `close-out.md:31`.
+
+Either branch leaves the verdict written down; neither can silently skip.
 
 ### H. The 4 vacuous typed-API skipifs — SIMPLIFY
 
@@ -216,12 +261,21 @@ Remove the guards; the tests run unconditionally.
   State only; the orchestrator slots it.
 - **[HARD]** No ComputationGraph rev. Every change is a deletion, a docstring, a test, a
   unit pin, or the dispatch-order fix. Anything needing a graph rev is out of scope.
-- **[NEED]** Every D1 finding (F1–F5) ends **dispositioned** — done, filed with a real
-  BACKLOG entry, or handed off to its owning item — with the disposition recorded in the
-  plan close-out. Nothing silently dropped (register discipline).
+- **[HARD]** **Test-deletion rule (this item's, distinct from Item 6's).** Item 6's rule
+  is "no test deleted without a replacement." This item is different: a test is deleted
+  **only when its sole purpose was pinning a now-deleted dead symbol**, so no live
+  behavior loses coverage. Expect a **net test-count decrease**; the close-out names each
+  deleted test and the symbol it pinned. "Suite green" (SC-G) is therefore auditable, not
+  a cover for silently dropping a failing orphan.
+- **[NEED]** Every D1 finding (D1-F1…D1-F5) ends **dispositioned** — done, filed with a
+  real BACKLOG entry, or handed off to its owning item — with the disposition recorded in
+  the plan close-out. Nothing silently dropped (register discipline).
 - **[INFERRED]** A deletion that orphans a conformance test updates or removes that test
-  in the same change; any REQ/matrix re-frame it forces (REQ-PGD-06) is **handed to
-  Item 7**, which owns the matrix and runs after this item.
+  in the same change, and **updates the reference doc it renders stale in the same change**
+  (R1/R4 step 4 — e.g. doc-17 when `get_default_value` is deleted). The *matrix PASS-row*
+  re-frame that a deletion forces (REQ-PGD-06) is the one piece handed to Item 7 — via a
+  durable BACKLOG entry (`[ITEM7-PGD06]`), not an in-spec note — with a visible breadcrumb
+  left on the matrix row so the transient gap is not silent.
 
 ## Non-Goals
 
@@ -231,7 +285,7 @@ Remove the guards; the tests run unconditionally.
 - Constraint serialization on the from-snapshot path — Item 4.
 - Any ComputationGraph rev or new feature work surfaced by a deletion (file it).
 - Forcing the two-sanitizer consolidation when the divergence is load-bearing (file it
-  instead — see F-2).
+  instead — see D1-F2).
 
 ## Open Questions / Deferred to design
 
@@ -241,24 +295,27 @@ are verify-at-implement, with recorded decision paths already in the catalog:
 - Whether `get_default_value` / `generate_derived_group_json` encode a live requirement
   vs. exist only for their own tests — resolved by the implement-time grep + the
   recorded fork (B), not deferred to a human.
-- Whether the two-sanitizer consolidation (F-2) is safely doable — assessed at
+- Whether the two-sanitizer consolidation (D1-F2) is safely doable — assessed at
   implement; default disposition is FILE, given the load-bearing divergence.
 
 **Coordination recorded (not open):**
 - **generation-boundary item** (BACKLOG: In Progress, BUILD phase, Step 7.6 —
   traceable). It enforces `generation/` consuming only ComputationGraph. This item
-  deletes `generation/` symbols (two templates, `map_sysml_type_to_rootmodel_wrapper`,
-  `generate_derived_group_json` + its `__init__` exports) — all surface-shrinking, low
-  conflict. Flag the shared files (`type_mapping.py`, `entry_point.py`, `templates/`,
-  `generation/__init__.py`) to that owner so a rebase does not resurrect the deleted
-  exports.
+  deletes generation-layer symbols (`map_sysml_type_to_rootmodel_wrapper`,
+  `generate_derived_group_json` + its `__init__` exports) plus two Jinja templates that
+  live one directory up in `src/sysml_codegen/templates/` (a sibling of `generation/`,
+  not inside it) — all surface-shrinking, low conflict. Flag the shared files
+  (`generation/type_mapping.py`, `generation/entry_point.py`, `generation/__init__.py`,
+  and `templates/`) to that owner so a rebase does not resurrect the deleted exports.
 - **Item 4** owns `_deserialize_constraint_info` and `extract_all_constraints` (F, above).
-- **Item 7** owns the REQ-PGD-06 re-frame if `get_default_value` is deleted (B), and the
-  matrix rows for any REQ this item touches.
+- **Item 7** owns the REQ-PGD-06 matrix PASS-row re-frame if `get_default_value` is
+  deleted (B) — received via the durable `[ITEM7-PGD06]` BACKLOG entry, not this spec —
+  and reconciliation of the new REQ-AST-10 matrix row (D). The reference-doc updates for
+  both land in *this* item.
 - **Item 10** sweeps the retired doc-19 and doc-25 caveats at epic close (D, E).
 
 **Orchestration mode:** autonomous epic run. Every disposition above is decided and
-recorded; there is no blocking human decision. The two forks (B, F-2) resolve on
+recorded; there is no blocking human decision. The two forks (B, D1-F2) resolve on
 implement-time evidence with the decision paths written down.
 
 ---

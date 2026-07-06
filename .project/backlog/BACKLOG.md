@@ -167,6 +167,21 @@ REQ-mirroring prose untouched pending this reconciliation.
 - `tests/conformance/test_graph_assembly.py` section header/class docstring still say
   "exactly 3 fields" (the test body pins 5).
 
+### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — CONDITIONAL, Item 7 consumes
+
+**Source**: PIPELINE-TRUTH Item 8 (`.project/active/cleanup-debt/spec.md`, row B), filed
+2026-07-06. **Conditional — only fires if Item 8 deleted `get_default_value`.** Item 8's
+fork-B deletes `ParameterGroupDeriver.get_default_value()` when the method is confirmed
+dead (only its own conformance tests call it). When that happens, Item 8 updates the
+reference doc in the same change (doc-17 rows `:26`/`:28` + prose `:143`, per R1) and
+leaves a breadcrumb on the matrix, but the **matrix PASS-row re-frame is Item 7's** (it
+owns the verification matrix). Item 7 must, at its spec: check whether Item 8 deleted the
+method (read `cleanup-debt/` close-out); if so, re-frame or retire `verification-matrix.md:379`
+(REQ-PGD-06, currently PASS verified-by `test_parameter_group_deriver.py` — those tests are
+gone) and reconcile REQ-PGD-08's `get_default_value` mention (`:28`). If Item 8 kept the
+method, this entry is a no-op — retire it. **Item 7 required reading must include this
+entry.**
+
 ---
 
 ## Completed

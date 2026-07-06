@@ -196,7 +196,64 @@ handoff has no receiver yet. Revise.
 
 ## Resolutions
 
-*(To be filled in during Stage 5 as the reviewer resolves each finding, keyed by ID.)*
+Orchestrator adopts the reviewer's positions wholesale. All 7 must-fixes + 3 minors
+incorporated into `spec.md` (2026-07-06).
+
+- **L1-1 — FIXED.** Row B `map_sysml_type_to_rootmodel_wrapper`: added the module-docstring
+  bullet `type_mapping.py:9` to the caller list and to the delete list. Row B
+  `binding_to_entry_point`: added the `:179` naming comment
+  (`# Unified binding resolutions (replaces _binding_to_entry_point)`) to both the site
+  list and the delete list.
+
+- **L1-2 — NO CHANGE (verified non-finding).** The Row D "known deviation from REQ-AST-03"
+  citation is correct (doc-19:36, BACKLOG:196). Recorded so it isn't re-raised.
+
+- **L2-1 — NO CHANGE (no finding).** Framing/sizing endorsed; the aggregation-bug bundling
+  and the pre-PUSH-DOWN timing bet stand.
+
+- **L3-1 — FIXED.** The REQ-PGD-06 handoff now has a durable home: new BACKLOG P3 entry
+  `[ITEM7-PGD06]` (conditional — "only if Item 8 deleted `get_default_value`"), with
+  "Item 7 required reading must include this entry." Row B and the [INFERRED] req + the
+  coordination note now point at the BACKLOG entry instead of an in-spec note. (`matrix-truth/`
+  is empty because Item 7 is un-specced; BACKLOG is the durable home per orchestrator note.)
+
+- **L3-2 — FIXED.** Row B split stated explicitly: on the delete fork, **this item** updates
+  doc-17 (rows `:26`/`:28` + prose `:143` — the `:28` REQ-PGD-08 mention was found beyond
+  the two the review named) and breadcrumbs `verification-matrix.md:379`
+  (`PASS → PENDING-ITEM7`) in the same change (R1/R4 step 4); **only** the matrix PASS-row
+  re-frame waits for Item 7. SC list and [INFERRED] req updated to match.
+
+- **L3-3 — FIXED.** Added an explicit [HARD] test-deletion rule (distinct from Item 6's):
+  delete a test only when its sole purpose was pinning a now-dead symbol; expect a net
+  test-count decrease; close-out names each deleted test + its symbol. New SC row makes
+  SC-G tell the count story so "green" is auditable, not a silent-orphan cover.
+
+- **L3-4 — FIXED.** Row D no longer says the muddy "reconcile REQ-AST-03/-05." It now
+  **adds a new REQ row** (recommended REQ-AST-10: literal-before-invocation ordering in
+  `_walk_aggregation_ast`), verified-by the new fixture, with the **matrix row added
+  in-item** (per R1 "rows move with code"; only Item 7's PASS-row reconciliation waits).
+  New SC row pins "the fixed dispatch has a REQ home." Added to doc-19's requirements table.
+
+- **L3-5 — FIXED.** Row D docs step and a SC row now require **closing `BACKLOG.md:185`**
+  (the aggregation-literal entry, currently "Absorbed") on landing — move to Completed /
+  strike.
+
+- **L3-6 — FIXED.** Row G rewritten as "assess-then-decide, verdict recorded": the
+  assessment output (the alias-rewrite-branch comparison + the size judgment, with "small"
+  defined as ~1–2 local sites vs. cross-module rework) is a recorded artifact either way —
+  the commit if implemented, or a BACKLOG entry carrying the size argument + a correction
+  to the false `close-out.md:31` claim if filed.
+
+- **L3-7 — FIXED.** SC-2 and Row D's Gate now name the baseline set explicitly and
+  cross-reference the [HARD] Item-4 sequencing req (v1 before the bump, v2 after).
+
+- **L4-1 — FIXED.** Coordination note corrected: the two `.jinja2` files live in
+  `src/sysml_codegen/templates/` (sibling of `generation/`), not "generation/ symbols";
+  the flagged-file list now qualifies each path.
+
+- **L5-1 — FIXED.** Discovery-series findings are now `D1-F1…D1-F5` consistently
+  (SC list, Row F header + bullets, Non-Goals, Open Questions, Orchestration note);
+  docs-scrub series stays `DOCS-SCRUB-Fn`. No more `F-2`/`F2` collision.
 
 ---
 
