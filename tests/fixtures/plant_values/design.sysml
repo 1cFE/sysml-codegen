@@ -25,9 +25,12 @@ package PlantValuesDesign {
             :>> cost_per_target = 10.0;
         }
 
-        // Mechanism (c): no override — the plant calc reaches `chamber.cost_per_unit`
-        // cross-part (the plain-attribute chain, no calc output). 'Reaction Chamber'
-        // leaves it a valueless user-fill attribute the current pipeline cannot wire to
-        // the inherited plant calc's `chamber_cost` input.
+        // Mechanism (c): a plain one-hop cross-part attribute. The chamber's
+        // `cost_per_unit` literal is supplied by a usage-level DOTTED override on the
+        // plant instance (distinct from (b)'s override BLOCK). The plant calc reads
+        // `chamber.cost_per_unit` cross-part; the current pipeline cannot wire this
+        // usage-level value to the inherited calc input, so the entry point stays
+        // valueless TODAY (V11 trips) — and the literal is the value Item 2 flips it to.
+        :>> chamber.cost_per_unit = 7.0;
     }
 }

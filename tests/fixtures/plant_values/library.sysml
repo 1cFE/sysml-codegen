@@ -63,13 +63,14 @@ package PlantValuesLib {
         attribute cost_per_target : Real;
     }
 
-    // Mechanism (c): the plain cross-part-attribute chain (the `driver.cost_per_joule`
-    // / twolevel shape, no calc output in the chain — the P1 acceptance note, distinct
-    // from the calc-output-valued variant). The reaction chamber declares the consumed
-    // attribute; the plant calc reaches it cross-part (`chamber.cost_per_unit`). The
-    // current pipeline leaves this reference a valueless user-fill entry point that the
-    // calc still wires — the headline's (c) V11-trip role (the value-carrying (c) with
-    // fan-out lives in the extended spec_chain_twolevel per SC-2, not here).
+    // Mechanism (c): a plain one-hop cross-part attribute. The reaction chamber declares
+    // `cost_per_unit` (valueless on the def); the plant usage supplies its literal via a
+    // usage-level DOTTED override (`:>> chamber.cost_per_unit = 7.0`, see design.sysml —
+    // distinct from (b)'s override BLOCK). The plant calc reads `chamber.cost_per_unit`
+    // cross-part; the current pipeline cannot wire the usage-level override to the inherited
+    // calc input, so the entry point stays valueless TODAY (V11 trips) — while the captured
+    // override literal (7.0, in hierarchy_data.design_overrides) is the value Item 2 flips
+    // `chamber_cost` TO. NOT a trip-only offender.
     part def 'Reaction Chamber' {
         attribute cost_per_unit : Real;
     }

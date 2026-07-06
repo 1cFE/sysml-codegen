@@ -14,10 +14,17 @@ passed; ruff src 21 / mypy 109 (baseline unchanged). `/_my_audit` suggested next
 
 - **D6 gate (PASS):** `plant_values` trips V11 with 3 offenders on module
   `plantvaluesdesign__plant__cost_calc`, covering all three value-provision mechanisms —
-  `driver_efficiency` (a, subtype-def literal via retype), `target_cost` (b, bare override
-  block), `chamber_cost` (c, plain one-hop cross-part attr). This is the SC-1 before-state
-  Item 2 flips; hand-computed after: `plant_cost=(10+7)/0.35=48.571`, constraint
-  `0.35*40>=10` holds.
+  `driver_efficiency` (a, subtype-def literal via retype → redefinition 0.35),
+  `target_cost` (b, override BLOCK → design_override 10.0), `chamber_cost` (c, plain one-hop
+  cross-part attr with a usage-level DOTTED override → design_override 7.0). All three
+  offenders are valueless EPs TODAY **and each carries a captured literal Item 2 flips it TO**
+  (audit-F1 cure: (c) is no longer trip-only — the `:>> chamber.cost_per_unit = 7.0` override
+  lands in `hierarchy_data.design_overrides`, pinned by
+  `test_mechanism_c_plain_cross_part_attr_valueless_ep_with_flippable_literal`). This is the
+  SC-1 before-state Item 2 flips; hand-computed after: `plant_cost = (target_cost + chamber_cost)
+  / driver_efficiency = (10.0 + 7.0) / 0.35 = 48.571`, constraint `eta*gain>=threshold` →
+  `0.35*40.0=14.0>=10.0` holds. Every operand is reproducible from the fixture source (see the
+  plan's Phase-4 cure note for file:line).
 - **Per-shape labels:** `plant_value_shapes` — CORRECT (bare default, 5-deep chain, quoted
   `'net cost'` output, Style-E, quoted return), DEGRADED (econ-param nested `:>>`,
   inherited-redefined-below), DIAGNOSTIC (non-float enum EP / Item 5). No extractor crash →

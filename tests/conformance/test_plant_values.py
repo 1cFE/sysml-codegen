@@ -81,11 +81,22 @@ def test_mechanism_b_override_block_literal_valueless_ep():
     assert _ep_default(_graph(), _EP_BY_MECHANISM["b"]) is None
 
 
-def test_mechanism_c_plain_cross_part_chain_valueless_ep():
-    """(c): the plain cross-part chain `chamber.cost_per_unit` (no calc output — the P1
-    shape) feeds a valueless plant-calc EP — the pipeline leaves it a user-fill EP the
-    inherited calc still wires, so it trips (the headline's (c) V11-trip role)."""
+def test_mechanism_c_plain_cross_part_attr_valueless_ep_with_flippable_literal():
+    """(c): the plain one-hop cross-part attr `chamber.cost_per_unit`, its literal supplied
+    by a usage-level dotted override (`:>> chamber.cost_per_unit = 7.0`, distinct from (b)'s
+    override BLOCK). TWO facts pinned:
+      1. the EP is valueless TODAY — the current pipeline cannot wire the usage-level value
+         to the inherited calc input, so `chamber_cost` trips (V11-trip role); AND
+      2. the override literal 7.0 IS captured in `design_overrides`, so Item 2 has a concrete
+         value to flip `chamber_cost` TO. This is NOT a trip-only offender (audit F1)."""
     assert _ep_default(_graph(), _EP_BY_MECHANISM["c"]) is None
+    snap = json.loads(snapshot_fixture("plant_values").read_text())
+    overrides = {
+        o["attribute_name"]: o["literal_value"]
+        for o in snap["hierarchy_data"]["design_overrides"]
+    }
+    assert overrides.get("cost_per_unit") == 7.0  # the value Item 2 resolves chamber_cost to
+    assert overrides.get("cost_per_target") == 10.0  # (b)'s value, for symmetry
 
 
 def test_assert_constraint_is_invisible_today():
@@ -97,12 +108,18 @@ def test_assert_constraint_is_invisible_today():
     and its bindings visible to the drop report)."""
     snap = json.loads(snapshot_fixture("plant_values").read_text())
     usage_names = {cu.get("qualified_name") for cu in snap["calc_usages"]}
-    assert "PlantValuesDesign__plant__viability" not in usage_names
     # The only extracted usage is the plant cost calc — the assert constraint is dropped.
     assert usage_names == {"PlantValuesDesign__plant__cost_calc"}
-    blob = json.dumps(snap)
-    assert blob.count("eta") == 0          # the cross-part binding is invisible
-    assert blob.count("viability") == 0    # the constraint usage is invisible
+    assert "PlantValuesDesign__plant__viability" not in usage_names
+    # Structural (not raw-byte counts): if the constraint were visible it would surface as a
+    # graph module / usage named `viability` with an `eta` input bound to driver.efficiency.
+    # Assert against parsed graph structures that neither exists.
+    graph = _graph()
+    assert not any("viability" in m.name for m in graph.modules)
+    input_params = {inp.param_name for m in graph.modules for inp in m.inputs}
+    assert "eta" not in input_params  # the constraint's cross-part binding never surfaces
+    ep_qns = {ep.qualified_name for g in graph.entry_point_groups for ep in g.parameters}
+    assert not any("viability" in q for q in ep_qns)
 
 
 def test_constraint_defaulted_param_leaks_to_design_attrs():

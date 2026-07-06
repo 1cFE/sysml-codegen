@@ -870,4 +870,45 @@ uncommitted per the plan (scratch, not a committed test).
 
 ---
 
+### Post-Audit Cure (PASS-WITH-NOTES → cured)
+**Completed:** 2026-07-06. One cure commit. Independent audit (`audit.md`) returned
+PASS-WITH-NOTES with three findings; all cured.
+
+**F1 (mechanism (c) was trip-only) — CURED.** The Phase-4 (c) revert dropped the source
+literal entirely, so `chamber_cost` tripped V11 but Item 2 had no value to flip it TO. Cure:
+give (c) a usage-level literal that stays valueless TODAY (a base-def literal resolves to a
+VALUED EP — empirically confirmed in Phase 1 — so the value must sit on the usage, same as
+(a)/(b)). Added a DOTTED usage-level override `:>> chamber.cost_per_unit = 7.0;`
+(`design.sysml:34`) — distinct from (b)'s override BLOCK, keeping (c) a plain one-hop cross-part
+attr. Re-captured `plant_values` (extraction + pipeline baseline via `--fixtures`). Result:
+`chamber_cost` EP `default_value is None` (still trips; 3 offenders, same tuples — D6 pin
+unchanged) AND the override literal 7.0 is captured in `hierarchy_data.design_overrides[0]`
+(`attribute_name=cost_per_unit, literal_value=7.0`), symmetric with (b)'s
+`design_overrides[1]` (`cost_per_target=10.0`). Pinned by the renamed
+`test_mechanism_c_plain_cross_part_attr_valueless_ep_with_flippable_literal`.
+
+**F2 (reproducible hand anchor) — RECORDED.** Formula `plant_cost = (target_cost + chamber_cost)
+/ driver_efficiency` (`library.sysml:24-25`). Operands, each from fixture source:
+- `driver_efficiency = 0.35` — `'Hif Driver' :>> efficiency = 0.35` (`library.sysml:55`),
+  consumed via retype `part :>> driver : 'Hif Driver'` (`design.sysml:20`) — mechanism (a).
+- `target_cost = 10.0` — `:>> cost_per_target = 10.0` (`design.sysml:25`) — mechanism (b).
+- `chamber_cost = 7.0` — `:>> chamber.cost_per_unit = 7.0` (`design.sysml:34`) — mechanism (c).
+- `plant_cost = (10.0 + 7.0) / 0.35 = 48.5714…`
+Constraint `eta*gain >= threshold` (`library.sysml:36`): `0.35 * 40.0 = 14.0 >= 10.0` → holds.
+`eta = driver.efficiency = 0.35` (a); `gain = 40.0` (`library.sysml:88`); `threshold = 10.0`
+default (`library.sysml:34`).
+
+**F3 (substring pin → structural) — DONE.** `test_assert_constraint_is_invisible_today` no longer
+uses `blob.count("eta")==0` / `blob.count("viability")==0`. It now asserts against parsed graph
+structures: `calc_usages` == {cost_calc only}, no graph module name contains `viability`, `eta`
+is not a module input param (the constraint's cross-part binding never surfaces), and no EP
+qualified_name contains `viability`.
+
+**Byte-identity:** only `plant_values/{design.sysml,extraction_snapshot.json}` changed on the
+re-capture (the pipeline baseline was byte-identical — graph structure unchanged). Full suite
+green after the cure. The Item-2 handoff in CURRENT_WORK.md was updated (no longer overstates (c);
+records the flippable-literal cure and the reproducible anchor).
+
+---
+
 **Status:** Complete

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "plant_values",
-  "captured_at": "2026-07-06T17:53:44.504106+00:00",
+  "captured_at": "2026-07-06T18:20:24.131962+00:00",
   "compilation_results": {
     "PlantCostCalc": {
       "calc_def_name": "PlantCostCalc",
@@ -222,6 +222,22 @@
       }
     ],
     "design_overrides": [
+      {
+        "owning_part_qn": "PlantValuesDesign__plant",
+        "attribute_name": "cost_per_unit",
+        "redefinition_type": "literal",
+        "literal_value": 7.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [
+          "chamber",
+          "cost_per_unit"
+        ],
+        "is_deep_path": true,
+        "source_file": "unknown",
+        "source_line": 0
+      },
       {
         "owning_part_qn": "PlantValuesDesign__plant__target_factory",
         "attribute_name": "cost_per_target",
