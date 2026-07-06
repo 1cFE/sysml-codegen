@@ -348,6 +348,30 @@ class TestMultiOutputReturnType:
             + "\n".join(failures)
         )
 
+    @pytest.mark.req("REQ-GEN-04")
+    def test_multi_output_return_type_literal(self, all_graph_data, template_env):
+        """A known 5-output module renders the exact literal tuple return type.
+
+        The parametrized test above builds its expected string as
+        f"tuple[{', '.join(['float']*n)}]" -- self-shaped on n, so it can't catch a wrong
+        arity. Pin one named module's full return string as a literal.
+        """
+        graph, _inputs = all_graph_data["solar_battery_model"]
+        module = next(
+            m for m in _get_calcusage_modules(graph)
+            if m.name
+            == "solarbatterydesign__solar_battery_plant__solar_array__pv_module__cost_model"
+        )
+        # provenance: pv_module cost_model has 5 outputs (material_cost, fab_cost,
+        #   install_cost, total_cost, idiot_index) -- library.sysml PVModuleCostCalc.
+        stub_module = module.model_copy(update={"auto_impl_context": None})
+        code = generate_implementation(
+            stub_module, template_env, Path("/tmp/test.py"), package_name="solar_battery",
+        )
+        assert "tuple[float, float, float, float, float]" in code, (
+            "pv_module cost_model should render a 5-float tuple return type"
+        )
+
 
 # ---------------------------------------------------------------------------
 # REQ-GEN-04: Import path consistency

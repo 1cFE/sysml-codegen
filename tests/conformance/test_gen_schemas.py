@@ -311,6 +311,11 @@ class TestFieldNamesMatchModuleOutputs:
     def test_field_names_match_pipeline_module_outputs(
         self, model_name, all_graph_data, template_env,
     ):
+        # NOTE (Item 6, L7): template-fidelity check -- compares generated schema field
+        # names against [o.field_name for o in module.outputs], both from one graph, so it
+        # only proves the template renders the graph's field names (not that the names are
+        # correct). The field-name CONTENT (output PQNs) is pinned independently by the
+        # output-registry PQN tests. Kept as a fidelity guard; sibling-pinned for content.
         graph, _ = all_graph_data[model_name]
         multi_output_modules = _get_multi_output_modules(graph)
 

@@ -177,6 +177,13 @@ class TestCrossGeneratorConsistency:
     def test_all_generators_use_shared_function(self, model_name, extraction_snapshots):
         """For each CalcUsage module, all type annotations are consistent
         with map_sysml_type_to_python() output for the same SysML type."""
+        # NOTE (Item 6, L4): this is a weak, partly self-referential check --
+        # expected = map_sysml_type_to_python(attr.sysml_type) recomputes the graph's own
+        # value. Its residual value is real but narrow: it proves every generator routes
+        # through the shared mapping (a divergent hardcode would fail). The actual type-map
+        # CONTENT is pinned independently by the literal siblings
+        # test_gen_schemas.py:359-381 and test_gen_module_wrappers.py (map literal table).
+        # Kept as a consistency guard, not deleted; sibling-pinned for content.
         graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         snap = inputs["snap"]
         calc_defs = snap["calc_defs"]

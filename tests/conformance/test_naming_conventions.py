@@ -262,11 +262,21 @@ class TestModuleName:
         )
         assert result == "solarbatterydesign__solar_battery_plant__cost_model"
 
+    # Hand-transcribed lowercased module name per REAL_EQNS row. Replaces the former
+    # `assert result == eqn.lower()`, which recomputed get_module_name's own lowercasing
+    # (a tautology). provenance: hand-transcribed lowercasing of each REAL_EQNS row.
+    EXPECTED_MODULE_NAMES = {
+        "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model":
+            "solarbatterydesign__solar_battery_plant__battery_system__battery_pack__cost_model",
+        "CATFMFEPhysics__catf_physics__net_electric":
+            "catfmfephysics__catf_physics__net_electric",
+        "CATFMFEPhysics__catf_physics__alpha_neutron_split":
+            "catfmfephysics__catf_physics__alpha_neutron_split",
+    }
+
     @pytest.mark.parametrize("eqn", REAL_EQNS)
     def test_module_name_parametrized(self, eqn):
-        result = get_module_name(eqn)
-        assert result == eqn.lower()
-        assert result == result.lower()
+        assert get_module_name(eqn) == self.EXPECTED_MODULE_NAMES[eqn]
 
 
 # ---------------------------------------------------------------------------

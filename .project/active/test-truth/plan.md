@@ -733,6 +733,31 @@ missing files. Registry lands at `output/__init__.py`; module files under `outpu
 ruff identical to HEAD (5 pre-existing errors, 0 introduced).
 
 ### Phase 7 Completion
+**Completed:** 2026-07-06
+**Per-candidate inspection:** all 7 reconstructed LOW rows (L1, L4–L8) + the register-named
+MF-07 (L2, done in Phase 3) were confirmed self-referential on inspection. **None struck** —
+SC-1 arithmetic holds at 17 register-named + 8 LOW = 25.
+**Fixes:**
+- **L1** `test_module_name_parametrized` (`test_naming_conventions.py`): replaced
+  `assert result == eqn.lower()` with a transcribed `EXPECTED_MODULE_NAMES` dict pinning the
+  lowercased literal for each of the 3 `REAL_EQNS` rows (verified via `get_module_name`).
+- **L8** `test_gen_stencils.py`: added a dedicated `test_multi_output_return_type_literal`
+  pinning pv_module cost_model's exact `tuple[float, float, float, float, float]` (5 outputs)
+  — the parametrized test's expected was self-shaped on `n`. +1 test.
+**Documented (sibling-pinned, kept not deleted):**
+- **L4** `test_all_generators_use_shared_function` (`test_type_mapping_consolidation.py`):
+  NOTE — recomputes `map_sysml_type_to_python`; content pinned by literal type-map siblings.
+- **L5** `test_input_types_match_module` (`test_gen_module_wrappers.py`): NOTE —
+  template-fidelity; content sibling-pinned.
+- **L6** `test_input_type_cross_reference_with_graph` (`test_gen_module_wrappers.py`): NOTE —
+  near-duplicate of L5, dedup opportunity flagged (not done here).
+- **L7** `test_field_names_match_pipeline_module_outputs` (`test_gen_schemas.py`): NOTE —
+  field-name content pinned by output-registry PQN tests.
+**Literal verification vs v2:** L1 literals and L8 arity CONFIRMED by building from the
+committed solar snapshot. No v2 discrepancy.
+**Count change:** +1 (L8 dedicated test).
+**Validation:** 137 passed across the 5 files; ruff identical to HEAD per file (0 introduced).
+
 ### Phase 8 Completion
 ### Phase 9 Completion (mutation spot-check + close-out)
 
