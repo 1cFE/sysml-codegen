@@ -522,7 +522,11 @@ independently-anchored expectations.
 **Success Criteria**:
 - [ ] All 25 register entries dispositioned; each fixed test demonstrably fails under
   a deliberate production mutation (spot-check three, note in close-out).
-- [ ] Suite green, count changes explained (no test deleted without a replacement).
+  <!-- audit 2026-07-06: all 25 dispositioned ✓; mutation spot-check recorded in close-out
+       (3 RED→revert→GREEN) but NOT independently reproduced at audit (pytest gated in stage
+       context). Statically corroborated. Left unchecked pending one licensed reproduction. -->
+- [x] Suite green, count changes explained (no test deleted without a replacement).
+  <!-- audit: orchestrator live gate 2005/4/5; −26 = parametrization reduction + 4 new fns; no fn deleted. -->
 
 **Required Reading**: discovery register §D5 (incl. the cleared-non-findings list —
 do not re-flag); `docs/architecture/verification-matrix.md` PASS definition.

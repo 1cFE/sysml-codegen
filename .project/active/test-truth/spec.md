@@ -37,7 +37,7 @@ pass-or-FAIL.
 
 ## Success Criteria
 
-- [ ] All 25 §D5 flagged tests are dispositioned — fixed, converted, handed off
+- [x] All 25 §D5 flagged tests are dispositioned — fixed, converted, handed off
   (EXT-09 → Item 4), or documented-as-sibling-pinned — with a one-line rationale each
   in the disposition table below. Of the 25, **17 are register-named** (H1–H7 by
   category, M1–M10 by category) and **8 are the LOW tier, of which the register names
@@ -47,21 +47,27 @@ pass-or-FAIL.
 - [ ] Each **fixed** test demonstrably fails under a deliberate production mutation.
   Spot-check three (one count-tautology, one naming/channel, the MF-07 conversion) by
   perturbing production, confirming red, reverting; record the three in the close-out.
-- [ ] **Per-test literal provenance is recorded** (L3-2): every re-anchored literal
+  <!-- audit NOT marked — pytest gated in this stage context; could not reproduce live RED.
+       Corroborated statically (H7 pin coupled to qualified_names.py:100) + close-out's 3
+       RED→revert→GREEN + orchestrator live gate. Recommend one licensed reproduction to close. -->
+- [x] **Per-test literal provenance is recorded** (L3-2): every re-anchored literal
   carries a comment next to it citing its source — snapshot path + line, fixture source
   `file:line`, or "hand-computed from <inputs>". This makes "pasted from production
   output" detectable at review for all ~24 fixed tests, not just the 3 mutation-checked
   ones. The close-out lists the provenance per fixed test.
-- [ ] `test_localterm_sibling_agg_output` (REQ-MF-07) fails — not skips — when its
+- [x] `test_localterm_sibling_agg_output` (REQ-MF-07) fails — not skips — when its
   LocalTerm does not resolve to the expected sibling aggregation channel.
-- [ ] The mis-anchored REQ-REG-02 test checks import paths against files an actual
+  <!-- audit: converted to pass-or-FAIL (ends on `assert found`, :793); literal coupled to production. -->
+- [x] The mis-anchored REQ-REG-02 test checks import paths against files an actual
   generation run wrote to disk, not against a re-derived path rule.
-- [ ] The two SC-6 render-contract pins exist and pass (scientific-notation normalized
+- [x] The two SC-6 render-contract pins exist and pass (scientific-notation normalized
   form; one positive `sum(...)` exact render).
-- [ ] `tests/conformance/README.md` carries a short "how to anchor a conformance
+  <!-- audit: test_hierarchy_resolver.py:321,330 — both exact-string, provenance-commented. -->
+- [x] `tests/conformance/README.md` carries a short "how to anchor a conformance
   expectation" note (the anti-pattern, the fix, the pass-or-skip trap).
-- [ ] Full suite green; any test-count change is explained in the close-out (no test
+- [x] Full suite green; any test-count change is explained in the close-out (no test
   deleted without a replacement). ruff/mypy not worse than the 21/109 baseline.
+  <!-- audit: orchestrator live gate 2005/4/5; −26 = parametrization reduction + 4 new fns, no fn deleted; ruff 20/mypy 105. -->
 
 ## Known Requirements
 

@@ -6,6 +6,13 @@
 
 ## Active Work
 
+### PIPELINE-TRUTH Item 5 — Silent-Failure Hardening — SPEC IN PROGRESS
+Track B. Spec phase is a verification pass (R4): the D3 floor findings are static-read
+verdicts reproduced/refuted before design. Verification table + spec:
+`.project/active/silent-failure-hardening/spec.md`; live probes (python execution is
+sandbox-blocked, so verdicts rest on code-trace + committed tests):
+`.project/active/silent-failure-hardening/probes/`.
+
 ### PIPELINE-TRUTH Item 1 — Plant-Value & Blind-Spot Fixtures — IMPLEMENTED (awaiting audit)
 Track A head (Items 2, 4, 5, 9 build on its fixtures). Fixtures + captures only, zero
 `src/` production code. Spec/plan: `.project/active/plant-value-fixtures/{spec,plan}.md`.
@@ -89,12 +96,19 @@ SC-11 import rewrite, drop 4 vacuous skipifs. Handoffs: `_deserialize_constraint
 Sequencing: agg-fixture capture runs entirely before OR after Item 4's snapshot v2 bump,
 not interleaved. Spec: `.project/active/cleanup-debt/spec.md`.
 
-### PIPELINE-TRUTH Item 6 — Self-Referential Test Remediation — spec in progress
+### PIPELINE-TRUTH Item 6 — Self-Referential Test Remediation — audited PASS-WITH-NOTES (2026-07-06)
 Track B, no deps. Re-anchor the 25 §D5 flagged tests (7 HIGH + 10 MEDIUM + 8 LOW) to
 hand-transcribed fixture literals; convert `test_localterm_sibling_agg_output` (MF-07)
 from pass-or-skip to pass-or-FAIL; re-anchor REQ-REG-02 to on-disk paths; add SC-6
 render pins + a tests/conformance anchoring note. EXT-09 handed off to Item 4. Matrix
 rows are Item 7's. Spec: `.project/active/test-truth/spec.md`.
+**Audit (`.project/active/test-truth/audit.md`):** anti-pattern gone (static sweep + 5
+spot-checks); 5 literals independently confirmed vs committed snapshots; −26 count = param
+reduction + 4 new fns, no fn deleted; all 25 dispositioned; EXT-09 handoff clean; doubling
+notes present; README accurate. **Open (1 note):** the mutation spot-check (SC-2) could not
+be reproduced at audit — pytest gated in the non-interactive stage context; corroborated
+statically + by the orchestrator's live gate (2005/4/5) + the close-out's 3 RED→revert→GREEN.
+Recommend one licensed reproduction to close SC-2.
 
 ### PIPELINE-TRUTH epic — DEFINED (Draft, awaiting scope review)
 Shaped 2026-07-06 from `.project/active/NEXT_EPIC_PROMPT.md` via `/_my_epic_plan` with
