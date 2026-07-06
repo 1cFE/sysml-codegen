@@ -5,7 +5,7 @@
 **Created:** 2026-07-06
 **Complexity:** HIGH (breadth, cross-repo; bounded by a hard 1–1.5 day scope guard)
 **Branch (artifacts):** `upstream-findings-epic` (this repo, sysml-codegen)
-**Branch (implementation):** `upstream-findings-sync` (in `~/1cfe/agentic-mbse` — already carries the A-2 stencil fix)
+**Branch (implementation):** `upstream-findings-sync` (in `~/1cfe/agentic-mbse` — already carries the A-2 stencil fix, commit `6dbdf1b`)
 
 ---
 
@@ -17,8 +17,8 @@ and audits models before generation (the L1–L6 validation runner) — has not 
 The two have drifted, and the drift cuts both ways:
 
 - **agentic-mbse teaches at least one broken pattern.** Its calc-def stencil taught the
-  expression-losing body-assignment form (register finding A-2). Item 3 fixed this inline;
-  Item 12 must confirm it landed and sweep for anything else stale.
+  expression-losing body-assignment form (register finding A-2). Item 3 fixed it inline
+  (committed, `6dbdf1b`); Item 12's job is to sweep for anything *else* stale.
 - **agentic-mbse's checks contradict what codegen now supports.** The L6 architecture check
   flags legal `out attribute X = <expr>` inside calc defs and flags quoted names — both now
   first-class in codegen (Items 3, 5). A model can pass generation but fail the auditor, or
@@ -72,7 +72,8 @@ self-named-binding check is the clearest example — Items 8, 9, and 10 each tou
 |---|--------|-------------|-----------|
 | **Checks (the A-1 floor + item-recorded checks)** ||||
 | C1 | **Self-named-binding check (FAIL, L2).** A binding/redefinition that binds an attribute to itself with no resolvable upstream is a modeling error. The rescue (Item 10) resolves the *resolvable* case; the unresolvable case still FAILs. Negative fixture: the `self_named_binding_trap` shape. | BUILD-CHECK | plant-fixtures/spec §impact; cross-part-wiring/release-notes + REQ-VBR-10; plant-prefill/spec (stays FAIL until rescue) |
-| C2 | **Return-style output check (L6).** Accept `out attribute`, named `return` (inline-expr *and* body-assignment), and bare `in` params. FAIL an **anonymous `return`** (no name → no channel; mirrors codegen V8). WARN the body-assignment `return attribute y; ... y = expr` form (extracts an output but loses auto-impl). Negative fixtures: anonymous-return; body-assignment. | BUILD-CHECK | return-style-extraction/spec §"Recorded for Item 12"; epic Item 12 floor |
+| C2a | **Return-style output check — accept + FAIL (L6).** Accept the newly legal forms: `out attribute`, named `return` (inline-expr *and* body-assignment), and bare `in` params. FAIL an **anonymous `return`** (no name → no output channel; mirrors codegen V8). Its own negative fixture: an anonymous-return calc def. | BUILD-CHECK | return-style-extraction/spec §"Recorded for Item 12"; epic Item 12 floor |
+| C2b | **Body-assignment auto-impl-loss (WARN, L6).** WARN the body-assignment `return attribute y; ... y = expr` form — it extracts an output but loses auto-impl until codegen's deferred capture lands. Separate check, its own negative fixture: a body-assignment calc def. | BUILD-CHECK | return-style-extraction/spec §"Recorded for Item 12" |
 | C3 | **Constraint non-executability (WARN, L6).** A model carrying constraint usages should WARN that constraints are not executable and are dropped. Points at modeling-assumptions §8. Negative fixture: a model with an inline constraint usage. | BUILD-CHECK | baseline-diagnostics/spec §impact (endorse A-1); epic floor |
 | C4 | **Calc-bearing part def with no instantiation (FAIL, L6).** A part def owning template calcs that is never instantiated — plainly *or by retyping* — FAILs, because its template calcs are dropped. Retyped usages (Item 4) now count as instantiation, so the check's notion of "instantiated" must include them. Negative fixture: a calc-bearing part def with no usage. | BUILD-CHECK | type-indexing/spec §impact item 2; epic floor (A-1 row 4) |
 | C5 | **adr002 operator-set correction.** In static design-attribute / FORMULA expressions the supported set is `+ - * /` and unit `[...]`; `**`/`^`, functions, and conditionals are NOT static operators and must move to a calc def. Correct `**`'s status in the operator table and make a **function-invocation in a static expression a WARN** (steer to a calc def). Negative fixtures: `attribute x : Real = a ** b;` and `= sqrt(a);` at design-attribute scope. | BUILD-CHECK | epic Item 12 floor (register A-1 adr002 corrections); modeling-assumptions §3 "Supported Operators" |
@@ -87,15 +88,24 @@ self-named-binding check is the clearest example — Items 8, 9, and 10 each tou
 | D5 | **Bare-`:>>` value idiom + attribute-`:>>` warning.** The value-carrying redefinition idiom is the **bare** `:>> attr = value` form (parses as ReferenceUsage, captured). Also teach the plain-usage literal override `part x : Type { :>> nested.attr = <literal>; }`. `attribute :>> attr = <expression>` is known-unsupported (paired with check C7). State the redefinition-precedence rule: usage override > specialized-def `:>>` > base def. | BUILD-DOC | plant-prefill/release-notes §impact; cross-part-wiring/design D-F + release-notes |
 | D6 | **EXPOSE surfacing.** An EXPOSE_PURE name is no longer internal wiring convenience only — it surfaces as a named output capture: it lands on `output_aliases` and becomes the output filename `{instance_path}__{alias_name}.json`. The surfaced name is the sanitized `python_name` (teach the sanitized form). Both shapes (part-def A, part-usage B) surface. EXPOSE_COMPUTED (calc output + arithmetic) stays rejected. | BUILD-DOC | alias-surfacing/release-notes §impact |
 | D7 | **Constraint pointer.** The MODELING_GUIDE constraint guidance points at modeling-assumptions §8 (canonical "constraints are not executable"). Pairs with check C3. | BUILD-DOC | baseline-diagnostics/spec §impact |
+| D8 | **Def-owned design attributes are supported.** A design attribute owned directly by a part def (empty `parent_part`) now resolves through the matcher (Item 7). Add a one-line note that this shape is supported, alongside the retyping pattern (D2). Item 7 recorded this as a *soft* candidate ("worth a note?") and its own Phase-5 answer leaned "no note needed — codegen matcher concern"; included here as a cheap BUILD-DOC line rather than dropped, so the R2 trail is complete. The plan may downgrade it to the no-impact paragraph if it judges the note redundant. | BUILD-DOC | warning-reconciliation/spec §impact (third bullet); plan Phase 5 |
 | **Verify** ||||
-| V1 | **A-2 stencil fix landed.** Confirm the sysml-conventions calc-def stencil (`references/stencils.md`, research cites ~lines 39–41) now teaches inline `return <r> : Real = <expr>` / `out attribute <r> : Real = <expr>`, NOT the body-assignment `return attribute <r>; ... <r> = expr` form. Item 3 applied it inline (agentic-mbse `6dbdf1b` per plan) but never read it back — this is the epic's explicit re-verify gate. | VERIFY | return-style-extraction/spec §"Inline in this item"; epic SC + Item 3 audit |
-| V2 | **Skill sweep.** Confirm nothing else in the sysml-conventions skill teaches a pattern codegen now rejects (or rejects one it now accepts). | VERIFY | epic Item 12 scope item 3 |
+| V1 | **A-2 spot-check (in passing).** The calc-def stencil fix is **committed** (agentic-mbse `upstream-findings-sync`, `6dbdf1b`) — `references/stencils.md` teaches inline `return <r> : Real = <expr>` / `out attribute <r> : Real = <expr>`, not the body-assignment form. Read it once to confirm it reads as expected. This is a spot-check, not a re-verification of whether A-2 landed — it did. | VERIFY | return-style-extraction/spec §"Inline in this item"; Item 3 plan (`6dbdf1b`) |
+| V2 | **Skill sweep — the load-bearing check.** Sweep the whole sysml-conventions skill for any *other* stencil or rule that teaches a pattern codegen now rejects (or rejects one it now accepts). This, not re-checking A-2, is the epic's "nothing else teaches a broken pattern" gate. | VERIFY | epic Item 12 scope item 3 |
 | **File (out of scope → backlog, not dropped)** ||||
-| F1 | **syside vendor note.** The self-named-binding recursion the WI-014 toy documents is **evaluation-time syside behavior, not extraction-time** — extraction is finite/degenerate (Item 8 probe, `timeout 150`, exit 0). File the vendor note with this distinction recorded; do not build the vendor report here. | FILE | epic Item 12 out-of-scope; plant-fixtures/plan Phase 2 + audit |
-| F2 | **V11 model-side mirror check (candidate).** A design-attribute binding whose `*_params` key no parameter group provides — the model-side mirror of codegen V11. Item 7 recorded it as a *candidate*, not floor; codegen V11 (hard FAIL) is the backstop. File as agentic-mbse backlog. | FILE | warning-reconciliation/spec+plan §impact |
-| F3 | **Shape-B leaf-collision.** Two distinct shape-B owning parts sharing a leaf name and exposing the same alias to different channels → a filename collision codegen does not yet disambiguate. Not triggered in-repo. File as backlog. | FILE | alias-surfacing/audit Obs. 2 |
-| F4 | **Redefinition / design_override name surfacing.** `:>>` and design-override names resolve as channels but are not EXPOSE_PURE-sourced, so they do not surface. File as backlog follow-up. | FILE | alias-surfacing/release-notes §impact |
-| F5 | **Positive unresolvable-warning test (opportunistic).** Item 11's INV-6 "unresolvable refs still warn" leg has no positive live assertion. Add opportunistically or file. | FILE | alias-surfacing/audit Obs. 1 |
+| F1 | **syside vendor note** → **agentic-mbse backlog** (implement session writes it on `upstream-findings-sync`). The self-named-binding recursion the WI-014 toy documents is **evaluation-time syside behavior, not extraction-time** — extraction is finite/degenerate (Item 8 probe, `timeout 150`, exit 0). File the note with this distinction recorded; do not build the vendor report or contact Sensmetry here. | FILE (agentic-mbse) | epic Item 12 out-of-scope; plant-fixtures/plan Phase 2 + audit |
+| F2 | **V11 model-side mirror check (candidate)** → **agentic-mbse backlog**. A design-attribute binding whose `*_params` key no parameter group provides — the model-side mirror of codegen V11. Item 7 recorded it as a *candidate*, not floor; codegen V11 (hard FAIL) is the backstop. | FILE (agentic-mbse) | warning-reconciliation/spec+plan §impact |
+| F3 | **Shape-B leaf-collision** → **this repo, `.project/backlog/BACKLOG.md`** (filed during Item 12's close-out here, which runs in sysml-codegen). Two distinct shape-B owning parts sharing a leaf name and exposing the same alias to different channels → a filename collision codegen does not yet disambiguate. Not triggered in-repo. | FILE (sysml-codegen) | alias-surfacing/audit Obs. 2 |
+| F4 | **Redefinition / design_override name surfacing** → **this repo, `.project/backlog/BACKLOG.md`** (Item 12 close-out here). `:>>` and design-override names resolve as channels but are not EXPOSE_PURE-sourced, so they do not surface. | FILE (sysml-codegen) | alias-surfacing/release-notes §impact |
+| F5 | **Positive unresolvable-warning test (opportunistic)** → **this repo, `.project/backlog/BACKLOG.md`** (Item 12 close-out here). Item 11's INV-6 "unresolvable refs still warn" leg has no positive live assertion; add opportunistically in sysml-codegen or file. | FILE (sysml-codegen) | alias-surfacing/audit Obs. 1 |
+
+**Filing homes (no cross-repo write needed).** The FILE rows split by which repo owns the
+concern, and each is written from a session that can reach it: F1/F2 (agentic-mbse concerns —
+the vendor note, the model-side check) go into agentic-mbse's backlog, written by the
+implement session on `upstream-findings-sync`. F3/F4/F5 (sysml-codegen concerns — a filename
+edge, channel surfacing, a codegen test) go into this repo's `.project/backlog/BACKLOG.md`,
+written during Item 12's close-out step, which runs here in sysml-codegen. No filing crosses
+a repo boundary the writing session can't reach.
 
 **Explicitly recorded as no-impact (kept so the trail is complete):** Item 2 (snapshot
 generation — docs pointer only); Item 6 (expression reconstruction — the fix travels with
@@ -112,8 +122,9 @@ expression-capture follow-up (Item 3) is a sysml-codegen backlog item.
 - **[HARD]** *(R2)* Every new or corrected validation check ships with a **negative fixture**
   in agentic-mbse's fixture layout, and the check is shown to catch its trap on the WI-014
   toy / plant fixture shapes. No check lands without a fixture.
-- **[HARD]** The A-2 stencil fix (V1) is **read back and confirmed** in the live
-  `references/stencils.md`, not assumed from the Item-3 commit record.
+- **[HARD]** The sysml-conventions skill is **swept** (V2) for any stencil or rule teaching a
+  pattern codegen now rejects or now accepts. A-2 itself is already committed (`6dbdf1b`) —
+  confirm it in passing (V1), but the load-bearing gate is that nothing *else* is stale.
 - **[HARD]** Check designs mirror codegen's already-shipped behavior — they must not
   contradict the V1–V11 diagnostics or the modeling-assumptions supported subset. C2 mirrors
   V8 (anonymous return), C5 mirrors V4 (unknown operator), C4 mirrors the retyping support
@@ -124,9 +135,13 @@ expression-capture follow-up (Item 3) is a sysml-codegen backlog item.
   recording to a row and a disposition.
 - **[NEED]** fusion-tea's RAW_LEARNINGS traps each map to a check (C1–C8) or a documented
   rule (D1–D7), shown as a traceability table in the close-out.
-- **[INFERRED]** The floor checks (C1–C6) are in scope; the two candidate WARNs (C7, C8) are
-  in scope only if they fit the guard, else they join the FILE set. The plan makes the call
-  after sizing each against agentic-mbse's actual check structure.
+- **[HARD]** Four checks are **non-fileable** — the traps that actually bit fusion-tea: C1
+  (self-named FAIL), C2a (return-style output update), C4 (calc-bearing-no-instantiation
+  FAIL), C3 (constraint WARN). The guard may file everything else (C5, C6, C2b, C7, C8), but
+  not these. (See Scope guard.)
+- **[INFERRED]** C5/C6/C2b and the two candidate WARNs (C7, C8) are in scope only if they fit
+  the guard, else they join the FILE set. The plan makes the call after sizing each against
+  agentic-mbse's actual check structure.
 - **[INFERRED]** agentic-mbse's L1–L6 runner and fixture conventions are as the impact lists
   describe them (`agentic_mbse.validation.runner.run_all_checks`, a 6-level structure). The
   implement session confirms the exact layout, check-function naming, and fixture format
@@ -170,12 +185,25 @@ plan or the first execute step from an implement session with agentic-mbse read 
 
 ## Scope guard
 
-**1–1.5 days in agentic-mbse.** The floor is C1–C6 + D1–D7 + V1–V2 + filing F1–F5. That is
-the commitment. C7 and C8 are the flex: include them if they fit, else file. Anything that
-turns out bigger than a small check-plus-fixture or a guide section — for example, if the L6
-false-positive correction (C6) needs a structural rework of the architecture check rather
-than a scoping tweak — gets filed as an agentic-mbse backlog item, not built. The plan
-enforces this by sizing each row before starting.
+**1–1.5 days in agentic-mbse.** Not every floor row is equal under the guard, so state the
+line explicitly:
+
+- **Must-land — non-fileable.** The checks catching traps that *actually bit fusion-tea*
+  ship no matter what: **C1** (self-named-binding FAIL), **C2a** (return-style output update
+  — accept the legal forms + FAIL anonymous return), **C4** (calc-bearing-part-def-no-instantiation
+  FAIL), **C3** (constraint non-executability WARN). If the day runs out, these four are what
+  got fixed. C1 and C3 already have in-repo negative fixtures, so they are the cheapest to
+  land first.
+- **May file if the day runs out.** The adr002 operator corrections (**C5**), the L6
+  false-positive corrections (**C6**), the body-assignment WARN (**C2b**), and both candidate
+  WARNs (**C7**, **C8**) are desirable but fileable — each drops to an agentic-mbse backlog
+  item if it exceeds a small check-plus-fixture. C6 is the named risk: if it needs a
+  structural rework of the architecture check rather than a scoping tweak, file it.
+- **Docs and filing are cheap and expected to land** (D1–D8, F1–F5), but a doc section that
+  balloons files too.
+
+The plan sizes each row against the real runner before starting and honors this ordering:
+must-land first, then the fileable checks, then docs, filing throughout.
 
 ---
 
