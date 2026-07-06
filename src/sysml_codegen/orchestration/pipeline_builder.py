@@ -614,13 +614,27 @@ def _scope_aggregation_expressions(
 
     # Derive the design prefix from the first virtual CalcUsage QN.
     # The prefix is segment[0] of any virtual QN (e.g., "SolarBatteryDesign").
+    # D3-15: this is first-wins. If two designs coexist in one model, their
+    # aggregations share the first design's prefix and are mis-keyed silently.
+    # Collect the distinct prefixes and warn on >1 (INV-3) before taking the
+    # first — one model = one design is the expected shape.
     design_prefix: str | None = None
+    seen_prefixes: list[str] = []
     for usage in calc_usages:
         if not usage.is_template and usage.owning_part_def_qn:
             segments = usage.qualified_name.split("__")
-            if segments:
-                design_prefix = segments[0]
-            break
+            if segments and segments[0] not in seen_prefixes:
+                seen_prefixes.append(segments[0])
+    if seen_prefixes:
+        design_prefix = seen_prefixes[0]
+    if len(seen_prefixes) > 1:
+        logger.warning(
+            "Multiple design prefixes %s found; aggregation scoping keys off the "
+            "first ('%s') — a second design's aggregations will be mis-keyed "
+            "(D3-15).",
+            seen_prefixes,
+            design_prefix,
+        )
 
     for agg_expr in hierarchy_data.aggregation_expressions:
         dotted_paths = find_instance_paths_for_partdef(

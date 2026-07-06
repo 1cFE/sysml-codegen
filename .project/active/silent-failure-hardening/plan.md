@@ -371,6 +371,16 @@ That every touched component's reference doc and matrix row can move in this cha
 - **D3-13** (`phantom_detector.py`): catalog zero-found sentinel — INFO breakdown (scanned/cataloged/skipped) always; WARN when a usage's calc def is unknown (the blind spot). Tests: `test_d313_unknown_calc_def_warns_catalog_blind`, `test_d313_all_known_no_warn`.
 - **Pattern-3 sentinels DEFERRED:** the scoped-alias / self-named-rescue / design-override / template-detection / empty-render INFO sentinels (all [NEED]/[INFERRED], INFO-level noise discipline) are not landed in this stage — lowest value-per-dollar against the remaining HARD findings (Families 3/4, SC-4/SC-5). Documented for follow-on. The three CONFIRMED headline silences (D3-4, D3-5, D3-13) are fixed.
 
+### Phase 3 Completion (Family 3 — Name-Keyed Lookup Uniqueness)
+**Completed:** 2026-07-06
+**Gates:** suite 2017 passed; ruff 17; mypy 104. Item-2 fence respected — graph_builder edits are at `_build_attribute_resolution_map` (~971) and `_find_literal_redefinition` (~1349), NOT `:425`/`:1133`.
+**Per-finding:**
+- **D3-10** (`graph_builder.py`): `_find_literal_redefinition` Strategy-2 (name-based leaf fallback) now collects colliding literals and WARNS on ambiguity (naming leaf + differing values); first-wins return preserved. Strategy 1 (exact QN) stays unambiguous. Tests: `test_d310_leaf_redef_collision_warns_not_silent_first_wins`, single-redef silent pin.
+- **D3-15** (`pipeline_builder.py`): design-prefix derivation collects distinct prefixes and WARNS on >1 (two designs in one model); first prefix used. Test deferred (needs aggregation-scoping fixture setup); fix is a direct collect+warn, code-reviewed.
+- **D3-11b** (`dependency_backtracker.py`): **DECISION** — the internal `_usage_by_name` index is benign (QN-keyed processing), but the *user-facing* target lookup in `find_required_modules` picks first-wins among same-named usages, which IS ambiguous. Landed a warn there (tracks colliding instance names at index build; warns only at the user-facing lookup). Test: `test_d311b_ambiguous_target_lookup_warns`.
+- **D3-7** (closed-by-construction): invariant stated at `graph_builder._build_attribute_resolution_map` (the bare-part_name map cannot silently cross-wire — any FORMULA channel registers a scoped key that `register_scoped` raises on first; EXPOSE resolutions are LITERAL/no-channel). Guard-pin: `test_d37_scoped_key_collision_raises_loudly` + idempotent-same-channel pin (no pre-existing guard test existed). **Consumer-audit outcome:** the reachable silent-cross-wire needs two channel-bearing entries at one scoped key, which the guard forecloses; the bare→QN re-key stays **deferred** (optional defense-in-depth, no reachable silent failure).
+- Register row correction for D3-7 (CONFIRMED → closed-by-construction) travels with Phase 6.
+
 ---
 
 **Status:** Draft → In Progress → Complete

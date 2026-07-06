@@ -145,11 +145,17 @@ class DependencyBacktracker:
         # different parent scopes (e.g., pump_load in blanket vs vacuum). All internal
         # processing uses qualified names (EQN) which are globally unique.
         self._usage_by_name: dict[str, CalcUsageData] = {}
+        # D3-11b: track colliding simple names. The index itself is benign
+        # (internal processing keys off globally-unique QNs), but a *user-facing*
+        # target lookup by simple name picks first-wins — that pick is ambiguous
+        # and warrants a warn (INV-3). Warn at the lookup, not per internal use.
+        self._ambiguous_instance_names: set[str] = set()
         for u in all_usages:
             if u.instance_name not in self._usage_by_name:
                 self._usage_by_name[u.instance_name] = u
             else:
                 existing = self._usage_by_name[u.instance_name]
+                self._ambiguous_instance_names.add(u.instance_name)
                 logger.debug(
                     f"Instance name collision: '{u.instance_name}' used by both "
                     f"{existing.calc_def_name} and {u.calc_def_name}"
@@ -234,6 +240,17 @@ class DependencyBacktracker:
                 else:
                     instance_name = target
                 usage = self._usage_by_name.get(instance_name)
+                if usage is not None and instance_name in self._ambiguous_instance_names:
+                    # D3-11b: this user-facing target resolves to a first-wins
+                    # pick among same-named usages — warn that it is ambiguous.
+                    logger.warning(
+                        "Target '%s' resolves to instance name '%s', which is "
+                        "shared by multiple usages; resolved first-wins to '%s' "
+                        "(ambiguous — qualify the target to disambiguate).",
+                        target,
+                        instance_name,
+                        usage.qualified_name,
+                    )
 
                 if not usage:
                     available = list(self._usage_by_name.keys())[:10]
