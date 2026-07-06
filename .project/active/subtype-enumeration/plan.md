@@ -197,17 +197,17 @@ def test_reqext09_independent_anchor(self, caplog):
 ### Changes Required
 **See `design.md` for:** D3 (collect/render split), D4 (delete row 2), D8 (stable tokens), §Component Overview, §Implementation Notes (sentinel wording + REQ-EXT-09 re-anchor bullets a–e), INV-C/INV-G, house-style (R1).
 
-- [ ] **`extraction/constraint_report.py` (NEW, pure — no syside import):** `ConstraintKind` (`ASSERT`/`PLAIN`/`REQUIREMENT`/`SATISFY`) + `OwnerKind` (`CALC_DEF`/`PART_DEF`/`PART_USAGE`/`ELEMENT`/`MODEL`) enums (serialize by stable token, D8); `ConstraintManifestEntry` frozen dataclass (`owner_kind, owner_name, owner_qualified_name, constraint_name, constraint_kind, source_line`, D2); `render_constraint_report(manifest, logger)` — always-emitted zero-found sentinel INFO, then M per-droppable INFO, then WARN only if M>0. **Both paths pass the `sysml_codegen.extraction.extractor` logger** (design Implementation Notes — do not let render default to its own module logger).
-- [ ] **`extractor.py` — `collect_constraint_manifest(*, include_subtypes=True, excluded_types=EXCLUDED_CONSTRAINT_TYPES)` (NEW):** live sweep (`include_subtypes=True`) + ordered is_instance kind-ladder (assert → satisfy → requirement → plain; satisfy before requirement because `SatisfyRequirementUsage ⊂ RequirementUsage`) → `list[ConstraintManifestEntry]`, **stable-sorted by `(owner_qualified_name, constraint_name)` (INV-G)**. Keeps the **full swept subtree** including excluded requirement/satisfy tagged by kind (INV-C). Ladder-droppable ≡ `is_droppable_constraint` (INV-D pin).
-- [ ] **`extractor.py:92` — `report_dropped_constraints`** refactored in place: `manifest = self.collect_constraint_manifest(); render_constraint_report(manifest, logger)`. Same name, same call site (`orchestration/pipeline_builder.py:685`).
-- [ ] **Delete `extract_all_constraints`** (`constraint_extractor.py:39/50`, row 2/D4) and **`_deserialize_constraint_info`** (`loader.py:275`, dead) — after re-running the zero-caller grep (Phase 0). Coordinate with Item 8 so each dies once.
-- [ ] **`tests/conformance/test_extractor.py:888-922` REQ-EXT-09 re-anchor:** (a) replace the self-referential `expected` (`:895-899`) with a **literal** transcribed from a fixture-source grep (comment the grep); (b) add the **part-usage-owner** leg — confirm catf_mfe carries a part-usage-owned constraint, **else add a minimal Item-4-owned fixture** (owned work, design §Potential Risks — not a quiet drop); (c) wi014 assert pin (1 droppable assert `affordable`); (d) executable mutation check (MF5); (e) the from-snapshot INV-B leg is authored here but its committed-snapshot assertion lands in Phase 5 (see note).
+- [x] **`extraction/constraint_report.py` (NEW, pure — no syside import):** `ConstraintKind` (`ASSERT`/`PLAIN`/`REQUIREMENT`/`SATISFY`) + `OwnerKind` (`CALC_DEF`/`PART_DEF`/`PART_USAGE`/`ELEMENT`/`MODEL`) enums (serialize by stable token, D8); `ConstraintManifestEntry` frozen dataclass (`owner_kind, owner_name, owner_qualified_name, constraint_name, constraint_kind, source_line`, D2); `render_constraint_report(manifest, logger)` — always-emitted zero-found sentinel INFO, then M per-droppable INFO, then WARN only if M>0. **Both paths pass the `sysml_codegen.extraction.extractor` logger** (design Implementation Notes — do not let render default to its own module logger).
+- [x] **`extractor.py` — `collect_constraint_manifest(*, include_subtypes=True, excluded_types=EXCLUDED_CONSTRAINT_TYPES)` (NEW):** live sweep (`include_subtypes=True`) + ordered is_instance kind-ladder (assert → satisfy → requirement → plain; satisfy before requirement because `SatisfyRequirementUsage ⊂ RequirementUsage`) → `list[ConstraintManifestEntry]`, **stable-sorted by `(owner_qualified_name, constraint_name)` (INV-G)**. Keeps the **full swept subtree** including excluded requirement/satisfy tagged by kind (INV-C). Ladder-droppable ≡ `is_droppable_constraint` (INV-D pin).
+- [x] **`extractor.py:92` — `report_dropped_constraints`** refactored in place: `manifest = self.collect_constraint_manifest(); render_constraint_report(manifest, logger)`. Same name, same call site (`orchestration/pipeline_builder.py:685`).
+- [x] **Delete `extract_all_constraints`** (`constraint_extractor.py:39/50`, row 2/D4) and **`_deserialize_constraint_info`** (`loader.py:275`, dead) — after re-running the zero-caller grep (Phase 0). Coordinate with Item 8 so each dies once.
+- [x] **`tests/conformance/test_extractor.py:888-922` REQ-EXT-09 re-anchor:** (a) replace the self-referential `expected` (`:895-899`) with a **literal** transcribed from a fixture-source grep (comment the grep); (b) add the **part-usage-owner** leg — confirm catf_mfe carries a part-usage-owned constraint, **else add a minimal Item-4-owned fixture** (owned work, design §Potential Risks — not a quiet drop); (c) wi014 assert pin (1 droppable assert `affordable`); (d) executable mutation check (MF5); (e) the from-snapshot INV-B leg is authored here but its committed-snapshot assertion lands in Phase 5 (see note).
 
 ### Validation
-- [ ] Live: wi014 assert reported; mutation check MISSES it (discriminates); REQ-EXT-09 fires across calc-def/part-def/part-usage owners with an independent anchor; silent-on-clean holds; sentinel emits scanned/reported/excluded on N=0 and N>0,M=0.
-- [ ] `require constraint` certified reported + pinned (plain `ConstraintUsage`, already visible).
-- [ ] Deletions: zero-caller grep clean; suite green after removal (B4).
-- [ ] codegen suite green. Commit on `pipeline-truth-epic` ("report: collect/render split + subtype-aware manifest, REQ-EXT-09 re-anchored (D3/D4/D8)").
+- [x] Live: wi014 assert reported; mutation check MISSES it (discriminates); REQ-EXT-09 fires across calc-def/part-def/part-usage owners with an independent anchor; silent-on-clean holds; sentinel emits scanned/reported/excluded on N=0 and N>0,M=0.
+- [x] `require constraint` certified reported + pinned (plain `ConstraintUsage`, already visible).
+- [x] Deletions: zero-caller grep clean; suite green after removal (B4).
+- [x] codegen suite green. Commit on `pipeline-truth-epic` ("report: collect/render split + subtype-aware manifest, REQ-EXT-09 re-anchored (D3/D4/D8)").
 
 **What We Know Works After This Phase:** the live report fires on assert, is independently anchored, discriminates under mutation, and renders from a typed manifest. Render identity across paths is by construction (one `render` fn).
 
@@ -237,17 +237,17 @@ def test_manifest_roundtrip_render_identity(caplog):
 ### Changes Required
 **See `design.md` for:** D2 (carrier), D8 (tokens), MF4/INV-B, M8, §Architecture (OFFLINE path), Component Overview.
 
-- [ ] **`serializer.py`** — write one top-level `dropped_constraints` array (typed records, stable tokens D8, order preserved INV-G).
-- [ ] **`loader.py`** — read `dropped_constraints` into `snap["constraint_manifest"]`; **M8:** align the version-mismatch error message to the real re-capture tooling `scripts/capture_extraction_snapshots.py` (not `sysml-codegen snapshot`).
-- [ ] **`orchestration/pipeline_context.py:60` `PipelineContext`** — add `constraint_manifest` field.
-- [ ] **`orchestration/pipeline_builder.py` step ~685 / `build_pipeline_context`** — set `ctx.constraint_manifest = manifest` when it renders the live report (single-path, MF4).
-- [ ] **`orchestration/snapshot_context.py:24` `build_pipeline_context_from_snapshot`** — one added `render_constraint_report(snap["constraint_manifest"], logger)` call (the replay).
-- [ ] **INV-B parity test authored** (its committed-snapshot leg activates in Phase 5): compares from-snapshot render output against the **live** render output for the same model + pins a **golden serialized manifest fragment**.
+- [x] **`serializer.py`** — write one top-level `dropped_constraints` array (typed records, stable tokens D8, order preserved INV-G).
+- [x] **`loader.py`** — read `dropped_constraints` into `snap["constraint_manifest"]`; **M8:** align the version-mismatch error message to the real re-capture tooling `scripts/capture_extraction_snapshots.py` (not `sysml-codegen snapshot`).
+- [x] **`orchestration/pipeline_context.py:60` `PipelineContext`** — add `constraint_manifest` field.
+- [x] **`orchestration/pipeline_builder.py` step ~685 / `build_pipeline_context`** — set `ctx.constraint_manifest = manifest` when it renders the live report (single-path, MF4).
+- [x] **`orchestration/snapshot_context.py:24` `build_pipeline_context_from_snapshot`** — one added `render_constraint_report(snap["constraint_manifest"], logger)` call (the replay).
+- [x] **INV-B parity test authored** (its committed-snapshot leg activates in Phase 5): compares from-snapshot render output against the **live** render output for the same model + pins a **golden serialized manifest fragment**.
 
 ### Validation
-- [ ] In-memory round-trip: serialize → deserialize → equal; render byte-identical across a live manifest and its deserialized twin.
-- [ ] Existing v1 snapshots still load (additive field; version unchanged) — full suite green.
-- [ ] codegen suite green. Commit on `pipeline-truth-epic` ("snapshot: serialize + replay constraint manifest, from-snapshot report parity (D2/MF4)").
+- [x] In-memory round-trip: serialize → deserialize → equal; render byte-identical across a live manifest and its deserialized twin.
+- [x] Existing v1 snapshots still load (additive field; version unchanged) — full suite green.
+- [x] codegen suite green. Commit on `pipeline-truth-epic` ("snapshot: serialize + replay constraint manifest, from-snapshot report parity (D2/MF4)").
 
 **What We Know Works After This Phase:** the from-snapshot path renders the same report as live, guarded by the INV-B round-trip test. All that remains is flipping the version and re-capturing.
 
@@ -396,8 +396,81 @@ Not regressions — they were asserting the blind-validator bug.
 baseline-comparison subprocess tests among them can't run in this sandbox but the level3 baseline
 content is verified correct via `_extract_metrics`).
 
+### Pre-Phase-3: Codegen `is_instance` Name Inventory (D6 gate)
+**Completed:** 2026-07-06 · Commits `bc24ae3` (agentic-mbse `pipeline-truth-item4`), `9a8721b` (codegen).
+
+Ran the multi-line-aware `is_instance`/`elements_of_type`/`get_type` name scan over
+`src/sysml_codegen/`. 21 distinct names used; 4 used-but-unmapped. Map-or-delete decided
+per evidence (syside stub `.venv/.../syside/core/__init__.pyi`):
+
+- **`LiteralReal` — DELETED** (3 sites: `expression_compiler.py:398`, `expression_utils.py:62`,
+  `:334`). Not a syside class (only `LiteralRational`). These branches silently returned False
+  forever pre-D6; post-D6 they would raise on the unmapped name. A float literal `400.0` is a
+  `LiteralRational`, handled by the adjacent branch, so deletion is behavior-neutral. The
+  `MockLiteralReal` test fixture (same fiction) renamed to `MockLiteralRational`; 4 hierarchy-
+  resolver tests that asserted `MockLiteralReal → LITERAL` fixed by the rename.
+- **`OwningMembership`, `Subclassification`, `NullExpression` — MAPPED** (agentic-mbse adapter,
+  `bc24ae3`). All real syside classes, used by codegen `is_instance`, previously relying on the
+  silent string-match. Mapping makes the checks hierarchy-aware (strictly more correct).
+
+Post-inventory re-scan: **zero** used-but-unmapped codegen names. Both suites green
+(codegen 2017, agentic-mbse 1238). The LiteralReal breakage is gone.
+
 ### Phase 3 Completion
+**Completed:** 2026-07-06 · Commit `501968f` on `pipeline-truth-epic`.
+
+**Changes:** new pure `extraction/constraint_report.py` (`ConstraintKind`/`OwnerKind` str-enums,
+frozen `ConstraintManifestEntry`, `DROPPABLE_KINDS`, `render_constraint_report`); `extractor.py`
+gains `collect_constraint_manifest(*, include_subtypes=True)` (subtype sweep + ordered kind-ladder,
+stable-sorted INV-G) and `_classify_constraint_kind`; `report_dropped_constraints` refactored to
+collect+render and now **returns the manifest**; `_constraint_owner_kind` returns `OwnerKind`.
+Row 2 deleted (`constraint_extractor.py` gone; dead `loader._deserialize_constraint_info` +
+`ConstraintInfo` import removed). REQ-EXT-09 re-anchored.
+
+**Live-verified manifest (probe):** wi014_toy → scanned 1 / exact-only 0 / droppable 1 (assert
+`affordable`, part_def owner, L51). catf_mfe → scanned 65 / droppable 65, all plain, owners
+{calc_def 51, part_def 5, part_usage 9} — so **catf_mfe already covers the part-usage leg** (no new
+part-usage fixture needed). Independent anchor: `grep -rhE '^\s*constraint\s+\w+\s*\{' catf_mfe = 65`.
+
+**Deviations from design (recorded):**
+1. **No `excluded_types` parameter on `collect_constraint_manifest`.** The design signature listed
+   `excluded_types=EXCLUDED_CONSTRAINT_TYPES`, but INV-C requires keeping the full swept subtree, so
+   the sweep never pre-filters — the param would be unused in the body (an abstraction-quality red
+   flag). Droppability is derived from `constraint_kind` via `DROPPABLE_KINDS`; INV-D is enforced by
+   a live cross-check test (`_classify_constraint_kind` droppability == adapter `is_droppable_constraint`,
+   element by element on `item4_require`). The single policy source is still the adapter; the pin is
+   stronger than threading a constant the collector wouldn't branch on. `include_subtypes` (the
+   mutation-check lever, MF5) is the one injectable param.
+2. **New Item-4-owned fixture `tests/fixtures/item4_require/` (live-only, no snapshot)** — pins
+   `require constraint` as a reported PLAIN predicate and a requirement usage as swept-and-EXCLUDED
+   (kind REQUIREMENT). It is the only codegen fixture exercising the exclusion/sentinel path live.
+   Kept snapshot-free so it stays out of the Phase-5 re-capture set.
+
+**Concurrency artifact:** the shared working tree carried other stage subagents (Item 2/Item 8).
+My `git rm constraint_extractor.py` was swept into a concurrent Item-8 commit (`2446e4b`) before I
+committed Phase 3 — the file dies exactly once (D4 "each dies once"), attributed to that commit
+rather than `501968f`. Net state correct; noted for the Item-9 ledger.
+
+**Suite:** codegen 2027 passed (+10). ruff 21→20, mypy 109→105 (dead-code deletion; both under bar).
+
 ### Phase 4 Completion
+**Completed:** 2026-07-06 · Commit `a627f0a` on `pipeline-truth-epic`. **Version-neutral** (still v1).
+
+**Changes:** `constraint_report.py` gains pure `manifest_to_records`/`manifest_from_records` (stable
+tokens D8, order preserved INV-G); `PipelineContext.constraint_manifest` field; `pipeline_builder`
+step 2.5 captures the returned manifest → ctx (single-path, MF4); `serializer` writes top-level
+`dropped_constraints`; `loader` reads it into `snap["constraint_manifest"]` (additive `.get`, old
+snapshots → empty) + M8 message alignment to `scripts/capture_extraction_snapshots.py`;
+`snapshot_context` replays `render_constraint_report` through the `sysml_codegen.extraction.extractor`
+logger (INV-B); `capture.py` passes `ctx.constraint_manifest`.
+
+**Verified end-to-end (license-free):** `build_pipeline_context_from_snapshot` on the committed catf
+snapshot replays the sentinel INFO through the extractor logger (manifest empty until Phase-5
+re-capture — expected). In-memory INV-B leg pinned: round-trip lossless + render byte-identical
+across a manifest and its deserialized twin. Committed-snapshot INV-B leg deferred to Phase 5.
+
+**Suite:** codegen 2029 passed (+2). ruff 20, mypy 105 (under bar). agentic-mbse untouched (green).
+
 ### Phase 5 Completion
 ### Phase 6 Completion
 ### Phase 7 Completion
