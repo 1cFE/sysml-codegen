@@ -34,10 +34,14 @@ Prioritized list of epics and features.
 
 ---
 
-### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report (P1; SC-1 regression-in-effect)
+### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report — RESOLVED (PIPELINE-TRUTH Item 4)
 
-**Absorbed into PIPELINE-TRUTH Item 4** (`epic_pipeline_truth.md`) — entry kept as the
-finding of record until that item closes.
+**RESOLVED by PIPELINE-TRUTH Item 4** (`epic_pipeline_truth.md`), 2026-07-06. The drop report now
+sweeps `ConstraintUsage` subtype-aware (`include_subtypes=True`), so `assert constraint`
+(`AssertConstraintUsage`) is reported; the summary is a scanned/reported/excluded sentinel that never
+goes fully silent. Pinned by the re-anchored REQ-EXT-09 (`tests/conformance/test_extractor.py`, wi014
+assert + mutation check) and available on the `--from-snapshot` path too. Retained below for
+provenance.
 
 **Source**: fusion-tea upstream-fix verification, 2026-07-06
 (`~/1cfe/fusion-tea/work/active/20260706_upstream-fix-verification/report.md`); verified
