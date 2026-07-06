@@ -1,8 +1,7 @@
 """Shared AST-to-text reconstruction utilities for SysML expressions.
 
-Extracted from constraint_extractor.py to provide common AST traversal
-and text reconstruction logic used by both the constraint extractor and
-the expression compiler.
+Common AST traversal and text reconstruction logic used across extraction —
+notably the expression compiler and the hierarchy resolver.
 """
 
 from typing import Any

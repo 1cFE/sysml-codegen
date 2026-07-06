@@ -26,7 +26,6 @@ from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
-    ConstraintInfo,
     HierarchyExtractionResult,
     LocalTerm,
     MultiplicityData,
@@ -269,17 +268,6 @@ def _deserialize_attribute_info(d: dict) -> AttributeInfo:
         unit=d.get("unit"),
         source_line=d.get("source_line", 0),
         is_optional=d.get("is_optional", False),
-    )
-
-
-def _deserialize_constraint_info(d: dict) -> ConstraintInfo:
-    """Reconstruct a ConstraintInfo from a serialized dict."""
-    return ConstraintInfo(
-        expression=d["expression"],
-        description=d["description"],
-        affected_attributes=d["affected_attributes"],
-        constraint_type=d["constraint_type"],
-        source_line=d.get("source_line", 0),
     )
 
 

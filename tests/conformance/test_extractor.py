@@ -18,6 +18,10 @@ from pathlib import Path
 import pytest
 from agentic_mbse.sysml.types import BindingType
 
+from sysml_codegen.extraction.constraint_report import (
+    DROPPABLE_KINDS,
+    ConstraintKind,
+)
 from sysml_codegen.extraction.data_models import (
     LocalTerm,
     RedefinitionType,
@@ -887,17 +891,25 @@ class TestReqExt08ZeroOutputFailFast:
 
 @pytest.mark.req("REQ-EXT-09")
 class TestReqExt09ConstraintDropDiagnostic:
-    """Dropped constraint usages produce one summary WARN plus one INFO per
-    constraint, counted structurally against the loaded model (no magic N)."""
+    """The constraint drop report fires on every dropped predicate — including
+    subtype shapes like ``assert`` — with counts anchored independently of the
+    production query.
+
+    This class replaces the REQ-EXT-09 anti-pattern: the old test computed its
+    expected count with the same exact-type query the implementation used, so it
+    was structurally unable to detect the subtype blindness it claimed to cover.
+    """
+
+    # Independent anchor for catf_mfe_model, transcribed from the fixture source
+    # (NOT the production query):
+    #   grep -rhE '^\s*constraint\s+[A-Za-z_][A-Za-z0-9_]*\s*\{' \
+    #     tests/fixtures/catf_mfe_model --include=*.sysml | wc -l   ->   65
+    # 65 plain constraint usages, no assert/require/satisfy, spanning calc-def
+    # (51), part-def (5), and part-usage (9) owners — all droppable.
+    CATF_DROPPABLE = 65
 
     def test_dropped_constraints_reported(self, caplog):
         extractor = _load_live_extractor("catf_mfe_model")
-        expected = sum(
-            1 for _ in extractor.adapter.elements_of_type(
-                extractor.model, "ConstraintUsage"
-            )
-        )
-        assert expected > 0, "catf_mfe_model must carry constraint usages"
 
         with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
             extractor.report_dropped_constraints()
@@ -911,11 +923,121 @@ class TestReqExt09ConstraintDropDiagnostic:
             if r.levelno == logging.INFO and "is not executable" in r.getMessage()
         ]
         assert len(warns) == 1, f"expected exactly one summary WARN, got {len(warns)}"
-        assert len(infos) == expected, (
-            f"expected one INFO per constraint ({expected}), got {len(infos)}"
+        assert len(infos) == self.CATF_DROPPABLE, (
+            f"expected one INFO per droppable constraint ({self.CATF_DROPPABLE}), "
+            f"got {len(infos)}"
         )
-        # I4: the count spans both owner kinds -- a calc-def-owned and a
-        # part-def-owned constraint are both reported.
+        # I4 + part-usage leg: the report spans all three owner kinds.
         info_text = "\n".join(r.getMessage() for r in infos)
         assert "calc def" in info_text, "no calc-def-owned constraint reported"
         assert "part def" in info_text, "no part-def-owned constraint reported"
+        assert "part usage" in info_text, "no part-usage-owned constraint reported"
+
+    def test_zero_found_sentinel_always_emits(self, caplog):
+        # The scanned/reported/excluded sentinel is emitted even when droppable
+        # > 0, so an empty result is distinguishable from a blind query (row 1).
+        extractor = _load_live_extractor("catf_mfe_model")
+        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
+            extractor.report_dropped_constraints()
+        sentinels = [
+            r for r in caplog.records
+            if "scanned" in r.getMessage() and "droppable" in r.getMessage()
+        ]
+        assert len(sentinels) == 1, "the sentinel line must always emit exactly once"
+        assert f"scanned {self.CATF_DROPPABLE}" in sentinels[0].getMessage()
+
+    def test_wi014_assert_is_reported(self, caplog):
+        # wi014_toy's only constraint is `assert constraint affordable` at
+        # toy_plant.sysml:51 — an AssertConstraintUsage, invisible to the old
+        # exact-type query. Independent literal: exactly 1 droppable assert.
+        extractor = _load_live_extractor("wi014_toy")
+        manifest = extractor.collect_constraint_manifest()
+        asserts = [e for e in manifest if e.constraint_kind is ConstraintKind.ASSERT]
+        assert len(asserts) == 1, "wi014_toy must carry exactly one assert constraint"
+        assert asserts[0].constraint_name == "affordable"
+
+        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
+            extractor.report_dropped_constraints()
+        infos = [
+            r for r in caplog.records
+            if r.levelno == logging.INFO and "is not executable" in r.getMessage()
+        ]
+        assert any("affordable" in r.getMessage() for r in infos), (
+            "the assert constraint must be reported as a dropped predicate"
+        )
+
+    def test_mutation_check_discriminates(self):
+        # MF5: flip the injectable policy to exact-type and the assert vanishes.
+        # If this ever fails (the assert survives an exact-type sweep), the pin
+        # above is a tautology again.
+        extractor = _load_live_extractor("wi014_toy")
+        blind = extractor.collect_constraint_manifest(include_subtypes=False)
+        assert not any(
+            e.constraint_kind is ConstraintKind.ASSERT for e in blind
+        ), "exact-type sweep must MISS the assert — otherwise the test does not discriminate"
+
+
+@pytest.mark.req("REQ-EXT-09")
+class TestConstraintRequireAndExclusion:
+    """`require constraint` is a reported plain predicate; a requirement usage is
+    swept-and-excluded and stays observable in the sentinel.
+
+    ``item4_require`` is the only codegen fixture exercising the exclusion path
+    live: ``within_budget`` (a ``require constraint``, a plain ConstraintUsage)
+    and ``demo_req`` (a RequirementUsage, excluded).
+    """
+
+    def test_require_constraint_is_reported_plain(self):
+        extractor = _load_live_extractor("item4_require")
+        manifest = extractor.collect_constraint_manifest()
+        require_entries = [e for e in manifest if e.constraint_name == "within_budget"]
+        assert len(require_entries) == 1, "the require constraint must be swept"
+        assert require_entries[0].constraint_kind is ConstraintKind.PLAIN
+        assert require_entries[0].constraint_kind in DROPPABLE_KINDS
+
+    def test_requirement_usage_is_excluded(self):
+        extractor = _load_live_extractor("item4_require")
+        manifest = extractor.collect_constraint_manifest()
+        req_entries = [e for e in manifest if e.constraint_name == "demo_req"]
+        assert len(req_entries) == 1, "the requirement usage is swept (subtype of ConstraintUsage)"
+        assert req_entries[0].constraint_kind is ConstraintKind.REQUIREMENT
+        assert req_entries[0].constraint_kind not in DROPPABLE_KINDS
+
+    def test_sentinel_reports_excluded_and_require(self, caplog):
+        # scanned 2, reported 1 (the require constraint), excluded 1 (the
+        # requirement usage) — the exclusion is observable, not silent.
+        extractor = _load_live_extractor("item4_require")
+        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
+            extractor.report_dropped_constraints()
+        sentinels = [
+            r for r in caplog.records
+            if "scanned" in r.getMessage() and "excluded" in r.getMessage()
+        ]
+        assert len(sentinels) == 1
+        msg = sentinels[0].getMessage()
+        assert "scanned 2" in msg
+        assert "reported 1" in msg
+        assert "excluded 1" in msg
+
+
+@pytest.mark.req("REQ-EXT-09")
+class TestConstraintDroppablePolicyParity:
+    """INV-D: codegen's kind-derived droppability equals the adapter's single
+    policy source (``is_droppable_constraint``), element by element — so the two
+    repos cannot drift on what counts as a dropped predicate."""
+
+    def test_ladder_droppable_equals_adapter_policy(self):
+        from agentic_mbse.sysml.syside_adapter import is_droppable_constraint
+
+        extractor = _load_live_extractor("item4_require")
+        swept = list(
+            extractor.adapter.elements_of_type(
+                extractor.model, "ConstraintUsage", include_subtypes=True
+            )
+        )
+        assert swept, "fixture must carry swept constraint usages"
+        for elem in swept:
+            kind = extractor._classify_constraint_kind(elem)
+            assert (kind in DROPPABLE_KINDS) == is_droppable_constraint(elem), (
+                f"kind-derived droppability disagrees with the adapter policy for {elem}"
+            )
