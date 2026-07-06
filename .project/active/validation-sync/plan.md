@@ -361,20 +361,216 @@ R2 trail across all twelve items is closed with nothing dropped.
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 0 Completion
-**Completed:** — **Findings (structure confirmed/corrected):** — **Deviations:** —
+**Completed:** 2026-07-06.
+
+**Findings (every impact-list assumption confirmed against the real repo):**
+- **Runner** = `agentic_mbse.validation.runner.run_all_checks(models_path, fail_fast, specific_level, verbose)`.
+  Takes a **directory** (globs `**/*.sysml`), runs L1–L6, each `validate_*(models_path)`. CONFIRMED.
+- **Severity model**: `Severity.ERROR|WARNING|INFO` on `ValidationIssue(level, severity, code, message,
+  element_name, location, suggestion)`. Codes are a `ValidationCode` str-enum in `sysml/types.py`.
+  L6 `success = no ERROR` (WARN passes). **L2 `success = len(all_issues)==0`** — L2 fails on WARN too
+  (matters for where a WARN-severity check lands; C1 is a FAIL so unaffected).
+- **C1 site** = `level2_structure.py` (`validate_structure`). **C2a/C3/C4/C6 site** = `level6_architecture.py`
+  (`validate_architecture`). **C5 site** = `adr002.py` (`SUPPORTED_OPERATORS = {"+","-","*","/","[","^"}`
+  — note `^` is currently IN the set; C5 removes it; `check_supported_operators` uses `extract_operators`).
+- **Negative-fixture convention**: agentic-mbse carries its OWN fixture dirs under `tests/fixtures/`
+  (`l6_negative/`, `adr002_violations/` use `library/`+`designs/` subdirs). **Decision (Open-Q "reuse"):**
+  author compact mirror fixtures in agentic-mbse's tree under `tests/fixtures/item12/` — do NOT couple
+  agentic-mbse's suite to sysml-codegen paths. Cross-repo acceptance (Phase 4) runs separately over the
+  sysml-codegen corpus.
+- **Own-suite command**: `uv run --env-file .env pytest tests/` (testpaths=["tests"]); license valid to 2026-08-06.
+- **stencils.md** (V1): `claude/skills/sysml-conventions/references/stencils.md:39` teaches inline
+  `return result : Real = input_a * input_b;` — the committed A-2 form. Skill = SKILL.md + references/stencils.md
+  (no MODELING_GUIDE in the skill; MODELING_GUIDE.md lives at `modeling_project/MODELING_GUIDE.md`).
+- **Item-8 L6 baseline reproduced live** over `self_named_binding_trap`: L1–L5 pass; L6 FAILs with exactly
+  `V2_DYNAMIC_EXPRESSION` (calc-def-internal `out attribute … = expr`, the C6a false positive) +
+  `L6_INVALID_QUALIFIED_NAME` (`'Trap Plant'` quoted name, the C6b false positive). Confirms C6 is a
+  scoping tweak, not a rework.
+
+**Check-design facts probed live (drive Phase 1):**
+- **C1**: `extract_bindings` gives `source_path == param_name` for a self-named `in P = P` in BOTH trap and
+  rescue (`references` list is empty for REFERENCE bindings, so key off `source_path`). Distinguisher =
+  a **producer** of the name in the owner: rescue has `attribute throughput = source_calc.throughput`
+  (chain into a calc), trap has only `attribute availability = 0.70` (literal). Predicate: self-named +
+  no producer → FAIL.
+- **C2a**: anonymous `return : Real = x*2` → an output member (`dir=Out`) with `declared_name = None`
+  (synthesized `name='result'`). Named returns carry `declared_name='y'`. Predicate: output member with
+  empty/None `declared_name` → FAIL.
+- **C4**: part-usage `.types` includes the **full supertype chain AND retype targets** — the Variant's
+  retyped `driver` usage has `.types = [IFE Driver, …, HIF Driver]`. So "instantiated" = partdef name ∈
+  union of all part-usage `.types`; retyping counts automatically. Predicate: calc-bearing partdef whose
+  name is absent from that union → FAIL.
+
+**Deviations:** none. No floor assumption broke; Phase 1 proceeds at planned size.
 
 ### Phase 1 Completion
-**Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
+**Status:** COMPLETE — all four checks landed + green; committed in agentic-mbse at `9db5ede`.
+
+**C1 RESOLVED (orchestrator ruling A — reframe to a true dead-end).** The C1 blocker below
+was resolved by reframing the check, not forcing the old fixture:
+- `_owner_produces_name` → **`_owner_covers_name`**: coverage is ANY same-named feature
+  (attribute incl. bare literal, or a sibling calc output) in the owner. Dropped the
+  `extract_feature_refs` non-literal condition + its import.
+- **Key correction found during re-wire:** the scan must walk **`owner.features`** (owned +
+  inherited), not `owned_members`. ife_plant's `'Hif Driver' :> 'Base Driver'` binds
+  `in bank_energy = bank_energy` against a `bank_energy` attribute **inherited** from its base
+  def (Item 4 retype path). Scanning only `owned_members` missed it and FALSELY flagged 1
+  dead-end → flipped ife_plant L2 PASS→FAIL. With `features`, ife_plant + wi014_toy both PASS,
+  0 self-named FAILs.
+- **Role flip (ruling step 3):** NEW `self_named_deadend` fixture (`in gain = gain`, NO
+  covering feature) FAILs; `self_named_trap` (has covering `attribute availability`) and
+  `self_named_rescue` (has covering `attribute throughput`) both do NOT fire; ife_plant L2 PASS.
+- **Rationale (for traceability + sysml-codegen spec amendment):** C1's floor was written
+  pre-Items-9/10. Item 9's rescue made self-named-with-covering-attribute a SUPPORTED pattern,
+  so the trap fixture's role flipped to negative-of-the-negative; only a self-named binding with
+  no covering feature at all is a real error.
+- **Gate:** 8 item12 tests pass (was 7 — +1 dead-end test); full agentic-mbse suite
+  **1213 passed / 1 skipped**; ruff clean.
+
+**Original C1 blocker (kept for the trail — resolved above):**
+
+**Landed (C2a, C3, C4 — all built, tested, suite-green, zero corpus regression):**
+- **C2a** `check_anonymous_returns` (`level6_architecture.py`): output member with empty/None
+  `declared_name` → `L6_ANONYMOUS_RETURN` FAIL. Fixture `item12/anonymous_return` FAILs;
+  `item12/return_styles` (all four legal forms) does NOT fire. Mirrors codegen V8.
+- **C3** `check_constraint_executability` (`level6_architecture.py`): each ConstraintUsage →
+  `L6_CONSTRAINT_NON_EXECUTABLE` WARN (L6 stays passing). Fixture `item12/constraint_model`.
+- **C4** `check_calc_bearing_instantiation` (`level6_architecture.py`): calc-bearing part def whose
+  name ∉ union of all part-usage `.types` → `L6_CALC_DEF_NO_INSTANTIATION` FAIL. Fixture
+  `item12/no_instantiation` FAILs; `item12/retype_instantiation` does NOT (retype target lands in
+  `.types`, so retyping counts — Item 4). 
+- New `ValidationCode`s in `sysml/types.py`; metrics added to L6 result.
+- **Gate:** agentic-mbse own suite **1212 passed / 1 skipped**; ruff clean; mypy adds 0 new errors
+  (23 pre-existing, none in the new functions). Cross-repo: C2a/C3/C4 fire **0** times on
+  `wi014_toy` and `ife_plant` — no L1–L5 regression, no L6 change on the plant fixtures.
+- 7 direct-call tests in `tests/test_validation/test_item12_checks.py` (incl. all negatives-of-negatives).
+
+**C1 BLOCKER — floor-assumption break (the Phase-0/Phase-1 STOP gate fired).**
+C1 assumes the `self_named_binding_trap` shape is a self-named binding "with no resolvable upstream"
+that a validator can FAIL while the plant idiom passes. **Phase-1 evidence refutes this at the
+agentic-mbse layer:**
+- Probed the resolved RHS referent for three fixtures. **All three resolve `in X = X` to the calc's
+  OWN parameter** (refOwner = the CalculationUsage):
+  - trap `avail_calc`: `TrapLib::'Trap Plant'::avail_calc::availability`
+  - ife_plant `volume_calc`: `IfePlantLib::Coil::volume_calc::radius`  ← the legitimate plant idiom
+  - rescue `sink_calc`: `RescueLib::'Rescue Plant'::sink_calc::throughput`
+- The trap (`attribute availability = 0.70` + `in availability = availability`) is **structurally and
+  resolution-identically the same** as ife_plant's `attribute radius = <lit>` + `in radius = radius`.
+  ife_plant carries **21** such legitimate design-attribute bindings.
+- The full-QN own-param resolution that sysml-codegen's extractor uses to mark the trap "degenerate"
+  is **not reproduced by agentic-mbse's `extract_bindings`** (it yields only the short name). No signal
+  available at this layer (source_path, referent, referent-owner, producer scan) separates trap from
+  ife_plant.
+- Consequence: a C1 that FAILs the trap FAILs ife_plant 21× and flips its L2 PASS→FAIL — a HARD
+  no-regression violation. C1-as-specced is unbuildable here.
+
+**State left for resume:** `check_self_named_bindings` + `_owner_produces_name` are written in
+`level2_structure.py` but **intentionally NOT wired** into `validate_structure` (commented, with
+reason). The `item12/self_named_trap` + `self_named_rescue` fixtures and the two direct-call C1 tests
+pass in isolation (my mirror trap has only the literal, so the current predicate fires on it) — but the
+predicate is WRONG for the corpus. Nothing committed. ife_plant L2 verified back to PASS.
+
+**Decision needed before C1 can land — see final orchestrator message.** Options sketched:
+(A) Reframe C1 to fire only on a self-named binding with **no same-named attribute/producer at all** in
+the owner (a true dead-end), and author a NEW agentic-mbse negative fixture for that (the sysml-codegen
+trap, which carries the literal, would then correctly NOT fire — so it stops being C1's fixture).
+(B) Keep the sysml-codegen trap as the fixture but accept C1 cannot be a corpus-safe FAIL → downgrade/FILE
+(C1 is HARD non-fileable, so this needs explicit approval).
+(C) Some other discriminator the spec author knows that I could not find at this layer.
+
+**Deviations:** C1 unwired pending decision (above). No other deviation.
 
 ### Phase 2 Completion
-**Completed:** — **BUILD/FILE decisions (per row, with reason):** — **Deviations:** —
+**Completed:** 2026-07-06 — committed in agentic-mbse at `87f9bc8`. Full suite **1218 passed /
+1 skipped**; ruff clean; mypy 0 new errors.
+
+**BUILD/FILE decisions (per row, with reason):**
+- **C5 — BUILD.** (a) dropped `^` from `SUPPORTED_OPERATORS` (was wrongly present); (b) new
+  `check_static_function_invocations` WARNs `V4_STATIC_FUNCTION_INVOCATION` on a design-scope
+  function call. Sized live: `sqrt(a)` → InvocationExpression (Operator=False), `a ^ b` →
+  OperatorExpression (Invocation=False) — `is_instance` distinguishes them cleanly.
+- **C6 — BUILD (the named FILE risk — turned out a scoping tweak, not a rework).** (a)
+  `check_static_expressions` skips attributes owned by a `CalculationDefinition` (owner-type
+  predicate, independent of the `library/` path convention the flat-layout trap fixture defeats);
+  (b) `check_qualified_names` accepts single-quoted segments (`'Trap Plant'`). **Confirmed on the
+  real Item-8 trap:** `self_named_binding_trap` L6 now PASSES, 0 V2_DYNAMIC_EXPRESSION + 0
+  L6_INVALID_QUALIFIED_NAME (both fired pre-C6).
+- **C2b — BUILD.** `check_body_assignment_impl_loss` WARNs `L6_BODY_ASSIGNMENT_IMPL_LOSS`. Sized
+  live: the body-assignment `return attribute y; y = expr` yields an Out member with `has_fve=False`
+  plus a same-named sibling member carrying the value expression — precise detector, inline forms
+  don't fire.
+- **C7 — FILE (agentic-mbse backlog).** Attribute-`:>>`-with-expression WARN. Reason: its correct
+  trigger boundary is subtle — must fire on an *AttributeUsage* redefinition with an *expression*
+  RHS but NOT on the supported bare-`:>>` (ReferenceUsage) form nor a literal-valued redefinition.
+  Getting that wrong reintroduces the C6 defect class (flagging a shape codegen accepts). Explicit
+  candidate under the guard → filed rather than shipped rushed. Paired doc D5 still lands.
+- **C8 — FILE (agentic-mbse backlog).** Two-names-one-identifier WARN. Reason: requires replicating
+  codegen's identifier sanitizer in agentic-mbse to compute collisions — real duplication risk
+  (drift from codegen's REQ-NC-09). Explicit candidate → filed; codegen's duplicate-path error is
+  the backstop.
+
+**Deviations:** none — the guard's build-or-file split executed as written; both FILEs are the
+named candidates, logged here and carried to Phase 4 F-rows.
 
 ### Phase 3 Completion
-**Completed:** — **V2 sweep result:** — **Deviations:** —
+**Completed:** 2026-07-06 — committed in agentic-mbse at `f68d1cb`.
+
+**D-rows landed:**
+- **D1/D2/D8** — new `docs/patterns/plant-idiom.md`: template calcs, design-attribute
+  bindings, retyping (D2), def-owned attributes (D8, kept as a cheap section, not downgraded),
+  cross-part chains + EXPOSE, sibling disambiguation. References the 5 sysml-codegen fixtures
+  (all verified present).
+- **D3** — SKILL.md naming: quoted names are fine, codegen derives the identifier.
+- **D4** — adr002-calculations.md: no-loops rule (A-3), DAG.
+- **D5** — semantic-operators.md: bare-`:>>` value idiom, plain-usage literal override,
+  `attribute :>>`-with-expression warning (pairs with FILED C7), redefinition precedence.
+- **D6** — expose-pattern.md: EXPOSE surfacing (output_aliases, filename, sanitized name,
+  both shapes, EXPOSE_COMPUTED rejected).
+- **D7** — constraints.md: not executable, dropped at extraction (pairs with C3, points at
+  modeling-assumptions §8).
+- Registered plant-idiom.md in all three indices (stencils.md, MODELING_GUIDE.md, README.md).
+
+**V1:** confirmed — `references/stencils.md:39` teaches the committed A-2 inline
+`return result : Real = input_a * input_b;` form (not body-assignment).
+
+**V2 sweep result (the load-bearing gate — CLOSED):** swept the whole sysml-conventions skill
++ all `docs/patterns/`. Nothing else teaches a now-rejected pattern.
+- The operator taxonomy in `adr002-calculations.md` ALREADY matched C5 (supported `+ - * /`
+  and `[`; unsupported `**`/`^`, functions sin/sqrt/abs, conditionals, derived design-attr
+  refs) — no correction needed, it agrees with the shipped check.
+- The only stale stencil was the A-2 body-assignment calc-def form, fixed at `6dbdf1b`.
+- The `out attribute result : Real;` forms in semantic-operators.md are usage-based-dataflow
+  output channels (value wired by downstream usage bindings), NOT the C2b body-assignment
+  anti-pattern — checked, they don't trip C2b (no same-named valued sibling). Left as-is.
+- Minor note (not fixed, not stale): SKILL.md:121 shows conditional syntax without a
+  design-vs-calc-def scope caveat; the authoritative taxonomy in adr002-calculations.md is
+  correct. Not a broken pattern — left as general-syntax reference.
+
+**Deviations:** none. No doc section ballooned (guard not triggered).
 
 ### Phase 4 Completion
-**Completed:** — **Acceptance gates:** — **Filings landed:** — **Deviations:** —
+**Completed:** 2026-07-06. Full detail in `close-out.md` (two traceability tables).
+
+**Acceptance gates (both green):**
+- agentic-mbse own suite: **1218 passed / 1 skipped**; ruff clean; mypy 0 new errors.
+- run_all_checks over the sysml-codegen corpus: three plant fixtures L1–L5 PASS (no
+  regression); L6 changes are exactly the designed ones (C6 makes the real trap L6 PASS;
+  C2a FAILs anonymous_return by design; C2b WARNs return_styles). `retype_model` L2=F is a
+  pre-existing `UNBOUND_INPUT`, not an Item-12 code.
+
+**Filings landed:**
+- agentic-mbse (`upstream-findings-sync`, committed `08cd595`): F1 (vendor note + draft),
+  F2, C7, C8.
+- sysml-codegen (this repo, WRITTEN not committed): F3/F4/F5 in `.project/backlog/BACKLOG.md`.
+
+**Traceability:** every impact-list row (C1–C8, D1–D8, V1–V2, F1–F5) dispositioned with
+evidence; every fusion-tea trap (SC-1..SC-11, A-1/A-2/A-3) mapped to a check, rule, codegen
+fix, or filing — nothing dropped. RAW_LEARNINGS + register read live (this session had
+fusion-tea access).
+
+**Deviations:** C1 reframed from its spec floor (dead-end, not the trap shape) per orchestrator
+ruling A — recorded as the spec amendment in close-out.md. No other deviation.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete**

@@ -6,6 +6,42 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 12: agentic-mbse Sync — Guidance & Validation
+
+**Status**: **COMPLETE** (2026-07-06). Close-out: `.project/active/validation-sync/close-out.md`
+(two traceability tables — every impact row and every fusion-tea trap dispositioned).
+Executed in `~/1cfe/agentic-mbse` (branch `upstream-findings-sync`), four commits
+`9db5ede`→`08cd595`. This is the epic's final item — the validated-subset contract is
+enforceable again.
+
+**What landed (agentic-mbse):**
+- **Checks (BUILT):** C1 self-named-binding FAIL (L2), C2a anonymous-return FAIL (L6), C2b
+  body-assignment WARN (L6), C3 constraint WARN (L6), C4 calc-bearing-no-instantiation FAIL
+  (L6), C5 operator-set correction (`^` dropped) + function-invocation WARN, C6 L6
+  false-positive corrections (calc-def-internal derived expr + quoted names). Each with a
+  negative fixture + negative-of-the-negative under `tests/fixtures/item12/`.
+- **Checks (FILED):** C7 (attribute-`:>>`-expr WARN), C8 (two-names-one-identifier WARN) —
+  agentic-mbse backlog `ITEM-SYNC-C7/C8`, reasons logged (guard).
+- **Docs (BUILT):** D1–D8 — new `docs/patterns/plant-idiom.md` (plant idiom, retyping,
+  def-owned attrs), quoted-names, no-loops, bare-`:>>`, EXPOSE surfacing, constraint pointer.
+  V1 confirmed (A-2 stencil), V2 sweep found nothing else stale.
+- **Filings:** F1 (syside vendor note — evaluation-time-not-extraction-time — + draft),
+  F2 agentic-mbse; F3/F4/F5 in this repo's `.project/backlog/BACKLOG.md` (`SYNC-F3/4/5`).
+
+**Acceptance gates (both green):** agentic-mbse suite 1218 passed / 1 skipped (ruff clean,
+mypy 0 new); run_all_checks over the sysml-codegen corpus — three plant fixtures PASS L1–L5
+(no regression), the real `self_named_binding_trap` L6 now PASSES (C6), all Item-12 L6
+changes are the designed ones.
+
+**Key deviation (C1 reframed per orchestrator ruling):** C1 FAILs only a *dead-end*
+self-named binding (owner carries no covering feature, owned or inherited). The old
+`self_named_binding_trap` fixture — which carries a covering attribute — is now the SUPPORTED
+plant idiom (Items 9/10) and became C1's negative-of-the-negative; the new negative is
+`item12/self_named_deadend`. One-line codegen-spec amendment recorded in close-out.md.
+
+**Nothing committed in sysml-codegen** (per orchestration): F3/F4/F5, close-out, plan/spec
+status, and this note are written here, not committed.
+
 ### UPSTREAM-FINDINGS Item 11: Derived-Attribute Alias Surfacing (SC-7)
 
 **Status**: **AUDITED — PASS/Certify** (2026-07-06, commits `4f6ba40`+`0672cae`;

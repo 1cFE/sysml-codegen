@@ -36,7 +36,26 @@ Prioritized list of epics and features.
 
 ## P2 - Medium Priority
 
-*No epics yet*
+### [SYNC-F3] Shape-B leaf-collision filename edge (UPSTREAM-FINDINGS Item 12, F3)
+
+**Source**: alias-surfacing (Item 11) audit Obs. 2. Two distinct shape-B owning parts that
+share a leaf name and expose the same alias to different channels produce the same output
+filename `{instance_path}__{alias}.json` — a collision codegen does not yet disambiguate.
+Not triggered by any in-repo fixture. File to disambiguate (e.g. qualify by owning-part
+path) before a real model hits it.
+
+### [SYNC-F4] Redefinition / design_override name surfacing (UPSTREAM-FINDINGS Item 12, F4)
+
+**Source**: alias-surfacing (Item 11) release-notes §impact. `:>>` and design-override names
+resolve as channels but are not EXPOSE_PURE-sourced, so they do not surface as named
+outputs. Decide whether these names should surface (mirror of D6/EXPOSE surfacing) or stay
+internal.
+
+### [SYNC-F5] Positive unresolvable-warning test (UPSTREAM-FINDINGS Item 12, F5)
+
+**Source**: alias-surfacing (Item 11) audit Obs. 1. Item 11's INV-6 "unresolvable refs still
+warn" leg has no positive live assertion. Add a test that asserts an unresolvable ref emits
+its warning. Opportunistic — cheap to add in sysml-codegen's test suite.
 
 ---
 

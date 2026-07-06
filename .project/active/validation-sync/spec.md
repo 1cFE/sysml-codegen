@@ -1,6 +1,6 @@
 # Spec: agentic-mbse Sync — Guidance & Validation (UPSTREAM-FINDINGS Item 12)
 
-**Status:** Draft
+**Status:** Complete (2026-07-06 — see `close-out.md`; C1 reframed per orchestrator ruling, amendment recorded)
 **Owner:** Reid W
 **Created:** 2026-07-06
 **Complexity:** HIGH (breadth, cross-repo; bounded by a hard 1–1.5 day scope guard)
