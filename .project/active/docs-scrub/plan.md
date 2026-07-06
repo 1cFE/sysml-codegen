@@ -62,19 +62,19 @@ head -30 scripts/capture_*.py
 ```
 
 ### Changes Required
-- [ ] Read `.project/backlog/epic_upstream_findings.md` (the 12-item map)
-- [ ] Read the three `release-notes.md` files (Items 7, 10, 11)
-- [ ] Confirm code symbols: `snapshot/` package, `--from-snapshot`, `ScopedAliasKey`,
+- [x] Read `.project/backlog/epic_upstream_findings.md` (the 12-item map)
+- [x] Read the four `release-notes.md` files (Items 7, 9, 10, 11 — Item 9's exists too)
+- [x] Confirm code symbols: `snapshot/` package, `--from-snapshot`, `ScopedAliasKey`,
       `output_aliases`/`OutputAlias`, `fallback_entry_points` (exclude=True),
       `reference_chain`, `EXPOSE_CHAIN_TENTATIVE` + Phase 3b confirm pass,
       `sanitize_qualified_name`, exit-point filename override
-- [ ] Confirm capture-script roles from docstrings
-- [ ] Write `.project/active/docs-scrub/fact-sheet.md` — one line per fact, with the
+- [x] Confirm capture-script roles from docstrings
+- [x] Write `.project/active/docs-scrub/fact-sheet.md` — one line per fact, with the
       code symbol or release-note section that proves it
 
 ### Validation
-- [ ] Fact sheet exists; every fact has a provenance pointer
-- [ ] `ConsumerScopedKey` grep over src/ returns nothing (else the spec's rename claim is wrong — stop and report)
+- [x] Fact sheet exists; every fact has a provenance pointer
+- [x] `ConsumerScopedKey` grep over src/ returns nothing (else the spec's rename claim is wrong — stop and report)
 
 **What We Know Works After This Phase:** every later doc edit has a checkable source.
 
@@ -247,10 +247,10 @@ Mechanical checks that don't belong to any one doc, plus the unchanged-gate proo
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:**
-**Actual Changes:**
-**Issues:**
-**Deviations:**
+**Completed:** 2026-07-06 ~06:55
+**Actual Changes:** `fact-sheet.md` written (F1–F12, each fact with a code-symbol or release-note provenance pointer). No doc edits yet.
+**Issues:** None. `ConsumerScopedKey` absent from src/ and docs/; all new-term symbols confirmed present in src/.
+**Deviations:** Read four release-notes files, not three — Item 9 (plant-prefill) has one the handoff didn't list. Nuance corrected vs. my earlier assumption: Phase 3b (tentative→confirm) is a *registry-build* phase in `output_registry_builder.py`, not a backtracker phase — recorded in F5 so docs get it right.
 
 ### Phase 2 Completion
 **Completed:**
