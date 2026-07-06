@@ -1,6 +1,6 @@
 # Implementation Plan: Plant-Value & Blind-Spot Fixtures (PIPELINE-TRUTH Item 1)
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-06
 **Last Updated:** 2026-07-06
 **Epic Item:** PIPELINE-TRUTH Item 1 (Track A head)
@@ -160,12 +160,12 @@ constraint).**
 ### Validation
 
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_capture_fixtures_filter.py` → passes.
-- [ ] `uv run pytest tests/` → no regressions.
-- [ ] `uv run ruff check scripts/ tests/` → clean.
+- [x] `uv run pytest tests/unit/test_capture_fixtures_filter.py` → passes.
+- [x] `uv run pytest tests/` → no regressions.
+- [x] `uv run ruff check scripts/ tests/` → clean.
 
 **Manual:**
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures sample_model` then
+- [x] `uv run python scripts/capture_extraction_snapshots.py --fixtures sample_model` then
       `git status --porcelain` → only `sample_model` paths appear (or none). Confirm the
       byte-identity gate is real.
 
