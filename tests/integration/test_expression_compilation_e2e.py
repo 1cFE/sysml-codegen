@@ -207,15 +207,15 @@ class TestCATFMFEValidation:
 
     @pytest.fixture(scope="class")
     def catf_mfe_output(self, tmp_path_factory: pytest.TempPathFactory) -> Path:
-        """catf_mfe generation now aborts with V11 (Item 7 / D4).
+        """catf_mfe generation succeeds — Item 10 wired the cross-part pin (SC-1).
 
-        The cross-part ``cryo_load.magnet_volume`` EXPOSE gap makes strict
-        generation refuse (guaranteed runtime ``KeyError``). This fixture pins
-        the abort, then ``xfail``s every downstream output-inspecting test in the
-        class — there is no generated output to validate until Items 9-11 wire
-        the ``tf_coil.volume`` cross-part shape and flip generation back to clean.
-        The exact gap is pinned green in
-        ``tests/unit/test_uncovered_params.py`` (``[cryo_load.magnet_volume]``).
+        The cross-part ``cryo_load.magnet_volume = catf_radial_build.magnet_volume_total``
+        binding used to fall to a valueless V11 fallback that aborted strict
+        generation. Item 10's multi-hop EXPOSE confirm pass now resolves
+        ``magnet_volume_total = tf_coil.volume`` (an alias terminal) transitively
+        to the ``tf_coil.volume_calc.volume`` channel and registers the alias, so
+        the consumer wires and generation is clean again. This fixture pins the
+        flip; the downstream tests validate the generated output.
         """
         model_path = FIXTURES_DIR / "catf_mfe_model"
         output_path = tmp_path_factory.mktemp("catf_mfe")
@@ -225,11 +225,11 @@ class TestCATFMFEValidation:
             package_name="catf_mfe",
         )
         success = run_codegen(config)
-        assert success is False, "V11 must abort catf_mfe generation (magnet_volume gap)"
-        pytest.xfail(
-            "catf_mfe magnet_volume cross-part EXPOSE gap — Items 9-11 wire "
-            "tf_coil.volume; V11 aborts generation by design until then"
+        assert success is True, (
+            "catf_mfe generation must succeed — Item 10 wired the magnet_volume "
+            "cross-part pin"
         )
+        return output_path
 
     def test_codegen_succeeds(self, catf_mfe_output: Path):
         assert (catf_mfe_output / "handwritten").exists()

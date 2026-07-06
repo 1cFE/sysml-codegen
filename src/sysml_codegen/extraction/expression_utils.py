@@ -278,6 +278,48 @@ def extract_feature_chain_name(expr_node: Any) -> str:
     return str(expr_node)
 
 
+def extract_feature_chain_segments(expr_node: Any) -> list[str]:
+    """Return the full dotted-path segments of a FeatureChainExpression.
+
+    The segment-list analog of extract_feature_chain_name (Item 10, D9). Unlike
+    that helper — which reads ``operands[0]`` + ``target_feature.name`` and joins
+    to a string — this expands ``target_feature.chaining_features`` so a 3+-deep
+    chain yields every segment instead of truncating.
+
+    Concretely, ``tf_coil.volume_calc.volume`` parses to a FeatureChainExpression
+    whose ``target_feature`` is an anonymous Feature with ``name is None`` and
+    ``chaining_features == [volume_calc, volume]``. Reading ``.name`` alone yields
+    ``["tf_coil"]``; expanding ``chaining_features`` yields the full
+    ``["tf_coil", "volume_calc", "volume"]`` the multi-hop confirm walk needs.
+
+    Returns an empty list for a non-FeatureChainExpression node.
+    """
+    if not SysideAdapter.is_instance(expr_node, "FeatureChainExpression"):
+        return []
+
+    segments: list[str] = []
+
+    operands = list(getattr(expr_node, "operands", []) or [])
+    if operands:
+        root = operands[0]
+        if SysideAdapter.is_instance(root, "FeatureChainExpression"):
+            segments.extend(extract_feature_chain_segments(root))
+        else:
+            name = reconstruct_expression(root)
+            if name:
+                segments.append(name)
+
+    target = getattr(expr_node, "target_feature", None)
+    if target is not None:
+        chaining = list(getattr(target, "chaining_features", []) or [])
+        if chaining:
+            segments.extend(c.name for c in chaining if getattr(c, "name", None))
+        elif getattr(target, "name", None):
+            segments.append(target.name)
+
+    return segments
+
+
 def is_literal_expression(expr: Any) -> bool:
     """Check if a syside AST node is a literal value expression.
 

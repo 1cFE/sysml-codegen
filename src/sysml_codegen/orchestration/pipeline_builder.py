@@ -524,10 +524,10 @@ def build_pipeline_context(
     # Merge all channel aliases (CHAIN from Step 3.5 + EXPOSE_PURE from Step 4.5)
     all_channel_aliases = chain_aliases + expose_aliases
 
-    # Step 5: Create parameter group deriver (uses filtered design_attrs)
-    group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
-
-    # Step 5.5: Build OutputRegistry (4-phase registration protocol)
+    # Step 5.5: Build OutputRegistry (4-phase registration protocol). Its Phase 3b
+    # confirm pass finalizes every EXPOSE_CHAIN_TENTATIVE in place (Item 10) —
+    # resolving to EXPOSE_PURE or reverting to FORMULA. So design_attr removal and
+    # group derivation must run AFTER this (INV-G), not before.
     output_registry = build_output_registry(
         calc_usages=calc_usages,
         calc_defs=calc_defs,
@@ -536,6 +536,16 @@ def build_pipeline_context(
         channel_aliases=all_channel_aliases,
         design_attributes=design_attrs,
     )
+
+    # Step 5.6: Re-run FORMULA removal (INV-G). The Step-4.5 removal ran before the
+    # confirm pass, so a tentative that reverted to FORMULA is still in design_attrs
+    # and would leak a valueless entry point (C6b). This second pass removes it. The
+    # Step-4.5 removal stays for genuine (never-tentative) FORMULAs.
+    _remove_formula_from_design_attrs(computed_attrs, design_attrs)
+
+    # Step 5.7: Create parameter group deriver, now that design_attrs reflects the
+    # FINAL classifications (moved after confirm per INV-G).
+    group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
 
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(

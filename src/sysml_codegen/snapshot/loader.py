@@ -482,4 +482,8 @@ def _deserialize_computed_attribute(d: dict) -> ComputedAttributeData:
         is_on_part_definition=d.get("is_on_part_definition", False),
         source_file=Path(d.get("source_file", "unknown")),
         source_line=d.get("source_line", 0),
+        # Additive-optional (Item 10, D9): old snapshots lack it → None. No
+        # SNAPSHOT_FORMAT_VERSION bump; absent chain leaves classification at
+        # today's FORMULA behavior.
+        reference_chain=d.get("reference_chain"),
     )

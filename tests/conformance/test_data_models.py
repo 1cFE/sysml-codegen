@@ -174,7 +174,10 @@ ENUM_SPECS = [
     pytest.param(
         "sysml_codegen.extraction.data_models",
         "ComputedAttributeClassification",
-        {"FORMULA", "EXPOSE_PURE", "EXPOSE_COMPUTED", "LITERAL", "UNRESOLVABLE"},
+        {
+            "FORMULA", "EXPOSE_PURE", "EXPOSE_COMPUTED",
+            "EXPOSE_CHAIN_TENTATIVE", "LITERAL", "UNRESOLVABLE",
+        },
         id="ComputedAttributeClassification",
     ),
     pytest.param(

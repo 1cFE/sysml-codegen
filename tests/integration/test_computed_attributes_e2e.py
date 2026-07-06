@@ -280,18 +280,17 @@ class TestPhase1Regression:
             "All chain spike impls should be auto-implemented"
         )
 
-    def test_catf_mfe_aborts_with_v11(
+    def test_catf_mfe_wired_after_item10(
         self, catf_mfe_model_path: Path, tmp_path: Path, caplog,
     ):
-        """catf_mfe generation aborts with V11 (Item 7 / D4) — tracked to Items 9-11.
+        """catf_mfe generation succeeds — Item 10 wired the cross-part pin (SC-1).
 
         ``cryo_load.magnet_volume`` binds the cross-part EXPOSE
-        ``catf_radial_build.magnet_volume_total`` (= ``tf_coil.volume``), which
-        falls through resolution with no value and stays wired → a guaranteed
-        runtime ``KeyError``. Strict generation refuses it. Items 9-11 wire the
-        ``tf_coil.volume`` cross-part shape and flip this back to clean
-        generation. The exact gap is pinned green in
-        ``tests/unit/test_uncovered_params.py`` (``[cryo_load.magnet_volume]``).
+        ``catf_radial_build.magnet_volume_total`` (= ``tf_coil.volume``). Before
+        Item 10 that fell through with no value and V11 aborted strict generation.
+        The multi-hop EXPOSE confirm pass now resolves it transitively to the
+        ``tf_coil.volume_calc.volume`` channel and registers the alias, so the
+        consumer wires and generation is clean — no V11 diagnostic.
         """
         import logging
 
@@ -301,9 +300,9 @@ class TestPhase1Regression:
             package_name="catf_mfe",
         )
         with caplog.at_level(logging.ERROR):
-            assert run_codegen(config) is False, (
-                "V11 must abort catf_mfe generation (magnet_volume cross-part gap)"
+            assert run_codegen(config) is True, (
+                "catf_mfe generation must succeed after Item 10 wires magnet_volume"
             )
-        assert any("V11" in r.message for r in caplog.records), (
-            "strict generation must log the V11 diagnostic"
+        assert not any("V11" in r.message for r in caplog.records), (
+            "no V11 diagnostic — the cross-part magnet_volume pin is wired"
         )

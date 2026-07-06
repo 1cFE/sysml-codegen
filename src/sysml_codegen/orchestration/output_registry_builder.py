@@ -31,6 +31,58 @@ from sysml_codegen.extraction.usage_extractor import CalcUsageData
 logger = logging.getLogger(__name__)
 
 
+def _resolve_reference_chain(
+    instance_prefix: str,
+    chain: list[str],
+    ca_by_part_attr: dict[tuple[str, str], ComputedAttributeData],
+    registry: OutputRegistry,
+    visited: set[str],
+) -> CanonicalChannel | None:
+    """Walk a multi-hop reference_chain to a canonical channel (Item 10, #2).
+
+    The transitive N-segment walk the confirm pass runs (the recursive analog of
+    ``_resolve_aggregation_input_channel``, with its ``visited`` cycle guard, M5).
+
+    Two terminal shapes, both handled here:
+    - Direct calc-output terminal (ife_plant): ``radial_build.magnet_volume_total
+      = tf_coil.volume_calc.volume`` — the full chain under the instance scope is a
+      scoped channel key, so ``scoped_lookup`` hits directly.
+    - Alias terminal one hop further (catf_mfe): ``catf_radial_build.magnet_volume_total
+      = tf_coil.volume``, where ``tf_coil.volume`` is itself an EXPOSE alias for
+      ``volume_calc.volume``. The direct key misses, so substitute the terminal
+      attribute's OWN reference_chain and recurse. This resolves through the SCOPED
+      calc-output channel, never the flat ``_alias`` (which is corrupted first-wins
+      across same-named siblings — probe D-B).
+
+    ``instance_prefix`` is the owning part's short name (the design-prefix-stripped
+    scope, matching make_scoped_key's format). Returns the channel or None.
+    """
+    if not chain:
+        return None
+
+    key = f"{instance_prefix}.{'.'.join(chain)}"
+    if key in visited:
+        return None  # cycle guard (M5)
+    visited.add(key)
+
+    channel = registry.scoped_lookup(ScopedKey(key))
+    if channel is not None:
+        return channel
+
+    # Alias terminal: the last segment names an attribute on the part reached by
+    # the penultimate segment. Follow it by substituting its own reference_chain.
+    if len(chain) < 2:
+        return None
+    part_seg, leaf = chain[-2], chain[-1]
+    alias_ca = ca_by_part_attr.get((part_seg, leaf))
+    if alias_ca is None or not alias_ca.reference_chain:
+        return None
+    substituted = chain[:-1] + alias_ca.reference_chain
+    return _resolve_reference_chain(
+        instance_prefix, substituted, ca_by_part_attr, registry, visited
+    )
+
+
 def build_output_registry(
     calc_usages: list[CalcUsageData],
     calc_defs: list[CalculationDefinitionData],
@@ -190,6 +242,67 @@ def build_output_registry(
                 "named alias is emitted.",
                 scoped_key,
                 alias.canonical_name,
+            )
+
+    # ------------------------------------------------------------------
+    # Phase 3b: Confirm multi-hop EXPOSE tentatives (Item 10, D6 / REQ-CA-10)
+    #
+    # The leaf tagged EXPOSE_CHAIN_TENTATIVE structurally (INV-E); it could not
+    # decide EXPOSE-ness (B5). Now, with Phase-1 channels and Phase-2/3 aliases
+    # registered, walk each tentative's reference_chain to a canonical channel.
+    # Resolve -> register the cross-part alias and finalize EXPOSE_PURE IN PLACE
+    # (M6: the shared CA objects, so nothing serializes a live tentative). Fail ->
+    # revert to FORMULA in place (INV-D: byte-identical to today's behavior). Runs
+    # after Phase 3, before Phase 4 (INV-G).
+    # ------------------------------------------------------------------
+    confirm_resolved = 0
+    confirm_reverted = 0
+    ca_by_part_attr: dict[tuple[str, str], ComputedAttributeData] = {
+        (ca.owning_part_name, ca.name): ca for ca in computed_attributes
+    }
+    for ca in computed_attributes:
+        if ca.classification != ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE:
+            continue
+        channel = _resolve_reference_chain(
+            ca.owning_part_name,
+            ca.reference_chain or [],
+            ca_by_part_attr,
+            registry,
+            set(),
+        )
+        if channel is not None:
+            qn = ca.owning_part_qualified_name
+            if "::" in qn:
+                owning_part_short = qn.rsplit("::", 1)[-1]
+            else:
+                owning_part_short = qn.split("__")[-1]
+            registry.register_alias(
+                ScopedKey(f"{owning_part_short}.{ca.python_name}"), channel
+            )
+            ca.classification = ComputedAttributeClassification.EXPOSE_PURE
+            confirm_resolved += 1
+        else:
+            ca.classification = ComputedAttributeClassification.FORMULA
+            confirm_reverted += 1
+
+    if confirm_resolved or confirm_reverted:
+        logger.info(
+            "Phase 3b: confirmed %d multi-hop EXPOSE alias(es), reverted %d "
+            "unresolvable tentative(s) to FORMULA",
+            confirm_resolved,
+            confirm_reverted,
+        )
+
+    # INV-F (registry-side guarantee): every tentative is now EXPOSE_PURE or
+    # FORMULA. A survivor means the confirm loop skipped a classification it must
+    # own — a bug, not a degraded input — so raise rather than let it leak to the
+    # graph builder's readers (which each also raise defensively, INV-F).
+    for ca in computed_attributes:
+        if ca.classification == ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE:
+            raise ValueError(
+                f"INV-F violation: EXPOSE_CHAIN_TENTATIVE survived the confirm pass "
+                f"for '{ca.owning_part_name}.{ca.name}' — the tentative was neither "
+                f"resolved nor reverted."
             )
 
     # ------------------------------------------------------------------

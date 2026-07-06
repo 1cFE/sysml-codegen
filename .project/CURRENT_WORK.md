@@ -8,11 +8,27 @@
 
 ### UPSTREAM-FINDINGS Item 10: Cross-Part Channel Wiring (SC-5 stage 2)
 
-**Status**: Spec in progress — `.project/active/cross-part-wiring/spec.md`. The riskiest
-item; design decides whether to split into stage (a) CHAIN alias lookup + EXPOSE_PURE
-shape-A (flips both V11 pins) and stage (b) the specialization-chain per-instance rewrite
-(the novel gamma → lcoe machinery). Spec surfaces a load-bearing gap: ife_plant exercises
-stage (a) only — stage (b) has no committed fixture.
+**Status**: **IMPLEMENTING — Phases 0–3 landed and green (stage (a) core).** Not committed.
+Plan: `.project/active/cross-part-wiring/plan.md` (Phase 0 probe results + per-phase notes +
+Phase-4..8 handoff).
+
+**Done (green boundary):** Phase 0 probe battery (both hard stops cleared; 2 absorbable
+deviations D-A/D-B found + recorded); Phase 1 (D9 `reference_chain` capture, corrected
+`chaining_features` walk); Phase 2 (leaf `EXPOSE_CHAIN_TENTATIVE` tag, INV-E gate); Phase 3
+(the confirm pass — transitive walk flips BOTH V11 pins live: catf + ife `magnet_volume`
+resolve to real channels; INV-F raises at 3 graph_builder readers + confirm terminal; INV-G
+second FORMULA-removal + `group_deriver` move). **Gate: 1945 passed / 4 skipped / 5 xfailed;
+ruff 21; mypy 109.** The 6 CATFMFEValidation tests un-xfailed to passing (SC-1).
+
+**Remaining:** Phase 4 (part-def EXPOSE scoped-alias `#4`/`#1` + wi014 shape-A / REQ-CA-09);
+Phase 5 (recapture catf+ife snapshots — REVIEWED-DIFF regen boundary; a path-drift
+model-relative-vs-repo-relative `source_file` issue must be resolved first, see plan Phase-5
+handoff); Phases 6–7 (stage (b): 3 companion fixtures + precedence resolver, ONE-DAY escalation
+guard); Phase 8 (WI-015 fusion-tea live anchor + docs/REQ IDs).
+
+**Key caveat:** committed catf/ife snapshots are still FORMULA (stale) — live extraction flips
+the pins, snapshot-based tests still see the old gap. This is exactly what Phase 5 recapture
+resolves; suite is green in the meantime.
 
 ### UPSTREAM-FINDINGS Item 9: Plant-Idiom Literal Pre-Fill (SC-5 stage 1)
 

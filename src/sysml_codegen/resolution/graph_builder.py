@@ -260,6 +260,14 @@ def build_computation_graph(
                 )
                 entry_points.update(new_eps)
                 modules.append(module)
+            elif ca.classification == ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE:
+                # INV-F: the confirm pass (Step 5.5) finalizes every tentative to
+                # EXPOSE_PURE or FORMULA. Reaching the graph builder with one means
+                # a tentative leaked — raise rather than silently drop it.
+                raise ValueError(
+                    "INV-F violation: EXPOSE_CHAIN_TENTATIVE reached module build "
+                    f"for '{ca.owning_part_name}.{ca.name}'"
+                )
 
     # Step 6.6b: Build EXPOSE_PURE alias map for aggregation LocalTerm resolution.
     # Maps (owning_part_qn, python_name) -> expression_text (e.g., "allocation_model.total_allocation").
@@ -274,6 +282,12 @@ def build_computation_graph(
         if ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
             normalized_qn = sanitize_qualified_name(ca.owning_part_qualified_name)
             expose_aliases[(normalized_qn, ca.python_name)] = ca.expression_text
+        elif ca.classification == ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE:
+            # INV-F: no tentative survives the confirm pass (see module-build reader).
+            raise ValueError(
+                "INV-F violation: EXPOSE_CHAIN_TENTATIVE reached the aggregation "
+                f"alias map for '{ca.owning_part_name}.{ca.name}'"
+            )
 
     # Step 6.7: Build aggregation modules
     for agg in (aggregation_data or []):
@@ -860,6 +874,15 @@ def _build_attribute_resolution_map(
                 result[part_name][ca.python_name] = AttributeResolution(
                     kind=AttributeResolutionKind.LITERAL,
                 )
+
+        elif ca.classification == ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE:
+            # INV-F: no tentative survives the confirm pass. Without this branch a
+            # survivor would fall through to the implicit literal default below and
+            # silently mis-wire — raise instead.
+            raise ValueError(
+                "INV-F violation: EXPOSE_CHAIN_TENTATIVE reached the attribute "
+                f"resolution map for '{ca.owning_part_name}.{ca.name}'"
+            )
 
     return result
 

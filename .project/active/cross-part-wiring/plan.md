@@ -68,22 +68,22 @@ That D9's `reference_chain` capture is producible for **both** pin shapes (B7), 
 classifier reclassifies **only** the enumerated set (M1) — no surprise churn.
 
 ### Probes (each writes its result into "Probe Results" below; no `src/` edits)
-- [ ] **B7 — segment capture (the gating probe).** In a scratch script, load ife_plant + catf_mfe live and
+- [x] **B7 — segment capture (the gating probe).** In a scratch script, load ife_plant + catf_mfe live and
   call the whole-chain walk `extract_feature_chain_name` (`expression_utils.py:250-280`) uses (`.operands[0]`
   + `.target_feature.name`). Confirm it yields `["tf_coil","volume_calc","volume"]` for ife_plant's
   `magnet_volume_total` (`subsystems.sysml:12`) and the alias chain for catf_mfe's `tf_coil.volume`
   (`radial_build.sysml:582`+`:458`). See `design.md#B7`.
-- [ ] **B1 re-confirm — both pins reason-one.** Trace both pins against the *live* registry (not just
+- [x] **B1 re-confirm — both pins reason-one.** Trace both pins against the *live* registry (not just
   source): each resolves to a single canonical channel, instance-independent. See `design.md#B1`.
-- [ ] **`extract_feature_refs` truncation cause (probe 1, non-gating).** Read the agentic-mbse internal that
+- [x] **`extract_feature_refs` truncation cause (probe 1, non-gating).** Read the agentic-mbse internal that
   truncates `tf_coil.volume_calc.volume` → `[tf_coil]`. Confirms D9's segment-list seam is the right one.
   Does **not** gate — D9 uses the in-repo chain walker, not `extract_feature_refs` (`design.md#D9`).
-- [ ] **M1 expected-churn table.** Enumerate **every** computed attribute on catf_mfe **and** ife_plant that
+- [x] **M1 expected-churn table.** Enumerate **every** computed attribute on catf_mfe **and** ife_plant that
   the new leaf-tag rule (INV-E: `reference_chain` ≥ 2 segments, single terminal leaf) would re-tag
   FORMULA→tentative. Record each: attr name, source line, has-cross-part-consumer?, expected final
   classification. Confirm `first_wall_area`/`magnet_surface_area` are single-hop (sibling calc) and
   **unaffected** (`design.md#potential-risks`, M1 bullet).
-- [ ] **M2 aggregation-walker interaction.** Confirm which of the re-tagged exposes (if any) feed
+- [x] **M2 aggregation-walker interaction.** Confirm which of the re-tagged exposes (if any) feed
   `_build_aggregation_module`'s alias map (`graph_builder.py:264-277,1172+`) and that INV-E keeps
   two-terminal chains out (`design.md#M2`).
 
@@ -130,17 +130,17 @@ def test_old_snapshot_degrades_to_none():
 **See `design.md` for:** D9 decision, the segment-list analog rationale, the no-version-bump precedent
 (SC-10 additive-degrade).
 
-- [ ] **Test file** (`tests/unit/test_computed_attribute_extractor.py` or a new red-first test) — the two
+- [x] **Test file** (`tests/unit/test_computed_attribute_extractor.py` or a new red-first test) — the two
   stencils above, on real objects.
-- [ ] `extraction/data_models.py:214-217` — add `reference_chain: list[str] | None = None` as a **trailing
+- [x] `extraction/data_models.py:214-217` — add `reference_chain: list[str] | None = None` as a **trailing
   defaulted** dataclass field (safe; verified the default block sits at the end).
-- [ ] `extraction/computed_attribute_extractor.py` — at live extraction, populate `reference_chain` with the
+- [x] `extraction/computed_attribute_extractor.py` — at live extraction, populate `reference_chain` with the
   segment-list analog of `extract_feature_chain_name` (`expression_utils.py:250-280` — return the list
   instead of joining).
-- [ ] `snapshot/serializer.py` — auto-included (loops `dataclasses.fields`, `:171`); confirm no field
+- [x] `snapshot/serializer.py` — auto-included (loops `dataclasses.fields`, `:171`); confirm no field
   exclusion needed.
-- [ ] `snapshot/loader.py:467-485` — add `reference_chain=d.get("reference_chain")` (`:474` region).
-- [ ] **Do NOT bump `SNAPSHOT_FORMAT_VERSION`** (`snapshot/__init__.py`) — see M6.
+- [x] `snapshot/loader.py:467-485` — add `reference_chain=d.get("reference_chain")` (`:474` region).
+- [x] **Do NOT bump `SNAPSHOT_FORMAT_VERSION`** (`snapshot/__init__.py`) — see M6.
 
 ### Validation
 **Automated:** red-first tests pass; full suite green (this field is inert until Phase 2 reads it); mypy/ruff
@@ -177,12 +177,12 @@ def test_arithmetic_over_chain_stays_formula():
 reads, D6), why the leaf cannot decide (B5), the round-1 "one ref after removing waypoints" rule that gave
 **zero** for the real pin and is replaced (C4).
 
-- [ ] Add `EXPOSE_CHAIN_TENTATIVE` to `ComputedAttributeClassification`
+- [x] Add `EXPOSE_CHAIN_TENTATIVE` to `ComputedAttributeClassification`
   (`extraction/data_models.py`, enum).
-- [ ] `extraction/computed_attribute_extractor.py:104-109` — when the root is a pure `FeatureChainExpression`
+- [x] `extraction/computed_attribute_extractor.py:104-109` — when the root is a pure `FeatureChainExpression`
   (`:104-106`) AND `reference_chain` satisfies INV-E, return `EXPOSE_CHAIN_TENTATIVE` instead of dropping to
   FORMULA. Do **not** test terminal-is-an-output.
-- [ ] Red-first tests above + a two-terminal-chain case that **stays FORMULA** (never tagged — the INV-E
+- [x] Red-first tests above + a two-terminal-chain case that **stays FORMULA** (never tagged — the INV-E
   guard that keeps ambiguous aliases out of the resolvers, M2).
 
 ### Validation
@@ -235,20 +235,20 @@ def test_surviving_tentative_raises_at_each_reader():
 modeled on `_resolve_aggregation_input_channel` `graph_builder.py:1043-1079` — the **real** recursive analog,
 M5), the exact reader sites (INV-F), and the phase-order evidence (INV-G).
 
-- [ ] **Confirm pass (Phase 3b)** in `build_output_registry` (`resolution/output_registry_builder.py`) —
+- [x] **Confirm pass (Phase 3b)** in `build_output_registry` (`resolution/output_registry_builder.py`) —
   runs **after** Phase 3 single-hop aliases, **before** Phase 4. Per tentative: walk `reference_chain`
   left-to-right building an instance path from waypoint segments; at the terminal look up a scoped channel
   (direct — ife_plant) or an alias, following one alias hop to its channel (catf_mfe); carry the M5 `_visited`
   guard. Resolve → register alias + set `EXPOSE_PURE` **in place**; else → set `FORMULA` in place.
-- [ ] **INV-F asserts** — add `else: raise` on a surviving `EXPOSE_CHAIN_TENTATIVE` at all four readers:
+- [x] **INV-F asserts** — add `else: raise` on a surviving `EXPOSE_CHAIN_TENTATIVE` at all four readers:
   `output_registry_builder.py:120` (Phase 1c), `graph_builder.py:253` (module build), `:274` (aggregation
   alias map), `:834` (`_build_attribute_resolution_map`).
-- [ ] **INV-G ordering** in `orchestration/pipeline_builder.py` — a **second** `_remove_formula_from_design_attrs`
+- [x] **INV-G ordering** in `orchestration/pipeline_builder.py` — a **second** `_remove_formula_from_design_attrs`
   pass at Step 5.6 (twin of the Step-4.5 removal at `:133`); move `group_deriver` construction from `:528`
   to Step 5.7, **after** that removal, so it consumes final `design_attrs`. The Step-4.5 removal stays
   (genuine FORMULAs).
-- [ ] Red-first tests above; plus an aggregation-fixture regression (M2 guard at the walker entry).
-- [ ] **M6 in-place constraint:** the confirm pass must mutate the **shared** `computed_attrs` objects in
+- [x] Red-first tests above; plus an aggregation-fixture regression (M2 guard at the walker entry).
+- [x] **M6 in-place constraint:** the confirm pass must mutate the **shared** `computed_attrs` objects in
   place — an implementer who rebuilds from copies serializes live tentatives. State this in a code comment.
 
 ### Validation
@@ -482,25 +482,210 @@ Live extraction / capture needs the syside license (**expires 2026-08-06**) — 
 
 ## Implementation Notes
 
-### Probe Results (fill in Phase 0)
-_[TO BE FILLED — B7 segments for both pins; B1 live re-confirm; truncation cause; the M1 expected-churn
-table (attr, line, consumer?, final classification); M2 walker interaction. Record the two hard-stop
-outcomes explicitly.]_
+### Probe Results (Phase 0 — COMPLETE, 2026-07-05, license live)
+
+Run live via `scratch_probe_phase0.py` / `scratch_ast_inspect.py` / `scratch_probe_b1.py`
+(all non-`src/` scratch; deleted after recording).
+
+**HARD-STOP OUTCOMES — neither fired. Cleared to proceed.**
+- B7: **PASS** (segments producible for both pins — see deviation D-A below).
+- Churn table: **within the enumerated set** (exactly 3 attrs, no surprise reach).
+
+**B7 — segment capture (gating).** Both pins produce full segments, BUT NOT via the design's
+named mechanism. Raw AST (via `scratch_ast_inspect.py`):
+- ife_plant `radial_build.magnet_volume_total = tf_coil.volume_calc.volume` (3-deep):
+  `FeatureChainExpression(operands[0]=FeatureRef 'tf_coil', target_feature=<anon Feature with
+  chaining_features=[CalcUsage 'volume_calc', AttrUsage 'volume']>)`. `target_feature.name` is
+  **None** — the deeper segments live in `target_feature.chaining_features`.
+- catf_mfe `catf_radial_build.magnet_volume_total = tf_coil.volume` (2-deep):
+  `FeatureChainExpression(operands[0]='tf_coil', target_feature=AttrUsage 'volume')` —
+  `target_feature.name='volume'`.
+- **DEVIATION D-A (absorbable, Phase 1 seam):** the design's D9/B7 said
+  `extract_feature_chain_name` (operands[0] + `.target_feature.name`) "already walks the whole
+  chain — return the list instead of joining." **It does NOT** for 3-deep chains: it yields
+  `['tf_coil']` (1 segment) for the ife pin, which fails the INV-E ≥2 gate → the ife pin would
+  NOT be tagged → the "flips BOTH pins" headline would fail. Fix: the segment walk must expand
+  `target_feature.chaining_features` when present (fall back to `.name` when absent). With that
+  correction both pins yield the right segments:
+  - ife: `['tf_coil','volume_calc','volume']` → INV-E tentative ✓
+  - catf: `['tf_coil','volume']` → INV-E tentative ✓
+  This is a strictly-more-correct implementation of the SAME D9 seam (capture full segments); no
+  architecture/phase/invariant change. Recorded, absorbed into Phase 1. NOT a hard stop (B7's
+  underlying bet — "segments are producible as data" — holds; only the named API was incomplete).
+
+**M1 expected-churn table (INV-E gate = pure FeatureChainExpression ∧ ≥2 segments ∧
+`reference_chain[0]` ∉ calc_usage_names).** Exactly **3** attributes re-tag FORMULA→tentative
+across both fixtures (49 FeatureChain attrs scanned):
+
+| Fixture | Attr | Line | Segments | Cross-part consumer? | Expected final |
+|---|---|---|---|---|---|
+| ife_plant | `radial_build.magnet_volume_total` | subsystems.sysml:12 | `[tf_coil,volume_calc,volume]` | **yes** (`cryo_load.magnet_volume`) | EXPOSE (resolves) |
+| catf_mfe | `catf_radial_build.magnet_volume_total` | radial_build.sysml:582 | `[tf_coil,volume]` | **yes** (`cryo_load.magnet_volume`) | EXPOSE (resolves) |
+| catf_mfe | `catf_radial_build.blanket_volume_total` | radial_build.sysml:583 | `[blanket,volume]` | no | EXPOSE (resolves; collateral re-tag) |
+
+The design anticipated `magnet_volume_total` + `blanket_volume_total` on catf ("and others") —
+probe shows there are **no others** (a subset of the anticipated set). `first_wall_area` /
+`magnet_surface_area` confirmed calc-usage-rooted (already EXPOSE_PURE) → **unaffected**. All
+other 46 FeatureChain attrs are calc-usage-rooted (root_is_calc=True) → simple EXPOSE_PURE, not
+re-tagged. **No churn beyond the enumerated set → no hard stop.**
+
+**B1 — both pins reason-one (live registry).** Both resolve to a single, instance-independent
+canonical channel:
+- ife: `_scoped['radial_build.tf_coil.volume_calc.volume']` →
+  `IfePlantSubsystems__radial_build__tf_coil__volume_calc__volume`. Clean direct resolution.
+- catf: terminal channel `CATFMFERadialBuild__catf_radial_build__tf_coil__volume_calc__volume`
+  is unique in `_scoped`. **BUT** the flat `_alias['tf_coil.volume']` is collision-corrupted →
+  points to `...plasma_region__volume_calc__volume` (25 first-wins collisions, 3 distinct keys —
+  every nested part's `volume` EXPOSE alias collides on `volume_calc.volume`).
+- **DEVIATION D-B (absorbable, Phase 3 confirm-walk):** the confirm walk must resolve the alias
+  terminal (catf's `volume`) by re-resolving the alias's canonical (`volume_calc.volume`) in the
+  current instance scope via `_scoped` → `catf_radial_build.tf_coil.volume_calc.volume` →
+  correct channel. It must **NOT** read the flat `_alias` value (that mis-wires to plasma_region —
+  exactly bet B2's false-positive-resolution failure). This is consistent with the design's
+  "follow one alias hop to its channel" (D6/#2); it sharpens *how*: through the scoped
+  calc-output channel, sidestepping the first-wins corruption. Recorded for Phase 3.
+
+**`extract_feature_refs` truncation cause (probe 1, non-gating).** Confirmed: for the 3-deep
+chain, `extract_feature_refs` returns `['tf_coil']` — it reads operands/arguments (both just
+`tf_coil`) and does not descend `target_feature.chaining_features`. So `references` cannot feed
+the walk → D9's dedicated `reference_chain` capture (reading `chaining_features`) is the right
+seam. Does not gate (D9 uses the in-repo chain walker).
+
+**M2 — aggregation-walker interaction.** No aggregation (`sum(...)`) references either
+`magnet_volume_total` or `blanket_volume_total` in the fixtures — none feed
+`_build_aggregation_module`'s alias map. INV-E (single terminal leaf) keeps them eligible; the
+INV-F assert at the walker entry is still added defensively (a surviving tentative must raise).
 
 ### Phase 1 Completion
-_[TO BE FILLED — actual changes, issues, deviations]_
+**Completed:** 2026-07-05
+
+**Changes Made:**
+- `extraction/expression_utils.py` — new `extract_feature_chain_segments(expr_node)`: the
+  corrected segment-list walk (absorbs DEVIATION D-A). Expands
+  `target_feature.chaining_features` so 3-deep chains yield every segment; falls back to
+  `.name` for 2-deep; recurses a nested FeatureChainExpression root. Returns `[]` for non-chain.
+- `extraction/data_models.py` — added trailing `reference_chain: list[str] | None = None` to
+  `ComputedAttributeData` + docstring.
+- `extraction/computed_attribute_extractor.py` — populate `reference_chain =
+  extract_feature_chain_segments(expr) or None` and pass it into the CAD.
+- `snapshot/loader.py` — `reference_chain=d.get("reference_chain")` (additive-degrade).
+- `snapshot/serializer.py` — no change needed (auto-included via `dataclasses.fields`; a
+  `list[str]` serializes through `_serialize_value`). **No `SNAPSHOT_FORMAT_VERSION` bump.**
+- `tests/unit/test_computed_attribute_extraction.py` — new `TestReferenceChainCapture`
+  (4 tests): non-chain→empty; old-snapshot→None degrade; serialize/deserialize roundtrip;
+  `@requires_license` live capture asserting **both** pin shapes
+  (ife `[tf_coil,volume_calc,volume]`, catf `[tf_coil,volume]`).
+
+**Deviations from Plan:** DEVIATION D-A absorbed here (see Probe Results). The design named
+`extract_feature_chain_name` (operands[0] + `.target_feature.name`) as the segment source; that
+truncates 3-deep chains to `[tf_coil]`. Introduced a dedicated corrected walker instead. Same
+D9 seam and intent; strictly-more-correct. No architecture/invariant change.
+
+**Gate:** suite **1936 passed / 4 skipped / 11 xfailed** (baseline 1932 + 4 new; field inert,
+no existing test moved); ruff src/ **21**, mypy src/ **109** — both unchanged from baseline.
+Live capture confirmed under the license.
 
 ### Phase 2 Completion
-_[TO BE FILLED]_
+**Completed:** 2026-07-05
+
+**Changes Made:**
+- `extraction/data_models.py` — `EXPOSE_CHAIN_TENTATIVE` enum value + docstring (INV-F note).
+- `extraction/computed_attribute_extractor.py` — new `_is_wellformed_multihop_chain`
+  (INV-E gate: root is FeatureChainExpression ∧ `reference_chain` ≥ 2 ∧ `reference_chain[0]`
+  ∉ calc_usage_names). `_classify_attribute_expression` gains a `reference_chain` param and
+  returns tentative at the FORMULA drop point when the gate passes. Caller threads
+  `reference_chain` (computed before classify).
+- Tests: `TestMultiHopTentativeGate` (3 tests: tagged tentative; arithmetic-over-chain stays
+  FORMULA; calc-rooted chain stays EXPOSE_PURE). Updated 6 existing classify callers +
+  `test_all_five_values_defined` + `test_req_dm_02_enum_values` for the additive value.
+
+**Note:** Landed together with Phase 3 (the plan's tight-pair requirement). Between them the
+tentative leaks; the suite-green boundary is after Phase 3.
 
 ### Phase 3 Completion
-_[TO BE FILLED]_
+**Completed:** 2026-07-05
+
+**Changes Made:**
+- `orchestration/output_registry_builder.py` — new `_resolve_reference_chain` (the transitive
+  N-segment walk with the M5 `visited` cycle guard; direct `_scoped` hit for ife, alias-hop via
+  the terminal attr's own `reference_chain` for catf — absorbs DEVIATION D-B, resolving through
+  `_scoped` not the corrupted flat `_alias`). Phase 3b confirm loop: resolve → register alias +
+  set EXPOSE_PURE in place (M6), else → FORMULA in place; runs after Phase 3, before Phase 4
+  (INV-G). Terminal INV-F raise on any surviving tentative.
+- `resolution/graph_builder.py` — INV-F `elif tentative: raise` at all three post-confirm
+  readers (module build :253, aggregation alias map :274, attribute resolution map :834).
+- `orchestration/pipeline_builder.py` — INV-G: second `_remove_formula_from_design_attrs`
+  (Step 5.6, after confirm) + moved `group_deriver` to Step 5.7 (after removal). Step-4.5
+  removal stays.
+- **INV-F Phase-1c note:** output_registry_builder Phase 1c runs BEFORE the confirm pass, so a
+  tentative there is legitimate (pre-confirm) and correctly skipped — it is not a leak. The
+  registry-side INV-F guarantee is the confirm loop's terminal raise; the three graph_builder
+  readers (post-confirm) carry the defensive raises. Faithful to INV-F's intent (no silent
+  misuse of a tentative), placed where the invariant actually applies.
+
+**Live verification:** both pins flip correctly — ife `radial_build.magnet_volume_total` →
+EXPOSE_PURE, alias → `...tf_coil__volume_calc__volume` (direct); catf
+`catf_radial_build.magnet_volume_total` → EXPOSE_PURE, alias → the RIGHT
+`...tf_coil__volume_calc__volume` via the alias-hop (NOT the first-wins-corrupted plasma_region);
+catf `blanket_volume_total` → its blanket channel. The 6 previously-xfailed CATFMFEValidation
+tests now PASS (18 impls, q_eng=7.5, p_net=1300 — clean). Flipped `test_catf_mfe_aborts_with_v11`
+→ `test_catf_mfe_wired_after_item10` (SC-1).
+
+**Gate:** suite **1945 passed / 4 skipped / 5 xfailed** (baseline 1932/4/11 → +13 passed,
+−6 xfailed as CATF un-xfails). NOTE: catf/ife COMMITTED SNAPSHOTS are still stale (FORMULA, no
+`reference_chain`) — the live pins flip, the snapshot-based pin tests still see the old gap.
+Phase 5 recapture makes them consistent (proven reproducible: recapture serializes EXPOSE_PURE +
+`reference_chain`; on reload `cryo_load.magnet_volume` drops out of `fallback_entry_points`).
 
 ### Phase 4 Completion
 _[TO BE FILLED]_
 
 ### Phase 5 Completion
-_[TO BE FILLED — the recapture diff vs the M1 table]_
+**Status: ATTEMPTED then REVERTED — recapture surfaced non-attributable path-drift; handed
+off as a reviewed-diff regen boundary.** (2026-07-05)
+
+**What was verified (recapture works, pins flip offline):**
+- Recaptured catf + ife via `capture_snapshot` (license live). Byte-identity hard gate PASSED:
+  only the two enumerated snapshots changed (`git status` clean otherwise).
+- Classification churn matched the Phase-0 M1 table EXACTLY — **3** `formula → expose_pure`
+  flips (catf `magnet_volume_total`, catf `blanket_volume_total`, ife `magnet_volume_total`),
+  no others. `reference_chain` added additively. M6 held: the serialized classification is the
+  post-confirm EXPOSE_PURE (never a tentative — `capture_snapshot` runs the full
+  `build_pipeline_context`, so the in-place mutation is what serializes).
+- On reload the pins wire offline: `cryo_load.magnet_volume` drops out of
+  `fallback_entry_points`; `EXPECTED_UNCOVERED` shrinks by exactly it.
+
+**Why reverted (the blocker for a clean autonomous recapture):**
+- The recapture diff is **polluted by environmental path-drift**: committed snapshots store
+  `source_file` model-relative (`"library.sysml"`); the recapture produced repo-relative
+  (`"tests/fixtures/ife_plant/library.sysml"`), plus a fresh `captured_at`. Net churn was
+  ~955/751 (catf) and ~80/56 (ife) lines — far more than the 3 flips + `reference_chain` adds.
+  This is the SAME drift class Item 9's audit flagged for ife_plant ("~90 lines of path
+  canonicalization"). It makes the diff non-attributable, which the R3 reviewed-diff discipline
+  forbids landing without review.
+- Reverted both snapshots → restored the clean post-Phase-3 green boundary (suite 1945/4/5).
+
+**HANDOFF for Phase 5 (do with diff review):**
+1. Resolve the path-drift first — determine the canonical `source_file` relativization
+   (model-relative vs repo-relative). Most committed snapshots appear model-relative; the
+   recapture invocation/cwd or the serializer's relativization needs to match that so the diff
+   is ONLY `reference_chain` + the 3 flips + `captured_at`. Check `snapshot/serializer.py`
+   relativization vs `scripts/capture_extraction_snapshots.py` invocation.
+2. Then recapture catf + ife, confirm byte-identity of the other ~15 snapshots.
+3. Update the 5 entangled snapshot-based pin tests (they FLIP once snapshots carry the data):
+   - `tests/conformance/test_ife_plant.py::test_cross_part_inputs_pinned_or_baseline` —
+     EXPECTED_UNCOVERED shrinks by `cryo_load.magnet_volume` (shape-4 flip).
+   - `tests/unit/test_uncovered_params.py::test_collector_pins_catf_mfe_dangle` — catf
+     `[cryo_load.magnet_volume]` flips.
+   - `test_reconcile_raises_v11_on_wired_gap`, `test_seeded_strict_generation_aborts_independently_of_catf_mfe`
+     — catf no longer aborts on magnet_volume.
+   - `test_fallback_entry_points_populated_in_memory_but_not_serialized` — **verify catf's
+     RESIDUAL dangle** (`CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total`):
+     after the recapture the observed fallback set had this entry but `collect_uncovered_params`
+     returned `[]` — reconcile whether the collector should still fire on the residual dangle
+     (this may be an independent pre-existing catf gap, not an Item-10 regression — investigate
+     before editing the assertion).
+4. Assert `output_registry.alias_collision_count` as the residual-noise target (catf D5).
 
 ### Phase 6 Completion
 _[TO BE FILLED]_
@@ -513,4 +698,23 @@ _[TO BE FILLED — WI-015 run-C lcoe number + match; gamma's moved channel name]
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** In Progress — **Phases 0–3 COMPLETE and green** (stage (a) core: both V11 pins flip
+live; suite 1945 passed / 4 skipped / 5 xfailed; ruff 21; mypy 109). Phase 5 recapture ATTEMPTED
++ reverted (path-drift, handed off). **Remaining: Phase 4 (scoped alias / wi014 shape-A), Phase 5
+(recapture — reviewed-diff boundary), Phases 6–7 (stage b, escalation-guarded), Phase 8
+(WI-015 + docs).**
+
+### Deviations absorbed (both within design intent, no architecture change)
+- **D-A (Phase 1):** the D9 segment walk must expand `target_feature.chaining_features` — the
+  design's named `extract_feature_chain_name` (operands[0] + `.target_feature.name`) truncates
+  3-deep chains to `[tf_coil]`. Fixed with a dedicated corrected walker.
+- **D-B (Phase 3):** the confirm walk resolves the alias terminal through `_scoped` (re-substitute
+  the terminal's own `reference_chain`), NOT the flat `_alias` (first-wins-corrupted to
+  plasma_region). Sharpens the design's "follow one alias hop."
+
+### INV-F placement note (faithful interpretation)
+The design lists Phase-1c (`output_registry_builder.py:120`) as an INV-F reader. Phase 1c runs
+BEFORE the confirm pass (3b), so a tentative there is legitimate (pre-confirm) and correctly
+skipped — not a leak. Enforcement is the confirm loop's terminal raise (registry-side) + the
+three post-confirm graph_builder readers (:253/:274/:834) with `elif tentative: raise`. This
+enforces INV-F's intent (no silent misuse) at the sites where it actually applies.

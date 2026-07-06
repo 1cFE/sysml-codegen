@@ -124,11 +124,13 @@ class TestStepOrdering:
     def test_step_ordering_call_sequence(self):
         """Call sites in build_pipeline_context appear in strict DAG order.
 
-        Expected order:
+        Expected order (Item 10 / INV-G: ParameterGroupDeriver moved AFTER
+        build_output_registry so it consumes design_attrs with the confirm pass's
+        final classifications):
         extract_calculation_definitions → extract_calculation_usages →
         _extract_hierarchy_and_rewrite_bindings → extract_design_attributes →
-        _extract_and_filter_computed_attributes → ParameterGroupDeriver →
-        build_output_registry → DependencyBacktracker → compile_calc_def →
+        _extract_and_filter_computed_attributes → build_output_registry →
+        ParameterGroupDeriver → DependencyBacktracker → compile_calc_def →
         build_computation_graph
         """
         ordered_calls = [
@@ -137,8 +139,8 @@ class TestStepOrdering:
             "_extract_hierarchy_and_rewrite_bindings",
             "extract_design_attributes",
             "_extract_and_filter_computed_attributes",
-            "ParameterGroupDeriver",
             "build_output_registry",
+            "ParameterGroupDeriver",
             "DependencyBacktracker",
             "compile_calc_def",
             "build_computation_graph",
