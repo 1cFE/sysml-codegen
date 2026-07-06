@@ -9,13 +9,18 @@ Real extraction snapshots — no mocks (R1). The unwired-summary partition has n
 committed real-fixture that exercises it (every corpus V11 case is wired), so it
 is covered by a constructed ``ComputationGraph`` of real Pydantic model objects.
 
-V11 corpus surface (all genuine, pre-existing fell-through ∩ valueless ∩ wired
-gaps; see plan.md Phase-2 blocking finding):
-  - catf_mfe            cryo_load.magnet_volume   (cross-part EXPOSE; Items 9-11)
-  - alias_agg_probe     cost_model.base_cost      (bare-name :>> redefinition; Item 9)
-  - issue22_model       cost_model.base_cost      (same class; Item 9)
-  - unresolvable_attr_probe  my_calc.x            (dedicated V11 proof fixture)
+V11 corpus surface after Item 9 (genuine fell-through ∩ valueless ∩ wired gaps that
+remain — the plain-usage LITERAL class is now pre-filled and drops off this list):
+  - catf_mfe            cryo_load.magnet_volume   (cross-part CHAIN; Items 10-11 wire it)
+  - ife_plant shape-4   cryo_load.magnet_volume   (cross-part CHAIN; the committed
+                                                   non-catf_mfe strict-V11 proof)
   - chain_override_probe cost_model.sensitivity   (calc-output ref; A1 keeps it loud)
+
+The dedicated committed V11 proof is now catf_mfe (strict raise, ``test_reconcile_
+raises_v11_on_wired_gap``) + ife_plant shape-4 (strict abort, ``test_seeded_strict_
+generation_aborts_independently_of_catf_mfe``). alias_agg_probe / issue22_model /
+unresolvable_attr_probe are pre-filled by Item 9's plain-usage literal capture and
+now generate cleanly (their collector lists go empty below).
 """
 
 from __future__ import annotations
@@ -83,30 +88,32 @@ def test_collector_pins_catf_mfe_dangle():
 
 
 def test_collector_pins_alias_agg_probe():
-    """alias_agg_probe: exactly one base_cost gap (bare-name :>> redefinition).
+    """alias_agg_probe: no uncovered params — Item 9 pre-fills base_cost.
 
-    Tracked to Item 9 (RedefinitionData → CalcUsage entry-point default).
+    The plain-usage ``:>> widget.base_cost = 50.0`` override is now captured, and the
+    virtual ``cost_model.base_cost`` binding is rewritten to LITERAL 50.0 before it can
+    become a valueless entry point, so the collector list is empty (REQ-HR-08).
     """
     result = collect_uncovered_params(_graph("alias_agg_probe"))
-    assert [(u.input, u.module.split("__")[-1]) for u in result] == [
-        ("base_cost", "cost_model")
-    ]
+    assert result == []
 
 
 def test_collector_pins_issue22_model():
-    """issue22_model: exactly one base_cost gap (same class as alias_agg_probe)."""
+    """issue22_model: no uncovered params — same class as alias_agg_probe (100.0)."""
     result = collect_uncovered_params(_graph("issue22_model"))
-    assert [(u.input, u.module.split("__")[-1]) for u in result] == [
-        ("base_cost", "cost_model")
-    ]
+    assert result == []
 
 
 def test_collector_pins_unresolvable_attr_probe():
-    """unresolvable_attr_probe: exactly one my_calc.x gap (dedicated V11 proof)."""
+    """unresolvable_attr_probe: no uncovered params — Item 9 fills my_calc.x.
+
+    ``:>> local_val = 5.0`` on the plain ``design_derived_instance`` is captured and
+    rewrites the ``my_calc.x = local_val`` binding to LITERAL 5.0. Its valueless-ness
+    was itself the dropped-plain-usage-override bug Item 9 fixes, so the dedicated
+    committed V11 proof moves to catf_mfe + ife_plant shape-4 (D5).
+    """
     result = collect_uncovered_params(_graph("unresolvable_attr_probe"))
-    assert [(u.input, u.module.split("__")[-1]) for u in result] == [
-        ("x", "my_calc")
-    ]
+    assert result == []
 
 
 def test_collector_pins_chain_override_probe():
@@ -127,31 +134,38 @@ def test_collector_pins_chain_override_probe():
 # Strict boundary raises V11 (explicit raises-assertion, pins the behavior).
 # ---------------------------------------------------------------------------
 def test_reconcile_raises_v11_on_wired_gap():
-    """The generation boundary raises V11 on a wired fell-through-valueless input."""
+    """The generation boundary raises V11 on a wired fell-through-valueless input.
+
+    Anchored on catf_mfe's ``cryo_load.magnet_volume`` — a cross-part CHAIN gap the
+    LITERAL filter deliberately keeps out of design_overrides, so it stays
+    wired-valueless and trips V11 (the committed real-fixture proof; Items 10-11
+    wire it). Re-anchored off unresolvable_attr_probe, which Item 9 now pre-fills.
+    """
     from sysml_codegen.cli import _reconcile_params_coverage
     from sysml_codegen.generation import CodeGenerationError
 
-    graph = _graph("unresolvable_attr_probe")
+    graph = _graph("catf_mfe_model")
     with pytest.raises(CodeGenerationError, match=r"V11"):
         _reconcile_params_coverage(graph)
 
 
 def test_seeded_strict_generation_aborts_independently_of_catf_mfe(tmp_path, caplog):
-    """Strict generation aborts on the dedicated seeded fixture (V11), proving the
-    check fires independently of catf_mfe (B4).
+    """Strict generation aborts on ife_plant (V11), proving the check fires
+    independently of catf_mfe (B4).
 
-    ``unresolvable_attr_probe`` is the purpose-built, committed seeded fixture
-    (spec deviation: satisfies the "new seeded fixture" requirement without a new
-    license capture — see plan.md). ``run_codegen`` catches CodeGenerationError
-    and returns False (the fail-fast idiom), so the abort is observed as
-    ``False`` + a logged V11 line, not a propagated exception.
+    ife_plant's shape-4 ``cryo_load.magnet_volume`` is a cross-part CHAIN that stays
+    wired-valueless until Item 10 wires it — a non-catf_mfe fixture that still trips
+    strict V11 at generation. ``run_codegen`` catches CodeGenerationError and returns
+    False (the fail-fast idiom), so the abort is observed as ``False`` + a logged V11
+    line, not a propagated exception. Re-anchored off unresolvable_attr_probe, which
+    Item 9 now pre-fills (D5).
     """
     from sysml_codegen.cli import GenerationConfig, run_codegen
 
     config = GenerationConfig(
         output_path=tmp_path,
-        from_snapshot=snapshot_fixture("unresolvable_attr_probe"),
-        package_name="uap",
+        from_snapshot=snapshot_fixture("ife_plant"),
+        package_name="ife",
         overwrite=True,
     )
     with caplog.at_level(logging.ERROR):

@@ -9,6 +9,7 @@ Key features:
 - Unbound parameter identification for entry point candidates
 """
 
+import copy
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -390,7 +391,12 @@ def _create_virtual_calc_usage(
         calc_def_name=template.calc_def_name,
         calc_def_qualified_name=template.calc_def_qualified_name,
         module_type=template.module_type,
-        bindings=list(template.bindings),
+        # Shallow-copy each BindingInfo so sibling instances never share a binding
+        # object (REQ-VBR-08 / D2). The rewrite reassigns only scalar fields, so a
+        # shallow copy gives each instance independent scalars while the read-only
+        # AST-node references stay shared (copy.deepcopy would recurse into the
+        # SysIDE parse subgraph — slow and possibly cyclic).
+        bindings=[copy.copy(b) for b in template.bindings],
         unbound_params=list(template.unbound_params),
         source_file=template.source_file,
         source_line=template.source_line,

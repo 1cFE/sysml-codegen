@@ -560,14 +560,20 @@ class TestCrossModelIssue22:
     """Cross-model validation on issue22_model."""
 
     def test_cross_model_issue22_hierarchy(self, issue22_snapshot):
-        """issue22 has 2 redefinitions, 1 multiplicity, 1 aggregation expression."""
+        """issue22 has 2 redefs, 1 design override, 1 multiplicity, 1 aggregation.
+
+        The design override is the plain-usage deep-path literal
+        ``:>> widget.base_cost = 100.0`` — captured since Item 9 (REQ-HR-08).
+        """
         hd = issue22_snapshot["hierarchy_data"]
         assert len(hd.redefinitions) == 2, (
             f"Expected 2 redefinitions, got {len(hd.redefinitions)}"
         )
-        assert len(hd.design_overrides) == 0, (
-            f"Expected 0 design_overrides, got {len(hd.design_overrides)}"
+        assert len(hd.design_overrides) == 1, (
+            f"Expected 1 design_override (widget.base_cost), got {len(hd.design_overrides)}"
         )
+        assert hd.design_overrides[0].target_path == ["widget", "base_cost"]
+        assert hd.design_overrides[0].literal_value == 100.0
         assert len(hd.multiplicities) == 1, (
             f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
         )
@@ -645,14 +651,21 @@ class TestAliasAggProbe:
     """
 
     def test_hierarchy_structure(self, alias_agg_probe_snapshot):
-        """alias_agg_probe has 3 redefs, 0 design overrides, 1 multiplicity, 1 aggregation."""
+        """alias_agg_probe has 3 redefs, 1 design override, 1 multiplicity, 1 aggregation.
+
+        The design override is the plain-usage deep-path literal
+        ``:>> widget.base_cost = 50.0`` — dropped before Item 9's guard
+        relaxation (REQ-HR-08), captured since.
+        """
         hd = alias_agg_probe_snapshot["hierarchy_data"]
         assert len(hd.redefinitions) == 3, (
             f"Expected 3 redefinitions, got {len(hd.redefinitions)}"
         )
-        assert len(hd.design_overrides) == 0, (
-            f"Expected 0 design_overrides, got {len(hd.design_overrides)}"
+        assert len(hd.design_overrides) == 1, (
+            f"Expected 1 design_override (widget.base_cost), got {len(hd.design_overrides)}"
         )
+        assert hd.design_overrides[0].target_path == ["widget", "base_cost"]
+        assert hd.design_overrides[0].literal_value == 50.0
         assert len(hd.multiplicities) == 1, (
             f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
         )

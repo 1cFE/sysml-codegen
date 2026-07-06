@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "unresolvable_attr_probe",
-  "captured_at": "2026-07-05T23:55:28.872942+00:00",
+  "captured_at": "2026-07-06T03:28:22.869812+00:00",
   "compilation_results": {},
   "calc_defs": [
     {
@@ -62,13 +62,13 @@
       "bindings": [
         {
           "param_name": "x",
-          "source_path": "UnresolvableAttrProbeDesign::'Design Derived'::local_val",
-          "binding_type": "reference",
+          "source_path": null,
+          "binding_type": "literal",
           "is_cross_file": false,
           "raw_expression": "FeatureReferenceExpression -> UnresolvableAttrProbeDesign::'Design Derived'::local_val",
           "source_instance_elem": null,
           "source_attribute_elem": null,
-          "literal_value": null,
+          "literal_value": 5.0,
           "expression_ast": null,
           "source_instance_name": null,
           "source_attribute_name": "local_val"
@@ -162,7 +162,86 @@
   },
   "hierarchy_data": {
     "redefinitions": [],
-    "design_overrides": [],
+    "design_overrides": [
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__derived_instance",
+        "attribute_name": "base_rate",
+        "redefinition_type": "literal",
+        "literal_value": 10.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__derived_instance",
+        "attribute_name": "base_factor",
+        "redefinition_type": "literal",
+        "literal_value": 2.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__derived_instance",
+        "attribute_name": "local_multiplier",
+        "redefinition_type": "literal",
+        "literal_value": 3.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__design_derived_instance",
+        "attribute_name": "base_rate",
+        "redefinition_type": "literal",
+        "literal_value": 10.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__design_derived_instance",
+        "attribute_name": "base_factor",
+        "redefinition_type": "literal",
+        "literal_value": 2.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__design_derived_instance",
+        "attribute_name": "local_val",
+        "redefinition_type": "literal",
+        "literal_value": 5.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
     "multiplicities": [],
     "aggregation_expressions": [],
     "warnings": [],

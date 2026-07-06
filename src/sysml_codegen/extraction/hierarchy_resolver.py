@@ -164,14 +164,33 @@ def extract_redefinitions(part_element: Any) -> list[RedefinitionData]:
     return results
 
 
+def _keep_plain_usage_override(redef_data: RedefinitionData) -> bool:
+    """Keep a newly-scanned plain-usage :>> override only when its RHS is LITERAL.
+
+    CHAIN/EXPRESSION overrides on plain usages (e.g. catf_mfe's cross-part refs,
+    ife_plant shape 4) are Item 10's job; keeping them out of design_overrides
+    means they never reach the literal-rewrite path and never churn a baseline
+    (REQ-HR-08 / D3, INV-1).
+    """
+    return redef_data.redefinition_type is RedefinitionType.LITERAL
+
+
 def extract_design_overrides(
     part_usages: Iterable[Any],
 ) -> list[RedefinitionData]:
     """Scan design-level PartUsages for :>> overrides.
 
-    Design PartUsages with non-empty owned_redefinitions are 'part redefines'
-    instances. Their owned_members may contain deep-path :>> overrides like
-    :>> pv_module.wattage = 400.0.
+    Two shapes carry a :>> override:
+    - A 'part redefines' usage (non-empty owned_redefinitions on the usage
+      itself). Its owned_members may hold deep-path overrides like
+      :>> pv_module.wattage = 400.0. All RHS types are captured (INV-4).
+    - A plain typed usage (empty owned_redefinitions). The override lives on a
+      member ReferenceUsage — e.g. :>> widget.base_cost = 50.0. These are
+      captured too (REQ-HR-08) but filtered to LITERAL RHS (D3); CHAIN/EXPRESSION
+      plain overrides are Item 10's job and stay out of design_overrides (INV-1).
+
+    Members are scanned regardless of the usage kind; ``_extract_single_redefinition``
+    returns None for non-ReferenceUsage / value-less members, so the scan is cheap.
 
     Args:
         part_usages: Iterable of PartUsage elements to scan. The caller
@@ -184,15 +203,17 @@ def extract_design_overrides(
     results: list[RedefinitionData] = []
 
     for usage in part_usages:
-        if not getattr(usage, "owned_redefinitions", None):
-            continue  # Not a 'part redefines'
+        is_part_redefines = bool(getattr(usage, "owned_redefinitions", None))
 
         usage_qn = build_element_qualified_name(usage)
 
         for member in getattr(usage, "owned_members", []):
             redef_data = _extract_single_redefinition(member, usage_qn)
-            if redef_data is not None:
-                results.append(redef_data)
+            if redef_data is None:
+                continue
+            if not is_part_redefines and not _keep_plain_usage_override(redef_data):
+                continue  # plain-usage CHAIN/EXPRESSION override — Item 10's job
+            results.append(redef_data)
 
     return results
 

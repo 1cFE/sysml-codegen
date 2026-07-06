@@ -239,7 +239,16 @@ def _rewrite_virtual_bindings(
             elif "." in source:
                 leaf = source.rsplit(".", 1)[-1]
             else:
-                raise ValueError(f"Unexpected bare-name source_path: {source!r}")
+                # Bare-name source_path (self-named binding, e.g. ``in x = x``).
+                # Resolving it to the outer attribute is Item 10's per-instance
+                # rewrite; here we only stay crash-safe (REQ-VBR-09). No deep-path
+                # key can match a bare leaf, so skipping loses no rewrite.
+                logger.debug(
+                    "bare-name source_path %r on %s; skipping override match",
+                    source,
+                    usage.qualified_name,
+                )
+                continue
 
             key = (parent_path, leaf)
             matched = override_index.get(key)

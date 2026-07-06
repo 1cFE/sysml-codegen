@@ -211,12 +211,82 @@ See CLAUDE.md. Key commands: `uv run pytest tests/`, `uv run mypy src/`, `uv run
 - **Phase 1 (unintended capture):** the LITERAL filter (D3, INV-1) keeps CHAIN/EXPRESSION out of `design_overrides`; the Phase-2 byte-exact sweep is the deterministic guard against a grep-missed fixture.
 
 ## Implementation Notes
-[TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
+**Completed:** 2026-07-05
+- Added `tests/unit/test_virtual_binding_rewrite.py` (NEW): divergent-sibling
+  (REQ-VBR-08), bare-name skip (REQ-VBR-09), LITERAL-filter predicate (REQ-HR-08).
+- Proven RED first, each for the intended reason: iB read 50.0 (shared object);
+  `ValueError` at `pipeline_builder.py:242`; predicate `ImportError`.
+
 ### Phase 1 Completion
+**Completed:** 2026-07-05
+**Changes:**
+- `hierarchy_resolver.py` — added `_keep_plain_usage_override`; relaxed the guard
+  (`is_part_redefines = bool(...)`, always scan members, `continue` on non-LITERAL
+  plain-usage override).
+- `pipeline_builder.py:242` — bare-name `raise` → `logger.debug(...) ; continue`.
+- `usage_extractor.py` — `bindings=[copy.copy(b) for b in template.bindings]` +
+  `import copy`.
+- **Result (ran green before the sandbox block):** unit tests 3/3; full suite
+  **1931 passed / 4 skipped / 11 xfailed** (+3 my tests; skips/xfails unchanged);
+  mypy 109; ruff 21. Offline pins stayed green (they read the still-old committed
+  snapshots) — confirms zero code-only regression.
+
 ### Phase 2 Completion
+**Completed (edits + capture + sweep):** 2026-07-05
+- **Live re-capture** (`capture_extraction_snapshots.py`, license) changed exactly the
+  four enumerated snapshots. Verified via git/JSON inspection: ife_plant gains
+  `capacity_factor=0.95`; alias_agg_probe/issue22 `base_cost` → LITERAL 50.0/100.0
+  (source_path null); unresolvable_attr_probe 6 overrides, `my_calc.x` → LITERAL 5.0.
+- **Byte-exact sweep (INV-5):** `git diff` confirms exactly the four snapshots changed;
+  every other snapshot byte-identical; `baseline_outputs/` untouched.
+- **Deviation (approved):** the live capture surfaced pre-existing orthogonal drift in
+  three NON-enumerated snapshots (`wi014_toy`, `self_named_binding_trap` path
+  canonicalization; `quoted_owner_formula` path + a two-attr design→computed
+  reclassification). Proven independent of Item 9 (0 `design_overrides`/binding diff
+  lines). Per orchestrator approval, reverted with the 9 timestamp-only snapshots
+  (`git show HEAD:… > …`), keeping only the four. Filed as a deferred stale-fixture-
+  refresh chore in `BACKLOG.md` (Ideas / Future Considerations).
+- **Pin-flips:** all checklist rows applied (see `release-notes.md`). Re-anchors:
+  `test_reconcile_raises_v11_on_wired_gap` → catf_mfe; `test_seeded_strict_generation_
+  aborts_independently_of_catf_mfe` → ife_plant. `test_alias_agg_probe_generation.py`
+  → clean-gen parametrized over alias_agg_probe + issue22 (D4). `test_ife_plant.py`
+  shape-5 → capture assertion.
+- **⚠ Gate NOT re-run — OPEN.** After the snapshot capture, the permission sandbox
+  began blocking ALL command execution non-interactively (even `python -c "print()"`;
+  only shell builtins + git pass). So the **final `uv run pytest tests/` / `mypy` /
+  `ruff` after the pin-flips could not be executed**, and two re-anchors are verified
+  by static reasoning only, NOT by a run:
+    - `ife_plant` must trip **strict** V11 (run_codegen False + V11 log), not just the
+      in-memory collector. Static basis: `test_cross_part_inputs_pinned_or_baseline`
+      (unchanged, was green) pins ife_plant's collector to the magnet_volume gap, and
+      `_reconcile_params_coverage` raises on any collector violation → run_codegen
+      catches → False + V11 log. **If this fails on re-run, author a minimal
+      genuinely-unbound seeded fixture (design → Potential Risks, V11 re-anchor).**
+    - `ife_plant` baseline byte-identity (no test rebuilds it from snapshot; argued
+      from capacity_factor being unconsumed). Confirm on re-run.
+  **Action for the orchestrator:** run `uv run pytest tests/`, `uv run mypy src/`,
+  `uv run ruff check src/`. Expect green / 109 / 21.
+
 ### Phase 3 Completion
+**Completed:** 2026-07-05
+- Doc 25 (`reference/25-hierarchy-resolver.md`) — REQ-HR-08 row + Phase-2 rewrite
+  (two shapes, LITERAL filter, performance note).
+- Doc 12 (`reference/12-virtual-binding-rewrite.md`) — REQ-VBR-08/09 rows, corrected
+  bare-name handling (skip-with-DEBUG, by-branch reachability m1), per-instance
+  isolation section.
+- `verification-matrix.md` — REQ-HR-08 / REQ-VBR-08 / REQ-VBR-09 rows (PASS); summary
+  counts 209→212, PASS 195→198.
+- `modeling-assumptions.md` §5 — untouched (no new V-rule; documented in release-notes).
+- `release-notes.md` (NEW) — pin-flip enumeration, test-count shift, R2 agentic-mbse
+  impact, deep_cross_scope_probe drift note (m2), gate-status caveat.
+- `BACKLOG.md` — deferred stale-fixture-refresh chore.
+- Doc 18 (LVP) untouched (scope 2 cut).
 
 ---
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Implementation complete; final gate re-run OPEN**
+(all edits, snapshot capture, byte-exact sweep, pin-flips, and docs landed; the
+post-pin-flip `pytest`/`mypy`/`ruff` gate could not be executed — sandbox blocked all
+command execution mid-session. See Phase 2 Completion notes for the exact re-run and
+the two statically-verified re-anchors to confirm.)

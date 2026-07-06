@@ -20,13 +20,14 @@ baseline diffs legible:
 - Shape 4 (mech B), **known-incomplete**: cross-part calc-chain
   (``cryo_load.magnet_volume``) — falls to a valueless wired fallback EP that the
   collector pins.
-- Shape 5 (mech C), **known-incomplete**: plain-usage ``:>>`` override
-  (``baseline_plant.capacity_factor``) — dropped at extraction.
+- Shape 5 (mech C), **captured (Item 9)**: plain-usage ``:>>`` override
+  (``baseline_plant.capacity_factor = 0.95``) — now captured into
+  ``design_overrides`` (captured-but-unwired: no calc consumes ``capacity_factor``).
 - Shape 7 (mech —), **correct**: two same-type sibling chambers
   (``chamber_a``/``chamber_b``) — each produces its own virtual ``yield_calc``.
 
-The **working** shapes (3, 7) prove the Item 4/5 path; the **known-incomplete**
-shapes (2, 4, 5) are the baselines Items 9-10 improve.
+The **working** shapes (3, 7) prove the Item 4/5 path; shape 5 is captured by Item 9;
+the remaining **known-incomplete** shapes (2, 4) are the baselines Item 10 improves.
 
 ## Item 7 sequencing (the conditional collector pin)
 
@@ -45,6 +46,7 @@ from pathlib import Path
 import pytest
 
 import sysml_codegen.resolution.graph_builder as gb
+from sysml_codegen.extraction.data_models import RedefinitionType
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
     load_extraction_snapshot,
@@ -158,19 +160,25 @@ def test_shape2_specialized_def_redefinition_captured(ife_snapshot: dict) -> Non
 # --- Shape 5 (known-incomplete): plain-usage :>> override dropped -----------
 
 
-def test_shape5_plain_usage_override_dropped(ife_snapshot: dict) -> None:
-    """Shape 5 (known-incomplete baseline, mechanism C): the plain-usage ``:>>``
-    override on ``baseline_plant`` (``capacity_factor = 0.95``) is DROPPED at
-    extraction — only the def default (0.90) survives. Pinning the drop is what makes
-    Item 9's override-capture win show up as a baseline diff."""
+def test_shape5_plain_usage_override_captured(ife_snapshot: dict) -> None:
+    """Shape 5 (mechanism C, captured by Item 9): the plain-usage ``:>>`` override on
+    ``baseline_plant`` (``capacity_factor = 0.95``) is CAPTURED into
+    ``hierarchy_data.design_overrides`` as a bare-name LITERAL.
+
+    It is captured-but-unwired — ``capacity_factor`` is consumed by no calc and appears
+    nowhere in the ife_plant graph — so the verifiable outcome is *capture*, not a param
+    value flip (Design shape-5 correction). The def-level 0.90 default stays untouched.
+    This is Item 9's baseline diff."""
     overrides = [
-        a
-        for attrs in ife_snapshot["design_attributes"].values()
-        for a in attrs
-        if a.name == "capacity_factor" and "baseline_plant" in a.qualified_name
+        r
+        for r in ife_snapshot["hierarchy_data"].design_overrides
+        if r.attribute_name == "capacity_factor" and "baseline_plant" in r.owning_part_qn
     ]
-    assert overrides == [], [o.qualified_name for o in overrides]
-    # Only the def-level default (0.90) is present.
+    assert len(overrides) == 1, ife_snapshot["hierarchy_data"].design_overrides
+    override = overrides[0]
+    assert override.redefinition_type == RedefinitionType.LITERAL
+    assert override.literal_value == 0.95
+    # The def-level default (0.90) still present as a design_attribute, unchanged.
     def_level = [
         a
         for attrs in ife_snapshot["design_attributes"].values()

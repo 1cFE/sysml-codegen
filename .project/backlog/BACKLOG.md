@@ -75,6 +75,25 @@ Prioritized list of epics and features.
   the snapshot; it does not — 0 occurrences). The paren/literal fix applies to constraint
   text too but has no snapshot-level regression coverage. Add a test that exercises
   constraint reconstruction directly if that coverage is wanted.
+- **Stale-fixture snapshot refresh (from UPSTREAM-FINDINGS Item 9).** Three committed
+  extraction snapshots drift from current live output but were left untouched by Item 9
+  (its live re-capture reverted them to keep INV-5's "exactly four fixtures change"). They
+  must be refreshed so the committed corpus ends the epic script-reproducible — deferred,
+  not dropped. Run as one stale-fixture-refresh chore in the Item 6 Step-1 style: own
+  commit, reviewed diff, and any test updates that assert the stale form. Execute at
+  epic close-out.
+  - `wi014_toy`, `self_named_binding_trap` — **path canonicalization only.** Last captured
+    at Item 8 (`84ae948`) under the old convention; re-capture normalizes `source_file`
+    (repo-relative → model-relative), `design_attributes` keys (repo-relative → absolute),
+    and `document_path` (`file:…` → `file:///home/…`). No `design_overrides` / binding
+    change — provably orthogonal to Item 9 (0 diff lines on those surfaces).
+  - `quoted_owner_formula` — **path canonicalization + a classification shift.** Re-capture
+    also drops two `design_attributes` (`net_margin`, `total_payout`), which now classify as
+    computed attributes instead. Likely cause: post-Item-7 computed-attribute classification
+    behavior reaching this Item-6-vintage snapshot (`346cf47`). The refresher should review
+    this reclassification deliberately — confirm `net_margin`/`total_payout` SHOULD be
+    computed, not design attributes — rather than wave the diff through. The repo already
+    flags this fixture's path drift in `scripts/capture_extraction_snapshots.py:56-60`.
 - InvocationExpression / function call support (sqrt, min, max whitelist)
 - SelectExpression / if-then-else support (piecewise functions)
 - EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)

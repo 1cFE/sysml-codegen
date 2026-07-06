@@ -27,6 +27,8 @@ virtual (non-template) copies become pipeline modules.
 | REQ-VBR-05 | Template copies (`is_template=True`) SHALL be skipped during rewriting | `if usage.is_template: continue` at line 291 |
 | REQ-VBR-06 | Bindings already LITERAL or with no `source_path` SHALL be skipped (no double-rewrite) | Guard at lines 300-303 |
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | Called at line 736 in `build_pipeline_context()`, before Steps 4-7 |
+| REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` (`[copy.copy(b) for b in template.bindings]`) so no two virtual instances share a binding object; the rewrite mutates only scalar fields, so a shallow copy suffices | `test_virtual_binding_rewrite.py::test_rewrite_respects_instance_boundary_for_divergent_siblings` — two instances given different overrides read 50.0 and 100.0 independently |
+| REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path` (no `::`, no `.`); it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py::test_rewrite_skips_bare_name_source_path_without_raising` — non-empty index, bare-name binding, no raise, DEBUG logged, binding unchanged |
 
 ## Why Binding Rewriting Is Needed
 
@@ -87,7 +89,17 @@ For each `CalcUsageData` where `is_template = False`:
 3. Extract the leaf name from `binding.source_path`:
    - SysML QN (`"::"` separator): `"Lib::Solar_Array::wattage"` -> leaf `"wattage"`
    - Dotted path (`"."` separator): `"tracker.eta"` -> leaf `"eta"`
-   - Bare name (fallback): `"wattage"` -> leaf `"wattage"`
+   - Bare name (no `::`, no `.`): a self-named binding like `in availability = availability`.
+     The binding is **skipped with a DEBUG log** (REQ-VBR-09) — no deep-path key can
+     match a bare leaf, so skipping loses no rewrite, and resolving it to the outer
+     attribute is Item 10's per-instance rewrite. Before REQ-VBR-09 this raised
+     `ValueError`; that raise was unreachable only while the index was empty for these
+     models. The relaxed capture guard (REQ-HR-08) can now make the index non-empty, so
+     the branch is reachable and is made crash-safe. No committed fixture reaches it —
+     the reachable bindings in `unresolvable_attr_probe` / ife_plant are all
+     `::`-qualified (they take the `::` branch), and `self_named_binding_trap` has no
+     plain-usage literal so its index stays empty — the guarantee holds by branch, not
+     by empty index; the constructed unit test is the coverage.
 4. Lookup `(parent_path, leaf)` in the override index
 
 ### The Three Mutation Cases
@@ -167,6 +179,21 @@ at **Step 3.5** of [`build_pipeline_context()`](00-pipeline-overview.md), which 
 The mutations are in-place on the shared `calc_usages` list, so every downstream
 consumer automatically sees the rewritten bindings. No return value carries the
 modified list -- the same list object is passed through the entire pipeline.
+
+### Per-Instance Binding Isolation (REQ-VBR-08)
+
+Because the rewrite mutates `BindingInfo` **in place**, sibling virtual instances
+minted from one template must not share the same `BindingInfo` objects. When a
+multiplicity part like `widget [3]` produces multiple virtual instances and their
+deep-path overrides diverge, a shared object would let the first instance's rewrite
+(to LITERAL) make the rewrite skip the second (already-LITERAL), so the second reads
+the first's value. `_create_virtual_calc_usage` (`extraction/usage_extractor.py`)
+therefore mints each instance's bindings as `[copy.copy(b) for b in template.bindings]`
+— a **shallow** copy per binding. The rewrite reassigns only scalar fields
+(`binding_type`, `literal_value`, `source_path`), so each instance gets independent
+scalars while the read-only raw AST-node references (`source_instance_elem`,
+`expression_ast`) stay shared. `copy.deepcopy` is deliberately avoided — it would
+recurse into the SysIDE parse subgraph (slow, possibly cyclic).
 
 ## Key Data Model References
 

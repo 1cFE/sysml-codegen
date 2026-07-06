@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "issue22_model",
-  "captured_at": "2026-07-05T23:55:28.832794+00:00",
+  "captured_at": "2026-07-06T03:28:22.800191+00:00",
   "compilation_results": {
     "WidgetCostCalc": {
       "calc_def_name": "WidgetCostCalc",
@@ -182,13 +182,13 @@
       "bindings": [
         {
           "param_name": "base_cost",
-          "source_path": "Issue22Library::Widget::cost_model::base_cost",
-          "binding_type": "reference",
+          "source_path": null,
+          "binding_type": "literal",
           "is_cross_file": false,
           "raw_expression": "FeatureReferenceExpression -> Issue22Library::Widget::cost_model::base_cost",
           "source_instance_elem": null,
           "source_attribute_elem": null,
-          "literal_value": null,
+          "literal_value": 100.0,
           "expression_ast": null,
           "source_instance_name": null,
           "source_attribute_name": "base_cost"
@@ -311,7 +311,24 @@
         "source_line": 0
       }
     ],
-    "design_overrides": [],
+    "design_overrides": [
+      {
+        "owning_part_qn": "Issue22Design__plant__assembly",
+        "attribute_name": "base_cost",
+        "redefinition_type": "literal",
+        "literal_value": 100.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [
+          "widget",
+          "base_cost"
+        ],
+        "is_deep_path": true,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
     "multiplicities": [
       {
         "part_usage_name": "widget",

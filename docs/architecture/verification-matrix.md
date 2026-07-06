@@ -6,8 +6,8 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 209 |
-| PASS (test exists and passes) | 195 |
+| Total requirements | 212 |
+| PASS (test exists and passes) | 198 |
 | UNTESTED (no dedicated test) | 12 |
 | DEFERRED | 1 |
 | REQ families | 29 |
@@ -254,6 +254,7 @@ the documentation rather than executable code.
 | REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression... | `test_hierarchy_resolver.py` | PASS |
 | REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_loo... | `test_hierarchy_resolver.py` | PASS |
 | REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added ... | `test_hierarchy_resolver.py` | PASS |
+| REQ-HR-08 | `extract_design_overrides()` SHALL scan `:>>` overrides on plain part usages (not only `part redefines`), keeping a newly-scanned plain-usage override only when its RHS is LITERAL; `part redefines` keeps all RHS types | `test_virtual_binding_rewrite.py`, `test_uncovered_params.py` | PASS |
 
 ### IR
 
@@ -482,6 +483,8 @@ the documentation rather than executable code.
 | REQ-VBR-05 | Template copies (`is_template=True`) SHALL be skipped during rewriting | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-06 | Bindings already LITERAL or with no `source_path` SHALL be skipped (no double-rewrite) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | `test_virtual_binding_rewrite.py` | PASS |
+| REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` so no two virtual instances share a binding object (divergent-sibling rewrite correctness; Item 10 precondition) | `test_virtual_binding_rewrite.py` | PASS |
+| REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path`; it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py` | PASS |
 
 ---
 
