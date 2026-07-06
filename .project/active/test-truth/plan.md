@@ -615,6 +615,29 @@ has exactly 3 entry_point_groups (design_params, library_params, system_design);
 **Validation:** 56 passed; no residual `len(x) == len(y)` self-comparison in the 4 touched tests.
 
 ### Phase 2 Completion
+**Completed:** 2026-07-06
+**Changes (`test_entry_point_classifier.py`):**
+- **H5** `test_usage_literal_float_conversion`: dropped `expected = float(source)` (which
+  recomputed production's own `float(entry_point_sources[qname])`). Now asserts three named
+  catf USAGE_LITERAL EPs against literals transcribed from the snapshot bindings
+  (`gross_electric`→1546.72, `p_neutron`→2079.41, `p_thermal_electric`→1104.22), keeps the
+  value-agnostic isinstance(float) shape check, and adds a synthetic `float("3+4")` guard for
+  the None path.
+- **M1** `test_unparseable_default_is_none`: removed the LIBRARY_DEFAULT branch that
+  re-invoked `_get_library_default` and asserted agreement. **Finding:** that branch was not
+  only tautological but **vacuous** — no LIBRARY_DEFAULT EP has a None default in any fixture
+  (all calc-def input defaults parse to float; verified across solar/catf/chain_spike). Kept
+  the DA + UL branches (they assert the raw source is genuinely unparseable, independent of
+  the classifier's conversion). Added a dedicated `test_library_default_parsing_anchored`
+  (solar) that anchors `_get_library_default` against transcribed numeric defaults
+  (`cost_per_watt`→1.07, `fab_factor`→0.45, `cost_per_kwh`→171.5) plus synthetic
+  unparseable→None (`"1.0 / q_eng"`, `"TBD"`, absent) via SimpleNamespace stubs.
+**Literal verification vs v2 snapshots:** all six literals present in the committed snapshots
+at the cited lines. No v2 content discrepancy.
+**Count change:** +1 test (36 vs 35) — the new anchored test replaces the removed vacuous
+LD branch coverage. Justified in close-out.
+**Validation:** 36 passed; ruff clean; no `expected = float(source)` tautology remains.
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 ### Phase 5 Completion
