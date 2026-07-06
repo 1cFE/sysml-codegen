@@ -720,6 +720,18 @@ lines (608/609) as the primary source. Values identical, so no v2 content discre
 **Validation:** 30 passed; ruff clean; two pass-or-skip removed.
 
 ### Phase 6 Completion
+**Completed:** 2026-07-06
+**M10 (`test_gen_registry.py`):** re-anchored `test_req_reg_02_import_paths_match_filesystem`
+from the weak `all(seg.replace("_","").isalnum())` syntactic check (never touched the
+filesystem) to on-disk truth: `run_codegen(GenerationConfig(from_snapshot=..., overwrite=True))`
+to `tmp_path` (license-free), then for each `from pkg.modules.A.B.C import Name` assert
+`output/modules/A/B/C.py` exists. Verified: solar has 36 module imports, catf likewise; 0
+missing files. Registry lands at `output/__init__.py`; module files under `output/modules/`.
+- Did NOT duplicate REG-05; did NOT touch the count sibling `test_module_count_matches_inputs`
+  (out of scope — Item 7's matrix; noted as an observed-but-unlisted circular sibling).
+**Validation:** 22 passed; real `.exists()` filesystem check confirmed, `.isalnum()` removed;
+ruff identical to HEAD (5 pre-existing errors, 0 introduced).
+
 ### Phase 7 Completion
 ### Phase 8 Completion
 ### Phase 9 Completion (mutation spot-check + close-out)

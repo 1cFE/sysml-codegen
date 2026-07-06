@@ -279,42 +279,50 @@ class TestImportPathsMatchFilesystem:
     @pytest.mark.req("REQ-REG-02")
     @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"],
                              ids=["solar_battery", "catf_mfe"])
-    def test_req_reg_02_import_paths_match_filesystem(
-        self, model_name, all_registry_codes, all_graph_data,
-    ):
-        """For each import in the generated registry, verify the import path
-        matches PythonModulePath.from_sysml() using the same QN."""
-        code = all_registry_codes[model_name]
-        package_name = MODEL_IDS[model_name]
-        module_imports = _extract_module_import_lines(code, package_name)
+    def test_req_reg_02_import_paths_match_filesystem(self, model_name, tmp_path):
+        """Every registry module import points at a file a real generation wrote to disk.
 
+        Re-anchored from a weak "each dotted segment is alphanumeric" syntactic check
+        (which never touched the filesystem) to on-disk truth: generate the model from
+        its committed snapshot -- license-free -- and assert each
+        ``from pkg.modules.A.B.C import Name`` has a matching ``output/modules/A/B/C.py``.
+
+        provenance: the on-disk files ARE the anchor -- produced by run_codegen from the
+        committed extraction snapshot (the from-snapshot generation harness, cf.
+        tests/integration/test_full_pipeline.py generation tests).
+        """
+        from sysml_codegen.cli import GenerationConfig, run_codegen
+
+        package_name = MODEL_IDS[model_name]
+        output = tmp_path / "out"
+        generated = run_codegen(GenerationConfig(
+            output_path=output,
+            from_snapshot=snapshot_fixture(model_name),
+            package_name=package_name,
+            overwrite=True,
+        ))
+        assert generated is True, f"generation failed for {model_name}"
+
+        code = (output / "__init__.py").read_text()
+        module_imports = _extract_module_import_lines(code, package_name)
         assert len(module_imports) > 0, f"No module imports in {model_name}"
 
-        failures = []
+        missing = []
         for line in module_imports:
-            # Extract the import path: "from pkg.modules.X.Y import Z"
+            # "from pkg.modules.A.B.C import Name" -> modules/A/B/C.py must exist.
             match = re.match(
                 rf"from {re.escape(package_name)}\.modules\.(\S+) import \S+",
                 line,
             )
             if not match:
                 continue
-            actual_import_path = match.group(1)
+            rel = match.group(1).replace(".", "/") + ".py"
+            if not (output / "modules" / rel).exists():
+                missing.append(f"  {line.strip()} -> modules/{rel} (no file on disk)")
 
-            # Reconstruct QN from import path:
-            # e.g., "solarbatterylibrary.pvmodulecostcalc" -> segments
-            segments = actual_import_path.split(".")
-            # The import path from PythonModulePath.from_sysml is dir.filename
-            # We can verify by constructing a SQN and checking roundtrip
-            # Build QN by reversing: lowercase segments -> PascalCase not possible
-            # Instead, verify the import path is a valid dotted Python path
-            # and that the class name matches the last segment + "Module"
-            if not all(seg.replace("_", "").isalnum() for seg in segments):
-                failures.append(f"  Invalid path segments in: {line}")
-
-        assert not failures, (
-            f"Import path validation failures in {model_name}:\n"
-            + "\n".join(failures)
+        assert not missing, (
+            f"Registry imports with no file on disk in {model_name}:\n"
+            + "\n".join(missing)
         )
 
     @pytest.mark.req("REQ-REG-02")
