@@ -1,7 +1,7 @@
 # Epic: Upstream Findings Remediation & Plant-Idiom Support
 
 **Epic ID**: UPSTREAM-FINDINGS
-**Status**: Draft
+**Status**: Complete — all 12 items landed and audited PASS (orchestrated run, 2026-07-05..06)
 **Priority**: High
 **Created**: 2026-07-05
 **Estimated Effort**: ~13–16 days (12 items; two parallel tracks)
@@ -527,11 +527,34 @@ Item 12 (agentic-mbse sync) ← accumulates from ALL items; executes last
 
 ## Lessons Learned (Post-Completion)
 
-*Fill in after epic is complete*
+**What Went Well**:
+- Probe-first discipline paid for itself repeatedly: Item 3's V8 primary rule refuted live; Item 7's
+  Phase-0 capture killed a false worksheet before code; Item 10's B7 probe reshaped the walk's input.
+- Adversarial reviews caught real, load-bearing defects at every stage (Item 6's inverted paren
+  polarity; Item 10's three silent-mis-wire rounds; Item 11's simkit grammar mismatch, settled by
+  reading the actual consumer).
+- The channel-identity assertion class (born from Item 10's D-C offline mis-wire) became the
+  epic's strongest test idiom.
+- Two-stage/checkpoint commits kept the trail auditable through six multi-session items.
 
-**What Went Well**: TBD
-**What Could Improve**: TBD
-**Surprises**: TBD
+**What Could Improve**:
+- Fixture flavor/staleness was the recurring tax: the capture scripts produced live-flavored output
+  the byte-exact tests couldn't consume (Item 1), and stale snapshots (pre-reference_chain) broke
+  three separate items' assumptions. Fixture-reproducibility discipline (scripts-only, canonical
+  form) had to be re-established mid-epic.
+- Non-interactive resume sessions repeatedly lost execution permissions; the fresh-session-with-
+  recipe pattern worked but cost round-trips.
+- The spec-time evidence base drifted under long items: Item 10's fixture collapsed a two-level
+  specialization; Item 12's C1 floor predated Items 9/10 making the trap shape supported.
+
+**Surprises**:
+- The register's SC-5 deferral evidence ("0 cross-part refs in fixtures") was self-inflicted —
+  Item 8's fixtures immediately made three items' worth of latent gaps visible.
+- fusion-tea's real gamma edge was a two-level specialization no fixture modeled; the C-then-B
+  staged ruling landed it anyway (usage-level retype indexing + instance-aware type-select).
+- Item 9's rescue silently flipped the semantics of Item 7's dedicated V11 proof fixture and
+  Item 12's C1 floor — supported-subset changes ripple into the *test* corpus's meaning, not just
+  code.
 
 ---
 
