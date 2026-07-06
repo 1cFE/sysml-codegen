@@ -639,6 +639,32 @@ LD branch coverage. Justified in close-out.
 **Validation:** 36 passed; ruff clean; no `expected = float(source)` tautology remains.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-06
+**Changes (`test_factory_aggregation.py`):**
+- Added `_select_agg(inputs, instance_path, attribute_name)` (identity selection, fails loud
+  if absent) and `_build_one(inputs, agg)` helpers.
+- **H6** `test_module_name_format`: `agg_inputs`(parametrized)→`solar_battery_agg`; select
+  solar_array/capital_cost by identity; assert fully-lowercased literal
+  `solarbatterydesign__solar_battery_plant__solar_array__capital_cost`.
+- **H7** `test_output_channel_name_format`: same identity selection; assert the DOUBLED
+  literal `...__solar_array__capital_cost__capital_cost` with an in-code ADR-003 doubling
+  comment (do-not-de-double).
+- **L2** `test_localterm_sibling_agg_output`: pass-or-skip → pass-or-FAIL. Select idiot_index
+  @ solar_array; assert `capital_cost` input `producer_channel` == doubled literal; end on
+  unconditional `assert found`.
+- **L3** `test_localterm_expose_alias`: pass-or-skip → pass-or-FAIL. Select capital_cost @
+  solar_array; assert `misc_hardware_cost` input resolves via EXPOSE_PURE alias to
+  `...__solar_array__allocation_model__total_allocation`; end on `assert found`.
+- Removed now-unused `get_channel_name`/`get_module_name` imports.
+**Literal verification vs v2 snapshot:** all four literals CONFIRMED by building the modules
+from the committed solar_battery snapshot (probe run pre-edit). No v2 discrepancy.
+**Count change:** H6/H7 switched from parametrized (solar+issue22) to solar-only → −2 test
+instances (the dropped issue22 runs only ever exercised the tautology). L2/L3 no longer skip.
+**Note (out of scope):** two pre-existing `pytest.skip`s remain (lines ~744, ~1180) in MF-06
+constructed SumTerm/SingletonTerm fallback tests — not among the §D5 25; left untouched.
+**Validation:** 29 passed, 1 skipped (pre-existing); ruff clean; no `aggregation_data[<int>]`
+index access; L2/L3 no longer end on skip.
+
 ### Phase 4 Completion
 ### Phase 5 Completion
 ### Phase 6 Completion
