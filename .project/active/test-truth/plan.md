@@ -666,6 +666,35 @@ constructed SumTerm/SingletonTerm fallback tests — not among the §D5 25; left
 index access; L2/L3 no longer end on skip.
 
 ### Phase 4 Completion
+**Completed:** 2026-07-06
+**M4 (`test_aggregation_scoping.py`):**
+- AS-03 `test_instance_path_has_design_prefix_in_scoped_data`: kept the per-item
+  prefix/separator invariant loop; replaced the tautological `expected_eqn = f"..."`
+  recompute with an identity-selected literal on solar_array/capital_cost.
+- AS-07 `test_module_eqn_format_solar_battery`: dropped the `range(20)` index parametrization
+  (index = DFS artifact); now selects two aggregations by (instance_path, attribute_name) and
+  asserts literals (`...solar_array__capital_cost`, `...solar_battery_plant__capital_cost`).
+  Both verified against the committed snapshot. `test_module_eqn_issue22` already literal-anchored
+  (left as the model).
+**M5–M9 — all six recompute tests dispositioned** (register said five; sweep's sixth = the
+extra `module_type` recompute; coverage gained, not scope creep):
+- `test_factory_calc_usage.py`: added `_select_module`; converted `test_module_name_matches_eqn`,
+  `test_module_type_derives_from_calc_def`, `test_channel_name_is_pqn` from parametrized (3
+  models) whole-loop recompute → dedicated `solar_battery_factory` literal on `energy_production`
+  (name / module_type / channel).
+- `test_factory_formula.py`: added `_select_formula_module`; converted `test_module_name_from_ca_qn`,
+  `test_module_type_from_ca_qn`, `test_output_channel_name_pqn` → dedicated `solar_battery_formula`
+  literal on `p_net_kw`. Formula channel literal DOUBLED (ADR-003, same as H7) with a
+  do-not-de-double comment.
+- Removed orphaned imports (`get_module_name`/`get_channel_name`/`derive_module_type`) from both.
+**Literal verification vs v2 snapshots:** all six factory literals + both M4 literals CONFIRMED
+by building modules from the committed snapshots. No v2 discrepancy.
+**Count change:** AS-07 −19 instances (20→1); calc_usage naming −6 (3 tests × 2 dropped models);
+formula naming −3 (3 tests × 1 dropped model). All dropped instances were tautological.
+**Lint note:** 5 pre-existing F401/E501 remain in the two factory test files (present in HEAD,
+untouched by this item, and not in the `ruff check src/` gate which stays at 20).
+**Validation:** 101 passed, 2 skipped (pre-existing); my new F401s all cleared.
+
 ### Phase 5 Completion
 ### Phase 6 Completion
 ### Phase 7 Completion

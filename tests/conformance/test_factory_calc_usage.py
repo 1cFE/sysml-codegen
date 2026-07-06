@@ -25,9 +25,7 @@ from sysml_codegen.analysis.dependency_backtracker import (
     DependencyBacktracker,
 )
 from sysml_codegen.analysis.parameter_groups import ParameterGroupDeriver
-from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
-from sysml_codegen.core.qualified_names import get_channel_name, get_module_name
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import _build_pipeline_module, _classify_entry_points
@@ -157,6 +155,15 @@ def _build_all_modules(
     return modules
 
 
+def _select_module(factory_inputs, instance_name: str) -> PipelineModule:
+    """Select one built module by its usage instance_name. Fails loud if absent."""
+    result, entry_points, calc_def_map, _snap = factory_inputs
+    for module, usage, _calc_def in _build_all_modules(result, entry_points, calc_def_map):
+        if usage.instance_name == instance_name:
+            return module
+    raise AssertionError(f"module for usage {instance_name!r} not found")
+
+
 # ===========================================================================
 # REQ-MF-01: Pure data transformer — no mutation, correct return type
 # ===========================================================================
@@ -203,29 +210,32 @@ class TestPureDataTransformer:
             assert module.module_type, f"Module type must be non-empty for {usage.instance_name}"
             assert len(module.outputs) > 0, f"Module must have outputs for {usage.instance_name}"
 
-    def test_module_name_matches_eqn(self, factory_inputs):
-        """module.name == get_module_name(usage.qualified_name) for every module."""
-        result, entry_points, calc_def_map, snap = factory_inputs
-        modules = _build_all_modules(result, entry_points, calc_def_map)
+    def test_module_name_matches_eqn(self, solar_battery_factory):
+        """Named calc-usage module name is the transcribed lowercased EQN.
 
-        for module, usage, calc_def in modules:
-            expected = get_module_name(usage.qualified_name)
-            assert module.name == expected, (
-                f"Module name mismatch for {usage.instance_name}: "
-                f"{module.name!r} != {expected!r}"
-            )
+        The former body computed expected = get_module_name(usage.qualified_name) --
+        production's exact call -- for every module, so it could never fail. Anchor a
+        dedicated named module instead.
+        """
+        module = _select_module(solar_battery_factory, "energy_production")
+        # provenance: solar_battery snapshot usage SolarBatteryDesign::solar_battery_plant
+        #   ::energy_production; get_module_name lowercases the EQN (core/qualified_names.py).
+        assert module.name == "solarbatterydesign__solar_battery_plant__energy_production", (
+            f"module.name mismatch: {module.name!r}"
+        )
 
-    def test_module_type_derives_from_calc_def(self, factory_inputs):
-        """module.module_type == derive_module_type(calc_def.qualified_name)."""
-        result, entry_points, calc_def_map, snap = factory_inputs
-        modules = _build_all_modules(result, entry_points, calc_def_map)
+    def test_module_type_derives_from_calc_def(self, solar_battery_factory):
+        """Named calc-usage module_type is the transcribed derived type.
 
-        for module, usage, calc_def in modules:
-            expected = derive_module_type(calc_def.qualified_name)
-            assert module.module_type == expected, (
-                f"Module type mismatch for {usage.instance_name}: "
-                f"{module.module_type!r} != {expected!r}"
-            )
+        The former body computed expected = derive_module_type(calc_def.qualified_name),
+        production's exact call. Anchor a dedicated named module to a literal.
+        """
+        module = _select_module(solar_battery_factory, "energy_production")
+        # provenance: calc def SolarBatteryLibrary::EnergyProductionCalc ->
+        #   derive_module_type lowercases the namespace, PascalCase-suffixes "Module".
+        assert module.module_type == "solarbatterylibrary.EnergyProductionCalcModule", (
+            f"module_type mismatch: {module.module_type!r}"
+        )
 
     def test_execution_order_assigned(self, factory_inputs):
         """execution_order parameter is passed through to module."""
@@ -519,19 +529,18 @@ class TestOutputNaming:
         assert module.outputs[0].field_name == original_attr.name
         assert module.outputs[1].field_name == "secondary_output"
 
-    def test_channel_name_is_pqn(self, factory_inputs):
-        """Every output channel_name == get_channel_name(usage.qn, attr.name)."""
-        result, entry_points, calc_def_map, snap = factory_inputs
-        modules = _build_all_modules(result, entry_points, calc_def_map)
+    def test_channel_name_is_pqn(self, solar_battery_factory):
+        """Named calc-usage output channel is the transcribed PQN literal.
 
-        for module, usage, calc_def in modules:
-            for i, output_attr in enumerate(calc_def.output_attributes):
-                expected = get_channel_name(usage.qualified_name, output_attr.name)
-                assert module.outputs[i].channel_name == expected, (
-                    f"Module {module.name}, output {output_attr.name}: "
-                    f"channel_name {module.outputs[i].channel_name!r} != "
-                    f"expected {expected!r}"
-                )
+        The former body computed expected = get_channel_name(usage.qn, attr.name) --
+        production's exact call -- for every output. Anchor a dedicated named module.
+        """
+        module = _select_module(solar_battery_factory, "energy_production")
+        # provenance: solar_battery snapshot -- energy_production output annual_energy_mwh;
+        #   get_channel_name composes usage_qn + "__" + output_name (ADR-003).
+        assert module.outputs[0].channel_name == (
+            "SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh"
+        ), f"channel_name mismatch: {module.outputs[0].channel_name!r}"
 
     def test_output_count_matches_calc_def(self, factory_inputs):
         """len(module.outputs) == len(calc_def.output_attributes) for every module."""
