@@ -553,21 +553,92 @@ production regression; the suite is green with mutations reverted; the item is a
 
 ---
 
-## Close-out (fill during implement)
+## Close-out (COMPLETE — 2026-07-06)
 
-- [ ] **Disposition table** — all 25 dispositioned: 17 register-named (H1–H7, M1–M10) + 8 LOW
-  (1 register-named MF-07 + 7 reconstructed). One-line rationale each. Any struck reconstructed
-  LOW recorded with evidence.
-- [ ] **H1 (EXT-09) handoff** to Item 4 recorded (untouched here).
-- [ ] **Per-fixed-test provenance list** — the `file:line` / snapshot / hand-computed source of
-  each re-anchored literal (SC / L3-2). ~24 fixed tests.
-- [ ] **Mutation spot-check results** — the three named mutations, the RED observed, revert
-  confirmed.
-- [ ] **Test-count reconciliation** — before/after counts; every delta explained (M5–M9 adds
-  dedicated assertions; SC-6 adds 2 pins; no test deleted without a replacement). If any LOW
-  candidate was struck, note the count change and the SC-1 arithmetic (17 + 8).
-- [ ] **Gate** — full suite green; ruff/mypy vs the 21/109 baseline.
-- [ ] **Five-vs-six factory count** flagged for Item 7's matrix recount (no decision here).
+### Phase 9 Completion (mutation spot-check)
+The three named mutations, applied to production, observed RED, reverted; each production
+file `git diff`-clean after revert; full suite re-run green.
+
+1. **H2 count-tautology** — `test_req_gen_05_one_json_per_group`. Mutation:
+   `generation/entry_point.py` JSON loop `for group in entry_point_groups[:-1]` (drop a group).
+   RED: solar wrote **2 JSON files != 3** (catf 7 != 8). The literal caught the dropped group
+   where the old `len==len` tautology would have passed. Reverted → GREEN.
+2. **H7 naming/channel** — `test_output_channel_name_format`. Mutation: `core/qualified_names.py`
+   `get_channel_name` single-`_` separator (de-double). RED: channel became
+   `...capital_cost_capital_cost` vs doubled literal `...capital_cost__capital_cost`. The doubling
+   pin caught the exact de-doubling the [HARD] note guards against. Reverted → GREEN.
+3. **L2 MF-07 conversion** — `test_localterm_sibling_agg_output`. Mutation: `graph_builder.py:1589`
+   `producer_channel=sibling_channel + "_MUT"`. RED: the converted test **FAILED** (not skipped) —
+   `producer_channel` `..._MUT` != literal — proving the pass-or-skip trap is closed. Reverted → GREEN.
+
+### Disposition — all 25 (17 register-named + 8 LOW = 1 MF-07 + 7 reconstructed)
+| # | Test | Disposition |
+|---|---|---|
+| H1 | `test_extractor` EXT-09 | **HANDOFF → Item 4** (untouched; `test_extractor.py` clean this run). |
+| H2 | `test_req_gen_05_one_json_per_group` | Fixed — `EXPECTED_GROUP_COUNTS {solar:3,catf:8}` literal. |
+| H3 | `test_req_gen_05_one_schema_per_group` | Fixed — same literal dict. |
+| H4 | `test_req_py_07_json_file_count...` + `test_entry_fusion_json_count` twin | Fixed — same literal dict. |
+| H5 | `test_usage_literal_float_conversion` | Fixed — 3 transcribed catf UL literals + synthetic None. |
+| H6 | `test_module_name_format` (agg) | Fixed — identity-selected lowercased module-name literal. |
+| H7 | `test_output_channel_name_format` (agg) | Fixed — identity-selected doubled channel literal. |
+| M1 | `test_unparseable_default_is_none` | Fixed — vacuous+tautological LD branch removed; new `test_library_default_parsing_anchored` anchors numeric + synthetic None. |
+| M2 | `test_req_pgd_05_classify_precedence_matches_index` + 4 `classify_returns_group_for_*_index` | Fixed — named qname → named group literals. |
+| M3 | `test_req_pgd_06_default_value_literal` + binding twin | Fixed — child_count 25.0 / total_child_mass 50.0 / binding p_net_mw 0.008. |
+| M4 | `test_module_eqn_format_solar_battery` + AS-03 recompute | Fixed — identity-selected module_eqn literals. |
+| M5–M9 | 6 factory recomputes (calc_usage + formula name/type/channel) | Fixed — dedicated literals on energy_production / p_net_kw (formula channel doubled). |
+| M10 | `test_req_reg_02_import_paths_match_filesystem` | Fixed — on-disk `.exists()` from-snapshot generation. |
+| L1 | `test_module_name_parametrized` | Fixed — transcribed lowercased literals per REAL_EQNS row. |
+| L2 | `test_localterm_sibling_agg_output` MF-07 | Converted pass-or-skip → pass-or-FAIL; doubled channel literal. |
+| L3 | `test_localterm_expose_alias` MF-07 | Converted pass-or-skip → pass-or-FAIL; expose-alias channel literal. |
+| L4 | `test_all_generators_use_shared_function` | Documented — sibling-pinned (type-map literal siblings). |
+| L5 | `test_input_types_match_module` | Documented — template-fidelity, sibling-pinned. |
+| L6 | `test_input_type_cross_reference_with_graph` | Documented — near-dup of L5 (dedup flagged), sibling-pinned. |
+| L7 | `test_field_names_match_pipeline_module_outputs` | Documented — output-PQN sibling-pinned. |
+| L8 | `test_req_gen_04_multi_output_return_type` | Fixed — dedicated 5-float `tuple[...]` literal pin. |
+**No reconstructed LOW candidate struck** — all 7 (L1, L4–L8) confirmed self-referential on
+inspection. SC-1 arithmetic holds: 17 + 8 = 25.
+
+### Per-fixed-test literal provenance
+- H2/H3/H4/twin: committed `computation_graph.json` baselines (solar 3, catf 8 groups).
+- H5: catf snapshot literal bindings — 1546.72 (:4527), 2079.41 (:2896), 1104.22 (:4495); "3+4" hand-computed.
+- M1: solar snapshot calc-def defaults — 1.07 (:923), 0.45 (:936), 171.5 (:1428); synthetic "1.0 / q_eng"/"TBD"/absent hand-computed.
+- H6/H7/L2/L3: solar aggregation modules built from committed snapshot; ADR-003 doubling (`core/qualified_names.py:98-100`); expose alias `library.sysml:612` (allocation_model `:607`).
+- M4: solar snapshot aggregation_expressions (solar_array/capital_cost, plant-root/capital_cost).
+- M5–M9: solar snapshot — energy_production (name/type/channel), p_net_kw (name/type/doubled channel).
+- M10: on-disk files from `run_codegen(from_snapshot=...)` ARE the anchor.
+- M2/M3: design.sysml:53 (p_net_mw=0.008), library.sysml:608/609 (child_count 25.0 / total_child_mass 50.0); classifications from committed snapshot.
+- L1: hand-transcribed lowercasing of each REAL_EQNS row (verified via `get_module_name`).
+- L8: pv_module cost_model 5 outputs (`library.sysml` PVModuleCostCalc) → `tuple[float×5]`.
+- SC-6 Pin1/Pin2: hand-computed (`str(1e-06)=="1e-06"`; `sum(pv_module.capital_cost)`).
+
+### Test-count reconciliation (baseline 2031 → final 2005 passed; −26)
+- +1 Phase 2 (`test_library_default_parsing_anchored`).
+- −2 Phase 3 (H6/H7 solar-only; dropped issue22 tautological instances).
+- −28 Phase 4: AS-07 −19 (20 index params → 1); calc_usage naming −6 (3 tests × 2 dropped models);
+  formula naming −3 (3 tests × 1 dropped model). All dropped instances were tautological.
+- +1 Phase 7 (`test_multi_output_return_type_literal`).
+- +2 Phase 8 (SC-6 Pin1, Pin2).
+Net +4 −30 = −26. **2031 − 26 = 2005. ✓** No test deleted without a replacement; every drop
+was a tautological parametrization instance replaced by a stronger identity/literal pin.
+skips 4 (unchanged — L2/L3 skips removed, but they were never in the counted 4; the 4 are
+pre-existing MF-06/other constructed skips), xfailed 5 (unchanged).
+
+### Gate
+Full suite: **2005 passed, 4 skipped, 5 xfailed** with all mutations reverted. `ruff check src/`
+= **20**, `mypy src/` = **105** — identical to the current (post-Item-4) baseline; no regression.
+(Plan's older "21/109" predates Item 4; live bar is 20/105.) Test-file lint: every touched file's
+ruff count identical to HEAD (0 introduced); pre-existing test-file F401/E501 left untouched.
+
+### Five-vs-six factory count
+The register said "five" factory-naming tests; the sweep found **six** of the identical recompute
+shape (the extra is the second `module_type` recompute). All six dispositioned (M5–M9). Flagged
+for **Item 7's** matrix recount — no decision here.
+
+### Observed-but-out-of-scope (not in the §D5 25)
+- `test_module_count_matches_inputs` (test_gen_registry.py) re-derives its count from the same
+  graph rule — circular, but not among the 25; left for Item 7's matrix.
+- Two pre-existing `pytest.skip` MF-06 constructed-fallback tests in test_factory_aggregation.py
+  (SumTerm/SingletonTerm) — not §D5 findings; untouched.
 
 ---
 
@@ -785,4 +856,5 @@ test_gen_schemas.py:355-381 exemplar literal tables).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete** (all 9 phases; 2005 passed / 4 skipped / 5
+xfailed; ruff 20 / mypy 105; 3 mutations RED-then-reverted)
