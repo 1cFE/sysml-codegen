@@ -356,8 +356,184 @@ Research Findings states catf_mfe's chain as `tf_coil.volume` (not `tf_coil.volu
 
 ---
 
-**Overall:** Revise
-**Next Steps:** Record resolutions above — especially C1/C2/C3, which change what stage (a) is and
-whether #2/#1 are as small as the design claims. Then re-run `/_my_design` (or return to the
-design-agent session) and point it at this review to incorporate. The reviewer does not edit the
-design.
+## Targeted Verification Round 2 (the three reshaped mechanisms)
+
+The rework closed all seven round-1 findings *in concept* — the tentative/confirm split is the
+right shape for C2, the tuple key is the right shape for C3, three fixtures is right for M3. But a
+code-grounded trace of each reshaped mechanism against the actual data it will run on found three
+new load-bearing gaps, all of the same class the epic exists to kill (silent mis-wire / silent
+drop). **This does not approve.** The concepts are sound; the specifications are not yet airtight.
+
+### What now holds (verified airtight)
+
+- **Alias-terminal hop (C1's catf_mfe half).** Following an EXPOSE alias to its channel is exactly
+  **one** dict lookup and cannot recurse: `register_alias` refuses any target not already a
+  registered canonical channel (`output_registry.py:105-112`), and Phase 3 resolves the terminal
+  channel *at registration time* (`output_registry_builder.py:180-184`). A cycle is impossible by
+  construction (aliases point at channels, never other aliases) — the design needs no cycle guard
+  *for the walk as specified*. Good.
+- **FORMULA gate.** A genuine arithmetic-over-chain formula has an OperatorExpression root, so it
+  fails the `is_instance(..., "FeatureChainExpression")` check (`computed_attribute_extractor.py:104-106`)
+  and is never tagged tentative. B2's front gate is real.
+- **C3 tuple key.** `("a","b.c")` and `("a.b","c")` hash distinct; the design stores the *unjoined*
+  tuple (design.md:219,379); a dedicated `_consumer_scoped` dict cannot collide with `_alias`
+  strings. The collapse the review found is closed.
+- **`_is_self_reference`.** Already channel-based and key-shape-independent
+  (`dependency_backtracker.py:635-644`) — the new step can reuse it unchanged. D7 slightly
+  overstates the "re-derive" work; no real change needed.
+- **Snapshot boundary (C2 replay hypothesis, benign).** Capture runs the *full* pipeline including
+  the Step-5.5 confirm before serializing (`snapshot/capture.py:42-55`), and the confirm mutates
+  `ca.classification` in place, so a correctly-built confirm pass leaves no tentative to serialize.
+  Adding the enum value deserializes fine on old snapshots (value-lookup, additive). The
+  hypothesized "snapshots contain live tentatives" break does **not** occur — *provided* the
+  confirm pass mutates the shared objects in place (design states this; nothing enforces it).
+
+### Critical (new — must address before implementation)
+
+- **C4 — The confirm walk's input segments do not exist in the data it reads, and under the
+  design's own leaf-tag rule the ife_plant pin is never tagged.** This is the sharpest finding.
+  Extraction truncates the cross-part chain to its **root waypoint only**: the committed
+  `tests/fixtures/ife_plant/extraction_snapshot.json:1536-1556` shows `magnet_volume_total`'s
+  `references` is `[tf_coil]` — `volume_calc` and `volume` are gone, and `expression_text` collapsed
+  to `"tf_coil"`. So:
+  - The design says the confirm pass "generalizes `_resolve_expose_pure`" (design.md:281,335),
+    which loops over `ca.references` (`graph_builder.py:776-780`). Over `[tf_coil]` there is nothing
+    to walk — the middle and terminal segments are absent. "Generalize `_resolve_expose_pure`"
+    cannot recover them; only re-parsing `expression_ast` can. The design conflates the two
+    (Implementation Notes #2 says both), and they are different mechanisms.
+  - Worse, the design's leaf-tag condition (design.md:209,364-367) is "exactly one non-instance
+    ref remains after removing part-typed waypoints." For the real pin, removing `tf_coil` leaves
+    **zero** refs, not one — so the pin **fails the tag condition and stays FORMULA**. As specified,
+    stage (a) flips *neither* the ife_plant pin nor (by the same truncation) catf_mfe. This directly
+    breaks B1/B6/SC-1 ("stage (a) flips both committed pins").
+  - The only viable input is `expression_ast` — but on the **snapshot-replay path** the loader
+    nullifies it (`expression_ast=None`, `loader.py:474`; confirm re-runs in `graph_rebuild.py:39-46`
+    with no AST). The design claims stage (a)'s gate is "license-free offline snapshots"
+    (design.md:416,436). If the offline gate replays AST-less snapshots and the walk needs the AST,
+    the license-free-offline claim is contradicted. **Resolve which input the walk reads, re-derive
+    the leaf-tag/INV-E conditions against AST segments, and confirm the offline gate has the AST it
+    needs.** Design Open Question 2 flags "probe the walk on both pin shapes" — the trace shows that
+    probe *fails* against the references-based spec and forces this re-design, so it is a design
+    gap, not a probe-to-confirm. *Dimension 1, 3, 5, 7.*
+
+- **C5 — Nothing populates `_consumer_scoped`; the #1 step is inert as specified.** Every mention
+  of `_consumer_scoped` describes the **lookup** side (design.md:288-290,341-343,379-382); none
+  describes a registration. #4 registers its part-def exposes into `_alias`, not `_consumer_scoped`
+  (design.md:285-287, Phase-3 `register_alias`). So #1 reads a namespace nothing writes — it always
+  misses. The load-bearing unwritten piece is the **registration method and its key derivation**:
+  a consumer-scoped key is built at *registration* time (before any consumer exists) yet must match
+  a lookup key `(consumer_scope, source_path)` built from the *consumer* — a non-trivial mapping the
+  design never states, and exactly where a mis-key could re-introduce a wrong-channel hit with
+  nothing to review. Inertness would not be caught by any stage-(a) gate (D4 rides #1's test on
+  stage (b); Open Question 1 still asks whether #1 is even load-bearing). **Specify what registers
+  into `_consumer_scoped`, when, and how its key is derived.** *Dimension 5, 6.*
+
+- **C6 — INV-F's fail-fast does not exist, and the tentative/confirm split introduces a concrete
+  false-entry-point regression.** Two parts:
+  - **Fail-fast is fiction.** Every downstream reader of `.classification` is a silent `if`/`elif`
+    with no `else`: `output_registry_builder.py:120`, `graph_builder.py:253`, `:274`, `:834-862`.
+    A surviving `EXPOSE_CHAIN_TENTATIVE` is silently *skipped* (no module, no alias, no resolution
+    entry) — the attribute vanishes from the graph rather than tripping an assert. INV-F's "graph
+    builder + aggregation walker assert none survives" describes code that is not present. The
+    asserts must be *added* at those sites; until then INV-F is aspirational.
+  - **Removal-ordering regression (concrete new bug).** `_remove_formula_from_design_attrs` runs at
+    Step 4.5 *before* confirm and removes only `== FORMULA` (`pipeline_builder.py:69,133`), and it
+    runs exactly once. A tentative escapes removal at 4.5; if the confirm pass **reverts it to
+    FORMULA** at 5.5, removal has already run — so the reverted attribute **stays in `design_attrs`
+    and surfaces as a false JSON entry point.** This breaks the design's own claim that reverting to
+    FORMULA is "today's exact behavior, no silent change" (design.md:141): the *classification*
+    reverts, but the *side effect* FORMULA used to have (design-attr removal) does not. Move/repeat
+    the removal after confirm, or have the revert re-trigger it. *Dimension 6.*
+
+### Major (new)
+
+- **M5 — The Phase-4 "transitive-default precedent" the confirm pass claims to mirror does not
+  exist.** Phase 4 (`output_registry_builder.py:200-214`) is a **single dotted key** tried against
+  three registries, then one alias registered — no hop-by-hop walk, no N-segment path assembly.
+  "Transitive" there means only "the value is a dotted string" (`is_transitive_default`), not a
+  transitive algorithm. The genuine recursive analog is `_resolve_aggregation_input_channel`
+  (`graph_builder.py:1043-1079`), which follows `source_path` recursively and *therefore* carries an
+  explicit `_visited` cycle guard. If the confirm walk is built to chase `:>>` chains the way that
+  function does, it will need that guard — which the design does not specify. The "we already do
+  this in Phase 4" reassurance is unfounded; cite the real analog and its cycle guard. *Dimension 2, 7.*
+
+- **M6 — Snapshot format version and the in-place-mutation assumption.** If this item bumps
+  `SNAPSHOT_FORMAT_VERSION` (`snapshot/__init__.py`), all 18 committed `extraction_snapshot.json`
+  fixtures fail the load gate (`loader.py:81-92`) and must be recaptured — a license-gated,
+  window-bound task (expires 2026-08-06). And the "no tentative is ever serialized" guarantee rests
+  on the confirm pass mutating the *shared* `computed_attrs` objects in place; if an implementer
+  rebuilds from copies, `ctx.computed_attributes` keeps the tentatives and the serializer writes
+  them with no validation. State both as implement constraints. *Dimension 5.*
+
+### Round-2 verdict
+
+The three reshaped mechanisms are the right *concepts* but not yet safe *specifications*. C4 is the
+most serious: as written, the headline (stage (a) flips both pins) is not just unproven but
+contradicted by the committed extraction snapshot — the pin never gets tagged, and the walk has no
+segments to follow. C5 makes #1 inert. C6 turns "revert to FORMULA is a no-op" into a false-entry
+regression and shows INV-F's guards are not in the code. None is fatal to the approach; each needs a
+concrete re-spec against the actual extraction/registry/orchestration behavior before plan. The
+probes the design already lists (Open Questions 1-2) will *surface* C4 and C5 — but as re-design
+triggers, not confirmations, so they belong resolved in the design, not deferred to implement.
+
+---
+
+## Round-2 Resolutions
+
+**C4 — ACCEPTED, fixed (D9 + revised D6, INV-E).** Confirmed the truncation in the committed
+snapshot (`references: [tf_coil]`, `expression_text: "tf_coil"`, `expression_ast: null`) and that
+the replay path nullifies the AST (`loader.py:474`; serializer `_AST_FIELDS`). Fix per the ruling:
+extraction captures an **additive `reference_chain: list[str]`** (`ComputedAttributeData` dataclass
+default block, `data_models.py:214-217`), populated by the segment-list analog of
+`extract_feature_chain_name` (`expression_utils.py:250-280` already walks the full chain via
+`.operands[0]` + `.target_feature.name` — **verified producible**, B7). Serializer auto-includes it;
+loader adds `reference_chain=d.get(...)`; **no `SNAPSHOT_FORMAT_VERSION` bump** — old snapshots
+degrade to FORMULA (today's behavior; SC-10 precedent). The confirm walk reads `reference_chain`,
+**not** `references` (truncated) or the AST (None) — the round-1 "generalize `_resolve_expose_pure`
+over `references`" conflation is removed. The leaf-tag/INV-E condition is re-derived on
+`reference_chain` (≥ 2 segments + single terminal leaf), replacing the "one ref after removing
+waypoints" rule that gave **zero** for the real pin. The *why-it-truncates* question
+(agentic-mbse internal, unreadable) is the first probe (B7 doesn't depend on it — D9 uses the
+in-repo walker). Design: D9, D6, INV-E, B7, blast radius, Handoff.
+
+**C5 — ACCEPTED, fixed (revised D7, D4).** Both sides written and shown to meet by construction.
+`_scoped_alias` (renamed from `_consumer_scoped`) is a tuple-keyed `ScopedAliasKey = (prefix, leaf)`
+namespace. **Registration:** #4's per-instance part-def-expose expansion writes `(instance_path,
+exposed_leaf)` at Phase 3 (wi014_toy → `("demo_plant","total_cost")`). **Lookup:** #1 splits the
+consumer's `source_path` at the last dot → `(prefix, leaf)`. They meet because both split the same
+model dotted reference identically. This makes #1 **load-bearing in stage (a)** (for #4's part-def
+exposes / SC-5 shape-A), while the two V11 pins resolve via #2 + the unscoped Step 2 — answering
+Open Question 1. **Inertness gate** added: a stage-(a) test fails if `_scoped_alias` is empty after
+registering wi014_toy. Design: D7, D4, INV-B, Validation.
+
+**C6 — ACCEPTED, both parts fixed (INV-F real, INV-G order).** (a) The four silent readers
+(`output_registry_builder.py:120`, `graph_builder.py:253/274/834`) get an explicit `else: raise` on
+a surviving `EXPOSE_CHAIN_TENTATIVE` — stated as required stage-(a) edits, with a fail-fast test;
+INV-F is no longer aspirational. (b) Removal ordering fixed with a stated phase order (INV-G):
+confirm runs as **Phase 3b** (after single-hop aliases, before Phase 4); `_remove_formula_from_design_attrs`
+runs a **second time at Step 5.6** so a reverted tentative is removed (no false JSON entry point);
+`group_deriver` moves to Step 5.7 to consume final `design_attrs`. Evidence for the order: confirm
+needs the registry channels (so it can't precede Phase 1/3), and Phase 4 / group_deriver must see
+final classifications (so they follow confirm). Design: INV-G, Architecture phase diagram, D6,
+Validation (no-false-EP test).
+
+**M5 — ACCEPTED.** Corrected the precedent: the confirm walk carries a `_visited` cycle guard
+modeled on `_resolve_aggregation_input_channel` (`graph_builder.py:1043-1050`), the real recursive
+analog — not the Phase-4 transitive-default (a single dotted lookup, no walk). Design: D6, confirm-pass
+Implementation Note, Component Overview.
+
+**M6 — ACCEPTED.** No version bump (D9). Recapture set enumerated: **catf_mfe, ife_plant, and the
+three stage-(b) fixtures** (the multi-hop-EXPOSE carriers); the ~15 others load unchanged. The
+"no tentative serialized" guarantee is stated to depend on the confirm pass mutating the **shared**
+`computed_attrs` in place — an implement constraint. Design: Potential Risks (M6 bullet), D9.
+
+---
+
+**Overall:** Revise (round 1 findings resolved; round 2 opened C4/C5/C6 + M5/M6 — **not Approve**)
+**Next Steps:** Address C4, C5, C6 in the design before plan — they are the same silent-mis-wire /
+silent-drop class the epic targets, now inside the *fixes* for the round-1 findings. Specifically:
+(C4) re-specify the confirm walk's input (AST vs `references`), re-derive the leaf-tag/INV-E
+conditions against AST segments, and confirm the license-free offline gate has that input; (C5)
+specify the `_consumer_scoped` registration path and key derivation; (C6) add INV-F's asserts for
+real and fix the Step-4.5-vs-confirm removal ordering. Then re-run `/_my_design` and point it back
+at this review. The reviewer does not edit the design.

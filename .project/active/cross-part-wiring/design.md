@@ -32,16 +32,20 @@ The two stages touch disjoint code, and stage (a) has zero dependency on stage (
   and mechanism-D positive rescue (SC-4). It is *not* "one seam" — see the honest scope in
   Component Overview and M4-driven Implementation Notes.
 
-**Blast radius, stage (a):** four low-risk seams, all additive: (1) the leaf tags a tentative
-instead of dropping to FORMULA (`computed_attribute_extractor.py:104-109`); (2) a **confirm pass**
-runs the transitive walk and finalizes EXPOSE-or-FORMULA (generalizes `graph_builder.py:789`, runs
-at `build_output_registry`); (3) part-def alias expansion (guard at
-`computed_attribute_extractor.py:245`, Phase-3 registration); (4) a structured consumer-scoped
-lookup step (`dependency_backtracker.py:592-615`). The [NEED] no-override rule holds — every new
-path only *adds* a resolution that previously fell through, and an unconfirmed tentative reverts to
-today's FORMULA. Committed baselines flip (ife_plant shape-4, catf_mfe's pin + its enumerated
-multi-hop re-tag set per M1, wi014_toy shape-A); the other three stay byte-identical. This is
-larger than "relax a knockout," but still no new fixture and no cross-codebase reach.
+**Blast radius, stage (a) (widened by round-2, still no new fixture, no cross-codebase reach):**
+additive seams — (1) capture `reference_chain` at extraction + serialize/deserialize (D9,
+`data_models.py`, `serializer.py`, `loader.py:474`); (2) leaf tags a tentative on `reference_chain`
+instead of dropping to FORMULA (`computed_attribute_extractor.py:104-109`); (3) a **confirm pass
+(Phase 3b)** walks `reference_chain` and finalizes EXPOSE-or-FORMULA (`build_output_registry`);
+(4) part-def alias expansion into `_scoped_alias` (guard at `computed_attribute_extractor.py:245`);
+(5) the structured `_scoped_alias` lookup step (`dependency_backtracker.py:592-615`); (6) `else:
+raise` asserts at four classification readers (INV-F); (7) the INV-G ordering fix — a second
+FORMULA-removal pass + moving `group_deriver` after confirm. The [NEED] no-override rule holds — an
+unconfirmed tentative reverts to today's FORMULA *and its design-attr removal is re-run* (INV-G).
+Committed baselines flip (ife_plant shape-4, catf_mfe's pin + its enumerated multi-hop re-tag set
+per M1, wi014_toy shape-A); the ~15 non-multi-hop snapshots load unchanged (no version bump), the
+three non-flipping pipeline baselines stay byte-identical. Bigger than "relax a knockout," but
+bounded — no new fixture in stage (a), no reach outside these files.
 
 **Blast radius, stage (b) (restated honestly, M4).** No new *extraction* — the specialized-def
 `:>>` values are already in `hierarchy_data.redefinitions` (`hierarchy_resolver.py:144-164`,
@@ -139,8 +143,9 @@ waypoints *might* be a multi-hop EXPOSE) and a later pass, at the layer where th
 holds every channel and alias, **confirms** it by a **transitive walk** — resolving the chain hop
 by hop to a canonical channel (following an alias terminal one more hop, so catf_mfe flips too).
 A tentative that fails to resolve **reverts to FORMULA** — today's exact behavior, no silent
-change. Stage (a) also expands part-def exposes per instance and adds a consumer-scoped alias
-lookup in its own key namespace.
+change. The walk reads the full chain segments captured as data (D9's `reference_chain`), since the
+truncated `references` and the replay-nulled AST cannot feed it. Stage (a) also expands part-def
+exposes per instance and adds a structured scoped-alias lookup in its own key namespace.
 
 **Reason two — the producing calc's own bindings are wrong per instance, so the value on the
 channel is wrong (or self-referential).** A specialized nested part's calc needs its inputs
@@ -153,8 +158,9 @@ two.** Stage (a) alone flips them. Stage (b)'s value (gamma → lcoe) is reason 
 committed fixture — so stage (b) brings its own (three, one per mechanism).
 
 This composes with existing pieces, adding no parallel mechanism: the leaf still classifies (now
-tagging a tentative), the confirm pass reuses `_resolve_expose_pure`'s resolution generalized to a
-transitive walk, part-def expansion reuses `_build_chain_aliases`'s per-instance-path pattern, the
+tagging a tentative), the confirm pass reuses the recursive walk shape of
+`_resolve_aggregation_input_channel` (cycle guard included), part-def expansion reuses
+`_build_chain_aliases`'s per-instance-path pattern, the
 lookup stays in `_resolve_chain_dispatch`'s ordered ladder (with its own key namespace), and the
 rewrite stays in `_rewrite_virtual_bindings` behind INV-2.
 
@@ -183,6 +189,14 @@ rewrite stays in `_rewrite_virtual_bindings` behind INV-2.
   (direct-calc-output vs alias-terminal), so a single-terminal discriminator flips only one. *If
   false → the mechanism as first written would have sufficed.* Verified false in source (C1);
   the transitive walk is the response.
+- **B7 (new, load-bearing per C4).** Live extraction *can* produce the full chain segments as data.
+  *If false → the confirm walk has no input on any path (the AST is None on replay, `references` is
+  truncated to `[tf_coil]`), and stage (a) flips neither pin.* Verified producible:
+  `extract_feature_chain_name` (`expression_utils.py:250-280`) already walks the whole chain via
+  `.operands[0]` + `.target_feature.name` — D9 returns the segment list instead of the joined
+  string. **The one residual unknown** is *why* `extract_feature_refs` truncates (agentic-mbse
+  internal, unread) — the first probe (Handoff), but it does not gate B7 because D9 uses the
+  in-repo chain walker, not `extract_feature_refs`.
 - **B3.** Item 9's per-instance `BindingInfo` copy (INV-2) makes a *channel* rewrite as safe as
   the literal rewrite it already hosts — sibling instances cannot be corrupted. *If false →
   stage (b)'s rewrite silently poisons same-type siblings (the exact bug INV-2 was built to
@@ -205,24 +219,48 @@ rewrite stays in `_rewrite_virtual_bindings` behind INV-2.
   *How* the classification is decided is D6.
 - **D6. Decide the multi-hop classification by TENTATIVE-at-leaf + CONFIRM-at-registry (C2
   mechanism ii), not by plumbing calc-def output sets into the leaf (mechanism i).** The leaf tags
-  a structural candidate `EXPOSE_CHAIN_TENTATIVE` (pure `FeatureChainExpression`, ≥1 part-typed
-  waypoint, exactly one non-instance terminal ref — see INV-E). A confirm pass at
-  `build_output_registry` time (Step 5.5, where the registry holds all channels + Phase-2/3
-  aliases) runs the transitive walk; on resolution it finalizes to the EXPOSE alias variant, else
-  **reverts to FORMULA** (today's behavior — no silent change, INV-D). *Rejected: mechanism (i),
-  plumb calc-def output sets into `_classify_attribute_expression`* — the leaf is architecturally
-  barred from resolution imports (`:7-8`), and catf_mfe's alias-terminal is undecidable even with
-  calc-def outputs (it needs the whole registry, B5). *Tentative-state representation (C2
-  requirement):* a distinct classification enum value that **no downstream consumer reads** —
-  the confirm pass rewrites `ca.classification` in place before Step 6/7, and the graph builder +
-  aggregation walker assert no `EXPOSE_CHAIN_TENTATIVE` survives (fail-fast).
-- **D7. The #1 consumer-scoped lookup uses a STRUCTURED key in its own registry namespace, not a
-  dotted string in the shared `_alias` dict (C3).** A `ConsumerScopedKey = NewType(tuple[str, str])`
-  over `(consumer_scope, source_path)`, stored in and looked up from a dedicated
-  `_consumer_scoped` dict on `OutputRegistry` — so it cannot collide with flat `_alias` string keys
-  (the `a.b.c` ⇄ `a.b`-exposes-`c` ambiguity the review found). The `_is_self_reference` guard is
-  re-derived for the new step (channel-based, key-shape-independent). *Rejected: reserved-separator
-  string key* — still one flat dict, still a stringly-typed boundary doc 10 exists to forbid.
+  a structural candidate `EXPOSE_CHAIN_TENTATIVE` when the captured chain (D9's `reference_chain`)
+  has **≥ 2 segments** rooted at a part-typed waypoint (INV-E) — *not* "one non-instance ref after
+  removing waypoints," which the round-2 trace showed yields **zero** refs for the real pin
+  (`references` is truncated to `[tf_coil]`, C4). A confirm pass inside `build_output_registry`
+  runs the transitive walk **over `reference_chain`** (D9), after Phase-3 single-hop aliases and
+  before Phase-4 (INV-G order); on resolution it finalizes to the EXPOSE alias variant, else
+  **reverts to FORMULA** (today's behavior — INV-D). *Rejected: mechanism (i), plumb calc-def
+  output sets into `_classify_attribute_expression`* — the leaf is barred from resolution imports
+  (`:7-8`), and catf_mfe's alias-terminal is undecidable even with calc-def outputs (needs the whole
+  registry, B5). *Tentative-state representation (C2):* a distinct enum value **no downstream
+  consumer reads** — the confirm pass rewrites `ca.classification` **in place** (M6) before Step
+  6/7, and every classification reader raises on a survivor (INV-F, made real per C6a).
+- **D9. Extraction captures the full chain as data (`reference_chain: list[str]`) — the C4 fix,
+  R1-consistent.** Today `extract_feature_refs` truncates `tf_coil.volume_calc.volume` to its root
+  waypoint `[tf_coil]`, and the snapshot nullifies `expression_ast` (serializer `_AST_FIELDS`;
+  loader.py:474) — so **neither `references` nor the AST can feed the walk on the offline path**.
+  Fix: add an additive-optional `reference_chain: list[str] | None = None` to `ComputedAttributeData`
+  (`data_models.py:214-217` default block; it is a dataclass, so a trailing defaulted field is
+  safe), populated at live extraction by the **segment-list analog** of `extract_feature_chain_name`
+  (`expression_utils.py:250-280` already walks the full chain via `.operands[0]` + `.target_feature.name`,
+  but joins to a string — verified producible, Q2). Serialization auto-includes it
+  (`serializer.py:171` loops `dataclasses.fields`); the loader adds `reference_chain=d.get("reference_chain")`
+  (`loader.py:467-485`). **No `SNAPSHOT_FORMAT_VERSION` bump** — old snapshots: field absent →
+  `None` → walk unavailable → classification stays FORMULA (today's behavior; the SC-10 additive-
+  degrade precedent). Only fixtures needing multi-hop EXPOSE are recaptured (M6). *Rejected: read
+  the AST at confirm time* — gone on replay (Q5); *re-parse `expression_text`* — also truncated to
+  `"tf_coil"`.
+- **D7. The #1 lookup uses a STRUCTURED tuple key in its own registry namespace, with BOTH sides
+  written (C3 + C5).** A `ScopedAliasKey = NewType(tuple[str, str])` = `(scope, leaf)` in a dedicated
+  `_scoped_alias` dict on `OutputRegistry`, distinct from the flat `_alias` — the tuple is stored
+  **unjoined**, so `("a.b","c")` and `("a","b.c")` never collapse (leaf is always a single segment,
+  so `("a","b.c")` cannot even arise). *Registration side (what writes it, when):* #4's per-instance
+  part-def-expose expansion writes `(instance_path, exposed_leaf)` during the Phase-3 alias walk —
+  wi014_toy → `("demo_plant", "total_cost")` → the `demo_plant__…__cost_calc__cost` channel. Stage
+  (b)'s #3 also writes here, prefixing the consumer instance scope. *Lookup side (what #1 builds):*
+  from a consumer binding's `source_path`, split at the **last** dot → `(prefix, leaf)` and look up
+  `_scoped_alias`; `demo_plant.total_cost` → `("demo_plant","total_cost")` → hit. **They meet by
+  construction:** both derive `(path-prefix, single-leaf)` from the *same* model dotted reference,
+  split identically. `_is_self_reference` reused unchanged (channel-based; round-2 confirmed no
+  re-derive needed). *Rejected: reserved-separator string key* — still one flat dict, still stringly
+  typed. This makes #1 **load-bearing in stage (a)** — for #4's part-def exposes (SC-5 shape-A),
+  *not* the two V11 pins (which resolve via #2 + the unscoped Step 2), resolving Open Question 1.
 - **D3. The required stage-(b) fixture is a COMPANION, not an extension of ife_plant.**
   *Rejected: extend ife_plant.* Reasons: (i) ife_plant's shapes 2/3/5/7 pins were just set by
   Item 9 — adding a gamma → lcoe consumer edge churns them in the *same* baseline diff as stage
@@ -245,15 +283,16 @@ rewrite stays in `_rewrite_virtual_bindings` behind INV-2.
   each captures current-incomplete then flips as a separately-attributable diff. *Rejected: one
   model with three separately-assertable pins* — separable pins don't make the baseline diff
   separable, which is the point of the Item 8 pattern.
-- **D4. #1 (consumer-scoped alias lookup) lands in stage (a) per the spec, but its positive
-  channel test rides stage (b)'s fixture.** *Rejected: move #1 to stage (b).* The source trace
-  says the *pins* resolve through the existing unscoped Step 2 once #2 registers
-  `radial_build.magnet_volume_total` (the consumer references that exact dotted path). #1 is
-  functionally the mechanism-B (gamma → lcoe) precondition. It is a 4-line additive step with
-  zero override risk, so landing it in stage (a) hardens the instance-scope discipline early; a
-  probe at implement (Open Question 3) confirms whether the pins strictly need it. Its executable
-  test is stage (b)'s fixture — acceptable because both stages are inside Item 10 (no
-  cross-item machinery/test split).
+- **D4. #1 lands in stage (a) and is load-bearing there — it resolves #4's part-def exposes, not
+  the two V11 pins (updated per C5).** Round-1 left #1's stage-(a) role unclear ("test rides stage
+  (b)"); round-2's C5 forced the question and the answer is cleaner: `_scoped_alias` **is populated
+  in stage (a) by #4** (D7 registration), and #1 is the reader that resolves a consumer of a part-def
+  expose (wi014_toy's SC-5 shape-A). The **two V11 pins do not need #1** — they are top-level-usage
+  exposes registered in the flat `_alias` and found by the unscoped Step 2 (Open Question 1 now
+  answered). Stage (b)'s #3 extends the same `_scoped_alias` with consumer-instance scope. *Rejected:
+  move #1 wholly to stage (b)* — it would leave #4's part-def exposes unreachable in stage (a) and
+  strand the SC-5 shape-A test from its resolver. An **inertness gate** (below) fails if
+  `_scoped_alias` is empty after registering the stage-(a) fixtures.
 - **D5. Mechanism D has exactly one home: REQ-VBR-10** (the rewrite that implements the rescue).
   *Rejected: REQ-HR-09* — reserved-but-never-committed in Item 9's handoff; released here.
 
@@ -261,33 +300,34 @@ rewrite stays in `_rewrite_virtual_bindings` behind INV-2.
 
 Data flow, left to right, with the stage that touches each seam:
 
-Orchestration order (verified `pipeline_builder.py:505-604`):
-Step 4.5 classify (leaf) → Step 5.5 `build_output_registry` (Phases 1-4 + **new confirm pass**)
-→ Step 6 backtracker lookup → Step 7 graph build.
+Orchestration order, finalized (the INV-G order that fixes C6b), verified against
+`pipeline_builder.py:505-604`:
 
 ```
-extraction (4.5)        registry build (5.5)              lookup (6)            orchestration/rewrite
-────────────────        ────────────────────              ──────────           ─────────────────────
-classify attr    ─(a)→  CONFIRM tentatives ────────(a)→   _resolve_chain_      _rewrite_virtual_bindings
- (#2 tag TENTATIVE) │    (#2 transitive walk;             dispatch (#1          (#3 stage-b precedence
-                    │     resolve→EXPOSE else→FORMULA)     structured consumer-   resolver: index +
-                    │    #4 part-def expose expand         scoped step, own       type-select + merge,
-                    │     per instance path                namespace)      ─(b)→  CHAIN + bare-name)
-                    └→ (finalized classification only reaches Step 6/7)
+4.5  leaf classify + capture reference_chain (D9); remove genuine FORMULAs from design_attrs
+5.5  build_output_registry:
+        Phase 1  channels (calc outputs)          Phase 2  CHAIN aliases
+        Phase 3  single-hop EXPOSE aliases         →  #4 writes (instance_path, leaf) to _scoped_alias
+        Phase 3b CONFIRM tentatives  ← #2 walk reference_chain vs registry; resolve→EXPOSE(+register)
+                                        else→FORMULA (in place); cycle guard per M5
+        Phase 4  transitive design-attr aliases  (now sees FINAL classifications)
+5.6  re-run _remove_formula_from_design_attrs   ← reverted tentatives removed (no false EP, C6b)
+5.7  group_deriver (moved after confirm: consumes FINAL design_attrs)
+6    backtracker  ← #1 structured _scoped_alias lookup in _resolve_chain_dispatch
+7    graph build  ← every .classification reader raises on a surviving tentative (INV-F/C6a)
 ```
 
-- **#2 (stage a)** spans two seams across two steps. The leaf tags a candidate
-  `EXPOSE_CHAIN_TENTATIVE` (`computed_attribute_extractor.py:56-109`). The **confirm pass** at
-  registry-build time runs the transitive N-segment walk (generalizing `_resolve_expose_pure`,
-  `graph_builder.py:789`): resolve the chain hop by hop against the registry, following an alias
-  terminal one more hop (catf_mfe) or landing on a calc-output channel directly (ife_plant). Resolve
-  → finalize EXPOSE + register the alias; no resolution → revert to FORMULA. REQ-CA-10.
+- **#2 (stage a)** — leaf tags `EXPOSE_CHAIN_TENTATIVE` (`computed_attribute_extractor.py:56-109`)
+  and records `reference_chain` (D9). The **confirm pass (Phase 3b)** walks `reference_chain` hop by
+  hop against the registry — following an alias terminal one more hop (catf_mfe's `tf_coil.volume`)
+  or landing on a calc-output channel directly (ife_plant), with the M5 `_visited` cycle guard.
+  Resolve → finalize EXPOSE + register the alias; else → revert to FORMULA. REQ-CA-10.
 - **#4 (stage a)** drops the `not is_part_def` guard (`:245`) and expands the part-def expose alias
-  per instance path (reusing `_build_chain_aliases`'s pattern) before Phase-3 registration, yielding
-  instance-scoped keys like `demo_plant.total_cost`. REQ-CA-03 revised.
-- **#1 (stage a)** inserts a **structured** consumer-scoped lookup step in `_resolve_chain_dispatch`,
-  keyed by `ConsumerScopedKey(consumer_scope, source_path)` against a dedicated `_consumer_scoped`
-  registry namespace (D7), ordered *before* the unscoped Step 2. REQ-BT-11.
+  per instance path (reusing `_build_chain_aliases`'s pattern), writing `(instance_path, leaf)` into
+  `_scoped_alias` (D7). REQ-CA-03 revised.
+- **#1 (stage a)** inserts a **structured** lookup step in `_resolve_chain_dispatch`, keyed by
+  `ScopedAliasKey((prefix, leaf))` split from the consumer's `source_path` against the dedicated
+  `_scoped_alias` registry (D7), ordered *before* the unscoped Step 2. REQ-BT-11.
 - **#3 (stage b)** is a precedence resolver in `_rewrite_virtual_bindings`: a second index over
   `redefinitions` by specializing-def QN, a `usage_type_map`-driven type-select per virtual
   instance, a three-tier merge (usage override > specialized-def `:>>` > base def), extending the
@@ -303,10 +343,11 @@ classify attr    ─(a)→  CONFIRM tentatives ────────(a)→   
 - **INV-B (unique keys — registration AND lookup, extended per C3).** Every new key is unique by
   construction, and this now covers *lookup* keys, not just registered ones. Registered keys
   (part-def expose, confirmed multi-hop alias) carry the instance path and never rely on the
-  first-wins fallback (`output_registry.register_alias:113-125`). The #1 consumer-scoped *lookup*
-  key is a structured `(consumer_scope, source_path)` tuple in its own registry namespace (D7) —
-  it cannot collapse to, or collide with, any flat `_alias` string key. No stringly-typed
-  scope boundary anywhere.
+  first-wins fallback (`output_registry.register_alias:113-125`). The #1 *lookup* key is a
+  structured `ScopedAliasKey = (prefix, leaf)` tuple in its own `_scoped_alias` namespace (D7),
+  written by #4 and read by #1 from the *same* split of the model's dotted reference — it cannot
+  collapse to, or collide with, any flat `_alias` string key. No stringly-typed scope boundary
+  anywhere.
 - **INV-C (INV-2 preserved).** Stage (b)'s rewrite mutates only per-instance shallow-copied
   bindings; no template or sibling binding is touched (`usage_extractor.py:399`, code is
   `[copy.copy(b) ...]`).
@@ -314,36 +355,54 @@ classify attr    ─(a)→  CONFIRM tentatives ────────(a)→   
   becomes EXPOSE **only** if the transitive walk resolves it to a canonical channel; otherwise it
   reverts to FORMULA — byte-identical to today. Over-tagging at the leaf is *safe*: an
   unresolvable tentative changes nothing.
-- **INV-E (single non-instance ref — the aggregation-walker/alias-resolver guard, M2).** The
-  alias resolvers (`computed_attribute_extractor.py:260-264`, `graph_builder._resolve_expose_pure`
-  `:776-780`) assign `output_name = ref.name` in a loop that assumes **exactly one** non-instance
-  ref. The multi-hop shape can carry a part-usage waypoint that bucket 2b tags as a sibling ref
-  (`:80`) — two non-instance refs, last-iteration-wins. Guard: a tentative with more than one
-  non-instance ref after removing part-typed waypoints **stays FORMULA** (never tagged). Stated so
-  the confirm pass and the Item 6 aggregation walker (`graph_builder.py:264-277,1172+`) never see
-  an ambiguous EXPOSE alias.
-- **INV-F (no tentative escapes, C2).** No downstream consumer reads `EXPOSE_CHAIN_TENTATIVE`.
-  The confirm pass finalizes every tentative before Step 6/7; the graph builder and aggregation
-  walker assert none survives (fail-fast).
+- **INV-E (well-formed chain — the leaf-tag gate, restated on `reference_chain` per C4).** A tag
+  requires `reference_chain` with **≥ 2 segments** (root waypoint + ≥ 1 more) and a **single
+  terminal leaf** (the last segment). A chain that would leave two competing non-instance terminals
+  — the case the single-ref alias resolvers (`computed_attribute_extractor.py:260-264`,
+  `graph_builder._resolve_expose_pure:776-780`) mishandle — **stays FORMULA** (never tagged). This
+  is what keeps the confirm pass and the Item 6 aggregation walker (`graph_builder.py:264-277,1172+`)
+  from ever seeing an ambiguous EXPOSE alias. The confirm walk reads `reference_chain`, not
+  `references` (truncated) or the AST (None on replay).
+- **INV-F (no tentative escapes — asserts are REAL, C6a).** No downstream consumer may read
+  `EXPOSE_CHAIN_TENTATIVE`. The current readers are silent `if`/`elif` with no `else`, so a survivor
+  would *vanish* from the graph, not fail. This item **adds an explicit `else: raise`** at every
+  reader: `output_registry_builder.py:120` (Phase 1c), `graph_builder.py:253` (module build), `:274`
+  (aggregation alias map), `:834` (`_build_attribute_resolution_map`). Until those asserts exist,
+  INV-F is not enforced — so they are required stage-(a) edits, not aspiration.
+- **INV-G (finalize before consumers — the phase order that fixes C6b).** `ca.classification` must
+  be final, and `design_attrs` must reflect it, before any consumer that branches on classification
+  or on design-attr membership runs. Concretely: the confirm pass (Phase 3b) runs *before* Phase 4
+  and the backtracker; `_remove_formula_from_design_attrs` runs a **second time after confirm**
+  (Step 5.6) so a tentative reverted to FORMULA is removed (no false JSON entry point); and
+  `group_deriver` moves to Step 5.7, after that removal. The first removal at Step 4.5 stays (genuine
+  FORMULAs). Without the second removal, a reverted tentative — absent at 4.5, FORMULA at 5.5 —
+  leaks as an entry point, breaking INV-D's "no silent change" claim at the *side-effect* level.
 
 ## Component Overview
 
-- **`_classify_attribute_expression`** (`computed_attribute_extractor.py:56-109`) — tag a
-  structural candidate `EXPOSE_CHAIN_TENTATIVE` (INV-E gate), do **not** decide EXPOSE-ness here.
-  Stage (a), #2. REQ-CA-10.
-- **Confirm pass** — new step in `build_output_registry`/`pipeline_builder.py` (Step 5.5) that runs
-  the transitive N-segment walk (generalizing `_resolve_expose_pure`, `graph_builder.py:759-803`)
-  over each tentative, finalizing to EXPOSE (+ alias registration) or reverting to FORMULA. Stage
-  (a), #2. REQ-CA-10.
+- **`reference_chain` capture** (`ComputedAttributeData` at `data_models.py:214-217`;
+  `computed_attribute_extractor.py` extraction; serializer auto-includes, loader.py:474
+  `d.get(...)`) — the additive full-chain-segments field the confirm walk reads (D9). Stage (a), #2.
+- **`_classify_attribute_expression`** (`computed_attribute_extractor.py:56-109`) — tag a structural
+  candidate `EXPOSE_CHAIN_TENTATIVE` when `reference_chain` is well-formed (INV-E gate); do **not**
+  decide EXPOSE-ness here. Stage (a), #2. REQ-CA-10.
+- **Confirm pass (Phase 3b)** — new step in `build_output_registry` that walks each tentative's
+  `reference_chain` against the registry (the recursive analog of `_resolve_aggregation_input_channel`,
+  `graph_builder.py:1043-1079`, **with its `_visited` cycle guard**, M5), finalizing to EXPOSE
+  (+ alias registration) or reverting to FORMULA. Stage (a), #2. REQ-CA-10.
+- **Classification-reader asserts** (`output_registry_builder.py:120`, `graph_builder.py:253/274/834`)
+  — add `else: raise` on a surviving tentative (INV-F/C6a). Stage (a).
+- **Second FORMULA-removal pass + group_deriver move** (`pipeline_builder.py:133` twin at Step 5.6;
+  group_deriver from :528 to Step 5.7) — the INV-G ordering fix (C6b). Stage (a).
 - **Part-def expose alias expansion** — new helper in `pipeline_builder.py` mirroring
   `_build_chain_aliases`; drop the `not is_part_def` guard at `computed_attribute_extractor.py:245`
-  and expand per instance path. Stage (a), #4. REQ-CA-03 revised in place.
-- **`OutputRegistry` `_consumer_scoped` namespace + `ConsumerScopedKey`** (`core/output_registry.py`,
-  `core/identifier_types.py`) — a tuple-keyed registry + NewType for the #1 lookup, distinct from
-  the flat `_alias` dict. Stage (a), #1/C3. REQ-BT-11.
+  and write `(instance_path, leaf)` into `_scoped_alias`. Stage (a), #4. REQ-CA-03 revised.
+- **`OutputRegistry` `_scoped_alias` namespace + `ScopedAliasKey`** (`core/output_registry.py`,
+  `core/identifier_types.py`) — a tuple-keyed registry + NewType written by #4, read by #1, distinct
+  from the flat `_alias` dict. Stage (a), #1/C3/C5. REQ-BT-11.
 - **`_resolve_chain_dispatch`** (`dependency_backtracker.py:592-615`) — insert the structured
-  consumer-scoped lookup before Step 2; re-derive `_is_self_reference` for the new step. Stage (a),
-  #1. REQ-BT-11; docs 11/24.
+  `_scoped_alias` lookup before Step 2; reuse `_is_self_reference` unchanged. Stage (a), #1.
+  REQ-BT-11; docs 11/24.
 - **`_rewrite_virtual_bindings`** (`pipeline_builder.py:190-266`) — the stage-(b) precedence
   resolver: second `redefinitions` index by specializing-def QN, `usage_type_map` type-select,
   three-tier merge, extended CHAIN + bare-name branches. Stage (b), #3. REQ-VBR-10; doc 12.
@@ -361,25 +420,35 @@ classify attr    ─(a)→  CONFIRM tentatives ────────(a)→   
 
 ## Implementation Notes
 
-- **#2 leaf tag (structural only, INV-E).** The leaf tags `EXPOSE_CHAIN_TENTATIVE` when: root is a
-  pure `FeatureChainExpression` (`:104-106`), at least one waypoint is a part-typed sibling ref, and
-  after removing part-typed waypoints **exactly one** non-instance ref remains (the terminal). It
-  does **not** test terminal-is-an-output — it cannot (B5). Over-tagging is safe (INV-D).
-- **#2 confirm pass (the transitive walk).** At Step 5.5, for each tentative, walk the chain
+- **D9 `reference_chain` capture (do this first — it unblocks everything).** At live extraction,
+  populate `reference_chain: list[str]` with the full dotted segments (`["tf_coil","volume_calc","volume"]`)
+  using the **segment-list analog** of `extract_feature_chain_name` (`expression_utils.py:250-280`
+  already recurses `.operands[0]` + `.target_feature.name` to build the joined string — return the
+  list instead of joining). Additive dataclass field (`data_models.py:214-217`); loader adds
+  `reference_chain=d.get("reference_chain")`; **no version bump**. Old snapshots: absent → `None` →
+  no tag → FORMULA (today's behavior).
+- **#2 leaf tag (structural only, on `reference_chain`, INV-E).** Tag `EXPOSE_CHAIN_TENTATIVE` when
+  the root is a pure `FeatureChainExpression` (`:104-106`) AND `reference_chain` has **≥ 2 segments**
+  rooted at a part-typed waypoint with a single terminal leaf. Do **not** test terminal-is-an-output
+  — the leaf cannot (B5). Over-tagging is safe (INV-D). (The round-1 "one ref after removing
+  waypoints" rule gave zero for the real pin — C4 — so it is replaced by this.)
+- **#2 confirm pass (Phase 3b, the transitive walk).** For each tentative, walk `reference_chain`
   left-to-right building an instance path from the waypoint segments; at the terminal look up a
-  scoped channel (direct calc output, ife_plant) OR an alias, following alias indirection to a
-  canonical channel (catf_mfe's `tf_coil.volume`). Resolve → register the alias, set classification
-  to the EXPOSE variant; no resolution → set FORMULA. Ordering: run **after** Phase-3 single-hop
-  EXPOSE aliases register, so an alias terminal is already present to follow (a Phase-3b, mirroring
-  the Phase-4 transitive-default precedent). Probe the live AST/registry first (see Handoff).
+  scoped channel (direct calc output — ife_plant) OR an alias, following one alias hop to its channel
+  (catf_mfe's `tf_coil.volume`). Carry a `_visited` cycle guard modeled on
+  `_resolve_aggregation_input_channel` (`graph_builder.py:1043-1050`, the **real** recursive analog —
+  not the Phase-4 transitive-default, which is a single dotted lookup, no walk, M5). Resolve →
+  register alias + set EXPOSE; else → set FORMULA. Runs after Phase 3, before Phase 4 (INV-G).
 - **#4 expansion timing.** The part def has no instances at extraction, so emit a *template* expose
-  alias (mark `source="expose_pure"`, `is_on_part_definition=True`) and expand per instance path in
-  `pipeline_builder.py` before the aliases reach `build_output_registry`.
-  `find_instance_paths_for_partdef` is the same helper `_build_chain_aliases` uses.
-- **#1 structured key (C3).** `ConsumerScopedKey((consumer_scope, source_path))` where
-  `consumer_scope = self._consumer_scope_dotted(usage)`, looked up in the dedicated
-  `_consumer_scoped` registry (not `_alias`); re-derive `_is_self_reference` for the new step; order
-  after Step 1b, before the unscoped Step 2.
+  alias (`is_on_part_definition=True`) and expand per instance path in `pipeline_builder.py`, writing
+  `(instance_path, exposed_leaf)` into `_scoped_alias`. `find_instance_paths_for_partdef` is the same
+  helper `_build_chain_aliases` uses.
+- **#1 structured key (C3/C5).** Lookup: split the consumer's `source_path` at the **last** dot →
+  `ScopedAliasKey((prefix, leaf))`, query `_scoped_alias` (not `_alias`); order after Step 1b, before
+  the unscoped Step 2; reuse `_is_self_reference`. Registration (#4/#3) and this lookup derive the
+  tuple from the same split — they meet by construction (D7). **Inertness gate:** a stage-(a) test
+  asserts `_scoped_alias` is non-empty (contains `("demo_plant","total_cost")`) after registering
+  wi014_toy.
 - **#3 precedence resolver (M4 scope).** Build a second index over `hierarchy_data.redefinitions`
   keyed by specializing-def QN (Item 9's `override_index` at `pipeline_builder.py:202-216` is
   `design_overrides`-only, so this is new). Per virtual instance, use `usage_type_map` to pick the
@@ -408,12 +477,20 @@ classify attr    ─(a)→  CONFIRM tentatives ────────(a)→   
   EXPOSE aliases feed `_build_aggregation_module`'s alias map (`graph_builder.py:264-277,1172+`).
   Mitigation: INV-E (single non-instance ref) + INV-F (no tentative survives) are the guards; add
   the assertion at the walker entry and cover it with an aggregation-fixture regression.
-- **#1 turns out load-bearing for the pins after all** (contradicts the source trace). Mitigation:
-  probe the registered key vs the consumer's constructed key (Open Question 1) *before* committing
-  the stage-(a) flips; #1 is already in stage (a), so a positive finding needs only a note.
+- **Reverted-tentative false entry point (C6b, now closed by INV-G).** Was: a tentative reverting to
+  FORMULA after the Step-4.5 removal leaked a JSON entry point. Mitigation in the design: the second
+  removal pass at Step 5.6 + `group_deriver` moved to 5.7. Residual risk is ordering-fragility —
+  covered by a regression asserting no entry point for a reverted tentative.
+- **Snapshot recapture set + in-place mutation (M6).** No `SNAPSHOT_FORMAT_VERSION` bump (D9), so the
+  ~15 non-multi-hop snapshots load unchanged. The fixtures that **must** be recaptured to carry
+  `reference_chain` are exactly those with a multi-hop EXPOSE: **catf_mfe, ife_plant, and the three
+  stage-(b) fixtures** — a license-gated task (expires **2026-08-06**). Second M6 constraint: the "no
+  tentative is ever serialized" guarantee holds only if the confirm pass mutates the **shared**
+  `computed_attrs` objects in place; an implementer who rebuilds from copies would serialize live
+  tentatives. Both are stated as implement constraints.
 - **Companion-fixture capture blocked by license** (expires **2026-08-06**). Mitigation: author and
   capture the three fixtures' current-incomplete baselines *before* the window, or after renewal;
-  stage (a)'s flips are license-free offline snapshots.
+  stage (a)'s flips are license-free offline snapshots (the recaptured multi-hop fixtures aside).
 - **catf_mfe alias-collision noise doesn't clear** after unique keys. Mitigation: the collision
   count summary (`output_registry.alias_collision_count`) is the assertion target; a residual count
   is a reviewed diff, not a silent pass.
@@ -438,8 +515,11 @@ names). agentic-mbse impact is recorded here, executed in Item 12: the MODELING_
   catf_mfe `[cryo_load.magnet_volume]` flips via the **alias-terminal** transitive hop with clean
   strict generation, and its enumerated multi-hop re-tag set matches the expected-churn table (M1);
   wi014_toy shape-A resolves and its REQ-CA-09 recorded-deferral pin flips to PASS (asserted alias
-  `demo_plant.total_cost`). A negative: a genuine multi-hop FORMULA (arithmetic over a chain) stays
-  FORMULA (INV-D). Red-first unit tests on real Pydantic/extraction objects (no mocks).
+  `demo_plant.total_cost`). Plus three guard tests forced by round-2: **inertness** (`_scoped_alias`
+  non-empty after registering wi014_toy, C5); **no false EP** (a tentative reverted to FORMULA
+  produces no JSON entry point, C6b/INV-G); **tentative fail-fast** (a synthetic surviving tentative
+  raises at each reader, C6a/INV-F). A negative: a genuine multi-hop FORMULA (arithmetic over a
+  chain) stays FORMULA (INV-D). Red-first unit tests on real Pydantic/extraction objects (no mocks).
 - **Stage (b) executable gate (three fixtures, separate diffs):** `spec_chain_channel` — gamma → lcoe
   channel edge asserted present in pipeline YAML (SC-2); `sibling_channel_ambiguity` — the consumer
   binding resolves to the correct instance-scoped channel, not a collision (SC-3);
@@ -455,18 +535,19 @@ names). agentic-mbse impact is recorded here, executed in Item 12: the MODELING_
 ## Next-Stage Handoff
 
 - **Fixed:** the split (stage a first, both in Item 10); #2 in the classification/alias path (D2)
-  via tentative-at-leaf + confirm-by-transitive-walk (D6); structured consumer-scoped key (D7);
-  three per-mechanism fixtures (D8); #1 in stage (a) (D4); mechanism D homed in REQ-VBR-10 (D5); no
-  ComputationGraph field.
+  via tentative-at-leaf + confirm-by-transitive-walk over `reference_chain` (D6/D9); structured
+  `_scoped_alias` key with both sides written (D7); #1 load-bearing in stage (a) for #4's exposes
+  (D4); three per-mechanism fixtures (D8); mechanism D homed in REQ-VBR-10 (D5); INV-F asserts real
+  (C6a); INV-G phase order (C6b); no ComputationGraph field; no snapshot version bump (D9/M6).
 - **Open (resolve at implement, probe-first; license live, expires 2026-08-06):**
-  (1) registered key vs consumer-constructed key for the shape-4 pin — is #1 load-bearing for the
-  pins? (2) the confirm-pass transitive walk on *both* pin shapes — ife_plant's direct calc-output
-  terminal AND catf_mfe's alias terminal one hop further (validates C1's fix); (3) the full
-  catf_mfe multi-hop re-tag set for the M1 expected-churn table; (4) `find_instance_paths_for_partdef`
-  returns `demo_plant`'s path for #4; (5) the specialization-chain resolution on each stage-(b)
-  fixture once authored.
-- **De-risk first:** probes (2) and (3) before committing stage-(a) flips — they validate B1/B6 and
-  bound the catf_mfe diff.
+  (1) **why `extract_feature_refs` truncates** the chain (agentic-mbse internal, unread) — confirms
+  D9's segment-list capture is the right seam; the *first* probe. (2) the confirm walk over
+  `reference_chain` on *both* pin shapes — ife_plant's direct calc-output terminal AND catf_mfe's
+  alias terminal one hop further (validates C1). (3) the full catf_mfe multi-hop re-tag set for the
+  M1 churn table. (4) `find_instance_paths_for_partdef` returns `demo_plant`'s path for #4.
+  (5) the specialization-chain resolution on each stage-(b) fixture once authored.
+- **De-risk first:** probe (1) then capture `reference_chain` for one fixture and confirm the walk
+  flips one pin *before* the full build-out — it validates B7 and the whole D9→confirm chain.
 - **Fallback if a probe fails (m1):** if a pin turns out reason-two, or the confirm walk cannot
   reach its terminal, that pin moves to stage (b) and the split headline is revised to "stage (a)
   flips the pin(s) it can, stage (b) covers the rest" — stated now rather than discovered at
