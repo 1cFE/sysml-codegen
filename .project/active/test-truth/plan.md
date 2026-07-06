@@ -759,6 +759,28 @@ committed solar snapshot. No v2 discrepancy.
 **Validation:** 137 passed across the 5 files; ruff identical to HEAD per file (0 introduced).
 
 ### Phase 8 Completion
+**Completed:** 2026-07-06
+**SC-6 render pins (`tests/unit/test_hierarchy_resolver.py`):** added
+`TestReconstructExpressionRenderContract` with two exact-string pins:
+- Pin 1 — scientific-notation normalized form: `reconstruct_expression(MockLiteralRational(1e-06))
+  == "1e-06"` (str(value) path; not "1.0e-6"/"0.000001").
+- Pin 2 — positive sum exact render: `sum(pv_module.capital_cost)` (existing coverage was
+  substring `"sum("` only; left in place, added the exact pin).
+- **Deviation from spec stencil (recorded):** spec named the stub `MockLiteralReal`, but a
+  SysML `Real` literal is a KerML `LiteralRational` — `SysideAdapter.is_instance`'s name
+  fallback needs the class name to contain "LiteralRational" to hit the render branch (a
+  `MockLiteralReal` stub returns the object repr, not "1e-06"; verified empirically). Reused
+  the **existing** `MockLiteralRational` stub (defined by Item 4 at line ~421) rather than
+  adding a duplicate.
+**Conformance README (`tests/conformance/README.md`, NEW):** the anti-pattern (`expected =
+production_fn(...)`), the fix (transcribe a committed-source literal + provenance comment,
+select by identity, deliberate-doubling note), and the pass-or-skip trap (end on unconditional
+`assert found`). Points at existing conventions with verified line refs (conftest.py:66 req
+marker; conftest.py:70-91 snapshot fixtures; test_naming_conventions.py:93-149 and
+test_gen_schemas.py:355-381 exemplar literal tables).
+**Count change:** +2 tests (Pin 1, Pin 2).
+**Validation:** 53 passed; ruff identical to HEAD (10, 0 introduced); README covers the 3 points.
+
 ### Phase 9 Completion (mutation spot-check + close-out)
 
 ---

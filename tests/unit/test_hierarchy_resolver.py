@@ -310,6 +310,31 @@ class TestReconstructExpressionInvocation:
         assert "sqrt(" in result
         assert "value" in result
 
+
+class TestReconstructExpressionRenderContract:
+    """SC-6 render-contract pins (Item 6): exact render strings, not substrings.
+
+    These pin two render behaviors that were previously unpinned (Pin 1) or only
+    checked by substring (Pin 2). Both anchors are hand-computed, license-free.
+    """
+
+    def test_scientific_notation_normalized_form(self):
+        """A small Real renders via str(value) — Python's normalized "1e-06" form.
+
+        Not "1.0e-6" and not "0.000001". reconstruct_expression has no dedicated float
+        formatter; numeric literals render through str(value).
+        """
+        # provenance: hand-computed — Python str(1e-06) == "1e-06".
+        assert reconstruct_expression(MockLiteralRational(1e-06)) == "1e-06"
+
+    def test_positive_sum_exact_render(self):
+        """sum(pv_module.capital_cost) renders exactly (existing coverage: substring only)."""
+        expr = MockInvocationExpression(
+            "sum", [MockFeatureChainExpression(["pv_module", "capital_cost"])]
+        )
+        # provenance: hand-computed — func_name + "(" + chain render + ")".
+        assert reconstruct_expression(expr) == "sum(pv_module.capital_cost)"
+
     def test_zero_arg_invocation(self):
         """reconstruct_expression handles zero-argument invocation."""
         invoc = MockInvocationExpression("now", [])
