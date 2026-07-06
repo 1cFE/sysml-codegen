@@ -228,8 +228,47 @@ not polish (MF4).
 
 ## Resolutions
 
-_Filled in during Stage 4 as the user resolves each issue. The reviewer records decisions here; the
-design agent reads this section to incorporate them. The reviewer does not edit the design._
+Incorporated 2026-07-06 (orchestrator rulings). Keyed by ID. All landed in `design.md`.
+
+- **MF1 (critical) — FIXED.** New decision **D6**: adapter `TYPE_MAP` gains the exact syside classes
+  `AssertConstraintUsage`, `RequirementUsage`, `SatisfyRequirementUsage`; **both** `elements_of_type`
+  and `is_instance` **hard-error (ValueError + valid-names list) on an unknown type name**. The
+  `is_instance` hard error is gated on "name not in TYPE_MAP" **before** the documented mock
+  string-match fallback, so the mock path survives. A fires-on-unknown-name unit pin lands in the
+  companion. The hidden bet is surfaced as first-class **B2** (names must resolve) and closed by D6 —
+  silent-wrong becomes loud-if-wrong. Core Concept, INV-F, Validation, and the R4 table (row 5 note)
+  updated.
+- **MF2 (major) — FIXED.** New decision **D7**: the `level6_architecture.py:601 except Exception:
+  constraints = []` swallow is fixed in this item (narrow/remove; fail loud), since it sits at the
+  line row 7 edits. Recorded as absorbing one D3-family site early, **noted for Item 5's ledger**;
+  Non-Goals updated to carve out this one site; a level6 error-injection test row added; R4 row 5
+  now names the swallow.
+- **MF3 (major) — FIXED.** **D1** rewritten: policy single-sourced in the adapter as
+  `EXCLUDED_CONSTRAINT_TYPES = ("RequirementUsage",)` + `is_droppable_constraint`, imported by both
+  repos → `"RequirementUsage"` lives in exactly one production location. The two *mechanisms*
+  (`exclude` param vs codegen's sweep-and-partition, forced by INV-C) are kept and justified honestly;
+  the "defined once" claim now applies to the *policy*, pinned by a cross-repo consistency test
+  (INV-D). Abstraction/Duplication concerns retired.
+- **MF4 (major) — FIXED.** Parity reframed everywhere ("parity by construction" removed): **render
+  identity = by construction; round-trip fidelity = by the INV-B test.** D3 states collect is
+  single-path (capture.py:42 reuses `build_pipeline_context`). INV-B now compares from-snapshot output
+  against **live** output for the same model and pins a **golden serialized manifest fragment**.
+  `ConstraintKind`/`OwnerKind` serialized form pinned (D8).
+- **MF5 (major) — FIXED.** `collect_constraint_manifest(*, include_subtypes=True,
+  excluded_types=EXCLUDED_CONSTRAINT_TYPES)` — the policy is an **injectable parameter defaulting to
+  production**, so the mutation check runs it with `include_subtypes=False` and watches the assert-pin
+  fail. This also serves MF3's single-sourcing. REQ-EXT-09 re-anchor bullet (d) updated.
+- **MF6 (minor) — FIXED.** **D8**: `owner_kind`/`constraint_kind` serialize as stable enum tokens
+  (`OwnerKind`: CALC_DEF/PART_DEF/PART_USAGE/ELEMENT/MODEL); render maps token → display wording. A
+  reword never changes snapshot bytes.
+- **M7 (minor) — FIXED.** "all committed snapshots including Item-1's additions" replaces the frozen
+  "20" (20 today, stated as such) in D5 and the re-capture note.
+- **M8 (minor) — FIXED.** Loader error message aligned to the real recapture tooling
+  `scripts/capture_extraction_snapshots.py` (not `sysml-codegen snapshot --models`).
+- **M9 (minor) — FIXED.** New **INV-G**: `collect_constraint_manifest` stable-sorts by
+  `(owner_qualified_name, constraint_name)`; serialize and render preserve that order — deterministic
+  parity bytes regardless of swept order (adopts the orchestrator's stable-sort recommendation over
+  raw swept order).
 
 ---
 
