@@ -187,9 +187,13 @@ class TestSanitizeName:
         assert sanitize_name("'class & def'") == "class_def"
 
     def test_edge_cases(self):
-        assert sanitize_name("") == ""
-        assert sanitize_name(None) == ""
+        # SC-4 A2 (INV-5): every result is a legal identifier — never "".
+        assert sanitize_name("") == "unnamed"
+        assert sanitize_name(None) == "unnamed"
         assert sanitize_name("$$$") == "unnamed"
+        # leading-digit and full keyword guard
+        assert sanitize_name("2nd stage").isidentifier()
+        assert not __import__("keyword").iskeyword(sanitize_name("class"))
 
 
 # ---------------------------------------------------------------------------

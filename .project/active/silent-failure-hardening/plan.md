@@ -392,6 +392,41 @@ That every touched component's reference doc and matrix row can move in this cha
 
 ---
 
+### Phase 5 Completion (SC-4 — Sanitizer)
+**Completed:** 2026-07-06
+**Gates:** suite 2018 passed; ruff 17; mypy 104.
+- **SC-4 A2** (`qualified_names.py`): `sanitize_name` now ALWAYS yields a legal, non-keyword identifier — full `keyword.kwlist` guard (was 6 keywords), leading-digit prepend (`2nd stage` → `n_2nd_stage`), and empty/None → `"unnamed"` (was `""`). **Coupling fixed:** the anonymous-return V8 detector (`extractor.py:319`) relied on `sanitize_name("") == ""`; corrected to check the RAW `declared_name` for emptiness before sanitizing. Three tests that pinned the old `"" `→`""` behavior updated (`test_qualified_names`, `test_naming_conventions`); leading-digit/keyword `.isidentifier()` assertions added. Other `sanitize_name(...) or default` call sites (constraint naming) now take the `"unnamed"` result — cosmetic, suite green.
+- **SC-4 A1 (EP-key uniqueness fail-fast) DEFERRED:** the registration-boundary collision raise in `parameter_groups.py` (two sibling names sanitizing to one EP key) is NOT landed — it needs a collision trip fixture + careful placement across the `:132`/`:351/377/404/583`/`:554-640` sites, which exceeds the remaining stage budget. Channels are already guarded by `register_scoped` (D3-7 guard-pin). Documented for follow-on.
+
+### Phase 6 (Docs + Register Close-Out) — PARTIAL / DEFERRED
+**Not completed in this stage (budget).** The R4 step-4 reference-doc sweep (10+ docs), the register §D3 Disposition discharge, the `[D3-HYGIENE-TAIL]` / `[MULTIHOP-CHAIN-PARSE]` filings, and the Item-9 impact list are DEFERRED. The per-phase Implementation Notes above are the authoritative record of what landed. Highest-priority follow-on: the D3-7 register row (`20260706_pipeline-truth-discovery.md` §D3) still reads CONFIRMED "silent cross-wire" and must be reclassified to closed-by-construction (guard already loud).
+
+---
+
+## Stage Summary (Item 5 implement — budget-bounded)
+
+**Landed & green (suite 2018 passed, ruff 17 ≤ baseline 19, mypy 104 = baseline; 5 pathspec-scoped commits Phase 1–5):**
+- **Family 1** (INV-1 totality): D3-1, D3-2, D3-3, D3-8, D3-9, D3-16 code fixes + tests; `invocation_binding_probe` & `d38_caret` fixtures graduated; `deep_cross_scope_probe` re-captured + pins flipped.
+- **Family 2** (report surfacing): D3-4, D3-5, D3-13 + tests.
+- **Family 3** (INV-3 uniqueness-or-warn): D3-10, D3-15, D3-11b (decision made), D3-7 guard-pin + invariant + tests.
+- **Family 4** (exception swallows): D3-6, D3-12 (root narrowed), D3-14 (preserve-on-transient) + tests.
+- **SC-4 A2** (sanitizer always-legal-identifier) + tests.
+
+**Deferred (documented, not dropped):**
+- D3-16 synthetic trip fixture (code landed + corpus-inert; fires-on-shape fixture needs live iteration).
+- Pattern-3 INFO sentinels (Family 2 noise-discipline additions).
+- **SC-5/D3-12 hazard-scoped WARN** — the naive predicate breaks INV-6 on `attr_expr_probe` (chain-reference defaults); needs the EP-omission membership check. The eval/float roots ARE narrowed.
+- SC-4 A1 (EP-key fail-fast).
+- Phase 6: R4 doc-sweep, register §D3 discharge (incl. D3-7 row correction), backlog filings, Item-9 impacts.
+
+**Implement-time deviations (all documented above):**
+- D3-1 disposition: ADR-003 forecloses a "distinct disposition"; it stays a *loud* entry point (warning fixes the silence).
+- D3-8 root cause: `Operator` enum vs str (old map.get always hit the enum-stringifying fallback — the `^`→XOR mechanism).
+- D3-2: converts truncated-chain offenders to clean warned EPs (deep_cross offender set collapses — an improvement).
+- D3-14: flipped an existing test that pinned the old stub-over behavior.
+
+**Recommend `/_my_audit` on the landed work, and a follow-on stage for the deferred items (SC-5 hazard-scope, SC-4 A1, Phase 6 docs/register).**
+
 **Status:** Draft → In Progress → Complete
 **Related:** `/_my_design` (before) · `/_my_implement` (execute) · `/_my_audit` (after)
 </content>

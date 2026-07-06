@@ -316,7 +316,10 @@ class SysMLDataExtractor:
             owning_membership = getattr(member, "owning_membership", None)
             if type(owning_membership).__name__ != "ReturnParameterMembership":
                 continue
-            if not sanitize_name(getattr(member, "declared_name", None)):
+            # Detect anonymity on the RAW declared_name — sanitize_name no longer
+            # returns "" for empty input (SC-4 A2 always yields a legal identifier),
+            # so emptiness must be checked before sanitizing.
+            if not (getattr(member, "declared_name", None) or "").strip():
                 raise ValueError(
                     f"Calc def '{name}' has an anonymous `return` (a result with "
                     "no name), so no output channel can be built. Give the result "
