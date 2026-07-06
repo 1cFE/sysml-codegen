@@ -67,14 +67,14 @@ Re-establish world state for a standalone session and prove the tree is green be
 That Item 4's v1→v2 snapshot re-capture has already landed on `pipeline-truth-epic`, so Phase 5's fixture captures at **v2** and its byte-identity gate is judged against the **v2** corpus (the [HARD] sequencing requirement: entirely-after, never interleaved).
 
 ### Changes Required
-- [ ] **Confirm Item 4's Phase-5 re-capture is committed** — `git log --oneline` shows Item 4's snapshot-format-v2 re-capture landed; `snapshot_format_version` in a sample `extraction_snapshot.json` reads the v2 value. If it is **not** landed, STOP: this item's Phase 5 cannot run (Phases 1–4 are safe to run, but do not author/capture the Row-D fixture until Item 4 lands).
-- [ ] Record the pre-work state in this plan's Implementation Notes: full suite count (`uv run pytest tests/ -q | tail -1`), ruff count, mypy count.
-- [ ] **Flag shared files to the generation-boundary item owner** (BACKLOG: In Progress, Step 7.6) so a rebase does not resurrect deleted exports: `generation/type_mapping.py`, `generation/entry_point.py`, `generation/__init__.py`, and `src/sysml_codegen/templates/` (a **sibling** of `generation/`, not inside it — per spec-review L4-1). Record the flag in Implementation Notes.
+- [x] **Confirm Item 4's Phase-5 re-capture is committed** — all 23 `extraction_snapshot.json` fixtures read `snapshot_format_version: 2`; Item 4/6 commits (`748b0f7`, `bbf30ff`, `6b856bd`) on `pipeline-truth-epic`. Gate SATISFIED.
+- [x] Record the pre-work state in this plan's Implementation Notes: full suite count, ruff count, mypy count.
+- [x] **Flag shared files to the generation-boundary item owner** (BACKLOG: In Progress, Step 7.6) so a rebase does not resurrect deleted exports: `generation/type_mapping.py`, `generation/entry_point.py`, `generation/__init__.py`, and `src/sysml_codegen/templates/` (a **sibling** of `generation/`, not inside it — per spec-review L4-1). Flag recorded on the generation-boundary BACKLOG row.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/` → green; count recorded.
-- [ ] ruff = 21, mypy = 109 recorded.
+- [x] `uv run pytest tests/` → green; count recorded (2005 passed / 4 skipped / 5 xfailed).
+- [x] ruff = 20, mypy = 105 recorded (baseline moved off the plan-recorded 21/109 across Items 4/6; gate is now not-worse-than 20/105).
 
 **What We Know Works After This Phase:**
 The baseline is captured, the sequencing precondition is confirmed (or the item is correctly blocked on Item 4), and the coordination flag is out.
@@ -398,7 +398,9 @@ Every success criterion has a written, auditable answer; no disposition stops on
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 0 Completion
-**Baseline:** suite count = __ ; ruff = __ ; mypy = __ . Item 4 v2 re-capture committed? __ . Coordination flag sent? __
+**Completed:** 2026-07-06
+**Baseline:** suite count = **2005 passed / 4 skipped / 5 xfailed** ; ruff = **20** ; mypy = **105** . Item 4 v2 re-capture committed? **YES** — all 23 `extraction_snapshot.json` at `snapshot_format_version: 2`. Coordination flag sent? **YES** — recorded on the generation-boundary BACKLOG row (In Progress, Step 7.6), naming `type_mapping.py` / `entry_point.py` / `__init__.py` / `templates/` as rebase-sensitive.
+**Note on gate numbers:** the plan text records a 21/109 baseline (pre-Items 4/6). The live baseline is **20/105**; the SC-G gate is enforced as *not worse than 20/105* for the rest of this item.
 
 ### Phase 1 Completion
 ### Phase 2 Completion  (fork taken: __ )

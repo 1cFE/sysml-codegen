@@ -19,7 +19,7 @@ Prioritized list of epics and features.
 
 | Item | Priority | Status | Started | Notes |
 |------|----------|--------|---------|-------|
-| generation-boundary | P1 | In Progress (BUILD phase) | 2026-02-20 | Step 7.6 — enforcing generation/ only consumes ComputationGraph. Phases 1-2-4 done. |
+| generation-boundary | P1 | In Progress (BUILD phase) | 2026-02-20 | Step 7.6 — enforcing generation/ only consumes ComputationGraph. Phases 1-2-4 done. **FLAG (Item 8, 2026-07-06):** Item 8 deletes generation-layer symbols on a rebase-sensitive surface — `map_sysml_type_to_rootmodel_wrapper` (`generation/type_mapping.py`), `generate_derived_group_json` + its `generation/__init__.py` re-exports (`generation/entry_point.py`), and two dead Jinja templates in `src/sysml_codegen/templates/` (a sibling of `generation/`). Do not resurrect these exports on rebase. |
 | hierarchical-output | P2 | Draft (spec only) | 2026-02-22 | Convert flat JSON output to hierarchical structure reflecting SysML part hierarchy. |
 | new-pipeline-explainer | P2 | Draft (active) | 2026-02-22 | Interactive HTML explainer for refactored 7-step pipeline architecture. |
 
