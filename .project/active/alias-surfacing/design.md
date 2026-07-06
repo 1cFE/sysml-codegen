@@ -41,8 +41,8 @@ The two EXPOSE_PURE sources are already computed by Item 10 and carry provenance
   EXPOSE_PURE exactly. `wi014_toy` registers `("demo_plant","total_cost") → …cost_calc__cost`.
 - **Shape B (part usage)** — the `expose_pure` `ChannelAlias` objects
   (`core/models.py:71`): `alias_name = python_name` (bare), `canonical_name =
-  "{instance}.{output}"` (a scoped key resolvable via `registry.scoped_lookup`),
-  `owning_part_qn`, `source == "expose_pure"`. Built at
+  "{instance}.{output}"` (a bare Key_A key resolvable via `registry.alias_lookup`, with
+  `scoped_lookup` as fallback — see C1), `owning_part_qn`, `source == "expose_pure"`. Built at
   `computed_attribute_extractor.py:317`, merged into `all_channel_aliases`
   (`pipeline_builder.py:707`).
 
@@ -102,10 +102,16 @@ render). It invents no lookup, rewrite, or classification — the Non-Goal bound
 - **B1.** `_scoped_alias` contains exactly the shape-A EXPOSE_PURE aliases and nothing
   else. *If false → `output_aliases` surfaces non-EXPOSE_PURE names, violating the
   [HARD] "EXPOSE_PURE only" scope.* (Verified: single writer, part-def+EXPOSE guarded.)
-- **B2.** Every `expose_pure` ChannelAlias's `canonical_name` resolves to a canonical
-  channel via `registry.scoped_lookup` — the same lookup Phase-3 registration uses
-  (`output_registry_builder.py:265-267`). *If false → shape-B aliases can't name a
-  channel and are silently dropped, so `scale_result` never surfaces.*
+- **B2.** Every `expose_pure` ChannelAlias's `canonical_name` (bare `instance.attr`)
+  resolves through the persisted **Key_A alias registration** — `registry.alias_lookup`,
+  which reads the `_alias` entry Phase 1 wrote at `output_registry_builder.py:172` — with
+  `scoped_lookup` only as a fallback. This is the *value* Phase 3's primary resolver
+  (`instance_attr_to_channel`, a build-local map) computes; `alias_lookup` is its
+  persisted twin, reachable at graph-build time. *If false → shape-B aliases can't name a
+  channel and are silently dropped, so `scale_result` never surfaces.* (Corrected after
+  design review C1: the earlier `scoped_lookup`-only claim was wrong — `scoped_lookup`
+  keeps the full nested path and matches only a top-level usage, so a nested part-usage
+  EXPOSE like the plant idiom would miss.)
 - **B3.** Nothing in-repo reads the shape-A EXPOSE_PURE entry of the per-def
   resolution map for wiring. *If false → changing that branch to a literal fallback
   mis-wires a FORMULA input.* (Verified: only consumer is `_build_computed_attr_module`
@@ -151,13 +157,19 @@ render). It invents no lookup, rewrite, or classification — the Non-Goal bound
   the existing conformance tests need **no** change, and simkit's key validation is a
   real consumer-side backstop for INV-3.
 
-- **D4. Dangling aliases are filtered out, not raised on.** *Rejected: raising like
-  `_validate_channel_references`.* `_scoped_alias` and the ChannelAlias list are built
-  before backtracking prunes modules, so a targeted (non-`include_all`) run can
-  legitimately drop a channel an EXPOSE still references. Raising would crash valid
-  targeted generation. Filtering (drop + debug-log when an alias channel is not a
-  declared output) satisfies the [HARD] guarantee — no emitted entry dangles — without
-  the crash. For the baselines (all `include_all`) nothing is ever dropped.
+- **D4. Dangling aliases are filtered, but the filter is only silent on targeted runs.**
+  *Rejected: an unconditional raise, and an unconditional silent filter.* `_scoped_alias`
+  and the ChannelAlias list are built before backtracking prunes modules, so a targeted
+  (non-`include_all`) run can *legitimately* drop a channel an EXPOSE still references —
+  an unconditional raise would crash valid targeted generation. But on an `include_all` /
+  full run (every baseline), nothing legitimate prunes, so a dropped alias is a real
+  wiring regression, and an unconditional silent filter would swallow it (design-review
+  M3). Split by run mode: **targeted run** → drop + debug-log; **`include_all` run** →
+  dropping any alias is an error (raise, or at minimum a WARNING the reviewed baseline
+  diff surfaces). The [HARD] guarantee (no emitted entry dangles) holds both ways; the
+  silent path fires only on the case it was written for. `build_computation_graph`
+  already knows the run mode via the backtracking result / `include_all` flag threaded
+  from `pipeline_builder`.
 
 - **D5. Collision coverage = a unit test on `sibling_channel_ambiguity`, not a new
   baseline.** *Rejected: committing a graph/YAML baseline for the fixture.* The fixture
@@ -176,9 +188,9 @@ pipeline_builder.build_pipeline_context
   └─ build_computation_graph(..., channel_aliases=expose_pure_subset)   # NEW param
        ├─ _build_attribute_resolution_map(...)      # EDIT: shape-A reroute (warning)
        ├─ ... existing module build ...
-       ├─ _validate_channel_references(modules)      # existing; yields declared_channels
+       ├─ _validate_channel_references(modules)      # existing; returns None, raises on bad ref
        └─ _build_output_aliases(scoped_alias, expose_pure_aliases,      # NEW step 8.5
-                                registry, declared_channels)
+                                registry, modules)  # recomputes its own declared-channel set
             → ComputationGraph(..., output_aliases=[...])                # NEW field
 
 generation.pipeline.generate_pipeline_yaml(graph)
@@ -201,14 +213,17 @@ that channel's exit line → YAML line
 - **INV-2 (channel identity).** Each entry's `canonical_channel` is the *same* channel
   the value already flows on — read from the registry, never re-derived. [HARD, §7]
 - **INV-3 (existence).** Every emitted entry's `canonical_channel` is a declared graph
-  output channel (validated against the `_validate_channel_references` channel set). No
-  dangling alias survives. Consumer-side backstop: simkit re-validates every exit key
-  against known channels (`_parse_exit_outputs`). [HARD]
+  output channel. No dangling alias survives — on `include_all` runs a would-be drop is
+  an error, not a silent filter (D4). Consumer-side backstop: simkit re-validates every
+  exit key against known channels (`_parse_exit_outputs`). [HARD]
 - **INV-4 (uniqueness).** Two instances exposing the same `alias_name` produce distinct
   output filenames — `{instance_path}__{alias_name}.json` — so simkit's per-exit-module
   duplicate-filename check stays green. [HARD]
 - **INV-5 (determinism).** `output_aliases` is stable-sorted by `(instance_path,
-  alias_name)`, so regen
+  alias_name)`. *Uniqueness assumption (M6):* this key is unique because one name cannot
+  be both part-def- and part-usage-exposed on a single instance, so shape A and shape B
+  never emit the same `(instance_path, alias_name)`; source iteration order (dict-insertion
+  + list order, both deterministic) then never affects the result. So regen
   never yields an ordering-only diff (the failure class Item 1 was created to kill).
   [HARD]
 - **INV-6 (warning matrix).** Resolvable EXPOSE (both shapes, incl. shape A via
@@ -222,12 +237,27 @@ that channel's exit line → YAML line
   empty, no `exclude`).
 
 - **`_build_output_aliases`** (`resolution/graph_builder.py`, new; Step 8.5). Reads
-  the two registries, normalizes to `OutputAlias`, filters to `declared_channels`
-  (INV-3), stable-sorts by `(instance_path, alias_name)` (INV-5). Shape A: iterate a new read accessor
-  on the registry over `_scoped_alias` items. Shape B: iterate the threaded
-  `expose_pure` ChannelAliases, resolve `canonical_name` via `registry.scoped_lookup`,
-  take `instance_path` from the owning scope (the short form Phase-3 uses,
-  `output_registry_builder.py:258-264`).
+  the two sources, normalizes to `OutputAlias`, filters to the declared-channel set
+  (INV-3, D4), stable-sorts by `(instance_path, alias_name)` (INV-5). Shape A: iterate a
+  new read accessor over `_scoped_alias` items → `instance_path` is the key's scope half.
+  Shape B: iterate the threaded `expose_pure` ChannelAliases; resolve `canonical_name`
+  the same two-step way Phase 3 does — `registry.alias_lookup(ScopedKey(canonical_name))`
+  first (the persisted Key_A twin), `scoped_lookup` as fallback (C1); `instance_path` =
+  `owning_part_leaf(alias.owning_part_qn)` (the shared helper below). **Why the
+  `alias_lookup` read does not violate INV-1:** INV-1 governs which entries *surface* —
+  only `expose_pure` ChannelAliases + `_scoped_alias`, never a scan of `_alias`. Here the
+  entry is *already* source-selected as `expose_pure`; `alias_lookup` is used only to
+  resolve that already-chosen alias's channel string. The spec's ban on `_alias` was
+  against *sourcing* from it (source-erased, un-filterable), not against a targeted channel
+  lookup for an already-EXPOSE_PURE alias. Implementation must not "fix" this back to
+  `scoped_lookup`.
+
+- **`owning_part_leaf` shared helper** (`core/` or `output_registry_builder.py`, new;
+  Dim-4). The leaf derivation `qn.rsplit("::",1)[-1] if "::" in qn else qn.split("__")[-1]`
+  is already copied twice (`output_registry_builder.py:260-263`, `308-311`).
+  `_build_output_aliases` needs the identical rule; extract one helper and call it from all
+  three sites so shape A and shape B can't drift (a `::`-form `owning_part_qn` must not
+  yield a `__`-split wrong leaf).
 
 - **Registry read accessor** (`core/output_registry.py`, new small property, e.g.
   `scoped_alias_items()` → the `(scope, leaf) → channel` pairs). Tests already read
@@ -268,10 +298,11 @@ that channel's exit line → YAML line
 - **Thread shape B in:** add `channel_aliases: list[ChannelAlias] | None = None` to
   `build_computation_graph`; pipeline_builder passes `all_channel_aliases`. Filter to
   `.source == "expose_pure"` inside `_build_output_aliases`.
-- **instance_path for shape B** = the owning-scope short form already computed at
-  `output_registry_builder.py:258-264` (`qn.rsplit("::"|"__")[-1]`). Keep the two
-  derivations identical so `instance_path` (and thus the filename) matches the
-  registered scope.
+- **instance_path for shape B** = `owning_part_leaf(alias.owning_part_qn)`, the shared
+  helper (Dim-4) that both Phase 3 (`output_registry_builder.py:260-263`) and the
+  `_scoped_alias` registration (`308-311`) already need. Extracting it — rather than a
+  third hand-copied `rsplit("::") / split("__")` — is what keeps `instance_path` (and thus
+  the filename) matched to the registered scope for both `::`- and `__`-form QNs.
 - **Reroute placement:** the EXPOSE_PURE `is_on_part_definition` split is the only
   edit to `_build_attribute_resolution_map`; leave the FORMULA and shape-B arms byte
   identical. The shape-A resolvability probe can leaf-match `_scoped_alias` on
@@ -327,20 +358,37 @@ consumes only `ComputationGraph`.
 
 ## Validation Approach
 
-- **Field-set conformance** (R1 discipline): a `test_data_models`-style test asserting
-  `output_aliases` exists on `ComputationGraph`, is a `list[OutputAlias]`, and each
-  entry has the four fields — the ComputationGraph-rev gate.
+- **Field-set conformance — the graph-rev gate (R1), incl. the tests that MUST flip
+  (M1).** Adding `output_aliases` deliberately hard-fails the exact-set assertion at
+  `tests/conformance/test_graph_assembly.py:365`
+  (`set(ComputationGraph.model_fields.keys()) == {modules, entry_point_groups,
+  execution_order, fallback_entry_points}`). That failure *is* the discipline working —
+  update it to name `output_aliases` in the set. Also add an `output_aliases` case to the
+  per-field annotation test in `tests/unit/test_data_models.py`. (`test_orchestrator.py:744`
+  uses `in` checks and survives — no change.) Plus a new positive test asserting
+  `output_aliases` is a `list[OutputAlias]` with the four fields.
 - **Shape A end-to-end** (`wi014_toy`): graph carries `OutputAlias(total_cost,
   …cost_calc__cost, demo_plant, part_def)`; new committed YAML baseline shows the
   `…cost_calc__cost` exit line's filename is `demo_plant__total_cost.json`.
 - **Shape B end-to-end** (`attr_expr_probe`): graph gains the three
   `scale_result`/`half_vol`/`quarter_vol` entries; the YAML diff renames those three
   channels' exit filenames to the modeler's names; all other lines byte-identical.
-- **Collision** (`sibling_channel_ambiguity`, unit test, D5): the two siblings produce
-  two distinct output filenames (`chamber_a__power.json`, `chamber_b__power.json`) — no
-  duplicate.
+- **Nested shape-B — the C1 guard** (`ife_plant`, the plant-idiom fixture whose EXPOSE
+  sits at `plant.subsystem.calc.output`, a *nested* usage): assert its exposed names
+  surface as `OutputAlias` entries with a resolved (non-null) `canonical_channel` — the
+  test that fails if the resolver ever regresses to `scoped_lookup`-only and silently
+  drops nested exposures. This is the coverage that keeps the item from no-oping exactly
+  where the spec wants it populated.
+- **Collision** (`sibling_channel_ambiguity`, unit test, D5): the two shape-A siblings
+  produce two distinct output filenames (`chamber_a__power.json`, `chamber_b__power.json`)
+  — no duplicate. (Note per Dim-1: this exercises the shape-A `_scoped_alias` scope half;
+  shape-B instance-qualification collision is uncovered but low-risk — distinct owning
+  parts give distinct leaves.)
+- **Tie-break (M4):** a unit test for one channel carrying two aliases (two attributes
+  exposing the same calc output under two names) → the exit filename is the deterministic
+  first-by-sorted-`alias_name`, and *both* entries still appear in `output_aliases`.
 - **Determinism (INV-5):** a test asserting `output_aliases` equals its
-  capture-key-sorted copy.
+  `(instance_path, alias_name)`-sorted copy.
 - **Warning matrix (INV-6):** `test_wi014_toy.py:28-40` flips from pinning the
   malformed-refs warning to asserting shape-A resolution + the surfaced `total_cost`
   alias, and that the resolvable case emits no warning; unresolvable-refs and
@@ -374,17 +422,28 @@ consumes only `ComputationGraph`.
 - **verification-matrix.md:** rows for REQ-DM-09, REQ-PY-08, REQ-CA-11.
 - **agentic-mbse:** record the EXPOSE-pattern docs impact — the exposed name now
   surfaces downstream as a named output capture (documentation-only note; no code).
+- **Release notes — the filename move is a downstream-coordination change (M2).** Add
+  `.project/active/alias-surfacing/release-notes.md` (Item 10's
+  `.project/active/cross-part-wiring/release-notes.md` is the template). This is not mere
+  baseline churn: aliased channels' output files MOVE `{channel}.json` →
+  `{instance}__{alias}.json` — `attr_expr_probe` moves three (`scale_result`, `half_vol`,
+  `quarter_vol`), `wi014_toy` moves one. Any consumer reading generated output by the old
+  `{channel}.json` path (e.g. a fusion-tea harness) sees the move. Enumerate which
+  baselines' exit filenames change and the consumer-visible effect, so it's a coordination
+  note, not a surprise.
 
 ## Next-Stage Handoff
 
-- **Fixed:** the two sources (INV-1); channel identity read-not-derived (INV-2); the
-  five HARD invariants; EXPOSE_PURE-only scope; the entry shape (D2); always-serialized
-  field (D1); filename-rename YAML capture confirmed against simkit (D3); filter-not-
-  raise (D4); unit-test collision coverage (D5). The TEAx grammar handoff is
-  **discharged** (Potential Risks).
+- **Fixed:** the two sources (INV-1); shape-B resolution via the Key_A `alias_lookup`
+  twin with `scoped_lookup` fallback, INV-1 non-violation stated (C1); channel identity
+  read-not-derived (INV-2); the five HARD invariants; EXPOSE_PURE-only scope; the entry
+  shape (D2); always-serialized field (D1); filename-rename YAML capture confirmed against
+  simkit (D3); run-mode-split filter (D4/M3); collision + nested-shape-B + tie-break +
+  field-flip tests pinned (D5/C1/M4/M1); shared `owning_part_leaf` helper (Dim-4);
+  release-notes deliverable (M2). The TEAx grammar handoff is **discharged**.
 - **Open (plan-time):** precise vs leaf-only `_scoped_alias` matching in the reroute;
-  whether `wi014_toy` YAML captures license-free; deterministic tie-break wording if a
-  single channel ever carries two aliases (D3 / Component note).
+  whether `wi014_toy` YAML captures license-free; exact wording of the `include_all`-drop
+  error (raise vs WARNING, D4).
 
 ---
 Next Step: After approval → `/_my_plan` (or `/_my_implement`).
