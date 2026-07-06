@@ -48,6 +48,20 @@ MODEL_IDS = {
     "catf_mfe_model": "catf_mfe",
 }
 
+# Hand-transcribed entry-point-group counts per model. These replace the former
+# len(files) == len(graph.entry_point_groups) tautology (both sides were the same
+# count over a 1:1 producer loop, so the assertion could never fail).
+# provenance: tests/fixtures/baseline_outputs/solar_battery/computation_graph.json
+#   entry_point_groups = [design_params, library_params, system_design] -> 3
+# provenance: tests/fixtures/baseline_outputs/catf_mfe/computation_graph.json
+#   entry_point_groups = [blanket_params, heating_params, magnets_params,
+#   physics_params, radial_build_params, system_params, tritium_params,
+#   vacuum_params] -> 8
+EXPECTED_GROUP_COUNTS = {
+    "solar_battery_model": 3,
+    "catf_mfe_model": 8,
+}
+
 
 # ---------------------------------------------------------------------------
 # Session-scoped fixtures
@@ -112,11 +126,11 @@ class TestOneJsonPerGroup:
     @pytest.mark.req("REQ-GEN-05")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS,
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS])
-    def test_req_gen_05_one_json_per_group(self, model_name, all_graphs, all_jsons):
-        graph = all_graphs[model_name]
+    def test_req_gen_05_one_json_per_group(self, model_name, all_jsons):
         json_files = all_jsons[model_name]
-        assert len(json_files) == len(graph.entry_point_groups), (
-            f"{model_name}: expected {len(graph.entry_point_groups)} JSON files, "
+        expected = EXPECTED_GROUP_COUNTS[model_name]
+        assert len(json_files) == expected, (
+            f"{model_name}: expected {expected} JSON files, "
             f"got {len(json_files)}"
         )
 
@@ -132,11 +146,11 @@ class TestOneSchemaPerGroup:
     @pytest.mark.req("REQ-GEN-05")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS,
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS])
-    def test_req_gen_05_one_schema_per_group(self, model_name, all_graphs, all_schemas):
-        graph = all_graphs[model_name]
+    def test_req_gen_05_one_schema_per_group(self, model_name, all_schemas):
         schema_files = all_schemas[model_name]
-        assert len(schema_files) == len(graph.entry_point_groups), (
-            f"{model_name}: expected {len(graph.entry_point_groups)} schema files, "
+        expected = EXPECTED_GROUP_COUNTS[model_name]
+        assert len(schema_files) == expected, (
+            f"{model_name}: expected {expected} schema files, "
             f"got {len(schema_files)}"
         )
 
@@ -551,14 +565,14 @@ class TestJsonFileCountMatchesYamlEntry:
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS,
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS])
     def test_req_py_07_json_file_count_matches_entry_point_groups(
-        self, model_name, all_graphs, all_jsons,
+        self, model_name, all_jsons,
     ):
-        graph = all_graphs[model_name]
         json_files = all_jsons[model_name]
+        expected = EXPECTED_GROUP_COUNTS[model_name]
 
-        assert len(json_files) == len(graph.entry_point_groups), (
+        assert len(json_files) == expected, (
             f"{model_name}: {len(json_files)} JSON files != "
-            f"{len(graph.entry_point_groups)} ParameterGroups"
+            f"{expected} ParameterGroups"
         )
 
 

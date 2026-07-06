@@ -598,6 +598,22 @@ See CLAUDE.md. Tests: `uv run pytest tests/`. Type: `uv run mypy src/`. Lint:
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
+**Completed:** 2026-07-06
+**Baseline (current, post-Item-4):** 2031 passed / 4 skipped / 5 xfailed; ruff 20, mypy 105.
+(The plan's earlier 21/109 predates Item 4's landing; current is 20/105 — this is the
+no-regress bar for this item.)
+**Changes:**
+- `test_gen_json_templates.py`: added `EXPECTED_GROUP_COUNTS = {solar:3, catf:8}` with
+  provenance to the committed `computation_graph.json` baselines; H2/H3/H4 now assert
+  `len(files) == EXPECTED_GROUP_COUNTS[model_name]` (dropped the `all_graphs` arg where no
+  longer needed). Parametrization kept (L3-3).
+- `test_gen_pipeline_yaml.py`: same dict (keys solar+catf; twin runs over `[:2]`);
+  `test_entry_fusion_json_count` now pins to the literal.
+**Verification of literals against committed snapshots (v2):** solar `computation_graph.json`
+has exactly 3 entry_point_groups (design_params, library_params, system_design); catf has 8
+(blanket/heating/magnets/physics/radial_build/system/tritium/vacuum)_params. No v2 discrepancy.
+**Validation:** 56 passed; no residual `len(x) == len(y)` self-comparison in the 4 touched tests.
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion
