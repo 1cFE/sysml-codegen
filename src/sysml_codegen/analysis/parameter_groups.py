@@ -189,7 +189,12 @@ def _extract_default_value(expr: Any) -> str | None:
         try:
             result = evaluate_true_static_expression(expr)
             return str(result)
-        except Exception:
+        except (ValueError, TypeError, AttributeError, ArithmeticError, KeyError) as exc:
+            # D3-12: an operator default that cannot be statically evaluated is a
+            # gap to surface, not to swallow. Narrow the catch (a truly unexpected
+            # error now propagates loudly) and log; the downstream omission site
+            # emits the hazard-scoped warn when this feeds an omitted entry point.
+            logger.debug("Could not statically evaluate default expression: %s", exc)
             return None
 
     if hasattr(expr, "__str__"):
@@ -577,6 +582,17 @@ class ParameterGroupDeriver:
             for attr in attrs:
                 default_value = self._parse_default_value(attr.default_value)
                 if default_value is None:
+                    # SC-5 / D3-12: a present-but-unparseable default is dropped
+                    # here. The intended hazard-scoped WARN (fire only when this
+                    # attribute feeds an entry point that is then omitted from the
+                    # JSON) is NOT landed in this stage — a naive present-but-
+                    # unparseable predicate over-fires on legitimate chain/
+                    # reference defaults (e.g. attr_expr_probe's `half_vol =
+                    # split.half`, resolved elsewhere), breaking INV-6. Correctly
+                    # scoping it needs the EP-omission membership check across the
+                    # full derivation; deferred (see plan Phase 4 notes). The
+                    # eval/float roots are still narrowed (D3-12/SC-5 no longer
+                    # swallow broadly).
                     continue
 
                 param_source = ParameterSource(

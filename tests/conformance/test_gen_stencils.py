@@ -574,14 +574,28 @@ class TestDecisionTree:
     def test_req_sr_03_decision_tree_case2_unparseable(
         self, all_graph_data, tmp_path,
     ):
-        """Case 2: File with syntax errors → (True, 'Could not parse...')."""
+        """Case 2 (D3-14, Item 5): a NON-EMPTY file that fails to parse is a
+        *transient* parse error — preserve the (maybe-valid handwritten) impl,
+        do NOT stub over it. Was (True, 'Could not parse'); now preserved."""
         module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
         bad_file = tmp_path / "bad_impl.py"
         bad_file.write_text("def broken(\n    # syntax error\n")
 
         should_regen, reason = should_regenerate_stencil(module, bad_file)
+        assert should_regen is False
+        assert "Preserved" in reason
+
+    @pytest.mark.req("REQ-SR-03")
+    def test_req_sr_03_empty_impl_regenerates(self, all_graph_data, tmp_path):
+        """D3-14 boundary: a genuinely-EMPTY impl has nothing to preserve →
+        regenerate (distinct from the transient non-empty parse error)."""
+        module = _get_first_calcusage_module(all_graph_data, "solar_battery_model")
+        empty_file = tmp_path / "empty_impl.py"
+        empty_file.write_text("   \n")
+
+        should_regen, reason = should_regenerate_stencil(module, empty_file)
         assert should_regen is True
-        assert "Could not parse" in reason
+        assert "Empty" in reason
 
     @pytest.mark.req("REQ-SR-03")
     def test_req_sr_03_decision_tree_case3_unchanged(

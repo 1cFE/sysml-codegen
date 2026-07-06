@@ -421,7 +421,17 @@ def _deserialize_hierarchy_result(d: dict) -> HierarchyExtractionResult:
             parts = json.loads(key_str)
             usage_type_map[(parts[0], parts[1])] = value
         except (json.JSONDecodeError, IndexError):
-            pass
+            # D3-6 (offline-parity guard): a malformed usage_type_map key drops a
+            # retype mapping, so the from-snapshot path silently mis-wires (falls
+            # to the base def) where the live path wired correctly. The except is
+            # already narrow; log the drop instead of a bare pass so the offline
+            # divergence is visible.
+            logger.warning(
+                "Snapshot usage_type_map: dropping malformed key %r — the "
+                "retype it carried will fall to the base def (offline-only "
+                "mis-wire).",
+                key_str,
+            )
 
     # part_usage_names has set values serialized as sorted lists
     part_usage_names: dict[str, set[str]] = {
