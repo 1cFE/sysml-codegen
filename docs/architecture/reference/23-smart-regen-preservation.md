@@ -11,10 +11,10 @@ changed, and upgrades stubs to auto-implementations when possible.
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `matches()` at `signature_extractor.py:35-62` |
+| REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `FunctionSignature.matches()` in `generation/preservation.py` (a parallel copy exists in `analysis/signature_extractor.py`) |
 | REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `sorted(self.input_fields) == sorted(other.input_fields)` |
-| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [4-case decision tree](#the-4-case-decision-tree) | 4 return paths in `preservation.py:99-131` |
-| REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `auto_impl_context` available | `_generate_stencils()` in `cli/__init__.py:262-289` checks all three |
+| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [4-case decision tree](#the-4-case-decision-tree) | 4 return paths in `should_regenerate_stencil()` (`generation/preservation.py`) |
+| REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `auto_impl_context` available | `_generate_stencils()` in `cli/__init__.py` checks all three |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `backup_implementation()` called before `write_text()` |
 | REQ-SR-06 | Aggregation and [computed-attribute](16-computed-attributes.md) modules are synthetic and always regenerated in practice | The unified `_generate_stencils()` processes all module types; synthetic modules lack handwritten content so the smart-regen path is a no-op |
 | REQ-SR-07 | `--preserve-handwritten` SHALL skip ALL existing handwritten files without comparison | Blanket skip, no signature extraction |
@@ -23,7 +23,9 @@ changed, and upgrades stubs to auto-implementations when possible.
 
 ## FunctionSignature Data Model
 
-**File**: `analysis/signature_extractor.py:16-33`
+**File**: `generation/preservation.py` (`FunctionSignature`). This is the copy the
+decision tree uses at runtime; a parallel copy exists in
+`analysis/signature_extractor.py`.
 
 ```python
 @dataclass
@@ -34,7 +36,7 @@ class FunctionSignature:
     input_fields: list[str] | None  # ["n_alpha_in", "n_neutron_in"] or None
 ```
 
-### matches() Method (lines 35-62)
+### matches() Method
 
 Two-level comparison:
 
@@ -59,9 +61,12 @@ comparison is skipped and only type-level checks apply.
 
 ## Signature Extraction
 
-### From Existing File (lines 148-192)
+### From Existing File
 
-`extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None`
+`_extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None` in
+`generation/preservation.py` — this is what the decision tree calls. (A public
+`extract_signature_from_impl()` in `analysis/signature_extractor.py` does the same
+job but is not on the decision-tree path.)
 
 Uses Python AST to find `run_*` function:
 1. Parse source with `ast.parse()`
@@ -72,7 +77,7 @@ Uses Python AST to find `run_*` function:
 
 Returns `None` if file doesn't exist, has syntax errors, or lacks `run_*`.
 
-### From PipelineModule (preservation.py lines 138-159)
+### From PipelineModule
 
 `_generate_expected_signature_from_module(module) -> FunctionSignature`
 
@@ -93,14 +98,14 @@ input_fields = [inp.param_name for inp in module.inputs]
 ```
 
 > **Note**: `analysis/signature_extractor.py` also has a `generate_expected_signature()`
-> that takes `CalculationDefinitionData` directly (lines 195-239). The preservation
+> that takes `CalculationDefinitionData` directly. The preservation
 > module's version is the one used by the decision tree at runtime.
 
 ---
 
 ## The 4-Case Decision Tree
 
-**File**: `generation/preservation.py:99-131`
+**File**: `generation/preservation.py` (`should_regenerate_stencil()`)
 
 `should_regenerate_stencil(module, impl_path) -> tuple[bool, str]`
 
@@ -111,7 +116,7 @@ impl_path.exists()?
   |
   +-- Yes
        |
-       extract_signature_from_impl(impl_path) -> sig?
+       _extract_signature_from_impl(impl_path) -> sig?
          |
          +-- None  --> (True, "Could not parse")
          |
@@ -131,7 +136,7 @@ impl_path.exists()?
 When `should_regenerate_stencil()` returns `False` (signature unchanged),
 a second check determines if a stub can be upgraded:
 
-**File**: `cli/__init__.py:274-289` (within `_generate_stencils()`)
+**File**: `cli/__init__.py` (within `_generate_stencils()`)
 
 ```python
 if not should_regen:
@@ -158,7 +163,7 @@ Handwritten implementations (without `NotImplementedError`) are never upgraded.
 
 ## Backup System
 
-**File**: `generation/preservation.py:162-186`
+**File**: `generation/preservation.py` (`backup_implementation()`)
 
 ```python
 def backup_implementation(impl_path: Path, backup_dir: Path) -> Path:

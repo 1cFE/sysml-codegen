@@ -20,13 +20,14 @@ Three functions in `orchestration/pipeline_builder.py` implement this, called du
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-AS-01 | Each PartDef-level aggregation SHALL produce one `ScopedAggregationData` per design instance | One-to-many expansion in `_scope_aggregation_expressions()` at line 456 |
-| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) BEFORE child-walk fallback (Strategy 2) | Strategy 1 at line 366, Strategy 2 guarded by `if not instance_paths` at line 372 |
-| REQ-AS-03 | Instance paths SHALL be converted from `__`-separated to dotted format with design prefix stripped | Prefix stripping + dot join at lines 388-396 |
-| REQ-AS-04 | CHAIN aliases SHALL only be produced for non-deep-path redefinitions whose `source_path` contains `"."` | Three filters at lines 425-431: `!= CHAIN`, `is_deep_path`, `"." not in source_path` |
-| REQ-AS-05 | [Phase 1b](10-output-registry.md) SHALL register a canonical channel for each `ScopedAggregationData` | `registry.register(canonical, keys)` at line 575 |
-| REQ-AS-06 | [Phase 2](10-output-registry.md) SHALL resolve `ChannelAlias.canonical_name` in registry before registering alias | `resolved = registry.resolve(alias.canonical_name)` at line 617 |
-| REQ-AS-07 | `module_eqn` property SHALL be `"{instance_path}__{attribute_name}"` | Property at line 360 in `data_models.py` |
+| REQ-AS-01 | Each PartDef-level aggregation SHALL produce one `ScopedAggregationData` per design instance | One-to-many expansion in `_scope_aggregation_expressions()` (`orchestration/pipeline_builder.py`) |
+| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) BEFORE child-walk fallback (Strategy 2) | In `find_instance_paths_for_partdef()`: Strategy 1 runs first; Strategy 2 is guarded by `if not instance_paths` |
+| REQ-AS-03 | Instance paths SHALL be converted from `__`-separated to dotted format with design prefix stripped | Prefix stripping + dot join at the end of `find_instance_paths_for_partdef()` |
+| REQ-AS-04 | CHAIN aliases SHALL only be produced for non-deep-path redefinitions whose `source_path` contains `"."` | Three filters in `_build_chain_aliases()`: `!= CHAIN`, `is_deep_path`, `"." not in source_path` |
+| REQ-AS-05 | [Phase 1b](10-output-registry.md) SHALL register a canonical channel for each `ScopedAggregationData` | Phase 1b block in `build_output_registry()` (`orchestration/output_registry_builder.py`): `registry.register_scoped(...)` per aggregation |
+| REQ-AS-06 | [Phase 2](10-output-registry.md) SHALL resolve `ChannelAlias.canonical_name` in registry before registering alias | Phase 2 block in `build_output_registry()`: `registry.scoped_lookup(...)` then `registry.register_alias(...)` |
+| REQ-AS-07 | `module_eqn` property SHALL be `"{instance_path}__{attribute_name}"` | `ScopedAggregationData.module_eqn` property in `extraction/data_models.py` |
+| REQ-AS-08 | The scoping function SHALL log a WARNING (not just info) when an aggregation expression produces zero scoped modules, identifying the PartDef QN and attribute name | `logger.warning` in the zero-paths branch of `_scope_aggregation_expressions()` |
 
 ## Data Models
 
@@ -122,20 +123,17 @@ The filter `"." not in source_path` excludes bare CAS codes like `"CAS220101"` w
 ### Edge case: zero instances found
 
 If both strategies find zero instance paths for a PartDef, the aggregation
-expression produces NO `ScopedAggregationData` and NO pipeline module. This is
-silent — the only signal is the `logger.info("Scoped 0 aggregation module(s)")`
-count. This can happen when:
+expression produces NO `ScopedAggregationData` and NO pipeline module.
+`_scope_aggregation_expressions()` logs a WARNING naming the attribute and the
+PartDef QN (REQ-AS-08), then skips the expression. This can happen when:
 - The design never instantiates the PartDef that declares the aggregation
 - Instance discovery strategies fail to match (e.g., PartDef QN mismatch)
 
-**REQ-AS-08**: The scoping function SHALL log a WARNING (not just info) when an
-aggregation expression produces zero scoped modules, identifying the PartDef QN
-and attribute name.
-
 ## How This Feeds Into the OutputRegistry
 
-The [`build_output_registry()`](10-output-registry.md) function (same file, line 502) consumes
-these outputs in its [4-phase registration protocol](10-output-registry.md):
+The [`build_output_registry()`](10-output-registry.md) function
+(`orchestration/output_registry_builder.py`) consumes these outputs in its
+[phased registration protocol](10-output-registry.md):
 
 - **Phase 1b:** Each `ScopedAggregationData` registers a canonical channel via
   `get_channel_name(agg.module_eqn, agg.expression.attribute_name)` producing

@@ -42,6 +42,12 @@ Generated package (modules/, schemas/, inputs/, pipelines/, handwritten/)
 
 *(Numbers reference document files in this directory, e.g., "01" = [01-extraction.md](01-extraction.md).)*
 
+**Snapshot path.** Step 1 can run offline: `sysml-codegen snapshot` captures a
+versioned extraction snapshot from live models (this capture needs the live
+syside license), and `generate --from-snapshot` (mutually exclusive with
+`--models`) rebuilds the same `PipelineContext` from that JSON, license-free --
+Steps 2-7 run unchanged. See [27-snapshot-generation](27-snapshot-generation.md).
+
 ## Running example: battery_pack cost_model
 
 Trace a single calculation through all 7 steps. The library defines
@@ -85,6 +91,9 @@ consumer's scope. The [backtracker](11-analysis-backtracker.md) constructs
 Keys follow a [strict 4-phase protocol](10-output-registry.md#the-4-phase-registration-protocol).
 [CHAIN redefinitions](01-extraction.md#redefinitions-redefinitiondata) create
 Phase 2 aliases (e.g., `battery_pack.capital_cost` -> same canonical).
+Multi-hop EXPOSE aliases are registered tentatively and confirmed (or reverted
+to FORMULA) in a Phase 3b pass of registry build
+(`orchestration/output_registry_builder.py`).
 
 ### Step 3: Trace dependencies ([backtracker](11-analysis-backtracker.md) | [overview](03-resolution-overview.md))
 
@@ -132,6 +141,12 @@ The [ComputationGraph](09-data-models.md#resolution-models) feeds Jinja2 templat
 to produce: `modules/*.py`, `handwritten/*_impl.py`, `pipelines/*.yaml`,
 `inputs/*.json`, and `schemas/*.py`.
 
+Rendering is gated by a params-coverage check (V11): `collect_uncovered_params`
+(`resolution/graph_builder.py`) runs at the generation boundary and aborts if a
+wired module input references a params key that no JSON input file will carry.
+Surfaced modeler names travel as `output_aliases` on the ComputationGraph and
+override exit-point output filenames in the pipeline YAML (`generation/pipeline.py`).
+
 ## Package structure (post-refactor)
 
 ```
@@ -144,8 +159,12 @@ sysml_codegen/
 
   orchestration/    Pipeline coordination: extract, resolve, generate
     pipeline_builder.py       build_pipeline_context(): multi-step orchestration
-    output_registry_builder.py  build_output_registry(): 4-phase registration
+    output_registry_builder.py  build_output_registry(): 4-phase registration + Phase 3b confirm
+    snapshot_context.py       build_pipeline_context_from_snapshot(): offline path
     pipeline_context.py       PipelineContext dataclass
+
+  snapshot/         Extraction snapshot capture and offline rebuild
+    capture.py / serializer.py / loader.py / graph_rebuild.py
 
   analysis/         Step 3 -- Dependency backtracking and parameter group derivation
     dependency_backtracker.py DependencyBacktracker: DFS + binding resolution
@@ -159,6 +178,8 @@ sysml_codegen/
     pipeline.py / modules.py / schemas.py / stencils.py / entry_point.py
 
   core/             Shared utilities (OutputRegistry, qualified_names, models)
+
+  cli/              generate (--models | --from-snapshot) and snapshot subcommands
 ```
 
 See [02-orchestration.md](02-orchestration.md) for orchestration detail.
@@ -193,3 +214,4 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [17-parameter-group-deriver](17-parameter-group-deriver.md) | Grouping entry points into JSON input files |
 | [18-literal-value-propagation](18-literal-value-propagation.md) | Carrying `:>>` literal values into JSON templates |
 | [26-pipeline-module-migration](26-pipeline-module-migration.md) | REQ-PIPE-07 migration: PipelineModule field expansion |
+| [27-snapshot-generation](27-snapshot-generation.md) | License-free generation from captured extraction snapshots |

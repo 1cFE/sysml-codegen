@@ -13,13 +13,13 @@ human write it?
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype in SysIDE) | Line 312 checks FCE before line 323 checks OE; see also [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) |
-| REQ-EC-02 | N-ary operands SHALL be left-folded into binary `BINARY_OP` nodes | Left-fold loop at lines 364-374 |
-| REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `[` handler at lines 333-340 discards unit, recurses on value |
-| REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | Validation at lines 217-223 raises `CompilationError` on `SyntaxError` |
-| REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `if execution_order is None` block at lines 532-547 |
-| REQ-EC-06 | `classify_compilability()` SHALL use worst-case roll-up semantics | Function at lines 263-282: MANUAL > PARTIALLY > FULLY |
-| REQ-EC-07 | Undeclared intermediates SHALL be discovered iteratively from `member_expressions` | Iterative discovery loop at lines 520-527 |
+| REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype in SysIDE) | FCE branch precedes the OE branch in `build_expression_ast()`; see also [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) |
+| REQ-EC-02 | N-ary operands SHALL be left-folded into binary `BINARY_OP` nodes | Left-fold loop in the `len(operands) > 2` case of `build_expression_ast()` |
+| REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `operator == "["` handler in `build_expression_ast()` discards unit, recurses on value |
+| REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | Validation at the end of `compile_expression()` raises `CompilationError` on `SyntaxError` |
+| REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `if execution_order is None` block in `compile_calc_def()` |
+| REQ-EC-06 | `classify_compilability()` SHALL use worst-case roll-up semantics | `classify_compilability()`: MANUAL > PARTIALLY > FULLY |
+| REQ-EC-07 | Undeclared intermediates SHALL be discovered iteratively from `member_expressions` | Iterative discovery loop (`while to_process`) in `compile_calc_def()` |
 
 ---
 
@@ -209,7 +209,7 @@ This system has TWO separate expression-to-Python paths:
 | **Input** | SysIDE AST nodes | SysIDE AST nodes |
 | **Output** | `ExpressionAST` IR → Python string | Text string (direct transform) |
 | **Operators** | 7 arithmetic (+, -, *, /, **, ^, [) | 12+ (arithmetic + comparison + logical) |
-| **FCE handling** | → INPUT_REF (compilable) | → SingletonTerm (wired to upstream) |
+| **FCE handling** | → UNSUPPORTED (not compilable) | → SingletonTerm (wired to upstream) |
 | **OE handling** | → BinaryOp (recursive) | → text concatenation |
 | **Shared invariant** | [FCE before OE](19-ast-dispatch-invariant.md) | [FCE before OE](19-ast-dispatch-invariant.md) |
 

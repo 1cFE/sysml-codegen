@@ -19,12 +19,12 @@ consumption. It does NOT resolve bindings or build modules.
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-HR-01 | Every `:>>` redefinition SHALL be classified as exactly one [RedefinitionType](09-data-models.md) from {LITERAL, CHAIN, EXPRESSION} | `all(r.redefinition_type in RedefinitionType for r in redefs)` |
-| REQ-HR-02 | Both `FeatureChainExpression` and `FeatureReferenceExpression` value expressions SHALL produce `RedefinitionType.CHAIN` | Lines 105-125: both FCE and FRE map to CHAIN |
-| REQ-HR-03 | Deep-path redefinitions SHALL set `is_deep_path=True` and populate `target_path` from `chaining_features` | Line 78: `chaining_features` list → target_path segments |
-| REQ-HR-04 | Multiplicity extraction SHALL use `cached_lower_bound` (not `cached_upper_bound`) due to SysIDE exclusive upper-bound convention | Line 221: `getattr(mult, "cached_lower_bound", None)` |
-| REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression` per [AST dispatch invariant](19-ast-dispatch-invariant.md) | Lines 331-338: FCE check precedes OE check |
-| REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_lookup` dict | Lines 382-391: multiplicity_attr from mult_lookup |
-| REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added as aliases | Lines 550-557: `source_path.endswith(agg.attribute_name)` |
+| REQ-HR-02 | Both `FeatureChainExpression` and `FeatureReferenceExpression` value expressions SHALL produce `RedefinitionType.CHAIN` | `_extract_single_redefinition`: both the FCE and FRE branches return CHAIN |
+| REQ-HR-03 | Deep-path redefinitions SHALL set `is_deep_path=True` and populate `target_path` from `chaining_features` | `_extract_single_redefinition`: `chaining_features` list → target_path segments |
+| REQ-HR-04 | Multiplicity extraction SHALL use `cached_lower_bound` (not `cached_upper_bound`) due to SysIDE exclusive upper-bound convention | `extract_multiplicities`: `getattr(mult, "cached_lower_bound", None)` |
+| REQ-HR-05 | `_walk_aggregation_ast()` SHALL check `FeatureChainExpression` BEFORE `OperatorExpression` per [AST dispatch invariant](19-ast-dispatch-invariant.md) | `_walk_aggregation_ast`: FCE check precedes OE check |
+| REQ-HR-06 | `sum(child.attr)` SHALL be transformed to `(count_attr * child.attr)` using the `mult_lookup` dict | The `sum` branch of `_walk_aggregation_ast`: multiplicity_attr from mult_lookup |
+| REQ-HR-07 | CHAIN-type sibling redefinitions that reference the aggregation attribute SHALL be added as aliases | The sibling-alias scan in `extract_hierarchy_data`: `source_path == agg.attribute_name` or `source_path.endswith("." + agg.attribute_name)` |
 | REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the usage's **most-specific owned FeatureTyping target**, not `next(iter(member.types))`; incomparable multi-typings resolve deterministically (sorted-first) with a V10 warning | `test_type_indexing.py` — `(Variant, driver) → HIF Driver` (declared subtype); `(MultiHolder, multi) → IFE Driver` (sorted-first) + V10 |
 | REQ-HR-08 | `extract_design_overrides()` SHALL scan `:>>` member overrides on **plain** part usages, not only `part redefines` usages; a newly-scanned **plain**-usage override SHALL be kept only when its RHS is LITERAL (CHAIN/EXPRESSION plain overrides stay out — Item 10's job), while the `part redefines` path keeps all RHS types unchanged | `test_virtual_binding_rewrite.py::test_plain_usage_override_filter_keeps_only_literal`; the alias_agg_probe/issue22/unresolvable_attr_probe collector pins in `test_uncovered_params.py` go empty once the plain-usage literal is captured and rewritten |
 | REQ-HR-09 | RELEASED — reserved in Item 9's handoff as mechanism D's tentative home; not used. Mechanism D is homed in REQ-VBR-10 ([12-virtual-binding-rewrite](12-virtual-binding-rewrite.md)) instead (design D5). | n/a — no code; recorded so the ID is not silently skipped |
@@ -32,18 +32,18 @@ consumption. It does NOT resolve bindings or build modules.
 
 ## The 4 Extraction Phases
 
-`extract_hierarchy_data()` (line 490) orchestrates four phases per PartDef:
+`extract_hierarchy_data()` orchestrates four phases per PartDef:
 
 | Phase | Function | Input | Output |
 |-------|----------|-------|--------|
 | 1 | `extract_redefinitions()` | PartDef element | `list[RedefinitionData]` |
-| 2 | `extract_design_overrides()` | Design PartUsages | `list[RedefinitionData]` (deep-path only) |
+| 2 | `extract_design_overrides()` | Design PartUsages | `list[RedefinitionData]` (usage-level overrides, flat or deep-path) |
 | 3 | `extract_multiplicities()` | PartDef element | `list[MultiplicityData]` |
 | 4 | `build_aggregation_expression()` | EXPRESSION redefs + multiplicities | `list[AggregationExpressionData]` |
 
 Additionally, the orchestrator builds two lookup structures:
 - `part_usage_names: dict[str, set[str]]` — child PartUsage names per PartDef, used by [aggregation scoping](13-aggregation-scoping.md) for instance discovery
-- `usage_type_map: dict[tuple[str, str], str]` — `(owning_qn, usage_name) → type_partdef_qn`, used by [literal value propagation](18-literal-value-propagation.md) to find redefinition defaults. The type is the usage's **most-specific owned FeatureTyping target** (REQ-LVP-08), read from the owned typing relationship — not `next(iter(member.types))`, whose first entry is a *supertype* for a retyped `part :>> driver : 'HIF Driver'`. So a retyped usage resolves its defaults against the declared subtype (the type-aware `target_partdef_qn` branch of `_find_literal_redefinition`, the one behavioral consumer). When a usage has multiple incomparable owned types the pick is the sorted-first QN plus a V10 warning. A usage with **no** owned FeatureTyping (an untyped `part x {}`, implicit library `Part`, or a redefinition that inherits its typing) keeps the position-0 type — there is nothing to compare, and this holds existing output identical.
+- `usage_type_map: dict[tuple[str, str], str]` — `(owning_qn, usage_name) → type_partdef_qn`, used by [literal value propagation](18-literal-value-propagation.md) to find redefinition defaults. The type is the usage's **most-specific owned FeatureTyping target** (REQ-LVP-08), read from the owned typing relationship — not `next(iter(member.types))`, whose first entry is a *supertype* for a retyped `part :>> driver : 'HIF Driver'`. So a retyped usage resolves its defaults against the declared subtype (the type-aware `target_partdef_qn` branch of `_find_literal_redefinition` in `resolution/graph_builder.py`; since Item 10 the map's second consumer is `_rewrite_specialized_chain`'s instance-first type-select, REQ-VBR-11). When a usage has multiple incomparable owned types the pick is the sorted-first QN plus a V10 warning. A usage with **no** owned FeatureTyping (an untyped `part x {}`, implicit library `Part`, or a redefinition that inherits its typing) keeps the position-0 type — there is nothing to compare, and this holds existing output identical.
 
 ### Usage-Level Retype Indexing (Two-Level Specialization, REQ-LVP-09)
 
@@ -77,7 +77,7 @@ instance-first type-select (REQ-VBR-11,
 
 ## Phase 1: Redefinition Classification
 
-`extract_redefinitions()` (line 139) scans a PartDef's `owned_members` for
+`extract_redefinitions()` scans a PartDef's `owned_members` for
 `ReferenceUsage` elements with non-empty `owned_redefinitions`. Each is
 classified by its right-hand-side expression via `_extract_single_redefinition()`:
 
@@ -144,7 +144,7 @@ drive [virtual binding rewrite](12-virtual-binding-rewrite.md).
 
 ## Phase 3: Multiplicity Extraction
 
-`extract_multiplicities()` (line 195) detects child PartUsages with multiplicity
+`extract_multiplicities()` detects child PartUsages with multiplicity
 annotations. This data is CRITICAL for Phase 4: without multiplicity, `sum()`
 cannot be transformed to parametric multiply.
 
@@ -164,7 +164,7 @@ The extractor produces:
 ```python
 MultiplicityData(
     part_usage_name="pv_module",
-    owning_part_def_qn="SolarLib::Solar_Array",
+    owning_part_def_qn="SolarLib__Solar_Array",
     count=20,
     count_attribute_name="module_count",  # from upper_bound.referent
     default_value=20,                     # from referent's feature_value_expression
@@ -179,7 +179,7 @@ Singletons (no multiplicity attribute) are excluded from the output.
 
 ## Phase 4: Aggregation Transformation
 
-`build_aggregation_expression()` (line 439) takes an EXPRESSION-type
+`build_aggregation_expression()` takes an EXPRESSION-type
 redefinition and transforms it into an [AggregationExpressionData](09-data-models.md).
 
 ### The mult_lookup Mechanism
@@ -195,7 +195,7 @@ parts and transform `sum()` calls.
 
 ### AST Walking and Term Classification
 
-`_walk_aggregation_ast()` (line 305) recursively walks the expression AST.
+`_walk_aggregation_ast()` recursively walks the expression AST.
 The dispatch order follows the [AST dispatch invariant](19-ast-dispatch-invariant.md):
 
 | Priority | AST Type | Classification | Example |
@@ -220,14 +220,16 @@ If multiplicity is missing, a warning is logged and an unresolved SumTerm
 
 **Wrapper unwrapping**: SysIDE sometimes wraps expressions in
 `Evaluation`, `evaluate`, `collect`, or `select` InvocationExpressions.
-The `_unwrap_invocation()` helper (line 278) peels these off recursively
+The `_unwrap_invocation()` helper peels these off recursively
 (max depth 3) to reach the inner FCE/FRE node.
 
 ### Alias Detection (REQ-HR-07)
 
 After building an `AggregationExpressionData`, the orchestrator scans sibling
-redefinitions for CHAIN-type aliases. If a sibling's `source_path` ends with
-the aggregation's `attribute_name` and has a different name, it's an alias:
+redefinitions for CHAIN-type aliases (in `extract_hierarchy_data`). If a
+sibling's `source_path` equals the aggregation's `attribute_name` — or ends
+with `"." + attribute_name` for a dotted path — and the sibling has a
+different name, it's an alias:
 
 ```sysml
 :>> capital_cost = sum(pv_module.capital_cost) + bos_cost;  /* aggregation */
@@ -238,10 +240,12 @@ Here `total_capex` becomes an alias for the `capital_cost` aggregation,
 registered in the [output registry](10-output-registry.md) as a Phase 2
 CHAIN alias.
 
-**Edge case**: The `endswith()` check on `source_path` may false-positive
-on dotted source_paths (e.g., `parent.capital_cost` would match
-`attribute_name="capital_cost"`). No current model triggers this, but it
-could produce spurious aliases for hierarchical CHAIN redefinitions.
+**Edge case**: The `.`-suffix branch matches any dotted `source_path` whose
+leaf is the aggregation attribute (e.g., `parent.capital_cost` matches
+`attribute_name="capital_cost"`), regardless of which part it references.
+No current model triggers this, but it could produce spurious aliases for
+hierarchical CHAIN redefinitions. A bare-name suffix like
+`total_capital_cost` does NOT match — the dot boundary guards it.
 
 ## Concrete Example
 

@@ -61,7 +61,64 @@ its warning. Opportunistic — cheap to add in sysml-codegen's test suite.
 
 ## P3 - Low Priority
 
-*No epics yet*
+### [DOCS-SCRUB-F1] Delete the two dead templates (+ dead-code candidates nearby)
+
+**Source**: docs-scrub (post-UPSTREAM-FINDINGS docs pass), 2026-07-06. Zero render sites
+each (re-confirm with grep before deleting):
+- `src/sysml_codegen/templates/pydantic_schema.py.jinja2` (carries `generation_timestamp`;
+  originally verified dead during Item 2)
+- `src/sysml_codegen/templates/entry_point_schema.py.jinja2` (only
+  `parameter_group_schema.py.jinja2` is rendered by `generation/entry_point.py`)
+
+Same-cleanup candidates found during the scrub (verify, then delete or wire up):
+- `map_sysml_type_to_rootmodel_wrapper()` in `generation/type_mapping.py` — no external
+  callers; `modules.py` imports `map_sysml_type_to_python` without calling it (dead import).
+- `get_default_value()` on the ParameterGroupDeriver — only its conformance test calls it
+  (REQ-PGD-06 would need re-framing if removed).
+- `generate_derived_group_json()` in `generation/entry_point.py` still emits null-default
+  keys, unlike `generate_all_derived_jsons()` which omits them (Item 7's corrected shape) —
+  check reachability; it reintroduces the null-key shape if still live.
+- `BacktrackingResult.binding_to_entry_point` — marked DEPRECATED "will be removed after
+  all consumers updated" since long before the epic.
+
+### [DOCS-SCRUB-F2] Reconcile REQ-OR-05/06/08 with the Key_A/Key_F registrations at HEAD
+
+**Source**: docs-scrub doc-10 pass, 2026-07-06. The REQ text and doc 10's "Eliminated Key
+Formats" section say Key_A and Key_F are not registered at all, but `build_output_registry()`
+Phase 1a registers Key_A via `register_alias()` (cross-scope CHAIN, first-wins) and Phase 1c
+registers Key_F via `register_scoped()` (REFERENCE secondary, spike Q5); Phases 3–4 also
+consult a construction-time Key_A-format dict (`instance_attr_to_channel`) before typed
+lookups (vs REQ-OR-06's "through typed lookup"). `test_output_registry.py::TestReqOR08` has
+already narrowed its own reading. Decide the intended contract, then fix REQ text + doc 10 +
+(possibly) code together — not a docs-only fix.
+
+### [DOCS-SCRUB-F4] `resolve_input()` cutover divergence (REQ-IR-05/07, REQ-RES-02)
+
+**Source**: docs-scrub docs-03/04/05/06 pass, 2026-07-06. `resolve_input()` /
+`AGG_STRATEGIES` (`analysis/input_resolver.py`) has **zero production call sites** — only
+`test_input_resolver.py` / `test_dual_resolution.py` call it; the production aggregation
+path resolves SumTerm/SingletonTerm inline via `_resolve_aggregation_input_channel()` in
+`resolution/graph_builder.py`. But REQ-IR-05/REQ-IR-07/REQ-RES-02 say aggregation SHALL
+use `resolve_input()` with `AGG_STRATEGIES`, and the IR rows are marked PASS (pinned by
+tests that call the bypassed function directly). Either land the cutover or re-frame the
+REQs. Related smaller facts: Strategy D is a documented-intent no-op (returns `None` for
+every ref — the aggregation-EP dedup it promises never happens), and the `AGG_STRATEGIES`
+inline comment describes Strategy C's old mechanism. Docs 03/04/05 deliberately left the
+REQ-mirroring prose untouched pending this reconciliation.
+
+### [DOCS-SCRUB-F3] Stale code docstrings found while verifying docs (one-line fixes)
+
+**Source**: docs-scrub, 2026-07-06. Code changes, out of scope for the docs-only pass:
+- `_resolve_binding_via_registry` docstring (`analysis/dependency_backtracker.py`): lists a
+  REFERENCE "Step 1b: Normalize :: to dotted -> scoped_lookup" that doesn't exist in
+  `_resolve_reference_dispatch`, and its CHAIN summary omits Step 1c.
+- `OutputRegistry` class docstring (`core/output_registry.py`): says "Three typed
+  registries" (there are four) and its phase list omits Phase 3b; `__repr__` omits the
+  `_scoped_alias` count.
+- `build_pipeline_context` docstring (`orchestration/pipeline_builder.py`): old 7-step
+  summary with the group deriver ahead of the registry (it runs at Step 5.7, after).
+- `tests/conformance/test_graph_assembly.py` section header/class docstring still say
+  "exactly 3 fields" (the test body pins 5).
 
 ---
 

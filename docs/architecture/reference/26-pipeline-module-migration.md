@@ -1,5 +1,11 @@
 # 26 -- PipelineModule Migration: Achieving REQ-PIPE-07
 
+**Status: Historical.** This describes the completed PipelineModule migration
+(REQ-PIPE-07). The end state it documents still holds: no generator imports
+`CalculationDefinitionData`, and all REQ-PMM rows remain pinned by
+`tests/conformance/test_pipeline_module_expansion.py`. Kept as design rationale;
+it is not a description of ongoing work.
+
 ## Motivation
 
 [REQ-PIPE-07](00-pipeline-overview.md) states: "Generation SHALL produce output

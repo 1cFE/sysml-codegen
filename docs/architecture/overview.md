@@ -31,25 +31,28 @@ Generated package
 
 Orchestration (`orchestration/pipeline_builder.py`) coordinates these steps, threading intermediate data through a `PipelineContext`. See [02-orchestration](reference/02-orchestration.md) for the step-by-step sequence and ordering constraints.
 
+There is a second, license-free path into the same pipeline. `sysml-codegen snapshot` captures a versioned extraction snapshot from live models (`capture_snapshot` in `snapshot/capture.py` -- this capture step needs the live syside license). `generate --from-snapshot` (mutually exclusive with `--models`) then rebuilds the same `PipelineContext` from that JSON via `build_pipeline_context_from_snapshot` (`orchestration/snapshot_context.py`) -- Steps 2-7 run unchanged, with no license at runtime. The snapshot format carries a `snapshot_format_version` that hard-errors on mismatch. See [27-snapshot-generation](reference/27-snapshot-generation.md).
+
 ---
 
 ## Key Architectural Principles
 
 ### ComputationGraph as Single Source of Truth
 
-The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, and parameter group schemas. Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). See [09-data-models](reference/09-data-models.md).
+The `ComputationGraph` (a Pydantic model in `resolution/models.py`) is the sole data structure that code generation consumes. It contains all pipeline modules, their inputs wired to upstream outputs or entry points, execution order, parameter group schemas, and surfaced output aliases (`output_aliases`, serialized with the graph). Generation templates receive only `ComputationGraph` fields -- no back-references to extraction models (REQ-PIPE-07). Generation is also gated by a params-coverage check (V11): `collect_uncovered_params` (`resolution/graph_builder.py`) runs at the generation boundary and aborts if a wired module input references a params key that no JSON input file will carry. See [09-data-models](reference/09-data-models.md).
 
 ### Typed Registries
 
-SysML bindings reference the same output using different string formats depending on AST node type and context. The `OutputRegistry` resolves this ambiguity using three typed registries, each keyed by a `NewType` wrapper:
+SysML bindings reference the same output using different string formats depending on AST node type and context. The `OutputRegistry` resolves this ambiguity using four typed registries, each keyed by a `NewType` wrapper:
 
 | Registry | Key Type | Resolves |
 |----------|----------|----------|
 | Scoped | `ScopedKey` (dotted hierarchy path) | CHAIN bindings via scope-prepend lookup |
 | SysML QN | `SysMLQN` (`Package::Element::attr`) | REFERENCE bindings (library-qualified) |
 | Alias | `ScopedKey` | `:>>` redefinition aliases and EXPOSE_PURE aliases |
+| Scoped alias | `ScopedAliasKey` (`(scope, leaf)` tuple) | Part-def EXPOSE aliases, expanded per design instance |
 
-All three map to `CanonicalChannel` (the unique PQN-format output name). Type-directed dispatch selects the correct registry based on binding type. See [10-output-registry](reference/10-output-registry.md) and [15-naming-conventions](reference/15-naming-conventions.md).
+All four map to `CanonicalChannel` (the unique PQN-format output name). Type-directed dispatch selects the correct registry based on binding type. Multi-hop EXPOSE aliases are registered tentatively and confirmed (or reverted to FORMULA) in a Phase 3b pass of registry build (`orchestration/output_registry_builder.py`). See [10-output-registry](reference/10-output-registry.md) and [15-naming-conventions](reference/15-naming-conventions.md).
 
 ### Dual Resolution Architecture
 
@@ -64,7 +67,7 @@ Both paths produce the same answer format: each input resolves to either `module
 
 ### Test-First with Real SysML Data
 
-Conformance tests use real SysML fixture models (extracted via SysIDE) and verify pipeline behavior against extraction snapshots. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. The test suite covers 204 requirements across 33 conformance test files. See [verification-matrix.md](verification-matrix.md).
+Conformance tests use real SysML fixture models (extracted via SysIDE) and verify pipeline behavior against extraction snapshots. No mock adapters or synthetic data. This ensures tests exercise the same code paths as production. The test suite covers 233 requirements across 49 conformance test files. See [verification-matrix.md](verification-matrix.md).
 
 ---
 
@@ -82,8 +85,14 @@ sysml_codegen/
 
   orchestration/       Pipeline coordination
     pipeline_builder.py          build_pipeline_context(): multi-step orchestration
-    output_registry_builder.py   build_output_registry(): 4-phase registration
+    output_registry_builder.py   build_output_registry(): 4-phase registration + Phase 3b multi-hop EXPOSE confirm
+    snapshot_context.py          build_pipeline_context_from_snapshot(): offline path
     pipeline_context.py          PipelineContext dataclass
+
+  snapshot/            Extraction snapshot capture and offline rebuild
+    capture.py                   capture_snapshot(): versioned snapshot from live models
+    serializer.py / loader.py    Snapshot (de)serialization; format-version gate
+    graph_rebuild.py             build_full_graph_from_snapshot(): rebuild extraction data offline
 
   analysis/            Step 3 -- Dependency backtracking and parameter groups
     dependency_backtracker.py    DependencyBacktracker: DFS + binding resolution
@@ -107,6 +116,9 @@ sysml_codegen/
     stencils.py                  Implementation stencil generator
     entry_point.py               JSON template + parameter schema generator
     preservation.py              Smart regeneration (preserve user edits)
+
+  cli/                 Command-line interface
+    __init__.py                  generate (--models | --from-snapshot) and snapshot subcommands
 ```
 
 ---
@@ -141,6 +153,7 @@ sysml_codegen/
 | Generation details | [20](reference/20-module-registry-generation.md), [21](reference/21-pipeline-yaml-generation.md), [22](reference/22-output-schema-rules.md), [23](reference/23-smart-regen-preservation.md) |
 | Hierarchy resolution | [25](reference/25-hierarchy-resolver.md) |
 | PipelineModule migration | [26](reference/26-pipeline-module-migration.md) |
+| Snapshot-driven generation | [27](reference/27-snapshot-generation.md) |
 
 ---
 
@@ -202,7 +215,7 @@ The following open issues are documented in the codebase. None block current pip
 
 ## Verification
 
-204 requirements (REQ-* tags) are tracked across 29 requirement families. 192 have dedicated conformance tests; 12 are untested (design-only constraints or cross-cutting principles verified indirectly).
+233 requirements (REQ-* tags) are tracked across 29 requirement families. 221 have dedicated conformance tests; 12 are untested (design-only constraints or cross-cutting principles verified indirectly).
 
 See [verification-matrix.md](verification-matrix.md) for the full REQ-to-test traceability matrix.
 
@@ -212,4 +225,4 @@ See [verification-matrix.md](verification-matrix.md) for the full REQ-to-test tr
 
 - [Modeling Assumptions](modeling-assumptions.md) -- SysML conventions the pipeline depends on
 - [Verification Matrix](verification-matrix.md) -- REQ-to-test traceability
-- [Reference Documentation](reference/) -- 27 detailed design documents (docs 00-26; doc 27 merged into doc 10)
+- [Reference Documentation](reference/) -- 28 detailed design documents (docs 00-27)

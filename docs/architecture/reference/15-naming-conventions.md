@@ -15,7 +15,7 @@ Authoritative sources: `core/qualified_names.py`, `core/identifier_types.py`.
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→`_`, collapse `_` runs, strip edge `_`, reserved-word suffix | Unit test on each transform rule |
 | REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dotted format); SysML QN registry uses `SysMLQN` (`::` format) in its own typed registry | Typed registry API enforces key types; see [10-output-registry](10-output-registry.md) |
 | REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `ModuleType.from_sysml` / `PythonModulePath.from_sysml` sanitize per segment; FORMULA module_eqn sites use `sanitize_qualified_name()`; conformance: `test_alias_agg_probe_generation`, `test_formula_quoted_owner` |
-| REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path, across all three write key spaces (modules, stencils, schemas) | `_check_duplicate_output_paths()` runs before `_clear_output_directory`; conformance: `test_duplicate_path_failfast` |
+| REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path, across module, stencil, and schema outputs (two key spaces — modules and stencils share the derived python path) | `_check_duplicate_output_paths()` runs before `_clear_output_directory`; conformance: `test_duplicate_path_failfast` |
 
 ## 1. SysML Qualified Name (SysML QN)
 
@@ -71,8 +71,9 @@ detection. Full EQN eliminates this complexity.
 
 Derivation from SysML QN:
 1. Split on `::`
-2. Package segments joined with `.`, lowercased (namespace)
-3. Last segment (element name) gets `Module` suffix, case preserved
+2. Each segment passes through `sanitize_name()` (Item 5 / REQ-NC-08)
+3. Package segments joined with `.`, lowercased (namespace)
+4. Last segment (element name) gets `Module` suffix, case preserved
 
 | SysML QN | Module Type |
 |----------|-------------|
@@ -93,9 +94,11 @@ Channels ARE PQNs. There is no separate "channel name" concept (REQ-NC-05).
 
 The [`OutputRegistry`](10-output-registry.md) (`core/output_registry.py`) maps typed lookup keys
 to canonical channel names (REQ-NC-07). Keys are registered in a strict 4-phase protocol
-using three typed registries ([10-output-registry](10-output-registry.md)):
+using four typed registries ([10-output-registry](10-output-registry.md)):
 scoped (`ScopedKey` → `CanonicalChannel`), SysML QN (`SysMLQN` → `CanonicalChannel`),
-and alias (`ScopedKey` → `CanonicalChannel`).
+alias (`ScopedKey` → `CanonicalChannel`), and the structured scoped-alias registry
+(`ScopedAliasKey`, a `(scope, leaf)` tuple in `core/identifier_types.py`, →
+`CanonicalChannel`) which holds the per-instance part-def EXPOSE aliases (Item 10).
 **Type wrappers**: `ScopedKey` for scoped/alias keys, `SysMLQN` for SysML QN keys,
 `CanonicalChannel` for all registry values ([09-data-models](09-data-models.md#name-type-wrappers))
 
@@ -133,8 +136,10 @@ See [The Scope Problem](03-resolution-overview.md) for why Key_C is the primary 
 | 3 | [EXPOSE_PURE](16-computed-attributes.md) attributes | `ScopedKey` | `{owning_part_short}.{attr}` | Phase 1+2 |
 | 4 | Transitive design attrs | `ScopedKey` | `{parent_part}.{attr}` | Phase 1-3 |
 
-Collision policy for alias registry: refuse overwrite, log warning, keep first registration.
-Scoped and SysML QN registries are unique by construction — no collision policy needed.
+Collision policy for the alias registry: refuse overwrite, keep first registration;
+each collision is recorded and logged at DEBUG, with a single WARNING count summary
+per run (Item 7). The scoped, SysML QN, and scoped-alias registries are unique by
+construction, so a duplicate key with a different channel raises.
 
 ## 8. SysML `::` to `__` Conversion
 
