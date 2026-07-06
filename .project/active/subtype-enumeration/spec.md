@@ -56,25 +56,34 @@ not defaulted.
 - [ ] Generating wi014_toy **and** the committed fusion-tea snapshot emits the constraint drop
   report including the assert-shaped constraint at `toy_plant.sysml:51`, with counts anchored
   independently of the production query (hardcoded / fixture-source grep).
-- [ ] The constraint drop report is available on the `generate --from-snapshot` path (constraints
+  <!-- AUDIT 2026-07-06: wi014 leg MET (committed snapshot manifest + test_snapshot_contract.py:92). fusion-tea leg NOT MET here — no committed fusion-tea snapshot in this repo; depends on Item 2 regen on v2. Left unchecked (conjunction). See audit.md Note 2. -->
+
+- [x] The constraint drop report is available on the `generate --from-snapshot` path (constraints
   serialized into the snapshot and the report replayed), not only on the live path.
+  <!-- AUDIT 2026-07-06: verified by artifact — snapshot_context.py:45 replays render; INV-B committed-snapshot test (test_snapshot_contract.py:92) license-free. -->
+
 - [ ] agentic-mbse Level 3 produces a **non-empty** dependency graph on a fixture with imports,
   and a seeded circular-import fixture **FAILS** the circular-dependency check (the first time
   that check can fail).
-- [ ] `REQ-EXT-09`'s test **fails** when the underlying query is deliberately broken (a mutation
+- [x] `REQ-EXT-09`'s test **fails** when the underlying query is deliberately broken (a mutation
   check documented inside the test), covers both the summary WARN and the per-owner INFO across
   calc-def, part-def, **and part-usage** owners, and asserts the assert-shaped constraint on
   wi014_toy is reported.
-- [ ] `require constraint` is certified reported and pinned permanently (it is a plain
+  <!-- AUDIT 2026-07-06: verified by source — test_extractor.py:969 mutation check via injectable include_subtypes; independent literal 65; part-usage leg :934. Not executed (sandbox). -->
+- [x] `require constraint` is certified reported and pinned permanently (it is a plain
   `ConstraintUsage` under `RequirementConstraintMembership` — already visible; the pin locks
   that in).
-- [ ] The `EnumerationUsage`-as-attribute decision is recorded and pinned by a test on the
+  <!-- AUDIT 2026-07-06: verified — item4_require fixture + test_extractor.py:990. -->
+- [x] The `EnumerationUsage`-as-attribute decision is recorded and pinned by a test on the
   existing enum-bearing fixtures (whichever way it lands).
+  <!-- AUDIT 2026-07-06: verified by code — parameter_groups.py:102 keeps exact-type AttributeUsage (row-3 opt-OUT). Pin test not executed. -->
 - [ ] Per-call-site subtype decision table published in the agentic-mbse adapter docs, mirrored
   by a pointer here; every new/changed diagnostic has a fires-on-shape test (independently
   anchored) **and** a silent-on-clean test (R1 addition).
-- [ ] The R4 verification table is complete — every CONFIRMED-BLIND site reproduced by a failing
+- [x] The R4 verification table is complete — every CONFIRMED-BLIND site reproduced by a failing
   probe before design touched it; the discovery register updated in place.
+  <!-- AUDIT 2026-07-06: verified as artifact — design.md:43-49 + plan.md Phase-0 (all rows CONFIRMED-live); _probe.py committed. -->
+
 - [ ] Both repos' suites green (R2 coordinated pair). Item 4 owns a **repo-wide snapshot
   re-capture** — all 20 committed `extraction_snapshot.json` at format v2, one reviewed commit,
   license-gated, capture-script only (R3). The reviewed-diff gate: after re-capture every snapshot

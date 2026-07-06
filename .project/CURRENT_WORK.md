@@ -56,11 +56,38 @@ design decides value-propagation vs channel-wiring. Anchor: `plant_cost=(10+7)/0
 Spec: `.project/active/whole-plant-resolution/spec.md`. Implement runs AFTER Item 4
 (snapshot format v2 re-capture).
 
-### PIPELINE-TRUTH Item 4 — Subtype-Aware Enumeration & Constraint-Report Truth — spec in progress
+### PIPELINE-TRUTH Item 4 — Subtype-Aware Enumeration & Constraint-Report Truth — AUDITED: PASS-WITH-NOTES (2026-07-06)
 Track B head (no deps). Coordinated pair with agentic-mbse (R2): one adapter choke
 point (`include_subtypes`), per-call-site decision table, constraint drop report fires
 on assert constraints, REQ-EXT-09 re-anchored independently, snapshot constraint
-serialization. Spec: `.project/active/subtype-enumeration/spec.md`.
+serialization. Spec: `.project/active/subtype-enumeration/spec.md`. Audit:
+`.project/active/subtype-enumeration/audit.md`.
+- **Codegen side solid** — verified by artifact/source: collect/render split, REQ-EXT-09
+  re-anchor with executable mutation check, full serialize→replay chain (from-snapshot
+  report available), INV-B/D/E/G pins, dead-code deletions, docs rewrite, all 23 committed
+  snapshots at v2, wi014 assert manifest committed.
+- **Note 1 (gate disclosure):** the Phase-5 reviewed-diff gate under-itemized
+  `self_named_rescue` — its v2 diff carries a `binding_type` reference→chain reclassification
+  filed as "relativization." NOT Item-4-caused (Item 4 touches no binding code) but the
+  gate's itemization is inaccurate; re-itemize + pin/justify the reclassification.
+- **Note 2 (fusion-tea):** no committed fusion-tea snapshot exists in this repo, so the
+  "wi014 AND fusion-tea" SC is only half-met here; the v2 hard-gate now rejects any external
+  v1 fusion-tea snapshot until Item 2 re-captures it — carry to Item 2's SC-A/SC-4.
+- **Note 3 (limit):** sandbox blocked all code execution + all agentic-mbse access, so both
+  suites green, ruff/mypy (20/105 claimed), a live mutation run, and the entire agentic-mbse
+  half (rows 5–8, decision table, TYPE_MAP, Level-3 circular-FAILS) are plan-recorded only,
+  not re-executed. Needs a licensed/unsandboxed confirmation run before epic close.
+
+### PIPELINE-TRUTH Item 8 — Dead Code & Cleanup Debt — spec in progress
+Track B, no deps (schedule before PUSH-DOWN). One reviewed pass: delete two dead
+templates + verify-then-delete four dead functions (DOCS-SCRUB-F1), fix four stale
+docstrings (F3), fix the `_walk_aggregation_ast` literal-before-invocation dispatch bug
+(R4 reproduce + byte-identity gate + literal-bearing fixture; retires doc-19 hedge), pin
+the dotted-leaf alias edge (retires doc-25 hedge), disposition D1 residue F1–F5, assess
+SC-11 import rewrite, drop 4 vacuous skipifs. Handoffs: `_deserialize_constraint_info`/
+`extract_all_constraints` → Item 4; REQ-PGD-06 re-frame → Item 7; doc caveats → Item 10.
+Sequencing: agg-fixture capture runs entirely before OR after Item 4's snapshot v2 bump,
+not interleaved. Spec: `.project/active/cleanup-debt/spec.md`.
 
 ### PIPELINE-TRUTH Item 6 — Self-Referential Test Remediation — spec in progress
 Track B, no deps. Re-anchor the 25 §D5 flagged tests (7 HIGH + 10 MEDIUM + 8 LOW) to
