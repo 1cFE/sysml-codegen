@@ -8,10 +8,26 @@
 
 ### UPSTREAM-FINDINGS Item 10: Cross-Part Channel Wiring (SC-5 stage 2)
 
-**Status**: **COMPLETE — all phases landed and green, including Phase 8 (C-then-B ruling STEP 1+2
-succeeded).** Not committed. Plan: `.project/active/cross-part-wiring/plan.md`
-(see "Phase 8 STEP 1 + STEP 2 — COMPLETE" note). **Gate: 1962 passed / 4 skipped / 5 xfailed;
-ruff src/ 21; mypy src/ 109.** Suggest `/_my_audit` next.
+**Status**: **AUDITED — CONDITIONAL** (2026-07-06, commit `0c4b921`; audit:
+`.project/active/cross-part-wiring/audit.md`). All phases landed and green (Phase 8 C-then-B STEP 1+2
+succeeded), committed across four commits (`5ea0a6a`→`0c4b921`). **Gate: 1962 passed / 4 skipped / 5
+xfailed; ruff src/ 21; mypy src/ 109** (recorded; `uv run` approval-gated this session, so green rests on
+the recorded gate + static code/snapshot/baseline inspection). Substance certified; production code sound
+for all six mechanisms; INV-F/INV-G/D-C verified; 5 of 6 mechanisms channel-identity-pinned.
+
+**Two test/fixture fixes required before `/_my_close` (no production change):**
+1. **ife_plant channel-identity gap (Finding 1)** — the flagship multi-hop-EXPOSE mechanism's
+   direct-calc-output shape is only pinned by `EXPECTED_UNCOVERED == set()`, the exact insufficient signal
+   the D-C find flagged. Add an `offline_input_sources("ife_plant")` assertion pinning `magnet_volume` →
+   `...tf_coil__volume_calc__volume` (license-free; catf's alias-terminal shape is already baseline-pinned).
+2. **Stale ife baseline (Finding 2)** — `baseline_outputs/ife_plant/computation_graph.json` still shows
+   `magnet_volume` as `entry_point`/null (not regenerated), inconsistent with the recaptured snapshot;
+   regenerate + add `test_baseline_comparison_ife_plant`, or remove it. The plan's "ife baseline needed no
+   regen" note is false — its structure did change.
+
+**SC-2 honest status (unchanged, truthful in all docs):** gamma→lcoe edge present in the fusion-tea
+ComputationGraph from generated wiring alone; the full YAML still aborts at V11 on 10 OTHER cross-part
+bindings (Items 9-11 scope, pre-existing); run-C $270.12/MWh recorded-not-reproduced. BACKLOG P1 filed.
 
 **Phase 8 STEP 1+2 done (2026-07-06, the ruling's (B) branch):** authored the two-level fixture
 `spec_chain_twolevel` matching the REAL fusion-tea `hif_plant` shape — consumer `lcoe_calc` on the

@@ -229,6 +229,26 @@ def test_cross_part_inputs_pinned_or_baseline() -> None:
         assert graph.modules
 
 
+def test_shape4_wires_to_exact_channel() -> None:
+    """Shape 4 channel-identity pin (Item 10 audit gap #1).
+
+    An empty uncovered set alone cannot distinguish correct wiring from a
+    mis-wire (the D-C offline-parity bug hid behind exactly that signal).
+    Pin the direct-calc-output-terminal path to its precise producer channel —
+    the tf_coil instance, not a first-wins sibling.
+    """
+    graph, _ = build_full_graph_from_snapshot(snapshot_fixture("ife_plant"))
+    wired = {
+        (m.name, i.param_name): i.source.producer_channel
+        for m in graph.modules
+        for i in m.inputs
+        if i.source.source_type == "module_output"
+    }
+    key = ("ifeplantdesign__magnet_system__cryo_load", "magnet_volume")
+    assert key in wired, sorted(wired)
+    assert wired[key] == "IfePlantSubsystems__radial_build__tf_coil__volume_calc__volume"
+
+
 # ---------------------------------------------------------------------------
 # Live extractor layer (license-gated)
 # ---------------------------------------------------------------------------

@@ -62,7 +62,7 @@
         "area = length * width",
         "\nDocumentation:\nToy geometry calc: rectangular panel area = length * width.\nFirst stage of a two-calc chain used to validate usage-level\ncalc chaining for the WI-010 plant idiom.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
       ],
-      "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+      "source_file": "toy_library.sysml",
       "source_line": 4
     },
     {
@@ -127,7 +127,7 @@
         "cost = area * unit_cost",
         "\nDocumentation:\nToy cost calc: cost = area * unit_cost. Second stage of the\nchain — its `area` input is bound to `'Panel Area'.area` at\nthe usage level inside the part def.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
       ],
-      "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+      "source_file": "toy_library.sysml",
       "source_line": 26
     }
   ],

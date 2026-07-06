@@ -364,10 +364,19 @@ sysml-codegen defines the executable subset; agentic-mbse teaches and audits it.
 - Alias *emission* into generated output (Item 11)
 - Supertype-chain template inheritance (MFE-epic note from Item 4)
 
-**Success Criteria**:
-- [ ] gamma → lcoe edge present in generated YAML; IFE anchors reproduce end-to-end without harness wiring
-- [ ] Existing 4 baselines unchanged (or diffs reviewed and justified)
-- [ ] Instance-ambiguity case (two same-type sibling parts) covered by a test
+**Success Criteria** (audited 2026-07-06, commit `0c4b921` — verdict CONDITIONAL, see `active/cross-part-wiring/audit.md`):
+- [~] gamma → lcoe edge present in generated YAML; IFE anchors reproduce end-to-end without harness wiring
+  — **AUDIT: met at the GRAPH level only.** The gamma→lcoe edge is present in the fusion-tea
+  ComputationGraph from generated wiring alone (`hif_plant__lcoe_calc` input `driver_cost_constant` →
+  `hif_plant_pkg__hif_plant__driver__meier_cost__gamma`; left the V11 offender list 11→10). The full YAML
+  does NOT emit (aborts at V11 on 10 other cross-part bindings — `driver.efficiency`, `chamber.*`,
+  `target_factory.*`, `hif_driver_instance` — pre-existing, out of Item 10 scope), and run-C $270.12/MWh
+  stays recorded-not-reproduced (fusion-tea harness only). fusion-tea workarounds stay upstream. Tracked as
+  BACKLOG P1 (`BACKLOG.md:104`).
+- [~] Existing 4 baselines unchanged (or diffs reviewed and justified) — catf regenerated + reviewed; the
+  **ife_plant graph baseline is stale/unreviewed** (audit Finding 2 — regen or remove before close).
+- [x] Instance-ambiguity case (two same-type sibling parts) covered by a test —
+  `test_sibling_channel_ambiguity.py` pins the consumer to `...chamber_b__power_calc__power` (≠ chamber_a).
 
 **Deliverables**: `.project/active/cross-part-wiring/{spec,design,plan}.md`, docs 10/11/24/25 updates
 

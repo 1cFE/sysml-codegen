@@ -8,7 +8,6 @@ from ife_plant.modules.ifeplantlib.driverpowercalc import DriverPowerCalcModule
 from ife_plant.modules.ifeplantlib.hifcostcalc import HifCostCalcModule
 from ife_plant.modules.ifeplantlib.plantlcoe import PlantLcoeModule
 
-from ife_plant.schemas.design_params import DesignParams as DesignParams
 from ife_plant.schemas.library_params import LibraryParams as LibraryParams
 
 from ife_plant.primitives import Float
@@ -33,4 +32,4 @@ def create_ife_plant_registry() -> PipelineModuleRegistry:
 
 # Custom schema types for TEAx pipeline registration
 # Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
-CUSTOM_SCHEMA_TYPES = [    DesignParams,    LibraryParams,    Float,]
+CUSTOM_SCHEMA_TYPES = [    LibraryParams,    Float,]

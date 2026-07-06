@@ -89,36 +89,43 @@ and stages (a/b). This table maps them so "stage (a) flips both pins" is checkab
 
 ## Success Criteria
 
-- [ ] **SC-1 — the two committed V11 pins flip to real channel wiring, clean strict generation:**
+- [x] **SC-1 — the two committed V11 pins flip to real channel wiring, clean strict generation:**
   catf_mfe `[cryo_load.magnet_volume]` and ife_plant shape-4 `magnet_volume` resolve to a
   producer channel instead of a valueless fallback EP. Delivered by **scope #2 (multi-hop EXPOSE
   through a nested part) + scope #1 (consumer-scoped CHAIN alias lookup)** — *not* the part-def
   EXPOSE guard. Stage (a); committed-fixture backed.
-- [ ] **SC-2 — the gamma → lcoe edge is present in generated pipeline YAML** and the IFE anchors
+- [~] **SC-2 — the gamma → lcoe edge is present in generated pipeline YAML** and the IFE anchors
+  *(AUDIT: met at the GRAPH level only — the edge is present in the fusion-tea ComputationGraph from
+  generated wiring alone; `driver_cost_constant` left the V11 offender list 11→10. The full YAML does NOT
+  emit (aborts at V11 on 10 other cross-part bindings, out of scope), and run-C stays
+  recorded-not-reproduced. Left partial `[~]` per the honest caveat; BACKLOG P1 follow-up filed.)*
   reproduce end-to-end from generated wiring alone, with no harness-fed values (WI-015 run C's
   lcoe — procedure below). Delivered by **scope #3 (per-instance specialization-chain rewrite)**.
   Stage (b); backed by the **required** stage-(b) fixture (Known Requirements), whose
   current-incomplete baseline is captured before the stage-(b) code lands so the wiring shows as a
   reviewed diff (Item 8 pattern).
-- [ ] **SC-3 — instance-ambiguity channel test:** two same-type sibling parts (`chamber_a`/
+- [x] **SC-3 — instance-ambiguity channel test:** two same-type sibling parts (`chamber_a`/
   `chamber_b`-shaped) where a *consumer* binding disambiguates to the correct sibling's
   instance-scoped channel — not a collision or a first-wins alias. Folded into the stage-(b)
   fixture (it shares that fixture's consumer-edge dependency).
-- [ ] **SC-4 — mechanism D self-named rescue, positive test:** a self-named binding (`in x = x`)
+- [x] **SC-4 — mechanism D self-named rescue, positive test:** a self-named binding (`in x = x`)
   that today resolves to the calc's own parameter is rewritten by scope #3 to its upstream
   channel. The `self_named_binding_trap` fixture (Item 8) is the substrate; the positive case is
   its rescue (or a self-named binding in the stage-(b) fixture). Stage (b).
-- [ ] **SC-5 — SC-7 shape-A name-drop test lands here** with scope #4 (the REQ-CA-03 /
+- [x] **SC-5 — SC-7 shape-A name-drop test lands here** with scope #4 (the REQ-CA-03 /
   `is_part_def` revision it exercises): the wi014_toy part-def EXPOSE resolves through the revised
   path. The deferral chain (Item 1 → 8 → "10 or 11") ends here — machinery and its test land
   together. Stage (a).
-- [ ] **Existing 4 pipeline baselines unchanged**, or every diff reviewed and justified through
+- [~] **Existing 4 pipeline baselines unchanged**, or every diff reviewed and justified through
   the capture scripts (R3). The additive consumer-scoped alias step and the EXPOSE reclassification
   must not reorder or reclassify resolutions for models that already wire.
-- [ ] **Every new/changed registry key is consumer-scope-prefixed and unique by construction**
+  *(AUDIT: catf regenerated + reviewed; the ife_plant graph baseline is STALE — still shows
+  `magnet_volume` as `entry_point`/null while the recaptured snapshot wires it to `tf_coil`. No
+  comparison test catches it. Left partial pending regen/removal — audit Finding 2.)*
+- [x] **Every new/changed registry key is consumer-scope-prefixed and unique by construction**
   (R1 / doc 10) — no new ambiguous string keys, no reliance on the alias registry's first-wins
   collision fallback.
-- [ ] **Docs and matrix move with the code** (R1): REQ-BT-08 + docs 11/24 (new CHAIN step);
+- [x] **Docs and matrix move with the code** (R1): REQ-BT-08 + docs 11/24 (new CHAIN step);
   REQ-CA-03 revised + doc 16 (part-def EXPOSE); the multi-hop EXPOSE requirement + doc 16/11; the
   rewrite requirement + doc 12; new REQ/V numbers from the census; verification-matrix rows.
 

@@ -1,59 +1,6 @@
 {
   "modules": [
     {
-      "name": "ifeplantdesign__magnet_system__cryo_load",
-      "module_type": "ifeplantlib.CryoLoadModule",
-      "inputs": [
-        {
-          "param_name": "magnet_volume",
-          "python_type": "float",
-          "source": {
-            "source_type": "entry_point",
-            "param_group": "design_params",
-            "qualified_name": "IfePlantDesign__magnet_system__cryo_load__magnet_volume",
-            "producer_channel": null
-          },
-          "description": "",
-          "default_value": null
-        }
-      ],
-      "outputs": [
-        {
-          "field_name": "root",
-          "python_type": "float",
-          "channel_name": "IfePlantDesign__magnet_system__cryo_load__cooling_power",
-          "description": "",
-          "default_value": null,
-          "unit": null
-        }
-      ],
-      "execution_order": 0,
-      "compilability": "fully_compilable",
-      "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
-      "auto_impl_context": {
-        "execution_steps": [],
-        "output_expressions": [
-          {
-            "name": "cooling_power",
-            "expression": "(inputs.magnet_volume * 0.05)"
-          }
-        ],
-        "output_count": 1,
-        "single_output_expression": "(inputs.magnet_volume * 0.05)"
-      },
-      "calc_def_name": "CryoLoad",
-      "calc_def_qualified_name": "IfePlantLib::CryoLoad",
-      "doc_comment": "Cryogenic cooling load from magnet volume. Its input is wired cross-part\n(mechanism B) and deliberately left unresolvable — the known-incomplete\nbaseline Items 9-10 later wire.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain, unwired)\n*Last Updated**: 2026-07-05",
-      "calc_expressions": [
-        "cooling_power = magnet_volume * 0.05",
-        "\nDocumentation:\nCryogenic cooling load from magnet volume. Its input is wired cross-part\n(mechanism B) and deliberately left unresolvable — the known-incomplete\nbaseline Items 9-10 later wire.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain, unwired)\n*Last Updated**: 2026-07-05"
-      ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
-      "source_line": 97
-    },
-    {
       "name": "ifeplantsubsystems__radial_build__tf_coil__volume_calc",
       "module_type": "ifeplantlib.CoilVolumeModule",
       "inputs": [
@@ -80,7 +27,7 @@
           "unit": null
         }
       ],
-      "execution_order": 1,
+      "execution_order": 0,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -103,7 +50,7 @@
         "volume = radius * radius * 3.14159",
         "\nDocumentation:\nCoil volume from radius — the calc output that the shape-4 cross-part\nchain reaches through the nested tf_coil part.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain target)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 81
     },
     {
@@ -145,7 +92,7 @@
           "unit": null
         }
       ],
-      "execution_order": 2,
+      "execution_order": 1,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -168,7 +115,7 @@
         "driver_power = efficiency * bank_energy",
         "\nDocumentation:\nDriver electrical power from wall-plug efficiency and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (supertype-preserved template)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 42
     },
     {
@@ -210,7 +157,7 @@
           "unit": null
         }
       ],
-      "execution_order": 3,
+      "execution_order": 2,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -233,7 +180,7 @@
         "driver_power = efficiency * bank_energy",
         "\nDocumentation:\nDriver electrical power from wall-plug efficiency and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (supertype-preserved template)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 42
     },
     {
@@ -275,7 +222,7 @@
           "unit": null
         }
       ],
-      "execution_order": 4,
+      "execution_order": 3,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -298,7 +245,7 @@
         "driver_cost = cost_per_joule * bank_energy",
         "\nDocumentation:\nHIF driver capital cost from cost-per-joule and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (subtype template instantiates)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 55
     },
     {
@@ -340,7 +287,7 @@
           "unit": null
         }
       ],
-      "execution_order": 5,
+      "execution_order": 4,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -363,7 +310,7 @@
         "chamber_yield = blanket_multiple * yield_constant",
         "\nDocumentation:\nChamber yield cost from blanket multiple and yield constant.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 7 (per-instance sibling calc)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 68
     },
     {
@@ -405,7 +352,7 @@
           "unit": null
         }
       ],
-      "execution_order": 6,
+      "execution_order": 5,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -428,7 +375,7 @@
         "chamber_yield = blanket_multiple * yield_constant",
         "\nDocumentation:\nChamber yield cost from blanket multiple and yield constant.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 7 (per-instance sibling calc)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 68
     },
     {
@@ -614,7 +561,7 @@
           "unit": null
         }
       ],
-      "execution_order": 7,
+      "execution_order": 6,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -637,27 +584,64 @@
         "lcoe = (plant_cost_constant + om_cost_constant + target_cost_constant) / (availability * gain * driver_efficiency * thermal_efficiency)",
         "\nDocumentation:\nRepresentative plant LCOE-style calc consuming the 14 technology-agnostic\nparameters. Simplified formula — the modeling shape (14 def literals wired\nto a calc) is what Item 9 measures, not the economics.\n\n*Source**: authored fixture (Item 8, UPSTREAM-FINDINGS)\n*Reference**: spec.md Fixture 2, shape 1 (richness floor)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "tests/fixtures/ife_plant/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 11
+    },
+    {
+      "name": "ifeplantdesign__magnet_system__cryo_load",
+      "module_type": "ifeplantlib.CryoLoadModule",
+      "inputs": [
+        {
+          "param_name": "magnet_volume",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "IfePlantSubsystems__radial_build__tf_coil__volume_calc__volume"
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "IfePlantDesign__magnet_system__cryo_load__cooling_power",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 7,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "cooling_power",
+            "expression": "(inputs.magnet_volume * 0.05)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.magnet_volume * 0.05)"
+      },
+      "calc_def_name": "CryoLoad",
+      "calc_def_qualified_name": "IfePlantLib::CryoLoad",
+      "doc_comment": "Cryogenic cooling load from magnet volume. Its input is wired cross-part\n(mechanism B) and deliberately left unresolvable — the known-incomplete\nbaseline Items 9-10 later wire.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain, unwired)\n*Last Updated**: 2026-07-05",
+      "calc_expressions": [
+        "cooling_power = magnet_volume * 0.05",
+        "\nDocumentation:\nCryogenic cooling load from magnet volume. Its input is wired cross-part\n(mechanism B) and deliberately left unresolvable — the known-incomplete\nbaseline Items 9-10 later wire.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain, unwired)\n*Last Updated**: 2026-07-05"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 97
     }
   ],
   "entry_point_groups": [
-    {
-      "name": "design_params",
-      "class_name": "DesignParams",
-      "source_file": "design.sysml",
-      "parameters": [
-        {
-          "qualified_name": "IfePlantDesign__magnet_system__cryo_load__magnet_volume",
-          "simple_name": "magnet_volume",
-          "entry_type": "usage_literal",
-          "default_value": null,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        }
-      ]
-    },
     {
       "name": "library_params",
       "class_name": "LibraryParams",
@@ -892,13 +876,13 @@
     }
   ],
   "execution_order": [
-    "ifeplantdesign__magnet_system__cryo_load",
     "ifeplantsubsystems__radial_build__tf_coil__volume_calc",
     "ifeplantdesign__hif_plant__driver__base_power_calc",
     "ifeplantdesign__baseline_plant__driver__base_power_calc",
     "ifeplantdesign__hif_plant__driver__hif_cost_calc",
     "ifeplantdesign__baseline_plant__chamber_a__yield_calc",
     "ifeplantdesign__baseline_plant__chamber_b__yield_calc",
-    "ifeplantdesign__baseline_plant__lcoe_calc"
+    "ifeplantdesign__baseline_plant__lcoe_calc",
+    "ifeplantdesign__magnet_system__cryo_load"
   ]
 }
