@@ -37,12 +37,21 @@ pass-or-FAIL.
 
 ## Success Criteria
 
-- [ ] All 25 §D5 register entries are dispositioned — fixed, converted, handed off
+- [ ] All 25 §D5 flagged tests are dispositioned — fixed, converted, handed off
   (EXT-09 → Item 4), or documented-as-sibling-pinned — with a one-line rationale each
-  in the disposition table below.
+  in the disposition table below. Of the 25, **17 are register-named** (H1–H7 by
+  category, M1–M10 by category) and **8 are the LOW tier, of which the register names
+  only MF-07 explicitly**; the other 7 LOW identities are reconstructed by re-applying
+  the §D5 heuristic (see Q-1 ruling below). "25" is not a fixed register set — it is
+  17 register-named + 8 (1 register-named + 7 reconstructed).
 - [ ] Each **fixed** test demonstrably fails under a deliberate production mutation.
   Spot-check three (one count-tautology, one naming/channel, the MF-07 conversion) by
   perturbing production, confirming red, reverting; record the three in the close-out.
+- [ ] **Per-test literal provenance is recorded** (L3-2): every re-anchored literal
+  carries a comment next to it citing its source — snapshot path + line, fixture source
+  `file:line`, or "hand-computed from <inputs>". This makes "pasted from production
+  output" detectable at review for all ~24 fixed tests, not just the 3 mutation-checked
+  ones. The close-out lists the provenance per fixed test.
 - [ ] `test_localterm_sibling_agg_output` (REQ-MF-07) fails — not skips — when its
   LocalTerm does not resolve to the expected sibling aggregation channel.
 - [ ] The mis-anchored REQ-REG-02 test checks import paths against files an actual
@@ -64,6 +73,16 @@ pass-or-FAIL.
   committed snapshots (`tests/fixtures/{solar_battery_model,catf_mfe_model}/extraction_snapshot.json`)
   and design sources — license-free, so the pins run without a syside license. The
   concrete literals are enumerated per test below.
+- **[HARD]** Every re-anchored literal carries a **provenance comment** next to it (the
+  snapshot path + line, fixture source `file:line`, or hand-computation inputs). This is
+  the review-time defense against a literal lifted from production output — it makes the
+  anti-pattern detectable per test, above the 3-test executable mutation spot-check (L3-2).
+- **[HARD]** The **aggregation-channel doubling** (e.g.
+  `…__capital_cost__capital_cost`) is **correct by design, not a typo** — per ADR-003,
+  `get_channel_name` composes `usage_qn + "__" + output_name` (`core/qualified_names.py:98-100`)
+  and an aggregation module's EQN already ends with the attribute name, so the PQN of an
+  aggregation output repeats the trailing segment. Every doubled literal (H7, M5–M9)
+  carries a comment saying so; it must not be "de-doubled." Carry this note into the plan.
 - **[HARD]** REQ-EXT-09 (H1) is **out of scope** — Item 4 (subtype-enumeration) owns
   its re-anchoring as part of the constraint-report fix. Record the handoff; do not
   touch `test_extractor.py`'s EXT-09 test here.
@@ -93,12 +112,12 @@ starting point; re-confirm at implement.
 | # | Test / REQ | File:line | Why it can't fail | Fix / anchor |
 |---|---|---|---|---|
 | H1 | `test_extractor` EXT-09 | test_extractor.py:~895 | `expected` computed by the impl's own constraint query | **HANDOFF → Item 4.** Not touched here. |
-| H2 | `test_req_gen_05_one_json_per_group` GEN-05 | test_gen_json_templates.py:115 | `len(json_files) == len(graph.entry_point_groups)` — both sides are `len(groups)` over a 1:1 producer loop | Assert against literal counts: solar_battery **3**, catf_mfe **8**. |
-| H3 | `test_req_gen_05_one_schema_per_group` GEN-05 | test_gen_json_templates.py:135 | same `len==len` for schema files | same literals (3, 8). |
-| H4 | `test_req_py_07_json_file_count_matches_entry_point_groups` PY-07 | test_gen_json_templates.py:553 | byte-duplicate of H2's assertion; claims a YAML cross-check it never performs | Assert literal counts (3, 8). **Also fix the true PY-07 twin** `test_entry_fusion_json_count` (test_gen_pipeline_yaml.py:402), same `len==len` over the `entry_fusion` block — literal 3/8. |
+| H2 | `test_req_gen_05_one_json_per_group` GEN-05 | test_gen_json_templates.py:115 | `len(json_files) == len(graph.entry_point_groups)` — both sides are `len(groups)` over a 1:1 producer loop | Keep the parametrization; index a **per-model expected-count dict** `{"solar_battery_model": 3, "catf_mfe_model": 8}` by `model_name` (do not collapse to a scalar). `PARAMETRIZED_MODELS` is exactly those two, so the map is complete. |
+| H3 | `test_req_gen_05_one_schema_per_group` GEN-05 | test_gen_json_templates.py:135 | same `len==len` for schema files | same per-model dict `{solar:3, catf:8}` keyed by `model_name`. |
+| H4 | `test_req_py_07_json_file_count_matches_entry_point_groups` PY-07 | test_gen_json_templates.py:553 | byte-duplicate of H2's assertion; claims a YAML cross-check it never performs | same per-model dict `{solar:3, catf:8}`. **Also fix the true PY-07 twin** `test_entry_fusion_json_count` (test_gen_pipeline_yaml.py:402), same `len==len` over the `entry_fusion` block — same keyed dict. |
 | H5 | `test_usage_literal_float_conversion` EPC-03 | test_entry_point_classifier.py:289 | `expected = float(source)` (line 309) recomputes production's `float(entry_point_sources.get(qname))` (graph_builder.py:508-511) | Hardcode input→expected pairs from catf_mfe USAGE_LITERALs: `gross_electric`→**1546.72**, `p_neutron`→**2079.41**, `p_thermal_electric`→**1104.22**; add a synthetic unparseable `"3+4"`→**None**. Keep the independent `isinstance(...float)` check. |
-| H6 | `test_module_name_format` MF-01 (aggregation) | test_factory_aggregation.py:208 | `expected = get_module_name(agg.module_eqn)` — the exact call production makes (graph_builder.py:1389) | Dedicated assertion on solar_battery agg idx 0: `module.name == "solarbatterydesign__solar_battery_plant__solar_array__capital_cost"` (note the design prefix is **lowercased** — only a literal catches this). |
-| H7 | `test_output_channel_name_format` MF-05 (aggregation) | test_factory_aggregation.py:566 | `expected = get_channel_name(agg.module_eqn, attr)` — production's exact call (graph_builder.py:1644-1647) | Literal idx 0: `channel_name == "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"` (the trailing attribute is **doubled** — invisible to a helper-derived expected). |
+| H6 | `test_module_name_format` MF-01 (aggregation) | test_factory_aggregation.py:208 | `expected = get_module_name(agg.module_eqn)` — the exact call production makes (graph_builder.py:1389) | **Select the aggregation by `(instance_path, attribute_name)`, NOT by list index** (L3-1: index is a DFS-order artifact, not stored in the snapshot — a reorder must not spuriously fail this pin). Pick `instance_path == "SolarBatteryDesign__solar_battery_plant__solar_array"`, `attribute_name == "capital_cost"`; assert `module.name == "solarbatterydesign__solar_battery_plant__solar_array__capital_cost"` (design prefix **lowercased** — only a literal catches this). |
+| H7 | `test_output_channel_name_format` MF-05 (aggregation) | test_factory_aggregation.py:566 | `expected = get_channel_name(agg.module_eqn, attr)` — production's exact call (graph_builder.py:1644-1647) | **Select by `(instance_path, attribute_name)`, not index** (L3-1). For `solar_array`/`capital_cost`: `channel_name == "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"`. The trailing attribute is **doubled — deliberate ADR-003 aggregation PQN, not a typo; do not de-double** (see the [HARD] note above). Add that as a code comment on the literal. |
 
 ### MEDIUM (10)
 
@@ -107,17 +126,21 @@ starting point; re-confirm at implement.
 | M1 | `test_unparseable_default_is_none` (LIBRARY_DEFAULT branch) EPC-03 | test_entry_point_classifier.py:318 | branch gated on `default_value is None` (itself produced by `_get_library_default`) then re-invokes `_get_library_default` (line 353) and asserts it agrees | Transcribe calc-def default → expected: numeric `"0.45"`→0.45, `"1.07"`→1.07, `"171.5"`→171.5; expression default (e.g. `"1.0 / q_eng"`, `"TBD"`)→None. The DA (339) and UL (359) branches of the same test share the disease in weaker form — anchor them too. |
 | M2 | `test_req_pgd_05_classify_precedence_matches_index` PGD-05 | test_parameter_group_deriver.py:411 | `expected_group = deriver._generate_group_names(file_path.stem)` — the same method `classify()` calls internally | Hardcode: `classify("SolarBatteryDesign__solar_battery_plant__p_net_mw") == "design_params"`. Also harden the four `classify_returns_group_for_*_index` tests (365-402): they draw `qname` from the index and assert only non-None — replace with named qname → named group (attr→design_params; unbound/literal → library_params). Keep `classify_unknown_returns_none` (404, already a literal negative). |
 | M3 | `test_req_pgd_06_default_value_literal` PGD-06 | test_parameter_group_deriver.py:476 | reads `_literal_index[qname][1]` then asserts `get_default_value(qname)` returns that same dict value | Hardcode the two real literal-index entries: `child_count`→**25.0**, `total_child_mass`→**50.0**. Also fix the binding-resolution twin (459): it asserts only `None or isinstance float` — replace with `get_default_value(".._energy_production__p_net_mw") == 0.008` (exercises the real binding→attr resolution). Model: `test_req_pgd_06_default_value_direct_attr` (451, already literal 0.008). |
-| M4 | `test_module_eqn_format_solar_battery` AS-07 | test_aggregation_scoping.py:511 | `expected = f"{agg.instance_path}__{agg.expression.attribute_name}"` duplicates the `module_eqn` property's own f-string | Literal per idx: idx 0 `"SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"`; …; idx 15 `"SolarBatteryDesign__solar_battery_plant__capital_cost"`. Model: `test_module_eqn_issue22` (521, literal). Fold in the identical REQ-AS-03 recompute at line 311 (`expected_eqn = f"..."`). |
-| M5–M9 | Five factory-naming tests (composition unverified) | test_factory_calc_usage.py:206, :522; test_factory_formula.py:216, :647; (+ module_type twins :218, :234) | each builds `expected` by calling the production naming helper (`get_module_name` / `get_channel_name` / `derive_module_type`) the factory used | Dedicated non-parametrized literal on a named solar_battery module: calc_usage name `"solarbatterydesign__solar_battery_plant__energy_production"`; calc_usage channel `"SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh"`; formula name `"solarbatterydesign__solar_battery_plant__p_net_kw"`; formula channel (doubled) `"SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw"`; module_type `"solarbatterylibrary.EnergyProductionCalcModule"` / `"solarbatterydesign.solar_battery_plant.p_net_kwModule"`. **Count note:** the register said "five"; the sweep found six of this exact shape (the two `module_type` recomputes are the likely extras). Disposition all six; the extra is coverage gained, not scope creep. |
-| M10 | `test_req_reg_02_import_paths_match_filesystem` REG-02 | test_gen_registry.py:279 | asserts only that each dotted segment is alphanumeric (valid Python path); never compares to `PythonModulePath.from_sysml()` or the filesystem; the sibling `test_module_count_matches_inputs` (320) re-derives the count from the same graph rule | Re-anchor to on-disk truth: generate solar_battery + catf_mfe to `tmp_path` (the integration harness path already used in `tests/integration/test_full_pipeline.py:228-248`), then for each `from pkg.modules.A.B.C import Name` assert `output/modules/A/B/C.py` exists. Example: `…solarbatterylibrary.allocationcostcalc import AllocationCostCalcModule` → assert `output/modules/solarbatterylibrary/allocationcostcalc.py` exists. Note REQ-REG-02's stated behavior currently lives under REQ-REG-05's test (463) — the mis-anchoring is that REG-02 points at a weak syntactic check; do **not** duplicate REG-05, just make REG-02 assert the on-disk match. (Matrix re-mapping is Item 7's.) |
+| M4 | `test_module_eqn_format_solar_battery` AS-07 | test_aggregation_scoping.py:511 | `expected = f"{agg.instance_path}__{agg.expression.attribute_name}"` duplicates the `module_eqn` property's own f-string | **Select the aggregation by `(instance_path, attribute_name)`, not by the parametrized index** (L3-1). E.g. `solar_array`/`capital_cost` → `module_eqn == "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"`; plant-root/`capital_cost` → `"SolarBatteryDesign__solar_battery_plant__capital_cost"`. Model: `test_module_eqn_issue22` (521, literal). Fold in the identical REQ-AS-03 recompute at line 311 (`expected_eqn = f"..."`) with the same by-selection fix. |
+| M5–M9 | Five factory-naming tests (composition unverified) | test_factory_calc_usage.py:206, :522; test_factory_formula.py:216, :647; (+ module_type twins :218, :234) | each builds `expected` by calling the production naming helper (`get_module_name` / `get_channel_name` / `derive_module_type`) the factory used | Dedicated non-parametrized literal on a named solar_battery module: calc_usage name `"solarbatterydesign__solar_battery_plant__energy_production"`; calc_usage channel `"SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh"`; formula name `"solarbatterydesign__solar_battery_plant__p_net_kw"`; formula channel (doubled) `"SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw"`; module_type `"solarbatterylibrary.EnergyProductionCalcModule"` / `"solarbatterydesign.solar_battery_plant.p_net_kwModule"`. The FORMULA-channel doubling is the same **deliberate ADR-003 PQN** as H7 (a computed-attr module's EQN ends in the attr name) — comment it, do not de-double. **Count note:** the register said "five"; the sweep found six of this exact shape (the two `module_type` recomputes are the likely extras). Disposition all six; the extra is coverage gained, not scope creep. |
+| M10 | `test_req_reg_02_import_paths_match_filesystem` REG-02 | test_gen_registry.py:279 | asserts only that each dotted segment is alphanumeric (valid Python path); never compares to `PythonModulePath.from_sysml()` or the filesystem; the sibling `test_module_count_matches_inputs` (test_gen_registry.py:323, key on the name not the line) re-derives the count from the same graph rule | Re-anchor to on-disk truth: generate solar_battery + catf_mfe to `tmp_path` (the integration harness path already used in `tests/integration/test_full_pipeline.py:228-248`), then for each `from pkg.modules.A.B.C import Name` assert `output/modules/A/B/C.py` exists. Example: `…solarbatterylibrary.allocationcostcalc import AllocationCostCalcModule` → assert `output/modules/solarbatterylibrary/allocationcostcalc.py` exists. Note REQ-REG-02's stated behavior currently lives under REQ-REG-05's test (463) — the mis-anchoring is that REG-02 points at a weak syntactic check; do **not** duplicate REG-05, just make REG-02 assert the on-disk match. (Matrix re-mapping is Item 7's.) |
 
 ### LOW (8) — per-test judgment (fix if one-line, else document sibling-pin)
 
-The authoritative LOW enumeration lived only in the discovery session transcript; the
-list below is reconstructed by re-applying the §D5 LOW heuristic (circular expectation,
-content pinned by a literal sibling). **First implement step: reconcile this list
-against the transcript's D5 agent output if recoverable; otherwise this reconstructed
-set stands.** MF-07 (L2/L3) is named explicitly by the register and is not optional.
+The register named only **MF-07** (L2) among the 8 LOW; the other 7 identities lived
+only in the discovery session transcript. **Orchestrator ruling (Q-1): that transcript
+is NOT recoverable** — the archived discovery transcripts were probed and the D5 LOW
+enumeration is not economically extractable. So the list below is **authoritative as
+reconstructed**: re-apply the §D5 LOW heuristic (circular expectation, content pinned by
+a literal sibling) and each candidate stands on its own inspection at implement. No
+transcript archaeology at implement. If implement inspection finds a listed candidate is
+NOT actually self-referential, strike it with evidence and note the count change in the
+close-out (the SC-1 "25" is 17 register-named + 8, of which 7 LOW are reconstructed).
 
 | # | Test / REQ | File:line | Judgment |
 |---|---|---|---|
@@ -221,16 +244,15 @@ an EXPOSE_PURE alias resolving to
 
 ## Open Questions / Deferred to design
 
-- **The authoritative LOW-8 list.** The register enumerated LOW only in the session
-  transcript. The reconstructed set above stands unless the transcript's D5 agent
-  output is recovered at implement — the first plan step reconciles them. If the
-  transcript names a LOW test not in the reconstruction, disposition it by the same
-  fix-if-one-line-else-document rule.
-- **The "five vs six" factory-naming count.** The register said five; the sweep found
-  six of the identical recompute shape. All six are dispositioned (M5–M9 row); no
-  decision needed, but the count divergence is flagged for Item 7's matrix recount.
 - Whether L4–L7 (the generation-vs-graph consistency family) warrant a shared helper
   assertion instead of per-test documentation — a design nicety, deferable.
+
+**Resolved during spec review (recorded, not open):**
+- **The LOW-8 list** — transcript not recoverable (Q-1 ruling); the reconstructed set is
+  authoritative, confirmed by per-candidate inspection at implement.
+- **The "five vs six" factory-naming count** — the register said five, the sweep found
+  six of the identical shape; all six dispositioned (M5–M9). The count divergence is
+  flagged for Item 7's matrix recount, no decision needed here.
 
 ---
 

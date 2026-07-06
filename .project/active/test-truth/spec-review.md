@@ -165,8 +165,44 @@ orchestrator explicitly asked for, and one honest-scoping question about the LOW
 
 ## Resolutions
 
-*(Filled in during Stage 5, keyed by finding ID. The spec agent reads this section to
-incorporate the review; the reviewer does not edit the spec.)*
+*(Filled in during Stage 5, keyed by finding ID.)*
+
+All six must-fixes incorporated into `spec.md` 2026-07-06.
+
+- **[L3-1] — DONE.** H6, H7, and M4 re-keyed from raw list index ("idx 0/15") to
+  selection by `(instance_path, attribute_name)` — the same robust pattern the MF-07
+  detail already uses. Each row now says explicitly "select by (instance_path,
+  attribute_name), not by index" with the DFS-artifact rationale. A reorder can no
+  longer spuriously fail these pins.
+
+- **[L1-1] — DONE.** Added a standalone **[HARD]** requirement stating the
+  aggregation/formula channel doubling (`…__capital_cost__capital_cost`) is deliberate
+  per ADR-003 (`get_channel_name` = `usage_qn + "__" + output`; an aggregation/CA
+  module's EQN already ends in the attr name), verified at `core/qualified_names.py:98-100`,
+  and must not be de-doubled — carried into the plan via the requirement text. The H7
+  and M5–M9 rows now carry the same note inline and require a code comment on each
+  doubled literal.
+
+- **[L3-2] — DONE (provenance requirement adopted).** Per orchestrator ruling, adopted
+  per-test literal provenance: added a **[HARD]** requirement and a success criterion
+  that every re-anchored literal carries a comment citing its source (snapshot path+line,
+  fixture `file:line`, or hand-computation inputs), with the close-out listing provenance
+  per fixed test. The 3-test executable mutation spot-check stays on top.
+
+- **[Q-1] — RESOLVED (transcript not recoverable).** Per orchestrator ruling, rewrote
+  the LOW-tier preamble: the discovery transcript is NOT recoverable, so the reconstructed
+  LOW set is authoritative and each candidate stands on its own inspection at implement —
+  no transcript archaeology. SC-1 now states the "25" plainly as 17 register-named + 8
+  LOW (1 register-named MF-07 + 7 reconstructed), so it is not read as a fixed register
+  set. A struck candidate at implement is recorded with evidence + a count-change note.
+
+- **[L3-3] — DONE.** H2/H3/H4 fixes now specify a per-model expected-count dict
+  `{"solar_battery_model": 3, "catf_mfe_model": 8}` keyed by `model_name`, keeping the
+  parametrization (not a scalar, not the [INFERRED] non-parametrized route). The H4
+  `entry_fusion` twin gets the same map.
+
+- **[L1-2] — DONE (trivial).** REG-02's count sibling reference corrected to
+  `test_gen_registry.py:323` with an explicit "key on the name not the line" note.
 
 ---
 
