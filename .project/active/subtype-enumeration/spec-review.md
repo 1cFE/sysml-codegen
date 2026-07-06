@@ -90,17 +90,43 @@ No blocking findings. The spec is dense but well-structured; the decision table 
 
 ## Resolutions
 
-*(Filled in during Stage 5 as the human resolves findings. Keyed by ID.)*
+Incorporated 2026-07-06 (orchestrator resolutions). Keyed by ID.
 
-- **[L1-1]**
-- **[L1-2]**
-- **[L2-1]**
-- **[L3-1]**
-- **[L3-2]**
-- **[L3-3]**
-- **[L3-4]**
-- **[L3-5]**
-- **[L4-1]**
+- **[L1-1]** FIXED — resolution **(a): satisfy-excluded, documented deliberately.** Metamodel-facts
+  bullet rewritten: `SatisfyRequirementUsage ⊂ RequirementUsage` (stub line 16063), NOT
+  `⊂ AssertConstraintUsage`. The `[HARD]` semantic line now reads "assert and require in; requirement
+  AND satisfy out"; a dedicated `[HARD]` **satisfy note** under the decision table records the
+  three-part rationale (no supported model uses satisfy; satisfy is requirement-side; the zero-found
+  sentinel keeps the exclusion observable) and names the exclude-except-satisfy alternative as
+  deferred. Row 1 rationale rewritten; rows 6/7 inherit via "mirror row 1". The false "keeps satisfy
+  in" claim is deleted.
+- **[L1-2]** FIXED — settled checkout `/home/reid/1cfe/agentic-mbse` carried into a new `[HARD]`
+  "agentic-mbse landing" subsection under Known Requirements; removed from Open Questions. The stale
+  `~/agentic-mbse` reference is flagged as such.
+- **[L2-1]** ACKNOWLEDGED (non-blocking) — bundling of serialization + format bump is retained per
+  the epic scope (Item 4, scope 6) and the from-snapshot success criterion. The sequencing ruling
+  (L3-2) makes the cost explicit and owned, so the size is now a conscious call, not a surprise.
+- **[L3-1]** FIXED — the format-bump `[HARD]` and the Success-Criteria bullet now state plainly:
+  bump `SNAPSHOT_FORMAT_VERSION` 1→2, all 20 committed snapshots re-captured (not diffed-and-kept),
+  loader hard-gates the version (no coexistence), re-capture is license-gated via
+  `capture_extraction_snapshots.py`. The "byte-identical except the version bump" phrasing is
+  corrected to "byte-identical except the version field and, for constraint-bearing models, the new
+  constraint manifest".
+- **[L3-2]** FIXED — sequencing `[HARD]` added: **Item 1 impl → Item 4 impl → Item 2 impl** on one
+  serialized working tree. Item 4 OWNS the repo-wide re-capture (one reviewed commit) using Item 1's
+  `--fixtures` name-filter capture tooling; Item 2 afterward regenerates only its plant baselines.
+- **[L3-3]** FIXED — companion-branch procedure added to the "agentic-mbse landing" subsection:
+  branch from current `upstream-findings-sync` HEAD, stage ONLY Item-4 files (adapter + level3/4/6 +
+  new fixtures/tests/docs), never stash, never touch the dirty `adr002.py` + two spec dirs.
+- **[L3-4]** FIXED — the verification-first `[HARD]` no longer says "table below"; it states the
+  table is produced at design open (R4 mandates the in-spec table only for Items 5/7), consistent
+  with Next Steps and the SC wording.
+- **[L3-5]** FIXED (recommended, adopted) — row 5's pin now spells out both legs: fires-on-shape
+  (seeded circular-import fixture FAILS + non-empty graph) and silent-on-clean (acyclic import
+  fixture PASSES, non-empty graph, no false-positive cycle).
+- **[L4-1]** FIXED — REQ-EXT-09 citations corrected to `tests/conformance/test_extractor.py` with
+  the `expected` block at lines 894-899 (class 888-923), at both occurrences (Problem bullet and the
+  re-anchor `[HARD]`).
 
 ---
 
