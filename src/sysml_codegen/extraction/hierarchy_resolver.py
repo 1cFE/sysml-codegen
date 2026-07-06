@@ -50,6 +50,15 @@ from sysml_codegen.extraction.usage_extractor import (
 
 logger = logging.getLogger(__name__)
 
+# D3-8: aggregation-expression operator translation. OPERATOR_MAP spells every
+# operator correctly *except* `^`, which it maps to Python bitwise-XOR (` ^ `);
+# in an aggregation (as in SysML) `^` is exponentiation and must become ` ** `.
+# The comparison/logical translations (`> < == != and or implies not ...`) are
+# kept as-is — swapping wholesale to PYTHON_OPERATOR_MAP would drop them and
+# falsely trip has_unsupported on a valid `sum(x) > threshold` aggregation. An
+# operator absent from this map is genuinely untranslatable → has_unsupported.
+AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}
+
 
 def _chain_sibling_aliases_aggregation(
     sibling: RedefinitionData, agg_attribute_name: str
@@ -350,6 +359,30 @@ def _unwrap_invocation(node: Any, _depth: int = 0) -> Any:
     return node
 
 
+def _agg_operator_str(operator: Any, ctx: _AggregationContext) -> str:
+    """Translate an aggregation operator to its Python spelling (D3-8).
+
+    `operator` is a SysIDE `Operator` enum on real nodes (a plain str in unit
+    stubs); normalize with str() to the SysML symbol first — the same idiom
+    reconstruct_operator_expression uses (expression_utils.py:170) — then look up
+    the `**`-corrected translation. An operator in neither the arithmetic nor the
+    comparison/logical map is untranslatable: it sets ctx.has_unsupported and
+    warns (mirroring the unknown-node arm), instead of silently passing the raw
+    operator through (the pre-fix path, which stringified `^` to Python XOR).
+    """
+    op_key = str(operator)
+    op_str = AGG_PYTHON_OPS.get(op_key)
+    if op_str is None:
+        ctx.has_unsupported = True
+        logger.warning(
+            "Unsupported operator '%s' in aggregation expression; "
+            "marking aggregation unsupported.",
+            op_key,
+        )
+        return f" {op_key} "
+    return op_str
+
+
 def _walk_aggregation_ast(
     node: Any,
     mult_lookup: dict[str, MultiplicityData],
@@ -389,7 +422,7 @@ def _walk_aggregation_ast(
         if len(operands) == 2:
             left = _walk_aggregation_ast(operands[0], mult_lookup, ctx)
             right = _walk_aggregation_ast(operands[1], mult_lookup, ctx)
-            op_str = OPERATOR_MAP.get(operator, f" {operator} ")
+            op_str = _agg_operator_str(operator, ctx)
             return f"({left}{op_str}{right})"
         if len(operands) == 1:
             inner = _walk_aggregation_ast(operands[0], mult_lookup, ctx)
@@ -401,7 +434,7 @@ def _walk_aggregation_ast(
                 _walk_aggregation_ast(op, mult_lookup, ctx)
                 for op in operands
             ]
-            op_str = OPERATOR_MAP.get(operator, f" {operator} ")
+            op_str = _agg_operator_str(operator, ctx)
             return op_str.join(parts)
         return operator
 

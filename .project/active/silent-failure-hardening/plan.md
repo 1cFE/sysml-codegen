@@ -339,10 +339,28 @@ That every touched component's reference doc and matrix row can move in this cha
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 0 Completion
-**Item-8 Row-D commit:** [hash] · **Baseline:** [suite / ruff / mypy] · **Rebased D3-8 cites:** [lines]
+**Completed:** 2026-07-06
+**Item-8 Row-D commit:** `b1dece5` (on `pipeline-truth-epic`; audit `3fd390d`). Confirmed literal branch at `hierarchy_resolver.py:418` ABOVE the invocation catch-all at `:422`.
+**Baseline (audited live):** suite 2000 passed / 4 skipped / 5 xfailed; `ruff check src/` = 19; `mypy src/` = 104.
+**Rebased D3-8 cites:** operator sites at `hierarchy_resolver.py:392,404` (both `OPERATOR_MAP.get(operator, f" {operator} ")`); unknown-node model arm at `:482-486`.
+**INV-6 harness:** the clean-corpus zero-WARNING sweep already exists as `tests/unit/test_warning_reconciliation.py` (explicit clean list: `attr_expr_probe`, `sample_model`, `chain_spike_model`). It is an *inclusion* list, so new trip fixtures are simply never added to it — the exclusion is by construction. Green at baseline.
 
-### Phase 1–6 Completion
-[Same structure per phase: actual changes, issues, deviations, re-capture diffs reviewed]
+### Phase 1 Completion (Family 1 — Blind-Dispatch Fall-Throughs)
+**Completed:** 2026-07-06
+**Gates:** suite 2008 passed / 4 skipped / 5 xfailed; ruff 17 (≤ baseline 19, import-sort auto-fixes); mypy 104 (= baseline). deep_cross re-capture reviewed (below).
+
+**Per-finding:**
+- **D3-1** (`usage_extractor.py`): threaded `warnings` into `_extract_single_binding`; terminal arm now WARNS (naming param + node type). **DEVIATION from design D1:** the "distinct disposition, not UNBOUND reuse" is *foreclosed by ADR-003* — the graph builder requires every input param to resolve to bound-xor-entry-point (no third "dropped" disposition; dropping `x` makes `build_pipeline_context` raise "No binding resolution for …|x"). The finding's actual harm is the *silence*, which the warning fixes; `x` stays a (now loud) entry point. Unifies with D3-2's disposition. Fires-on-shape: `test_d31_invocation_binding_warns_not_silent` (live).
+- **D3-2** (`usage_extractor.py`): 3+-segment chain counted via `extract_feature_chain_segments` (count only) → WARN + surface as entry point, no root-truncation. Fires-on-shape lives with the fixture (`test_deep_cross_scope_probe.py::test_pattern_a_deep_chain_warns_on_extraction`).
+- **D3-3** (`usage_extractor.py`): closed-by-construction debug-guard on `_parse_reference_expression` `(None,None)` returns + stated SysIDE resolved-referent invariant. No fires-on-shape.
+- **D3-8** (`hierarchy_resolver.py`): `AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}`; new `_agg_operator_str` helper at both operator sites (392/404). **Root cause found at implement time:** `operator` is a SysIDE `Operator` enum, not a str — the old `OPERATOR_MAP.get(enum, f" {enum} ")` ALWAYS hit the fallback (str-stringified the enum), which is exactly why `^` silently became XOR. Fix normalizes via `str(operator)` (the `reconstruct_operator_expression` idiom), then looks up; genuinely-unknown → `has_unsupported` + warn. Byte-identical for all non-`^` operators (verified: agg conformance + e2e green). Fires-on-shape: `test_d38_caret_aggregation_compiles_to_power_not_xor` (live).
+- **D3-9** (`computed_attribute_extractor.py`): tripwire — non-literal AST root + empty refs WARNS; `not refs → LITERAL` classification unchanged. Guard-pin: `test_d39_nonliteral_root_empty_refs_warns` + silent-side `test_d39_no_ast_root_stays_silent`.
+- **D3-16** (`computed_attribute_extractor.py`): `else` arm added — cross-part single-hop EXPOSE_PURE with no local instance ref now WARNS instead of silently skipping the alias. Verified inert on the current corpus (D3-16 probe finds zero trip shapes in catf_mfe/ife_plant/wi014_toy). **DEFERRED:** the synthetic cross-part trip fixture + fires-on-shape test — authoring it needs live modeling iteration that exceeds this stage's budget. Code fix is landed and corpus-inert; follow-on = author `d316_crosspart_expose` fixture. (Not a reclassification — the shape is reachable per spec; only the fixture is deferred.)
+
+**Fixtures graduated:** `invocation_binding_probe` (extraction-only, D3-1), `d38_caret` (full-pipeline, D3-8) → `tests/fixtures/` + registered in `capture_extraction_snapshots.py` + snapshots captured.
+**Carve-out re-captures (reviewed):**
+- `deep_cross_scope_probe` (D3-2): the truncated CHAIN bindings (`data_point` `source_path="station"`, plus `sensor`, `base_metric` — all 3+-seg chains) are gone; those params are now unbound entry points. Consequence: the uncovered-offender set collapses to empty (silent valueless-wired offenders → clean warned EPs). Three committed pins updated to the new (better) truth; the truncation pin flipped to a fires-on-shape warning pin.
+- `d38_caret` (D3-8): captured fresh (new fixture). No committed aggregation snapshot uses `^`, so the corpus is byte-identical for the D3-8 change (vacuous carve-out, as designed).
 
 ---
 

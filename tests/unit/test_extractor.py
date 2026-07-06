@@ -142,7 +142,7 @@ def test_operator_expression_classified_as_expression():
         "sysml_codegen.extraction.usage_extractor._is_literal_expression",
         return_value=False,
     ):
-        result = _extract_single_binding(usage_elem, param_elem, "test_param")
+        result = _extract_single_binding(usage_elem, param_elem, "test_param", [])
 
     assert result.binding_type == BindingType.EXPRESSION
     assert result.param_name == "test_param"
@@ -171,6 +171,6 @@ def test_operator_expression_stores_ast():
         "sysml_codegen.extraction.usage_extractor._is_literal_expression",
         return_value=False,
     ):
-        result = _extract_single_binding(usage_elem, param_elem, "test_param")
+        result = _extract_single_binding(usage_elem, param_elem, "test_param", [])
 
     assert result.expression_ast is mock_expr

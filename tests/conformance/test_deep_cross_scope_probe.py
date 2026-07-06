@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from sysml_codegen.resolution.graph_builder import collect_uncovered_params
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
-from tests.conftest import snapshot_fixture
+from tests.conftest import requires_license, snapshot_fixture
 
 _ANALYZER = "deepcrossscopedesign__measurement_system__analyzer"
 _DERIVED = "deepcrossscopedesign__measurement_system__station__array__derived_calc"
@@ -39,29 +39,31 @@ def test_full_graph_builds_five_modules():
 
 
 def test_offender_set_pinned():
-    """Two cross-scope inputs stay valueless-and-wired today (V11 offenders): the
-    Pattern-A deep CHAIN `chain_analysis.data_point` and the mid-level `derived_calc.
-    base_metric`. Pinned so drift that silently wires or drops them fails."""
+    """D3-2 loud-reject (Item 5): the two former V11 offenders — the Pattern-A deep
+    CHAIN `chain_analysis.data_point` and the mid-level `derived_calc.base_metric` —
+    are 3+-segment chains the extractor can no longer truncate. They are now
+    hard-rejected at extraction (warned) and surface as clean entry points, NOT
+    valueless-and-wired fallbacks. So the uncovered-offender set is empty: silent
+    degradation was replaced by a loud, user-fillable EP. Pinned so drift that
+    re-introduces a silent wire fails."""
     actual = {(u.module, u.input) for u in collect_uncovered_params(_graph())}
-    assert actual == {
-        (f"{_ANALYZER}__chain_analysis", "data_point"),
-        (_DERIVED, "base_metric"),
-    }
+    assert actual == set()
 
 
-def test_pattern_a_deep_chain_falls_to_valueless_ep():
-    """Pattern A (4-level dot CHAIN `station.array.derived_calc.derived_value`): does NOT
-    resolve to the producer; the consumer input lands on its own design-params EP."""
+def test_pattern_a_deep_chain_falls_to_own_entry_point():
+    """Pattern A (4-level dot CHAIN `station.array.derived_calc.derived_value`): the
+    3+-segment chain is loud-rejected (D3-2), so the consumer input is unbound and
+    lands on its own design-params EP (its own QN), rather than a truncated wire."""
     qn = _input_source_qn(_graph(), f"{_ANALYZER}__chain_analysis", "data_point")
     assert qn == "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__data_point"
 
 
-def test_pattern_a_deep_chain_source_path_truncates_degradation():
-    """DEGRADATION the probe exposes: the extractor truncates the Pattern-A deep CHAIN
-    `station.array.derived_calc.derived_value` source_path to its FIRST segment
-    (`station`) — losing the rest of the path. Pinned as observed so a fix (or further
-    drift) is caught. This is why the probe is kept out of the global CHAIN-source_path
-    invariant (it would fail the dotted-source_path assertion)."""
+def test_pattern_a_deep_chain_no_truncated_binding():
+    """D3-2 (Item 5): the extractor no longer truncates the Pattern-A deep CHAIN
+    `station.array.derived_calc.derived_value` source_path to its root (`station`).
+    A 3+-segment chain is hard-rejected: there is NO CHAIN binding carrying a
+    truncated `station` source_path — the param is unbound instead (see the
+    fires-on-shape warning test below)."""
     import json
 
     from tests.conftest import snapshot_fixture
@@ -72,9 +74,29 @@ def test_pattern_a_deep_chain_source_path_truncates_degradation():
             if b["param_name"] == "data_point" and "chain_analysis" in (
                 usage.get("qualified_name") or ""
             ):
-                assert b["source_path"] == "station"  # truncated (should be 4 segments)
-                return
-    raise AssertionError("chain_analysis.data_point binding not found")
+                raise AssertionError(
+                    f"Expected no truncated CHAIN binding for data_point, got: {b}"
+                )
+    # No data_point binding survives — correct (it is now an unbound entry point).
+
+
+@requires_license
+def test_pattern_a_deep_chain_warns_on_extraction():
+    """D3-2 fires-on-shape (LOUD-REJECT): extracting the fixture live emits a warning
+    naming the multi-hop chain the extractor cannot resolve. Expectation anchored to
+    the fixture source (`station.array.derived_calc.derived_value`), not computed by
+    the code under test (R1)."""
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+    from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
+
+    fixture_dir = snapshot_fixture("deep_cross_scope_probe").parent
+    extractor = SysMLDataExtractor([fixture_dir])
+    assert extractor.load_models()
+    calc_defs = extractor.extract_calculation_definitions()
+    _usages, report = extract_calculation_usages(extractor.model, calc_defs=calc_defs)
+    assert any(
+        "station.array.derived_calc.derived_value" in w for w in report.warnings
+    ), report.warnings
 
 
 def test_pattern_b_deep_reference_resolves_to_cross_package_producer_ep():

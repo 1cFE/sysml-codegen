@@ -95,6 +95,12 @@ MODELS = {
     "plant_values": FIXTURES_DIR / "plant_values",
     "plant_value_shapes": FIXTURES_DIR / "plant_value_shapes",
     "deep_cross_scope_probe": FIXTURES_DIR / "deep_cross_scope_probe",
+    # Silent-Failure Hardening (PIPELINE-TRUTH Item 5) trip fixtures — graduated
+    # from probes/. Each carries a diagnostic shape, excluded from the
+    # zero-WARNING clean sweep (INV-6):
+    #   d38_caret — `sum(cell.total_cost) ^ exponent`: `^` is power → ` ** `, not
+    #               Python XOR; full-pipeline (D3-8).
+    "d38_caret": FIXTURES_DIR / "d38_caret",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
@@ -111,6 +117,11 @@ EXTRACTION_ONLY_MODELS = {
     # Extraction-only: the literal-bearing aggregation is fully visible in extraction;
     # no pipeline baseline is needed. Isolated so its shape cannot poison other fixtures.
     "agg_literal_probe": FIXTURES_DIR / "agg_literal_probe",
+    # Silent-Failure Hardening (Item 5) — extraction-only trip fixtures:
+    #   invocation_binding_probe — `in x = Doubler(v=a)` is an InvocationExpression
+    #     binding RHS: an unhandled dispatch type. Extraction-only (the pipeline
+    #     cannot resolve the invocation). Warns + drops (D3-1).
+    "invocation_binding_probe": FIXTURES_DIR / "invocation_binding_probe",
 }
 
 

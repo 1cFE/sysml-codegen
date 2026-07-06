@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 2,
   "model_name": "deep_cross_scope_probe",
-  "captured_at": "2026-07-06T19:03:24.561430+00:00",
+  "captured_at": "2026-07-06T22:58:08.261907+00:00",
   "compilation_results": {
     "Core_Metric": {
       "calc_def_name": "Core_Metric",
@@ -253,19 +253,6 @@
       "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
       "bindings": [
         {
-          "param_name": "data_point",
-          "source_path": "station",
-          "binding_type": "chain",
-          "is_cross_file": false,
-          "raw_expression": "FeatureChainExpression -> station",
-          "source_instance_elem": null,
-          "source_attribute_elem": null,
-          "literal_value": null,
-          "expression_ast": null,
-          "source_instance_name": "station",
-          "source_attribute_name": null
-        },
-        {
           "param_name": "baseline",
           "source_path": null,
           "binding_type": "literal",
@@ -275,11 +262,15 @@
           "source_attribute_elem": null,
           "literal_value": 2.0,
           "expression_ast": null,
+          "unhandled": false,
           "source_instance_name": null,
           "source_attribute_name": "baseline_value"
         }
       ],
-      "unbound_params": [],
+      "unbound_params": [
+        "data_point",
+        "data_point"
+      ],
       "source_file": "design.sysml",
       "source_line": 69,
       "parent_part_path": "",
@@ -304,6 +295,7 @@
           "source_attribute_elem": null,
           "literal_value": null,
           "expression_ast": null,
+          "unhandled": false,
           "source_instance_name": null,
           "source_attribute_name": "metric_value"
         },
@@ -317,6 +309,7 @@
           "source_attribute_elem": null,
           "literal_value": 2.0,
           "expression_ast": null,
+          "unhandled": false,
           "source_instance_name": null,
           "source_attribute_name": "baseline_value"
         }
@@ -346,6 +339,7 @@
           "source_attribute_elem": null,
           "literal_value": 2.0,
           "expression_ast": null,
+          "unhandled": false,
           "source_instance_name": null,
           "source_attribute_name": "baseline_value"
         }
@@ -377,6 +371,7 @@
           "source_attribute_elem": null,
           "literal_value": 10.0,
           "expression_ast": null,
+          "unhandled": false,
           "source_instance_name": null,
           "source_attribute_name": "reading"
         }
@@ -395,22 +390,10 @@
       "calc_def_name": "Derived_Metric",
       "calc_def_qualified_name": "DeepCrossScopeProducer::'Derived Metric'",
       "module_type": "deepcrossscopeproducer.Derived_MetricModule",
-      "bindings": [
-        {
-          "param_name": "base_metric",
-          "source_path": "sensor",
-          "binding_type": "chain",
-          "is_cross_file": false,
-          "raw_expression": "FeatureChainExpression -> sensor",
-          "source_instance_elem": null,
-          "source_attribute_elem": null,
-          "literal_value": null,
-          "expression_ast": null,
-          "source_instance_name": "sensor",
-          "source_attribute_name": null
-        }
-      ],
+      "bindings": [],
       "unbound_params": [
+        "base_metric",
+        "base_metric",
         "factor"
       ],
       "source_file": "library.sysml",
