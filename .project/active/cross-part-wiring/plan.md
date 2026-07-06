@@ -926,8 +926,218 @@ worth an explicit note since it touches the sole mechanism-D home, REQ-VBR-10).
   the real idiom is `attribute :>>`, extraction (`hierarchy_resolver.py:71`) must ALSO relax to accept
   AttributeUsage redefinitions — flagged now so it is not a Phase-8 surprise.
 
-### Phase 8 Completion
-_[TO BE FILLED — WI-015 run-C lcoe number + match; gamma's moved channel name]_
+### Phase 7 Completion
+**Completed:** 2026-07-06 (fresh session, full execution). All three mechanisms landed
+red→green, each verified with its pin test + the full suite between. **Gate: 1956 passed /
+4 skipped / 5 xfailed; ruff src/ 21; mypy src/ 109** — unmoved from Phase 6 (the three pin
+tests flipped their assertions from incomplete→wired; no net test-count change). Escalation
+guard NOT tripped — all three fit one session, well inside the one-day bound.
+
+Landed in the enumerated order (offline-verifiable first):
+
+- **b2 `sibling_channel_ambiguity` (D-D, REQ-BT-11) — backtracker #1 scope fix.**
+  `_resolve_chain_dispatch` Step 1c (`dependency_backtracker.py`) now tries the
+  consumer-scope-prefixed key `('{consumer_scope}.{prefix}', leaf)` before the bare
+  `(prefix, leaf)`, mirroring Step 1's prepend. `chamber_b.power` on `total_calc`
+  (scope `twin_plant`) now reaches the registered `('twin_plant.chamber_b','power')` alias
+  → wired `module_output` to chamber_b's channel, never first-wins-colliding on chamber_a.
+  INV-A held (additive: only adds a hit where the ladder fell through — full suite green).
+- **b3 `self_named_rescue` (D-E, REQ-VBR-10) — mechanism-D self-reference rescue.** New
+  `_rescue_self_named_bindings` (`pipeline_builder.py` Step 5.56, mirrored offline in
+  `graph_rebuild.py`) detects a full-QN self-reference (the binding's `::`-QN parent equals
+  the consuming usage's own short name) and, when an outer same-named EXPOSE resolves to a
+  real channel (a `_scoped_alias` hit — the "resolves to a real channel" test D-E requires),
+  rewrites it to `{instance}.{leaf}` CHAIN → the chain dispatch wires it to the upstream
+  `source_calc` channel. The `self_named_binding_trap` has no such upstream (no scoped alias
+  for `availability`) → left as-is, its pin unchanged. Placed after the scoped-alias registry
+  so resolvability is a real lookup, before the backtracker reads bindings.
+- **b1 `spec_chain_channel` (#3, REQ-VBR-10) — specialized-def precedence resolver.**
+  `_rewrite_virtual_bindings` (`pipeline_builder.py`) gained (1) a second index over
+  `hierarchy_data.redefinitions` keyed by specializing-def QN and (2) tier-2 rewrite via
+  `_rewrite_specialized_chain`: type-select the retyped part usage through `usage_type_map`
+  (`(Variant,'driver') -> HIF_Driver`), find that def's `:>> cost_per_joule = meier_cost.gamma`,
+  rewrite `driver.cost_per_joule -> driver.meier_cost.gamma`. Three-tier merge = usage
+  override (existing) > specialized-def `:>>` (new) > base def (fall-through). Single hop,
+  non-recursive (a cycle guard would be dead code — the recursive analog already lives in
+  the aggregation walker `graph_builder.py:1043`). Because this is an extraction/hierarchy-time
+  rewrite (live path only, not re-run offline per INV-1/SC-9), the b1 snapshot was RECAPTURED
+  (license) to bake in the rewritten binding. **Recapture diff is exactly two lines**:
+  `source_path` `driver.cost_per_joule -> driver.meier_cost.gamma` + `captured_at`. Only
+  `spec_chain_channel` changed — every other snapshot byte-identical (enumerated-set discipline).
+  Live end-to-end confirmed: `lcoe_calc.cost_per_joule` wires `module_output` →
+  `SpecChainDesign__spec_chain_plant__driver__meier_cost__gamma` (the gamma → lcoe edge, SC-2).
+
+**Change scope (exactly the enumerated set):** 3 src files
+(`dependency_backtracker.py`, `pipeline_builder.py`, `snapshot/graph_rebuild.py`), 3
+conformance test flips (the three stage-(b) pins), 1 recaptured snapshot
+(`spec_chain_channel`).
+
+**Deviation note (absorbed, faithful to design):** b3's rescue landed as its OWN step
+(`_rescue_self_named_bindings`), not inside `_rewrite_virtual_bindings` — that function
+early-returns when there are no design_overrides (b3 has none) and runs at Step 3.5 before
+the scoped-alias registry (the resolvability signal) exists. A dedicated step keeps one job
+per function and places the rewrite where its "resolves to a real channel" check is real.
+REQ-VBR-10 stays mechanism-D's sole home (the rewrite that implements the rescue); only the
+implementation site is a separate function, per D-E's "may land as a pre-resolution rewrite."
+
+### Phase 8 — STOPPED at WI-015 anchor (2026-07-06). WI-015 MISMATCH — orchestrator ruling needed.
+
+**Phase 7 is complete and green (see above). Phase 8 hit a hard STOP on the WI-015 SC-2 headline
+BEFORE the docs sweep** (docs would assert a passing SC-2 that does not hold for the real model).
+
+**What was run (live, license):** `sysml-codegen generate --models ~/1cfe/fusion-tea/models
+--output /tmp/ife_tea_gen --package-name ife_tea`. Generation ABORTED at the strict V11 check
+(Item 7) — 11 unresolved module inputs — and, critically, the offender list includes
+`hif_plant_pkg__hif_plant__lcoe_calc` input `driver_cost_constant`: **the gamma → lcoe edge is
+ABSENT from the generated wiring.** This is a mismatch with SC-2 ("the generated pipeline YAML
+contains the gamma → lcoe channel edge").
+
+**Root cause — the b1 fixture shape does not match the fusion-tea shape (two-level specialization):**
+- **Fusion-tea (real):** `lcoe_calc { in driver_cost_constant = driver.cost_per_joule }` is declared
+  on the BASE def `'IFE Power Plant'` (`ife_lcoe.sysml`/`ife_plant.sysml`). The retype
+  `part :>> driver : 'HIF Driver'` lives on the SPECIALIZATION `hif_plant : 'IFE Power Plant'`
+  (`hif_plant.sysml:25`). The `:>> cost_per_joule = meier_cost.gamma` redefinition is on
+  `HIF_Driver` (`hif_driver.sysml:82`, bare form — D-F holds).
+- **b1 `spec_chain_channel` (fixture):** consumer `lcoe_calc` AND the retype `driver -> 'HIF Driver'`
+  are BOTH on the SAME def `Variant`. So the consumer's declaring def == the retype's owning def.
+- **Why the resolver wires b1 but not fusion-tea:** the Phase-7 type-select keys
+  `usage_type_map[(usage.owning_part_def_qn, part_usage)]`. For the fusion-tea `lcoe_calc`,
+  `owning_part_def_qn = ife_plant__IFE_Power_Plant` (the BASE, where lcoe_calc is declared), so the
+  lookup returns the base `ife_subsystems__IFE_Driver` (no `cost_per_joule` redefinition) → no rewrite
+  → the binding stays `driver.cost_per_joule` → unresolved → V11. Probed live: `usage_type_map` has
+  `('ife_plant__IFE_Power_Plant','driver') -> ife_subsystems__IFE_Driver` and **NO** entry for the
+  hif_plant `:>> driver : 'HIF Driver'` retype (the redefined-inherited part usage is not indexed —
+  Item-4 SC-3 territory). So no keying of the current type-select can reach HIF_Driver; the data
+  isn't captured at extraction.
+
+**Why this is a STOP, not a push-through:** wiring the real edge needs (1) an extraction-layer change
+to index the `:>> driver : 'HIF Driver'` retype at the instance/specialization level (usage_type_map
+does not carry it today — that is hierarchy_resolver / Item-4 territory, not the Phase-7 resolver), and
+(2) an instance-aware type-select that uses the consumer INSTANCE's def-in-context (HIF_Plant), not the
+declaring base def. Both are beyond Phase 7's bounded scope and touch the escalation-guarded seam on the
+epic's riskiest item. Per the item's explicit "WI-015 mismatch = STOP," reported for a ruling.
+
+**Anchor numbers (recorded, not reproduced):** run-C lcoe = **$270.12/MWh** (Osiris, SV-013), tolerance
+**rel 1e-6**, γ = **$68.247/J** — from fusion-tea `work/completed/20260705_WI-015_ife-end-to-end-demo/spec.md:29,31,35`
+and `exploration/ife_e2e/run_anchors.py:48,156,183`. The run-C number is recomputed live by the fusion-tea
+harness (teax simkit + `create_output_router_with_json_schemas` + hand-built input JSONs + the two-pass
+gamma feedback in run_anchors.py), **not reproducible from sysml-codegen alone** — so the end-to-end
+numeric match was never the in-repo gate (the spec's committed gate is the offline pin flips + the
+stage-(b) fixture flip). gamma's intended producer channel under correct wiring would be
+`hif_plant_pkg__hif_plant__driver__meier_cost__gamma` (today it is a bare entry point).
+
+**b1 structural anchor (does hold):** the b1 fixture DOES prove the single-level idiom
+(consumer + retype on one def) wires gamma → lcoe from generated wiring alone (Phase 7, green offline).
+The gap is strictly the two-level specialization the real model uses.
+
+**Remaining Phase 8 (BLOCKED on the ruling):** docs 11/24/25/16/12 + REQ-CA-03 revision + verification
+matrix rows (V12/V13); release notes (gamma EQN move, hif_driver_instance / two-pass deletable);
+agentic-mbse MODELING_GUIDE list for Item 12 (incl. D-F's `attribute :>>` guidance); CURRENT_WORK.
+Deliberately NOT written yet — they would assert a passing SC-2.
+
+### Phase 8 — RULING RECEIVED, then EXECUTION LOSS (2026-07-06, second session)
+
+**Ruling:** (C) then (B) staged, hard cap, fallback (A+); write the BACKLOG follow-up either way.
+STEP 1 — author a two-level fixture matching the REAL shape (consumer calc on the base def; `part :>>
+driver : Subtype` retype on the specialized def; `:>> attr = calc.output` on the subtype), capture
+current-incomplete, pins naming the gap. STEP 2 (ONE bounded attempt, hard cap = 1 day / no suite
+destabilization beyond the new pins): (i) extraction — index the `:>>`-redefined inherited part usage into
+`usage_type_map` at the specialization level (Item-4 machinery extended one level); (ii) resolver —
+instance-aware type-select keyed on the consumer INSTANCE's def-in-context, not the declaring base def. If
+both land: flip the two-level pins, re-run the WI-015 generate, confirm `driver_cost_constant` leaves the
+V11 offender list and the gamma edge appears. Fallback A+ if the cap trips.
+
+**STEP 1 progress (partial):** authored the two-level fixture SysML at
+`tests/fixtures/spec_chain_twolevel/{library,design}.sysml` — `'IFE Power Plant'` (base) owns
+`part driver : 'IFE Driver'` + `calc lcoe_calc { in cost_per_joule = driver.cost_per_joule }`;
+`'HIF Plant' :> 'IFE Power Plant'` does `part :>> driver : 'HIF Driver'` and INHERITS lcoe_calc;
+`'HIF Driver' :> 'IFE Driver'` carries bare `:>> cost_per_joule = meier_cost.gamma`; design instantiates
+`part hif_plant : 'HIF Plant'`. This is the exact hif_plant/hif_driver structure. **NOT captured, NOT
+pinned, NOT verified** (see blocker).
+
+**BLOCKER — EXECUTION LOSS (project-venv/license commands gated this session):** every `uv run` and every
+project-venv command (`.venv/bin/python`, live extraction, `capture_snapshot`, `sysml-codegen generate`,
+`pytest`, `ruff`, `mypy`) returns "requires approval" and is blocked in this non-interactive session —
+including with `dangerouslyDisableSandbox`. Only system `python3` (no project deps) and trivial bash run.
+So Step 1's capture, Step 2's generate re-run, and every gate are unrunnable. Per the ruling's own final
+line ("Stop-and-report if execution dies") and the item's execution-loss stop condition, STOPPED here.
+
+**State intact and green as of the FIRST session's end** (Phase 7: 1956 passed / 4 skipped / 5 xfailed;
+ruff 21; mypy 109). No `src/` changed this session; only two uncaptured fixture files were added under
+`tests/fixtures/spec_chain_twolevel/` (untracked, inert — no test references them, so they cannot redden
+the suite). Nothing to revert.
+
+**To resume (venv/license restored):** (1) capture `spec_chain_twolevel`
+(`capture_snapshot([dir], dir/'extraction_snapshot.json')`); the first session's live probe of the REAL
+fusion-tea set already established the expected incomplete state — `lcoe_calc`'s binding stays
+`driver.cost_per_joule` (unrewritten), `usage_type_map` carries only the declaring-def key to the BASE
+driver and NO specialization-level `driver -> HIF Driver` entry — so write the conformance pins to assert
+exactly that gap. (2) Attempt Step 2 under the cap. (3) Docs + BACKLOG per the outcome.
+
+### Phase 8 STEP 1 + STEP 2 — COMPLETE, SC-2 WIRED (2026-07-06, fresh session, full execution)
+
+**Outcome: the (B) branch landed. The two-level gamma → lcoe edge wires on the REAL fusion-tea model
+from generated wiring alone.** Gate: **1962 passed / 4 skipped / 5 xfailed; ruff src/ 21; mypy src/ 109**
+(1956 + 6 new `spec_chain_twolevel` pins; no ruff/mypy movement). Cap NOT tripped — one bounded session,
+no suite destabilization beyond the new fixture.
+
+**Fixture correction (STEP 1 — the prior session's fixture was WRONG).** The prior session authored a
+`'HIF Plant' :> 'IFE Power Plant'` DEF specialization with the retype on the def. That does NOT match
+fusion-tea: `designs/hif_ife/hif_plant.sysml:23` is `part hif_plant : 'IFE Power Plant' { part :>> driver
+: 'HIF Driver' ... }` — a part USAGE typed by the BASE def, with the retype INLINE ON THE USAGE. The def
+form masked the real gap two ways: (a) def-level machinery indexed the retype into `usage_type_map`, and
+(b) `lcoe_calc` (owned by the base) was DROPPED because the usage was typed by the specialization, not the
+base. Rewrote `design.sysml` to the usage-level form and dropped `'HIF Plant'` from `library.sysml`. Now
+the probe reproduces the fusion-tea gap exactly: `lcoe_calc` instantiates (inherited from the base the
+usage is typed by); `usage_type_map` carries only `('TwoLevelLib__IFE_Power_Plant','driver') ->
+'IFE_Driver'`; the pin `lcoe_calc.cost_per_joule` is an unwired entry point.
+
+**Root-cause correction to the Phase-8-STOP diagnosis.** The STOP note framed the gap as "usage_type_map
+lacks the redefined-inherited retype entry (Item-4 SC-3 territory)." The precise cause is narrower: the
+retype lives on a part USAGE, and `usage_type_map` is built ONLY from `PartDefinition` members
+(`hierarchy_resolver.py` PartDef loop), so a usage-level retype is never indexed. Not a heritage-walk gap —
+a scan-scope gap (defs only, not design usages).
+
+**STEP 2 (i) extraction — `_index_usage_level_retypes` (`hierarchy_resolver.py`).** After the PartDef loop
+builds the def-level `usage_type_map`, a second pass scans design-level part usages and indexes genuine
+usage-level retypes keyed by the CONTAINER usage's instance QN: `('TwoLevelDesign__hif_plant','driver') ->
+'TwoLevelLib__HIF_Driver'`. **Blast-radius discriminator (the key to "no destabilization"):** index a
+member only when it is a `:>>` redefinition (`owned_redefinitions`) AND its most-specific owned type
+DIFFERS from the base def's declared type for that member (read from the just-built def-level map). A
+value-only `:>>` override that keeps the same type (solar_battery's `:>> solar_array {...}`,
+chain_override's sensor) is excluded. Verified empirically across all fixtures: **exactly one** fixture
+gains an entry — `spec_chain_twolevel`. Every other committed snapshot stays byte-identical.
+
+**STEP 2 (ii) resolver — instance-aware type-select (`pipeline_builder._rewrite_specialized_chain`).** The
+type-select now tries the consumer INSTANCE's path key first
+(`usage.qualified_name.rsplit('__',1)[0]` = `TwoLevelDesign__hif_plant`), falling back to the declaring-def
+key (the single-level `spec_chain_channel` shape). So `driver.cost_per_joule` → (instance `hif_plant`'s
+`driver` is `'HIF Driver'`) → its `:>> cost_per_joule = meier_cost.gamma` → rewrite to
+`driver.meier_cost.gamma` → chain dispatch → gamma channel. Live-path rewrite baked into the recaptured
+`spec_chain_twolevel` snapshot (like Phase 7 b1); offline == live verified.
+
+**SC-2 evidence (real fusion-tea model, `generate --models ~/1cfe/fusion-tea/models`):**
+- `driver_cost_constant` **LEFT the V11 offender list** — offender count 11 → 10 (my change removed exactly
+  it; added none — INV-A additive, no regression).
+- Gamma edge confirmed directly in the fusion-tea ComputationGraph:
+  `hif_plant_pkg__hif_plant__lcoe_calc` input `driver_cost_constant` = `module_output` → producer_channel
+  `hif_plant_pkg__hif_plant__driver__meier_cost__gamma`. The gamma → lcoe edge is present from generated
+  wiring alone, no hand-plumbing.
+- **YAML gating (honest):** the full fusion-tea YAML still does NOT emit — generation aborts at V11 on **10
+  remaining offenders** that are OTHER cross-part bindings on `lcoe_calc`/`recirc_calc`
+  (`driver.efficiency`, `driver.energy`, `driver.lifetime_shots`, `chamber.blanket_energy_multiple`,
+  `chamber.yield_cost_constant`, `target_factory.cost_per_target`, plus the separate
+  `hif_driver_instance` driver). These are the broader plant-wiring gaps (Items 9-11 scope), pre-existing,
+  NOT SC-2 and NOT touched by this change. So the gamma edge is confirmed at the graph level (the YAML's
+  source of truth), not by a written YAML file — recorded as such.
+- **$270.12/MWh (run-C lcoe) stays recorded-not-reproduced.** The end-to-end numeric anchor is a
+  fusion-tea-harness computation (teax simkit + two-pass gamma feedback in `run_anchors.py`), never an
+  in-repo gate. The in-repo SC-2 gate is the graph edge + the `spec_chain_twolevel` pin flip.
+
+**Change scope (exactly enumerated):** 2 src files (`extraction/hierarchy_resolver.py`,
+`orchestration/pipeline_builder.py`), 1 capture-script registration, 1 new fixture
+(`spec_chain_twolevel/{library,design,extraction_snapshot}.sysml/json`), 1 new conformance test
+(`test_spec_chain_twolevel.py`, 6 pins). No other snapshot changed.
 
 ---
 

@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-07-05
+**Last Updated**: 2026-07-06
 
 ---
 
@@ -8,27 +8,49 @@
 
 ### UPSTREAM-FINDINGS Item 10: Cross-Part Channel Wiring (SC-5 stage 2)
 
-**Status**: **IMPLEMENTING — Phases 0–3 landed and green (stage (a) core).** Not committed.
-Plan: `.project/active/cross-part-wiring/plan.md` (Phase 0 probe results + per-phase notes +
-Phase-4..8 handoff).
+**Status**: **COMPLETE — all phases landed and green, including Phase 8 (C-then-B ruling STEP 1+2
+succeeded).** Not committed. Plan: `.project/active/cross-part-wiring/plan.md`
+(see "Phase 8 STEP 1 + STEP 2 — COMPLETE" note). **Gate: 1962 passed / 4 skipped / 5 xfailed;
+ruff src/ 21; mypy src/ 109.** Suggest `/_my_audit` next.
 
-**Done (green boundary):** Phase 0 probe battery (both hard stops cleared; 2 absorbable
-deviations D-A/D-B found + recorded); Phase 1 (D9 `reference_chain` capture, corrected
-`chaining_features` walk); Phase 2 (leaf `EXPOSE_CHAIN_TENTATIVE` tag, INV-E gate); Phase 3
-(the confirm pass — transitive walk flips BOTH V11 pins live: catf + ife `magnet_volume`
-resolve to real channels; INV-F raises at 3 graph_builder readers + confirm terminal; INV-G
-second FORMULA-removal + `group_deriver` move). **Gate: 1945 passed / 4 skipped / 5 xfailed;
-ruff 21; mypy 109.** The 6 CATFMFEValidation tests un-xfailed to passing (SC-1).
+**Phase 8 STEP 1+2 done (2026-07-06, the ruling's (B) branch):** authored the two-level fixture
+`spec_chain_twolevel` matching the REAL fusion-tea `hif_plant` shape — consumer `lcoe_calc` on the
+BASE def, `part :>> driver : 'HIF Driver'` retype on a part USAGE (the prior session's fixture
+wrongly used a `'HIF Plant'` DEF, masking the gap). Two-seam fix under the cap:
+- **Extraction (REQ-LVP-09):** `_index_usage_level_retypes` (`hierarchy_resolver.py`) indexes the
+  usage-level retype into `usage_type_map` keyed by the container instance QN, filtered to genuine
+  retypes (target ≠ base-declared type) — verified blast radius = exactly `spec_chain_twolevel`,
+  every other snapshot byte-identical.
+- **Resolver (REQ-VBR-11):** instance-aware type-select in `_rewrite_specialized_chain`
+  (`pipeline_builder.py`) tries the consumer instance-path key before the declaring-def key.
 
-**Remaining:** Phase 4 (part-def EXPOSE scoped-alias `#4`/`#1` + wi014 shape-A / REQ-CA-09);
-Phase 5 (recapture catf+ife snapshots — REVIEWED-DIFF regen boundary; a path-drift
-model-relative-vs-repo-relative `source_file` issue must be resolved first, see plan Phase-5
-handoff); Phases 6–7 (stage (b): 3 companion fixtures + precedence resolver, ONE-DAY escalation
-guard); Phase 8 (WI-015 fusion-tea live anchor + docs/REQ IDs).
+**SC-2 confirmed on the REAL fusion-tea model:** `generate --models ~/1cfe/fusion-tea/models` now
+wires `hif_plant__lcoe_calc` input `driver_cost_constant` = `module_output` →
+`hif_plant_pkg__hif_plant__driver__meier_cost__gamma` (the gamma → lcoe edge). `driver_cost_constant`
+LEFT the V11 offender list (count 11 → 10, no regression). YAML gating (honest): the full model still
+aborts at V11 on 10 OTHER cross-part bindings (`driver.efficiency`, `chamber.*`, `target_factory.*`,
+`hif_driver_instance`) — broader Items 9-11 scope, pre-existing, out of Item 10. So the gamma edge is
+confirmed in the ComputationGraph (the YAML's source of truth), not a written YAML. Run-C lcoe
+$270.12/MWh stays recorded-not-reproduced (fusion-tea harness only). fusion-tea workarounds
+(`hif_driver_instance` + two-pass gamma feedback) STAY upstream until the other 10 resolve
+(BACKLOG P1 follow-up).
 
-**Key caveat:** committed catf/ife snapshots are still FORMULA (stale) — live extraction flips
-the pins, snapshot-based tests still see the old gap. This is exactly what Phase 5 recapture
-resolves; suite is green in the meantime.
+**Note on the "V12/V13" from the design:** reframed as REQ coverage (REQ-CA-10 multi-hop EXPOSE;
+REQ-LVP-09/REQ-VBR-11 specialization chain) rather than new diagnostic V-codes — the mechanisms are
+positive resolution, not new abort diagnostics, so inventing V-codes would be fictional.
+
+**Phases 0–7 (prior sessions, all green):** Phase 0 probe battery (2 absorbable deviations D-A/D-B);
+Phase 1 (D9 `reference_chain` capture); Phase 2 (`EXPOSE_CHAIN_TENTATIVE` tag, INV-E); Phase 3
+(confirm pass — both V11 pins flip live; INV-F/INV-G); Phase 4 (part-def EXPOSE `_scoped_alias`
+#4/#1, wi014 shape-A, REQ-CA-09 discharged); Phase 5 (recapture catf+ife + D-C offline==live parity
+fix); Phase 6 (3 stage-(b) fixtures captured incomplete-first); Phase 7 (3 stage-(b) mechanisms:
+D-D backtracker prepend, D-E self-named rescue, b1 specialized-def resolver).
+
+**Deliverables (Phase 8):** `spec_chain_twolevel` fixture + snapshot + `test_spec_chain_twolevel.py`
+(6 pins); `_index_usage_level_retypes` + instance-aware type-select; verification-matrix rows
+(REQ-BT-11, REQ-CA-10, REQ-VBR-10/11, REQ-LVP-09; REQ-CA-03/09 revised); release notes
+(`.project/active/cross-part-wiring/release-notes.md`); BACKLOG P1 follow-up; reference docs
+11/24/25/16/12 updated. Real fixtures, no mocks; no commits.
 
 ### UPSTREAM-FINDINGS Item 9: Plant-Idiom Literal Pre-Fill (SC-5 stage 1)
 

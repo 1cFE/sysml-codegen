@@ -6,17 +6,17 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 212 |
-| PASS (test exists and passes) | 198 |
+| Total requirements | 217 |
+| PASS (test exists and passes) | 204 |
 | UNTESTED (no dedicated test) | 12 |
-| DEFERRED | 1 |
+| DEFERRED | 0 |
 | REQ families | 29 |
-| Conformance test files | 33 |
+| Conformance test files | 34 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
 - **UNTESTED**: No conformance test directly references this requirement
-- **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (REQ-CA-09 → Item 8)
+- **DEFERRED**: Behavior implemented; real-fixture test deferred to a later item (none open — REQ-CA-09 discharged by Item 10)
 
 UNTESTED requirements are either cross-cutting architectural principles verified
 indirectly through component-level tests, or design-only requirements that constrain
@@ -118,6 +118,7 @@ the documentation rather than executable code.
 | REQ-BT-08 | Resolution SHALL use type-directed dispatch on `BindingType` format to select the correct... | `test_backtracker.py` | PASS |
 | REQ-BT-09 | The FORMULA `::`-QN REFERENCE path SHALL per-segment sanitize (`sanitize_qualified_name`) before comparison/lookup so a quoted-owner QN matches the sanitized design-attribute QN (Bug A; six-site lockstep flip, INV-1) | `test_matcher_fixes_item7.py`, `test_dual_resolution.py` | PASS |
 | REQ-BT-10 | A design attribute owned by a part **def** (empty `parent_part`) SHALL match its binding via a leaf-unique fallback over design-part attributes (calc-def I/O excluded), returning a QN only when exactly one candidate exists, else None (Bug B; INV-2, no cross-wire) | `test_matcher_fixes_item7.py` | PASS |
+| REQ-BT-11 | `_resolve_chain_dispatch` SHALL query the structured `_scoped_alias` namespace (Step 1c) by splitting `source_path` at the last dot, trying the consumer-scope-prefixed key `(consumer_scope.prefix, leaf)` before the bare `(prefix, leaf)` (Item 10 #1 / D-D sibling disambiguation), ordered after Step 1b and before the unscoped Step 2 (INV-A: additive, only where the ladder fell through) | `test_sibling_channel_ambiguity.py`, `test_wi014_toy.py` | PASS |
 
 ### CA
 
@@ -127,13 +128,14 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-CA-01 | Classification SHALL produce exactly one of 5 values per attribute expression | `test_computed_attributes.py` | PASS |
 | REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
-| REQ-CA-03 | EXPOSE_PURE SHALL produce `ChannelAlias` only for PartUsage-level (not PartDef) | `test_computed_attributes.py` | PASS |
+| REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
+| REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | `test_computed_attributes.py` | PASS |
 | REQ-CA-05 | UNRESOLVABLE attributes SHALL be logged but not generate modules or aliases | `test_computed_attributes.py` | PASS |
 | REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or ... | `test_computed_attributes.py` | PASS |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | — | UNTESTED |
-| REQ-CA-09 | The two EXPOSE_PURE name-drop warnings (key-not-found + Phase-3) SHALL state that the derived-attribute name is dropped and name the canonical channel; malformed-refs unchanged | `test_computed_attributes.py` | DEFERRED TO ITEM 8 |
+| REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
 
 ### DM
 
@@ -283,6 +285,7 @@ the documentation rather than executable code.
 | REQ-LVP-05 | Entry point default backfill SHALL replace `None` defaults with literal values discovered... | `test_factory_aggregation.py` | PASS |
 | REQ-LVP-06 | `usage_type_map` SHALL be threaded from `HierarchyExtractionResult` through `build_comput... | `test_factory_aggregation.py` | PASS |
 | REQ-LVP-08 | `usage_type_map` SHALL resolve each `(owning_qn, usage_name)` to the most-specific owned FeatureTyping target (not `next(iter(member.types))`); incomparable multi-typings resolve sorted-first with V10 | `test_type_indexing.py` | PASS |
+| REQ-LVP-09 | `_index_usage_level_retypes` SHALL index usage-level retypes of inherited part usages (`part hif_plant : Base { part :>> driver : Subtype }`) into `usage_type_map` keyed by the CONTAINER usage's instance QN, limited to GENUINE retypes (a `:>>` redefinition whose most-specific owned type differs from the base def's declared type for that member) so value-only `:>>` overrides are excluded and non-two-level snapshots stay byte-identical (REQ-HR-09 released) | `test_spec_chain_twolevel.py` | PASS |
 | REQ-LVP-07 | Literal default found SHALL keep module `FULLY_COMPILABLE`; no default SHALL set `MANUAL_... | `test_factory_aggregation.py` | PASS |
 
 ### MF
@@ -485,6 +488,8 @@ the documentation rather than executable code.
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` so no two virtual instances share a binding object (divergent-sibling rewrite correctness; Item 10 precondition) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path`; it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py` | PASS |
+| REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py` | PASS |
+| REQ-VBR-11 | The `_rewrite_specialized_chain` type-select SHALL be instance-aware: it SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`, `part_usage`) in `usage_type_map` before the declaring-def key, so a two-level specialization (usage-level `:>> driver : Subtype` on an inherited part usage) selects the specialized def where the declaring-def key sees only the base type | `test_spec_chain_twolevel.py` | PASS |
 
 ---
 

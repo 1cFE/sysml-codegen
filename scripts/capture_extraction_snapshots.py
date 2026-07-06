@@ -70,6 +70,13 @@ MODELS = {
     "spec_chain_channel": FIXTURES_DIR / "spec_chain_channel",
     "sibling_channel_ambiguity": FIXTURES_DIR / "sibling_channel_ambiguity",
     "self_named_rescue": FIXTURES_DIR / "self_named_rescue",
+    # Two-level specialization fixture (Item 10 Phase 8, C-then-B ruling). Reproduces
+    # the REAL fusion-tea hif_plant shape: a part USAGE typed by the BASE def
+    # ('IFE Power Plant') with an inline `part :>> driver : 'HIF Driver'` retype on the
+    # usage; lcoe_calc inherited from the base. The usage-level retype is NOT indexed in
+    # usage_type_map (keyed by part-DEF QN), so the declaring-base-def type-select misses
+    # 'HIF Driver' -> the gamma -> lcoe edge stays unwired. This is the WI-015 gap.
+    "spec_chain_twolevel": FIXTURES_DIR / "spec_chain_twolevel",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types

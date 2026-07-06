@@ -101,3 +101,30 @@ Prioritized list of epics and features.
 - EXPOSE_COMPUTED decomposition (calc output + arithmetic, deferred from ATTR-EXPR)
 - Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
 - Body-assignment expression capture (P3, M-lift; deferred from UPSTREAM-FINDINGS Item 3 / SC-2). For the `return attribute y : Real; y = expr;` form, wire the direction-None `member_expressions[y]` (the body assignment) into `output_expression_asts[y]` so `y` auto-implements instead of degrading to a `NotImplementedError` stencil. Inline `return y : Real = expr` already auto-implements, and the A-2 stencil fix steers modelers to the inline form, so this is low value — it restores auto-impl only for the deprecated body-assignment pattern.
+- **fusion-tea whole-plant cross-part wiring (P1; from UPSTREAM-FINDINGS Item 10, SC-2 follow-up).**
+  Item 10 wired the `gamma → lcoe` edge for the two-level `hif_plant` shape (the WI-015
+  headline): `hif_plant__lcoe_calc` input `driver_cost_constant` now resolves to the Meier
+  `gamma` channel from generated wiring alone, and left the V11 offender list (count 11 → 10).
+  But `generate --models ~/1cfe/fusion-tea/models` still ABORTS at V11 on **10 other** unresolved
+  cross-part inputs on `lcoe_calc`/`recirc_calc` — `driver.efficiency`, `driver.energy`,
+  `driver.lifetime_shots`, `chamber.blanket_energy_multiple`, `chamber.yield_cost_constant`,
+  `target_factory.cost_per_target`, plus the separate `hif_driver_instance` driver's inputs.
+  These are plain cross-part attribute references (subsystem attribute → plant calc input),
+  a different shape than Item 10's specialized-`:>>`-chain and multi-hop-EXPOSE cases; they
+  are pre-existing and untouched by Item 10 (INV-A additive). Until they resolve, the generated
+  pipeline cannot replace the fusion-tea hand-plumbing, so the `hif_driver_instance` scaffold
+  and the two-pass gamma feedback in `run_anchors.py` STAY upstream (not yet deletable).
+  **Acceptance test:** `tests/fixtures/spec_chain_twolevel` extended with the plain
+  subsystem-attribute cross-part bindings, plus a fusion-tea `generate` that emits the full
+  YAML with zero V11 offenders and reproduces run-C's lcoe ($270.12/MWh) within tolerance.
+  This is the remainder of SC-5 (Items 9–11 plant wiring), scoped out of Item 10 per the
+  C-then-B ruling.
+- **Two-level specialization — `attribute :>>` extraction gap (P3; from UPSTREAM-FINDINGS Item 10,
+  D-F).** A value-carrying redefinition authored as `attribute :>> attr = <expression>` (an
+  AttributeUsage) is silently dropped at extraction — `_extract_single_redefinition`
+  (`hierarchy_resolver.py`) only scans ReferenceUsage members — so `hierarchy_data.redefinitions`
+  comes back empty and the specialized-def resolver has nothing to read. Item 10 did NOT relax
+  this: fusion-tea uses only the bare `:>> attr = value` form (86 occurrences, zero
+  `attribute :>>`; the real gamma edge is `hif_driver.sysml:82 :>> cost_per_joule = meier_cost.gamma`).
+  Recorded as an agentic-mbse guidance/validation candidate for Item 12 (teach the bare form; warn
+  when an `attribute :>>` carries an expression RHS), not a codegen change.

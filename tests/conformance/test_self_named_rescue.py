@@ -12,13 +12,16 @@ the Phase-7 rewrite has a real channel to rescue it to (SC-4, mechanism D). Layo
 Where ``self_named_binding_trap`` dead-ends on the calc's own parameter (no upstream), this
 fixture's identical binding has ``source_calc.throughput`` in scope to rescue to.
 
-## Current-incomplete pin (captured FIRST, Item 8 pattern)
+## Resolved wiring (Phase 7, mechanism D / amendment D-E)
 
-The Phase-7 mechanism-D branch does not yet rewrite the self-named binding, so
-``sink_calc.throughput`` resolves to the calc usage's OWN parameter entry point
-(``RescueDesign__rescue_plant__sink_calc__throughput`` — the trap failure mode) instead of
-the upstream ``source_calc`` channel. Phase 7 flips this: the entry point becomes a
-``module_output`` wired to ``source_calc``'s throughput channel (SC-4 rescue).
+The self-named binding does NOT reach the rewrite as a bare name: extraction resolves it
+to a full REFERENCE QN pointing at sink_calc's OWN parameter
+(``RescueLib::'Rescue Plant'::sink_calc::throughput``). The mechanism-D rescue detects that
+self-reference and, because an outer same-named EXPOSE (``throughput = source_calc.throughput``)
+resolves to a real channel, rewrites the binding to the upstream ``source_calc`` channel —
+wiring it as a ``module_output``. Captured current-incomplete FIRST (Item 8 pattern); this
+test now asserts the flipped, rescued state. The negative companion
+``self_named_binding_trap`` has no resolvable upstream, so it is correctly left as-is.
 """
 
 from __future__ import annotations
@@ -50,16 +53,17 @@ def test_upstream_channel_exists() -> None:
     assert UPSTREAM_CHANNEL in channels, channels
 
 
-def test_self_named_binding_pinned_to_own_param() -> None:
-    """CURRENT-INCOMPLETE (SC-4 pin): the self-named ``throughput`` resolves to the calc
-    usage's OWN parameter entry point (the trap failure mode), NOT the upstream channel.
-    Phase 7 flips this to a wired ``module_output`` on ``source_calc``."""
+def test_self_named_binding_rescued_to_upstream() -> None:
+    """SC-4 FLIP (Phase 7, mechanism D / D-E): the self-named ``throughput`` no longer
+    dead-ends on sink_calc's own parameter — the full-QN self-reference is detected and,
+    because an outer same-named EXPOSE (``throughput = source_calc.throughput``) resolves
+    to a real channel, the binding is rewritten to the upstream ``source_calc`` channel as
+    a wired ``module_output``. (The negative companion ``self_named_binding_trap`` has no
+    such upstream and is correctly left as-is.)"""
     sources = offline_input_sources(MODEL)
     src = sources[(CONSUMER, "throughput")]
-    assert src.source_type == "entry_point", src
-    # Degenerate self-reference: points at sink_calc's own throughput parameter.
-    assert src.qualified_name == "RescueDesign__rescue_plant__sink_calc__throughput", src
-    assert src.producer_channel is None, src
+    assert src.source_type == "module_output", src
+    assert src.producer_channel == UPSTREAM_CHANNEL, src
 
 
 @requires_license

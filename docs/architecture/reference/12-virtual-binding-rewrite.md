@@ -29,6 +29,8 @@ virtual (non-template) copies become pipeline modules.
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | Called at line 736 in `build_pipeline_context()`, before Steps 4-7 |
 | REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` (`[copy.copy(b) for b in template.bindings]`) so no two virtual instances share a binding object; the rewrite mutates only scalar fields, so a shallow copy suffices | `test_virtual_binding_rewrite.py::test_rewrite_respects_instance_boundary_for_divergent_siblings` — two instances given different overrides read 50.0 and 100.0 independently |
 | REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path` (no `::`, no `.`); it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py::test_rewrite_skips_bare_name_source_path_without_raising` — non-empty index, bare-name binding, no raise, DEBUG logged, binding unchanged |
+| REQ-VBR-10 | A `part_usage.attr` CHAIN binding whose retyped part usage's specialized def carries a `:>> attr = calc.output` redefinition SHALL be rewritten through it (tier 2 of the three-tier merge, `_rewrite_specialized_chain`). A self-named binding (`in x = x`, resolved to a full-QN self-reference) whose outer same-named EXPOSE resolves to a real channel SHALL be rewritten to that upstream channel (mechanism D, `_rescue_self_named_bindings`, a separate step); no resolvable upstream → left as-is | Specialized-def resolver: `test_spec_chain_channel.py::test_cost_per_joule_wired_to_gamma`; self-named rescue: `test_self_named_rescue.py::test_self_named_binding_rescued_to_upstream` |
+| REQ-VBR-11 | The specialized-def type-select SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`) before the declaring-def key, so a two-level specialization (retype on a part usage, consumer calc on the base def) resolves against the instance's own retype | `test_spec_chain_twolevel.py::test_cost_per_joule_wired_to_gamma` |
 
 ## Why Binding Rewriting Is Needed
 
@@ -109,6 +111,66 @@ For each `CalcUsageData` where `is_template = False`:
 | **LITERAL override** | `matched.redefinition_type == RedefinitionType.LITERAL` | `binding_type = LITERAL`, `literal_value = matched.literal_value`, `source_path = None` | Becomes [DESIGN_ATTRIBUTE entry point](06-entry-point-classifier.md) |
 | **CHAIN override** | `matched.redefinition_type == RedefinitionType.CHAIN` | `source_path = matched.source_path` (e.g., `"tracker.eta"`) | Resolved via [OutputRegistry](10-output-registry.md) as MODULE_OUTPUT |
 | **No match** | Key not in override index | Binding unchanged | Original template binding used |
+
+## Three-Tier Merge: Specialized-Def `:>>` Precedence (REQ-VBR-10, REQ-VBR-11)
+
+The usage-override cases above are tier 1. When no usage override matches, a second
+tier resolves a `part_usage.attr` binding through the *type* the part usage was retyped
+to. The full precedence is:
+
+**usage override (tier 1) > specialized-def `:>>` (tier 2) > base def (fall-through).**
+
+Tier 2 lives in `_rewrite_specialized_chain`. Its two inputs come from the hierarchy
+resolver ([25-hierarchy-resolver](25-hierarchy-resolver.md)):
+
+- A **second index** over `hierarchy_data.redefinitions` keyed by the *specializing*
+  def QN (`(owning_part_qn, attribute_name) → RedefinitionData`), distinct from the
+  tier-1 `override_index`.
+- `usage_type_map`, which says what type a part usage resolves to per scope.
+
+**The rewrite.** For a binding `driver.cost_per_joule`, split into part usage `driver`
+and attribute `cost_per_joule`. Type-select `driver` to its retyped def (`'HIF Driver'`).
+If that def redefines `cost_per_joule :>> meier_cost.gamma`, rewrite the binding to
+`driver.meier_cost.gamma`. The chain dispatch then wires it to the gamma channel (the
+gamma → lcoe edge, SC-2). A base def whose attribute carries no redefinition falls
+through unchanged — tier 3. The hop is single and non-recursive.
+
+**Instance-first type-select (REQ-VBR-11).** The type-select tries two keys, in order:
+
+```python
+instance_path = usage.qualified_name.rsplit("__", 1)[0]
+target_def = usage_type_map.get((instance_path, part_usage)) \
+    or usage_type_map.get((owning_def, part_usage))
+```
+
+The **instance-path key first** handles two-level specialization: the fusion-tea shape
+retypes `driver` on a part *usage* (`part hif_plant : 'IFE Power Plant' { part :>>
+driver : 'HIF Driver' }`) while the consumer `lcoe_calc` is declared on the *base* def.
+Keying only on the consumer's declaring def would see the base type and miss the retype.
+The instance-path key (`TwoLevelDesign__hif_plant`) reaches the usage-level retype that
+`_index_usage_level_retypes` indexed (REQ-LVP-09,
+[25-hierarchy-resolver](25-hierarchy-resolver.md)). The **declaring-def key** is the
+fall-through for the single-level shape (`spec_chain_channel`), where consumer and retype
+sit on the same def.
+
+## Self-Named Binding Rescue — Mechanism D (REQ-VBR-10)
+
+A self-named binding `in throughput = throughput` does **not** reach `_rewrite_virtual_bindings`
+as a bare name. Extraction resolves it to a full REFERENCE QN pointing at the consuming
+calc's own parameter (e.g. `RescueLib::'Rescue Plant'::sink_calc::throughput`) — the same
+shape `self_named_binding_trap` pins. So the rescue is a **separate step**,
+`_rescue_self_named_bindings`, not a branch of the rewrite (D-E deviation, faithful to the
+design's "may land as a pre-resolution rewrite").
+
+It runs at **Step 5.56**, after the scoped-alias registry is populated (so "resolves to a
+real channel" is a real lookup) and before the backtracker reads bindings. It detects the
+self-reference — the binding QN's parent segment equals the consuming usage's own short
+name — and, when an outer same-named EXPOSE resolves to a real channel (a `_scoped_alias`
+hit), rewrites the binding to the instance-scoped `{instance}.{leaf}` CHAIN. The chain
+dispatch (Step 1c) then wires it to the upstream `source_calc` channel. No resolvable
+outer EXPOSE → the binding is left as-is: that is the genuine modeling error
+`self_named_binding_trap` pins. This keeps REQ-VBR-10 as mechanism D's sole home; only the
+implementation site is a dedicated function.
 
 ## Concrete Before/After Example
 

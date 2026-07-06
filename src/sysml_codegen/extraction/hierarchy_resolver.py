@@ -513,6 +513,64 @@ def build_aggregation_expression(
     )
 
 
+def _index_usage_level_retypes(
+    part_usages: Iterable[Any],
+    base_type_map: dict[tuple[str, str], str],
+    qn_to_partdef: dict[str, Any],
+) -> dict[tuple[str, str], str]:
+    """Index genuine usage-level retypes of inherited part usages, keyed by the
+    CONTAINER usage's instance QN (Item 10 two-level specialization, Phase 8).
+
+    The def-level ``usage_type_map`` keys retypes by the declaring PartDef. But a
+    two-level specialization retypes an inherited part usage ON A PART USAGE — e.g.
+    fusion-tea's ``part hif_plant : 'IFE Power Plant' { part :>> driver : 'HIF Driver' }``,
+    where the retype lives on the ``hif_plant`` usage, not on any def. A type-select
+    keyed on the consumer's declaring def then sees only the base type (``'IFE Driver'``)
+    and misses the retype.
+
+    This indexes ``(container_usage_qn, member_name) -> retyped_def`` for exactly the
+    members that are a GENUINE retype: a ``:>>`` redefinition (``owned_redefinitions``)
+    whose most-specific owned type DIFFERS from the base def's declared type for that
+    member. A value-only ``:>>`` override that keeps the same type (e.g. solar_battery's
+    ``:>> solar_array {...}``) is excluded, so no non-two-level fixture gains an entry —
+    committed snapshots stay byte-identical.
+
+    ``base_type_map`` is the fully-built def-level ``usage_type_map`` (read-only here).
+    """
+    new_entries: dict[tuple[str, str], str] = {}
+    for usage in part_usages:
+        container_targets = [
+            qn
+            for target in owned_feature_typing_targets(usage)
+            if (qn := build_element_qualified_name(target))
+        ]
+        container_def, _ = most_specific(container_targets, qn_to_partdef)
+        if not container_def:
+            continue
+        for member in getattr(usage, "owned_members", []):
+            if not SysideAdapter.is_instance(member, "PartUsage"):
+                continue
+            if not getattr(member, "owned_redefinitions", None):
+                continue  # plain typed usage, not a :>> redefinition
+            name = sanitize_name(getattr(member, "name", ""))
+            if not name:
+                continue
+            target_qns = [
+                qn
+                for target in owned_feature_typing_targets(member)
+                if (qn := build_element_qualified_name(target))
+            ]
+            winner, _ = most_specific(target_qns, qn_to_partdef)
+            if not winner:
+                continue
+            if winner != base_type_map.get((container_def, name)):
+                # Genuine retype-of-inherited-usage: the target type differs from the
+                # base-declared type. Key by the container usage's instance QN so the
+                # resolver's instance-aware type-select reaches the specialized def.
+                new_entries[(build_element_qualified_name(usage), name)] = winner
+    return new_entries
+
+
 def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     """Top-level orchestrator: extract all hierarchy data from the model.
 
@@ -610,9 +668,16 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                             agg.aliases.append(sibling.attribute_name)
                     all_aggregations.append(agg)
 
-    # Design-level overrides from PartUsages
-    part_usages = SysideAdapter.elements_of_type(model, "PartUsage")
+    # Design-level overrides from PartUsages (materialized: iterated twice below).
+    part_usages = list(SysideAdapter.elements_of_type(model, "PartUsage"))
     design_overrides = extract_design_overrides(part_usages)
+
+    # Item 10 two-level specialization (Phase 8): index usage-level retypes of inherited
+    # part usages, keyed by the container usage's instance QN. usage_type_map now carries
+    # def-level entries only; pass it as the read-only base-type source before extending.
+    usage_type_map.update(
+        _index_usage_level_retypes(part_usages, usage_type_map, qn_to_partdef)
+    )
 
     return HierarchyExtractionResult(
         redefinitions=all_redefinitions,

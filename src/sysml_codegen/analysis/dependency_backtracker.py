@@ -613,11 +613,24 @@ class DependencyBacktracker:
         # e.g. demo_plant.total_cost) that no flat string key constructs. Ordered
         # after both scoped steps and before the unscoped alias step (INV-A): it
         # only ADDS a hit where the old ladder fell through, never overrides one.
+        #
+        # D-D (Item 10 b2, REQ-BT-11): try the consumer-scope-prefixed key FIRST,
+        # mirroring Step 1's `consumer_scope + '.' + source_path` prepend. A binding
+        # like `chamber_b.power` in a two-sibling plant registers as
+        # `('twin_plant.chamber_b','power')`; the bare `('chamber_b','power')` misses
+        # it and the def-level `power` name first-wins-collides. Prepending the
+        # consumer's instance scope disambiguates to the correct sibling channel.
         if "." in source_path:
             prefix, leaf = source_path.rsplit(".", 1)
-            channel = self._output_registry.scoped_alias_lookup(
-                ScopedAliasKey((prefix, leaf))
-            )
+            channel = None
+            if consumer_scope:
+                channel = self._output_registry.scoped_alias_lookup(
+                    ScopedAliasKey((f"{consumer_scope}.{prefix}", leaf))
+                )
+            if channel is None:
+                channel = self._output_registry.scoped_alias_lookup(
+                    ScopedAliasKey((prefix, leaf))
+                )
             if channel is not None and not self._is_self_reference(channel, usage):
                 return channel
 

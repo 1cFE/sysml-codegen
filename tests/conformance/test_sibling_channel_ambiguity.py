@@ -10,13 +10,14 @@ Layout:
 - ``total_calc`` binds ``chamber_power = chamber_b.power`` — it must reach chamber_b's
   instance-scoped channel, not first-wins to chamber_a.
 
-## Current-incomplete pin (captured FIRST, Item 8 pattern)
+## Resolved wiring (Phase 7, amendment D-D)
 
-The Phase-7 resolver does not yet rewrite the consumer chain to the instance-scoped
-channel, so ``total_calc.chamber_power`` resolves to a def-level entry point
-(``SiblingLib__Chamber__power``) — the un-disambiguated collision — instead of wiring to
-``chamber_b``'s channel. Phase 7 flips this: the entry point becomes a ``module_output``
-wired to ``chamber_b``'s power channel (and NOT ``chamber_a``'s).
+The #1 consumer-scoped ``_scoped_alias`` lookup (``_resolve_chain_dispatch`` Step 1c)
+prepends the consumer's instance scope, so ``total_calc.chamber_power`` (bound
+``chamber_b.power``) reaches the registered ``('twin_plant.chamber_b','power')`` alias
+and wires to ``chamber_b``'s power channel as a ``module_output`` — never first-wins
+colliding on the def-level ``power`` name (chamber_a). Captured current-incomplete FIRST
+(Item 8 pattern); this test now asserts the flipped, wired state.
 """
 
 from __future__ import annotations
@@ -50,18 +51,17 @@ def test_both_sibling_channels_exist() -> None:
     assert CHAMBER_B in channels, channels
 
 
-def test_chamber_power_pinned_as_ambiguous_entry_point() -> None:
-    """CURRENT-INCOMPLETE (SC-3 pin): the consumer's ``chamber_power`` is a def-level
-    (un-disambiguated) entry point, NOT wired to chamber_b's instance channel. Phase 7
-    flips this to a wired ``module_output`` on ``chamber_b`` — never ``chamber_a`` — via
-    the #1 consumer-scoped ``_scoped_alias`` lookup prepending the consumer's instance
-    scope so ``chamber_b.power`` reaches ``('twin_plant.chamber_b','power')``."""
+def test_chamber_power_disambiguated_to_chamber_b() -> None:
+    """SC-3 FLIP (Phase 7, D-D): the consumer's ``chamber_power`` wires to chamber_b's
+    instance channel — never chamber_a. The #1 consumer-scoped ``_scoped_alias`` lookup
+    prepends the consumer's instance scope so ``chamber_b.power`` reaches the registered
+    ``('twin_plant.chamber_b','power')`` alias instead of first-wins colliding on the
+    def-level ``power`` name."""
     sources = offline_input_sources(MODEL)
     src = sources[(CONSUMER, "chamber_power")]
-    assert src.source_type == "entry_point", src
-    # Def-level qualified name: the collision has not been disambiguated to an instance.
-    assert src.qualified_name == "SiblingLib__Chamber__power", src
-    assert src.producer_channel is None, src
+    assert src.source_type == "module_output", src
+    assert src.producer_channel == CHAMBER_B, src
+    assert src.producer_channel != CHAMBER_A, src
 
 
 @requires_license

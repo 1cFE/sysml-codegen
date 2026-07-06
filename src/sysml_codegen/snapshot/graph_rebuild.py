@@ -50,6 +50,7 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
     # offline too. Local import avoids a pipeline_builder import cycle.
     from sysml_codegen.orchestration.pipeline_builder import (
         _register_partdef_expose_scoped_aliases,
+        _rescue_self_named_bindings,
     )
 
     _register_partdef_expose_scoped_aliases(
@@ -58,6 +59,11 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
         snap["calc_usages"],
         snap.get("hierarchy_data"),
     )
+
+    # Item 10 stage (b), mechanism D: rescue self-named bindings to their upstream
+    # EXPOSE channel (pipeline_builder Step 5.56), so the offline path wires them the
+    # same as the live path. Runs after the scoped aliases exist, before the backtracker.
+    _rescue_self_named_bindings(registry, snap["calc_usages"])
 
     # Run backtracker
     backtracker = DependencyBacktracker(

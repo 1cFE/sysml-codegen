@@ -189,19 +189,71 @@ def _extract_hierarchy_and_rewrite_bindings(
     return (hierarchy_data, scoped_agg_data, chain_aliases)
 
 
+def _rewrite_specialized_chain(
+    binding: Any,
+    usage: CalcUsageData,
+    redef_by_def: dict[tuple[str, str], RedefinitionData],
+    usage_type_map: dict[tuple[str, str], str],
+) -> bool:
+    """Item 10 #3 / REQ-VBR-10: rewrite a ``part_usage.attr`` CHAIN binding through the
+    retyped part usage's specialized-def ``:>>`` redefinition. Returns True if rewritten.
+
+    The consumer binds ``driver.cost_per_joule``. ``driver`` is retyped to ``'HIF Driver'``
+    for this instance (``usage_type_map``), and ``'HIF Driver'`` redefines
+    ``cost_per_joule :>> meier_cost.gamma``. So the binding is rewritten to
+    ``driver.meier_cost.gamma``, which the chain dispatch then wires to the gamma channel
+    (the gamma -> lcoe edge, SC-2). Non-recursive single hop — a base def whose attribute
+    carries no redefinition falls through unchanged (the base-def tier).
+    """
+    if binding.binding_type != BindingType.CHAIN:
+        return False
+    src = binding.source_path
+    if not src or "." not in src or "::" in src:
+        return False
+    owning_def = usage.owning_part_def_qn
+    if not owning_def:
+        return False
+    part_usage, rest = src.split(".", 1)
+    attr = rest.split(".", 1)[0]
+    # Instance-aware type-select (Item 10 two-level specialization, Phase 8). Try the
+    # consumer INSTANCE's own retype of the inherited part usage first, keyed by the
+    # instance path (e.g. ``TwoLevelDesign__hif_plant``). This catches a usage-level
+    # ``:>> driver : 'HIF Driver'`` that the declaring-def key cannot see. Fall back to
+    # the declaring-def key (single-level shape, spec_chain_channel).
+    instance_path = usage.qualified_name.rsplit("__", 1)[0]
+    target_def = usage_type_map.get((instance_path, part_usage)) or usage_type_map.get(
+        (owning_def, part_usage)
+    )
+    if not target_def:
+        return False
+    redef = redef_by_def.get((target_def, attr))
+    if (
+        redef is None
+        or redef.redefinition_type != RedefinitionType.CHAIN
+        or not redef.source_path
+    ):
+        return False
+    tail = rest[len(attr):]  # "" for driver.attr, ".deeper" for driver.attr.deeper
+    binding.source_path = f"{part_usage}.{redef.source_path}{tail}"
+    return True
+
+
 def _rewrite_virtual_bindings(
     calc_usages: list[CalcUsageData],
     hierarchy_data: HierarchyExtractionResult,
 ) -> int:
-    """Rewrite virtual CalcUsage bindings using :>> design overrides.
+    """Rewrite virtual CalcUsage bindings using :>> design overrides and specialized-def
+    redefinitions (the three-tier merge: usage override > specialized-def :>> > base def).
 
     Mutates BindingInfo objects in-place. Returns count of rewritten bindings.
 
-    Phase 1: Build override index from design_overrides.
-    Phase 2: Extract leaf name from source_path (SYSML_QN, DOTTED, or bare),
-             match against overrides, and rewrite (LITERAL or CHAIN).
+    Phase 1: Build the override index (design_overrides) AND the specialized-def
+             redefinition index keyed by owning (specializing) PartDef QN (Item 10 #3).
+    Phase 2: Extract leaf name from source_path (SYSML_QN, DOTTED, or bare); match a
+             usage override first (tier 1), else a retyped part-usage's specialized-def
+             :>> chain (tier 2, REQ-VBR-10), and rewrite.
     """
-    # Phase 1: Build override index
+    # Phase 1a: usage-override index (tier 1).
     # Key: (full_target_parent_path, leaf_attribute_name) -> RedefinitionData
     override_index: dict[tuple[str, str], RedefinitionData] = {}
     for override in hierarchy_data.design_overrides:
@@ -214,7 +266,16 @@ def _rewrite_virtual_bindings(
             full_parent = override.owning_part_qn
             override_index[(full_parent, override.attribute_name)] = override
 
-    if not override_index:
+    # Phase 1b: specialized-def redefinition index (tier 2, Item 10 #3). Keyed by the
+    # SPECIALIZING def QN so the retyped part usage's applicable def (picked per instance
+    # via usage_type_map) selects its :>> chain. Distinct from override_index.
+    redef_by_def: dict[tuple[str, str], RedefinitionData] = {
+        (redef.owning_part_qn, redef.attribute_name): redef
+        for redef in hierarchy_data.redefinitions
+    }
+    usage_type_map = hierarchy_data.usage_type_map
+
+    if not override_index and not redef_by_def:
         return 0
 
     # Phase 2: Rewrite bindings
@@ -243,8 +304,8 @@ def _rewrite_virtual_bindings(
             else:
                 # Bare-name source_path (self-named binding, e.g. ``in x = x``).
                 # Resolving it to the outer attribute is Item 10's per-instance
-                # rewrite; here we only stay crash-safe (REQ-VBR-09). No deep-path
-                # key can match a bare leaf, so skipping loses no rewrite.
+                # rewrite (mechanism D, _rescue_self_named_bindings); here we only
+                # stay crash-safe (REQ-VBR-09). No deep-path key can match a bare leaf.
                 logger.debug(
                     "bare-name source_path %r on %s; skipping override match",
                     source,
@@ -256,6 +317,7 @@ def _rewrite_virtual_bindings(
             matched = override_index.get(key)
 
             if matched:
+                # Tier 1: usage override wins.
                 if matched.redefinition_type == RedefinitionType.LITERAL:
                     binding.binding_type = BindingType.LITERAL
                     binding.literal_value = matched.literal_value
@@ -264,6 +326,11 @@ def _rewrite_virtual_bindings(
                 elif matched.redefinition_type == RedefinitionType.CHAIN:
                     binding.source_path = matched.source_path
                     rewrite_count += 1
+            elif _rewrite_specialized_chain(
+                binding, usage, redef_by_def, usage_type_map
+            ):
+                # Tier 2: retyped part-usage's specialized-def :>> chain.
+                rewrite_count += 1
 
     return rewrite_count
 
@@ -446,6 +513,66 @@ def _register_partdef_expose_scoped_aliases(
     return registered
 
 
+def _rescue_self_named_bindings(
+    registry: OutputRegistry,
+    calc_usages: list[CalcUsageData],
+) -> int:
+    """Mechanism D (Item 10 stage (b), REQ-VBR-10 / amendment D-E): rewrite a
+    self-named binding (``in x = x``) to its upstream EXPOSE channel when one exists.
+
+    Extraction resolves a self-named binding to a full REFERENCE QN pointing at the
+    consuming calc's OWN parameter (e.g. ``RescueLib::'Rescue Plant'::sink_calc::throughput``
+    for ``sink_calc { in throughput = throughput }``) — it never reaches the rewrite as a
+    bare name. This detects that self-reference (the QN's parent segment is the consuming
+    usage's own short name) and, when an outer same-named part EXPOSE resolves to a real
+    channel (the ``_scoped_alias`` populated by ``_register_partdef_expose_scoped_aliases``),
+    rewrites the binding to the instance-scoped attribute path as a CHAIN. The existing
+    chain dispatch (#1, Step 1c) then wires it to the upstream channel.
+
+    No resolvable outer EXPOSE → the binding is left as-is: that is the genuine modeling
+    error the ``self_named_binding_trap`` fixture pins. Runs after the scoped-alias
+    registry is populated (so "resolves to a real channel" is a real lookup) and before
+    the backtracker reads the bindings. Mutates ``BindingInfo`` in place; returns the
+    rescue count.
+    """
+    rescued = 0
+    for usage in calc_usages:
+        if usage.is_template:
+            continue
+        segments = usage.qualified_name.split("__")
+        if len(segments) < 3:
+            continue
+        instance = ".".join(segments[1:-1])
+        usage_short = segments[-1]
+
+        for binding in usage.bindings:
+            if binding.binding_type != BindingType.REFERENCE:
+                continue
+            source = binding.source_path
+            if not source or "::" not in source:
+                continue
+            qn_segs = source.split("::")
+            if len(qn_segs) < 2:
+                continue
+            leaf = qn_segs[-1]
+            parent_short = qn_segs[-2]
+            # Self-reference: the binding points at the consuming usage's own param.
+            if sanitize_qualified_name(parent_short) != usage_short:
+                continue
+            # Resolvable upstream EXPOSE? The scoped alias is the "resolves to a real
+            # channel" test D-E requires — absent for the trap, present for the rescue.
+            channel = registry.scoped_alias_lookup(ScopedAliasKey((instance, leaf)))
+            if channel is None:
+                continue
+            binding.source_path = f"{instance}.{leaf}"
+            binding.binding_type = BindingType.CHAIN
+            rescued += 1
+
+    if rescued:
+        logger.info("Step 5.56: rescued %d self-named binding(s) to upstream", rescued)
+    return rescued
+
+
 def _scope_aggregation_expressions(
     hierarchy_data: HierarchyExtractionResult | None,
     calc_usages: list[CalcUsageData],
@@ -598,6 +725,12 @@ def build_pipeline_context(
     _register_partdef_expose_scoped_aliases(
         output_registry, computed_attrs, calc_usages, hierarchy_data
     )
+
+    # Step 5.56: Rescue self-named bindings (mechanism D, Item 10 stage (b)). A
+    # self-named ``in x = x`` that has a resolvable outer EXPOSE (now in _scoped_alias)
+    # is rewritten to that upstream channel; one without an upstream (the trap) is left
+    # as-is. Runs after the scoped aliases exist and before the backtracker reads bindings.
+    _rescue_self_named_bindings(output_registry, calc_usages)
 
     # Step 5.6: Re-run FORMULA removal (INV-G). The Step-4.5 removal ran before the
     # confirm pass, so a tentative that reverted to FORMULA is still in design_attrs

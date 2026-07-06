@@ -390,6 +390,15 @@ V11. Behavioral note: Item 7 also fixed two resolution matcher bugs (the FORMULA
 reclassify some entry points `USAGE_LITERAL` → `DESIGN_ATTRIBUTE` and switch their
 default-value source; see the Item 7 release notes.
 
+**No V12/V13 (Item 10 note).** The Item-10 design tentatively proposed V12 (multi-hop
+EXPOSE coverage) and V13 (specialization-chain channel coverage) as new diagnostic codes.
+They were not added: Item 10's mechanisms are **positive resolution** (they wire cross-part
+channels that previously fell through), not new abort diagnostics, so a V12/V13 code would
+emit nothing. The coverage is instead tracked as requirements — REQ-CA-10 (multi-hop
+EXPOSE), REQ-LVP-09 + REQ-VBR-11 (specialization chain), REQ-BT-11 (scoped-alias sibling
+disambiguation) — in the [verification matrix](verification-matrix.md). A model that still
+fails to wire a cross-part input surfaces through the existing **V11** boundary.
+
 ---
 
 ## Related Documents
