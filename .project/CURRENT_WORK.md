@@ -6,6 +6,28 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 6: Expression Reconstruction Fidelity (SC-6)
+
+**Status**: **Audited CONDITIONAL** (2026-07-05, commits `346cf47` feat + `77fc46c` chore) —
+substance certified; clears to PASS on one item: re-run the suite gate (auditor was
+harness-blocked from `uv run`). Same block as Items 1/2.
+**Epic**: `.project/backlog/epic_upstream_findings.md`
+**Spec / Design / Plan**: `.project/active/expression-fidelity/{spec,design,plan}.md`
+**Audit**: `.project/active/expression-fidelity/audit.md`
+
+Two display-path fixes in `expression_utils.py`: literal/null branches dispatch before the
+invocation catch-all (via `is_instance`, REQ-AST-08), and operator expressions parenthesize
+precedence-aware per the KerML table (REQ-AST-09). Verified statically: five hand-traces match
+the design table exactly; zero `Literal*Evaluation` in the corpus; three snapshot restorers
+present; **executable byte-identity holds across both regen commits by direct diff** (0 exec-field
+changes). Regen ran as a two-commit split (chore = non-Item-6 staleness with the pre-Item-6
+reconstructor; feat = display-only regen). All four recorded deviations sound. Doc 19 + matrix +
+BACKLOG (aggregation-literal + constraint coverage) + PUSH-DOWN note landed.
+
+**To clear CONDITIONAL → PASS:** re-run `uv run pytest tests/` (expect 1894 passed,
+`test_live_vs_snapshot_byte_identical` green post-regen), `ruff check src/` (21), `mypy src/` (109)
+in a Python-enabled env. No code change expected.
+
 ### UPSTREAM-FINDINGS Item 1: Baseline Repair & Silent-Failure Diagnostics
 
 **Status**: **Audited CONDITIONAL** (2026-07-05, commit 3c42dd1) — implementation certifiable; clears
