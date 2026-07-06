@@ -175,3 +175,35 @@ attribute lookup, which fails or produces wrong wiring.
 - **Downstream**: [05-module-factory](05-module-factory.md) -- term types determine module input construction
 - **Pipeline context**: [00-pipeline-overview](00-pipeline-overview.md) -- where dispatch sits in the overall pipeline
 - **Data models**: [09-data-models](09-data-models.md) -- SingletonTerm, LocalTerm, SumTerm field definitions
+
+---
+
+## Totality generalized — Silent-Failure Hardening (PIPELINE-TRUTH Item 5)
+
+The doc-19 totality invariant (REQ-AST-08: literals dispatch before the invocation
+catch-all) was generalized from the *display* dispatch to every load-bearing
+extraction / classification / lookup / exception handler. The durable contracts,
+to add to the new-dispatch-site and new-lookup-site code-review checklist:
+
+- **INV-1 (totality).** A terminal dispatch arm routes an unhandled input to a
+  distinct, warned disposition — never a silently reused valid category (UNBOUND
+  reuse, XOR pass-through). Sites: `_extract_single_binding` (D3-1), aggregation
+  `AGG_PYTHON_OPS` (D3-8, `hierarchy_resolver.py`), EXPOSE_PURE alias loop (D3-16).
+- **INV-2 (report parity).** The extraction report is rendered on the live path
+  (D3-4); the from-snapshot path lacks the usage-report (not serialized) — a
+  documented parity gap, filed.
+- **INV-3 (uniqueness-or-warn).** Name-keyed lookups key by QN or warn on an
+  ambiguous bare-name lookup (D3-10 redef leaf, D3-15 design prefix, D3-11b
+  target). D3-7 is closed-by-construction (the OutputRegistry scoped-key guard).
+- **INV-4 (preserve-on-transient).** `--smart-regen` never stubs over a valid
+  non-empty impl on a transient read/parse error (D3-14, `preservation.py`).
+- **INV-5 (sanitizer).** `sanitize_name` always yields a legal, non-keyword
+  identifier; sibling names colliding on one EP/channel key fail fast (SC-4).
+- **SC-5.** A non-float (bool/string/enum) entry point is warned at JSON emission
+  (`parameter_groups.derive_groups`), not silently omitted.
+
+**Doc-sweep scope note (Item 5 implement):** this doc + the register §D3
+disposition column are updated in-change. The remaining per-component reference-doc
+touches (01/10/12/13/14/16/17/23/27 and the matrix rows) are a scoped follow-on —
+the per-finding Implementation Notes in
+`.project/active/silent-failure-hardening/plan.md` are the authoritative record.

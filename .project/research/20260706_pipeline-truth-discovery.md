@@ -77,22 +77,22 @@ Top findings by blast radius (all verified with file:line by the agent):
 
 | # | Finding | Site | Disposition |
 |---|---------|------|-------------|
-| D3-1 | Unknown binding expression type (e.g. InvocationExpression) silently classified UNBOUND → model's binding discarded, param becomes a JSON entry point | `usage_extractor.py:748-753` | Item 5 |
-| D3-2 | 3+-segment chain bindings truncate to root segment (`a.b.c` → `a`), no warning; `extract_feature_chain_segments` exists and is unused here | `usage_extractor.py:756-779` | Item 5 |
-| D3-3 | Unresolvable reference → `(None, None)` → param vanishes from both wired and unbound ledgers | `usage_extractor.py:782-798,126` | Item 5 |
-| D3-4 | Usage-extraction warning report discarded on the live path (`calc_usages, _report = ...`) — "could not resolve calc def" warnings never surface; usage dropped from pipeline silently | `pipeline_builder.py:688` | Item 5 |
-| D3-5 | Registry Phase 1a: usage with unknown calc def → bare `continue`, zero channels, no log | `output_registry_builder.py:166-168` | Item 5 |
-| D3-6 | Snapshot loader `except (JSONDecodeError, IndexError): pass` drops `usage_type_map` entries → retype falls to base def, offline-only mis-wire | `snapshot/loader.py:424-429` | Item 5 |
+| D3-1 | Unknown binding expression type (e.g. InvocationExpression) silently classified UNBOUND → model's binding discarded, param becomes a JSON entry point | `usage_extractor.py:748-753` | FIXED (warn + loud EP; ADR-003 forecloses a 3rd disposition) |
+| D3-2 | 3+-segment chain bindings truncate to root segment (`a.b.c` → `a`), no warning; `extract_feature_chain_segments` exists and is unused here | `usage_extractor.py:756-779` | FIXED (LOUD-REJECT 3+-seg chain; deep_cross re-captured) |
+| D3-3 | Unresolvable reference → `(None, None)` → param vanishes from both wired and unbound ledgers | `usage_extractor.py:782-798,126` | closed-by-construction (SysIDE resolved-referent invariant + debug-guard) |
+| D3-4 | Usage-extraction warning report discarded on the live path (`calc_usages, _report = ...`) — "could not resolve calc def" warnings never surface; usage dropped from pipeline silently | `pipeline_builder.py:688` | FIXED (report rendered live; INV-2 snapshot parity deferred) |
+| D3-5 | Registry Phase 1a: usage with unknown calc def → bare `continue`, zero channels, no log | `output_registry_builder.py:166-168` | FIXED (Phase-1a unknown calc-def skip warns) |
+| D3-6 | Snapshot loader `except (JSONDecodeError, IndexError): pass` drops `usage_type_map` entries → retype falls to base def, offline-only mis-wire | `snapshot/loader.py:424-429` | FIXED (usage_type_map malformed-key drop logged) |
 | D3-7 | **RECLASSIFIED → closed-by-construction (Item 5).** The reachable silent-cross-wire shape (two FORMULA `Widget.result`) is loud-rejected by the OutputRegistry scoped-key collision guard (`core/output_registry.py:72`, raises `ValueError`) BEFORE the resolution-map merge. Any silent cross-wire needs two channel-bearing entries at one `(bare part_name, python_name)`; every such FORMULA entry registers the colliding key so the guard raises first. EXPOSE resolutions are LITERAL/no-channel. Invariant stated at `graph_builder._build_attribute_resolution_map`; guard-pinned (`test_silent_failure_family3.py::test_d37_scoped_key_collision_raises_loudly`). Bare→QN re-key deferred (optional defense-in-depth, no reachable silent failure). | `graph_builder.py:984,1102` / `output_registry.py:72` | closed-by-construction |
-| D3-8 | Aggregation `transformed_expression` uses SysML-text `OPERATOR_MAP` (`^`→XOR, unknown ops pass through) instead of `PYTHON_OPERATOR_MAP`, no `has_unsupported` | `hierarchy_resolver.py:370,382` | Item 5 |
+| D3-8 | Aggregation `transformed_expression` uses SysML-text `OPERATOR_MAP` (`^`→XOR, unknown ops pass through) instead of `PYTHON_OPERATOR_MAP`, no `has_unsupported` | `hierarchy_resolver.py:370,382` | FIXED (AGG_PYTHON_OPS `^`→`**`; enum-operator root cause) |
 | D3-9 | Empty `refs` from a blind ref-extractor indistinguishable from genuine literal → attribute silently dropped as constant | `computed_attribute_extractor.py:92-94` | Item 5 (tripwire) |
-| D3-10 | Redefinition matched by leaf name first-wins across all partdefs | `graph_builder.py:1246-1250,1349` | Item 5 |
-| D3-11 | `_usage_by_name` first-wins ambiguous target index (D3-11b, CONFIRMED-conditional). ~~`.output` half never validated~~ (D3-11a — **NOT-REPRODUCED**: live probe shows the target lookup raises `TargetNotFoundError` on a bad output) | `dependency_backtracker.py:248,151-164` | Item 5 |
-| D3-12 | Default-expression eval `except Exception: return None` → param silently absent from its group | `parameter_groups.py:188-193` | Item 5 |
+| D3-10 | Redefinition matched by leaf name first-wins across all partdefs | `graph_builder.py:1246-1250,1349` | FIXED (leaf-redef collision warns; first-wins preserved) |
+| D3-11 | `_usage_by_name` first-wins ambiguous target index (D3-11b, CONFIRMED-conditional). ~~`.output` half never validated~~ (D3-11a — **NOT-REPRODUCED**: live probe shows the target lookup raises `TargetNotFoundError` on a bad output) | `dependency_backtracker.py:248,151-164` | D3-11b FIXED (user-facing ambiguous-target warn); D3-11a NOT-REPRODUCED |
+| D3-12 | Default-expression eval `except Exception: return None` → param silently absent from its group | `parameter_groups.py:188-193` | FIXED (eval except narrowed; SC-5 emission-time hazard warn) |
 | D3-13 | Phantom detector blindness reads as "no phantoms" (shared failure mode) | `phantom_detector.py:165-173` | Item 5 (sentinel) |
-| D3-14 | `--smart-regen`: transient read error on a valid handwritten impl → silently regenerated to stub (DEBUG-only log) | `preservation.py:95-96`, `cli:397` | Item 5 |
-| D3-15 | `design_prefix` from first virtual usage, first-wins; two designs in one model mis-key aggregations | `pipeline_builder.py:590-598` | Item 5 |
-| D3-16 | EXPOSE_PURE classification and alias production disagree silently (cross-part chain leaves `instance_name=None`, alias skipped, no warning) | `computed_attribute_extractor.py:305-322` | Item 5 |
+| D3-14 | `--smart-regen`: transient read error on a valid handwritten impl → silently regenerated to stub (DEBUG-only log) | `preservation.py:95-96`, `cli:397` | FIXED (preserve-on-transient; empty-only regenerate) |
+| D3-15 | `design_prefix` from first virtual usage, first-wins; two designs in one model mis-key aggregations | `pipeline_builder.py:590-598` | FIXED (design-prefix >1 collision warn) |
+| D3-16 | EXPOSE_PURE classification and alias production disagree silently (cross-part chain leaves `instance_name=None`, alias skipped, no warning) | `computed_attribute_extractor.py:305-322` | FIXED (cross-part single-hop EXPOSE_PURE else-warn + fixture) |
 
 **Pattern-3 family** (diagnostic gated on a collection sharing the collector's failure
 mode — the SC-1 silence shape): scoped-alias registration (`pipeline_builder.py:501-509`),
