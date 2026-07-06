@@ -696,6 +696,29 @@ untouched by this item, and not in the `ruff check src/` gate which stays at 20)
 **Validation:** 101 passed, 2 skipped (pre-existing); my new F401s all cleared.
 
 ### Phase 5 Completion
+**Completed:** 2026-07-06
+**M2 (`test_parameter_group_deriver.py`):**
+- `test_req_pgd_05_classify_precedence_matches_index`: dropped the
+  `_generate_group_names(file.stem)` re-invocation (the same method classify() calls); now
+  asserts `classify(p_net_mw) == "design_params"`.
+- The four `classify_returns_group_for_*_index` tests: dropped `next(iter(index))` + non-None;
+  each now pins a named qname → named group (attr/binding → design_params;
+  unbound/literal → library_params).
+- `classify_unknown_returns_none` left unchanged (already a literal negative).
+**M3:**
+- `test_req_pgd_06_default_value_literal`: dropped `_, expected = _literal_index[qname]` +
+  skip; now asserts `child_count`→25.0, `total_child_mass`→50.0.
+- `test_req_pgd_06_default_value_binding_resolution`: dropped `None or isinstance float` +
+  skip; now asserts `get_default_value(energy_production__p_net_mw) == 0.008` (real
+  binding→attr resolution). `test_req_pgd_06_default_value_direct_attr` (0.008) left as model.
+**Literal verification vs v2 snapshots:** classifications and defaults CONFIRMED by building
+the deriver from the committed solar snapshot. Provenance: design.sysml:53 (p_net_mw=0.008),
+library.sysml:608/609 (child_count=25.0 / total_child_mass=50.0). No v2 discrepancy.
+**Note on provenance drift vs plan:** plan cited "solar snapshot:3555/3568" for the literal
+values; the deriver's `_literal_index` sources them from library.sysml — cited the .sysml
+lines (608/609) as the primary source. Values identical, so no v2 content discrepancy.
+**Validation:** 30 passed; ruff clean; two pass-or-skip removed.
+
 ### Phase 6 Completion
 ### Phase 7 Completion
 ### Phase 8 Completion
