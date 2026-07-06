@@ -107,6 +107,10 @@ EXTRACTION_ONLY_MODELS = {
     # self-reference is fully visible in extraction; no pipeline baseline is needed.
     # Kept isolated (own fixture dir) so its failure mode cannot poison ife_plant.
     "self_named_binding_trap": FIXTURES_DIR / "self_named_binding_trap",
+    # Aggregation-literal dispatch probe (PIPELINE-TRUTH Item 8, Row D / REQ-AST-10).
+    # Extraction-only: the literal-bearing aggregation is fully visible in extraction;
+    # no pipeline baseline is needed. Isolated so its shape cannot poison other fixtures.
+    "agg_literal_probe": FIXTURES_DIR / "agg_literal_probe",
 }
 
 

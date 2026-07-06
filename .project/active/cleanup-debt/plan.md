@@ -300,38 +300,38 @@ def test_literal_operand_mis_dispatched_BEFORE_fix():
 **See `spec.md` §D and the [HARD] R4 + sequencing requirements.**
 
 #### R4 step 1 — intent check (DONE at spec time)
-- [ ] Confirm doc-19 (`19-ast-dispatch-invariant.md:64-70`) still records the known deviation from REQ-AST-03 (literal/null branches dispatch **before** the invocation catch-all). Legal outcome = fix code to doc.
+- [x] Confirm doc-19 (`19-ast-dispatch-invariant.md:64-70`) still records the known deviation from REQ-AST-03 (literal/null branches dispatch **before** the invocation catch-all). Legal outcome = fix code to doc.
 
 #### R4 step 2 — author fixture + reproduce
-- [ ] Author the `agg_literal_probe` fixture (`tests/fixtures/agg_literal_probe/` with `library.sysml` + `design.sysml`) — an aggregation `:>>` whose RHS mixes a `sum(...)`/FCE term with a numeric literal.
-- [ ] **Register it** in `scripts/capture_extraction_snapshots.py` (`MODELS` dict) so the snapshot is script-reproducible (never hand-authored — R3).
-- [ ] **Capture at v2** via `scripts/capture_extraction_snapshots.py --fixtures agg_literal_probe` (+ the pipeline baseline if it builds a graph). License-bearing path — run through the real capture script (per the syside-license memory, the license loads for capture scripts, not a bare `-c` probe).
-- [ ] Write the failing probe above; **run it and see it fail** (R4 step 2 — the mis-dispatch is demonstrated before any fix).
+- [x] Author the `agg_literal_probe` fixture (`tests/fixtures/agg_literal_probe/` with `library.sysml` + `design.sysml`) — an aggregation `:>>` whose RHS mixes a `sum(...)`/FCE term with a numeric literal.
+- [x] **Register it** in `scripts/capture_extraction_snapshots.py` (`MODELS` dict) so the snapshot is script-reproducible (never hand-authored — R3).
+- [x] **Capture at v2** via `scripts/capture_extraction_snapshots.py --fixtures agg_literal_probe` (+ the pipeline baseline if it builds a graph). License-bearing path — run through the real capture script (per the syside-license memory, the license loads for capture scripts, not a bare `-c` probe).
+- [x] Write the failing probe above; **run it and see it fail** (R4 step 2 — the mis-dispatch is demonstrated before any fix).
 
 #### R4 step 3 — fix (root fix, house style)
-- [ ] Hoist the `is_literal_expression` branch (`~:452-454`) **above** the invocation catch-all (`~:392`) in `_walk_aggregation_ast`, matching REQ-AST-03/-08 canonical ordering (mirror the Item-6 `reconstruct_expression` fix). The literal branch is no longer dead.
-- [ ] Re-run the probe → now green (corrected dispatch: `has_unsupported` stays False, literal survives).
+- [x] Hoist the `is_literal_expression` branch (`~:452-454`) **above** the invocation catch-all (`~:392`) in `_walk_aggregation_ast`, matching REQ-AST-03/-08 canonical ordering (mirror the Item-6 `reconstruct_expression` fix). The literal branch is no longer dead.
+- [x] Re-run the probe → now green (corrected dispatch: `has_unsupported` stays False, literal survives).
 
 #### R4 gate — byte-identity
-- [ ] Re-capture / re-run baselines and confirm **all existing corpora are byte-identical** against the **v2** set (`git status` shows only the new `agg_literal_probe` files changed). No hand-edited baselines (R3).
+- [x] Re-capture / re-run baselines and confirm **all existing corpora are byte-identical** against the **v2** set (`git status` shows only the new `agg_literal_probe` files changed). No hand-edited baselines (R3).
 
 #### R1 — REQ home + matrix row (rows move with code)
-- [ ] Add **REQ-AST-10** to doc-19's requirements table: "`_walk_aggregation_ast` SHALL dispatch all literal/null branches before the invocation catch-all," **verified-by** the new `agg_literal_probe` fixture.
-- [ ] **Add its matrix row in this item** (`verification-matrix.md` — matrix *additions* are allowed in-item per R1; only Item-7's *PASS-row reconciliation* waits). Note the addition in Item 7's ledger via BACKLOG so the sweep sees it.
+- [x] Add **REQ-AST-10** to doc-19's requirements table: "`_walk_aggregation_ast` SHALL dispatch all literal/null branches before the invocation catch-all," **verified-by** the new `agg_literal_probe` fixture.
+- [x] **Add its matrix row in this item** (`verification-matrix.md` — matrix *additions* are allowed in-item per R1; only Item-7's *PASS-row reconciliation* waits). Note the addition in Item 7's ledger via BACKLOG so the sweep sees it.
 
 #### R4 step 4 — docs + BACKLOG closure
-- [ ] Retire the doc-19 "Known deviation — `_walk_aggregation_ast`" note (`:64-70`). **Coordinate the doc-19 retirement with Item 10** (epic-close caveat sweep) — note it so Item 10 sees it.
-- [ ] **Close the BACKLOG entry that tracks this bug** — currently in "Ideas / Future Considerations", tagged "*→ Absorbed into PIPELINE-TRUTH Item 8*" (spec cited `:185`; it has drifted — re-grep `Absorbed into PIPELINE-TRUTH Item 8`). Move it to Completed / strike it on landing. This is the **BACKLOG:185 closure** the close-out names.
+- [x] Retire the doc-19 "Known deviation — `_walk_aggregation_ast`" note (`:64-70`). **Coordinate the doc-19 retirement with Item 10** (epic-close caveat sweep) — note it so Item 10 sees it.
+- [x] **Close the BACKLOG entry that tracks this bug** — currently in "Ideas / Future Considerations", tagged "*→ Absorbed into PIPELINE-TRUTH Item 8*" (spec cited `:185`; it has drifted — re-grep `Absorbed into PIPELINE-TRUTH Item 8`). Move it to Completed / strike it on landing. This is the **BACKLOG:185 closure** the close-out names.
 
 ### Validation
 **Automated:**
-- [ ] Probe **red before** the hoist, **green after** (R4 step 2 → step 3, demonstrated in-order).
-- [ ] `git status` after re-capture → only `agg_literal_probe` files new; **every other baseline byte-identical** (v2).
-- [ ] `uv run pytest tests/` → green; ruff ≤ 21, mypy ≤ 109.
+- [x] Probe **red before** the hoist, **green after** (R4 step 2 → step 3, demonstrated in-order).
+- [x] `git status` after re-capture → only `agg_literal_probe` files new; **every other baseline byte-identical** (v2).
+- [x] `uv run pytest tests/` → green; ruff ≤ 21, mypy ≤ 109.
 
 **Manual:**
-- [ ] doc-19 no longer lists the deviation; REQ-AST-10 is in its table; matrix carries the new row verified-by the fixture.
-- [ ] The aggregation-literal BACKLOG entry is in Completed / struck.
+- [x] doc-19 no longer lists the deviation; REQ-AST-10 is in its table; matrix carries the new row verified-by the fixture.
+- [x] The aggregation-literal BACKLOG entry is in Completed / struck.
 
 **What We Know Works After This Phase:**
 A literal operand inside an aggregation expression now dispatches to the literal branch (proven by a fixture that failed before the fix), every pre-existing corpus is byte-identical, and the fixed dispatch has a REQ home + matrix row + retired deviation note.
@@ -448,7 +448,16 @@ Every success criterion has a written, auditable answer; no disposition stops on
 - **§G SC-11 (AST import rewrite, D1-F1):** assessed → **FILE — not small** as `[SC11-IMPORT-REWRITE]` (P3), with the size argument (cross-module AST rework vs. the D3 hygiene site's 1–2-site change). **Corrected the false "filed follow-up" claim** in `identifier-sanitization/close-out.md:31`. This is the SC-11 assessment-verdict artifact.
 **Gate:** ruff src **19**, mypy src **104** — both held (no code change landed in Phase 4; all dispositions are FILE/NO-OP). Suite unchanged from Phase 3 (1999).
 
-### Phase 5 Completion  (probe red-before/green-after: __ ; byte-identity: __ )
+### Phase 5 Completion  (probe red-before/green-after: **YES**; byte-identity: **YES**)
+**Completed:** 2026-07-06 — the one real bug, R4 in full order.
+- **Fixture:** `tests/fixtures/agg_literal_probe/{library,design}.sysml` — `:>> total_cost = sum(module.cost) + 5.0` (a `sum(...)` term + a numeric literal). Registered in `scripts/capture_extraction_snapshots.py` EXTRACTION_ONLY_MODELS; captured at **v2** via `--fixtures agg_literal_probe` (license path).
+- **R4 step 2 — reproduce (RED first):** captured with the pre-fix code, the walk produced `transformed_expression='(module.cost + LiteralRationalEvaluation())'`, `has_unsupported_nodes=True` — the `5.0` hit the invocation catch-all (its derived `.function.name`). `test_agg_literal_dispatch.py` ran **RED** (`assert True is False`).
+- **R4 step 3 — fix:** hoisted the `is_literal_expression` branch **above** the invocation catch-all in `_walk_aggregation_ast` (`extraction/hierarchy_resolver.py`), mirroring the Item-6 `reconstruct_expression` fix. Re-captured → `transformed_expression='(module.cost + 5.0)'`, `has_unsupported_nodes=False`; probe **GREEN**.
+- **Byte-identity gate:** re-captured the full corpus; **all 23 existing v2 snapshots differed ONLY in `captured_at`** (verified line-by-line) → reorder is byte-inert. Reverted the timestamp churn; `git status` shows only the new `tests/fixtures/agg_literal_probe/` path. No hand-edited baselines (R3).
+- **REQ home (R1):** **REQ-AST-10** added to doc-19's table + a `verification-matrix.md` PASS row (verified-by `test_agg_literal_dispatch.py`); noted for Item 7's sweep via the `[ITEM7-PGD06]` BACKLOG reading entry.
+- **Docs/BACKLOG (R4 step 4):** doc-19 "Known deviation" note re-framed to "conforms (REQ-AST-10)" and handed to Item 10's caveat sweep; the Ideas BACKLOG aggregation entry struck → **RESOLVED**.
+**Gate:** ruff src **19**, mypy src **104** — held. Suite **2000 passed / 4 skipped / 5 xfailed** (+1 probe vs Phase 3's 1999).
+
 ### Phase 6 Completion  (named-deleted-tests: __ ; net count Δ: __ )
 
 ---

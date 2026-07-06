@@ -230,6 +230,12 @@ gone) and reconcile REQ-PGD-08's `get_default_value` mention (`:28`). If Item 8 
 method, this entry is a no-op — retire it. **Item 7 required reading must include this
 entry.**
 
+**Also for Item 7's matrix sweep (Item 8, Row D):** Item 8 added a new PASS row
+**REQ-AST-10** to `verification-matrix.md` (`_walk_aggregation_ast` dispatches literals
+before the invocation catch-all, verified by `test_agg_literal_dispatch.py`). Matrix
+*additions* are in-item per R1; this is flagged only so Item 7's reconciliation sweep sees
+the new row and does not treat it as an orphan.
+
 ---
 
 ## Completed
@@ -245,17 +251,15 @@ entry.**
 
 ## Ideas / Future Considerations
 
-- **Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**
-  *→ Absorbed into PIPELINE-TRUTH Item 8 (byte-identity gate + literal-bearing fixture).*
-  `hierarchy_resolver._walk_aggregation_ast` (`hierarchy_resolver.py:372,431`) keeps the
-  old literal-after-invocation ordering: a literal operand in an aggregation expression is
-  mis-dispatched to the invocation catch-all, marked `has_unsupported`, and its
-  `reconstruct_expression` delegation (`:433`) is dead. Item 6 fixed the twin in
-  `reconstruct_expression` (display path) but left this one — it touches an executable
-  aggregation path (`transformed_expression` → `compiled_expression` → `auto_impl_context`),
-  so it needs its own item with a byte-identity gate. Inert on today's corpus (no
-  literal-bearing aggregation fixture); a future one would expose it. Documented as a
-  known deviation from revised REQ-AST-03 in doc 19.
+- ~~**Aggregation-literal dispatch bug (from UPSTREAM-FINDINGS Item 6, SC-6).**~~
+  **✅ RESOLVED by PIPELINE-TRUTH Item 8 (Row D), 2026-07-06.** `_walk_aggregation_ast`'s
+  literal branch was hoisted above the invocation catch-all (the executable-path twin of the
+  Item-6 `reconstruct_expression` fix). Reproduced RED first on a new literal-bearing fixture
+  (`agg_literal_probe`: `sum(module.cost) + 5.0`), GREEN after; all 23 existing v2 corpora
+  byte-identical (only `captured_at` timestamps moved, reverted). Governed by **REQ-AST-10**
+  (doc-19 + `verification-matrix.md`), verified by `test_agg_literal_dispatch.py`. The doc-19
+  known-deviation note is re-framed to "conforms" and handed to Item 10's caveat sweep for
+  final removal.
 - **Constraint-reconstruction coverage (from UPSTREAM-FINDINGS Item 6, SC-6).**
   `reconstruct_expression` also serves constraint text, but constraint expressions are not
   captured in extraction snapshots (the Item-6 design's Appendix-A #4 wrongly assumed the

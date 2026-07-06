@@ -88,6 +88,7 @@ the documentation rather than executable code.
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(n... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal/`NullExpression` branches (via `is_instance`) before the invocation catch-all | `test_expression_reconstruction_fidelity.py`, offline totality guard | PASS |
 | REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand iff it binds looser than its parent, or equal and on the associativity-unfavored side | `test_expression_reconstruction_fidelity.py`, `test_expression_paren_helper.py` | PASS |
+| REQ-AST-10 | `hierarchy_resolver._walk_aggregation_ast()` SHALL dispatch all literal/null branches before the invocation catch-all | `test_agg_literal_dispatch.py` (`agg_literal_probe` fixture) | PASS |
 
 ### BASE
 

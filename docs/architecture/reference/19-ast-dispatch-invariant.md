@@ -38,6 +38,7 @@ breaking aggregation wiring in the
 | REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal and `NullExpression` branches (via `is_instance`) before the invocation catch-all | Every node carries a derived `.function`, so the catch-all must not precede literals | License-gated real-AST test + offline literal-totality guard |
 | REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand (binary or unary) iff it binds looser than its parent, or equal and on the associativity-unfavored side (precedence-aware) | Preserve meaning-changing grouping in displayed math | Real-AST repro + branch fixture; offline hand-trace unit tests |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` (not `LocalTerm`) | Correct aggregation wiring | `SingletonTerm` count matches FCE node count in aggregation AST |
+| REQ-AST-10 | `hierarchy_resolver._walk_aggregation_ast()` SHALL dispatch all literal/null branches **before** the invocation catch-all | Every node carries a derived `.function`, so the catch-all must not precede literals — the executable-path twin of REQ-AST-08 (`transformed_expression` → `compiled_expression` → `auto_impl_context`) | `test_agg_literal_dispatch.py` on the `agg_literal_probe` fixture (`sum(module.cost) + 5.0` → the `5.0` literal survives, `has_unsupported_nodes` False) |
 | REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "unsupported operator: .") | Correct diagnostics | No "unsupported operator: ." in diagnostics |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(name)"`) | Correct reconstruction | Reconstructed expressions match `name.attr` format |
 
@@ -61,13 +62,15 @@ catch-all (`hasattr(expr_node, "function")`) matches every literal. Placed after
 it, the literal branches are dead code and each literal stringifies to
 `LiteralRationalEvaluation()`. The catch-all is therefore the last branch.
 
-**Known deviation — `_walk_aggregation_ast`.** `_walk_aggregation_ast` in
-`extraction/hierarchy_resolver.py` keeps the old literal-after-invocation ordering
-and carries the same latent bug: an aggregation literal is mis-dispatched to the
-invocation catch-all and marked unsupported, so its trailing `reconstruct_expression`
-delegation (the `is_literal_expression` branch) is dead. It is **not** fixed here — that touches an executable
-aggregation path (out of the display-only scope of REQ-AST-08/-09). Filed to
-BACKLOG.
+**`_walk_aggregation_ast` now conforms (REQ-AST-10).** This function previously kept
+the old literal-after-invocation ordering, so an aggregation literal was mis-dispatched
+to the invocation catch-all and marked unsupported (its `is_literal_expression` branch
+was dead). PIPELINE-TRUTH Item 8 (Row D) hoisted the literal branch above the invocation
+catch-all — the executable-path twin of the REQ-AST-08 fix — pinned by
+`test_agg_literal_dispatch.py` on the `agg_literal_probe` fixture (reproduced RED first,
+then GREEN), with all existing corpora byte-identical (no committed fixture had a
+literal-bearing aggregation). *(The retirement of this note is on Item 10's epic-close
+caveat sweep.)*
 
 ---
 

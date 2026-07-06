@@ -411,6 +411,13 @@ def _walk_aggregation_ast(
         ctx.local_terms.append(LocalTerm(attribute_name=ref_name))
         return ref_name
 
+    # Literals: delegate to expression_utils. MUST precede the InvocationExpression
+    # catch-all below — every SysIDE node carries a derived KerML `.function.name`,
+    # so a literal operand would otherwise be mis-dispatched to the invocation branch
+    # and marked unsupported (REQ-AST-10; mirrors the Item-6 reconstruct_expression fix).
+    if is_literal_expression(node):
+        return reconstruct_expression(node)
+
     # InvocationExpression: sum() → parametric multiply
     if hasattr(node, "function") and hasattr(node.function, "name"):
         func_name = node.function.name
@@ -470,10 +477,6 @@ def _walk_aggregation_ast(
             for op in operands
         )
         return f"{func_name}({args})"
-
-    # Literals: delegate to expression_utils (consistent with is_instance pattern)
-    if is_literal_expression(node):
-        return reconstruct_expression(node)
 
     # Unknown node type
     ctx.has_unsupported = True
