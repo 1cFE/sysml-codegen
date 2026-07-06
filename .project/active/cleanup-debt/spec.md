@@ -39,29 +39,29 @@ half-done.
 
 ## Success Criteria
 
-- [ ] **Zero grep hits** for every deleted symbol across `src/` and `tests/`; the full
+- [x] **Zero grep hits** for every deleted symbol across `src/` and `tests/`; the full
   suite is green; ruff/mypy counts are not worse than the 21/109 baseline (SC-G).
-- [ ] **Suite green with the count story told, not assumed.** The net test count
+- [x] **Suite green with the count story told, not assumed.** The net test count
   **decreases** (self-tests of deleted dead symbols go with them); the close-out names
   each deleted test and the symbol it solely pinned, and confirms no non-self-test lost
   coverage — so "green" is auditable, not achieved by silently dropping an orphan (the
   test-deletion rule below).
-- [ ] **Aggregation-literal fix reproduced then fixed** (R4): a failing probe on a new
+- [x] **Aggregation-literal fix reproduced then fixed** (R4): a failing probe on a new
   literal-bearing aggregation fixture demonstrates the mis-dispatch *before* the fix;
   after the fix that fixture shows the corrected dispatch; **all existing corpora stay
   byte-identical** against the baseline set fixed by the Item-4 sequencing requirement
   (v1 if this lands before Item 4's bump, v2 if after — see the [HARD] sequencing req).
-- [ ] **The fixed dispatch has a REQ home.** A new/extended REQ-AST row governs
+- [x] **The fixed dispatch has a REQ home.** A new/extended REQ-AST row governs
   literal-before-invocation ordering in `_walk_aggregation_ast`, verified-by the new
   fixture; its matrix row is added in this item (R1: rows move with code).
-- [ ] **doc-19 known-deviation note retired**, its BACKLOG entry (`BACKLOG.md:185`)
+- [x] **doc-19 known-deviation note retired**, its BACKLOG entry (`BACKLOG.md:185`)
   closed, and the dotted-leaf alias edge pinned by a unit test, retiring doc-25's "no
   current model triggers this" hedge.
-- [ ] **Every D1 finding (D1-F1…D1-F5) ends dispositioned** — deleted, fixed, filed with
+- [x] **Every D1 finding (D1-F1…D1-F5) ends dispositioned** — deleted, fixed, filed with
   a real BACKLOG entry, or handed off to its owning item — with the disposition recorded
   here. Nothing left "filed" only in a plan file.
-- [ ] **The 4 vacuous skipif guards removed**; their tests run unconditionally.
-- [ ] Every touched component's docstring/reference doc updated in the same change (R1) —
+- [x] **The 4 vacuous skipif guards removed**; their tests run unconditionally.
+- [x] Every touched component's docstring/reference doc updated in the same change (R1) —
   including doc-17 when `get_default_value` is deleted.
 
 ## Scope: the cleanup catalog
