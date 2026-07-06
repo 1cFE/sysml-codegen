@@ -37,15 +37,22 @@ them per family, not site by site — that is the anti-whack-a-mole contract (R4
 in three tiers:
 
 1. **Ran live and confirmed:** D3-2 (committed conformance test), D3-4, SC-5, SC-4 (A1+A2),
-   and the self-named drift attribution. D3-11's output-half ran live and was **refuted**.
+   and the self-named drift attribution. **Design-open added: D3-1, D3-8, D3-10** — the three
+   trip fixtures were repaired (minimal calc def added; D3-1's `max(...)` swapped for a
+   calc-def invocation `Doubler(v=a)` that resolves to a Behavior) and all ran live.
+   D3-11's output-half ran live and was **refuted**. **D3-7 ran live and RECLASSIFIED** — see
+   tier 3.
 2. **Code-trace-only, and the trace suffices:** the remaining findings are deterministic
    terminal-arm dispatch bugs — the code path is fully fixed by the AST node type or the
-   map contents, with no runtime nondeterminism — so an exact trace is airtight. Three of
-   their probe fixtures (`d37`/`d38`/`d310`) carry **no calc def**, so
-   `build_pipeline_context` raises before the probe reaches its finding; those probes are
-   not runnable until a calc def is added at design-open (see Open Questions). D3-1's probe
-   also did not run despite its fixture carrying a calc def — design confirms what it needs.
-3. **Refuted live:** D3-11's "`.output` half never validated" — dropped (see the D3-11 row).
+   map contents, with no runtime nondeterminism — so an exact trace is airtight. (The
+   design-open probe-runnability gate is now **satisfied**: all trip fixtures carry a calc
+   def and run; the probes converted D3-1/8/10 to live and reclassified D3-7.)
+3. **Refuted / reclassified live:** D3-11's "`.output` half never validated" — dropped
+   (see the D3-11a row). **D3-7's "silent cross-wire" — reclassified closed-by-construction**:
+   the two-FORMULA-`Widget.result` shape is *loud-rejected* by the OutputRegistry scoped-key
+   collision guard (`core/output_registry.py:72`, raises `ValueError`) *before* the
+   resolution-map merge is reached — so the reachable shape is already loud, not silent (see
+   the D3-7 row). Family 3's re-key set shrinks accordingly.
 
 ## Success Criteria
 
@@ -93,16 +100,16 @@ git artifacts.
 
 | # | Finding (site) | Intended behavior (doc) | Verdict | Evidence / probe |
 |---|---|---|---|---|
-| D3-1 | Unknown binding-expr type (InvocationExpression) → silent `UNBOUND`, param becomes JSON entry point. `usage_extractor.py:748-753` | `01-extraction.md:147`: `UNBOUND` = *"no binding expression at all."* REQ-EXT-02: only 5 legal binding types — no "unknown" bucket. | **CONFIRMED** (trace) | Unconditional fall-through at 748; `_extract_bindings:675-676` routes UNBOUND→`unbound_params`; function isn't even passed a warnings list. `probe_d3_1_invocation.py` + authored fixture. |
+| D3-1 | Unknown binding-expr type (InvocationExpression) → silent `UNBOUND`, param becomes JSON entry point. `usage_extractor.py:748-753` | `01-extraction.md:147`: `UNBOUND` = *"no binding expression at all."* REQ-EXT-02: only 5 legal binding types — no "unknown" bucket. | **CONFIRMED (live)** | Live `probe_d3_1_invocation.py`: `in x = Doubler(v=a)` → `x` in `unbound_params`, **zero warnings**. Unconditional fall-through at 748; `_extract_bindings:675-676` routes UNBOUND→`unbound_params`. `_extract_single_binding` is not passed the `warnings` list its caller `_extract_bindings` already threads. |
 | D3-2 | 3+-segment CHAIN binding truncates to first segment, silently. `usage_extractor.py:756-779` | Chain source_path should carry all segments (`10-output-registry.md` FCE row: dotted local path). | **CONFIRMED (live)** | `_parse_chain_expression` grabs ≤2 names; `extract_feature_chain_segments` exists, unused. Committed test `test_deep_cross_scope_probe.py:59-75` asserts `station.array.derived_calc.derived_value` → `source_path=="station"`. |
 | D3-3 | Unresolvable REFERENCE → `(None,None)` → `REFERENCE` with `source_path=None` → filtered from BOTH ledgers, param vanishes. `usage_extractor.py:782-798,126` | REQ-EXT-02: every param lands in `bindings` xor `unbound_params`; nothing falls between. | **CONFIRMED-latent — closed-by-construction** (trace) | Double-vanish is deterministic (126 filters `source_path=None`; algo-param rescue at 603-618 sees it in `bindings`). **Invariant that closes it:** SysIDE guarantees a resolved `referent` with a non-empty `qualified_name` for any `FeatureReferenceExpression` in successfully-parsed SysML (doc 16:115-119), so `(None,None)` is unreachable without a parser bug/partial SysML. Fix = the family totality sentinel + a debug-guard/assert at the `(None,None)` return; **no fires-on-shape test** (no reachable shape to feed). `probe_d3_3_vanish.py` scans for the signature (finds none). |
 | D3-4 | Usage-extraction warning report discarded on live path (`calc_usages, _report = …`); "could not resolve calc def"/"usage dropped" never surface. `pipeline_builder.py:689` | The report exists to surface dropped usages; discarding it defeats its purpose. | **CONFIRMED** (live) | `_report` bound and thrown away at 689; `probe_d3_4_discarded_report.py` ran live and showed the report suppressed. Headline gated-report silence. |
 | D3-5 | Registry Phase 1a: usage with unknown calc def → bare `continue`, zero channels, no log. `output_registry_builder.py:167-168` | `10-output-registry.md` Phase 1a: every CalcUsage registers its channels; a skip is a real gap. | **CONFIRMED** (trace) | `if not calc_def: continue` — no logger call. |
 | D3-6 | Snapshot loader `except (JSONDecodeError, IndexError): pass` drops `usage_type_map` entries → retype falls to base def, offline-only mis-wire. `snapshot/loader.py:423-424` | `27-snapshot-generation.md`: offline path must reproduce live wiring (INV parity). | **CONFIRMED-latent** (trace) | `except … : pass` at 423-424. Live path correct; from-snapshot diverges silently on a malformed key. Trip needs a corrupt/omitted snapshot entry (offline-parity guard). |
-| D3-7 | Attribute-resolution map keyed by bare `owning_part_name`; same-named parts in different packages merge buckets → silent cross-wire passing Step-8. `graph_builder.py:984,1102` | `07-graph-assembly.md`/`15-naming-conventions.md`: two distinct PartDefs must not share a resolution namespace. | **CONFIRMED-latent** (trace) | Bare-name key at 984 (write) and 1102 (`resolution_map.get(ca.owning_part_name,…)`). Needs two same-named parts (authored `d37_partname_merge` fixture). `d37_partname_merge.py`. |
-| D3-8 | Aggregation walker uses `OPERATOR_MAP` (`^`→` ^ ` = Python XOR; unknown ops pass through) not the power-emitting map; no `has_unsupported`. `hierarchy_resolver.py:370,382` | `13-aggregation-scoping.md`/`14-expression-compiler.md`: `^` is power → `**`; untranslatable nodes set `has_unsupported`. | **CONFIRMED-latent** (trace) | `OPERATOR_MAP["^"]==" ^ "` (`expression_utils.py:27`); fallback `f" {operator} "` at 370/382, no `has_unsupported`. No corpus aggregation uses `^`. `d38_caret_operator.py` + fixture. |
+| D3-7 | Attribute-resolution map keyed by bare `owning_part_name`; same-named parts in different packages merge buckets → *claimed* silent cross-wire passing Step-8. `graph_builder.py:984,1102` | `07-graph-assembly.md`/`15-naming-conventions.md`: two distinct PartDefs must not share a resolution namespace. | **CONFIRMED-latent — closed-by-construction (live)** | Live `d37_partname_merge.py`: the reachable shape (two FORMULA `Widget.result`) **raises loudly** at registry build — `ValueError: OutputRegistry scoped key collision: 'Widget.result'…` (`core/output_registry.py:72`), *before* the resolution-map merge (`graph_builder.py:984`) is reached. A FORMULA channel registers `key_f = "{owning_part_name}.{python_name}"`; two distinct parts sharing that key collide and raise. **Invariant that closes it:** any silent cross-wire needs two entries at the same `(bare part_name, python_name)` *with a channel*; every such FORMULA entry registers the colliding `key_f` and the guard raises first. EXPOSE resolutions are LITERAL/no-channel, so a same-key overwrite mis-wires nothing. Fix = pin the guard fires + state the invariant; the bare→QN re-key of the resolution map is optional defense-in-depth (needs a consumer audit), **no silent-drop fires-on-shape test owed**. |
+| D3-8 | Aggregation walker uses `OPERATOR_MAP` (`^`→` ^ ` = Python XOR; unknown ops pass through) not the power-emitting map; no `has_unsupported`. `hierarchy_resolver.py:370,382` | `13-aggregation-scoping.md`/`14-expression-compiler.md`: `^` is power → `**`; untranslatable nodes set `has_unsupported`. | **CONFIRMED-latent (live)** | Live `d38_caret_operator.py`: `total_cost = sum(cell.total_cost) ^ exponent` → `transformed_expression='((count * cell.total_cost) ^ exponent)'`, `has_unsupported_nodes=False` — `^` compiled to Python XOR, silently. `OPERATOR_MAP["^"]==" ^ "` (`extraction/expression_utils.py:27`); fallback `f" {operator} "` at 370/382, no `has_unsupported`. No corpus aggregation uses `^`. |
 | D3-9 | Empty `refs` list == genuine literal → computed attr silently dropped as constant. `computed_attribute_extractor.py:92-94` | `16-computed-attributes.md:129`: *"No refs at all → LITERAL"* (then excluded, REQ-CA-04) — the **documented, intended** behavior. | **RECLASSIFIED** (trace) | Matches spec. Silent loss only under an upstream `extract_feature_refs` under-report — no evidence. Becomes a tripwire guard (non-literal AST root + empty refs = suspicious), not a diagnostic-on-shape. `probe_d3_9_16_computed.py`. |
-| D3-10 | Redefinition matched by leaf name, first-wins, across all partdefs. `graph_builder.py:1246-1250,1349` | `07-graph-assembly.md`: a redefinition binds to its own part's attribute. | **CONFIRMED-latent** (trace) | `redef.attribute_name==attr` + leaf compare + `break` at 1246-1251. Needs two partdefs sharing a leaf name (`d310_leaf_redef` fixture). |
+| D3-10 | Redefinition matched by leaf name, first-wins, across all partdefs. `graph_builder.py:1246-1250,1349` | `07-graph-assembly.md`: a redefinition binds to its own part's attribute. | **CONFIRMED-latent (live)** | Live `d310_leaf_redef.py`: two `Motor` partdefs (`:>> power = 100.0` / `999.0`); `_find_literal_redefinition('motor','power', usage_type_map=None)` → **`100.0` for both** (first-wins), the `999.0` Motor's literal unreachable via the Strategy-2 fallback (`graph_builder.py:1349-1350`, `sanitize_name(leaf).lower()==part_usage.lower()`, first match `break`). |
 | D3-11a | `.output` half of a backtracker target never validated. `dependency_backtracker.py:244-254` | `11-analysis-backtracker.md`: target resolution validates the named output. | **NOT-REPRODUCED** (live) | Live `d311_usage_by_name.py`: `find_required_modules(["power_calc.THIS_OUTPUT_DOES_NOT_EXIST"])` **raises `TargetNotFoundError`** — the target lookup already validates. Struck; no fix owed. |
 | D3-11b | `_usage_by_name` first-wins on colliding instance names (two `power_calc`). `dependency_backtracker.py:248,151-164` | Target resolution must be unambiguous. | **CONFIRMED-latent** (live-adjacent) | `_usage_by_name.get(instance_name)` collapses same-named usages first-wins. But the code comment at `:151-154` calls these collisions **"expected and benign"** — internal processing keys off qualified names, not this index. So design must first decide whether the *user-facing target lookup* at `:248` warrants require-unique-or-warn **at all** (it may be a non-issue). `d311_usage_by_name.py`. |
 | D3-12 | Default-expr eval `except Exception: return None` → param silently absent from its group. `parameter_groups.py:192-193` | `17-parameter-group-deriver.md`: a default that can't be evaluated is a gap to surface, not to swallow. | **CONFIRMED** (trace) | `except Exception: return None` at 192-193; `None` default → param omitted downstream (see D3/SC-5 drop path). |
@@ -123,9 +130,11 @@ git artifacts.
 **Count (of the 16 D3 findings):** **14 CONFIRMED** (D3-1,2,3,4,5,6,7,8,10,11,12,14,15,16 —
 several CONFIRMED-latent; D3-11 counts once via its confirmed instance-ambiguity half, its
 output-half struck NOT-REPRODUCED), **2 RECLASSIFIED** (D3-9 → tripwire guard, D3-13 → zero-
-found sentinel). Scope-beyond: SC-4 + SC-5 CONFIRMED, drift explained-benign. Fewer than 16
-carry a diagnostic-on-shape (two are closed-by-construction / reclassified) — the protocol
-working.
+found sentinel). Scope-beyond: SC-4 + SC-5 CONFIRMED, drift explained-benign. **Two of the 14
+are closed-by-construction** — D3-3 (SysIDE resolved-referent invariant) and **D3-7**
+(design-open live run: the OutputRegistry scoped-key collision guard already loud-rejects the
+reachable FORMULA shape). Both carry an invariant + guard-pin, **not** a silent-drop
+fires-on-shape test. Fewer than 16 carry a diagnostic-on-shape — the protocol working.
 
 ## Known Requirements
 
@@ -176,13 +185,18 @@ the family there, not per site.
 - **[INFERRED]** A DEBUG/INFO summary shape is acceptable for the sentinels; the
   requirement is zero-found ≠ silence, not a WARNING per site (noise discipline, RN-7).
 
-### Family 3 — Name-keyed lookup maps (D3-7, D3-10, D3-15; D3-11b conditionally)
+### Family 3 — Name-keyed lookup maps (D3-10, D3-15; D3-11b conditionally; D3-7 closed-by-construction)
 
 - **[HARD]** Resolution maps are keyed so two distinct SysML entities cannot merge. Key by
   qualified name (QN), or — where a leaf-name match is structurally required — enforce
-  uniqueness and warn on collision at lookup. Sites: attribute-resolution map
-  (`graph_builder.py:984,1102`), redefinition leaf match (`:1246-1250`), `design_prefix`
-  first-wins (`pipeline_builder.py:597`).
+  uniqueness and warn on collision at lookup. Sites (post-design-open, D3-7 removed):
+  redefinition leaf match (`graph_builder.py:1349-1350`), `design_prefix` first-wins
+  (`pipeline_builder.py:597`).
+- **[INFERRED]** D3-7's attribute-resolution map (`graph_builder.py:984,1102`) is **out of the
+  re-key set** — the design-open live run showed the reachable FORMULA shape is already
+  loud-rejected by the OutputRegistry scoped-key collision guard (`core/output_registry.py:72`)
+  before the merge. Treatment = pin the guard + state the invariant; the bare→QN re-key is
+  optional defense-in-depth (consumer audit first), not a `[HARD]`.
 - **[INFERRED]** `_usage_by_name` first-wins collision (`dependency_backtracker.py:248`,
   D3-11b) is **conditional** — the code comment at `:151-154` calls these collisions
   "expected and benign" (internal processing keys off QNs). Design decides at design-open
@@ -225,22 +239,27 @@ the family there, not per site.
   independently anchored, not computed by the code under test) **and** a silent-on-clean
   test — **except closed-by-construction findings**, which get a comment-level assertion /
   debug-guard and a stated invariant instead (no shape to assert on). Per finding:
-  - **Reachable → authored synthetic trip fixture + fires-on-shape test:** D3-6, D3-7,
-    D3-8, D3-10, D3-15, D3-16. Several trip fixtures exist under `probes/fixtures/` and
-    become permanent fixtures in design/impl (see the probe-runnability gate below).
-  - **Closed-by-construction → invariant + assert/debug-guard, no fires-on-shape test:**
-    D3-3 (SysIDE guarantees a resolved referent + non-empty QN for parsed SysML, so
-    `(None,None)` is unreachable).
-- **[HARD]** **Probe-runnability gate (design-open).** Three trip fixtures
-  (`d37_partname_merge`, `d38_caret_operator`, `d310_leaf_redef`) carry **no calc def**, so
-  `build_pipeline_context` raises before the probe reaches its finding — D3-7/D3-8/D3-10
-  stay **code-trace-only** until a calc def is added at design-open. D3-1's probe also did
-  not run despite its fixture carrying a calc def — design confirms what it still needs.
-  Running these probes green is the first design/plan gate.
+  - **Reachable → authored synthetic trip fixture + fires-on-shape test:** D3-6, D3-8,
+    D3-10, D3-15, D3-16. The trip fixtures under `probes/fixtures/` are repaired and run
+    (design-open gate satisfied) and become permanent fixtures in design/impl.
+  - **Closed-by-construction → invariant + assert/debug-guard, no silent-drop fires-on-shape
+    test:** D3-3 (SysIDE guarantees a resolved referent + non-empty QN for parsed SysML, so
+    `(None,None)` is unreachable) and **D3-7** (design-open live: the OutputRegistry scoped-key
+    collision guard already loud-rejects the reachable FORMULA shape — pin the guard fires +
+    state the invariant).
+- **[HARD]** **Probe-runnability gate (design-open) — SATISFIED.** The three no-calc-def trip
+  fixtures (`d37_partname_merge`, `d38_caret`, `d310_leaf_redef`) were repaired (isolated
+  minimal `NoopCalc` + usage), and D3-1's `invocation_binding_probe` fixture was repaired
+  (`max(...)` → `Doubler(v=a)`, a calc-def invocation that resolves to a Behavior). **All
+  probes ran live.** Outcome: D3-1/D3-8/D3-10 → live-CONFIRMED; D3-7 → reclassified
+  closed-by-construction (its probe raises the OutputRegistry collision loudly, refuting the
+  silent-cross-wire claim).
 - **[HARD]** **Baseline corpus entrants.** Latent trip fixtures that become permanent
-  corpus fixtures (D3-6/7/8/10/15/16) enter the baseline set with their diagnostic pinned;
+  corpus fixtures (D3-6/8/10/15/16) enter the baseline set with their diagnostic pinned;
   only D3-2 and D3-8 move an *existing* committed fixture's output (both carved out of the
-  byte-identical SC above). No other current baseline changes.
+  byte-identical SC above). D3-7's `d37_partname_merge` enters as a **raises-loudly pin**
+  (asserts the OutputRegistry `ValueError`), not a generation baseline. No other current
+  baseline changes.
 - **[HARD]** Reference docs, modeling-assumptions sections, and matrix rows for every
   touched component move in the same change (R4 step 4).
 

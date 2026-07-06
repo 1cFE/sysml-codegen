@@ -21,3 +21,13 @@ package D37PkgB {
         attribute result : Real = a + b;   // FORMULA (siblings only)
     }
 }
+
+// Minimal calc def so build_pipeline_context accepts the model (probe-runnability
+// gate). Isolated from the two Widget FORMULA attrs that D3-7 exercises.
+package D37Probe {
+    private import ScalarValues::*;
+    calc def NoopCalc {
+        in attribute x : Real;
+        out attribute result : Real = x;
+    }
+}

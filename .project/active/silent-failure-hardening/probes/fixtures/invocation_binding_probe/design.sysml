@@ -11,11 +11,12 @@ package InvocationBindingDesign {
         // types the dispatch in _extract_single_binding handles, so it falls
         // through to the UNBOUND catch-all (usage_extractor.py:748).
         //
-        // If `max(...)` does not parse in this SysIDE build, swap for another
-        // invocation form (e.g. `min(a, b)` or a user function call). The point
-        // is any InvocationExpression as a binding RHS.
+        // `Doubler(v = a)` is a calc-def invocation (InvocationExpression). The
+        // point is any InvocationExpression as a binding RHS. (`max(a, b)` does
+        // not resolve to a Behavior in this SysIDE build; a calc-def invocation
+        // does.)
         calc c : PassthroughCalc {
-            in x = max(a, b);
+            in x = Doubler(v = a);
         }
     }
 }

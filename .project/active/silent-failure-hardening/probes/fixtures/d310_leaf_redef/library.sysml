@@ -25,3 +25,13 @@ package D310PkgB {
         :>> power = 999.0;
     }
 }
+
+// Minimal calc def so build_pipeline_context accepts the model (probe-runnability
+// gate). Isolated from the two Motor LITERAL redefinitions D3-10 exercises.
+package D310Probe {
+    private import ScalarValues::*;
+    calc def NoopCalc {
+        in attribute x : Real;
+        out attribute result : Real = x;
+    }
+}

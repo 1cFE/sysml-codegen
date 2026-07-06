@@ -24,3 +24,13 @@ package D38Lib {
         :>> total_cost = sum(cell.total_cost) ^ exponent;
     }
 }
+
+// Minimal calc def so build_pipeline_context accepts the model (probe-runnability
+// gate). Isolated from the 'Pack' aggregation D3-8 exercises.
+package D38Probe {
+    private import ScalarValues::*;
+    calc def NoopCalc {
+        in attribute x : Real;
+        out attribute result : Real = x;
+    }
+}
