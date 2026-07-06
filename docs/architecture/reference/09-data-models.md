@@ -221,9 +221,27 @@ See [10-output-registry](10-output-registry.md) for the 4-phase protocol and typ
 
 ## Resolution Models
 
-**ComputationGraph** (BaseModel, `resolution/models.py:174`)
+**ComputationGraph** (BaseModel, `resolution/models.py:230`)
 `modules: list[PipelineModule]`, `entry_point_groups: list[ParameterGroup]`,
-`execution_order: list[str]`.
+`execution_order: list[str]`, `output_aliases: list[OutputAlias]`.
+The model also declares `fallback_entry_points: set[str]` but with `exclude=True`
+(Item 7 — an in-memory analysis artifact kept out of the serialized graph), so it
+is not a serialized field and is omitted from this list. `output_aliases` is the
+deliberate contrast (Item 11 / REQ-DM-09): a genuine schema field with **no**
+`exclude`, so it serializes on every graph (empty `[]` when the model has no
+EXPOSE_PURE derived attribute) and appears in the field-set conformance test.
+`ComputationGraph.model_fields` therefore has 5 entries; the serialized set is 4.
+
+**OutputAlias** (BaseModel, `resolution/models.py:193`)
+`alias_name: str`, `canonical_channel: str`, `instance_path: str`,
+`shape: Literal["part_def", "part_usage"]`. Property: `output_filename` →
+`{instance_path}__{alias_name}.json`. One EXPOSE_PURE modeler name surfaced onto the
+canonical channel the value already flows on (Item 11 / SC-7 / REQ-DM-09). `shape`
+tags provenance: `part_def` from the `_scoped_alias` registry (shape A), `part_usage`
+from an `expose_pure` `ChannelAlias` (shape B). `canonical_channel` is read from the
+registry, never re-derived (INV-2), and is validated to be a declared graph output
+channel (INV-3). See [16-computed-attributes](16-computed-attributes.md) and
+[21-pipeline-yaml-generation](21-pipeline-yaml-generation.md).
 
 **PipelineModule** (BaseModel, `resolution/models.py:150`)
 `name: str`, `module_type: str`, `inputs: list[ModuleInput]`, `outputs: list[ModuleOutput]`,

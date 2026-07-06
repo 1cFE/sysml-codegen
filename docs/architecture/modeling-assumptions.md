@@ -178,6 +178,19 @@ part subsystem {
 
 This is permitted because it introduces no new computation -- it is pure value forwarding. Consumers bind to `subsystem.exposed_name` without knowing the internal calc structure.
 
+**What "exposed_name" means concretely (Item 5 / Item 11).** The name a consumer
+binds to is the derived, *sanitized* `python_name`, not the raw SysML name. Item 5
+derives every identifier once at extraction (`_sanitize_name`, REQ-NC-06) and looks it
+up thereafter; for a spaced name `'total cost'` the bound form is `total_cost`. As of
+Item 11 (SC-7 / REQ-DM-09 / REQ-PY-08) that sanitized name **surfaces into generated
+output**: it lands on `ComputationGraph.output_aliases` and, in the pipeline YAML,
+becomes the output filename on the exposed channel's exit line
+(`{instance_path}__{exposed_name}.json`). Both EXPOSE_PURE shapes surface — a part-def
+EXPOSE (shape A, e.g. `total_cost` on a `part def`) via the `_scoped_alias` registry,
+and a part-usage EXPOSE (shape B) via its `expose_pure` `ChannelAlias`. See
+[16-computed-attributes](reference/16-computed-attributes.md) and
+[21-pipeline-yaml-generation](reference/21-pipeline-yaml-generation.md).
+
 **EXPOSE_COMPUTED (deferred):** Combining a calc output reference with arithmetic (e.g., `= calc.output * 1.15`) is NOT supported. Create a CalcDef for the adjustment instead -- the pipeline auto-implements simple arithmetic CalcDefs, so no handwritten `_impl.py` is needed.
 
 ### Dynamic Expressions (Error)

@@ -385,34 +385,36 @@ Land the R1 documentation obligations and the downstream-coordination note for t
 
 **See `design.md#docs--req-census`.**
 
-- [ ] **REQ tags:** `REQ-DM-09` (the `output_aliases` field: shape, INV-3 existence, INV-5 order),
+- [x] **REQ tags:** `REQ-DM-09` (the `output_aliases` field: shape, INV-3 existence, INV-5 order),
   `REQ-PY-08` (aliased channel's exit line renders the modeler's name as its filename), `REQ-CA-11`
-  (shape-A EXPOSE_PURE routed via `_scoped_alias`; warning retired for resolvable case). Confirm each
-  is the next free tag in its family before allocating.
-- [ ] **Doc 09** (`reference/09-data-models.md`): add `output_aliases: list[OutputAlias]` to the
-  ComputationGraph field list + an `OutputAlias` model entry; note it is present *because* not
-  excluded (contrast `fallback_entry_points`). Fix the stale `models.py:174` line ref.
-- [ ] **Doc 21** (`reference/21-pipeline-yaml-generation.md`): exit-point filename override; cite the
-  simkit `<Type> <filename>` grammar; add the REQ-PY-08 matrix row.
-- [ ] **Doc 16** (`reference/16-computed-attributes.md`): EXPOSE_PURE → surfaced-name story end; the
-  shape-A warning retirement.
-- [ ] **modeling-assumptions §3:** reconcile "consumers bind to `subsystem.exposed_name`" with the
-  sanitized `python_name` form (Item 5 / REQ-NC-06).
-- [ ] **verification-matrix.md:** rows for REQ-DM-09, REQ-PY-08, REQ-CA-11.
-- [ ] **Release notes** — NEW `.project/active/alias-surfacing/release-notes.md` (M2; template:
-  `.project/active/cross-part-wiring/release-notes.md`). The filename MOVE
-  `{channel}.json → {instance}__{alias}.json` is a real behavioral change, not just churn:
-  `attr_expr_probe` moves 3, `wi014_toy` moves 1. Enumerate which baselines' exit filenames change and
-  the consumer-visible effect (a harness reading old `{channel}.json` paths sees the move).
-- [ ] **agentic-mbse:** record the EXPOSE-pattern docs impact — the exposed name now surfaces as a
-  named output capture (documentation-only note; no code).
-- [ ] **CURRENT_WORK.md:** update Item 11 status.
+  (shape-A EXPOSE_PURE routed via `_scoped_alias`; warning retired for resolvable case). All three
+  confirmed next-free at implement time; present at their code/test sites (DM-09 `mark.req` +
+  models.py field docstring; PY-08 comment at `pipeline.py:54`; CA-11 Item-11 comment at the
+  `graph_builder.py:1006` reroute + `test_wi014_toy.py` docstring — matching the file's no-inline-REQ
+  convention).
+- [x] **Doc 09** (`reference/09-data-models.md`): added `output_aliases: list[OutputAlias]` to the
+  ComputationGraph field list + an `OutputAlias` model entry; noted present *because* not excluded
+  (contrast `fallback_entry_points`); fixed the stale `models.py:174` ref → `:230`.
+- [x] **Doc 21** (`reference/21-pipeline-yaml-generation.md`): new "Exit Point Filename Override"
+  section citing the simkit `<Type> <filename>` grammar; REQ-PY-08 matrix row added.
+- [x] **Doc 16** (`reference/16-computed-attributes.md`): shape-A reroute + warning-retirement
+  subsection (REQ-CA-11) and the EXPOSE_PURE → surfaced-name story end.
+- [x] **modeling-assumptions §3:** reconciled "consumers bind to `subsystem.exposed_name`" with the
+  sanitized `python_name` form (Item 5 / REQ-NC-06) + the surfacing note.
+- [x] **verification-matrix.md:** rows for REQ-DM-09, REQ-PY-08, REQ-CA-11; section + summary counts
+  reconciled to actual (233/221/12 — the pre-existing drift was corrected while adding the 3 rows).
+- [x] **Release notes** — NEW `.project/active/alias-surfacing/release-notes.md` (M2). Filename MOVE
+  enumerated as a table: `attr_expr_probe` ×3, `solar_battery` ×1, new `wi014_toy` baseline ×1; the
+  catf first-wins nested-collapse note; the warning retirement; consumer-visible effect stated.
+- [x] **agentic-mbse:** EXPOSE-pattern docs-impact section in release-notes (for Item 12; no code).
+- [x] **CURRENT_WORK.md:** Item 11 status → COMPLETE.
+- [x] **spec Baseline Regen §1 amendment:** solar_battery DOES carry shape-A `misc_hardware_cost`.
 
 ### Validation
 
-- [ ] Every new REQ tag appears in both its owner doc and the verification matrix.
-- [ ] Release notes enumerate all 4 filename moves and the consumer effect.
-- [ ] Final gate recorded: `pytest` / `ruff check src/` / `mypy src/`.
+- [x] Every new REQ tag appears in both its owner doc and the verification matrix.
+- [x] Release notes enumerate all filename moves (attr_expr ×3, solar ×1, new wi014 ×1) + consumer effect.
+- [x] Final gate recorded: `pytest` 1989 passed / 4 skipped / 5 xfailed; `ruff check src/` 21; `mypy src/` 109.
 
 **What we know works after this phase:** the schema rev is documented per R1; the filename move is a
 coordination note, not a surprise.
@@ -479,37 +481,41 @@ recorded-gate + static inspection (Item 8–10 audit pattern) rather than claimi
   `generate_pipeline_yaml` builds the map; template `pipeline_yaml.jinja2:47` → `{{ exit.filename }}`
   (key + type unchanged, REQ-PY-06 green). New `tests/unit/test_exit_point_aliases.py` (10 tests).
 
-### Phase 4 Completion — PARTIAL (blocked on solar_battery recapture)
+### Phase 4 Completion — DONE (green; solar recapture executed)
 - 6/7 graph baselines regenerated + reviewed clean (field-addition + alias entries only, nothing
   else churns): solar_battery(+empty→see below), catf_mfe(+44), attr_expr_probe(+3), chain_spike(+[]),
   sample_model(+[]), wi014_toy(+1), ife_plant(+2). `registry_init.py` unchanged for all.
 - `capture_baseline_yaml.py` refactored to the snapshot path (F-B optional; license-free), verified
   byte-identical to prior live baselines for unaffected models. attr_expr_probe YAML: 3 renames only.
   New `wi014_toy.yaml` committed + `test_yaml_baseline_comparison_wi014_toy`.
-- **BLOCKED — solar_battery SC-1 reconciliation (approved option 1, not executed this session):**
+- **RESOLVED — solar_battery SC-1 reconciliation (approved option 1, executed):**
   solar_battery carries a shape-A EXPOSE `misc_hardware_cost = allocation_model.total_allocation`
-  (the spec's Baseline Regen §1 "no EXPOSE_PURE" classification is FALSE). The committed snapshot is
-  stale (`misc_hardware_cost.reference_chain = None`, pre-Item-10 format), so the snapshot path
-  under-surfaces vs live → SC-1 byte-identity breaks. Fix = recapture solar_battery's snapshot under
-  license (same reference_chain class Item 10 recaptured wi014/catf/ife for). **The recapture is
-  blocked in this sandbox** (reading `~/1cfe/agentic-mbse/.env` outside the working dir + network
-  license validation require an interactive approval). Residual failures (2):
-  `test_snapshot_generation.py::test_live_vs_snapshot_byte_identical`,
-  `test_e2e_output_registry.py::TestYamlDiffValidation::test_yaml_matches_baseline[solar_battery]`.
-  **Resume steps:** (1) recapture `tests/fixtures/solar_battery_model/extraction_snapshot.json`;
-  (2) verify its diff is limited to `reference_chain` (+ `captured_at` + any canonical-path fields);
-  (3) re-run `capture_pipeline_baselines.py` (solar graph baseline gains 1 alias) +
-  `capture_baseline_yaml.py` (solar YAML gains the `misc_hardware_cost` rename); (4) re-run
-  `test_live_vs_snapshot_byte_identical` explicitly.
-- **Gate at partial state:** 1987 passed / 4 skipped / 5 xfailed / **2 failed** (both solar SC-1);
+  on `solar_array` (the spec's Baseline Regen §1 "no EXPOSE_PURE" classification was FALSE — amended
+  in spec §1). Its stale pre-Item-10 snapshot (`reference_chain = None`) was recaptured, the solar
+  graph baseline gained 1 alias entry, and the solar YAML gained the `misc_hardware_cost` filename
+  rename (`…total_allocation.json → solar_battery_plant.solar_array__misc_hardware_cost.json`). The
+  two residual failures (`test_live_vs_snapshot_byte_identical`, `test_yaml_matches_baseline
+  [solar_battery]`) are green at HEAD.
+- **Gate at HEAD (feat `4f6ba40`):** 1989 passed / 4 skipped / 5 xfailed / 0 failed;
   ruff src/ 21; mypy src/ 109.
 
-### Phase 5 Completion — NOT STARTED (gated on the recapture + final baseline set)
-- Pending: REQ-DM-09 / REQ-PY-08 / REQ-CA-11 tags; docs 09/21/16; modeling-assumptions §3;
-  verification-matrix rows; `release-notes.md` (filename moves: attr_expr ×3, wi014 ×1, **solar ×1**,
-  + catf first-wins-collapse note); agentic-mbse impact note; CURRENT_WORK. Also: spec Baseline
-  Regen §1 one-line amendment (solar_battery DOES carry shape-A EXPOSE misc_hardware_cost).
+### Phase 5 Completion — DONE (docs-only; no production change)
+- **REQ tags** verified present at code/test sites (per the file conventions — not every family
+  inline-tags code; graph_builder carries Item-N comments, tests carry docstrings/`mark.req`).
+- **Docs:** doc 09 (ComputationGraph field + `OutputAlias` entry, stale `:174`→`:230` fixed), doc 21
+  (Exit Point Filename Override section + REQ-PY-08 row), doc 16 (shape-A reroute/warning-retirement +
+  surfaced-name story), modeling-assumptions §3 (sanitized `exposed_name` reconciliation + surfacing).
+- **verification-matrix.md:** 3 rows (CA-11, DM-09, PY-08); CA/DM/PY index counts + summary counts
+  reconciled to actual current totals (233/221/12; the summary had drifted to 217/204 before this).
+- **release-notes.md** (NEW): filename-move table (attr_expr ×3, solar ×1, new wi014 ×1), graph-level
+  populated-fixture list (5), catf first-wins collapse note (44 entries / 19 channels), warning
+  retirement, and the agentic-mbse impact section for Item 12.
+- **spec §1 amendment** (solar carries shape-A `misc_hardware_cost`) and **CURRENT_WORK** → COMPLETE.
+- **All doc claims verified against committed code** (grep/read of models.py, pipeline.py,
+  graph_builder.py, the 7 graph baselines, and the 5 YAML baselines) — no aspirational statements.
+- **Final gate (docs-only, unchanged):** `pytest` 1989 passed / 4 skipped / 5 xfailed; `ruff check
+  src/` 21; `mypy src/` 109.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete**

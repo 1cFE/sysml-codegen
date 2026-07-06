@@ -242,6 +242,42 @@ class AttributeResolution:
     channel_name: str | None = None  # For FORMULA and EXPOSE_ALIAS
 ```
 
+### Shape-A EXPOSE_PURE reroute + warning retirement (REQ-CA-11)
+
+`_build_attribute_resolution_map` splits the EXPOSE_PURE branch on
+`ca.is_on_part_definition`:
+
+- **Part usage (shape B)** — unchanged. It still calls `_resolve_expose_pure`, so a
+  genuinely unresolvable shape-B EXPOSE still warns at `graph_builder.py:796`.
+- **Part def (shape A)** — does **not** call the refs parser. On a part def the
+  calc-usage instance names are absent from `calc_usage_names`, so `_resolve_expose_pure`
+  could not split the refs and would fire the malformed-refs warning at `:796` — the
+  Item-1 interim warning. Item 10 resolves shape A per instance through the
+  `_scoped_alias` namespace instead, and this per-def map is structurally
+  instance-blind, so shape A takes a LITERAL fallback (identical to the old
+  post-warning behavior — no in-repo FORMULA consumes a shape-A exposed name). The map
+  then consults `_scoped_alias` only to decide the warning: a registered leaf means the
+  name resolved (Item 10) and now surfaces (Item 11) → **silent**; an unregistered leaf
+  warns naming the real cause, not "Item 10/11."
+
+This retires the Item-1 malformed-refs warning for the resolvable case
+(`test_wi014_toy.py`, previously pinning the warning, now asserts silence + the
+surfaced name).
+
+### EXPOSE_PURE → surfaced name (Item 11 / SC-7)
+
+The value already flows on its canonical channel; Item 10 computed the name→channel
+mapping for both shapes and stored it with provenance. Item 11 reads those two sources
+(`_scoped_alias` for shape A, `expose_pure` `ChannelAlias` objects for shape B) at the
+end of graph construction and normalizes them into
+[`ComputationGraph.output_aliases`](09-data-models.md) (a list of `OutputAlias`), then
+renders each as the output filename on its channel's exit line in the pipeline YAML
+([doc 21](21-pipeline-yaml-generation.md), REQ-PY-08). So `total_cost` (shape A,
+`wi014_toy`) and `scale_result` / `half_vol` / `quarter_vol` (shape B,
+`attr_expr_probe`) now reach generated output as named captures. EXPOSE_COMPUTED is
+**not** surfaced — it stays rejected per [modeling-assumptions §3](../modeling-assumptions.md),
+and its warning stays.
+
 ---
 
 ## Concrete Example: Solar_Array

@@ -8,12 +8,23 @@
 
 ### UPSTREAM-FINDINGS Item 11: Derived-Attribute Alias Surfacing (SC-7)
 
-**Status**: Spec in progress — `.project/active/alias-surfacing/spec.md`. Surfaces
-Item 10's typed EXPOSE_PURE alias registrations into a new `output_aliases`
+**Status**: COMPLETE — all 5 phases landed (feat commit `4f6ba40`). Surfaces
+Item 10's typed EXPOSE_PURE alias registrations into a new serialized `output_aliases`
 ComputationGraph field + named exit-point captures in pipeline YAML, both shapes
-(wi014_toy shape A, attr_expr_probe shape B). Retires Item 1's "name is dropped"
-warning for resolvable cases. Scope pinned: EXPOSE_PURE only (redefinition-name
-surfacing is a BACKLOG non-goal).
+(wi014_toy shape A `total_cost`, attr_expr_probe shape B `scale_result`/`half_vol`/
+`quarter_vol`). Retires Item 1's shape-A malformed-refs warning for resolvable cases.
+Scope pinned: EXPOSE_PURE only (redefinition-name surfacing is a BACKLOG non-goal).
+- **5 populated graph baselines:** attr_expr_probe (3), solar_battery (1, shape-A
+  `misc_hardware_cost` — the spec's "no EXPOSE_PURE" §1 label was wrong; snapshot
+  recaptured under the approved SC-1 reconciliation), wi014_toy (1), ife_plant (2),
+  catf_mfe (44 entries / 19 channels, first-wins collapse).
+- **Filename MOVE (downstream coordination):** aliased channels' output files move
+  `{channel}.json → {instance}__{alias}.json` — committed YAML: attr_expr_probe ×3,
+  solar_battery ×1, new wi014_toy baseline ×1. See
+  `.project/active/alias-surfacing/release-notes.md`.
+- **Gate:** 1989 passed / 4 skipped / 5 xfailed; ruff src/ 21; mypy src/ 109.
+- **Docs:** REQ-DM-09 / REQ-PY-08 / REQ-CA-11 (docs 09/16/21, modeling-assumptions §3,
+  verification-matrix). Ready for `/_my_audit` → `/_my_pre_pr`.
 
 ### UPSTREAM-FINDINGS Item 10: Cross-Part Channel Wiring (SC-5 stage 2)
 

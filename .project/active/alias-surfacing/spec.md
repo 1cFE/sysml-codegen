@@ -241,12 +241,18 @@ classes now so the diffs are attributable, not surprising:
 
 1. **Graph baselines gaining the field (7 total).** `computation_graph.json` for
    `solar_battery`, `sample_model`, `chain_spike`, `attr_expr_probe`, `ife_plant`,
-   `catf_mfe`, `wi014_toy`. Review class: **field-addition only.** The three with no
-   EXPOSE_PURE derived attribute (`solar_battery`, `sample_model`, `chain_spike`)
-   gain an empty `output_aliases` (or no line, if excluded-when-empty — Open
-   Question); everything else in those files is byte-identical. The four with
-   EXPOSE_PURE aliases gain populated entries. Regen: `capture_pipeline_baselines.py`
-   (license-free, snapshot-driven).
+   `catf_mfe`, `wi014_toy`. Review class: **field-addition only.** Only two have no
+   EXPOSE_PURE derived attribute (`sample_model`, `chain_spike`) and gain an empty
+   `output_aliases`; everything else in those files is byte-identical. The other five
+   gain populated entries. Regen: `capture_pipeline_baselines.py` (license-free,
+   snapshot-driven).
+   **Amendment (implement-time correction):** this section originally listed
+   `solar_battery` as having no EXPOSE_PURE attribute. That is wrong — `solar_battery`
+   carries a shape-A EXPOSE `misc_hardware_cost = allocation_model.total_allocation` on
+   `solar_array`, so it gains one populated `output_aliases` entry (`part_def`,
+   instance_path `solar_battery_plant.solar_array`) and its YAML gains the matching
+   filename rename. Its stale pre-Item-10 snapshot was recaptured so the snapshot path
+   surfaces the alias (the approved SC-1 reconciliation).
 2. **YAML baseline diff — `attr_expr_probe` (shape B).** Gains named exit-point
    captures for `scale_result` / `half_vol` / `quarter_vol`. Reviewed diff.
 3. **New YAML baseline — `wi014_toy` (shape A).** Adds `total_cost` as a named

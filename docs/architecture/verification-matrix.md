@@ -6,8 +6,8 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 217 |
-| PASS (test exists and passes) | 204 |
+| Total requirements | 233 |
+| PASS (test exists and passes) | 221 |
 | UNTESTED (no dedicated test) | 12 |
 | DEFERRED | 0 |
 | REQ families | 29 |
@@ -28,8 +28,8 @@ the documentation rather than executable code.
 - [AST — AST Dispatch Invariant](#ast) (7/7 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (8/8 pass)
-- [CA — Computed Attributes](#ca) (7/9 pass, 1 deferred to Item 8)
-- [DM — Data Models](#dm) (7/8 pass)
+- [CA — Computed Attributes](#ca) (10/11 pass, 1 untested)
+- [DM — Data Models](#dm) (8/9 pass)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
@@ -47,7 +47,7 @@ the documentation rather than executable code.
 - [PGD — Parameter Group Deriver](#pgd) (7/7 pass)
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
-- [PY — Pipeline YAML](#py) (7/7 pass)
+- [PY — Pipeline YAML](#py) (8/8 pass)
 - [REG — Module Registry](#reg) (7/7 pass)
 - [RES — Resolution Overview](#res) (0/8 pass)
 - [SNAP — Extraction Snapshots](#snap) (7/7 pass)
@@ -136,6 +136,7 @@ the documentation rather than executable code.
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | — | UNTESTED |
 | REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
+| REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`graph_builder.py:796`) for the resolvable case | `test_wi014_toy.py` | PASS |
 
 ### DM
 
@@ -151,6 +152,7 @@ the documentation rather than executable code.
 | REQ-DM-06 | Models with dedicated docs SHALL link to those docs, not duplicate detail | `test_data_models.py` | PASS |
 | REQ-DM-07 | The data flow diagram SHALL show all pipeline stages and their primary I/O models | `test_data_models.py` | PASS |
 | REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | — | UNTESTED |
+| REQ-DM-09 | `ComputationGraph.output_aliases: list[OutputAlias]` SHALL be a serialized field (no `exclude`, contrast `fallback_entry_points`) carrying each EXPOSE_PURE modeler name, its canonical channel (validated to exist — INV-3), instance path, and `shape`; stable-sorted by `(instance_path, alias_name)` (INV-5) so regen yields no ordering-only diff | `test_data_models.py`, `test_graph_assembly.py` | PASS |
 
 ### DRA
 
@@ -415,6 +417,7 @@ the documentation rather than executable code.
 | REQ-PY-05 | `channel_field_map` SHALL contain an entry for every `ModuleOutput` in the graph | `test_gen_pipeline_yaml.py` | PASS |
 | REQ-PY-06 | Exit point type SHALL be `RootModel[T]` when `field_name == "root"`, else `T` | `test_gen_pipeline_yaml.py` | PASS |
 | REQ-PY-07 | Entry point module inputs SHALL list one JSON file per `ParameterGroup` | `test_gen_json_templates.py`, `test_gen_pipeline_yaml.py` | PASS |
+| REQ-PY-08 | An aliased channel's exit line SHALL render the modeler's instance-qualified name as its output filename (`{instance_path}__{alias_name}.json`); the exit **key** stays the canonical channel and the type token is unchanged (REQ-PY-06 holds), so simkit's key-is-a-channel check still passes | `test_gen_pipeline_yaml.py` | PASS |
 
 ### REG
 
