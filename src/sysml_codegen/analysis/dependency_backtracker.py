@@ -505,19 +505,20 @@ class DependencyBacktracker:
 
         Dispatch by binding format:
 
-        CHAIN (no "::" in source_path):
-          Step 1: scoped_lookup(consumer_scope.source_path)
+        CHAIN (no "::" in source_path) — see `_resolve_chain_dispatch`:
+          Step 1:  scoped_lookup(consumer_scope.source_path)
           Step 1b: scoped_lookup(source_path) — direct (Key_F FORMULA)
-          Step 2: alias_lookup(source_path) — cross-scope
-          Step 3: design_attribute match -> ENTRY_POINT
-          Step 4: fallback -> ENTRY_POINT with warning
+          Step 1c: scoped_alias_lookup((scope, leaf)) — structured part-def
+                   EXPOSE (Item 10 #1; consumer-scope-prefixed key first, REQ-BT-11)
+          Step 2:  alias_lookup(source_path) — cross-scope
 
-        REFERENCE ("::" in source_path):
-          Step 1: sysml_qn_lookup(source_path)
-          Step 1b: Normalize :: to dotted -> scoped_lookup
+        REFERENCE ("::" in source_path) — see `_resolve_reference_dispatch`:
+          Step 1: sysml_qn_lookup(source_path) — per-segment sanitized
           Step 2: leaf + parent scope -> scoped_lookup then alias_lookup
+
+        Both formats then share (in this method, after dispatch returns None):
           Step 3: design_attribute match -> ENTRY_POINT
-          Step 4: fallback -> ENTRY_POINT with warning
+          Step 4: fallback -> ENTRY_POINT (DEBUG line; recorded for the V11 collector)
         """
         assert self._output_registry is not None
         source_path = binding.source_path

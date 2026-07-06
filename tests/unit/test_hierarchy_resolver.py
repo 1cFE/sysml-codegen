@@ -33,6 +33,7 @@ from sysml_codegen.extraction.data_models import (
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.extraction.expression_utils import reconstruct_expression
 from sysml_codegen.extraction.hierarchy_resolver import (
+    _chain_sibling_aliases_aggregation,
     build_aggregation_expression,
     extract_design_overrides,
     extract_hierarchy_data,
@@ -1259,3 +1260,59 @@ class TestWalkAggregationAstEvaluationUnwrap:
         assert "module_count * pv_module.capital_cost" in result.transformed_expression
         assert "inverter_count * inverter.capital_cost" in result.transformed_expression
         assert "Evaluation" not in result.transformed_expression
+
+
+# ===========================================================================
+# REQ-HR-07: dotted-leaf CHAIN-alias matching (doc-25 "Edge case" pin)
+# ===========================================================================
+class TestDottedLeafAliasMatch:
+    """Pin the `.`-suffix CHAIN-alias branch (`_chain_sibling_aliases_aggregation`).
+
+    doc-25 hedged this edge as "No current model triggers this". These pin the
+    CURRENT behavior directly (no fixture): the dotted-leaf match is by leaf only
+    and does NOT check which part the path references, and the dot boundary guards
+    against bare-name suffixes.
+    """
+
+    def _chain(self, attribute_name: str, source_path: str) -> RedefinitionData:
+        return RedefinitionData(
+            owning_part_qn="Lib__Plant",
+            attribute_name=attribute_name,
+            redefinition_type=RedefinitionType.CHAIN,
+            source_path=source_path,
+        )
+
+    def test_exact_name_matches(self):
+        """`:>> total_capex = capital_cost` aliases the `capital_cost` aggregation."""
+        sib = self._chain("total_capex", "capital_cost")
+        assert _chain_sibling_aliases_aggregation(sib, "capital_cost") is True
+
+    def test_dotted_leaf_matches_regardless_of_part(self):
+        """A dotted path whose leaf equals the attr matches even for a DIFFERENT part.
+
+        This is the doc-25 edge: `other_part.capital_cost` aliases `capital_cost`
+        by leaf alone — the branch never checks that `other_part` is the aggregation's
+        own part. Current (spurious-alias) behavior, pinned as-is.
+        """
+        sib = self._chain("total_capex", "other_part.capital_cost")
+        assert _chain_sibling_aliases_aggregation(sib, "capital_cost") is True
+
+    def test_bare_name_suffix_does_not_match(self):
+        """`total_capital_cost` does NOT match `capital_cost` — the dot boundary guards it."""
+        sib = self._chain("some_alias", "total_capital_cost")
+        assert _chain_sibling_aliases_aggregation(sib, "capital_cost") is False
+
+    def test_same_name_sibling_is_not_an_alias(self):
+        """A sibling redefining the SAME attribute name is not an alias of itself."""
+        sib = self._chain("capital_cost", "capital_cost")
+        assert _chain_sibling_aliases_aggregation(sib, "capital_cost") is False
+
+    def test_non_chain_sibling_never_matches(self):
+        """Only CHAIN redefinitions can be aliases; a LITERAL never matches."""
+        sib = RedefinitionData(
+            owning_part_qn="Lib__Plant",
+            attribute_name="total_capex",
+            redefinition_type=RedefinitionType.LITERAL,
+            literal_value=5.0,
+        )
+        assert _chain_sibling_aliases_aggregation(sib, "capital_cost") is False

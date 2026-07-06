@@ -242,10 +242,15 @@ CHAIN alias.
 
 **Edge case**: The `.`-suffix branch matches any dotted `source_path` whose
 leaf is the aggregation attribute (e.g., `parent.capital_cost` matches
-`attribute_name="capital_cost"`), regardless of which part it references.
-No current model triggers this, but it could produce spurious aliases for
-hierarchical CHAIN redefinitions. A bare-name suffix like
-`total_capital_cost` does NOT match — the dot boundary guards it.
+`attribute_name="capital_cost"`), regardless of which part it references — so it
+could produce spurious aliases for hierarchical CHAIN redefinitions. A bare-name
+suffix like `total_capital_cost` does NOT match — the dot boundary guards it.
+This edge (`_chain_sibling_aliases_aggregation`) is pinned directly by
+`tests/unit/test_hierarchy_resolver.py::TestDottedLeafAliasMatch`, which asserts
+the current leaf-only, part-blind behavior; no committed fixture triggers it, so
+the unit pin is the coverage. *(Whether the part-blindness should be tightened is
+a caveat for PIPELINE-TRUTH Item 10's epic-close sweep — the pin fixes the current
+behavior in place so any change is a red-then-green.)*
 
 ## Concrete Example
 

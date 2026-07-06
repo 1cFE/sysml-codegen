@@ -210,23 +210,23 @@ def test_dotted_leaf_alias_matches_by_leaf_regardless_of_part():
 **See `spec.md` §C (four rows) and §E.**
 
 #### §C — four docstring fixes (verify each against the body first)
-- [ ] `_resolve_binding_via_registry` (`analysis/dependency_backtracker.py`): drop the non-existent "Step 1b: Normalize :: to dotted → scoped_lookup" reference; add the omitted Step 1c to the CHAIN summary — match `_resolve_reference_dispatch` actual steps.
-- [ ] `OutputRegistry` class docstring (`core/output_registry.py`): "Three typed registries" → **four**; add the omitted Phase 3b to the phase list; add the `_scoped_alias` count to the `__repr__` description.
-- [ ] `build_pipeline_context` (`orchestration/pipeline_builder.py`): fix the stale 7-step summary — the group deriver runs at **Step 5.7, after** the registry, not ahead of it.
-- [ ] `tests/conformance/test_graph_assembly.py`: section header / class docstring "exactly 3 fields" → **5** (the body already pins 5).
+- [x] `_resolve_binding_via_registry` (`analysis/dependency_backtracker.py`): drop the non-existent "Step 1b: Normalize :: to dotted → scoped_lookup" reference; add the omitted Step 1c to the CHAIN summary — match `_resolve_reference_dispatch` actual steps.
+- [x] `OutputRegistry` class docstring (`core/output_registry.py`): "Three typed registries" → **four**; add the omitted Phase 3b to the phase list; add the `_scoped_alias` count to the `__repr__` description.
+- [x] `build_pipeline_context` (`orchestration/pipeline_builder.py`): fix the stale 7-step summary — the group deriver runs at **Step 5.7, after** the registry, not ahead of it.
+- [x] `tests/conformance/test_graph_assembly.py`: section header / class docstring "exactly 3 fields" → **5** (the body already pins 5).
 
 #### §E — dotted-leaf alias unit pin + doc-25 rewrite
-- [ ] Add the unit pin above, exercising the `.`-suffix CHAIN-alias branch directly and asserting current behavior.
-- [ ] Rewrite the doc-25 hedge (`25-hierarchy-resolver.md:243-248`) to point at the new pin instead of "No current model triggers this". **Coordinate the doc-25 retirement with Item 10** (epic-close caveat sweep) — note it so Item 10 sees it.
+- [x] Add the unit pin above, exercising the `.`-suffix CHAIN-alias branch directly and asserting current behavior.
+- [x] Rewrite the doc-25 hedge (`25-hierarchy-resolver.md:243-248`) to point at the new pin instead of "No current model triggers this". **Coordinate the doc-25 retirement with Item 10** (epic-close caveat sweep) — note it so Item 10 sees it.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/` → green (new pin passes; +1 test).
-- [ ] ruff ≤ 21, mypy ≤ 109.
+- [x] `uv run pytest tests/` → green (new pin passes; +1 test).
+- [x] ruff ≤ 21, mypy ≤ 109.
 
 **Manual:**
-- [ ] Read each of the four docstrings against its body → they now agree.
-- [ ] doc-25:243-248 points at the pin, not the hedge.
+- [x] Read each of the four docstrings against its body → they now agree.
+- [x] doc-25:243-248 points at the pin, not the hedge.
 
 **What We Know Works After This Phase:**
 No touched docstring lies about its code, and the dotted-leaf edge is pinned by a test rather than a hope.
@@ -431,6 +431,15 @@ Every success criterion has a written, auditable answer; no disposition stops on
 **Gate:** ruff src **19** held; mypy src 105 → **104** (improved — one error left with the deleted method). Suite: **1994 passed / 4 skipped / 5 xfailed** — exactly −5 vs Phase 1 (the deleted REQ-PGD-06 self-tests), no other coverage lost.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-06
+**§C — four docstrings fixed (each verified against its body first):**
+- `_resolve_binding_via_registry` (`dependency_backtracker.py`): dropped the fictional REFERENCE "Step 1b: Normalize :: to dotted" (no such step in `_resolve_reference_dispatch`); added the omitted CHAIN **Step 1c** (structured `scoped_alias_lookup`, Item 10); split shared Step 3/4 out of the per-format ladders to match reality.
+- `OutputRegistry` (`core/output_registry.py`): "Three typed registries" → **four** (added `_scoped_alias`); added **Phase 3b** (`register_scoped_alias`, confirmed multi-hop EXPOSE, Item 10/D6) to the phase list; **`__repr__` now emits `scoped_alias=`** (was omitted though `__len__` already counted it) — 2 exact-repr pins updated (`test_output_registry.py:470/474`). Module docstring fixed to match (same lie, same file).
+- `build_pipeline_context` (`pipeline_builder.py`): rewrote the stale "7-step" summary — the OutputRegistry (Step 5.5) now precedes the parameter group deriver (**Step 5.7, after** the registry, once design_attrs is FORMULA-free), matching the inline `Step N` markers.
+- `test_graph_assembly.py`: "exactly 3 fields" → **5** (module docstring, section header, class docstring now name all five; the "all 3 fields" type-check prose scoped to its three collection fields). Body already pinned 5.
+**§E — dotted-leaf alias pin:** extracted the exact `.`-suffix match condition into a pure predicate `_chain_sibling_aliases_aggregation` (`hierarchy_resolver.py`, behavior-preserving refactor so the branch is directly unit-testable without a licensed model), and added `TestDottedLeafAliasMatch` (5 tests) pinning current leaf-only/part-blind behavior + the dot-boundary guard. doc-25:243-248 rewritten to point at the pin (retired the "No current model triggers this" hedge) and to hand the "should part-blindness be tightened?" caveat to Item 10's epic-close sweep.
+**Gate:** ruff src **19** held (fixed one E501 I introduced in a docstring); mypy src **104** held. Suite: **1999 passed / 4 skipped / 5 xfailed** (+5 pin tests vs Phase 2's 1994); no behavior change (existing alias tests still green).
+
 ### Phase 4 Completion  (D1-F2 decision: __ ; SC-11 verdict: __ )
 ### Phase 5 Completion  (probe red-before/green-after: __ ; byte-identity: __ )
 ### Phase 6 Completion  (named-deleted-tests: __ ; net count Δ: __ )

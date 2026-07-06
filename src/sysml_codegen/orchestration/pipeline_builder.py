@@ -637,15 +637,19 @@ def build_pipeline_context(
     """Build complete pipeline context from SysML models.
 
     This is the canonical initialization sequence used by all codegen scripts.
-    It performs the following 7-step sequence:
+    The major steps (see the inline ``Step N`` markers for the full sub-step order):
 
-    1. Load models via SysMLDataExtractor
-    2. Extract calculation definitions
-    3. Extract calculation usages with enhanced algorithm param detection
-    4. Extract design attributes for group derivation
-    5. Create parameter group deriver
-    6. Create backtracker and run dependency analysis
-    7. Build ComputationGraph (single source of truth)
+    1. Load models via SysMLDataExtractor (Step 1)
+    2. Extract calculation definitions (Step 2)
+    3. Extract calculation usages with enhanced algorithm param detection (Step 3)
+    4. Extract hierarchy, rewrite bindings, scope aggregation, build CHAIN aliases (Step 3.5)
+    5. Extract design attributes and computed attributes / EXPOSE_PURE aliases (Steps 4, 4.5)
+    6. Build the OutputRegistry — 4-phase registration incl. Phase 3b (Step 5.5)
+    7. Create the parameter group deriver — **at Step 5.7, after the registry**, once
+       design_attrs is FORMULA-free (INV-G)
+    8. Create backtracker and run dependency analysis (Step 6)
+    9. Compile expressions and classify compilability (Step 6.5)
+    10. Build ComputationGraph — single source of truth (Step 7)
 
     Args:
         model_paths: Paths to SysML model directories (library + designs)

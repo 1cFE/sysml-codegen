@@ -51,6 +51,28 @@ from sysml_codegen.extraction.usage_extractor import (
 logger = logging.getLogger(__name__)
 
 
+def _chain_sibling_aliases_aggregation(
+    sibling: RedefinitionData, agg_attribute_name: str
+) -> bool:
+    """True if a CHAIN redefinition aliases the aggregation attribute (REQ-HR-07).
+
+    A sibling aliases the aggregation when its ``source_path`` equals the attribute
+    name exactly, or is a dotted path whose leaf equals it (``parent.capital_cost``
+    aliases ``capital_cost``). The dotted-leaf match is by leaf ONLY — it does not
+    check which part the path references (doc-25 "Edge case"), so a differently-parted
+    dotted path with the same leaf still matches. A bare-name suffix like
+    ``total_capital_cost`` does NOT match, because the ``"." +`` prefix requires a dot
+    boundary. The sibling must redefine a differently-named attribute.
+    """
+    if sibling.redefinition_type != RedefinitionType.CHAIN or not sibling.source_path:
+        return False
+    matches_leaf = (
+        sibling.source_path == agg_attribute_name
+        or sibling.source_path.endswith("." + agg_attribute_name)
+    )
+    return matches_leaf and sibling.attribute_name != agg_attribute_name
+
+
 def _extract_single_redefinition(
     member: Any,
     owning_qn: str,
@@ -656,14 +678,8 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                     # BF-7: Find CHAIN-type aliases for this aggregation attribute
                     # e.g., :>> total_capex = capital_cost creates alias "total_capex"
                     for sibling in redefs:
-                        if (
-                            sibling.redefinition_type == RedefinitionType.CHAIN
-                            and sibling.source_path
-                            and (
-                                sibling.source_path == agg.attribute_name
-                                or sibling.source_path.endswith("." + agg.attribute_name)
-                            )
-                            and sibling.attribute_name != agg.attribute_name
+                        if _chain_sibling_aliases_aggregation(
+                            sibling, agg.attribute_name
                         ):
                             agg.aliases.append(sibling.attribute_name)
                     all_aggregations.append(agg)
