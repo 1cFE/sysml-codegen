@@ -6,6 +6,17 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 9: Plant-Idiom Literal Pre-Fill (SC-5 stage 1)
+
+**Status**: **Spec in progress** — `.project/active/plant-prefill/spec.md` (Draft). Literal
+values reach the generated input JSONs for plant-idiom models: capture `:>>` overrides on
+plain part usages (relax the `owned_redefinitions` guard), propagate RedefinitionData
+literals to CalcUsage entry-point defaults (classifier-path mirror of REQ-LVP), and fix the
+shared-mutable `BindingInfo` bug (deep-copy — precondition for Item 10). Spec-time question
+answered: scope 1+2 **does** cover the bare-name `:>> widget.base_cost` class → flips
+`alias_agg_probe` + `issue22_model` back to clean generation (literal pre-fill, not Item 10
+channel wiring). Depends on Item 8 fixtures.
+
 ### UPSTREAM-FINDINGS Item 8: Plant-Idiom Conformance Fixtures
 
 **Status**: **Audited CONDITIONAL** (2026-07-05, commit `84ae948`) — substance fully
