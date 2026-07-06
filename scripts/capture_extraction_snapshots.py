@@ -48,6 +48,11 @@ MODELS = {
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
     "return_styles": FIXTURES_DIR / "return_styles",
     "retype_model": FIXTURES_DIR / "retype_model",
+    # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS). Both build the
+    # full graph — the unresolved cross-part inputs fall to Step-4 fallbacks rather
+    # than stopping assembly (like catf_mfe's dangling cryo_load.magnet_volume).
+    "wi014_toy": FIXTURES_DIR / "wi014_toy",
+    "ife_plant": FIXTURES_DIR / "ife_plant",
     # Registered so the capture script can reproduce this snapshot (Item 5
     # committed it without registering it here — permanent fixture drift). Its
     # committed paths are repo-relative; re-capture brings it to the canonical
@@ -61,6 +66,10 @@ EXTRACTION_ONLY_MODELS = {
     "expression_binding_probe": FIXTURES_DIR / "expression_binding_probe",
     "chain_override_probe": FIXTURES_DIR / "chain_override_probe",
     "unresolvable_attr_probe": FIXTURES_DIR / "unresolvable_attr_probe",
+    # Self-named-binding trap (Item 8, mechanism D). Extraction-only: the degenerate
+    # self-reference is fully visible in extraction; no pipeline baseline is needed.
+    # Kept isolated (own fixture dir) so its failure mode cannot poison ife_plant.
+    "self_named_binding_trap": FIXTURES_DIR / "self_named_binding_trap",
 }
 
 

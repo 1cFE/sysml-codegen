@@ -6,6 +6,50 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 8: Plant-Idiom Conformance Fixtures
+
+**Status**: **Implementation Complete** (2026-07-05) — awaiting `/_my_audit`. Fixtures,
+captures, conformance tests, and agentic-mbse validation all landed. No `src/` changes
+(spec Non-Goal). **Not committed** per orchestration.
+
+**Gate**: 1928 passed / 4 skipped / 11 xfailed (was 1912 + 16 new); ruff src/ 21; mypy
+src/ 109 (both unchanged). New fixtures reddened no existing test.
+
+**Deliverables**: three fixtures under `tests/fixtures/` — `wi014_toy` (imported
+verbatim from fusion-tea `964d3ae4`), `ife_plant` (authored, 6 shapes + 16 def
+literals), `self_named_binding_trap` (isolated mechanism-D). Extraction snapshots for
+all three; pipeline baselines for wi014_toy + ife_plant. Conformance tests:
+`test_{wi014_toy,ife_plant,self_named_binding_trap}.py` (16 tests).
+
+**Three live-probe outcomes**:
+1. **WI-014 EXPOSE_PURE warning** = **malformed-refs** (`graph_builder.py:783`), not the
+   reworded name-drop. → REQ-CA-09 discharged as a **recorded deferral** to Items 10/11.
+2. **Mechanism-B surface** = **pipeline baseline** — ife_plant's graph builds (8 modules);
+   shape-4 cross-part input falls to a Step-4 fallback, like catf's dangling input.
+3. **Self-named trap** = **finite degenerate resolution** — extracts cleanly (no
+   recursion); self-named binding resolves to the calc's own param. No register-A-1
+   recursion note triggered (recursion is evaluation-time, not extraction-time).
+
+**Per-shape labels**: correct = 3 (retype), 7 (siblings); known-incomplete = 2 (mech A,
+`:>>`-valued def, captured-but-unwired), 4 (mech B, cross-part chain, collector pins
+`cryo_load.magnet_volume`), 5 (mech C, plain-usage `:>>` override, dropped at extraction).
+
+**Item 7 status at implement time**: LANDED — collector pin uses the definitive
+exact-set assertion (Items 9-10 flip it).
+
+**agentic-mbse impact (recorded for Item 12, not built here)**:
+- **Reference examples**: the three fixtures are the canonical reference shapes for
+  Item 12's MODELING_GUIDE plant-idiom guidance.
+- **Validation run**: executed in-session via
+  `agentic_mbse.validation.runner.run_all_checks`. **Well-formedness (L1-L5): all three
+  PASS.** L6 architecture flags (recorded, not fixed): derived-expression-in-calc-def
+  (all 3, incl. verbatim toy) + quoted-name EQN-derivation (toy + trap). The
+  mechanism-specific negative checks (self-named-binding Level-2, mech A/C/D) do not yet
+  exist in agentic-mbse — Item 12 builds them against these fixtures.
+
+**Spec / Plan**: `.project/active/plant-fixtures/{spec,plan}.md` (no design — epic budgets
+none). **Epic**: `.project/backlog/epic_upstream_findings.md` (Item 8 + consumers 9/10/11).
+
 ### UPSTREAM-FINDINGS Item 7: Resolution Matcher Fixes & Warning Reconciliation (SC-8)
 
 **Status**: **Audited CONDITIONAL** (2026-07-05, commit `7aec029`) — implementation

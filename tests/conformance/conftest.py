@@ -25,6 +25,10 @@ SNAPSHOT_MODELS = [
     "chain_override_probe",
     "unresolvable_attr_probe",
     "alias_agg_probe",
+    # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS).
+    "wi014_toy",
+    "ife_plant",
+    "self_named_binding_trap",
 ]
 
 

@@ -1,0 +1,174 @@
+{
+  "modules": [
+    {
+      "name": "toy_plant__demo_plant__area_calc",
+      "module_type": "toy_library.Panel_AreaModule",
+      "inputs": [
+        {
+          "param_name": "length",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "toy_plant_params",
+            "qualified_name": "toy_plant__Toy_Plant__plant_length",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "width",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "toy_plant_params",
+            "qualified_name": "toy_plant__Toy_Plant__plant_width",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "toy_plant__demo_plant__area_calc__area",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "area",
+            "expression": "(inputs.length * inputs.width)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.length * inputs.width)"
+      },
+      "calc_def_name": "Panel_Area",
+      "calc_def_qualified_name": "toy_library::'Panel Area'",
+      "doc_comment": "Toy geometry calc: rectangular panel area = length * width.\nFirst stage of a two-calc chain used to validate usage-level\ncalc chaining for the WI-010 plant idiom.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content",
+      "calc_expressions": [
+        "area = length * width",
+        "\nDocumentation:\nToy geometry calc: rectangular panel area = length * width.\nFirst stage of a two-calc chain used to validate usage-level\ncalc chaining for the WI-010 plant idiom.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
+      ],
+      "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+      "source_line": 4
+    },
+    {
+      "name": "toy_plant__demo_plant__cost_calc",
+      "module_type": "toy_library.Panel_CostModule",
+      "inputs": [
+        {
+          "param_name": "area",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "toy_plant__demo_plant__area_calc__area"
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "unit_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "toy_plant_params",
+            "qualified_name": "toy_plant__Toy_Plant__plant_unit_cost",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "toy_plant__demo_plant__cost_calc__cost",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "cost",
+            "expression": "(inputs.area * inputs.unit_cost)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.area * inputs.unit_cost)"
+      },
+      "calc_def_name": "Panel_Cost",
+      "calc_def_qualified_name": "toy_library::'Panel Cost'",
+      "doc_comment": "Toy cost calc: cost = area * unit_cost. Second stage of the\nchain — its `area` input is bound to `'Panel Area'.area` at\nthe usage level inside the part def.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content",
+      "calc_expressions": [
+        "cost = area * unit_cost",
+        "\nDocumentation:\nToy cost calc: cost = area * unit_cost. Second stage of the\nchain — its `area` input is bound to `'Panel Area'.area` at\nthe usage level inside the part def.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
+      ],
+      "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+      "source_line": 26
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "toy_plant_params",
+      "class_name": "ToyPlantParams",
+      "source_file": "toy_plant.sysml",
+      "parameters": [
+        {
+          "qualified_name": "toy_plant__Toy_Plant__plant_length",
+          "simple_name": "plant_length",
+          "entry_type": "design_attribute",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": "toy_plant_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "toy_plant__Toy_Plant__plant_unit_cost",
+          "simple_name": "plant_unit_cost",
+          "entry_type": "design_attribute",
+          "default_value": 250.0,
+          "source_calc_usage": null,
+          "param_group": "toy_plant_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "toy_plant__Toy_Plant__plant_width",
+          "simple_name": "plant_width",
+          "entry_type": "design_attribute",
+          "default_value": 3.0,
+          "source_calc_usage": null,
+          "param_group": "toy_plant_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "toy_plant__demo_plant__area_calc",
+    "toy_plant__demo_plant__cost_calc"
+  ]
+}

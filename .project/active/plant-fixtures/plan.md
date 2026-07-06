@@ -542,27 +542,161 @@ before their Phase 3 capture are `xfail`-guarded until the snapshot lands.
 [TO BE FILLED DURING IMPLEMENTATION — Leave empty now]
 
 ### Phase 0 Completion
-**Completed:**
+**Completed:** 2026-07-05
+
 **Actual Changes:**
+- `tests/fixtures/wi014_toy/{toy_library.sysml,toy_plant.sysml}` (NEW) — copied
+  byte-for-byte from `~/1cfe/fusion-tea/exploration/construct_validation/`. **No
+  path/import/shape adaptation needed** — the toy uses self-contained package
+  imports (`ScalarValues::*`, `toy_library::*`).
+- `tests/fixtures/wi014_toy/PROVENANCE.md` (NEW) — records fusion-tea HEAD
+  `964d3ae4`, toy last-touched commit `dae3942a`, and the no-adaptation import note.
+- `tests/fixtures/wi014_toy/extraction_snapshot.json` (NEW) — full-pipeline capture
+  via `capture_snapshot`. 2 calc_usages (`area_calc`, `cost_calc`), 1 EXPOSE_PURE
+  computed attribute (`total_cost`, `is_on_part_definition=True` — shape A), 0
+  channel_aliases (the alias is dropped — see warning below), 7 design_attributes.
+- `tests/conformance/test_wi014_toy.py` (NEW) — 2 offline + 2 live tests, all green.
+
 **Live probe — WI-014 warning fired (`:689` malformed-refs / `:700` name-drop):**
-**Issues:**
-**Deviations:**
+**MALFORMED-REFS** (`graph_builder.py:783`, old `:689`). The shape-A
+`total_cost = cost_calc.cost` fires
+`EXPOSE_PURE total_cost: could not identify instance/output from refs ['cost', 'cost_calc']`.
+On a part *def*, the calc-usage instance names are not in `calc_usage_names`, so
+`_resolve_expose_pure` cannot separate instance ref (`cost_calc`) from output ref
+(`cost`) and returns before reaching the reworded name-drop branch (`:794`). This
+reproduces Item 1's minimal-probe finding exactly.
+
+→ **REQ-CA-09 fork = recorded deferral.** Discharged in this file:
+`test_wi014_toy_shape_a_fires_malformed_refs` pins the malformed-refs warning as the
+current baseline and asserts the name-drop warning does NOT fire; the reworded-warning
+test is handed to Items 10/11 (shape-A resolution path, `epic_upstream_findings.md:387`).
+Handoff is explicit — not a silent third punt. (Phase 4 obligation satisfied early
+since the probe settled it.)
+
+**Issues:** The live warning test captures to `tmp_path` (not the committed snapshot
+path) to avoid mutating the fixture on every run.
+
+**Deviations:** REQ-CA-09 discharge (a Phase 4 item) landed here in Phase 0's test
+file, since the Phase 0 probe already settled the fork. No functional deviation.
 
 ### Phase 1 Completion
-**Completed:**
+**Completed:** 2026-07-05
+
 **Actual Changes:**
-**Def-literal count (≥14):**
+- `tests/fixtures/ife_plant/library.sysml` (NEW) — plant part def + subsystem defs +
+  6 calc defs (PlantLcoe, DriverPowerCalc, HifCostCalc, ChamberYieldCalc, CoilVolume,
+  CryoLoad).
+- `tests/fixtures/ife_plant/design.sysml` (NEW) — `Hif Plant` retype specialization,
+  `hif_plant` + `baseline_plant` instances, and the shape-4 `magnet_system` cross-part
+  calc.
+- `tests/fixtures/ife_plant/subsystems.sysml` (NEW) — separate-package `radial_build`
+  (the shape-4 cross-part source half; mirrors catf's `CATFMFERadialBuild`).
+- `tests/fixtures/ife_plant/extraction_snapshot.json` (NEW) — full-pipeline capture.
+- `tests/conformance/test_ife_plant.py` (NEW) — 9 tests, all green (8 offline + 1 live).
+
+**Def-literal count (≥14):** **16** numeric def-declared literals on the plant def
+(14 Hawker params + `net_power_target` + `capacity_factor`). Floor met with margin.
+
 **Per-shape labels (correct: 3,7 / known-incomplete: 2,4,5):**
+- Shape 1 (**correct**): 16 def literals — richness floor.
+- Shape 2 (**known-incomplete**, mech A): `Shielded Core :>> scope_multiplier = 3.0`
+  captured as a redefinition (`hierarchy_data.redefinitions`) but unwired (no
+  consumer) — Item 9 improves.
+- Shape 3 (**correct**): retyped `driver → Hif Driver` instantiates the subtype-owned
+  `hif_cost_calc` AND preserves the supertype `base_power_calc`. The Item 4/5 win.
+- Shape 4 (**known-incomplete**, mech B): `magnet_system.cryo_load.magnet_volume` bound
+  cross-package to `radial_build.magnet_volume_total` (an EXPOSE_PURE/FORMULA reaching a
+  calc output through nested `tf_coil`). The chain does not resolve; `magnet_volume`
+  falls to a valueless wired Step-4 fallback EP — `collect_uncovered_params` reports
+  exactly `[cryo_load.magnet_volume]`, the definitive pin (mirrors catf's
+  `[cryo_load.magnet_volume]`). Items 9-10 flip it.
+- Shape 5 (**known-incomplete**, mech C): `baseline_plant :>> capacity_factor = 0.95`
+  is DROPPED at extraction — only the def default (0.90) survives. Pinned as an
+  absence.
+- Shape 7 (**correct**): `chamber_a` + `chamber_b` each produce their own virtual
+  `yield_calc` — the instance-ambiguity substrate for Item 10.
+
+**Mechanism-B surface probe (Phase 3 open question, settled here):** the graph
+**BUILDS** (8 modules) — the expected/success path (like catf's dangling input), NOT
+the extraction-only fallback. Pipeline baseline is takeable.
+
 **Issues:**
-**Deviations:**
+- Getting shape 4 to actually trip the collector took two iterations. A plant-internal
+  parent→child binding (`driver.exposed_power`) and a same-package sibling both
+  *resolved* to non-fallthrough valueless EPs (collector = 0, treated as legitimate
+  user-fill). The catf shape requires the target to be an EXPOSE reaching a calc output
+  **cross-package** so the chain stays unresolvable and falls through. Reaching the
+  calc output through the nested part (`tf_coil.volume_calc.volume`) classified the
+  source attr as FORMULA (feature-chain-in-formula is unsupported — a captured WARNING),
+  which removes it from `design_attributes` and forces the fall-through. Net: collector
+  = 1, matching intent.
+- Asymmetry (captured baseline detail): the retyped `hif_plant` shows only its driver
+  calcs, not its inherited chambers/lcoe; `baseline_plant` shows the chambers/lcoe.
+  Shape 7's two siblings come from `baseline_plant`. Both working-shape assertions hold.
+
+**Deviations:** Shape 4's source attr lands as a failed-FORMULA rather than a clean
+EXPOSE_PURE (a 2-hop chain to the calc output through the nested part). Net effect
+matches catf's known-incomplete cross-part gap; the FORMULA-compile-fail is a captured
+known-incomplete surface, not a fixture defect.
 
 ### Phase 2 Completion
-**Completed:**
+**Completed:** 2026-07-05
+
 **Actual Changes:**
+- `tests/fixtures/self_named_binding_trap/{library,design}.sysml` (NEW) — a minimal
+  `'Trap Plant'` with exactly the mechanism-D self-named binding
+  `in availability = availability` and nothing else.
+- `tests/fixtures/self_named_binding_trap/extraction_snapshot.json` (NEW) —
+  extraction-only capture under the timeout guard.
+- `tests/conformance/test_self_named_binding_trap.py` (NEW) — 3 tests, all green.
+
 **Trap failure mode (degenerate / diagnostic / recursion-to-timeout):**
-**Isolation proof (ife_plant snapshot unaffected):**
-**Issues:**
-**Deviations:**
+**(a) FINITE DEGENERATE RESOLUTION.** The trap extracts cleanly — no recursion, no
+hang, no diagnostic (probed under `timeout 150`, exit 0). The self-named binding
+resolves to the calc usage's OWN parameter
+(`TrapLib::'Trap Plant'::avail_calc::availability`, a REFERENCE self-reference), NOT
+the outer part attribute. Captured as the baseline (branch a).
+→ The recursion the toy's comments document is an *evaluation-time* syside behavior
+(expression evaluation to the step limit), on a different path than *extraction*.
+Extraction is finite. **No register A-1 recursion vendor note is triggered** by this
+probe. Recorded for Item 12.
+
+**Isolation proof (ife_plant snapshot unaffected):** The trap lives in its own fixture
+directory and is captured extraction-only, independently of ife_plant. ife_plant's
+snapshot is produced by a separate `capture_snapshot` call on its own directory — the
+trap fixture is never in scope, so ife_plant's snapshot is byte-identical whether or
+not the trap exists (isolation holds by construction).
+
+**Issues:** None.
+**Deviations:** None — benign branch, trap ships with a snapshot as planned.
+
+### Phase 3 Completion
+**Completed:** 2026-07-05
+
+**Actual Changes:**
+- `scripts/capture_extraction_snapshots.py` — registered `wi014_toy`, `ife_plant` in
+  `MODELS` (full-pipeline path); `self_named_binding_trap` in `EXTRACTION_ONLY_MODELS`.
+- `scripts/capture_pipeline_baselines.py` — registered `wi014_toy`, `ife_plant` in
+  `MODELS`.
+- `tests/conformance/conftest.py` — added all three to `SNAPSHOT_MODELS`.
+- Committed pipeline baselines:
+  `tests/fixtures/baseline_outputs/{wi014_toy,ife_plant}/{computation_graph.json,registry_init.py}`
+  (wi014_toy: 2 modules; ife_plant: 8 modules; both `registry_init.py` syntax valid).
+
+**Mechanism-B surface (pipeline baseline / extraction-only fallback + cost):**
+**PIPELINE BASELINE** — ife_plant's graph BUILDS (8 modules). The unresolved cross-part
+input (shape 4) falls to a Step-4 fallback entry point, exactly as catf_mfe's dangling
+`cryo_load.magnet_volume` does. No extraction-only fallback needed; full graph-level
+conformance substrate available to Items 9-10.
+
+**Trap capture surface:** extraction-only (`EXTRACTION_ONLY_MODELS`) — the degenerate
+self-reference is fully visible in extraction; no pipeline baseline needed.
+
+**Per-shape correct/known-incomplete labeling:** recorded in Phase 1 notes and in
+`test_ife_plant.py`'s module docstring (shapes 3,7 correct; 2,4,5 known-incomplete).
+
+**Issues:** None.
+**Deviations:** None.
 
 ### Phase 3 Completion
 **Completed:**
@@ -573,14 +707,71 @@ before their Phase 3 capture are `xfail`-guarded until the snapshot lands.
 **Deviations:**
 
 ### Phase 4 Completion
-**Completed:**
+**Completed:** 2026-07-05
+
 **Actual Changes:**
+- `tests/conformance/test_ife_plant.py` — the conditional collector pin
+  (`test_cross_part_inputs_pinned_or_baseline`) + shape 2/5 baseline pins (added in
+  Phase 1's file).
+- `tests/conformance/test_wi014_toy.py` — REQ-CA-09 discharge (added in Phase 0's file).
+- Fixed 6 E501 in `test_ife_plant.py` (wide docstring table → compact list) so the new
+  test files are ruff-clean (existing conformance tests carry no E501).
+
 **Item 7 landed at implement time? (collector pin vs baseline-record):**
+**LANDED.** `collect_uncovered_params` exists (`resolution/graph_builder.py:664`). The
+pin asserts the EXACT expected uncovered set —
+`{(ifeplantdesign__magnet_system__cryo_load, magnet_volume,
+design_params.IfePlantDesign__magnet_system__cryo_load__magnet_volume)}` — the
+definitive assertion form. Items 9-10 flip this. The `else` (Item-7-absent) branch is
+retained so the test is satisfiable at either landing order. No Item 7 `src/` code was
+written (Non-Goal).
+
 **REQ-CA-09 disposition (real test / recorded deferral to Items 10/11):**
+**RECORDED DEFERRAL.** The WI-014 toy's shape-A `total_cost = cost_calc.cost` fires the
+**malformed-refs** warning (`graph_builder.py:783`), not the reworded name-drop warning
+(`:794`). `test_wi014_toy_shape_a_fires_malformed_refs` pins the malformed-refs warning
+as the current baseline and asserts the name-drop warning does NOT fire. The
+reworded-warning test is handed to **Items 10/11** (which own the shape-A part-def
+resolution path, `epic_upstream_findings.md:387`) — an explicit named handoff, not a
+silent punt. Full rationale in `test_wi014_toy.py`'s module docstring.
+
 **agentic-mbse run outcome (run in-session / deferred to Item 12) + expected-flag list:**
-**Issues:**
-**Deviations:**
+**RUN IN-SESSION** (not deferred). Entry point:
+`agentic_mbse.validation.runner.run_all_checks(models_path, fail_fast=False)` — a 6-level
+SysML quality validation (L1 syntax, L2 structure, L3 dataflow, L4 constraints, L5
+traceability, L6 architecture). Run against all three fixture directories.
+
+- **Well-formedness bar (MUST PASS): ALL THREE PASS.** Every fixture passes L1 Syntax
+  (0 errors, 0 warnings) plus L2-L5. The fixtures are genuinely well-formed SysML.
+- **L6 Architecture & Pipeline Readiness: all three flagged (expected, recorded, NOT
+  fixed).** These are agentic-mbse's architecture-readiness findings, not fixture
+  defects — the verbatim-imported toy triggers the same, confirming they are the
+  checker's view. Enumerated expected-flag list (→ Item 12 negative-fixture / L6-check
+  refinement inputs):
+  1. **Derived-expression-in-calc-def-output** (all 3): L6 flags `out attribute X =
+     <expr over in params>` inside `calc def`s (toy `toy_library.sysml:23,40`; ife_plant
+     `library.sysml:36,51,64,77,90`; trap `library.sysml:16`). Per ADR-002 derived
+     expressions belong in calc defs, so this is L6 scanning library files over-broadly.
+     Recorded; not fixed (altering would break the calc defs).
+  2. **Quoted-name EQN-derivation** (toy + trap): L6 cannot derive an EQN from quoted
+     multi-word names — `'Panel Area'`, `'Panel Cost'`, `'Toy Plant'`
+     (`toy_plant.sysml:36`); `'Trap Plant'` (`library.sysml:31`). ife_plant uses
+     unquoted calc-def names and is NOT flagged. Recorded; not fixed (toy is imported
+     verbatim — Non-Goal; trap uses a quoted name deliberately for minimalism).
+- The mechanism-specific negative checks the spec anticipates (self-named-binding
+  Level-2 check, mechanism-A/C/D flags) do **not** exist in agentic-mbse today — that is
+  exactly what Item 12 builds against these fixtures. The fixtures are the substrate; the
+  checks are Item 12's deliverable.
+
+**Issues:** None that block. The L6 "derived expression" check firing on calc-def
+outputs (including the validated verbatim toy) suggests the L6 scan is over-broad — an
+input for Item 12 to refine, recorded not fixed here.
+
+**Deviations:** REQ-CA-09 discharge and the collector pin were authored in Phases 0/1's
+test files rather than added fresh in Phase 4, since their probes settled earlier. No
+functional deviation from the plan.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete (2026-07-05)** — all 5 phases landed;
+gate 1928/4/11; ruff src/ 21; mypy src/ 109; not committed (awaiting audit).

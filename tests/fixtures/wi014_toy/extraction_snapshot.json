@@ -1,0 +1,378 @@
+{
+  "snapshot_format_version": 1,
+  "model_name": "wi014_toy",
+  "captured_at": "2026-07-06T01:52:52.926254+00:00",
+  "compilation_results": {
+    "Panel_Area": {
+      "calc_def_name": "Panel_Area",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "area",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.length * inputs.width)",
+          "input_refs": [
+            "length",
+            "width"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "area"
+      ]
+    },
+    "Panel_Cost": {
+      "calc_def_name": "Panel_Cost",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.area * inputs.unit_cost)",
+          "input_refs": [
+            "area",
+            "unit_cost"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "cost"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "Panel_Area",
+      "qualified_name": "toy_library::'Panel Area'",
+      "doc_comment": "Toy geometry calc: rectangular panel area = length * width.\nFirst stage of a two-calc chain used to validate usage-level\ncalc chaining for the WI-010 plant idiom.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content",
+      "calc_expressions": [
+        "area = length * width",
+        "\nDocumentation:\nToy geometry calc: rectangular panel area = length * width.\nFirst stage of a two-calc chain used to validate usage-level\ncalc chaining for the WI-010 plant idiom.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
+      ],
+      "input_attributes": [
+        {
+          "name": "length",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "width",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "area",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+      "source_line": 4,
+      "source_hash": "7701120d5f5ecd665983aade4a0b14ddabcf63814a95869334dc2c9fec613716",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "area",
+        "length",
+        "width"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "Panel_Cost",
+      "qualified_name": "toy_library::'Panel Cost'",
+      "doc_comment": "Toy cost calc: cost = area * unit_cost. Second stage of the\nchain — its `area` input is bound to `'Panel Area'.area` at\nthe usage level inside the part def.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content",
+      "calc_expressions": [
+        "cost = area * unit_cost",
+        "\nDocumentation:\nToy cost calc: cost = area * unit_cost. Second stage of the\nchain — its `area` input is bound to `'Panel Area'.area` at\nthe usage level inside the part def.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
+      ],
+      "input_attributes": [
+        {
+          "name": "area",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "unit_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+      "source_line": 26,
+      "source_hash": "7701120d5f5ecd665983aade4a0b14ddabcf63814a95869334dc2c9fec613716",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "area",
+        "cost",
+        "unit_cost"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "toy_plant__demo_plant__area_calc",
+      "calc_def_name": "Panel_Area",
+      "calc_def_qualified_name": "toy_library::'Panel Area'",
+      "module_type": "toy_library.Panel_AreaModule",
+      "bindings": [
+        {
+          "param_name": "length",
+          "source_path": "toy_plant::'Toy Plant'::plant_length",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> toy_plant::'Toy Plant'::plant_length",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "plant_length"
+        },
+        {
+          "param_name": "width",
+          "source_path": "toy_plant::'Toy Plant'::plant_width",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> toy_plant::'Toy Plant'::plant_width",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "plant_width"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+      "source_line": 36,
+      "parent_part_path": "demo_plant",
+      "qualified_name": "toy_plant__demo_plant__area_calc",
+      "is_template": false,
+      "owning_part_def_qn": "toy_plant__Toy_Plant",
+      "raw_element": null
+    },
+    {
+      "instance_name": "toy_plant__demo_plant__cost_calc",
+      "calc_def_name": "Panel_Cost",
+      "calc_def_qualified_name": "toy_library::'Panel Cost'",
+      "module_type": "toy_library.Panel_CostModule",
+      "bindings": [
+        {
+          "param_name": "area",
+          "source_path": "area_calc.area",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> area_calc.area",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "area_calc",
+          "source_attribute_name": "area"
+        },
+        {
+          "param_name": "unit_cost",
+          "source_path": "toy_plant::'Toy Plant'::plant_unit_cost",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> toy_plant::'Toy Plant'::plant_unit_cost",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "plant_unit_cost"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+      "source_line": 42,
+      "parent_part_path": "demo_plant",
+      "qualified_name": "toy_plant__demo_plant__cost_calc",
+      "is_template": false,
+      "owning_part_def_qn": "toy_plant__Toy_Plant",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "tests/fixtures/wi014_toy/toy_plant.sysml": [
+      {
+        "name": "plant_length",
+        "sysml_type": "Real",
+        "default_value": "4.0",
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+        "source_line": 30,
+        "parent_part": "",
+        "qualified_name": "toy_plant__Toy_Plant__plant_length"
+      },
+      {
+        "name": "plant_width",
+        "sysml_type": "Real",
+        "default_value": "3.0",
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+        "source_line": 31,
+        "parent_part": "",
+        "qualified_name": "toy_plant__Toy_Plant__plant_width"
+      },
+      {
+        "name": "plant_unit_cost",
+        "sysml_type": "Real",
+        "default_value": "250.0",
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+        "source_line": 32,
+        "parent_part": "",
+        "qualified_name": "toy_plant__Toy_Plant__plant_unit_cost"
+      },
+      {
+        "name": "plant_budget",
+        "sysml_type": "Real",
+        "default_value": "5000.0",
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+        "source_line": 33,
+        "parent_part": "",
+        "qualified_name": "toy_plant__Toy_Plant__plant_budget"
+      },
+      {
+        "name": "total_cost",
+        "sysml_type": "Real",
+        "default_value": "cost_calc.cost",
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_plant.sysml",
+        "source_line": 48,
+        "parent_part": "",
+        "qualified_name": "toy_plant__Toy_Plant__total_cost"
+      }
+    ],
+    "tests/fixtures/wi014_toy/toy_library.sysml": [
+      {
+        "name": "area",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+        "source_line": 23,
+        "parent_part": "",
+        "qualified_name": "toy_library__Panel_Area__area"
+      },
+      {
+        "name": "cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "tests/fixtures/wi014_toy/toy_library.sysml",
+        "source_line": 40,
+        "parent_part": "",
+        "qualified_name": "toy_library__Panel_Cost__cost"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {},
+    "usage_type_map": {}
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [
+    {
+      "name": "total_cost",
+      "python_name": "total_cost",
+      "owning_part_name": "Toy_Plant",
+      "owning_part_qualified_name": "toy_plant::'Toy Plant'",
+      "expression_ast": null,
+      "expression_text": "cost_calc.cost",
+      "references": [
+        {
+          "name": "cost",
+          "qualified_name": "toy_library::'Panel Cost'::cost",
+          "document_path": "file:tests/fixtures/wi014_toy/toy_library.sysml"
+        },
+        {
+          "name": "cost_calc",
+          "qualified_name": "toy_plant::'Toy Plant'::cost_calc",
+          "document_path": "file:tests/fixtures/wi014_toy/toy_plant.sysml"
+        }
+      ],
+      "classification": "expose_pure",
+      "compilability": "manual_required",
+      "compiled_expression": null,
+      "is_on_part_definition": true,
+      "source_file": "unknown",
+      "source_line": 0
+    }
+  ],
+  "channel_aliases": []
+}

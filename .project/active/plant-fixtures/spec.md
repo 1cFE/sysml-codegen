@@ -1,6 +1,6 @@
 # Spec: Plant-Idiom Conformance Fixtures
 
-**Status:** Draft
+**Status:** Implementation Complete (2026-07-05) — awaiting audit
 **Owner:** Reid W
 **Created:** 2026-07-05
 **Complexity:** MEDIUM

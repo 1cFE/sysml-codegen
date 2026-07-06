@@ -54,6 +54,10 @@ MODELS = {
     "attr_expr_probe": "attr_expr_probe",
     "chain_spike": "chain_spike_model",
     "sample_model": "sample_model",
+    # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS). Both build the
+    # graph; the known-incomplete cross-part inputs land on Step-4 fallback EPs.
+    "wi014_toy": "wi014_toy",
+    "ife_plant": "ife_plant",
 }
 
 
