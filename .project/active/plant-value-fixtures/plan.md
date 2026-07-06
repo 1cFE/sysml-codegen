@@ -552,7 +552,7 @@ into the fixture-gap register, and close out CURRENT_WORK. License-free.
 ### Changes Required
 
 **agentic-mbse impact list (spec "agentic-mbse impact — Item 9 accumulation list", L3-3):**
-- [ ] Finalize the spec's "agentic-mbse impact — Item 9 accumulation list" block with the
+- [x] Finalize the spec's "agentic-mbse impact — Item 9 accumulation list" block with the
       **exact fixture names/locations captured** (the spec left these to "the plan finalizes
       at capture"). One line per shape: mechanism/shape name + fixture path + purpose. This is
       the artifact Item 9 reads — a bare "recorded for Item 9" is insufficient (L3-3). Update
@@ -562,7 +562,7 @@ into the fixture-gap register, and close out CURRENT_WORK. License-free.
       expression-RHS warning (Item 9 §2) and the assert-constraint visibility check.
 
 **Fixture-gap register (spec SC / D4 — deferred shapes filed with a pointer to §D6):**
-- [ ] **Decision (autonomous — the register file does not yet exist):** create
+- [x] **Decision (autonomous — the register file does not yet exist):** create
       `.project/active/plant-value-fixtures/fixture-gap-register.md` as the register. It
       records: the deferred D6 shapes (D4's filed remainder — selective import of quoted
       names; standalone package-level `:>>`-fed calc bindings; constraint def consuming a
@@ -573,26 +573,26 @@ into the fixture-gap register, and close out CURRENT_WORK. License-free.
       epic wants it tracked corpus-wide.
 
 **Close-out:**
-- [ ] Update `.project/CURRENT_WORK.md`: Item 1 status → complete; the D6 gate outcome (offender
+- [x] Update `.project/CURRENT_WORK.md`: Item 1 status → complete; the D6 gate outcome (offender
       tuples + three-mechanism coverage); the per-shape observed labels; the rider review
       verdict (`quoted_owner_formula` confirmed vs filed); the capture-surface decisions
       (full-pipeline vs extraction-only per fixture); and the two downstream handoffs (Item 2
       before-pin location; Item 4/5 assert-constraint + non-float-EP substrate location).
-- [ ] Suggest `/_my_audit` (spec/plan are the contract; the audit catches placeholder pins and
+- [x] Suggest `/_my_audit` (spec/plan are the contract; the audit catches placeholder pins and
       gaps the implementing session misses).
 
 ### Validation
 
 **Automated:**
-- [ ] `uv run pytest tests/` → full suite green.
-- [ ] `uv run ruff check` and `uv run mypy src/` → clean.
+- [x] `uv run pytest tests/` → full suite green.
+- [x] `uv run ruff check` and `uv run mypy src/` → clean.
 
 **Manual:**
-- [ ] Confirm the agentic-mbse impact block names concrete fixture paths (Item 9 can read it
+- [x] Confirm the agentic-mbse impact block names concrete fixture paths (Item 9 can read it
       without re-deriving).
-- [ ] Confirm the fixture-gap register exists, points at §D6, and carries any escape-hatch
+- [x] Confirm the fixture-gap register exists, points at §D6, and carries any escape-hatch
       crash evidence.
-- [ ] Confirm CURRENT_WORK records the two downstream substrate handoffs.
+- [x] Confirm CURRENT_WORK records the two downstream substrate handoffs.
 
 **What We Know Works After This Phase:** Item 2 has a pinned, reviewed before-state on one
 fixture; Items 4/5 have their assert-constraint and non-float-EP substrate; Item 9 has a
@@ -849,13 +849,25 @@ truncation is pinned as an observed degradation instead.
 confirmed); no `src/` change (ruff src 21, mypy 109 unchanged). Full suite: 2017 passed.
 
 ### Phase 5 Completion
-**Completed:**
-**agentic-mbse impact list (final fixture paths):**
-**Fixture-gap register entries filed:**
-**Downstream handoffs recorded (Item 2 pin / Item 4/5 substrate):**
-**Issues:**
-**Deviations:**
+**Completed:** 2026-07-06
+**agentic-mbse impact list (final fixture paths):** the `spec.md` "agentic-mbse impact — Item 9
+accumulation list" block is finalized in place with concrete `tests/fixtures/` paths per shape
+(a/b/c mechanisms, assert-constraint invisibility, the 7 secondary shapes with correct/degraded
+labels, the non-float EP, and the deep-chain-truncation bonus). Item 9 can read it without
+re-deriving.
+**Fixture-gap register entries filed:** NEW `.project/active/plant-value-fixtures/fixture-gap-register.md`
+— the 4 deferred D6 shapes (selective quoted import; standalone package-level `:>>`-fed calc;
+constraint-def defaulted param → Item 4; standalone retyped-child consumer) each with a §D6
+pointer; escape-hatch removals = NONE (no extractor crash); plus 3 captured-and-pinned
+degradations noted for follow-up (multi-hop source_path truncation; econ-param nested `:>>`;
+inherited-redefined-below).
+**Downstream handoffs recorded (Item 2 pin / Item 4/5 substrate):** in CURRENT_WORK.md — Item 2
+before-pin location (`test_plant_values.py`), Item 4/5 assert-constraint + non-float-EP substrate
+locations, Item 9 impact-list + register locations, and the per-fixture capture surfaces.
+**Issues:** None.
+**Deviations:** None. Scratch rehearsal probe (`scripts/probes/_plant_values_rehearsal.py`) left
+uncommitted per the plan (scratch, not a committed test).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Complete

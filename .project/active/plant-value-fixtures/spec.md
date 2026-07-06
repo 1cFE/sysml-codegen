@@ -386,24 +386,44 @@ the template). No `/_my_design` — fixtures + captures carry no design surface.
 ## agentic-mbse impact — Item 9 accumulation list
 
 No agentic-mbse code change in this item. The plant-value fixture shapes below become the
-reference examples Item 9 folds into agentic-mbse's MODELING_GUIDE + reference fixtures
-(one line per shape; the plan finalizes exact fixture names/locations at capture):
+reference examples Item 9 folds into agentic-mbse's MODELING_GUIDE + reference fixtures.
+Exact fixture paths finalized at capture (all under `tests/fixtures/`):
 
 - **Mechanism (a)** — subtype-def literal `:>>` consumed cross-part through a usage-level
-  retype. Lives in `plant_values`. Reference example for the whole-plant value idiom.
+  retype. `plant_values/library.sysml` (`'Hif Driver' :> 'Base Driver'`, `:>> efficiency
+  = 0.35`) + `plant_values/design.sysml` (`part :>> driver : 'Hif Driver'`). The plant
+  calc reads `driver.efficiency` (input `driver_efficiency`). Reference for the whole-plant
+  value idiom.
 - **Mechanism (b)** — bare no-retype `part :>> name { :>> attr = literal; }` override
-  block (incl. a quoted-enum `:>>`). Lives in `plant_values`. The shape no fixture
-  previously contained.
-- **Mechanism (c)** — plain cross-part-attribute chain with fan-out (one attr → two
-  consumers). Lives in `plant_values` (self-contained copy) and the extended
-  `spec_chain_twolevel`.
-- **Assert-constraint binding shapes** — cross-part + self-named + unbound-defaulted
-  bindings on an `assert constraint`. Lives in `plant_values`. Substrate for Item 4's
-  constraint-report truth and the agentic-mbse constraint-visibility check.
-- **Secondary syntactic shapes** — attribute-def-typed nested `:>>`, bare `default 10.0`,
-  quoted enum def + usage-level quoted `:>>`, quoted output-parameter name, Style-E calc
-  def, 5-deep specialization chain, inherited-attr-redefined-below. Live in
-  `plant_value_shapes`. Reference examples for the supported-subset guide.
-- **Non-float entry-point shape** — bool/string/enum-valued attribute one hop from an
-  entry point (`wall_type` idiom). Substrate for Item 5's non-float-EP diagnostic and the
+  block. `plant_values/design.sysml` (`part :>> target_factory { :>> cost_per_target =
+  10.0; }`); base `'Target Factory'` in `library.sysml`. The plant calc reads
+  `target_factory.cost_per_target` (input `target_cost`). The shape no fixture previously
+  contained. (A quoted-enum `:>>` lives in `plant_value_shapes/design.sysml`, `:>> wall =
+  'Wall Kind'::liquid_wall`.)
+- **Mechanism (c)** — plain cross-part-attribute chain (no calc output). The V11-trip
+  variant is `plant_values` (`chamber.cost_per_unit`, input `chamber_cost`, valueless).
+  The value-carrying variant WITH fan-out (one `scale` attr → two `ScaleCalc` consumers,
+  collapsed to one channel) + the plain `maintenance_rate` attr live in
+  `spec_chain_twolevel/library.sysml` (`MaintCalc`, `ScaleCalc`).
+- **Assert-constraint binding shapes** — cross-part (`in eta = driver.efficiency`) +
+  self-named (`in gain = gain`) + unbound-defaulted (`threshold`) bindings on `assert
+  constraint viability : 'Viability Threshold'` in `plant_values/library.sysml`. NOTE the
+  observed state: the assert constraint is INVISIBLE to extraction today (no usage in the
+  snapshot; the `threshold` param leaks into design_attributes) — the CONSTRAINT-SILENCE
+  substrate Item 4 flips and the agentic-mbse constraint-visibility check targets.
+- **Secondary syntactic shapes** — all in `plant_value_shapes/{library,design}.sysml`:
+  attribute-def-typed nested `:>>` (`'Econ Param'`, DEGRADED — nested value doesn't reach
+  the cross-part input), bare `default 10.0` (CORRECT), quoted enum def + usage `:>>`
+  (`'Wall Kind'`, CORRECT), quoted output-param `out attribute 'net cost'` (CORRECT,
+  de-quotes to `net_cost`), Style-E mixed `out attribute`+`return` (`'Mixed Output Style'`,
+  CORRECT — both outputs), 5-deep specialization chain with abstract ends (`'Chain L1'..L5'`,
+  CORRECT), inherited-attr-redefined-below (`'Flow Sub'`, DEGRADED). Reference examples for
+  the supported-subset guide with their observed correct/degraded labels.
+- **Non-float entry-point shape** — enum-valued `wall` one hop from the calc input
+  (`plant_value_shapes`, `'Chamber Unit'` / `ChamberSelectCalc`); the EP is valueless
+  (silent None-omission). Substrate for Item 5's non-float-EP diagnostic and the
   agentic-mbse D-F expression-RHS warning (Item 9 §2).
+- **Deep cross-scope degradation** (bonus, for the agentic-mbse guidance) — a multi-hop
+  dot CHAIN (`station.array.derived_calc.derived_value`) TRUNCATES its `source_path` to
+  the first segment (`deep_cross_scope_probe`). Reference for "keep cross-part chains
+  shallow" guidance.

@@ -6,6 +6,55 @@
 
 ## Active Work
 
+### PIPELINE-TRUTH Item 1 — Plant-Value & Blind-Spot Fixtures — IMPLEMENTED (awaiting audit)
+Track A head (Items 2, 4, 5, 9 build on its fixtures). Fixtures + captures only, zero
+`src/` production code. Spec/plan: `.project/active/plant-value-fixtures/{spec,plan}.md`.
+Implemented across 6 commits on `pipeline-truth-epic` (Phases 0–5). Full suite: 2017
+passed; ruff src 21 / mypy 109 (baseline unchanged). `/_my_audit` suggested next.
+
+- **D6 gate (PASS):** `plant_values` trips V11 with 3 offenders on module
+  `plantvaluesdesign__plant__cost_calc`, covering all three value-provision mechanisms —
+  `driver_efficiency` (a, subtype-def literal via retype), `target_cost` (b, bare override
+  block), `chamber_cost` (c, plain one-hop cross-part attr). This is the SC-1 before-state
+  Item 2 flips; hand-computed after: `plant_cost=(10+7)/0.35=48.571`, constraint
+  `0.35*40>=10` holds.
+- **Per-shape labels:** `plant_value_shapes` — CORRECT (bare default, 5-deep chain, quoted
+  `'net cost'` output, Style-E, quoted return), DEGRADED (econ-param nested `:>>`,
+  inherited-redefined-below), DIAGNOSTIC (non-float enum EP / Item 5). No extractor crash →
+  no escape-hatch filings.
+- **Rider (own commit):** `quoted_owner_formula` `net_margin`/`total_payout` design-attr →
+  computed reclassification reviewed and CONFIRMED (prior-epic UPSTREAM-FINDINGS Item 7
+  behavior, not a forward dep). `wi014_toy`/`self_named_binding_trap` = timestamp/path canon.
+- **Capture surfaces:** `plant_values`, `plant_value_shapes`, `deep_cross_scope_probe` all
+  full-pipeline (extraction snapshot + pipeline baseline). `deep_cross_scope_probe` gained
+  its first committed snapshot (closed D1-F6 drift); un-broken by renaming `derived`→
+  `derived_calc` (reserved KerML modifier).
+- **Downstream handoffs:**
+  - **Item 2 before-pin:** `tests/conformance/test_plant_values.py::test_plant_values_trips_v11_all_three_mechanisms`
+    (the 3-offender set). Extended `spec_chain_twolevel` carries the value-carrying (c) +
+    fan-out for Item 2's SC-B tolerance test.
+  - **Item 4/5 substrate:** the `assert constraint viability` in `plant_values` is INVISIBLE
+    to extraction today (pinned in `test_plant_values.py`); the non-float enum EP is in
+    `plant_value_shapes` (`test_plant_value_shapes.py::test_shape9...`).
+  - **Item 9 impact list:** finalized in `spec.md` "agentic-mbse impact — Item 9 accumulation
+    list" (concrete fixture paths); deferred shapes in
+    `.project/active/plant-value-fixtures/fixture-gap-register.md`.
+- **Known degradation surfaced (filed):** multi-hop CHAIN `source_path` truncates to the
+  first segment (why (c) is one-hop; `deep_cross_scope_probe` Pattern A pins it).
+
+### PIPELINE-TRUTH Item 4 — Subtype-Aware Enumeration & Constraint-Report Truth — spec in progress
+Track B head (no deps). Coordinated pair with agentic-mbse (R2): one adapter choke
+point (`include_subtypes`), per-call-site decision table, constraint drop report fires
+on assert constraints, REQ-EXT-09 re-anchored independently, snapshot constraint
+serialization. Spec: `.project/active/subtype-enumeration/spec.md`.
+
+### PIPELINE-TRUTH Item 6 — Self-Referential Test Remediation — spec in progress
+Track B, no deps. Re-anchor the 25 §D5 flagged tests (7 HIGH + 10 MEDIUM + 8 LOW) to
+hand-transcribed fixture literals; convert `test_localterm_sibling_agg_output` (MF-07)
+from pass-or-skip to pass-or-FAIL; re-anchor REQ-REG-02 to on-disk paths; add SC-6
+render pins + a tests/conformance anchoring note. EXT-09 handed off to Item 4. Matrix
+rows are Item 7's. Spec: `.project/active/test-truth/spec.md`.
+
 ### PIPELINE-TRUTH epic — DEFINED (Draft, awaiting scope review)
 Shaped 2026-07-06 from `.project/active/NEXT_EPIC_PROMPT.md` via `/_my_epic_plan` with
 the mandated 8-agent discovery sweep. Mission: the generated package is the truth —
