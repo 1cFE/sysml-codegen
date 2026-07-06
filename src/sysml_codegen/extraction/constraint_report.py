@@ -139,3 +139,38 @@ def render_constraint_report(
             "modeling-assumptions.md.",
             reported,
         )
+
+
+def manifest_to_records(manifest: list[ConstraintManifestEntry]) -> list[dict]:
+    """Serialize a manifest to JSON-safe records with stable enum tokens (D8).
+
+    The kind/owner enums serialize by their fixed token (``.value``), decoupled
+    from render's display wording, so a diagnostic reword never changes snapshot
+    bytes. Order is preserved (INV-G).
+    """
+    return [
+        {
+            "owner_kind": e.owner_kind.value,
+            "owner_name": e.owner_name,
+            "owner_qualified_name": e.owner_qualified_name,
+            "constraint_name": e.constraint_name,
+            "constraint_kind": e.constraint_kind.value,
+            "source_line": e.source_line,
+        }
+        for e in manifest
+    ]
+
+
+def manifest_from_records(records: list[dict]) -> list[ConstraintManifestEntry]:
+    """Rebuild a manifest from serialized records (stable tokens -> enums)."""
+    return [
+        ConstraintManifestEntry(
+            owner_kind=OwnerKind(r["owner_kind"]),
+            owner_name=r["owner_name"],
+            owner_qualified_name=r["owner_qualified_name"],
+            constraint_name=r["constraint_name"],
+            constraint_kind=ConstraintKind(r["constraint_kind"]),
+            source_line=r["source_line"],
+        )
+        for r in records
+    ]

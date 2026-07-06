@@ -15,10 +15,15 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from sysml_codegen.extraction.constraint_report import render_constraint_report
 from sysml_codegen.orchestration.pipeline_context import PipelineContext
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
 
 logger = logging.getLogger(__name__)
+
+# The from-snapshot report must render through the SAME logger as the live path
+# (Item 4, INV-B) so byte output and caplog filtering match across paths.
+_extractor_logger = logging.getLogger("sysml_codegen.extraction.extractor")
 
 
 def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext:
@@ -32,6 +37,12 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
     """
     graph, inputs = build_full_graph_from_snapshot(snapshot_path)
     snap = inputs["snap"]
+
+    # Replay the constraint drop report from the serialized manifest (Item 4).
+    # Same renderer, same logger as the live path — the report the live run
+    # emitted is now emitted offline too (INV-B).
+    constraint_manifest = snap["constraint_manifest"]
+    render_constraint_report(constraint_manifest, _extractor_logger)
 
     # Provenance banner (V5) — goes to the log only, never into an artifact (INV-6).
     logger.info(
@@ -72,5 +83,6 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
         hierarchy_data=snap["hierarchy_data"],
         aggregation_expressions=snap["aggregation_expressions"],
         channel_aliases=snap["channel_aliases"],
+        constraint_manifest=constraint_manifest,
         output_registry=inputs["registry"],
     )

@@ -51,6 +51,7 @@ def capture_snapshot(
         computed_attributes=ctx.computed_attributes,
         channel_aliases=ctx.channel_aliases,
         compilation_results=ctx.compilation_results,
+        constraint_manifest=ctx.constraint_manifest,
         output_dir=output_path.parent,
     )
 

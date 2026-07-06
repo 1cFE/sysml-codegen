@@ -20,6 +20,7 @@ from agentic_mbse.sysml.types import BindingType, ExpressionRef  # type: ignore[
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.core.models import ChannelAlias
+from sysml_codegen.extraction.constraint_report import manifest_from_records
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
     AttributeInfo,
@@ -81,14 +82,15 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     if version is None:
         raise SnapshotFormatError(
             f"Snapshot {snapshot_path} has no snapshot_format_version — it "
-            "predates versioned snapshots. Recapture with `sysml-codegen "
-            f"snapshot --models <sources>` (current tooling writes version "
-            f"{SNAPSHOT_FORMAT_VERSION})."
+            "predates versioned snapshots. Recapture with "
+            "`scripts/capture_extraction_snapshots.py` (current tooling writes "
+            f"version {SNAPSHOT_FORMAT_VERSION})."
         )
     if version != SNAPSHOT_FORMAT_VERSION:
         raise SnapshotFormatError(
             f"Snapshot {snapshot_path} is format version {version}, tool expects "
-            f"{SNAPSHOT_FORMAT_VERSION}. Recapture with `sysml-codegen snapshot`."
+            f"{SNAPSHOT_FORMAT_VERSION}. Recapture with "
+            "`scripts/capture_extraction_snapshots.py`."
         )
 
     snapshot_dir = snapshot_path.parent
@@ -112,6 +114,11 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
             ChannelAlias.model_validate(d) for d in raw["channel_aliases"]
         ],
         "compilation_results": _load_compilation_results(raw, snapshot_path),
+        # Model-wide dropped-constraint manifest (Item 4). Additive: a snapshot
+        # captured before this field just yields an empty manifest.
+        "constraint_manifest": manifest_from_records(
+            raw.get("dropped_constraints", [])
+        ),
     }
 
     # source_file re-absolutization (D1/D8): lexical absolute join against the

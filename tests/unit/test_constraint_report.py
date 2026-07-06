@@ -13,6 +13,8 @@ from sysml_codegen.extraction.constraint_report import (
     ConstraintKind,
     ConstraintManifestEntry,
     OwnerKind,
+    manifest_from_records,
+    manifest_to_records,
     render_constraint_report,
 )
 
@@ -84,6 +86,39 @@ def test_mixed_manifest_breakdown_and_warn(caplog):
     dropped_names = " ".join(r.getMessage() for r in drop_infos)
     assert "'a'" in dropped_names and "'p'" in dropped_names
     assert "'r'" not in dropped_names and "'s'" not in dropped_names
+
+
+def test_manifest_roundtrip_render_identity(caplog):
+    # INV-B (in-memory leg): serialize -> deserialize is lossless, and render is
+    # byte-identical across a manifest and its deserialized twin — the guarantee
+    # the from-snapshot replay rests on. (The committed-snapshot leg lands in
+    # Phase 5.)
+    manifest = [
+        _entry(ConstraintKind.ASSERT, "affordable", OwnerKind.PART_DEF),
+        _entry(ConstraintKind.PLAIN, "within_budget", OwnerKind.ELEMENT),
+        _entry(ConstraintKind.REQUIREMENT, "demo_req", OwnerKind.ELEMENT),
+        _entry(ConstraintKind.SATISFY, "sat", OwnerKind.ELEMENT),
+    ]
+    back = manifest_from_records(manifest_to_records(manifest))
+    assert back == manifest  # frozen-dataclass equality, order preserved (INV-G)
+
+    logger = logging.getLogger(_LOGGER_NAME)
+    with caplog.at_level(logging.INFO, logger=_LOGGER_NAME):
+        render_constraint_report(manifest, logger)
+    live = [(r.levelno, r.getMessage()) for r in caplog.records]
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger=_LOGGER_NAME):
+        render_constraint_report(back, logger)
+    replayed = [(r.levelno, r.getMessage()) for r in caplog.records]
+    assert live == replayed, "from-snapshot render must be byte-identical to live"
+
+
+def test_records_use_stable_tokens_not_display_wording():
+    # D8: serialized records carry the enum token, never the display wording, so
+    # a diagnostic reword never changes snapshot bytes.
+    records = manifest_to_records([_entry(ConstraintKind.PLAIN, "c", OwnerKind.PART_USAGE)])
+    assert records[0]["owner_kind"] == "part_usage"  # token, not "part usage"
+    assert records[0]["constraint_kind"] == "plain"
 
 
 def test_owner_kind_display_wording(caplog):
