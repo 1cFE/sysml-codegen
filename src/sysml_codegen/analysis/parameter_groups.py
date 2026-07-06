@@ -40,6 +40,37 @@ __all__ = [
 ]
 
 
+# A numeric entry point resolves to a float. These SysML scalar types (and any
+# physical-quantity type, which specializes them) are numeric; a type outside
+# this set is a bool/string/enum that cannot be a numeric entry point (SC-5).
+# Kept deliberately broad — the risk is a NON-numeric type slipping in as numeric
+# (a missed diagnostic), not the reverse (a false positive on a clean fixture).
+_NUMERIC_SYSML_TYPES = frozenset({
+    "Real", "Integer", "Number", "Rational", "Natural", "Positive",
+    "ScalarValue", "NumericalValue", "UnitValue", "Float",
+})
+
+
+def _is_numeric_sysml_type(sysml_type: str | None) -> bool:
+    """True if a SysML type is (or specializes) a numeric scalar (SC-5).
+
+    Physical-quantity types (Power, Length, Temperature, ...) are unit-bearing
+    Reals — treated as numeric. A bool/string/enum type (e.g. ``'Wall Kind'``) is
+    NOT numeric and cannot be a float entry point.
+    """
+    if not sysml_type:
+        return True  # unknown → assume numeric (conservative: no false warn)
+    t = sysml_type.strip().split("::")[-1].strip("'\"")
+    if t in _NUMERIC_SYSML_TYPES:
+        return True
+    # A quoted/spaced type name is an enum/string-shaped def, not a scalar.
+    if " " in sysml_type or "'" in sysml_type or '"' in sysml_type:
+        return False
+    # Bare capitalized quantity types (Power, Length, Temperature) specialize
+    # Real; treat an alphanumeric bare identifier as numeric, non-identifier as not.
+    return sysml_type.isidentifier()
+
+
 # ============== Data Structures ==============
 
 
@@ -472,7 +503,50 @@ class ParameterGroupDeriver:
                             existing_group.parameters.append(param)
                             existing_param_names.add(param.name)
 
+        self._warn_nonfloat_entry_points(design_groups)
         return design_groups
+
+    def _warn_nonfloat_entry_points(
+        self, groups: list[DerivedParameterGroup]
+    ) -> None:
+        """SC-5 / D3-12 hazard-scoped diagnostic, at the JSON-emission point.
+
+        A parameter that lands in a group with ``default_value is None`` resolved
+        to no numeric value. That is benign for a NUMERIC-typed input (a normal
+        user-fill float entry point) but a silent hole for a NON-numeric input (a
+        bool/string/enum, e.g. ``wall : 'Wall Kind'`` fed the enum literal
+        ``'Wall Kind'::liquid_wall``): it can never be a float entry point, so it
+        is silently omitted from the JSON. Resolve each None-default param's input
+        type by leaf name against the calc-def inputs; warn (count-summary) on the
+        non-numeric ones. A chain-reference design default (``half_vol =
+        split.half``) is numeric-typed / resolved elsewhere, so INV-6 holds.
+        """
+        # leaf input-name -> its declared sysml_type, across all calc defs.
+        input_types: dict[str, str] = {}
+        for cd in self.calc_defs:
+            for ia in getattr(cd, "input_attributes", []) or []:
+                if ia.name and ia.name not in input_types:
+                    input_types[ia.name] = getattr(ia, "sysml_type", None) or "Real"
+
+        hazards: list[tuple[str, str]] = []
+        for group in groups:
+            for param in group.parameters:
+                if param.default_value is not None:
+                    continue
+                leaf = param.name.split("__")[-1]
+                itype = input_types.get(leaf)
+                if itype is not None and not _is_numeric_sysml_type(itype):
+                    hazards.append((param.name, itype))
+
+        if hazards:
+            logger.warning(
+                "SC-5/D3-12: %d entry-point param(s) have a non-numeric type and "
+                "no numeric value, so they cannot be float entry points and are "
+                "omitted from the JSON: %s. Provide a numeric default or model the "
+                "value differently.",
+                len(hazards),
+                ", ".join(f"{qn} (:{typ})" for qn, typ in hazards),
+            )
 
     def derive_groups_filtered(
         self,
