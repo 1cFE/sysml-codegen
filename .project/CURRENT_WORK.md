@@ -6,6 +6,10 @@
 
 ## Active Work
 
+### docs-scrub — spec in progress
+Post-epic coherence pass over `docs/architecture/` on branch `docs-scrub` (off
+`upstream-findings-epic`). Spec: `.project/active/docs-scrub/spec.md`.
+
 ### UPSTREAM-FINDINGS Epic — COMPLETE (awaiting PR review/merge)
 
 All 12 items landed and audited PASS on branch `upstream-findings-epic`
