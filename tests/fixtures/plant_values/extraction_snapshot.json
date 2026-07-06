@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "plant_values",
-  "captured_at": "2026-07-06T17:44:33.290418+00:00",
+  "captured_at": "2026-07-06T17:53:44.504106+00:00",
   "compilation_results": {
     "PlantCostCalc": {
       "calc_def_name": "PlantCostCalc",
@@ -93,7 +93,7 @@
       "references": [],
       "source_file": "library.sysml",
       "source_line": 20,
-      "source_hash": "d843e72ab08121fb1d9f940d361d6cb0cd8dcf832f78b971cd7772ed4f6fb781",
+      "source_hash": "d0a0c3a5c71293406d6bca312fb93badfb225e34ec98b7e583ad760ba18ec191",
       "output_expression_asts": null,
       "all_member_names": [
         "chamber_cost",
@@ -139,21 +139,21 @@
         },
         {
           "param_name": "chamber_cost",
-          "source_path": "chamber",
+          "source_path": "chamber.cost_per_unit",
           "binding_type": "chain",
           "is_cross_file": false,
-          "raw_expression": "FeatureChainExpression -> chamber",
+          "raw_expression": "FeatureChainExpression -> chamber.cost_per_unit",
           "source_instance_elem": null,
           "source_attribute_elem": null,
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "chamber",
-          "source_attribute_name": null
+          "source_attribute_name": "cost_per_unit"
         }
       ],
       "unbound_params": [],
       "source_file": "library.sysml",
-      "source_line": 94,
+      "source_line": 91,
       "parent_part_path": "plant",
       "qualified_name": "PlantValuesDesign__plant__cost_calc",
       "is_template": false,
@@ -189,7 +189,7 @@
         "default_value": "40.0",
         "unit": null,
         "source_file": "library.sysml",
-        "source_line": 91,
+        "source_line": 88,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Power_Plant__gain"
       },
@@ -199,7 +199,7 @@
         "default_value": "cost_calc.plant_cost",
         "unit": null,
         "source_file": "library.sysml",
-        "source_line": 100,
+        "source_line": 97,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Power_Plant__plant_cost"
       }
@@ -234,28 +234,12 @@
         "is_deep_path": false,
         "source_file": "unknown",
         "source_line": 0
-      },
-      {
-        "owning_part_qn": "PlantValuesDesign__plant__chamber__liner",
-        "attribute_name": "cost_per_unit",
-        "redefinition_type": "literal",
-        "literal_value": 7.0,
-        "source_path": null,
-        "expression_ast": null,
-        "expression_text": "",
-        "target_path": [],
-        "is_deep_path": false,
-        "source_file": "unknown",
-        "source_line": 0
       }
     ],
     "multiplicities": [],
     "aggregation_expressions": [],
     "warnings": [],
     "part_usage_names": {
-      "PlantValuesLib__Reaction_Chamber": [
-        "liner"
-      ],
       "PlantValuesLib__Power_Plant": [
         "chamber",
         "driver",
@@ -263,7 +247,6 @@
       ]
     },
     "usage_type_map": {
-      "[\"PlantValuesLib__Reaction_Chamber\", \"liner\"]": "PlantValuesLib__Liner",
       "[\"PlantValuesLib__Power_Plant\", \"driver\"]": "PlantValuesLib__Base_Driver",
       "[\"PlantValuesLib__Power_Plant\", \"target_factory\"]": "PlantValuesLib__Target_Factory",
       "[\"PlantValuesLib__Power_Plant\", \"chamber\"]": "PlantValuesLib__Reaction_Chamber",

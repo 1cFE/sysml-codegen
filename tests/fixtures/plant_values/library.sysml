@@ -65,16 +65,13 @@ package PlantValuesLib {
 
     // Mechanism (c): the plain cross-part-attribute chain (the `driver.cost_per_joule`
     // / twolevel shape, no calc output in the chain — the P1 acceptance note, distinct
-    // from the calc-output-valued variant). A TWO-HOP chain: the plant calc reaches
-    // `chamber.liner.cost_per_unit`, and the value is supplied through a nested override
-    // block on the plant usage. This is a distinct shape from (b)'s one-hop block; the
-    // current pipeline cannot wire the nested value to the inherited plant calc input.
-    part def 'Liner' {
-        attribute cost_per_unit : Real;
-    }
-
+    // from the calc-output-valued variant). The reaction chamber declares the consumed
+    // attribute; the plant calc reaches it cross-part (`chamber.cost_per_unit`). The
+    // current pipeline leaves this reference a valueless user-fill entry point that the
+    // calc still wires — the headline's (c) V11-trip role (the value-carrying (c) with
+    // fan-out lives in the extended spec_chain_twolevel per SC-2, not here).
     part def 'Reaction Chamber' {
-        part liner : 'Liner';
+        attribute cost_per_unit : Real;
     }
 
     // Base plant def: owns the base-typed subsystems, the cross-part consumer calc,
@@ -94,7 +91,7 @@ package PlantValuesLib {
         calc cost_calc : PlantCostCalc {
             in driver_efficiency = driver.efficiency;              // (a)
             in target_cost = target_factory.cost_per_target;       // (b)
-            in chamber_cost = chamber.liner.cost_per_unit;         // (c) two-hop chain
+            in chamber_cost = chamber.cost_per_unit;               // (c) plain cross-part chain
         }
 
         attribute plant_cost : Real = cost_calc.plant_cost;

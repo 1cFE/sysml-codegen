@@ -124,6 +124,27 @@ def test_hif_driver_redefinition_extracted() -> None:
     ) in redefs, redefs
 
 
+def test_fanout_collapses_to_one_producer_channel() -> None:
+    """SC-2 fan-out: the one plant attribute ``scale`` is consumed by TWO modules
+    (``scale_a`` and ``scale_b``). Both inputs collapse onto the SAME entry point —
+    one producer channel wired to both consumers, not two separate EPs."""
+    sources = offline_input_sources(MODEL)
+    a = sources[("twoleveldesign__hif_plant__scale_a", "s")]
+    b = sources[("twoleveldesign__hif_plant__scale_b", "s")]
+    assert a.source_type == "entry_point" and b.source_type == "entry_point"
+    assert a.qualified_name == b.qualified_name == "TwoLevelLib__IFE_Power_Plant__scale"
+
+
+def test_plain_cross_part_attr_shape() -> None:
+    """SC-2 plain cross-part-attribute shape (the P1 note, no calc output in the chain):
+    ``maint_calc.rate`` reads the driver's plain ``maintenance_rate`` attribute — distinct
+    from the calc-output-valued ``cost_per_joule = gamma`` chain above it."""
+    sources = offline_input_sources(MODEL)
+    src = sources[("twoleveldesign__hif_plant__maint_calc", "rate")]
+    assert src.source_type == "entry_point"
+    assert src.qualified_name == "TwoLevelLib__IFE_Driver__maintenance_rate"
+
+
 @requires_license
 def test_spec_chain_twolevel_loads_live() -> None:
     """Guard against fixture rot: the committed model still parses through the live

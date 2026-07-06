@@ -25,14 +25,9 @@ package PlantValuesDesign {
             :>> cost_per_target = 10.0;
         }
 
-        // Mechanism (c): two-hop cross-part chain. The value is supplied through a
-        // nested override block reaching `chamber.liner.cost_per_unit`. The plant calc
-        // reads it cross-part; the current pipeline cannot wire the nested value to the
-        // inherited calc input.
-        part :>> chamber {
-            part :>> liner {
-                :>> cost_per_unit = 7.0;
-            }
-        }
+        // Mechanism (c): no override — the plant calc reaches `chamber.cost_per_unit`
+        // cross-part (the plain-attribute chain, no calc output). 'Reaction Chamber'
+        // leaves it a valueless user-fill attribute the current pipeline cannot wire to
+        // the inherited plant calc's `chamber_cost` input.
     }
 }

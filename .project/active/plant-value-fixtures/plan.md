@@ -488,11 +488,11 @@ def test_shape_b_override_literal_valueless_ep():
 **Read first, then write** (SC-3 empirical discipline — determine the property from the
 observed snapshot, do not pre-judge):
 
-- [ ] Read the committed `plant_values`, `plant_value_shapes`, `deep_cross_scope_probe`, and
+- [x] Read the committed `plant_values`, `plant_value_shapes`, `deep_cross_scope_probe`, and
       re-captured `spec_chain_twolevel` snapshots; record each shape's observed label
       (correct / degraded / diagnostic) in the Phase-4 notes, following the `ife_plant`
       shape-by-shape precedent.
-- [ ] `tests/conformance/test_plant_values.py` (NEW):
+- [x] `tests/conformance/test_plant_values.py` (NEW):
   - The **V11 offender-set pin** (`EXPECTED_UNCOVERED` = the exact tuples from Phase 2). This
     is the SC-1 before-state pin Item 2 flips. Retain a structure that still fires if the set
     later goes empty (so a regression re-dropping it fails loudly), per the `ife_plant`
@@ -505,35 +505,35 @@ observed snapshot, do not pre-judge):
     the binding resolver, and record that the assert constraint itself is invisible to the
     drop report today (Item 4 fires-on-shape substrate; the CONSTRAINT-SILENCE bug). Assert
     the observed absence explicitly (Item 4 flips it).
-- [ ] `tests/conformance/test_plant_value_shapes.py` (NEW) — one property pin per secondary
+- [x] `tests/conformance/test_plant_value_shapes.py` (NEW) — one property pin per secondary
       shape (SC-3). Each asserts a concrete observed property, e.g. "quoted-output shape yields
       EP Y", "bare `default 10.0` yields default_value 10.0", "non-float `wall_type` shape:
       EP omitted / value None (Item 5 substrate)". Any shape removed under the L2-2 escape hatch
       is NOT pinned here — it is filed in Phase 5.
-- [ ] `tests/conformance/test_spec_chain_twolevel.py` — ADD pins for the two new shapes (plain
+- [x] `tests/conformance/test_spec_chain_twolevel.py` — ADD pins for the two new shapes (plain
       cross-part attr; the fan-out attr consumed by two modules — assert the collapse to one
       producer channel wired to both consumers), preserving the existing `usage_type_map`
       retype pin and all current assertions (spec D2).
-- [ ] `tests/conformance/test_deep_cross_scope_probe.py` (NEW) — a drift pin over the newly
+- [x] `tests/conformance/test_deep_cross_scope_probe.py` (NEW) — a drift pin over the newly
       committed snapshot (patterns A/B/C observed shapes) so future silent drift fails (spec
       D1-F6). Assert observed properties (e.g. "pattern B: the 6-segment REFERENCE resolves
       to / is dropped as X"), not byte-equality.
-- [ ] Register the new fixtures in `tests/conformance/conftest.py` `SNAPSHOT_MODELS` (mirrors
+- [x] Register the new fixtures in `tests/conformance/conftest.py` `SNAPSHOT_MODELS` (mirrors
       the Item-8 registration).
 
 ### Validation
 
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_plant_values.py tests/conformance/test_plant_value_shapes.py tests/conformance/test_spec_chain_twolevel.py tests/conformance/test_deep_cross_scope_probe.py`
+- [x] `uv run pytest tests/conformance/test_plant_values.py tests/conformance/test_plant_value_shapes.py tests/conformance/test_spec_chain_twolevel.py tests/conformance/test_deep_cross_scope_probe.py`
       → all pass.
-- [ ] `uv run pytest tests/` → full suite green; no existing test reddened.
-- [ ] `uv run ruff check tests/` and `uv run mypy src/` → clean (mypy scope unchanged — no
+- [x] `uv run pytest tests/` → full suite green; no existing test reddened.
+- [x] `uv run ruff check tests/` and `uv run mypy src/` → clean (mypy scope unchanged — no
       `src/` change).
 
 **Manual:**
-- [ ] Confirm no pin is a whole-snapshot byte-equality (grep the new test files for
+- [x] Confirm no pin is a whole-snapshot byte-equality (grep the new test files for
       `== committed` / raw-snapshot compares). Each pin names a specific property.
-- [ ] Confirm the V11 pin's `EXPECTED_UNCOVERED` matches the Phase-2 recorded tuples exactly.
+- [x] Confirm the V11 pin's `EXPECTED_UNCOVERED` matches the Phase-2 recorded tuples exactly.
 
 **What We Know Works After This Phase:** Every captured shape has a property pin documenting its
 current behavior; the headline's V11 trip is pinned as the before-state Item 2 flips; the
@@ -813,11 +813,40 @@ timestamp moved (paths were already canonical). Same net effect: re-capture brin
 current script form.
 
 ### Phase 4 Completion
-**Completed:**
+**Completed:** 2026-07-06
+**New pin files:** `test_plant_values.py` (6), `test_plant_value_shapes.py` (8),
+`test_deep_cross_scope_probe.py` (6), + 2 pins added to `test_spec_chain_twolevel.py`.
+Registered `plant_values` + `plant_value_shapes` in conformance `SNAPSHOT_MODELS` (they
+pass the global invariants); `deep_cross_scope_probe` deliberately NOT registered (see below).
 **Per-shape observed labels (correct / degraded / diagnostic):**
-**V11 pin EXPECTED_UNCOVERED (matches Phase 2?):**
-**Issues:**
-**Deviations:**
+- `plant_values` (a)/(b)/(c): all three valueless (default None) fallback EPs — the V11 trip.
+  Assert constraint: INVISIBLE to extraction (no usage, no `eta`/`viability` tokens); the
+  `threshold` defaulted param leaks into design_attributes (both pinned as the Item-4 before-state).
+- `plant_value_shapes`: CORRECT — shape 2 bare `default 10.0` (design attr "10.0"), shape 5
+  5-deep-chain (`depth_marker` "1.0" inherited to L4), shape 7 quoted `out attribute 'net cost'`
+  (de-quotes to `net_cost`), shape 8 Style-E (`doubled`+`tripled` both captured), shape 8b quoted
+  return (`scaled`). DEGRADED — shape 1 econ-param nested `:>>` (`rated_cost.rate` None), shape 4
+  inherited-attr-redefined-below (`flow_rate` None). DIAGNOSTIC — shape 9 non-float enum EP
+  (`wall` None; Item 5 substrate).
+- `deep_cross_scope_probe`: Pattern A deep CHAIN → valueless offender + source_path truncated to
+  `station` (degradation pinned); Pattern B 6-segment REFERENCE → resolves cross-package to the
+  Core Metric producer EP; mid-level `derived_calc.base_metric` → valueless offender.
+**V11 pin EXPECTED_UNCOVERED (matches Phase 2?):** YES — exactly the 3 committed tuples
+(driver_efficiency/target_cost/chamber_cost on `plantvaluesdesign__plant__cost_calc`).
+**Issues (a real invariant conflict, resolved):** mechanism (c) was authored as a TWO-HOP chain
+(`chamber.liner.cost_per_unit`) in Phases 1–2. Registering the fixtures under `SNAPSHOT_MODELS`
+exposed that a deep/multi-hop chain **truncates its CHAIN `source_path` to the first segment**
+(`chamber`), which violates the global `test_chain_bindings_have_source_path` invariant
+(dotted source_paths). Fix: reverted (c) to the ONE-HOP plain cross-part attr `chamber.cost_per_unit`
+(dotted source_path, still valueless, still trips — the headline's (c) is V11-trip role only; the
+value-carrying (c) with fan-out lives in the extended twolevel per SC-2). Re-captured plant_values
+(D6 gate re-verified: 3 offenders, all mechanisms; committed baseline unchanged). The SAME
+truncation is a genuine extraction degradation `deep_cross_scope_probe`'s Pattern A exposes —
+so that probe is kept OUT of `SNAPSHOT_MODELS` (its drift pin reads the graph directly) and the
+truncation is pinned as an observed degradation instead.
+**Deviations:** (c) one-hop (not two-hop); `deep_cross_scope_probe` not in `SNAPSHOT_MODELS`
+(both forced by the CHAIN-source_path invariant — recorded above). No byte-equality pins (grep-
+confirmed); no `src/` change (ruff src 21, mypy 109 unchanged). Full suite: 2017 passed.
 
 ### Phase 5 Completion
 **Completed:**
