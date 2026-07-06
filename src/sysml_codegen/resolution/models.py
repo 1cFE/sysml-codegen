@@ -12,6 +12,7 @@ Key Design Principles:
 
 from enum import Enum
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -189,6 +190,43 @@ class PipelineModule(BaseModel):
     source_line: int | None = None
 
 
+class OutputAlias(BaseModel):
+    """A modeler's EXPOSE_PURE name surfaced onto a canonical output channel.
+
+    Item 11 (SC-7). The two EXPOSE_PURE shapes both land here, tagged by
+    provenance:
+    - ``part_def`` (shape A): from the ``_scoped_alias`` registry (a part-def
+      derived attribute, e.g. ``total_cost = cost_calc.cost``, expanded per
+      instance).
+    - ``part_usage`` (shape B): from an ``expose_pure`` ``ChannelAlias`` (a
+      derived attribute on a part usage).
+
+    Attributes:
+        alias_name: The modeler's sanitized ``python_name`` (Item 5 / REQ-NC-06).
+        canonical_channel: The channel the value already flows on (INV-2), read
+            from the registry — never re-derived.
+        instance_path: The instance scope that qualifies the name so two
+            siblings exposing the same name land on distinct output filenames
+            (INV-4): the scope half of a ``_scoped_alias`` key (shape A) or the
+            owning part's leaf (shape B).
+        shape: Which source produced the entry.
+    """
+
+    alias_name: str
+    canonical_channel: str
+    instance_path: str
+    shape: Literal["part_def", "part_usage"]
+
+    @property
+    def output_filename(self) -> str:
+        """Destination filename for this alias's exit-point capture (D2).
+
+        ``{instance_path}__{alias_name}.json`` — instance-qualified so two
+        instances exposing the same name never collide (INV-4).
+        """
+        return f"{self.instance_path}__{self.alias_name}.json"
+
+
 class ComputationGraph(BaseModel):
     """The complete computation graph derived from BacktrackingResult.
 
@@ -205,12 +243,19 @@ class ComputationGraph(BaseModel):
             is pure over the graph alone. In-memory analysis artifact consumed at
             the generation boundary; ``exclude=True`` keeps it out of the
             serialized graph so committed baselines do not churn.
+        output_aliases: EXPOSE_PURE modeler names surfaced onto their canonical
+            output channels (Item 11 / SC-7), stable-sorted by
+            ``(instance_path, alias_name)``. A genuine schema field describing
+            real generated output — **not** excluded (contrast
+            ``fallback_entry_points``): it is serialized on every graph and
+            drives the named exit-point captures in the pipeline YAML.
     """
 
     modules: list[PipelineModule]
     entry_point_groups: list[ParameterGroup]
     execution_order: list[str]
     fallback_entry_points: set[str] = Field(default_factory=set, exclude=True)
+    output_aliases: list[OutputAlias] = Field(default_factory=list)
 
 
 __all__ = [
@@ -222,6 +267,7 @@ __all__ = [
     "InputSource",
     "ModuleInput",
     "ModuleOutput",
+    "OutputAlias",
     "ParameterGroup",
     "PipelineModule",
 ]

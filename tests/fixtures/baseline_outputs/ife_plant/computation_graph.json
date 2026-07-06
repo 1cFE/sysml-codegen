@@ -884,5 +884,19 @@
     "ifeplantdesign__baseline_plant__chamber_b__yield_calc",
     "ifeplantdesign__baseline_plant__lcoe_calc",
     "ifeplantdesign__magnet_system__cryo_load"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "lcoe",
+      "canonical_channel": "IfePlantDesign__baseline_plant__lcoe_calc__lcoe",
+      "instance_path": "baseline_plant",
+      "shape": "part_def"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "IfePlantSubsystems__radial_build__tf_coil__volume_calc__volume",
+      "instance_path": "radial_build.tf_coil",
+      "shape": "part_def"
+    }
   ]
 }

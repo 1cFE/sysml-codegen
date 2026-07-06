@@ -27,10 +27,15 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
 )
 from sysml_codegen.core.identifier_types import ScopedKey, derive_module_type
-from sysml_codegen.core.models import BindingResolution, BindingResolutionType
+from sysml_codegen.core.models import (
+    BindingResolution,
+    BindingResolutionType,
+    ChannelAlias,
+)
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
     get_module_name,
+    owning_part_leaf,
     sanitize_name,
     sanitize_qualified_name,
 )
@@ -54,6 +59,7 @@ from sysml_codegen.resolution.models import (
     InputSource,
     ModuleInput,
     ModuleOutput,
+    OutputAlias,
     ParameterGroup,
     PipelineModule,
 )
@@ -158,6 +164,8 @@ def build_computation_graph(
     aggregation_data: list[ScopedAggregationData] | None = None,
     hierarchy_redefinitions: list[RedefinitionData] | None = None,
     usage_type_map: dict[tuple[str, str], str] | None = None,
+    channel_aliases: list[ChannelAlias] | None = None,
+    include_all: bool = True,
 ) -> ComputationGraph:
     """Build the complete computation graph from backtracking result.
 
@@ -182,6 +190,14 @@ def build_computation_graph(
             Used to resolve usage names to their type PartDef QNs for LITERAL
             redefinition lookup (e.g., ("Lib__Site_Infra", "permitting") →
             "Lib__Permitting_Interconnect").
+        channel_aliases: All ChannelAliases (CHAIN + EXPOSE_PURE + design_override).
+            Item 11 reads only the ``expose_pure`` subset to surface shape-B
+            (part-usage) EXPOSE names into ``output_aliases``. If omitted, shape B
+            silently does not surface — both call sites (live + snapshot) must
+            thread it (F-A).
+        include_all: Run mode, forwarded to ``_build_output_aliases``'s dangling
+            filter (D4). True for full runs (every baseline); False for targeted
+            generation, where a referenced channel may be legitimately pruned.
 
     Returns:
         ComputationGraph ready for YAML and JSON generation
@@ -373,6 +389,13 @@ def build_computation_graph(
     # This catches transitive binding resolution bugs before TEAx validation
     _validate_channel_references(modules)
 
+    # Step 8.5: Surface EXPOSE_PURE modeler names onto their canonical channels
+    # (Item 11 / SC-7). Reads the two provenance-carrying sources; recomputes its
+    # own declared-channel set (M5).
+    output_aliases = _build_output_aliases(
+        output_registry, channel_aliases or [], modules, include_all,
+    )
+
     # Step 9: Sort entry-point groups by name, and the parameters within each
     # group by qualified_name (REQ-BASE-06). Both the group order and the
     # within-group parameter order are derived in model-discovery order, which
@@ -394,6 +417,7 @@ def build_computation_graph(
         entry_point_groups=param_groups,
         execution_order=[m.name for m in modules],
         fallback_entry_points=set(result.fallback_entry_points),
+        output_aliases=output_aliases,
     )
 
 
@@ -659,6 +683,114 @@ def _validate_channel_references(modules: list[PipelineModule]) -> None:
                     )
 
 
+def _build_output_aliases(
+    output_registry: OutputRegistry,
+    channel_aliases: list[ChannelAlias],
+    modules: list[PipelineModule],
+    include_all: bool,
+) -> list[OutputAlias]:
+    """Surface EXPOSE_PURE modeler names onto their canonical channels (Item 11).
+
+    Reads the two provenance-carrying EXPOSE_PURE sources — never the
+    source-erased flat ``_alias`` (INV-1) — normalizes each into an
+    ``OutputAlias``, drops any whose channel is not a declared graph output
+    (INV-3, run-mode split per D4), and stable-sorts by
+    ``(instance_path, alias_name)`` (INV-5).
+
+    Shape A (part def): the ``_scoped_alias`` registry, already keyed
+    ``(instance_path, python_name) → channel``. The channel is read straight
+    from the registry (INV-2); the scope half is the instance path.
+
+    Shape B (part usage): the ``expose_pure`` ``ChannelAlias`` objects. Each
+    carries a bare ``canonical_name`` (``instance.attr``) resolved the same
+    two-step way Item 10 registered it — ``alias_lookup`` first (the persisted
+    Key_A twin written at ``output_registry_builder`` Phase 1a), ``scoped_lookup``
+    as fallback. C1: ``scoped_lookup`` alone keeps the full nested path and would
+    miss every nested part-usage EXPOSE (it resolves none of the in-repo shape-B
+    aliases), so alias-first is load-bearing, not interchangeable — do not "fix"
+    it to ``scoped_lookup``-only. The ``alias_lookup`` read does not violate
+    INV-1: the entry is already source-selected as ``expose_pure``; the lookup
+    only resolves that already-chosen alias's channel string, it does not *source*
+    entries from ``_alias``.
+
+    Args:
+        output_registry: Carries both EXPOSE_PURE sources.
+        channel_aliases: All ChannelAliases; filtered to ``.source == "expose_pure"``.
+        modules: The built pipeline modules. The declared-channel set is
+            recomputed here locally — ``_validate_channel_references`` returns
+            ``None``, it does not hand its set over (M5).
+        include_all: Run mode. On a full run a dropped alias is a real wiring
+            regression (raise); on a targeted run a channel an EXPOSE references
+            may be legitimately pruned (drop + debug-log). (D4 / M3.)
+
+    Raises:
+        ValueError: On an ``include_all`` run, if any emitted entry's channel is
+            not a declared graph output.
+    """
+    declared_channels: set[str] = set()
+    for module in modules:
+        for output in module.outputs:
+            declared_channels.add(output.channel_name)
+
+    candidates: list[OutputAlias] = []
+
+    # Shape A: part-def EXPOSE_PURE, expanded per instance into _scoped_alias.
+    for (scope, leaf), channel in output_registry.scoped_alias_items():
+        candidates.append(OutputAlias(
+            alias_name=leaf,
+            canonical_channel=channel,
+            instance_path=scope,
+            shape="part_def",
+        ))
+
+    # Shape B: part-usage EXPOSE_PURE ChannelAliases.
+    for alias in channel_aliases:
+        if alias.source != "expose_pure":
+            continue
+        resolved = output_registry.alias_lookup(ScopedKey(alias.canonical_name))
+        if resolved is None:
+            resolved = output_registry.scoped_lookup(ScopedKey(alias.canonical_name))
+        if resolved is None:
+            # Genuinely unresolvable shape B — no name to surface. The
+            # resolution-map path (_resolve_expose_pure :796) owns that warning;
+            # here we simply do not emit an entry.
+            continue
+        candidates.append(OutputAlias(
+            alias_name=alias.alias_name,
+            canonical_channel=resolved,
+            instance_path=owning_part_leaf(alias.owning_part_qn),
+            shape="part_usage",
+        ))
+
+    # INV-3: every emitted entry's channel is a declared output. D4 splits the
+    # drop by run mode.
+    surfaced: list[OutputAlias] = []
+    for entry in candidates:
+        if entry.canonical_channel in declared_channels:
+            surfaced.append(entry)
+            continue
+        if include_all:
+            raise ValueError(
+                f"output_aliases: EXPOSE_PURE alias '{entry.alias_name}' on "
+                f"'{entry.instance_path}' targets channel "
+                f"'{entry.canonical_channel}', which is not a declared graph "
+                f"output. On a full (include_all) run nothing legitimately prunes, "
+                f"so this is a wiring regression, not a targeted-run drop (D4)."
+            )
+        logger.debug(
+            "output_aliases: dropping alias '%s' on '%s' — channel '%s' pruned "
+            "on this targeted run",
+            entry.alias_name, entry.instance_path, entry.canonical_channel,
+        )
+
+    # INV-5: deterministic order. (instance_path, alias_name) is unique because
+    # one name cannot be both part-def- and part-usage-exposed on one instance,
+    # so shape A and shape B never emit the same key; source iteration order
+    # then never affects the result.
+    surfaced.sort(key=lambda a: (a.instance_path, a.alias_name))
+    return surfaced
+
+
 @dataclass(frozen=True)
 class UncoveredInput:
     """A module input wired to a params key that no parameter group provides.
@@ -829,7 +961,8 @@ def _build_attribute_resolution_map(
 
     Resolution logic per attribute:
     - FORMULA computed attr -> kind="formula", channel from synthetic module
-    - EXPOSE_PURE computed attr -> kind="expose_alias", channel from upstream calc
+    - EXPOSE_PURE part usage (shape B) -> kind="expose_alias", channel from upstream
+    - EXPOSE_PURE part def (shape A) -> kind="literal"; warning gated on _scoped_alias
     - Not found -> kind="literal" (conservative: becomes entry point)
 
     Args:
@@ -839,6 +972,13 @@ def _build_attribute_resolution_map(
         calc_usage_names: CalcUsage instance names for EXPOSE_PURE resolution
     """
     result: dict[str, dict[str, AttributeResolution]] = {}
+
+    # Shape-A resolvability probe (Item 11): the leaves registered in the
+    # structured part-def EXPOSE namespace. A shape-A EXPOSE whose python_name is
+    # among these resolved (Item 10) and surfaces (Item 11), so it warns no more.
+    scoped_alias_leaves = {
+        leaf for (_scope, leaf), _chan in output_registry.scoped_alias_items()
+    }
 
     for ca in computed_attrs:
         part_name = ca.owning_part_name
@@ -863,17 +1003,42 @@ def _build_attribute_resolution_map(
             )
 
         elif ca.classification == ComputedAttributeClassification.EXPOSE_PURE:
-            # EXPOSE_PURE -> resolve through alias to upstream calc output
-            channel = _resolve_expose_pure(ca, calc_usage_names, output_registry)
-            if channel is not None:
-                result[part_name][ca.python_name] = AttributeResolution(
-                    kind=AttributeResolutionKind.EXPOSE_ALIAS, channel_name=channel,
-                )
-            else:
-                # Fallback: treat as literal (entry point)
+            if ca.is_on_part_definition:
+                # Shape A (part def). _resolve_expose_pure can't split the refs
+                # here — the calc-usage instance names are absent from
+                # calc_usage_names on a part def — so it would fire the
+                # malformed-refs warning at :796. Item 10 resolves shape A per
+                # instance via _scoped_alias instead; this per-def map is
+                # structurally instance-blind and no in-repo FORMULA consumes a
+                # shape-A exposed name (B3), so the LITERAL fallback — identical to
+                # today's post-warning behavior — mis-wires nothing. Consult
+                # _scoped_alias only to decide the warning: a registered leaf means
+                # the name resolves and surfaces (Item 11) → silent; an
+                # unregistered one names the real cause, not "Item 10/11".
                 result[part_name][ca.python_name] = AttributeResolution(
                     kind=AttributeResolutionKind.LITERAL,
                 )
+                if ca.python_name not in scoped_alias_leaves:
+                    logger.warning(
+                        "EXPOSE_PURE %s on part def %s: no scoped alias registered "
+                        "for '%s' — the derived-attribute name cannot be surfaced "
+                        "(the referenced calc output did not resolve on any design "
+                        "instance).",
+                        ca.name, ca.owning_part_name, ca.python_name,
+                    )
+            else:
+                # Shape B (part usage): unchanged _resolve_expose_pure path — an
+                # unresolvable shape B still warns at :796.
+                channel = _resolve_expose_pure(ca, calc_usage_names, output_registry)
+                if channel is not None:
+                    result[part_name][ca.python_name] = AttributeResolution(
+                        kind=AttributeResolutionKind.EXPOSE_ALIAS, channel_name=channel,
+                    )
+                else:
+                    # Fallback: treat as literal (entry point)
+                    result[part_name][ca.python_name] = AttributeResolution(
+                        kind=AttributeResolutionKind.LITERAL,
+                    )
 
         elif ca.classification == ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE:
             # INV-F: no tentative survives the confirm pass. Without this branch a
@@ -1715,6 +1880,7 @@ __all__ = [
     "_build_aggregation_module",
     "_build_attribute_resolution_map",
     "_build_computed_attr_module",
+    "_build_output_aliases",
     "_find_literal_redefinition",
     "_resolve_aggregation_input_channel",
     "_resolve_expose_pure",

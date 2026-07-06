@@ -137,6 +137,27 @@ def extract_simple_name(qualified_path: str) -> str:
     return qualified_path
 
 
+def owning_part_leaf(owning_part_qn: str) -> str:
+    """Return the leaf (last segment) of a PartDef/PartUsage qualified name.
+
+    Handles both separator forms an ``owning_part_qn`` can carry: SysML ``::``
+    (e.g. ``"AttrExprProbeDesign::probe_design"``) and Python ``__`` (e.g.
+    ``"SolarBatteryLibrary__Solar_Array"``). A ``::``-form QN splits on ``::``
+    only — a ``__`` inside a sanitized segment must not be mistaken for the
+    separator, which is why this is not ``split`` on both at once. Unlike
+    ``extract_simple_name`` it never splits on ``.``, so a dotted nested scope
+    stays intact where the caller passes one.
+
+    Single rule for the three sites that derive an instance scope from an
+    ``owning_part_qn``: the two EXPOSE_PURE alias registrations in
+    ``output_registry_builder`` and ``_build_output_aliases`` — so shape A and
+    shape B can never drift on a ``::``-form QN.
+    """
+    if "::" in owning_part_qn:
+        return owning_part_qn.rsplit("::", 1)[-1]
+    return owning_part_qn.split("__")[-1]
+
+
 __all__ = [
     "sanitize_name",
     "build_element_qualified_name",
@@ -147,4 +168,5 @@ __all__ = [
     "sanitize_qualified_name",
     "python_to_sysml_qualified_name",
     "extract_simple_name",
+    "owning_part_leaf",
 ]

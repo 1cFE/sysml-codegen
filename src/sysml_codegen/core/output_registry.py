@@ -167,6 +167,16 @@ class OutputRegistry:
         """Exact-match lookup in the structured ``(scope, leaf)`` alias registry."""
         return self._scoped_alias.get(key)
 
+    def scoped_alias_items(self) -> list[tuple[ScopedAliasKey, CanonicalChannel]]:
+        """Read view of the structured ``(scope, leaf) → channel`` alias pairs.
+
+        The shape-A source for Item 11's ``output_aliases`` (part-def EXPOSE_PURE,
+        expanded per instance). A public accessor keeps ``_build_output_aliases``
+        off the private ``_scoped_alias`` attribute. Insertion order is
+        deterministic (dict), so the caller's stable sort is total.
+        """
+        return list(self._scoped_alias.items())
+
     def scoped_lookup(self, key: ScopedKey) -> CanonicalChannel | None:
         """Exact-match lookup in the scoped registry."""
         return self._scoped.get(key)

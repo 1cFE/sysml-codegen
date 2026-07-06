@@ -18,7 +18,11 @@ from sysml_codegen.core.identifier_types import (
 )
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry, is_transitive_default
-from sysml_codegen.core.qualified_names import get_channel_name, sanitize_qualified_name
+from sysml_codegen.core.qualified_names import (
+    get_channel_name,
+    owning_part_leaf,
+    sanitize_qualified_name,
+)
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeClassification,
@@ -256,11 +260,7 @@ def build_output_registry(
         if alias.source != "expose_pure":
             continue
         # owning_part_qn may use "::" (SysML format) or "__" (Python format)
-        qn = alias.owning_part_qn
-        if "::" in qn:
-            owning_part_short = qn.rsplit("::", 1)[-1]
-        else:
-            owning_part_short = qn.split("__")[-1]
+        owning_part_short = owning_part_leaf(alias.owning_part_qn)
         scoped_key = ScopedKey(f"{owning_part_short}.{alias.alias_name}")
         resolved = instance_attr_to_channel.get(alias.canonical_name)
         if resolved is None:
@@ -304,11 +304,7 @@ def build_output_registry(
             set(),
         )
         if channel is not None:
-            qn = ca.owning_part_qualified_name
-            if "::" in qn:
-                owning_part_short = qn.rsplit("::", 1)[-1]
-            else:
-                owning_part_short = qn.split("__")[-1]
+            owning_part_short = owning_part_leaf(ca.owning_part_qualified_name)
             registry.register_alias(
                 ScopedKey(f"{owning_part_short}.{ca.python_name}"), channel
             )

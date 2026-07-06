@@ -31,17 +31,19 @@ part def the calc-usage instance names are not populated into ``calc_usage_names
 so ``_resolve_expose_pure`` cannot separate the instance ref (``cost_calc``) from the
 output ref (``cost``) and returns before reaching the name-drop branch.
 
-Therefore REQ-CA-09 is discharged as a **recorded deferral**: this file pins the
-malformed-refs warning as the *current baseline*, and the reworded name-drop-warning
-test is handed off to **Items 10/11** — the items that own the shape-A part-def
-resolution path (``epic_upstream_findings.md:387``). Once that path lands, the ref
-classification succeeds, ``_resolve_expose_pure`` reaches the name-drop branch, and
-the deferred assertion can be upgraded there. This is not a silent third punt: the
-handoff item is named and the current warning is asserted, not ignored.
+The deferral is now **fully discharged by Item 11 (SC-7)**: the shape-A branch of
+``_build_attribute_resolution_map`` no longer calls ``_resolve_expose_pure`` at all
+(so it never reaches the malformed-refs warning at :796); it sets the resolution to
+LITERAL and consults ``_scoped_alias`` to decide the warning. For ``total_cost`` a
+scoped alias is registered, so the case is **silent and the name surfaces** as an
+``output_aliases`` entry. The historical deferral narrative above is kept for
+provenance; ``test_wi014_toy_shape_a_silent_and_surfaces`` pins the discharged
+behavior (name emitted, malformed-refs warning gone) offline and license-free.
 """
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -128,6 +130,36 @@ def test_wi014_toy_shape_a_resolves_offline_via_scoped_alias() -> None:
     channel = registry.scoped_alias_lookup(key)
     assert channel is not None
     assert channel.endswith("cost_calc__cost"), channel
+
+
+def test_wi014_toy_shape_a_silent_and_surfaces(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """REQ-CA-11 / REQ-DM-09 (Item 11): the shape-A EXPOSE is silent and its name
+    surfaces — closing the Item 1 → 8 → "10/11" deferral this file recorded.
+
+    Built from the committed snapshot (license-free). Two assertions, the warning
+    case-matrix for the resolvable case (INV-6):
+    - ``total_cost`` appears in ``graph.output_aliases`` (the name is emitted); and
+    - the malformed-refs warning (``_resolve_expose_pure`` :796) does **not** fire —
+      shape A no longer reaches that function.
+    """
+    from sysml_codegen.snapshot import build_full_graph_from_snapshot
+
+    with caplog.at_level(
+        logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+    ):
+        graph, _ = build_full_graph_from_snapshot(snapshot_fixture("wi014_toy"))
+
+    total_cost = [a for a in graph.output_aliases if a.alias_name == "total_cost"]
+    assert len(total_cost) == 1, [a.alias_name for a in graph.output_aliases]
+    assert total_cost[0].shape == "part_def"
+    assert total_cost[0].instance_path == "demo_plant"
+    assert total_cost[0].canonical_channel.endswith("cost_calc__cost")
+
+    assert "could not identify instance/output" not in caplog.text
+    assert "derived-attribute name is dropped" not in caplog.text
+    assert "no scoped alias registered" not in caplog.text
 
 
 # ---------------------------------------------------------------------------

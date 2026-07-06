@@ -233,5 +233,6 @@
     "chainspikedesign__spike_design__area_calc",
     "chainspikedesign__spike_design__cost_calc",
     "chainspikedesign__spike_design__summary"
-  ]
+  ],
+  "output_aliases": []
 }

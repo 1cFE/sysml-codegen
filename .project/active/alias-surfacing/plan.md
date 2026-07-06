@@ -440,13 +440,75 @@ recorded-gate + static inspection (Item 8–10 audit pattern) rather than claimi
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION]
+### Phase 1 Completion — DONE (green)
+- `OutputAlias` model + `ComputationGraph.output_aliases` field (serialized, no `exclude`), `resolution/models.py`.
+- `owning_part_leaf` shared helper (`core/qualified_names.py`); the two `output_registry_builder`
+  sites (`:260-263`, `:308-311`) refactored to call it.
+- `scoped_alias_items()` read accessor (`core/output_registry.py`).
+- `_build_output_aliases` (`resolution/graph_builder.py`): shape A from `scoped_alias_items()`;
+  shape B `alias_lookup`-first then `scoped_lookup` (C1 — verified: shape-B aliases resolve ONLY
+  via `alias_lookup`; `scoped_lookup` alone drops all of them, so the C1 guard has teeth on
+  attr_expr_probe AND catf_mfe); D4 run-mode dangling filter (raise on `include_all`, debug-drop on
+  targeted); INV-5 sort.
+- `channel_aliases` + `include_all` threaded through BOTH `build_computation_graph` call sites
+  (live `pipeline_builder.py:800`, snapshot `graph_rebuild.py:139`) AND the `test_factory_purity`
+  build helper (a third, test call site — needed to match the snapshot-captured baseline).
+- Field-test flips: GA-05 exact-set + DM-03 (4→5 fields) name `output_aliases`; new
+  `test_req_dm_09_fields_output_alias`. New `tests/unit/test_output_aliases.py` (12 tests).
+- **Fixture-shape correction (verified at implement time):** ife_plant's nested exposure is
+  **shape A** (`_scoped_alias`, scope `radial_build.tf_coil`), NOT shape B as the design's C1 prose
+  labels it. The genuine nested shape-B fixture is catf_mfe. C1 guard placed on attr_expr_probe +
+  catf_mfe accordingly.
+- **catf_mfe first-wins collapse (documented, invariant-compliant):** catf surfaces 44 shape-B
+  entries; 28 (13 `minor_radius` + 13 `volume` + 2 `pump_power`) share a bare `canonical_name` and
+  resolve to a single first-wins `_alias` channel each — a pre-existing Item-10 characteristic
+  (design C1 note acknowledges it). INV-2/3/4 hold as defined against the registry; distinct
+  instance_paths → distinct filenames. Release-notes coordination item.
 
-### Phase 1 Completion
-### Phase 2 Completion
-### Phase 3 Completion
-### Phase 4 Completion
-### Phase 5 Completion
+### Phase 2 Completion — DONE (green)
+- `_build_attribute_resolution_map` EXPOSE_PURE split on `is_on_part_definition`: shape A → LITERAL
+  (identical to prior post-warning behavior, B3) + `_scoped_alias`-leaf-gated warning
+  (resolvable → silent; unresolvable → names the real cause); shape B unchanged `_resolve_expose_pure`
+  path (`:796` unresolvable warning intact). Verified: wi014 shape A now silent + surfaces.
+- `test_wi014_toy.py`: disposition docstring flipped (deferral discharged by Item 11); new offline
+  `test_wi014_toy_shape_a_silent_and_surfaces` pins name-emitted + malformed-refs-gone.
+
+### Phase 3 Completion — DONE (green)
+- `_build_alias_filename_map` (first-wins over INV-5-sorted aliases, M4) +
+  `_build_exit_points(modules, alias_filenames)` (required param, no papering default) +
+  `generate_pipeline_yaml` builds the map; template `pipeline_yaml.jinja2:47` → `{{ exit.filename }}`
+  (key + type unchanged, REQ-PY-06 green). New `tests/unit/test_exit_point_aliases.py` (10 tests).
+
+### Phase 4 Completion — PARTIAL (blocked on solar_battery recapture)
+- 6/7 graph baselines regenerated + reviewed clean (field-addition + alias entries only, nothing
+  else churns): solar_battery(+empty→see below), catf_mfe(+44), attr_expr_probe(+3), chain_spike(+[]),
+  sample_model(+[]), wi014_toy(+1), ife_plant(+2). `registry_init.py` unchanged for all.
+- `capture_baseline_yaml.py` refactored to the snapshot path (F-B optional; license-free), verified
+  byte-identical to prior live baselines for unaffected models. attr_expr_probe YAML: 3 renames only.
+  New `wi014_toy.yaml` committed + `test_yaml_baseline_comparison_wi014_toy`.
+- **BLOCKED — solar_battery SC-1 reconciliation (approved option 1, not executed this session):**
+  solar_battery carries a shape-A EXPOSE `misc_hardware_cost = allocation_model.total_allocation`
+  (the spec's Baseline Regen §1 "no EXPOSE_PURE" classification is FALSE). The committed snapshot is
+  stale (`misc_hardware_cost.reference_chain = None`, pre-Item-10 format), so the snapshot path
+  under-surfaces vs live → SC-1 byte-identity breaks. Fix = recapture solar_battery's snapshot under
+  license (same reference_chain class Item 10 recaptured wi014/catf/ife for). **The recapture is
+  blocked in this sandbox** (reading `~/1cfe/agentic-mbse/.env` outside the working dir + network
+  license validation require an interactive approval). Residual failures (2):
+  `test_snapshot_generation.py::test_live_vs_snapshot_byte_identical`,
+  `test_e2e_output_registry.py::TestYamlDiffValidation::test_yaml_matches_baseline[solar_battery]`.
+  **Resume steps:** (1) recapture `tests/fixtures/solar_battery_model/extraction_snapshot.json`;
+  (2) verify its diff is limited to `reference_chain` (+ `captured_at` + any canonical-path fields);
+  (3) re-run `capture_pipeline_baselines.py` (solar graph baseline gains 1 alias) +
+  `capture_baseline_yaml.py` (solar YAML gains the `misc_hardware_cost` rename); (4) re-run
+  `test_live_vs_snapshot_byte_identical` explicitly.
+- **Gate at partial state:** 1987 passed / 4 skipped / 5 xfailed / **2 failed** (both solar SC-1);
+  ruff src/ 21; mypy src/ 109.
+
+### Phase 5 Completion — NOT STARTED (gated on the recapture + final baseline set)
+- Pending: REQ-DM-09 / REQ-PY-08 / REQ-CA-11 tags; docs 09/21/16; modeling-assumptions §3;
+  verification-matrix rows; `release-notes.md` (filename moves: attr_expr ×3, wi014 ×1, **solar ×1**,
+  + catf first-wins-collapse note); agentic-mbse impact note; CURRENT_WORK. Also: spec Baseline
+  Regen §1 one-line amendment (solar_battery DOES carry shape-A EXPOSE misc_hardware_cost).
 
 ---
 

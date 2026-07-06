@@ -4419,5 +4419,13 @@
     "solarbatterydesign__solar_battery_plant__annualized_financial",
     "solarbatterydesign__solar_battery_plant__idiot_index",
     "solarbatterydesign__solar_battery_plant__lcoe"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "misc_hardware_cost",
+      "canonical_channel": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation",
+      "instance_path": "solar_battery_plant.solar_array",
+      "shape": "part_def"
+    }
   ]
 }

@@ -4114,5 +4114,271 @@
     "catfmfephysics__catf_physics__net_electric",
     "catfmfephysics__catf_physics__q_engineering",
     "catfmfephysics__catf_physics__plant_efficiency"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "bioshield",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "bioshield",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "blanket",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "blanket",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "pump_power",
+      "canonical_channel": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_power",
+      "instance_path": "catf_blanket",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "wall_plug_power",
+      "canonical_channel": "CATFMFEHeating__catf_heating__wall_plug__wall_plug_power",
+      "instance_path": "catf_heating",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "auxiliary_power",
+      "canonical_channel": "CATF_MFE__catf_mfe_plant__auxiliary_load__auxiliary_power",
+      "instance_path": "catf_mfe_plant",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "eta_plant_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__plant_efficiency__eta_plant",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "f_recirc_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__q_engineering__f_recirculating",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "p_alpha_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__alpha_neutron_split__p_alpha",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "p_electric_gross_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__gross_electric__p_electric_gross",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "p_electric_net_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__net_electric__p_net",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "p_neutron_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__alpha_neutron_split__p_neutron",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "p_thermal_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__blanket_thermal__p_thermal",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "q_eng_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__q_engineering__q_eng",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "q_sci_out",
+      "canonical_channel": "CATFMFEPhysics__catf_physics__q_scientific__q_sci",
+      "instance_path": "catf_physics",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "first_wall_area",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__first_wall_area_calc__area",
+      "instance_path": "catf_radial_build",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "magnet_surface_area",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__area",
+      "instance_path": "catf_radial_build",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "cooling_power",
+      "canonical_channel": "CATFMFEMagnets__catf_tf_system__cryo_load__cooling_power",
+      "instance_path": "catf_tf_system",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "processing_power",
+      "canonical_channel": "CATFMFETritium__catf_tritium__processing_load__processing_power",
+      "instance_path": "catf_tritium",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "cryo_power",
+      "canonical_channel": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__refrigeration_power",
+      "instance_path": "catf_vacuum_pumping",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "pump_power",
+      "canonical_channel": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_power",
+      "instance_path": "catf_vacuum_pumping",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "first_wall",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "first_wall",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "gap1",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "gap1",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "gap2",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "gap2",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "ht_shield",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "ht_shield",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "lt_shield",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "lt_shield",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "plasma_region",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "plasma_region",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "reflector",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "reflector",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "structure",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "structure",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "tf_coil",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "tf_coil",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "vacuum_gap",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "vacuum_gap",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "minor_radius",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__minor_calc__a",
+      "instance_path": "vessel",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "volume",
+      "canonical_channel": "CATFMFERadialBuild__catf_radial_build__plasma_region__volume_calc__volume",
+      "instance_path": "vessel",
+      "shape": "part_usage"
+    }
   ]
 }

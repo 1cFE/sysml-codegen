@@ -16,6 +16,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleInput,
     ModuleOutput,
+    OutputAlias,
     ParameterGroup,
     PipelineModule,
 )
@@ -50,12 +51,17 @@ def generate_pipeline_yaml(
         for out in module.outputs
     }
 
+    # Item 11 (REQ-PY-08): an aliased channel's exit line renders the modeler's
+    # name as its output filename. The map is policy (which filename wins per
+    # channel); _build_exit_points just applies it.
+    alias_filenames = _build_alias_filename_map(graph.output_aliases)
+
     # Build template context
     context = {
         "package_name": package_name,
         "entry_points": _build_entry_points(graph.entry_point_groups),
         "modules": _build_module_contexts(graph.modules, channel_field_map),
-        "exit_points": _build_exit_points(graph.modules),
+        "exit_points": _build_exit_points(graph.modules, alias_filenames),
     }
 
     # Render template
@@ -199,7 +205,24 @@ def _output_to_context(out: ModuleOutput) -> dict:
     }
 
 
-def _build_exit_points(modules: list[PipelineModule]) -> list[dict]:
+def _build_alias_filename_map(output_aliases: list[OutputAlias]) -> dict[str, str]:
+    """Map each aliased canonical channel to its exit-point output filename.
+
+    First-wins over the INV-5-sorted ``output_aliases``, so a channel carrying
+    two names renders the first by ``(instance_path, alias_name)`` deterministically
+    (M4). Every alias still appears in ``output_aliases`` for programmatic
+    consumers; only the rendered filename is single-valued per channel.
+    """
+    filenames: dict[str, str] = {}
+    for alias in output_aliases:
+        filenames.setdefault(alias.canonical_channel, alias.output_filename)
+    return filenames
+
+
+def _build_exit_points(
+    modules: list[PipelineModule],
+    alias_filenames: dict[str, str],
+) -> list[dict]:
     """Build exit point context for template.
 
     Exit points capture all module outputs for pipeline results.
@@ -209,11 +232,18 @@ def _build_exit_points(modules: list[PipelineModule]) -> list[dict]:
     - Single-output modules (field_name="root"): channel contains RootModel[T]
     - Multi-output modules (field_name=attr_name): channel contains T (unwrapped)
 
+    Filename rule (Item 11 / D3): an aliased channel uses the modeler's
+    instance-qualified name as its output filename; every other channel keeps
+    today's ``{channel}.json``. The exit **key** stays the canonical channel
+    either way (simkit requires it — REQ-PY-06 unchanged).
+
     Args:
         modules: List of PipelineModule from ComputationGraph
+        alias_filenames: Canonical-channel → alias filename overrides
+            (``_build_alias_filename_map``); empty when no channel is aliased.
 
     Returns:
-        List of dicts with name, type for exit point outputs
+        List of dicts with name, type, filename for exit point outputs
     """
     exit_points = []
     for module in modules:
@@ -228,6 +258,9 @@ def _build_exit_points(modules: list[PipelineModule]) -> list[dict]:
                 {
                     "name": out.channel_name,
                     "type": output_type,
+                    "filename": alias_filenames.get(
+                        out.channel_name, f"{out.channel_name}.json"
+                    ),
                 }
             )
     return exit_points

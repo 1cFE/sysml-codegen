@@ -170,5 +170,13 @@
   "execution_order": [
     "toy_plant__demo_plant__area_calc",
     "toy_plant__demo_plant__cost_calc"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "total_cost",
+      "canonical_channel": "toy_plant__demo_plant__cost_calc__cost",
+      "instance_path": "demo_plant",
+      "shape": "part_def"
+    }
   ]
 }

@@ -748,14 +748,14 @@ class TestReferenceChainCapture:
 
     def test_old_snapshot_degrades_to_none(self):
         # A committed pre-Item-10 snapshot lacks the field → None, no version fail.
-        # Anchored on solar_battery_model: a non-flipping baseline NOT in Item 10's
-        # recapture set (ife/catf/wi014), so its committed snapshot has no
-        # ``reference_chain`` and exercises the additive-degrade path (D9). catf/ife
-        # can no longer serve here — they were recaptured and now carry the field.
+        # Anchored on unresolvable_attr_probe: 6 computed attributes, none EXPOSE,
+        # committed without ``reference_chain`` — exercises the additive-degrade
+        # path (D9). solar_battery can no longer serve here: Item 11's approved
+        # recapture gave its shape-A EXPOSE the field.
         from sysml_codegen.snapshot import load_extraction_snapshot
         from tests.conftest import snapshot_fixture
 
-        snap = load_extraction_snapshot(snapshot_fixture("solar_battery_model"))
+        snap = load_extraction_snapshot(snapshot_fixture("unresolvable_attr_probe"))
         cas = snap["computed_attributes"]
         assert cas, "expected computed attributes in the committed snapshot"
         assert all(ca.reference_chain is None for ca in cas)

@@ -104,6 +104,7 @@ def _build_full_pipeline_inputs(model_name: str) -> dict:
         "usage_type_map": hierarchy_data.usage_type_map,
         "aggregation_data": snap["aggregation_expressions"],
         "computed_attributes": snap["computed_attributes"],
+        "channel_aliases": snap.get("channel_aliases", []),
         "model_name": model_name,
     }
 
@@ -489,6 +490,10 @@ class TestComputationGraphIdentity:
             aggregation_data=inp["aggregation_data"],
             hierarchy_redefinitions=inp["redefinitions"],
             usage_type_map=inp["usage_type_map"],
+            # Item 11: thread the expose_pure aliases so output_aliases populates
+            # identically to the snapshot-captured baseline (F-A).
+            channel_aliases=inp["channel_aliases"],
+            include_all=True,
         )
 
         assert isinstance(graph, type(graph))  # sanity check

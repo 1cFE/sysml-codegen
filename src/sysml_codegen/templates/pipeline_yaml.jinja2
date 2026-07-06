@@ -44,6 +44,6 @@ modules:
     module_type: ExitPoint
     outputs:
 {% for exit in exit_points %}
-      {{ exit.name }}: {{ exit.type }} {{ exit.name }}.json
+      {{ exit.name }}: {{ exit.type }} {{ exit.filename }}
 {% endfor %}
 {% endif %}

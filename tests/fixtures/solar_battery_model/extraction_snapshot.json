@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "solar_battery_model",
-  "captured_at": "2026-07-05T23:55:28.628529+00:00",
+  "captured_at": "2026-07-06T10:13:34.654178+00:00",
   "compilation_results": {
     "PVModuleCostCalc": {
       "calc_def_name": "PVModuleCostCalc",
@@ -7286,7 +7286,11 @@
       "compiled_expression": null,
       "is_on_part_definition": true,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "allocation_model",
+        "total_allocation"
+      ]
     },
     {
       "name": "p_net_kw",
@@ -7307,7 +7311,8 @@
       "compiled_expression": "(inputs.p_net_mw * 1000.0)",
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": null
     }
   ],
   "channel_aliases": [

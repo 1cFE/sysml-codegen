@@ -552,3 +552,21 @@ class TestYamlBaselineComparison:
             f"YAML diff for {short_name}: generated output differs from baseline.\n"
             f"If this is expected after Bug 9/10 fixes, update the baseline."
         )
+
+    @pytest.mark.baseline
+    def test_yaml_baseline_comparison_wi014_toy(self, template_env) -> None:
+        """Item 11 shape A (REQ-PY-08): wi014_toy's committed YAML baseline matches
+        the generated output, including the ``total_cost`` exit-point filename
+        rename (``…cost_calc__cost`` line → ``demo_plant__total_cost.json``).
+
+        Standalone (not in the shared parametrized fixtures) — a single
+        shape-A fixture with a committed YAML, kept off the broad feature-matrix
+        tests that target the multi-feature models.
+        """
+        graph, _ = build_full_graph_from_snapshot(snapshot_fixture("wi014_toy"))
+        generated = generate_pipeline_yaml(graph, "wi014_toy", template_env)
+        baseline = (BASELINE_DIR / "wi014_toy.yaml").read_text()
+        assert generated == baseline, (
+            "YAML diff for wi014_toy: generated output differs from committed "
+            "baseline. Regenerate via scripts/capture_baseline_yaml.py if intended."
+        )

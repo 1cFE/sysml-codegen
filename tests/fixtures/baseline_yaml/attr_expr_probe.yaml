@@ -181,9 +181,9 @@ modules:
       AttrExprProbeDesign__probe_design__p_alpha__p_alpha: RootModel[float] AttrExprProbeDesign__probe_design__p_alpha__p_alpha.json
       AttrExprProbeDesign__probe_design__p_neutron__p_neutron: RootModel[float] AttrExprProbeDesign__probe_design__p_neutron__p_neutron.json
       AttrExprProbeDesign__probe_design__p_blanket_thermal__p_blanket_thermal: RootModel[float] AttrExprProbeDesign__probe_design__p_blanket_thermal__p_blanket_thermal.json
-      AttrExprProbeDesign__probe_design__scale_calc__result: RootModel[float] AttrExprProbeDesign__probe_design__scale_calc__result.json
+      AttrExprProbeDesign__probe_design__scale_calc__result: RootModel[float] probe_design__scale_result.json
       AttrExprProbeDesign__probe_design__cost__cost: RootModel[float] AttrExprProbeDesign__probe_design__cost__cost.json
-      AttrExprProbeDesign__probe_design__split__half: float AttrExprProbeDesign__probe_design__split__half.json
-      AttrExprProbeDesign__probe_design__split__quarter: float AttrExprProbeDesign__probe_design__split__quarter.json
+      AttrExprProbeDesign__probe_design__split__half: float probe_design__half_vol.json
+      AttrExprProbeDesign__probe_design__split__quarter: float probe_design__quarter_vol.json
       AttrExprProbeDesign__probe_design__marked_up_cost__marked_up_cost: RootModel[float] AttrExprProbeDesign__probe_design__marked_up_cost__marked_up_cost.json
       AttrExprProbeDesign__probe_design__cost_density__cost_density: RootModel[float] AttrExprProbeDesign__probe_design__cost_density__cost_density.json

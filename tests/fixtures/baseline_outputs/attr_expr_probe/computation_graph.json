@@ -1268,5 +1268,25 @@
     "attrexprprobedesign__probe_design__split",
     "attrexprprobedesign__probe_design__marked_up_cost",
     "attrexprprobedesign__probe_design__cost_density"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "half_vol",
+      "canonical_channel": "AttrExprProbeDesign__probe_design__split__half",
+      "instance_path": "probe_design",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "quarter_vol",
+      "canonical_channel": "AttrExprProbeDesign__probe_design__split__quarter",
+      "instance_path": "probe_design",
+      "shape": "part_usage"
+    },
+    {
+      "alias_name": "scale_result",
+      "canonical_channel": "AttrExprProbeDesign__probe_design__scale_calc__result",
+      "instance_path": "probe_design",
+      "shape": "part_usage"
+    }
   ]
 }
