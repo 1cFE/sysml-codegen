@@ -67,6 +67,12 @@ MODELS = {
     # graph; the known-incomplete cross-part inputs land on Step-4 fallback EPs.
     "wi014_toy": "wi014_toy",
     "ife_plant": "ife_plant",
+    # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1). Each builds a full
+    # graph (V11 fires only at the generation boundary, not at graph build), so each
+    # has a committed pipeline baseline — the valueless-fallback "before" state.
+    "plant_values": "plant_values",
+    "plant_value_shapes": "plant_value_shapes",
+    "deep_cross_scope_probe": "deep_cross_scope_probe",
 }
 
 

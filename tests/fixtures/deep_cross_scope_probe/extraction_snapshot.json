@@ -1,0 +1,555 @@
+{
+  "snapshot_format_version": 1,
+  "model_name": "deep_cross_scope_probe",
+  "captured_at": "2026-07-06T17:44:33.311023+00:00",
+  "compilation_results": {
+    "Core_Metric": {
+      "calc_def_name": "Core_Metric",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "metric_value",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.input_val * 1.5)",
+          "input_refs": [
+            "input_val"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "metric_value"
+      ]
+    },
+    "Derived_Metric": {
+      "calc_def_name": "Derived_Metric",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "derived_value",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.base_metric * inputs.factor)",
+          "input_refs": [
+            "base_metric",
+            "factor"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "derived_value"
+      ]
+    },
+    "Analysis_Calc": {
+      "calc_def_name": "Analysis_Calc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "analysis_result",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.data_point - inputs.baseline)",
+          "input_refs": [
+            "data_point",
+            "baseline"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "analysis_result"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "Core_Metric",
+      "qualified_name": "DeepCrossScopeProducer::'Core Metric'",
+      "doc_comment": "Leaf-level calculation: calibrates a raw sensor reading.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "metric_value = input_val * 1.5",
+        "\nDocumentation:\nLeaf-level calculation: calibrates a raw sensor reading.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "input_attributes": [
+        {
+          "name": "input_val",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "metric_value",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 23,
+      "source_hash": "194e395efa477b1e28301e9c99f592b654f1c55f3ff3377c298576d4bf337f3f",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "input_val",
+        "metric_value"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "Derived_Metric",
+      "qualified_name": "DeepCrossScopeProducer::'Derived Metric'",
+      "doc_comment": "Mid-level calculation: applies a scaling factor to a base metric.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "factor = 2.0",
+        "derived_value = base_metric * factor",
+        "\nDocumentation:\nMid-level calculation: applies a scaling factor to a base metric.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "input_attributes": [
+        {
+          "name": "base_metric",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "factor",
+          "sysml_type": "Real",
+          "default_value": "2.0",
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": true
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "derived_value",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 37,
+      "source_hash": "194e395efa477b1e28301e9c99f592b654f1c55f3ff3377c298576d4bf337f3f",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "base_metric",
+        "derived_value",
+        "factor"
+      ],
+      "member_expressions": null
+    },
+    {
+      "name": "Analysis_Calc",
+      "qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "doc_comment": "Consumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "baseline = 0.0",
+        "analysis_result = data_point - baseline",
+        "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "input_attributes": [
+        {
+          "name": "data_point",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "baseline",
+          "sysml_type": "Real",
+          "default_value": "0.0",
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": true
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "analysis_result",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 111,
+      "source_hash": "194e395efa477b1e28301e9c99f592b654f1c55f3ff3377c298576d4bf337f3f",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "analysis_result",
+        "baseline",
+        "data_point"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "chain_analysis",
+      "calc_def_name": "Analysis_Calc",
+      "calc_def_qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
+      "bindings": [
+        {
+          "param_name": "data_point",
+          "source_path": "station",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> station",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "station",
+          "source_attribute_name": null
+        },
+        {
+          "param_name": "baseline",
+          "source_path": null,
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> DeepCrossScopeDesign::measurement_system::analyzer::baseline_value",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 2.0,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "baseline_value"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "design.sysml",
+      "source_line": 69,
+      "parent_part_path": "",
+      "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis",
+      "is_template": false,
+      "owning_part_def_qn": null,
+      "raw_element": null
+    },
+    {
+      "instance_name": "ref_analysis",
+      "calc_def_name": "Analysis_Calc",
+      "calc_def_qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
+      "bindings": [
+        {
+          "param_name": "data_point",
+          "source_path": "DeepCrossScopeProducer::'Core Metric'::metric_value",
+          "binding_type": "reference",
+          "is_cross_file": true,
+          "raw_expression": "FeatureReferenceExpression -> DeepCrossScopeProducer::'Core Metric'::metric_value",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "metric_value"
+        },
+        {
+          "param_name": "baseline",
+          "source_path": null,
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> DeepCrossScopeDesign::measurement_system::analyzer::baseline_value",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 2.0,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "baseline_value"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "design.sysml",
+      "source_line": 81,
+      "parent_part_path": "",
+      "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis",
+      "is_template": false,
+      "owning_part_def_qn": null,
+      "raw_element": null
+    },
+    {
+      "instance_name": "self_ref_analysis",
+      "calc_def_name": "Analysis_Calc",
+      "calc_def_qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
+      "bindings": [
+        {
+          "param_name": "data_point",
+          "source_path": null,
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> DeepCrossScopeDesign::measurement_system::analyzer::baseline_value",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 2.0,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "baseline_value"
+        }
+      ],
+      "unbound_params": [
+        "baseline"
+      ],
+      "source_file": "design.sysml",
+      "source_line": 91,
+      "parent_part_path": "",
+      "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis",
+      "is_template": false,
+      "owning_part_def_qn": null,
+      "raw_element": null
+    },
+    {
+      "instance_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core",
+      "calc_def_name": "Core_Metric",
+      "calc_def_qualified_name": "DeepCrossScopeProducer::'Core Metric'",
+      "module_type": "deepcrossscopeproducer.Core_MetricModule",
+      "bindings": [
+        {
+          "param_name": "input_val",
+          "source_path": null,
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> DeepCrossScopeProducer::Sensor::reading",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 10.0,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "reading"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "library.sysml",
+      "source_line": 67,
+      "parent_part_path": "measurement_system.station.array.sensor",
+      "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core",
+      "is_template": false,
+      "owning_part_def_qn": "DeepCrossScopeProducer__Sensor",
+      "raw_element": null
+    },
+    {
+      "instance_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc",
+      "calc_def_name": "Derived_Metric",
+      "calc_def_qualified_name": "DeepCrossScopeProducer::'Derived Metric'",
+      "module_type": "deepcrossscopeproducer.Derived_MetricModule",
+      "bindings": [
+        {
+          "param_name": "base_metric",
+          "source_path": "sensor",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> sensor",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "sensor",
+          "source_attribute_name": null
+        }
+      ],
+      "unbound_params": [
+        "factor"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 85,
+      "parent_part_path": "measurement_system.station.array",
+      "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc",
+      "is_template": false,
+      "owning_part_def_qn": "DeepCrossScopeProducer__Sensor_Array",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/deep_cross_scope_probe/library.sysml": [
+      {
+        "name": "metric_value",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 34,
+        "parent_part": "",
+        "qualified_name": "DeepCrossScopeProducer__Core_Metric__metric_value"
+      },
+      {
+        "name": "factor",
+        "sysml_type": "Real",
+        "default_value": "2.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 47,
+        "parent_part": "",
+        "qualified_name": "DeepCrossScopeProducer__Derived_Metric__factor"
+      },
+      {
+        "name": "derived_value",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 49,
+        "parent_part": "",
+        "qualified_name": "DeepCrossScopeProducer__Derived_Metric__derived_value"
+      },
+      {
+        "name": "baseline",
+        "sysml_type": "Real",
+        "default_value": "0.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 122,
+        "parent_part": "",
+        "qualified_name": "DeepCrossScopeConsumer__Analysis_Calc__baseline"
+      },
+      {
+        "name": "analysis_result",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 124,
+        "parent_part": "",
+        "qualified_name": "DeepCrossScopeConsumer__Analysis_Calc__analysis_result"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [
+      {
+        "owning_part_qn": "DeepCrossScopeDesign__measurement_system__analyzer",
+        "attribute_name": "baseline_value",
+        "redefinition_type": "literal",
+        "literal_value": 2.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "DeepCrossScopeDesign__measurement_system__station__array__sensor",
+        "attribute_name": "reading",
+        "redefinition_type": "literal",
+        "literal_value": 10.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {
+      "DeepCrossScopeProducer__Sensor_Array": [
+        "sensor"
+      ],
+      "DeepCrossScopeProducer__Monitoring_Station": [
+        "array"
+      ]
+    },
+    "usage_type_map": {
+      "[\"DeepCrossScopeProducer__Sensor_Array\", \"sensor\"]": "DeepCrossScopeProducer__Sensor",
+      "[\"DeepCrossScopeProducer__Monitoring_Station\", \"array\"]": "DeepCrossScopeProducer__Sensor_Array"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [
+    {
+      "name": "station_output",
+      "python_name": "station_output",
+      "owning_part_name": "Monitoring_Station",
+      "owning_part_qualified_name": "DeepCrossScopeProducer::'Monitoring Station'",
+      "expression_ast": null,
+      "expression_text": "array",
+      "references": [
+        {
+          "name": "array",
+          "qualified_name": "DeepCrossScopeProducer::'Monitoring Station'::array",
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/deep_cross_scope_probe/library.sysml"
+        }
+      ],
+      "classification": "formula",
+      "compilability": "manual_required",
+      "compiled_expression": null,
+      "is_on_part_definition": true,
+      "source_file": "unknown",
+      "source_line": 0,
+      "reference_chain": [
+        "array",
+        "derived_calc",
+        "derived_value"
+      ]
+    }
+  ],
+  "channel_aliases": []
+}

@@ -1,0 +1,433 @@
+{
+  "modules": [
+    {
+      "name": "deepcrossscopedesign__measurement_system__analyzer__chain_analysis",
+      "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
+      "inputs": [
+        {
+          "param_name": "data_point",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__data_point",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "baseline",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "system_design",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__baseline",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": "0.0"
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__analysis_result",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "analysis_result",
+            "expression": "(inputs.data_point - inputs.baseline)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.data_point - inputs.baseline)"
+      },
+      "calc_def_name": "Analysis_Calc",
+      "calc_def_qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "doc_comment": "Consumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "baseline = 0.0",
+        "analysis_result = data_point - baseline",
+        "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 111
+    },
+    {
+      "name": "deepcrossscopedesign__measurement_system__analyzer__ref_analysis",
+      "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
+      "inputs": [
+        {
+          "param_name": "data_point",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "DeepCrossScopeProducer__Core_Metric__metric_value",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "baseline",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "system_design",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__baseline",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": "0.0"
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__analysis_result",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "analysis_result",
+            "expression": "(inputs.data_point - inputs.baseline)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.data_point - inputs.baseline)"
+      },
+      "calc_def_name": "Analysis_Calc",
+      "calc_def_qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "doc_comment": "Consumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "baseline = 0.0",
+        "analysis_result = data_point - baseline",
+        "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 111
+    },
+    {
+      "name": "deepcrossscopedesign__measurement_system__analyzer__self_ref_analysis",
+      "module_type": "deepcrossscopeconsumer.Analysis_CalcModule",
+      "inputs": [
+        {
+          "param_name": "data_point",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "system_design",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__data_point",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "baseline",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__baseline",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": "0.0"
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__analysis_result",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "analysis_result",
+            "expression": "(inputs.data_point - inputs.baseline)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.data_point - inputs.baseline)"
+      },
+      "calc_def_name": "Analysis_Calc",
+      "calc_def_qualified_name": "DeepCrossScopeConsumer::'Analysis Calc'",
+      "doc_comment": "Consumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "baseline = 0.0",
+        "analysis_result = data_point - baseline",
+        "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 111
+    },
+    {
+      "name": "deepcrossscopedesign__measurement_system__station__array__sensor__core",
+      "module_type": "deepcrossscopeproducer.Core_MetricModule",
+      "inputs": [
+        {
+          "param_name": "input_val",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "system_design",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__input_val",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__metric_value",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 3,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "metric_value",
+            "expression": "(inputs.input_val * 1.5)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.input_val * 1.5)"
+      },
+      "calc_def_name": "Core_Metric",
+      "calc_def_qualified_name": "DeepCrossScopeProducer::'Core Metric'",
+      "doc_comment": "Leaf-level calculation: calibrates a raw sensor reading.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "metric_value = input_val * 1.5",
+        "\nDocumentation:\nLeaf-level calculation: calibrates a raw sensor reading.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 23
+    },
+    {
+      "name": "deepcrossscopedesign__measurement_system__station__array__derived_calc",
+      "module_type": "deepcrossscopeproducer.Derived_MetricModule",
+      "inputs": [
+        {
+          "param_name": "base_metric",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc__base_metric",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc__factor",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": "2.0"
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc__derived_value",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 4,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "derived_value",
+            "expression": "(inputs.base_metric * inputs.factor)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.base_metric * inputs.factor)"
+      },
+      "calc_def_name": "Derived_Metric",
+      "calc_def_qualified_name": "DeepCrossScopeProducer::'Derived Metric'",
+      "doc_comment": "Mid-level calculation: applies a scaling factor to a base metric.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17",
+      "calc_expressions": [
+        "factor = 2.0",
+        "derived_value = base_metric * factor",
+        "\nDocumentation:\nMid-level calculation: applies a scaling factor to a base metric.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 37
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "design_params",
+      "class_name": "DesignParams",
+      "source_file": "design.sysml",
+      "parameters": [
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__data_point",
+          "simple_name": "data_point",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__baseline",
+          "simple_name": "baseline",
+          "entry_type": "library_default",
+          "default_value": 0.0,
+          "source_calc_usage": "Analysis_Calc",
+          "param_group": "design_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "library_params",
+      "class_name": "LibraryParams",
+      "source_file": "library.sysml",
+      "parameters": [
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc__base_metric",
+          "simple_name": "base_metric",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc__factor",
+          "simple_name": "factor",
+          "entry_type": "library_default",
+          "default_value": 2.0,
+          "source_calc_usage": "Derived_Metric",
+          "param_group": "library_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "system_design",
+      "class_name": "SystemDesign",
+      "source_file": "hierarchy",
+      "parameters": [
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis__baseline",
+          "simple_name": "baseline",
+          "entry_type": "usage_literal",
+          "default_value": 2.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__baseline",
+          "simple_name": "baseline",
+          "entry_type": "usage_literal",
+          "default_value": 2.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__data_point",
+          "simple_name": "data_point",
+          "entry_type": "usage_literal",
+          "default_value": 2.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__input_val",
+          "simple_name": "input_val",
+          "entry_type": "usage_literal",
+          "default_value": 10.0,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "DeepCrossScopeProducer__Core_Metric__metric_value",
+          "simple_name": "metric_value",
+          "entry_type": "design_attribute",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": null,
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "deepcrossscopedesign__measurement_system__analyzer__chain_analysis",
+    "deepcrossscopedesign__measurement_system__analyzer__ref_analysis",
+    "deepcrossscopedesign__measurement_system__analyzer__self_ref_analysis",
+    "deepcrossscopedesign__measurement_system__station__array__sensor__core",
+    "deepcrossscopedesign__measurement_system__station__array__derived_calc"
+  ],
+  "output_aliases": []
+}

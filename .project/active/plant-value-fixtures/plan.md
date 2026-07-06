@@ -326,20 +326,20 @@ And that the byte-identity gate holds: nothing outside the deliberately-touched 
 ### Changes Required
 
 **Registration (additive — spec "Deliberately-touched baseline set"):**
-- [ ] `scripts/capture_extraction_snapshots.py` `MODELS` — add `"plant_values"`,
+- [x] `scripts/capture_extraction_snapshots.py` `MODELS` — add `"plant_values"`,
       `"spec_chain_twolevel"` is already present. Add `"plant_value_shapes"` to `MODELS` if it
       builds a full graph, else to `EXTRACTION_ONLY_MODELS` (determined at capture). Add
       `"deep_cross_scope_probe"` to `MODELS` if its graph builds, else `EXTRACTION_ONLY_MODELS`
       (spec Open Question — determined at capture).
-- [ ] `scripts/capture_pipeline_baselines.py` `MODELS` — add `"plant_values": "plant_values"`
+- [x] `scripts/capture_pipeline_baselines.py` `MODELS` — add `"plant_values": "plant_values"`
       (spec deliberately-touched set lists a pipeline baseline for it). Add
       `"plant_value_shapes"` and `"deep_cross_scope_probe"` **only if** each builds a full
       graph. `spec_chain_twolevel` re-captures via its existing registration.
 
 **Captures (each named via `--fixtures`, then git-status gate after each):**
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures plant_values` →
+- [x] `uv run python scripts/capture_extraction_snapshots.py --fixtures plant_values` →
       commits `tests/fixtures/plant_values/extraction_snapshot.json`.
-- [ ] **D6 PROBE GATE (checkpoint — phase blocks here until it passes):**
+- [x] **D6 PROBE GATE (checkpoint — phase blocks here until it passes):**
   ```
   graph, _ = build_full_graph_from_snapshot(snapshot_fixture("plant_values"))
   offenders = collect_uncovered_params(graph)
@@ -349,20 +349,20 @@ And that the byte-identity gate holds: nothing outside the deliberately-touched 
   mechanism is missing, return to Phase 1, rework that mechanism's layout to route it
   cross-part, re-capture — **never relax the criterion** (spec D6). Record the exact offender
   `(module, input, missing_key)` tuples for the Phase-4 pin.
-- [ ] `uv run python scripts/capture_pipeline_baselines.py --fixtures plant_values` → commits
+- [x] `uv run python scripts/capture_pipeline_baselines.py --fixtures plant_values` → commits
       `tests/fixtures/baseline_outputs/plant_values/{computation_graph.json,registry_init.py}`
       (the graph builds — V11 fires only at the generation boundary, not at graph build, like
       `chain_override_probe`; the baseline is the valueless-fallback "before" state Item 2
       flips).
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures plant_value_shapes` →
+- [x] `uv run python scripts/capture_extraction_snapshots.py --fixtures plant_value_shapes` →
       commit its snapshot; pipeline baseline **only if** its graph builds (record which).
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures deep_cross_scope_probe`
+- [x] `uv run python scripts/capture_extraction_snapshots.py --fixtures deep_cross_scope_probe`
       → commit its snapshot (register full-pipeline if the graph builds, else extraction-only —
       record which, spec Open Question).
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures spec_chain_twolevel`
+- [x] `uv run python scripts/capture_extraction_snapshots.py --fixtures spec_chain_twolevel`
       then `--fixtures spec_chain_twolevel` on the pipeline-baseline script → re-capture the
       extended twolevel snapshot + baseline as a reviewed diff.
-- [ ] **Byte-identity gate after each capture:** `git status --porcelain` shows changes only
+- [x] **Byte-identity gate after each capture:** `git status --porcelain` shows changes only
       inside the deliberately-touched set (`plant_values`, `plant_value_shapes`,
       `deep_cross_scope_probe`, `spec_chain_twolevel`, the two capture scripts). Any other path
       changing → investigate before committing (the filter or a shared-state leak).
@@ -370,16 +370,16 @@ And that the byte-identity gate holds: nothing outside the deliberately-touched 
 ### Validation
 
 **Automated:**
-- [ ] `uv run pytest tests/` → no regressions (new-fixture pins land Phase 4; existing
+- [x] `uv run pytest tests/` → no regressions (new-fixture pins land Phase 4; existing
       `spec_chain_twolevel` pins must still pass against the re-captured snapshot).
-- [ ] `uv run python scripts/capture_pipeline_baselines.py --fixtures plant_values` reports
+- [x] `uv run python scripts/capture_pipeline_baselines.py --fixtures plant_values` reports
       `syntax: valid` for `registry_init.py`.
 
 **Manual:**
-- [ ] Confirm the D6 gate passed with all three mechanisms in the offender set; paste the
+- [x] Confirm the D6 gate passed with all three mechanisms in the offender set; paste the
       offender tuples into the Phase-2 notes (Item 2's before-pin substrate).
-- [ ] Confirm `git status` shows only deliberately-touched paths (paste the porcelain output).
-- [ ] Record, per fixture, whether it captured full-pipeline or extraction-only, and whether a
+- [x] Confirm `git status` shows only deliberately-touched paths (paste the porcelain output).
+- [x] Record, per fixture, whether it captured full-pipeline or extraction-only, and whether a
       pipeline baseline was taken.
 
 **What We Know Works After This Phase:** The headline fixture is committed and **proven to trip
@@ -754,12 +754,34 @@ resolved to a value and did not trip). Faithful to the plan's "plain cross-part-
 no calc output" intent.
 
 ### Phase 2 Completion
-**Completed:**
-**D6 gate — committed offender tuples + three-mechanism coverage:**
+**Completed:** 2026-07-06
+**Registration:** `plant_values`, `plant_value_shapes`, `deep_cross_scope_probe` added to
+`capture_extraction_snapshots.py` MODELS and `capture_pipeline_baselines.py` MODELS (all
+build full graphs). `spec_chain_twolevel` re-captured via its existing extraction registration
+(it has no pipeline baseline — not in that script's MODELS, unchanged).
+**D6 gate — committed offender tuples + three-mechanism coverage (PASS):**
+`collect_uncovered_params(build_full_graph_from_snapshot(snapshot_fixture("plant_values")))`
+on the COMMITTED snapshot → 3 offenders, all on module `plantvaluesdesign__plant__cost_calc`:
+- `(plantvaluesdesign__plant__cost_calc, driver_efficiency, library_params.PlantValuesDesign__plant__cost_calc__driver_efficiency)` — **(a)**
+- `(plantvaluesdesign__plant__cost_calc, target_cost, library_params.PlantValuesDesign__plant__cost_calc__target_cost)` — **(b)**
+- `(plantvaluesdesign__plant__cost_calc, chamber_cost, library_params.PlantValuesDesign__plant__cost_calc__chamber_cost)` — **(c)**
+Non-empty AND covers (a)/(b)/(c) → **GATE PASS**. These are the exact tuples the Phase-4 pin
+(`EXPECTED_UNCOVERED`) asserts; committed result == rehearsal result (no serialization drift).
 **Capture surfaces (full-pipeline vs extraction-only per fixture):**
-**Byte-identity gate (git status porcelain):**
-**Issues:**
-**Deviations:**
+- `plant_values`: full-pipeline. Extraction snapshot + pipeline baseline (1 module: `cost_calc`;
+  registry_init.py syntax valid).
+- `plant_value_shapes`: full-pipeline. Extraction snapshot + pipeline baseline (6 modules; valid).
+- `deep_cross_scope_probe`: full-pipeline (Open Question resolved). Extraction snapshot + pipeline
+  baseline (5 modules; valid). First-ever committed snapshot (closes the D1-F6 drift).
+- `spec_chain_twolevel`: full-pipeline; extraction snapshot re-captured (reviewed diff — adds the
+  MaintCalc/ScaleCalc modules; the gamma→lcoe retype channel unchanged). No pipeline baseline dir.
+**Byte-identity gate (git status porcelain):** after BOTH capture steps, only the deliberately-
+touched set changed — the two capture scripts, `spec_chain_twolevel/extraction_snapshot.json`
+(re-captured), and the new `plant_values` / `plant_value_shapes` / `deep_cross_scope_probe`
+snapshots + their `baseline_outputs/` dirs. No other committed baseline moved.
+**Issues:** None. Full suite green (1996 passed, 4 skipped, 5 xfailed) — the re-captured twolevel
+snapshot kept all existing twolevel pins passing.
+**Deviations:** None.
 
 ### Phase 3 Completion
 **Completed:**

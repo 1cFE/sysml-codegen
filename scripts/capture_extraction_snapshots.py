@@ -85,6 +85,16 @@ MODELS = {
     # usage_type_map (keyed by part-DEF QN), so the declaring-base-def type-select misses
     # 'HIF Driver' -> the gamma -> lcoe edge stays unwired. This is the WI-015 gap.
     "spec_chain_twolevel": FIXTURES_DIR / "spec_chain_twolevel",
+    # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1). All three build a
+    # full graph:
+    #   plant_values          — the headline; its 3 cross-part plant-calc inputs fall
+    #                           to valueless Step-4 EPs and trip V11 on all three
+    #                           value-provision mechanisms (the "before" state Item 2 flips).
+    #   plant_value_shapes    — 9 secondary fusion-tea syntactic shapes (SC-3).
+    #   deep_cross_scope_probe — committed for the first time (D1-F6 drift); full-pipeline.
+    "plant_values": FIXTURES_DIR / "plant_values",
+    "plant_value_shapes": FIXTURES_DIR / "plant_value_shapes",
+    "deep_cross_scope_probe": FIXTURES_DIR / "deep_cross_scope_probe",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types

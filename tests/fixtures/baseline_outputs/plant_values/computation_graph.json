@@ -1,0 +1,127 @@
+{
+  "modules": [
+    {
+      "name": "plantvaluesdesign__plant__cost_calc",
+      "module_type": "plantvalueslib.PlantCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "driver_efficiency",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "PlantValuesDesign__plant__cost_calc__driver_efficiency",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "target_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "PlantValuesDesign__plant__cost_calc__target_cost",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "chamber_cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "PlantValuesDesign__plant__cost_calc__chamber_cost",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "PlantValuesDesign__plant__cost_calc__plant_cost",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "plant_cost",
+            "expression": "((inputs.target_cost + inputs.chamber_cost) / inputs.driver_efficiency)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((inputs.target_cost + inputs.chamber_cost) / inputs.driver_efficiency)"
+      },
+      "calc_def_name": "PlantCostCalc",
+      "calc_def_qualified_name": "PlantValuesLib::PlantCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "plant_cost = (target_cost + chamber_cost) / driver_efficiency"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 20
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "library_params",
+      "class_name": "LibraryParams",
+      "source_file": "library.sysml",
+      "parameters": [
+        {
+          "qualified_name": "PlantValuesDesign__plant__cost_calc__chamber_cost",
+          "simple_name": "chamber_cost",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValuesDesign__plant__cost_calc__driver_efficiency",
+          "simple_name": "driver_efficiency",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValuesDesign__plant__cost_calc__target_cost",
+          "simple_name": "target_cost",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "plantvaluesdesign__plant__cost_calc"
+  ],
+  "output_aliases": [
+    {
+      "alias_name": "plant_cost",
+      "canonical_channel": "PlantValuesDesign__plant__cost_calc__plant_cost",
+      "instance_path": "plant",
+      "shape": "part_def"
+    }
+  ]
+}
