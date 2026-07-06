@@ -129,6 +129,13 @@ def extract_design_attributes(
         Dict mapping source file Path to list of DesignAttributeData
     """
     attrs_by_file: dict[Path, list[DesignAttributeData]] = {}
+    # SC-4 A1 (INV-5): sanitize_name is many-to-one, so two distinct sibling
+    # SysML names can collapse to one entry-point key (`'a b'` and `'a-b'` both
+    # -> `a_b`), silently overwriting each other downstream. Guard the key
+    # construction here (where the RAW names are still available; the deriver
+    # only sees the sanitized key): a second, DIFFERENT raw name mapping to a key
+    # already claimed by another raw name fails fast.
+    key_owner: dict[str, str] = {}
 
     for elem in SysideAdapter.elements_of_type(model, "AttributeUsage"):
         if not hasattr(elem, "feature_value_expression"):
@@ -144,6 +151,17 @@ def extract_design_attributes(
         attr_data = _extract_single_attribute(elem)
         if attr_data is None:
             continue
+
+        raw_name = getattr(elem, "name", None) or ""
+        prior_raw = key_owner.get(attr_data.qualified_name)
+        if prior_raw is not None and prior_raw != raw_name:
+            raise ValueError(
+                f"Entry-point key collision (SC-4 A1): distinct SysML names "
+                f"{prior_raw!r} and {raw_name!r} both sanitize to the key "
+                f"'{attr_data.qualified_name}'. Rename one so the sanitized "
+                f"identifiers are unique."
+            )
+        key_owner[attr_data.qualified_name] = raw_name
 
         if attr_data.source_file not in attrs_by_file:
             attrs_by_file[attr_data.source_file] = []
