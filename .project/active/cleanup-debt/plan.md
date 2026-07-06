@@ -344,19 +344,19 @@ A literal operand inside an aggregation expression now dispatches to the literal
 Consolidate the auditable close-out the spec's success criteria demand. No new code — this phase proves the item met its own bar.
 
 ### Changes Required (all recorded in this plan's Implementation Notes / close-out)
-- [ ] **SC-G gate:** final full suite green; **zero grep hits** for every deleted symbol across `src/` and `tests/`; ruff/mypy **not worse than 21/109**. Record the final counts.
-- [ ] **The count story (auditable, not assumed):** the net test count **decreased**; list **each deleted test and the dead symbol it solely pinned**, and confirm **no non-self-test lost coverage**. Named-deleted-tests list assembled from Phases 1–2 (map-function dedicated cases incl. `hasattr` :242; `get_default_value` tests if the delete-fork was taken; `test_data_models.py:361` field-name assertion) — this is the **named-deleted-tests list** the close-out requires.
-- [ ] **§B fork record:** state which fork `get_default_value` took (dead→deleted, or live→kept), and confirm `generate_derived_group_json` deleted with both export sites.
-- [ ] **D1 residue ledger:** every D1-F1…D1-F5 with its final disposition (F1/§G verdict; F2 filed-or-merged; F3 file-or-no-op; F4 fixed; F5 done/already-gone) — nothing "filed only in a plan file" ([NEED]).
-- [ ] **SC-11 assessment verdict artifact** (§G): implemented-commit or filed-BACKLOG-entry + corrected `close-out.md:31` — named and linked.
-- [ ] **BACKLOG:185 closure** confirmed (§D aggregation entry → Completed / struck) and **doc-19 / doc-25 caveats** noted as handed to Item 10.
-- [ ] **`[ITEM7-PGD06]` state** recorded (activated if `get_default_value` deleted; no-op if kept) and the new **REQ-AST-10 matrix row** noted in Item 7's ledger via BACKLOG.
-- [ ] Update `.project/CURRENT_WORK.md` Item 8 entry to IMPLEMENTED with the close-out summary; suggest `/_my_audit`.
+- [x] **SC-G gate:** final full suite green; **zero grep hits** for every deleted symbol across `src/` and `tests/`; ruff/mypy **not worse than 21/109**. Record the final counts.
+- [x] **The count story (auditable, not assumed):** the net test count **decreased**; list **each deleted test and the dead symbol it solely pinned**, and confirm **no non-self-test lost coverage**. Named-deleted-tests list assembled from Phases 1–2 (map-function dedicated cases incl. `hasattr` :242; `get_default_value` tests if the delete-fork was taken; `test_data_models.py:361` field-name assertion) — this is the **named-deleted-tests list** the close-out requires.
+- [x] **§B fork record:** state which fork `get_default_value` took (dead→deleted, or live→kept), and confirm `generate_derived_group_json` deleted with both export sites.
+- [x] **D1 residue ledger:** every D1-F1…D1-F5 with its final disposition (F1/§G verdict; F2 filed-or-merged; F3 file-or-no-op; F4 fixed; F5 done/already-gone) — nothing "filed only in a plan file" ([NEED]).
+- [x] **SC-11 assessment verdict artifact** (§G): implemented-commit or filed-BACKLOG-entry + corrected `close-out.md:31` — named and linked.
+- [x] **BACKLOG:185 closure** confirmed (§D aggregation entry → Completed / struck) and **doc-19 / doc-25 caveats** noted as handed to Item 10.
+- [x] **`[ITEM7-PGD06]` state** recorded (activated if `get_default_value` deleted; no-op if kept) and the new **REQ-AST-10 matrix row** noted in Item 7's ledger via BACKLOG.
+- [x] Update `.project/CURRENT_WORK.md` Item 8 entry to IMPLEMENTED with the close-out summary; suggest `/_my_audit`.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/` → green; final counts recorded.
-- [ ] `grep -rn "<each deleted symbol>" src/ tests/` → zero.
+- [x] `uv run pytest tests/` → green; final counts recorded.
+- [x] `grep -rn "<each deleted symbol>" src/ tests/` → zero.
 
 **What We Know Works After This Phase:**
 Every success criterion has a written, auditable answer; no disposition stops one step short of "nothing left filed in a plan file."
@@ -458,11 +458,34 @@ Every success criterion has a written, auditable answer; no disposition stops on
 - **Docs/BACKLOG (R4 step 4):** doc-19 "Known deviation" note re-framed to "conforms (REQ-AST-10)" and handed to Item 10's caveat sweep; the Ideas BACKLOG aggregation entry struck → **RESOLVED**.
 **Gate:** ruff src **19**, mypy src **104** — held. Suite **2000 passed / 4 skipped / 5 xfailed** (+1 probe vs Phase 3's 1999).
 
-### Phase 6 Completion  (named-deleted-tests: __ ; net count Δ: __ )
+### Phase 6 Completion  (named-deleted-tests: **11**; net count Δ: **−5 passed, 2005→2000**)
+**Completed:** 2026-07-06 — every success criterion has a written, auditable answer.
+
+**SC-G gate (final, fresh numbers):** suite **2000 passed / 4 skipped / 5 xfailed**; **ruff src 19; mypy src 104** — both better than the 20/105 baseline. **Zero grep hits** for all 12 deleted symbols across `src/ tests/` (`map_sysml_type_to_rootmodel_wrapper`, `PYTHON_TO_ROOTMODEL_WRAPPER`, `_check_semantic_match`, `_extract_keywords`, `binding_to_entry_point`, `_binding_to_entry_point`, `get_default_value`, `generate_derived_group_json`, and the 4 skipif markers). Both dead templates gone.
+
+**Count story (auditable, not assumed):** net **−5** passed (2005→2000) = **−11 deleted dead-symbol self-tests + 6 new** (5 dotted-leaf pins + 1 Row-D probe). Every deleted test solely pinned a now-deleted dead symbol; **no non-self-test lost coverage** (the live default path, the model field-set, and the type-map content are all still pinned by kept/modified tests).
+- **Named deleted tests (11):**
+  - Phase 1 (6, pinned the dead wrapper fn/dict): `TestWrapperMapping::test_wrapper_{real_to_Float, integer_to_Int, boolean_to_Bool, string_to_String, unknown_passthrough}`; `TestSharedModuleAPI::test_python_to_rootmodel_dict_has_4_entries`.
+  - Phase 2 (5, pinned the dead `get_default_value`): `TestReqPgd06DefaultValueResolution::test_req_pgd_06_default_value_{direct_attr, binding_resolution, literal, unbound_returns_none, unknown_returns_none}`.
+- **Added tests (6):** `TestDottedLeafAliasMatch` (5, §E — pins a live edge); `TestReqAst10LiteralDispatch` (1, Row-D probe).
+- **Modified, not deleted (coverage kept):** `test_type_mapping_module_exists` (dropped wrapper hasattr); `test_req_dm_03_fields_backtracking_result` (dropped `binding_to_entry_point` from the live field set); 2 repr pins (added `scoped_alias=`); `test_graph_assembly` shape docstrings 3→5.
+
+**§B fork record:** `get_default_value` → **DEAD → DELETED** (live default resolves inline via `_parse_default_value`); `generate_derived_group_json` → **DELETED** with both export sites (`entry_point.__all__` + `generation/__init__` import & `__all__`).
+
+**D1 residue ledger (nothing left "filed only in a plan file"):**
+- D1-F1 / SC-11 → **FILE** `[SC11-IMPORT-REWRITE]` (not small; the SC-11 verdict artifact) + corrected the false "filed follow-up" in `identifier-sanitization/close-out.md:31`.
+- D1-F2 → **FILE** `[SANITIZER-MERGE]` (load-bearing divergence).
+- D1-F3 → **NO-OP** (catf `pumping_speed_total` is a valued `USAGE_LITERAL`; collector correctly skips — non-bug; recorded).
+- D1-F4 → **FILE** `[GB-PARAMGROUPS-TYPING]` (ignores retained; mypy held at 104).
+- D1-F5 → **DONE** (dead `subprocess` var removed; `snapshot-generation` audit #2/#3 dispositioned, plan checkboxes flipped).
+
+**BACKLOG:185 closure:** the Ideas aggregation entry struck → **RESOLVED** (REQ-AST-10 + byte-identity). **doc-19 / doc-25 caveats** re-framed and handed to Item 10's caveat sweep. **`[DOCS-SCRUB-F1]`** marked Absorbed.
+
+**Handoff state:** `[ITEM7-PGD06]` **ACTIVATED** (Item 8 deleted `get_default_value`); the new **REQ-AST-10** matrix row flagged in Item 7's ledger via BACKLOG. `CURRENT_WORK.md` Item 8 → IMPLEMENTED. **Suggested next: `/_my_audit`.**
 
 ---
 
-**Status:** In Progress — **Phases 0–4 COMPLETE & committed; Phases 5–6 REMAINING** (budget-stopped 2026-07-06).
+**Status:** COMPLETE — all 6 phases landed & committed on `pipeline-truth-epic` (2026-07-06). Tree green 2000/19/104. Ready for `/_my_audit`.
 
 ### Session hand-off (budget stop)
 Phases 0–4 landed on `pipeline-truth-epic` (commits `3314264`, `d5032c3`, `529dc74`, `3ec4efa`, `024028b`).

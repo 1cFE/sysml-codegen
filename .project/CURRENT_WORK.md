@@ -85,7 +85,19 @@ serialization. Spec: `.project/active/subtype-enumeration/spec.md`. Audit:
   half (rows 5–8, decision table, TYPE_MAP, Level-3 circular-FAILS) are plan-recorded only,
   not re-executed. Needs a licensed/unsandboxed confirmation run before epic close.
 
-### PIPELINE-TRUTH Item 8 — Dead Code & Cleanup Debt — spec in progress
+### PIPELINE-TRUTH Item 8 — Dead Code & Cleanup Debt — IMPLEMENTED (2026-07-06)
+**All 6 phases landed on `pipeline-truth-epic`** (`3314264`, `d5032c3`, `529dc74`, `3ec4efa`,
+`024028b`, `b1dece5`). Tree GREEN: **suite 2000 passed / 4 skipped / 5 xfailed; ruff src 19;
+mypy src 104** (both better than the 20/105 gate). SC-G clean: zero grep hits for all 12 deleted
+symbols. Row-D aggregation-literal bug fixed under a passing byte-identity gate (reproduced RED
+first on `agg_literal_probe`; REQ-AST-10 governs it). Count story: net **−5** passed (2005→2000) =
+−11 deleted dead-symbol self-tests + 6 new pins/probe. Every D1 residue dispositioned to FILE/NO-OP
+(`[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`). Handoffs live:
+`[ITEM7-PGD06]` activated + REQ-AST-10 flagged for Item 7; doc-19/doc-25 caveats to Item 10.
+**Next: `/_my_audit`.** Full close-out in `.project/active/cleanup-debt/plan.md`.
+
+<details><summary>original spec-stage description</summary>
+
 Track B, no deps (schedule before PUSH-DOWN). One reviewed pass: delete two dead
 templates + verify-then-delete four dead functions (DOCS-SCRUB-F1), fix four stale
 docstrings (F3), fix the `_walk_aggregation_ast` literal-before-invocation dispatch bug
@@ -95,6 +107,8 @@ SC-11 import rewrite, drop 4 vacuous skipifs. Handoffs: `_deserialize_constraint
 `extract_all_constraints` → Item 4; REQ-PGD-06 re-frame → Item 7; doc caveats → Item 10.
 Sequencing: agg-fixture capture runs entirely before OR after Item 4's snapshot v2 bump,
 not interleaved. Spec: `.project/active/cleanup-debt/spec.md`.
+
+</details>
 
 ### PIPELINE-TRUTH Item 6 — Self-Referential Test Remediation — audited PASS-WITH-NOTES (2026-07-06)
 Track B, no deps. Re-anchor the 25 §D5 flagged tests (7 HIGH + 10 MEDIUM + 8 LOW) to
