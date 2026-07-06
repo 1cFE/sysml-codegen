@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "wi014_toy",
-  "captured_at": "2026-07-06T06:27:04.298881+00:00",
+  "captured_at": "2026-07-06T17:46:14.608016+00:00",
   "compilation_results": {
     "Panel_Area": {
       "calc_def_name": "Panel_Area",

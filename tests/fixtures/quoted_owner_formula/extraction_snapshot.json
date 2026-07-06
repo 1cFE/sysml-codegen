@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "quoted_owner_formula",
-  "captured_at": "2026-07-05T23:55:28.857662+00:00",
+  "captured_at": "2026-07-06T17:46:14.613227+00:00",
   "compilation_results": {
     "ScaleCalc": {
       "calc_def_name": "ScaleCalc",
@@ -96,26 +96,6 @@
         "source_line": 11,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__cost"
-      },
-      {
-        "name": "net_margin",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "design.sysml",
-        "source_line": 16,
-        "parent_part": "Margin Part",
-        "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__net_margin"
-      },
-      {
-        "name": "total_payout",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "design.sysml",
-        "source_line": 25,
-        "parent_part": "Margin Part",
-        "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__total_payout"
       }
     ],
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/quoted_owner_formula/library.sysml": [
@@ -166,7 +146,8 @@
       "compiled_expression": "(inputs.revenue - inputs.cost)",
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": null
     },
     {
       "name": "total_payout",
@@ -187,7 +168,8 @@
       "compiled_expression": "(inputs.net_margin * 2.0)",
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": null
     }
   ],
   "channel_aliases": []

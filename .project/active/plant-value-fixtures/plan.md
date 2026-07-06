@@ -409,31 +409,31 @@ before committing.
 
 **See spec "Capture hygiene" [HARD] and D3.**
 
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures wi014_toy,self_named_binding_trap,quoted_owner_formula`
+- [x] `uv run python scripts/capture_extraction_snapshots.py --fixtures wi014_toy,self_named_binding_trap,quoted_owner_formula`
       → re-captures the three snapshots. (`quoted_owner_formula` is already registered in
       `MODELS`; confirm the other two are registered — `wi014_toy` is in `MODELS`,
       `self_named_binding_trap` is in `EXTRACTION_ONLY_MODELS`.)
-- [ ] **Review the `quoted_owner_formula` diff deliberately** (spec D3): confirm the two attrs
+- [x] **Review the `quoted_owner_formula` diff deliberately** (spec D3): confirm the two attrs
       (`net_margin`, `total_payout`) move design-attr → computed, and that this reflects
       behavior that **already landed in the PRIOR epic (UPSTREAM-FINDINGS Item 7, computed-
       attribute classification)** — NOT a forward dependency on this epic's Item 7 (matrix
       reconciliation, which runs after Item 1). Confirmed correct → commit. If the diff hides a
       real question rather than confirming the known reclassification → **file it, do not wave
       it through**.
-- [ ] Byte-identity gate: `git status --porcelain` shows only the three rider fixtures'
+- [x] Byte-identity gate: `git status --porcelain` shows only the three rider fixtures'
       snapshot paths. Nothing else.
-- [ ] **Own commit** — commit the rider separately from the Phase-2 captures, message naming it
+- [x] **Own commit** — commit the rider separately from the Phase-2 captures, message naming it
       the stale-fixture-refresh rider and the reviewed reclassification.
 
 ### Validation
 
 **Automated:**
-- [ ] `uv run pytest tests/` → no regressions (any existing rider-fixture pins must still pass;
+- [x] `uv run pytest tests/` → no regressions (any existing rider-fixture pins must still pass;
       the `quoted_owner_formula` reclassification may require a pin update — do it here, in the
       rider commit).
 
 **Manual:**
-- [ ] Diff each rider snapshot; confirm only the expected canonicalization/reclassification
+- [x] Diff each rider snapshot; confirm only the expected canonicalization/reclassification
       changes. Paste the `quoted_owner_formula` field-level diff and the review verdict
       (confirmed vs filed) into the Phase-3 notes.
 
@@ -784,11 +784,33 @@ snapshot kept all existing twolevel pins passing.
 **Deviations:** None.
 
 ### Phase 3 Completion
-**Completed:**
-**quoted_owner_formula field-level diff + review verdict (confirmed / filed):**
-**Byte-identity gate:**
-**Issues:**
-**Deviations:**
+**Completed:** 2026-07-06
+**Re-captured:** `wi014_toy`, `self_named_binding_trap`, `quoted_owner_formula` via one
+`--fixtures` run. Byte-identity gate: only those three snapshot paths changed.
+**Per-fixture field-level diff review:**
+- `wi014_toy`: ONLY `captured_at` changed. Its paths were already canonical; the single
+  moving field is the timestamp (every snapshot carries one — this is why the byte-identity
+  gate scopes by path, not byte-equality). Confirmed benign.
+- `self_named_binding_trap`: path canonicalization only — the `design_attributes` key went
+  repo-relative → absolute (`tests/...` → `/home/reid/.../tests/...`), plus the timestamp.
+- `quoted_owner_formula`: timestamp + path canonicalization + the REVIEWED reclassification:
+  `net_margin` and `total_payout` were duplicated in BOTH `design_attributes` and
+  `computed_attributes` (the stale-fixture drift); re-capture REMOVES them from
+  `design_attributes`, leaving them correctly only in `computed_attributes` (a move/dedup,
+  verified — no data loss). Also a benign `reference_chain: null` field added to the
+  computed-attribute entries (the M6 format field; absent from the other two because they
+  have no computed attributes).
+**Review verdict: CONFIRMED, not filed.** The `net_margin`/`total_payout` design-attr →
+computed reclassification reflects behavior already landed in the PRIOR epic (UPSTREAM-FINDINGS
+Item 7, computed-attribute classification), matching the BACKLOG stale-fixture-refresh entry —
+NOT a forward dependency on this epic's Item 7. It is a snapshot-content change (no code
+change), reviewed field-by-field, and waved through only after confirming the move is complete.
+**Byte-identity gate:** `git status --porcelain` showed exactly the three rider snapshot paths.
+**Issues:** None — full suite green (1996 passed); no existing pin asserted the removed design
+attrs, so no pin update was needed.
+**Deviations:** The plan anticipated "path canonicalization" for `wi014_toy`; in fact only the
+timestamp moved (paths were already canonical). Same net effect: re-capture brings it to the
+current script form.
 
 ### Phase 4 Completion
 **Completed:**
