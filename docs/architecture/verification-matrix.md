@@ -11,7 +11,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | UNTESTED (no dedicated test) | 12 |
 | DEFERRED | 0 |
 | REQ families | 29 |
-| Conformance test files | 34 |
+| Distinct test files cited | 49 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -25,26 +25,26 @@ the documentation rather than executable code.
 ## Index
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
-- [AST — AST Dispatch Invariant](#ast) (7/7 pass)
+- [AST — AST Dispatch Invariant](#ast) (9/9 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
-- [BT — Backtracker](#bt) (8/8 pass)
+- [BT — Backtracker](#bt) (11/11 pass)
 - [CA — Computed Attributes](#ca) (10/11 pass, 1 untested)
 - [DM — Data Models](#dm) (8/9 pass)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
-- [EXT — Extraction](#ext) (9/9 pass)
-- [GA — Graph Assembly](#ga) (7/7 pass)
+- [EXT — Extraction](#ext) (14/14 pass)
+- [GA — Graph Assembly](#ga) (8/8 pass)
 - [GEN — Generation](#gen) (5/7 pass)
-- [HR — Hierarchy Resolver](#hr) (7/7 pass)
+- [HR — Hierarchy Resolver](#hr) (8/8 pass)
 - [IR — Input Resolver](#ir) (7/7 pass)
-- [LVP — Literal Value Propagation](#lvp) (7/7 pass)
+- [LVP — Literal Value Propagation](#lvp) (9/9 pass)
 - [MF — Module Factory](#mf) (8/8 pass)
 - [NC — Naming Conventions](#nc) (7/7 pass)
-- [OR — Output Registry](#or) (8/8 pass)
+- [OR — Output Registry](#or) (9/9 pass)
 - [ORCH — Orchestration](#orch) (7/7 pass)
 - [OSR — Output Schema Rules](#osr) (7/7 pass)
-- [PGD — Parameter Group Deriver](#pgd) (7/7 pass)
+- [PGD — Parameter Group Deriver](#pgd) (8/8 pass)
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
 - [PY — Pipeline YAML](#py) (8/8 pass)
@@ -52,7 +52,7 @@ the documentation rather than executable code.
 - [RES — Resolution Overview](#res) (0/8 pass)
 - [SNAP — Extraction Snapshots](#snap) (7/7 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
-- [VBR — Virtual Binding Rewrite](#vbr) (7/7 pass)
+- [VBR — Virtual Binding Rewrite](#vbr) (11/11 pass)
 
 ---
 

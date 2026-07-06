@@ -97,17 +97,17 @@ grep -c "^|" docs/architecture/verification-matrix.md   # then count per-status
 ```
 
 ### Changes Required
-- [ ] Read `modeling-assumptions.md` end-to-end (not per-diff); fix seams; verify the
+- [x] Read `modeling-assumptions.md` end-to-end (not per-diff); fix seams; verify the
       EXPOSE story (§3 surfacing / §5 retyping / V7–V11) tells one story
-- [ ] Verify the V12/V13-reframe note still reads correctly against doc 16 / REQ-CA-03
-- [ ] Recount verification-matrix rows; correct the summary block from the table, not
+- [x] Verify the V12/V13-reframe note still reads correctly against doc 16 / REQ-CA-03
+- [x] Recount verification-matrix rows; correct the summary block from the table, not
       from the previous summary (233/221/12 was already stale once)
-- [ ] Preserve honest caveats (SC-2 graph-level-only, fusion-tea workarounds) — check
+- [x] Preserve honest caveats (SC-2 graph-level-only, fusion-tea workarounds) — check
       each caveat sentence survives verbatim or stronger-in-honesty
 
 ### Validation
-- [ ] Matrix summary equals actual row counts (show the arithmetic in the commit message)
-- [ ] A read of modeling-assumptions top-to-bottom hits no contradiction with the fact sheet
+- [x] Matrix summary equals actual row counts (show the arithmetic in the commit message)
+- [x] A read of modeling-assumptions top-to-bottom hits no contradiction with the fact sheet
 
 **What We Know Works After This Phase:** the contract the reference docs point at is sound.
 
@@ -253,10 +253,10 @@ Mechanical checks that don't belong to any one doc, plus the unchanged-gate proo
 **Deviations:** Read four release-notes files, not three — Item 9 (plant-prefill) has one the handoff didn't list. Nuance corrected vs. my earlier assumption: Phase 3b (tentative→confirm) is a *registry-build* phase in `output_registry_builder.py`, not a backtracker phase — recorded in F5 so docs get it right.
 
 ### Phase 2 Completion
-**Completed:**
-**Actual Changes:**
-**Issues:**
-**Deviations:**
+**Completed:** 2026-07-06 ~07:15
+**Actual Changes:** modeling-assumptions.md — §3 gained the multi-hop chain row + EXPOSE_CHAIN_TENTATIVE/Phase-3b paragraph and a shape-A (part-def EXPOSE) paragraph; §5 gained the specialization-chain precedence rule (REQ-VBR-10/11) and the bare-`:>>`-form caveat (F6); V-table intro corrected (V1–V10 extraction-time, V11 generation-boundary). verification-matrix.md — summary block verified CORRECT against the table (233 total = 221 PASS + 12 UNTESTED; no drift since Item 11), but 9 Index family counts were stale (AST 7→9, BT 8→11, EXT 9→14, GA 7→8, HR 7→8, LVP 7→9, OR 8→9, PGD 7→8, VBR 7→11) and the test-file metric was wrong (34 → 49 distinct files cited; label clarified since some cited files are unit tests).
+**Issues:** The predicted summary-block drift (Discovery 2) did NOT materialize — the drift was in the Index counts instead. Same lesson, different block.
+**Deviations:** SC-2/fusion-tea caveat sentences turn out to live in release notes, not docs/ — nothing to preserve-check in the contract docs; the constraint remains "don't strengthen claims" for Phases 3–5.
 
 ### Phase 3 Completion
 **Completed:**
