@@ -507,6 +507,7 @@ def _register_partdef_expose_scoped_aliases(
     """
     part_usage_names = hierarchy_data.part_usage_names if hierarchy_data else None
     registered = 0
+    scanned = 0  # pattern-3: count part-def EXPOSE_PURE candidates scanned.
     for ca in computed_attrs:
         if ca.classification != ComputedAttributeClassification.EXPOSE_PURE:
             continue
@@ -515,6 +516,7 @@ def _register_partdef_expose_scoped_aliases(
         chain = ca.reference_chain
         if not chain or len(chain) < 2:
             continue
+        scanned += 1
         rel = ".".join(chain)  # calc-usage-rooted, e.g. "cost_calc.cost"
         # CA carries the raw ``::`` QN; calc usages key on the sanitized ``__``
         # EQN (e.g. "toy_plant::'Toy Plant'" -> "toy_plant__Toy_Plant"). Convert
@@ -531,9 +533,21 @@ def _register_partdef_expose_scoped_aliases(
             )
             registered += 1
 
-    if registered:
+    # Pattern-3 sentinel (zero-found ≠ silence): always report the scan, so a
+    # "scanned N, registered 0" is distinguishable from "nothing scanned". Only
+    # a real gap (scanned but none registered) escalates to WARN.
+    if scanned or registered:
         logger.info(
-            "Step 5.55: registered %d part-def EXPOSE scoped alias(es)", registered
+            "Step 5.55: part-def EXPOSE scoped aliases — scanned %d candidate(s), "
+            "registered %d.",
+            scanned,
+            registered,
+        )
+    if scanned and not registered:
+        logger.warning(
+            "Step 5.55: scanned %d part-def EXPOSE_PURE candidate(s) but "
+            "registered 0 scoped alias(es) — their channels did not resolve.",
+            scanned,
         )
     return registered
 
