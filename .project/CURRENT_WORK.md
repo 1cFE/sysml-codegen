@@ -6,6 +6,14 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 10: Cross-Part Channel Wiring (SC-5 stage 2)
+
+**Status**: Spec in progress — `.project/active/cross-part-wiring/spec.md`. The riskiest
+item; design decides whether to split into stage (a) CHAIN alias lookup + EXPOSE_PURE
+shape-A (flips both V11 pins) and stage (b) the specialization-chain per-instance rewrite
+(the novel gamma → lcoe machinery). Spec surfaces a load-bearing gap: ife_plant exercises
+stage (a) only — stage (b) has no committed fixture.
+
 ### UPSTREAM-FINDINGS Item 9: Plant-Idiom Literal Pre-Fill (SC-5 stage 1)
 
 **Status**: **Audited CONDITIONAL** (2026-07-05, commit `5140432`) — substance fully
