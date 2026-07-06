@@ -87,7 +87,7 @@ Top findings by blast radius (all verified with file:line by the agent):
 | D3-8 | Aggregation `transformed_expression` uses SysML-text `OPERATOR_MAP` (`^`→XOR, unknown ops pass through) instead of `PYTHON_OPERATOR_MAP`, no `has_unsupported` | `hierarchy_resolver.py:370,382` | Item 5 |
 | D3-9 | Empty `refs` from a blind ref-extractor indistinguishable from genuine literal → attribute silently dropped as constant | `computed_attribute_extractor.py:92-94` | Item 5 (tripwire) |
 | D3-10 | Redefinition matched by leaf name first-wins across all partdefs | `graph_builder.py:1246-1250,1349` | Item 5 |
-| D3-11 | `_usage_by_name` first-wins ambiguous target index; `.output` half of target never validated | `dependency_backtracker.py:248,155-164` | Item 5 |
+| D3-11 | `_usage_by_name` first-wins ambiguous target index (D3-11b, CONFIRMED-conditional). ~~`.output` half never validated~~ (D3-11a — **NOT-REPRODUCED**: live probe shows the target lookup raises `TargetNotFoundError` on a bad output) | `dependency_backtracker.py:248,151-164` | Item 5 |
 | D3-12 | Default-expression eval `except Exception: return None` → param silently absent from its group | `parameter_groups.py:188-193` | Item 5 |
 | D3-13 | Phantom detector blindness reads as "no phantoms" (shared failure mode) | `phantom_detector.py:165-173` | Item 5 (sentinel) |
 | D3-14 | `--smart-regen`: transient read error on a valid handwritten impl → silently regenerated to stub (DEBUG-only log) | `preservation.py:95-96`, `cli:397` | Item 5 |
@@ -111,6 +111,26 @@ close (nothing silently dropped).
 
 **Cross-repo pointer**: `extract_feature_refs` traversal coverage and `str(direction)`
 repr stability bottom out in agentic-mbse. → Item 9 (companion audit).
+
+### D3 verification verdicts (Item 5 spec pass, 2026-07-06)
+
+Per R4, the 16 D3 sites were verified before design. Full table with intended-behavior
+notes, file:line traces, and probes:
+`.project/active/silent-failure-hardening/spec.md` (Verification Table) +
+`.project/active/silent-failure-hardening/probes/verdict-*.md`. The probes ran live (a
+`parents[3]→[4]` fixture-path bug was fixed, commit `a9b3540`): D3-2, D3-4, SC-4, SC-5, and
+the drift attribution are **live-confirmed**; the rest are deterministic code-trace verdicts
+(three probe fixtures — `d37`/`d38`/`d310` — need a calc def added before they run; that is
+a design-open gate). Verdicts (of 16): **14 CONFIRMED** (D3-1/2/3/4/5/6/7/8/10/11/12/14/15/16
+— several CONFIRMED-latent; D3-3 closed-by-construction; D3-11 counts via its confirmed
+instance-ambiguity half, **D3-11a "`.output` never validated" struck NOT-REPRODUCED** — the
+live probe shows the lookup raises `TargetNotFoundError`), **2 RECLASSIFIED** (D3-9 → tripwire
+guard, matches documented `not refs → LITERAL` spec; D3-13 → zero-found sentinel). Confirmed
+defects group into four families with one choke point each (blind-dispatch fall-throughs;
+gated-report silences; name-keyed lookup maps; exception swallows). Scope-beyond: SC-4
+sanitizer injectivity + isidentifier CONFIRMED; SC-5 non-float EP CONFIRMED;
+`self_named_rescue` reference→chain drift EXPLAINED (Item-10 rescue firing, not a finding).
+Per-row Disposition cells stay "Item 5" here and are discharged in full at item close.
 
 ## D4 — Exact-type enumeration audit
 

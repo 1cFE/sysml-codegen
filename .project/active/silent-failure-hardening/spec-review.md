@@ -201,7 +201,50 @@ confirmed list. These are record-keeping edits, not a rethink. **Revise.**
 
 ## Resolutions
 
-_(Filled in during Stage 5, keyed by finding ID.)_
+_Incorporated 2026-07-06. All 6 must-fixes + lower-stakes items adopted; two decisions per
+orchestrator rulings._
+
+- **L1-1 (MF1) — D3-11 split.** Done. Verification table row split into **D3-11a
+  NOT-REPRODUCED** (live: target lookup raises `TargetNotFoundError`, output half already
+  validated) and **D3-11b CONFIRMED-conditional** (instance-ambiguity, with the "expected and
+  benign" `:151-154` nuance). Family 3 `[HARD]` for `.output`-validation **struck**; D3-11b
+  demoted to `[INFERRED]` pending design's decide-whether-to-fix. Register row (line 90) and
+  verdict block both corrected in place.
+- **L1-2 / L5-1 (MF2) — refresh caveat + evidence tags.** Done. "Reproduction caveat" replaced
+  with a three-tier **"Evidence basis (what ran live)"** block (ran-live-confirmed /
+  code-trace-only-and-why-it-suffices / refuted-live). Per-row Evidence cells re-tagged:
+  D3-4, SC-4 A1/A2, SC-5 → (live); drift → (live/git); D3-2 stays (live); the rest (trace).
+- **L2-1 / L2-2 (MF3) — D3-2 fix mode + byte-identical.** Decision: **LOUD-REJECT** (orch
+  ruling). Family 1 D3-2 requirement changed from `[NEED]` "fully parsed or hard-diagnosed"
+  to `[HARD]` **hard-diagnose only**; full-parse FILED as `[MULTIHOP-CHAIN-PARSE]` follow-on
+  (Open Questions). Byte-identical SC gains a **second named exception** for
+  `deep_cross_scope_probe` (Pattern-A pin flips truncation→diagnostic; one scoped snapshot
+  re-capture). 2-segment/V11 path noted unchanged.
+- **L1-3 (MF4) — count reconciliation.** Done. Chosen accounting: **14 CONFIRMED / 2
+  RECLASSIFIED** of the 16 (D3-3 counted inside as CONFIRMED-latent-closed-by-construction;
+  D3-11 counts once via 11b; drift is scope-beyond, not in the 16). Table Count line, Problem
+  section, and register verdict block all now say 14/2.
+- **L1-4 (MF5) — probe-runnability gate.** Done. New `[HARD]` states `d37`/`d38`/`d310` carry
+  no calc def so `build_pipeline_context` raises → D3-7/8/10 stay code-trace-only until a calc
+  def is added at design-open; D3-1's non-run flagged for design; running the set green is the
+  first design/plan gate. Evidence-basis tier 2 and Related-Artifacts probe note say the same.
+- **L2-3 (MF6) — D3-3 / D3-16 fires-on-shape.** Decided per finding on the reachability
+  criterion. **D3-3 = closed-by-construction** (invariant stated: SysIDE guarantees a resolved
+  referent + non-empty QN for parsed SysML → `(None,None)` unreachable; fix = sentinel +
+  debug-guard/assert, **no** fires-on-shape test). **D3-16 = reachable** (calc-refs single-hop
+  cross-part is a real shape the Item-10 gate misses) → gets a synthetic trip fixture +
+  fires-on-shape test. Verdict key and cross-cutting R1 requirement rewritten to encode both
+  sub-cases; table rows for D3-3 and D3-16 updated.
+- **L3-1 — SC-4/SC-5 success criteria.** Done. Two explicit success criteria added (sanitizer
+  injective + always-legal-identifier; non-float EP diagnostic/typed-prefill).
+- **L3-2 — register timing.** Done. The two conflicting SCs reconciled to **one** timing:
+  verdict recorded in the register's verdict block this pass; per-row Disposition cells stay
+  "Item 5" and are discharged at item close. Stated in both the SC and the register block.
+- **L3-3 — D3-12 / SC-5 shared omission site.** Done. `[INFERRED]` note added to Family 4:
+  same downstream omission site, different roots, fix both without double-patch or gap.
+- **L4-1 — line cites.** Fixed `_classify_entry_points` cite (`graph_builder.py:425`, was
+  `:482`); confirmed `parameter_groups` referenced without a `generation/` prefix.
+- **L5-1 — caveat decomposition.** Folded into MF2 (the three-tier block).
 
 ---
 

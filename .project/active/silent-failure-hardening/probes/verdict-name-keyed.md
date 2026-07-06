@@ -36,13 +36,17 @@ fixtures in design/impl.
   leaf-name compare, then `break` (first-wins) across all redefinitions.
 - **Verdict: CONFIRMED-latent.** Needs two partdefs sharing a leaf name (`d310_leaf_redef`).
 
-## D3-11 — `_usage_by_name` first-wins; `.output` half never validated
-- **Intended:** `11-analysis-backtracker.md` — target resolution unambiguous, named output
-  validated.
-- **Trace:** `dependency_backtracker.py:244-248` — `target.split(".")[0]` discards the
-  `.output` suffix unchecked; `self._usage_by_name.get(instance_name)` collapses same-named
-  usages. `sibling_channel_ambiguity` already carries two `power_calc` usages.
-- **Verdict: CONFIRMED.**
+## D3-11 — SPLIT (live run corrected this)
+- **D3-11a — `.output` half never validated → NOT-REPRODUCED (live).** Live
+  `d311_usage_by_name.py`: `find_required_modules(["power_calc.THIS_OUTPUT_DOES_NOT_EXIST"])`
+  **raises `TargetNotFoundError`** — the target lookup already validates the output. Struck;
+  nothing to add.
+- **D3-11b — `_usage_by_name` first-wins on colliding instance names → CONFIRMED-conditional.**
+  `dependency_backtracker.py:248` — `self._usage_by_name.get(instance_name)` collapses
+  same-named usages (`sibling_channel_ambiguity` has two `power_calc`). BUT the code comment
+  at `:151-154` calls these collisions **"expected and benign"** (internal processing keys off
+  qualified names, not this index). So design must first decide whether the user-facing target
+  lookup warrants require-unique-or-warn **at all** — it may be a non-issue.
 
 ## D3-15 — `design_prefix` first-wins across two designs
 - **Intended:** `13-aggregation-scoping.md` — aggregation keys scoped to their own design.
@@ -50,9 +54,10 @@ fixtures in design/impl.
   virtual usage, first-wins; two designs in one model mis-key aggregations.
 - **Verdict: CONFIRMED-latent.** Needs a two-design model (`d315_two_designs`, to author).
 
-## Family choke point (name-keyed: D3-7, D3-10, D3-11, D3-15)
+## Family choke point (name-keyed: D3-7, D3-10, D3-15; D3-11b conditionally)
 Key resolution maps so two distinct SysML entities cannot merge: key by qualified name (QN),
 or — where a leaf-name match is structurally required — enforce uniqueness and warn on
-collision at lookup. Validate the `.output` half of a backtracker target against the resolved
-usage's real outputs. Design may split the QN re-key to a follow-on if churn is large
-(epic-pre-authorized); a require-unique-or-warn interim is the loud, low-churn stopgap.
+collision at lookup. (D3-11a's `.output`-validation ask is struck — already exists.) Design
+may split the QN re-key to a follow-on if churn is large (epic-pre-authorized); a
+require-unique-or-warn interim is the loud, low-churn stopgap. D3-11b is decided separately —
+its collision is documented "expected and benign", so it may need no fix.
