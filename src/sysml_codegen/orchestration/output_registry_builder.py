@@ -114,6 +114,39 @@ def build_output_registry(
     calc_def_by_name = {cd.name: cd for cd in calc_defs}
 
     # ------------------------------------------------------------------
+    # Offline-parity re-tag (Item 10, reconciles M6 with D9).
+    #
+    # M6 serializes the POST-confirm EXPOSE_PURE state, but the Phase-3b confirm
+    # walk — the ONLY code that resolves a multi-hop chain to its correct transitive
+    # channel — runs only on EXPOSE_CHAIN_TENTATIVE CAs. So when a recaptured snapshot
+    # is reloaded, a multi-hop expose arrives as EXPOSE_PURE, Phase 3 registers its
+    # alias via the NAIVE 2-segment path (which resolves the ambiguous terminal through
+    # the first-wins-corrupted flat _alias — plasma_region, not tf_coil), and Phase 3b
+    # skips it. The live path never hits this because the CA is still tentative when
+    # Phase 3 runs (Phase 3 skips it) and 3b registers the correct channel first.
+    #
+    # D9 captured reference_chain precisely so the walk can re-run offline. Reconstruct
+    # the PRE-confirm tentative state here for exactly the multi-hop candidates: an
+    # already-EXPOSE_PURE CA whose reference_chain is a part-rooted chain of >= 2
+    # segments (the durable INV-E signal; the AST is None on replay, but EXPOSE_PURE
+    # already encodes the pure-FeatureChain root that the live leaf-tag checked). A
+    # single-hop calc-rooted expose (reference_chain[0] is a calc-usage instance) is
+    # left EXPOSE_PURE — Phase 3's naive path is correct for it. Live CAs are still
+    # tentative here, so this is a no-op on the live path.
+    # ------------------------------------------------------------------
+    # Short calc-usage names (the last EQN segment). instance_name is short in some
+    # fixtures but the full QN in others, so derive the short form from the QN.
+    calc_usage_names = {cu.qualified_name.rsplit("__", 1)[-1] for cu in calc_usages}
+    for ca in computed_attributes:
+        if (
+            ca.classification == ComputedAttributeClassification.EXPOSE_PURE
+            and ca.reference_chain
+            and len(ca.reference_chain) >= 2
+            and ca.reference_chain[0] not in calc_usage_names
+        ):
+            ca.classification = ComputedAttributeClassification.EXPOSE_CHAIN_TENTATIVE
+
+    # ------------------------------------------------------------------
     # Phase 1: Canonical channels
     #
     # Typed registration puts Key_C, Key_E_stripped, SysML QN into typed

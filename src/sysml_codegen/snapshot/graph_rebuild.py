@@ -45,6 +45,20 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
         design_attributes=snap.get("design_attributes", {}),
     )
 
+    # Item 10 #4: populate the structured _scoped_alias namespace the same way the
+    # live path does (pipeline_builder Step 5.55), so a part-def EXPOSE resolves
+    # offline too. Local import avoids a pipeline_builder import cycle.
+    from sysml_codegen.orchestration.pipeline_builder import (
+        _register_partdef_expose_scoped_aliases,
+    )
+
+    _register_partdef_expose_scoped_aliases(
+        registry,
+        snap["computed_attributes"],
+        snap["calc_usages"],
+        snap.get("hierarchy_data"),
+    )
+
     # Run backtracker
     backtracker = DependencyBacktracker(
         all_usages=snap["calc_usages"],

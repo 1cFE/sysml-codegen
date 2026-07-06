@@ -193,16 +193,13 @@ def test_shape5_plain_usage_override_captured(ife_snapshot: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-# Shape 4 (known-incomplete, mechanism B): the exact expected uncovered cross-part
-# input. Items 9-10 flip this as they wire the chain. Pinned as (module, input,
-# missing_key) tuples so the assertion is a definitive equality, not a bare count.
-EXPECTED_UNCOVERED = {
-    (
-        "ifeplantdesign__magnet_system__cryo_load",
-        "magnet_volume",
-        "design_params.IfePlantDesign__magnet_system__cryo_load__magnet_volume",
-    ),
-}
+# Shape 4: the cross-part chain ``cryo_load.magnet_volume``. Item 10 stage (a) WIRED
+# it (multi-hop EXPOSE confirm walk, direct-calc-output terminal — the recaptured
+# snapshot carries ``reference_chain`` + the ``magnet_volume_total`` EXPOSE_PURE flip),
+# so it no longer falls through to a valueless wired fallback EP. The uncovered set is
+# now EMPTY. (Pre-Item-10 this pinned the single ``magnet_volume`` gap; kept as an empty
+# set — not a deleted assertion — so a regression that re-drops the pin fails loudly.)
+EXPECTED_UNCOVERED: set[tuple[str, str, str]] = set()
 
 
 def test_ife_plant_graph_builds(ife_snapshot: dict) -> None:
@@ -213,13 +210,13 @@ def test_ife_plant_graph_builds(ife_snapshot: dict) -> None:
 
 
 def test_cross_part_inputs_pinned_or_baseline() -> None:
-    """Shape 4 (known-incomplete): the deliberately-unwired cross-part chain.
+    """Shape 4: the cross-part chain, now WIRED by Item 10 stage (a).
 
     Conditional on Item 7's ``collect_uncovered_params`` (satisfiable at either
     landing order):
-    - *Item 7 landed* (current): pin the EXACT expected uncovered set — shape 4's
-      ``cryo_load.magnet_volume`` fell through to a valueless wired fallback EP.
-      Items 9-10 flip this.
+    - *Item 7 landed* (current): pin the EXACT expected uncovered set. Item 10
+      wired shape 4's ``cryo_load.magnet_volume`` (multi-hop EXPOSE), so the set is
+      now empty — the assertion still fires (a regression re-dropping the pin fails).
     - *Item 7 absent*: assert only that the graph builds; the warning set is the
       recorded baseline (see the module docstring / plan notes).
     """

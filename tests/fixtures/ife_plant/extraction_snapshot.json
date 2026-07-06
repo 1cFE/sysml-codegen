@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "ife_plant",
-  "captured_at": "2026-07-06T03:28:22.846889+00:00",
+  "captured_at": "2026-07-06T06:25:50.632396+00:00",
   "compilation_results": {
     "PlantLcoe": {
       "calc_def_name": "PlantLcoe",
@@ -1424,7 +1424,18 @@
         "qualified_name": "IfePlantLib__Ife_Power_Plant__lcoe"
       }
     ],
-    "/home/reid/1cfe/sysml-codegen/tests/fixtures/ife_plant/subsystems.sysml": []
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/ife_plant/subsystems.sysml": [
+      {
+        "name": "magnet_volume_total",
+        "sysml_type": "Real",
+        "default_value": "tf_coil",
+        "unit": null,
+        "source_file": "subsystems.sysml",
+        "source_line": 12,
+        "parent_part": "radial_build",
+        "qualified_name": "IfePlantSubsystems__radial_build__magnet_volume_total"
+      }
+    ]
   },
   "hierarchy_data": {
     "redefinitions": [
@@ -1505,7 +1516,11 @@
       "compiled_expression": null,
       "is_on_part_definition": true,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "lcoe",
@@ -1531,7 +1546,11 @@
       "compiled_expression": null,
       "is_on_part_definition": true,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "lcoe_calc",
+        "lcoe"
+      ]
     },
     {
       "name": "magnet_volume_total",
@@ -1547,12 +1566,17 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/ife_plant/subsystems.sysml"
         }
       ],
-      "classification": "formula",
+      "classification": "expose_pure",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "tf_coil",
+        "volume_calc",
+        "volume"
+      ]
     }
   ],
   "channel_aliases": []

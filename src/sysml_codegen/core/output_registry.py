@@ -13,6 +13,7 @@ from typing import Any
 
 from sysml_codegen.core.identifier_types import (
     CanonicalChannel,
+    ScopedAliasKey,
     ScopedKey,
     SysMLQN,
 )
@@ -41,6 +42,11 @@ class OutputRegistry:
         self._scoped: dict[ScopedKey, CanonicalChannel] = {}
         self._sysml_qn: dict[SysMLQN, CanonicalChannel] = {}
         self._alias: dict[ScopedKey, CanonicalChannel] = {}
+        # Item 10 (D7): structured (scope, leaf) alias namespace for part-def
+        # EXPOSE (and stage-b consumer-scoped) aliases. Kept distinct from the
+        # flat string ``_alias`` so a tuple key can never collapse or collide
+        # with a string one (INV-B).
+        self._scoped_alias: dict[ScopedAliasKey, CanonicalChannel] = {}
         self._canonical: set[CanonicalChannel] = set()
         # Item 7 / D5: first-wins alias collisions, recorded for one WARNING
         # count-summary (emitted by output_registry_builder) instead of one
@@ -125,9 +131,41 @@ class OutputRegistry:
             return
         self._alias[alias] = canonical_channel
 
+    def register_scoped_alias(
+        self, key: ScopedAliasKey, channel: CanonicalChannel
+    ) -> None:
+        """Register a structured ``(scope, leaf)`` alias (Item 10, D7 / REQ-CA-03).
+
+        The channel MUST already be canonical (same phase-ordering rule as
+        ``register_alias``). Unique by construction — the scope carries the
+        instance path — so a duplicate key with a different channel is a
+        key-derivation bug and raises.
+        """
+        if channel not in self._canonical:
+            logger.warning(
+                "OutputRegistry scoped alias %s targets unregistered channel "
+                "'%s' (possible phase ordering violation)",
+                key,
+                channel,
+            )
+            return
+        if key in self._scoped_alias:
+            if self._scoped_alias[key] != channel:
+                raise ValueError(
+                    f"OutputRegistry scoped-alias key collision: {key} already "
+                    f"maps to '{self._scoped_alias[key]}', cannot overwrite with "
+                    f"'{channel}'"
+                )
+            return
+        self._scoped_alias[key] = channel
+
     # ------------------------------------------------------------------
     # Typed lookup methods (REQ-OR-02)
     # ------------------------------------------------------------------
+
+    def scoped_alias_lookup(self, key: ScopedAliasKey) -> CanonicalChannel | None:
+        """Exact-match lookup in the structured ``(scope, leaf)`` alias registry."""
+        return self._scoped_alias.get(key)
 
     def scoped_lookup(self, key: ScopedKey) -> CanonicalChannel | None:
         """Exact-match lookup in the scoped registry."""
@@ -159,7 +197,7 @@ class OutputRegistry:
         """Total number of lookup keys across all registries."""
         return (
             len(self._scoped) + len(self._sysml_qn) + len(self._alias)
-            + len(self._canonical)
+            + len(self._scoped_alias) + len(self._canonical)
         )
 
     def __repr__(self) -> str:

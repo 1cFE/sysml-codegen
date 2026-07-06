@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, PhantomDetector
-from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
+from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey, SysMLQN
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
@@ -606,6 +606,20 @@ class DependencyBacktracker:
         channel = self._output_registry.scoped_lookup(ScopedKey(source_path))
         if channel is not None and not self._is_self_reference(channel, usage):
             return channel
+
+        # Step 1c: Structured part-def / consumer-scoped alias lookup (Item 10 #1).
+        # Split the source_path at the LAST dot into (scope, leaf) and query the
+        # structured _scoped_alias namespace. This reaches a part-def EXPOSE (D7,
+        # e.g. demo_plant.total_cost) that no flat string key constructs. Ordered
+        # after both scoped steps and before the unscoped alias step (INV-A): it
+        # only ADDS a hit where the old ladder fell through, never overrides one.
+        if "." in source_path:
+            prefix, leaf = source_path.rsplit(".", 1)
+            channel = self._output_registry.scoped_alias_lookup(
+                ScopedAliasKey((prefix, leaf))
+            )
+            if channel is not None and not self._is_self_reference(channel, usage):
+                return channel
 
         # Step 2: Cross-scope alias lookup
         channel = self._output_registry.alias_lookup(ScopedKey(source_path))

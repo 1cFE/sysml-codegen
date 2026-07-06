@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 1,
   "model_name": "catf_mfe_model",
-  "captured_at": "2026-07-05T23:55:28.765118+00:00",
+  "captured_at": "2026-07-06T06:26:23.704141+00:00",
   "compilation_results": {
     "MagnetCryogenicLoad": {
       "calc_def_name": "MagnetCryogenicLoad",
@@ -8589,6 +8589,26 @@
         "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius"
       },
       {
+        "name": "magnet_volume_total",
+        "sysml_type": "Real",
+        "default_value": "tf_coil.volume",
+        "unit": null,
+        "source_file": "designs/catf_mfe/radial_build.sysml",
+        "source_line": 582,
+        "parent_part": "catf_radial_build",
+        "qualified_name": "CATFMFERadialBuild__catf_radial_build__magnet_volume_total"
+      },
+      {
+        "name": "blanket_volume_total",
+        "sysml_type": "Real",
+        "default_value": "blanket.volume",
+        "unit": null,
+        "source_file": "designs/catf_mfe/radial_build.sysml",
+        "source_line": 583,
+        "parent_part": "catf_radial_build",
+        "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket_volume_total"
+      },
+      {
         "name": "first_wall_area",
         "sysml_type": "Real",
         "default_value": "first_wall_area_calc.area",
@@ -10399,7 +10419,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "wall_plug",
+        "wall_plug_power"
+      ]
     },
     {
       "name": "pump_power",
@@ -10425,7 +10449,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "pump_load",
+        "pump_power"
+      ]
     },
     {
       "name": "cryo_power",
@@ -10451,7 +10479,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "cryo_load",
+        "refrigeration_power"
+      ]
     },
     {
       "name": "processing_power",
@@ -10477,7 +10509,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "processing_load",
+        "processing_power"
+      ]
     },
     {
       "name": "cooling_power",
@@ -10503,7 +10539,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "cryo_load",
+        "cooling_power"
+      ]
     },
     {
       "name": "magnet_volume_total",
@@ -10524,12 +10564,16 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml"
         }
       ],
-      "classification": "formula",
+      "classification": "expose_pure",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "tf_coil",
+        "volume"
+      ]
     },
     {
       "name": "blanket_volume_total",
@@ -10550,12 +10594,16 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml"
         }
       ],
-      "classification": "formula",
+      "classification": "expose_pure",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "blanket",
+        "volume"
+      ]
     },
     {
       "name": "first_wall_area",
@@ -10581,7 +10629,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "first_wall_area_calc",
+        "area"
+      ]
     },
     {
       "name": "magnet_surface_area",
@@ -10607,7 +10659,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "magnet_surface_calc",
+        "area"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10633,7 +10689,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10659,7 +10719,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10685,7 +10749,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10711,7 +10779,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10737,7 +10809,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10763,7 +10839,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10789,7 +10869,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10815,7 +10899,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10841,7 +10929,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10867,7 +10959,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10893,7 +10989,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10919,7 +11019,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10945,7 +11049,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -10971,7 +11079,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -10997,7 +11109,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -11023,7 +11139,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -11049,7 +11169,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -11075,7 +11199,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -11101,7 +11229,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -11127,7 +11259,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -11153,7 +11289,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -11179,7 +11319,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -11205,7 +11349,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -11231,7 +11379,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "minor_radius",
@@ -11257,7 +11409,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "minor_calc",
+        "a"
+      ]
     },
     {
       "name": "volume",
@@ -11283,7 +11439,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "volume_calc",
+        "volume"
+      ]
     },
     {
       "name": "pump_power",
@@ -11309,7 +11469,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "pump_load",
+        "pump_power"
+      ]
     },
     {
       "name": "auxiliary_power",
@@ -11335,7 +11499,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "auxiliary_load",
+        "auxiliary_power"
+      ]
     },
     {
       "name": "p_alpha_out",
@@ -11361,7 +11529,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "alpha_neutron_split",
+        "p_alpha"
+      ]
     },
     {
       "name": "p_neutron_out",
@@ -11387,7 +11559,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "alpha_neutron_split",
+        "p_neutron"
+      ]
     },
     {
       "name": "p_thermal_out",
@@ -11413,7 +11589,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "blanket_thermal",
+        "p_thermal"
+      ]
     },
     {
       "name": "p_electric_gross_out",
@@ -11439,7 +11619,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "gross_electric",
+        "p_electric_gross"
+      ]
     },
     {
       "name": "p_electric_net_out",
@@ -11465,7 +11649,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "net_electric",
+        "p_net"
+      ]
     },
     {
       "name": "q_sci_out",
@@ -11491,7 +11679,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "q_scientific",
+        "q_sci"
+      ]
     },
     {
       "name": "q_eng_out",
@@ -11517,7 +11709,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "q_engineering",
+        "q_eng"
+      ]
     },
     {
       "name": "f_recirc_out",
@@ -11543,7 +11739,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "q_engineering",
+        "f_recirculating"
+      ]
     },
     {
       "name": "eta_plant_out",
@@ -11569,7 +11769,11 @@
       "compiled_expression": null,
       "is_on_part_definition": false,
       "source_file": "unknown",
-      "source_line": 0
+      "source_line": 0,
+      "reference_chain": [
+        "plant_efficiency",
+        "eta_plant"
+      ]
     }
   ],
   "channel_aliases": [

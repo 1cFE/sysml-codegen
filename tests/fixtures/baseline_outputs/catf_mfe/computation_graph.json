@@ -339,6 +339,83 @@
       "source_line": 325
     },
     {
+      "name": "catfmferadialbuild__catf_radial_build__tf_coil__minor_calc",
+      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
+      "inputs": [
+        {
+          "param_name": "r_inner",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "r_outer",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__outer_radius",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__minor_calc__a",
+          "description": "",
+          "default_value": null,
+          "unit": "m"
+        }
+      ],
+      "execution_order": 4,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "a",
+            "expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)"
+      },
+      "calc_def_name": "TorusMinorRadius",
+      "calc_def_qualified_name": "FusionPhysicsGeometry::TorusMinorRadius",
+      "doc_comment": "\nToroidal Minor Radius Calculation\n\nCalculates the minor radius (a) of a toroidal annular layer from its\ninner and outer radii relative to the major radius. The minor radius\nrepresents the half-width of the layer cross-section at the midplane.\n\nFormula: a = (r_inner + r_outer) / 2.0 - r_major\n\nWhere:\nr_inner = inner radius of the annular layer [m]\nr_outer = outer radius of the annular layer [m]\nr_major = major radius (center of torus/plasma) [m]\na = minor radius (distance from major radius to layer center) [m]\n\nSource: Standard tokamak geometry convention\nReference: Used in radial build volume calculations\nTypical Values:\nr_inner = 3.0-8.0 m (varies by layer, CATF MFE)\nr_outer = 3.1-8.55 m (varies by layer, CATF MFE)\nr_major = 3.0 m (CATF MFE)\na = 0.5-4.0 m (varies by layer)\nLast Updated: 2025-12-22",
+      "calc_expressions": [
+        "a = (r_inner + r_outer) / 2.0 - r_major",
+        "\nDocumentation:\n\nToroidal Minor Radius Calculation\n\nCalculates the minor radius (a) of a toroidal annular layer from its\ninner and outer radii relative to the major radius. The minor radius\nrepresents the half-width of the layer cross-section at the midplane.\n\nFormula: a = (r_inner + r_outer) / 2.0 - r_major\n\nWhere:\nr_inner = inner radius of the annular layer [m]\nr_outer = outer radius of the annular layer [m]\nr_major = major radius (center of torus/plasma) [m]\na = minor radius (distance from major radius to layer center) [m]\n\nSource: Standard tokamak geometry convention\nReference: Used in radial build volume calculations\nTypical Values:\nr_inner = 3.0-8.0 m (varies by layer, CATF MFE)\nr_outer = 3.1-8.55 m (varies by layer, CATF MFE)\nr_major = 3.0 m (CATF MFE)\na = 0.5-4.0 m (varies by layer)\nLast Updated: 2025-12-22"
+      ],
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 52
+    },
+    {
       "name": "catfmferadialbuild__catf_radial_build__magnet_surface_calc",
       "module_type": "fusionphysicsgeometry.MagnetSurfaceAreaModule",
       "inputs": [
@@ -401,7 +478,7 @@
           "unit": null
         }
       ],
-      "execution_order": 4,
+      "execution_order": 5,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -479,7 +556,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 5,
+      "execution_order": 6,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -556,7 +633,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 6,
+      "execution_order": 7,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -633,7 +710,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 7,
+      "execution_order": 8,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -710,7 +787,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 8,
+      "execution_order": 9,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -787,7 +864,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 9,
+      "execution_order": 10,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -864,7 +941,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 10,
+      "execution_order": 11,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -941,7 +1018,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 11,
+      "execution_order": 12,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -1018,7 +1095,7 @@
           "unit": "m"
         }
       ],
-      "execution_order": 12,
+      "execution_order": 13,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -1090,83 +1167,6 @@
           "field_name": "root",
           "python_type": "float",
           "channel_name": "CATFMFERadialBuild__catf_radial_build__vessel__minor_calc__a",
-          "description": "",
-          "default_value": null,
-          "unit": "m"
-        }
-      ],
-      "execution_order": 13,
-      "compilability": "fully_compilable",
-      "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
-      "auto_impl_context": {
-        "execution_steps": [],
-        "output_expressions": [
-          {
-            "name": "a",
-            "expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)"
-          }
-        ],
-        "output_count": 1,
-        "single_output_expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)"
-      },
-      "calc_def_name": "TorusMinorRadius",
-      "calc_def_qualified_name": "FusionPhysicsGeometry::TorusMinorRadius",
-      "doc_comment": "\nToroidal Minor Radius Calculation\n\nCalculates the minor radius (a) of a toroidal annular layer from its\ninner and outer radii relative to the major radius. The minor radius\nrepresents the half-width of the layer cross-section at the midplane.\n\nFormula: a = (r_inner + r_outer) / 2.0 - r_major\n\nWhere:\nr_inner = inner radius of the annular layer [m]\nr_outer = outer radius of the annular layer [m]\nr_major = major radius (center of torus/plasma) [m]\na = minor radius (distance from major radius to layer center) [m]\n\nSource: Standard tokamak geometry convention\nReference: Used in radial build volume calculations\nTypical Values:\nr_inner = 3.0-8.0 m (varies by layer, CATF MFE)\nr_outer = 3.1-8.55 m (varies by layer, CATF MFE)\nr_major = 3.0 m (CATF MFE)\na = 0.5-4.0 m (varies by layer)\nLast Updated: 2025-12-22",
-      "calc_expressions": [
-        "a = (r_inner + r_outer) / 2.0 - r_major",
-        "\nDocumentation:\n\nToroidal Minor Radius Calculation\n\nCalculates the minor radius (a) of a toroidal annular layer from its\ninner and outer radii relative to the major radius. The minor radius\nrepresents the half-width of the layer cross-section at the midplane.\n\nFormula: a = (r_inner + r_outer) / 2.0 - r_major\n\nWhere:\nr_inner = inner radius of the annular layer [m]\nr_outer = outer radius of the annular layer [m]\nr_major = major radius (center of torus/plasma) [m]\na = minor radius (distance from major radius to layer center) [m]\n\nSource: Standard tokamak geometry convention\nReference: Used in radial build volume calculations\nTypical Values:\nr_inner = 3.0-8.0 m (varies by layer, CATF MFE)\nr_outer = 3.1-8.55 m (varies by layer, CATF MFE)\nr_major = 3.0 m (CATF MFE)\na = 0.5-4.0 m (varies by layer)\nLast Updated: 2025-12-22"
-      ],
-      "source_file": "library/physics/geometry.sysml",
-      "source_line": 52
-    },
-    {
-      "name": "catfmferadialbuild__catf_radial_build__tf_coil__minor_calc",
-      "module_type": "fusionphysicsgeometry.TorusMinorRadiusModule",
-      "inputs": [
-        {
-          "param_name": "r_inner",
-          "python_type": "float",
-          "source": {
-            "source_type": "entry_point",
-            "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
-            "producer_channel": null
-          },
-          "description": "",
-          "default_value": null
-        },
-        {
-          "param_name": "r_outer",
-          "python_type": "float",
-          "source": {
-            "source_type": "entry_point",
-            "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__outer_radius",
-            "producer_channel": null
-          },
-          "description": "",
-          "default_value": null
-        },
-        {
-          "param_name": "r_major",
-          "python_type": "float",
-          "source": {
-            "source_type": "entry_point",
-            "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
-            "producer_channel": null
-          },
-          "description": "",
-          "default_value": null
-        }
-      ],
-      "outputs": [
-        {
-          "field_name": "root",
-          "python_type": "float",
-          "channel_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__minor_calc__a",
           "description": "",
           "default_value": null,
           "unit": "m"
@@ -1706,6 +1706,83 @@
       "source_line": 74
     },
     {
+      "name": "catfmferadialbuild__catf_radial_build__tf_coil__volume_calc",
+      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
+      "inputs": [
+        {
+          "param_name": "r_major",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "a",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__tf_coil__minor_calc__a"
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "kappa",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "radial_build_params",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__volume_calc__volume",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 22,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "volume",
+            "expression": "((((((2.0 * 3.14159265359) * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.a) * inputs.kappa)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "((((((2.0 * 3.14159265359) * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.a) * inputs.kappa)"
+      },
+      "calc_def_name": "TorusVolume",
+      "calc_def_qualified_name": "FusionPhysicsGeometry::TorusVolume",
+      "doc_comment": "\nElongated Torus Volume Calculation\n\nCalculates the volume of an elongated toroidal shell with elliptical\ncross-section. Used for computing radial build layer volumes in tokamaks.\n\nFormula: V = 2 * pi^2 * R * a^2 * kappa\n\nWhere:\nR = major radius (center of torus) [m]\na = minor radius (half-width at midplane) [m]\nkappa = elongation (vertical/horizontal aspect ratio)\nV = volume [m^3]\n\nPhysical Basis: This is the volume of an elliptical torus. For a\ncircular torus (kappa=1), this reduces to V = 2*pi^2*R*a^2.\n\nNote: Uses pi * pi as a static expression, which is valid per ADR-002\n(true static expressions with only literals are allowed).\n\nSource: Standard elliptical torus volume formula\nReference: PyFECONS radial_build.sysml lines 91-94\nTypical Values:\nR = 3.0 m (CATF MFE major radius)\na = 0.5-4.0 m (varies by layer)\nkappa = 3.0 (CATF MFE elongation)\nV = 50-2500 m^3 (varies by layer)\nLast Updated: 2025-12-22",
+      "calc_expressions": [
+        "volume = 2.0 * 3.14159265359 * 3.14159265359 * r_major * a * a * kappa",
+        "\nDocumentation:\n\nElongated Torus Volume Calculation\n\nCalculates the volume of an elongated toroidal shell with elliptical\ncross-section. Used for computing radial build layer volumes in tokamaks.\n\nFormula: V = 2 * pi^2 * R * a^2 * kappa\n\nWhere:\nR = major radius (center of torus) [m]\na = minor radius (half-width at midplane) [m]\nkappa = elongation (vertical/horizontal aspect ratio)\nV = volume [m^3]\n\nPhysical Basis: This is the volume of an elliptical torus. For a\ncircular torus (kappa=1), this reduces to V = 2*pi^2*R*a^2.\n\nNote: Uses pi * pi as a static expression, which is valid per ADR-002\n(true static expressions with only literals are allowed).\n\nSource: Standard elliptical torus volume formula\nReference: PyFECONS radial_build.sysml lines 91-94\nTypical Values:\nR = 3.0 m (CATF MFE major radius)\na = 0.5-4.0 m (varies by layer)\nkappa = 3.0 (CATF MFE elongation)\nV = 50-2500 m^3 (varies by layer)\nLast Updated: 2025-12-22"
+      ],
+      "source_file": "library/physics/geometry.sysml",
+      "source_line": 94
+    },
+    {
       "name": "catfmferadialbuild__catf_radial_build__first_wall_area_calc",
       "module_type": "fusionphysicsgeometry.TorusSurfaceAreaModule",
       "inputs": [
@@ -1756,7 +1833,7 @@
           "unit": null
         }
       ],
-      "execution_order": 22,
+      "execution_order": 23,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -1833,7 +1910,7 @@
           "unit": null
         }
       ],
-      "execution_order": 23,
+      "execution_order": 24,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -1910,7 +1987,7 @@
           "unit": null
         }
       ],
-      "execution_order": 24,
+      "execution_order": 25,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -1987,7 +2064,7 @@
           "unit": null
         }
       ],
-      "execution_order": 25,
+      "execution_order": 26,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -2064,7 +2141,7 @@
           "unit": null
         }
       ],
-      "execution_order": 26,
+      "execution_order": 27,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -2141,7 +2218,7 @@
           "unit": null
         }
       ],
-      "execution_order": 27,
+      "execution_order": 28,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -2218,7 +2295,7 @@
           "unit": null
         }
       ],
-      "execution_order": 28,
+      "execution_order": 29,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -2295,7 +2372,7 @@
           "unit": null
         }
       ],
-      "execution_order": 29,
+      "execution_order": 30,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -2372,7 +2449,7 @@
           "unit": null
         }
       ],
-      "execution_order": 30,
+      "execution_order": 31,
       "compilability": "fully_compilable",
       "compiled_expression": null,
       "is_computed_attribute": false,
@@ -2444,83 +2521,6 @@
           "field_name": "root",
           "python_type": "float",
           "channel_name": "CATFMFERadialBuild__catf_radial_build__vessel__volume_calc__volume",
-          "description": "",
-          "default_value": null,
-          "unit": null
-        }
-      ],
-      "execution_order": 31,
-      "compilability": "fully_compilable",
-      "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
-      "auto_impl_context": {
-        "execution_steps": [],
-        "output_expressions": [
-          {
-            "name": "volume",
-            "expression": "((((((2.0 * 3.14159265359) * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.a) * inputs.kappa)"
-          }
-        ],
-        "output_count": 1,
-        "single_output_expression": "((((((2.0 * 3.14159265359) * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.a) * inputs.kappa)"
-      },
-      "calc_def_name": "TorusVolume",
-      "calc_def_qualified_name": "FusionPhysicsGeometry::TorusVolume",
-      "doc_comment": "\nElongated Torus Volume Calculation\n\nCalculates the volume of an elongated toroidal shell with elliptical\ncross-section. Used for computing radial build layer volumes in tokamaks.\n\nFormula: V = 2 * pi^2 * R * a^2 * kappa\n\nWhere:\nR = major radius (center of torus) [m]\na = minor radius (half-width at midplane) [m]\nkappa = elongation (vertical/horizontal aspect ratio)\nV = volume [m^3]\n\nPhysical Basis: This is the volume of an elliptical torus. For a\ncircular torus (kappa=1), this reduces to V = 2*pi^2*R*a^2.\n\nNote: Uses pi * pi as a static expression, which is valid per ADR-002\n(true static expressions with only literals are allowed).\n\nSource: Standard elliptical torus volume formula\nReference: PyFECONS radial_build.sysml lines 91-94\nTypical Values:\nR = 3.0 m (CATF MFE major radius)\na = 0.5-4.0 m (varies by layer)\nkappa = 3.0 (CATF MFE elongation)\nV = 50-2500 m^3 (varies by layer)\nLast Updated: 2025-12-22",
-      "calc_expressions": [
-        "volume = 2.0 * 3.14159265359 * 3.14159265359 * r_major * a * a * kappa",
-        "\nDocumentation:\n\nElongated Torus Volume Calculation\n\nCalculates the volume of an elongated toroidal shell with elliptical\ncross-section. Used for computing radial build layer volumes in tokamaks.\n\nFormula: V = 2 * pi^2 * R * a^2 * kappa\n\nWhere:\nR = major radius (center of torus) [m]\na = minor radius (half-width at midplane) [m]\nkappa = elongation (vertical/horizontal aspect ratio)\nV = volume [m^3]\n\nPhysical Basis: This is the volume of an elliptical torus. For a\ncircular torus (kappa=1), this reduces to V = 2*pi^2*R*a^2.\n\nNote: Uses pi * pi as a static expression, which is valid per ADR-002\n(true static expressions with only literals are allowed).\n\nSource: Standard elliptical torus volume formula\nReference: PyFECONS radial_build.sysml lines 91-94\nTypical Values:\nR = 3.0 m (CATF MFE major radius)\na = 0.5-4.0 m (varies by layer)\nkappa = 3.0 (CATF MFE elongation)\nV = 50-2500 m^3 (varies by layer)\nLast Updated: 2025-12-22"
-      ],
-      "source_file": "library/physics/geometry.sysml",
-      "source_line": 94
-    },
-    {
-      "name": "catfmferadialbuild__catf_radial_build__tf_coil__volume_calc",
-      "module_type": "fusionphysicsgeometry.TorusVolumeModule",
-      "inputs": [
-        {
-          "param_name": "r_major",
-          "python_type": "float",
-          "source": {
-            "source_type": "entry_point",
-            "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
-            "producer_channel": null
-          },
-          "description": "",
-          "default_value": null
-        },
-        {
-          "param_name": "a",
-          "python_type": "float",
-          "source": {
-            "source_type": "module_output",
-            "param_group": null,
-            "qualified_name": null,
-            "producer_channel": "CATFMFERadialBuild__catf_radial_build__tf_coil__minor_calc__a"
-          },
-          "description": "",
-          "default_value": null
-        },
-        {
-          "param_name": "kappa",
-          "python_type": "float",
-          "source": {
-            "source_type": "entry_point",
-            "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
-            "producer_channel": null
-          },
-          "description": "",
-          "default_value": null
-        }
-      ],
-      "outputs": [
-        {
-          "field_name": "root",
-          "python_type": "float",
-          "channel_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__volume_calc__volume",
           "description": "",
           "default_value": null,
           "unit": null
@@ -2916,10 +2916,10 @@
           "param_name": "magnet_volume",
           "python_type": "float",
           "source": {
-            "source_type": "entry_point",
-            "param_group": "magnets_params",
-            "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume",
-            "producer_channel": null
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "CATFMFERadialBuild__catf_radial_build__tf_coil__volume_calc__volume"
           },
           "description": "",
           "default_value": null
@@ -3548,15 +3548,6 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume",
-          "simple_name": "magnet_volume",
-          "entry_type": "usage_literal",
-          "default_value": null,
-          "source_calc_usage": null,
-          "param_group": "magnets_params",
-          "python_type": "float"
-        },
-        {
           "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__p_neutron",
           "simple_name": "p_neutron",
           "entry_type": "usage_literal",
@@ -4085,6 +4076,7 @@
     "catfmfevacuum__catf_vacuum_pumping__pump_load",
     "catfmfevacuum__catf_vacuum_pumping__cryo_load",
     "catfmfetritium__catf_tritium__processing_load",
+    "catfmferadialbuild__catf_radial_build__tf_coil__minor_calc",
     "catfmferadialbuild__catf_radial_build__magnet_surface_calc",
     "catfmferadialbuild__catf_radial_build__plasma_region__minor_calc",
     "catfmferadialbuild__catf_radial_build__vacuum_gap__minor_calc",
@@ -4095,7 +4087,6 @@
     "catfmferadialbuild__catf_radial_build__structure__minor_calc",
     "catfmferadialbuild__catf_radial_build__gap1__minor_calc",
     "catfmferadialbuild__catf_radial_build__vessel__minor_calc",
-    "catfmferadialbuild__catf_radial_build__tf_coil__minor_calc",
     "catfmferadialbuild__catf_radial_build__gap2__minor_calc",
     "catfmferadialbuild__catf_radial_build__lt_shield__minor_calc",
     "catfmferadialbuild__catf_radial_build__bioshield__minor_calc",
@@ -4103,6 +4094,7 @@
     "catf_mfe__catf_mfe_plant__auxiliary_load",
     "catfmfephysics__catf_physics__alpha_neutron_split",
     "catfmfephysics__catf_physics__q_scientific",
+    "catfmferadialbuild__catf_radial_build__tf_coil__volume_calc",
     "catfmferadialbuild__catf_radial_build__first_wall_area_calc",
     "catfmferadialbuild__catf_radial_build__plasma_region__volume_calc",
     "catfmferadialbuild__catf_radial_build__vacuum_gap__volume_calc",
@@ -4113,7 +4105,6 @@
     "catfmferadialbuild__catf_radial_build__structure__volume_calc",
     "catfmferadialbuild__catf_radial_build__gap1__volume_calc",
     "catfmferadialbuild__catf_radial_build__vessel__volume_calc",
-    "catfmferadialbuild__catf_radial_build__tf_coil__volume_calc",
     "catfmferadialbuild__catf_radial_build__gap2__volume_calc",
     "catfmferadialbuild__catf_radial_build__lt_shield__volume_calc",
     "catfmferadialbuild__catf_radial_build__bioshield__volume_calc",

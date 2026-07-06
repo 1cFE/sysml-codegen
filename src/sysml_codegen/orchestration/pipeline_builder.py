@@ -21,7 +21,9 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
+from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.models import ChannelAlias
+from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
 from sysml_codegen.extraction.data_models import (
     ComputedAttributeClassification,
@@ -391,6 +393,59 @@ def _build_chain_aliases(
     return aliases
 
 
+def _register_partdef_expose_scoped_aliases(
+    registry: OutputRegistry,
+    computed_attrs: list[ComputedAttributeData],
+    calc_usages: list[CalcUsageData],
+    hierarchy_data: HierarchyExtractionResult | None,
+) -> int:
+    """#4 (Item 10, D7 / REQ-CA-03): expand each PartDef-level EXPOSE_PURE per
+    design instance path into the structured ``_scoped_alias`` namespace.
+
+    A part def has no instances at extraction, so a derived ``leaf = calc.output``
+    on a part *def* (shape A, e.g. wi014_toy's ``total_cost = cost_calc.cost``) is a
+    template. This resolves it per instance the same way ``_build_chain_aliases``
+    expands CHAIN redefs — ``find_instance_paths_for_partdef`` gives the instance
+    scope, ``scoped_lookup`` gives the calc-output channel — and writes
+    ``(instance_path, leaf) -> channel``. The consumer-side reader is
+    ``dependency_backtracker._resolve_chain_dispatch`` (#1). Part *usage* exposes
+    (the two V11 pins) are ``is_on_part_definition=False`` and untouched here.
+
+    Returns the count of registered scoped aliases.
+    """
+    part_usage_names = hierarchy_data.part_usage_names if hierarchy_data else None
+    registered = 0
+    for ca in computed_attrs:
+        if ca.classification != ComputedAttributeClassification.EXPOSE_PURE:
+            continue
+        if not ca.is_on_part_definition:
+            continue
+        chain = ca.reference_chain
+        if not chain or len(chain) < 2:
+            continue
+        rel = ".".join(chain)  # calc-usage-rooted, e.g. "cost_calc.cost"
+        # CA carries the raw ``::`` QN; calc usages key on the sanitized ``__``
+        # EQN (e.g. "toy_plant::'Toy Plant'" -> "toy_plant__Toy_Plant"). Convert
+        # once at this boundary so the instance-path lookup matches.
+        owning_eqn = sanitize_qualified_name(ca.owning_part_qualified_name)
+        for inst in find_instance_paths_for_partdef(
+            owning_eqn, calc_usages, part_usage_names
+        ):
+            channel = registry.scoped_lookup(ScopedKey(f"{inst}.{rel}"))
+            if channel is None:
+                continue
+            registry.register_scoped_alias(
+                ScopedAliasKey((inst, ca.python_name)), channel
+            )
+            registered += 1
+
+    if registered:
+        logger.info(
+            "Step 5.55: registered %d part-def EXPOSE scoped alias(es)", registered
+        )
+    return registered
+
+
 def _scope_aggregation_expressions(
     hierarchy_data: HierarchyExtractionResult | None,
     calc_usages: list[CalcUsageData],
@@ -535,6 +590,13 @@ def build_pipeline_context(
         computed_attributes=computed_attrs,
         channel_aliases=all_channel_aliases,
         design_attributes=design_attrs,
+    )
+
+    # Step 5.55: Expand PartDef-level EXPOSE aliases per instance into the
+    # structured _scoped_alias namespace (Item 10 #4). Runs after the registry's
+    # channels exist and before the backtracker's #1 lookup reads them.
+    _register_partdef_expose_scoped_aliases(
+        output_registry, computed_attrs, calc_usages, hierarchy_data
     )
 
     # Step 5.6: Re-run FORMULA removal (INV-G). The Step-4.5 removal ran before the

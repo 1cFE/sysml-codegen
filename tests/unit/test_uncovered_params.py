@@ -9,18 +9,23 @@ Real extraction snapshots — no mocks (R1). The unwired-summary partition has n
 committed real-fixture that exercises it (every corpus V11 case is wired), so it
 is covered by a constructed ``ComputationGraph`` of real Pydantic model objects.
 
-V11 corpus surface after Item 9 (genuine fell-through ∩ valueless ∩ wired gaps that
-remain — the plain-usage LITERAL class is now pre-filled and drops off this list):
-  - catf_mfe            cryo_load.magnet_volume   (cross-part CHAIN; Items 10-11 wire it)
-  - ife_plant shape-4   cryo_load.magnet_volume   (cross-part CHAIN; the committed
-                                                   non-catf_mfe strict-V11 proof)
-  - chain_override_probe cost_model.sensitivity   (calc-output ref; A1 keeps it loud)
+V11 corpus surface after Item 10 stage (a) (genuine fell-through ∩ valueless ∩ wired
+gaps that remain — the plain-usage LITERAL class is pre-filled, and Item 10 wired the
+two cross-part CHAIN pins, so both drop off this list):
+  - chain_override_probe cost_model.sensitivity   (calc-output ref; A1 keeps it loud —
+                                                   the sole remaining committed V11 proof)
 
-The dedicated committed V11 proof is now catf_mfe (strict raise, ``test_reconcile_
-raises_v11_on_wired_gap``) + ife_plant shape-4 (strict abort, ``test_seeded_strict_
-generation_aborts_independently_of_catf_mfe``). alias_agg_probe / issue22_model /
-unresolvable_attr_probe are pre-filled by Item 9's plain-usage literal capture and
-now generate cleanly (their collector lists go empty below).
+Item 10 wired the two former anchors:
+  - catf_mfe            cryo_load.magnet_volume   (multi-hop EXPOSE, alias-terminal hop)
+  - ife_plant shape-4   cryo_load.magnet_volume   (multi-hop EXPOSE, direct-calc-output)
+so the dedicated committed V11 proof RE-ANCHORS to ``chain_override_probe`` — the one
+full-graph-buildable fixture whose gap the leaf-unique restriction (A1) deliberately
+keeps valueless-and-loud. (Verified: after Item 10 no other committed full-pipeline
+fixture fires the collector.) catf_mfe retains one *valued* residual fallback EP
+(``pump_load.pumping_speed_total``, USAGE_LITERAL 200.0) — fell-through but valued, so
+NOT a V11 violation; tracked as a benign pre-existing catf gap (BACKLOG, not Item 10).
+alias_agg_probe / issue22_model / unresolvable_attr_probe are pre-filled by Item 9's
+plain-usage literal capture and now generate cleanly (their collector lists go empty).
 """
 
 from __future__ import annotations
@@ -31,7 +36,6 @@ from pathlib import Path
 import pytest
 
 from sysml_codegen.resolution.graph_builder import (
-    UncoveredInput,
     collect_uncovered_params,
     collect_unwired_fallthrough,
 )
@@ -68,23 +72,18 @@ def test_collector_is_pure_on_clean_graph():
 # ---------------------------------------------------------------------------
 # INV-4: catf_mfe collector list is pinned exactly.
 # ---------------------------------------------------------------------------
-def test_collector_pins_catf_mfe_dangle():
-    """catf_mfe collector returns exactly the one magnet_volume gap (INV-4).
+def test_catf_mfe_dangle_wired_after_item10():
+    """catf_mfe collector returns ``[]`` — Item 10 wired the magnet_volume gap (INV-4).
 
-    Grow/shrink fails: the list content is pinned. Tracked to Items 9-11 — the
-    cross-part ``tf_coil.volume`` EXPOSE they wire flips this to ``[]``.
+    Pre-Item-10 this pinned the single ``cryo_load.magnet_volume`` gap. Item 10 stage
+    (a) wires it via the multi-hop EXPOSE confirm walk (``tf_coil.volume`` alias-terminal
+    hop → the ``tf_coil__volume_calc__volume`` channel), so the collector list is now
+    empty. Pinned to ``[]`` (not deleted) so a regression re-dropping the pin fails loudly.
+    catf's one residual fallback EP (``pump_load.pumping_speed_total``) is USAGE_LITERAL
+    200.0 — valued, so it is not a valueless V11 violation and the collector skips it.
     """
     result = collect_uncovered_params(_graph("catf_mfe_model"))
-    assert result == [
-        UncoveredInput(
-            module="catfmfemagnets__catf_tf_system__cryo_load",
-            input="magnet_volume",
-            missing_key=(
-                "magnets_params."
-                "CATFMFEMagnets__catf_tf_system__cryo_load__magnet_volume"
-            ),
-        )
-    ]
+    assert result == []
 
 
 def test_collector_pins_alias_agg_probe():
@@ -136,36 +135,37 @@ def test_collector_pins_chain_override_probe():
 def test_reconcile_raises_v11_on_wired_gap():
     """The generation boundary raises V11 on a wired fell-through-valueless input.
 
-    Anchored on catf_mfe's ``cryo_load.magnet_volume`` — a cross-part CHAIN gap the
-    LITERAL filter deliberately keeps out of design_overrides, so it stays
-    wired-valueless and trips V11 (the committed real-fixture proof; Items 10-11
-    wire it). Re-anchored off unresolvable_attr_probe, which Item 9 now pre-fills.
+    Anchored on chain_override_probe's ``cost_model.sensitivity`` — a calc-output ref the
+    leaf-unique restriction (A1 / DEV-2) deliberately keeps out of design_overrides, so it
+    stays wired-valueless and trips V11 (the sole remaining committed real-fixture proof).
+    Re-anchored off catf_mfe, which Item 10 stage (a) now wires (its magnet_volume gap is
+    resolved, so it no longer trips V11).
     """
     from sysml_codegen.cli import _reconcile_params_coverage
     from sysml_codegen.generation import CodeGenerationError
 
-    graph = _graph("catf_mfe_model")
+    graph = _graph("chain_override_probe")
     with pytest.raises(CodeGenerationError, match=r"V11"):
         _reconcile_params_coverage(graph)
 
 
-def test_seeded_strict_generation_aborts_independently_of_catf_mfe(tmp_path, caplog):
-    """Strict generation aborts on ife_plant (V11), proving the check fires
-    independently of catf_mfe (B4).
+def test_seeded_strict_generation_aborts_on_v11_gap(tmp_path, caplog):
+    """Strict generation aborts (V11) end-to-end via ``run_codegen`` on a wired-valueless
+    gap, proving the boundary fires on the full snapshot-driven path, not just at the
+    pure collector.
 
-    ife_plant's shape-4 ``cryo_load.magnet_volume`` is a cross-part CHAIN that stays
-    wired-valueless until Item 10 wires it — a non-catf_mfe fixture that still trips
-    strict V11 at generation. ``run_codegen`` catches CodeGenerationError and returns
-    False (the fail-fast idiom), so the abort is observed as ``False`` + a logged V11
-    line, not a propagated exception. Re-anchored off unresolvable_attr_probe, which
-    Item 9 now pre-fills (D5).
+    Anchored on chain_override_probe's ``cost_model.sensitivity`` — a calc-output ref A1
+    keeps valueless-and-loud (the sole remaining committed full-graph V11 proof). Item 10
+    stage (a) wired the two former cross-part anchors (catf_mfe + ife_plant shape-4), so
+    neither aborts anymore. ``run_codegen`` catches CodeGenerationError and returns False
+    (the fail-fast idiom), so the abort is observed as ``False`` + a logged V11 line.
     """
     from sysml_codegen.cli import GenerationConfig, run_codegen
 
     config = GenerationConfig(
         output_path=tmp_path,
-        from_snapshot=snapshot_fixture("ife_plant"),
-        package_name="ife",
+        from_snapshot=snapshot_fixture("chain_override_probe"),
+        package_name="cop",
         overwrite=True,
     )
     with caplog.at_level(logging.ERROR):
@@ -183,7 +183,12 @@ def test_seeded_strict_generation_aborts_independently_of_catf_mfe(tmp_path, cap
 # identically on the --from-snapshot path.
 # ---------------------------------------------------------------------------
 def test_fallback_entry_points_populated_in_memory_but_not_serialized():
-    graph = _graph("catf_mfe_model")
+    # Anchored on chain_override_probe: after Item 10 wired catf_mfe's magnet_volume,
+    # catf's only residual fallback EP (pumping_speed_total) is VALUED, so its collector
+    # goes empty and it can no longer demonstrate "collector fires". chain_override_probe's
+    # sensitivity gap stays wired-valueless, so both the populated-field and collector-fires
+    # halves hold on one fixture.
+    graph = _graph("chain_override_probe")
     # In-memory: populated by the (snapshot-driven) backtracker run.
     assert graph.fallback_entry_points, "backtracker must populate the field in memory"
     assert collect_uncovered_params(graph), "collector fires on the in-memory graph"

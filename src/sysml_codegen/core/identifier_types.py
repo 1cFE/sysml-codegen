@@ -36,6 +36,12 @@ CanonicalChannel = NewType("CanonicalChannel", str)
 ScopedKey = NewType("ScopedKey", str)
 """Dotted hierarchy key with design prefix stripped. Rejects ``::``."""
 
+ScopedAliasKey = NewType("ScopedAliasKey", tuple[str, str])
+"""Structured ``(scope, leaf)`` key for the part-def / consumer-scoped alias
+registry (Item 10, D7). Stored UNJOINED so ``("a.b", "c")`` and ``("a", "b.c")``
+can never collapse — the leaf is always a single segment, so ``("a", "b.c")``
+cannot even arise. Distinct namespace from the flat string ``ScopedKey`` alias."""
+
 
 def make_scoped_key(usage_eqn: str, attr_name: str) -> ScopedKey:
     """Derive a ScopedKey from a usage EQN and attribute name.

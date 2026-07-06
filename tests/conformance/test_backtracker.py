@@ -277,9 +277,11 @@ class TestReqBT02:
                 alias_hit_count += 1
 
         # After C11b: Key_A registered as alias in Phase 1a, so all cross-scope
-        # CHAIN bindings resolve via alias_lookup (was 10 before Key_A aliases)
-        assert alias_hit_count == 18, (
-            f"Expected 18 cross-package alias hits in catf_mfe, got {alias_hit_count}"
+        # CHAIN bindings resolve via alias_lookup (was 10 before Key_A aliases).
+        # Item 10 stage (a): +1 (18→19) — the recaptured catf snapshot now wires the
+        # cross-part multi-hop EXPOSE (cryo_load.magnet_volume) via the alias-terminal hop.
+        assert alias_hit_count == 19, (
+            f"Expected 19 cross-package alias hits in catf_mfe, got {alias_hit_count}"
         )
 
 
@@ -725,7 +727,12 @@ class TestResultBaselines:
 
     @pytest.mark.req("REQ-BT-04")
     def test_catf_mfe_counts(self, catf_mfe_bt):
-        """catf_mfe: 42 usages, 136 resolutions, 30 MODULE_OUTPUT."""
+        """catf_mfe: 42 usages, 136 resolutions, 31 MODULE_OUTPUT.
+
+        Item 10 stage (a): MODULE_OUTPUT 30→31 — the recaptured snapshot wires the
+        cross-part multi-hop EXPOSE (cryo_load.magnet_volume), turning one fell-through
+        fallback into a resolved module output.
+        """
         result, _, _ = catf_mfe_bt
         assert len(result.required_usages) == 42
         assert len(result.binding_resolutions) == 136
@@ -733,7 +740,7 @@ class TestResultBaselines:
             1 for r in result.binding_resolutions.values()
             if r.resolution_type == BindingResolutionType.MODULE_OUTPUT
         )
-        assert mo_count == 30
+        assert mo_count == 31
 
     @pytest.mark.req("REQ-BT-04")
     def test_attr_expr_probe_counts(self, attr_expr_probe_bt):
@@ -1227,8 +1234,11 @@ class TestC11bPhaseRegistration:
                     phase4_registered += 1
 
         assert phase4_total > 0, "No transitive candidates in catf_mfe"
-        assert phase4_registered == 44, (
-            f"Expected 44 Phase 4 transitive aliases, got {phase4_registered}"
+        # Item 10 stage (a): 44→46 — the recaptured snapshot flips catf's two multi-hop
+        # exposes (magnet_volume_total, blanket_volume_total) FORMULA→EXPOSE_PURE, so both
+        # now appear as design_attributes with transitive defaults and register in Phase 4.
+        assert phase4_registered == 46, (
+            f"Expected 46 Phase 4 transitive aliases, got {phase4_registered}"
         )
 
 
