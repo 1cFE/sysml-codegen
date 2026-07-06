@@ -232,7 +232,44 @@ No comprehension-blocking jargon. The one place the prose misleads is the "choke
 
 ## Resolutions
 
-_Filled in during Stage 4 as the user resolves each issue. Do not edit the design here._
+_Incorporated 2026-07-06 per orchestrator rulings. 2 Critical + 3 Major + minors adopted._
+
+- **C1 — D3-8 map swap too broad.** Adopted the **narrow fix** (orch ruling 1). Design D3 and
+  the Implementation Note now define `AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}`:
+  arithmetic gets correct Python spellings (sole divergence `^`→`**`), comparison/logical keep
+  their existing valid `OPERATOR_MAP` translations, and an operator in **neither** map sets
+  `has_unsupported=True` + warn. No wholesale `PYTHON_OPERATOR_MAP` swap. The rejected-
+  alternative now names the true alternative (narrow vs wholesale), and the byte-identity claim
+  is restated as "no *aggregation expression* uses `^` or any dropped operator."
+- **C2 — Item-8 fence.** Added an explicit **Item-8 coordination fence** (Non-Goals) naming the
+  shared function `_walk_aggregation_ast` (`hierarchy_resolver.py:331`). Sequencing ruling
+  recorded: **Item 5 lands after Item 8**; D3-8's edit is written against Item 8's post-reorder
+  dispatch and all D3-8 line cites are Item-8-relative; byte-identity coordinated with Item 8's
+  v2 gate. Also surfaced in the Handoff "Sequencing (hard)" block and the appendix row.
+- **M3 — SC-5 noise vs INV-6.** Adopted the **hazard-scoped warn** (orch ruling 3): fires only
+  when an unparseable-but-present default feeds an EP omitted from the JSON. Non-EP non-float
+  shapes stay silent → INV-6 holds for clean fixtures without a blanket carve-out. From the
+  probe, `plant_value_shapes`' enum EP (`wall = 'Wall Kind'::liquid_wall`) lands as an omitted
+  EP, so it warns → `plant_value_shapes` declared an **expected-warning trip fixture** (third
+  carve-out, re-capture if the diff moves). B2, INV-6, and the byte-identical carve-outs
+  updated; "every clean fixture holds INV-6" qualified to "every *clean* (non-trip) fixture."
+- **M4 — SC-4 A1 fail-fast site.** Named precisely (orch ruling 4): the **EP-key registration
+  boundary in the parameter-group deriver** — `parameter_groups.py:132` (sanitize),
+  `:351/377/404/583` (key build), `:554-640` (group collection). Guard is a uniqueness check at
+  registration time (not sanitize time); channels remain covered by `register_scoped`
+  (`output_registry.py:72`). Design D7 and the appendix row updated.
+- **M5 — framing.** Reframed (orch ruling 5) to "**the totality pattern applied at N
+  enumerated arms**, backed by a stated invariant." Core Concept now lists the 6 Family-1 arms
+  and the 3-warns+1-guard-pin Family-3 arms, and states INV-1/INV-3 (added to the new-site
+  code-review checklist) as the durable contract. "Choke point" language softened in
+  Architecture. No residual-risk-hiding prose.
+- **m6 — path drift.** Fixed: `output_registry_builder.py` cited under `orchestration/` (was
+  `resolution/`) at both sites.
+- **m7 — "^ corpus has none" imprecise.** Restated as "no *aggregation expression* uses `^`;
+  the `^` at `solar_battery_model/library.sysml:317,339` is doc-comment prose."
+- **m8 — live-run note.** Acknowledged: the reviewer confirmed D3-7 by code trace (sandbox
+  denied execution in the review session). In *this* session probes executed live and the
+  Design-Open Gate table reflects real runs; the D3-7 reclassification stands.
 
 ---
 

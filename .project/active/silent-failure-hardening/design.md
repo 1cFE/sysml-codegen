@@ -11,8 +11,9 @@
 ## Overview
 
 Make the model shapes the pipeline cannot handle produce a diagnostic at the root, per
-family, without adding noise to clean models. Four families, one choke point each, plus the
-sanitizer and the non-float entry-point holes.
+family, without adding noise to clean models. Four families, each one totality pattern +
+stated invariant applied at its enumerated dispatch/lookup/handler arms, plus the sanitizer
+and the non-float entry-point holes.
 
 ## Related Artifacts
 
@@ -65,18 +66,37 @@ entry-point ledgers. It composes with what already exists:
 - The `warnings` list `_extract_bindings` already threads and the `ExtractionReport` it
   already builds — Family 1 and Family 2 wire into these, adding no new plumbing.
 
-The fix is per family at its choke point, not per site (R4 step 3 — the anti-whack-a-mole
-contract).
+**Framing: one pattern + one invariant per family, applied at N enumerated arms — not a
+single code location.** Families 1 and 3 are a *discipline* (route-unhandled-to-warned-
+sentinel; require-unique-or-warn) applied at each dispatch/lookup arm, backed by a stated
+invariant (INV-1, INV-3) that is the durable contract. The invariant, not a single edit, is
+what stops a *newly-added* arm from reintroducing the silent bug — the plan adds INV-1/INV-3 to
+the code-review checklist for new dispatch/lookup sites. The enumerated arms:
+
+- **Family 1 (6 arms):** `_extract_single_binding` terminal (D3-1, `usage_extractor.py:748`);
+  `_parse_chain_expression` 3+-segment reject (D3-2, `:756`); aggregation operator translation
+  (D3-8, `hierarchy_resolver.py:370,382`); EXPOSE alias-loop `else` (D3-16,
+  `computed_attribute_extractor.py:315`); D3-9 tripwire (`:92`); D3-3 debug-guard/assert
+  (`usage_extractor.py:789`, closed-by-construction).
+- **Family 3 (3 warns + 1 guard-pin):** redefinition leaf-match collision (D3-10,
+  `graph_builder.py:1349`); `design_prefix` collision (D3-15, `pipeline_builder.py:597`);
+  `_usage_by_name` lookup ambiguity (D3-11b, `dependency_backtracker.py:247`); D3-7
+  guard-pin (`output_registry.py:72`, closed-by-construction).
+
+This is R4 step 3 (anti-whack-a-mole) satisfied by a unifying pattern + invariant, not by
+pretending each family is one line.
 
 ## Key Bets
 
 - **B1.** Every reachable unhandled shape at these choke points is one this item should
   *reject loudly*, not *support* — support is a Non-Goal deferred to the epic. *If false →
   we'd be rejecting models users legitimately expect to work, and the loud arm becomes noise.*
-- **B2.** The doc-19 totality pattern generalizes to the extraction/classification dispatches
-  without changing ledger semantics for clean models — the loud arm is unreachable on any
-  clean corpus fixture. *If false → clean fixtures regress with new WARNINGs and the
-  byte-identical / zero-WARNING success criteria break.*
+- **B2.** The totality/hazard-scoped arms are unreachable on any *clean* corpus fixture — a
+  clean model carries no unhandled dispatch shape and no EP-feeding unparseable default, so the
+  new arms stay silent there. Fixtures that *do* carry a trip shape (`deep_cross_scope_probe`
+  for D3-2, `plant_value_shapes` for SC-5) are expected-warning trip fixtures, excluded from
+  the zero-WARNING clean sweep. *If false → a genuinely clean fixture regresses with a new
+  WARNING and the zero-WARNING criterion breaks.*
 - **B3.** The OutputRegistry scoped-key collision guard closes every reachable D3-7 silent
   cross-wire: any silent merge needs two entries at the same `(bare part_name, python_name)`
   *with a channel*, and every such FORMULA entry registers the colliding `key_f` so the guard
@@ -100,18 +120,30 @@ contract).
   `extract_feature_chain_segments` (`extraction/expression_utils.py:279`); >2 segments →
   warn + reject (do not truncate to root). 2-segment/V11 path unchanged. *Rejected: full
   multi-hop parse — new capability, Non-Goal; FILED as `[MULTIHOP-CHAIN-PARSE]`.*
-- **D3 — D3-8 = use the power-emitting map + set `has_unsupported`.** The aggregation walker
-  (`hierarchy_resolver.py:370,382`) maps known operators through the Python-emitting map so
-  `^`→`**`; an operator absent from that map sets `ctx.has_unsupported = True` (the pattern
-  already used at the unknown-node arm, line 457) instead of the silent `f" {operator} "`
-  fallback. *Rejected: leaving the pass-through fallback (silently emits Python XOR).*
-- **D4 — SC-5 + D3-12 = warn-on-unparseable-present at the shared omission site, fix both
-  roots.** The two roots (`parameter_groups.py:192` eval `except→None`; `:710` `float()→None`)
-  both feed `if default_value is None: continue` at the design-attr loop (`:601`). The fix
-  warns *only* when the raw source carried a value that parsed to `None` (present-but-
-  unparseable), silent when genuinely absent — one predicate at the shared site, both roots
-  narrowed. *Rejected: typed pre-fill of a fabricated value (hides the real gap); double-
-  patching each root independently (leaves a gap at the shared site).*
+- **D3 — D3-8 = narrow aggregation-operator translation (override the one arithmetic
+  divergence, keep the rest, `has_unsupported` on genuinely-unknown).** The aggregation walker
+  (`hierarchy_resolver.py:370,382`) gets a dedicated map
+  `AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}`: arithmetic translates to the correct Python
+  spelling (the sole divergence today is `^`, which must become `**`, never XOR);
+  comparison/logical operators (`> < == != and or implies not …`) keep their existing valid
+  `OPERATOR_MAP` translations; an operator in **neither** map sets `ctx.has_unsupported = True`
+  with the warn (the pattern already at the unknown-node arm, line 457), replacing the silent
+  `f" {operator} "` fallback. *Rejected: wholesale swap to `PYTHON_OPERATOR_MAP`
+  (`expression_compiler.py:151-159`) — that map lacks the comparison/logical operators, so a
+  `sum(x) > threshold` aggregation that emits valid `(left > right)` today would falsely trip
+  `has_unsupported`. Also rejected: leaving the pass-through fallback (silently emits XOR).*
+- **D4 — SC-5 + D3-12 = hazard-scoped warn at the shared omission site, fix both roots.** The
+  two roots (`parameter_groups.py:192` eval `except→None`; `:710` `float()→None`) both feed
+  `if default_value is None: continue` at the design-attr loop (`:601`). The warn is
+  **hazard-scoped**: it fires *only* when an unparseable-but-present default belongs to an
+  attribute that **feeds an entry point which is then omitted from the JSON** — the actual
+  silent hole. A non-float attribute that is *not* an EP (e.g. an internal doc-string-shaped
+  value) parses to `None` but is not a silent-drop hazard, so it stays silent. One predicate at
+  the shared site, both roots narrowed. This keeps INV-6 zero-WARNINGs for clean fixtures
+  *without* a blanket carve-out — only fixtures that actually carry the enum/string-EP hole
+  warn. *Rejected: warn on every non-float attribute (fires on benign non-EP shapes → INV-6
+  regression); typed pre-fill of a fabricated value (hides the gap); double-patching each root
+  (leaves a gap at the shared site).*
 - **D5 — Family 3 = require-unique-and-warn at lookup; no follow-on split.** D3-10
   (`graph_builder.py:1349`) and D3-15 (`pipeline_builder.py:597`) get a collision warning at
   the lookup/derivation site (leaf-name match is structurally required in the fallback, so a
@@ -128,14 +160,23 @@ contract).
 - **D7 — SC-4 = broaden guard + prepend + injective key construction.** `sanitize_name`
   (`core/qualified_names.py:12`) broadens the keyword guard to `keyword.kwlist`, prepends a
   safe prefix when the result starts with a digit or is empty (so `.isidentifier()` always
-  holds), and the empty-input early return no longer yields `""`. Channel/EP **key
-  construction** gains a collision fail-fast (the `register_scoped` raise pattern). *Rejected:
-  post-hoc collision detection downstream (too late — the wrong key is already wired).*
+  holds), and the empty-input early return no longer yields `""`. **SC-4 A1 fail-fast site
+  (named):** channels already fail fast via `register_scoped` (`output_registry.py:72`); the
+  *unguarded* boundary is **entry-point key construction in the parameter-group deriver** —
+  where `sanitize_name` produces `param_name` (`parameter_groups.py:132`) and the EP key is
+  built (`qname = f"{usage.qualified_name}__{param_name}"`, `:351/377/404`; `attr.qualified_name`,
+  `:583`) and the `ParameterSource` entries are collected into groups (`:554-640`). The guard
+  is a **uniqueness check at that registration boundary**: two distinct SysML sibling names
+  that sanitize to one EP key raise, rather than the second silently overwriting the first.
+  *Rejected: a guard at sanitize time (sanitize is many-to-one by design and has no key
+  context); post-hoc collision detection downstream (too late — the wrong key is already
+  wired).*
 
 ## Architecture
 
-Five edit clusters, each at its family's choke point. Data flow is unchanged for clean
-models; the new arms fire only on the trip shapes.
+Five edit clusters, one per family (+ sanitizer), each applying its family's pattern at the
+enumerated arms above. Data flow is unchanged for clean models; the new arms fire only on the
+trip shapes.
 
 - **Family 1 — extraction dispatch** (`extraction/usage_extractor.py`,
   `extraction/hierarchy_resolver.py`, `extraction/computed_attribute_extractor.py`). The
@@ -144,7 +185,7 @@ models; the new arms fire only on the trip shapes.
   on the cross-part single-hop shape the Item-10 gate misses. Diagnostics ride the existing
   `warnings` list → `ExtractionReport`.
 - **Family 2 — report surfacing** (`orchestration/pipeline_builder.py`,
-  `analysis/phantom_detector.py`, `resolution/output_registry_builder.py`). D3-4 renders the
+  `analysis/phantom_detector.py`, `orchestration/output_registry_builder.py`). D3-4 renders the
   extraction report (live + from-snapshot, INV parity). D3-5 and D3-13 and the pattern-3 sites
   get the Item-4 scanned/reported/excluded sentinel.
 - **Family 3 — lookup uniqueness** (`resolution/graph_builder.py`,
@@ -169,8 +210,10 @@ models; the new arms fire only on the trip shapes.
 - **INV-5 (sanitizer).** For all `x`, `sanitize_name(x)` is a legal Python identifier and not
   a keyword; two sibling names that sanitize to one channel/EP key **fail fast** at key
   construction.
-- **INV-6 (silent-on-clean).** Every clean corpus fixture still generates with zero WARNINGs;
-  repetitive diagnostic classes use the count-summary style (RN-7).
+- **INV-6 (silent-on-clean).** Every *clean* corpus fixture still generates with zero
+  WARNINGs; repetitive diagnostic classes use the count-summary style (RN-7). Expected-warning
+  **trip** fixtures (`deep_cross_scope_probe`, `plant_value_shapes`, and the D3-6/8/10/15/16
+  trip fixtures) are excluded from the zero-WARNING sweep and pin their diagnostic instead.
 
 ## Component Overview
 
@@ -182,12 +225,13 @@ models; the new arms fire only on the trip shapes.
 - `orchestration/pipeline_builder.py` — render the discarded report (D3-4); `design_prefix`
   collision-warn (D3-15); pattern-3 sentinels (scoped-alias, self-named rescue, design-override
   rewrite, empty-render).
-- `resolution/output_registry_builder.py` — Phase-1a unknown-calc-def skip warns (D3-5).
+- `orchestration/output_registry_builder.py` — Phase-1a unknown-calc-def skip warns (D3-5).
 - `resolution/graph_builder.py` — `_find_literal_redefinition` fallback collision-warn (D3-10);
   the D3-7 guard pin + invariant (no re-key by default).
 - `analysis/dependency_backtracker.py` — `_usage_by_name` lookup ambiguity warn (D3-11b).
-- `analysis/parameter_groups.py` — `_parse_default_value` + expr-eval narrowed; warn-on-
-  unparseable-present at the shared omission site (SC-5, D3-12).
+- `analysis/parameter_groups.py` — `_parse_default_value` + expr-eval narrowed; hazard-scoped
+  warn (EP-feeding unparseable) at the shared omission site (SC-5, D3-12); SC-4 A1 EP-key
+  uniqueness fail-fast at registration.
 - `analysis/phantom_detector.py` — zero-found sentinel (D3-13).
 - `snapshot/loader.py` — `usage_type_map` `except…pass` narrowed + logged (D3-6).
 - `generation/preservation.py` — narrow `except` + preserve-on-transient (D3-14).
@@ -200,6 +244,16 @@ models; the new arms fire only on the trip shapes.
   chains, non-uniform arrays) — loud rejection only.
 - Item 2's sites (the two `0.0`-truthiness classifiers, `design_overrides` threading) and
   Item 4's landed fixes — coordination fences, do not touch.
+- **Item 8 — shared function `_walk_aggregation_ast` (`hierarchy_resolver.py:331`).** Item 8
+  (cleanup-debt) is editing this same function *concurrently*: it reorders the dispatch to put
+  the literal check (currently line 453) before the invocation catch-all, under its own
+  byte-identity gate. **Sequencing ruling: Item 5's implement lands AFTER Item 8's.** D3-8's
+  edit is written against the *post-reorder* dispatch, and all D3-8 line cites (operator sites
+  370/382, unknown-node arm 457) are **relative to Item 8's reorder** — the plan rebases them
+  onto Item 8's landed state before editing. D3-8 touches only the operator translation, not
+  the literal/invocation ordering Item 8 owns, so the two edits are disjoint within the
+  function once sequenced. Coordinate D3-8's byte-identity language with Item 8's v2 gate (both
+  assert the committed aggregation corpus is unchanged).
 - The bulk QN re-key of the D3-7 resolution map (optional defense-in-depth, deferred).
 - The `[MULTIHOP-CHAIN-PARSE]` follow-on and the `[D3-HYGIENE-TAIL]` consolidated entry —
   FILED at item close, not implemented here.
@@ -211,26 +265,40 @@ models; the new arms fire only on the trip shapes.
   (line 557). Family 1 diagnostics append to that list; Family 2's D3-4 renders it.
 - **D3-2 segment count.** Use `extract_feature_chain_segments` for the *count* only — do not
   build the resolved path from it (that is the deferred multi-hop feature).
-- **D3-8 map choice (confirmed).** Swap `OPERATOR_MAP` (`expression_utils.py:13`, `^`→` ^ `
-  XOR) for `PYTHON_OPERATOR_MAP` (`expression_compiler.py:151`, `^`→` ** ` at `:157`) at the
-  walker's two operator sites (`hierarchy_resolver.py:370,382`). That map's values are
-  `str | None`; a `None` value (or an absent operator) is the `ctx.has_unsupported = True`
-  trigger, mirroring the unknown-node arm at line 457.
-- **SC-5/D3-12 predicate.** At `parameter_groups.py:601`, warn when `attr.default_value` is
-  truthy but `_parse_default_value(...)` returned `None`; silent when `attr.default_value` is
-  absent. Apply the mirror predicate at the expr-eval root so both roots share one site.
+- **D3-8 narrow fix (confirmed).** Define `AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}` and
+  use it at the walker's two operator sites (`hierarchy_resolver.py:370,382`, **line numbers
+  relative to Item 8's post-reorder dispatch** — see fences). `OPERATOR_MAP`
+  (`expression_utils.py:13-30`) already spells every operator correctly *except* `^`
+  (`^`→` ^ ` XOR), so the override is a one-key change; comparison/logical translations survive
+  untouched. Replace the silent `f" {operator} "` fallback with: operator absent from
+  `AGG_PYTHON_OPS` → `ctx.has_unsupported = True` + warn (mirroring line 457). Do **not** reach
+  for `PYTHON_OPERATOR_MAP` — it drops the comparison/logical operators (see D3).
+- **SC-5/D3-12 predicate (hazard-scoped).** At `parameter_groups.py:601`, warn when
+  `attr.default_value` is present but `_parse_default_value(...)` returned `None` **and** the
+  attribute feeds an entry point that is then omitted from the JSON; silent when the value is
+  genuinely absent, or when the unparseable value is not an EP hazard. Apply the mirror
+  predicate at the expr-eval root so both roots share one site. The EP-feeds check reuses the
+  group/EP membership the deriver already computes — no new traversal.
 - **Sentinel verbosity (RN-7).** Repetitive classes (phantom scan, scoped-alias registration,
   self-named rescue) use a build-level count-summary INFO + WARN-only-when-`>0`, not a WARN
   per site. Follow `render_constraint_report`'s three-part shape exactly.
-- **Byte-identical carve-outs.** Only D3-2 (`deep_cross_scope_probe` Pattern-A pin flips
-  truncation→diagnostic; one scoped snapshot re-capture) and D3-8 (`^` corpus has none, so
-  still byte-identical on the committed corpus). Every clean fixture holds INV-6.
+- **Byte-identical carve-outs.** D3-2 (`deep_cross_scope_probe` Pattern-A pin flips
+  truncation→diagnostic; one scoped snapshot re-capture); D3-8 (no *aggregation expression* in
+  the corpus uses `^` — the `^` at `solar_battery_model/library.sysml:317,339` is doc-comment
+  prose, not an aggregation — so still byte-identical on the committed aggregation corpus,
+  coordinated with Item 8's v2 gate); **SC-5 `plant_value_shapes`** (its enum EP
+  `wall = 'Wall Kind'::liquid_wall` feeds an omitted EP, so the hazard-scoped warn fires — it
+  becomes an expected-warning trip fixture; generated bytes stay identical since the fix warns
+  rather than pre-fills, but a snapshot re-capture is taken if the diff moves). Every *clean*
+  fixture (non-trip) holds INV-6.
 
 ## Potential Risks
 
-- **Clean-fixture WARNING regression (INV-6).** A totality arm mis-fires on a legitimate
-  clean shape → byte/zero-WARNING break. *Mitigation:* every new diagnostic lands with a
-  silent-on-clean test over the corpus; run the full baseline diff before commit.
+- **Clean-fixture WARNING regression (INV-6).** A totality arm or the SC-5 hazard-scope
+  mis-fires on a legitimate clean shape (e.g. a non-EP non-float attribute) → zero-WARNING
+  break. *Mitigation:* every new diagnostic lands with a silent-on-clean test over the corpus;
+  the SC-5 hazard predicate is gated on actual EP-omission, not on non-float-ness; run the full
+  baseline diff before commit.
 - **B3 over-claim (D3-7).** A non-FORMULA resolution path reaches the bare-name map and
   cross-wires silently despite the guard. *Mitigation:* the D3-7 test asserts the guard
   *raises* on the FORMULA shape; the plan does the consumer audit before deciding to skip the
@@ -264,13 +332,20 @@ subsystem, no new config. The trip fixtures under `probes/fixtures/` graduate to
 
 ## Next-Stage Handoff
 
-**Fixed (do not reopen):** the four-family choke-point map; the LOUD-REJECT ruling for D3-2;
-D3-7 is closed-by-construction (Family 3 re-key set is {D3-10, D3-15}); D3-11b and D3-14 fixes
-land in-item (no split); the design-open probe gate is satisfied and the spec table finalized.
+**Fixed (do not reopen):** the four-family pattern+invariant map; the LOUD-REJECT ruling for
+D3-2; the D3-8 narrow fix (`AGG_PYTHON_OPS`, no wholesale swap); D3-7 is closed-by-construction
+(Family 3 re-key set is {D3-10, D3-15}); D3-11b and D3-14 fixes land in-item (no split); SC-5
+is hazard-scoped (warns only on EP-feeding unparseables); the design-open probe gate is
+satisfied and the spec table finalized.
+
+**Sequencing (hard):** Item 5's implement lands **after Item 8's** — D3-8 edits the shared
+`_walk_aggregation_ast` and rebases its line cites onto Item 8's literal-reorder before
+touching the operator sites. Coordinate D3-8's byte-identity assertion with Item 8's v2 gate.
 
 **Open (plan decides):** the D3-7 consumer audit (whether the optional QN re-key is worth
 doing); the precise sentinel-verbosity split across pattern-3 sites (bounded by RN-7); the
-D3-14 transient/permanent error boundary set.
+D3-14 transient/permanent error boundary set; the exact silent-side pin for the SC-5
+hazard-scope (confirm against `plant_value_shapes` which non-EP non-float attrs stay silent).
 
 **Risk to de-risk first:** INV-6 (clean-fixture zero-WARNING) — write the silent-on-clean
 tests and run the baseline diff *before* landing any diagnostic, so a mis-firing totality arm
@@ -293,18 +368,18 @@ is outside this session's write fence.
 | D3-5 | `output_registry_builder.py:167` | Phase-1a `if not calc_def:` skip warns. |
 | D3-6 | `loader.py:423-424` | Narrow `except`; log the dropped `usage_type_map` key (offline-parity guard). |
 | D3-7 | `output_registry.py:72` / `graph_builder.py:984` | Pin the guard raises + state invariant; QN re-key optional (audit first). |
-| D3-8 | `hierarchy_resolver.py:370,382` | Power-emitting map; unknown op → `has_unsupported`. |
+| D3-8 | `hierarchy_resolver.py:370,382` (Item-8-relative) | `AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}`; operator absent from it → `has_unsupported` + warn. Keeps comparison/logical translations. |
 | D3-9 | `computed_attribute_extractor.py:92` | Tripwire: non-literal AST root + empty refs warns; `not refs → LITERAL` stays. |
 | D3-10 | `graph_builder.py:1349-1350` | Fallback leaf match: warn on ambiguous same-leaf collision. |
 | D3-11b | `dependency_backtracker.py:247` | Track collisions at index build; warn when a bare-name target lookup is ambiguous. |
-| D3-12 | `parameter_groups.py:192` + `:601` | Narrow eval `except`; warn-on-unparseable-present at shared omission site. |
+| D3-12 | `parameter_groups.py:192` + `:601` | Narrow eval `except`; hazard-scoped warn (EP-feeding unparseable) at shared omission site. |
 | D3-13 | `phantom_detector.py:165-173` | Zero-found scanned/reported sentinel. |
 | D3-14 | `preservation.py:92-95` | Narrow `except`, log WARNING, preserve-on-transient. |
 | D3-15 | `pipeline_builder.py:597` | Collision-warn on >1 distinct `design_prefix`. |
 | D3-16 | `computed_attribute_extractor.py:315` | `else` arm warns on cross-part single-hop EXPOSE_PURE the Item-10 gate misses. |
-| SC-4 A1 | channel/EP key construction | Collision fail-fast (`register_scoped` pattern). |
+| SC-4 A1 | EP-key registration in `parameter_groups.py` (`:132` sanitize, `:351/377/404/583` key build, `:554-640` group collection) | Uniqueness check at the registration boundary: two sibling names sanitizing to one EP key raise (channels already covered by `register_scoped`, `output_registry.py:72`). |
 | SC-4 A2 | `qualified_names.py:12-37` | `keyword.kwlist` guard; prepend prefix on digit/empty; empty-input no longer `""`. |
-| SC-5 | `parameter_groups.py:710` + `:601` | Narrow `float()`; warn-on-unparseable-present at shared site. |
+| SC-5 | `parameter_groups.py:710` + `:601` | Narrow `float()`; hazard-scoped warn (EP-feeding unparseable) at shared site. |
 
 ---
 Next Step: After approval → `/_my_plan` (family-by-family, INV-6 tests first).
