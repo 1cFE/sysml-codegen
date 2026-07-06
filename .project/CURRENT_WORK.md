@@ -6,6 +6,15 @@
 
 ## Active Work
 
+### UPSTREAM-FINDINGS Item 11: Derived-Attribute Alias Surfacing (SC-7)
+
+**Status**: Spec in progress — `.project/active/alias-surfacing/spec.md`. Surfaces
+Item 10's typed EXPOSE_PURE alias registrations into a new `output_aliases`
+ComputationGraph field + named exit-point captures in pipeline YAML, both shapes
+(wi014_toy shape A, attr_expr_probe shape B). Retires Item 1's "name is dropped"
+warning for resolvable cases. Scope pinned: EXPOSE_PURE only (redefinition-name
+surfacing is a BACKLOG non-goal).
+
 ### UPSTREAM-FINDINGS Item 10: Cross-Part Channel Wiring (SC-5 stage 2)
 
 **Status**: **AUDITED — CONDITIONAL** (2026-07-06, commit `0c4b921`; audit:
