@@ -593,6 +593,66 @@ than overriding either.
 order) all hold; D-C only reconstructs the input state the confirm pass was always meant to consume offline.
 
 ---
+
+## Round-4 Amendments (applied at Phase-7 scoping — stage (b) mechanism seams, APPROVED)
+
+Phase 7's empirical scoping (three companion fixtures probed live + offline) confirmed M4's "not one
+seam." The design's Architecture bullet said all three stage-(b) mechanisms land in
+`_rewrite_virtual_bindings` (#3). Two of the three actually live elsewhere or take a different shape.
+These are seam/shape corrections, not architecture changes — each still delivers its SC criterion behind
+the same invariants.
+
+**Amendment D-D (b2 sibling disambiguation lives in the backtracker #1 lookup, not the rewrite).**
+The design put SC-3 (two same-type siblings, consumer disambiguates to the correct instance channel) in
+`_rewrite_virtual_bindings`. But stage (a)'s #4 already registers the instance-scoped aliases
+(`('twin_plant.chamber_a','power')`, `('twin_plant.chamber_b','power')`) into `_scoped_alias`, and the
+consumer binding `chamber_b.power` is a plain CHAIN — nothing to *rewrite*. The gap is purely in the
+**reader**: `_resolve_chain_dispatch`'s #1 step (`dependency_backtracker.py:610-622`) splits `chamber_b.power`
+at the last dot → `('chamber_b','power')`, which MISSES the registered `('twin_plant.chamber_b','power')`
+because it lacks the consumer's instance-scope prefix. **This is CONSISTENT with stage (a)'s design, not a
+departure from it:** #1 is the `ScopedAliasKey` reader (D4/D7), and Step 1 of the very same dispatch
+(`:596-602`) already prepends `_consumer_scope_dotted(usage)` to the plain scoped lookup. D-D just gives the
+`_scoped_alias` step (#1, Step 1c) the identical consumer-scope prepend Step 1 has — try
+`(consumer_scope + '.' + prefix, leaf)` before the bare `(prefix, leaf)`, ordered before the unscoped Step 2
+(INV-A: only adds a hit where the ladder fell through). So SC-3 is delivered by extending the stage-(a) #1
+machinery, and REQ-BT-11 (#1) — not REQ-VBR-10 (#3) — is its home.
+
+**Amendment D-E (b3 mechanism-D rescue is full-QN self-reference detection, not the bare-name branch).**
+The design said "extend the bare-name / mechanism-D branch (`_rewrite_virtual_bindings:242-251`) — self-named
+`in x = x`." But a self-named binding does NOT reach the rewrite as a bare name: extraction resolves it to a
+full REFERENCE QN pointing at the calc usage's OWN parameter (`RescueLib::'Rescue Plant'::sink_calc::throughput`
+— identical shape to `self_named_binding_trap`, confirmed by the committed trap snapshot). The bare-name branch
+(`:243-253`) never sees it; the binding is a REFERENCE, not a bare CHAIN. So mechanism D is a **self-reference
+detection**: the binding's `source_path` parent is the consuming usage itself and its leaf is one of that calc
+def's input params, AND an outer same-named part attribute resolves to a real channel → rewrite to that
+upstream channel; no resolvable upstream → leave as-is (the trap, still a modeling error). The rescue may land
+as a pre-resolution rewrite (rewrite the self-ref `source_path` to the outer instance-scoped attribute path,
+`rescue_plant.throughput`, which the existing chain dispatch then resolves through the EXPOSE alias) — the
+faithful reading of "rewrite to the upstream channel." REQ-VBR-10 remains mechanism D's sole home (D5); only
+the detected *shape* changes. Intent unchanged; characterization corrected.
+
+**Amendment D-F (b1 fixture idiom — the `:>>` redefinition MUST be the bare form).** Not a code change; a
+fixture/authoring constraint the design implied but did not state. A value-carrying `:>>` redefinition must be
+authored as bare `:>> attr = value` (which parses as a ReferenceUsage), NOT `attribute :>> attr = value`
+(an AttributeUsage). `_extract_single_redefinition` (`hierarchy_resolver.py:71`) only scans ReferenceUsage
+members, so an `attribute :>>` chain redefinition is silently NOT extracted — `hierarchy_data.redefinitions`
+comes back empty and #3 has nothing to read. b1 `spec_chain_channel` uses the bare form (matching ife_plant
+shape 2 and the real fusion-tea idiom — see the agentic-mbse note). This `attribute :>>` gap is recorded as an
+agentic-mbse guidance/validation candidate for Item 12 (below), NOT fixed in this item — fusion-tea uses only
+the bare form (86 occurrences, zero `attribute :>>`; the real gamma edge is
+`hif_driver.sysml:82 :>> cost_per_joule = meier_cost.gamma`, exactly b1's shape), so no extraction relaxation
+is needed here.
+
+**agentic-mbse impact addition (Item 12, MODELING_GUIDE / validation).** Add to the content list: the
+value-carrying redefinition idiom is the **bare** `:>> attr = value` form; `attribute :>> attr = <expression>`
+is a **known-unsupported** shape (the AttributeUsage redefinition is dropped at extraction,
+`hierarchy_resolver.py:71`). Item-12 guidance should teach the bare form and add a validation warning when an
+`attribute :>>` carries an expression RHS (silent no-op today). This is guidance/validation, not codegen code.
+
+**Invariant impact:** none broken. D-D preserves INV-A (additive reader hit). D-E preserves INV-2
+(per-instance rewrite, no sibling corruption) and REQ-VBR-10's mechanism-D homing. D-F is authoring guidance.
+
+---
 Next Step: After approval → `/_my_plan`. Stage (a): red-first tests + leaf tag + confirm pass + #4
 + #1 + baseline flips (with the M1 churn table). Stage (b): precedence resolver + three companion
 fixtures + captures.

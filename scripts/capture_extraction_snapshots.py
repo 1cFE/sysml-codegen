@@ -58,6 +58,18 @@ MODELS = {
     # committed paths are repo-relative; re-capture brings it to the canonical
     # script form (absolute design_attributes keys, model-relative source_file).
     "quoted_owner_formula": FIXTURES_DIR / "quoted_owner_formula",
+    # Stage-(b) companion fixtures (Item 10, UPSTREAM-FINDINGS). Each isolates one
+    # cross-part channel mechanism the Phase-7 precedence resolver flips (D8):
+    #   spec_chain_channel      — specialized-def :>> nested calc output -> cross-part
+    #                             consumer (the gamma -> lcoe edge, SC-2)
+    #   sibling_channel_ambiguity — two same-type siblings; consumer disambiguates to
+    #                             the correct instance-scoped channel (SC-3)
+    #   self_named_rescue       — self-named `in x = x` with a resolvable upstream (SC-4)
+    # Captured current-incomplete FIRST (Item 8 pattern) so each Phase-7 flip is a
+    # separately-attributable diff. They carry `reference_chain` (recapture set, M6).
+    "spec_chain_channel": FIXTURES_DIR / "spec_chain_channel",
+    "sibling_channel_ambiguity": FIXTURES_DIR / "sibling_channel_ambiguity",
+    "self_named_rescue": FIXTURES_DIR / "self_named_rescue",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types

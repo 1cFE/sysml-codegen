@@ -358,15 +358,17 @@ That three minimal single-mechanism fixtures reproduce SC-2/SC-3/SC-4 cleanly an
 isolated incomplete baseline.
 
 ### Changes Required (REGEN BOUNDARY — captures land current-incomplete)
-- [ ] `tests/fixtures/spec_chain_channel/` — a retyped nested part whose calc **output** wires into a
+- [x] `tests/fixtures/spec_chain_channel/` — a retyped nested part whose calc **output** wires into a
   cross-part consumer (the gamma → lcoe analog, SC-2).
-- [ ] `tests/fixtures/sibling_channel_ambiguity/` — two same-type siblings where a consumer binding
+- [x] `tests/fixtures/sibling_channel_ambiguity/` — two same-type siblings where a consumer binding
   disambiguates to the correct instance-scoped channel (SC-3).
-- [ ] `tests/fixtures/self_named_rescue/` — a self-named `in x = x` with a **resolvable** upstream (the
+- [x] `tests/fixtures/self_named_rescue/` — a self-named `in x = x` with a **resolvable** upstream (the
   positive companion to `self_named_binding_trap`, SC-4).
-- [ ] **Capture (license-gated)** each fixture's extraction snapshot + current-incomplete pipeline baseline
-  via `scripts/capture_*.py` (R3). These carry `reference_chain` (recapture set, M6).
-- [ ] Conformance tests per fixture, red-first, asserting the current-incomplete state (the pin the resolver
+- [x] **Capture (license-gated)** each fixture's extraction snapshot via `scripts/capture_*.py` (R3).
+  Registered in `MODELS` (full-pipeline capture). These carry `reference_chain` (recapture set, M6).
+  No separate baseline-YAML file needed — the conformance tests build the graph offline from the
+  committed snapshot and assert the pins directly.
+- [x] Conformance tests per fixture, red-first, asserting the current-incomplete state (the pin the resolver
   will flip in Phase 7).
 
 ### Validation
@@ -825,24 +827,123 @@ catf gap (a valued literal), NOT an Item-10 regression. **BACKLOG owner: a follo
 now also carries the reference_chain field.
 
 ### Phase 6 Completion
-_[TO BE FILLED — stage (b): 3 companion fixtures authored + captured incomplete FIRST]_
+**Completed:** 2026-07-06 (fresh session, full execution). Gate: **1956 passed / 4 skipped /
+5 xfailed; ruff src/ 21; mypy src/ 109** (baseline 1947 + 9 new stage-(b) conformance tests;
+no src/ change, so ruff/mypy unmoved).
 
-### Phase 7 Completion
-_[TO BE FILLED — escalation-guard outcome: did stage (b) fit one day?]_
+**Three companion fixtures authored + captured current-incomplete FIRST (Item 8 pattern, D8).**
+Each isolates exactly one mechanism; each shows a clean, isolated incomplete pin the Phase-7
+resolver will flip as a separately-attributable diff.
+
+- **b1 `spec_chain_channel` (SC-2, gamma → lcoe).** Base `'IFE Driver'` declares `cost_per_joule`
+  unvalued; `'HIF Driver' :> 'IFE Driver'` redefines `cost_per_joule :>> meier_cost.gamma`;
+  `Variant :> Facility` retypes `driver` to `'HIF Driver'` and owns the consumer
+  `lcoe_calc { in cost_per_joule = driver.cost_per_joule }`. **Incomplete pin:**
+  `lcoe_calc.cost_per_joule` resolves to a library-default entry point
+  `SpecChainLib__HIF_Driver__cost_per_joule`, NOT wired to the gamma channel
+  `...driver__meier_cost__gamma` (which exists). Live warning: "EXPOSE_PURE cost_per_joule: could
+  not identify instance/output from refs ['gamma','meier_cost']" — the specialized `:>>` can't pick
+  an instance without the Phase-7 resolver.
+- **b2 `sibling_channel_ambiguity` (SC-3).** `Chamber` exposes `power = power_calc.power`; `'Twin
+  Plant'` owns same-type siblings `chamber_a`/`chamber_b`; `total_calc { in chamber_power =
+  chamber_b.power }`. **Incomplete pin:** `total_calc.chamber_power` resolves to the def-level
+  entry point `SiblingLib__Chamber__power` (un-disambiguated collision), NOT wired to
+  `...chamber_b__power_calc__power`. Both sibling channels exist.
+- **b3 `self_named_rescue` (SC-4, positive companion to `self_named_binding_trap`).** `source_calc`
+  produces `throughput`; `attribute throughput = source_calc.throughput` exposes it;
+  `sink_calc { in throughput = throughput }` (self-named). **Incomplete pin:**
+  `sink_calc.throughput` resolves to the calc's OWN parameter entry point
+  `...sink_calc__throughput` (the trap failure mode), NOT the upstream `...source_calc__throughput`
+  (which exists).
+
+**Deviations / notes:**
+- **b3 keyword collision fixed.** The prior session's b3 used `flow` as an attribute name — `flow`
+  is a SysML v2 reserved keyword (flow connections), so the committed fixture did NOT parse. Renamed
+  the shared name to `throughput`. (This is why the handoff flagged it AUTHORED-BUT-UNVERIFIED.)
+- **b1/b2 authoring corrections (found live, absorbed).** b1's `lcoe_calc` was first placed on the
+  base `Facility` and got dropped ("no PartUsage instantiations") — moved it onto the instantiated
+  `Variant`. b2 first bound `chamber_b.power_calc.power` (3-segment through a calc usage), which the
+  chain extractor truncates to `chamber_b` — switched to the exposed-attribute form `chamber_b.power`
+  (2-segment, fully captured), keeping the ambiguity a resolver concern, not an extraction gap.
+- **Offline == live verified** for all three: `build_pipeline_context_from_snapshot` reproduces the
+  exact incomplete pins the live `build_pipeline_context` produces. So the conformance tests are
+  license-free; a `@requires_license` live-load guard per fixture protects against fixture rot.
+- **Capture:** registered all three in `scripts/capture_extraction_snapshots.py::MODELS` (full-pipeline
+  path). Snapshots carry `reference_chain`. No baseline-YAML files — the offline-graph conformance
+  tests pin the wiring directly, which is the attributable unit Phase 7 flips.
+- **New test infra:** `tests/conformance/conftest.py::offline_input_sources(model)` — builds a
+  fixture's graph offline and returns `{(module, param): InputSource}`, the shared seam the three
+  test files assert against.
+
+### Phase 7 — SCOPING COMPLETE, IMPLEMENTATION NOT STARTED (2026-07-06, escalation checkpoint)
+
+**Escalation-guard outcome: the empirical scope confirms M4's "not one seam" — Phase 7 is THREE
+distinct mechanisms across TWO seams, and two of the three deviate from the design's stated
+implementation.** Reported to the orchestrator for a checkpoint before landing (per the design-mandated
+guard on the epic's riskiest item). Each pin's exact current-incomplete state and the precise fix are
+now known (probed live + offline):
+
+**b1 `spec_chain_channel` — the design's core resolver (in `_rewrite_virtual_bindings`).**
+- Fixture-idiom fix applied first: the `:>>` redefinition was authored as `attribute :>> cost_per_joule
+  = meier_cost.gamma`, which parses as an **AttributeUsage** — and `_extract_single_redefinition`
+  (`hierarchy_resolver.py:71`) only accepts **ReferenceUsage**, so the redefinition was NOT extracted
+  (empty `hierarchy_data.redefinitions`). Changed to the bare `:>> cost_per_joule = meier_cost.gamma`
+  form (the value-carrying idiom ife_plant shape 2 uses); now extracted as
+  `(SpecChainLib__HIF_Driver, cost_per_joule, CHAIN, meier_cost.gamma)`. Snapshot + conformance test
+  re-captured/updated. **This was a fixture bug, NOT a design/extraction gap.**
+- Current pin (post-fix): `lcoe_calc.cost_per_joule` = EP
+  `SpecChainDesign__spec_chain_plant__lcoe_calc__cost_per_joule` (own valueless param).
+- The resolver has its inputs: `usage_type_map` carries the retype
+  `('SpecChainLib__Variant','driver') -> 'SpecChainLib__HIF_Driver'`; `redefinitions` carries the
+  `:>>` chain. Fix = second index over `redefinitions` by owning (specializing-def) QN + type-select
+  via `usage_type_map` + rewrite `driver.cost_per_joule` -> `driver.meier_cost.gamma`. **In-scope,
+  design-faithful, bounded.**
+
+**b2 `sibling_channel_ambiguity` — a #1-lookup SCOPE fix (in `_resolve_chain_dispatch`, the
+BACKTRACKER — NOT `_rewrite_virtual_bindings`).** Stage-(a) #4 already registered the scoped aliases
+`('twin_plant.chamber_a','power')` and `('twin_plant.chamber_b','power')`. The consumer binding is
+`chamber_b.power`; the #1 lookup splits at the last dot -> `('chamber_b','power')`, which MISSES the
+registered `('twin_plant.chamber_b','power')` — the key lacks the consumer's instance-scope prefix
+(`twin_plant.`). Fix = prepend the consumer usage's instance path before the #1 lookup (INV-A must
+hold: only add a hit where the ladder fell through). **Different seam than the design named; smaller.**
+
+**b3 `self_named_rescue` — self-reference rescue (design's mechanism D, but NOT the shape the design
+assumed).** The design's Phase-7 says "extend the bare-name branch (`:242-251`) — self-named `in x = x`."
+But the self-named binding does NOT arrive as a bare name: its `source_path` is a full REFERENCE QN
+pointing at the calc's OWN parameter, `RescueLib::'Rescue Plant'::sink_calc::throughput` (identical
+shape to `self_named_binding_trap`). So the bare-name branch never sees it. Fix = detect the
+self-reference (source_path's parent is the calc usage itself, leaf is a param name) AND an outer
+same-named attribute exists as a resolvable channel, then rewrite to the upstream (`source_calc`
+channel); no resolvable upstream -> leave as-is (the trap). The **intent** is unambiguous; the
+**mechanism** deviates from the design's "bare-name" characterization (absorbable like D-A/B/C, but
+worth an explicit note since it touches the sole mechanism-D home, REQ-VBR-10).
+
+**Open decisions for the orchestrator (batched) — see the session report.**
+- Confirm proceeding to implement all three deviating-but-bounded mechanisms autonomously, OR land
+  them under review one pin at a time.
+- The fusion-tea-idiom question (does the real gamma -> lcoe use the bare `:>>` chain redefinition my
+  b1 now uses, or `attribute :>>`?) is a Phase-8 verification concern, not a Phase-7 blocker, but if
+  the real idiom is `attribute :>>`, extraction (`hierarchy_resolver.py:71`) must ALSO relax to accept
+  AttributeUsage redefinitions — flagged now so it is not a Phase-8 surprise.
 
 ### Phase 8 Completion
 _[TO BE FILLED — WI-015 run-C lcoe number + match; gamma's moved channel name]_
 
 ---
 
-**Status:** In Progress — **STAGE (a) COMPLETE and green (Phases 0–5).** Both V11 pins flip on the
-LIVE *and* OFFLINE paths (channel identity verified: tf_coil, not the plasma_region collision); wi014
-shape-A resolves live and offline; suite **1947 passed / 4 skipped / 5 xfailed; ruff src/ 21; mypy src/
-109**; only the 4 enumerated fixtures changed. Phase 5 found+fixed a real offline-parity bug (M6/D9
-reconciliation — see Phase 5 COMPLETE #2; a small design amendment for orchestrator review).
-**Remaining: stage (b) — Phase 6 (3 companion fixtures, captured incomplete FIRST), Phase 7 (precedence
-resolver, ONE-DAY escalation guard), Phase 8 (WI-015 anchor + docs/matrix/REQ IDs + release notes +
-agentic-mbse MODELING_GUIDE list + CURRENT_WORK).**
+**Status:** In Progress — **STAGE (a) COMPLETE (Phases 0–5); STAGE (b) Phase 6 COMPLETE; Phase 7 SCOPED,
+at escalation checkpoint.** Suite **1956 passed / 4 skipped / 5 xfailed; ruff src/ 21; mypy src/ 109.**
+Phase 6 landed the three companion fixtures (spec_chain_channel/sibling_channel_ambiguity/
+self_named_rescue) captured current-incomplete FIRST, with 9 red-first conformance tests, all offline
+== live. NO src/ change in Phase 6 (fixtures + tests + capture-script registration only).
+
+**Phase 7 escalation checkpoint (see the "Phase 7 — SCOPING COMPLETE" note above):** the empirical scope
+confirms M4's "not one seam" — three distinct mechanisms across two seams, two deviating from the
+design's stated implementation (b2 is a backtracker #1-scope fix, not the rewrite resolver; b3's
+self-named binding is a full-QN self-reference, not the design's bare-name). Reported to the orchestrator
+for a proceed/review ruling before landing on the epic's riskiest item. **Remaining: Phase 7 (the three
+scoped pin-flips), Phase 8 (WI-015 anchor + docs/matrix/REQ IDs + release notes + agentic-mbse
+MODELING_GUIDE list + CURRENT_WORK).**
 
 ### Deviations absorbed (all within design intent, no architecture change)
 - **D-A (Phase 1):** the D9 segment walk must expand `target_feature.chaining_features` — the
