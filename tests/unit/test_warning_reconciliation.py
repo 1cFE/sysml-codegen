@@ -70,6 +70,7 @@ def test_solar_battery_zero_warnings_in_item7_categories(tmp_path, caplog):
     )
 
 
+# REQ-OR-09: per-collision alias lines are DEBUG; one WARNING count-summary at build.
 def test_alias_collisions_collapse_to_one_summary(tmp_path, caplog):
     """catf_mfe's per-collision alias lines collapse to one WARNING summary.
 

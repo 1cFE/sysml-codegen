@@ -788,7 +788,7 @@ class TestInheritedAttrClassification:
                 f"KNOWN MISCLASSIFICATION: {owning_part}.{attr_name} is "
                 f"{ca.classification.value}, should be {correct_cls.value}. "
                 f"Cause: inherited attr QN resolves to supertype namespace. "
-                f"Fix scope: C05 classifier or Phase 7 refactor."
+                f"Fix filed: [ITEM7-CLASSIFIER-FIX] (loud EXPOSE_COMPUTED reject, no model hit)."
             )
 
     def test_inherited_refs_have_supertype_qn(self, unresolvable_attr_snapshot):

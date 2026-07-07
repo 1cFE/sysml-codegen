@@ -229,6 +229,8 @@ def test_cross_part_inputs_pinned_or_baseline() -> None:
         assert graph.modules
 
 
+# REQ-CA-10: the Phase-3b confirm walk finalizes a part-rooted FCE to EXPOSE_PURE and
+# registers the transitive channel — pinned to the exact producer channel.
 def test_shape4_wires_to_exact_channel() -> None:
     """Shape 4 channel-identity pin (Item 10 audit gap #1).
 

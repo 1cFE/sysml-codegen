@@ -74,6 +74,8 @@ def test_lcoe_calc_instantiated() -> None:
     assert (CONSUMER, "cost_per_joule") in sources, sorted(sources)
 
 
+# REQ-VBR-11: instance-aware _rewrite_specialized_chain type-select follows the
+# hif_plant usage-level retype to the specialized def, wiring cost_per_joule to gamma.
 def test_cost_per_joule_wired_to_gamma() -> None:
     """SC-2 FLIP (Phase 8 STEP 2, two-level specialization). ``lcoe_calc.cost_per_joule``
     wires to the gamma channel — the gamma -> lcoe edge — because the instance-aware
@@ -86,6 +88,8 @@ def test_cost_per_joule_wired_to_gamma() -> None:
     assert src.producer_channel == GAMMA_CHANNEL, src
 
 
+# REQ-LVP-09: _index_usage_level_retypes indexes usage-level retypes keyed by the
+# container instance QN (genuine retypes only).
 def test_usage_type_map_indexes_usage_level_retype() -> None:
     """The EXTRACTION change (``_index_usage_level_retypes``): the ``hif_plant``
     usage-level ``:>> driver : 'HIF Driver'`` retype is indexed keyed by the CONTAINER

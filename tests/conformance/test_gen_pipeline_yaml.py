@@ -551,6 +551,7 @@ class TestYamlBaselineComparison:
     @pytest.mark.baseline
     @pytest.mark.parametrize("model_name", BASELINE_MODELS,
                              ids=[BASELINE_IDS[m] for m in BASELINE_MODELS])
+    # REQ-BASE-05: generated YAML/graph/registry from snapshot matches the reviewed re-captured baseline (ordering-only recapture).
     def test_yaml_baseline_comparison(self, model_name, all_yamls):
         """Generated YAML from snapshot matches baseline file."""
         short_name = BASELINE_IDS[model_name]

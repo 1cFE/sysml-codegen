@@ -213,6 +213,41 @@ EPs, SingletonTerm "Try 2" direct-channel construction) BEFORE rewiring.
 `_resolve_aggregation_input_channel` is deleted, Strategy D is gone, baselines are
 byte-identical or reviewed, and the parity gate runs against the replaced function.
 
+### [ITEM7-MATRIX-TEST-GAPS] Three REQ rows lack a pinning test — P3, test-coverage
+
+**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** The matrix reconciliation dispositioned
+most UNTESTED rows by cross-citing an existing component test, but three claims have no
+honest test to cite and are left UNTESTED with an argument in the matrix:
+
+- **REQ-DM-08** — "name fields with semantic format constraints SHALL use NewType wrappers,
+  not bare `str`." The wrappers exist (`core/identifier_types.py`) but no test asserts the
+  relevant model fields are *annotated* with them. Needs a small static test (assert the
+  wrappers are `NewType` and the target fields use them).
+- **REQ-RES-05** — "the orchestrator SHALL be a linear sequence: classify → build modules →
+  rebuild groups → toposort → validate." `test_orchestrator.py::test_step_ordering_call_sequence`
+  pins only the OUTER `build_pipeline_context` DAG order (REQ-ORCH-01), a different function.
+  No test pins `build_computation_graph`'s internal sequence.
+- **REQ-RES-08** — "consumer scope derivation SHALL apply to ALL resolution paths." Per-path
+  derivation is verified (aggregation REQ-IR-07, CalcUsage-CHAIN REQ-DRA-04) but no single
+  test pins the cross-cutting invariant. Needs a new independently-anchored test enumerating
+  the paths (R1 ban: expectation written independently, not computed by the code under test).
+  Item 1's cross-part fixtures are substrate.
+
+None is feature work — all three are test-authoring. Kept out of Item 7 (matrix-truth budget;
+new-test authoring, not matrix reconciliation).
+
+### [ITEM7-CLASSIFIER-FIX] Inherited-attr EXPOSE_COMPUTED misclassification — P3, behind a loud xfail
+
+**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** `test_computed_attributes.py::TestInheritedAttrClassification::test_misclassification_documented`
+xfails N inherited-attribute patterns classified EXPOSE_COMPUTED where FORMULA is correct: an
+inherited attribute's QN resolves to the **supertype** namespace, which defeats the classifier's
+Step-2b `owning_part_qn` prefix check (`test_computed_attributes.py::test_inherited_refs_have_supertype_qn`
+pins the root cause). **Re-frame chosen over fix in Item 7:** the misclassification is *loud*
+(EXPOSE_COMPUTED rejection, not silent wrong output), no fusion-tea model hits it, and the fix
+(supertype-namespace QN resolution vs the Step-2b prefix check) is out of proportion to a
+matrix-truth item. Fix scope: teach the Step-2b check to accept a supertype-namespace QN for an
+inherited attribute. When landed, the xfail cases flip to PASS (xfail strict=False).
+
 ### [DOCS-SCRUB-F3] Stale code docstrings found while verifying docs (one-line fixes)
 
 **Source**: docs-scrub, 2026-07-06. Code changes, out of scope for the docs-only pass:
@@ -261,7 +296,17 @@ Step-6.6 rebuild anyway, so it is likely a removable dead computation). Deferred
 graph_builder's group-assembly flow in a cleanup pass. **Constraint honored: mypy stayed at 104
 (ignores retained).**
 
-### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — CONDITIONAL, Item 7 consumes
+### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — RETIRED (Item 7 consumed)
+
+**Retired 2026-07-06 by Item 7.** Confirmed `get_default_value` is deleted (0 hits in `src/`
+and `tests/`). REQ-PGD-06 re-framed in the matrix from the PENDING-ITEM7 row to an
+UNTESTED row with its argument: the numeric default now resolves inline via
+`_parse_default_value` in `_derive_from_*` (live), but it is a side-output of grouping
+(pinned by REQ-PGD-01/08) and not independently asserted — the standalone accessor that
+pinned it is gone. REQ-PGD-08's `get_default_value` mention in doc-17 was already cleared by
+Item 8. Superseded.
+
+
 
 **Source**: PIPELINE-TRUTH Item 8 (`.project/active/cleanup-debt/spec.md`, row B), filed
 2026-07-06. **FIRED (2026-07-06) — Item 8 confirmed `get_default_value` DEAD and deleted it**
