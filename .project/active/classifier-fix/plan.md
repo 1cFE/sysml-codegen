@@ -250,19 +250,19 @@ def test_formula_fully_compilable_builds_module_no_warning():   # silent-on-clea
 **See `design.md#architecture`** (Site 2), **`design.md` D5, INV-5, INV-6**, and **`design.md#implementation-notes`** (the `deep_cross_scope_probe` subset-check note).
 
 **File:** `src/sysml_codegen/resolution/graph_builder.py` (Step-6.5 loop, `:269-288`)
-- [ ] Add the `FORMULA and not FULLY_COMPILABLE → WARN "no module produced" + skip` branch. Keep the FULLY_COMPILABLE and EXPOSE_CHAIN_TENTATIVE arms untouched. Warning names the attr; it is a runtime log, not serialized.
+- [x] Add the `FORMULA and not FULLY_COMPILABLE → WARN "no module produced" + skip` branch. Keep the FULLY_COMPILABLE and EXPOSE_CHAIN_TENTATIVE arms untouched. Warning names the attr; it is a runtime log, not serialized.
 
 **File:** D5 test module (crafted `ComputedAttributeData` unit tests — cleaner than routing through a fixture, `design.md#test-doc-surface`)
-- [ ] fires-on-shape + silent-on-clean pair (above).
+- [x] fires-on-shape + silent-on-clean pair (above).
 
 ### Validation
 **Automated:**
-- [ ] D5 pair green.
-- [ ] **Full suite green** including `deep_cross_scope_probe` — it gains one new warning; confirm its test uses a subset/`any()` warning check (`test_deep_cross_scope_probe.py:97-99`), not an exact-set/count assertion. If an exact-warning assertion trips, it named a previously-silent drop and should be updated to include the new loud line.
-- [ ] `deep_cross_scope_probe` committed `baseline_outputs/` bytes unaffected (warnings aren't generated code).
+- [x] D5 pair green.
+- [x] **Full suite green** including `deep_cross_scope_probe` — it gains one new warning; confirm its test uses a subset/`any()` warning check (`test_deep_cross_scope_probe.py:97-99`), not an exact-set/count assertion. If an exact-warning assertion trips, it named a previously-silent drop and should be updated to include the new loud line.
+- [x] `deep_cross_scope_probe` committed `baseline_outputs/` bytes unaffected (warnings aren't generated code).
 
 **Manual:**
-- [ ] Confirm no clean corpus model emits the new WARN (INV-6): the only firing fixture is the probe.
+- [x] Confirm no clean corpus model emits the new WARN (INV-6): the only firing fixture is the probe.
 
 **What We Know Works After This Phase:**
 The generation-time silent drop is now loud at the exact `graph_builder.py:269-288` site, on both live and from-snapshot generation, proven by the fires-on-shape test; clean models stay zero-WARNING.
@@ -364,7 +364,10 @@ Item 4 debt retired: classifier fixed, snapshot re-captured and reviewed, xfails
 ### Phase 3 Completion
 Collapsed `INHERITED_ATTR_PATTERNS` to a single-column 7-row table (6 FORMULA + D3 EXPOSE_COMPUTED) with the `len == 7` / `sum(FORMULA) == 6` module-level guard (fails loudly on collapse). Rewrote `test_inherited_attr_classification` to assert the single literal column (real positive PASSes, no vacuous xfail). **Deleted `test_misclassification_documented`** — removes all 5 xfails (grep confirms zero `xfail` anywhere in tests/). Count 6→7. Re-keyed `test_no_compiled_expressions` to positively assert 6 FORMULA are MANUAL_REQUIRED + compiled=None (+ D3), so it can't silently narrow. Reworded `test_inherited_refs_have_supertype_qn` docstring to "now treated as sibling" (INV-4 kept). Also rewrote the stale C3 FINDING comment block to the fixed CONTRACT (no ghost in the test file). **Result:** this file 50 passed / 0 xfailed (was 26 + 5 xfailed). Other fixture consumers (test_extractor, test_uncovered_params, unit) all green. Test-file ruff unchanged (18 pre-existing, 0 new; not in the `src/` gate).
 
-### Phase 4–6 Completion
+### Phase 4 Completion
+Added the D5 branch at `graph_builder.py` Step-6.5: `elif ca.classification == FORMULA` (after the FULLY_COMPILABLE and EXPOSE_CHAIN_TENTATIVE arms) → `logger.warning(...naming the attr + compilability...)` + skip. EXPOSE_COMPUTED/EXPOSE_PURE stay deferred (explicit elif, not a catch-all else — Non-Goals honored). Test pair in `tests/unit/test_graph_builder_computed_attrs.py` (crafted ComputedAttributeData, cleaner than a fixture): `test_d5_formula_not_compilable_warns_no_module` (INV-5 fires-on-shape — warning naming the attr + zero modules) and `test_d5_fully_compilable_formula_builds_module_no_warning` (INV-6 silent-on-clean — module built + no D5 warning). Full deep_cross_scope_probe + integration + graph_builder suites (103 tests) green — the one fixture that fires D5 uses subset warning checks and still passes; its baseline_outputs bytes are runtime-untouched (warnings aren't generated code). graph_builder.py ruff clean; no new src errors.
+
+### Phase 5–6 Completion
 _[fill]_
 
 ---

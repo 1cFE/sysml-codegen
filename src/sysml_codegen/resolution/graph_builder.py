@@ -286,6 +286,23 @@ def build_computation_graph(
                     "INV-F violation: EXPOSE_CHAIN_TENTATIVE reached module build "
                     f"for '{ca.owning_part_name}.{ca.name}'"
                 )
+            elif ca.classification == ComputedAttributeClassification.FORMULA:
+                # D5 (INV-5): a FORMULA that is not FULLY_COMPILABLE has no module
+                # to build — its expression did not compile (e.g. an inherited-attr
+                # ref that sits outside the calc's input_names). Before this branch
+                # it fell through with no module, no raise, and no warning, on BOTH
+                # the live and from-snapshot generation paths — the same silent drop
+                # the classifier fix was retiring, reached by a different route. Warn
+                # loudly and skip. (EXPOSE_COMPUTED / EXPOSE_PURE stay deferred and
+                # are intentionally NOT handled here — see Non-Goals.)
+                logger.warning(
+                    "Computed attribute '%s.%s' is FORMULA but not FULLY_COMPILABLE "
+                    "(%s); no pipeline module produced. Its expression could not be "
+                    "compiled — a manual implementation is required.",
+                    ca.owning_part_name,
+                    ca.name,
+                    ca.compilability.value,
+                )
 
     # Step 6.6b: Build EXPOSE_PURE alias map for aggregation LocalTerm resolution.
     # Maps (owning_part_qn, python_name) -> expression_text (e.g., "allocation_model.total_allocation").
