@@ -170,7 +170,27 @@ gate the epic already uses. These are Revise-level edits, not a rework.
 
 ## Resolutions
 
-*Filled in during Stage 5, keyed by finding ID.*
+*Applied 2026-07-07 (single revision round). All five accepted.*
+
+- **L2-1 (accepted):** Site 2 framing in Problem corrected — dropped the false "length-sort
+  guards the prefix case"; added the concrete `cost`/`cost_total` → `inputs.inputs.cost_total`
+  corruption walkthrough; named nested-attribute-name as the primary reproduce target (not
+  `x`-in-`max`). Also carried into the per-site R4 reproduce section.
+- **L3-1 (accepted):** Added a `[HARD]` "corpus-scan-before-disposition gate" requirement —
+  per site, scan every clean corpus fixture proving no false fire *before* choosing WARN vs
+  raise (Item-4 D5 discipline); INV-6 is the outcome, the scan is the gate.
+- **L1-1 (accepted):** Reframed site 1↔3 coupling in Problem (site 3) and Open Questions —
+  `"Any"` is minted live at `extractor.py:492` / `data_models.py:70`, so site 1 is only one
+  source; site 3 needs its own diagnostic; collapse option (b) flagged as the trap.
+- **L3-2 (accepted):** Added "R4 Reproduce-First — per-site deliverable" section naming the
+  reproduce artifact + independent anchor per site; sites 2 and 3 carry an explicit
+  reclassification-is-legitimate note.
+- **L1-2 (accepted):** Added a one-line Non-Goals disposition for the
+  `str(expr)`-into-channel-name pattern — OUT (the `str(expr_node)` fallbacks feed expression
+  text, not channel keys; channel names come from `get_channel_name(attribute_name)`; the
+  repr-stability concern is routed to Item 9). Re-file if design finds an in-repo channel-name
+  path.
+- L3-3, L5-1 (notes): no separate action; L5-1 readability resolved by the L2-1 rewrite.
 
 ---
 
