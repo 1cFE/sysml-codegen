@@ -215,6 +215,33 @@ def DesignAttributeLookup(ref: str, ctx: ResolutionContext) -> CanonicalChannel 
 
 
 # ---------------------------------------------------------------------------
+# Strategy E: DirectChannelConstruction
+# ---------------------------------------------------------------------------
+def DirectChannelConstruction(ref: str, ctx: ResolutionContext) -> CanonicalChannel | None:  # noqa: N802
+    """Construct a CalcUsage-format channel directly and verify it (Strategy E).
+
+    Reproduces the SingletonTerm "Try 2" channel construction that no registry
+    lookup covers: build get_channel_name("{instance_path}__{prefix-dots-as-__}",
+    output) and return it iff it exists in canonical_channels. Correct for CalcUsage
+    EQN-format targets; a no-op for refs whose constructed channel is not registered
+    (SumTerm array-child costs, LocalTerms).
+
+    In-idiom with ChainRedefinitionFollow's `{instance_path}__…` construction.
+    """
+    if "." not in ref:
+        return None
+
+    prefix, output_name = ref.rsplit(".", 1)
+    calc_path = prefix.replace(".", "__")
+    channel = get_channel_name(f"{ctx.instance_path}__{calc_path}", output_name)
+    if channel in ctx.output_registry.canonical_channels:
+        logger.debug("Strategy E: '%s' resolved via direct channel '%s'", ref, channel)
+        return CanonicalChannel(channel)
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Strategy chain constants
 # ---------------------------------------------------------------------------
 AGG_STRATEGIES: list[ResolutionStrategy] = [
@@ -222,6 +249,7 @@ AGG_STRATEGIES: list[ResolutionStrategy] = [
     ChainRedefinitionFollow,    # C: :>> chain → ScopedKey → scoped registry
     SysMLQNLookup,              # B: SysMLQN → SysML QN registry (for :: refs)
     DesignAttributeLookup,      # D: design attr match → entry point
+    DirectChannelConstruction,  # E: CalcUsage-format channel construction (Try 2)
 ]
 
 
@@ -266,8 +294,11 @@ def resolve_input(
                 producer_channel=channel,
             )
 
-    # Fallback: entry_point (REQ-IR-06)
-    param_name = ref.rsplit(".", 1)[-1] if "." in ref else ref
+    # Fallback: entry_point (REQ-IR-06). The fallback QN reconciles with the live
+    # aggregation call sites, which mint the part-usage-prefixed key
+    # {module_eqn}__{ref-with-dots-as-underscores} (INV-1). A leaf-only rsplit would
+    # collide sibling part-usage inputs and clash with the module's own output channel.
+    param_name = ref.replace(".", "_")
     ep_qn = f"{ctx.module_eqn}__{param_name}"
     logger.debug(
         "resolve_input fallback: '%s' → entry_point '%s'",

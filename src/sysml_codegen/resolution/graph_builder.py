@@ -52,6 +52,11 @@ from sysml_codegen.extraction.expression_compiler import (
     Compilability,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
+from sysml_codegen.resolution.input_resolver import (
+    AGG_STRATEGIES,
+    ResolutionContext,
+    resolve_input,
+)
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     EntryPoint,
@@ -1395,6 +1400,88 @@ def _find_literal_redefinition(
             first_value,
         )
     return first_value
+
+
+def _build_agg_input_source(
+    ref: str,
+    ctx: ResolutionContext,
+    literal_lookup_key: tuple[str, str] | None,
+    redefinitions: list[RedefinitionData],
+    usage_type_map: dict[tuple[str, str], str],
+    owning_part_qn: str,
+    group_deriver: ParameterGroupDeriver | None,
+    entry_points: dict[str, EntryPoint],
+    new_entry_points: dict[str, EntryPoint],
+) -> tuple[InputSource, bool]:
+    """Resolve one aggregation term to an InputSource, owning the EP side effects.
+
+    The reconciliation choke point for SumTerm/SingletonTerm inputs. Wraps the pure
+    ``resolve_input(ref, ctx, AGG_STRATEGIES)``:
+
+    - A ``module_output`` result is returned as-is (not manual-required).
+    - An ``entry_point`` result triggers the side effects the old inline ``else:``
+      blocks owned: look up a ``LITERAL :>>`` default, register/dedup/backfill the
+      ``DESIGN_ATTRIBUTE`` EntryPoint into ``new_entry_points``, classify its
+      param-group, and report ``manual_required`` (True when the term is unresolved
+      and has no literal default — the caller sets ``MANUAL_REQUIRED`` compilability).
+
+    The EP QN is ``resolve_input``'s reconciled fallback key
+    ``{ctx.module_eqn}__{ref.replace('.','_')}`` (INV-1). ``ctx.module_eqn`` MUST be
+    ``agg.module_eqn`` (INV-7), else every fallback key shifts.
+
+    ``literal_lookup_key`` is the ``(part_usage, attr)`` to look up a LITERAL default
+    for, or ``None`` to skip the lookup (the dotless-SingletonTerm case, which has no
+    part-usage to look up — its default stays ``None``).
+
+    Returns ``(InputSource, manual_required)``. Mutates ``new_entry_points`` only.
+    """
+    resolved = resolve_input(ref, ctx, AGG_STRATEGIES)
+    if resolved.source_type == "module_output":
+        return resolved, False
+
+    # Entry-point fallback: reproduce the inline else-block's side effects.
+    ep_qn = resolved.qualified_name
+    assert ep_qn is not None  # resolve_input always sets qualified_name on entry_point
+    param_name = ref.replace(".", "_")
+
+    literal_default: float | None = None
+    if literal_lookup_key is not None:
+        lu_part_usage, lu_attr = literal_lookup_key
+        literal_default = _find_literal_redefinition(
+            lu_part_usage, lu_attr, redefinitions, usage_type_map, owning_part_qn,
+        )
+
+    manual_required = literal_default is None
+
+    if ep_qn not in entry_points and ep_qn not in new_entry_points:
+        param_group = group_deriver.classify(ep_qn) if group_deriver else None
+        new_entry_points[ep_qn] = EntryPoint(
+            qualified_name=ep_qn,
+            simple_name=param_name,
+            entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+            default_value=literal_default,
+            param_group=param_group,
+        )
+    elif literal_default is not None:
+        # Backfill the default onto an EP created earlier without one.
+        existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
+        if existing_ep and existing_ep.default_value is None:
+            new_entry_points[ep_qn] = EntryPoint(
+                qualified_name=existing_ep.qualified_name,
+                simple_name=existing_ep.simple_name,
+                entry_type=existing_ep.entry_type,
+                default_value=literal_default,
+                source_calc_usage=existing_ep.source_calc_usage,
+                param_group=existing_ep.param_group,
+            )
+
+    ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
+    source = InputSource(
+        source_type="entry_point",
+        qualified_name=ep_qn,
+        param_group=ep.param_group,
+    )
+    return source, manual_required
 
 
 def _build_aggregation_module(

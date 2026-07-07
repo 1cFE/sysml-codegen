@@ -63,6 +63,7 @@ try:
     from sysml_codegen.resolution.input_resolver import (
         ChainRedefinitionFollow,
         DesignAttributeLookup,
+        DirectChannelConstruction,
         ScopedRegistryLookup,
         SysMLQNLookup,
     )
@@ -81,6 +82,9 @@ except ImportError:
         raise NotImplementedError
 
     def DesignAttributeLookup(ref, ctx):  # type: ignore[no-redef]
+        raise NotImplementedError
+
+    def DirectChannelConstruction(ref, ctx):  # type: ignore[no-redef]
         raise NotImplementedError
 
 
@@ -226,12 +230,15 @@ class TestReqIR02:
     @pytest.mark.req("REQ-IR-02")
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
     def test_strategy_ordering_matches_agg_strategies(self):
-        """AGG_STRATEGIES has exactly 4 entries in the documented order."""
-        assert len(AGG_STRATEGIES) == 4
+        """AGG_STRATEGIES has the documented strategies in order. Phase 1 appends
+        Strategy E (DirectChannelConstruction) after A/C/B/D; the Phase 3 cutover then
+        deletes the dead Strategy D, leaving A/C/B/E."""
+        assert len(AGG_STRATEGIES) == 5
         assert AGG_STRATEGIES[0] is ScopedRegistryLookup
         assert AGG_STRATEGIES[1] is ChainRedefinitionFollow
         assert AGG_STRATEGIES[2] is SysMLQNLookup
         assert AGG_STRATEGIES[3] is DesignAttributeLookup
+        assert AGG_STRATEGIES[4] is DirectChannelConstruction
 
 
 # ---------------------------------------------------------------------------
@@ -776,6 +783,62 @@ class TestStrategyD:
 # ---------------------------------------------------------------------------
 # Regression: Full pipeline baseline comparison
 # ---------------------------------------------------------------------------
+class TestPhase1ValueHalf:
+    """Phase 1 value-half plumbing: the reconciled fallback key (D1) and Strategy E (D3)."""
+
+    @pytest.mark.req("REQ-IR-06")
+    @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
+    def test_agg_fallback_key_is_dotted_underscored(self):
+        """resolve_input's entry-point fallback mints {module_eqn}__{ref.replace('.','_')},
+        not a leaf-only rsplit (INV-1)."""
+        registry, snap = _build_registry_from_snapshot("solar_battery_model")
+        agg_data = snap["aggregation_expressions"]
+        redefs = snap["hierarchy_data"].redefinitions
+        design_attrs = _flatten_design_attrs(snap.get("design_attributes", {}))
+        agg = agg_data[0]
+        ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
+
+        # A ref that no strategy resolves → fallback entry_point.
+        ref = "no_such_usage.no_such_attr"
+        result = resolve_input(ref, ctx, AGG_STRATEGIES)
+        assert result.source_type == "entry_point"
+        assert result.qualified_name == f"{ctx.module_eqn}__no_such_usage_no_such_attr"
+        # The disambiguating part-usage prefix survives (not the bare leaf).
+        assert not result.qualified_name.endswith("__no_such_attr")
+
+    @pytest.mark.req("REQ-IR-02")
+    @pytest.mark.skipif(not STRATEGIES_AVAILABLE, reason=SKIP_REASON)
+    def test_strategy_e_returns_channel_only_when_in_canonical(self):
+        """Strategy E is a no-op for dotless refs and for refs whose constructed channel
+        is not registered; it returns a channel only when the constructed CalcUsage-format
+        channel exists in canonical_channels."""
+        registry, snap = _build_registry_from_snapshot("solar_battery_model")
+        agg_data = snap["aggregation_expressions"]
+        redefs = snap["hierarchy_data"].redefinitions
+        design_attrs = _flatten_design_attrs(snap.get("design_attributes", {}))
+
+        # No-op on a dotless ref.
+        any_ctx = _build_resolution_context_for_agg(agg_data[0], registry, redefs, design_attrs)
+        assert DirectChannelConstruction("bare_local", any_ctx) is None
+
+        # No-op on a dotted ref whose constructed channel is not registered.
+        assert DirectChannelConstruction("no_such_usage.no_such_out", any_ctx) is None
+
+        # Every channel E returns must exist in the registry (verified over all
+        # singleton terms across the corpus fixture).
+        returned = 0
+        for agg in agg_data:
+            ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
+            for s_term in agg.expression.singleton_terms:
+                ch = DirectChannelConstruction(s_term.source_path, ctx)
+                if ch is not None:
+                    assert ch in registry.canonical_channels
+                    returned += 1
+        # Strategy E exists to cover the SingletonTerm "Try 2" case; the fixture must
+        # exercise it at least once or the strategy is untested.
+        assert returned > 0, "Strategy E returned no channel on solar_battery — untested"
+
+
 class TestRegression:
     """Regression tests: resolve_input() produces identical wiring to current code."""
 

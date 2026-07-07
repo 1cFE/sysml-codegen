@@ -54,20 +54,20 @@ A filed line number is a static-read verdict until reproduced. Baseline/typing e
 shift line numbers, so re-anchor every target before editing anything.
 
 ### Actions
-- [ ] Confirm the three call sites and the def. Spec filing: call sites `graph_builder.py:1444/1539/1640`,
-  def at `:1212`. Re-grep and record the live line numbers — later phases reference them.
-- [ ] Confirm baseline gate counts live: `mypy src/` == 104, `ruff check src/` == 17 at HEAD.
-- [ ] Reproduce the mypy typing error for D4: temporarily remove both `type: ignore`s at
+- [x] Confirm the three call sites and the def. Spec filing: call sites `graph_builder.py:1444/1539/1640`,
+  def at `:1212`. Re-grep and record the live line numbers — later phases reference them. **DONE — zero drift.**
+- [x] Confirm baseline gate counts live: `mypy src/` == 104, `ruff check src/` == 17 at HEAD. **DONE.**
+- [x] Reproduce the mypy typing error for D4: temporarily remove both `type: ignore`s at
   `graph_builder.py:408/412`, run `mypy src/`, confirm the exact two errors the design records
   (`:408 [assignment]` ParameterGroup vs DerivedParameterGroup; `:412 [attr-defined]` ParameterSource
-  has no `qualified_name`), then restore the ignores. Do not fix yet (that is Phase 5).
-- [ ] Confirm the SingletonTerm "Try 2" channel construction (`~:1548-1560`) and the LocalTerm
-  expose-alias branch (`~:1640`) still match `design.md#core-concept` / D5.
+  has no `qualified_name`), then restore the ignores. Do not fix yet (that is Phase 5). **DONE — verbatim match, restored.**
+- [x] Confirm the SingletonTerm "Try 2" channel construction (`~:1548-1560`) and the LocalTerm
+  expose-alias branch (`~:1640`) still match `design.md#core-concept` / D5. **DONE — match.**
 
 ### Validation
-- [ ] Live line numbers recorded in this plan's Implementation Notes; any drift from the filing noted.
-- [ ] mypy = 104, ruff = 17 confirmed at HEAD.
-- [ ] The two D4 mypy errors reproduced verbatim, then ignores restored (working tree clean).
+- [x] Live line numbers recorded in this plan's Implementation Notes; any drift from the filing noted (none).
+- [x] mypy = 104, ruff = 17 confirmed at HEAD.
+- [x] The two D4 mypy errors reproduced verbatim, then ignores restored (working tree clean).
 
 **What We Know After:** every edit target is anchored to live lines; the D4 fix is confirmed a
 loop-variable problem, not a binding-site one.
@@ -103,22 +103,26 @@ def test_strategy_e_returns_channel_only_when_in_canonical():
 ### Changes Required
 **See `design.md#component-overview` and `#key-decisions` (D1, D3).**
 
-- [ ] `input_resolver.py:~270` — fallback key `ref.rsplit(".",1)[-1]` → `ref.replace(".", "_")` (D1 value half; INV-1).
-- [ ] `input_resolver.py` — add Strategy E `DirectChannelConstruction`; append after A/C/B in `AGG_STRATEGIES`
-  (D3; in-idiom with `ChainRedefinitionFollow` `:184-188`). **Do NOT remove Strategy D yet** — it goes in the cutover commit (Phase 3) per `design.md` Sequencing.
-- [ ] `graph_builder.py` — add `_build_agg_input_source(...)` helper. It wraps `resolve_input`, owns the
-  EP side effects (literal default, register/dedup/backfill, `param_group` classify, `DESIGN_ATTRIBUTE`
-  typing), returns `(InputSource, manual_required: bool)`. **Must absorb both literal-lookup shapes**
-  (Minor 4): SumTerm pre-split fields vs the dotless-SingletonTerm "skip lookup → `literal_default=None`"
-  case. **Build `ctx` with `module_eqn = agg.module_eqn`** (INV-7 — else every fallback key shifts).
-  Not called from any call site yet.
+- [x] `input_resolver.py:~270` — fallback key `ref.rsplit(".",1)[-1]` → `ref.replace(".", "_")` (D1 value half; INV-1).
+- [x] `input_resolver.py` — add Strategy E `DirectChannelConstruction`; append after A/C/B in `AGG_STRATEGIES`
+  (D3; in-idiom with `ChainRedefinitionFollow`). **Strategy D kept** (removed in Phase 3). Appended at end → `[A,C,B,D,E]`.
+- [x] `graph_builder.py` — add `_build_agg_input_source(...)` helper (dormant). Wraps `resolve_input`, owns the
+  EP side effects, returns `(InputSource, manual_required: bool)`. Absorbs both literal-lookup shapes via
+  `literal_lookup_key: tuple[str,str] | None` (None = dotless-SingletonTerm skip). ctx built by caller with
+  `module_eqn = agg.module_eqn` (INV-7). Uses `resolve_input`'s reconciled `qualified_name` as the EP key.
 
 ### Validation
 **Automated:**
-- [ ] New unit tests pass.
-- [ ] `uv run pytest tests/` → green (nothing rewired; helper is dormant).
-- [ ] `ruff check src/` ≤ 17; `mypy src/` ≤ 104 (helper + Strategy E add no new errors).
-- [ ] `git diff tests/fixtures/baseline_outputs/` → empty (no generation path change yet).
+- [x] New unit tests pass (`TestPhase1ValueHalf`, 2 tests).
+- [x] `uv run pytest tests/` → green (2071 passed, 4 skipped, 5 xfailed; helper dormant).
+- [x] `ruff check src/` == 17; `mypy src/` == 104 (helper + Strategy E add no new errors).
+- [x] `git diff tests/fixtures/baseline_outputs/` → empty (no generation path change yet).
+
+### Phase 1 Completion note
+- Also updated `test_strategy_ordering_matches_agg_strategies` (4→5, E at index 4) — a necessary
+  consequence of adding Strategy E while keeping D. Phase 3 revises it again to 4 (A/C/B/E) when D is deleted.
+- `param_name` proven uniform: SumTerm `{pu}_{attr}` and SingletonTerm `source_path.replace('.','_')`
+  both equal `ref.replace('.','_')`, so the single fallback rule reconciles both (B1 confirmed in code).
 
 **What We Know After:** the reconciled value half and the helper exist and typecheck; the live path is
 untouched, proving these additions are behavior-neutral.
@@ -374,9 +378,29 @@ Baseline re-capture: `scripts/capture_*.py` only (R3). Snapshot generation is li
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
+**Completed:** 2026-07-06
 **Live line numbers (re-verified):**
-**mypy/ruff baseline at HEAD:**
-**D4 mypy errors reproduced:**
+- `_resolve_aggregation_input_channel` def: `graph_builder.py:1212`; `__all__` export: `:1925`.
+- Call sites: SumTerm `:1444` (inline `else:` `1453-1493`), SingletonTerm `:1539` (Try-2 `1548-1560`,
+  fallback `1562-1608`), LocalTerm expose-alias `:1640` (own fallback `1650-1666`).
+- Internal recursion call at `:1282` (inside the def itself — dies with the def).
+- All match the spec filing (1444/1539/1640, def 1212) — **zero drift** from filing at HEAD.
+- param_groups: Step-5 call `:228-233`; `raw_groups` loop var `group` `:325`; `ParameterGroup` loops
+  `:335/:373/:408`; ignores `:408` `[assignment]` / `:412` `[attr-defined]`; orphan
+  `_group_entry_points_via_deriver` (D4b delete target).
+- Established agg ctx mapping (from `test_dual_resolution.py:425-434`, `test_input_resolver.py:107-128`
+  `_build_resolution_context_for_agg`): `consumer_scope = ".".join(module_eqn.split("__")[1:-1])`,
+  `module_eqn = agg.module_eqn`, `instance_path = agg.instance_path`. Reproduce this in the helper.
+- `resolve_input`/`ResolutionContext`/`AGG_STRATEGIES` constructed ONLY in tests, never in `src/` —
+  confirms "built + parity-validated, never wired" (spec).
+
+**mypy/ruff baseline at HEAD:** `mypy src/` = **104** errors / 22 files; `ruff check src/` = **17**. Confirmed live.
+
+**D4 mypy errors reproduced:** removed both ignores → mypy = **106** with exactly:
+- `:408 Incompatible types in assignment (expression has type "ParameterGroup", variable has type "DerivedParameterGroup") [assignment]`
+- `:412 "ParameterSource" has no attribute "qualified_name" [attr-defined]`
+Verbatim match to design D4. Ignores restored; working tree clean. Confirmed a loop-variable problem
+(`group` bound `DerivedParameterGroup` at `:325`), not a binding-site one — the D4 rename fix is correct.
 
 ### Phase 1 Completion
 ### Phase 2 Completion
