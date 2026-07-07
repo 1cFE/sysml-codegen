@@ -6,6 +6,13 @@
 
 ## Active Work
 
+### TRUTH-DEBT Item 1 — F4 Aggregation-Resolution Cutover — ✍️ spec in progress (2026-07-06)
+
+Critical-path head of TRUTH-DEBT. Wire the live aggregation path through
+`resolve_input(AGG_STRATEGIES)`, delete `_resolve_aggregation_input_channel` + Strategy D,
+and fold in the graph_builder `param_groups` typing split. Spec:
+`.project/active/f4-cutover/spec.md`.
+
 ### TRUTH-DEBT epic — 📋 SCOPED (Draft, 2026-07-06) — next up
 
 Retires the PIPELINE-TRUTH follow-on ledger in one epic (P2, ~7–9.5 days, 6 items). Absorbs
