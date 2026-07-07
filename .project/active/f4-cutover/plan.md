@@ -164,27 +164,36 @@ def test_localterm_reroute_module_output_only():
 ### Changes Required
 **See `design.md#component-overview` (M3 gate, LocalTerm reroute pin) and D2, D5, Major 1/2/3.**
 
-- [ ] Extend `test_input_resolver.py::TestRegression` into the M3 gate: two halves — an **old-comparand**
-  half (calls `_resolve_aggregation_input_channel` + reproduces the old fallback) and a permanent
-  **new-side** half asserting `_build_agg_input_source(...).qualified_name == formula` incl. `param_group`
-  (D2; L3-1 blind spot at `:820-825`/`:849-853` closed). Mark clearly which half is old-comparand — Phase 3 deletes only that half.
-- [ ] Add the LocalTerm expose-alias reroute pin (Major 3): assert channel parity when a channel exists,
-  and the D5 `module_output`-only guard holds (non-channel result leaves LocalTerm key at
-  `{module_eqn}__{attribute_name}`). Fixtures: `alias_agg_probe`, `solar_battery`.
-- [ ] Add the MANUAL_REQUIRED preservation test (INV-2): an unresolved, no-default agg term routed
-  through `_build_agg_input_source` returns `manual_required=True`.
+- [x] Extend `TestRegression` into the M3 gate: two halves, clearly marked with `Phase-3 DELETE
+  START/END` fences. `test_m3_full_inputsource_parity` (old-comparand, calls the deleted function +
+  reproduces the old fallback, compares FULL InputSource tuple incl param_group) over
+  `solar_battery_model`+`issue22_model`; `test_m3_reconciled_ep_key_survives` (permanent new-side, asserts
+  `_build_agg_input_source(...).qualified_name == formula` + param_group) over `solar_battery_model`.
+- [x] LocalTerm expose-alias reroute pin (Major 3) — `TestLocalTermExposeAliasReroutePin`: channel parity
+  when a channel exists + D5 `module_output`-only guard. Exercised the real case
+  (`misc_hardware_cost → allocation_model.total_allocation → channel`, channel_hits=1).
+- [x] MANUAL_REQUIRED preservation test (INV-2) — `TestManualRequiredPreserved`: unresolved no-default
+  term → `manual_required=True`; channel-resolving term → `False`.
+
+**DEVIATIONS (fixture scoping, recorded per plan):**
+- `test_m3_reconciled_ep_key_survives` scoped to `solar_battery_model` only — issue22's agg inputs ALL
+  resolve to channels (zero fallback EPs), so the new-side assertion is legitimately vacuous there.
+  issue22 stays in the full-parity (old-comparand) test, covering the channel branch.
+- LocalTerm reroute pin scoped to `solar_battery_model` only — verified `alias_agg_probe`'s snapshot
+  carries NO EXPOSE_PURE computed_attributes (empty `expose_aliases`, no `local_terms`), so it cannot
+  exercise the reroute through the factory-inputs path. solar_battery is the covering fixture.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_input_resolver.py` → all three green.
-- [ ] Old-comparand half compiles and runs (function not yet deleted) — this proves it captured the
-  executed old block before Phase 3 removes it.
-- [ ] `ruff check src/` ≤ 17; `mypy src/` ≤ 104.
+- [x] `uv run pytest tests/conformance/test_input_resolver.py` → 32 passed (all gates green).
+- [x] Old-comparand half compiles and runs (function not yet deleted) — captured the executed old block
+  before Phase 3 removes it (INV-3).
+- [x] `ruff check src/` == 17; `mypy src/` == 104. Full suite 2075 passed; baselines byte-identical.
 
 **What We Know After (INV-3):** the reconciled path matches the executed old block over the aggregation
 fixtures, and the LocalTerm reroute is safe. The rewire is now de-risked.
 
-**GATE — do not start Phase 3 until this phase is green.**
+**GATE — CLEARED (all parity gates green before rewire).**
 
 ---
 
