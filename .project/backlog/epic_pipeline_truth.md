@@ -153,9 +153,9 @@ and 7, and the register is updated as findings are confirmed or struck.
   constraints included — with independently-anchored expected counts (Items 4, 5).
 - [ ] **SC-E**: Zero self-referential diagnostic tests remain; the 25 flagged tests
   are re-anchored; the pass-or-skip test fails when its assertion fails (Item 6).
-- [ ] **SC-F**: REQ text, tests, and code agree — F2 and F4 resolved by decision (land
+- [x] **SC-F**: REQ text, tests, and code agree — F2 and F4 resolved by decision (land
   or excise/re-frame), every divergent-PASS row from discovery fixed, the UNTESTED-12
-  dispositioned, no PASS row pins less than its text (Item 7).
+  dispositioned, no PASS row pins less than its text (Item 7). ✅ Certified 2026-07-06.
 - [ ] **SC-G**: Full suite green; ruff/mypy counts not worse than the 21/109 baseline;
   all baseline churn via capture scripts with reviewed diffs.
 - [ ] **SC-H**: agentic-mbse teaches and checks everything this epic changes (Item 9);

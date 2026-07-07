@@ -105,33 +105,33 @@ Two prior epics staged this: UPSTREAM-FINDINGS left F2/F4 as filed residue
 
 ## Success Criteria
 
-- [ ] **F2 and F4 closed by recorded decision.** BACKLOG DOCS-SCRUB-F2, DOCS-SCRUB-F4,
+- [x] **F2 and F4 closed by recorded decision.** BACKLOG DOCS-SCRUB-F2, DOCS-SCRUB-F4,
   and [ITEM7-PGD06] retired. The decision and its evidence live in the docs, not just
   in chat.
-- [ ] **The F4 verdict is reached by running the three kill-condition probes**, each of
+- [x] **The F4 verdict is reached by running the three kill-condition probes**, each of
   which produces a named evidence artifact the verdict cites (see the HARD-F4 block), and
   whichever outcome lands, the full consequence set moves in **one change**: the 7 IR
   rows, REQ-DRA-02/03/04/05, REQ-BT-09, REQ-RES-02/07/08 text, the 22
   `test_input_resolver.py` skipifs (recount at implement), `test_dual_resolution.py`, and
   docs 03/04/05 prose all end mutually consistent. No row pins a module the code doesn't
   call; no doc describes an architecture the code doesn't have.
-- [ ] **Zero divergent-PASS rows from the D7 list remain.** Each is fixed (test
+- [x] **Zero divergent-PASS rows from the D7 list remain.** Each is fixed (test
   strengthened or REQ re-framed) or, if it surfaces new feature work, filed with a
   matrix pointer. No PASS row pins less than its text.
-- [ ] **UNTESTED count deliberately dispositioned.** Target: ≤ the rows argued
+- [x] **UNTESTED count deliberately dispositioned.** Target: ≤ the rows argued
   untestable-as-written, each carrying its argument in the matrix. REQ-RES-02 rewritten
   for the real architecture.
-- [ ] **Matrix recount matches row-by-row reality.** Total/PASS/UNTESTED/PENDING counts
+- [x] **Matrix recount matches row-by-row reality.** Total/PASS/UNTESTED/PENDING counts
   reconcile to the actual rows (the 249-vs-248 gap closed); the footer file count is
   correct or the PASS definition is re-framed honestly; the 7 missing row→test markers
   added.
-- [ ] **The 5 xfails decided** (fix classifier or re-frame REQ + document as contract);
+- [x] **The 5 xfails decided** (fix classifier or re-frame REQ + document as contract);
   no xfail silently carried.
-- [ ] **Suite green; baselines byte-identical.** Any code touched (F2 fix, an F4
+- [x] **Suite green; baselines byte-identical.** Any code touched (F2 fix, an F4
   cutover, a Strategy D dedup) keeps existing baselines byte-identical or lands as a
   reviewed capture-script diff (SC-G / R3). ruff/mypy not worse than the 21/109
   baseline.
-- [ ] **The R4 verification table is a produced artifact** (finding → probe →
+- [x] **The R4 verification table is a produced artifact** (finding → probe →
   CONFIRMED / NOT-REPRODUCED / RECLASSIFIED), and the discovery register is updated in
   place for the F2/F4/divergent findings this item confirms or strikes.
 
