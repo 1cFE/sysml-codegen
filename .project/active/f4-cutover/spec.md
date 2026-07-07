@@ -1,6 +1,6 @@
 # Spec: F4 Aggregation-Resolution Cutover (+ graph_builder param-group typing)
 
-**Status:** Draft
+**Status:** Draft (revised post spec-review, 2026-07-06 — all findings incorporated)
 **Owner:** Reid W
 **Created:** 2026-07-06
 **Complexity:** HIGH
@@ -11,11 +11,19 @@
 
 ## Problem
 
-The generated pipeline resolves aggregation inputs (SumTerm / SingletonTerm / LocalTerm-EXPOSE)
-through an inline function, `_resolve_aggregation_input_channel` (`graph_builder.py:1212`). A
-consolidated replacement, `resolve_input(AGG_STRATEGIES)` (`input_resolver.py`), was built and
-parity-validated during PIPELINE-TRUTH but **never wired to the live path**. That left three
-pieces of standing debt:
+**The shape in two lines.** Aggregation input resolution today has two halves that live in two
+places. `_resolve_aggregation_input_channel` (`graph_builder.py:1212`) resolves **only the
+channel** — it returns a channel string or `None`. When it returns `None`, a separate **inline
+`else:` fallback at each of the three call sites** (`1453-1493` SumTerm, `1562-1608`
+SingletonTerm, `1650-1666` LocalTerm) builds the entry point. The consolidated replacement,
+`resolve_input(AGG_STRATEGIES)` (`input_resolver.py`), does **strictly more** than the deleted
+function: it never returns `None` and owns the fallback itself. So the cutover is not a
+function swap — it **moves fallback ownership into `resolve_input` and deletes the three inline
+`else:` blocks**. That asymmetry is exactly why the entry-point keys must be reconciled first
+(the M4 blocker below).
+
+`resolve_input(AGG_STRATEGIES)` was built and parity-validated during PIPELINE-TRUTH but **never
+wired to the live path**. That left three pieces of standing debt:
 
 1. **The IR matrix family lies by omission.** REQ-IR rows now describe `resolve_input` as a
    "parity-validated, not-yet-wired consolidation" — honest, but it means an entire requirement
@@ -43,45 +51,75 @@ Item 2's multi-hop chain work edits adjacent chain-follow code, so it lands **fi
 ## Success Criteria
 
 - [ ] The live aggregation path calls `resolve_input(AGG_STRATEGIES)`;
-  `_resolve_aggregation_input_channel` is deleted (def + the `__all__` export at `:1925`).
+  `_resolve_aggregation_input_channel` is deleted (def + the `__all__` export at `:1925`); the
+  three inline `else:` fallbacks are deleted, fallback ownership having moved into `resolve_input`.
 - [ ] Before rewiring, `resolve_input`'s entry-point fallback is reconciled to the live path's
-  richer entry-point construction, so no input entry point collides with an output channel and
-  no part-usage disambiguator is dropped (the M4 blocker is resolved, not worked around).
-- [ ] A parity gate compares `resolve_input(AGG_STRATEGIES)` against **the replaced function
-  `_resolve_aggregation_input_channel`** (not only the backtracker DFS), runs in CI, and is green
-  — added and green **before** the rewire (design-review M3).
-- [ ] Aggregation baselines are byte-identical after the cutover, OR land as one reviewed
-  `scripts/capture_*.py` diff; every non-aggregation baseline is byte-identical (R3). A
-  non-byte-identical aggregation diff is a signal the fallback reconciliation is incomplete —
-  it is reviewed, not rubber-stamped.
+  richer entry-point construction — the key format, `_find_literal_redefinition` defaults,
+  param-group classification, `DESIGN_ATTRIBUTE` typing, multiplicity entry points, **and the
+  `Compilability.MANUAL_REQUIRED` signal plus the EP register/dedup/backfill semantics** — so no
+  input entry point collides with an output channel, no disambiguator is dropped, and no
+  unresolved term is silently marked compilable (the M4 blocker is resolved, not worked around).
+- [ ] A parity gate compares the **full `InputSource` the call-site block produces** — the old
+  inline block (channel resolution **and** entry-point fallback) against the new `resolve_input`
+  path — over the aggregation fixtures, runs in CI, and is green **before** the rewire
+  (design-review M3, sharpened per spec-review L3-1: a channel-only, function-to-function gate is
+  structurally blind to the M4 fallback divergence).
+- [ ] The aggregation baseline is **byte-identical** after the cutover (the reconciliation is
+  designed to reproduce the live EP construction exactly, so zero aggregation churn is the
+  expected outcome). Any aggregation diff **blocks the cutover pending root-cause** — it is a
+  defect to explain, not a deliverable to sign off. Every non-aggregation baseline (including any
+  snapshot-generation fixture that carries aggregation EP construction) is byte-identical (R3).
 - [ ] Strategy D is removed from `AGG_STRATEGIES`, its function deleted, and its lying docstring
   gone (the residual ghost Item 7 left noted).
 - [ ] The IR-family matrix rows drop the "not-yet-wired" note and pin live code; REQ text +
   reference docs 03/04/05 + `24-dual-resolution-architecture.md` move in the same change (R1).
-- [ ] `param_groups` double-binding is split into two distinctly-named variables (the Step-5
-  computation removed if confirmed dead); both `type: ignore`s at `:408`/`:412` are cleared.
+- [ ] The `param_groups` bind-mutate chain is untangled: the discarded Step-5 result (`:228`) is
+  isolated so the live variable carries one type from `:331` onward; both `type: ignore`s at
+  `:408`/`:412` are cleared.
 - [ ] Gates hold: full suite green; `mypy src/` ≤ 104; `ruff check src/` ≤ 17.
 
 ## Known Requirements
 
-- **[HARD]** **Reconcile the fallback before rewiring (M4).** The live call sites build the
-  SumTerm/SingletonTerm entry point with the part-usage-prefixed QN plus
-  `_find_literal_redefinition` default propagation, `param_group` classification,
-  `DESIGN_ATTRIBUTE` typing, multiplicity entry points, and the SingletonTerm "Try 2"
-  direct-channel construction. `resolve_input`'s fallback emits a bare `{module_eqn}__{leaf}`.
-  The reconciliation must make the module produce the live path's richer entry point so the
-  baseline does not churn. Forced by the coexisting-key evidence in `probe_iv_ep_key_divergence.md`.
+- **[HARD]** **Reconcile the fallback before rewiring (M4).** When the live call site falls
+  through to its inline `else:` block, it does more than mint a key. The reconciliation target —
+  everything `resolve_input`'s fallback must reproduce so nothing regresses — is:
+  - the part-usage-prefixed entry-point QN (`{module_eqn}__{part_usage}_{attr}`), not the module's
+    bare `{module_eqn}__{leaf}`;
+  - `_find_literal_redefinition` default propagation and `DESIGN_ATTRIBUTE` typing;
+  - `param_group` classification via `group_deriver.classify(ep_qn)` and the multiplicity entry point;
+  - the **EP register/dedup guard** (`if ep_qn not in entry_points and ep_qn not in
+    new_entry_points`) and the **literal-default backfill** onto an EP created earlier without one
+    (`graph_builder.py:1468-1487`, `:1582-1602`);
+  - the **`Compilability.MANUAL_REQUIRED` signal** the fallback sets when a term is unresolved and
+    has no literal default (`:1465`, `:1579`). This one is load-bearing: if the cutover moves the
+    fallback into `resolve_input` and drops this assignment, a genuinely-unresolved aggregation term
+    is silently marked compilable and gets a wrong auto-impl — the exact silent-regression class
+    this epic exists to kill (spec-review L3-2).
 
-- **[HARD]** **Parity gate against the replaced function (M3).** The cutover's own safety net
-  must compare `resolve_input(AGG_STRATEGIES)` against `_resolve_aggregation_input_channel`
-  directly. Backtracker parity (probe (i), the committed `TestResolveInputParityExtended`) is
-  general-correctness evidence, not parity-with-the-replaced-function. This gate lands and is
-  green before the rewire, and captures the replaced function before it is deleted.
+  Forced by the coexisting-key evidence in `probe_iv_ep_key_divergence.md`. Note the SingletonTerm
+  "Try 2" construction (`:1548-1560`) is **not** part of this fallback target — it builds a
+  `module_output` channel, not an entry point (see Open Questions).
 
-- **[HARD]** **R3 baseline discipline.** All baseline/snapshot regeneration runs through
-  `scripts/capture_*.py` with reviewed diffs; one regen at a time; the byte-identity gate proves
-  non-aggregation baselines are untouched (timestamp-churn method: memory note
-  `byte-identity-captured-at-churn`). The syside license is on monthly renewal — no expiry pressure.
+- **[HARD]** **Parity gate over the full `InputSource` (M3, sharpened).** The gate must compare the
+  **full `InputSource` the call-site block produces** — the old inline block (channel resolution
+  **and** its entry-point fallback) against the new `resolve_input` path — over the aggregation
+  fixtures, green **before** the rewire. A function-to-function gate comparing only
+  `_resolve_aggregation_input_channel` (channel-or-`None`) is structurally blind to the M4
+  divergence: the replaced function never builds an entry point, so a channel-only gate is silent
+  on exactly the fallback keys that diverge (spec-review L3-1). Backtracker parity (probe (i), the
+  committed `TestResolveInputParityExtended`) remains general-correctness evidence, not
+  parity-with-the-replaced-path. The gate must capture the old block's behavior before the inline
+  fallbacks are deleted.
+
+- **[HARD]** **R3 baseline discipline, tightened for this item.** All baseline/snapshot
+  regeneration runs through `scripts/capture_*.py`; one regen at a time; the byte-identity gate
+  proves non-aggregation baselines are untouched (timestamp-churn method: memory note
+  `byte-identity-captured-at-churn`). For *this* item the aggregation baseline bar is **byte-identity**,
+  not "byte-identical or reviewed diff": the reconciliation is designed to reproduce the live EP
+  construction exactly, so any aggregation diff is a defect to root-cause, not expected churn to
+  accept. Include any snapshot-generation fixture that carries aggregation EP construction in the
+  gate scope (memory note `multihop-expose-offline-parity`). The syside license is on monthly
+  renewal — no expiry pressure.
 
 - **[HARD]** **R4 verify-then-fix, applied to two filed reads.** A filed line number is a
   static-read verdict until reproduced at pickup:
@@ -93,13 +131,16 @@ Item 2's multi-hop chain work edits adjacent chain-follow code, so it lands **fi
     `param_groups` "is typed from its earlier `DerivedParameterGroup` binding." Spec-time read
     shows **both** `_group_entry_points_via_deriver` (Step 5) and `_convert_derived_groups`
     (Step 6.6) are annotated `-> list[ParameterGroup]` — the same type — so the stated cause looks
-    stale. Reproduce the actual mypy error (capture the exact message) before choosing the split;
+    stale. Reproduce the actual mypy error (capture the exact message) before committing to a fix;
     do not fix against the comment's account of the cause.
 
 - **[HARD]** **Gate ceilings (no regression).** `mypy src/` ≤ 104; `ruff check src/` ≤ 17; full
-  suite green. Current baseline is exactly 104 / 17 (PIPELINE-TRUTH close gate). Clearing the two
-  ignores must not raise mypy above 104 — a root annotation was proven not to clear it, so the
-  fix is the two-named-variable split, not a re-annotation (epic Risks table).
+  suite green. Current baseline is exactly 104 / 17 (PIPELINE-TRUTH close gate; re-confirm the live
+  counts at pickup). The **expected** typing fix is the two-named-variable split (isolate the
+  discarded Step-5 result so the live variable carries one type from `:331`) — a root annotation
+  was proven not to clear it (epic Risks table). This is the expected fix, not a mandate: it stays
+  contingent on what the reproduced mypy error actually shows (R4 above). Whatever the fix, it must
+  clear both ignores without raising mypy above 104.
 
 - **[HARD]** **R1 docs-move-with-code.** The IR-family rows (REQ-IR-01..07, with IR-05/IR-07
   carrying the false live-usage text Item 7 rewrote to capability claims), the reframed
@@ -135,19 +176,33 @@ Item 2's multi-hop chain work edits adjacent chain-follow code, so it lands **fi
 ## Open Questions / Deferred to design
 
 - **Where the reconciliation lives.** Either move the live path's richer entry-point construction
-  into `resolve_input`'s fallback, or have the call sites pass the extra context so the module
-  builds the same key. The design picks the cleaner choke point; the [HARD] outcome (no
-  collision, no dropped disambiguator, byte-identical baseline) is fixed, the mechanism is not.
+  (including the `MANUAL_REQUIRED` signal and register/dedup/backfill) into `resolve_input`'s
+  fallback, or have the call sites pass the extra context so the module builds the same key and
+  raises the same signal. The design picks the cleaner choke point; the [HARD] outcome (no
+  collision, no dropped disambiguator, no lost compilability signal, byte-identical baseline) is
+  fixed, the mechanism is not.
+
+- **Is SingletonTerm "Try 2" covered by an `AGG_STRATEGY`?** Try-2 (`graph_builder.py:1548-1560`)
+  builds a `module_output` **channel** (`get_channel_name(...)` checked against
+  `canonical_channels`), not an entry point — it belongs in a **strategy** (the channel half), not
+  the fallback. Replacing the SingletonTerm block with `resolve_input` **drops Try-2 unless one of
+  the four `AGG_STRATEGIES` reproduces it** (ScopedRegistryLookup / ChainRedefinitionFollow /
+  SysMLQNLookup). Design must confirm coverage; if none reproduces Try-2, add a strategy that does.
+  This is a channel-resolution gap the M3 full-`InputSource` gate would catch — but design should
+  answer it deliberately, not discover it in a baseline diff.
 
 - **The shape of the M3 parity gate.** Whether it is a new conformance test parametrized over the
-  aggregation fixtures, or an extension of `test_dual_resolution.py`, and how it captures the
-  replaced function's output before deletion (snapshot the values, or run both functions
-  side-by-side in the test). Design decides.
+  aggregation fixtures, or an extension of `test_dual_resolution.py`, and how it captures the old
+  call-site block's full `InputSource` before the inline fallbacks are deleted (snapshot the
+  values, or run old and new side-by-side in the test). Design decides — the [HARD] outcome (full
+  `InputSource`, green before rewire) is fixed.
 
-- **Whether reconciling the fallback shifts any entry point the multiplicity/param-group logic
-  classifies.** If the richer construction is reproduced faithfully, baselines stay byte-identical
-  and this is moot; if design finds an unavoidable, reviewed diff, it names the exact rows in the
-  capture diff. Surfaced here so implement does not treat a diff as automatically benign.
+- **LocalTerm-EXPOSE is excluded from the fallback reconciliation — confirm the reason holds.**
+  Its ref is undotted, so the entry-point fallback builds `{module_eqn}__{attr}`
+  (`graph_builder.py:1652`), which equals `resolve_input`'s leaf-only key — they already agree, so
+  there is nothing to reconcile. Design should state this so implement does not "reconcile" it and
+  break the agreement. Its channel-resolution call site (`:1640`, the expose-alias branch) is still
+  in the 3-site deletion scope.
 
 ---
 
