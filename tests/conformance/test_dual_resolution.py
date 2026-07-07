@@ -626,6 +626,108 @@ class TestEntryPointFallbackConsistent:
 
 
 # ===================================================================
+# REQ-DRA-04 / REQ-IR-*: Extended parity over Item 1's landed fixtures
+# ===================================================================
+class TestResolveInputParityExtended:
+    """Backtracker DFS vs resolve_input(AGG_STRATEGIES) over the three Item-1
+    fixtures the committed catf_mfe/solar_battery suite never covered.
+
+    This is the permanent home of design-time probe (i)
+    (`.project/active/matrix-truth/probes/probe_i_extended_parity.py`): the F4
+    reframe rows (REQ-IR-01..07) cite a committed, CI-running test, not the
+    one-shot probe script.
+
+    What it pins, stated honestly (design M5): parity is against the
+    **backtracker DFS**, not against the live `_resolve_aggregation_input_channel`
+    the cutover replaces (that comparand is [ITEM7-F4-CUTOVER]'s own gate). The
+    load-bearing evidence is the FULL set — the committed 12-test suite above
+    over catf_mfe/solar_battery PLUS this thin extension: 1 MODULE_OUTPUT
+    channel-equality check + 5 entry-point fallback checks.
+    """
+
+    # Hand-transcribed from the probe run log (probe_i_run_log.txt) — structural
+    # facts about each fixture, NOT computed by resolve_input (INV-E). These make
+    # the parity assertion non-vacuous: a fixture that stopped exercising the
+    # path would drop its count and fail here.
+    EXPECTED = {
+        "plant_values": {"mo": 0, "ep": 3},
+        "plant_value_shapes": {"mo": 0, "ep": 1},
+        "spec_chain_twolevel": {"mo": 1, "ep": 1},
+    }
+
+    @pytest.mark.req("REQ-DRA-04")
+    @pytest.mark.parametrize(
+        "fixture", ["plant_values", "plant_value_shapes", "spec_chain_twolevel"]
+    )
+    def test_resolve_input_parity_with_backtracker(self, fixture):
+        """Every backtracker binding resolution agrees with resolve_input:
+        MODULE_OUTPUT channels match exactly; ENTRY_POINT refs fall back to
+        entry_point (or resolve to a valid module_output — strictly more
+        capable, not a divergence)."""
+        result, registry, snap = _build_backtracker_from_snapshot(fixture)
+        redefs = snap["hierarchy_data"].redefinitions
+        design_attrs = _flatten_design_attrs(snap.get("design_attributes", {}))
+
+        mo_verified = 0
+        ep_verified = 0
+        kills = []
+        for key, res in result.binding_resolutions.items():
+            sp = res.source_path
+            if not sp:
+                continue
+            usage_qn = key.split("|")[0]
+            parts = usage_qn.split("__")
+            consumer_scope = ".".join(parts[1:-1]) if len(parts) >= 3 else ""
+            instance_path = "__".join(parts[:-1]) if len(parts) >= 2 else usage_qn
+            ctx = ResolutionContext(
+                output_registry=registry,
+                redefinitions=redefs,
+                design_attrs=design_attrs,
+                module_eqn=usage_qn,
+                consumer_scope=consumer_scope,
+                instance_path=instance_path,
+            )
+            ir = resolve_input(sp, ctx, AGG_STRATEGIES)
+            is_ref = "::" in sp
+            if res.resolution_type == BindingResolutionType.MODULE_OUTPUT:
+                if ir.source_type == "module_output":
+                    if ir.producer_channel != res.qualified_name:
+                        kills.append(
+                            f"CHANNEL MISMATCH key='{key}' ref='{sp}': "
+                            f"BT='{res.qualified_name}' IR='{ir.producer_channel}'"
+                        )
+                    else:
+                        mo_verified += 1
+                elif is_ref:
+                    pass  # Strategy-B REFERENCE capability gap (documented asymmetry)
+                else:
+                    kills.append(
+                        f"CHAIN-DOT FALLBACK key='{key}' ref='{sp}': "
+                        f"BT=MODULE_OUTPUT('{res.qualified_name}') IR=entry_point"
+                    )
+            else:  # ENTRY_POINT
+                if "." not in sp:
+                    continue
+                if ir.source_type not in ("entry_point", "module_output"):
+                    kills.append(
+                        f"UNEXPECTED TYPE key='{key}' ref='{sp}': IR={ir.source_type}"
+                    )
+                else:
+                    ep_verified += 1
+
+        assert not kills, f"{fixture}: {len(kills)} parity kills:\n" + "\n".join(kills)
+        expected = self.EXPECTED[fixture]
+        assert mo_verified == expected["mo"], (
+            f"{fixture}: expected {expected['mo']} MODULE_OUTPUT parity checks, "
+            f"got {mo_verified}"
+        )
+        assert ep_verified == expected["ep"], (
+            f"{fixture}: expected {expected['ep']} entry-point fallback checks, "
+            f"got {ep_verified}"
+        )
+
+
+# ===================================================================
 # REQ-DRA-03: No untyped dict.get() in resolution paths
 # ===================================================================
 class TestNoUntypedDictGetInResolutionPaths:

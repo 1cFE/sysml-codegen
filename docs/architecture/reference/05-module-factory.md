@@ -1,10 +1,12 @@
 # 05 -- Module Factory: Building the 3 Types of Pipeline Modules
 
-After the refactoring, module construction is decoupled from ad-hoc inline
-resolution. CalcUsage factories receive pre-resolved data (from the
+Module construction is decoupled from ad-hoc inline resolution. CalcUsage
+factories receive pre-resolved data (from the
 [backtracker](11-analysis-backtracker.md)). FORMULA factories use the
 pre-computed [attribute resolution map](16-computed-attributes.md); Aggregation
-factories delegate resolution to [`resolve_input()`](04-input-resolver.md). All three
+factories resolve terms inline via `_resolve_aggregation_input_channel`. (The
+consolidated [`resolve_input()`](04-input-resolver.md) is the intended aggregation
+resolver but is not yet wired — `[ITEM7-F4-CUTOVER]`.) All three
 produce a [PipelineModule](09-data-models.md#resolution-models) + new
 [entry points](06-entry-point-classifier.md#two-entry-point-creation-paths).
 
@@ -150,7 +152,8 @@ SumTerm(part_usage_name="pv_module", attribute_name="capital_cost",
         multiplicity_attr="module_count", multiplicity_count=20)
 ```
 
-Resolution chain ([input resolver](04-input-resolver.md) with `AGG_STRATEGIES`):
+Resolution chain (live path: `_resolve_aggregation_input_channel`; the intended
+[input resolver](04-input-resolver.md) `AGG_STRATEGIES` mirror is not yet wired):
 1. `_resolve_aggregation_input_channel()` -- CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata) tracing + [registry](10-output-registry.md)
 2. **LITERAL fallback** (REQ-MF-06) -- `_find_literal_redefinition()` checks for `:>> attr = value`
    on the child PartDef. If found, the value becomes the entry point's `default_value`
@@ -231,18 +234,18 @@ a shared dict. But the three types differ in HOW they resolve:
 |------|-------------------|-------------|
 | CalcUsage | `binding_resolutions` dict (pre-computed by [backtracker](11-analysis-backtracker.md)) | Backtracker (during DFS) |
 | FORMULA | Pre-computed [attribute resolution map](16-computed-attributes.md) | Factory uses map (no resolver call) |
-| Aggregation | [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES` | Factory calls resolver |
+| Aggregation | `_resolve_aggregation_input_channel` (live); [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES` once wired (`[ITEM7-F4-CUTOVER]`) | Factory resolves inline |
 
 CalcUsage factories are truly pure data transformers -- lookup only, no
 resolution logic. FORMULA factories read the pre-computed map; Aggregation
-factories delegate to `resolve_input()`. Entry points
+factories resolve inline via `_resolve_aggregation_input_channel`. Entry points
 created by FORMULA/Aggregation factories are hardcoded to DESIGN_ATTRIBUTE;
 CalcUsage entry points receive full 3-strategy classification. See
 [06-entry-point-classifier](06-entry-point-classifier.md#two-entry-point-creation-paths).
 
 ## Related Documents
 
-- **Upstream**: [03-resolution-overview](03-resolution-overview.md) -- orchestrator that calls factory functions, [04-input-resolver](04-input-resolver.md) -- resolve_input() called by factories
+- **Upstream**: [03-resolution-overview](03-resolution-overview.md) -- orchestrator that calls factory functions, [04-input-resolver](04-input-resolver.md) -- resolve_input(), the intended (not-yet-wired) aggregation resolver
 - **Downstream**: [07-graph-assembly](07-graph-assembly.md) -- topological sort of produced modules, [06-entry-point-classifier](06-entry-point-classifier.md) -- classifies returned entry points
 - **Aggregation**: [13-aggregation-scoping](13-aggregation-scoping.md) -- produces ScopedAggregationData, [18-literal-value-propagation](18-literal-value-propagation.md) -- LITERAL fallback defaults
 - **Computed attrs**: [16-computed-attributes](16-computed-attributes.md) -- FORMULA/EXPOSE_PURE classification
