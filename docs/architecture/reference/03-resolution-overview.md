@@ -18,7 +18,7 @@ answer this question correctly across all reachable combinations.
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-RES-01 | Every [ModuleInput](09-data-models.md#resolution-models) SHALL resolve to exactly one of {`module_output`, `entry_point`}. | `all(mi.source.source_type in {"module_output","entry_point"} for m in modules for mi in m.inputs)` |
-| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade ([11](11-analysis-backtracker.md)). FORMULA uses pre-computed attribute resolution map ([16](16-computed-attributes.md)). Aggregation SumTerm/SingletonTerm uses `_resolve_aggregation_input_channel` ([05](05-module-factory.md)); the consolidated `resolve_input()`/`AGG_STRATEGIES` ([04](04-input-resolver.md)) is parity-validated but NOT yet wired (`[ITEM7-F4-CUTOVER]`). Aggregation LocalTerm uses a factory-specific 3-strategy cascade ([05](05-module-factory.md#4c-localterm)). | Call site inspection per module type |
+| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade ([11](11-analysis-backtracker.md)). FORMULA uses pre-computed attribute resolution map ([16](16-computed-attributes.md)). Aggregation SumTerm/SingletonTerm uses `resolve_input()`/`AGG_STRATEGIES` ([04](04-input-resolver.md)) via the `_build_agg_input_source()` choke point ([05](05-module-factory.md)). Aggregation LocalTerm uses a factory-specific 3-strategy cascade, with its expose-alias reroute calling `resolve_input()` ([05](05-module-factory.md#4c-localterm)). | Call site inspection per module type |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation of shared state (REQ-RES-03a: no side effects). | Type signature + no external dict mutation in [module factory](05-module-factory.md) |
 | REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the [OutputRegistry](10-output-registry.md). | `_validate_channel_references()` in [graph assembly](07-graph-assembly.md) |
 | REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups -> toposort -> validate. | Code structure of `build_computation_graph()` |
@@ -67,7 +67,7 @@ Prepending that scope to `source_path` produces a
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `ScopedKey` lookup against the typed scoped registry ([10-output-registry](10-output-registry.md)). REFERENCE bindings (`::` in source_path) SHALL use `SysMLQN` lookup against the SysML QN registry. Cross-package CHAIN references fall through to the alias registry. | Typed dispatch in backtracker (REQ-BT-08) and typed strategies in `AGG_STRATEGIES` |
-| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `_resolve_aggregation_input_channel` (Aggregation) — and to the parity-validated `resolve_input()` via `ResolutionContext.consumer_scope`. | Backtracker: `_consumer_scope_dotted()` in `dependency_backtracker.py`. resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
+| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation) via `ResolutionContext.consumer_scope`. | Backtracker: `_consumer_scope_dotted()` in `dependency_backtracker.py`. resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
 
 ## Why Resolution Is Hard
 
@@ -148,14 +148,15 @@ FORMULA and Aggregation modules do NOT participate in DFS -- they are built
 after dependency discovery. Their resolution CAN be extracted into a standalone
 [`resolve_input()`](04-input-resolver.md) function.
 
-## Intended State: Consolidated Resolution (partially landed)
+## Consolidated Resolution (landed)
 
-> **Status (F4, Item 7):** the consolidation below is the intended end-state. At
-> HEAD it is **partially landed**: FORMULA already uses the pre-computed attribute
-> resolution map, but **aggregation still runs `_resolve_aggregation_input_channel`
-> inline** — `resolve_input()` has zero production callers. It is parity-validated
-> against the backtracker (`test_dual_resolution.py`) but the factory rewire is
-> deferred to `[ITEM7-F4-CUTOVER]`. Read this section as the target shape.
+> **Status (F4 cutover landed, TRUTH-DEBT Item 1):** the consolidation below is
+> live. FORMULA uses the pre-computed attribute resolution map, and **aggregation
+> SumTerm/SingletonTerm now runs through `resolve_input()`** via the
+> `_build_agg_input_source()` choke point in `graph_builder.py`. The old
+> `_resolve_aggregation_input_channel` is **deleted**. The cutover was
+> parity-validated against the backtracker (`test_dual_resolution.py`) and landed
+> byte-identical baselines. Spec/design/plan in `.project/active/f4-cutover/`.
 
 The consolidation reduces three resolution paths to **two well-defined paths**:
 
@@ -163,8 +164,7 @@ The consolidation reduces three resolution paths to **two well-defined paths**:
 |------|------------|-------|--------|
 | **Backtracker** | CalcUsage | `analysis/dependency_backtracker.py` | live (DFS requires resolution during traversal) |
 | **attribute resolution map** | FORMULA | `resolution/graph_builder.py` | live |
-| **`_resolve_aggregation_input_channel`** | Aggregation | `resolution/graph_builder.py` | live |
-| **resolve_input()** | Aggregation (intended) | `resolution/input_resolver.py` | built, parity-validated, **not yet wired** (`[ITEM7-F4-CUTOVER]`) |
+| **resolve_input()** | Aggregation | `resolution/input_resolver.py` (called via `_build_agg_input_source()` in `graph_builder.py`) | live |
 
 The code structure:
 
@@ -197,8 +197,8 @@ def build_computation_graph(result, calc_defs, design_attrs, ...) -> Computation
             ca, resolution_map=...)
         modules.append(module); entry_points.update(new_eps)
     for agg in aggregation_data:
-        module, new_eps = _build_aggregation_module(        # 05 -- calls
-            agg, redefinitions=..., output_registry=...)     # _resolve_aggregation_input_channel
+        module, new_eps = _build_aggregation_module(        # 05 -- resolve_input via
+            agg, redefinitions=..., output_registry=...)     # _build_agg_input_source()
         modules.append(module); entry_points.update(new_eps)
     param_groups = rebuild_groups(entry_points)             # 17
     modules = topological_sort(modules)                     # 07
@@ -208,9 +208,9 @@ def build_computation_graph(result, calc_defs, design_attrs, ...) -> Computation
 
 CalcUsage modules look up pre-computed `binding_resolutions` (REQ-RES-06).
 FORMULA modules use the pre-computed [attribute resolution map](16-computed-attributes.md).
-Aggregation modules call `_resolve_aggregation_input_channel` inline (the intended
-[`resolve_input()`](04-input-resolver.md) rewire is deferred to `[ITEM7-F4-CUTOVER]`).
-All factory functions return `(module, new_entry_points)` (REQ-RES-03).
+Aggregation modules resolve SumTerm/SingletonTerm inputs through
+[`resolve_input()`](04-input-resolver.md) via the `_build_agg_input_source()`
+choke point. All factory functions return `(module, new_entry_points)` (REQ-RES-03).
 
 ### What Changed vs. What Stayed
 
@@ -239,9 +239,8 @@ binding_resolutions["alpha_split|p_total"]  → MODULE_OUTPUT, channel="plasma_p
 binding_resolutions["alpha_split|f_alpha"]  → ENTRY_POINT, qn="Physics__alpha_split__f_alpha"
 ```
 
-**Aggregation path**: Same question. At HEAD this is answered inline by
-`_resolve_aggregation_input_channel`; the intended `resolve_input()` form (once
-wired, `[ITEM7-F4-CUTOVER]`) is parity-validated to give the same answer:
+**Aggregation path**: Same question, now answered by `resolve_input()` (via
+`_build_agg_input_source()`), parity-validated to give the same answer:
 
 ```python
 resolve_input("p_total", ctx)  → InputSource(module_output, "plasma_power__p_total")

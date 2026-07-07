@@ -169,12 +169,12 @@ the documentation rather than executable code.
 
 **Dual Resolution Architecture** — Component X02 — [reference/24-dual-resolution-architecture.md](reference/24-dual-resolution-architecture.md)
 
-**Status (F4, Item 7):** the `resolve_input()` path these rows compare against is the not-yet-wired consolidation (see the [IR family note](#ir)); the parity checks compare it against the **backtracker DFS**, which is the live comparand, not against `_resolve_aggregation_input_channel` (the function the cutover replaces — [ITEM7-F4-CUTOVER]'s own gate). The live aggregation path is `_resolve_aggregation_input_channel`.
+**Status (F4 cutover LANDED, TRUTH-DEBT Item 1):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is now the **live** aggregation SumTerm/SingletonTerm resolution path — wired through the `_build_agg_input_source()` choke point in `graph_builder._build_aggregation_module`. The channel-only `_resolve_aggregation_input_channel` and the three inline entry-point fallbacks are deleted. These parity checks compare the live path against the **backtracker DFS** (the independent comparand).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs st... | `test_backtracker.py` | PASS |
-| REQ-DRA-02 | FORMULA SHALL use pre-computed attribute resolution map; aggregation SumTerm/SingletonTerm resolution is validated by `resolve_input()` (the not-yet-wired consolidation) against the backtracker — the live path is `_resolve_aggregation_input_channel` | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
+| REQ-DRA-02 | FORMULA SHALL use pre-computed attribute resolution map; aggregation SumTerm/SingletonTerm resolution runs live through `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`), parity-checked against the backtracker | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
 | REQ-DRA-03 | Both paths SHALL use typed registries (10-output-registry): `scoped_lookup(ScopedKey)` fo... | `test_backtracker.py`, `test_dual_resolution.py` | PASS |
 | REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.t... | `test_dual_resolution.py`, `test_input_resolver.py` | PASS |
 | REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produc... | `test_dual_resolution.py` | PASS |
@@ -277,7 +277,7 @@ the documentation rather than executable code.
 
 **Input Resolver** — Component C12 — [reference/04-input-resolver.md](reference/04-input-resolver.md)
 
-**Status (F4, Item 7):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is a **backtracker-parity-validated consolidation that is not yet wired to the live path** — it has zero production callers; the live aggregation path is `_resolve_aggregation_input_channel` (`graph_builder.py`). These rows pin the module's **capability**, not live usage: the skipif-gated `test_input_resolver.py` unit tests exercise the module directly, and `test_dual_resolution.py::TestResolveInputParityExtended` proves parity with the backtracker DFS over Item 1's fixtures (1 MODULE_OUTPUT + 5 entry-point checks) alongside the committed catf_mfe/solar_battery suite. Wiring is filed as `[ITEM7-F4-CUTOVER]`.
+**Status (F4 cutover LANDED, TRUTH-DEBT Item 1):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is now **live** — the aggregation SumTerm/SingletonTerm path calls it through `_build_agg_input_source()` in `graph_builder._build_aggregation_module`, and the LocalTerm expose-alias reroute takes its channel (D5 `module_output`-only guard). The deleted `_resolve_aggregation_input_channel` and the three inline fallbacks are gone; the cutover proved byte-identical baselines. These rows pin **live code**. Evidence: the skipif-gated `test_input_resolver.py` unit tests (incl. the surviving M3 new-side EP-key guard, the LocalTerm reroute pin, and MANUAL_REQUIRED preservation) and `test_dual_resolution.py::TestResolveInputParityExtended` (backtracker-DFS parity over Item 1's fixtures). Strategy D (`DesignAttributeLookup`) was deleted — zero live surface.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -285,9 +285,9 @@ the documentation rather than executable code.
 | REQ-IR-02 | Strategies SHALL execute in declared list order; first non-None result wins. | `test_input_resolver.py` | PASS |
 | REQ-IR-03 | Self-reference guard SHALL reject channels where the producing module EQN matches `ctx.mo... | `test_input_resolver.py` | PASS |
 | REQ-IR-04 | ResolutionContext SHALL be immutable (`frozen=True`); no strategy mutates it. | `test_input_resolver.py` | PASS |
-| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`) — the strategy list an aggregation caller receives once wired (capability, not live usage — see family note) | `test_input_resolver.py` | PASS |
+| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`); the live list is `[A, C, B, E]` — `DirectChannelConstruction` (E) reproduces the SingletonTerm Try-2 channel, Strategy D deleted | `test_input_resolver.py` | PASS |
 | REQ-IR-06 | Fallback SHALL produce an `entry_point` InputSource with qualified name `"{module_eqn}__{... | `test_input_resolver.py` | PASS |
-| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to (parity-validated; not yet the live aggregation path — see family note) | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
+| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to — this is the live aggregation path (F4 cutover landed) | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
 
 ### LVP
 
@@ -458,13 +458,13 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-RES-01 | Every ModuleInput SHALL resolve to exactly one of {`module_output`, `entry_point`}. | `test_orchestrator.py` | PASS |
-| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade (11); FORMULA uses the pre-computed attribute resolution map (16); aggregation SumTerm/SingletonTerm uses `_resolve_aggregation_input_channel` (`graph_builder.py`). The consolidated `resolve_input()` is parity-validated but not yet wired ([ITEM7-F4-CUTOVER]) | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
+| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade (11); FORMULA uses the pre-computed attribute resolution map (16); aggregation SumTerm/SingletonTerm uses `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`) — the F4 cutover wired it and deleted `_resolve_aggregation_input_channel` | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation o... | `test_factory_purity.py` | PASS |
 | REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_graph_assembly.py` | PASS |
 | REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | — *(no test pins `build_computation_graph`'s internal sequence classify→build→rebuild→toposort→validate; `test_orchestrator.py` pins only the outer `build_pipeline_context` DAG order, REQ-ORCH-01 — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
 | REQ-RES-06 | `binding_resolutions` from the backtracker SHALL be the single source of truth for CalcUs... | `test_factory_calc_usage.py` | PASS |
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's pa... | `test_input_resolver.py` | PASS |
-| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `_resolve_aggregation_input_channel` (aggregation) — and to the parity-validated `resolve_input()` via `ResolutionContext.consumer_scope` | — *(no single test pins the cross-cutting "ALL paths" invariant; per-path scope derivation is verified — REQ-IR-07 aggregation, REQ-DRA-04 CalcUsage-CHAIN — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input(AGG_STRATEGIES)` (aggregation) via `ResolutionContext.consumer_scope` | — *(no single test pins the cross-cutting "ALL paths" invariant; per-path scope derivation is verified — REQ-IR-07 aggregation, REQ-DRA-04 CalcUsage-CHAIN — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
 
 ### SNAP
 

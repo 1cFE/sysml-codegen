@@ -4,11 +4,12 @@ Module construction is decoupled from ad-hoc inline resolution. CalcUsage
 factories receive pre-resolved data (from the
 [backtracker](11-analysis-backtracker.md)). FORMULA factories use the
 pre-computed [attribute resolution map](16-computed-attributes.md); Aggregation
-factories resolve terms inline via `_resolve_aggregation_input_channel`. (The
-consolidated [`resolve_input()`](04-input-resolver.md) is the intended aggregation
-resolver but is not yet wired — `[ITEM7-F4-CUTOVER]`.) All three
-produce a [PipelineModule](09-data-models.md#resolution-models) + new
-[entry points](06-entry-point-classifier.md#two-entry-point-creation-paths).
+factories resolve SumTerm/SingletonTerm inputs through the consolidated
+[`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`, via the
+`_build_agg_input_source()` choke point. (The old inline
+`_resolve_aggregation_input_channel` is **deleted** — F4 cutover, TRUTH-DEBT
+Item 1.) All three produce a [PipelineModule](09-data-models.md#resolution-models)
++ new [entry points](06-entry-point-classifier.md#two-entry-point-creation-paths).
 
 ## Requirements
 
@@ -152,10 +153,10 @@ SumTerm(part_usage_name="pv_module", attribute_name="capital_cost",
         multiplicity_attr="module_count", multiplicity_count=20)
 ```
 
-Resolution chain (live path: `_resolve_aggregation_input_channel`; the intended
-[input resolver](04-input-resolver.md) `AGG_STRATEGIES` mirror is not yet wired):
-1. `_resolve_aggregation_input_channel()` -- CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata) tracing + [registry](10-output-registry.md)
-2. **LITERAL fallback** (REQ-MF-06) -- `_find_literal_redefinition()` checks for `:>> attr = value`
+Resolution chain (live path: `_build_agg_input_source()` → `resolve_input(ref,
+ctx, AGG_STRATEGIES)`, see [input resolver](04-input-resolver.md)):
+1. `resolve_input()` with `AGG_STRATEGIES` -- CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata) tracing + [registry](10-output-registry.md) lookup (Strategies A/C/B/E). A `module_output` result wires directly.
+2. **LITERAL fallback** (REQ-MF-06) -- on an `entry_point` result, `_build_agg_input_source()` calls `_find_literal_redefinition()` for `:>> attr = value`
    on the child PartDef. If found, the value becomes the entry point's `default_value`
    and the module stays `FULLY_COMPILABLE` (see [doc 18](18-literal-value-propagation.md)).
 3. Entry point (no default) + `MANUAL_REQUIRED` compilability.
@@ -169,9 +170,9 @@ When `multiplicity_attr` is present, adds a second input for the count
 SingletonTerm(source_path="allocation_model.total_allocation")
 ```
 
-Resolution chain:
-1. `_resolve_aggregation_input_channel()` -- CHAIN redefinition tracing + registry
-2. Direct channel construction -- `instance_path__prefix__output_name`
+Resolution chain (same live path: `_build_agg_input_source()` → `resolve_input(AGG_STRATEGIES)`):
+1. `resolve_input()` with `AGG_STRATEGIES` -- CHAIN redefinition tracing + registry (Strategies A/C/B)
+2. Direct channel construction -- `instance_path__prefix__output_name` (now Strategy E, `DirectChannelConstruction`, inside `resolve_input()`)
 3. **LITERAL fallback** (REQ-MF-06) -- same as SumTerm, found value becomes EP default
 4. Entry point (no default) + `MANUAL_REQUIRED` compilability.
 
@@ -187,9 +188,13 @@ Tries three strategies in order (REQ-MF-07):
 2. **EXPOSE_PURE alias** -- the `expose_aliases` map (built in Step 6.6b from
    [EXPOSE_PURE ComputedAttributes](16-computed-attributes.md)) provides a dotted
    expression path (e.g., `"allocation_model.total_allocation"`). That path is
-   then resolved through `_resolve_aggregation_input_channel()` to find the
-   upstream channel.
-3. **Entry point fallback** -- user-provided value.
+   then resolved through `resolve_input(AGG_STRATEGIES)`, but the channel is taken
+   **only when `resolve_input` returns a `module_output`** (the D5 guard). An
+   `entry_point` result is discarded here and falls through to strategy 3, because
+   `resolve_input` keys its fallback on the alias target, not `attribute_name` —
+   the LocalTerm fallback below keeps the `{module_eqn}__{attribute_name}` key.
+3. **Entry point fallback** -- user-provided value. LocalTerm keeps its own simpler
+   inline entry-point fallback (it did not move into `_build_agg_input_source()`).
 
 After all terms are processed, symbolic references (`pv_module.capital_cost`)
 are replaced with input references (`inputs.pv_module_capital_cost`) to produce
@@ -234,18 +239,19 @@ a shared dict. But the three types differ in HOW they resolve:
 |------|-------------------|-------------|
 | CalcUsage | `binding_resolutions` dict (pre-computed by [backtracker](11-analysis-backtracker.md)) | Backtracker (during DFS) |
 | FORMULA | Pre-computed [attribute resolution map](16-computed-attributes.md) | Factory uses map (no resolver call) |
-| Aggregation | `_resolve_aggregation_input_channel` (live); [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES` once wired (`[ITEM7-F4-CUTOVER]`) | Factory resolves inline |
+| Aggregation | [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`, via `_build_agg_input_source()` | Factory calls resolve_input |
 
 CalcUsage factories are truly pure data transformers -- lookup only, no
 resolution logic. FORMULA factories read the pre-computed map; Aggregation
-factories resolve inline via `_resolve_aggregation_input_channel`. Entry points
+factories resolve SumTerm/SingletonTerm inputs through `resolve_input(AGG_STRATEGIES)`
+via the `_build_agg_input_source()` choke point. Entry points
 created by FORMULA/Aggregation factories are hardcoded to DESIGN_ATTRIBUTE;
 CalcUsage entry points receive full 3-strategy classification. See
 [06-entry-point-classifier](06-entry-point-classifier.md#two-entry-point-creation-paths).
 
 ## Related Documents
 
-- **Upstream**: [03-resolution-overview](03-resolution-overview.md) -- orchestrator that calls factory functions, [04-input-resolver](04-input-resolver.md) -- resolve_input(), the intended (not-yet-wired) aggregation resolver
+- **Upstream**: [03-resolution-overview](03-resolution-overview.md) -- orchestrator that calls factory functions, [04-input-resolver](04-input-resolver.md) -- resolve_input(), the live aggregation resolver
 - **Downstream**: [07-graph-assembly](07-graph-assembly.md) -- topological sort of produced modules, [06-entry-point-classifier](06-entry-point-classifier.md) -- classifies returned entry points
 - **Aggregation**: [13-aggregation-scoping](13-aggregation-scoping.md) -- produces ScopedAggregationData, [18-literal-value-propagation](18-literal-value-propagation.md) -- LITERAL fallback defaults
 - **Computed attrs**: [16-computed-attributes](16-computed-attributes.md) -- FORMULA/EXPOSE_PURE classification

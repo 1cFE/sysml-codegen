@@ -366,22 +366,26 @@ recount from rows still holds the gate counts.
 ### Changes Required
 **See `spec.md` "R1 docs-move-with-code" + `design.md#integration-strategy`.**
 
-- [ ] Verification matrix: IR-family rows (REQ-IR-01..07; IR-05/IR-07 carry the false live-usage text
-  Item 7 rewrote to capability claims) drop the "not-yet-wired / parity-validated consolidation" note and
-  **pin live code**; reframe the RES/DRA/BT rows Item 7 touched. Recount the matrix **from rows**, not
-  the summary block (memory `verification-matrix-drift-modes`).
-- [ ] REQ tags in source move with the rows.
-- [ ] Reference docs — update every one that carries the aggregation-path description: `03-resolution-overview`,
-  `04-input-resolver`, `05-module-factory`, `07-graph-assembly`, `24-dual-resolution-architecture`.
-  (Design Related-Artifacts lists 03/04/05/07/24; confirm each for a not-yet-wired claim and update those
-  that carry one — R1.)
+- [x] Verification matrix: IR-family status blocks (DRA + IR) rewritten to "F4 cutover LANDED" pinning
+  live code; REQ-IR-05 (strategy list now `[A,C,B,E]`, D deleted / E added), REQ-IR-07, REQ-DRA-02,
+  REQ-RES-02, REQ-RES-08 reframed to the live `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source`
+  path. Recounted **from rows**: 253 total / 249 PASS / 4 UNTESTED / 30 families — matches the summary
+  block exactly, **no drift** (memory `verification-matrix-drift-modes`).
+- [x] REQ tags in source: the IR-family tests (`test_input_resolver.py`) carry their `@pytest.mark.req`
+  markers and now pin the live path (M3 new-side, reroute pin, MANUAL_REQUIRED). No marker needed to move.
+- [x] Reference docs — `03-resolution-overview`, `04-input-resolver`, `05-module-factory` updated to the
+  landed state (Strategy D→E, old function deleted, D5 guard, byte-identity). `07-graph-assembly` and
+  `24-dual-resolution-architecture` confirmed CLEAN (no not-yet-wired claim). `modeling-assumptions.md:450`
+  left untouched (its "not yet wired" is about V11 cross-part refs / Items 9-11, unrelated to F4).
 
 ### Validation (FINAL FULL GATES)
-- [ ] `uv run pytest tests/` → full suite green.
-- [ ] `ruff check src/` ≤ 17.
-- [ ] `mypy src/` ≤ 104 (both ignores cleared).
-- [ ] Matrix index counts recounted from rows; no "not-yet-wired" note survives; `grep -rn "not-yet-wired\|not yet wired" docs/` clean for the IR family.
-- [ ] `grep -rn "_resolve_aggregation_input_channel\|DesignAttributeLookup" src/ docs/` → gone from live code and docs.
+- [x] `uv run pytest tests/` → full suite green (2072 passed, 4 skipped, 5 xfailed).
+- [x] `ruff check src/` == 17 (≤17).
+- [x] `mypy src/` == 97 (≤104; both ignores cleared).
+- [x] Matrix index counts recounted from rows (253/249/4/30, no drift); no "not-yet-wired" note survives
+  for the IR family (the one remaining doc hit is REQ-PGD-06, an unrelated Item-8 dead-accessor note).
+- [x] `grep -rn "_resolve_aggregation_input_channel\|DesignAttributeLookup" src/ docs/` → only intentional
+  "deleted" historical notes remain; no live references.
 
 **What We Know After (SC-A, SC-G, SC-H):** the matrix and the code agree; the item's success criteria hold.
 
@@ -442,6 +446,7 @@ Verbatim match to design D4. Ignores restored; working tree clean. Confirmed a l
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **COMPLETE** (all 7 phases landed 2026-07-06; final gates green:
+2072 passed, mypy=97, ruff=17; aggregation baselines byte-identical)
 </content>
 </invoke>
