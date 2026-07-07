@@ -60,6 +60,34 @@ def test_dotted_override_synthesizes_source_qn():
     assert by_qn["Scope__plant__driver__efficiency"].default_value == "0.35"
 
 
+def test_renamed_consumers_dedup_to_one_synth_attr():
+    """INV-2: two differently-named consumers of one source produce ONE synthetic
+    attribute (deduped by source QN), so they collapse onto one entry point downstream."""
+    u1 = CalcUsageData(
+        instance_name="lcoe", calc_def_name="C", calc_def_qualified_name="Lib::C",
+        module_type="Lib__C",
+        bindings=[BindingInfo(param_name="driver_efficiency", source_path="driver.efficiency",
+                              binding_type=BindingType.CHAIN)],
+        qualified_name=f"{_SCOPE}__lcoe",
+    )
+    u2 = CalcUsageData(
+        instance_name="recirc", calc_def_name="C", calc_def_qualified_name="Lib::C",
+        module_type="Lib__C",
+        bindings=[BindingInfo(param_name="eta", source_path="driver.efficiency",
+                              binding_type=BindingType.CHAIN)],
+        qualified_name=f"{_SCOPE}__recirc",
+    )
+    out = materialize_supplied_values(
+        [u1, u2],
+        redefinitions=[],
+        design_overrides=[_override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert len(out) == 1  # one synth attr, not one-per-consumer
+    assert out[0].qualified_name == "Scope__plant__driver__efficiency"
+
+
 def test_zero_literal_carries_as_string_zero_not_dropped():
     """F2/INV-6: a supplied 0.0 materializes as `"0.0"`, never dropped."""
     out = materialize_supplied_values(

@@ -27,3 +27,36 @@ def test_fusion_tea_emits_full_pipeline():
     assert len(graph.modules) > 0
     # Every module output has a channel; every wired input resolves (no valueless V11).
     assert all(m.name for m in graph.modules)
+
+
+def _consumers_of(graph, ep_suffix: str):
+    eps = {
+        ep.qualified_name
+        for gr in graph.entry_point_groups
+        for ep in gr.parameters
+        if ep.qualified_name.endswith(ep_suffix)
+    }
+    consumers = [
+        (m.name, inp.param_name)
+        for m in graph.modules
+        for inp in m.inputs
+        if inp.source and getattr(inp.source, "qualified_name", "") in eps
+    ]
+    return eps, consumers
+
+
+def test_renamed_consumers_collapse_to_one_source_ep():
+    """INV-2 / EP-keys-by-source-QN [HARD]: fusion-tea's real fan-out renames per
+    consumer — `driver.efficiency` feeds `lcoe_calc.driver_efficiency` AND
+    `recirc_calc.eta`. Both differently-named inputs collapse onto ONE source-QN entry
+    point (not N per-consumer keys), the property that distinguishes this mechanism from
+    per-consumer VBR-03."""
+    graph, _ = build_full_graph_from_snapshot(snapshot_fixture("fusion_tea"))
+    eps, consumers = _consumers_of(graph, "__driver__efficiency")
+    assert len(eps) == 1, eps  # one source EP, not two
+    consumer_names = {c[1] for c in consumers}
+    assert {"eta", "driver_efficiency"} <= consumer_names, consumers  # both renamed readers
+
+    # The second renamed source: chamber.blanket_energy_multiple -> two differing names.
+    bem_eps, _ = _consumers_of(graph, "__chamber__blanket_energy_multiple")
+    assert len(bem_eps) == 1, bem_eps
