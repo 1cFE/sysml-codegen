@@ -214,6 +214,35 @@ def test_live_vs_snapshot_byte_identical(fixture, tmp_path):
 
 @requires_license
 @pytest.mark.req("REQ-SNAP-19")
+def test_fusion_tea_live_vs_snapshot(tmp_path):
+    """SC-D one-time leg: fusion-tea's real plant is byte-identical live vs snapshot.
+
+    The vendored whole-plant fixture (multi-file designs + library, the value-fill materializer
+    wiring the Meier chain) generates the same package from the live models and from the
+    committed v2 snapshot. Full-tree diff = channel identity: a whole-plant mis-wire (the
+    offline precedent abort-level checks miss) would change a wired channel in the YAML and
+    fail here. Absolute --models so the parser's source_file re-absolutizes to the snapshot dir.
+    """
+    models = REPO_ROOT / "tests/fixtures/fusion_tea"
+    live_out, snap_out = tmp_path / "live", tmp_path / "snap"
+
+    live = _run_cli(
+        "generate", "--models", str(models),
+        "--output", str(live_out), "--package-name", "fusion_tea", "--overwrite",
+    )
+    assert live.returncode == 0, live.stderr
+
+    snap = _run_cli(
+        "generate", "--from-snapshot", str(models / "extraction_snapshot.json"),
+        "--output", str(snap_out), "--package-name", "fusion_tea", "--overwrite",
+    )
+    assert snap.returncode == 0, snap.stderr
+
+    assert _tree_diff(live_out, snap_out) == []
+
+
+@requires_license
+@pytest.mark.req("REQ-SNAP-19")
 def test_live_vs_snapshot_byte_identical_symlinked(tmp_path):
     """SC-1 on a SYMLINKED source path (D8/B2 at integration scale).
 

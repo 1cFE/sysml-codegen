@@ -357,8 +357,63 @@ cross-module channel source (`radial_build.magnet_volume_total` →
 mis-wired channel mints no params key) and the parity test FAILED; snapshot reverted clean
 (`git checkout`, status empty). Confirms the gate catches a channel mis-wire.
 
-### Phase 3 Completion
-### Phase 4 Completion
+### Phase 3 Completion (fusion-tea repo)
+**Completed:** 2026-07-06 · branch `chore/retire-pipeline-truth-workarounds` (off `epic/pipeline-derisk-demo`)
+
+**Commit:** `5a889ac5` — retirement source edits (pathspec-scoped; their in-progress `.project/`
+changes and bridged artifacts untouched):
+- Deleted `exploration/ife_e2e/sanitize_names.py` (R-1).
+- Deleted `part hif_driver_instance` from BOTH `models/designs/hif_ife/hif_driver.sysml` and
+  the `exploration/ife_e2e/models/` copy (kept in sync) (R-2).
+- Rewrote `exploration/ife_e2e/run_anchors.py` (R-2/R-3/R-4): module-level A/B, single-pass C
+  reading the emitted `generated/inputs/`, Meier channels re-anchored to
+  `hif_plant_pkg__hif_plant__driver__meier_cost__*`, no two-pass feedback, no hand-written
+  input JSONs, + a perturbed-key rerun. Kept the teax T-1/T-2 OutputRouter/WriteHandler.
+
+**Retirement greps (operative surface = models + `exploration/ife_e2e/*.py`), all ZERO:**
+- `sanitize_names` → 0 · `hif_driver_instance` → 0 · `two.pass|second pass|gamma feedback` in
+  run_anchors.py → 0 · `bridged` in exploration harness → 0.
+
+**Scope decisions (documented deviations):**
+- **Greps scoped to the operative surface.** `work/` (report, WI-015 findings, evidence,
+  snapshots), `.project/reports|research`, and demo docs still name the workarounds as
+  *historical record* — those legitimately document the workaround when it existed and are not
+  mine to rewrite. Only models + harness are the retirement target.
+- **`run_anchors_bridged.py` + the report's bridge artifacts kept** — frozen reproduce evidence
+  I did not author; deleting breaks the report's Reproduce section. SC-C's spec text names
+  sanitize_names/hif_driver_instance/two-pass, not the bridge; the canonical harness is clean.
+- **`sweep_ife.py` untouched** — it calls the generated impls directly and never used the
+  instance Meier-channel path, so it needs no re-anchor. Its ηG>10 viability check is a KEEP.
+- **R-6 (seven `out attribute`): KEPT all.** They are genuine calc outputs correctly marked
+  `out`; the report reclassifies them as non-workaround optional style; the vendored codegen
+  fixture uses this form; my live run proved all seven extract/wire/execute to 270.12.
+  Reverting to `return` is cosmetic-only with regeneration risk. (`cost_billions` must stay
+  `out` — consumed channel — so a blanket revert was never on the table.)
+
+### Phase 4 Completion (live legs — license LIVE in this session)
+**Completed:** 2026-07-06
+
+**Live leg A — state-(ii) regen + anchors (fusion-tea, commit `2286e5aa`):**
+- Regenerated `exploration/ife_e2e/generated` from the workaround-free models: 6 modules
+  (was 7), **zero V11 offenders**, Meier channels = `hif_plant_pkg__hif_plant__driver__meier_cost__*`,
+  zero `hif_driver_instance` in the YAML, new `system_design` entry-point group.
+- Captured the matching **v2** snapshot `work/.../snapshots/ife_workaround_free.snapshot.json`
+  (new file, no timestamp-churn gate needed — nothing tracked to diff against); it generates to
+  the same zero-offender package license-free.
+- Ran the simplified `run_anchors.py` live through the real teax executor — ALL PASS rel 1e-6,
+  single pass: **A $252.29996307, B $68.69020165, C $270.12117794** (gamma 68.247088, capital
+  3.30388687, COE 4.73540355, f_recirc 0.07222302); **perturbed gain 80→100 → $216.55528392**
+  (oracle-matched). Did NOT commit this snapshot into sysml-codegen.
+
+**Live leg B — SNAP-19 parametrized (this repo):** all 6 fixtures + symlinked leg PASS
+byte-identical with license (ran in-session, not skipped).
+
+**Live leg C — fusion_tea live-vs-snapshot byte-diff (this repo):** added
+`test_fusion_tea_live_vs_snapshot` (`@requires_license`) — live `--models` vs `--from-snapshot`
+on the vendored fixture, `_tree_diff == []`. PASSES. (Derisk finding: needs the ABSOLUTE
+`--models` path so `source_file` re-absolutizes to the snapshot dir — a relative path diverges
+on the docstring source paths; matches the existing SNAP-19 pattern.)
+
 ### Phase 5 Completion
 
 ---
