@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from sysml_codegen.resolution.graph_builder import collect_uncovered_params
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
-from tests.conftest import snapshot_fixture
+from tests.conftest import requires_license, snapshot_fixture
 
 _ANALYZER = "deepcrossscopedesign__measurement_system__analyzer"
 _DERIVED = "deepcrossscopedesign__measurement_system__station__array__derived_calc"
@@ -37,11 +37,15 @@ def _graph():
 
 
 def _input_source_qn(graph, module_name, param):
+    """Return the channel a module input actually resolves to: a wired module_output
+    carries its channel in `producer_channel` (with `qualified_name` null), an entry
+    point carries it in `qualified_name`. Return whichever is set so the channel-
+    identity pins compare against the real wired channel, not a null."""
     for m in graph.modules:
         if m.name == module_name:
             for inp in m.inputs:
                 if inp.param_name == param:
-                    return inp.source.qualified_name
+                    return inp.source.producer_channel or inp.source.qualified_name
     raise AssertionError(f"{module_name}.{param} not found")
 
 
@@ -117,3 +121,26 @@ def test_pattern_b_deep_reference_resolves_to_cross_package_producer_ep():
     to the Core Metric producer's entry point QN (distinct from Pattern A's local EP)."""
     qn = _input_source_qn(_graph(), f"{_ANALYZER}__ref_analysis", "data_point")
     assert qn == "DeepCrossScopeProducer__Core_Metric__metric_value"
+
+
+@requires_license
+def test_live_offline_parity_both_chains():
+    """Live/offline parity (INV-3, HARD). Both deep chains resolve to the SAME channel
+    live (extract + resolve) and offline (committed snapshot), each equal to the
+    R1-anchored pin. A multi-hop cross-part chain is exactly the shape where live and
+    `--from-snapshot` diverged before (memory `multihop-expose-offline-parity`): resolves
+    live yet mis-wires from a snapshot. This leg confirms the committed snapshot bakes in
+    no mis-wire. @requires_license → skipped license-free; the offline channel pins above
+    are then the only always-on guard (treat this as confirmation, not the primary safe)."""
+    from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+
+    fixture_dir = snapshot_fixture("deep_cross_scope_probe").parent
+    live_graph = build_pipeline_context([fixture_dir]).computation_graph
+    offline_graph = _graph()
+    for module, param, expected in [
+        (f"{_ANALYZER}__chain_analysis", "data_point", _DATA_POINT_CHANNEL),
+        (_DERIVED, "base_metric", _BASE_METRIC_CHANNEL),
+    ]:
+        live_qn = _input_source_qn(live_graph, module, param)
+        offline_qn = _input_source_qn(offline_graph, module, param)
+        assert live_qn == expected == offline_qn, (module, param, live_qn, offline_qn)

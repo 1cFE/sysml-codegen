@@ -322,40 +322,25 @@ INV-5; the byte-identity method → design.md#implementation-notes ("Byte-identi
 memory `byte-identity-captured-at-churn`; the stale flip → memory `deep-cross-scope-stale-baseline`.
 
 **Specific file changes / steps:**
-- [ ] `uv run python scripts/capture_extraction_snapshots.py --fixtures deep_cross_scope_probe`
-      → re-writes `tests/fixtures/deep_cross_scope_probe/extraction_snapshot.json`.
-- [ ] `uv run python scripts/capture_pipeline_baselines.py --fixtures deep_cross_scope_probe`
-      → re-writes `tests/fixtures/baseline_outputs/deep_cross_scope_probe/computation_graph.json`.
-- [ ] **Byte-identity gate** (memory `byte-identity-captured-at-churn`): `git diff` — confirm no other
-      snapshot/baseline moved; if a full run churned `captured_at` on untouched fixtures, revert those so
-      only `deep_cross_scope_probe` shows. (The `--fixtures` filter should already scope this; verify.)
-- [ ] **Three-part decomposition** — check each diff line against a known cause before commit:
-      1. `chain_analysis.data_point`: `unbound_params` loses `data_point`×2; a CHAIN binding
-         (`station.array.derived_calc.derived_value`) appears; the graph input flips entry_point →
-         module_output `…__derived_calc__derived_value`.
-      2. `derived_calc.base_metric`: `unbound_params` loses `base_metric`×2; CHAIN binding
-         `sensor.core.metric_value`; input flips to module_output `…__sensor__core__metric_value`.
-      3. The pre-existing stale entry-point-classification flip (`entry_type` usage_literal→library_default,
-         `source_calc_usage` null→Analysis_Calc/Derived_Metric). **Root-cause code-correct vs
-         baseline-correct before commit** (R4); it reproduces on pre-F4 `ba3bca4` (non-aggregation), so it
-         is not caused by this item. It may be partly mooted once data_point/base_metric wire (their EPs
-         vanish) — decompose whatever survives.
-- [ ] Add the `@requires_license` parity leg; remove/replace the old
-      `test_pattern_a_deep_chain_warns_on_extraction` (its extraction-warn no longer fires — the WARN
-      moved to the backtracker, covered by the Phase-4 D5 unit test + the new parity leg).
+- [x] `capture_extraction_snapshots.py --fixtures deep_cross_scope_probe` → re-wrote `extraction_snapshot.json` (only that file; `--fixtures` scoped it, no captured_at churn elsewhere).
+- [x] `capture_pipeline_baselines.py --fixtures deep_cross_scope_probe` → re-wrote `computation_graph.json` (only that file).
+- [x] **Byte-identity gate**: `git status` — among fixtures/baselines, ONLY `deep_cross_scope_probe`'s snapshot + baseline changed. No churn to revert (the `--fixtures` filter scoped both captures). (Unrelated `.project/*/spec*.md` edits are from a parallel orchestrator stage, excluded by pathspec-limited commits.)
+- [x] **Diff decomposition** — verified programmatically (module-by-module, EP-set delta):
+      1. `chain_analysis.data_point`: unbound_params loses `data_point`×2; CHAIN binding `station.array.derived_calc.derived_value`; graph input flips entry_point → module_output `…__derived_calc__derived_value` (== `_DATA_POINT_CHANNEL`). ✓
+      2. `derived_calc.base_metric`: unbound_params loses `base_metric`×2; CHAIN binding `sensor.core.metric_value`; input flips to module_output `…__sensor__core__metric_value` (== `_BASE_METRIC_CHANNEL`). ✓
+      3. Stale entry-point-classification flip → **FULLY MOOTED, zero residue**: the two EPs it would reclassify are exactly the two now-wired params; both vanished from the EP groups (no `entry_type`/`source_calc_usage` flip on any surviving EP). R4 verdict: baseline-correct (the flip is superseded, not code-wrong — it reproduced on `ba3bca4` as non-aggregation staleness; here the wires remove its substrate).
+      - Mechanical consequences: per-module `execution_order` index + exec-order sequence reorder (topological, same module set); extraction snapshot's `unhandled: false` field dropped across all bindings (serialization catch-up — BindingInfo removed the field before this session; not this item).
+- [x] Added the `@requires_license` parity leg `test_live_offline_parity_both_chains` (in-process `build_pipeline_context(...).computation_graph`); re-added the `requires_license` import. Old warn-test already removed in Phase 2.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_deep_cross_scope_probe.py` → the two channel pins + offender
-      set + no-truncated-binding → **GREEN**.
-- [ ] `uv run pytest tests/` → full suite GREEN.
-- [ ] `git status` / `git diff --stat` → only `deep_cross_scope_probe` snapshot + baseline changed.
+- [x] `uv run pytest tests/conformance/test_deep_cross_scope_probe.py` → 7/7 GREEN (both channel pins, offender set, full-path binding, pattern-b, parity leg).
+- [x] `uv run pytest tests/` → 2080 passed, 4 skipped, 5 xfailed — full suite GREEN.
+- [x] `git status` → only `deep_cross_scope_probe` snapshot + baseline changed among fixtures/baselines.
 
 **Manual:**
-- [ ] Read the three-part diff line-by-line; each line maps to a named cause above. Record the
-      stale-flip root-cause verdict (code-correct vs baseline-correct) in Implementation Notes.
-- [ ] If license present: parity leg GREEN (live == offline). If absent: note the leg is skipped and the
-      committed-snapshot channel pins are the only always-on guard (design.md#implementation-notes).
+- [x] Diff decomposed line-by-line (programmatic check); each maps to a named cause. Stale-flip verdict recorded above: fully mooted / baseline-correct.
+- [x] License present here → parity leg ran GREEN (live == offline == pinned), not skipped. Confirms no offline mis-wire baked into the snapshot.
 
 **What We Know Works After This Phase:** both wires resolve identically live and offline; the fixture
 pins the resolved chains; no other baseline moved. The item's behavior is complete and guarded.
@@ -458,7 +443,12 @@ for live capture; the `--fixtures` filter is the byte-identity discipline). agen
 **Red/green after phase:** all 6 backtracker unit tests GREEN; full suite 2076 passed. Remaining RED = 3 offline pins (Phase 5). Gates: ruff 17, mypy 97.
 
 ### Phase 5 Completion
-**Completed:** — **Actual Changes:** — **Stale-flip root-cause verdict:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-07
+**Actual Changes:** Re-captured `deep_cross_scope_probe` extraction snapshot + computation_graph (both wires land: data_point→derived_value, base_metric→metric_value). Added `@requires_license` in-process parity leg. Fixed `_input_source_qn` helper to read `producer_channel` (a wired module_output stores its channel there, `qualified_name` is null) — this was latent in the Phase-1 helper and only surfaced once a real wire existed.
+**Stale-flip root-cause verdict:** FULLY MOOTED — baseline-correct, not code-wrong. The stale classification flip's two target EPs (`chain_analysis.data_point`, `derived_calc.base_metric`) are exactly the two now-wired params; both vanish from the EP groups, so there is zero surviving residue and no reclassification on any remaining EP. (It reproduced on `ba3bca4` as non-aggregation staleness; the wires supersede it.)
+**Issues:** the extraction diff also drops `unhandled: false` from every binding — pre-existing serialization catch-up (BindingInfo removed the field before this session), not this item. Verified BindingInfo has no `unhandled` field.
+**Deviations:** `_input_source_qn` helper fix (producer_channel) — a Phase-1 helper bug, fixed here; faithful to the spec's "exact wired channel QN" intent.
+**Red/green after phase:** conformance 7/7 GREEN; full suite 2080 passed. Byte-identity: only the target fixture's snapshot + baseline moved. Gates: ruff 17, mypy 97.
 
 ### Phase 6 Completion
 **Completed:** — **R2 disposition:** — **Final gate numbers (ruff / mypy):** — **Deviations:** —
