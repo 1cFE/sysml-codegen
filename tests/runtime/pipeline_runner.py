@@ -30,9 +30,16 @@ def _install_simkit_stub() -> None:
     A generated wrapper does `from simkit.core.base import ModuleBase, ModuleResult`
     and subclasses `ModuleBase[Input, Output]`. The stub gives a subscriptable base and
     a result holder; the wrapper's own `run` method and auto-impl do the work.
+
+    A multi-output calc additionally does `from simkit.config.schema import MultiOutput`
+    and subclasses it with one float field per output channel. The real `MultiOutput` is
+    a pydantic container; the stub aliases it to `BaseModel`, which is all the runner needs
+    (it reads each output via `getattr(result.data, field_name)`).
     """
     if "simkit" in sys.modules:
         return
+
+    from pydantic import BaseModel
 
     class _Subscriptable:
         def __class_getitem__(cls, _item: Any) -> type:
@@ -69,6 +76,15 @@ def _install_simkit_stub() -> None:
     core.pipeline_registry = registry
     core.registry_builder = registry_builder
     simkit.core = core
+
+    # Multi-output surface: `simkit.config.schema.MultiOutput`, a pydantic container base.
+    config = types.ModuleType("simkit.config")
+    config.__path__ = []  # type: ignore[attr-defined]
+    config_schema = types.ModuleType("simkit.config.schema")
+    config_schema.MultiOutput = BaseModel
+    config.schema = config_schema
+    simkit.config = config
+
     sys.modules.update(
         {
             "simkit": simkit,
@@ -76,6 +92,8 @@ def _install_simkit_stub() -> None:
             "simkit.core.base": base,
             "simkit.core.pipeline_registry": registry,
             "simkit.core.registry_builder": registry_builder,
+            "simkit.config": config,
+            "simkit.config.schema": config_schema,
         }
     )
 
@@ -103,14 +121,22 @@ def _resolve_source(
 ) -> float:
     """Resolve one input source token to a value.
 
-    A source is either an entry-point reference (`<group>.<QN>`, value from JSON) or a
-    module-output channel (`<channel>.root`, value from a prior module).
+    Three source forms appear in the pipeline YAML:
+      - ``<channel>.root``   single-output upstream channel (RootModel wrapper)
+      - ``<channel>``        multi-output upstream channel (bare channel name, ``__``-keyed)
+      - ``<group>.<QN>``     entry point (value from the emitted JSON)
+
+    Upstream channels resolve first: modules run in dependency order, so a producer's
+    channel is registered before any consumer reads it. Anything left is an entry point,
+    keyed by its QN (the leading group segment is stripped).
     """
     if source.endswith(".root"):
         channel = source[: -len(".root")]
         if channel not in channels:
             raise KeyError(f"unresolved upstream channel '{channel}'")
         return channels[channel]
+    if source in channels:  # multi-output channel: a bare channel name, no `.root` wrapper
+        return channels[source]
     # Entry point: strip the leading group segment to get the JSON key (the QN).
     qn = source.split(".", 1)[1] if "." in source else source
     if qn not in entry_values:

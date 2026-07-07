@@ -289,6 +289,50 @@ The epic's real-world proof is assembled, recorded, and coordinated. SC-A/B/C/D 
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 1 Completion
+**Completed:** 2026-07-06
+
+**Changes Made:**
+- `tests/runtime/test_fusion_tea_acceptance.py` (NEW): 4 tests — anchor C (full pipeline
+  → lcoe `270.1211779380445`), perturbed-key consumption (gain 80→100 → hand-computed
+  `216.55528392479388`), anchor A (meier_cost module isolation: gamma `68.247088`,
+  cost_billions `0.9749584`), anchor B (recirc module isolation: f_recirc
+  `0.07222302470027446`). All expected values hand-derived from SysML arithmetic and
+  transcribed with the arithmetic in the comments — never read back from the executor.
+- `tests/runtime/pipeline_runner.py`: completed the fixture simkit stub for **multi-output**
+  packages (fusion_tea is the first). Two faithful additions, NOT a re-implementation of the
+  executor logic or a resolution patch: (1) `_install_simkit_stub` now provides
+  `simkit.config.schema.MultiOutput` (aliased to pydantic `BaseModel` — the only surface the
+  runner needs, it reads each output via `getattr`); (2) `_resolve_source` now recognizes a
+  bare multi-output channel name as an upstream channel (the third source form alongside
+  `<channel>.root` and `<group>.<QN>`). The generated YAML wiring was already correct (the
+  report proved anchor C reproduces via the teax executor); the in-repo runner's token
+  classifier was single-output-only because the twolevel fixture never exercised multi-output.
+
+**Acceptance numbers achieved (exact):**
+- anchor C lcoe: `270.1211779380445` (target `270.1211779380445`, rel 1e-6) — bit-exact
+- perturbed lcoe @ `lcoe_calc__gain`=100: executor `216.55528392479388` == independent
+  hand-calc `216.55528392479388` — bit-exact
+- anchor A: gamma `68.247088`, cost_billions `0.9749584`; anchor B: f_recirc `0.07222302470027446`
+
+**Deviations / notes:**
+- **Perturbed key.** gain is emitted **per-consumer** (`hif_plant_pkg__hif_plant__lcoe_calc__gain`
+  and `...__recirc_calc__gain`), NOT collapsed by source QN — it is a plant DESIGN_ATTRIBUTE
+  bound into each calc usage, not a cross-part fan-out. Only `driver__efficiency` collapses
+  (cross-part, one key feeding `lcoe_calc.driver_efficiency` + `recirc_calc.eta`). Perturbing
+  the lcoe_calc gain key alone moves lcoe; recirc is untouched. This resolves the plan's MEDIUM
+  risk (the per-consumer key the report assumed DOES exist post-collapse).
+- **Anchors A/B** are module-level checks of the *current* generated modules' own semantics.
+  The report's historical A=$252.30 / B=$68.69 were pre-wiring WI-015 dollar figures from an
+  earlier model state (lcoe-calc fed `driver_cost_constant=5.0`); superseded per plan.
+- **Runner-completion flag (for audit):** the two `pipeline_runner.py` edits are a
+  test-harness surface completion, not a mechanism change. No `src/` resolution code touched.
+- **Test isolation:** each test generates a uniquely-named package (from its tmp_path) — the
+  runner imports by dir name and a shared name collides in `sys.modules`.
+
+**Validation:** full suite `2060 passed, 4 skipped, 5 xfailed` (was 2056; +4 new). ruff src/
+= 17 (unchanged), mypy src/ = 104 (unchanged). `test_fusion_tea_snapshot.py` /
+`test_pipeline_runner.py` still green.
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion
