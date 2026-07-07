@@ -684,7 +684,7 @@ pins.
 
 ---
 
-### Item 9: agentic-mbse Sync — Guidance, Validation, and the Companion Audit [1–1.5 days]
+### Item 9: agentic-mbse Sync — Guidance, Validation, and the Companion Audit [1–1.5 days] ✅
 
 **Type**: Code/Integration + Documentation (agentic-mbse repo)
 **Effort**: 1–1.5 days (spec 1.5h, plan 1h, execute 5–8h) — fit: high (Item 12 of the
@@ -720,10 +720,10 @@ cross-repo debt from the prior epic is verified closed, not just recorded.
 - sysml-codegen code changes (they land in their own items).
 
 **Success Criteria**:
-- [ ] Every impact-list row implemented or filed; traceability table complete.
-- [ ] New checks each have a negative fixture and catch their trap on the Item-1
+- [x] Every impact-list row implemented or filed; traceability table complete.
+- [x] New checks each have a negative fixture and catch their trap on the Item-1
   fixtures.
-- [ ] Prior-epic cross-repo residue (companion PR, C7/C8/F6, vendor note) verified
+- [x] Prior-epic cross-repo residue (companion PR, C7/C8/F6, vendor note) verified
   closed or explicitly re-filed.
 
 **Required Reading**: discovery register §D4 (agentic-mbse rows) + cross-repo

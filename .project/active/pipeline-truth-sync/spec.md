@@ -47,27 +47,27 @@ either closed or explicitly re-filed.
 
 Mirrors epic Item 9's three success criteria, made concrete.
 
-- [ ] **SC-1 — The consolidated impact list is built and dispositioned.** One
+- [x] **SC-1 — The consolidated impact list is built and dispositioned.** One
   deduplicated, sourced table (item → impact → disposition), with nothing from any per-item
   recording silently dropped. This spec delivers the table; the plan/execute honors it and
   the close-out reports each row done or filed. (Epic Item 9 SC row 1 + §6 traceability.)
-- [ ] **SC-2 — Every new or corrected check has a negative fixture and catches its trap on
+- [x] **SC-2 — Every new or corrected check has a negative fixture and catches its trap on
   the Item-1 fixture shapes.** Specifically the D-F expression-RHS warning (§the deliverable
   C7 row) fires on `attribute :>> attr = <expression>` and stays silent on the bare
   `:>> attr = <literal>` form. (Epic Item 9 SC row 2.)
-- [ ] **SC-3 — The teaching surfaces match the newly supported subset.** MODELING_GUIDE /
+- [x] **SC-3 — The teaching surfaces match the newly supported subset.** MODELING_GUIDE /
   sysml-conventions cover the whole-plant value idiom (four mechanisms a/b/c/d, precedence,
   QN-keying, LITERAL-only), the subtype-aware validation semantics Item 4 landed, and the
   Item-5 diagnostics a modeler can trip (non-float entry points, deep-chain truncation).
-- [ ] **SC-4 — Prior-epic cross-repo residue is verified closed or explicitly re-filed.**
+- [x] **SC-4 — Prior-epic cross-repo residue is verified closed or explicitly re-filed.**
   PR #7 merge status recorded; C7 built (this item), C8 and F6 dispositioned; the syside
   vendor note filed-with-Sensmetry or explicitly declined, with the decision recorded.
-- [ ] **SC-5 — SYNC-F3/F4/F5 each get a recorded decision.** F5 verified against Item 5's
+- [x] **SC-5 — SYNC-F3/F4/F5 each get a recorded decision.** F5 verified against Item 5's
   fires-on-shape work (discharge or re-file); F3 and F4 each get a decision.
-- [ ] **SC-6 — The companion audit is complete.** `extract_feature_refs` traversal coverage
+- [x] **SC-6 — The companion audit is complete.** `extract_feature_refs` traversal coverage
   and `str(direction)` repr stability are audited against the shapes sysml-codegen's
   extraction relies on; findings fixed-if-small or filed.
-- [ ] **SC-7 — Both repos' suites green** at close (R2 pair); nothing in agentic-mbse now
+- [x] **SC-7 — Both repos' suites green** at close (R2 pair); nothing in agentic-mbse now
   teaches or checks a pattern codegen accepts (the "fires on a supported subset" defect
   class the epic exists to remove).
 
