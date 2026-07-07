@@ -233,7 +233,26 @@ a dense one) — fixing Major 3 fixes the comprehension issue too.
 
 ## Resolutions
 
-_(Filled during Stage 4 as the user resolves each issue. None yet — headless review.)_
+- **Major 1 (M3 fate contradiction / permanent key guard):** ADOPTED. D2 + Integration Strategy +
+  Component + Sequencing rewritten: the gate has two halves; the old-comparand half is deleted at
+  cutover, the **new-side** assertion (`_build_agg_input_source(...).qualified_name == formula`)
+  survives as a permanent test — the durable EP-key guard, no dependency on the deleted function.
+- **Major 2 (LocalTerm reroute guard):** ADOPTED. D5 + Architecture diagram now state the explicit
+  `source_type == "module_output"`-only guard on the `:1640` reroute; else fall through to
+  LocalTerm's own inline fallback (key unchanged).
+- **Major 3 (M3 LocalTerm coverage gap):** ADOPTED. B3 mitigation corrected (M3 covers SumTerm +
+  SingletonTerm only); added a dedicated LocalTerm expose-alias reroute pin, green before the
+  rewire (Component Overview + Validation + Sequencing).
+- **Minor 4 (dotless SingletonTerm):** ADOPTED. Helper interface now takes an optional split /
+  "skip lookup, `literal_default = None`" case (Component Overview).
+- **Minor 5 (`ctx.module_eqn == agg.module_eqn`):** ADOPTED as INV-7 and stated in the helper
+  component.
+- **Note 6 (B4 wording):** ADOPTED. B4 corrected — the non-float warning fires **only** at Step 6.6;
+  the deleted Step-5 path emits none; "asserted twice" worry dropped.
+- **Notes 7/8 (mypy + grep):** CLOSED by orchestrator live evidence. mypy reproduced exactly
+  (`:408 [assignment]`, `:412 [attr-defined]`, stale `:325` loop variable; baseline 104) → D4 is the
+  loop-variable rename, no longer contingent. Grep corroborated: `solar_battery` the sole
+  divergent-key baseline. Recorded in D4 / Implementation Notes / Baseline scope.
 
 ---
 
