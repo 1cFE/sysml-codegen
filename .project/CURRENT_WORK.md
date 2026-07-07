@@ -6,7 +6,14 @@
 
 ## Active Work
 
-### TRUTH-DEBT Item 1 — F4 Aggregation-Resolution Cutover — ✍️ spec in progress (2026-07-06)
+### TRUTH-DEBT Item 1 — F4 Aggregation-Resolution Cutover — ✅ certified PASS-WITH-NOTES (2026-07-06)
+
+**Audit:** `.project/active/f4-cutover/audit.md`. All 7 phases + SC-A/SC-G verified (code + git).
+Byte-identity is git-proven (zero fixture churn across the whole impl range). One caveat: gate
+counts (2072/4/5, ruff 17, mypy 97) and the mutation spot-check are **static-only** — pytest/mypy/
+ruff were sandbox-blocked (approval-gated), so re-run the full gates once on a machine with
+execution access to convert those legs from static to executed. One cosmetic test nit (F1).
+
 
 Critical-path head of TRUTH-DEBT. Wire the live aggregation path through
 `resolve_input(AGG_STRATEGIES)`, delete `_resolve_aggregation_input_channel` + Strategy D,
