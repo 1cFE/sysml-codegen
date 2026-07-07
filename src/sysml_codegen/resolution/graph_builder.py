@@ -164,6 +164,7 @@ def build_computation_graph(
     aggregation_data: list[ScopedAggregationData] | None = None,
     hierarchy_redefinitions: list[RedefinitionData] | None = None,
     usage_type_map: dict[tuple[str, str], str] | None = None,
+    design_overrides: list[RedefinitionData] | None = None,
     channel_aliases: list[ChannelAlias] | None = None,
     include_all: bool = True,
 ) -> ComputationGraph:
@@ -190,6 +191,10 @@ def build_computation_graph(
             Used to resolve usage names to their type PartDef QNs for LITERAL
             redefinition lookup (e.g., ("Lib__Site_Infra", "permitting") →
             "Lib__Permitting_Interconnect").
+        design_overrides: Instance-level :>> overrides (bare-block and dotted).
+            Read by the supplied-value materializer (REQ-SVM-01) as precedence tier 1
+            to fill a subsystem-attr entry point the base def leaves valueless. Both
+            call sites (live + snapshot) thread it; ``None`` disables the materializer.
         channel_aliases: All ChannelAliases (CHAIN + EXPOSE_PURE + design_override).
             Item 11 reads only the ``expose_pure`` subset to surface shape-B
             (part-usage) EXPOSE names into ``output_aliases``. If omitted, shape B
@@ -479,7 +484,11 @@ def _classify_entry_points(
         if qname in design_attr_by_qname:
             attr = design_attr_by_qname[qname]
             entry_type = EntryPointType.DESIGN_ATTRIBUTE
-            if attr.default_value:
+            # INV-6 (F2): `is not None`, not truthiness — a supplied `0.0` (or `""`)
+            # design attribute must carry as `0.0`, not silently drop to `None` and
+            # emit `null`, which would escape V11 (`collect_uncovered_params` keys on
+            # the fell-through set, so a Step-3-resolved 0.0 EP dropped to None lies).
+            if attr.default_value is not None:
                 try:
                     default_value = float(attr.default_value)
                 except (ValueError, TypeError):
@@ -1141,7 +1150,10 @@ def _build_computed_attr_module(
                 # Look up default value from design attrs
                 default_value: float | None = None
                 da = design_attr_by_qname.get(ep_qname)
-                if da and da.default_value:
+                # INV-6 (F2), second drop site: same `is not None` guard as `:482`.
+                # A FORMULA computed-attr input can wire to a materialized subsystem
+                # attribute valued `0.0`; truthiness would drop it to `null` here too.
+                if da and da.default_value is not None:
                     try:
                         default_value = float(da.default_value)
                     except (ValueError, TypeError):

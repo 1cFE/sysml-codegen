@@ -147,6 +147,9 @@ def build_full_graph_from_snapshot(
         aggregation_data=snap["aggregation_expressions"],
         hierarchy_redefinitions=hierarchy_data.redefinitions,
         usage_type_map=hierarchy_data.usage_type_map,
+        # Item 2 (F-A thread-through): the materializer's precedence tier 1. Without
+        # it, shapes (b)/(c) have no value source and revert to valueless.
+        design_overrides=hierarchy_data.design_overrides,
         # Item 11 (F-A): the snapshot path is the one the 7 graph baselines are
         # captured through — thread the expose_pure ChannelAliases so shape-B
         # output_aliases are populated (not silently empty) in committed artifacts.
