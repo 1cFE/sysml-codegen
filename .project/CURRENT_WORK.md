@@ -56,7 +56,12 @@ passed; ruff src 21 / mypy 109 (baseline unchanged). `/_my_audit` suggested next
 - **Known degradation surfaced (filed):** multi-hop CHAIN `source_path` truncates to the
   first segment (why (c) is one-hop; `deep_cross_scope_probe` Pattern A pins it).
 
-### PIPELINE-TRUTH Item 2 — Whole-Plant Cross-Part Value Resolution — IMPLEMENTED (awaiting audit)
+### PIPELINE-TRUTH Item 2 — Whole-Plant Cross-Part Value Resolution — CERTIFIED (PASS-WITH-NOTES, 2026-07-06)
+Audit: `.project/active/whole-plant-resolution/audit.md`. 10→0 offenders verified structurally
+(all clear by synthesis; 10 applied → 7 source-QN EPs via dedup, **zero** collision-defers).
+One doc correction owed before close: the Phase-7 close-out misattributes the clearing path as
+"collision guard defers, real wins" — no real-wins defer fired; fix the narrative (no code change).
+
 Track A headline (gates fusion-tea). Value-fill via the supplied-value materializer
 (`resolution/supplied_values.py`, REQ-SVM-01..04): a pre-pass synthesizes design
 attributes for cross-part/in-part supplied values, keyed by source QN, merged into

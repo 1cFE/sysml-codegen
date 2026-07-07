@@ -542,8 +542,11 @@ flips DEGRADED→8.0. INV-4 owner-scoping unit-pinned.
 
 ### Phase 7 — fusion-tea SC-4 + baselines (commit 47f5165)
 Vendored `tests/fixtures/fusion_tea` + v2 snapshot. **Offender arithmetic 10→0:** the 8
-cross-part (a/b/c) + 2 in-part (d) references all clear — most fusion-tea values are real
-design attributes (collision guard defers, real wins) and the rest synthesize; net TRUE
+cross-part (a/b/c) + 2 in-part (d) references all clear **by synthesis** — the audit's
+logged probe shows "10 literal applied, 0 non-literal skipped" with ZERO collision WARNs
+(no real-wins defer ever fired; the earlier "most are real design attributes" narrative
+was inverted — corrected per audit finding #1). The 10→7 emitted-attr gap is pure
+source-QN dedup of renamed/duplicate consumers. Net TRUE
 ZERO offenders on the committed snapshot; full YAML emits (32 modules, valid schemas).
 Four-cross-part byte-identity gate (catf_mfe, ife_plant) clean. V11 raise-proof re-anchored
 to Shape 1 (`rated_cost.rate`, stays valueless).

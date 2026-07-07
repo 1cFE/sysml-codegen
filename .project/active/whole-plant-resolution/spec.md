@@ -74,7 +74,7 @@ snapshot" a well-defined, achievable bar for this item.
 
 ## Success Criteria
 
-- [ ] **SC-1 (the headline flip)**: `plant_values` generates clean — zero V11 offenders.
+- [x] **SC-1 (the headline flip)**: `plant_values` generates clean — zero V11 offenders.
   The three-offender pin in `test_plant_values.py` flips to empty **as a behavior-observing
   pin** (not deleted). The resolved values/edges match the hand-computed expectations,
   anchored independently of the resolver: with (a) `0.35`, (b) `10.0`, and (c) `7.0` all
@@ -86,34 +86,34 @@ snapshot" a well-defined, achievable bar for this item.
   like (a)/(b), not a test-supplied user-fill. The authoritative value is the cure commit's:
   if the cure lands a chamber literal other than `7.0`, this anchor follows it. This spec
   cites `48.571` on the in-flight cure; the plan pulls the final number from the landed cure.
-- [ ] **SC-1d (the in-part flip)**: `'Flow Sub'` in `plant_value_shapes` resolves — its
+- [x] **SC-1d (the in-part flip)**: `'Flow Sub'` in `plant_value_shapes` resolves — its
   `flow_calc.flow_rate` input carries `8.0` (from the `:>> throughput = 8.0` redefinition),
   and the DEGRADED valueless-EP pin (`test_plant_value_shapes.py`) flips to the resolved
   value as a behavior-observing pin. This is the in-part shape (d); it is the in-repo proxy
   for fusion-tea offenders #9/#10.
-- [ ] **SC-2 (precedence holds)**: The plain-value redefinition precedence — usage override
+- [x] **SC-2 (precedence holds)**: The plain-value redefinition precedence — usage override
   > specialized-def `:>>` > base def — resolves correctly, pinned by a fixture that
   exercises all three tiers with **distinct** values at each tier (including the
   usage-override tier, currently unexercised in any fixture — design authors it). A
   tier-skip or tier-reorder regression fails the test. The existing calc-output precedence
   pins (`test_spec_chain_channel.py`, `test_spec_chain_twolevel.py`) stay green.
-- [ ] **SC-3 (SC-B in-repo gate, executed)**: The extended `spec_chain_twolevel` computes
+- [x] **SC-3 (SC-B in-repo gate, executed)**: The extended `spec_chain_twolevel` computes
   its lcoe-analog by **executing the generated package** (importing the generated modules,
   running them in pipeline-YAML dependency order, feeding the emitted JSON inputs) within
   `rel 1e-6` of the hand-computed value. Graph-level inspection does **not** satisfy this —
   the value must be produced by execution. Standing up the minimal in-repo runner is a
   deliverable of this item (see Known Requirements).
-- [ ] **SC-4 (license-free acceptance proxy)**: `generate --from-snapshot` on the committed
+- [x] **SC-4 (license-free acceptance proxy)**: `generate --from-snapshot` on the committed
   fusion-tea snapshot emits the full YAML package with **true zero** V11 offenders — all 10
   cleared by mechanisms (a)/(b)/(c)/(d) per the offender-arithmetic table. This is the
   license-free stand-in for the fusion-tea acceptance run (Item 3's live gate).
-- [ ] **SC-5 (baseline discipline + V11 raise-proof)**: The four existing plant-idiom /
+- [x] **SC-5 (baseline discipline + V11 raise-proof)**: The four existing plant-idiom /
   cross-part baselines are byte-identical or every change is a justified reviewed diff;
   `plant_values` and `'Flow Sub'` baselines regenerate to the resolved zero-offender state
   via the capture scripts. The V11 raise-proof is preserved by re-anchoring it to a
   **genuinely-deferred** shape (NOT `'Flow Sub'` — this item dissolves it; see SC-1d), so
   V11 can still fire after this item clears the plant offenders.
-- [ ] **SC-6 (docs + agentic-mbse impact)**: Reference docs 11/12/25 and
+- [x] **SC-6 (docs + agentic-mbse impact)**: Reference docs 11/12/25 and
   modeling-assumptions §5 record the four supported value shapes and the plain-value
   precedence REQ (R4 step 4); the newly supported shapes are recorded for Item 9's
   agentic-mbse impact list as a concrete block (R2).

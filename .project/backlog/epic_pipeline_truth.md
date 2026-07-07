@@ -227,7 +227,7 @@ snapshots + baselines.
 
 ---
 
-### Item 2: Whole-Plant Cross-Part Value Resolution [1.5–2 days]
+### Item 2: Whole-Plant Cross-Part Value Resolution [1.5–2 days] ✅
 
 **Type**: Implementation — **the headline item; first-class, gates fusion-tea**
 **Effort**: 1.5–2 days (spec 2h, design 3h, plan 1h, execute 8–11h) — fit: high (the
