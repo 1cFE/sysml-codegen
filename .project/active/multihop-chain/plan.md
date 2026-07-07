@@ -108,31 +108,23 @@ shape → design.md#component-overview ("Fires-on-shape unit test"); the confirm
 **Specific file changes:**
 
 #### `tests/conformance/test_deep_cross_scope_probe.py` (REWRITE the rejection pins)
-- [ ] Flip `test_pattern_a_deep_chain_falls_to_own_entry_point` → resolves-to-`_DATA_POINT_CHANNEL`.
-- [ ] Add `test_base_metric_deep_chain_resolves_to_metric_value_channel` (new, hardcoded QN).
-- [ ] Rewrite `test_pattern_a_deep_chain_no_truncated_binding`: the binding is no longer absent — assert
-      the snapshot now carries a **CHAIN** binding with the full untruncated `source_path`
-      (`station.array.derived_calc.derived_value`), not a truncated `station`.
-- [ ] Rewrite `test_offender_set_pinned` **docstring** (the set stays `set()`, but now because both are
-      *wired*, not rejected-to-clean-EP) — re-verify the assertion still holds after re-capture (Phase 5).
-- [ ] Leave `test_pattern_b_deep_reference_resolves_...` unchanged (Non-Goal; REFERENCE arm).
-- [ ] Confirm exact casing of both QNs against snapshot instance QNs (`core` = snapshot `:383`) before
-      committing the constants — this is the R1 independent-anchor step.
+- [x] Flip `test_pattern_a_deep_chain_falls_to_own_entry_point` → `..._resolves_to_derived_value_channel` == `_DATA_POINT_CHANNEL`.
+- [x] Add `test_base_metric_deep_chain_resolves_to_metric_value_channel` (new, hardcoded QN). NOTE: queries module `_DERIVED` directly (the plan stencil's `f"{_DERIVED}__derived_calc"` was a typo — `_DERIVED` already IS the derived_calc EQN; verified against the built graph's module names).
+- [x] Rewrite `test_pattern_a_deep_chain_no_truncated_binding` → `..._full_path_chain_binding`: assert the snapshot carries exactly one **CHAIN** binding with full untruncated `source_path` `station.array.derived_calc.derived_value`.
+- [x] Rewrite `test_offender_set_pinned` **docstring** (set stays `set()`, now because both are *wired*) — assertion re-verified GREEN offline (both currently EP → still no uncovered offenders; stays green post-recapture when both wire).
+- [x] Leave `test_pattern_b_deep_reference_resolves_...` unchanged (Non-Goal; REFERENCE arm).
+- [x] Confirm exact casing of both QNs against snapshot instance QNs (`core` `:359/:383`, `derived_calc` `:389/:402`) — R1 independent anchor done.
 
-#### D5 fires-on-shape + silent-on-clean (NEW, unit-level)
-- [ ] Add `test_multihop_fallback_warns_loud_and_untruncated` (RED until Phase 4).
-- [ ] Add silent-on-clean sibling: a resolvable 3+-dot CHAIN through a registry that has the key →
-      MODULE_OUTPUT, **no** WARNING record. (Green throughout by construction; its value is catching a
-      future over-firing WARN.)
-- [ ] Confirm the `caplog` logger target = the backtracker module logger (design.md#implementation-notes,
-      "Warn surfacing" — confirmed here: `logger` in `dependency_backtracker.py`).
+#### D5 fires-on-shape + silent-on-clean (NEW, unit-level) — `tests/unit/test_dependency_backtracker.py` (new file)
+- [x] Add `test_multihop_fallback_warns_loud_and_untruncated` (RED until Phase 4).
+- [x] Add silent-on-clean sibling `test_resolvable_multihop_chain_is_silent` → MODULE_OUTPUT, no backtracker-logger WARNING. GREEN by construction (Step 1 resolves).
+- [x] Confirm `caplog` logger target = `sysml_codegen.analysis.dependency_backtracker` (module `__name__`). Silent assertion scoped to that logger name (an unrelated phantom_detector WARN fires on registry build; scoping keeps the sibling faithful to the multi-hop WARN).
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_deep_cross_scope_probe.py` → the two channel pins RED
-      (snapshot still rejected), which is expected.
-- [ ] `uv run pytest -k multihop_fallback_warns` → RED (WARN not built yet), expected.
-- [ ] Silent-on-clean sibling → GREEN.
+- [x] `uv run pytest tests/conformance/test_deep_cross_scope_probe.py` → the two channel pins + full-path-binding RED (snapshot not re-captured), expected.
+- [x] `uv run pytest -k multihop_fallback_warns` → RED (WARN not built), expected. Climb-resolve pin also RED (climb not built), expected.
+- [x] Silent-on-clean sibling + base_metric-Step1 + refuse + 2-seg-gate → GREEN. ruff clean on both files.
 
 **What We Know Works After This Phase:** the target QNs are committed and independently anchored; every
 downstream phase now has a red pin it must turn green — no behavior can land unpinned.
@@ -446,7 +438,13 @@ for live capture; the `--fixtures` filter is the byte-identity discipline). agen
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-07
+**Actual Changes:**
+- `tests/conformance/test_deep_cross_scope_probe.py`: added `_DATA_POINT_CHANNEL`/`_BASE_METRIC_CHANNEL` constants (R1-anchored to snapshot instance QNs); flipped Pattern-A pin to resolves-to-channel; added base_metric channel pin; rewrote no-truncated-binding → full-path CHAIN assertion; rewrote offender-set docstring.
+- `tests/unit/test_dependency_backtracker.py` (NEW): 4 climb tests (resolve/Step1-hit/refuse/2-seg-gate) + 2 Step-4 fallback tests (fires-on-shape WARN + silent-on-clean).
+**Issues:** silent-on-clean initially caught an unrelated `phantom_detector` WARNING → scoped both silence assertions to the backtracker logger name.
+**Deviations:** base_metric pin queries module `_DERIVED` directly, not the plan stencil's `f"{_DERIVED}__derived_calc"` (stencil typo; `_DERIVED` already is the full derived_calc EQN — verified against built graph module names).
+**Red/green after phase:** RED (expected, flip in later phases) = Pattern-A channel pin, base_metric channel pin, full-path-binding pin, climb-resolve unit test, fallback-WARN unit test. GREEN = offender-set, pattern-b, silent-on-clean, base_metric-Step1, refuse, 2-seg-gate.
 
 ### Phase 2 Completion
 **Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
