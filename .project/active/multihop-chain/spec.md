@@ -122,8 +122,14 @@ pointers are static-read verdicts until reproduced; these are the corrections.
 
 - **[HARD]** The loud-diagnostic contract holds for the unresolvable tail (Item-5 contract). A
   3+-segment chain that cannot be fully resolved must still warn loudly and surface as an entry
-  point — never truncate to root, never silently wire. The reject site (`usage_extractor.py:717`)
-  is not deleted; it is narrowed to the tail the new path cannot resolve.
+  point — never truncate to root, never silently wire. ~~The reject site (`usage_extractor.py:717`)
+  is not deleted; it is narrowed to the tail the new path cannot resolve.~~
+  **[DESIGN ANNOTATION 2026-07-07 — deviation APPROVED at design-review]** The reject site is **not**
+  narrowed at extraction. Extraction has no registry, so it cannot tell a resolvable chain from an
+  unresolvable one; the loud + entry-point + never-truncated contract **moves to the backtracker
+  Step-4 fallback** (`dependency_backtracker.py:569`), where the registry lookup actually fails, as
+  a genuine `logger.warning`. The substance is preserved; only the location moves, for the hard
+  registry-timing reason. See design.md D3 and design-review.md move 6.
 - **[HARD]** Channel-identity assertion — for **both** wires. Each test asserts the exact wired
   channel QN, not "resolved" or "left `fallback_entry_points`." A mis-wire also removes the input
   from the fallback set (it becomes the *wrong* module output) — checking the fallback set alone

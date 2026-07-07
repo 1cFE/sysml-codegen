@@ -75,17 +75,28 @@ extraction** and the backtracker to **try the right scope**. Two small, additive
    dotted source_path from `extract_feature_chain_segments` (the helper already yields every
    segment). This alone wires `base_metric`, whose consumer scope already matches.
 
-2. **The backtracker climbs.** Add one step to `_resolve_chain_dispatch`: when the existing scoped
-   ladder misses, retry `scoped_lookup` with progressively shorter ancestor-scope prefixes
-   (drop trailing segments of `consumer_scope`, longest-first, first hit wins). This mirrors SysML
-   lexical name resolution — the first chain segment resolves in the nearest enclosing scope that
-   declares it — and wires Pattern A.
+2. **The backtracker climbs, and refuses when ambiguous.** Add one step to `_resolve_chain_dispatch`:
+   when the existing scoped ladder misses, retry `scoped_lookup` with progressively shorter
+   ancestor-scope prefixes (drop trailing segments of `consumer_scope`). Collect **every** hit, not
+   the first. If they all point at one channel, resolve to it (innermost/longest is the natural
+   pick, but they agree). If two prefixes reach **different** channels, refuse — fall through to the
+   loud Step-4 fallback rather than silently pick. This wires Pattern A and keeps a genuine cross-scope
+   collision from resolving silently.
 
 The insight: prefixing the whole path with the ancestor scope where the **first segment** resolves
 yields exactly the registered scoped key, because the registry key is the full downward instance
-path from that scope. Longest-first climbing gives the innermost-scope-wins rule for free. The
-resolution stays a pure `scoped_lookup` against Phase-1a calc-output registrations, so it is
-deterministic and identical live and offline (no dependence on the confirm-walk re-tag).
+path from that scope. The resolution stays a pure `scoped_lookup` against Phase-1a calc-output
+registrations, so it is deterministic and identical live and offline (no dependence on the
+confirm-walk re-tag).
+
+**One honest limit (B2, M-1).** Collect-all-and-refuse closes the case where two scopes both carry
+the *full* path to different channels. It does **not** close the subtler case where an inner scope
+declares only the *first segment* (and lacks the rest) while an outer scope carries the full path:
+that produces a single hit — the outer channel — which strict SysML lexical resolution would instead
+call unresolvable (bind the inner first segment, then fail the downward walk). Distinguishing it
+needs per-segment scope inspection, which no corpus model requires. That residual is a documented
+assumption, not a built guard — safe for the corpus (only one prefix hits `data_point`; the pins
+verify the exact channel), filed under Non-Goals "file, don't build for hypothetical shapes."
 
 The loud diagnostic for a genuinely unresolvable chain moves **with the resolution** to the
 backtracker's Step-4 fallback: a 3+-segment CHAIN that misses every step warns loudly and surfaces
@@ -98,16 +109,23 @@ as an entry point — never truncated, never silent (the Item-5 contract, in its
   the chain falls to an entry point; the wire never lands.* (Verified: `make_scoped_key`
   `identifier_types.py:46` drops only `segments[0]`; both targets are calc outputs registered in
   Phase 1a.)
-- **B2.** Ancestor-scope climbing on the scoped key is semantically equivalent to SysML name
-  resolution for these chains — the innermost ancestor scope in which the first segment resolves
-  produces the correct terminal channel. *If false → a chain climbs to the wrong same-named target
-  in an outer scope (a silent mis-wire).* (Mitigated: longest-first ordering = innermost-wins; the
-  channel-identity pins assert the exact QN, not just "resolved.")
+- **B2.** For the corpus chains, ancestor-scope climbing on the scoped key produces the correct
+  terminal channel: exactly one ancestor prefix yields a `scoped_lookup` hit. *If false → a chain
+  reaches a wrong same-named target in another scope (a silent mis-wire).* **Coverage is partial and
+  the design says so:** the collect-all-and-refuse guard closes the case of two prefixes reaching
+  *different* full-path channels (loud refuse, not a silent pick). It does **not** close the
+  first-segment-shadowing single-hit case (inner declares the first segment but lacks the full path;
+  outer supplies it) — that is a documented, filed assumption, not built (see Core Concept / Non-Goals).
+  Mitigated for the corpus: the channel-identity pins assert the exact QN, not just "resolved," and
+  only one prefix hits `data_point`.
 - **B3.** The two calc-usage deep chains resolve purely through `scoped_lookup`, never the
-  first-wins flat `alias_lookup`, so live and offline produce identical wires. *If false → an
-  offline snapshot bakes in a mis-wire — a lying sim, not a crash* (the Phase-5 failure class,
-  memory `multihop-expose-offline-parity`). (Mitigated: the climb uses `scoped_lookup` only; the
-  parity guard asserts live == offline.)
+  first-wins flat `alias_lookup`. *If false → an offline snapshot bakes in a mis-wire — a lying sim,
+  not a crash* (the Phase-5 failure class, memory `multihop-expose-offline-parity`). **This is
+  structurally guaranteed, not merely mitigated:** flat `alias_lookup` keys are always
+  `instance.attr` — exactly one dot (`output_registry_builder.py:186`) — and a gated chain has ≥2
+  dots, so it can **never** match the Step-2 alias step. Placing the climb after Step 2 is therefore
+  safe by key shape, and both chains resolve deterministically through `scoped_lookup`, identically
+  live and offline. The parity guard confirms live == offline.
 
 ## Key Decisions
 
@@ -122,8 +140,10 @@ as an entry point — never truncated, never silent (the Item-5 contract, in its
   pulls the attribute baselines `station_output` / ife_plant `magnet_volume_total` into
   byte-identity scope for no benefit.*
 - **D3. The loud diagnostic moves from extraction to the backtracker Step-4 fallback.** A 3+-segment
-  CHAIN (`"::" not in source_path` and `source_path.count(".") >= 2`) that reaches Step 4 warns
-  (not the existing DEBUG line) and surfaces as an entry point. *Rejected: keeping the reject at
+  CHAIN (`"::" not in source_path` and `source_path.count(".") >= 2`) that reaches Step 4 emits a
+  genuine `logger.warning` — a distinct WARNING level, **not** folded into the deliberately-DEBUG
+  benign line it sits next to (`dependency_backtracker.py:569-576`) — and surfaces as an entry point.
+  The message names the full untruncated chain. *Rejected: keeping the reject at
   extraction (extraction cannot detect unresolvability without the registry — the seam the spec's
   "narrow the reject site" phrasing assumed does not hold; see Non-Goals / Risks).* **This is a
   deliberate deviation from the spec's literal "reject site is not deleted, it is narrowed" wording
@@ -136,8 +156,9 @@ as an entry point — never truncated, never silent (the Item-5 contract, in its
   for no corpus benefit).*
 - **D5. Fires-on-shape substrate is a synthetic backtracker unit test, not a fixture.** Feed a
   3+-segment CHAIN `BindingInfo` whose tail names a non-existent output into
-  `_resolve_binding_via_registry` with a registry that lacks it; assert ENTRY_POINT + a warning
-  fired. *Rejected: a new dangling-chain fixture (adds a captured baseline + snapshot + a
+  `_resolve_binding_via_registry` with a registry that lacks it; assert ENTRY_POINT, level=WARNING,
+  and the full untruncated returned QN (M-2). *Rejected: a new dangling-chain fixture (adds a
+  captured baseline + snapshot + a
   byte-identity surface for a negative case; the warning lives at the backtracker, so a unit test
   exercises the exact path faithfully).*
 
@@ -155,11 +176,12 @@ backtracker (_resolve_chain_dispatch):
   Step 1b  scoped_lookup(path)
   Step 1c  scoped_alias_lookup(...)
   Step 2   alias_lookup(path)
-  Step CLIMB (new, gated ".">=2): for prefix in ancestors(consumer_scope) longest→shortest:
-             hit = scoped_lookup(prefix + "." + path); first non-self hit wins   # data_point hits here
+  Step CLIMB (new, gated ".">=2): collect scoped_lookup(prefix + "." + path) over
+             ancestors(consumer_scope); {} → miss; {1 distinct channel} → MODULE_OUTPUT (data_point);
+             {≥2 distinct channels} → refuse (fall through, no silent pick)
   → BindingResolution(MODULE_OUTPUT, channel)
 
-  Step 4 fallback (miss): if 3+-segment chain → WARN + fallback_entry_points  # loud diagnostic
+  Step 4 fallback (miss): if 3+-segment chain → logger.warning + fallback_entry_points  # loud diagnostic
 ```
 
 **Boundaries:**
@@ -178,8 +200,12 @@ backtracker (_resolve_chain_dispatch):
   `data_point → DeepCrossScopeDesign__measurement_system__station__array__derived_calc__derived_value`
   and `base_metric → …__station__array__sensor__core__metric_value`. Each pinned by an
   independently-anchored assertion of the full QN (not "resolved" / "left fallback").
-- **INV-2.** A 3+-segment chain that resolves through no step still warns loudly and surfaces as an
-  entry point — never truncated to root, never silently wired (Item-5 contract, D3 home).
+- **INV-2.** A 3+-segment chain that resolves through no step still warns loudly (a genuine
+  `logger.warning`, WARNING level, distinct from the sibling DEBUG line) and surfaces as an entry
+  point — never truncated to root, never silently wired (Item-5 contract, D3 home).
+- **INV-2b.** The climb never silently picks among conflicting channels: if two ancestor prefixes
+  reach different channels, it refuses and falls to the loud Step-4 fallback (M-1 guard). Only a
+  single distinct climb channel resolves to a wire.
 - **INV-3.** The climb resolves only through `scoped_lookup`; no deep chain resolves through the
   flat `alias_lookup`. Live and offline produce identical wires for both chains.
 - **INV-4.** Path-scoped byte-identity: no calc-usage-param baseline other than
@@ -194,22 +220,30 @@ backtracker (_resolve_chain_dispatch):
 - **CHAIN extraction arm (`usage_extractor.py:717`).** Replace the `len(segments) > 2` reject with a
   CHAIN build over the full segment list. The 2-segment `_parse_chain_expression` path stays; the
   3+-segment path now joins all segments into `source_path` and returns `BindingType.CHAIN`. No
-  truncation, no warning here.
+  truncation, no warning here. **The deep-chain arm intentionally sets only `source_path`** — it
+  omits `source_instance_elem` / `source_attribute_elem` / `is_cross_file` (N-1). The backtracker
+  consumes none of those three for CHAIN resolution (only `source_path`), so this is safe; a
+  plan-stage implementer must **not** reach back into `_parse_chain_expression` to populate them.
 - **Scope-climb step (`_resolve_chain_dispatch`, new, gated).** After Step 2, if
   `source_path.count(".") >= 2`, iterate ancestor prefixes of `consumer_scope` (drop trailing
-  segments, longest→shortest), `scoped_lookup(prefix + "." + source_path)` each, take the first
-  non-self-reference hit. Additive (INV-A): ordered after the existing ladder, only adds a hit
-  where it fell through.
+  segments), collect every non-self-reference `scoped_lookup(prefix + "." + source_path)` hit into a
+  set of distinct channels. Empty → return None (fall through). Exactly one → resolve to it. Two or
+  more → return None and let Step 4 fire the loud fallback (the M-1 ambiguity guard — refuse, never
+  silently pick). Additive (INV-A): ordered after the existing ladder, only adds a hit where it fell
+  through.
 - **Multi-hop fallback WARN (`_resolve_binding_via_registry` Step 4).** When a fallthrough binding
-  is a 3+-segment CHAIN, emit a WARNING naming the chain (in addition to the fallback entry point).
-  The silent-on-clean sibling: both corpus chains resolve, so no WARN fires on the corpus.
+  is a 3+-segment CHAIN, emit a genuine `logger.warning` (level WARNING, distinct from the sibling
+  DEBUG line) naming the full untruncated chain, in addition to the fallback entry point. The
+  silent-on-clean sibling: both corpus chains resolve, so no WARN fires on the corpus.
 - **Pins (`test_deep_cross_scope_probe.py`).** Flip `test_pattern_a_deep_chain_falls_to_own_entry_point`
   and `_no_truncated_binding` to resolved-wire assertions; rewrite `test_offender_set_pinned`'s
   docstring (the set stays empty, but now because both are *wired*, not rejected-to-clean-EP —
   re-verify the assertion); add a `base_metric` channel-identity pin; replace the extraction-warns
   test with the fires-on-shape unit test + the live/offline parity test.
 - **Fires-on-shape unit test (new).** Synthetic 3+-segment dangling CHAIN → backtracker → assert
-  ENTRY_POINT + WARN (D5).
+  ENTRY_POINT, **level=WARNING**, and that the returned QN is the full untruncated `usage_qn__param`
+  (D5, M-2 — the assertion locks the "loud + never-truncated" substance, not merely "an EP came
+  back").
 - **Live/offline parity test (new, @requires_license).** Extract + resolve the fixture live; assert
   both channel QNs equal the committed-snapshot wires.
 
@@ -220,6 +254,10 @@ backtracker (_resolve_chain_dispatch):
 - A literal per-hop part-containment walker. The scoped registry already keys every output by its
   full instance path; the climb + one `scoped_lookup` reaches the terminal without walking
   intermediate hops.
+- The first-segment-shadowing single-hit shape (inner scope declares the chain's first segment but
+  lacks the full downward path; an outer scope supplies it). No corpus model exercises it; closing
+  it needs per-segment scope inspection the climb does not do. Filed, not built (B2, M-1) — a code
+  comment must name the assumption at the climb site.
 - Sharing a resolution walk with the attribute confirm path (D2).
 - The duplicated `unbound_params` entries (`data_point`×2, `base_metric`×2) — resolving the
   bindings likely clears them; do not chase unless they survive the re-capture.
@@ -260,8 +298,11 @@ backtracker (_resolve_chain_dispatch):
 - **The spec expected the reject to stay at extraction (D3 deviation).** *Mitigation:* recorded
   prominently as a decision; the substance of the HARD Item-5 contract is preserved. Surface at
   design-review for explicit sign-off.
-- **B2 wrong scope wins (silent mis-wire).** *Mitigation:* longest-first (innermost-wins) ordering;
-  the channel-identity pins assert exact QNs, computed independently of the code under test (R1).
+- **B2 wrong scope wins (silent mis-wire).** *Mitigation:* the M-1 collect-all-and-refuse guard
+  turns a cross-scope collision (two prefixes, different channels) into a loud refusal, not a silent
+  pick; the channel-identity pins assert exact QNs, computed independently of the code under test
+  (R1). *Residual:* the first-segment-shadowing single-hit shape is filed, not built (safe for the
+  corpus — only one prefix hits `data_point`).
 - **The stale classification flip is code-wrong, not baseline-wrong.** *Mitigation:* root-cause
   before commit (R4 verify-then-fix); it reproduces on `ba3bca4`, so it is not caused by this item.
 
@@ -288,12 +329,15 @@ to document the climb step in the same change.
 ## Next-Stage Handoff
 
 - **Fixed:** extraction emits full-path CHAIN (D1); the walk is ancestor-scope climbing in
-  `_resolve_chain_dispatch`, gated to 3+-segment (D2/D4); the loud diagnostic moves to the
-  backtracker Step-4 fallback (D3); fires-on-shape is a synthetic unit test (D5); resolution is
-  `scoped_lookup`-only for parity (B3/INV-3); base_metric resolves via the existing Step 1 (no climb).
-- **Open at plan:** exact form of the ancestor-prefix iteration and its stop condition; how the
-  backtracker surfaces the new WARN (caplog vs a warnings list); whether the stale classification
-  flip survives the wire flips (root-cause at re-capture).
+  `_resolve_chain_dispatch`, gated to 3+-segment (D2/D4), with a collect-all-and-refuse ambiguity
+  guard (M-1/INV-2b); the loud diagnostic moves to the backtracker Step-4 fallback as a genuine
+  `logger.warning` (D3/M-2); fires-on-shape is a synthetic unit test asserting level=WARNING + the
+  untruncated QN (D5); resolution is `scoped_lookup`-only, structurally guaranteed by the 1-dot
+  alias-key shape (B3/INV-3); base_metric resolves via the existing Step 1 (no climb).
+- **Open at plan:** exact form of the ancestor-prefix iteration; the code comment naming the
+  filed first-segment-shadowing assumption at the climb site (B2); how the backtracker surfaces the
+  new WARN (caplog target); whether the stale classification flip survives the wire flips
+  (root-cause at re-capture).
 - **De-risk first:** confirm the climb resolves `data_point` to the exact expected channel **and**
   that no other baseline diffs — run the byte-identity gate before writing the pins, so a surprise
   churn surfaces before the pins encode it.
