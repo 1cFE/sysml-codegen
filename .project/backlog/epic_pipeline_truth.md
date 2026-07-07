@@ -288,7 +288,7 @@ updates (R1).
 
 ---
 
-### Item 3: fusion-tea Acceptance & Workaround Retirement [1–1.5 days]
+### Item 3: fusion-tea Acceptance & Workaround Retirement [1–1.5 days] ✅
 
 **Type**: Execution / cross-repo coordination
 **Effort**: 1–1.5 days (spec 1h, plan 1h, execute 5–8h) — fit: high (the report's
@@ -325,12 +325,12 @@ deleted, anchors green, and the evidence gaps the adversarial pass named are clo
 - Constraint execution (the ηG viability check stays harness-side).
 
 **Success Criteria**:
-- [ ] fusion-tea `run_anchors.py` (simplified, no bridge, no two-pass) passes A/B
+- [x] fusion-tea `run_anchors.py` (simplified, no bridge, no two-pass) passes A/B
   module-level + C full-pipeline at rel 1e-6, on the workaround-free canonical models.
-- [ ] Perturbed-input rerun moves the output to the hand-computed value.
-- [ ] Retirement table all-deleted; fusion-tea repo has no reference to
+- [x] Perturbed-input rerun moves the output to the hand-computed value.
+- [x] Retirement table all-deleted; fusion-tea repo has no reference to
   `sanitize_names.py` / `hif_driver_instance` / two-pass feedback.
-- [ ] SNAP-19 parity green over the parametrized fixture set, live leg included.
+- [x] SNAP-19 parity green over the parametrized fixture set, live leg included.
 
 **Required Reading**: fusion-tea report §"Coordination actions" + §"Reproduce";
 discovery register §adversarial (SC-3, SC-5, SC-9/10, Anchors rows);

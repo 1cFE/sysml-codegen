@@ -6,6 +6,23 @@
 
 ## Active Work
 
+### PIPELINE-TRUTH Item 9 — agentic-mbse Sync (Guidance, Validation, Companion Audit) — SPEC IN PROGRESS
+Executes the accumulated agentic-mbse impact lists (Items 1–5), builds the D-F expression-RHS
+warning, discharges prior-epic residue (PR #7, C7/C8/F6, vendor note), and runs the
+`extract_feature_refs` / `str(direction)` companion audit. Artifacts in this repo
+(`.project/active/pipeline-truth-sync/`, prior-epic `validation-sync` pattern); code lands in
+`/home/reid/1cfe/agentic-mbse` on `pipeline-truth-item4`. Spec being written 2026-07-06.
+
+### PIPELINE-TRUTH Item 3 — fusion-tea Acceptance & Workaround Retirement — CERTIFIED
+Audit PASS-WITH-NOTES (`.project/active/fusiontea-acceptance/audit.md`, 2026-07-06). Crux
+(runner multi-output completion) confirmed test-harness-only, zero `src/`. All 4 acceptance
+tests pass; anchor + perturbed-lcoe (216.55528392479388) arithmetic re-derived independently;
+retirement greps zero; both offender states zero with canonical Meier channels; SNAP-19 parity
+green over 6 fixtures + fusion_tea leg (license live). Gates 2066/4/5, ruff 17, mypy 104.
+Only note: fusion-tea teax executor not re-run in audit (needs their venv) — corroborated via
+byte-identical wiring + in-repo executor. Next: fusion-tea PR from
+`chore/retire-pipeline-truth-workarounds`.
+
 ### PIPELINE-TRUTH Item 5 — Silent-Failure Hardening — SPEC IN PROGRESS
 Track B. Spec phase is a verification pass (R4): the D3 floor findings are static-read
 verdicts reproduced/refuted before design. Verification table + spec:
