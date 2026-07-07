@@ -1,14 +1,19 @@
-# Prompt: Interactive Pipeline Explainer (post-UPSTREAM-FINDINGS)
+# Prompt: Interactive Pipeline Explainer (post-PIPELINE-TRUTH)
 
 Copy everything below the line into a fresh agent session in
-`/home/reid/1cfe/sysml-codegen`, on branch `docs-scrub`.
+`/home/reid/1cfe/sysml-codegen`, on branch `pipeline-truth-epic` (or `main` once that
+branch merges). The docs-scrub pass merged to `main` as PR #4; the PIPELINE-TRUTH epic
+then landed on `pipeline-truth-epic` and re-verified every doc it touched at that HEAD.
 
 ---
 
 Build a single self-contained interactive HTML explainer of the **sysml-codegen
 pipeline** — what it is for, how it works algorithmically, and how it is operated —
-current as of branch `docs-scrub` (the post-epic docs there were just scrubbed and
-audited against code at HEAD; trust them and cite them rather than re-deriving).
+current as of `pipeline-truth-epic` HEAD (the post-epic docs there were scrubbed, then
+re-verified at epic close against code at HEAD; trust them and cite them rather than
+re-deriving). The facts below are certified true by the GREEN Item-3 fusion-tea
+acceptance run — full package generates at zero V11 offenders and run-C's lcoe
+reproduces bit-exactly ($270.1211779380445/MWh) through the generated package alone.
 
 ## The one-paragraph subject
 
@@ -91,6 +96,7 @@ skeleton (verify names against the docs; each has a scrubbed reference doc):
 | `extraction/computed_attribute_extractor.py` (doc 16) | Classify design-attribute expressions (FORMULA / EXPOSE_PURE / EXPOSE_COMPUTED-rejected / tentative / literal / unresolvable) | An attribute expression can be an algorithm, an alias, or a config value — each takes a different pipeline path |
 | `core/output_registry.py` + `orchestration/output_registry_builder.py` (doc 10) | One authoritative name→channel registry, typed keys, phased build incl. the Phase 3b multi-hop confirm walk | Ambiguous string keys caused silent mis-wires; a multi-hop chain can't be classified at extraction (leaf lacks the registry) |
 | `analysis/dependency_backtracker.py` (docs 11/24) | Resolve every binding to exactly one source via typed dispatch ladders (CHAIN vs REFERENCE) | Quoted names, def-owned attributes, sibling instances of one type, cross-part chains |
+| `resolution/supplied_values.py` (REQ-SVM; PIPELINE-TRUTH Item 2) | Pre-pass that materializes design attributes for cross-part/in-part supplied values, keyed by source QN, before the backtracker | A literal on a subsystem attribute must fill a plant-calc input, or generation aborts at V11 — the whole-plant idiom fusion-tea uses; fan-out collapses to one shared EP per source QN |
 | `orchestration/pipeline_builder.py` (docs 02/12) | Ordered assembly: rewrite virtual bindings through the specialization chain (usage override > specialized-def `:>>` > base def), then backtrack, then derive groups | Step order IS the correctness argument (e.g. group deriver runs after the registry confirm pass) |
 | `resolution/graph_builder.py` (doc 07) | Emit the `ComputationGraph` — sole input to generation — and gate it (V11 params-coverage, channel validation) | A generated pipeline that `KeyError`s at load is worse than a loud abort |
 | `analysis/` param-group deriver (doc 17) | Entry points → per-design-file JSON input groups | Which literals are user-facing knobs (ADR-001: LIBRARY_DEFAULT / DESIGN_ATTRIBUTE / USAGE_LITERAL) |
@@ -108,13 +114,28 @@ or `wi014_toy` for the part-def EXPOSE shape). SysML source line → AST nodes �
 data → registry entries → resolved binding → graph module → YAML exit line. Real names
 from the baselines, not invented ones.
 
-**4. The cross-part story (the epic's centerpiece).** Multi-hop EXPOSE
+**4. The cross-part story (the epic's centerpiece).** Two complementary halves — channel
+wiring and value resolution — cover the whole-plant idiom that fusion-tea uses.
+
+*Channel wiring* (an output of one calc reaches another calc's input): multi-hop EXPOSE
 (`EXPOSE_CHAIN_TENTATIVE` → Phase 3b confirm), part-def EXPOSE expanded per instance
 (shape A, `_scoped_alias` / `ScopedAliasKey`), specialized-def `:>>` chains (single- and
 two-level — the `gamma → lcoe` shape), sibling disambiguation, and alias surfacing
 (`ComputationGraph.output_aliases`, serialized, vs `fallback_entry_points`, in-memory —
 a deliberate contrast; the modeler's name becomes the exit-point output filename
 `{instance_path}__{alias_name}.json`).
+
+*Value resolution* (a literal sitting on a subsystem attribute fills a plant-calc input —
+the PIPELINE-TRUTH headline): the **supplied-value materializer**
+(`resolution/supplied_values.py`, REQ-SVM-01..04). A pre-pass synthesizes design
+attributes for cross-part and in-part supplied values, keyed by **source QN**, merged into
+`design_attributes` before the backtracker runs. It covers the four value-provision shapes
+Item 2 landed — (a) subtype-def literal through a usage-level retype, (b) a bare no-retype
+`part :>>` override block, (c) a plain one-hop cross-part attribute with a dotted usage
+override, (d) an in-part supplied value — with precedence **usage override >
+specialized-def `:>>` > base def** (REQ-VBR-10). Fan-out collapses by source QN: one
+attribute feeding three consumers is one shared entry point, not three keys. This is what
+retired the V11 10-offender abort — fusion-tea's full YAML now emits with zero offenders.
 
 **5. Operational reality.** How you actually run it: `generate --models` (live
 extraction) vs `snapshot` + `generate --from-snapshot` (mutually exclusive with
@@ -131,29 +152,61 @@ FAIL). Every epic item recorded matching agentic-mbse updates so teaching and ch
 never drift from what codegen accepts. Frame it as the enforcement half of the
 modeling-assumptions contract.
 
-**7. Honest caveats — preserve, never strengthen.** Constraints are dropped (loudly —
-§8); EXPOSE_COMPUTED rejected; `attribute :>> attr = <expr>` silently dropped (use the
-bare form); cross-part support covers four specific shapes while the full fusion-tea
-plant still aborts at V11 on 10 remaining bindings (workarounds stay upstream; BACKLOG
-P1); two documented REQ-vs-code divergences are open (`BACKLOG.md` DOCS-SCRUB-F2:
-Key_A/Key_F registration; DOCS-SCRUB-F4: `resolve_input()` has zero production callers).
-The explainer must not present any of these as solved.
+**7. Honest caveats — preserve, never strengthen.** These are the limits that are still
+real at post-PIPELINE-TRUTH HEAD. State them exactly as hedged; do not present them as
+solved, and do not resurrect the pre-epic caveats the epic retired (see the note below).
 
-## Reading list (in order; all scrubbed 2026-07-06 and audited against HEAD)
+- **Constraints are dropped** — but loudly, subtype-aware, and on both paths (§8). The drop
+  report sweeps every `ConstraintUsage` including subtypes, so an `assert constraint`
+  (`AssertConstraintUsage`) is reported, not silent; it runs on the live and
+  `generate --from-snapshot` paths (REQ-EXT-09, Item 4). There is still no execution path
+  for constraints — encode a gate as a calc-def output if you need one enforced.
+- **`attribute :>> attr = <expression>` is silently dropped at extraction** — use the bare
+  `:>> attr = value` form. agentic-mbse now WARNs on the expression form (Item 9), but
+  codegen extraction still drops it. Genuinely unsupported.
+- **EXPOSE_COMPUTED is rejected** and does not surface.
+- **`resolve_input()` / `AGG_STRATEGIES` is built and parity-validated but not yet wired**
+  to the live aggregation path — the live path is `_resolve_aggregation_input_channel`. This
+  is the honest current state (docs 03/04/05 + matrix say so), the rewire is filed as
+  `[ITEM7-F4-CUTOVER]`, and the two implementations are proven equivalent on the committed
+  corpus by `test_dual_resolution.py`. It is a not-yet-wired consolidation, **not** an
+  unreconciled REQ-vs-code divergence.
+
+**Retired by PIPELINE-TRUTH — do NOT present these as open caveats** (they were true
+pre-epic; they are not now): the V11 10-offender abort (fusion-tea's full YAML now emits at
+zero offenders via the supplied-value materializer — Item 2/3; workarounds deleted
+upstream — SC-C); the assert-constraint silence (fixed subtype-aware — Item 4); the
+"four specific cross-part shapes" limit (support is now broader: four wiring shapes + SVM
+value-fill a/b/c/d — Item 2); the two "open" REQ-vs-code divergences (DOCS-SCRUB-F2
+resolved fix-text-to-code, DOCS-SCRUB-F4 resolved land-with-split — both retired by Item 7);
+and the run-C anchor being "recorded not reproduced" (it now reproduces bit-exactly in the
+acceptance run — SC-B).
+
+## Reading list (in order; scrubbed 2026-07-06, then re-verified at PIPELINE-TRUTH close)
 
 1. `docs/architecture/modeling-assumptions.md` — the contract; read end-to-end first
 2. `docs/architecture/overview.md` + `reference/00-pipeline-overview.md` — shape + reading guide
-3. `.project/active/docs-scrub/fact-sheet.md` — condensed "true at HEAD" facts F1–F12 with provenance
+3. `.project/active/docs-scrub/fact-sheet.md` — condensed "true at HEAD" facts F1–F12 with
+   provenance; read its **F6/F10 POST-EPIC UPDATE** for what PIPELINE-TRUTH changed
 4. Reference docs per the responsibility table above (01, 25, 12, 16, 10, 11, 24, 02, 07, 17, 08, 20, 21, 27; 19 for the AST invariant)
-5. `docs/architecture/verification-matrix.md` — skim; the REQ counts and families (248 = 236 PASS + 12 UNTESTED) if you cite coverage
-6. `.project/backlog/epic_upstream_findings.md` + `.project/active/{warning-reconciliation,cross-part-wiring,alias-surfacing,plant-prefill}/release-notes.md` — the why behind the newest mechanisms
+5. `docs/architecture/verification-matrix.md` — skim; the REQ counts and families
+   (253 = 249 PASS + 4 UNTESTED, 30 families) if you cite coverage. Recount from the
+   family index, never the summary block.
+6. `.project/research/20260706_pipeline-truth-discovery.md` — the PIPELINE-TRUTH discovery
+   register (D1–D7 + adversarial); the evidence base for the epic's mechanisms
+7. `.project/backlog/epic_pipeline_truth.md` — the PIPELINE-TRUTH epic (goals, per-item
+   scope, Lessons Learned) + `.project/backlog/epic_upstream_findings.md` (prior epic)
+8. `.project/active/{warning-reconciliation,cross-part-wiring,alias-surfacing,plant-prefill}/release-notes.md`
+   (UPSTREAM-FINDINGS mechanisms) + the PIPELINE-TRUTH item close-outs
+   (`.project/active/{whole-plant-resolution,fusiontea-acceptance,subtype-enumeration,silent-failure-hardening}/`)
+   — the why behind the newest mechanisms (SVM, subtype-aware enumeration, silent-failure hardening)
 
 Prior art: `.project/diagrams/new_pipeline_explainer.html` (268KB) and its design at
 `.project/active/new-pipeline-explainer/design.md`. Reuse its proven machinery if
 useful (viewBox zoom/pan controller, tier-slot DAG layout, narrative callouts,
 progressive disclosure) but treat its *content* as unverified against HEAD — parts
-predate the UPSTREAM-FINDINGS epic. Do not just retrofit it; this explainer's scope
-(SysML/AST layer, responsibility map, operations, agentic-mbse) is larger.
+predate the UPSTREAM-FINDINGS and PIPELINE-TRUTH epics. Do not just retrofit it; this
+explainer's scope (SysML/AST layer, responsibility map, operations, agentic-mbse) is larger.
 
 ## Technical constraints
 

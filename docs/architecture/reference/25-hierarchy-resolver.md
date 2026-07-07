@@ -248,9 +248,10 @@ suffix like `total_capital_cost` does NOT match — the dot boundary guards it.
 This edge (`_chain_sibling_aliases_aggregation`) is pinned directly by
 `tests/unit/test_hierarchy_resolver.py::TestDottedLeafAliasMatch`, which asserts
 the current leaf-only, part-blind behavior; no committed fixture triggers it, so
-the unit pin is the coverage. *(Whether the part-blindness should be tightened is
-a caveat for PIPELINE-TRUTH Item 10's epic-close sweep — the pin fixes the current
-behavior in place so any change is a red-then-green.)*
+the unit pin is the coverage. *(PIPELINE-TRUTH Item 10 resolved the part-blindness
+question: keep the current behavior. No supported model triggers the edge, and the
+unit pin makes any future tightening a red-then-green change. Speculative tightening
+is filed as BACKLOG `[DOTTED-LEAF-PART-BLIND]` (P3), not done here.)*
 
 ## Concrete Example
 
