@@ -57,9 +57,9 @@ for rel, target in getattr(part_element, "heritage", []):
 ### Changes Required
 **See `design.md#research-findings`** (reachability gate PASSES) and **`design.md#key-bets`** (B1, B2).
 
-- [ ] Write a temporary probe (a scratch script under `scripts/` or a temporary `-k probe` test) that loads the fixture through the licensed path and prints/asserts the two facts above.
-- [ ] Run it. Record the exact printed `target.qualified_name` string in this plan's Implementation Notes.
-- [ ] Delete the scratch probe (it is not a committed artifact; the depth-2 fixture + re-capture in later phases are the durable proof).
+- [x] Write a temporary probe (a scratch script under `scripts/` or a temporary `-k probe` test) that loads the fixture through the licensed path and prints/asserts the two facts above.
+- [x] Run it. Record the exact printed `target.qualified_name` string in this plan's Implementation Notes.
+- [x] Delete the scratch probe (it is not a committed artifact; the depth-2 fixture + re-capture in later phases are the durable proof).
 
 ### Validation
 **Automated:**
@@ -343,7 +343,10 @@ Item 4 debt retired: classifier fixed, snapshot re-captured and reviewed, xfails
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Recorded fact — the printed `target.qualified_name`:** _[fill: exact `::`-form string]_
+**Status:** GATE PASSED (2026-07-07). Probe ran via licensed extractor path (`SysMLDataExtractor([unresolvable_attr_probe]).load_models()`), then walked `'Derived Component'.heritage`.
+**Recorded fact — the printed `str(target.qualified_name)`:** `"UnresolvableAttrProbeLibrary::'Base Component'"` (`::`-form, quotes preserved, no `__`).
+**Prefix confirmation:** inherited ref `base_rate` QN = `"UnresolvableAttrProbeLibrary::'Base Component'::base_rate"` → `startswith(supertype_qn + "::")` TRUE. `base_factor` likewise. Own attr `local_multiplier` QN sits under `'Derived Component'::` and correctly does NOT match Base. B1 (QN `::`-form) + B2-depth-1 (heritage→Subclassification→target) both confirmed.
+**DEVIATION (recorded):** `target.qualified_name` returns a `syside.core.QualifiedName` object, not a `str`. The walk must apply `str(...)` before prefix use — the design pseudocode (`design.md:354`) already does (`str(getattr(target, "qualified_name", "") or "")`), so no design change; the classifier's existing `part_qn` at `extractor.py:194` also already `str()`-wraps. Probe deleted (scratch, not committed).
 
 ### Phase 2 Completion
 **B3 verdict:** _[fill: corpus grep result for inherited-attr computed attrs AND nested-CalcDef-under-ancestor; expected: neither present]_
