@@ -1,0 +1,5 @@
+[PARITY] plant_values: mo_verified=0 ep_verified=3 bt_only(Strategy-B gap)=0 kills=0
+[PARITY] plant_value_shapes: mo_verified=0 ep_verified=1 bt_only(Strategy-B gap)=0 kills=0
+[PARITY] spec_chain_twolevel: mo_verified=1 ep_verified=1 bt_only(Strategy-B gap)=0 kills=0
+
+OVERALL: 100% PARITY — no kill (total kills=0)
