@@ -244,6 +244,32 @@ expression bindings, deep `::` bindings, units, `default :=` — healthy surplus
 - **Coverage honesty**: ~175 PASS rows not deep-read. Item 7 execution completes the
   sweep with the D7 triage heuristics.
 
+### D7 close-out — reconciled by PIPELINE-TRUTH Item 7 (2026-07-06)
+
+- **F4 — CONFIRMED, RECLASSIFIED.** Three kill probes fired no kill (see `matrix-truth/r4-verification-table.md`).
+  Verdict LAND-with-split: the IR family + DRA-02/RES-02/08 texts reframed from "pins the live
+  resolver" to "parity-validated, not-yet-wired capability"; docs 03/04/05 reframed; cutover filed
+  `[ITEM7-F4-CUTOVER]`. The "REQ-RES-02 is UNTESTED not PASS" correction landed (RES-02 text now
+  names the live `_resolve_aggregation_input_channel`, cross-cited in Phase 5).
+- **F2 — CONFIRMED, fix-text-to-code.** The construction-time dict does NOT bypass the typed
+  contract (B3). REQ-OR-05/06/08 + doc-10 corrected to the real registrations; **REQ-ORCH-04's
+  weakened `min<min` replaced with a red-mutation-gated presence assertion**; both lying docstrings
+  fixed. `DOCS-SCRUB-F2`/`F4` retired.
+- **Divergent-PASS rows — CONFIRMED, reframed.** EXT-09 (Item 4) and PGD-08 (cited test in
+  `tests/unit/`) verified DONE/honest; CA-05, PY-01/03/05, GEN-02, SR-07, DM-06/07, GA-07 reframed
+  to what the cited test checks.
+- **7 unmarked rows — CLOSED.** Six `# REQ-*` markers added (BASE-05, BT-11, CA-10, LVP-09, OR-09,
+  VBR-11); PGD-08 routed through the divergent-row disposition.
+- **UNTESTED-12 — dispositioned.** 9 discharged by cross-citation; 3 argued-UNTESTED (DM-08,
+  RES-05, RES-08) filed `[ITEM7-MATRIX-TEST-GAPS]`; RES-02 rewritten.
+- **Counts — reconciled.** Recount 253 = 249 PASS + 4 UNTESTED + 0 PENDING; footer "33 files"
+  corrected to 57 distinct cited (41 conformance + 16 unit/integration), definition stated.
+- **~175-row sweep — substantially completed, residue named.** ~167 qualifying rows deep-read; all
+  findings PASS-but-pins-narrower (no correctness lies), filed `[ITEM7-MATRIX-SWEEP-RESIDUE]`; ~46
+  qualifying rows named as un-deep-read residue there.
+- **5 xfails — RECLASSIFIED.** One parametrized contract documented; classifier fix filed
+  `[ITEM7-CLASSIFIER-FIX]`.
+
 ## Adversarial pass (fusion-tea report attack)
 
 Substrate limits: fusion-tea models have no return (canonical), no aliases, no

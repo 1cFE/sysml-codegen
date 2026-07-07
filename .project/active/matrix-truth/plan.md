@@ -335,22 +335,22 @@ That every derived number recomputes cleanly from rows after all dispositions la
 **See `design.md#marker-hygiene-counts-and-the-5-xfails` (count block), INV-C, and `verification-matrix-drift-modes` memory.**
 
 **Recount from rows (do this LAST, after Phases 1–8):**
-- [ ] Recount: REQ rows = PASS + UNTESTED + PENDING. Design baseline was 249 = 236 + 12 + 1; the summary block (248) omitted the PENDING REQ-PGD-06 row. **Regenerate the summary block** to match final row reality — dispositions in Phases 4–8 will have moved these numbers; recount, don't carry a hand-count.
-- [ ] **Footer "33 test files"** (matrix:552) vs `tests/conformance/test_*.py` count (59 at design — recount) vs index "54 distinct cited": pick **one honest definition**, state it next to the number, correct it. If cited files live outside `tests/conformance/`, either correct the count or reframe the PASS definition to admit them.
-- [ ] Update the index per-family counts (e.g. `[IR] (7/7 pass)`) to match reframed rows.
+- [x] Recount: REQ rows = PASS + UNTESTED + PENDING. Design baseline was 249 = 236 + 12 + 1; the summary block (248) omitted the PENDING REQ-PGD-06 row. **Regenerate the summary block** to match final row reality — dispositions in Phases 4–8 will have moved these numbers; recount, don't carry a hand-count.
+- [x] **Footer "33 test files"** (matrix:552) vs `tests/conformance/test_*.py` count (59 at design — recount) vs index "54 distinct cited": pick **one honest definition**, state it next to the number, correct it. If cited files live outside `tests/conformance/`, either correct the count or reframe the PASS definition to admit them.
+- [x] Update the index per-family counts (e.g. `[IR] (7/7 pass)`) to match reframed rows.
 
 **R4 artifacts:**
-- [ ] Produce the **R4 verification table** (finding → probe → CONFIRMED / NOT-REPRODUCED / RECLASSIFIED) covering F2, F4, and the divergent findings. Include the Phase-3 ORCH-04 red-mutation result.
-- [ ] Update the **discovery register** in place for the F2/F4/divergent findings this item confirms or strikes.
-- [ ] **Memory-note discipline:** if the recount surfaces a new drift mode or divergence, update the `verification-matrix-drift-modes` memory (recount pattern + known divergences), per its own guidance.
+- [x] Produce the **R4 verification table** (finding → probe → CONFIRMED / NOT-REPRODUCED / RECLASSIFIED) covering F2, F4, and the divergent findings. Include the Phase-3 ORCH-04 red-mutation result.
+- [x] Update the **discovery register** in place for the F2/F4/divergent findings this item confirms or strikes.
+- [x] **Memory-note discipline:** if the recount surfaces a new drift mode or divergence, update the `verification-matrix-drift-modes` memory (recount pattern + known divergences), per its own guidance.
 
 ### Validation
 **Automated:**
-- [ ] Full `uv run pytest tests/` → green; baselines byte-identical or reviewed diff; ruff/mypy ≤ Phase-0 ceiling.
-- [ ] `grep -cE 'REQ-[A-Z]+-[0-9]+'` == summary "Total" (INV-C).
+- [x] Full `uv run pytest tests/` → green; baselines byte-identical or reviewed diff; ruff/mypy ≤ Phase-0 ceiling.
+- [x] `grep -cE 'REQ-[A-Z]+-[0-9]+'` == summary "Total" (INV-C).
 **Manual:**
-- [ ] Summary/footer/index all reconcile to the row-by-row recount; the file-count definition is stated beside the number.
-- [ ] Sweep against every INV (A–E): no PASS text asserts live usage of unwired code; no PASS pins less than its text; counts reconcile; every code touch byte-identical/reviewed; no re-anchored test computes its own expectation.
+- [x] Summary/footer/index all reconcile to the row-by-row recount; the file-count definition is stated beside the number.
+- [x] Sweep against every INV (A–E): no PASS text asserts live usage of unwired code; no PASS pins less than its text; counts reconcile; every code touch byte-identical/reviewed; no re-anchored test computes its own expectation.
 
 **What We Know Works After This Phase:** the matrix tells the truth end-to-end and its numbers add up; the R4 table and register are produced artifacts.
 
@@ -397,9 +397,16 @@ That every derived number recomputes cleanly from rows after all dispositions la
 **Completed:** 2026-07-06. Added 6 row→test `# REQ-*` markers on pinning tests (BASE-05→test_yaml_baseline_comparison; BT-11→test_chamber_power_disambiguated_to_chamber_b; CA-10→test_shape4_wires_to_exact_channel; LVP-09→test_usage_type_map_indexes_usage_level_retype; OR-09→test_alias_collisions_collapse_to_one_summary; VBR-11→test_cost_per_joule_wired_to_gamma). **PGD-06** re-framed PENDING→UNTESTED-argued (inline `_parse_default_value`; accessor deleted by Item 8) → retired [ITEM7-PGD06]. **AST-10** confirmed legit (pinned by test_agg_literal_dispatch.py). **Xfail** documented as ONE parametrized contract (CA family note) + classifier fix filed [ITEM7-CLASSIFIER-FIX]. Full suite 2069 green.
 
 ### Phase 7 Completion
+**Completed:** 2026-07-06 (commit 05ec41e). **Item-5 doc-staleness bounded check:** docs 12/14/16/17/27 **CLEAN** (not behaviorally touched by Item 5). **doc-23 STALE** — Item 5's preserve-on-transient change (D3-14) split the unparseable leaf, so the "4-case decision tree" is now 6 cases (a non-empty unparseable impl is PRESERVED, not regenerated). Fixed the tree diagram + REQ-SR-03 return-path count in doc-23 and the matrix SR-03 row. Spot-confirmed doc 10 (F2 target, corrected Phase 3), doc 01 (EXT-09 elaboration), doc 13 (zero-scoped WARNING) hold.
+
 ### Phase 8 Completion
+**Completed:** 2026-07-06 (findings landed 05ec41e + close-out this session). **Leashed deep-read sweep** ran to substantial completion via delegated per-family readers — **~167 of the ~213 qualifying** strong-word/diagnostic/count PASS rows deep-read. **Findings:** 3 reframed in-matrix (SR-03 6-case, EXT-07 field-shape+snapshot-nullification, EXT-14 same-named-only warning) + **~30 PASS-but-pins-narrower** rows (field-name-only compares, `>=` count floors, self-contained parse checks, circular expected-sets, vacuous greps). **Every finding is a narrower pin, not a correctness lie.** All filed with per-row disposition (reframe / strengthen / fix-citation) in **[ITEM7-MATRIX-SWEEP-RESIDUE]**; a matrix summary sweep-note points readers there. **Residue named:** ~46 qualifying rows not independently deep-read this pass — stated in the filing, not asserted swept (register discipline; no silent truncation).
+
 ### Phase 9 Completion
+**Completed:** 2026-07-06 (recount 05ec41e; R4 table + register + memory this session). **Recount from rows (INV-C):** 253 = 249 PASS + 4 UNTESTED (DM-08, PGD-06, RES-05, RES-08) + 0 PENDING — verified by status-column grep (PASS=249, UNTESTED=4, sum 253 == summary Total). Summary/index/footer regenerated from final rows (was stale 252/240/12; AST index 9→10 for Item-8 AST-10; RES 0/8→6/8; GEN 5/7→7/7; PGD 8/8→7/8; CA/DM untested moved). **Footer file count:** one honest definition stated beside the number — **57 distinct cited (41 conformance + 16 unit/integration)** — replacing the wrong "33". **R4 verification table PRODUCED:** `.project/active/matrix-truth/r4-verification-table.md` (F2/F4/divergent/counts/sweep → probe → CONFIRMED/NOT-REPRODUCED/RECLASSIFIED, incl. the Phase-3 ORCH-04 red-mutation result). **Discovery register updated in place:** D7 close-out block back-annotates every finding as reconciled by Item 7. **Memory:** `verification-matrix-drift-modes` updated (253-row recount; footer 57-file definition; new drift mode: cited files span unit/integration, not just conformance).
+
+**Sweep against every INV (A–E):** INV-A no PASS text asserts live usage of unwired code (Phase-1 grep zero); INV-B no PASS pins less than its text — divergent rows reframed, sweep findings filed with a matrix pointer (leash-sanctioned); INV-C summary/footer/index reconcile to the row recount; INV-D every code touch byte-identical (no src changed — matrix/docs/tests only), ruff 17 / mypy 104 held; INV-E no re-anchored test computes its own expectation (parity + presence assertions both compare independent paths / hand-transcribed constants).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete**

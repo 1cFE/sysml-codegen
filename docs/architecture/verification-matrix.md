@@ -22,6 +22,13 @@ UNTESTED requirements are either cross-cutting architectural principles verified
 indirectly through component-level tests, or design-only requirements that constrain
 the documentation rather than executable code.
 
+> **Sweep note (PIPELINE-TRUTH Item 7).** The ~175-row deep-read sweep found ~30 PASS
+> rows whose cited test passes but pins *less* than the full requirement text (e.g.
+> field-name-only compares, `>=` count floors, self-contained parse checks). None is a
+> correctness lie. They are enumerated with per-row dispositions in
+> `[ITEM7-MATRIX-SWEEP-RESIDUE]` (backlog), to fix when each owning component is next
+> touched. ~46 qualifying rows remain un-deep-read (named there — not asserted swept).
+
 ## Index
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
