@@ -437,12 +437,18 @@ Baseline re-capture: `scripts/capture_*.py` only (R3). Snapshot generation is li
 Verbatim match to design D4. Ignores restored; working tree clean. Confirmed a loop-variable problem
 (`group` bound `DerivedParameterGroup` at `:325`), not a binding-site one — the D4 rename fix is correct.
 
-### Phase 1 Completion
-### Phase 2 Completion
-### Phase 3 Completion
-### Phase 4 Completion
-### Phase 5 Completion
-### Phase 6 Completion
+### Phases 1–6 Completion
+Per-phase detail lives in the six `impl(item1 P*)` commits (`ce26a5b`, `32626a7`, `58adf4d`,
+`0e85044`, `0962779`, `65b8b30`). Highlights: parity gates green before the one-commit cutover
+(P2→P3); aggregation baselines **byte-identical** — zero churn, no re-capture needed (P4);
+both type-ignores cleared by the D4 loop-variable rename (P5); docs 03/04/05 + matrix re-pinned (P6).
+
+### Orchestrator close-out (post-session)
+The implement session exited after running final gates but before its docs-residue sweep.
+Orchestrator verification: gates independently re-run and confirmed (2072 passed / 4 skipped /
+5 xfailed; ruff 17; mypy 97). One residual stale claim found and fixed: doc 24's
+`AGG_STRATEGIES` listing still showed deleted Strategy D and missed Strategy E
+(`24-dual-resolution-architecture.md:144` + the strategy-overlap table row).
 
 ---
 

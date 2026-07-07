@@ -141,7 +141,7 @@ AGG_STRATEGIES:
   A: ScopedRegistryLookup     — ScopedKey → scoped registry + alias registry
   C: ChainRedefinitionFollow   — :>> chain → ScopedKey → scoped registry
   B: SysMLQNLookup            — SysMLQN → SysML QN registry (for :: refs)
-  D: DesignAttributeLookup    — design attr match → entry point
+  E: DirectChannelConstruction — CalcUsage-format channel construction ("Try 2")
 ```
 
 `ChainRedefinitionFollow` (C) is promoted because aggregation inputs almost
@@ -164,7 +164,8 @@ Both paths solve the same problem with overlapping (but not identical) strategie
 | SysML QN lookup (`sysml_qn_lookup(SysMLQN)`) | REFERENCE Step 1 | Strategy B |
 | Leaf + scope lookup | REFERENCE Step 2 | -- |
 | CHAIN redefinition follow | -- | Strategy C |
-| Design attr transitive | Step 3 (both paths) | Strategy D |
+| Design attr transitive | Step 3 (both paths) | -- (former Strategy D deleted in the F4 cutover; design-attr matches fall to the `_build_agg_input_source` entry-point fallback) |
+| Direct channel construction | -- | Strategy E (CalcUsage-format targets, "Try 2") |
 | LITERAL :>> fallback | -- | In factory (REQ-MF-06) |
 | Self-reference guard | After each step | After each strategy |
 
