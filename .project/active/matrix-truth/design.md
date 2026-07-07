@@ -22,6 +22,7 @@ verdict from evidence the probes produced (all three artifacts under `probes/`).
   - `probes/probe_i_extended_parity.py` + `probes/probe_i_run_log.txt`
   - `probes/probe_ii_strategy_d_dedup.py` + `probes/probe_ii_run_log.txt`
   - `probes/probe_iii_module_drift.md`
+  - `probes/probe_iv_ep_key_divergence.md` (EP-key divergence evidence, per review M4)
 - **Epic:** `.project/backlog/epic_pipeline_truth.md` (Item 7; R1/R4; SC-F)
 - **Required Reading:** discovery §D7; `verification-matrix.md`; docs 03/04/05 (F4 intent),
   10 (F2); memory `verification-matrix-drift-modes`, `verify-then-fix-protocol`
@@ -57,11 +58,14 @@ The presumption was "land the cutover (a)"; it flips to excise only if a probe f
 No probe fired a kill:
 
 - **Probe (i) — extended parity.** `probe_i_run_log.txt`. The extended suite compares the
-  backtracker DFS against `resolve_input(AGG_STRATEGIES)` over Item 1's fixtures
+  **backtracker DFS** against `resolve_input(AGG_STRATEGIES)` over Item 1's fixtures
   (`plant_values`, `plant_value_shapes`, `spec_chain_twolevel`) — the fixtures the committed
-  suite never covered. Result: **100% parity, 0 kills.** Every CHAIN MODULE_OUTPUT resolves
-  to the same channel; every entry-point fallback agrees on type. The module's *channel
-  resolution* has not diverged from the live path's correctness.
+  suite never covered. Result: **0 kills**, over an honestly thin extension: **1 MODULE_OUTPUT
+  channel-equality check** (`spec_chain_twolevel`) + **5 entry-point fallback checks**. The
+  module's *channel resolution* has not diverged **from the backtracker's** — not, on this
+  evidence alone, from `_resolve_aggregation_input_channel` (see the sub-bet in B1 and the
+  cutover filing). The load-bearing evidence is the **full** set: the committed 12-test suite
+  over catf_mfe/solar_battery **plus** this extension.
 - **Probe (ii) — Strategy D dedup.** `probe_ii_run_log.txt`. Computed the aggregation-EP
   key-set diff that *implementing* Strategy D (`DesignAttributeLookup`) would produce against
   the `catf_mfe` and `solar_battery` baselines. Result: **zero key churn on both.** catf_mfe
@@ -81,9 +85,9 @@ No probe fired a kill:
 
 ### Why the cutover splits out (the load-bearing decision)
 
-The probes prove the module's **channel resolution** is correct. They do **not** make
-`resolve_input` a drop-in for the live path, because the live call sites do far more than the
-module's fallback:
+The probes prove the module's channel resolution matches the **backtracker**. They do **not**
+make `resolve_input` a drop-in for the live path, because the live call sites do far more than
+the module's fallback:
 
 - The SumTerm/SingletonTerm call sites (graph_builder.py:1437, 1532, 1633) build entry points
   with `_find_literal_redefinition` default propagation, `param_group` classification,
@@ -91,9 +95,11 @@ module's fallback:
   construction. `resolve_input`'s fallback does none of this — it emits a bare
   `{module_eqn}__{leaf}` entry point.
 - The EP *key* differs: live builds `{module_eqn}__{part_usage}_{attr}` (e.g.
-  `…site_infra__raw_material_cost__permitting_raw_material_cost`); the module would build
-  `…__raw_material_cost`. Both keys already exist in the solar_battery baseline, so a naive
-  drop-in would **collapse distinct params and churn baselines**.
+  `…site_infra__raw_material_cost__permitting_raw_material_cost`, an input EP); the module's
+  leaf-only fallback would build `…__raw_material_cost` — which already exists in the same
+  graph as the module's own **output channel**. A naive drop-in would collide an input EP with
+  an output channel name and drop the part-usage disambiguator. Captured with the concrete
+  coexisting baseline lines in `probes/probe_iv_ep_key_divergence.md` (M4).
 
 So a real cutover is a refactor: reconcile the module's fallback to the live path's richer
 one (or move that logic into the module), rewire 3 call sites, and re-capture baselines
@@ -108,13 +114,24 @@ no doc describes an architecture the code doesn't have" — is satisfied by refr
 **true** state, not by doing the cutover. In one change:
 
 - **IR rows (REQ-IR-01..07):** reframe from "PASS, pins the live resolver" to pinning the
-  module as a **parity-validated, not-yet-wired** consolidation — cite the extended parity
-  suite (probe i) as the evidence, and add the pointer to the filed cutover item. The 22
-  `test_input_resolver.py` skipifs stay (they test real, correct code); their matrix framing
-  stops implying the code is live.
+  module as a **backtracker-parity-validated, not-yet-wired** consolidation. **REQ-IR-05
+  (matrix:274) and REQ-IR-07 (matrix:276) carry the false live-usage claim in their
+  requirement text** ("Aggregation modules SHALL **use** `AGG_STRATEGIES`…", "SumTerm and
+  SingletonTerm inputs SHALL **use** `resolve_input()`…") — production runs
+  `_resolve_aggregation_input_channel`, which never calls `resolve_input`. **Rewrite both
+  texts** to module-capability claims ("`resolve_input` SHALL…"), not live-usage claims — a
+  status re-label is not enough (C2, INV-A). Evidence cited is the **committed** parity suite
+  (`test_dual_resolution.py`, extended in place at implement — see below), plus the pointer to
+  the cutover item. The 22 `test_input_resolver.py` skipifs stay (they test real, correct
+  code); their framing stops implying the code is live.
 - **REQ-DRA-02/03/04/05, REQ-BT-09:** DRA-03 and BT-09 also cite `test_dual_resolution.py`;
-  the suite is **extended, not deleted** (LAND keeps it as the safety net), so their citations
-  survive and are re-pointed at the extended file. DRA-04 stops claiming a live comparand.
+  the suite is **extended in place, not deleted** (LAND keeps it as the safety net), so their
+  citations already point at the right file and survive untouched (no re-pointing needed).
+  DRA-04 stops claiming a live comparand.
+- **Commit the parity extension (M6).** Probe (i)'s logic lands in `test_dual_resolution.py`
+  as a **permanent parametrization** over the three Item 1 fixtures — the reframed IR/DRA rows
+  must cite a **committed, CI-running** test, never the `.project/` probe script. This is the
+  one test edit F4 makes in Item 7 (the spec's atomicity set already names this file as moving).
 - **REQ-RES-02:** rewritten to describe the real three-mechanism architecture (backtracker
   DFS for CalcUsage; attribute-resolution-map for FORMULA; `_resolve_aggregation_input_channel`
   for aggregation) — deleting the dead-path name it currently carries.
@@ -123,12 +140,22 @@ no doc describes an architecture the code doesn't have" — is satisfied by refr
   honest status — the consolidation exists, is parity-validated over the extended corpus, and
   the live-path cutover is filed as `[ITEM7-F4-CUTOVER]` with the three probe artifacts as
   its safety-net evidence. No reader inherits "this is the architecture" when it is not yet.
-- **Strategy D:** delete it (probe ii: zero surface) or, if kept for the cutover item's
-  extensibility, doc-comment it as a proven no-op — decided when the cutover item runs. Item 7
-  does not need to touch it; deleting it is Item 8-adjacent and can ride the cutover item.
+- **Strategy D:** delete it (probe ii: zero surface — it is a `return None` stub). Deferred to
+  the cutover item, which also corrects the stub's own docstring ("included… for future
+  extensibility") — a residual ghost Item 7 leaves noted, not fixed (m7).
 
-**Backlog:** retire DOCS-SCRUB-F4; file `[ITEM7-F4-CUTOVER]` with the probe artifacts and the
-3-call-site rewire scope.
+**Backlog:** retire DOCS-SCRUB-F4; file `[ITEM7-F4-CUTOVER]` carrying, explicitly:
+
+1. **The correct comparand (M3).** The cutover's safety-net parity suite must compare
+   `resolve_input(AGG_STRATEGIES)` against **`_resolve_aggregation_input_channel`** — the
+   function it replaces — not only the backtracker DFS that probe (i) and the committed suite
+   use. Backtracker parity is general-correctness evidence, not parity-with-the-replaced-
+   function.
+2. **The EP-key reconciliation (M4).** `probes/probe_iv_ep_key_divergence.md` — the concrete
+   coexisting-key baseline lines the fallback reconciliation must resolve before rewiring.
+3. **Scope:** reconcile `resolve_input`'s fallback to the live richer EP construction, rewire
+   the 3 call sites (graph_builder.py:1437, 1532, 1633), re-capture baselines byte-identically,
+   delete Strategy D + fix its docstring.
 
 ---
 
@@ -141,12 +168,12 @@ validation contract? It does not:
 - The dict is declared "NOT persisted in registry — exists only during construction"
   (`output_registry_builder.py:161`). It is a build-time helper mapping Key_A-format names to
   canonical channels.
-- Every channel it holds was already registered via the typed `register_scoped` /
-  `register_alias` methods, whose guards enforce phase ordering (`register_alias` warns+skips
-  when the target is not yet in `_canonical`) and collision policy.
-- At Phase 3/4 the dict is consulted to *resolve* a Key_A name, then the result is registered
-  through the typed API (`register_alias`, line 279); on a miss it falls back to
-  `registry.scoped_lookup` (line 277). It feeds the typed registry; it does not replace it.
+- At Phase 3/4 the dict is consulted only to *resolve* a Key_A name, then the result is
+  registered through the guarded `register_alias` (line 279, Phase 3; line 365, Phase 4),
+  which warns+skips when the target is not yet in `_canonical`; on a miss it falls back to
+  `registry.scoped_lookup` (line 277). The dict **feeds only guarded `register_alias` calls**;
+  it does not itself register anything. (Phases 1b/1c do call `registry._canonical.add`
+  directly at lines 213/237, but those are not dict-fed and do not bear on F2.)
 
 So the registrations are real and validated. **Fix REQ-OR-05/06/08 text and doc 10's
 "Eliminated Key Formats"** to describe the actual state: Phase 1a registers Key_A as an alias
@@ -157,15 +184,22 @@ time* lookups, not the build-time helper).
 
 **Non-negotiable either way:**
 
-- **REQ-ORCH-04 restored.** The weakened `min(phase1_calls) < min(alias_calls)`
-  (`test_orchestrator.py:474`) is vacuous: Phase 1a interleaves `register_scoped` (line 183)
-  and `register_alias` (line 186) in one loop, so the first-scoped-before-first-alias check
-  passes trivially and pins nothing. Restore an assertion that pins the real contract —
-  *every alias targets an already-registered canonical channel*. The runtime guard already
-  enforces this; the strongest honest restoration is the **behavioral** form (build the
-  registry on the corpus; assert no alias ever targets an unregistered channel), which
-  `test_all_aliases_target_canonical_channels_solar_battery` already models. Pick the
-  behavioral assertion over a fragile static max/min that the Phase-1a interleave defeats.
+- **REQ-ORCH-04 restored — must assert PRESENCE (C1).** The weakened
+  `min(phase1_calls) < min(alias_calls)` (`test_orchestrator.py:474`) is vacuous: Phase 1a
+  interleaves `register_scoped` (line 183) and `register_alias` (line 186) in one loop, so the
+  first-scoped-before-first-alias check passes trivially. The naive "behavioral" alternative —
+  `test_all_aliases_target_canonical_channels_solar_battery` iterating `registry._alias` and
+  asserting each survivor is canonical — is **the same vacuity in a new costume**:
+  `register_alias`'s guard warns+skips any mis-ordered alias, so it never enters `_alias`, so
+  the check holds by construction. A phase-order regression passes both.
+  **The restoration must assert EXPECTED aliases are PRESENT**, not that survivors are
+  canonical. Build a **hand-transcribed, fixture-anchored expected-alias list** (the Item-6
+  anchoring rule: the expectation is written independently, never computed by the code under
+  test) and assert each expected Key_A alias resolves to its canonical channel on the corpus.
+  **The mutation that must turn it red:** swap the Phase-1a order so `register_alias` runs
+  before its canonical target is registered — the guard then drops the alias, the expected
+  alias vanishes from the registry, and the presence assertion **fails**. A survivors-are-
+  canonical check stays green under that mutation; a presence check does not.
 - **Two lying docstrings fixed.** `test_output_registry.py:329` ("Key_A … Key_F … NOT in any
   registry") contradicts its own reality — Key_A is an alias and Key_F is scoped-registered.
   The second is the ORCH-04 static-analysis docstring (`test_orchestrator.py:449`, "Phase 1
@@ -228,21 +262,24 @@ that actually pins the claim.
 - Recount from rows: 249 REQ rows = 236 PASS + 12 UNTESTED + 1 PENDING (REQ-PGD-06,
   matrix:380). The summary block (248) omits the PENDING row. Regenerate summary to match
   row reality after all dispositions land.
-- Footer "33 test files" vs 57 in `tests/conformance/` vs index "54 distinct cited": pick one
-  honest definition. 9 cited files live outside `tests/conformance/`. Either correct the
-  count or reframe the PASS definition to admit cited-outside-conformance files. Decide at
-  implement; state the definition next to the number.
+- Footer "33 test files" vs the `tests/conformance/test_*.py` count (**59 today** — the design's
+  own earlier "57" already drifted, which is exactly the point: recount at implement, do not
+  carry a hand-count) vs index "54 distinct cited": pick one honest definition. Some cited
+  files live outside `tests/conformance/`. Either correct the count or reframe the PASS
+  definition to admit cited-outside-conformance files. State the definition next to the number.
 - **REQ-PGD-06 (matrix:380):** Item 8 deleted `get_default_value` (verified: 0 hits in `src/`
   and `tests/`); pinning tests gone. Re-frame or retire the PASS row and confirm PGD-08's
   `get_default_value` mention (doc-17) was cleared. **REQ-AST-10** (Item 8, pinned by
   `test_agg_literal_dispatch.py`) is a legitimate new row — do not treat as orphan.
 
-**The 5 xfails — RE-FRAME (confirmed).** `test_computed_attributes.py:787` xfails an
-inherited-attr classified EXPOSE_COMPUTED where FORMULA is correct (a supertype-namespace QN
-defeats the Step-2b prefix check). The misclassification produces a **loud** EXPOSE_COMPUTED
-rejection (not silent wrong output), no fusion-tea model hits it, and the classifier fix is
-out of proportion to a matrix-truth item. Re-frame the REQ + document the xfails as a known
-contract; **file the classifier fix as its own backlog item** with a matrix pointer.
+**The xfails — RE-FRAME (confirmed).** These are **one parametrized `pytest.xfail` site**
+(`test_computed_attributes.py:787`) producing N xfailed cases, not 5 distinct markers — so the
+contract to document is one, not five. It xfails an inherited-attr classified EXPOSE_COMPUTED
+where FORMULA is correct (a supertype-namespace QN defeats the Step-2b prefix check). The
+misclassification produces a **loud** EXPOSE_COMPUTED rejection (not silent wrong output), no
+fusion-tea model hits it, and the classifier fix is out of proportion to a matrix-truth item.
+Re-frame the REQ + document the one parametrized xfail contract as known; **file the classifier
+fix as its own backlog item** with a matrix pointer.
 
 ---
 
@@ -286,15 +323,19 @@ Most were not behaviorally touched by Item 5; this is a check, not a rewrite pas
 
 - **B1.** The three probes' verdicts are the real correctness signal for F4. *If false → we
   land a cutover (later) on a module that silently mis-wires a shape the corpus doesn't
-  cover.* Mitigated: probe (i) enumerates Item 1's fixtures (no open-ended hole), and the
-  cutover item re-runs the extended suite as its safety net.
+  cover.* Mitigated: probe (i) enumerates Item 1's fixtures (no open-ended hole).
+  **Hidden sub-bet (M3):** *parity against the backtracker DFS is an adequate proxy for parity
+  against `_resolve_aggregation_input_channel`, the function the cutover actually replaces.*
+  For the LAND verdict this is safe (LAND keeps the module unwired). But it is unproven, so
+  `[ITEM7-F4-CUTOVER]`'s own gate must re-run parity against `_resolve_aggregation_input_channel`
+  directly — stated in the filing, not assumed here.
 - **B2.** `resolve_input`'s fallback diverging from the live path's richer fallback is the
   true cost that makes the cutover a refactor. *If false (fallbacks are equivalent) → the
   cutover is a trivial 3-line rewire and should stay in Item 7.* Refuted directly: the EP-key
   format differs and both keys coexist in the baseline (baseline-collapse risk shown).
-- **B3.** The `instance_attr_to_channel` dict feeds the typed registry rather than bypassing
-  it. *If false → F2 flips to a code fix.* Refuted by reading the builder: helper is
-  build-time, results register through guarded typed methods.
+- **B3.** The `instance_attr_to_channel` dict feeds only guarded `register_alias` calls rather
+  than bypassing the typed contract. *If false → F2 flips to a code fix.* Refuted by reading
+  the builder: helper is build-time, its results register through guarded `register_alias`.
 - **B4.** The matrix's derived numbers can be regenerated from row reality. *If false → the
   count reconciliation chases a moving target.* Mitigated: recount from rows last, per the
   memory note.
@@ -308,9 +349,11 @@ Most were not behaviorally touched by Item 5; this is a check, not a rewrite pas
   split).* 
 - **D2.** F2 fixes text to code. *Rejected: fix the code (flip condition unmet — the
   construction-time dict does not bypass the typed-registry contract).* 
-- **D3.** ORCH-04 restored via the **behavioral** assertion (no alias targets an unregistered
-  channel). *Rejected: a static max/min phase-order check (defeated by Phase 1a's intra-loop
-  Key_A alias — the same class of fragility that produced the weakening).* 
+- **D3.** ORCH-04 restored via a **presence** assertion — a fixture-anchored expected-alias
+  list; a dropped-alias regression makes an expected alias vanish and fails the test.
+  *Rejected: the static `min<min` check (Phase-1a interleave defeats it) AND the survivors-
+  are-canonical behavioral check (the guard drops mis-ordered aliases before they are seen, so
+  it holds by construction — vacuous in a new costume).* 
 - **D4.** 5 xfails re-framed + classifier fix filed. *Rejected: fix the classifier now (loud
   not silent, no model hits it, disproportionate to a matrix-truth item).* 
 - **D5.** Strategy D deletion rides the cutover item, not Item 7. *Rejected: delete in Item 7
@@ -319,8 +362,9 @@ Most were not behaviorally touched by Item 5; this is a check, not a rewrite pas
 
 ## Required Invariants
 
-- **INV-A.** After Item 7, no PASS row claims the code calls `resolve_input` on the live path
-  (it does not, until the cutover item).
+- **INV-A.** After Item 7, no PASS row **text** asserts live usage of unwired code — including
+  REQ-IR-05/07, whose "SHALL use `resolve_input`" wording is rewritten to a capability claim.
+  The code does not call `resolve_input` on the live path until the cutover item.
 - **INV-B.** No PASS row pins less than its text; every UNTESTED row carries its argument.
 - **INV-C.** Summary/footer/index counts reconcile to the row-by-row recount (249 = 236 + 12
   + 1, updated as dispositions land).
@@ -356,7 +400,8 @@ under `probes/` for the orchestrator; no production/test edits land at design.
 
 ## Validation Approach
 
-- **Probes:** all three ran; artifacts under `probes/` (parity 100%, dedup 0-churn, drift 0).
+- **Probes:** all three ran; artifacts under `probes/` (parity: 1 MO + 5 EP checks, 0 kills;
+  dedup 0-churn; drift 0) + the M4 EP-key evidence artifact.
 - **Suite green:** full `pytest` after implement; baselines byte-identical or reviewed diff.
 - **Recount:** row-by-row recount matches regenerated summary/footer/index.
 - **Register:** R4 verification table produced (finding → probe → CONFIRMED/NOT-REPRODUCED/
@@ -384,9 +429,10 @@ PYTHONPATH=. uv run python .project/active/matrix-truth/probes/probe_ii_strategy
 
 ## Appendix B — F4 consequence-set row inventory (matrix line refs)
 
-REQ-IR-01..07 (270–276); REQ-DRA-02 (165), -03 (166), -04 (167), -05 (168); REQ-BT-09 (120);
-REQ-RES-02 (447), -07 (452), -08 (453). 22 skipifs in `test_input_resolver.py`.
-`test_dual_resolution.py` extended (not deleted) — DRA-03/BT-09 citations survive.
+REQ-IR-01..07 (270–276; IR-05 at 274 and IR-07 at 276 get **text** rewrites, C2);
+REQ-DRA-02 (165), -03 (166), -04 (167), -05 (168); REQ-BT-09 (120);
+REQ-RES-02 (447), -07 (452), -08 (453). 22 skipifs in `test_input_resolver.py` stay.
+`test_dual_resolution.py` extended **in place** — DRA-03/BT-09 already cite it, no re-pointing.
 
 ---
 Next Step: After approval → `/_my_plan` or `/_my_implement`.

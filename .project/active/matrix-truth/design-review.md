@@ -307,13 +307,41 @@ extended file"). Clarify to avoid implying a citation move that doesn't happen.
 *(To be filled during Stage 4 as the user resolves each issue. The design agent reads this section
 to incorporate the review; the reviewer does not edit `design.md`.)*
 
-- **[C1]**
-- **[C2]**
-- **[M3]**
-- **[M4]**
-- **[M5]**
-- **[M6]**
-- **[m7]** / **[m8]** / **[m9]** / **[m10]**
+- **[C1]** ADOPTED. ORCH-04 restored via a **presence** assertion, not survivors-are-canonical
+  (which the review correctly showed is vacuous — the guard drops mis-ordered aliases before
+  they enter `_alias`). The restored test builds a hand-transcribed, fixture-anchored
+  expected-alias list (Item-6 anchoring rule) and asserts each expected Key_A alias resolves to
+  its canonical channel. Named red-mutation stated in the design: swap Phase-1a order so
+  `register_alias` runs before its canonical target → guard drops the alias → the expected
+  alias vanishes → presence assertion fails. Design F2 block + D3 rewritten.
+- **[C2]** ADOPTED. REQ-IR-05 (matrix:274) and REQ-IR-07 (matrix:276) named explicitly; their
+  requirement **texts** ("SHALL use `resolve_input`/`AGG_STRATEGIES`") are rewritten to
+  module-capability claims, not just re-labeled in status. Added to the atomic reframe set;
+  INV-A strengthened to forbid any row text asserting live usage of unwired code.
+- **[M3]** ADOPTED. The backtracker-vs-live-path proxy is named honestly: probe (i) validates
+  parity against the **backtracker DFS**, not `_resolve_aggregation_input_channel`. Surfaced as
+  the hidden sub-bet under B1; design line "not diverged from the live path" corrected to
+  "from the backtracker's channel resolution." `[ITEM7-F4-CUTOVER]` filing now requires its own
+  gate to re-run parity against `_resolve_aggregation_input_channel` directly.
+- **[M4]** ADOPTED. EP-key divergence captured as a probe artifact:
+  `probes/probe_iv_ep_key_divergence.md` quotes the two coexisting baseline lines (2472/4311
+  entry-point QN; 2483/3270/3486 output channel) with the file path. Cited from B2, the F4
+  split bullet, and the cutover filing.
+- **[M5]** ADOPTED. "100% parity" replaced with the real coverage: **1 MODULE_OUTPUT
+  channel-equality check + 5 entry-point checks** over the extension; the IR reframe is anchored
+  on the **full** evidence set (committed 12-test suite over catf_mfe/solar_battery + the
+  extension), not probe (i) alone.
+- **[M6]** ADOPTED. Design states explicitly that implement commits the probe-(i) logic into
+  `test_dual_resolution.py` as a **permanent parametrization** — the reframed IR/DRA rows cite a
+  committed, CI-running test, never the `.project/` script.
+- **[m7]** ADOPTED. Strategy D deletion (probe ii: `return None` stub, zero surface) rides the
+  cutover item, which also corrects the stub's own "future extensibility" docstring; Item 7
+  leaves it noted, not fixed. **[m8]** ADOPTED — F2 phrasing tightened to "the dict feeds only
+  guarded `register_alias` calls"; Phases 1b/1c `_canonical.add` writes noted as not dict-fed.
+  **[m9]** ADOPTED — the stale "57" corrected to "59 today, recount at implement" (reinforcing
+  the recount method); "5 xfails" restated as one parametrized `pytest.xfail` site.
+  **[m10]** ADOPTED — Appendix B / DRA-03/BT-09 wording fixed: suite extended **in place**, no
+  citation re-pointing happens.
 
 ---
 
