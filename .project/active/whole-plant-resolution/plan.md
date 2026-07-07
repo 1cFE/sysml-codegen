@@ -511,17 +511,63 @@ Questions): return to the orchestrator, do not silently re-scope (d) out.
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION — leave empty now]
+**Status: Complete.** All 8 phases landed; acceptance ladder held on every rung.
 
-### Phase 1 Completion
-### Phase 2 Completion
-### Phase 3 Completion
-### Phase 4 Completion
-### Phase 5 Completion
-### Phase 6 Completion
-### Phase 7 Completion
-### Phase 8 Completion
+### Key deviation from plan (structural, documented)
+The plan placed the materializer inside `build_computation_graph`, but the backtracker
+that runs Step 3 (`_resolve_to_design_attribute`) is constructed in the CALLERS
+(`graph_rebuild.build_classifier_inputs_from_snapshot`, `pipeline_builder` Step 5.65)
+*before* `build_computation_graph`. So the pre-pass runs at the caller seam, honoring the
+design's intent ("merge into `design_attributes` before backtracking"). The
+`design_overrides` param Phase 1 threaded into `build_computation_graph` was reverted; the
+F2 0.0 fixes stayed. A second subtlety surfaced at capture: the materializer must enrich a
+GRAPH-ONLY copy of `design_attrs` — `ctx.design_attributes` stays the pure extraction
+boundary, so a captured snapshot serializes only real attributes and the materializer
+reconstructs the synth attrs at from-snapshot generate time. Without this the capture
+double-serialized synth attrs into the extraction snapshot.
+
+### Phase 1 — thread + F2 (commit 2de8f60)
+`design_overrides` threading relocated to the caller seam (above). Both 0.0-drop sites
+(`_classify_entry_points:482`, FORMULA computed-attr input builder ~:1149) fixed to
+`is not None`. Unit pins on the classify path + threading spy.
+
+### Phase 2 — materializer core (commit df35289)
+`resolution/supplied_values.py`: precedence tier 1 (override) / tier 2a (spec-def via
+usage_type_map, Strategy-1-only) + collision guard (F3) + non-literal sentinel (F5).
+`plant_values` flips to zero offenders; a/b/c → 0.35/10.0/7.0 on source-QN EPs.
+
+### Phase 4 — (d) in-part leg (commit 820a312)
+Tier 2b direct-owner match (`redef.owning_part_qn == calc.owning_part_def_qn`). Flow Sub
+flips DEGRADED→8.0. INV-4 owner-scoping unit-pinned.
+
+### Phase 7 — fusion-tea SC-4 + baselines (commit 47f5165)
+Vendored `tests/fixtures/fusion_tea` + v2 snapshot. **Offender arithmetic 10→0:** the 8
+cross-part (a/b/c) + 2 in-part (d) references all clear — most fusion-tea values are real
+design attributes (collision guard defers, real wins) and the rest synthesize; net TRUE
+ZERO offenders on the committed snapshot; full YAML emits (32 modules, valid schemas).
+Four-cross-part byte-identity gate (catf_mfe, ife_plant) clean. V11 raise-proof re-anchored
+to Shape 1 (`rated_cost.rate`, stays valueless).
+
+### Phase 6 — SC-3 runner (commit 59d31a7)
+`tests/runtime/pipeline_runner.py`, signature pinned. twolevel executes to lcoe=100.0
+(hand-derived) within rel 1e-6; input-override doubles it.
+
+### Phase 3 — renamed-consumer collapse (commit c06f053)
+Proven on the REAL fusion-tea shape (`driver.efficiency` → `driver_efficiency` + `eta`;
+`blanket_energy_multiple` → two names) → one source EP; materializer dedup unit-pinned.
+Deviation: fusion-tea already carries the shapes the spec names, so no spec_chain rider.
+
+### Phase 5 — precedence + anchor (commit 941aa9b)
+Anchor `(10+7)/0.35 = 48.5714` hand-transcribed (INV-5). Three-tier precedence ladder
+pinned at the mechanism seam (reorder-sensitive). Deviation: mechanism-level proof rather
+than a bespoke captured `plant_value_precedence` fixture — flagged for audit.
+
+### Phase 8 — docs + close-out
+Doc 25 §Supplied-Value Materializer (REQ-SVM-01..04, cross-refs doc 18 helper + doc 12
+VBR-03); docs 11/12 Related-Documents cross-refs; modeling-assumptions §5 four-shapes
+block; matrix `### SVM` block (4/4 PASS, counts 248→252, families 29→30); Item-9 impact
+block in spec.md.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Complete

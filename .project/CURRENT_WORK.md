@@ -56,12 +56,28 @@ passed; ruff src 21 / mypy 109 (baseline unchanged). `/_my_audit` suggested next
 - **Known degradation surfaced (filed):** multi-hop CHAIN `source_path` truncates to the
   first segment (why (c) is one-hop; `deep_cross_scope_probe` Pattern A pins it).
 
-### PIPELINE-TRUTH Item 2 — Whole-Plant Cross-Part Value Resolution — spec in progress
-Track A headline (gates fusion-tea); depends on Item 1 fixtures. Resolve the three
-cross-part value mechanisms on `plant_values` so the headline generates zero-offender;
-design decides value-propagation vs channel-wiring. Anchor: `plant_cost=(10+7)/0.35=48.571`.
-Spec: `.project/active/whole-plant-resolution/spec.md`. Implement runs AFTER Item 4
-(snapshot format v2 re-capture).
+### PIPELINE-TRUTH Item 2 — Whole-Plant Cross-Part Value Resolution — IMPLEMENTED (awaiting audit)
+Track A headline (gates fusion-tea). Value-fill via the supplied-value materializer
+(`resolution/supplied_values.py`, REQ-SVM-01..04): a pre-pass synthesizes design
+attributes for cross-part/in-part supplied values, keyed by source QN, merged into
+`design_attributes` before the backtracker. Plan/design/spec:
+`.project/active/whole-plant-resolution/`. **All 8 phases landed** across commits
+2de8f60→(Phase 8), acceptance ladder held:
+- **SC-1**: `plant_values` zero offenders; a/b/c → 0.35/10.0/7.0 on source-QN EPs; anchor
+  `(10+7)/0.35=48.5714` hand-transcribed (INV-5).
+- **SC-1d**: `'Flow Sub'` flips DEGRADED→8.0 via tier-2b direct-owner leg.
+- **SC-4 (epic CSF)**: committed fusion-tea v2 snapshot (`tests/fixtures/fusion_tea`)
+  → **TRUE ZERO** V11 offenders (8 cross-part a/b/c + 2 in-part d), full YAML emits
+  license-free. Item 3 reuses this v2 capture + the SC-3 runner.
+- **SC-3**: `tests/runtime/pipeline_runner.py` (pinned signature) executes twolevel to
+  lcoe=100.0 within rel 1e-6.
+- **SC-5**: four cross-part baselines byte-identical (catf_mfe, ife_plant); V11 raise-proof
+  re-anchored to Shape 1 (`rated_cost.rate`).
+- Suite 2056 passed / 4 skipped / 5 xfailed; ruff 17, mypy 104 (baselines unchanged).
+- **Two documented deviations** (see plan Implementation Notes): materializer runs at the
+  caller seam (not inside `build_computation_graph`, which post-dates the backtracker);
+  precedence + renamed-consumer proven at the mechanism/real-fusion-tea level rather than
+  via bespoke captured fixtures. `/_my_audit` suggested next.
 
 ### PIPELINE-TRUTH Item 4 — Subtype-Aware Enumeration & Constraint-Report Truth — AUDITED: PASS-WITH-NOTES (2026-07-06)
 Track B head (no deps). Coordinated pair with agentic-mbse (R2): one adapter choke

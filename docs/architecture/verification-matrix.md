@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 248 |
-| PASS (test exists and passes) | 236 |
+| Total requirements | 252 |
+| PASS (test exists and passes) | 240 |
 | UNTESTED (no dedicated test) | 12 |
 | DEFERRED | 0 |
-| REQ families | 29 |
-| Distinct test files cited | 54 |
+| REQ families | 30 |
+| Distinct test files cited | 56 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -52,6 +52,7 @@ the documentation rather than executable code.
 - [RES — Resolution Overview](#res) (0/8 pass)
 - [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (19/19 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
+- [SVM — Supplied-Value Materializer](#svm) (4/4 pass)
 - [VBR — Virtual Binding Rewrite](#vbr) (11/11 pass)
 
 ---
@@ -491,6 +492,17 @@ the documentation rather than executable code.
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `test_gen_stencils.py` | PASS |
 | REQ-SR-06 | Aggregation and computed-attribute modules are synthetic and always regenerated in practi... | `test_gen_stencils.py` | PASS |
 | REQ-SR-07 | `--preserve-handwritten` SHALL skip ALL existing handwritten files without comparison | `test_gen_stencils.py` | PASS |
+
+### SVM
+
+**Supplied-Value Materializer** (PIPELINE-TRUTH Item 2) — `resolution/supplied_values.py` — [reference/25-hierarchy-resolver.md](reference/25-hierarchy-resolver.md#supplied-value-materializer-req-svm-01-04). Reuses doc 18's shared `_find_literal_redefinition` helper (Strategy 1); sibling of doc 12's per-consumer VBR-03 (this mechanism keys by source QN and collapses across consumers).
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-SVM-01 | For a referenced subsystem-attr binding, synthesize a design attribute carrying the LITERAL value resolved by precedence (usage override > specialized-def `:>>` > base def), `default_value` as a string | `test_supplied_values.py` | PASS |
+| REQ-SVM-02 | Key the synthetic attribute by source QN so differently-named consumers collapse to one entry point | `test_supplied_values.py`, `test_fusion_tea_snapshot.py` | PASS |
+| REQ-SVM-03 | A synthetic attribute SHALL never overwrite a real captured design attribute; on collision the real one wins and the materializer WARNs | `test_supplied_values.py` | PASS |
+| REQ-SVM-04 | Apply LITERAL only; emit a count-summary WARN naming non-literal (CHAIN/EXPRESSION) skips; a referenced non-literal-only binding falls through to Step-4 (V11), never a silent drop | `test_supplied_values.py` | PASS |
 
 ### VBR
 

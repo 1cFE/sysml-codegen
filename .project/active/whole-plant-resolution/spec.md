@@ -404,6 +404,31 @@ Keyed by the spec-review's Must-Fix IDs (which cite the Lens findings).
 
 ---
 
+## agentic-mbse Impact (Item 9 accumulation)
+
+The four whole-plant value-provision shapes the materializer supports, for the
+MODELING_GUIDE (concrete-block style, Item-1 precedent). Each is a pattern a modeler may
+author and expect to resolve cross-part/in-part:
+
+- **(a) subtype-def literal via usage-level retype** — `:>> driver : 'Hif Driver'` where
+  `Hif_Driver` carries `:>> efficiency = 0.35`. Reaches the consumer through the retype;
+  resolved via `usage_type_map` (tier 2a).
+- **(b) bare no-retype override block** — `part :>> target_factory { :>> cost_per_target = 10.0; }`.
+  Owner QN is the sub-part instance; resolved via `design_overrides` (tier 1).
+- **(c) plain one-hop cross-part attribute with a usage-level dotted override** —
+  `:>> chamber.cost_per_unit = 7.0` on the plant instance. Resolved via `design_overrides`
+  `target_path` (tier 1).
+- **(d) in-part inherited-attr redefine** — `in flow_rate = throughput` reading an
+  inherited attribute the same def redefines below the binding (`:>> throughput = 8.0`).
+  Resolved via a direct-owner LITERAL redefinition (tier 2b), no `usage_type_map` needed.
+
+Guidance the guide should teach: precedence is **usage override > specialized-def `:>>` >
+base def**; entry points key by the **source attribute QN**, so renaming an input per
+consumer still collapses to one parameter; only LITERAL values propagate — a CHAIN/EXPRESSION
+supplied value falls through to the uncovered-parameter diagnostic, not silently.
+
+---
+
 **Next Steps:** After approval, proceed to `/_my_design`. Design owns the mechanism decision
 (value propagation vs channel wiring), whether that mechanism subsumes shape (d), and the
 split decision, with the decision inputs above and the discovery §"Anchors" attack as
