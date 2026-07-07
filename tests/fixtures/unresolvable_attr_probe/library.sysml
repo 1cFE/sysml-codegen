@@ -34,4 +34,13 @@ package UnresolvableAttrProbeLibrary {
         // L2: mix of inherited + locally-declared attrs
         attribute mixed_product : Real = base_rate * local_multiplier;
     }
+
+    // Depth-2 transitive inheritance: 'Grandchild' :> 'Derived Component' :> 'Base Component'.
+    // Its computed attr references GRANDPARENT attrs (base_rate, base_factor on
+    // 'Base Component'), two hops up. Classifying this FORMULA requires the ancestor
+    // walk to be TRANSITIVE (Grandchild -> Derived -> Base), not depth-1 (Item 4, D2/B2).
+    part def 'Grandchild' :> 'Derived Component' {
+        // Depth-2: only grandparent attrs -> FORMULA iff the walk reaches 'Base Component'.
+        attribute grandchild_product : Real = base_rate * base_factor;
+    }
 }

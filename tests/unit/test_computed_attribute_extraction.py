@@ -233,6 +233,113 @@ class TestClassifyAttributeExpression:
         )
         assert result == ComputedAttributeClassification.FORMULA
 
+    def test_inherited_ref_with_ancestor_prefix_is_formula(
+        self, mock_syside_adapter, monkeypatch
+    ):
+        """inherited_product = base_rate * base_factor → FORMULA (Item 4).
+
+        Both refs resolve into the ancestor PartDef's namespace
+        ('Base Component'), not the owning part's. The ancestor-prefix widening
+        recognizes them as inherited-attr siblings, so a formerly-EXPOSE_COMPUTED
+        expression classifies FORMULA.
+        """
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            _classify_attribute_expression,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+
+        expr = MockOperatorExpression("*", [
+            MockFeatureReferenceExpression("base_rate"),
+            MockFeatureReferenceExpression("base_factor"),
+        ])
+        refs = _make_refs(
+            ("base_rate", "Lib::'Base Component'::base_rate"),
+            ("base_factor", "Lib::'Base Component'::base_factor"),
+        )
+        result = _classify_attribute_expression(
+            refs=refs,
+            owning_part_qualified_name="Lib::'Derived Component'",
+            calc_usage_names=set(),
+            sibling_attr_names={"inherited_product"},
+            expression_ast=expr,
+            reference_chain=None,
+            ancestor_part_qns={"Lib::'Base Component'"},
+        )
+        assert result == ComputedAttributeClassification.FORMULA
+
+    def test_mixed_inherited_and_local_is_formula(
+        self, mock_syside_adapter, monkeypatch
+    ):
+        """base_rate (inherited) * local_multiplier (own) → FORMULA (Item 4).
+
+        A mix of an ancestor-namespace ref and an own-namespace ref stays all
+        siblings → FORMULA.
+        """
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            _classify_attribute_expression,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+
+        expr = MockOperatorExpression("*", [
+            MockFeatureReferenceExpression("base_rate"),
+            MockFeatureReferenceExpression("local_multiplier"),
+        ])
+        refs = _make_refs(
+            ("base_rate", "Lib::'Base Component'::base_rate"),
+            ("local_multiplier", "Lib::'Derived Component'::local_multiplier"),
+        )
+        result = _classify_attribute_expression(
+            refs=refs,
+            owning_part_qualified_name="Lib::'Derived Component'",
+            calc_usage_names=set(),
+            sibling_attr_names={"mixed_product"},
+            expression_ast=expr,
+            reference_chain=None,
+            ancestor_part_qns={"Lib::'Base Component'"},
+        )
+        assert result == ComputedAttributeClassification.FORMULA
+
+    def test_top_level_calc_output_stays_expose_computed(
+        self, mock_syside_adapter, monkeypatch
+    ):
+        """D3 seam (INV-1): mixed_expose = my_calc.result * base_rate → EXPOSE_COMPUTED.
+
+        The over-correction negative control. ``result`` resolves into a
+        top-level CalcDef's namespace (``SimpleCalc``), which is NEVER in
+        ancestor_part_qns, so it stays a calc_ref even though ``base_rate`` is
+        now a sibling. calc_refs non-empty + sibling_refs present → EXPOSE_COMPUTED.
+        """
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            _classify_attribute_expression,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+
+        expr = MockOperatorExpression("*", [
+            MockFeatureChainExpression(),
+            MockFeatureReferenceExpression("base_rate"),
+        ])
+        refs = _make_refs(
+            ("result", "Lib::SimpleCalc::result"),
+            ("my_calc", "Lib::'Design Derived'::my_calc"),
+            ("base_rate", "Lib::'Base Component'::base_rate"),
+        )
+        result = _classify_attribute_expression(
+            refs=refs,
+            owning_part_qualified_name="Lib::'Design Derived'",
+            calc_usage_names={"my_calc"},
+            sibling_attr_names={"mixed_expose"},
+            expression_ast=expr,
+            reference_chain=None,
+            ancestor_part_qns={"Lib::'Base Component'"},
+        )
+        assert result == ComputedAttributeClassification.EXPOSE_COMPUTED
+
     def test_expose_pure(self, mock_syside_adapter, monkeypatch):
         """p_alpha_out = alpha_split.p_alpha → EXPOSE_PURE.
 
