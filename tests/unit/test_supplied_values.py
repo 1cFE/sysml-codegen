@@ -96,6 +96,34 @@ def test_specialized_def_resolves_when_no_override():
     assert _synth_by_qn(out)["Scope__plant__driver__efficiency"].default_value == "0.35"
 
 
+def test_in_part_direct_owner_leg_resolves_bare_name():
+    """(d)/F4: a bare in-part binding resolves via tier-2b direct-owner match on the
+    consuming calc's own part def."""
+    usage = _usage("throughput", owning_part_def_qn="Lib__Flow_Sub")
+    out = materialize_supplied_values(
+        [usage],
+        redefinitions=[_override("Lib__Flow_Sub", "throughput", 8.0)],
+        design_overrides=[],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)["Scope__plant__throughput"].default_value == "8.0"
+
+
+def test_in_part_leg_scoped_by_owner_no_cross_wire():
+    """INV-4: tier-2b matches only the consuming calc's OWN part def. A same-named
+    redefinition owned by an unrelated part def does not cross-wire."""
+    usage = _usage("throughput", owning_part_def_qn="Lib__Flow_Sub")
+    out = materialize_supplied_values(
+        [usage],
+        redefinitions=[_override("Lib__Other_Part", "throughput", 99.0)],
+        design_overrides=[],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert out == []  # unrelated owner → no synthesis, no cross-wire
+
+
 def test_collision_guard_real_attr_wins_and_warns(caplog):
     """F3/REQ-SVM-03: a real design attribute covering the source QN is not overwritten;
     the materializer skips synthesis and WARNs."""

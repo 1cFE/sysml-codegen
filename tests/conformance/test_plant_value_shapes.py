@@ -34,8 +34,11 @@ def _calc_def_outputs(snap, qn):
 
 
 def _ep_default(name):
+    return _ep_default_by_qn(f"PlantValueShapesDesign__shapes_design__{name}")
+
+
+def _ep_default_by_qn(qn):
     graph, _ = build_full_graph_from_snapshot(snapshot_fixture("plant_value_shapes"))
-    qn = f"PlantValueShapesDesign__shapes_design__{name}"
     for group in graph.entry_point_groups:
         for ep in group.parameters:
             if ep.qualified_name == qn:
@@ -86,11 +89,13 @@ def test_shape1_econ_param_nested_redef_does_not_reach_cross_part_input():
     assert _ep_default("rated_cost__rate") is None
 
 
-def test_shape4_inherited_attr_redefined_below_does_not_propagate():
-    """Shape 4 (in-binding reading an inherited attr the same def redefines below it):
-    DEGRADED — `:>> throughput = 8.0` does not reach `flow_calc.flow_rate`, which lands
-    on a valueless entry point (default None)."""
-    assert _ep_default("flow_unit__flow_calc__flow_rate") is None
+def test_shape4_in_part_inherited_redefine_resolves_to_8():
+    """Shape 4 = mechanism (d): an in-binding reads an inherited attr the same def
+    redefines below it (`:>> throughput = 8.0`). Item 2 resolves it via the materializer's
+    tier-2b direct-owner leg (`redef.owning_part_qn == calc.owning_part_def_qn`, both
+    Flow_Sub) — NOT the Strategy-2 name-fallback (this fixture's usage_type_map is empty).
+    The `flow_rate` input now wires to the source-QN entry point carrying 8.0."""
+    assert _ep_default_by_qn("PlantValueShapesLib__Flow_Sub__throughput") == 8.0
 
 
 # --- DIAGNOSTIC / Item 5 substrate --------------------------------------------

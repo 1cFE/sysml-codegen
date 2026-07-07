@@ -156,6 +156,11 @@ def _resolve_value(
     Tier 2a: specialized-def `:>>` via `usage_type_map` (reuse `_find_literal_redefinition`
              Strategy 1 only — gated on the type key existing, so the brittle Strategy-2
              name-fallback is never reached).
+    Tier 2b: in-part inherited-attr redefine (shape d) — a LITERAL redef owned directly
+             by the consuming calc's own part def (`redef.owning_part_qn ==
+             calc.owning_part_def_qn`). A direct owner match, NOT the name-fallback (F4):
+             `plant_value_shapes` has an empty `usage_type_map`, so (d) must not route
+             through tier 2a.
     """
     value, saw_non_literal = _match_override(
         instance_scope, target.part_usage, target.attr, design_overrides
@@ -177,6 +182,20 @@ def _resolve_value(
         )
         if value is not None:
             return value, False
+
+    # Tier 2b (shape d): direct-owner LITERAL redef on the consuming calc's part def.
+    if owning_part_def_qn:
+        for redef in redefinitions:
+            if (
+                redef.redefinition_type == RedefinitionType.LITERAL
+                and redef.attribute_name == target.attr
+                and redef.owning_part_qn == owning_part_def_qn
+                and redef.literal_value is not None
+            ):
+                try:
+                    return float(redef.literal_value), False
+                except (ValueError, TypeError):
+                    return None, False
 
     return None, False
 
