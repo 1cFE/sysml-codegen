@@ -1,6 +1,6 @@
 # Implementation Plan: agentic-mbse Sync — Guidance, Validation, Companion Audit (PIPELINE-TRUTH Item 9)
 
-**Status:** Draft
+**Status:** COMPLETE — Phases 0–5 done (agentic-mbse `fa3b706`/`1fab4d6`/`9cc7ab4`, pushed to origin; this-repo close-out landed)
 **Created:** 2026-07-06
 **Last Updated:** 2026-07-06
 
@@ -112,35 +112,21 @@ whole-plant docs target `docs/patterns/` + `modeling_project/MODELING_GUIDE.md` 
 `ITEM-SYNC-C8`, and the syside vendor note.
 
 ### Survey checklist (read-only; produces a short findings note in the execute log / Phase-0 completion)
-- [ ] **Confirm the settled facts live:** `gh pr view 7` state (OPEN/MERGED); `git log
-  pipeline-truth-item4` shows the four Item-4 commits at tip over base `7f77510`.
-- [ ] **Record the gate baseline:** run agentic-mbse's own suite (prior epic:
-  `uv run --env-file .env pytest tests/`; confirm the exact command + `.env`/license validity)
-  and record pass/skip counts, `ruff`, `mypy` new-error count **at `pipeline-truth-item4` tip**.
-- [ ] **Locate C7's build site.** The shape `attribute :>> attr = <expression>` is silently
-  dropped by codegen's `hierarchy_resolver._extract_single_redefinition` (scans only
-  ReferenceUsage). Find where an L-level validator can *see* an AttributeUsage redefinition with
-  an expression RHS — the mirror check site (likely `level6_architecture.py` or the redefinition
-  path). Confirm how a check emits a WARN and registers a `ValidationCode`.
-- [ ] **Confirm the fixture convention** — `tests/fixtures/item12/` layout (`library/`+`designs/`),
-  and whether C7 can point at a sysml-codegen shape (`plant_value_shapes` carries the non-float /
-  enum-valued shape one hop from the expression-RHS form) or must carry a mirror fixture (spec
-  Open Questions — "Negative-fixture reuse").
-- [ ] **Confirm the doc surfaces** the D-rows edit: `docs/patterns/plant-idiom.md` (Item-12
-  landed it — D1 extends it), `docs/patterns/semantic-operators.md` (D5 from Item 12 pairs with
-  C7), `modeling_project/MODELING_GUIDE.md`, the sysml-conventions skill
-  (`SKILL.md` + `references/stencils.md`).
-- [ ] **Confirm the prior-epic filings exist** in agentic-mbse's backlog (`08cd595`):
-  `ITEM-SYNC-C7`, `ITEM-SYNC-C8`, the vendor note — so R-C8/R-VENDOR dispose against a real record.
-- [ ] **Confirm A1/A2 probe targets:** `extract_feature_refs` (the binding-extraction primitive)
-  and `str(direction)` (parameter-direction keying) exist where the spec says.
+- [x] **Confirm the settled facts live:** PR #7 OPEN (base main); the four Item-4 commits at tip over `7f77510`.
+- [x] **Record the gate baseline:** `uv run --env-file .env pytest tests/` → 1238 passed, 1 skipped, 33 deselected.
+- [x] **Locate C7's build site.** `level6_architecture.py`; drop is `hierarchy_resolver.py:102` (ReferenceUsage-only).
+  Live probe cleanly separates AttributeUsage (dropped) from ReferenceUsage (accepted). STOP gate cleared.
+- [x] **Confirm the fixture convention** — `tests/fixtures/item12/<name>/{library,designs}/`; C7 carries its own
+  mirror fixtures under a sibling `item9/` (agentic-mbse cannot point at a sysml-codegen fixture path).
+- [x] **Confirm the doc surfaces** — `plant-idiom.md` (D1), `semantic-operators.md` (already teaches C7's D5
+  boundary), `MODELING_GUIDE.md`, `sysml-conventions/{SKILL.md, references/stencils.md}`.
+- [x] **Confirm the prior-epic filings** in `.project/backlog/BACKLOG.md`: C7 (86), C8 (106), F1 vendor (58).
+- [x] **Confirm A1/A2 probe targets:** `extract_feature_refs` (expression.py:119); `str(direction)` keying.
 
 ### Validation
-- [ ] Findings note written; each impact-list assumption marked confirmed or corrected.
-- [ ] Gate baseline recorded (suite counts, ruff, mypy) — the regression yardstick for Phases 1–4.
-- [ ] **Gate:** if a correction changes C7's size or moves its build site, state the new size and
-  confirm it still fits the guard before Phase 1. If a floor assumption breaks (C7 unbuildable at
-  the located site, as C1 broke in the prior epic), **STOP and surface it** before building.
+- [x] Findings note written (above); every impact-list assumption confirmed, none corrected.
+- [x] Gate baseline recorded (1238/1/33) — the regression yardstick for Phases 1–4.
+- [x] **Gate:** no correction changed C7's size; the build site holds; no floor assumption broke → proceed.
 
 **What we know after this phase:** the real shape of every surface the next four phases touch,
 and the number a Phase-1 regression would move.
@@ -174,13 +160,12 @@ run_all_checks(plant_value_shapes)       → L1–L6 unchanged vs Phase-0 baseli
 ```
 
 ### Changes Required (see spec rows C7, D1 for full detail — do not restate)
-- [ ] **C7** — the WARN check at the Phase-0 site. Spec row C7. Fires on AttributeUsage-`:>>`
-  with expression RHS; silent on the bare-literal and ReferenceUsage forms. New `ValidationCode`.
-  Discharges the prior epic's filed `ITEM-SYNC-C7`. *(agentic-mbse, `pipeline-truth-item4`.)*
-- [ ] **C7 fixtures** — `attr_redef_expr` (negative, fires) + `attr_redef_literal`
-  (silent-on-clean), in the Phase-0-confirmed fixture dir. Point at `plant_value_shapes`'
-  non-float shape if the convention allows reuse; else author the mirror pair.
-- [ ] **D1** — the whole-plant value idiom doc: four mechanisms (a/b/c/d), the precedence rule
+- [x] **C7** — the WARN check at the Phase-0 site (`check_attr_redef_expression_dropped`, level6_architecture.py).
+  Fires on AttributeUsage-`:>>` with expression RHS; silent on bare-literal/ReferenceUsage/attribute-literal forms.
+  New `L6_ATTR_REDEF_EXPR_DROPPED`. Discharges `ITEM-SYNC-C7`. *(agentic-mbse `fa3b706`.)*
+- [x] **C7 fixtures** — `item9/attr_redef_expr` (fires) + `item9/attr_redef_literal` (silent). Authored the mirror
+  pair (agentic-mbse cannot point at a sysml-codegen fixture path — Open-Questions "Negative-fixture reuse" resolved).
+- [x] **D1** — the whole-plant value idiom doc: four mechanisms (a/b/c/d), the precedence rule
   (usage override > specialized-def `:>>` > base def), entry-point QN-keying (rename-per-consumer
   collapses to one parameter; one attr → N consumers is one channel), LITERAL-only propagation
   (CHAIN/EXPRESSION falls to the uncovered-parameter diagnostic, not a silent drop). Anchors on
@@ -190,14 +175,14 @@ run_all_checks(plant_value_shapes)       → L1–L6 unchanged vs Phase-0 baseli
 
 ### Validation
 **Automated (agentic-mbse suite + cross-repo acceptance):**
-- [ ] C7 negative fixture WARNs its expected code; the two silent-on-clean fixtures do **not** fire.
-- [ ] `run_all_checks` on `plant_values` / `plant_value_shapes` unchanged vs the Phase-0 baseline
-  (no L1–L6 regression — C7 is silent on the supported subset).
-- [ ] agentic-mbse own suite green (≥ baseline + the new C7 tests); ruff clean; mypy 0 new errors.
+- [x] C7 negative fixture WARNs its expected code; the silent-on-clean fixture does **not** fire.
+- [x] `validate_architecture` on `plant_values` / `plant_value_shapes` / `spec_chain_twolevel` — C7 count 0;
+  stash-verified n_errors unchanged (10/18/9) vs baseline (no L1–L6 regression).
+- [x] agentic-mbse own suite green (1240, = baseline + 2 C7 tests); ruff clean; mypy 0 new errors.
 
 **Manual:**
-- [ ] D1 renders; every referenced fixture (`plant_values`, `plant_value_shapes`,
-  `spec_chain_twolevel`, the fusion-tea vendored exemplar) is confirmed present.
+- [x] D1 renders; every referenced fixture (`plant_values`, `plant_value_shapes`,
+  `spec_chain_twolevel`, the fusion-tea vendored exemplar) confirmed present.
 
 **What we know after this phase:** the one silent-drop shape now WARNs before generation without
 flagging anything codegen accepts, and the headline teaching surface exists. First proof point met.
@@ -218,33 +203,22 @@ surface teaching a now-rejected pattern (or checking a now-accepted one), that's
 sweep — fix it inline; if large, log and file.
 
 ### Changes Required (see spec rows — reference fixtures are in-repo)
-- [ ] **D2** — secondary supported-subset shapes with observed labels (CORRECT vs DEGRADED), teach
-  the CORRECT, document the two DEGRADED as known-incomplete. Reference `plant_value_shapes`. Spec D2.
-- [ ] **D3** — keep cross-part chains shallow (multi-hop dot chain TRUNCATES `source_path`).
-  Reference `deep_cross_scope_probe`; pairs with the Item-5 D3-2 loud-reject. Spec D3.
-- [ ] **D4** — subtype-aware validation semantics teaching note **+ VERIFY** the Item-4 8-row
-  decision table is published in the adapter docs (Item 4 committed it — `bc196df`; do not redo,
-  R2/D4). Modeler-facing note: assert-shaped constraints are now visible to the drop report + L4/L6.
-  Spec D4.
-- [ ] **I5** — derive Item 5's deferred modeler-facing diagnostics from its spec/plan/audit and
-  fold into D2/D3: non-float entry points (bool/string/enum) now diagnosed (`plant_value_shapes`
-  `wall`); multi-hop loud-reject (D3-2); aggregation operator-map (`^` no longer silently XORs).
-  Guidance, not new checks. Spec I5 (derive; do not invent — read Item 5's landed artifacts).
-- [ ] **V1** — spot-check `references/stencils.md` still reads as the committed inline-`return`
-  form (not body-assignment). A read, not a re-verification. Spec V1.
-- [ ] **V2** — sweep the whole sysml-conventions skill + `docs/patterns/` for any surface teaching
-  a pattern codegen now rejects, or checking one it now accepts — against the **new** accepted set
-  (whole-plant idiom, subtype-aware constraints, Item-5 loud shapes). Fix inline; file if large.
-  **The load-bearing gate.** Spec V2.
-- [ ] **V3** — record Item 3 = no new agentic-mbse impact (no-op row kept so the trail is complete).
-  Spec V3. *(recorded in the close-out; no agentic-mbse write.)*
+- [x] **D2** — secondary shapes with observed labels (plant-idiom.md "Secondary shapes and their limits"). Spec D2.
+- [x] **D3** — keep cross-part chains shallow (multi-hop dot chain truncates `source_path`). Ref `deep_cross_scope_probe`. Spec D3.
+- [x] **D4** — subtype-aware note in constraints.md **+ VERIFY** `docs/subtype-enumeration-decision-table.md` published
+  (Item-4 `bc196df`, confirmed present — not redone). Assert constraints now visible to drop report + L4/L6. Spec D4.
+- [x] **I5** — derived from Item 5's landed artifacts, folded into the D2 section: non-float EPs diagnosed
+  (`plant_value_shapes` `wall`); multi-hop loud-reject (D3-2); `^` operator-map (no longer silent XOR). Spec I5.
+- [x] **V1** — `references/stencils.md:39` confirmed as the inline-`return` form. Spec V1.
+- [x] **V2** — swept skill + `docs/patterns/`: **nothing else stale** (the load-bearing gate). Spec V2.
+- [x] **V3** — Item 3 no new impact (recorded in close-out, Phase 5; no agentic-mbse write). Spec V3.
 
 ### Validation
-- [ ] Each D-row renders and points at a real in-repo reference fixture.
-- [ ] D4: the Item-4 decision table is confirmed published (VERIFY leg); the modeler note added.
-- [ ] V1: stencils.md confirmed as the inline form (note the line range).
-- [ ] V2: sweep complete — either "nothing else stale" recorded, or each find fixed/filed.
-- [ ] agentic-mbse own suite still green (docs don't touch tests, but the D4 VERIFY re-runs clean).
+- [x] Each D-row renders and points at a real in-repo reference fixture.
+- [x] D4: the Item-4 decision table confirmed published; the modeler note added.
+- [x] V1: stencils.md confirmed as the inline form (line 39).
+- [x] V2: sweep complete — "nothing else stale" recorded.
+- [x] agentic-mbse own suite still green (1240; D4 VERIFY / F6 re-run clean).
 
 **What we know after this phase:** the teaching surface matches the supported subset and the skill
 has been swept end-to-end — the "nothing else teaches a broken pattern" gate is closed.
@@ -265,32 +239,20 @@ changes, S-F3/S-F4 keep-filed (no consumer), S-F5 already covered by an Item-5 t
 doesn't hold gets the opposite decision — and it's recorded either way.
 
 ### Rows (each → a recorded decision; filing home noted)
-- [ ] **R-PR7** — record PR #7 OPEN/MERGED status (`gh pr view 7`). If open, it stays the human's;
-  do **not** merge. *(recorded in close-out.)*
-- [ ] **R-C8** — two-names-one-identifier warning. **Keep filed** (Item-5 SC-4 sanitizer-injectivity
-  fails loudly in codegen — the backstop exists); build the pre-warn only if it's a small
-  check-plus-fixture. Record the decision. *(agentic-mbse backlog `ITEM-SYNC-C8`.)*
-- [ ] **R-F6** — static-expression false-FAIL fix (`49c7b7a`): verify `check_static_expressions`
-  still exempts same-part owned-sibling FORMULA refs while firing on calc-output-in-arithmetic /
-  self-ref / dotted paths **after Item-4's validator changes**. Confirm closed. *(agentic-mbse.)*
-- [ ] **R-VENDOR** — syside self-named-binding recursion note. **Decline the Sensmetry filing**
-  (evaluation-time syside behavior; extraction is finite/degenerate — Item 8 probe exit 0; no
-  codegen path affected). Keep the backlog note as the durable record. Record the decision.
-  *(agentic-mbse backlog.)*
-- [ ] **S-F5** — positive unresolvable-warning test. **Verify first:** read Item 5's landed tests;
-  if one already asserts an unresolvable ref emits its warning (INV-6 leg), discharge S-F5; else
-  add opportunistically if cheap, or keep filed. Record which. *(this-repo BACKLOG + close-out.)*
-- [ ] **S-F3** — Shape-B leaf-collision filename edge. **Keep filed** (no model hits it). Record.
-  *(this-repo `.project/backlog/BACKLOG.md`.)*
-- [ ] **S-F4** — redefinition / design_override name surfacing. **Keep filed** (no consumer).
-  Record. *(this-repo BACKLOG.)*
+- [x] **R-PR7** — PR #7 OPEN (base main), stays the human's; not merged. *(recorded above + close-out.)*
+- [x] **R-C8** — **Keep filed** (codegen SC-4 backstop; pre-warn needs shared sanitizer, not small). *(agentic-mbse `ITEM-SYNC-C8`.)*
+- [x] **R-F6** — **Verified closed**: both F6 tests green under current validators. *(agentic-mbse.)*
+- [x] **R-VENDOR** — **Decline the Sensmetry filing** (evaluation-time; extraction finite/degenerate). *(agentic-mbse `ITEM-SYNC-F1`.)*
+- [x] **S-F5** — **Discharge**: covered by `chain_override_probe` loud-on-gap + V11 raise + family2 INV-6 tests. *(close-out.)*
+- [x] **S-F3** — **Keep filed** (no model hits it). *(this-repo BACKLOG — Phase-5 write, not this session.)*
+- [x] **S-F4** — **Keep filed** (no consumer). *(this-repo BACKLOG — Phase-5 write, not this session.)*
 
 ### Validation
-- [ ] Each of the seven rows has a one-line recorded decision with its evidence and filing home.
-- [ ] R-F6's verification re-runs its fixtures green under the current validators.
-- [ ] S-F3/S-F4/(S-F5 if filed) written into this repo's `BACKLOG.md`; R-C8/R-VENDOR confirmed
-  present in agentic-mbse's backlog (no new cross-repo write the session can't reach).
-- [ ] agentic-mbse own suite still green.
+- [x] Each of the seven rows has a recorded decision with evidence and filing home.
+- [x] R-F6's verification re-runs its fixtures green under the current validators.
+- [x] R-C8/R-VENDOR filed in agentic-mbse's backlog (`9cc7ab4`); S-F3/S-F4 keep-filed + S-F5 discharge recorded
+  here for the Phase-5 close-out to file into this repo's BACKLOG.md (HARD BOUNDARY — not this session's write).
+- [x] agentic-mbse own suite still green (backlog is docs; 1240 unchanged).
 
 **What we know after this phase:** every cross-repo thread from both epics is closed, kept-filed,
 or declined — with a decision on record, none dropped.
@@ -322,18 +284,15 @@ str(direction) for in/out params across shapes → stable "in"/"out"? no "<Direc
 ```
 
 ### Changes Required
-- [ ] **A1** — probe `extract_feature_refs` over multi-segment feature chains, self-named
-  bindings, cross-part refs. Write the verdict. Fix-if-small (small = a contained traversal patch
-  with a fixture), else file to agentic-mbse backlog. Spec A1. *(agentic-mbse.)*
-- [ ] **A2** — probe `str(direction)` repr stability across syside versions/shapes. Write the
-  verdict. Fix-if-small (e.g. normalize the keying), else file. Spec A2. *(agentic-mbse.)*
-- [ ] **Evidence note** — `.project/active/pipeline-truth-sync/companion-audit.md` (this repo):
-  the two probe commands, their output, and the per-primitive verdict.
+- [x] **A1** — probed `extract_feature_refs` over multi-segment chain, self-named binding, cross-part ref.
+  Verdict **COVERED** (all traverse, none dropped). No fix needed. Spec A1.
+- [x] **A2** — probed `str(direction)` on syside 0.8.4. Verdict **STABLE** (clean enum string; codegen substring
+  keys resolve it, resilient to `<…>` drift). No fix needed. Spec A2.
+- [x] **Evidence note** — `companion-audit.md` written: probe command, output, per-primitive verdict.
 
 ### Validation
-- [ ] `companion-audit.md` exists with a written verdict per primitive (no silent pass).
-- [ ] Any A1/A2 fix ships with a fixture and leaves the agentic-mbse suite green; any filed gap
-  is logged with its reason (→ a Phase-5 traceability row + agentic-mbse backlog).
+- [x] `companion-audit.md` exists with a written verdict per primitive (no silent pass).
+- [x] No A1/A2 fix needed (both covered); nothing filed; suite unchanged (1240).
 
 **What we know after this phase:** the two silent-drop-root primitives are audited with evidence —
 covered, fixed, or filed, none assumed.
@@ -353,33 +312,21 @@ coverage is expected — the traceability table confirms it), and that no filing
 its session can't reach (spec §Filing homes pre-resolved this).
 
 ### Cross-repo acceptance (HARD — both green)
-- [ ] agentic-mbse's own test suite passes (≥ Phase-0 baseline + new C7/audit tests); ruff clean;
-  mypy 0 new errors.
-- [ ] `run_all_checks` over the sysml-codegen fixture corpus — the plant fixtures pass L1–L6 with
-  no regression vs the Phase-0 baseline; the only L6 change is C7's WARN on its negative fixture.
+- [x] agentic-mbse's own test suite passes (1240/1/33 = baseline + 2 C7 tests); ruff clean; mypy 0 new errors.
+- [x] `validate_architecture` over the plant fixtures — C7 count 0; stash-verified no L6-error regression (10/18/9).
 
 ### Close-out deliverables
-- [ ] **18-row traceability table** (in `close-out.md`): every row (D1–D4, C7, V1–V3, R-PR7/R-C8/
-  R-F6/R-VENDOR, S-F5/S-F3/S-F4, A1/A2, I5) → disposition → evidence. **Zero rows silently
-  dropped** (SC-1). A reader can trace any per-item recording to a row and a disposition.
-- [ ] **S-F3/S-F4/(S-F5 if filed) → `.project/backlog/BACKLOG.md`** (this repo) with their recorded
-  decisions.
-- [ ] **Companion-PR body draft** — `.project/active/pipeline-truth-sync/AGENTIC_MBSE_PR_BODY.md`,
-  prior-epic pattern, covering **Item 4 + Item 9 commits together** (B1: one PR for the epic's
-  agentic-mbse work). Enumerate Item-4's four commits (`64a097e`/`cc64b1d`/`bc24ae3`/`bc196df`)
-  and Item-9's commits (C7+D1, D2/D3/D4/I5, dispositions, audit). **PR base per B1:** against
-  `upstream-findings-sync` while PR #7 is open (diff shows only epic work); retarget to `main`
-  once #7 merges; base `main` if #7 is already merged. Draft only — **do not create/merge the PR**
-  (the human's call; Non-Goal).
-- [ ] **CURRENT_WORK.md** updated (this repo): Item 9 status, both gate results, disposition of
-  every row.
+- [x] **18-row traceability table** in `close-out.md` — 18/18 rows → disposition → evidence, zero dropped (SC-1).
+- [x] **S-F3/S-F4/S-F5 → `BACKLOG.md`** (this repo) with recorded decisions (F3/F4 keep-filed, F5 discharged).
+- [x] **Companion-PR body draft** — `COMPANION_PR_BODY.md` (saved under this name per the Phase-5 instruction):
+  Item-4's four commits + Item-9's three; B1 base-then-retarget stated. Draft only — PR not created.
+- [x] **CURRENT_WORK.md** updated: Item 9 COMPLETE, both gate results, every disposition.
 
 ### Validation
-- [ ] Every one of the 18 rows appears in the traceability table with a disposition and evidence.
-- [ ] Every FILE row written into a repo its session can reach (S-F* here; R-C8/R-VENDOR/any audit
-  gap in agentic-mbse backlog).
-- [ ] Both acceptance gates green and recorded.
-- [ ] The PR body draft enumerates both items' commits and states the B1 base/retarget rule.
+- [x] All 18 rows appear in the traceability table with a disposition and evidence.
+- [x] Every FILE row written into a reachable repo (S-F* here; R-C8/R-VENDOR in agentic-mbse backlog).
+- [x] Both acceptance gates green and recorded.
+- [x] The PR body draft enumerates both items' commits and states the B1 base/retarget rule.
 
 **What we know after this phase:** the validated-subset contract is enforceable again — a model
 the auditor passes is a model codegen accepts — and every cross-repo thread from two epics is
@@ -422,24 +369,171 @@ closed or explicitly re-filed, with nothing dropped.
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 0 Completion
-**Completed:** [Timestamp]
-**Findings:** [Each impact-list assumption confirmed/corrected; gate baseline recorded]
-**Deviations:** [...]
+**Completed:** 2026-07-06
+
+**Gate baseline (agentic-mbse @ `pipeline-truth-item4` tip `bc196df`):**
+- `uv run --env-file .env pytest tests/` → **1238 passed, 1 skipped, 33 deselected, 6 warnings in ~16s**.
+- This is the regression yardstick for Phases 1–4. ruff/mypy new-error counts checked at each phase close.
+
+**Settled facts confirmed live:**
+- PR #7 (`upstream-findings-sync`) is **OPEN**, base `main`, head `upstream-findings-sync`. Stays the human's.
+- The four Item-4 commits (`64a097e`/`cc64b1d`/`bc24ae3`/`bc196df`) sit at tip over base `7f77510`.
+
+**Every impact-list assumption confirmed (none corrected):**
+- **Runner:** `agentic_mbse.validation.runner.run_all_checks` over L1–L6; check functions live in
+  `level6_architecture.py`, each returning `list[ValidationIssue]`, aggregated in `validate_architecture`.
+- **C7 build site — STOP GATE CLEARED.** Codegen drop is `hierarchy_resolver._extract_single_redefinition`
+  (`hierarchy_resolver.py:102`): `if not is_instance(member, "ReferenceUsage"): return None`. A live syside
+  probe (`/tmp/c7probe`) proved the boundary is **cleanly distinguishable**:
+  | shape | syside kind | is_AttributeUsage | is_ReferenceUsage | codegen |
+  |---|---|---|---|---|
+  | `attribute :>> a = 2.0*3.0` (expr) | AttributeUsage + OperatorExpression | True | False | **dropped** |
+  | `attribute :>> b = 5.0` (literal) | AttributeUsage + LiteralRational | True | False | dropped |
+  | bare `:>> c = 7.0` (literal) | ReferenceUsage + LiteralRational | False | **True** | extracted (mechanism b) |
+  | bare `:>> d = 4.0+1.0` (expr) | ReferenceUsage + OperatorExpression | False | True | extracted (CHAIN/EXPR) |
+  AttributeUsage and ReferenceUsage are disjoint (the `attribute` keyword is the discriminator, 1:1 with the
+  drop condition). Every codegen-**accepted** `:>>` form is a ReferenceUsage → C7 fires only on AttributeUsage,
+  so it cannot fire on a supported shape. **Design confirmed (Design B):** the prior-epic filing `08cd595`
+  framed C7 as "attribute-`:>>`-**with-expression** WARN" with boundary "expression-vs-literal" — so C7 fires on
+  AttributeUsage-`:>>` with a **non-literal** RHS; the literal AttributeUsage form (shape b) stays taught (D5),
+  not checked. Literal detection mirrors codegen's `is_literal_expression` (5 literal types + NullExpression).
+- **Fixtures:** `tests/fixtures/item12/<name>/{library,designs}/`. C7 fixtures go under a sibling `item9/`.
+  C7 must carry its own mirror fixtures (agentic-mbse cannot point at a sysml-codegen fixture path); the
+  substrate shape lives in sysml-codegen `plant_value_shapes` but the check runs on in-repo fixtures.
+- **Doc surfaces:** `docs/patterns/plant-idiom.md` (D1 extends), `docs/patterns/semantic-operators.md`
+  (**already teaches C7's boundary** — "attribute `:>>` with expression is DROPPED" + precedence rule, lines
+  132–171; this is the D5 the filing references), `modeling_project/MODELING_GUIDE.md`,
+  `claude/skills/sysml-conventions/{SKILL.md, references/stencils.md}`.
+- **Prior-epic filings** in agentic-mbse `.project/backlog/BACKLOG.md`: `ITEM-SYNC-C7` (line 86),
+  `ITEM-SYNC-C8` (line 106), `ITEM-SYNC-F1` vendor note (line 58, draft at
+  `.project/research/20260706_syside-self-named-recursion-vendor-note.md`).
+- **A1/A2/R-F6 targets:** `extract_feature_refs` at `sysml/expression.py:119`; codegen keys direction via
+  `str(member.direction)` (extractor.py:381, usage_extractor.py:891) — A2 probes syside-side repr stability;
+  `check_static_expressions` at `adr002.py:567` (R-F6). R-F6's tests already exist in
+  `test_item12_checks.py` (`test_f6_formula_computed_attrs_not_flagged`, `test_f6_calc_output_ref_still_fires`)
+  — R-F6 verification = these pass under current validators.
+
+**Deviations:** None. No floor assumption broke; C7 fits the guard as a small check-plus-fixture at the located
+site. C7's teaching (D5) already exists, so Phase 1's doc work is D1 (new whole-plant section), not C7-teaching.
 
 ### Phase 1 Completion
-[Same structure]
+**Completed:** 2026-07-06 — agentic-mbse commit **`fa3b706`**.
+
+**C7 fixture evidence (test-first, red→green):**
+- Wrote `tests/fixtures/item9/attr_redef_expr/model.sysml` (one `attribute :>> gain = 2.0 * 3.0`) and
+  `attr_redef_literal/model.sysml` (bare `:>> gain = 7.0` literal + bare `:>> rate = 2.0*4.0` expr +
+  `attribute :>> level = 5.0` literal), plus `test_item9_checks.py`. Ran it → **red** (ImportError, check absent).
+- Built `check_attr_redef_expression_dropped` (level6_architecture.py) + `L6_ATTR_REDEF_EXPR_DROPPED` code +
+  aggregator/metric wiring. Ran it → **green: 2 passed**.
+  - `test_c7_attr_redef_expression_warns`: exactly 1 WARN on `gain`.
+  - `test_c7_bare_and_literal_redefs_do_not_fire`: 0 findings — the two bare (ReferenceUsage) forms and the
+    one `attribute :>>`-literal form all stay silent.
+
+**Design (confirmed against prior-epic filing `08cd595`):** fire on AttributeUsage `:>>` with a **non-literal**
+RHS; literal AttributeUsage redefine is taught (D5), not warned. Literal detection mirrors codegen's
+`is_literal_expression` (5 literal types + NullExpression).
+
+**Gates at phase close:**
+- agentic-mbse own suite: **1240 passed, 1 skipped, 33 deselected** (baseline 1238 + the 2 C7 tests). ruff clean.
+  mypy: 9 pre-existing "Returning Any" errors, all outside the C7 edits → **0 new**.
+- Cross-repo acceptance: `validate_architecture` over `plant_values` / `plant_value_shapes` / `spec_chain_twolevel`
+  → `L6_ATTR_REDEF_EXPR_DROPPED` count **0** on all three. Stash-verified no regression: n_errors 10/18/9 identical
+  with and without C7 (C7 is WARNING-only and fires 0 times, so the error set is unchanged).
+
+**D1:** `plant-idiom.md` gained "The whole-plant value idiom (the headline)" — four mechanisms a/b/c/d, precedence
+(usage `:>>` > specialized-def `:>>` > base def), QN-keying, LITERAL-only propagation; anchored on `plant_values`
+(a/b/c/d + fusion-tea exemplar), `plant_value_shapes`, `spec_chain_twolevel` — all confirmed present.
+
+**Deviations:** C7's *teaching* (D5 in semantic-operators.md) already existed from Item 12 — Phase 1 doc work was
+D1 only (the new headline section), as noted in Phase 0. First proof point met.
 
 ### Phase 2 Completion
-[Same structure]
+**Completed:** 2026-07-06 — agentic-mbse commit **`1fab4d6`** (docs only). Suite still green (1240).
+
+- **D2** — `plant-idiom.md` "Secondary shapes and their limits": the CORRECT shapes (bare `default`,
+  quoted enum `:>>`, quoted output param, Style-E mixed, 5-deep chain) taught; the two DEGRADED shapes
+  (attribute-def nested `:>>`, inherited-attr-redefined-below) documented as known-incomplete. Refs `plant_value_shapes`.
+- **I5** (derived from Item 5's landed artifacts, not invented) — folded into the same section: non-float
+  entry points now diagnosed ("keep EPs float-valued", the `wall` shape); aggregation `^` maps to `**`
+  (was silent bitwise-XOR). These are codegen-side diagnostics surfaced as guidance.
+- **D3** — "Keep cross-part chains shallow": multi-hop dot chain truncates `source_path` to the first segment;
+  keep refs one hop, surface deep values via an EXPOSE attribute. Pairs with Item-5 D3-2 loud-reject. Ref `deep_cross_scope_probe`.
+- **D4** — `constraints.md` "Subtype-aware validation" note: `assert` (AssertConstraintUsage) is now visible to
+  the drop report and L4/L6; requirement-side usages excluded. Points at the published
+  `docs/subtype-enumeration-decision-table.md`. **VERIFY leg:** that table is present (Item-4 `bc196df`) — confirmed, not redone.
+- **V1** — `references/stencils.md:39` reads `return result : Real = input_a * input_b; // inline expression`
+  — the committed inline-`return` form (not body-assignment). Confirmed by read.
+- **V2 (the load-bearing gate)** — swept `claude/skills/sysml-conventions/*` + `docs/patterns/*` against the new
+  accepted set. **Nothing else stale.** The one risk surface (`attribute :>>` value form) is correctly taught as
+  DROPPED (semantic-operators.md, Item-12 D5); the `^` hits are ASCII unit notation (`[m^2]`), not the operator;
+  SKILL.md pitfalls/anti-patterns/operator list all hold. No surface teaches a now-rejected pattern or checks a
+  now-accepted one; the green suite (incl. C7 + item12 negative-of-the-negative) confirms no check flags a supported shape.
+- **V3** — Item 3 = no new agentic-mbse impact (recorded in the close-out, Phase 5; no agentic-mbse write).
+
+**Deviations:** None.
 
 ### Phase 3 Completion
-[Same structure]
+**Completed:** 2026-07-06 — agentic-mbse commit **`9cc7ab4`** (backlog dispositions). Suite unaffected (docs).
+
+Each row → a recorded decision:
+- **R-PR7** — PR #7 (`upstream-findings-sync`) is **OPEN**, base `main` (confirmed Phase 0). Stays the human's;
+  not merged. *(recorded here + close-out.)*
+- **R-C8** — **KEEP FILED.** Not a small check-plus-fixture: the pre-warn still needs a shared sanitizer to avoid
+  drift against codegen REQ-NC-09 (~0.5–1 day). Item-5 SC-4 sanitizer-injectivity fail-fast is the codegen
+  backstop. *(agentic-mbse backlog `ITEM-SYNC-C8` updated.)*
+- **R-F6** — **VERIFIED CLOSED.** `test_item12_checks.py::test_f6_formula_computed_attrs_not_flagged` and
+  `::test_f6_calc_output_ref_still_fires` both pass under the current (post-Item-4) validators — same-part FORMULA
+  siblings stay exempt while calc-output-in-arithmetic still fires. *(agentic-mbse; verify-only, no change.)*
+- **R-VENDOR** — **DECLINE the Sensmetry filing.** Evaluation-time syside recursion; extraction finite/degenerate
+  (Item-8 probe `timeout 150` exit 0); no codegen path. Note kept as durable record. *(agentic-mbse `ITEM-SYNC-F1`.)*
+- **S-F5** — **DISCHARGE.** The `unresolvable_attr_probe` fixture was absorbed by Item 9's plain-usage-override fix
+  (it now resolves); the positive loud-on-gap proof is re-anchored on `chain_override_probe`
+  (`test_uncovered_params.py::test_collector_pins_chain_override_probe` — unresolved calc-output ref stays LOUD;
+  `::test_reconcile_raises_v11_on_wired_gap` — V11 raises), and the INV-6 silent-on-clean leg is covered by
+  `test_silent_failure_family2.py` (`test_d34_clean_report_no_warn`, `test_d313_all_known_no_warn`). No new test needed.
+- **S-F3** — **KEEP FILED.** No model hits the Shape-B leaf-collision filename edge.
+- **S-F4** — **KEEP FILED.** No consumer needs redefinition/design_override name surfacing.
+
+**Filing-home note (HARD BOUNDARY):** the S-F3/S-F4 keep-filed entries and the S-F5 discharge land in *this repo's*
+`.project/backlog/BACKLOG.md` — a Phase-5 close-out write. This session does not touch this repo's BACKLOG.md (an
+Item-7 session is concurrently editing it); the decisions are recorded here for the close-out to file. R-C8/R-VENDOR
+(agentic-mbse) were filed live above.
+
+**Deviations:** None. Every one of the seven rows has a recorded decision with evidence.
 
 ### Phase 4 Completion
-[Same structure]
+**Completed:** 2026-07-06 — evidence note `.project/active/pipeline-truth-sync/companion-audit.md` (this repo).
+No agentic-mbse code change (both primitives covered), so no Phase-4 agentic-mbse commit; suite unchanged (1240).
+
+- **A1 — `extract_feature_refs`: COVERED.** Probed multi-segment chain, one-hop cross-part ref, and self-named
+  `in x = x` binding — all three traverse to a **non-empty** ref set (no silent drop). The D3 `source_path`
+  truncation lives on codegen's side (`extract_feature_chain_name`), not in this traversal-complete primitive.
+- **A2 — `str(direction)`: STABLE.** syside 0.8.4 yields `FeatureDirectionKind.In` / `.Out` (a clean enum string,
+  not an angle-bracket repr). Codegen's substring keys (`"In" in str(direction)`, extractor.py:381 /
+  usage_extractor.py:891) resolve it correctly and are resilient even to a `<…>` repr — the drift A2 worried about
+  cannot silently break them (it would break both repos' identical `"Out" not in direction` checks loudly).
+
+Verdict per primitive written (no silent pass). No gap fixed, no gap filed.
+
+**Deviations:** None.
 
 ### Phase 5 Completion
-[Same structure]
+**Completed:** 2026-07-06. HARD BOUNDARY lifted (Item 7 landed + audited PASS); this-repo close-out executed.
+
+- **18-row traceability table** — `.project/active/pipeline-truth-sync/close-out.md`. Every row (D1–D4, C7,
+  V1–V3, R-PR7/R-C8/R-F6/R-VENDOR, S-F5/S-F3/S-F4, A1/A2, I5) → disposition → evidence. **18/18, zero dropped.**
+- **Both acceptance gates green** (recorded in close-out): agentic-mbse suite 1240/1/33; cross-repo C7-silent
+  with stash-verified no-regression (10/18/9).
+- **S-F* BACKLOG filings** — appended Item-9 dispositions to this-repo `BACKLOG.md`: `SYNC-F3`/`SYNC-F4`
+  keep-filed, `SYNC-F5` discharged. Item 7's `[ITEM7-F4-CUTOVER]` / `[ITEM7-MATRIX-SWEEP-RESIDUE]` untouched.
+- **Companion-PR body** — `.project/active/pipeline-truth-sync/COMPANION_PR_BODY.md`: Item 4's four commits +
+  Item 9's three, with the B1 base-then-retarget rule (base `upstream-findings-sync` while PR #7 open → `main` on merge).
+  Draft only — PR creation stays the human's.
+- **CURRENT_WORK.md** — Item 9 marked COMPLETE with both gate results and every disposition.
+- **agentic-mbse branch** `pipeline-truth-item4` pushed to origin (branch only, no PR).
+- **This-repo commit** (pathspec-scoped): plan + close-out + companion-audit + COMPANION_PR_BODY + BACKLOG + CURRENT_WORK.
+
+**Deviations:** None. The plan's "traceability table in close-out.md" is honored via a dedicated `close-out.md`.
 
 ---
 

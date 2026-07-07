@@ -6,12 +6,18 @@
 
 ## Active Work
 
-### PIPELINE-TRUTH Item 9 — agentic-mbse Sync (Guidance, Validation, Companion Audit) — SPEC IN PROGRESS
-Executes the accumulated agentic-mbse impact lists (Items 1–5), builds the D-F expression-RHS
-warning, discharges prior-epic residue (PR #7, C7/C8/F6, vendor note), and runs the
-`extract_feature_refs` / `str(direction)` companion audit. Artifacts in this repo
-(`.project/active/pipeline-truth-sync/`, prior-epic `validation-sync` pattern); code lands in
-`/home/reid/1cfe/agentic-mbse` on `pipeline-truth-item4`. Spec being written 2026-07-06.
+### PIPELINE-TRUTH Item 9 — agentic-mbse Sync (Guidance, Validation, Companion Audit) — COMPLETE
+Phases 0–5 landed 2026-07-06. **C7** (the one unbuilt check) WARNs on `attribute :>> attr =
+<expr>` — the AttributeUsage redefinition codegen silently drops; test-first, cross-repo-clean.
+**D1–D4/I5** teaching surfaces synced (whole-plant value idiom, secondary shapes, shallow chains,
+subtype-aware asserts, Item-5 diagnostics). Prior-epic residue closed: R-F6 verified, R-C8 &
+S-F3/S-F4 keep-filed, R-VENDOR & S-F5 declined/discharged, PR #7 stays the human's. Companion
+audit (`extract_feature_refs`, `str(direction)`) — both COVERED/STABLE.
+- **agentic-mbse** `pipeline-truth-item4`: commits `fa3b706` / `1fab4d6` / `9cc7ab4` (over Item 4's
+  four). Suite **1240 passed / 1 skipped**; pushed to origin. Companion PR is the human's to open
+  (B1 base-then-retarget: base `upstream-findings-sync` while PR #7 open, retarget to `main` on merge).
+- **This repo:** 18-row traceability + acceptance in `.project/active/pipeline-truth-sync/close-out.md`;
+  companion-audit evidence, plan, and `COMPANION_PR_BODY.md` alongside; S-F3/F4/F5 dispositions in `BACKLOG.md`.
 
 ### PIPELINE-TRUTH Item 3 — fusion-tea Acceptance & Workaround Retirement — CERTIFIED
 Audit PASS-WITH-NOTES (`.project/active/fusiontea-acceptance/audit.md`, 2026-07-06). Crux

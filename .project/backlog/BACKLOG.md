@@ -86,6 +86,10 @@ filename `{instance_path}__{alias}.json` — a collision codegen does not yet di
 Not triggered by any in-repo fixture. File to disambiguate (e.g. qualify by owning-part
 path) before a real model hits it.
 
+**PIPELINE-TRUTH Item 9 disposition (S-F3): KEEP FILED.** No model hits the leaf-collision
+edge; nothing to build under Item 9's guard. Revisit when a real model produces two shape-B
+owning parts that share a leaf and expose the same alias.
+
 ### [SYNC-F4] Redefinition / design_override name surfacing (UPSTREAM-FINDINGS Item 12, F4)
 
 **Source**: alias-surfacing (Item 11) release-notes §impact. `:>>` and design-override names
@@ -93,11 +97,24 @@ resolve as channels but are not EXPOSE_PURE-sourced, so they do not surface as n
 outputs. Decide whether these names should surface (mirror of D6/EXPOSE surfacing) or stay
 internal.
 
+**PIPELINE-TRUTH Item 9 disposition (S-F4): KEEP FILED.** No consumer needs
+`:>>`/design-override names surfaced as named outputs today. Revisit if a downstream consumer
+(e.g. a report or a cross-part binding) needs them exposed.
+
 ### [SYNC-F5] Positive unresolvable-warning test (UPSTREAM-FINDINGS Item 12, F5)
 
 **Source**: alias-surfacing (Item 11) audit Obs. 1. Item 11's INV-6 "unresolvable refs still
 warn" leg has no positive live assertion. Add a test that asserts an unresolvable ref emits
 its warning. Opportunistic — cheap to add in sysml-codegen's test suite.
+
+**PIPELINE-TRUTH Item 9 disposition (S-F5): DISCHARGED.** Verified against Item 5's landed
+tests. The old `unresolvable_attr_probe` fixture was *absorbed* by Item 9's plain-usage-override
+fix (`:>> local_val = 5.0` is now captured, so it resolves). The positive loud-on-gap proof is
+re-anchored on `chain_override_probe`: `tests/unit/test_uncovered_params.py::test_collector_pins_chain_override_probe`
+(an unresolved calc-output ref stays LOUD in the uncovered-params result) and
+`::test_reconcile_raises_v11_on_wired_gap` (V11 raises on the wired-valueless gap). The INV-6
+silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
+(`test_d34_clean_report_no_warn`, `test_d313_all_known_no_warn`). No new test needed.
 
 ---
 
