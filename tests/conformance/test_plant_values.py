@@ -22,25 +22,17 @@ from tests.conftest import snapshot_fixture
 
 _MODULE = "plantvaluesdesign__plant__cost_calc"
 
-# The exact offender tuples read from the committed snapshot (Phase 2 D6 gate). One
-# per value-provision mechanism; the missing_key is the params key the JSON never mints.
-EXPECTED_UNCOVERED = {
-    # (a) subtype-def literal `:>> efficiency = 0.35` via usage-level retype
-    (_MODULE, "driver_efficiency",
-     "library_params.PlantValuesDesign__plant__cost_calc__driver_efficiency"),
-    # (b) bare no-retype override block `part :>> target_factory { :>> cost_per_target = 10.0; }`
-    (_MODULE, "target_cost",
-     "library_params.PlantValuesDesign__plant__cost_calc__target_cost"),
-    # (c) plain cross-part chain `chamber.cost_per_unit` (no calc output; the P1 shape)
-    (_MODULE, "chamber_cost",
-     "library_params.PlantValuesDesign__plant__cost_calc__chamber_cost"),
-}
-
-# The entry-point QN each mechanism's cross-part input falls through to (valueless).
+# Item 2 flipped this fixture: the three cross-part references now resolve to filled
+# DESIGN_ATTRIBUTE entry points keyed by SOURCE QN (not the per-consumer fallback QN).
+# Each mechanism's supplied literal is carried onto its source attribute by the
+# supplied-value materializer (REQ-SVM-01..04), so V11 sees zero offenders.
 _EP_BY_MECHANISM = {
-    "a": "PlantValuesDesign__plant__cost_calc__driver_efficiency",
-    "b": "PlantValuesDesign__plant__cost_calc__target_cost",
-    "c": "PlantValuesDesign__plant__cost_calc__chamber_cost",
+    # (a) subtype-def literal `:>> efficiency = 0.35`, reached via usage-level retype.
+    "a": ("PlantValuesDesign__plant__driver__efficiency", 0.35),
+    # (b) bare no-retype override block `part :>> target_factory { :>> cost_per_target = 10.0; }`.
+    "b": ("PlantValuesDesign__plant__target_factory__cost_per_target", 10.0),
+    # (c) plain one-hop cross-part attr with a usage-level dotted override (`= 7.0`).
+    "c": ("PlantValuesDesign__plant__chamber__cost_per_unit", 7.0),
 }
 
 
@@ -57,46 +49,58 @@ def _ep_default(graph, qn: str):
     raise AssertionError(f"entry point {qn} not found")
 
 
-def test_plant_values_trips_v11_all_three_mechanisms():
-    """SC-1 before-state pin: exactly the three-mechanism offender set.
+def test_plant_values_resolves_all_three_mechanisms():
+    """SC-1 after-state pin: zero V11 offenders — the headline flip.
 
-    Item 2 flips this as it wires the cross-part values. The structure fails loudly
-    if the set later goes empty (a regression that silently re-drops the trip) OR if
-    the offenders change, so the pin stays meaningful either direction.
-    """
+    Behavior-observing (not `snapshot == committed`): the three cross-part references
+    resolve to filled entry points, so `collect_uncovered_params` returns empty. The
+    pin fails loudly in both directions — a regression that re-drops a value re-trips
+    V11 and grows the set."""
     actual = {(u.module, u.input, u.missing_key) for u in collect_uncovered_params(_graph())}
-    assert actual == EXPECTED_UNCOVERED, actual
-    assert len(actual) == 3  # non-empty, one per mechanism (a)/(b)/(c)
+    assert actual == set(), actual
 
 
-def test_mechanism_a_subtype_def_literal_valueless_ep():
-    """(a): the subtype-def `:>> efficiency = 0.35` (via usage-level retype) feeds a
-    valueless plant-calc EP — the current pipeline does not propagate it, so it trips."""
-    assert _ep_default(_graph(), _EP_BY_MECHANISM["a"]) is None
+def test_mechanism_a_subtype_def_literal_resolves_to_source_ep():
+    """(a): the subtype-def `:>> efficiency = 0.35` (via usage-level retype) is carried
+    onto its source attribute and resolves to a filled DESIGN_ATTRIBUTE entry point."""
+    qn, value = _EP_BY_MECHANISM["a"]
+    assert _ep_default(_graph(), qn) == value
 
 
-def test_mechanism_b_override_block_literal_valueless_ep():
-    """(b): the bare no-retype `part :>>` override-block literal (10.0) feeds a
-    valueless plant-calc EP — it is NOT pre-filled, so the collector flags it."""
-    assert _ep_default(_graph(), _EP_BY_MECHANISM["b"]) is None
+def test_mechanism_b_override_block_literal_resolves_to_source_ep():
+    """(b): the bare no-retype `part :>>` override-block literal (10.0) resolves onto its
+    source EP via the materializer's tier-1 override lookup."""
+    qn, value = _EP_BY_MECHANISM["b"]
+    assert _ep_default(_graph(), qn) == value
 
 
-def test_mechanism_c_plain_cross_part_attr_valueless_ep_with_flippable_literal():
+def test_mechanism_c_dotted_override_resolves_to_source_ep():
     """(c): the plain one-hop cross-part attr `chamber.cost_per_unit`, its literal supplied
     by a usage-level dotted override (`:>> chamber.cost_per_unit = 7.0`, distinct from (b)'s
-    override BLOCK). TWO facts pinned:
-      1. the EP is valueless TODAY — the current pipeline cannot wire the usage-level value
-         to the inherited calc input, so `chamber_cost` trips (V11-trip role); AND
-      2. the override literal 7.0 IS captured in `design_overrides`, so Item 2 has a concrete
-         value to flip `chamber_cost` TO. This is NOT a trip-only offender (audit F1)."""
-    assert _ep_default(_graph(), _EP_BY_MECHANISM["c"]) is None
+    override BLOCK), resolves onto its source EP. The override literal 7.0 comes from
+    `design_overrides` (the model), not the test."""
+    qn, value = _EP_BY_MECHANISM["c"]
+    assert _ep_default(_graph(), qn) == value
     snap = json.loads(snapshot_fixture("plant_values").read_text())
     overrides = {
         o["attribute_name"]: o["literal_value"]
         for o in snap["hierarchy_data"]["design_overrides"]
     }
-    assert overrides.get("cost_per_unit") == 7.0  # the value Item 2 resolves chamber_cost to
+    assert overrides.get("cost_per_unit") == 7.0  # value carried from the model, not test-supplied
     assert overrides.get("cost_per_target") == 10.0  # (b)'s value, for symmetry
+
+
+def test_plant_cost_anchor_hand_transcribed():
+    """SC-1 anchor (INV-5): the three carried values compose to the hand-derived plant
+    cost. The 48.5714… constant is transcribed by hand here, never read back from the
+    resolver — it only asserts the resolver produced the three operands (0.35/10.0/7.0)."""
+    g = _graph()
+    driver = _ep_default(g, _EP_BY_MECHANISM["a"][0])
+    target = _ep_default(g, _EP_BY_MECHANISM["b"][0])
+    chamber = _ep_default(g, _EP_BY_MECHANISM["c"][0])
+    assert driver == 0.35 and target == 10.0 and chamber == 7.0
+    # plant_cost = (target_cost + chamber_cost) / driver_efficiency, hand-transcribed:
+    assert abs((10.0 + 7.0) / 0.35 - 48.5714285714) < 1e-9
 
 
 def test_assert_constraint_is_invisible_today():

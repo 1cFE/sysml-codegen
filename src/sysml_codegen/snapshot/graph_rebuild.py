@@ -19,6 +19,7 @@ from sysml_codegen.resolution.graph_builder import (
     build_computation_graph,
 )
 from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.supplied_values import materialize_supplied_values
 from sysml_codegen.snapshot.loader import load_extraction_snapshot
 
 
@@ -64,6 +65,22 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
     # EXPOSE channel (pipeline_builder Step 5.56), so the offline path wires them the
     # same as the live path. Runs after the scoped aliases exist, before the backtracker.
     _rescue_self_named_bindings(registry, snap["calc_usages"])
+
+    # Item 2 (REQ-SVM-01..04): materialize supplied subsystem-attr values into
+    # design_attributes BEFORE the backtracker, so its Step-3 design-attribute
+    # resolution carries them to the consumer and collapses fan-out by source QN.
+    # The backtracker (below) is the real seam — it, not build_computation_graph,
+    # runs `_resolve_to_design_attribute`.
+    hierarchy_data = snap["hierarchy_data"]
+    synth_attrs = materialize_supplied_values(
+        snap["calc_usages"],
+        hierarchy_data.redefinitions,
+        hierarchy_data.design_overrides,
+        hierarchy_data.usage_type_map,
+        snap["design_attributes"],
+    )
+    if synth_attrs:
+        snap["design_attributes"].setdefault("<materialized>", []).extend(synth_attrs)
 
     # Run backtracker
     backtracker = DependencyBacktracker(
@@ -147,9 +164,6 @@ def build_full_graph_from_snapshot(
         aggregation_data=snap["aggregation_expressions"],
         hierarchy_redefinitions=hierarchy_data.redefinitions,
         usage_type_map=hierarchy_data.usage_type_map,
-        # Item 2 (F-A thread-through): the materializer's precedence tier 1. Without
-        # it, shapes (b)/(c) have no value source and revert to valueless.
-        design_overrides=hierarchy_data.design_overrides,
         # Item 11 (F-A): the snapshot path is the one the 7 graph baselines are
         # captured through — thread the expose_pure ChannelAliases so shape-B
         # output_aliases are populated (not silently empty) in committed artifacts.

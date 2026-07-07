@@ -49,6 +49,7 @@ from sysml_codegen.orchestration.pipeline_context import (
 )
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import build_computation_graph
+from sysml_codegen.resolution.supplied_values import materialize_supplied_values
 
 logger = logging.getLogger(__name__)
 
@@ -804,6 +805,21 @@ def build_pipeline_context(
     # Step-4.5 removal stays for genuine (never-tentative) FORMULAs.
     _remove_formula_from_design_attrs(computed_attrs, design_attrs)
 
+    # Step 5.65 (Item 2, REQ-SVM-01..04): materialize supplied subsystem-attr values
+    # into design_attrs before the deriver and backtracker read it, so Step-3
+    # design-attribute resolution carries them to the plant-calc inputs and collapses
+    # renamed-consumer fan-out by source QN.
+    if hierarchy_data is not None:
+        synth_attrs = materialize_supplied_values(
+            calc_usages,
+            hierarchy_data.redefinitions,
+            hierarchy_data.design_overrides,
+            hierarchy_data.usage_type_map,
+            design_attrs,
+        )
+        if synth_attrs:
+            design_attrs.setdefault(Path("<materialized>"), []).extend(synth_attrs)
+
     # Step 5.7: Create parameter group deriver, now that design_attrs reflects the
     # FINAL classifications (moved after confirm per INV-G).
     group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
@@ -874,8 +890,6 @@ def build_pipeline_context(
         aggregation_data=scoped_agg_data,
         hierarchy_redefinitions=hierarchy_data.redefinitions if hierarchy_data else None,
         usage_type_map=hierarchy_data.usage_type_map if hierarchy_data else None,
-        # Item 2 (F-A thread-through): materializer precedence tier 1 (shapes b/c).
-        design_overrides=hierarchy_data.design_overrides if hierarchy_data else None,
         # Item 11 (F-A): surface shape-B EXPOSE_PURE names. include_all carries the
         # run mode into the dangling-alias filter (D4).
         channel_aliases=all_channel_aliases,
