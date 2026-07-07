@@ -1,8 +1,9 @@
 """Unit tests for graph builder aggregation module support (Phase 3 & 4).
 
-Tests _resolve_aggregation_input_channel(),
-_build_aggregation_module(), topological ordering with aggregation modules,
-orphan entry point surfacing (BF-8), and expression compilation (BF-2).
+Tests aggregation channel resolution (via resolve_input/AGG_STRATEGIES, the F4-cutover
+replacement for the deleted _resolve_aggregation_input_channel), _build_aggregation_module(),
+topological ordering with aggregation modules, orphan entry point surfacing (BF-8), and
+expression compilation (BF-2).
 """
 
 import ast
@@ -24,8 +25,12 @@ from sysml_codegen.core.output_registry import OutputRegistry
 from tests.helpers.registry_compat import registry_register
 from sysml_codegen.resolution.graph_builder import (
     _build_aggregation_module,
-    _resolve_aggregation_input_channel,
     _unified_topological_sort,
+)
+from sysml_codegen.resolution.input_resolver import (
+    AGG_STRATEGIES,
+    ResolutionContext,
+    resolve_input,
 )
 from sysml_codegen.resolution.models import (
     EntryPoint,
@@ -85,6 +90,30 @@ def _make_chain_redef(
     )
 
 
+def _resolve_channel(
+    ref: str,
+    instance_path: str,
+    redefs: list[RedefinitionData],
+    registry: OutputRegistry,
+) -> str | None:
+    """Channel-or-None via the live resolve_input strategy chain — the migration shim
+    for the deleted _resolve_aggregation_input_channel. Builds a ResolutionContext with
+    the same mapping the live aggregation path uses (consumer_scope derived from the
+    instance path, i.e. the design prefix stripped), so these channel-resolution tests
+    now exercise the AGG_STRATEGIES that replaced the old function."""
+    parts = instance_path.split("__")
+    ctx = ResolutionContext(
+        output_registry=registry,
+        redefinitions=redefs,
+        design_attrs={},
+        module_eqn=f"{instance_path}__agg_probe",
+        consumer_scope=".".join(parts[1:]) if len(parts) > 1 else "",
+        instance_path=instance_path,
+    )
+    result = resolve_input(ref, ctx, AGG_STRATEGIES)
+    return result.producer_channel if result.source_type == "module_output" else None
+
+
 
 # ---------------------------------------------------------------------------
 # TestResolveAggregationInputChannel
@@ -104,7 +133,7 @@ class TestResolveAggregationInputChannel:
         # Registry must contain the channel as canonical for verification
         registry = OutputRegistry()
         registry_register(registry,expected_channel, ["cost_model.total_cost"])
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "pv_module.capital_cost",
             "Design__plant__solar_array",
             redefs,
@@ -117,7 +146,7 @@ class TestResolveAggregationInputChannel:
         agg_channel = "Design__plant__solar_array__capital_cost__capital_cost"
         registry = OutputRegistry()
         registry_register(registry,agg_channel, ["solar_array.capital_cost"])
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "solar_array.capital_cost",
             "Design__plant",
             [],  # No redefinitions
@@ -131,7 +160,7 @@ class TestResolveAggregationInputChannel:
             _make_chain_redef("x", "b.y", "Lib__A"),
             _make_chain_redef("y", "a.x", "Lib__B"),
         ]
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "a.x",
             "instance",
             redefs,
@@ -141,7 +170,7 @@ class TestResolveAggregationInputChannel:
 
     def test_no_match_returns_none(self):
         """No matching redef and no registry entry returns None."""
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "unknown.attr",
             "instance",
             [],
@@ -151,7 +180,7 @@ class TestResolveAggregationInputChannel:
 
     def test_local_ref_returns_none(self):
         """No dot in symbolic ref returns None (local term)."""
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "misc_cost",
             "instance",
             [],
@@ -170,7 +199,7 @@ class TestResolveAggregationInputChannel:
         )
         registry = OutputRegistry()
         registry_register(registry,expected_channel, ["calc.output"])
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "pv_module.cost",
             "inst",
             redefs,
@@ -188,7 +217,7 @@ class TestResolveAggregationInputChannel:
         registry.register_alias(
             "plant.array.pv_module.capital_cost", expected_channel
         )
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "pv_module.capital_cost",
             "Design__plant__array",
             [],
@@ -212,7 +241,7 @@ class TestResolveAggregationInputChannel:
                 "capital_cost", "cost_model.total_cost", "Lib__String_Inverter"
             )
         ]
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "inverter.capital_cost",
             "Design__plant__array",
             redefs,
@@ -230,7 +259,7 @@ class TestResolveAggregationInputChannel:
         registry.register_alias(
             "plant.array.child.cost", correct_channel
         )  # scoped
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "child.cost",
             "Design__plant__array",
             [],
@@ -244,7 +273,7 @@ class TestResolveAggregationInputChannel:
         registry = OutputRegistry()
         # Key_E_stripped: "plant.array.capital_cost" (registered by Change 2)
         registry_register(registry,agg_channel, ["plant.array.capital_cost"])
-        result = _resolve_aggregation_input_channel(
+        result = _resolve_channel(
             "array.capital_cost",
             "Design__plant",
             [],
@@ -361,7 +390,7 @@ class TestBuildAggregationModule:
         assert singleton_inputs[0].param_name == "allocation_model_total_allocation"
 
     def test_singleton_term_fallback_to_chain_resolution(self):
-        """SingletonTerm falls back to _resolve_aggregation_input_channel when direct fails."""
+        """SingletonTerm resolves via the CHAIN strategy when direct channel construction fails."""
         # Direct channel won't match, but chain resolution will
         resolved_channel = get_channel_name(
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"

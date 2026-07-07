@@ -638,8 +638,9 @@ class TestResolveInputParityExtended:
     one-shot probe script.
 
     What it pins, stated honestly (design M5): parity is against the
-    **backtracker DFS**, not against the live `_resolve_aggregation_input_channel`
-    the cutover replaces (that comparand is [ITEM7-F4-CUTOVER]'s own gate). The
+    **backtracker DFS**, not against the old inline aggregation channel resolution
+    the F4 cutover replaced with `resolve_input(AGG_STRATEGIES)` (that comparand was
+    the cutover's own M3 gate, now retired with the old function). The
     load-bearing evidence is the FULL set — the committed 12-test suite above
     over catf_mfe/solar_battery PLUS this thin extension: 1 MODULE_OUTPUT
     channel-equality check + 5 entry-point fallback checks.
@@ -800,7 +801,7 @@ class TestNoUntypedDictGetInResolutionPaths:
             input_resolver.ScopedRegistryLookup,
             input_resolver.ChainRedefinitionFollow,
             input_resolver.SysMLQNLookup,
-            input_resolver.DesignAttributeLookup,
+            input_resolver.DirectChannelConstruction,
         ]
         violations = []
         for func in functions:

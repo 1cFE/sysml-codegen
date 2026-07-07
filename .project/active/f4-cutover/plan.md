@@ -224,31 +224,33 @@ def test_sum_term_resolves_to_channel_via_resolve_input():
 **See `design.md#architecture`, D5, and `#implementation-notes` (test-surgery tail).**
 
 Rewire:
-- [ ] SumTerm call site — replace inline block with `_build_agg_input_source(...)`; apply
-  `MANUAL_REQUIRED` from the returned flag; keep the multiplicity EP append inline (unchanged).
-- [ ] SingletonTerm call site — same; helper absorbs the dotless case (Minor 4).
-- [ ] LocalTerm channel call (`~:1640`) — rewire with the **D5 `source_type == "module_output"`-only
-  guard**; else fall through to LocalTerm's own inline entry-point fallback (key `{module_eqn}__{attribute_name}`, unchanged).
+- [x] SumTerm call site — replaced inline block with `_build_agg_input_source(...)`; `MANUAL_REQUIRED`
+  applied from the returned flag; multiplicity EP append kept inline. ctx built once per agg (INV-7).
+- [x] SingletonTerm call site — same; helper absorbs the dotless case (Minor 4); Try-2 now Strategy E.
+- [x] LocalTerm channel call — rewired with the **D5 `source_type == "module_output"`-only guard**;
+  else falls through to LocalTerm's own inline fallback (`{module_eqn}__{attribute_name}`, unchanged).
 
 Delete (same commit):
-- [ ] The SumTerm + SingletonTerm inline `else:` blocks.
-- [ ] `_resolve_aggregation_input_channel` (def + the `__all__` export at `~:1925`).
-- [ ] Strategy D `DesignAttributeLookup` — from `AGG_STRATEGIES`, the function, and its lying docstring
-  (`input_resolver.py:~200`).
-- [ ] The M3 gate's **old-comparand half** (it references the deleted function). **Keep the new-side
-  assertion** as a permanent test (D2, Major 1) — this is the durable guard on the reconciled EP key.
+- [x] The SumTerm + SingletonTerm inline `else:` blocks (collapsed into the helper).
+- [x] `_resolve_aggregation_input_channel` (def + the `__all__` export). Added `_build_agg_input_source`
+  to `__all__`. Fixed the dangling docstring in `_find_literal_redefinition` + `output_registry_builder`.
+- [x] Strategy D `DesignAttributeLookup` — from `AGG_STRATEGIES`, the function, and its docstring.
+- [x] The M3 gate's **old-comparand half** (`test_m3_full_inputsource_parity`, DELETE-fenced). **Kept the
+  new-side assertion** (`test_m3_reconciled_ep_key_survives`) as the permanent EP-key guard (D2, Major 1).
+  Deleted `TestStrategyD`; converted the LocalTerm reroute pin to a permanent new-side form (no old fn).
 
-Test-surgery tail (~11 tests):
-- [ ] `tests/unit/test_graph_builder_aggregation.py` (`~:107-247`, `~:364`) — migrate still-meaningful
-  direct-call tests to `resolve_input`/`_build_agg_input_source`, or delete cases already covered by
-  `test_dual_resolution.py`. Budget as real work, not a line delete.
+Test-surgery tail:
+- [x] `tests/unit/test_graph_builder_aggregation.py` — migrated the 10 `TestResolveAggregationInputChannel`
+  direct-call tests via a `_resolve_channel` shim (channel-or-None over `resolve_input`/AGG_STRATEGIES),
+  preserving every assertion against the NEW strategy code. `TestBuildAggregationModule` (+ toposort/orphan/
+  compilation classes) call `_build_aggregation_module` and now exercise the rewired path — kept as-is, all pass.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/` → full suite green (the surviving new-side M3 assertion, MANUAL_REQUIRED
-  test, reroute pin, and migrated agg tests all pass).
-- [ ] `ruff check src/` ≤ 17; `mypy src/` ≤ 104.
-- [ ] `grep -rn "_resolve_aggregation_input_channel\|DesignAttributeLookup" src/` → no live references.
+- [x] `uv run pytest tests/` → full suite green (2072 passed, 4 skipped, 5 xfailed).
+- [x] `ruff check src/` == 17; `mypy src/` == **101** (deletions removed 3 errors; well under ≤104).
+- [x] `grep -rn "_resolve_aggregation_input_channel\|DesignAttributeLookup" src/` → no live references
+  (one intentional historical docstring mention in input_resolver.py). Baselines byte-identical (empty diff).
 
 **What We Know After:** the live aggregation path runs through `resolve_input(AGG_STRATEGIES)`; the old
 function, Strategy D, and the inline fallbacks are gone; INV-1/2/5 hold in code. Baselines are checked

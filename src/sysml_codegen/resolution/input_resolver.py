@@ -1,8 +1,9 @@
 """Consolidated input resolver for aggregation SumTerm/SingletonTerm inputs.
 
-Replaces inline resolution logic scattered through _resolve_aggregation_input_channel()
-and _build_aggregation_module() in graph_builder.py with one function and an explicit,
-ordered strategy chain.
+The live aggregation path (graph_builder._build_aggregation_module) resolves every
+SumTerm/SingletonTerm input through resolve_input() and this ordered strategy chain,
+via the _build_agg_input_source() choke-point helper. It replaced the former inline
+resolution (the deleted _resolve_aggregation_input_channel + per-call-site fallbacks).
 
 Design intent: 04-input-resolver.md, 24-dual-resolution-architecture.md
 Requirements: REQ-IR-01 through REQ-IR-07
@@ -195,26 +196,6 @@ def ChainRedefinitionFollow(ref: str, ctx: ResolutionContext) -> CanonicalChanne
 
 
 # ---------------------------------------------------------------------------
-# Strategy D: DesignAttributeLookup
-# ---------------------------------------------------------------------------
-def DesignAttributeLookup(ref: str, ctx: ResolutionContext) -> CanonicalChannel | None:  # noqa: N802
-    """Match ref against design attributes by leaf name (Strategy D).
-
-    Enables entry point deduplication: if a design attribute matches the ref
-    leaf name, returns None (causing fallthrough to the entry point fallback,
-    which will use the design attribute's QN as the entry point name).
-
-    Currently returns None for all cases — Strategy D does not produce a
-    CanonicalChannel. It is included in AGG_STRATEGIES for future extensibility
-    and to document the design intent.
-    """
-    # Strategy D matches design attributes but does not produce a CanonicalChannel
-    # (design attrs are entry points, not module outputs). The entry point fallback
-    # in resolve_input() handles QN construction.
-    return None
-
-
-# ---------------------------------------------------------------------------
 # Strategy E: DirectChannelConstruction
 # ---------------------------------------------------------------------------
 def DirectChannelConstruction(ref: str, ctx: ResolutionContext) -> CanonicalChannel | None:  # noqa: N802
@@ -248,7 +229,6 @@ AGG_STRATEGIES: list[ResolutionStrategy] = [
     ScopedRegistryLookup,       # A: ScopedKey → scoped registry + alias registry
     ChainRedefinitionFollow,    # C: :>> chain → ScopedKey → scoped registry
     SysMLQNLookup,              # B: SysMLQN → SysML QN registry (for :: refs)
-    DesignAttributeLookup,      # D: design attr match → entry point
     DirectChannelConstruction,  # E: CalcUsage-format channel construction (Try 2)
 ]
 

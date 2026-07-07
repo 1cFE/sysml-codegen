@@ -62,7 +62,6 @@ except ImportError:
 try:
     from sysml_codegen.resolution.input_resolver import (
         ChainRedefinitionFollow,
-        DesignAttributeLookup,
         DirectChannelConstruction,
         ScopedRegistryLookup,
         SysMLQNLookup,
@@ -79,9 +78,6 @@ except ImportError:
         raise NotImplementedError
 
     def SysMLQNLookup(ref, ctx):  # type: ignore[no-redef]
-        raise NotImplementedError
-
-    def DesignAttributeLookup(ref, ctx):  # type: ignore[no-redef]
         raise NotImplementedError
 
     def DirectChannelConstruction(ref, ctx):  # type: ignore[no-redef]
@@ -246,15 +242,14 @@ class TestReqIR02:
     @pytest.mark.req("REQ-IR-02")
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
     def test_strategy_ordering_matches_agg_strategies(self):
-        """AGG_STRATEGIES has the documented strategies in order. Phase 1 appends
-        Strategy E (DirectChannelConstruction) after A/C/B/D; the Phase 3 cutover then
-        deletes the dead Strategy D, leaving A/C/B/E."""
-        assert len(AGG_STRATEGIES) == 5
+        """AGG_STRATEGIES has exactly 4 entries in order: A/C/B/E. The dead Strategy D
+        (DesignAttributeLookup) was deleted in the F4 cutover; Strategy E
+        (DirectChannelConstruction) reproduces the SingletonTerm Try-2 channel."""
+        assert len(AGG_STRATEGIES) == 4
         assert AGG_STRATEGIES[0] is ScopedRegistryLookup
         assert AGG_STRATEGIES[1] is ChainRedefinitionFollow
         assert AGG_STRATEGIES[2] is SysMLQNLookup
-        assert AGG_STRATEGIES[3] is DesignAttributeLookup
-        assert AGG_STRATEGIES[4] is DirectChannelConstruction
+        assert AGG_STRATEGIES[3] is DirectChannelConstruction
 
 
 # ---------------------------------------------------------------------------
@@ -754,46 +749,8 @@ class TestStrategyC:
         assert channel is None
 
 
-class TestStrategyD:
-    """Strategy D: DesignAttributeLookup."""
-
-    @pytest.mark.req("REQ-IR-03")
-    @pytest.mark.skipif(not STRATEGIES_AVAILABLE, reason=SKIP_REASON)
-    def test_design_attr_match(self):
-        """Constructed ResolutionContext with a design attr matching the ref leaf name."""
-        registry, snap = _build_registry_from_snapshot("solar_battery_model")
-        redefs = snap["hierarchy_data"].redefinitions
-
-        # Construct design_attrs with a known name
-        from sysml_codegen.analysis.parameter_groups import DesignAttributeData
-
-        design_attrs = {
-            "test_param": DesignAttributeData(
-                name="test_param",
-                sysml_type="Real",
-                default_value="42.0",
-                unit=None,
-                source_file=Path("test.sysml"),
-                source_line=1,
-                parent_part="SolarArray",
-                qualified_name="SolarArray__test_param",
-            ),
-        }
-
-        ctx = ResolutionContext(
-            output_registry=registry,
-            redefinitions=redefs,
-            design_attrs=design_attrs,
-            module_eqn="Design__plant__solar_array__cost",
-            consumer_scope="plant.solar_array",
-            instance_path="Design__plant__solar_array",
-        )
-
-        # Strategy D should match ref leaf "test_param" against design_attrs
-        channel = DesignAttributeLookup("child.test_param", ctx)
-        # Returns design attr QN or None depending on implementation
-        # The key thing is no crash
-        assert channel is None or isinstance(channel, str)
+# Strategy D (DesignAttributeLookup) was a return-None stub with zero live surface
+# (probe ii); it was deleted in the F4 cutover. Its test went with it.
 
 
 # ---------------------------------------------------------------------------
@@ -875,67 +832,6 @@ class TestRegression:
     # ==================================================================
 
     @pytest.mark.req("REQ-IR-01")
-    @pytest.mark.parametrize("model_name", ["solar_battery_model", "issue22_model"])
-    @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
-    def test_m3_full_inputsource_parity(self, model_name):
-        """OLD-COMPARAND HALF (deleted at cutover). For every SumTerm/dotted
-        SingletonTerm, the new _build_agg_input_source() reproduces the FULL
-        InputSource the executed old inline block produced."""
-        # -- Phase-3 DELETE START: this half references the deleted function --
-        from sysml_codegen.resolution.graph_builder import (
-            _build_agg_input_source,
-            _resolve_aggregation_input_channel,
-        )
-        from tests.conformance.test_factory_aggregation import (
-            build_aggregation_factory_inputs,
-        )
-
-        f = build_aggregation_factory_inputs(model_name)
-        registry = f["registry"]
-        redefs = f["redefinitions"]
-        usage_type_map = f["usage_type_map"]
-        group_deriver = f["group_deriver"]
-        entry_points = f["entry_points"]
-        design_attrs = _flatten_design_attrs(f["snap"].get("design_attributes", {}))
-
-        mismatches = []
-        for agg in f["aggregation_data"]:
-            ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
-            owning_part_qn = agg.expression.owning_part_qn
-
-            for ref, lookup_key in _iter_agg_sum_singleton_terms(agg):
-                # Old full InputSource: old channel, else the reproduced old fallback.
-                old_channel = _resolve_aggregation_input_channel(
-                    ref, agg.instance_path, redefs, registry,
-                )
-                if old_channel is not None:
-                    old = ("module_output", old_channel, None, None)
-                else:
-                    ep_qn = f"{agg.module_eqn}__{ref.replace('.', '_')}"
-                    old = (
-                        "entry_point", None, ep_qn,
-                        group_deriver.classify(ep_qn),
-                    )
-
-                # New full InputSource via the helper (fresh new_entry_points).
-                new_src, _manual = _build_agg_input_source(
-                    ref, ctx, lookup_key, redefs, usage_type_map,
-                    owning_part_qn, group_deriver, entry_points, {},
-                )
-                new = (
-                    new_src.source_type, new_src.producer_channel,
-                    new_src.qualified_name, new_src.param_group,
-                )
-                if new != old:
-                    mismatches.append(f"{agg.module_eqn}/{ref}: old={old} new={new}")
-
-        assert not mismatches, (
-            f"{model_name}: {len(mismatches)} full-InputSource mismatches:\n"
-            + "\n".join(mismatches)
-        )
-        # -- Phase-3 DELETE END --
-
-    @pytest.mark.req("REQ-IR-01")
     @pytest.mark.parametrize("model_name", ["solar_battery_model"])
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
     def test_m3_reconciled_ep_key_survives(self, model_name):
@@ -1002,21 +898,21 @@ class TestRegression:
 
 
 class TestLocalTermExposeAliasReroutePin:
-    """Major 3 / D5: the LocalTerm expose-alias channel reroute (graph_builder.py:1640)
-    has ZERO M3 coverage — the M3 gate iterates sum/singleton terms only. Pin it directly,
-    green BEFORE the rewire: resolve_input on the alias target yields the same channel the
-    old function did, AND the D5 module_output-only guard holds (a non-channel result leaves
-    the LocalTerm EP key at {module_eqn}__{attribute_name})."""
+    """Major 3 / D5: the LocalTerm expose-alias channel reroute (graph_builder.py) has
+    ZERO M3 coverage — the M3 gate iterates sum/singleton terms only. This permanent pin
+    guards it directly: resolve_input on the alias target yields a module_output whose
+    channel is registered, and the D5 module_output-only guard means a non-channel result
+    would leave the LocalTerm EP key at {module_eqn}__{attribute_name} (never adopting
+    resolve_input's never-None entry_point fallback as a channel).
 
-    # NOTE: alias_agg_probe's snapshot carries no EXPOSE_PURE computed_attributes
-    # (its expose_aliases rebuild is empty and it has no local_terms), so the reroute
-    # is not exercisable through it. solar_battery_model exercises the real Major-3 case
-    # (misc_hardware_cost → allocation_model.total_allocation → channel).
+    NOTE: alias_agg_probe's snapshot carries no EXPOSE_PURE computed_attributes, so it
+    cannot exercise the reroute; solar_battery_model exercises the real Major-3 case
+    (misc_hardware_cost → allocation_model.total_allocation → channel)."""
+
     @pytest.mark.req("REQ-DRA-04")
     @pytest.mark.parametrize("model_name", ["solar_battery_model"])
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
     def test_localterm_reroute_module_output_only(self, model_name):
-        from sysml_codegen.resolution.graph_builder import _resolve_aggregation_input_channel
         from tests.conformance.test_factory_aggregation import (
             build_aggregation_factory_inputs,
         )
@@ -1028,7 +924,6 @@ class TestLocalTermExposeAliasReroutePin:
         design_attrs = _flatten_design_attrs(f["snap"].get("design_attributes", {}))
 
         channel_hits = 0
-        guard_holds = 0
         for agg in f["aggregation_data"]:
             ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
             for l_term in agg.expression.local_terms:
@@ -1037,31 +932,18 @@ class TestLocalTermExposeAliasReroutePin:
                 if not alias_source:
                     continue
 
-                old_channel = _resolve_aggregation_input_channel(
-                    alias_source, agg.instance_path, redefs, registry,
-                )
                 new_result = resolve_input(alias_source, ctx, AGG_STRATEGIES)
-
-                if old_channel is not None:
-                    # Channel parity: the rewire takes the same producer_channel.
-                    assert new_result.source_type == "module_output", (
-                        f"{agg.module_eqn}/{l_term.attribute_name}: old channel "
-                        f"{old_channel}, new={new_result.source_type}"
-                    )
-                    assert new_result.producer_channel == old_channel
+                if new_result.source_type == "module_output":
+                    # The reroute adopts this channel; it must be a real registered one.
+                    assert new_result.producer_channel in registry.canonical_channels
                     channel_hits += 1
                 else:
-                    # D5 guard: old returned no channel. The reroute must NOT take
-                    # resolve_input's never-None entry_point fallback as a channel;
-                    # LocalTerm falls through to its own key {module_eqn}__{attr}.
+                    # D5 guard: a non-channel result is NOT adopted; LocalTerm falls
+                    # through to its own key {module_eqn}__{attribute_name} (unchanged).
                     assert new_result.source_type == "entry_point"
-                    local_key = f"{agg.module_eqn}__{l_term.attribute_name}"
-                    # LocalTerm's own fallback key is unchanged by the reroute.
-                    assert local_key.endswith(f"__{l_term.attribute_name}")
-                    guard_holds += 1
 
-        assert channel_hits + guard_holds > 0, (
-            f"{model_name}: no LocalTerm expose-alias exercised — pin is vacuous"
+        assert channel_hits > 0, (
+            f"{model_name}: no LocalTerm expose-alias resolved to a channel — pin is vacuous"
         )
 
 

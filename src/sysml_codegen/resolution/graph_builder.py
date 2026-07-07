@@ -1213,121 +1213,6 @@ def _build_computed_attr_module(
     ), new_entry_points
 
 
-
-def _resolve_aggregation_input_channel(
-    symbolic_ref: str,
-    instance_path: str,
-    redefinitions: list[RedefinitionData],
-    output_registry: OutputRegistry,
-    _visited: set[str] | None = None,
-) -> str | None:
-    """Resolve a symbolic aggregation input to a pipeline channel name.
-
-    Resolution chain:
-    1. Parse "part_usage.attribute" from symbolic ref
-    2. Find CHAIN :>> redefinition on child PartDef for that attribute
-    3. Follow chain to CalcUsage output -> build pipeline channel name
-    4. Fall back to output registry lookup
-
-    Cycle detection: tracks visited (part_usage, attr) pairs. If a CHAIN
-    redefinition leads back to an already-visited pair, logs a warning and
-    returns None (caller should set MANUAL_REQUIRED compilability).
-
-    Args:
-        symbolic_ref: Dotted symbolic reference (e.g., "pv_module.capital_cost")
-        instance_path: Design scope (e.g., "Design__plant__solar_array")
-        redefinitions: PartDef-level :>> redefinitions
-        output_registry: OutputRegistry for channel verification and lookup
-        _visited: Internal cycle guard (set of visited keys)
-
-    Returns:
-        Pipeline channel name if resolved, None otherwise
-    """
-    if _visited is None:
-        _visited = set()
-
-    if "." not in symbolic_ref:
-        return None  # LocalTerm -- handled as entry point, not channel
-
-    part_usage, attr = symbolic_ref.rsplit(".", 1)
-
-    # Cycle guard
-    visit_key = f"{part_usage}.{attr}"
-    if visit_key in _visited:
-        logger.warning(
-            "Circular CHAIN detected: %s already visited in %s", visit_key, _visited
-        )
-        return None
-    _visited.add(visit_key)
-
-    # Capture canonical channels once for O(1) membership checks
-    canonical_channels = output_registry.canonical_channels
-
-    # Find CHAIN redefinition for this attribute on the child PartDef
-    chain_redef = None
-    for redef in redefinitions:
-        if redef.redefinition_type == RedefinitionType.CHAIN and redef.attribute_name == attr:
-            # Extract part name from QN (last segment after __)
-            redef_part_name = redef.owning_part_qn.split("__")[-1]
-            if sanitize_name(redef_part_name).lower() == part_usage.lower():
-                chain_redef = redef
-                break
-
-    if chain_redef and chain_redef.source_path:
-        # Parse chain source "calc_usage.output"
-        if "." in chain_redef.source_path:
-            calc_usage, output = chain_redef.source_path.rsplit(".", 1)
-            channel = get_channel_name(
-                f"{instance_path}__{part_usage}__{calc_usage}", output
-            )
-            # Verify channel exists in registry
-            if channel in canonical_channels:
-                return channel
-        # If channel not found or source has no dot, recurse with cycle guard
-        return _resolve_aggregation_input_channel(
-            chain_redef.source_path, instance_path, redefinitions,
-            output_registry, _visited,
-        )
-
-    # Fall back to output registry lookup with scoped keys.
-    # The instance_path provides full hierarchy scope; stripping the design
-    # prefix (segments[0]) produces the dotted format that Phase 2 CHAIN
-    # aliases and Phase 1b aggregation keys are registered under.
-    instance_parts = instance_path.split("__")
-    if len(instance_parts) > 1:
-        dotted_scope = ".".join(instance_parts[1:])
-        scoped_key = f"{dotted_scope}.{part_usage}.{attr}"
-        channel = output_registry.scoped_lookup(ScopedKey(scoped_key))
-        if channel is None:
-            channel = output_registry.alias_lookup(ScopedKey(scoped_key))
-        if channel is not None:
-            logger.debug(
-                "Aggregation input '%s.%s' resolved via scoped registry key '%s'",
-                part_usage, attr, scoped_key,
-            )
-            return channel
-
-    # Unscoped fallback (e.g., "solar_array.capital_cost")
-    catalog_key = f"{part_usage}.{attr}"
-    channel = output_registry.scoped_lookup(ScopedKey(catalog_key))
-    if channel is None:
-        channel = output_registry.alias_lookup(ScopedKey(catalog_key))
-    if channel is not None:
-        logger.debug(
-            "Aggregation input '%s.%s' resolved via unscoped key '%s'",
-            part_usage, attr, catalog_key,
-        )
-        return channel
-
-    logger.debug(
-        "Aggregation input '%s.%s' unresolved (tried scoped '%s', unscoped '%s')",
-        part_usage, attr,
-        f"{'.'.join(instance_parts[1:])}.{part_usage}.{attr}" if len(instance_parts) > 1 else "N/A",
-        catalog_key,
-    )
-    return None
-
-
 def _find_literal_redefinition(
     part_usage: str,
     attr: str,
@@ -1337,7 +1222,7 @@ def _find_literal_redefinition(
 ) -> float | None:
     """Find a LITERAL :>> redefinition value for a part usage attribute.
 
-    Mirrors the CHAIN matching pattern in _resolve_aggregation_input_channel()
+    Mirrors the CHAIN matching pattern used by ChainRedefinitionFollow (input_resolver.py)
     but for RedefinitionType.LITERAL. Used to propagate default values for
     entry points when a PartDef sets e.g. `:>> raw_material_cost = 0.0`.
 
@@ -1523,61 +1408,37 @@ def _build_aggregation_module(
     if agg.expression.has_unsupported_nodes:
         compilability = Compilability.MANUAL_REQUIRED
 
+    # Build the resolution context once for this aggregation. consumer_scope is
+    # derived from module_eqn (drop the design prefix [0] and self [-1]); module_eqn
+    # MUST be agg.module_eqn (INV-7) so the reconciled fallback key matches the live
+    # part-usage-prefixed EP QN. design_attrs is unused by AGG_STRATEGIES.
+    agg_parts = agg.module_eqn.split("__")
+    ctx = ResolutionContext(
+        output_registry=output_registry,
+        redefinitions=redefinitions,
+        design_attrs={},
+        module_eqn=agg.module_eqn,
+        consumer_scope=".".join(agg_parts[1:-1]) if len(agg_parts) >= 3 else "",
+        instance_path=agg.instance_path,
+    )
+    owning_part_qn = agg.expression.owning_part_qn
+
     # Process SumTerms (array child costs with multiplicity)
     for term in agg.expression.sum_terms:
         symbolic_ref = f"{term.part_usage_name}.{term.attribute_name}"
         param_name = f"{term.part_usage_name}_{term.attribute_name}"
 
-        channel = _resolve_aggregation_input_channel(
-            symbolic_ref, agg.instance_path, redefinitions, output_registry,
+        source, manual_required = _build_agg_input_source(
+            symbolic_ref, ctx, (term.part_usage_name, term.attribute_name),
+            redefinitions, usage_type_map or {}, owning_part_qn,
+            group_deriver, entry_points, new_entry_points,
         )
-
-        if channel:
-            source = InputSource(
-                source_type="module_output",
-                producer_channel=channel,
+        if manual_required:
+            logger.warning(
+                "Aggregation SumTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                symbolic_ref, agg.instance_path,
             )
-        else:
-            # Check for LITERAL :>> redefinition before falling back (defensive).
-            literal_default = _find_literal_redefinition(
-                term.part_usage_name, term.attribute_name, redefinitions,
-                usage_type_map, agg.expression.owning_part_qn,
-            )
-
-            if literal_default is None:
-                logger.warning(
-                    "Aggregation SumTerm '%s' in '%s' unresolved → ENTRY_POINT",
-                    symbolic_ref, agg.instance_path,
-                )
-                compilability = Compilability.MANUAL_REQUIRED
-
-            ep_qn = f"{agg.module_eqn}__{param_name}"
-            if ep_qn not in entry_points and ep_qn not in new_entry_points:
-                param_group = group_deriver.classify(ep_qn) if group_deriver else None
-                new_entry_points[ep_qn] = EntryPoint(
-                    qualified_name=ep_qn,
-                    simple_name=param_name,
-                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
-                    default_value=literal_default,
-                    param_group=param_group,
-                )
-            elif literal_default is not None:
-                existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
-                if existing_ep and existing_ep.default_value is None:
-                    new_entry_points[ep_qn] = EntryPoint(
-                        qualified_name=existing_ep.qualified_name,
-                        simple_name=existing_ep.simple_name,
-                        entry_type=existing_ep.entry_type,
-                        default_value=literal_default,
-                        source_calc_usage=existing_ep.source_calc_usage,
-                        param_group=existing_ep.param_group,
-                    )
-            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
-            source = InputSource(
-                source_type="entry_point",
-                qualified_name=ep_qn,
-                param_group=ep.param_group,
-            )
+            compilability = Compilability.MANUAL_REQUIRED
 
         inputs.append(ModuleInput(
             param_name=param_name,
@@ -1619,80 +1480,24 @@ def _build_aggregation_module(
     for s_term in agg.expression.singleton_terms:
         param_name = s_term.source_path.replace(".", "_")
 
-        s_source: InputSource | None = None
+        # The literal-default lookup uses the split source_path; a dotless singleton
+        # has no part-usage to look up, so it skips the lookup (default stays None).
+        literal_key: tuple[str, str] | None = None
         if "." in s_term.source_path:
-            # Try 1: Registry-first resolution (handles both CalcUsage and
-            # aggregation targets via Phase 1/2 keys and aliases).
-            resolved = _resolve_aggregation_input_channel(
-                s_term.source_path, agg.instance_path, redefinitions, output_registry,
+            s_part_usage, s_attr = s_term.source_path.rsplit(".", 1)
+            literal_key = (s_part_usage, s_attr)
+
+        s_source, manual_required = _build_agg_input_source(
+            s_term.source_path, ctx, literal_key,
+            redefinitions, usage_type_map or {}, owning_part_qn,
+            group_deriver, entry_points, new_entry_points,
+        )
+        if manual_required:
+            logger.warning(
+                "Aggregation SingletonTerm '%s' in '%s' unresolved → ENTRY_POINT",
+                s_term.source_path, agg.instance_path,
             )
-            if resolved:
-                s_source = InputSource(
-                    source_type="module_output",
-                    producer_channel=resolved,
-                )
-            else:
-                # Try 2: Direct channel construction (CalcUsage targets only).
-                # Builds instance_path__prefix__output_name — correct for CalcUsage
-                # EQN format but wrong for aggregation outputs (double-attr).
-                prefix, output_name = s_term.source_path.rsplit(".", 1)
-                calc_path = prefix.replace(".", "__")
-                channel = get_channel_name(
-                    f"{agg.instance_path}__{calc_path}", output_name,
-                )
-                if channel in canonical_channels:
-                    s_source = InputSource(
-                        source_type="module_output",
-                        producer_channel=channel,
-                    )
-
-        if s_source is None:
-            # Check for LITERAL :>> redefinition before falling back to entry point.
-            # e.g., Permitting defines `:>> raw_material_cost = 0.0` — the value
-            # becomes the entry point default so the JSON template is pre-populated.
-            literal_default: float | None = None
-            if "." in s_term.source_path:
-                s_part_usage, s_attr = s_term.source_path.rsplit(".", 1)
-                literal_default = _find_literal_redefinition(
-                    s_part_usage, s_attr, redefinitions,
-                    usage_type_map, agg.expression.owning_part_qn,
-                )
-
-            if literal_default is None:
-                logger.warning(
-                    "Aggregation SingletonTerm '%s' in '%s' unresolved → ENTRY_POINT",
-                    s_term.source_path, agg.instance_path,
-                )
-                compilability = Compilability.MANUAL_REQUIRED
-
-            ep_qn = f"{agg.module_eqn}__{param_name}"
-            if ep_qn not in entry_points and ep_qn not in new_entry_points:
-                param_group = group_deriver.classify(ep_qn) if group_deriver else None
-                new_entry_points[ep_qn] = EntryPoint(
-                    qualified_name=ep_qn,
-                    simple_name=param_name,
-                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
-                    default_value=literal_default,
-                    param_group=param_group,
-                )
-            elif literal_default is not None:
-                # Backfill default if entry point was created earlier without it
-                existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
-                if existing_ep and existing_ep.default_value is None:
-                    new_entry_points[ep_qn] = EntryPoint(
-                        qualified_name=existing_ep.qualified_name,
-                        simple_name=existing_ep.simple_name,
-                        entry_type=existing_ep.entry_type,
-                        default_value=literal_default,
-                        source_calc_usage=existing_ep.source_calc_usage,
-                        param_group=existing_ep.param_group,
-                    )
-            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
-            s_source = InputSource(
-                source_type="entry_point",
-                qualified_name=ep_qn,
-                param_group=ep.param_group,
-            )
+            compilability = Compilability.MANUAL_REQUIRED
 
         inputs.append(ModuleInput(
             param_name=param_name,
@@ -1719,19 +1524,20 @@ def _build_aggregation_module(
         if l_source is None and expose_aliases:
             # Try: EXPOSE_PURE alias resolution.
             # e.g., misc_hardware_cost = allocation_model.total_allocation
-            # The expression_text is a dotted path that _resolve_aggregation_input_channel
-            # already handles via scoped/unscoped registry lookups.
+            # The alias target is a dotted path resolve_input handles via its
+            # scoped/chain/direct strategies. D5 guard: take the channel ONLY when
+            # resolve_input returns a module_output — resolve_input keys its never-None
+            # entry_point fallback on the alias target, not l_term.attribute_name, so an
+            # entry_point result must fall through to LocalTerm's own fallback below
+            # (which keeps the {module_eqn}__{attribute_name} key).
             alias_key = (agg.expression.owning_part_qn, l_term.attribute_name)
             alias_source = expose_aliases.get(alias_key)
             if alias_source:
-                channel = _resolve_aggregation_input_channel(
-                    alias_source, agg.instance_path,
-                    redefinitions, output_registry,
-                )
-                if channel:
+                alias_resolved = resolve_input(alias_source, ctx, AGG_STRATEGIES)
+                if alias_resolved.source_type == "module_output":
                     l_source = InputSource(
                         source_type="module_output",
-                        producer_channel=channel,
+                        producer_channel=alias_resolved.producer_channel,
                     )
 
         if l_source is None:
@@ -2008,8 +1814,8 @@ __all__ = [
     "_build_attribute_resolution_map",
     "_build_computed_attr_module",
     "_build_output_aliases",
+    "_build_agg_input_source",
     "_find_literal_redefinition",
-    "_resolve_aggregation_input_channel",
     "_resolve_expose_pure",
     "_unified_topological_sort",
     "build_computation_graph",

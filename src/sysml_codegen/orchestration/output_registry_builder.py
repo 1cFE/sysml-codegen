@@ -44,8 +44,9 @@ def _resolve_reference_chain(
 ) -> CanonicalChannel | None:
     """Walk a multi-hop reference_chain to a canonical channel (Item 10, #2).
 
-    The transitive N-segment walk the confirm pass runs (the recursive analog of
-    ``_resolve_aggregation_input_channel``, with its ``visited`` cycle guard, M5).
+    The transitive N-segment walk the confirm pass runs (the recursive analog of the
+    aggregation CHAIN follow in ``ChainRedefinitionFollow``, with a ``visited`` cycle
+    guard, M5).
 
     Two terminal shapes, both handled here:
     - Direct calc-output terminal (ife_plant): ``radial_build.magnet_volume_total
