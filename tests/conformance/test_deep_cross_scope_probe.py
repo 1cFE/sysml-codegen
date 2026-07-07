@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from sysml_codegen.resolution.graph_builder import collect_uncovered_params
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
-from tests.conftest import requires_license, snapshot_fixture
+from tests.conftest import snapshot_fixture
 
 _ANALYZER = "deepcrossscopedesign__measurement_system__analyzer"
 _DERIVED = "deepcrossscopedesign__measurement_system__station__array__derived_calc"
@@ -104,23 +104,12 @@ def test_pattern_a_deep_chain_full_path_chain_binding():
     assert b["source_path"] == "station.array.derived_calc.derived_value", b
 
 
-@requires_license
-def test_pattern_a_deep_chain_warns_on_extraction():
-    """D3-2 fires-on-shape (LOUD-REJECT): extracting the fixture live emits a warning
-    naming the multi-hop chain the extractor cannot resolve. Expectation anchored to
-    the fixture source (`station.array.derived_calc.derived_value`), not computed by
-    the code under test (R1)."""
-    from sysml_codegen.extraction.extractor import SysMLDataExtractor
-    from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
-
-    fixture_dir = snapshot_fixture("deep_cross_scope_probe").parent
-    extractor = SysMLDataExtractor([fixture_dir])
-    assert extractor.load_models()
-    calc_defs = extractor.extract_calculation_definitions()
-    _usages, report = extract_calculation_usages(extractor.model, calc_defs=calc_defs)
-    assert any(
-        "station.array.derived_calc.derived_value" in w for w in report.warnings
-    ), report.warnings
+# NOTE (Item 2): `test_pattern_a_deep_chain_warns_on_extraction` was removed here.
+# Extraction no longer warns on a 3+-segment chain (D1) — it emits a full-path CHAIN.
+# The loud diagnostic for a genuinely unresolvable chain moved to the backtracker
+# Step-4 fallback (D3), covered by the fires-on-shape unit test
+# (tests/unit/test_dependency_backtracker.py). Live/offline parity for the resolved
+# chains is re-added below in Phase 5 as an @requires_license leg.
 
 
 def test_pattern_b_deep_reference_resolves_to_cross_package_producer_ep():

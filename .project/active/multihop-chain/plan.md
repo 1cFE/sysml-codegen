@@ -161,22 +161,15 @@ def test_deep_chain_emits_full_path_chain_not_reject():
 → design.md#component-overview and design-review N-1; D1 rationale → design.md#key-decisions.
 
 **Specific file changes:**
-- [ ] `extraction/usage_extractor.py:717-739`: remove the `len(segments) > 2` reject block; build a
-      `BindingInfo(binding_type=CHAIN, source_path=".".join(segments), raw_expression=...)` over the full
-      segment list. The 2-segment `_parse_chain_expression` path (`:740-750`) is untouched.
-- [ ] Add the N-1 comment at the arm: the deep-chain CHAIN intentionally sets only `source_path`; do NOT
-      reach into `_parse_chain_expression` to populate the element refs (nothing downstream consumes them
-      for CHAIN).
-- [ ] Remove the now-dead reject `warnings.append(...)`; the loud diagnostic moves to the backtracker
-      (Phase 4). The unrelated terminal-arm WARN (`:794`) stays.
+- [x] `extraction/usage_extractor.py`: removed the `len(segments) > 2` reject block; the arm now builds `BindingInfo(binding_type=CHAIN, source_path=".".join(segments), raw_expression=...)` over the full segment list. The 2-segment `_parse_chain_expression` path is untouched.
+- [x] Added the N-1 comment at the arm (only `source_path` set; do NOT reach into `_parse_chain_expression`).
+- [x] Removed the dead reject `warnings.append(...)`; loud diagnostic moves to backtracker (Phase 4). Terminal-arm WARN stays; `usage_name` still used there.
 
 ### Validation
 **Automated:**
-- [ ] New extraction unit test → GREEN.
-- [ ] `uv run pytest tests/` → the old `test_pattern_a_deep_chain_warns_on_extraction` (`:83`) now FAILS
-      (extraction no longer warns) — expected; it is replaced in Phase 4/5. Mark it `xfail`/skip with a
-      pointer, or remove it here and note the replacement lands in Phase 4.
-- [ ] `ruff check src/`, `mypy src/` → no new findings.
+- [x] New extraction unit test `test_deep_chain_emits_full_path_chain_not_reject` → GREEN (11/11 in test_extractor.py).
+- [x] `@requires_license` DOES load in this env (the warn test actually ran + failed, not skipped). So removed `test_pattern_a_deep_chain_warns_on_extraction` NOW (its warning no longer fires); replacements are the Phase-4 D5 unit test + Phase-5 parity leg. Also dropped the now-unused `requires_license` import (Phase 5 re-adds it) to keep phases 2–4 lint-clean.
+- [x] `ruff check src/` = 17 (unchanged), `mypy src/` = 97 (unchanged) — no new findings.
 
 **What We Know Works After This Phase:** deep chains survive extraction as full-path CHAIN bindings. The
 offline channel pins are still RED (committed snapshot not yet re-captured), but the extraction half of
@@ -447,7 +440,14 @@ for live capture; the `--fixtures` filter is the byte-identity discipline). agen
 **Red/green after phase:** RED (expected, flip in later phases) = Pattern-A channel pin, base_metric channel pin, full-path-binding pin, climb-resolve unit test, fallback-WARN unit test. GREEN = offender-set, pattern-b, silent-on-clean, base_metric-Step1, refuse, 2-seg-gate.
 
 ### Phase 2 Completion
-**Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-07
+**Actual Changes:**
+- `extraction/usage_extractor.py`: 3+-segment FCE arm now emits full-path CHAIN (source_path only, N-1) instead of hard-reject UNBOUND; reject warning deleted.
+- `tests/unit/test_extractor.py`: added `test_deep_chain_emits_full_path_chain_not_reject` (mock-based, mirrors existing OperatorExpression tests).
+- `tests/conformance/test_deep_cross_scope_probe.py`: removed `test_pattern_a_deep_chain_warns_on_extraction` + `requires_license` import (see below).
+**Issues:** `@requires_license` is NOT skipped in this environment (license loads for full pytest) — the extraction-warn test ran and failed after the D1 change. Removed it now rather than leave the suite red across phases 2–4.
+**Deviations:** removed the license warn-test in Phase 2 (plan offered "remove here"); dropped `requires_license` import to avoid an unused-import lint window (Phase 5 re-adds both the import and a parity leg).
+**Red/green after phase:** extractor tests all GREEN. Remaining RED (flip at Phase-5 re-capture) = the two offline channel pins + the full-path-binding pin. Gates: ruff 17, mypy 97 (unchanged).
 
 ### Phase 3 Completion
 **Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
