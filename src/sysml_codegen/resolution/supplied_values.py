@@ -33,9 +33,6 @@ from sysml_codegen.resolution.graph_builder import _find_literal_redefinition
 
 logger = logging.getLogger(__name__)
 
-# Source-file sentinel for synthesized attributes (never a real path).
-_MATERIALIZED_SOURCE = Path("<materialized>")
-
 
 @dataclass(frozen=True)
 class _BindingTarget:
@@ -274,7 +271,11 @@ def materialize_supplied_values(
                 sysml_type="Real",
                 default_value=str(value),
                 unit=None,
-                source_file=_MATERIALIZED_SOURCE,
+                # Group the supplied value with the consuming usage's file so it lands
+                # in a valid, existing parameter group (the sentinel filename would
+                # render an invalid Python schema class). A design-supplied value is a
+                # JSON-fillable key like any design attribute (D1).
+                source_file=usage.source_file,
                 source_line=0,
                 parent_part=target.parent_part,
                 qualified_name=target.qn,

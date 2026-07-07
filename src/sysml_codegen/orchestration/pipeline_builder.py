@@ -806,9 +806,13 @@ def build_pipeline_context(
     _remove_formula_from_design_attrs(computed_attrs, design_attrs)
 
     # Step 5.65 (Item 2, REQ-SVM-01..04): materialize supplied subsystem-attr values
-    # into design_attrs before the deriver and backtracker read it, so Step-3
-    # design-attribute resolution carries them to the plant-calc inputs and collapses
-    # renamed-consumer fan-out by source QN.
+    # so Step-3 design-attribute resolution carries them to the plant-calc inputs and
+    # collapses renamed-consumer fan-out by source QN. The synthetic attrs enrich a
+    # GRAPH-ONLY copy (deriver + backtracker + graph builder); `design_attrs` stays the
+    # pure extraction boundary, so a snapshot captured from this run serializes only
+    # real attributes and the materializer reconstructs the synth ones at from-snapshot
+    # generate time from the raw redefinitions/overrides.
+    graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
     if hierarchy_data is not None:
         synth_attrs = materialize_supplied_values(
             calc_usages,
@@ -817,18 +821,20 @@ def build_pipeline_context(
             hierarchy_data.usage_type_map,
             design_attrs,
         )
-        if synth_attrs:
-            design_attrs.setdefault(Path("<materialized>"), []).extend(synth_attrs)
+        for attr in synth_attrs:
+            # Bucket by the attribute's own source file (the consuming usage's file) so
+            # it groups into a valid, existing parameter group.
+            graph_design_attrs.setdefault(Path(attr.source_file), []).append(attr)
 
     # Step 5.7: Create parameter group deriver, now that design_attrs reflects the
     # FINAL classifications (moved after confirm per INV-G).
-    group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
+    group_deriver = ParameterGroupDeriver(graph_design_attrs, calc_usages, calc_defs)
 
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(
         calc_usages,
         calc_defs,
-        design_attributes=design_attrs,
+        design_attributes=graph_design_attrs,
         output_registry=output_registry,
     )
     backtracking_result = backtracker.find_required_modules(
@@ -882,7 +888,7 @@ def build_pipeline_context(
     computation_graph = build_computation_graph(
         result=backtracking_result,
         calc_defs=calc_defs,
-        design_attrs=design_attrs,
+        design_attrs=graph_design_attrs,
         group_deriver=group_deriver,
         output_registry=output_registry,
         compilation_results=compilation_results,

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 
+from sysml_codegen.resolution.graph_builder import collect_uncovered_params
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
 from tests.conftest import snapshot_fixture
 
@@ -85,8 +86,23 @@ def test_shape8b_return_in_quoted_def():
 def test_shape1_econ_param_nested_redef_does_not_reach_cross_part_input():
     """Shape 1 (attribute-def-typed attr with nested `:>>`, the 14-econ-params shape):
     DEGRADED — the nested `:>> value = 0.70` does not propagate to the cross-part calc
-    input `rated_cost.rate`, which lands on a valueless entry point (default None)."""
+    input `rated_cost.rate`, which lands on a valueless entry point (default None).
+
+    SC-5 / D5: this is the new V11 raise-proof anchor. `'Flow Sub'` cleared under
+    mechanism (d), so Shape 1 is now the genuinely-deferred shape that proves V11 still
+    fires after Item 2. Its value lives in a nested attribute-DEF bundle the materializer
+    does not read — not a part redefinition or design override — so it stays valueless."""
     assert _ep_default("rated_cost__rate") is None
+
+
+def test_shape1_still_trips_v11_after_item2():
+    """SC-5 raise-proof: `rated_cost.rate` remains a V11 offender after the materializer
+    clears the plant offenders — the diagnostic still bites on a genuinely-deferred shape."""
+    graph, _ = build_full_graph_from_snapshot(snapshot_fixture("plant_value_shapes"))
+    offenders = collect_uncovered_params(graph)
+    assert any(u.input == "rate" and "rated_cost" in u.module for u in offenders), [
+        (u.module, u.input) for u in offenders
+    ]
 
 
 def test_shape4_in_part_inherited_redefine_resolves_to_8():

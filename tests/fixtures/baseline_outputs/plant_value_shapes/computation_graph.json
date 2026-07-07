@@ -231,7 +231,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "library_params",
-            "qualified_name": "PlantValueShapesDesign__shapes_design__flow_unit__flow_calc__flow_rate",
+            "qualified_name": "PlantValueShapesLib__Flow_Sub__throughput",
             "producer_channel": null
           },
           "description": "",
@@ -406,10 +406,10 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "PlantValueShapesDesign__shapes_design__flow_unit__flow_calc__flow_rate",
-          "simple_name": "flow_rate",
-          "entry_type": "usage_literal",
-          "default_value": null,
+          "qualified_name": "PlantValueShapesLib__Flow_Sub__throughput",
+          "simple_name": "throughput",
+          "entry_type": "design_attribute",
+          "default_value": 8.0,
           "source_calc_usage": null,
           "param_group": "library_params",
           "python_type": "float"

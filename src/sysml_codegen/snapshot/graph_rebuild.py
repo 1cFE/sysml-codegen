@@ -79,8 +79,10 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
         hierarchy_data.usage_type_map,
         snap["design_attributes"],
     )
-    if synth_attrs:
-        snap["design_attributes"].setdefault("<materialized>", []).extend(synth_attrs)
+    for attr in synth_attrs:
+        # Bucket by the attribute's own source file (the consuming usage's file) so it
+        # groups into a valid, existing parameter group, not a sentinel-named one.
+        snap["design_attributes"].setdefault(str(attr.source_file), []).append(attr)
 
     # Run backtracker
     backtracker = DependencyBacktracker(

@@ -10,7 +10,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "library_params",
-            "qualified_name": "PlantValuesDesign__plant__cost_calc__driver_efficiency",
+            "qualified_name": "PlantValuesDesign__plant__driver__efficiency",
             "producer_channel": null
           },
           "description": "",
@@ -22,7 +22,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "library_params",
-            "qualified_name": "PlantValuesDesign__plant__cost_calc__target_cost",
+            "qualified_name": "PlantValuesDesign__plant__target_factory__cost_per_target",
             "producer_channel": null
           },
           "description": "",
@@ -34,7 +34,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "library_params",
-            "qualified_name": "PlantValuesDesign__plant__cost_calc__chamber_cost",
+            "qualified_name": "PlantValuesDesign__plant__chamber__cost_per_unit",
             "producer_channel": null
           },
           "description": "",
@@ -84,28 +84,28 @@
       "source_file": "library.sysml",
       "parameters": [
         {
-          "qualified_name": "PlantValuesDesign__plant__cost_calc__chamber_cost",
-          "simple_name": "chamber_cost",
-          "entry_type": "usage_literal",
-          "default_value": null,
+          "qualified_name": "PlantValuesDesign__plant__chamber__cost_per_unit",
+          "simple_name": "cost_per_unit",
+          "entry_type": "design_attribute",
+          "default_value": 7.0,
           "source_calc_usage": null,
           "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "PlantValuesDesign__plant__cost_calc__driver_efficiency",
-          "simple_name": "driver_efficiency",
-          "entry_type": "usage_literal",
-          "default_value": null,
+          "qualified_name": "PlantValuesDesign__plant__driver__efficiency",
+          "simple_name": "efficiency",
+          "entry_type": "design_attribute",
+          "default_value": 0.35,
           "source_calc_usage": null,
           "param_group": "library_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "PlantValuesDesign__plant__cost_calc__target_cost",
-          "simple_name": "target_cost",
-          "entry_type": "usage_literal",
-          "default_value": null,
+          "qualified_name": "PlantValuesDesign__plant__target_factory__cost_per_target",
+          "simple_name": "cost_per_target",
+          "entry_type": "design_attribute",
+          "default_value": 10.0,
           "source_calc_usage": null,
           "param_group": "library_params",
           "python_type": "float"

@@ -101,6 +101,13 @@ MODELS = {
     #   d38_caret — `sum(cell.total_cost) ^ exponent`: `^` is power → ` ** `, not
     #               Python XOR; full-pipeline (D3-8).
     "d38_caret": FIXTURES_DIR / "d38_caret",
+    # Whole-Plant Cross-Part Value Resolution (PIPELINE-TRUTH Item 2). The vendored
+    # canonical fusion-tea models (~/1cfe/fusion-tea/models). SC-4: `generate
+    # --from-snapshot` on this committed snapshot must emit the full YAML with TRUE
+    # ZERO V11 offenders — all ten cross-part/in-part plain-value references cleared
+    # by the supplied-value materializer. The license-free stand-in for Item 3's live
+    # acceptance run.
+    "fusion_tea": FIXTURES_DIR / "fusion_tea",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
