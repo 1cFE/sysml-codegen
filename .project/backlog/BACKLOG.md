@@ -277,7 +277,13 @@ honest test to cite and are left UNTESTED with an argument in the matrix:
 None is feature work — all three are test-authoring. Kept out of Item 7 (matrix-truth budget;
 new-test authoring, not matrix reconciliation).
 
-### [ITEM7-CLASSIFIER-FIX] Inherited-attr EXPOSE_COMPUTED misclassification — P3, behind a loud xfail
+### [ITEM7-CLASSIFIER-FIX] Inherited-attr EXPOSE_COMPUTED misclassification — RESOLVED (TRUTH-DEBT Item 4)
+
+**✅ LANDED by TRUTH-DEBT Item 4, 2026-07-07.** Step-2b widened to prefix-match any ancestor
+PartDef QN (`computed_attribute_extractor._ancestor_part_qns`); snapshot re-captured (5 flips +
+a depth-2 case); the xfail site deleted for a positively-asserting 7-row table (REQ-CA-12); D5
+graph-builder diagnostic added. **The "loud" framing below was corrected to "silent no-op"** —
+the misclassification dropped silently at `graph_builder.py:269-288`, it was never a loud reject.
 
 **Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 4, 2026-07-06.**
 
@@ -290,6 +296,34 @@ pins the root cause). **Re-frame chosen over fix in Item 7:** the misclassificat
 (supertype-namespace QN resolution vs the Step-2b prefix check) is out of proportion to a
 matrix-truth item. Fix scope: teach the Step-2b check to accept a supertype-namespace QN for an
 inherited attribute. When landed, the xfail cases flip to PASS (xfail strict=False).
+
+### [TRUTH-DEBT-INHERITED-FORMULA-COMPILE] Compile inherited-attr FORMULAs into real modules — P3
+
+**Filed by TRUTH-DEBT Item 4, 2026-07-07.** Item 4 fixed *classification* — an attribute
+referencing only inherited/local attrs now classifies FORMULA. But these stay
+`MANUAL_REQUIRED` and produce **no pipeline module**: the compiler's `input_names` is built
+from `owned_members` (`computed_attribute_extractor.py:188-191,247-249`), which per SysML v2
+excludes inherited attrs, so an inherited ref compiles to `UNSUPPORTED` →
+`compilability=MANUAL_REQUIRED`, `compiled_expression=None`. The D5 graph-builder diagnostic
+now makes that no-module outcome **loud** at generation, but it does not build the module.
+**Scope**: thread the ancestor PartDefs' attribute names into the FORMULA compiler's
+`input_names` (mirroring the ancestor-QN walk already added for classification) so an
+inherited-attr FORMULA compiles to a real module. Out of scope for Item 4 (classification-only,
+D1). No corpus model hits the shape today, so no baseline moves.
+
+### [TRUTH-DEBT-IFE-PLANT-CHAIN-STALE] `ife_plant` snapshot latently stale vs Item-2 multi-hop — P3
+
+**Filed by TRUTH-DEBT Item 4 B3 check, 2026-07-07.** While reproducing B3 for Item 4 (re-run
+the fixed classifier live vs each committed baseline), one **orthogonal** drift surfaced:
+`ife_plant` `radial_build.magnet_volume_total` is committed as `expose_pure` but live
+extraction now classifies it `expose_chain_tentative`. Confirmed **pre-existing** (reproduces
+on the pre-Item-4 classifier `0f75062`) — it is Item-2 multi-hop-chain machinery that landed
+without re-capturing `ife_plant`, NOT an Item-4 effect (the ancestor-prefix fix cannot produce
+that transition). Latent: the conformance suite reads the committed snapshot, so it is green
+today; it would surface on a future `ife_plant` re-capture. **Scope**: re-capture `ife_plant`
+and review the resulting diff (expect the one chain-classification flip and its downstream
+effects), landing it as a reviewed R3 diff. Deliberately not done in Item 4 (mixing Item-2
+drift into the Item-4 change would break the byte-identity carve-out).
 
 ### [ITEM7-MATRIX-SWEEP-RESIDUE] Deep-read sweep findings — P3, test-coverage / matrix-honesty
 

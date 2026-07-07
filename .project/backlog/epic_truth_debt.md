@@ -13,7 +13,7 @@
 PIPELINE-TRUTH proved the generated package is the truth and, in doing so, deliberately
 filed the follow-on work it chose not to rush under a per-item budget: an executable
 aggregation-resolution cutover, a new multi-hop chain capability, a batch of test-coverage
-and matrix-honesty rows, a classifier fix behind a loud xfail, and a hygiene tail of benign
+and matrix-honesty rows, a classifier fix for a silent inherited-attr misclassification (behind a xfail), and a hygiene tail of benign
 silent sites. This epic retires that ledger in one pass — every item already carries
 implement-time evidence (probes, pins, filings with file:line), so it is debt-retirement,
 not discovery.
@@ -38,7 +38,7 @@ and the deferred capabilities are built, not parked.
   resolved chain. `extract_feature_chain_segments` already yields every segment; Item 5 of
   the prior epic used it only to COUNT for the reject diagnostic.
 - Three matrix rows (REQ-DM-08, REQ-RES-05, REQ-RES-08) are UNTESTED with an argument — no
-  honest test pins them. Five xfail cases lock a loud inherited-attr misclassification.
+  honest test pins them. Five xfail cases lock a silent inherited-attr misclassification (an EXPOSE_COMPUTED no-op drop, not loud — corrected and retired by Item 4).
 - The leashed matrix sweep left ~46 rows unswept and a named residue of strengthens,
   reframes, and citation fixes. A hygiene tail of four benign silent sites is filed but not
   hardened. Two graph_builder type-ignores guard a genuine double-binding.
@@ -332,17 +332,25 @@ pinned); lift: low-medium; risk: low-medium (classifier logic + coordinated matr
 **Dependencies**: None (independent).
 
 **Objective**: Teach the classifier's Step-2b owning-part prefix check to accept a
-supertype-namespace QN for an inherited attribute, so the loud EXPOSE_COMPUTED
-misclassification stops and the parametrized xfail flips to PASS.
+supertype-namespace (ancestor PartDef) QN for an inherited attribute, so the silent
+EXPOSE_COMPUTED no-op misclassification stops and the parametrized xfail flips to PASS.
 
-**Current State**:
-- ⚠️ `test_computed_attributes.py:787` (one parametrized `pytest.xfail` site) produces 5 xfailed
+**Status**: ✅ LANDED. Step-2b widened to prefix-match any ancestor PartDef QN
+(`computed_attribute_extractor._ancestor_part_qns`); snapshot re-captured (5 flips + a
+depth-2 case); the xfail site deleted for a positively-asserting 7-row table; D5
+graph-builder diagnostic added so the residual no-module outcome is loud at generation.
+
+**Current State** (pre-fix, for the record):
+- `test_computed_attributes.py` (one parametrized `pytest.xfail` site) produced 5 xfailed
   cases: inherited attributes classified EXPOSE_COMPUTED where FORMULA is correct.
 - ✅ Root cause pinned: an inherited attribute's QN resolves to the **supertype** namespace,
   defeating the Step-2b `owning_part_qn` prefix check
-  (`test_computed_attributes.py::test_inherited_refs_have_supertype_qn`).
-- The misclassification is **loud** (rejection, not silent wrong output); no fusion-tea model
-  hits it.
+  (`test_computed_attributes.py::test_inherited_refs_have_supertype_qn`, kept green).
+- The misclassification is a **silent no-op**, not loud: a misclassified inherited-attr
+  FORMULA lands EXPOSE_COMPUTED, which the graph builder drops with no module and no
+  diagnostic (`graph_builder.py:269-288`; `test_computed_attributes_e2e.py`). Only the
+  "not a silent wrong value" half of the old "loud rejection" framing was true. No
+  fusion-tea model hits it.
 
 **Scope**:
 1. **Fix Step-2b** to accept a supertype-namespace QN when the attribute is inherited.

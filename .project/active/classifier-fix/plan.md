@@ -281,28 +281,28 @@ Every "loud" claim tied to *this* misclassification is corrected toward "silent 
 **See `design.md#test-doc-surface`** and **`design.md` note #5**; spec [INFERRED] items (`spec.md:181-191`).
 
 **File:** `docs/architecture/reference/16-computed-attributes.md`
-- [ ] Known-Issues "Inherited Attribute Misclassification" (`:365-408`) → rewritten to the fixed state.
-- [ ] Pseudocode `⚠ KNOWN BUG` (`:133`) and the supertype-namespace note (`~:114-117`) → updated to describe the fixed behavior.
-- [ ] Impact section's "silent no-ops" (`:392-395`) → **confirmed correct** (doc 16 was right) and tied to the new D5 diagnostic.
+- [x] Known-Issues "Inherited Attribute Misclassification" (`:365-408`) → rewritten to the fixed state.
+- [x] Pseudocode `⚠ KNOWN BUG` (`:133`) and the supertype-namespace note (`~:114-117`) → updated to describe the fixed behavior.
+- [x] Impact section's "silent no-ops" (`:392-395`) → **confirmed correct** (doc 16 was right) and tied to the new D5 diagnostic.
 
 **File:** `docs/architecture/verification-matrix.md`
-- [ ] "Known contract (Item 7)" block (`:136`) → rewritten from "confirmed bug / deferred" to fixed; the "**loud** (EXPOSE_COMPUTED rejection)" phrase corrected toward **silent no-op**, cited to `graph_builder.py:269-288` / the e2e test.
-- [ ] Flip the classifier rows UNTESTED-family → PASS with citations; add a positive REQ-CA row pinning "inherited-attr ref → sibling → FORMULA."
-- [ ] Recount from rows (matrix recount holds).
+- [x] "Known contract (Item 7)" block (`:136`) → rewritten from "confirmed bug / deferred" to fixed; the "**loud** (EXPOSE_COMPUTED rejection)" phrase corrected toward **silent no-op**, cited to `graph_builder.py:269-288` / the e2e test.
+- [x] Flip the classifier rows UNTESTED-family → PASS with citations; add a positive REQ-CA row pinning "inherited-attr ref → sibling → FORMULA."
+- [x] Recount from rows (matrix recount holds).
 
 **File:** `.project/backlog/epic_truth_debt.md`
-- [ ] Sweep **every** "loud" tied to this misclassification, not just one line: summary `:16` ("classifier fix behind a loud xfail"), overview `:41` ("Five xfail cases lock a **loud** … misclassification"), and Item-4 `:340` ("The misclassification is **loud** (rejection, not silent…)") — all corrected toward silent, cited.
+- [x] Sweep **every** "loud" tied to this misclassification, not just one line: summary `:16` ("classifier fix behind a loud xfail"), overview `:41` ("Five xfail cases lock a **loud** … misclassification"), and Item-4 `:340` ("The misclassification is **loud** (rejection, not silent…)") — all corrected toward silent, cited.
 
 **File:** `.project/backlog/BACKLOG.md`
-- [ ] File the follow-on `[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]` naming the `input_names` enrichment (making inherited-attr FORMULAs actually compile is out of scope here — D1 / Non-Goals).
+- [x] File the follow-on `[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]` naming the `input_names` enrichment (making inherited-attr FORMULAs actually compile is out of scope here — D1 / Non-Goals).
 
 ### Validation
 **Automated:**
-- [ ] `grep -rn "loud" docs/architecture/verification-matrix.md .project/backlog/epic_truth_debt.md` returns no occurrence tied to the inherited-attr misclassification (other "loud" uses, e.g. 3+-segment chain rejection, are untouched).
+- [x] `grep -rn "loud" docs/architecture/verification-matrix.md .project/backlog/epic_truth_debt.md` returns no occurrence tied to the inherited-attr misclassification (other "loud" uses, e.g. 3+-segment chain rejection, are untouched).
 
 **Manual:**
-- [ ] The e2e integration suite (`test_computed_attributes_e2e.py:44-48`) did **not** move — confirmed because it runs on `attr_expr_probe` (zero `:>`), not `unresolvable_attr_probe` (spec L3-3). If a check finds an inherited-attr computed attr there, those lists move too, in this change.
-- [ ] Matrix recount consistent with the row flips.
+- [x] The e2e integration suite (`test_computed_attributes_e2e.py:44-48`) did **not** move — confirmed because it runs on `attr_expr_probe` (zero `:>`), not `unresolvable_attr_probe` (spec L3-3). If a check finds an inherited-attr computed attr there, those lists move too, in this change.
+- [x] Matrix recount consistent with the row flips.
 
 **What We Know Works After This Phase:**
 Docs, matrix, and epic describe the fixed behavior with the correct severity; the contract is positively pinned; the follow-on is filed. No reader inherits a ghost.
@@ -367,7 +367,11 @@ Collapsed `INHERITED_ATTR_PATTERNS` to a single-column 7-row table (6 FORMULA + 
 ### Phase 4 Completion
 Added the D5 branch at `graph_builder.py` Step-6.5: `elif ca.classification == FORMULA` (after the FULLY_COMPILABLE and EXPOSE_CHAIN_TENTATIVE arms) → `logger.warning(...naming the attr + compilability...)` + skip. EXPOSE_COMPUTED/EXPOSE_PURE stay deferred (explicit elif, not a catch-all else — Non-Goals honored). Test pair in `tests/unit/test_graph_builder_computed_attrs.py` (crafted ComputedAttributeData, cleaner than a fixture): `test_d5_formula_not_compilable_warns_no_module` (INV-5 fires-on-shape — warning naming the attr + zero modules) and `test_d5_fully_compilable_formula_builds_module_no_warning` (INV-6 silent-on-clean — module built + no D5 warning). Full deep_cross_scope_probe + integration + graph_builder suites (103 tests) green — the one fixture that fires D5 uses subset warning checks and still passes; its baseline_outputs bytes are runtime-untouched (warnings aren't generated code). graph_builder.py ruff clean; no new src errors.
 
-### Phase 5–6 Completion
+### Phase 5 Completion
+R1 sweep, same change as the code. **doc 16** (`16-computed-attributes.md`): Step-2b pseudocode `⚠ KNOWN BUG` → the fixed OR-ancestor-QN rule; "Inherited Attribute Misclassification" Known-Issue → "Inherited Attribute Classification (fixed)" with the mechanism, the confirmed **silent-no-op** impact (doc 16 was right — cited to `graph_builder.py:269-288` / e2e test), and the D5 tie-in. **matrix** (`verification-matrix.md`): rewrote the "Known contract (Item 7)" block → "Classification contract (Item 4, fixed)", corrected "loud (EXPOSE_COMPUTED rejection)" → silent no-op with citation; added positive **REQ-CA-12** (ancestor-prefix sibling → FORMULA + D3 control + D5); recount CA 11→12, total 255→256 (verified sum of index denominators == 256). **epic** (`epic_truth_debt.md`): swept all three inherited-attr "loud" lines (`:16` summary, `:41` overview, Item-4 `:335`/`:344`) toward silent + cited; marked Item 4 LANDED. **BACKLOG**: marked `[ITEM7-CLASSIFIER-FIX]` RESOLVED; filed `[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]` (the `input_names` enrichment) AND `[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` (the orthogonal Item-2 drift from B3).
+**Validation:** every remaining "loud" in matrix+epic is a CHAIN-rejection (Item 2, e.g. REQ-BT-12/13) or Item-6 hygiene use — none tied to inherited-attr (grep-verified). e2e suite (`test_computed_attributes_e2e.py`) runs on `attr_expr_probe` (zero `:>`), so it does not move. No test asserts the matrix counts, so the recount has no test-side coupling.
+
+### Phase 6 Completion
 _[fill]_
 
 ---

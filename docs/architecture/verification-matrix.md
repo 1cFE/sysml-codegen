@@ -6,7 +6,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 255 |
+| Total requirements | 256 |
 | PASS (test exists and passes) | 251 |
 | UNTESTED (no dedicated test) | 4 |
 | DEFERRED | 0 |
@@ -35,7 +35,7 @@ the documentation rather than executable code.
 - [AST — AST Dispatch Invariant](#ast) (10/10 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (13/13 pass)
-- [CA — Computed Attributes](#ca) (11/11 pass)
+- [CA — Computed Attributes](#ca) (12/12 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
@@ -135,7 +135,7 @@ the documentation rather than executable code.
 
 **Computed Attributes** — Component C05 — [reference/16-computed-attributes.md](reference/16-computed-attributes.md)
 
-**Known contract (Item 7):** one parametrized xfail site (`test_computed_attributes.py::TestInheritedAttrClassification::test_misclassification_documented`) produces N xfailed cases where an inherited attribute is classified EXPOSE_COMPUTED though FORMULA is correct — a supertype-namespace QN defeats the Step-2b prefix check. The misclassification is **loud** (EXPOSE_COMPUTED rejection, not silent wrong output) and no fusion-tea model hits it; the classifier fix is filed as `[ITEM7-CLASSIFIER-FIX]`. This is one documented contract, not five separate xfails.
+**Classification contract (Item 4, fixed):** an attribute that references only inherited and/or local attributes classifies FORMULA. An inherited attribute's QN resolves into the **supertype (ancestor PartDef)** namespace; Step-2b now prefix-matches the owning part QN OR any ancestor PartDef QN (`computed_attribute_extractor._ancestor_part_qns`), so an inherited-attr ref is a sibling, not a cross-namespace calc output. A genuine calc output (D3 `mixed_expose`) still classifies EXPOSE_COMPUTED — the over-correction control. Pinned positively by **REQ-CA-12** and the 7-row `TestInheritedAttrClassification` table; the old `test_misclassification_documented` xfail site is deleted (no vacuous parametrization). The prior framing called this misclassification "**loud** (EXPOSE_COMPUTED rejection)" — that was wrong: a misclassified inherited-attr FORMULA was a **silent no-op**, dropped by the graph builder with no module and no diagnostic (`graph_builder.py:269-288`; `test_computed_attributes_e2e.py`); only the "not a silent wrong value" half was true. The residual no-module outcome for these MANUAL_REQUIRED FORMULAs is now loud at generation via the graph-builder D5 diagnostic; actually compiling them is the filed follow-on `[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]`.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -150,6 +150,7 @@ the documentation rather than executable code.
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | `test_computed_attributes.py` | PASS |
 | REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
 | REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure` in `graph_builder.py`) for the resolvable case | `test_wi014_toy.py` | PASS |
+| REQ-CA-12 | A reference whose QN sits under the owning part OR any **ancestor PartDef** namespace SHALL be treated as a sibling (Step-2b widened via `_ancestor_part_qns`, transitive), so an attribute referencing only inherited/local attributes classifies FORMULA — not EXPOSE_COMPUTED; a reference under a top-level CalcDef namespace SHALL stay a `calc_ref` (D3 over-correction control, `mixed_expose`). A FORMULA computed attribute that reaches graph-build without being FULLY_COMPILABLE SHALL emit a WARN and produce no module (D5 — the no-module outcome is loud, never a silent drop) | `test_computed_attributes.py`, `test_computed_attribute_extraction.py`, `test_graph_builder_computed_attrs.py` | PASS |
 
 ### DM
 
