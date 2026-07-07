@@ -622,56 +622,75 @@ class TestCrossModelCatfMfe:
 # C3: Inherited Attribute Classification (unresolvable_attr_probe fixture)
 # ---------------------------------------------------------------------------
 #
-# FINDING (C3, 2026-02-17): The classifier misclassifies inherited attributes
-# as EXPOSE_COMPUTED instead of FORMULA. SysIDE resolves inherited attribute
-# QNs to the supertype's namespace (e.g., 'Base Component'::base_rate), not
-# the subtype's ('Derived Component'::base_rate). The classifier's Step 2b
-# check `qn.startswith(owning_part_qn + "::")` fails, and the ref falls
-# through to Step 2c as a calc_ref. This pushes classification to
-# EXPOSE_COMPUTED.
+# CONTRACT (C3, fixed by TRUTH-DEBT Item 4): an attribute that references only
+# inherited and/or local attributes classifies FORMULA. SysIDE resolves an
+# inherited attribute's QN into the SUPERTYPE's namespace (e.g.
+# 'Base Component'::base_rate, not 'Derived Component'::base_rate). The
+# classifier's Step-2b sibling check now prefix-matches the owning part QN OR
+# any ANCESTOR PartDef QN (computed_attribute_extractor._ancestor_part_qns), so
+# an inherited-attr ref is recognized as a sibling instead of falling through to
+# Step-2c as a cross-namespace calc_ref. A ref under a top-level CalcDef's
+# namespace is never an ancestor, so a genuine calc output (D3) still forces
+# EXPOSE_COMPUTED — the over-correction control.
 #
-# UNRESOLVABLE was NOT triggered: all refs have non-empty QNs. The empty-QN
+# The supertype-namespace QN is still the root fact (INV-4): the fix
+# REINTERPRETS it as a sibling, it does not change what SysIDE reports
+# (test_inherited_refs_have_supertype_qn pins this). The flipped FORMULA attrs
+# stay MANUAL_REQUIRED — their inherited refs are outside the compiler's
+# input_names, so no module is produced (a filed follow-on;
+# graph_builder D5 makes that no-module outcome loud at generation).
+#
+# UNRESOLVABLE is NOT triggered: all refs have non-empty QNs. The empty-QN
 # fallback path (Step 2d) is never hit for valid SysML with inheritance.
 # ---------------------------------------------------------------------------
 
 
-# Expected classification results for unresolvable_attr_probe fixture.
-# Documents the ACTUAL (misclassified) behavior for regression tracking.
-# The "correct" column shows what the result SHOULD be once the classifier
-# handles inheritance; the "actual" column shows current behavior.
+# Post-fix classification contract for unresolvable_attr_probe. Single
+# authoritative column recording what the classifier NOW produces (Item 4 D4) —
+# no separate "actual"/"correct" columns to collapse to zero (the [HARD]
+# no-fake-test hazard). 7 rows: 6 FORMULA (L1/L2/D1/D2/D4 + the depth-2
+# grandparent case) and 1 EXPOSE_COMPUTED (D3, the over-correction control).
 INHERITED_ATTR_PATTERNS = {
-    # (owning_part_name, attr_name): (actual_classification, correct_classification, description)
+    # (owning_part_name, attr_name): (classification, description)
     ("Derived_Component", "inherited_product"): (
-        ComputedAttributeClassification.EXPOSE_COMPUTED,
         ComputedAttributeClassification.FORMULA,
-        "L1: only inherited attrs — both refs resolve to supertype namespace",
+        "L1: only inherited attrs — both refs resolve to the ancestor namespace",
     ),
     ("Derived_Component", "mixed_product"): (
-        ComputedAttributeClassification.EXPOSE_COMPUTED,
         ComputedAttributeClassification.FORMULA,
-        "L2: inherited + local — base_rate resolves to supertype, local_multiplier to subtype",
+        "L2: inherited + local — base_rate under ancestor, local_multiplier under own part",
     ),
     ("Design_Derived", "inherited_product"): (
-        ComputedAttributeClassification.EXPOSE_COMPUTED,
         ComputedAttributeClassification.FORMULA,
         "D1: only inherited attrs (design-side PartDef inheritance)",
     ),
     ("Design_Derived", "mixed_product"): (
-        ComputedAttributeClassification.EXPOSE_COMPUTED,
         ComputedAttributeClassification.FORMULA,
         "D2: inherited + local (design-side)",
     ),
     ("Design_Derived", "mixed_expose"): (
         ComputedAttributeClassification.EXPOSE_COMPUTED,
-        ComputedAttributeClassification.EXPOSE_COMPUTED,
-        "D3: CalcUsage output + inherited attr — EXPOSE_COMPUTED is correct",
+        "D3: CalcUsage output + inherited attr — EXPOSE_COMPUTED (over-correction control)",
     ),
     ("Design_Derived", "inherited_sum"): (
-        ComputedAttributeClassification.EXPOSE_COMPUTED,
         ComputedAttributeClassification.FORMULA,
         "D4: multi-term with inherited attrs (design-side)",
     ),
+    ("Grandchild", "grandchild_product"): (
+        ComputedAttributeClassification.FORMULA,
+        "depth-2: references GRANDPARENT attrs — needs the transitive ancestor walk",
+    ),
 }
+
+# Collapse guard (INV-3): an accidental empty/short table fails loudly here,
+# not silently as a green zero-case parametrization.
+assert len(INHERITED_ATTR_PATTERNS) == 7, (
+    f"expected 7 inherited-attr rows, got {len(INHERITED_ATTR_PATTERNS)}"
+)
+assert sum(
+    1 for v in INHERITED_ATTR_PATTERNS.values()
+    if v[0] == ComputedAttributeClassification.FORMULA
+) == 6, "expected exactly 6 FORMULA rows (L1/L2/D1/D2/D4 + depth-2)"
 
 
 class TestInheritedAttrClassification:
@@ -682,10 +701,14 @@ class TestInheritedAttrClassification:
     """
 
     def test_fixture_has_expected_count(self, unresolvable_attr_snapshot):
-        """unresolvable_attr_probe produces exactly 6 computed attributes."""
+        """unresolvable_attr_probe produces exactly 7 computed attributes.
+
+        6 pre-existing (L1/L2/D1/D2/D3/D4) + the depth-2 grandchild_product
+        added by Item 4 to exercise the transitive ancestor walk.
+        """
         computed = unresolvable_attr_snapshot["computed_attributes"]
-        assert len(computed) == 6, (
-            f"Expected 6 computed_attributes, got {len(computed)}: "
+        assert len(computed) == 7, (
+            f"Expected 7 computed_attributes, got {len(computed)}: "
             f"{[(ca.owning_part_name, ca.python_name) for ca in computed]}"
         )
 
@@ -726,14 +749,15 @@ class TestInheritedAttrClassification:
     def test_inherited_attr_classification(
         self, unresolvable_attr_snapshot, key, expected
     ):
-        """Each inherited-attr pattern produces the documented (mis)classification.
+        """Each inherited-attr pattern classifies as the post-fix contract states.
 
-        This test locks down the ACTUAL behavior as a regression guard.
-        When the classifier is fixed to handle inheritance, update the
-        expected values in INHERITED_ATTR_PATTERNS.
+        The expectation is a LITERAL enum in INHERITED_ATTR_PATTERNS (never
+        computed from the value under test), so these are real positive
+        assertions — 6 FORMULA rows proving the inherited shapes now classify
+        FORMULA, and 1 EXPOSE_COMPUTED row (D3) proving no over-correction.
         """
         owning_part, attr_name = key
-        actual_cls, correct_cls, description = expected
+        expected_classification, description = expected
 
         ca_match = [
             ca for ca in unresolvable_attr_snapshot["computed_attributes"]
@@ -744,59 +768,21 @@ class TestInheritedAttrClassification:
         )
         ca = ca_match[0]
 
-        # Assert actual (current) classification
-        assert ca.classification == actual_cls, (
-            f"{owning_part}.{attr_name}: expected {actual_cls.value}, "
+        assert ca.classification == expected_classification, (
+            f"{owning_part}.{attr_name}: expected {expected_classification.value}, "
             f"got {ca.classification.value} — {description}"
         )
 
-    @pytest.mark.parametrize(
-        "key,expected",
-        [
-            (k, v) for k, v in INHERITED_ATTR_PATTERNS.items()
-            if v[0] != v[1]  # only misclassified patterns
-        ],
-        ids=[
-            f"{k[0]}.{k[1]}" for k, v in INHERITED_ATTR_PATTERNS.items()
-            if v[0] != v[1]
-        ],
-    )
-    def test_misclassification_documented(
-        self, unresolvable_attr_snapshot, key, expected
-    ):
-        """Document misclassification: 5 of 6 patterns should be FORMULA but are EXPOSE_COMPUTED.
-
-        Root cause: SysIDE resolves inherited attribute QNs to supertype namespace.
-        Classifier Step 2b (owning_part_qn prefix check) fails for inherited attrs.
-
-        This test uses xfail to mark the known-wrong behavior. When the
-        classifier is fixed to handle supertype QN resolution, these tests
-        will start PASSING (xfail strict=False allows that).
-        """
-        owning_part, attr_name = key
-        actual_cls, correct_cls, description = expected
-
-        ca_match = [
-            ca for ca in unresolvable_attr_snapshot["computed_attributes"]
-            if ca.owning_part_name == owning_part and ca.python_name == attr_name
-        ]
-        ca = ca_match[0]
-
-        # This SHOULD be correct_cls, but currently is actual_cls (misclassified)
-        if ca.classification != correct_cls:
-            pytest.xfail(
-                f"KNOWN MISCLASSIFICATION: {owning_part}.{attr_name} is "
-                f"{ca.classification.value}, should be {correct_cls.value}. "
-                f"Cause: inherited attr QN resolves to supertype namespace. "
-                f"Fix filed: [ITEM7-CLASSIFIER-FIX] (loud EXPOSE_COMPUTED reject, no model hit)."
-            )
-
     def test_inherited_refs_have_supertype_qn(self, unresolvable_attr_snapshot):
-        """Inherited attribute refs have QNs in the supertype's namespace, not the subtype's.
+        """Inherited attribute refs carry QNs in the ancestor's namespace (INV-4).
 
-        This is the root cause of the misclassification. SysIDE resolves
-        `base_rate` on 'Derived Component' to `'Base Component'::base_rate`,
-        not `'Derived Component'::base_rate`.
+        Still the root fact after the fix — SysIDE resolves `base_rate` on
+        'Derived Component' to `'Base Component'::base_rate`, not
+        `'Derived Component'::base_rate`. The Item-4 fix does not change what
+        SysIDE reports; it now treats such an ancestor-namespace ref as a
+        SIBLING (an inherited attr genuinely is mine), which is why these attrs
+        classify FORMULA. This test anchors WHY the ancestor-prefix widening is
+        needed.
         """
         for ca in unresolvable_attr_snapshot["computed_attributes"]:
             for ref in ca.references:
@@ -813,14 +799,31 @@ class TestInheritedAttrClassification:
                     )
 
     def test_no_compiled_expressions(self, unresolvable_attr_snapshot):
-        """Misclassified attrs have no compiled expression (EXPOSE_COMPUTED skips compilation)."""
-        for ca in unresolvable_attr_snapshot["computed_attributes"]:
-            if ca.classification == ComputedAttributeClassification.EXPOSE_COMPUTED:
-                assert ca.compiled_expression is None, (
-                    f"{ca.owning_part_name}.{ca.python_name}: EXPOSE_COMPUTED should "
-                    f"have compiled_expression=None, got {ca.compiled_expression}"
-                )
-                assert ca.compilability == Compilability.MANUAL_REQUIRED, (
-                    f"{ca.owning_part_name}.{ca.python_name}: EXPOSE_COMPUTED should "
-                    f"have compilability=MANUAL_REQUIRED"
-                )
+        """No computed attr here compiles — all are MANUAL_REQUIRED + compiled=None.
+
+        The honest pin that the flipped FORMULA attrs produce no module and do
+        not compile: their inherited refs sit outside the compiler's input_names
+        (built from owned_members, which excludes inherited attrs), so a FORMULA
+        referencing them is UNSUPPORTED -> MANUAL_REQUIRED, compiled_expression
+        None (D1 / the filed follow-on). D3 (EXPOSE_COMPUTED) also compiles
+        nothing. Asserted over ALL 7 rows so it can't silently narrow to the one
+        EXPOSE_COMPUTED case after the flip (should-fix #2).
+        """
+        computed = unresolvable_attr_snapshot["computed_attributes"]
+        formula = [
+            ca for ca in computed
+            if ca.classification == ComputedAttributeClassification.FORMULA
+        ]
+        assert len(formula) == 6, (
+            f"expected 6 FORMULA computed attrs, got {len(formula)}: "
+            f"{[(ca.owning_part_name, ca.python_name) for ca in formula]}"
+        )
+        for ca in computed:
+            assert ca.compiled_expression is None, (
+                f"{ca.owning_part_name}.{ca.python_name} ({ca.classification.value}): "
+                f"expected compiled_expression=None, got {ca.compiled_expression}"
+            )
+            assert ca.compilability == Compilability.MANUAL_REQUIRED, (
+                f"{ca.owning_part_name}.{ca.python_name} ({ca.classification.value}): "
+                f"expected compilability=MANUAL_REQUIRED, got {ca.compilability}"
+            )

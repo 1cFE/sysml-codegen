@@ -204,21 +204,21 @@ def test_inherited_attr_classification(..., key, expected):   # asserts the sing
 **See `design.md#component-overview`** (table + tests) and **`design.md` INV-3, INV-1, D4**; spec [HARD] no-fake-test (`spec.md:122-140`).
 
 **File:** `tests/conformance/test_computed_attributes.py`
-- [ ] Collapse `INHERITED_ATTR_PATTERNS` (`:642`) to a **single classification column**, 7 rows (6 FORMULA + D3), add the `len == 7` / `sum(FORMULA) == 6` guard.
-- [ ] Rewrite `test_inherited_attr_classification` (`:726`) to assert the single literal column for all 7 rows (INV-1 D3 negative control included here as a real row).
-- [ ] **Delete `test_misclassification_documented`** (`:764`) — its `v[0] != v[1]` filter would collapse to zero cases (D4). This removes the 5 xfails.
-- [ ] Update `test_fixture_has_expected_count` (`:696`) `6` → `7`.
-- [ ] **Re-key `test_no_compiled_expressions`** (`:815`): today it iterates EXPOSE_COMPUTED (post-fix narrows silently to D3 only, should-fix #2). Extend it to positively assert the **6 FORMULA cases are `MANUAL_REQUIRED` + `compiled_expression is None`** (and keep D3). This is the honest pin that the flipped attrs produce no module and don't compile.
-- [ ] Keep `test_inherited_refs_have_supertype_qn` (`:794`) green; reword its docstring to "now treated as sibling" (INV-4 — root cause still true; the fix reinterprets, doesn't change SysIDE).
+- [x] Collapse `INHERITED_ATTR_PATTERNS` (`:642`) to a **single classification column**, 7 rows (6 FORMULA + D3), add the `len == 7` / `sum(FORMULA) == 6` guard.
+- [x] Rewrite `test_inherited_attr_classification` (`:726`) to assert the single literal column for all 7 rows (INV-1 D3 negative control included here as a real row).
+- [x] **Delete `test_misclassification_documented`** (`:764`) — its `v[0] != v[1]` filter would collapse to zero cases (D4). This removes the 5 xfails.
+- [x] Update `test_fixture_has_expected_count` (`:696`) `6` → `7`.
+- [x] **Re-key `test_no_compiled_expressions`** (`:815`): today it iterates EXPOSE_COMPUTED (post-fix narrows silently to D3 only, should-fix #2). Extend it to positively assert the **6 FORMULA cases are `MANUAL_REQUIRED` + `compiled_expression is None`** (and keep D3). This is the honest pin that the flipped attrs produce no module and don't compile.
+- [x] Keep `test_inherited_refs_have_supertype_qn` (`:794`) green; reword its docstring to "now treated as sibling" (INV-4 — root cause still true; the fix reinterprets, doesn't change SysIDE).
 
 ### Validation
 **Automated:**
-- [ ] `test_inherited_attr_classification` green over 7 literal rows; `test_no_compiled_expressions` green over 6 FORMULA (MANUAL_REQUIRED + None) + D3.
-- [ ] `test_inherited_refs_have_supertype_qn` green; `test_misclassification_documented` gone.
-- [ ] Suite summary line: **xfailed 5 → 0** (verify the number actually moves, not just that the suite is green).
+- [x] `test_inherited_attr_classification` green over 7 literal rows; `test_no_compiled_expressions` green over 6 FORMULA (MANUAL_REQUIRED + None) + D3.
+- [x] `test_inherited_refs_have_supertype_qn` green; `test_misclassification_documented` gone.
+- [x] Suite summary line: **xfailed 5 → 0** (verify the number actually moves, not just that the suite is green).
 
 **Manual:**
-- [ ] The collapse guard (`len == 7`) is present so an accidental empty/short table fails loudly.
+- [x] The collapse guard (`len == 7`) is present so an accidental empty/short table fails loudly.
 
 **What We Know Works After This Phase:**
 The contract is positively pinned: a reader points at PASS tests asserting inherited-attr refs classify FORMULA + are MANUAL_REQUIRED, not at an absent xfail. No fake/empty test.
@@ -361,7 +361,10 @@ Item 4 debt retired: classifier fixed, snapshot re-captured and reviewed, xfails
 
 **Post-recapture test state (expected, resolved by Phase 3):** 6 conformance failures — `test_fixture_has_expected_count` (6→7) + 5× `test_inherited_attr_classification` (old `actual_cls=expose_computed` column vs new snapshot `formula`). These are the table-vs-snapshot mismatches Phase 3's collapse fixes.
 
-### Phase 3–6 Completion
+### Phase 3 Completion
+Collapsed `INHERITED_ATTR_PATTERNS` to a single-column 7-row table (6 FORMULA + D3 EXPOSE_COMPUTED) with the `len == 7` / `sum(FORMULA) == 6` module-level guard (fails loudly on collapse). Rewrote `test_inherited_attr_classification` to assert the single literal column (real positive PASSes, no vacuous xfail). **Deleted `test_misclassification_documented`** — removes all 5 xfails (grep confirms zero `xfail` anywhere in tests/). Count 6→7. Re-keyed `test_no_compiled_expressions` to positively assert 6 FORMULA are MANUAL_REQUIRED + compiled=None (+ D3), so it can't silently narrow. Reworded `test_inherited_refs_have_supertype_qn` docstring to "now treated as sibling" (INV-4 kept). Also rewrote the stale C3 FINDING comment block to the fixed CONTRACT (no ghost in the test file). **Result:** this file 50 passed / 0 xfailed (was 26 + 5 xfailed). Other fixture consumers (test_extractor, test_uncovered_params, unit) all green. Test-file ruff unchanged (18 pre-existing, 0 new; not in the `src/` gate).
+
+### Phase 4–6 Completion
 _[fill]_
 
 ---
