@@ -1,0 +1,392 @@
+# Implementation Plan: F4 Aggregation-Resolution Cutover (+ graph_builder param-group typing)
+
+**Status:** Draft
+**Created:** 2026-07-06
+**Last Updated:** 2026-07-06
+**Branch:** truth-debt-epic
+**Epic:** TRUTH-DEBT, Item 1 (SC-A, SC-G)
+
+## Source Documents
+- **Spec:** `.project/active/f4-cutover/spec.md`
+- **Design:** `.project/active/f4-cutover/design.md` ← component details, D1–D5, INV-1..7, Sequencing
+- **Design review:** `.project/active/f4-cutover/design-review.md` (Revise → all resolutions ADOPTED/CLOSED)
+- **Epic:** `.project/backlog/epic_truth_debt.md` (Item 1; R1–R4)
+
+## Implementation Strategy
+
+**Phasing Rationale.** The design's sequencing is the plan's spine (`design.md#implementation-notes` →
+"Sequencing (green-before-rewire)"). The one hard constraint that orders everything: the parity gates
+must be **green before** the live path is touched, because the cutover deletes the very function the
+old-comparand gate compiles against. So the plan front-loads the pure value-half changes (no behavior
+change), stands up all three parity gates while the old code still runs, then lands the rewire and all
+deletions in **one cutover commit**, proves byte-identity, and only then does the separable typing
+cleanup and the docs/matrix move.
+
+**Critical Path:**
+1. Value-half plumbing (key fix, Strategy E, the helper) — no rewire, suite stays green.
+2. Parity gates GREEN before rewire — M3 full-`InputSource` gate + LocalTerm reroute pin + MANUAL_REQUIRED test.
+3. **Cutover commit** — rewire 3 call sites, delete inline blocks + old function + Strategy D + the M3 old-comparand half, migrate the ~11-test tail. All together.
+4. Baseline byte-identity proof (aggregation is the HARD bar — any agg diff blocks pending root-cause).
+5. param_groups typing cleanup (D4 rename + D4b dead-code delete).
+6. R1 docs + matrix, final full gates.
+
+**First Proof Point:** Phase 2 — the M3 full-`InputSource` gate green while the old path still runs.
+That is the safety net; nothing downstream is safe to touch until it holds.
+
+**Biggest Risks** (see `design.md#potential-risks`):
+- Strategy E churns SumTerm/LocalTerm (B3 false) → caught by the M3 gate pre-rewire; fallback is D3.
+- LocalTerm expose-alias reroute has **zero M3 coverage** → guarded by the D5 `module_output`-only
+  guard + a dedicated reroute pin + byte-identity.
+- Aggregation baseline churn → the whole point of the reconciliation is byte-identity; any agg diff is
+  a defect to root-cause, not churn to accept (INV-4).
+
+**Overall Validation Approach:**
+- Each phase starts with tests (or, in Phase 4, a re-capture proof).
+- Gate ceilings enforced where relevant: `ruff check src/` ≤ 17, `mypy src/` ≤ 104, targeted suite green.
+- Final phase runs full gates + matrix recount from rows.
+
+---
+
+## Phase 0 — Pickup Re-Verification (R4 step 2; do first, no code change)
+
+### Goal
+A filed line number is a static-read verdict until reproduced. Baseline/typing edits in this same item
+shift line numbers, so re-anchor every target before editing anything.
+
+### Actions
+- [ ] Confirm the three call sites and the def. Spec filing: call sites `graph_builder.py:1444/1539/1640`,
+  def at `:1212`. Re-grep and record the live line numbers — later phases reference them.
+- [ ] Confirm baseline gate counts live: `mypy src/` == 104, `ruff check src/` == 17 at HEAD.
+- [ ] Reproduce the mypy typing error for D4: temporarily remove both `type: ignore`s at
+  `graph_builder.py:408/412`, run `mypy src/`, confirm the exact two errors the design records
+  (`:408 [assignment]` ParameterGroup vs DerivedParameterGroup; `:412 [attr-defined]` ParameterSource
+  has no `qualified_name`), then restore the ignores. Do not fix yet (that is Phase 5).
+- [ ] Confirm the SingletonTerm "Try 2" channel construction (`~:1548-1560`) and the LocalTerm
+  expose-alias branch (`~:1640`) still match `design.md#core-concept` / D5.
+
+### Validation
+- [ ] Live line numbers recorded in this plan's Implementation Notes; any drift from the filing noted.
+- [ ] mypy = 104, ruff = 17 confirmed at HEAD.
+- [ ] The two D4 mypy errors reproduced verbatim, then ignores restored (working tree clean).
+
+**What We Know After:** every edit target is anchored to live lines; the D4 fix is confirmed a
+loop-variable problem, not a binding-site one.
+
+---
+
+## Phase 1 — Value-Half Plumbing (no rewire, no deletions)
+
+### Goal
+Land the three pure additions that carry no behavior change to the live path: the fallback key fix,
+Strategy E, and the `_build_agg_input_source` helper. Nothing is wired to the aggregation call sites
+yet, so the suite and baselines stay green/identical. This lets Phase 2's gates exercise the real
+new-side code.
+
+### Assumption Under Test
+The value half is a one-line key fix (B1) and Strategy E is a no-op for SumTerm/LocalTerm refs (B3) —
+i.e. these additions do not, by themselves, change any resolution result.
+
+### Test Stencil (Write First)
+```python
+# tests/unit/test_input_resolver.py
+def test_agg_fallback_key_is_dotted_underscored():
+    # resolve_input fallback QN must be ref.replace('.', '_'), not leaf-only rsplit
+    src = resolve_input("part_usage.cost", ctx, AGG_STRATEGIES)
+    assert src.qualified_name == f"{ctx.module_eqn}__part_usage_cost"
+
+def test_strategy_e_returns_channel_only_when_in_canonical():
+    # Strategy E builds get_channel_name(instance_path__prefix, output) iff it exists
+    assert strategy_e(dotless_local_ref, ctx) is None          # no-op for locals
+    assert strategy_e(singleton_ref, ctx_with_channel) == expected_channel
+```
+
+### Changes Required
+**See `design.md#component-overview` and `#key-decisions` (D1, D3).**
+
+- [ ] `input_resolver.py:~270` — fallback key `ref.rsplit(".",1)[-1]` → `ref.replace(".", "_")` (D1 value half; INV-1).
+- [ ] `input_resolver.py` — add Strategy E `DirectChannelConstruction`; append after A/C/B in `AGG_STRATEGIES`
+  (D3; in-idiom with `ChainRedefinitionFollow` `:184-188`). **Do NOT remove Strategy D yet** — it goes in the cutover commit (Phase 3) per `design.md` Sequencing.
+- [ ] `graph_builder.py` — add `_build_agg_input_source(...)` helper. It wraps `resolve_input`, owns the
+  EP side effects (literal default, register/dedup/backfill, `param_group` classify, `DESIGN_ATTRIBUTE`
+  typing), returns `(InputSource, manual_required: bool)`. **Must absorb both literal-lookup shapes**
+  (Minor 4): SumTerm pre-split fields vs the dotless-SingletonTerm "skip lookup → `literal_default=None`"
+  case. **Build `ctx` with `module_eqn = agg.module_eqn`** (INV-7 — else every fallback key shifts).
+  Not called from any call site yet.
+
+### Validation
+**Automated:**
+- [ ] New unit tests pass.
+- [ ] `uv run pytest tests/` → green (nothing rewired; helper is dormant).
+- [ ] `ruff check src/` ≤ 17; `mypy src/` ≤ 104 (helper + Strategy E add no new errors).
+- [ ] `git diff tests/fixtures/baseline_outputs/` → empty (no generation path change yet).
+
+**What We Know After:** the reconciled value half and the helper exist and typecheck; the live path is
+untouched, proving these additions are behavior-neutral.
+
+---
+
+## Phase 2 — Parity Gates GREEN Before Rewire (the safety net)
+
+### Goal
+Stand up all three parity guards **while the old path still runs**, so they capture the executed old
+behavior as the comparand. This is INV-3 and the load-bearing sequencing constraint.
+
+### Assumption Under Test
+The new-side helper reproduces the executed old inline block's **full `InputSource`** (source_type,
+producer_channel, qualified_name, param_group) over the aggregation fixtures — and the LocalTerm
+expose-alias reroute is safe under the D5 guard.
+
+### Test Stencil (Write First)
+```python
+# tests/unit/test_input_resolver.py :: TestRegression  (extend the existing gate → M3)
+def test_regression_full_inputsource_parity(agg_fixture):
+    for term in sum_terms + singleton_terms:
+        old = old_inline_block(term)              # calls _resolve_aggregation_input_channel + fallback
+        new, _manual = _build_agg_input_source(term.ref, ctx, ...)
+        assert new.source_type == old.source_type
+        assert new.producer_channel == old.producer_channel
+        # NEW-SIDE (survives cutover): the reconciled EP key
+        assert new.qualified_name == f"{term.module_eqn}__{term.ref.replace('.','_')}"
+
+# LocalTerm expose-alias reroute pin (Major 3) — over alias_agg_probe / solar_battery
+def test_localterm_reroute_module_output_only():
+    r = resolve_input(alias_source, ctx, AGG_STRATEGIES)
+    if r.source_type == "module_output":
+        assert r.producer_channel == old_channel
+    else:  # D5 guard: fall through, LocalTerm key unchanged
+        assert local_term_ep_key == f"{module_eqn}__{attribute_name}"
+```
+
+### Changes Required
+**See `design.md#component-overview` (M3 gate, LocalTerm reroute pin) and D2, D5, Major 1/2/3.**
+
+- [ ] Extend `test_input_resolver.py::TestRegression` into the M3 gate: two halves — an **old-comparand**
+  half (calls `_resolve_aggregation_input_channel` + reproduces the old fallback) and a permanent
+  **new-side** half asserting `_build_agg_input_source(...).qualified_name == formula` incl. `param_group`
+  (D2; L3-1 blind spot at `:820-825`/`:849-853` closed). Mark clearly which half is old-comparand — Phase 3 deletes only that half.
+- [ ] Add the LocalTerm expose-alias reroute pin (Major 3): assert channel parity when a channel exists,
+  and the D5 `module_output`-only guard holds (non-channel result leaves LocalTerm key at
+  `{module_eqn}__{attribute_name}`). Fixtures: `alias_agg_probe`, `solar_battery`.
+- [ ] Add the MANUAL_REQUIRED preservation test (INV-2): an unresolved, no-default agg term routed
+  through `_build_agg_input_source` returns `manual_required=True`.
+
+### Validation
+**Automated:**
+- [ ] `uv run pytest tests/unit/test_input_resolver.py` → all three green.
+- [ ] Old-comparand half compiles and runs (function not yet deleted) — this proves it captured the
+  executed old block before Phase 3 removes it.
+- [ ] `ruff check src/` ≤ 17; `mypy src/` ≤ 104.
+
+**What We Know After (INV-3):** the reconciled path matches the executed old block over the aggregation
+fixtures, and the LocalTerm reroute is safe. The rewire is now de-risked.
+
+**GATE — do not start Phase 3 until this phase is green.**
+
+---
+
+## Phase 3 — Cutover: Rewire + Deletions (ONE commit)
+
+### Goal
+Move fallback ownership to the helper, rewire the three call sites, and delete everything the cutover
+retires — in a single commit, because the deletions are mutually entangled (the M3 old-comparand half
+cannot compile against the deleted function).
+
+### Assumption Under Test
+The rewire is behavior-preserving: the live path now runs through `resolve_input`/`_build_agg_input_source`
+and produces the identical `InputSource` and `MANUAL_REQUIRED` decisions the inline blocks did.
+
+### Test Stencil (adjust existing)
+```python
+# tests/unit/test_graph_builder_aggregation.py — the ~11 direct-call tests
+# Each currently calls _resolve_aggregation_input_channel(...). Per case, either:
+#   migrate → assert resolve_input(ref, ctx, AGG_STRATEGIES) / _build_agg_input_source(...)
+#   delete  → if already covered by test_dual_resolution.py
+def test_sum_term_resolves_to_channel_via_resolve_input():
+    src, manual = _build_agg_input_source(ref, ctx, ...)
+    assert src.source_type == "module_output"
+    assert manual is False
+```
+
+### Changes Required
+**See `design.md#architecture`, D5, and `#implementation-notes` (test-surgery tail).**
+
+Rewire:
+- [ ] SumTerm call site — replace inline block with `_build_agg_input_source(...)`; apply
+  `MANUAL_REQUIRED` from the returned flag; keep the multiplicity EP append inline (unchanged).
+- [ ] SingletonTerm call site — same; helper absorbs the dotless case (Minor 4).
+- [ ] LocalTerm channel call (`~:1640`) — rewire with the **D5 `source_type == "module_output"`-only
+  guard**; else fall through to LocalTerm's own inline entry-point fallback (key `{module_eqn}__{attribute_name}`, unchanged).
+
+Delete (same commit):
+- [ ] The SumTerm + SingletonTerm inline `else:` blocks.
+- [ ] `_resolve_aggregation_input_channel` (def + the `__all__` export at `~:1925`).
+- [ ] Strategy D `DesignAttributeLookup` — from `AGG_STRATEGIES`, the function, and its lying docstring
+  (`input_resolver.py:~200`).
+- [ ] The M3 gate's **old-comparand half** (it references the deleted function). **Keep the new-side
+  assertion** as a permanent test (D2, Major 1) — this is the durable guard on the reconciled EP key.
+
+Test-surgery tail (~11 tests):
+- [ ] `tests/unit/test_graph_builder_aggregation.py` (`~:107-247`, `~:364`) — migrate still-meaningful
+  direct-call tests to `resolve_input`/`_build_agg_input_source`, or delete cases already covered by
+  `test_dual_resolution.py`. Budget as real work, not a line delete.
+
+### Validation
+**Automated:**
+- [ ] `uv run pytest tests/` → full suite green (the surviving new-side M3 assertion, MANUAL_REQUIRED
+  test, reroute pin, and migrated agg tests all pass).
+- [ ] `ruff check src/` ≤ 17; `mypy src/` ≤ 104.
+- [ ] `grep -rn "_resolve_aggregation_input_channel\|DesignAttributeLookup" src/` → no live references.
+
+**What We Know After:** the live aggregation path runs through `resolve_input(AGG_STRATEGIES)`; the old
+function, Strategy D, and the inline fallbacks are gone; INV-1/2/5 hold in code. Baselines are checked
+next.
+
+---
+
+## Phase 4 — Baseline Byte-Identity Proof (R3; aggregation = HARD bar)
+
+### Goal
+Prove the cutover changed **no** generated output. The reconciliation is designed to reproduce the live
+EP construction exactly, so the expected outcome is zero churn. Any aggregation diff **blocks** the
+cutover pending root-cause (INV-4) — it is a defect to explain, not a diff to accept.
+
+### Assumption Under Test
+The reconciled part-usage EP key and the rewired channel resolution reproduce every baseline byte-for-byte.
+
+### Changes Required
+**See `design.md#implementation-notes` (Baseline scope) + memory `byte-identity-captured-at-churn`.**
+
+- [ ] Re-capture baselines through `scripts/capture_*.py` **only**, one regen at a time (R3). All 10
+  `tests/fixtures/baseline_outputs/*` are in the gate; include aggregation-bearing snapshot fixtures
+  (`solar_battery_model`, `alias_agg_probe`, `agg_literal_probe`, `ep_key_collision_probe`) and the
+  `test_dual_resolution` fixtures (`plant_values`, `plant_value_shapes`, `spec_chain_twolevel`) —
+  memory `multihop-expose-offline-parity`.
+- [ ] Apply the timestamp-churn method: a full re-capture rewrites every `captured_at`; diff, confirm the
+  **only** churn on untouched fixtures is `captured_at`, and revert that timestamp-only churn so only an
+  intended change (if any) remains.
+- [ ] `solar_battery` is the sole divergent-key carrier (targeting hint, not gate boundary) — inspect its
+  aggregation EP keys specifically for the `raw_material_cost` reconciliation.
+
+### Validation
+- [ ] `git diff tests/fixtures/baseline_outputs/` after timestamp-revert → **empty for every
+  aggregation baseline** (byte-identity). If non-empty on aggregation → STOP, root-cause; do not proceed.
+- [ ] Non-aggregation + snapshot fixtures byte-identical (only `captured_at` churned, then reverted).
+- [ ] `uv run pytest tests/` → green against the (unchanged) baselines.
+
+**What We Know After (INV-4):** the cutover is provably behavior-identical on generated output.
+
+**GATE — an unexplained aggregation diff blocks the item here.**
+
+---
+
+## Phase 5 — param_groups Typing Cleanup (D4 + D4b; SC-G)
+
+### Goal
+Clear the two `param_groups` `type: ignore`s via the loop-variable rename (D4, evidence-backed in
+Phase 0) and delete the dead Step-5 computation (D4b). Separable from the cutover; done after the
+byte-identity proof so the cutover stayed isolated.
+
+### Assumption Under Test
+The rename clears both ignores without raising mypy; the Step-5 deletion loses no value or warning (B4).
+
+### Test Stencil (Write First)
+```python
+# The gate here is mypy itself + suite; add a guard only if warning behavior is in question:
+def test_no_nonfloat_warning_lost_after_step5_delete(caplog):
+    build_computation_graph(fixture_with_nonfloat_ep)
+    # non-float warning still fires at Step 6.6 via derive_groups(), not the deleted Step-5 path
+    assert any("non-float" in r.message for r in caplog.records)
+```
+
+### Changes Required
+**See `design.md#component-overview` (param_groups typing fix), D4, D4b, B4.**
+
+- [ ] Rename the `~:325` `DerivedParameterGroup` loop variable (`for group in raw_groups` → `for dg in
+  raw_groups`, updating its body) so the `ParameterGroup` loops at `~:335/:373/:408` bind a clean
+  `group` typed `ParameterGroup`. Remove both `type: ignore`s at `~:408/:412` (D4).
+- [ ] Before deleting Step-5: quick `caplog`/`_warn_nonfloat` grep to confirm the non-float warning fires
+  only at Step 6.6 (B4). Then delete the dead Step-5 call (`~:228-233`) and the orphan
+  `_group_entry_points_via_deriver` (`~:534-566`) whose only caller it was (D4b).
+
+### Validation
+**Automated:**
+- [ ] `mypy src/` ≤ 104 with **both ignores removed and no new errors** (re-confirm live).
+- [ ] `ruff check src/` ≤ 17.
+- [ ] `uv run pytest tests/` → green (Step-5 deletion loses no warning/value).
+
+**What We Know After (INV-6, SC-G):** the double-binding is untangled, both ignores cleared, mypy no worse.
+
+---
+
+## Phase 6 — R1 Docs + Matrix (docs move with code) + Final Gates
+
+### Goal
+Move the IR-family matrix rows and reference docs in the same change that wired the path, so no reader
+inherits the "not-yet-wired" note or the re-lie. Then run the full gates.
+
+### Assumption Under Test
+Every doc/row that described `resolve_input` as validated-but-unwired now pins live code, and the matrix
+recount from rows still holds the gate counts.
+
+### Changes Required
+**See `spec.md` "R1 docs-move-with-code" + `design.md#integration-strategy`.**
+
+- [ ] Verification matrix: IR-family rows (REQ-IR-01..07; IR-05/IR-07 carry the false live-usage text
+  Item 7 rewrote to capability claims) drop the "not-yet-wired / parity-validated consolidation" note and
+  **pin live code**; reframe the RES/DRA/BT rows Item 7 touched. Recount the matrix **from rows**, not
+  the summary block (memory `verification-matrix-drift-modes`).
+- [ ] REQ tags in source move with the rows.
+- [ ] Reference docs — update every one that carries the aggregation-path description: `03-resolution-overview`,
+  `04-input-resolver`, `05-module-factory`, `07-graph-assembly`, `24-dual-resolution-architecture`.
+  (Design Related-Artifacts lists 03/04/05/07/24; confirm each for a not-yet-wired claim and update those
+  that carry one — R1.)
+
+### Validation (FINAL FULL GATES)
+- [ ] `uv run pytest tests/` → full suite green.
+- [ ] `ruff check src/` ≤ 17.
+- [ ] `mypy src/` ≤ 104 (both ignores cleared).
+- [ ] Matrix index counts recounted from rows; no "not-yet-wired" note survives; `grep -rn "not-yet-wired\|not yet wired" docs/` clean for the IR family.
+- [ ] `grep -rn "_resolve_aggregation_input_channel\|DesignAttributeLookup" src/ docs/` → gone from live code and docs.
+
+**What We Know After (SC-A, SC-G, SC-H):** the matrix and the code agree; the item's success criteria hold.
+
+---
+
+## Environment Setup
+
+**See CLAUDE.md.** Key commands: `uv run pytest tests/`, `uv run mypy src/`, `uv run ruff check src/`.
+Baseline re-capture: `scripts/capture_*.py` only (R3). Snapshot generation is license-free via
+`--from-snapshot`; live re-capture needs the syside license (monthly renewal — no expiry pressure).
+
+## Risk Management
+
+**See `design.md#potential-risks`.** Phase-specific mitigations:
+- **Phase 2:** if the M3 gate reddens for SumTerm/LocalTerm (B3/E churn), fall back to a SingletonTerm-only
+  strategy list (D3) — do not proceed to rewire on a red gate.
+- **Phase 3:** the LocalTerm reroute is the least-covered route (zero M3 coverage) — the D5
+  `module_output`-only guard + Phase 2 reroute pin + Phase 4 byte-identity are its three guards.
+- **Phase 4:** any aggregation diff is a blocking defect, not accepted churn — root-cause before signing off.
+- **Phase 5:** re-confirm mypy ≤ 104 live after the rename; the fix is evidence-backed (Phase 0 repro) but
+  re-verify rather than trust the count.
+
+## Implementation Notes
+
+[TO BE FILLED DURING IMPLEMENTATION]
+
+### Phase 0 Completion
+**Live line numbers (re-verified):**
+**mypy/ruff baseline at HEAD:**
+**D4 mypy errors reproduced:**
+
+### Phase 1 Completion
+### Phase 2 Completion
+### Phase 3 Completion
+### Phase 4 Completion
+### Phase 5 Completion
+### Phase 6 Completion
+
+---
+
+**Status:** Draft → In Progress → Complete
+</content>
+</invoke>
