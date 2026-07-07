@@ -326,7 +326,14 @@ class TestReqOR05:
     @pytest.mark.req("REQ-OR-05")
     @pytest.mark.parametrize("model_name", ["solar_battery_model", "catf_mfe_model"])
     def test_no_dead_keys_registered(self, model_name):
-        """Key_A, Key_D, Key_E full, Key_F, bare NOT in any registry."""
+        """Key_A is NOT in the SCOPED registry (Key_C is its scoped form).
+
+        Key_A IS registered — as a guarded first-wins alias in Phase 1a
+        (`register_alias`), reachable via `alias_lookup` — and Key_F IS
+        scoped-registered in Phase 1c; the earlier "not in any registry" reading
+        was the F2 divergence, corrected in Item 7. This test only pins the
+        narrow true claim the body checks: the ambiguous Key_A format never
+        leaks into the scoped registry."""
         snap = load_extraction_snapshot(snapshot_fixture(model_name))
         registry = build_registry_from_snapshot(snap)
         calc_def_by_name = {cd.name: cd for cd in snap["calc_defs"]}

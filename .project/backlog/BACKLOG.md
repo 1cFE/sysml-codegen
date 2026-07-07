@@ -128,7 +128,15 @@ Same-cleanup candidates found during the scrub (verify, then delete or wire up):
 - `BacktrackingResult.binding_to_entry_point` — marked DEPRECATED "will be removed after
   all consumers updated" since long before the epic.
 
-### [DOCS-SCRUB-F2] Reconcile REQ-OR-05/06/08 with the Key_A/Key_F registrations at HEAD
+### [DOCS-SCRUB-F2] Reconcile REQ-OR-05/06/08 with the Key_A/Key_F registrations at HEAD — RETIRED (Item 7)
+
+**Retired 2026-07-06 by Item 7.** Design check confirmed the construction-time
+`instance_attr_to_channel` dict does NOT bypass the typed-registry contract (it feeds
+only guarded `register_alias` calls), so F2 landed as **fix-text-to-code**: REQ-OR-05/06/08
+text + doc 10's key-format section now describe the actual registrations (Key_A guarded
+alias, Key_F scoped), REQ-ORCH-04's real phase-order contract is restored via a
+fixture-anchored presence assertion (red-mutation-gated), and the two lying docstrings
+(`test_output_registry.py`, `test_orchestrator.py`) are corrected. Superseded.
 
 **Absorbed into PIPELINE-TRUTH Item 7** (with D7 refinements: REQ-ORCH-04's test was
 weakened to fit the divergence; two test docstrings misstate their own bodies).
