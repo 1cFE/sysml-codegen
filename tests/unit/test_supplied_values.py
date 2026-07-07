@@ -112,6 +112,25 @@ def test_precedence_usage_override_beats_specialized_def():
     assert _synth_by_qn(out)["Scope__plant__driver__efficiency"].default_value == "0.99"
 
 
+def test_three_tier_precedence_ladder():
+    """SC-2 / INV-3: the full ladder with distinct values at each tier. Tier 1 (usage
+    override 0.99) > tier 2 (specialized-def :>> 0.35) > tier 3 (base def → no synthesis).
+    A tier-skip or tier-reorder would flip an assertion below."""
+    tier2 = [_override("Lib__Hif_Driver", "efficiency", 0.35)]
+    tier1 = [_override(_SCOPE, "efficiency", 0.99, target_path=["driver", "efficiency"])]
+    utm = {(_SCOPE, "driver"): "Lib__Hif_Driver"}
+
+    def resolve(redefs, overrides):
+        out = materialize_supplied_values(
+            [_usage("driver.efficiency")], redefs, overrides, utm, {}
+        )
+        return out[0].default_value if out else None
+
+    assert resolve(tier2, tier1) == "0.99"  # tier 1 wins over tier 2
+    assert resolve(tier2, []) == "0.35"      # tier 2 wins when tier 1 absent
+    assert resolve([], []) is None           # tier 3: base def carries, no synthesis
+
+
 def test_specialized_def_resolves_when_no_override():
     """Tier 2a alone: spec-def :>> via usage_type_map (Strategy 1)."""
     out = materialize_supplied_values(
