@@ -240,10 +240,9 @@ guarantee → design.md#key-bets (B3), design-review N-2.
 
 ### Validation
 **Automated:**
-- [ ] The four climb unit tests → GREEN (resolve, Step-1-hit, refuse, gate).
-- [ ] `uv run pytest tests/` → no regression on existing CHAIN resolutions (D4 gate keeps 2-segment
-      byte-identical). Offline channel pins still RED (snapshot not re-captured).
-- [ ] `ruff check src/`, `mypy src/` → no new findings.
+- [x] The four climb unit tests → GREEN (resolve, Step-1-hit, refuse, gate). First proof point met on synthetic registries.
+- [x] `uv run pytest tests/` → 2075 passed; no regression on existing CHAIN resolutions (D4 gate keeps 2-segment byte-identical). Remaining RED = fallback WARN (Phase 4) + 3 offline pins (Phase 5).
+- [x] `ruff check src/` = 17, `mypy src/` = 97 → no new findings.
 
 **What We Know Works After This Phase:** the resolution mechanics are proven on synthetic registries —
 the climb resolves the `data_point` shape to the exact channel, `base_metric` hits Step 1, and a
@@ -450,7 +449,11 @@ for live capture; the `--fixtures` filter is the byte-identity discipline). agen
 **Red/green after phase:** extractor tests all GREEN. Remaining RED (flip at Phase-5 re-capture) = the two offline channel pins + the full-path-binding pin. Gates: ruff 17, mypy 97 (unchanged).
 
 ### Phase 3 Completion
-**Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-07
+**Actual Changes:** `analysis/dependency_backtracker.py` `_resolve_chain_dispatch` — added the gated Step CLIMB after Step 2: for `source_path.count(".") >= 2`, iterate ancestor prefixes of `consumer_scope` (full → empty, dropping trailing segments), collect distinct non-self-reference `scoped_lookup` hits, resolve iff exactly one, refuse (return None) on ≥2. Reuses `_is_self_reference`. B2/M-1 filed-assumption comment at the site.
+**Issues:** none.
+**Deviations:** none. (Climb tests were authored/committed in Phase 1; this phase turns 3 of the 4 that were pending green — all 4 now green.)
+**Red/green after phase:** climb resolve/Step1-hit/refuse/gate GREEN; full suite 2075 passed. Remaining RED = fallback-WARN (Phase 4) + 3 offline pins (Phase 5). Gates: ruff 17, mypy 97.
 
 ### Phase 4 Completion
 **Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
