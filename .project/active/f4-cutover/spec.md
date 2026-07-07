@@ -50,30 +50,30 @@ Item 2's multi-hop chain work edits adjacent chain-follow code, so it lands **fi
 
 ## Success Criteria
 
-- [ ] The live aggregation path calls `resolve_input(AGG_STRATEGIES)`;
+- [x] The live aggregation path calls `resolve_input(AGG_STRATEGIES)`;
   `_resolve_aggregation_input_channel` is deleted (def + the `__all__` export at `:1925`); the
   three inline `else:` fallbacks are deleted, fallback ownership having moved into `resolve_input`.
-- [ ] Before rewiring, `resolve_input`'s entry-point fallback is reconciled to the live path's
+- [x] Before rewiring, `resolve_input`'s entry-point fallback is reconciled to the live path's
   richer entry-point construction — the key format, `_find_literal_redefinition` defaults,
   param-group classification, `DESIGN_ATTRIBUTE` typing, multiplicity entry points, **and the
   `Compilability.MANUAL_REQUIRED` signal plus the EP register/dedup/backfill semantics** — so no
   input entry point collides with an output channel, no disambiguator is dropped, and no
   unresolved term is silently marked compilable (the M4 blocker is resolved, not worked around).
-- [ ] A parity gate compares the **full `InputSource` the call-site block produces** — the old
+- [x] A parity gate compares the **full `InputSource` the call-site block produces** — the old
   inline block (channel resolution **and** entry-point fallback) against the new `resolve_input`
   path — over the aggregation fixtures, runs in CI, and is green **before** the rewire
   (design-review M3, sharpened per spec-review L3-1: a channel-only, function-to-function gate is
   structurally blind to the M4 fallback divergence).
-- [ ] The aggregation baseline is **byte-identical** after the cutover (the reconciliation is
+- [x] The aggregation baseline is **byte-identical** after the cutover (the reconciliation is
   designed to reproduce the live EP construction exactly, so zero aggregation churn is the
   expected outcome). Any aggregation diff **blocks the cutover pending root-cause** — it is a
   defect to explain, not a deliverable to sign off. Every non-aggregation baseline (including any
   snapshot-generation fixture that carries aggregation EP construction) is byte-identical (R3).
-- [ ] Strategy D is removed from `AGG_STRATEGIES`, its function deleted, and its lying docstring
+- [x] Strategy D is removed from `AGG_STRATEGIES`, its function deleted, and its lying docstring
   gone (the residual ghost Item 7 left noted).
-- [ ] The IR-family matrix rows drop the "not-yet-wired" note and pin live code; REQ text +
+- [x] The IR-family matrix rows drop the "not-yet-wired" note and pin live code; REQ text +
   reference docs 03/04/05 + `24-dual-resolution-architecture.md` move in the same change (R1).
-- [ ] The `param_groups` bind-mutate chain is untangled: the discarded Step-5 result (`:228`) is
+- [x] The `param_groups` bind-mutate chain is untangled: the discarded Step-5 result (`:228`) is
   isolated so the live variable carries one type from `:331` onward; both `type: ignore`s at
   `:408`/`:412` are cleared.
 - [ ] Gates hold: full suite green; `mypy src/` ≤ 104; `ruff check src/` ≤ 17.

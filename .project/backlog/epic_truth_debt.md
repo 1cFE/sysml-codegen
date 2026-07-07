@@ -56,7 +56,7 @@ and the deferred capabilities are built, not parked.
 
 ## Success Criteria
 
-- [ ] **SC-A (F4 cutover)**: the live aggregation path calls `resolve_input(AGG_STRATEGIES)`;
+- [x] **SC-A (F4 cutover)**: the live aggregation path calls `resolve_input(AGG_STRATEGIES)`;
   `_resolve_aggregation_input_channel` deleted; Strategy D deleted and its lying docstring
   fixed; the cutover's parity gate compares against **the replaced function**, not only the
   backtracker; the IR family rows drop the "not-yet-wired" note and pin live code.
@@ -76,7 +76,7 @@ and the deferred capabilities are built, not parked.
   fixes landed; the ~46 unswept rows either completed or re-filed with a named count.
 - [ ] **SC-F (hygiene tail)**: the four D3 silent sites hardened family-style (fires-on-shape
   + silent-on-clean); INV-6 "clean fixtures generate with zero WARNINGs" preserved.
-- [ ] **SC-G (typing)**: the graph_builder `param_groups` double-binding split (dead Step-5
+- [x] **SC-G (typing)**: the graph_builder `param_groups` double-binding split (dead Step-5
   computation removed if confirmed); the two type-ignores cleared; **mypy ≤ 104**.
 - [ ] **SC-H (gates)**: full suite green; ruff ≤ 17; mypy ≤ 104; all baseline churn via
   `scripts/capture_*.py` with reviewed diffs; matrix recounted from rows, not the summary.
