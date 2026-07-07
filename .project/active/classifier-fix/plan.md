@@ -105,27 +105,27 @@ def test_top_level_calc_output_stays_expose_computed():   # D3 negative control 
 
 #### 1. Test file
 **File:** `tests/conformance/test_computed_attributes.py` (or a unit test module) — write first
-- [ ] Unit tests for the predicate: inherited-ancestor ref → FORMULA; top-level CalcDef output → EXPOSE_COMPUTED (D3 seam); mixed inherited+local → FORMULA.
+- [x] Unit tests for the predicate: inherited-ancestor ref → FORMULA; top-level CalcDef output → EXPOSE_COMPUTED (D3 seam); mixed inherited+local → FORMULA. **Landed in `tests/unit/test_computed_attribute_extraction.py::TestClassifyAttributeExpression`** (alongside the existing predicate unit tests — that is the pure-seam home).
 
 #### 2. Classifier
 **File:** `src/sysml_codegen/extraction/computed_attribute_extractor.py`
-- [ ] Add module-private `_ancestor_part_qns(part_element, adapter) -> set[str]` — transitive `heritage`/`Subclassification` walk returning raw `::`-form QNs (pseudocode `design.md#implementation-notes`). **Recurse on the raw `target` element**, not through a `qn_to_partdef` map — it is *not* a `_supertype_closure` clone.
-- [ ] **Add a code comment naming the deliberate divergence** from `_supertype_closure` (recurses on raw target → also descends into library supertypes; returns `::`-form not `__`-form) so a future reader does not "unify" the two walkers and reintroduce the `__`-form trap (`design.md#duplication-avoidance`, note #3).
-- [ ] `_classify_attribute_expression` (`:66`): add `ancestor_part_qns: set[str]` param; widen Step-2b (`:123`) to `qn.startswith(own_prefix) or qn.startswith(ancestor_prefixes)` where `ancestor_prefixes = tuple(a + "::" for a in ancestor_part_qns)`. Leave 2c/2d untouched.
-- [ ] `extract_computed_attributes`: compute the ancestor set once per part, thread it into each `_classify_attribute_expression` call.
+- [x] Add module-private `_ancestor_part_qns(part_element) -> set[str]` — transitive `heritage`/`Subclassification` walk returning raw `::`-form QNs. Recurses on the raw `target` element. **DEVIATION:** dropped the `adapter` param from the design signature — `SysideAdapter.is_instance` is a static method already called statically in this module (`:57`), so no instance is needed. Cleaner; matches surrounding style.
+- [x] **Code comment names the deliberate divergence** from `_supertype_closure` (recurses on raw target → descends into library supertypes; returns `::`-form not `__`-form).
+- [x] `_classify_attribute_expression`: added `ancestor_part_qns: set[str] | None = None` param; widened Step-2b to `qn.startswith(part_qn_prefix) or qn.startswith(ancestor_prefixes)`. **DEVIATION:** param defaults to `None` (→ empty prefixes) rather than required — ~15 existing direct-call unit tests are genuine no-ancestor shapes; a default keeps them valid without mechanical churn, and empty-set is the semantically correct value for a part with no supertypes (not a fallback masking an error). Production caller always passes it explicitly. Left 2c/2d untouched.
+- [x] `extract_computed_attributes`: computes the ancestor set once per part, threads it into each classify call.
 
 #### 3. Depth-2 fixture source
 **File:** `tests/fixtures/unresolvable_attr_probe/{library,design}.sysml`
-- [ ] Add `part def 'Grandchild' :> 'Derived Component'` with a computed attr referencing a **grandparent** attr (`base_rate`), so the transitive chain `Grandchild → Derived → Base` is exercised (`design.md#implementation-notes`, D2/B2). Do NOT re-capture the JSON yet — that is Phase 2.
+- [x] Added `part def 'Grandchild' :> 'Derived Component'` with computed attr `grandchild_product = base_rate * base_factor` (both **grandparent** attrs on 'Base Component', so classifying it FORMULA requires the walk to reach 2 hops up). Plus a `grandchild_instance` in design.sysml. JSON NOT re-captured yet (Phase 2).
 
 ### Validation
 **Automated:**
-- [ ] New unit tests pass (predicate widening + D3 seam).
-- [ ] `ruff check src/` passes; `mypy src/` — no new errors on the touched file.
+- [x] New unit tests pass (predicate widening + D3 seam) — 25 passed in the module.
+- [x] `ruff check` on touched file passes; `mypy` — no new errors (only pre-existing `agentic_mbse` import-untyped).
 
 **Manual:**
-- [ ] `is_instance` called in the module's existing static style (`SysideAdapter.is_instance`, `:57`).
-- [ ] The `.sysml` depth-2 case parses (spot-check via the fixture's existing load path if convenient; full proof is Phase 2 re-capture).
+- [x] `is_instance` called in the module's existing static style (`SysideAdapter.is_instance`).
+- [x] The `.sysml` depth-2 case: full proof deferred to Phase 2 re-capture (all fixture consumers read the snapshot JSON, not live extraction, so committing `.sysml` pre-recapture is inert — confirmed 123 passed / 5 xfailed).
 
 **What We Know Works After This Phase:**
 The predicate reclassifies inherited-attr shapes to FORMULA and preserves D3 EXPOSE_COMPUTED — proven on crafted inputs. The snapshot doesn't reflect it yet (that's Phase 2).
@@ -156,20 +156,20 @@ uv run python scripts/capture_extraction_snapshots.py unresolvable_attr_probe
 ### Changes Required
 **See `design.md` INV-2** (byte-identity carve-out), **`design.md#validation-approach`** steps 1/4/5, **`design.md#key-bets`** B3, and **memory `byte-identity-captured-at-churn`**.
 
-- [ ] Run the scoped re-capture (needs syside license via the capture script — not `-c`).
-- [ ] Review the JSON diff against the expected list above; it is a reviewed R3 diff, not blind.
-- [ ] Revert `captured_at` timestamp-only churn (run the byte-identity gate: timestamp-only diff check + revert so only the intended content moves).
-- [ ] **Byte-identity gate:** confirm only `tests/fixtures/unresolvable_attr_probe/` files move (the `{library,design}.sysml` from Phase 1 + `extraction_snapshot.json`); every other baseline byte-identical.
-- [ ] **B3 verification (record verdict in Implementation Notes):** grep the corpus for (a) computed attrs referencing inherited attrs and (b) a CalcDef nested under an ancestor PartDef; or re-capture-and-diff `fusion_tea` once. R4 says reproduce, don't static-read. If either shape exists, widen scope deliberately and stop to reconsider.
+- [x] Run the scoped re-capture (needs syside license via the capture script — not `-c`).
+- [x] Review the JSON diff against the expected list above; it is a reviewed R3 diff, not blind.
+- [x] Revert `captured_at` timestamp-only churn (run the byte-identity gate: timestamp-only diff check + revert so only the intended content moves).
+- [x] **Byte-identity gate:** confirm only `tests/fixtures/unresolvable_attr_probe/` files move (the `{library,design}.sysml` from Phase 1 + `extraction_snapshot.json`); every other baseline byte-identical.
+- [x] **B3 verification (record verdict in Implementation Notes):** grep the corpus for (a) computed attrs referencing inherited attrs and (b) a CalcDef nested under an ancestor PartDef; or re-capture-and-diff `fusion_tea` once. R4 says reproduce, don't static-read. If either shape exists, widen scope deliberately and stop to reconsider.
 
 ### Validation
 **Automated:**
-- [ ] Byte-identity gate green except the carved-out fixture files.
-- [ ] `unresolvable_attr_snapshot` now shows 5 FORMULA + D3 EXPOSE_COMPUTED + 1 depth-2 FORMULA = 7 computed attrs (the `test_fixture_has_expected_count` will need its `6` → `7` update in Phase 3).
+- [x] Byte-identity gate green except the carved-out fixture files.
+- [x] `unresolvable_attr_snapshot` now shows 5 FORMULA + D3 EXPOSE_COMPUTED + 1 depth-2 FORMULA = 7 computed attrs (the `test_fixture_has_expected_count` will need its `6` → `7` update in Phase 3).
 
 **Manual:**
-- [ ] JSON diff matches the expected-only list; nothing extra moved.
-- [ ] B3 verdict recorded (expected: neither shape present in the corpus; if present, escalate).
+- [x] JSON diff matches the expected-only list; nothing extra moved.
+- [x] B3 verdict recorded (expected: neither shape present in the corpus; if present, escalate).
 
 **What We Know Works After This Phase:**
 The flip is real and observable in the committed snapshot; the depth-2 transitive walk produced a FORMULA row (B2 lifted from "depth-1 proven" to "transitive exercised"); no other baseline desyncs.
@@ -349,8 +349,17 @@ Item 4 debt retired: classifier fixed, snapshot re-captured and reviewed, xfails
 **DEVIATION (recorded):** `target.qualified_name` returns a `syside.core.QualifiedName` object, not a `str`. The walk must apply `str(...)` before prefix use — the design pseudocode (`design.md:354`) already does (`str(getattr(target, "qualified_name", "") or "")`), so no design change; the classifier's existing `part_qn` at `extractor.py:194` also already `str()`-wraps. Probe deleted (scratch, not committed).
 
 ### Phase 2 Completion
-**B3 verdict:** _[fill: corpus grep result for inherited-attr computed attrs AND nested-CalcDef-under-ancestor; expected: neither present]_
-**Snapshot diff:** _[fill: confirm 5 flips + depth-2 row only; captured_at reverted]_
+**Re-capture command DEVIATION:** the script takes `--fixtures NAME`, not the positional form the plan/design wrote. Ran `uv run python scripts/capture_extraction_snapshots.py --fixtures unresolvable_attr_probe`.
+
+**Snapshot diff (reviewed R3):** Only `unresolvable_attr_probe/extraction_snapshot.json` moved (byte-identity gate GREEN — no other baseline snapshot changed; `git status` confirmed). captured_at reverted (timestamp-only churn → 0 in diff). Content changes, ALL explained and correct:
+- **5 classification flips** `expose_computed → formula` (L1,L2 on Derived_Component; D1,D2,D4 on Design_Derived). D3 `mixed_expose` unchanged (expose_computed). ✓
+- **1 new computed-attr object** `grandchild_product` (Grandchild) = FORMULA + manual_required + compiled=None — the depth-2 transitive walk PASSED (B2 lifted depth-1→transitive). ✓
+- **compilability/compiled_expression** unchanged for all pre-existing rows (all manual_required / null — inherited refs stay outside input_names). ✓
+- **DEVIATION from design INV-2 (recorded):** the diff is LARGER than INV-2's literal enumeration ("5 strings + depth-2 row + its design-attr entry"). INV-2 overlooked a correct downstream effect: `_extract_and_filter_computed_attributes` (`pipeline_builder.py:119`) REMOVES FORMULA-classified attrs from `design_attributes` (false-entry-point prevention, per its docstring). So the 5 flipped attrs are correctly REMOVED from the snapshot's `design_attributes` section (they were kept while EXPOSE_COMPUTED). `mixed_expose` (still EXPOSE_COMPUTED) correctly stays. Plus grandchild_instance's 3 `:>>` redefinitions land in the redefinitions section, and SimpleCalc's `source_hash` updates because library.sysml genuinely changed. **Every moved byte is a direct consequence of the flip or the depth-2 fixture — none is unexplained drift.** Verified field-by-field.
+
+**B3 verdict (R4 — reproduced in memory, not static-read):** wrote a throwaway `scripts/_b3_check.py` that re-ran the FIXED classifier LIVE against all 12 `:>`-using baselines and diffed classifications vs their committed snapshots (mutated nothing; deleted after). **NO classification drift attributable to the Item-4 ancestor-prefix fix** — neither shape (a) computed-attr-referencing-inherited-attr nor (b) CalcDef-nested-under-ancestor exists in any baseline; re-capturing only unresolvable_attr_probe cannot desync another. **One orthogonal drift surfaced** (`ife_plant` `radial_build.magnet_volume_total`: committed `expose_pure` → live `expose_chain_tentative`) — CONFIRMED pre-existing by re-running the check with the pre-Phase-1 classifier (`0f75062`): it reproduces without my change. This is Item-2 multi-hop-chain staleness (my ancestor-prefix change cannot produce that transition — it lives in the `not calc_refs` tentative gate I never touch). Filed as a follow-on (Phase 5 BACKLOG); NOT re-captured here (scope discipline — mixing Item-2 drift into the Item-4 change would break the carve-out).
+
+**Post-recapture test state (expected, resolved by Phase 3):** 6 conformance failures — `test_fixture_has_expected_count` (6→7) + 5× `test_inherited_attr_classification` (old `actual_cls=expose_computed` column vs new snapshot `formula`). These are the table-vs-snapshot mismatches Phase 3's collapse fixes.
 
 ### Phase 3–6 Completion
 _[fill]_
