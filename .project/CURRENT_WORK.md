@@ -6,6 +6,29 @@
 
 ## Active Work
 
+### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
+
+**The generated package is the truth.** fusion-tea's models generate, wire, and execute
+end-to-end from generated artifacts alone — TRUE ZERO V11 offenders (supplied-value
+materializer, Item 2), run-C lcoe bit-exact ($270.1211779380445) with every workaround
+deleted upstream (Item 3), constraint drop report subtype-aware incl. `assert` (Item 4),
+13 silent-failure findings fixed by family (Item 5), 25 self-referential tests re-anchored
+(Item 6), matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED with F2/F4 resolved by
+decision (Item 7), dead code cleared + REQ-AST-10 (Item 8), agentic-mbse taught+checked
+(Item 9), docs + explainer prompt refreshed and caveats retired (Item 10). Gate:
+2069 passed / 4 skipped / 5 xfailed; ruff src 17; mypy src 104. Epic + Lessons Learned:
+`.project/backlog/epic_pipeline_truth.md`. Item-10 artifacts:
+`.project/active/epic-close-docs/{spec,plan}.md`.
+
+**Human actions outstanding (the only ones):**
+1. **agentic-mbse companion PR** — branch `pipeline-truth-item4` is pushed to origin; open
+   the PR from `.project/active/pipeline-truth-sync/COMPANION_PR_BODY.md` (base `upstream-findings-sync` while
+   PR #7 is open; retarget to `main` on its merge).
+2. **Merge PR #7** (the UPSTREAM-FINDINGS agentic-mbse companion, `upstream-findings-sync`) —
+   still pending; the Item-4 companion bases on it until it merges.
+3. **fusion-tea workaround-retirement PR** — open from
+   `chore/retire-pipeline-truth-workarounds` (Item 3 end state).
+
 ### PIPELINE-TRUTH Item 9 — agentic-mbse Sync (Guidance, Validation, Companion Audit) — COMPLETE
 Phases 0–5 landed 2026-07-06. **C7** (the one unbuilt check) WARNs on `attribute :>> attr =
 <expr>` — the AttributeUsage redefinition codegen silently drops; test-first, cross-repo-clean.

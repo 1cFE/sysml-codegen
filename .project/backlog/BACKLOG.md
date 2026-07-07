@@ -29,7 +29,6 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [PIPELINE-TRUTH] The Generated Package Is the Truth | Draft | Finish what UPSTREAM-FINDINGS staged: fusion-tea's models generate/wire/execute end-to-end with zero bridges (the 10 V11 offenders — promoted from Ideas), every diagnostic fires on the shape it claims (assert-constraint silence + the subtype-blind enumeration pattern), zero self-referential tests, REQ/matrix truth (F2/F4), silent-failure hardening (16 sites), cleanup debt, agentic-mbse lockstep, closing docs+explainer-prompt pass. 10 items, ~10.5–13.5 days. Evidence: `.project/research/20260706_pipeline-truth-discovery.md`. See `epic_pipeline_truth.md`. Items: [ ] 1 plant-value fixtures [ ] 2 whole-plant resolution [ ] 3 fusion-tea acceptance+retirement [ ] 4 subtype enumeration [ ] 5 silent-failure hardening [ ] 6 self-referential tests [ ] 7 matrix reconciliation [ ] 8 cleanup debt [ ] 9 agentic-mbse sync [ ] 10 docs+explainer close |
 | [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing: the UPSTREAM-FINDINGS Item 6 prerequisite has landed (PR #3); new ruling — start after PIPELINE-TRUTH Items 5 (silent-failure hardening) and 8 (cleanup debt) land, since both modify the same extraction/ surfaces the push-down would move.** See `.project/concepts/agentic-mbse-push-down-design.md`. |
 
 ---
@@ -369,6 +368,19 @@ Step-6.6 rebuild anyway, so it is likely a removable dead computation). Deferred
 graph_builder's group-assembly flow in a cleanup pass. **Constraint honored: mypy stayed at 104
 (ignores retained).**
 
+### [DOTTED-LEAF-PART-BLIND] Tighten the dotted-leaf alias match to be part-aware (D6 edge) — P3
+
+**Filed by PIPELINE-TRUTH Item 10, 2026-07-06.** The `.`-suffix branch of
+`_chain_sibling_aliases_aggregation` (`extraction/hierarchy_resolver.py`) matches any dotted
+`source_path` whose leaf equals the aggregation attribute, **regardless of which part it
+references** — so `parent.capital_cost` matches `attribute_name="capital_cost"` on an unrelated
+part. It could produce a spurious alias for a hierarchical CHAIN redefinition. **Item 10
+disposition: keep the current behavior.** No supported model triggers the edge; the behavior is
+pinned by `tests/unit/test_hierarchy_resolver.py::TestDottedLeafAliasMatch` (doc-25's dotted-leaf
+section), so any tightening is a red-then-green change. Tightening (make the match part-aware) is a
+code change, deliberately left un-done at epic close — pick it up if a real model produces the
+spurious-alias collision.
+
 ### [ITEM7-PGD06] Re-frame REQ-PGD-06's matrix PASS row — RETIRED (Item 7 consumed)
 
 **Retired 2026-07-06 by Item 7.** Confirmed `get_default_value` is deleted (0 hits in `src/`
@@ -411,7 +423,8 @@ the new row and does not treat it as an orphan.
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
-| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into PIPELINE-TRUTH. See `epic_upstream_findings.md`. |
+| [PIPELINE-TRUTH] The Generated Package Is the Truth | 2026-07-06 | ~2 days (orchestrated) | All 10 items landed and audited PASS. **The generated package is the truth**: fusion-tea generates/wires/executes end-to-end at TRUE ZERO V11 offenders (SVM value-fill, Item 2); run-C lcoe reproduces bit-exact ($270.1211779380445) and every workaround deleted upstream (Item 3); constraint drop report subtype-aware incl. `assert` (Item 4); 13 silent-failure findings fixed by family (Item 5); 25 self-referential tests re-anchored (Item 6); matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED, F2/F4 resolved by decision (Item 7); dead code cleared + REQ-AST-10 (Item 8); agentic-mbse taught+checked (Item 9); docs+explainer refreshed (Item 10). Follow-on filings kept below (outlive the epic): `[ITEM7-F4-CUTOVER]`, `[ITEM7-MATRIX-TEST-GAPS]`, `[ITEM7-CLASSIFIER-FIX]`, `[ITEM7-MATRIX-SWEEP-RESIDUE]`, `[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`, `[DOTTED-LEAF-PART-BLIND]`, SYNC-F3/F4. See `epic_pipeline_truth.md` (Lessons Learned). |
+| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into — and now closed by — PIPELINE-TRUTH. See `epic_upstream_findings.md`. |
 | [COST-PATTERN] Costed Component Pattern Support | 2026-02-22 | ~12 days | 41 items completed: full conformance test suite (C01-C27, X01-X02), Phase 7 structural refactors, bug fixes (7, 11), docs consolidation. |
 | [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
 | [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |

@@ -1,7 +1,7 @@
 # Epic: The Generated Package Is the Truth
 
 **Epic ID**: PIPELINE-TRUTH
-**Status**: Draft
+**Status**: ✅ Completed — 2026-07-06 (all 10 items landed and audited PASS)
 **Priority**: High
 **Created**: 2026-07-06
 **Estimated Effort**: ~10.5–13.5 days (10 items; two parallel tracks)
@@ -136,31 +136,33 @@ and 7, and the register is updated as findings are confirmed or struck.
 
 ## Success Criteria
 
-- [ ] **SC-A**: `generate --models ~/1cfe/fusion-tea/models` emits the full package —
+- [x] **SC-A**: `generate --models ~/1cfe/fusion-tea/models` emits the full package —
   zero V11 offenders, zero bridges, zero post-processing. (Gate: fusion-tea acceptance
-  run, Item 3; license-free proxy: the committed fusion-tea snapshot generates clean.)
-- [ ] **SC-B**: Run-C's lcoe reproduces through the generated package alone. Gates in
+  run, Item 3; license-free proxy: the committed fusion-tea v2 snapshot generates clean at
+  TRUE ZERO offenders.) ✅ Items 2/3.
+- [x] **SC-B**: Run-C's lcoe reproduces through the generated package alone. Gated in
   two places: an in-repo tolerance test on the extended `spec_chain_twolevel` fixture
-  (Item 2), and the fusion-tea acceptance run against $270.1211779380445/MWh at
-  rel 1e-6 (Item 3) — including one perturbed-input rerun proving the JSON is
-  consumed, not the baked schema defaults.
-- [ ] **SC-C**: Every fusion-tea workaround in the report's retirement table is
+  (Item 2, lcoe-analog = 100.0 at rel 1e-6), and the fusion-tea acceptance run against
+  $270.1211779380445/MWh at rel 1e-6 (Item 3) — including one perturbed-input rerun
+  proving the JSON is consumed, not the baked schema defaults. ✅ Items 2/3.
+- [x] **SC-C**: Every fusion-tea workaround in the report's retirement table is
   **deleted** upstream (`sanitize_names.py`, `hif_driver_instance` + channel
   re-anchor, two-pass gamma feedback, hand-written input JSONs), not just deletable
-  (Item 3).
-- [ ] **SC-D**: Every V-diagnostic and every extraction/resolution warning
+  (Item 3; retirement greps zero). ✅ Item 3.
+- [x] **SC-D**: Every V-diagnostic and every extraction/resolution warning
   demonstrably fires on every syntactic shape it claims — assert and require
-  constraints included — with independently-anchored expected counts (Items 4, 5).
-- [ ] **SC-E**: Zero self-referential diagnostic tests remain; the 25 flagged tests
-  are re-anchored; the pass-or-skip test fails when its assertion fails (Item 6).
+  constraints included — with independently-anchored expected counts (Items 4, 5). ✅.
+- [x] **SC-E**: Zero self-referential diagnostic tests remain; the 25 flagged tests
+  are re-anchored; the pass-or-skip test fails when its assertion fails (Item 6). ✅.
 - [x] **SC-F**: REQ text, tests, and code agree — F2 and F4 resolved by decision (land
   or excise/re-frame), every divergent-PASS row from discovery fixed, the UNTESTED-12
   dispositioned, no PASS row pins less than its text (Item 7). ✅ Certified 2026-07-06.
-- [ ] **SC-G**: Full suite green; ruff/mypy counts not worse than the 21/109 baseline;
-  all baseline churn via capture scripts with reviewed diffs.
-- [ ] **SC-H**: agentic-mbse teaches and checks everything this epic changes (Item 9);
+- [x] **SC-G**: Full suite green (2069 passed / 4 skipped / 5 xfailed); ruff/mypy
+  counts better than the 21/109 baseline (17/104); all baseline churn via capture
+  scripts with reviewed diffs. ✅.
+- [x] **SC-H**: agentic-mbse teaches and checks everything this epic changes (Item 9);
   the docs-scrub certification still holds at epic close — every retired caveat
-  removed from docs, matrix, and the explainer prompt (Item 10).
+  removed from docs, matrix, and the explainer prompt (Item 10). ✅.
 
 ---
 
@@ -882,7 +884,51 @@ Item 10 (docs + explainer prompt) ← last, after all
 
 ## Lessons Learned (Post-Completion)
 
-*Fill in after epic is complete*
+Filled at epic close (Item 10), 2026-07-06.
+
+- **The value-fill vs channel-wiring decision (Item 2) was the right hinge.** The bridge
+  proved value-propagation sufficient for anchor semantics because all 10 offenders were
+  literals. Landing it as a supplied-value materializer (`resolution/supplied_values.py`)
+  keyed by **source QN** — a pre-pass that synthesizes design attributes before the
+  backtracker — kept the entry-point groups stable (fusion-tea's harness did not re-anchor)
+  and made fan-out collapse to one shared EP fall out for free. Wiring would have churned the
+  schema/JSON keys. The adversarial "Anchors" attack in the discovery register earned its place.
+
+- **R4 (verify-then-fix) shortened the work, as designed.** Discovery findings are
+  static-read verdicts, not bugs. Item 5's spec-phase verification pass cut the 16 D3 floor
+  findings to 13 CONFIRMED before any fix; Item 7's three F4 kill-probes fired no kill and
+  flipped the F4 decision from "excise" to "land-with-split." Reproduce-before-fix is what
+  kept the epic from whack-a-mole.
+
+- **A code-vs-doc divergence is a decision point, not a bug (R4 step 1).** F4's docs
+  (03/04/05) described `resolve_input()` as the *intended* consolidated resolver; the code
+  never cut over. The honest resolution was to reframe the docs+matrix to the true
+  not-yet-wired state and file the executable rewire (`[ITEM7-F4-CUTOVER]`), not to force a
+  cutover under a matrix-truth budget. "Fix the doc to the code" was the cheaper correct move.
+
+- **One choke point beats N site patches (R4 step 3).** Item 4's subtype-blindness fix was a
+  single adapter parameter (`include_subtypes`), not fifteen call-site patches. Item 5's
+  silent-failure fixes clustered into families (blind-dispatch fall-throughs, gated-report
+  silences, name-keyed lookups, exception swallows) fixed at the family choke point.
+
+- **Recount the matrix from rows, never the summary block.** The summary drifts; the family
+  index is the truth. 253 = 249 PASS + 4 UNTESTED + 0 DEFERRED, 30 families — confirmed by
+  summing the index at every item that moved a row (memory: `verification-matrix-drift-modes`).
+
+- **Each item closing its own docs loop (R4 step 4) made the epic-close docs pass cheap.**
+  By Item 10, the reference docs under `docs/architecture/` were already reconciled; the
+  close pass was verification + retiring caveats in the *aggregating* docs (explainer prompt,
+  fact sheet, BACKLOG), not a re-scrub. The cost of R4 step 4 is paid per item; the payoff is
+  a trivial close.
+
+- **Cross-repo work lands as a coordinated pair with its own branch.** Item 4 (adapter fix in
+  agentic-mbse, consumed here) and Item 9 (accumulated sync) both used a companion branch and
+  a prepared PR body; sandbox permission loss on the agentic-mbse side is the recurring tax —
+  plan an explicit code-side pass in that repo, as Item 9 did.
+
+**Human actions outstanding at close** (see CURRENT_WORK.md): create the agentic-mbse
+companion PR from `.project/active/pipeline-truth-sync/COMPANION_PR_BODY.md`; merge PR #7; open the fusion-tea
+workaround-retirement PR from `chore/retire-pipeline-truth-workarounds`.
 
 ---
 
