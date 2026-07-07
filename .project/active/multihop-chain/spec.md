@@ -98,25 +98,26 @@ pointers are static-read verdicts until reproduced; these are the corrections.
 
 ## Success Criteria
 
-- [ ] **Both** calc-usage 3+-segment chains resolve to their correct wired channels, each verified
+- [x] **Both** calc-usage 3+-segment chains resolve to their correct wired channels, each verified
   by an **independently-anchored** test asserting the **exact channel QN** (not "resolved" / "left
   the entry-point set"):
   - `chain_analysis.data_point` → `…__station__array__derived_calc__derived_value`.
   - `derived_calc.base_metric` → `…__station__array__sensor__core__metric_value`.
-- [ ] `deep_cross_scope_probe` pins both as **resolved chains**, not rejections (the current
+- [x] `deep_cross_scope_probe` pins both as **resolved chains**, not rejections (the current
   rejection pins at `test_deep_cross_scope_probe.py:41-99` flip).
-- [ ] A genuinely unresolvable deep chain still **hard-diagnoses** — loud warning + surfaced entry
+- [x] A genuinely unresolvable deep chain still **hard-diagnoses** — loud warning + surfaced entry
   point, never truncated to root (the Item-5 contract).
-- [ ] Fires-on-shape + silent-on-clean pair holds, **fully tested**: silent-on-clean is proven on
+- [x] Fires-on-shape + silent-on-clean pair holds, **fully tested**: silent-on-clean is proven on
   the two now-resolving chains; fires-on-shape is proven on a **new unresolvable-chain substrate**
   (a dangling-chain fixture or a synthetic unit test — no corpus chain is unresolvable after the
   flip).
-- [ ] Live and `--from-snapshot` paths produce the **same** wires for both chains (no offline
-  mis-wire). Note: the live leg is `@requires_license`-gated (below).
-- [ ] Byte-identity holds **path-scoped**: no calc-usage-param baseline other than
+- [x] Live and `--from-snapshot` paths produce the **same** wires for both chains (no offline
+  mis-wire). Note: the live leg is `@requires_license`-gated (below). [audit: verified statically;
+  live re-execution sandbox-blocked — audit.md Note 1]
+- [x] Byte-identity holds **path-scoped**: no calc-usage-param baseline other than
   `deep_cross_scope_probe` changes; `deep_cross_scope_probe`'s re-capture lands as a reviewed diff
   decomposed into its **three** parts (two wires + the stale classification flip).
-- [ ] agentic-mbse MODELING_GUIDE impact recorded (sandbox-blocked this session → for a later sync).
+- [x] agentic-mbse MODELING_GUIDE impact recorded (sandbox-blocked this session → for a later sync).
 
 ## Known Requirements
 

@@ -311,15 +311,18 @@ now makes that no-module outcome **loud** at generation, but it does not build t
 inherited-attr FORMULA compiles to a real module. Out of scope for Item 4 (classification-only,
 D1). No corpus model hits the shape today, so no baseline moves.
 
-### [TRUTH-DEBT-IFE-PLANT-CHAIN-STALE] `ife_plant` snapshot latently stale vs Item-2 multi-hop — P3
+### [TRUTH-DEBT-IFE-PLANT-CHAIN-STALE] `ife_plant` snapshot latently stale (pre-existing classifier drift) — P3
 
-**Filed by TRUTH-DEBT Item 4 B3 check, 2026-07-07.** While reproducing B3 for Item 4 (re-run
-the fixed classifier live vs each committed baseline), one **orthogonal** drift surfaced:
-`ife_plant` `radial_build.magnet_volume_total` is committed as `expose_pure` but live
-extraction now classifies it `expose_chain_tentative`. Confirmed **pre-existing** (reproduces
-on the pre-Item-4 classifier `0f75062`) — it is Item-2 multi-hop-chain machinery that landed
-without re-capturing `ife_plant`, NOT an Item-4 effect (the ancestor-prefix fix cannot produce
-that transition). Latent: the conformance suite reads the committed snapshot, so it is green
+**Filed by TRUTH-DEBT Item 4 B3 check, 2026-07-07; attribution corrected by Item 2's audit
+(multihop-chain/audit.md).** While reproducing B3 for Item 4, one **orthogonal** drift
+surfaced: `ife_plant` `radial_build.magnet_volume_total` is committed as `expose_pure` but
+live extraction now classifies it `expose_chain_tentative`. Confirmed pre-existing on the
+pre-Item-4 classifier (`0f75062`). The original filing attributed it to Item-2 multi-hop
+machinery; **Item 2's audit refuted that** — Item 2's entire source diff is
+`usage_extractor.py` + `dependency_backtracker.py`, neither on the attribute/classifier
+path, and it provably cannot produce the `expose_pure → expose_chain_tentative` transition.
+The drift is prior-epoch classifier staleness (pre-Item-2, from `891cf8e`), latent until
+`ife_plant` is re-captured. NOT an Item-4 effect either. Latent: the conformance suite reads the committed snapshot, so it is green
 today; it would surface on a future `ife_plant` re-capture. **Scope**: re-capture `ife_plant`
 and review the resulting diff (expect the one chain-classification flip and its downstream
 effects), landing it as a reviewed R3 diff. Deliberately not done in Item 4 (mixing Item-2
