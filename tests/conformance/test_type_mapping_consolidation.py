@@ -20,7 +20,6 @@ import pytest
 
 from sysml_codegen.generation.type_mapping import (
     map_sysml_type_to_python,
-    map_sysml_type_to_rootmodel_wrapper,
 )
 
 from sysml_codegen.snapshot import (
@@ -94,42 +93,6 @@ class TestPrimitiveMapping:
 
 
 # ===========================================================================
-# REQ-GEN-06: RootModel wrapper type mapping
-# ===========================================================================
-class TestWrapperMapping:
-    """REQ-GEN-06: SysML-to-RootModel wrapper type mapping for registry."""
-
-    @pytest.mark.req("REQ-GEN-06")
-    def test_wrapper_real_to_Float(self):
-        """Real maps to Float wrapper."""
-        assert map_sysml_type_to_rootmodel_wrapper("Real") == "Float"
-        assert map_sysml_type_to_rootmodel_wrapper("ScalarValues::Real") == "Float"
-
-    @pytest.mark.req("REQ-GEN-06")
-    def test_wrapper_integer_to_Int(self):
-        """Integer maps to Int wrapper."""
-        assert map_sysml_type_to_rootmodel_wrapper("Integer") == "Int"
-        assert map_sysml_type_to_rootmodel_wrapper("ScalarValues::Integer") == "Int"
-
-    @pytest.mark.req("REQ-GEN-06")
-    def test_wrapper_boolean_to_Bool(self):
-        """Boolean maps to Bool wrapper."""
-        assert map_sysml_type_to_rootmodel_wrapper("Boolean") == "Bool"
-        assert map_sysml_type_to_rootmodel_wrapper("ScalarValues::Boolean") == "Bool"
-
-    @pytest.mark.req("REQ-GEN-06")
-    def test_wrapper_string_to_String(self):
-        """String maps to String wrapper."""
-        assert map_sysml_type_to_rootmodel_wrapper("String") == "String"
-        assert map_sysml_type_to_rootmodel_wrapper("ScalarValues::String") == "String"
-
-    @pytest.mark.req("REQ-GEN-06")
-    def test_wrapper_unknown_passthrough(self):
-        """Unknown types pass through wrapper mapping unchanged."""
-        assert map_sysml_type_to_rootmodel_wrapper("PlasmaParams") == "PlasmaParams"
-
-
-# ===========================================================================
 # REQ-GEN-06: No divergent copies across generators
 # ===========================================================================
 class TestNoDivergentCopies:
@@ -177,6 +140,13 @@ class TestCrossGeneratorConsistency:
     def test_all_generators_use_shared_function(self, model_name, extraction_snapshots):
         """For each CalcUsage module, all type annotations are consistent
         with map_sysml_type_to_python() output for the same SysML type."""
+        # NOTE (Item 6, L4): this is a weak, partly self-referential check --
+        # expected = map_sysml_type_to_python(attr.sysml_type) recomputes the graph's own
+        # value. Its residual value is real but narrow: it proves every generator routes
+        # through the shared mapping (a divergent hardcode would fail). The actual type-map
+        # CONTENT is pinned independently by the literal siblings
+        # test_gen_schemas.py:359-381 and test_gen_module_wrappers.py (map literal table).
+        # Kept as a consistency guard, not deleted; sibling-pinned for content.
         graph, inputs = build_full_graph_from_snapshot(snapshot_fixture(model_name))
         snap = inputs["snap"]
         calc_defs = snap["calc_defs"]
@@ -239,16 +209,9 @@ class TestSharedModuleAPI:
         """type_mapping.py module exists and is importable."""
         from sysml_codegen.generation import type_mapping
         assert hasattr(type_mapping, "map_sysml_type_to_python")
-        assert hasattr(type_mapping, "map_sysml_type_to_rootmodel_wrapper")
 
     @pytest.mark.req("REQ-GEN-06")
     def test_sysml_to_python_dict_has_8_entries(self):
         """SYSML_TO_PYTHON dict covers all 4 types × 2 forms."""
         from sysml_codegen.generation.type_mapping import SYSML_TO_PYTHON
         assert len(SYSML_TO_PYTHON) == 8
-
-    @pytest.mark.req("REQ-GEN-06")
-    def test_python_to_rootmodel_dict_has_4_entries(self):
-        """PYTHON_TO_ROOTMODEL_WRAPPER covers all 4 Python primitive types."""
-        from sysml_codegen.generation.type_mapping import PYTHON_TO_ROOTMODEL_WRAPPER
-        assert len(PYTHON_TO_ROOTMODEL_WRAPPER) == 4

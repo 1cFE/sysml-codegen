@@ -467,8 +467,8 @@ class TestDiagnostics:
         reg = OutputRegistry()
         registry_register(reg,"ch_A", ["key_1", "key_2"])
         # 2 alias keys + 1 canonical channel
-        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=2, channels=1)"
+        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=2, scoped_alias=0, channels=1)"
 
     def test_repr_empty_registry(self):
         reg = OutputRegistry()
-        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, channels=0)"
+        assert repr(reg) == "OutputRegistry(scoped=0, sysml_qn=0, alias=0, scoped_alias=0, channels=0)"

@@ -9,7 +9,7 @@ and ComputationGraph assembly with real extraction data:
 - Cycle detection with CircularDependencyError
 - Channel reference validation (no dangling wires)
 - No self-dependency
-- ComputationGraph has exactly 3 fields
+- ComputationGraph has exactly 5 fields
 - execution_order matches module ordering
 - Kahn's algorithm with deque (static analysis)
 
@@ -349,10 +349,11 @@ class TestNoSelfDependency:
 
 
 # ===========================================================================
-# REQ-GA-05: ComputationGraph has exactly 3 fields
+# REQ-GA-05: ComputationGraph has exactly 5 fields
 # ===========================================================================
 class TestComputationGraphShape:
-    """REQ-GA-05: ComputationGraph has exactly modules, entry_point_groups, execution_order."""
+    """REQ-GA-05: ComputationGraph has exactly modules, entry_point_groups,
+    execution_order, fallback_entry_points, output_aliases."""
 
     @pytest.mark.req("REQ-GA-05")
     def test_computation_graph_has_exactly_three_fields(self):
@@ -375,7 +376,8 @@ class TestComputationGraphShape:
 
     @pytest.mark.req("REQ-GA-05")
     def test_graph_shape_from_real_data(self, real_graph):
-        """Real ComputationGraph has correct types for all 3 fields."""
+        """Real ComputationGraph has correct types for its three collection fields
+        (modules, entry_point_groups, execution_order)."""
         graph = real_graph
         assert isinstance(graph.modules, list)
         assert all(isinstance(m, PipelineModule) for m in graph.modules)

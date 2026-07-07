@@ -202,3 +202,9 @@ Low-severity findings dispositioned: #1 (4 type-ignores, all scoped/sound) accep
 opportunistic cleanup — non-blocking.
 
 Verdict upgraded: **PASS**. Item 2 complete.
+
+**PIPELINE-TRUTH Item 8 close (2026-07-06, D1-F5):** #2 cleared — the dead `out = subprocess.run`
+var removed from `test_snapshot_generation.py::test_generation_timestamp_has_no_render_site`.
+#3 cleared — Phase 3/4/5 checkboxes flipped and the Phase-5 Completion note filled in
+`snapshot-generation/plan.md`. #1 (the `param_groups` type-ignore cluster) is handled as Item 8's
+D1-F4 (see `cleanup-debt/plan.md` Phase 4).

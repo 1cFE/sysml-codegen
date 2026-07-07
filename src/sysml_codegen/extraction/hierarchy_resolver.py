@@ -50,6 +50,37 @@ from sysml_codegen.extraction.usage_extractor import (
 
 logger = logging.getLogger(__name__)
 
+# D3-8: aggregation-expression operator translation. OPERATOR_MAP spells every
+# operator correctly *except* `^`, which it maps to Python bitwise-XOR (` ^ `);
+# in an aggregation (as in SysML) `^` is exponentiation and must become ` ** `.
+# The comparison/logical translations (`> < == != and or implies not ...`) are
+# kept as-is — swapping wholesale to PYTHON_OPERATOR_MAP would drop them and
+# falsely trip has_unsupported on a valid `sum(x) > threshold` aggregation. An
+# operator absent from this map is genuinely untranslatable → has_unsupported.
+AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}
+
+
+def _chain_sibling_aliases_aggregation(
+    sibling: RedefinitionData, agg_attribute_name: str
+) -> bool:
+    """True if a CHAIN redefinition aliases the aggregation attribute (REQ-HR-07).
+
+    A sibling aliases the aggregation when its ``source_path`` equals the attribute
+    name exactly, or is a dotted path whose leaf equals it (``parent.capital_cost``
+    aliases ``capital_cost``). The dotted-leaf match is by leaf ONLY — it does not
+    check which part the path references (doc-25 "Edge case"), so a differently-parted
+    dotted path with the same leaf still matches. A bare-name suffix like
+    ``total_capital_cost`` does NOT match, because the ``"." +`` prefix requires a dot
+    boundary. The sibling must redefine a differently-named attribute.
+    """
+    if sibling.redefinition_type != RedefinitionType.CHAIN or not sibling.source_path:
+        return False
+    matches_leaf = (
+        sibling.source_path == agg_attribute_name
+        or sibling.source_path.endswith("." + agg_attribute_name)
+    )
+    return matches_leaf and sibling.attribute_name != agg_attribute_name
+
 
 def _extract_single_redefinition(
     member: Any,
@@ -328,6 +359,30 @@ def _unwrap_invocation(node: Any, _depth: int = 0) -> Any:
     return node
 
 
+def _agg_operator_str(operator: Any, ctx: _AggregationContext) -> str:
+    """Translate an aggregation operator to its Python spelling (D3-8).
+
+    `operator` is a SysIDE `Operator` enum on real nodes (a plain str in unit
+    stubs); normalize with str() to the SysML symbol first — the same idiom
+    reconstruct_operator_expression uses (expression_utils.py:170) — then look up
+    the `**`-corrected translation. An operator in neither the arithmetic nor the
+    comparison/logical map is untranslatable: it sets ctx.has_unsupported and
+    warns (mirroring the unknown-node arm), instead of silently passing the raw
+    operator through (the pre-fix path, which stringified `^` to Python XOR).
+    """
+    op_key = str(operator)
+    op_str = AGG_PYTHON_OPS.get(op_key)
+    if op_str is None:
+        ctx.has_unsupported = True
+        logger.warning(
+            "Unsupported operator '%s' in aggregation expression; "
+            "marking aggregation unsupported.",
+            op_key,
+        )
+        return f" {op_key} "
+    return op_str
+
+
 def _walk_aggregation_ast(
     node: Any,
     mult_lookup: dict[str, MultiplicityData],
@@ -367,7 +422,7 @@ def _walk_aggregation_ast(
         if len(operands) == 2:
             left = _walk_aggregation_ast(operands[0], mult_lookup, ctx)
             right = _walk_aggregation_ast(operands[1], mult_lookup, ctx)
-            op_str = OPERATOR_MAP.get(operator, f" {operator} ")
+            op_str = _agg_operator_str(operator, ctx)
             return f"({left}{op_str}{right})"
         if len(operands) == 1:
             inner = _walk_aggregation_ast(operands[0], mult_lookup, ctx)
@@ -379,7 +434,7 @@ def _walk_aggregation_ast(
                 _walk_aggregation_ast(op, mult_lookup, ctx)
                 for op in operands
             ]
-            op_str = OPERATOR_MAP.get(operator, f" {operator} ")
+            op_str = _agg_operator_str(operator, ctx)
             return op_str.join(parts)
         return operator
 
@@ -388,6 +443,13 @@ def _walk_aggregation_ast(
         ref_name = extract_feature_reference_name(node)
         ctx.local_terms.append(LocalTerm(attribute_name=ref_name))
         return ref_name
+
+    # Literals: delegate to expression_utils. MUST precede the InvocationExpression
+    # catch-all below — every SysIDE node carries a derived KerML `.function.name`,
+    # so a literal operand would otherwise be mis-dispatched to the invocation branch
+    # and marked unsupported (REQ-AST-10; mirrors the Item-6 reconstruct_expression fix).
+    if is_literal_expression(node):
+        return reconstruct_expression(node)
 
     # InvocationExpression: sum() → parametric multiply
     if hasattr(node, "function") and hasattr(node.function, "name"):
@@ -448,10 +510,6 @@ def _walk_aggregation_ast(
             for op in operands
         )
         return f"{func_name}({args})"
-
-    # Literals: delegate to expression_utils (consistent with is_instance pattern)
-    if is_literal_expression(node):
-        return reconstruct_expression(node)
 
     # Unknown node type
     ctx.has_unsupported = True
@@ -656,14 +714,8 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                     # BF-7: Find CHAIN-type aliases for this aggregation attribute
                     # e.g., :>> total_capex = capital_cost creates alias "total_capex"
                     for sibling in redefs:
-                        if (
-                            sibling.redefinition_type == RedefinitionType.CHAIN
-                            and sibling.source_path
-                            and (
-                                sibling.source_path == agg.attribute_name
-                                or sibling.source_path.endswith("." + agg.attribute_name)
-                            )
-                            and sibling.attribute_name != agg.attribute_name
+                        if _chain_sibling_aliases_aggregation(
+                            sibling, agg.attribute_name
                         ):
                             agg.aliases.append(sibling.attribute_name)
                     all_aggregations.append(agg)

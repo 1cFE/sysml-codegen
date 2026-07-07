@@ -1,0 +1,27 @@
+=== catf_mfe_model ===
+  agg exprs: 0   agg-EP keys (current): 0   after Strategy D: 0
+  Strategy D fires on 0 term(s):
+  keys removed from set: 0   keys added: 0
+  MERGE collisions (>1 distinct consumer collapsed to one key): 0
+
+=== solar_battery_model ===
+  agg exprs: 20   agg-EP keys (current): 3   after Strategy D: 3
+  Strategy D fires on 0 term(s):
+  keys removed from set: 0   keys added: 0
+  MERGE collisions (>1 distinct consumer collapsed to one key): 0
+
+
+--- Confirmation: the one leaf-matching term resolves to a CHANNEL (Strategy D unreachable) ---
+MATERIAL_PORTION ref: allocation_model.material_portion
+  -> module_output SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__material_portion
+The 3 fall-through entry_point agg terms (none match a design-attr leaf for collapse):
+  permitting.raw_material_cost   -> ...site_infra__raw_material_cost__raw_material_cost
+  permitting.fabrication_cost    -> ...site_infra__fabrication_cost__fabrication_cost
+  permitting.installation_cost   -> ...site_infra__installation_cost__installation_cost
+
+VERDICT: Strategy D dedup churns ZERO keys on both catf_mfe and solar_battery.
+No merge collisions. No consumer-depended key collapsed. NO KILL.
+Behavior-change review: implementing Strategy D as promised has no observable effect on
+the corpus — its trigger (design-attr leaf match at fallthrough) never co-occurs with a
+fall-through entry_point on these baselines. This argues DELETE (documented no-op with
+zero live surface), not implement.

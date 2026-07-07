@@ -1,10 +1,22 @@
 # 04 -- Consolidated Input Resolver
 
+> **Status (F4 reconciliation, Item 7): built, parity-validated, NOT yet wired.**
+> `resolve_input()` and `AGG_STRATEGIES` have **zero production callers**. The
+> live aggregation path is `_resolve_aggregation_input_channel` (`graph_builder.py`),
+> not this module. This module was built in the COST-PATTERN commit but the final
+> rewire of the factory call sites was never done; it is parity-validated against
+> the backtracker DFS over the corpus (`test_dual_resolution.py`). The live-path
+> cutover — reconcile the fallback's entry-point construction to the live path,
+> rewire the three call sites, re-capture baselines — is filed as
+> `[ITEM7-F4-CUTOVER]`. Read the sections below as this module's **capability and
+> intended shape**, not as a description of the current live pipeline.
+
 ## Why this module exists
 
 Aggregation modules (SumTerm/SingletonTerm inputs) reimplement input resolution
 inline with different strategies and error handling. The consolidated input
-resolver replaces these with one function and an explicit, ordered strategy chain.
+resolver is **designed to** replace these with one function and an explicit,
+ordered strategy chain (once wired — see the status note above).
 CalcUsage resolution stays in the [backtracker](11-analysis-backtracker.md) (DFS
 requires it — see [24](24-dual-resolution-architecture.md)). FORMULA modules use
 a [pre-computed attribute resolution map](16-computed-attributes.md) (not this
@@ -18,9 +30,9 @@ resolver). LocalTerm uses a [factory-specific cascade](05-module-factory.md#4c-l
 | REQ-IR-02 | Strategies SHALL execute in declared list order; first non-None result wins. | `for strategy in strategies: result = strategy(ref, ctx); if result: return ...` |
 | REQ-IR-03 | Self-reference guard SHALL reject channels where the producing module [EQN](15-naming-conventions.md) matches `ctx.module_eqn`. | Guard check after each strategy: `channel.rsplit("__", 1)[0] == ctx.module_eqn` triggers skip |
 | REQ-IR-04 | [ResolutionContext](#resolutioncontext) SHALL be immutable (`frozen=True`); no strategy mutates it. | `@dataclass(frozen=True)` on ResolutionContext; mutation raises `FrozenInstanceError` |
-| REQ-IR-05 | Aggregation modules SHALL use `AGG_STRATEGIES` with `ChainRedefinitionFollow` at position 1 (after `ScopedRegistryLookup`, before `SysMLQNLookup`). | `AGG_STRATEGIES[0] == ScopedRegistryLookup` and `AGG_STRATEGIES[1] == ChainRedefinitionFollow` |
+| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`) — the strategy list an aggregation caller receives once wired. | `AGG_STRATEGIES[0] == ScopedRegistryLookup` and `AGG_STRATEGIES[1] == ChainRedefinitionFollow` |
 | REQ-IR-06 | Fallback SHALL produce an `entry_point` [InputSource](#inputsource-output-model) with qualified name `"{module_eqn}__{param_name}"`. | `result.source_type == "entry_point"` and `result.qualified_name.startswith(ctx.module_eqn)` |
-| REQ-IR-07 | Aggregation SumTerm and SingletonTerm inputs SHALL use `resolve_input()` with `AGG_STRATEGIES`. FORMULA modules use pre-computed [attribute resolution](16-computed-attributes.md) (not this resolver). LocalTerm uses [factory-specific cascade](05-module-factory.md#4c-localterm). CalcUsage uses the [backtracker cascade](11-analysis-backtracker.md). | Aggregation call sites use `AGG_STRATEGIES` |
+| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to (parity — validated, not live). FORMULA modules use pre-computed [attribute resolution](16-computed-attributes.md) (not this resolver). CalcUsage uses the [backtracker cascade](11-analysis-backtracker.md); the live aggregation path is `_resolve_aggregation_input_channel` until `[ITEM7-F4-CUTOVER]`. | `test_dual_resolution.py::TestResolveInputParityExtended` + committed corpus suite |
 
 ## Function signature
 
@@ -36,8 +48,9 @@ def resolve_input(
 SysML QN, or dotted path). The format of `ref` determines which typed registry
 path the strategies will query. **`ctx`**: Immutable context bag with typed
 [OutputRegistry](10-output-registry.md). **`strategies`**: Ordered strategy list;
-callers must pass explicitly. Aggregation modules use `AGG_STRATEGIES` (REQ-IR-05).
-No default — there is no non-aggregation caller identified in the current codebase.
+callers must pass explicitly. The aggregation caller (once wired) will pass
+`AGG_STRATEGIES` (REQ-IR-05). No default — and, at HEAD, no production caller at
+all (see the status note).
 
 Always returns an [InputSource](#inputsource-output-model) (REQ-IR-01). Never raises on
 unresolved refs -- the [fallback](#fallback) produces an entry point (REQ-IR-06).
@@ -260,16 +273,19 @@ aggregation inputs ([SumTerms](05-module-factory.md#4a-sumterm)) almost always
 resolve through `:>>` chains rather than direct registry keys.
 
 ```python
-# In aggregation factory (05-module-factory):
+# Intended aggregation call site once wired (05-module-factory); NOT live at HEAD,
+# where the factory still calls _resolve_aggregation_input_channel directly:
 source = resolve_input(ref, ctx, strategies=AGG_STRATEGIES)  # SumTerm/SingletonTerm
 ```
 
-## What this eliminates
+## What this eliminates (once wired)
 
-FORMULA and Aggregation resolution collapse into `resolve_input()` call sites.
+The cutover collapses aggregation resolution into `resolve_input()` call sites.
 CalcUsage resolution remains in the [backtracker](11-analysis-backtracker.md)
-([24](24-dual-resolution-architecture.md)). For FORMULA/Agg, 160+ lines of
-duplicated logic become context construction + a single call.
+([24](24-dual-resolution-architecture.md)); FORMULA already uses the pre-computed
+attribute resolution map, not this resolver. For aggregation, ~160 lines of
+inline logic (`_resolve_aggregation_input_channel` + term-type fallbacks) become
+context construction + a single call — deferred to `[ITEM7-F4-CUTOVER]`.
 
 ## Related Documents
 

@@ -19,6 +19,7 @@ from sysml_codegen.resolution.graph_builder import (
     build_computation_graph,
 )
 from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.supplied_values import materialize_supplied_values
 from sysml_codegen.snapshot.loader import load_extraction_snapshot
 
 
@@ -64,6 +65,24 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
     # EXPOSE channel (pipeline_builder Step 5.56), so the offline path wires them the
     # same as the live path. Runs after the scoped aliases exist, before the backtracker.
     _rescue_self_named_bindings(registry, snap["calc_usages"])
+
+    # Item 2 (REQ-SVM-01..04): materialize supplied subsystem-attr values into
+    # design_attributes BEFORE the backtracker, so its Step-3 design-attribute
+    # resolution carries them to the consumer and collapses fan-out by source QN.
+    # The backtracker (below) is the real seam — it, not build_computation_graph,
+    # runs `_resolve_to_design_attribute`.
+    hierarchy_data = snap["hierarchy_data"]
+    synth_attrs = materialize_supplied_values(
+        snap["calc_usages"],
+        hierarchy_data.redefinitions,
+        hierarchy_data.design_overrides,
+        hierarchy_data.usage_type_map,
+        snap["design_attributes"],
+    )
+    for attr in synth_attrs:
+        # Bucket by the attribute's own source file (the consuming usage's file) so it
+        # groups into a valid, existing parameter group, not a sentinel-named one.
+        snap["design_attributes"].setdefault(str(attr.source_file), []).append(attr)
 
     # Run backtracker
     backtracker = DependencyBacktracker(

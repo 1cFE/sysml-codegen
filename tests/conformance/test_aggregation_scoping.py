@@ -308,8 +308,20 @@ class TestReqAS03DottedPrefixStripped:
             assert "__" in item.instance_path, (
                 f"instance_path should use __ separator: {item.instance_path}"
             )
-            expected_eqn = f"{item.instance_path}__{item.expression.attribute_name}"
-            assert item.module_eqn == expected_eqn
+        # Anchor module_eqn to a literal on one named aggregation. The former
+        # `expected_eqn = f"{instance_path}__{attr}"` duplicated module_eqn's own f-string
+        # (a tautology). Select by (instance_path, attribute_name), not index.
+        # provenance: solar_battery snapshot aggregation_expressions.
+        agg = next(
+            (i for i in result
+             if i.instance_path == "SolarBatteryDesign__solar_battery_plant__solar_array"
+             and i.expression.attribute_name == "capital_cost"),
+            None,
+        )
+        assert agg is not None, "solar_array/capital_cost aggregation not found"
+        assert agg.module_eqn == (
+            "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -509,14 +521,35 @@ class TestReqAS07ModuleEqnFormat:
     """REQ-AS-07: module_eqn property SHALL be '{instance_path}__{attribute_name}'."""
 
     @pytest.mark.req("REQ-AS-07")
-    @pytest.mark.parametrize("idx", range(20))
-    def test_module_eqn_format_solar_battery(
-        self, solar_battery_snapshot, idx
-    ):
-        """Each of 20 ScopedAggregationData has correct module_eqn."""
-        agg = solar_battery_snapshot["aggregation_expressions"][idx]
-        expected = f"{agg.instance_path}__{agg.expression.attribute_name}"
-        assert agg.module_eqn == expected
+    def test_module_eqn_format_solar_battery(self, solar_battery_snapshot):
+        """Named aggregations have the transcribed module_eqn.
+
+        The former body was parametrized over 20 indices and computed
+        expected = f"{instance_path}__{attribute_name}", duplicating module_eqn's own
+        f-string -- a tautology, and index-selected (a DFS-order artifact). Anchor two
+        aggregations selected by (instance_path, attribute_name) to literals.
+        """
+        aggs = solar_battery_snapshot["aggregation_expressions"]
+
+        def module_eqn(instance_path, attribute_name):
+            match = next(
+                (a for a in aggs
+                 if a.instance_path == instance_path
+                 and a.expression.attribute_name == attribute_name),
+                None,
+            )
+            assert match is not None, (
+                f"aggregation ({instance_path!r}, {attribute_name!r}) not found"
+            )
+            return match.module_eqn
+
+        # provenance: solar_battery snapshot aggregation_expressions (instance_path + attr).
+        assert module_eqn(
+            "SolarBatteryDesign__solar_battery_plant__solar_array", "capital_cost"
+        ) == "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost"
+        assert module_eqn(
+            "SolarBatteryDesign__solar_battery_plant", "capital_cost"
+        ) == "SolarBatteryDesign__solar_battery_plant__capital_cost"
 
     @pytest.mark.req("REQ-AS-07")
     def test_module_eqn_issue22(self, issue22_snapshot):

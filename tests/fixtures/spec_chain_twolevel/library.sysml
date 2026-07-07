@@ -15,10 +15,27 @@ package TwoLevelLib {
         out attribute lcoe : Real = cost_per_joule * 100.0;
     }
 
+    // Item-1 SC-2 additions. Two shapes on top of the existing calc-output chain:
+    //   - MaintCalc consumes a PLAIN cross-part attribute (no calc output in the
+    //     chain — the P1 acceptance note, distinct from cost_per_joule = gamma).
+    //   - ScaleCalc is instantiated TWICE, both reading one shared plant attribute,
+    //     so the fan-out collapses to one producer channel wired to both consumers.
+    calc def MaintCalc {
+        in attribute rate : Real;
+        out attribute maint_cost : Real = rate * 4.0;
+    }
+
+    calc def ScaleCalc {
+        in attribute s : Real;
+        out attribute scaled : Real = s * 10.0;
+    }
+
     // Base driver: declares cost_per_joule WITHOUT a value (base def tier).
     part def 'IFE Driver' {
         attribute drive_power : Real = 50.0;
         attribute cost_per_joule : Real;
+        // Plain cross-part attribute (no calc output) — the P1 acceptance shape.
+        attribute maintenance_rate : Real = 3.0;
 
         calc meier_cost : MeierCost {
             in drive_power = drive_power;
@@ -40,8 +57,26 @@ package TwoLevelLib {
     part def 'IFE Power Plant' {
         part driver : 'IFE Driver';
 
+        // Shared plant attribute for the fan-out collapse case (consumed by two
+        // ScaleCalc instances below — one producer channel, two consumers).
+        attribute scale : Real = 2.0;
+
         calc lcoe_calc : LcoeCalc {
             in cost_per_joule = driver.cost_per_joule;
+        }
+
+        // Plain cross-part-attribute shape: reads the driver's plain `maintenance_rate`
+        // (no calc output in the chain), distinct from the cost_per_joule = gamma chain.
+        calc maint_calc : MaintCalc {
+            in rate = driver.maintenance_rate;
+        }
+
+        // Fan-out: two modules consume the one `scale` attribute.
+        calc scale_a : ScaleCalc {
+            in s = scale;
+        }
+        calc scale_b : ScaleCalc {
+            in s = scale;
         }
     }
 }

@@ -358,7 +358,7 @@ def test_req_dm_03_fields_backtracking_result():
     expected = {
         "required_usages", "dependency_graph", "entry_points",
         "entry_point_sources", "binding_resolutions",
-        "phantom_report", "trace_log", "binding_to_entry_point",
+        "phantom_report", "trace_log",
         # Item 7 (REQ-GA-08 / D4): Step-4 fall-through set for the V11 collector.
         "fallback_entry_points",
     }

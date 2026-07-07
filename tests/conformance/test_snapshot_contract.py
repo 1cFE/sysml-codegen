@@ -19,6 +19,12 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.extraction.constraint_report import (
+    ConstraintKind,
+    ConstraintManifestEntry,
+    OwnerKind,
+    render_constraint_report,
+)
 from sysml_codegen.extraction.expression_compiler import CalcDefCompilationResult
 from sysml_codegen.snapshot import SnapshotFormatError, load_extraction_snapshot
 from tests.conftest import snapshot_fixture
@@ -64,6 +70,45 @@ def test_wrong_version_is_hard_error(tmp_path):
     snap.write_text(json.dumps({"snapshot_format_version": 999, "model_name": "x"}))
     with pytest.raises(SnapshotFormatError, match="format version 999"):
         load_extraction_snapshot(snap)
+
+
+@pytest.mark.req("REQ-SNAP-09")
+def test_v1_snapshot_is_rejected(tmp_path):
+    """INV-E: after the v2 bump there is no v1/v2 coexistence — a v1 snapshot is
+    rejected, so every committed snapshot must be re-captured at v2 (Item 4)."""
+    snap = tmp_path / "extraction_snapshot.json"
+    snap.write_text(json.dumps({"snapshot_format_version": 1, "model_name": "x"}))
+    with pytest.raises(SnapshotFormatError, match="format version 1"):
+        load_extraction_snapshot(snap)
+
+
+# ===========================================================================
+# REQ-EXT-09 / INV-B: the constraint manifest survives serialize -> commit ->
+# load, and the from-snapshot render matches a golden fragment (Item 4). This is
+# the committed-snapshot leg — it runs license-free on the re-captured v2
+# snapshot, so it only holds once Phase 5's re-capture has landed.
+# ===========================================================================
+@pytest.mark.req("REQ-EXT-09")
+def test_wi014_manifest_roundtrips_through_committed_snapshot(caplog):
+    snap = load_extraction_snapshot(snapshot_fixture("wi014_toy"))
+    manifest = snap["constraint_manifest"]
+    # Golden fragment: the assert constraint at toy_plant.sysml:51, part-def-owned.
+    golden = ConstraintManifestEntry(
+        owner_kind=OwnerKind.PART_DEF,
+        owner_name="Toy_Plant",
+        owner_qualified_name="toy_plant::'Toy Plant'",
+        constraint_name="affordable",
+        constraint_kind=ConstraintKind.ASSERT,
+        source_line=51,
+    )
+    assert manifest == [golden], "the assert manifest must survive the snapshot round-trip"
+
+    # ...and the from-snapshot render reports it as a dropped predicate.
+    with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
+        render_constraint_report(manifest, logging.getLogger("sysml_codegen.extraction.extractor"))
+    msgs = [r.getMessage() for r in caplog.records]
+    assert any("scanned 1" in m and "1 assert" in m for m in msgs)
+    assert any("affordable" in m and "is not executable" in m for m in msgs)
 
 
 # ===========================================================================

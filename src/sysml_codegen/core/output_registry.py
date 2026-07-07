@@ -1,9 +1,11 @@
 """OutputRegistry: typed registries for resolving binding source_paths to canonical channel names.
 
-Three typed registries replace the former flat ``dict[str, str]``:
+Four typed registries replace the former flat ``dict[str, str]``:
 - Scoped: ``dict[ScopedKey, CanonicalChannel]`` — Key_C (CalcUsage) and Key_E_stripped (Aggregation)
 - SysML QN: ``dict[SysMLQN, CanonicalChannel]`` — Phase 1c FORMULA outputs
 - Alias: ``dict[ScopedKey, CanonicalChannel]`` — Phases 2-4 aliases (CHAIN, EXPOSE_PURE, transitive)
+- Scoped alias: ``dict[ScopedAliasKey, CanonicalChannel]`` — structured (scope, leaf)
+  part-def / multi-hop EXPOSE aliases (Phase 3b, Item 10)
 
 See: 10-output-registry.md, 27-typed-registry-refactor.md
 """
@@ -24,17 +26,21 @@ logger = logging.getLogger(__name__)
 class OutputRegistry:
     """Typed registries for resolving binding source_paths to canonical channel names.
 
-    Three typed registries provide scoped, exact-match lookups:
+    Four typed registries provide scoped, exact-match lookups:
     - ``_scoped``: ``dict[ScopedKey, CanonicalChannel]`` — Key_C and Key_E_stripped
     - ``_sysml_qn``: ``dict[SysMLQN, CanonicalChannel]`` — SysML QN keys
     - ``_alias``: ``dict[ScopedKey, CanonicalChannel]`` — Phase 2-4 aliases
+    - ``_scoped_alias``: ``dict[ScopedAliasKey, CanonicalChannel]`` — structured
+      (scope, leaf) part-def / multi-hop EXPOSE aliases (Item 10, kept distinct
+      from the flat ``_alias`` so a tuple key never collides with a string one)
 
-    Usage protocol (4-phase registration):
+    Usage protocol (registration phases):
         Phase 1a: register_scoped() — CalcUsage outputs (Key_C)
         Phase 1b: register_scoped() — Aggregation outputs (Key_E_stripped)
         Phase 1c: register_sysml_qn() — FORMULA outputs
         Phase 2:  register_alias() — CHAIN redefinition aliases
         Phase 3:  register_alias() — EXPOSE_PURE aliases
+        Phase 3b: register_scoped_alias() — confirmed multi-hop EXPOSE (Item 10, D6)
         Phase 4:  register_alias() — Transitive design attribute aliases
     """
 
@@ -216,6 +222,7 @@ class OutputRegistry:
             f"OutputRegistry(scoped={len(self._scoped)}, "
             f"sysml_qn={len(self._sysml_qn)}, "
             f"alias={len(self._alias)}, "
+            f"scoped_alias={len(self._scoped_alias)}, "
             f"channels={len(self._canonical)})"
         )
 

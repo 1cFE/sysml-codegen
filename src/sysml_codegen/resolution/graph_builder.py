@@ -479,7 +479,11 @@ def _classify_entry_points(
         if qname in design_attr_by_qname:
             attr = design_attr_by_qname[qname]
             entry_type = EntryPointType.DESIGN_ATTRIBUTE
-            if attr.default_value:
+            # INV-6 (F2): `is not None`, not truthiness — a supplied `0.0` (or `""`)
+            # design attribute must carry as `0.0`, not silently drop to `None` and
+            # emit `null`, which would escape V11 (`collect_uncovered_params` keys on
+            # the fell-through set, so a Step-3-resolved 0.0 EP dropped to None lies).
+            if attr.default_value is not None:
                 try:
                     default_value = float(attr.default_value)
                 except (ValueError, TypeError):
@@ -971,6 +975,17 @@ def _build_attribute_resolution_map(
         output_registry: OutputRegistry for channel resolution
         calc_usage_names: CalcUsage instance names for EXPOSE_PURE resolution
     """
+    # D3-7 (closed-by-construction). This resolution map is keyed by the *bare*
+    # owning_part_name, so two same-named PartDefs in different packages could in
+    # principle merge buckets and silently cross-wire. The reachable silent-
+    # cross-wire shape is already loud-rejected upstream: any FORMULA channel
+    # registers a scoped key `{owning_part_name}.{python_name}` via
+    # OutputRegistry.register_scoped (core/output_registry.py:72), which RAISES on
+    # a duplicate key with a different channel — before this map is built. So a
+    # cross-wire needing two entries at the same (bare part_name, python_name)
+    # *with a channel* cannot reach here silently. EXPOSE resolutions are
+    # LITERAL/no-channel, so a same-key overwrite mis-wires nothing. The bare->QN
+    # re-key is optional defense-in-depth, deferred (no reachable silent failure).
     result: dict[str, dict[str, AttributeResolution]] = {}
 
     # Shape-A resolvability probe (Item 11): the leaves registered in the
@@ -1130,7 +1145,10 @@ def _build_computed_attr_module(
                 # Look up default value from design attrs
                 default_value: float | None = None
                 da = design_attr_by_qname.get(ep_qname)
-                if da and da.default_value:
+                # INV-6 (F2), second drop site: same `is not None` guard as `:482`.
+                # A FORMULA computed-attr input can wire to a materialized subsystem
+                # attribute valued `0.0`; truthiness would drop it to `null` here too.
+                if da and da.default_value is not None:
                     try:
                         default_value = float(da.default_value)
                     except (ValueError, TypeError):
@@ -1338,23 +1356,45 @@ def _find_literal_redefinition(
     if usage_type_map and owning_part_qn:
         target_partdef_qn = usage_type_map.get((owning_part_qn, part_usage))
 
+    first_value: float | None = None
+    # D3-10: Strategy 2 (name-based leaf match) is first-wins across ALL partdefs
+    # sharing a leaf name. A leaf-name match is structurally required in this
+    # fallback (there is no PartDef QN to key on), so instead of a silent
+    # first-wins we collect the colliding literals and warn (INV-3
+    # require-unique-or-warn). Strategy 1 (exact QN) stays unambiguous.
+    strategy2_hits: list[float] = []
     for redef in redefinitions:
         if redef.redefinition_type == RedefinitionType.LITERAL and redef.attribute_name == attr:
-            matched = False
+            via_strategy2 = False
             if target_partdef_qn is not None:
-                # Strategy 1: exact PartDef QN match (handles aliased usage names)
                 matched = redef.owning_part_qn == target_partdef_qn
             else:
-                # Strategy 2: name-based fallback (last segment match)
                 redef_part_name = redef.owning_part_qn.split("__")[-1]
                 matched = sanitize_name(redef_part_name).lower() == part_usage.lower()
+                via_strategy2 = matched
 
             if matched and redef.literal_value is not None:
                 try:
-                    return float(redef.literal_value)
+                    value = float(redef.literal_value)
                 except (ValueError, TypeError):
                     return None
-    return None
+                if not via_strategy2:
+                    return value  # Strategy 1: exact QN match, unambiguous.
+                strategy2_hits.append(value)
+                if first_value is None:
+                    first_value = value
+
+    if len(set(strategy2_hits)) > 1:
+        logger.warning(
+            "Redefinition leaf collision for '%s.%s': name-matched partdefs carry "
+            "differing literals %s; resolved first-wins to %s (ambiguous — no "
+            "PartDef QN to disambiguate).",
+            part_usage,
+            attr,
+            sorted(set(strategy2_hits)),
+            first_value,
+        )
+    return first_value
 
 
 def _build_aggregation_module(

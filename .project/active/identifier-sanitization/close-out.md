@@ -28,7 +28,11 @@ Confirmed **intended, documented, tested**: first-class design decision (doc 20 
 Constraints), REQ-REG-03/04/07 PASS, direct conformance tests, aliased baseline parseable. The
 residual grandparent-collision hole (parent-segment-only alias) is now a **hard fail-fast**
 (REQ-REG-08) — the Phase 0 static scan proved no committed model hits it (CLEAN gate). The
-AST-based import rewrite (substring, first-match) remains a filed follow-up, not built here.
+AST-based import rewrite (substring, first-match) was called a "filed follow-up" here but was in
+fact filed **nowhere**. PIPELINE-TRUTH Item 8 (§G / SC-11) assessed it and filed a real P3 BACKLOG
+entry (`[SC11-IMPORT-REWRITE]`): the size judgment is **not small** — done correctly it is a
+cross-module AST rework, not the 1–2-site local change the registry alias-rewrite's no-not-found
+branch (a D3 hygiene site) is. So it is filed, not built. This corrects the earlier false claim.
 
 ## ⚠️ Item 7 lockstep obligation (must reach Item 7's spec author)
 

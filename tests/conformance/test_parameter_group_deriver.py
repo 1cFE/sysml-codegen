@@ -365,41 +365,52 @@ class TestReqPgd05Classify:
     def test_req_pgd_05_classify_returns_group_for_attr_index(
         self, solar_battery_deriver
     ):
-        """classify() returns a non-None group name for an _attr_index qname."""
+        """A design-attribute qname classifies to design_params.
+
+        Former body drew qname = next(iter(_attr_index)) and asserted only non-None --
+        it never pinned which group. Anchor a named qname to a named group.
+        """
         deriver, _ = solar_battery_deriver
-        qname = next(iter(deriver._attr_index.keys()))
-        result = deriver.classify(qname)
-        assert result is not None, f"classify({qname}) returned None"
+        # provenance: design.sysml:53 -- p_net_mw is a design attribute.
+        qname = "SolarBatteryDesign__solar_battery_plant__p_net_mw"
+        assert deriver.classify(qname) == "design_params"
 
     @pytest.mark.req("REQ-PGD-05")
     def test_req_pgd_05_classify_returns_group_for_binding_index(
         self, solar_battery_deriver
     ):
-        """classify() returns a non-None group name for a _binding_index qname."""
+        """A binding-traced qname classifies to design_params (traces to a design attr)."""
         deriver, _ = solar_battery_deriver
-        qname = next(iter(deriver._binding_index.keys()))
-        result = deriver.classify(qname)
-        assert result is not None, f"classify({qname}) returned None"
+        # provenance: energy_production.p_net_mw binds to the design attr p_net_mw
+        #   (design.sysml:69), so it groups with design_params.
+        qname = "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw"
+        assert deriver.classify(qname) == "design_params"
 
     @pytest.mark.req("REQ-PGD-05")
     def test_req_pgd_05_classify_returns_group_for_unbound_index(
         self, solar_battery_deriver
     ):
-        """classify() returns a non-None group name for an _unbound_index qname."""
+        """An unbound library-default qname classifies to library_params."""
         deriver, _ = solar_battery_deriver
-        qname = next(iter(deriver._unbound_index.keys()))
-        result = deriver.classify(qname)
-        assert result is not None, f"classify({qname}) returned None"
+        # provenance: cost_per_watt is a library calc-def input default (library.sysml).
+        qname = (
+            "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module"
+            "__cost_model__cost_per_watt"
+        )
+        assert deriver.classify(qname) == "library_params"
 
     @pytest.mark.req("REQ-PGD-05")
     def test_req_pgd_05_classify_returns_group_for_literal_index(
         self, solar_battery_deriver
     ):
-        """classify() returns a non-None group name for a _literal_index qname."""
+        """A usage-literal qname classifies to library_params."""
         deriver, _ = solar_battery_deriver
-        qname = next(iter(deriver._literal_index.keys()))
-        result = deriver.classify(qname)
-        assert result is not None, f"classify({qname}) returned None"
+        # provenance: child_count = 25.0 usage literal (library.sysml:608).
+        qname = (
+            "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model"
+            "__child_count"
+        )
+        assert deriver.classify(qname) == "library_params"
 
     @pytest.mark.req("REQ-PGD-05")
     def test_req_pgd_05_classify_unknown_returns_none(self, solar_battery_deriver):
@@ -412,104 +423,26 @@ class TestReqPgd05Classify:
     def test_req_pgd_05_classify_precedence_matches_index(
         self, solar_battery_deriver
     ):
-        """classify() group name matches _generate_group_names(file.stem) for each index."""
+        """classify() returns the transcribed group for a named design-param qname.
+
+        Former body computed expected_group = deriver._generate_group_names(file.stem) --
+        the same method classify() calls internally -- so it could never fail. Anchor to
+        a literal group name.
+        """
         deriver, _ = solar_battery_deriver
-
-        # Test attr index
-        for qname, (file_path, _) in deriver._attr_index.items():
-            expected_group, _ = deriver._generate_group_names(file_path.stem)
-            assert deriver.classify(qname) == expected_group
-            break  # Just check first entry
-
-        # Test binding index
-        for qname, (file_path, _) in deriver._binding_index.items():
-            expected_group, _ = deriver._generate_group_names(file_path.stem)
-            assert deriver.classify(qname) == expected_group
-            break
-
-        # Test unbound index
-        for qname, (file_path, _) in deriver._unbound_index.items():
-            expected_group, _ = deriver._generate_group_names(file_path.stem)
-            assert deriver.classify(qname) == expected_group
-            break
-
-        # Test literal index
-        for qname, (file_path, _) in deriver._literal_index.items():
-            expected_group, _ = deriver._generate_group_names(file_path.stem)
-            assert deriver.classify(qname) == expected_group
-            break
+        # provenance: design.sysml:53 -- p_net_mw is a design attribute -> design_params.
+        assert deriver.classify(
+            "SolarBatteryDesign__solar_battery_plant__p_net_mw"
+        ) == "design_params"
 
 
 # ===========================================================================
-# REQ-PGD-06: Default Value Resolution
+# REQ-PGD-06: Default Value Resolution — retired.
+# The standalone default-value accessor these tests pinned was deleted by
+# PIPELINE-TRUTH Item 8 (dead: zero production callers; the live default path
+# resolves inline via `_parse_default_value` in `_derive_from_*`). Matrix PASS-row
+# re-frame handed to Item 7 via BACKLOG `[ITEM7-PGD06]`.
 # ===========================================================================
-
-
-class TestReqPgd06DefaultValueResolution:
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_direct_attr(self, solar_battery_deriver):
-        """get_default_value() for a known design attr qname returns correct float."""
-        deriver, _ = solar_battery_deriver
-        # SolarBatteryDesign__solar_battery_plant__p_net_mw has default "0.008"
-        qname = "SolarBatteryDesign__solar_battery_plant__p_net_mw"
-        result = deriver.get_default_value(qname)
-        assert result == pytest.approx(0.008), f"Expected 0.008, got {result}"
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_binding_resolution(
-        self, solar_battery_deriver
-    ):
-        """get_default_value() for a binding-traced qname resolves through _attr_index."""
-        deriver, _ = solar_battery_deriver
-
-        # Find a binding index entry
-        if not deriver._binding_index:
-            pytest.skip("No binding index entries")
-
-        qname = next(iter(deriver._binding_index.keys()))
-        result = deriver.get_default_value(qname)
-        # Binding resolution may or may not find a matching attr.
-        # Just verify it returns float or None (no crash)
-        assert result is None or isinstance(result, float)
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_literal(self, solar_battery_deriver):
-        """get_default_value() for a literal-indexed qname returns the literal float."""
-        deriver, _ = solar_battery_deriver
-
-        if not deriver._literal_index:
-            pytest.skip("No literal index entries")
-
-        qname = next(iter(deriver._literal_index.keys()))
-        _, expected_value = deriver._literal_index[qname]
-        result = deriver.get_default_value(qname)
-        assert result == pytest.approx(expected_value), (
-            f"Expected {expected_value}, got {result}"
-        )
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_unbound_returns_none(
-        self, solar_battery_deriver
-    ):
-        """get_default_value() for an unbound-indexed qname returns None."""
-        deriver, _ = solar_battery_deriver
-
-        if not deriver._unbound_index:
-            pytest.skip("No unbound index entries")
-
-        qname = next(iter(deriver._unbound_index.keys()))
-        result = deriver.get_default_value(qname)
-        assert result is None
-
-    @pytest.mark.req("REQ-PGD-06")
-    def test_req_pgd_06_default_value_unknown_returns_none(
-        self, solar_battery_deriver
-    ):
-        """get_default_value() for unknown qname returns None."""
-        deriver, _ = solar_battery_deriver
-        result = deriver.get_default_value("nonexistent__qname__here")
-        assert result is None
 
 
 # ===========================================================================

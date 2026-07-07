@@ -18,8 +18,8 @@ class TestSanitizeNameSpecialChars:
             ("  normal  ", "normal"),
             ("'Quoted Name'", "Quoted_Name"),
             ("class", "class_"),  # reserved word still works
-            ("", ""),  # empty still works
-            (None, ""),  # None still works
+            ("", "unnamed"),  # SC-4 A2: empty yields a legal identifier, not ""
+            (None, "unnamed"),  # SC-4 A2: None yields a legal identifier, not ""
             ("simple", "simple"),  # plain name unchanged
             ("already_valid_123", "already_valid_123"),  # underscores + digits OK
             ("___leading___", "leading"),  # leading/trailing underscores stripped

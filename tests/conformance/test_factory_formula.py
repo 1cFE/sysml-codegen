@@ -24,10 +24,7 @@ import pytest
 
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.analysis.parameter_groups import ParameterGroupDeriver
-from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.qualified_names import (
-    get_channel_name,
-    get_module_name,
     sysml_to_python_qualified_name,
 )
 from sysml_codegen.extraction.data_models import (
@@ -163,6 +160,19 @@ def _build_all_formula_modules(
     return results
 
 
+def _select_formula_module(formula_inputs, ca_name: str) -> PipelineModule:
+    """Select one built FORMULA module by its ComputedAttribute name. Fails loud."""
+    formula_cas, resolution_map, entry_points, design_attrs, group_deriver, _snap = (
+        formula_inputs
+    )
+    for module, ca in _build_all_formula_modules(
+        formula_cas, resolution_map, entry_points, design_attrs, group_deriver
+    ):
+        if ca.name == ca_name:
+            return module
+    raise AssertionError(f"FORMULA module for ca {ca_name!r} not found")
+
+
 # ---------------------------------------------------------------------------
 # Session-scoped fixtures (expensive -- build once per session)
 # ---------------------------------------------------------------------------
@@ -213,40 +223,32 @@ class TestPipelineModuleConstruction:
             assert module.module_type, f"Module type must be non-empty for {ca.name}"
             assert len(module.outputs) > 0, f"Module must have outputs for {ca.name}"
 
-    def test_module_name_from_ca_qn(self, formula_inputs):
-        """module.name == get_module_name(sysml_to_python_qualified_name(sysml_qn))."""
-        formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap = (
-            formula_inputs
-        )
-        modules = _build_all_formula_modules(
-            formula_cas, resolution_map, entry_points, design_attrs, group_deriver
+    def test_module_name_from_ca_qn(self, solar_battery_formula):
+        """Named FORMULA module name is the transcribed lowercased EQN.
+
+        The former body computed expected = get_module_name(sysml_to_python_qualified_name
+        (sysml_qn)) -- production's exact composition -- for every module, so it could
+        never fail. Anchor a dedicated named module (p_net_kw) to a literal.
+        """
+        module = _select_formula_module(solar_battery_formula, "p_net_kw")
+        # provenance: solar_battery snapshot computed-attr p_net_kw on
+        #   SolarBatteryDesign::solar_battery_plant; get_module_name lowercases the EQN.
+        assert module.name == "solarbatterydesign__solar_battery_plant__p_net_kw", (
+            f"module.name mismatch: {module.name!r}"
         )
 
-        for module, ca in modules:
-            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-            module_eqn = sysml_to_python_qualified_name(sysml_qn)
-            expected = get_module_name(module_eqn)
-            assert module.name == expected, (
-                f"Module name mismatch for {ca.name}: "
-                f"{module.name!r} != {expected!r}"
-            )
+    def test_module_type_from_ca_qn(self, solar_battery_formula):
+        """Named FORMULA module_type is the transcribed derived type.
 
-    def test_module_type_from_ca_qn(self, formula_inputs):
-        """module.module_type == derive_module_type(sysml_qn)."""
-        formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap = (
-            formula_inputs
+        The former body computed expected = derive_module_type(sysml_qn). Anchor a
+        dedicated named module to a literal.
+        """
+        module = _select_formula_module(solar_battery_formula, "p_net_kw")
+        # provenance: FORMULA sysml_qn SolarBatteryDesign::solar_battery_plant::p_net_kw ->
+        #   derive_module_type dots the lowercased scope and suffixes "Module".
+        assert module.module_type == "solarbatterydesign.solar_battery_plant.p_net_kwModule", (
+            f"module_type mismatch: {module.module_type!r}"
         )
-        modules = _build_all_formula_modules(
-            formula_cas, resolution_map, entry_points, design_attrs, group_deriver
-        )
-
-        for module, ca in modules:
-            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-            expected = derive_module_type(sysml_qn)
-            assert module.module_type == expected, (
-                f"Module type mismatch for {ca.name}: "
-                f"{module.module_type!r} != {expected!r}"
-            )
 
     def test_entry_point_creation(self, formula_inputs):
         """Factory adds new entry points for LITERAL inputs with correct ep_qname format."""
@@ -644,23 +646,20 @@ class TestOutputNaming:
                 f"got {module.outputs[0].field_name!r}"
             )
 
-    def test_output_channel_name_pqn(self, formula_inputs):
-        """output channel_name == get_channel_name(module_eqn, ca.python_name)."""
-        formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap = (
-            formula_inputs
-        )
-        modules = _build_all_formula_modules(
-            formula_cas, resolution_map, entry_points, design_attrs, group_deriver
-        )
+    def test_output_channel_name_pqn(self, solar_battery_formula):
+        """Named FORMULA output channel is the doubled ADR-003 PQN literal.
 
-        for module, ca in modules:
-            sysml_qn = f"{ca.owning_part_qualified_name}::{ca.name}"
-            module_eqn = sysml_to_python_qualified_name(sysml_qn)
-            expected = get_channel_name(module_eqn, ca.python_name)
-            assert module.outputs[0].channel_name == expected, (
-                f"FORMULA module {module.name}: channel_name "
-                f"{module.outputs[0].channel_name!r} != expected {expected!r}"
-            )
+        The former body computed expected = get_channel_name(module_eqn, ca.python_name) --
+        production's exact call. Anchor a dedicated named module to a literal.
+        """
+        module = _select_formula_module(solar_battery_formula, "p_net_kw")
+        # The trailing "p_net_kw" is DOUBLED on purpose -- not a typo. Same deliberate
+        # ADR-003 PQN as the aggregation channel (H7): a computed-attr module's EQN ends
+        # in the attribute name, and get_channel_name appends "__" + output_name
+        # (core/qualified_names.py:98-100). Do NOT de-double.
+        assert module.outputs[0].channel_name == (
+            "SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw"
+        ), f"channel_name mismatch: {module.outputs[0].channel_name!r}"
 
     def test_factory_entry_points_design_attribute(self, formula_inputs):
         """Every entry point created by the factory has entry_type == DESIGN_ATTRIBUTE."""

@@ -51,6 +51,8 @@ def test_both_sibling_channels_exist() -> None:
     assert CHAMBER_B in channels, channels
 
 
+# REQ-BT-11: consumer-scope-prefixed _scoped_alias key (Step 1c) disambiguates a
+# same-named sibling channel to the correct instance, not first-wins.
 def test_chamber_power_disambiguated_to_chamber_b() -> None:
     """SC-3 FLIP (Phase 7, D-D): the consumer's ``chamber_power`` wires to chamber_b's
     instance channel — never chamber_a. The #1 consumer-scoped ``_scoped_alias`` lookup

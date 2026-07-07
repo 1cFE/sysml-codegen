@@ -383,7 +383,7 @@ def test_from_snapshot_rejects_design_path_filter():
 location keeps `orchestration → snapshot` one-directional), Implementation Notes
 (CLI mechanism), Appendix A (V5 banner, V6 CLI errors), dead-template trap.
 
-- [ ] `src/sysml_codegen/orchestration/snapshot_context.py` —
+- [x] `src/sysml_codegen/orchestration/snapshot_context.py` —
       `build_pipeline_context_from_snapshot(snapshot_path) -> PipelineContext`:
       rebuild the graph (promoted helper), thread `compilation_results` into
       `build_computation_graph(...)`, wrap a `PipelineContext` with
@@ -391,40 +391,40 @@ location keeps `orchestration → snapshot` one-directional), Implementation Not
       `pipeline_context.py:78-104`), log the provenance banner **once** (V5), and —
       if the loader flagged stale sources — log the **one end-of-run freshness
       summary** (V3, design M6).
-- [ ] `src/sysml_codegen/snapshot/capture.py` — `capture_snapshot(model_paths,
+- [x] `src/sysml_codegen/snapshot/capture.py` — `capture_snapshot(model_paths,
       output_path, design_path_filter="")` lifted from
       `_capture_full_pipeline` (the only license-requiring code in the package).
       Default output `<models-root>/extraction_snapshot.json` (D5).
-- [ ] `cli/__init__.py`: replace `--models required=True` (`cli/__init__.py:513`)
+- [x] `cli/__init__.py`: replace `--models required=True` (`cli/__init__.py:513`)
       with `add_mutually_exclusive_group(required=True)` holding `--models` /
       `--from-snapshot` (INV-7); reject `--from-snapshot` + `--design-path-filter`
       in `cmd_generate` (V6); add `cmd_snapshot` subcommand; `GenerationConfig`
       gains `from_snapshot: Path | None`.
-- [ ] **Decision (design left open):** retire vs wrap
+- [x] **Decision (design left open):** retire vs wrap
       `scripts/capture_extraction_snapshots.py`. **Plan's call:** keep it as a thin
       wrapper that loops the 10 fixtures calling `capture_snapshot` (convenient for
       bulk fixture regen), delegating all logic to the promoted module — no second
       copy of capture logic (INV-3 spirit). The supported user path is the CLI.
-- [ ] **Dead-template guard (spec INFERRED).** Add a test asserting
+- [x] **Dead-template guard (spec INFERRED).** Add a test asserting
       `generation_timestamp` in `templates/pydantic_schema.py.jinja2:8` has **zero
       render sites** (leave unwired or delete) — wiring it would break byte-identity.
 
 ### Validation
 **Automated:**
-- [ ] Null-fields generation test (INV-4, B1) → generates, no `AttributeError`.
-- [ ] CLI route tests (INV-7, V6): both flags → error; neither → error;
+- [x] Null-fields generation test (INV-4, B1) → generates, no `AttributeError`.
+- [x] CLI route tests (INV-7, V6): both flags → error; neither → error;
       `--from-snapshot` + `--design-path-filter` → error.
-- [ ] **INV-1 env-scrubbed subprocess:** run `generate --from-snapshot` with
+- [x] **INV-1 env-scrubbed subprocess:** run `generate --from-snapshot` with
       `SYSIDE_LICENSE_KEY` et al. **unset** → success (proves the path never invokes
       the parser).
-- [ ] **INV-6 provenance-never-in-output:** generated files contain no
+- [x] **INV-6 provenance-never-in-output:** generated files contain no
       banner / `captured_at` / version text.
-- [ ] Dead-template guard test → passes.
-- [ ] `uv run pytest tests/` → full suite green.
+- [x] Dead-template guard test → passes.
+- [x] `uv run pytest tests/` → full suite green.
 
 **Manual:**
-- [ ] `uv run sysml-codegen snapshot --models <fixture>` writes a versioned snapshot.
-- [ ] `uv run sysml-codegen generate --from-snapshot <snapshot> --output /tmp/out`
+- [x] `uv run sysml-codegen snapshot --models <fixture>` writes a versioned snapshot.
+- [x] `uv run sysml-codegen generate --from-snapshot <snapshot> --output /tmp/out`
       prints the V5 provenance banner and generates.
 
 **What We Know Works After This Phase:**
@@ -468,24 +468,24 @@ def test_chain_spike_autoimpl_matches_live():
 **See `design.md` for:** Validation Approach (SC-1 license-gated, absolute path,
 symlinked run; SC-10 license-free once committed).
 
-- [ ] License-gated `test_live_vs_snapshot_byte_identical` — skips cleanly on
+- [x] License-gated `test_live_vs_snapshot_byte_identical` — skips cleanly on
       `ImportError` from `load_models` (reuse `test_extractor.py:851-864` idiom).
       Feed an **absolute** `--models` path; run **once on a symlinked source path**.
-- [ ] SC-10 `chain_spike` auto-impl test (license-free — rides the Phase-2
+- [x] SC-10 `chain_spike` auto-impl test (license-free — rides the Phase-2
       re-captured snapshot).
 
 ### Validation
 **Manual (license live — capture evidence into the plan's Implementation Notes):**
-- [ ] Run SC-1 with the license live → **empty tree diff**. Record the command and
+- [x] Run SC-1 with the license live → **empty tree diff**. Record the command and
       the empty-diff output.
-- [ ] Run SC-1 once on a **symlinked** source path → empty diff (D8/B2 at
+- [x] Run SC-1 once on a **symlinked** source path → empty diff (D8/B2 at
       integration scale). Record it.
-- [ ] SC-10 chain_spike → stencils auto-implemented, `compilability` set, matches
+- [x] SC-10 chain_spike → stencils auto-implemented, `compilability` set, matches
       live. Record it.
 
 **Automated (license-free thereafter):**
-- [ ] SC-10 test passes in CI (no license).
-- [ ] SC-1 test **skips** cleanly when no license present.
+- [x] SC-10 test passes in CI (no license).
+- [x] SC-1 test **skips** cleanly when no license present.
 
 **What We Know Works After This Phase:**
 Snapshot generation is byte-identical to live (the headline SC-9 claim, proven —
@@ -507,26 +507,26 @@ None — this is documentation and traceability closing out the item.
 **See `design.md` for:** D7 (new doc 27 + pointer from doc 02), M5 (REQ-SNAP
 numbering starts at **08** — 01–07 exist), agentic-mbse impact section.
 
-- [ ] `docs/architecture/reference/27-snapshot-generation.md` — format schema
+- [x] `docs/architecture/reference/27-snapshot-generation.md` — format schema
       (top-level `snapshot_format_version`, `compilation_results` block,
       relativized `source_file`), the version/provenance/freshness policy (V1–V6),
       and the `REQ-SNAP-08+` requirement table. Reconcile with the **existing**
       `REQ-SNAP-01..07` family (round-trip / typed-fields / AST-None) — doc 27 is a
       new reference doc for an existing family, not a new namespace.
-- [ ] Pointer from `docs/architecture/reference/02-orchestration.md`
+- [x] Pointer from `docs/architecture/reference/02-orchestration.md`
       (PipelineContext section) to doc 27.
-- [ ] Add `REQ-SNAP-08+` tags to the new behavior and **verification-matrix rows**
+- [x] Add `REQ-SNAP-08+` tags to the new behavior and **verification-matrix rows**
       mapping each REQ to its test (INV-1..7 → the tests written above).
-- [ ] **agentic-mbse impact:** record explicitly — expected **none** beyond a
+- [x] **agentic-mbse impact:** record explicitly — expected **none** beyond a
       possible docs pointer (design "agentic-mbse impact"; R2). Confirm "none vs
       docs pointer" and note it in the close-out.
-- [ ] Update `.project/CURRENT_WORK.md` Item 2 status → complete, with the SC-1/SC-10
+- [x] Update `.project/CURRENT_WORK.md` Item 2 status → complete, with the SC-1/SC-10
       evidence pointer.
 
 ### Validation
-- [ ] Doc 27 present; doc 02 pointer resolves; REQ table numbered from 08.
-- [ ] Verification matrix: every new REQ-SNAP has a row and a passing test.
-- [ ] `uv run pytest tests/` → full suite green (final gate).
+- [x] Doc 27 present; doc 02 pointer resolves; REQ table numbered from 08.
+- [x] Verification matrix: every new REQ-SNAP has a row and a passing test.
+- [x] `uv run pytest tests/` → full suite green (final gate).
 
 **What We Know Works After This Phase:**
 The snapshot format is documented and traceable; the item is closeable
@@ -740,8 +740,8 @@ enabler of byte-identity, not a semantic change. Pipeline baselines regenerated
 (license-free); full suite green (1837 passed).
 
 ### Phase 5 Completion
-**Completed:** —
-**agentic-mbse impact (none vs docs pointer):** —
+**Completed:** deliverables landed with Item 2 (PASS-audited); tracking flipped 2026-07-06 by PIPELINE-TRUTH Item 8 (D1-F5 finding #3). Doc 27 present, doc 02 pointer resolves, REQ-SNAP-08+ tags + verification-matrix rows in place, CLI `--from-snapshot` route live, full suite green.
+**agentic-mbse impact (none vs docs pointer):** none beyond the docs pointer — confirmed at Item 2 close-out (no adapter/API change; snapshot layer is repo-local).
 
 ---
 

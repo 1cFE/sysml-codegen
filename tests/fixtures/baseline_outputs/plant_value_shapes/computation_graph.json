@@ -1,0 +1,429 @@
+{
+  "modules": [
+    {
+      "name": "plantvalueshapesdesign__shapes_design__rated_cost",
+      "module_type": "plantvalueshapeslib.RatedCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "rate",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "PlantValueShapesDesign__shapes_design__rated_cost__rate",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__rated_cost__cost",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "cost",
+            "expression": "(inputs.rate * 100.0)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.rate * 100.0)"
+      },
+      "calc_def_name": "RatedCostCalc",
+      "calc_def_qualified_name": "PlantValueShapesLib::RatedCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "cost = rate * 100.0"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 54
+    },
+    {
+      "name": "plantvalueshapesdesign__shapes_design__net_cost_calc",
+      "module_type": "plantvalueshapeslib.NetCostCalcModule",
+      "inputs": [
+        {
+          "param_name": "revenue",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "PlantValueShapesDesign__shapes_design__net_cost_calc__revenue",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__net_cost_calc__net_cost",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "net_cost",
+            "expression": "(inputs.revenue * 0.5)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.revenue * 0.5)"
+      },
+      "calc_def_name": "NetCostCalc",
+      "calc_def_qualified_name": "PlantValueShapesLib::NetCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "net_cost = revenue * 0.5"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 35
+    },
+    {
+      "name": "plantvalueshapesdesign__shapes_design__mixed_style",
+      "module_type": "plantvalueshapeslib.Mixed_Output_StyleModule",
+      "inputs": [
+        {
+          "param_name": "base",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "PlantValueShapesDesign__shapes_design__mixed_style__base",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "doubled",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__mixed_style__doubled",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        },
+        {
+          "field_name": "tripled",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__mixed_style__tripled",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "doubled",
+            "expression": "(inputs.base * 2.0)"
+          },
+          {
+            "name": "tripled",
+            "expression": "(inputs.base * 3.0)"
+          }
+        ],
+        "output_count": 2,
+        "single_output_expression": null
+      },
+      "calc_def_name": "Mixed_Output_Style",
+      "calc_def_qualified_name": "PlantValueShapesLib::'Mixed Output Style'",
+      "doc_comment": "",
+      "calc_expressions": [
+        "doubled = base * 2.0",
+        "tripled = base * 3.0"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 41
+    },
+    {
+      "name": "plantvalueshapesdesign__shapes_design__quoted_return",
+      "module_type": "plantvalueshapeslib.Quoted_Return_CalcModule",
+      "inputs": [
+        {
+          "param_name": "amount",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "design_params",
+            "qualified_name": "PlantValueShapesDesign__shapes_design__quoted_return__amount",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__quoted_return__scaled",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 3,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "scaled",
+            "expression": "(inputs.amount * 1.5)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.amount * 1.5)"
+      },
+      "calc_def_name": "Quoted_Return_Calc",
+      "calc_def_qualified_name": "PlantValueShapesLib::'Quoted Return Calc'",
+      "doc_comment": "",
+      "calc_expressions": [
+        "scaled = amount * 1.5"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 48
+    },
+    {
+      "name": "plantvalueshapesdesign__shapes_design__flow_unit__flow_calc",
+      "module_type": "plantvalueshapeslib.FlowCalcModule",
+      "inputs": [
+        {
+          "param_name": "flow_rate",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "PlantValueShapesLib__Flow_Sub__throughput",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__flow_unit__flow_calc__total",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 4,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "total",
+            "expression": "(inputs.flow_rate * 10.0)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.flow_rate * 10.0)"
+      },
+      "calc_def_name": "FlowCalc",
+      "calc_def_qualified_name": "PlantValueShapesLib::FlowCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "total = flow_rate * 10.0"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 76
+    },
+    {
+      "name": "plantvalueshapesdesign__shapes_design__chamber_unit__select",
+      "module_type": "plantvalueshapeslib.ChamberSelectCalcModule",
+      "inputs": [
+        {
+          "param_name": "wall",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__wall",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        },
+        {
+          "param_name": "footprint",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "library_params",
+            "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__footprint",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__rating",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 5,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "is_computed_attribute": false,
+      "is_aggregation": false,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "rating",
+            "expression": "(inputs.footprint * 2.0)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.footprint * 2.0)"
+      },
+      "calc_def_name": "ChamberSelectCalc",
+      "calc_def_qualified_name": "PlantValueShapesLib::ChamberSelectCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "rating = footprint * 2.0"
+      ],
+      "source_file": "library.sysml",
+      "source_line": 91
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "design_params",
+      "class_name": "DesignParams",
+      "source_file": "design.sysml",
+      "parameters": [
+        {
+          "qualified_name": "PlantValueShapesDesign__shapes_design__mixed_style__base",
+          "simple_name": "base",
+          "entry_type": "usage_literal",
+          "default_value": 4.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValueShapesDesign__shapes_design__net_cost_calc__revenue",
+          "simple_name": "revenue",
+          "entry_type": "usage_literal",
+          "default_value": 200.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValueShapesDesign__shapes_design__quoted_return__amount",
+          "simple_name": "amount",
+          "entry_type": "usage_literal",
+          "default_value": 6.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValueShapesDesign__shapes_design__rated_cost__rate",
+          "simple_name": "rate",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        }
+      ]
+    },
+    {
+      "name": "library_params",
+      "class_name": "LibraryParams",
+      "source_file": "library.sysml",
+      "parameters": [
+        {
+          "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__footprint",
+          "simple_name": "footprint",
+          "entry_type": "usage_literal",
+          "default_value": 12.0,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__wall",
+          "simple_name": "wall",
+          "entry_type": "usage_literal",
+          "default_value": null,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "PlantValueShapesLib__Flow_Sub__throughput",
+          "simple_name": "throughput",
+          "entry_type": "design_attribute",
+          "default_value": 8.0,
+          "source_calc_usage": null,
+          "param_group": "library_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "plantvalueshapesdesign__shapes_design__rated_cost",
+    "plantvalueshapesdesign__shapes_design__net_cost_calc",
+    "plantvalueshapesdesign__shapes_design__mixed_style",
+    "plantvalueshapesdesign__shapes_design__quoted_return",
+    "plantvalueshapesdesign__shapes_design__flow_unit__flow_calc",
+    "plantvalueshapesdesign__shapes_design__chamber_unit__select"
+  ],
+  "output_aliases": []
+}

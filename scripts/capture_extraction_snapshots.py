@@ -11,10 +11,16 @@ capture via _capture_extraction_only().
 
 Usage:
     uv run python scripts/capture_extraction_snapshots.py
+    uv run python scripts/capture_extraction_snapshots.py --fixtures NAME[,NAME...]
+
+``--fixtures`` restricts the run to the named fixtures (keyed by MODEL NAME — the
+keys of MODELS / EXTRACTION_ONLY_MODELS), so each capture step touches exactly the
+fixtures it names and byte-identity of the rest is checkable via ``git status``.
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -22,6 +28,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
+
+from scripts.capture_filter import select_fixtures
 
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
@@ -77,6 +85,29 @@ MODELS = {
     # usage_type_map (keyed by part-DEF QN), so the declaring-base-def type-select misses
     # 'HIF Driver' -> the gamma -> lcoe edge stays unwired. This is the WI-015 gap.
     "spec_chain_twolevel": FIXTURES_DIR / "spec_chain_twolevel",
+    # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1). All three build a
+    # full graph:
+    #   plant_values          — the headline; its 3 cross-part plant-calc inputs fall
+    #                           to valueless Step-4 EPs and trip V11 on all three
+    #                           value-provision mechanisms (the "before" state Item 2 flips).
+    #   plant_value_shapes    — 9 secondary fusion-tea syntactic shapes (SC-3).
+    #   deep_cross_scope_probe — committed for the first time (D1-F6 drift); full-pipeline.
+    "plant_values": FIXTURES_DIR / "plant_values",
+    "plant_value_shapes": FIXTURES_DIR / "plant_value_shapes",
+    "deep_cross_scope_probe": FIXTURES_DIR / "deep_cross_scope_probe",
+    # Silent-Failure Hardening (PIPELINE-TRUTH Item 5) trip fixtures — graduated
+    # from probes/. Each carries a diagnostic shape, excluded from the
+    # zero-WARNING clean sweep (INV-6):
+    #   d38_caret — `sum(cell.total_cost) ^ exponent`: `^` is power → ` ** `, not
+    #               Python XOR; full-pipeline (D3-8).
+    "d38_caret": FIXTURES_DIR / "d38_caret",
+    # Whole-Plant Cross-Part Value Resolution (PIPELINE-TRUTH Item 2). The vendored
+    # canonical fusion-tea models (~/1cfe/fusion-tea/models). SC-4: `generate
+    # --from-snapshot` on this committed snapshot must emit the full YAML with TRUE
+    # ZERO V11 offenders — all ten cross-part/in-part plain-value references cleared
+    # by the supplied-value materializer. The license-free stand-in for Item 3's live
+    # acceptance run.
+    "fusion_tea": FIXTURES_DIR / "fusion_tea",
 }
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
@@ -89,6 +120,15 @@ EXTRACTION_ONLY_MODELS = {
     # self-reference is fully visible in extraction; no pipeline baseline is needed.
     # Kept isolated (own fixture dir) so its failure mode cannot poison ife_plant.
     "self_named_binding_trap": FIXTURES_DIR / "self_named_binding_trap",
+    # Aggregation-literal dispatch probe (PIPELINE-TRUTH Item 8, Row D / REQ-AST-10).
+    # Extraction-only: the literal-bearing aggregation is fully visible in extraction;
+    # no pipeline baseline is needed. Isolated so its shape cannot poison other fixtures.
+    "agg_literal_probe": FIXTURES_DIR / "agg_literal_probe",
+    # Silent-Failure Hardening (Item 5) — extraction-only trip fixtures:
+    #   invocation_binding_probe — `in x = Doubler(v=a)` is an InvocationExpression
+    #     binding RHS: an unhandled dispatch type. Extraction-only (the pipeline
+    #     cannot resolve the invocation). Warns + drops (D3-1).
+    "invocation_binding_probe": FIXTURES_DIR / "invocation_binding_probe",
 }
 
 
@@ -131,6 +171,10 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         computed_attributes=computed_attrs,
         channel_aliases=all_aliases,
         compilation_results={},  # extraction-only: no graph, no compilation
+        # Manifest is model-wide and does not need the graph, so the
+        # extraction-only path must carry it too — otherwise a constraint-bearing
+        # extraction-only fixture would diverge live-vs-snapshot (INV-B, Item 4).
+        constraint_manifest=extractor.collect_constraint_manifest(),
         output_dir=model_path,
     )
 
@@ -156,10 +200,15 @@ def _report(model_path: Path, snapshot: dict) -> None:
     )
 
 
-def main() -> None:
+def main(requested: str | None = None) -> None:
+    # `--fixtures` restricts the run; unknown names fail loud before any capture.
+    selected = select_fixtures(list(MODELS) + list(EXTRACTION_ONLY_MODELS), requested)
+
     # Full-pipeline models go through the promoted, supported capture path so
     # there is no second copy of the capture logic (INV-3 spirit).
     for model_name, model_path in MODELS.items():
+        if model_name not in selected:
+            continue
         print(f"Processing {model_name} from {model_path}...")
         out = capture_snapshot([model_path], model_path / "extraction_snapshot.json")
         _report(model_path, json.loads(out.read_text()))
@@ -167,6 +216,8 @@ def main() -> None:
     # Extraction-only fixtures cannot build the full pipeline; capture directly
     # and write the summary here.
     for model_name, model_path in EXTRACTION_ONLY_MODELS.items():
+        if model_name not in selected:
+            continue
         print(f"Processing {model_name} (extraction-only) from {model_path}...")
         snapshot = _capture_extraction_only(model_name, model_path)
         (model_path / "extraction_snapshot.json").write_text(snapshot_to_json(snapshot))
@@ -176,4 +227,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fixtures",
+        help="comma-separated fixture MODEL names to capture (default: all)",
+    )
+    args = parser.parse_args()
+    try:
+        main(args.fixtures)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(2)

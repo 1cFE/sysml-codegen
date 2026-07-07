@@ -333,6 +333,24 @@ captured — on template-instantiating usages (all RHS kinds) and on plain typed
 (an AttributeUsage redefinition) is **not captured** — it is currently dropped at
 extraction without a diagnostic. Use the bare form.
 
+### Cross-Part Supplied Values (Item 2, REQ-SVM-01..04)
+
+A plant calc may read a subsystem value it does not own, cross-part or in-part. The
+supplied-value materializer carries the model literal into the consumer's entry point,
+so the reference resolves to a filled `DESIGN_ATTRIBUTE` parameter instead of a valueless
+one. Four value-provision shapes are supported (see
+[25-hierarchy-resolver §Supplied-Value Materializer](reference/25-hierarchy-resolver.md#supplied-value-materializer-req-svm-01-04)):
+
+- **(a)** a subtype-def literal reached through a usage-level retype (`:>> driver : 'Hif Driver'` with `Hif_Driver.efficiency = 0.35`);
+- **(b)** a bare no-retype override block (`part :>> target_factory { :>> cost_per_target = 10.0; }`);
+- **(c)** a plain one-hop cross-part attribute with a usage-level dotted override (`:>> chamber.cost_per_unit = 7.0`);
+- **(d)** in-part consumption of an inherited attribute the same def redefines below the binding (`in flow_rate = throughput` with `:>> throughput = 8.0`).
+
+Precedence is **usage override > specialized-def `:>>` > base def**. Entry points key by
+the **source attribute's QN**, so two differently-named consumers of one source collapse
+onto one parameter. Only LITERAL values apply; a non-literal supplied value falls through
+to the uncovered-parameter diagnostic (V11) with a WARN, never silently.
+
 ---
 
 ## 6. Uniform-Array Assumption for Aggregation
@@ -390,11 +408,20 @@ path for them today: there is no boolean-output module, no assertion channel, an
 reads a constraint. So every constraint usage in the model is **dropped**.
 
 **Why the drop is loud, not silent.** A dropped constraint is a real modeling gap — the modeler may
-believe a viability gate is being enforced when it is not. At orchestration time the pipeline scans
-the whole model for constraint usages and reports them (REQ-EXT-09): one `INFO` per constraint naming
-its owner, and one summary `WARNING` with the model-wide total. `catf_mfe` has dozens of benign inline
-constraints, so the report is a single summary WARN plus per-constraint INFO — never per-constraint
-WARN noise.
+believe a viability gate is being enforced when it is not. At orchestration time the pipeline sweeps
+every `ConstraintUsage` **including its subtypes** — so an `assert constraint`
+(`AssertConstraintUsage`) and a `require`/plain predicate are both seen — and reports them
+(REQ-EXT-09). `RequirementUsage` and its `satisfy` subtype (`SatisfyRequirementUsage`) are
+requirement-side, not dropped predicates, and are **excluded** from the drop count. The report is:
+one always-present summary `INFO` — `scanned N ConstraintUsage (incl. subtypes), reported M droppable
+(K assert, J require/plain), excluded E requirement/satisfy` — then one `INFO` per dropped predicate
+naming its owner, then one summary `WARNING` only when `M > 0`. The scanned/excluded breakdown keeps
+an empty result distinguishable from a blind query and a swept-and-excluded `satisfy` observable.
+
+The report is available on **both** the live path and the `generate --from-snapshot` path: the
+manifest is serialized into the snapshot and the same renderer replays it offline (identical output,
+no license). `catf_mfe` has dozens of benign inline constraints, so the report is a single summary
+WARN plus per-constraint INFO — never per-constraint WARN noise.
 
 **What a modeler needing an enforced gate should do.** There is no in-model mechanism yet. Encode the
 check as a calc def that outputs the quantity you care about (e.g. a margin or a boolean-as-Real), so

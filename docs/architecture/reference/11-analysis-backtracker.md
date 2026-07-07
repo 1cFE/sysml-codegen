@@ -39,7 +39,6 @@ class BacktrackingResult(BaseModel):
     binding_resolutions: dict[str, BindingResolution]  # SINGLE SOURCE OF TRUTH
     phantom_report: PhantomDetectionReport      # Suspected phantom entry points
     trace_log: list[str]                        # Debug trace of resolution steps
-    binding_to_entry_point: dict[str, str]      # DEPRECATED - use binding_resolutions
     fallback_entry_points: set[str]             # Step-4 fall-through entry point QNs
 ```
 
@@ -394,5 +393,6 @@ No normalization needed — the SysML QN key is in its own typed registry.
 - **Upstream**: [02-orchestration](02-orchestration.md) — calls `find_required_modules()`, [10-output-registry](10-output-registry.md) — provides the typed registry queried by all steps
 - **Architecture**: [03-resolution-overview](03-resolution-overview.md) — The Scope Problem, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — why CalcUsage resolution stays here
 - **Downstream**: [07-graph-assembly](07-graph-assembly.md) — consumes `BacktrackingResult`, [05-module-factory](05-module-factory.md) — builds modules from resolved bindings
+- **Upstream (Item 2)**: [25-hierarchy-resolver §Supplied-Value Materializer](25-hierarchy-resolver.md#supplied-value-materializer-req-svm-01-04) — a pre-pass merges synthesized design attributes (cross-part/in-part supplied values, keyed by source QN) into `design_attributes` before this backtracker runs, so Step 3 (`_resolve_to_design_attribute`) carries them to the consumer and collapses renamed-consumer fan-out
 - **Cross-cutting**: [06-entry-point-classifier](06-entry-point-classifier.md) — classifies EPs discovered here, [15-naming-conventions](15-naming-conventions.md) — ScopedKey/CanonicalChannel formats
 - **Data models**: [09-data-models](09-data-models.md) — `BacktrackingResult`, `BindingResolution`, `BindingInfo`

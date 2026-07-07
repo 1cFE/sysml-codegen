@@ -1,0 +1,316 @@
+{
+  "snapshot_format_version": 2,
+  "model_name": "plant_values",
+  "captured_at": "2026-07-06T19:03:24.540912+00:00",
+  "compilation_results": {
+    "PlantCostCalc": {
+      "calc_def_name": "PlantCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "plant_cost",
+          "compilability": "fully_compilable",
+          "python_expression": "((inputs.target_cost + inputs.chamber_cost) / inputs.driver_efficiency)",
+          "input_refs": [
+            "target_cost",
+            "chamber_cost",
+            "driver_efficiency"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "plant_cost"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "PlantCostCalc",
+      "qualified_name": "PlantValuesLib::PlantCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "plant_cost = (target_cost + chamber_cost) / driver_efficiency"
+      ],
+      "input_attributes": [
+        {
+          "name": "driver_efficiency",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "target_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        },
+        {
+          "name": "chamber_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "plant_cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 20,
+      "source_hash": "4239c91b3c10768efe0c9ca0bbe444cf58d58c36911fa489d1ae629612704492",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "chamber_cost",
+        "driver_efficiency",
+        "plant_cost",
+        "target_cost"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "PlantValuesDesign__plant__cost_calc",
+      "calc_def_name": "PlantCostCalc",
+      "calc_def_qualified_name": "PlantValuesLib::PlantCostCalc",
+      "module_type": "plantvalueslib.PlantCostCalcModule",
+      "bindings": [
+        {
+          "param_name": "driver_efficiency",
+          "source_path": "driver.efficiency",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> driver.efficiency",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "driver",
+          "source_attribute_name": "efficiency"
+        },
+        {
+          "param_name": "target_cost",
+          "source_path": "target_factory.cost_per_target",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> target_factory.cost_per_target",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "target_factory",
+          "source_attribute_name": "cost_per_target"
+        },
+        {
+          "param_name": "chamber_cost",
+          "source_path": "chamber.cost_per_unit",
+          "binding_type": "chain",
+          "is_cross_file": false,
+          "raw_expression": "FeatureChainExpression -> chamber.cost_per_unit",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": "chamber",
+          "source_attribute_name": "cost_per_unit"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "library.sysml",
+      "source_line": 92,
+      "parent_part_path": "plant",
+      "qualified_name": "PlantValuesDesign__plant__cost_calc",
+      "is_template": false,
+      "owning_part_def_qn": "PlantValuesLib__Power_Plant",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/plant_values/library.sysml": [
+      {
+        "name": "plant_cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 24,
+        "parent_part": "",
+        "qualified_name": "PlantValuesLib__PlantCostCalc__plant_cost"
+      },
+      {
+        "name": "threshold",
+        "sysml_type": "Real",
+        "default_value": "10.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 34,
+        "parent_part": "",
+        "qualified_name": "PlantValuesLib__Viability_Threshold__threshold"
+      },
+      {
+        "name": "gain",
+        "sysml_type": "Real",
+        "default_value": "40.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 89,
+        "parent_part": "",
+        "qualified_name": "PlantValuesLib__Power_Plant__gain"
+      },
+      {
+        "name": "plant_cost",
+        "sysml_type": "Real",
+        "default_value": "cost_calc.plant_cost",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 98,
+        "parent_part": "",
+        "qualified_name": "PlantValuesLib__Power_Plant__plant_cost"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [
+      {
+        "owning_part_qn": "PlantValuesLib__Hif_Driver",
+        "attribute_name": "efficiency",
+        "redefinition_type": "literal",
+        "literal_value": 0.35,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "design_overrides": [
+      {
+        "owning_part_qn": "PlantValuesDesign__plant",
+        "attribute_name": "cost_per_unit",
+        "redefinition_type": "literal",
+        "literal_value": 7.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [
+          "chamber",
+          "cost_per_unit"
+        ],
+        "is_deep_path": true,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "PlantValuesDesign__plant__target_factory",
+        "attribute_name": "cost_per_target",
+        "redefinition_type": "literal",
+        "literal_value": 10.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {
+      "PlantValuesLib__Power_Plant": [
+        "chamber",
+        "driver",
+        "target_factory"
+      ]
+    },
+    "usage_type_map": {
+      "[\"PlantValuesLib__Power_Plant\", \"driver\"]": "PlantValuesLib__Base_Driver",
+      "[\"PlantValuesLib__Power_Plant\", \"target_factory\"]": "PlantValuesLib__Target_Factory",
+      "[\"PlantValuesLib__Power_Plant\", \"chamber\"]": "PlantValuesLib__Reaction_Chamber",
+      "[\"PlantValuesDesign__plant\", \"driver\"]": "PlantValuesLib__Hif_Driver"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [
+    {
+      "name": "plant_cost",
+      "python_name": "plant_cost",
+      "owning_part_name": "Power_Plant",
+      "owning_part_qualified_name": "PlantValuesLib::'Power Plant'",
+      "expression_ast": null,
+      "expression_text": "cost_calc.plant_cost",
+      "references": [
+        {
+          "name": "plant_cost",
+          "qualified_name": "PlantValuesLib::PlantCostCalc::plant_cost",
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/plant_values/library.sysml"
+        },
+        {
+          "name": "cost_calc",
+          "qualified_name": "PlantValuesLib::'Power Plant'::cost_calc",
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/plant_values/library.sysml"
+        }
+      ],
+      "classification": "expose_pure",
+      "compilability": "manual_required",
+      "compiled_expression": null,
+      "is_on_part_definition": true,
+      "source_file": "unknown",
+      "source_line": 0,
+      "reference_chain": [
+        "cost_calc",
+        "plant_cost"
+      ]
+    }
+  ],
+  "channel_aliases": [],
+  "dropped_constraints": [
+    {
+      "owner_kind": "part_def",
+      "owner_name": "Power_Plant",
+      "owner_qualified_name": "PlantValuesLib::'Power Plant'",
+      "constraint_name": "viability",
+      "constraint_kind": "assert",
+      "source_line": 105
+    }
+  ]
+}

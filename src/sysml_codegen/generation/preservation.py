@@ -6,10 +6,13 @@ before regeneration.
 """
 
 import ast
+import logging
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -91,8 +94,11 @@ def _extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None:
         return None
 
     except SyntaxError:
-        return None
-    except Exception:
+        # D3-14: a parse failure means we could not read the signature. Return
+        # None and let the *caller* decide preserve-vs-regenerate by policy — a
+        # non-empty impl that fails to parse is PRESERVED on this transient
+        # error, not stubbed over. The broad `except Exception: return None` is
+        # removed so a genuinely unexpected error propagates loudly.
         return None
 
 
@@ -121,7 +127,29 @@ def should_regenerate_stencil(
 
     existing_sig = _extract_signature_from_impl(impl_path)
     if existing_sig is None:
-        return True, "Could not parse existing implementation"
+        # D3-14 (preserve-on-transient, INV-4). We could not extract a signature.
+        # Policy at the call site: a transient read/parse error on a NON-EMPTY
+        # impl must NOT stub over a valid handwritten implementation — preserve
+        # it and warn. Only a genuinely-empty impl is safe to regenerate.
+        try:
+            content = impl_path.read_text()
+        except OSError as exc:
+            logger.warning(
+                "Transient read error on %s (%s); preserving the existing "
+                "implementation rather than regenerating a stub (D3-14).",
+                impl_path,
+                exc,
+            )
+            return False, "Preserved on transient read error"
+        if content.strip():
+            logger.warning(
+                "Existing implementation %s is non-empty but its signature "
+                "could not be parsed; preserving it (transient parse error — "
+                "not overwriting a valid impl with a stub, D3-14).",
+                impl_path,
+            )
+            return False, "Preserved (non-empty, unparseable — transient)"
+        return True, "Empty implementation (nothing to preserve)"
 
     expected_sig = _generate_expected_signature_from_module(module)
 

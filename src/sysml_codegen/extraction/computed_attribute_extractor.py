@@ -21,14 +21,15 @@ from sysml_codegen.core.models import ChannelAlias
 
 from .data_models import ComputedAttributeClassification, ComputedAttributeData
 from .expression_compiler import (
-    CompilationError,
     Compilability,
+    CompilationError,
     _sanitize_name,
     build_expression_ast,
     compile_expression,
 )
 from .expression_utils import (
     extract_feature_chain_segments,
+    is_literal_expression,
     reconstruct_expression,
 )
 
@@ -89,8 +90,19 @@ def _classify_attribute_expression(
     Returns:
         Classification enum value.
     """
-    # Step 1: no refs → LITERAL
+    # Step 1: no refs → LITERAL (the documented, intended behavior, REQ-CA-04).
     if not refs:
+        # D3-9 tripwire: a genuine literal has a literal AST root. A *non*-literal
+        # root with zero extracted refs is suspicious — it means extract_feature_refs
+        # under-reported, and a real computed attribute is about to be silently
+        # dropped as a constant. Warn (does not change the classification).
+        if expression_ast is not None and not is_literal_expression(expression_ast):
+            logger.warning(
+                "Computed attribute has a non-literal expression root "
+                "(%s) but zero extracted references; classifying as LITERAL "
+                "may silently drop a real computed attribute (D3-9 tripwire).",
+                type(expression_ast).__name__,
+            )
         return ComputedAttributeClassification.LITERAL
 
     sibling_refs: list[str] = []
@@ -320,5 +332,20 @@ def extract_computed_attributes(
                         owning_part_qn=part_qn,
                         source="expose_pure",
                     ))
+                else:
+                    # D3-16: classification (EXPOSE_PURE) and alias production
+                    # disagree. No local ref matched calc_usage_names, so no
+                    # instance was identified — a cross-part single-hop calc-refs
+                    # EXPOSE_PURE that the Item-10 tentative gate does not cover.
+                    # Was silent (alias skipped, param never wired); warn instead.
+                    logger.warning(
+                        "EXPOSE_PURE '%s' on '%s' classified as an alias but no "
+                        "local instance ref matched (refs=%s); the alias is "
+                        "skipped and the channel left unwired — a cross-part "
+                        "single-hop EXPOSE_PURE the Item-10 gate misses (D3-16).",
+                        attr_name,
+                        part_name,
+                        [r.name for r in refs],
+                    )
 
     return (results, aliases)

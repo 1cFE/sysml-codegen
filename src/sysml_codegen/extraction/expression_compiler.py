@@ -391,11 +391,10 @@ def build_expression_ast(
             name, f"unresolved reference: {name}"
         )
 
-    # --- LiteralRational / LiteralInteger / LiteralReal ---
+    # --- LiteralRational / LiteralInteger ---
     if (
         SysideAdapter.is_instance(syside_node, "LiteralRational")
         or SysideAdapter.is_instance(syside_node, "LiteralInteger")
-        or SysideAdapter.is_instance(syside_node, "LiteralReal")
     ):
         if hasattr(syside_node, "value"):
             return ExpressionAST.literal(syside_node.value)

@@ -7,21 +7,26 @@ Per ADR-003: Signal Identifier Architecture, this module provides
 the authoritative implementation for building qualified names.
 """
 
+import keyword
 import re
 
 
 def sanitize_name(name: str | None) -> str:
-    """Sanitize SysML name for Python.
+    """Sanitize a SysML name into a legal Python identifier.
+
+    SC-4 A2 (INV-5): the result ALWAYS satisfies ``.isidentifier()`` and is never
+    a Python keyword — for every input, including empty, all-symbol, leading-digit
+    (``2nd stage`` → ``n_2nd_stage``) and any ``keyword.kwlist`` member.
 
     Args:
         name: Raw SysML name (may contain quotes, spaces, reserved words,
-              special characters like &, $, @, -)
+              special characters like &, $, @, -).
 
     Returns:
-        Python-safe identifier string
+        A legal, non-keyword Python identifier (never the empty string).
     """
     if not name:
-        return ""
+        return "unnamed"
     name = name.strip("'\"")
     name = name.replace(" ", "_")
     # Replace non-alphanumeric, non-underscore chars with underscore
@@ -29,9 +34,13 @@ def sanitize_name(name: str | None) -> str:
     # Collapse runs of underscores (safe: operates on individual segments,
     # not qualified names — the __ ADR-003 separator is applied later)
     name = re.sub(r"_+", "_", name)
-    # Strip leading/trailing underscores
+    # Strip leading/trailing underscores; all-symbol input collapses to "unnamed"
     name = name.strip("_") or "unnamed"
-    if name in {"class", "def", "import", "from", "return", "yield"}:
+    # A leading digit is not a legal identifier start — prepend a safe prefix.
+    if name[0].isdigit():
+        name = f"n_{name}"
+    # Full keyword guard (was only 6 keywords) — trailing underscore per PEP 8.
+    if keyword.iskeyword(name):
         name = f"{name}_"
     return name
 

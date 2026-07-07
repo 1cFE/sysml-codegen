@@ -1,0 +1,247 @@
+{
+  "snapshot_format_version": 2,
+  "model_name": "d38_caret",
+  "captured_at": "2026-07-06T22:57:06.532051+00:00",
+  "compilation_results": {
+    "NoopCalc": {
+      "calc_def_name": "NoopCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "result",
+          "compilability": "fully_compilable",
+          "python_expression": "inputs.x",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "result"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "NoopCalc",
+      "qualified_name": "D38Probe::NoopCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "result = x"
+      ],
+      "input_attributes": [
+        {
+          "name": "x",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "result",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "library.sysml",
+      "source_line": 32,
+      "source_hash": "234eddecd234248032e37be7224822575aded7cb3166a5e326eff30caeaa179d",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "result",
+        "x"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "noop",
+      "calc_def_name": "NoopCalc",
+      "calc_def_qualified_name": "D38Probe::NoopCalc",
+      "module_type": "d38probe.NoopCalcModule",
+      "bindings": [
+        {
+          "param_name": "x",
+          "source_path": "1.0",
+          "binding_type": "literal",
+          "is_cross_file": false,
+          "raw_expression": "LiteralExpression -> 1.0",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": 1.0,
+          "expression_ast": null,
+          "unhandled": false,
+          "source_instance_name": null,
+          "source_attribute_name": null
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "design.sysml",
+      "source_line": 11,
+      "parent_part_path": "",
+      "qualified_name": "D38Design__plant__noop",
+      "is_template": false,
+      "owning_part_def_qn": null,
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/d38_caret/library.sysml": [
+      {
+        "name": "count",
+        "sysml_type": "Integer",
+        "default_value": "4",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 19,
+        "parent_part": "",
+        "qualified_name": "D38Lib__Pack__count"
+      },
+      {
+        "name": "exponent",
+        "sysml_type": "Real",
+        "default_value": "2.0",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 20,
+        "parent_part": "",
+        "qualified_name": "D38Lib__Pack__exponent"
+      },
+      {
+        "name": "result",
+        "sysml_type": "Real",
+        "default_value": "x",
+        "unit": null,
+        "source_file": "library.sysml",
+        "source_line": 34,
+        "parent_part": "",
+        "qualified_name": "D38Probe__NoopCalc__result"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [
+      {
+        "owning_part_qn": "D38Lib__Cell",
+        "attribute_name": "total_cost",
+        "redefinition_type": "chain",
+        "literal_value": null,
+        "source_path": "base_cost",
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "D38Lib__Pack",
+        "attribute_name": "total_cost",
+        "redefinition_type": "expression",
+        "literal_value": null,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "sum(cell.total_cost) ^ exponent",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "design_overrides": [
+      {
+        "owning_part_qn": "D38Design__plant__pack",
+        "attribute_name": "base_cost",
+        "redefinition_type": "literal",
+        "literal_value": 50.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [
+          "cell",
+          "base_cost"
+        ],
+        "is_deep_path": true,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "multiplicities": [
+      {
+        "part_usage_name": "cell",
+        "owning_part_def_qn": "D38Lib__Pack",
+        "count": 4,
+        "count_attribute_name": "count",
+        "default_value": 4
+      }
+    ],
+    "aggregation_expressions": [
+      {
+        "owning_part_qn": "D38Lib__Pack",
+        "owning_part_name": "Pack",
+        "attribute_name": "total_cost",
+        "raw_expression_text": "sum(cell.total_cost) ^ exponent",
+        "transformed_expression": "((count * cell.total_cost) ** exponent)",
+        "sum_terms": [
+          {
+            "part_usage_name": "cell",
+            "attribute_name": "total_cost",
+            "multiplicity_attr": "count",
+            "multiplicity_count": 4
+          }
+        ],
+        "singleton_terms": [],
+        "local_terms": [
+          {
+            "attribute_name": "exponent"
+          }
+        ],
+        "input_channels": [
+          "cell.total_cost"
+        ],
+        "entry_points": [
+          "count"
+        ],
+        "compilability": "unknown",
+        "has_unsupported_nodes": false,
+        "aliases": [],
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "warnings": [],
+    "part_usage_names": {
+      "D38Lib__Pack": [
+        "cell"
+      ]
+    },
+    "usage_type_map": {
+      "[\"D38Lib__Pack\", \"cell\"]": "D38Lib__Cell"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": [],
+  "dropped_constraints": []
+}

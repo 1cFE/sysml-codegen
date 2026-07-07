@@ -64,6 +64,18 @@ MODEL_IDS = {
     "attr_expr_probe": "attr_expr_probe",
 }
 
+# Hand-transcribed entry-point-group counts. Replaces the
+# len(entry_fusion_inputs) == len(graph.entry_point_groups) tautology in
+# test_entry_fusion_json_count (both sides re-derive from the same graph).
+# provenance: tests/fixtures/baseline_outputs/solar_battery/computation_graph.json
+#   entry_point_groups = [design_params, library_params, system_design] -> 3
+# provenance: tests/fixtures/baseline_outputs/catf_mfe/computation_graph.json
+#   8 groups [blanket/heating/magnets/physics/radial_build/system/tritium/vacuum]_params
+EXPECTED_GROUP_COUNTS = {
+    "solar_battery_model": 3,
+    "catf_mfe_model": 8,
+}
+
 
 @pytest.fixture(scope="session")
 def template_env():
@@ -399,16 +411,16 @@ class TestEntryFusionJsonCount:
     @pytest.mark.req("REQ-PY-07")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS[:2],
                              ids=[MODEL_IDS[m] for m in PARAMETRIZED_MODELS[:2]])
-    def test_entry_fusion_json_count(self, model_name, all_graphs, all_parsed_yamls):
-        """len(entry_fusion_inputs) == len(graph.entry_point_groups)."""
-        graph = all_graphs[model_name]
+    def test_entry_fusion_json_count(self, model_name, all_parsed_yamls):
+        """len(entry_fusion_inputs) == hand-transcribed group count."""
         parsed = all_parsed_yamls[model_name]
+        expected = EXPECTED_GROUP_COUNTS[model_name]
 
         entry_fusion = parsed["modules"]["entry_fusion"]
         entry_inputs = entry_fusion["inputs"]
-        assert len(entry_inputs) == len(graph.entry_point_groups), (
+        assert len(entry_inputs) == expected, (
             f"entry_fusion has {len(entry_inputs)} inputs "
-            f"but graph has {len(graph.entry_point_groups)} parameter groups "
+            f"but model has {expected} parameter groups "
             f"in {model_name}"
         )
 
@@ -539,6 +551,7 @@ class TestYamlBaselineComparison:
     @pytest.mark.baseline
     @pytest.mark.parametrize("model_name", BASELINE_MODELS,
                              ids=[BASELINE_IDS[m] for m in BASELINE_MODELS])
+    # REQ-BASE-05: generated YAML/graph/registry from snapshot matches the reviewed re-captured baseline (ordering-only recapture).
     def test_yaml_baseline_comparison(self, model_name, all_yamls):
         """Generated YAML from snapshot matches baseline file."""
         short_name = BASELINE_IDS[model_name]

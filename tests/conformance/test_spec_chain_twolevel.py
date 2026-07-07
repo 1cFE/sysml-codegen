@@ -74,6 +74,8 @@ def test_lcoe_calc_instantiated() -> None:
     assert (CONSUMER, "cost_per_joule") in sources, sorted(sources)
 
 
+# REQ-VBR-11: instance-aware _rewrite_specialized_chain type-select follows the
+# hif_plant usage-level retype to the specialized def, wiring cost_per_joule to gamma.
 def test_cost_per_joule_wired_to_gamma() -> None:
     """SC-2 FLIP (Phase 8 STEP 2, two-level specialization). ``lcoe_calc.cost_per_joule``
     wires to the gamma channel — the gamma -> lcoe edge — because the instance-aware
@@ -86,6 +88,8 @@ def test_cost_per_joule_wired_to_gamma() -> None:
     assert src.producer_channel == GAMMA_CHANNEL, src
 
 
+# REQ-LVP-09: _index_usage_level_retypes indexes usage-level retypes keyed by the
+# container instance QN (genuine retypes only).
 def test_usage_type_map_indexes_usage_level_retype() -> None:
     """The EXTRACTION change (``_index_usage_level_retypes``): the ``hif_plant``
     usage-level ``:>> driver : 'HIF Driver'`` retype is indexed keyed by the CONTAINER
@@ -124,6 +128,27 @@ def test_hif_driver_redefinition_extracted() -> None:
     ) in redefs, redefs
 
 
+def test_fanout_collapses_to_one_producer_channel() -> None:
+    """SC-2 fan-out: the one plant attribute ``scale`` is consumed by TWO modules
+    (``scale_a`` and ``scale_b``). Both inputs collapse onto the SAME entry point —
+    one producer channel wired to both consumers, not two separate EPs."""
+    sources = offline_input_sources(MODEL)
+    a = sources[("twoleveldesign__hif_plant__scale_a", "s")]
+    b = sources[("twoleveldesign__hif_plant__scale_b", "s")]
+    assert a.source_type == "entry_point" and b.source_type == "entry_point"
+    assert a.qualified_name == b.qualified_name == "TwoLevelLib__IFE_Power_Plant__scale"
+
+
+def test_plain_cross_part_attr_shape() -> None:
+    """SC-2 plain cross-part-attribute shape (the P1 note, no calc output in the chain):
+    ``maint_calc.rate`` reads the driver's plain ``maintenance_rate`` attribute — distinct
+    from the calc-output-valued ``cost_per_joule = gamma`` chain above it."""
+    sources = offline_input_sources(MODEL)
+    src = sources[("twoleveldesign__hif_plant__maint_calc", "rate")]
+    assert src.source_type == "entry_point"
+    assert src.qualified_name == "TwoLevelLib__IFE_Driver__maintenance_rate"
+
+
 @requires_license
 def test_spec_chain_twolevel_loads_live() -> None:
     """Guard against fixture rot: the committed model still parses through the live
@@ -136,4 +161,7 @@ def test_spec_chain_twolevel_loads_live() -> None:
     assert {c.qualified_name for c in calc_defs} == {
         "TwoLevelLib::MeierCost",
         "TwoLevelLib::LcoeCalc",
+        # Item-1 SC-2 additions: plain cross-part attr consumer + fan-out consumer.
+        "TwoLevelLib::MaintCalc",
+        "TwoLevelLib::ScaleCalc",
     }

@@ -29,8 +29,6 @@ import pytest
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.analysis.parameter_groups import ParameterGroupDeriver
 from sysml_codegen.core.qualified_names import (
-    get_channel_name,
-    get_module_name,
     sanitize_name,
 )
 from sysml_codegen.extraction.data_models import (
@@ -158,6 +156,39 @@ def _build_all_agg_modules(
     return results
 
 
+def _select_agg(inputs: dict, instance_path: str, attribute_name: str) -> ScopedAggregationData:
+    """Select one aggregation by (instance_path, attribute_name), not by list index.
+
+    Index is a DFS-order artifact not stored in the snapshot -- a reorder must not move
+    a pin. Fails loudly if the identified aggregation is absent from the fixture.
+    """
+    match = next(
+        (a for a in inputs["aggregation_data"]
+         if a.instance_path == instance_path
+         and a.expression.attribute_name == attribute_name),
+        None,
+    )
+    assert match is not None, (
+        f"aggregation ({instance_path!r}, {attribute_name!r}) not in fixture "
+        f"aggregation_data"
+    )
+    return match
+
+
+def _build_one(inputs: dict, agg: ScopedAggregationData) -> PipelineModule:
+    """Build a single aggregation module from a fresh copy of the entry points."""
+    module, _new_eps = _build_aggregation_module(
+        agg=agg,
+        redefinitions=inputs["redefinitions"],
+        output_registry=inputs["registry"],
+        entry_points=copy.deepcopy(inputs["entry_points"]),
+        group_deriver=inputs["group_deriver"],
+        expose_aliases=inputs["expose_aliases"],
+        usage_type_map=inputs["usage_type_map"],
+    )
+    return module
+
+
 # ---------------------------------------------------------------------------
 # Session-scoped fixtures (expensive -- build once per session)
 # ---------------------------------------------------------------------------
@@ -205,23 +236,24 @@ class TestReturnsPipelineModule:
             assert module.module_type, f"Module type must be non-empty for {agg.module_eqn}"
             assert len(module.outputs) > 0, f"Module must have outputs for {agg.module_eqn}"
 
-    def test_module_name_format(self, agg_inputs):
-        """module.name == get_module_name(agg.module_eqn) for every module."""
-        for agg in agg_inputs["aggregation_data"]:
-            module, _new_eps = _build_aggregation_module(
-                agg=agg,
-                redefinitions=agg_inputs["redefinitions"],
-                output_registry=agg_inputs["registry"],
-                entry_points=copy.deepcopy(agg_inputs["entry_points"]),
-                group_deriver=agg_inputs["group_deriver"],
-                expose_aliases=agg_inputs["expose_aliases"],
-                usage_type_map=agg_inputs["usage_type_map"],
-            )
-            expected = get_module_name(agg.module_eqn)
-            assert module.name == expected, (
-                f"Module name mismatch for {agg.module_eqn}: "
-                f"{module.name!r} != {expected!r}"
-            )
+    def test_module_name_format(self, solar_battery_agg):
+        """Aggregation module name is the fully-lowercased EQN of the selected module.
+
+        The former body computed ``expected = get_module_name(agg.module_eqn)`` -- the
+        exact call production makes -- so it could never fail. Anchor to a literal on an
+        aggregation selected by (instance_path, attribute_name), not by list index.
+        """
+        agg = _select_agg(
+            solar_battery_agg,
+            "SolarBatteryDesign__solar_battery_plant__solar_array",
+            "capital_cost",
+        )
+        module = _build_one(solar_battery_agg, agg)
+        # provenance: get_module_name lowercases the whole EQN (core/qualified_names.py);
+        #   the design prefix "SolarBatteryDesign" is lowercased too -- only a literal
+        #   catches the lowercasing.
+        expected = "solarbatterydesign__solar_battery_plant__solar_array__capital_cost"
+        assert module.name == expected, f"module.name mismatch: {module.name!r}"
 
     def test_creates_expected_entry_points(self, solar_battery_agg):
         """Factory returns new entry points via tuple (merged by caller)."""
@@ -563,24 +595,26 @@ class TestInputSourceWiring:
                 f"got {module.outputs[0].field_name!r}"
             )
 
-    def test_output_channel_name_format(self, agg_inputs):
-        """output.channel_name matches get_channel_name(module_eqn, attr)."""
-        ep_working = copy.deepcopy(agg_inputs["entry_points"])
-        for agg in agg_inputs["aggregation_data"]:
-            module, _new_eps = _build_aggregation_module(
-                agg=agg,
-                redefinitions=agg_inputs["redefinitions"],
-                output_registry=agg_inputs["registry"],
-                entry_points=ep_working,
-                group_deriver=agg_inputs["group_deriver"],
-                expose_aliases=agg_inputs["expose_aliases"],
-                usage_type_map=agg_inputs["usage_type_map"],
-            )
-            expected = get_channel_name(agg.module_eqn, agg.expression.attribute_name)
-            assert module.outputs[0].channel_name == expected, (
-                f"Module {module.name}: channel_name {module.outputs[0].channel_name!r} "
-                f"!= expected {expected!r}"
-            )
+    def test_output_channel_name_format(self, solar_battery_agg):
+        """Aggregation output channel is the doubled ADR-003 PQN literal.
+
+        The former body computed ``expected = get_channel_name(agg.module_eqn, attr)`` --
+        production's exact call -- so it could never fail. Anchor to a literal on an
+        aggregation selected by (instance_path, attribute_name), not by list index.
+        """
+        agg = _select_agg(
+            solar_battery_agg,
+            "SolarBatteryDesign__solar_battery_plant__solar_array",
+            "capital_cost",
+        )
+        module = _build_one(solar_battery_agg, agg)
+        # The trailing "capital_cost" is DOUBLED on purpose -- not a typo. Per ADR-003,
+        # get_channel_name composes usage_qn + "__" + output_name
+        # (core/qualified_names.py:98-100), and an aggregation module's EQN already ends
+        # in the attribute name, so the PQN repeats it. Do NOT de-double.
+        assert module.outputs[0].channel_name == (
+            "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"
+        ), f"channel_name mismatch: {module.outputs[0].channel_name!r}"
 
 
 # ===========================================================================
@@ -722,61 +756,77 @@ class TestLocalTermResolution:
     """Verify LocalTerm resolution strategies: sibling, expose alias, entry point."""
 
     def test_localterm_sibling_agg_output(self, solar_battery_agg):
-        """LocalTerm resolved via sibling aggregation output: source_type='module_output'."""
-        ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
-        found_sibling = False
+        """LocalTerm resolved via sibling aggregation output wires the doubled PQN literal.
 
-        for agg in solar_battery_agg["aggregation_data"]:
-            module, _new_eps = _build_aggregation_module(
-                agg=agg,
-                redefinitions=solar_battery_agg["redefinitions"],
-                output_registry=solar_battery_agg["registry"],
-                entry_points=ep_working,
-                group_deriver=solar_battery_agg["group_deriver"],
-                expose_aliases=solar_battery_agg["expose_aliases"],
-                usage_type_map=solar_battery_agg["usage_type_map"],
-            )
+        Converted from pass-or-skip to pass-or-FAIL. The former body set found_sibling
+        only inside nested ifs (a miss flipped nothing) and ended on pytest.skip -- so it
+        could pass or skip but never fail. Worse, its inner comparison rebuilt the channel
+        with the exact two lines production runs, so even a match proved nothing.
 
-            for l_term in agg.expression.local_terms:
-                for inp in module.inputs:
-                    if (inp.param_name == l_term.attribute_name
-                            and inp.source.source_type == "module_output"):
-                        # Verify it matches the sibling double-attr channel format
-                        sibling_eqn = f"{agg.instance_path}__{l_term.attribute_name}"
-                        sibling_channel = get_channel_name(sibling_eqn, l_term.attribute_name)
-                        if inp.source.producer_channel == sibling_channel:
-                            found_sibling = True
+        The idiot_index aggregation at solar_array has local_terms
+        [capital_cost, raw_material_cost], both sibling aggregations at that scope, so both
+        resolve via the sibling strategy. Anchor capital_cost's producer_channel to a
+        hardcoded literal and end on an unconditional assert found.
+        """
+        agg = _select_agg(
+            solar_battery_agg,
+            "SolarBatteryDesign__solar_battery_plant__solar_array",
+            "idiot_index",
+        )
+        module = _build_one(solar_battery_agg, agg)
 
-        if not found_sibling:
-            pytest.skip("No LocalTerm resolved via sibling aggregation output found")
+        found = False
+        for inp in module.inputs:
+            if inp.param_name == "capital_cost":
+                assert inp.source.source_type == "module_output", (
+                    f"capital_cost LocalTerm should resolve to a sibling module_output, "
+                    f"got {inp.source.source_type!r}"
+                )
+                # provenance: sibling aggregation channel PQN. capital_cost is itself an
+                #   aggregation on solar_array; get_channel_name doubles the trailing attr
+                #   (ADR-003, core/qualified_names.py:98-100) -- do NOT de-double.
+                assert inp.source.producer_channel == (
+                    "SolarBatteryDesign__solar_battery_plant__solar_array__capital_cost__capital_cost"
+                ), f"producer_channel mismatch: {inp.source.producer_channel!r}"
+                found = True
+
+        assert found, (
+            "idiot_index/solar_array aggregation with capital_cost LocalTerm not found"
+        )
 
     def test_localterm_expose_alias(self, solar_battery_agg):
-        """LocalTerm resolved via EXPOSE_PURE alias: source_type='module_output'."""
-        ep_working = copy.deepcopy(solar_battery_agg["entry_points"])
-        found_alias = False
+        """LocalTerm resolved via EXPOSE_PURE alias wires the aliased channel literal.
 
-        for agg in solar_battery_agg["aggregation_data"]:
-            module, _new_eps = _build_aggregation_module(
-                agg=agg,
-                redefinitions=solar_battery_agg["redefinitions"],
-                output_registry=solar_battery_agg["registry"],
-                entry_points=ep_working,
-                group_deriver=solar_battery_agg["group_deriver"],
-                expose_aliases=solar_battery_agg["expose_aliases"],
-                usage_type_map=solar_battery_agg["usage_type_map"],
-            )
+        Converted from pass-or-skip to pass-or-FAIL (same defect shape as
+        test_localterm_sibling_agg_output). The capital_cost aggregation on solar_array
+        has local_terms [misc_hardware_cost], an EXPOSE_PURE alias resolving to the
+        allocation_model total_allocation channel.
+        """
+        agg = _select_agg(
+            solar_battery_agg,
+            "SolarBatteryDesign__solar_battery_plant__solar_array",
+            "capital_cost",
+        )
+        module = _build_one(solar_battery_agg, agg)
 
-            for l_term in agg.expression.local_terms:
-                alias_key = (agg.expression.owning_part_qn, l_term.attribute_name)
-                if alias_key in solar_battery_agg["expose_aliases"]:
-                    # This local term has an expose alias -- check if it resolved
-                    for inp in module.inputs:
-                        if (inp.param_name == l_term.attribute_name
-                            and inp.source.source_type == "module_output"):
-                            found_alias = True
+        found = False
+        for inp in module.inputs:
+            if inp.param_name == "misc_hardware_cost":
+                assert inp.source.source_type == "module_output", (
+                    f"misc_hardware_cost LocalTerm should resolve via its expose alias to "
+                    f"a module_output, got {inp.source.source_type!r}"
+                )
+                # provenance: EXPOSE_PURE alias misc_hardware_cost = allocation_model.
+                #   total_allocation (tests/fixtures/solar_battery_model/library.sysml:612);
+                #   allocation_model at library.sysml:607.
+                assert inp.source.producer_channel == (
+                    "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation"
+                ), f"producer_channel mismatch: {inp.source.producer_channel!r}"
+                found = True
 
-        if not found_alias:
-            pytest.skip("No LocalTerm resolved via EXPOSE_PURE alias found")
+        assert found, (
+            "capital_cost/solar_array aggregation with misc_hardware_cost LocalTerm not found"
+        )
 
     def test_localterm_entry_point_fallback(self, solar_battery_agg):
         """LocalTerm unresolvable -> source_type='entry_point'.

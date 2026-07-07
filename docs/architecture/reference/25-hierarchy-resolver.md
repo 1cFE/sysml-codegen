@@ -242,10 +242,16 @@ CHAIN alias.
 
 **Edge case**: The `.`-suffix branch matches any dotted `source_path` whose
 leaf is the aggregation attribute (e.g., `parent.capital_cost` matches
-`attribute_name="capital_cost"`), regardless of which part it references.
-No current model triggers this, but it could produce spurious aliases for
-hierarchical CHAIN redefinitions. A bare-name suffix like
-`total_capital_cost` does NOT match — the dot boundary guards it.
+`attribute_name="capital_cost"`), regardless of which part it references — so it
+could produce spurious aliases for hierarchical CHAIN redefinitions. A bare-name
+suffix like `total_capital_cost` does NOT match — the dot boundary guards it.
+This edge (`_chain_sibling_aliases_aggregation`) is pinned directly by
+`tests/unit/test_hierarchy_resolver.py::TestDottedLeafAliasMatch`, which asserts
+the current leaf-only, part-blind behavior; no committed fixture triggers it, so
+the unit pin is the coverage. *(PIPELINE-TRUTH Item 10 resolved the part-blindness
+question: keep the current behavior. No supported model triggers the edge, and the
+unit pin makes any future tightening a red-then-green change. Speculative tightening
+is filed as BACKLOG `[DOTTED-LEAF-PART-BLIND]` (P3), not done here.)*
 
 ## Concrete Example
 
@@ -277,6 +283,56 @@ AggregationExpressionData(
     aliases=["total_capex"],  # from CHAIN sibling detection
 )
 ```
+
+## Supplied-Value Materializer (REQ-SVM-01..04)
+
+**Module:** `resolution/supplied_values.py` (PIPELINE-TRUTH Item 2).
+
+A plant calc reads a subsystem value cross-part (`in driver_efficiency =
+driver.efficiency`) or in-part (`in flow_rate = throughput`). The value is in the model,
+but on a *redefinition or override*, not on the attribute's base def — so the base def
+is valueless and the reference falls to a valueless Step-4 entry point that trips V11.
+The design-attribute resolution path (`_resolve_to_design_attribute`, doc 11 Step 3) is
+a working value-carrier; it just has no valued attribute to match.
+
+This pre-pass, run **before the backtracker**, reads the two capture buckets this
+resolver produces (`redefinitions` ∪ `design_overrides`), resolves the value by
+precedence, and emits one synthetic `DesignAttributeData` per supplied source attribute,
+keyed by its **source QN** and carrying the literal as a string. Merged into
+`design_attributes`, the existing Step-3 path carries it to every consumer and collapses
+renamed-consumer fan-out for free (two consumers of one source → one QN → one EP).
+
+**Four supported value shapes:**
+
+| Shape | Example | Bucket | Tier |
+|-------|---------|--------|------|
+| (a) subtype-def `:>>` via retype | `Hif_Driver.efficiency = 0.35` reached through `:>> driver : 'Hif Driver'` | `redefinitions` | 2a via `usage_type_map` |
+| (b) bare override block | `part :>> target_factory { :>> cost_per_target = 10.0; }` | `design_overrides` | 1 |
+| (c) dotted usage override | `:>> chamber.cost_per_unit = 7.0` on the instance | `design_overrides` | 1 |
+| (d) in-part inherited redefine | `in flow_rate = throughput` + `:>> throughput = 8.0` on the same def | `redefinitions` | 2b direct-owner |
+
+**Precedence (REQ-SVM-01):** usage override (tier 1) > specialized-def `:>>` (tier 2a via
+`usage_type_map`, or tier 2b direct-owner match `redef.owning_part_qn ==
+calc.owning_part_def_qn`) > base def (tier 3, no synthesis). Tier 2a reuses doc 18's
+`_find_literal_redefinition` **Strategy 1 only** (gated on the type key, so the brittle
+Strategy-2 name-fallback is never reached); tier 2b is a materializer-local exact match
+(doc 18's helper stays aggregation-scoped).
+
+**Distinct from siblings:** not aggregation LVP (doc 18, per-term; doc 18 explicitly
+fences CalcUsage-binding literals off from its helper), and not VBR-03 (doc 12,
+per-consumer). This mechanism keys by source QN and **collapses across consumers**
+(REQ-SVM-02) — the property that makes renamed-consumer fan-out (`efficiency` →
+`driver_efficiency` AND `eta`) resolve to one entry point.
+
+**Guards:** a synthetic attribute never overwrites a real captured design attribute
+(REQ-SVM-03, real wins + WARN); only LITERAL values apply, and a referenced
+non-literal-only binding falls through to V11 with a count-summary WARN, never a silent
+drop (REQ-SVM-04). A supplied `0.0` carries as `0.0`, not dropped to `null`
+(`_classify_entry_points` uses `is not None`, INV-6).
+
+The synthetic attributes enrich a graph-only copy of `design_attributes`; the pure
+extraction boundary is what a snapshot serializes, so the materializer reconstructs the
+synthetic attrs at from-snapshot generate time from the raw redefinitions/overrides.
 
 ## Data Models
 

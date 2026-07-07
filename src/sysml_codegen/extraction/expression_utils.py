@@ -1,8 +1,7 @@
 """Shared AST-to-text reconstruction utilities for SysML expressions.
 
-Extracted from constraint_extractor.py to provide common AST traversal
-and text reconstruction logic used by both the constraint extractor and
-the expression compiler.
+Common AST traversal and text reconstruction logic used across extraction —
+notably the expression compiler and the hierarchy resolver.
 """
 
 from typing import Any
@@ -59,7 +58,6 @@ def reconstruct_expression(expr_node: Any) -> str:
     # with the FCE/OE/FRE branches and is_literal_expression.
     if (
         SysideAdapter.is_instance(expr_node, "LiteralInteger")
-        or SysideAdapter.is_instance(expr_node, "LiteralReal")
         or SysideAdapter.is_instance(expr_node, "LiteralRational")
     ):
         if hasattr(expr_node, "value"):
@@ -323,15 +321,13 @@ def extract_feature_chain_segments(expr_node: Any) -> list[str]:
 def is_literal_expression(expr: Any) -> bool:
     """Check if a syside AST node is a literal value expression.
 
-    Handles the five SysML literal types (LiteralInteger, LiteralRational,
-    LiteralReal, LiteralBoolean, LiteralString) plus LiteralInfinity and
-    NullExpression, keeping this consistent with the dispatch set in
-    reconstruct_expression.
+    Handles the four SysML literal types (LiteralInteger, LiteralRational,
+    LiteralBoolean, LiteralString) plus LiteralInfinity and NullExpression,
+    keeping this consistent with the dispatch set in reconstruct_expression.
     """
     return (
         SysideAdapter.is_instance(expr, "LiteralInteger")
         or SysideAdapter.is_instance(expr, "LiteralRational")
-        or SysideAdapter.is_instance(expr, "LiteralReal")
         or SysideAdapter.is_instance(expr, "LiteralBoolean")
         or SysideAdapter.is_instance(expr, "LiteralString")
         or SysideAdapter.is_instance(expr, "LiteralInfinity")

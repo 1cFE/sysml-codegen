@@ -101,6 +101,21 @@ plant-prefill,cross-part-wiring,alias-surfacing}/release-notes.md`; `EPIC` =
 - `attribute :>> attr = <expression>` is **known-unsupported** (silently dropped at
   extraction); the supported value-carrying form is the bare `:>> attr = value`.
 
+> **POST-EPIC UPDATE (PIPELINE-TRUTH Item 10, 2026-07-06).** The bullets above were true at
+> *docs-scrub* HEAD and are kept as that record. PIPELINE-TRUTH retired most of them —
+> re-read them as history, not current state:
+> - **SC-2 / the 10-offender V11 abort — RETIRED.** fusion-tea's full YAML now emits at TRUE
+>   ZERO V11 offenders; the supplied-value materializer (`resolution/supplied_values.py`,
+>   REQ-SVM) resolves the cross-part/in-part supplied values (Item 2). SC-2 is met at the
+>   pipeline level, not just the graph level.
+> - **fusion-tea workarounds — DELETED upstream** (`sanitize_names.py`, `hif_driver_instance`,
+>   two-pass gamma feedback, hand-written input JSONs) — SC-C (Item 3).
+> - **Run-C anchor ($270.1211779380445/MWh) — now REPRODUCED**, bit-exact, through the
+>   generated package alone (Item 3); plus a perturbed-input rerun proving the JSON is consumed.
+> - **`attribute :>> attr = <expr>` — still genuinely unsupported** (dropped at extraction);
+>   agentic-mbse now WARNs on it (Item 9), but codegen extraction is unchanged. This one stands.
+> The current caveat truth lives in `EXPLAINER_PROMPT.md` §7 and modeling-assumptions §8.
+
 ## F7 — Item 11: alias surfacing (RN-11)
 
 - `OutputAlias` (resolution/models.py): `alias_name`, `canonical_channel`,
@@ -155,6 +170,11 @@ Absent everywhere: `ConsumerScopedKey`.
 
 1989 passed / 4 skipped / 5 xfailed; `ruff check src/` = 21; `mypy src/` = 109.
 [handoff Context]
+
+> **POST-EPIC UPDATE (PIPELINE-TRUTH Item 10, 2026-07-06).** The docs-scrub gate above is
+> superseded by the post-epic gate: **2069 passed / 4 skipped / 5 xfailed; `ruff check src/`
+> = 17; `mypy src/` = 104** (both linters better than the docs-scrub baseline; new tests from
+> Items 1–9 account for the count growth). Item 10 is docs-only, so it does not move the gate.
 
 ## F11 — Known dead template
 

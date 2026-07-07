@@ -21,6 +21,7 @@ from sysml_codegen.analysis.parameter_groups import (
 )
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
+from sysml_codegen.extraction.constraint_report import ConstraintManifestEntry
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeData,
@@ -99,6 +100,10 @@ class PipelineContext:
 
     # Channel aliases from EXPOSE_PURE + CHAIN redefinitions (Steps 3.5 + 4.5).
     channel_aliases: list[ChannelAlias] = field(default_factory=list)
+
+    # Model-wide dropped-constraint manifest (Step 2.5). Serialized into the
+    # snapshot so the from-snapshot path can replay the drop report (Item 4).
+    constraint_manifest: list[ConstraintManifestEntry] = field(default_factory=list)
 
     # OutputRegistry from Step 5.5 (None if not yet constructed).
     output_registry: OutputRegistry | None = None

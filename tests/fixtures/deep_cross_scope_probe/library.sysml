@@ -82,7 +82,7 @@ package DeepCrossScopeProducer {
 
         part sensor : 'Sensor';
 
-        calc derived : 'Derived Metric' {
+        calc derived_calc : 'Derived Metric' {
             in base_metric = sensor.core.metric_value;
         }
     }
@@ -101,7 +101,7 @@ package DeepCrossScopeProducer {
         part array : 'Sensor Array';
 
         // Expose mid-level output for direct consumption
-        attribute station_output : Real = array.derived.derived_value;
+        attribute station_output : Real = array.derived_calc.derived_value;
     }
 }
 

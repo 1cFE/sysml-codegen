@@ -59,12 +59,6 @@ class BacktrackingResult(BaseModel):
             For literal bindings: str(literal_value) (for default value propagation).
         phantom_report: Report of suspected phantom entry points
         trace_log: Debug trace of resolution steps (for troubleshooting)
-        binding_to_entry_point: DEPRECATED - Use binding_resolutions instead.
-            Authoritative mapping from (usage_qn, param) -> entry_point_qn.
-            Key format: "{usage_qualified_name}|{param_name}" (uses | to avoid conflict with SysML's ::).
-            Value: The entry point qualified name to use for this binding.
-            Graph builder uses this for lookup instead of constructing identifiers.
-            Will be removed after all consumers updated.
         binding_resolutions: Unified mapping for ALL binding resolutions (entry_point OR module_output).
             Key format: "{usage_qualified_name}|{param_name}".
             Value: Complete BindingResolution describing how the binding is wired.
@@ -77,8 +71,6 @@ class BacktrackingResult(BaseModel):
     entry_point_sources: dict[str, str]
     phantom_report: PhantomDetectionReport
     trace_log: list[str] = Field(default_factory=list)
-    # DEPRECATED: Keep for backward compatibility during migration
-    binding_to_entry_point: dict[str, str] = Field(default_factory=dict)
     # Unified mapping for ALL binding resolutions
     binding_resolutions: dict[str, BindingResolution] = Field(default_factory=dict)
     # Step-4 fall-through entry point QNs: bound bindings that matched no
@@ -153,11 +145,17 @@ class DependencyBacktracker:
         # different parent scopes (e.g., pump_load in blanket vs vacuum). All internal
         # processing uses qualified names (EQN) which are globally unique.
         self._usage_by_name: dict[str, CalcUsageData] = {}
+        # D3-11b: track colliding simple names. The index itself is benign
+        # (internal processing keys off globally-unique QNs), but a *user-facing*
+        # target lookup by simple name picks first-wins — that pick is ambiguous
+        # and warrants a warn (INV-3). Warn at the lookup, not per internal use.
+        self._ambiguous_instance_names: set[str] = set()
         for u in all_usages:
             if u.instance_name not in self._usage_by_name:
                 self._usage_by_name[u.instance_name] = u
             else:
                 existing = self._usage_by_name[u.instance_name]
+                self._ambiguous_instance_names.add(u.instance_name)
                 logger.debug(
                     f"Instance name collision: '{u.instance_name}' used by both "
                     f"{existing.calc_def_name} and {u.calc_def_name}"
@@ -173,10 +171,7 @@ class DependencyBacktracker:
 
         # Authoritative mapping from (usage_qn, param) -> entry_point_qn
         # Key format: "{usage_qualified_name}|{param_name}"
-        # DEPRECATED: Use _binding_resolutions instead
-        self._binding_to_entry_point: dict[str, str] = {}
-
-        # Unified binding resolutions (replaces _binding_to_entry_point)
+        # Unified binding resolutions
         # Key format: "{usage_qualified_name}|{param_name}"
         # Value: BindingResolution describing how binding is wired
         self._binding_resolutions: dict[str, BindingResolution] = {}
@@ -215,7 +210,6 @@ class DependencyBacktracker:
         self._trace_log = []
         self._entry_point_context = {}
         self._entry_point_sources = {}
-        self._binding_to_entry_point = {}
         self._binding_resolutions = {}
         # Step-4 fall-through entry points (bound bindings that matched no
         # resolution strategy and no design attribute). Item 7 / D4: the V11
@@ -246,6 +240,17 @@ class DependencyBacktracker:
                 else:
                     instance_name = target
                 usage = self._usage_by_name.get(instance_name)
+                if usage is not None and instance_name in self._ambiguous_instance_names:
+                    # D3-11b: this user-facing target resolves to a first-wins
+                    # pick among same-named usages — warn that it is ambiguous.
+                    logger.warning(
+                        "Target '%s' resolves to instance name '%s', which is "
+                        "shared by multiple usages; resolved first-wins to '%s' "
+                        "(ambiguous — qualify the target to disambiguate).",
+                        target,
+                        instance_name,
+                        usage.qualified_name,
+                    )
 
                 if not usage:
                     available = list(self._usage_by_name.keys())[:10]
@@ -301,7 +306,6 @@ class DependencyBacktracker:
             entry_point_sources=self._entry_point_sources,
             phantom_report=phantom_report,
             trace_log=self._trace_log,
-            binding_to_entry_point=self._binding_to_entry_point,  # DEPRECATED
             binding_resolutions=self._binding_resolutions,
             fallback_entry_points=self._fallback_entry_points,
         )
@@ -369,8 +373,6 @@ class DependencyBacktracker:
                     is_transitive=False,
                 )
 
-                # DEPRECATED: Keep for backward compat
-                self._binding_to_entry_point[mapping_key] = entry_point_qn
                 self._entry_point_context[entry_point_qn] = usage
 
                 # Carry literal value for entry point classification
@@ -401,8 +403,6 @@ class DependencyBacktracker:
                     self._entry_point_context[resolution.qualified_name] = usage
                     if resolution.source_path:
                         self._entry_point_sources[resolution.qualified_name] = resolution.source_path
-                    # DEPRECATED: Keep for backward compat
-                    self._binding_to_entry_point[mapping_key] = resolution.qualified_name
 
             elif binding.binding_type == BindingType.EXPRESSION:
                 # EXPRESSION bindings: no dispatch path, treat as entry point
@@ -418,7 +418,6 @@ class DependencyBacktracker:
                     is_transitive=False,
                 )
                 self._entry_point_context[entry_point_qn] = usage
-                self._binding_to_entry_point[mapping_key] = entry_point_qn
 
         # Also track unbound params as entry points (Case 1: use qualified name)
         for param in usage.unbound_params:
@@ -435,9 +434,6 @@ class DependencyBacktracker:
                 source_path=None,
                 is_transitive=False,
             )
-
-            # DEPRECATED: Keep for backward compat
-            self._binding_to_entry_point[mapping_key] = qualified_param_name
 
         return dependencies
 
@@ -526,19 +522,20 @@ class DependencyBacktracker:
 
         Dispatch by binding format:
 
-        CHAIN (no "::" in source_path):
-          Step 1: scoped_lookup(consumer_scope.source_path)
+        CHAIN (no "::" in source_path) — see `_resolve_chain_dispatch`:
+          Step 1:  scoped_lookup(consumer_scope.source_path)
           Step 1b: scoped_lookup(source_path) — direct (Key_F FORMULA)
-          Step 2: alias_lookup(source_path) — cross-scope
-          Step 3: design_attribute match -> ENTRY_POINT
-          Step 4: fallback -> ENTRY_POINT with warning
+          Step 1c: scoped_alias_lookup((scope, leaf)) — structured part-def
+                   EXPOSE (Item 10 #1; consumer-scope-prefixed key first, REQ-BT-11)
+          Step 2:  alias_lookup(source_path) — cross-scope
 
-        REFERENCE ("::" in source_path):
-          Step 1: sysml_qn_lookup(source_path)
-          Step 1b: Normalize :: to dotted -> scoped_lookup
+        REFERENCE ("::" in source_path) — see `_resolve_reference_dispatch`:
+          Step 1: sysml_qn_lookup(source_path) — per-segment sanitized
           Step 2: leaf + parent scope -> scoped_lookup then alias_lookup
+
+        Both formats then share (in this method, after dispatch returns None):
           Step 3: design_attribute match -> ENTRY_POINT
-          Step 4: fallback -> ENTRY_POINT with warning
+          Step 4: fallback -> ENTRY_POINT (DEBUG line; recorded for the V11 collector)
         """
         assert self._output_registry is not None
         source_path = binding.source_path

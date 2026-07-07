@@ -306,6 +306,11 @@ class TestInputTypesMatchModule:
     def test_input_types_match_module(
         self, model_name, all_graph_data, template_env,
     ):
+        # NOTE (Item 6, L5): template-fidelity check -- expected types come from
+        # module.inputs[i].python_type and the generated code renders from the same graph,
+        # so both sides derive from one source. Residual value: the Jinja template faithfully
+        # renders the graph's types. The type-map CONTENT is pinned by the literal sibling
+        # test_gen_schemas.py:359-381. Kept as a fidelity guard; sibling-pinned for content.
         graph, _inputs = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 
@@ -444,6 +449,11 @@ class TestInputTypeCrossReferenceWithGraph:
     def test_input_type_cross_reference_with_graph(
         self, model_name, all_graph_data, template_env,
     ):
+        # NOTE (Item 6, L6): same template-fidelity shape as test_input_types_match_module
+        # (L5) -- compares generated type hints against module.inputs[i].python_type, both
+        # from one graph. This test is a near-duplicate of L5; a future cleanup could dedup
+        # the two (not done here -- dedup is not Item 6's call). Content sibling-pinned by
+        # the literal type-map test (test_gen_schemas.py:359-381).
         graph, _inputs = all_graph_data[model_name]
         calcusage_modules = _get_calcusage_modules(graph)
 

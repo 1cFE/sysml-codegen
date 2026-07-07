@@ -20,13 +20,13 @@ from agentic_mbse.sysml.types import BindingType, ExpressionRef  # type: ignore[
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.core.models import ChannelAlias
+from sysml_codegen.extraction.constraint_report import manifest_from_records
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
     AttributeInfo,
     CalculationDefinitionData,
     ComputedAttributeClassification,
     ComputedAttributeData,
-    ConstraintInfo,
     HierarchyExtractionResult,
     LocalTerm,
     MultiplicityData,
@@ -82,14 +82,15 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     if version is None:
         raise SnapshotFormatError(
             f"Snapshot {snapshot_path} has no snapshot_format_version — it "
-            "predates versioned snapshots. Recapture with `sysml-codegen "
-            f"snapshot --models <sources>` (current tooling writes version "
-            f"{SNAPSHOT_FORMAT_VERSION})."
+            "predates versioned snapshots. Recapture with "
+            "`scripts/capture_extraction_snapshots.py` (current tooling writes "
+            f"version {SNAPSHOT_FORMAT_VERSION})."
         )
     if version != SNAPSHOT_FORMAT_VERSION:
         raise SnapshotFormatError(
             f"Snapshot {snapshot_path} is format version {version}, tool expects "
-            f"{SNAPSHOT_FORMAT_VERSION}. Recapture with `sysml-codegen snapshot`."
+            f"{SNAPSHOT_FORMAT_VERSION}. Recapture with "
+            "`scripts/capture_extraction_snapshots.py`."
         )
 
     snapshot_dir = snapshot_path.parent
@@ -113,6 +114,11 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
             ChannelAlias.model_validate(d) for d in raw["channel_aliases"]
         ],
         "compilation_results": _load_compilation_results(raw, snapshot_path),
+        # Model-wide dropped-constraint manifest (Item 4). Additive: a snapshot
+        # captured before this field just yields an empty manifest.
+        "constraint_manifest": manifest_from_records(
+            raw.get("dropped_constraints", [])
+        ),
     }
 
     # source_file re-absolutization (D1/D8): lexical absolute join against the
@@ -272,17 +278,6 @@ def _deserialize_attribute_info(d: dict) -> AttributeInfo:
     )
 
 
-def _deserialize_constraint_info(d: dict) -> ConstraintInfo:
-    """Reconstruct a ConstraintInfo from a serialized dict."""
-    return ConstraintInfo(
-        expression=d["expression"],
-        description=d["description"],
-        affected_attributes=d["affected_attributes"],
-        constraint_type=d["constraint_type"],
-        source_line=d.get("source_line", 0),
-    )
-
-
 def _deserialize_calc_def(d: dict) -> CalculationDefinitionData:
     """Reconstruct a CalculationDefinitionData from a serialized dict."""
     return CalculationDefinitionData(
@@ -426,7 +421,17 @@ def _deserialize_hierarchy_result(d: dict) -> HierarchyExtractionResult:
             parts = json.loads(key_str)
             usage_type_map[(parts[0], parts[1])] = value
         except (json.JSONDecodeError, IndexError):
-            pass
+            # D3-6 (offline-parity guard): a malformed usage_type_map key drops a
+            # retype mapping, so the from-snapshot path silently mis-wires (falls
+            # to the base def) where the live path wired correctly. The except is
+            # already narrow; log the drop instead of a bare pass so the offline
+            # divergence is visible.
+            logger.warning(
+                "Snapshot usage_type_map: dropping malformed key %r — the "
+                "retype it carried will fall to the base def (offline-only "
+                "mis-wire).",
+                key_str,
+            )
 
     # part_usage_names has set values serialized as sorted lists
     part_usage_names: dict[str, set[str]] = {

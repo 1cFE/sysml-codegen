@@ -444,36 +444,50 @@ class TestFormulaRemoval:
 class TestRegistryPhaseOrdering:
     """REQ-ORCH-04: OutputRegistry 4-phase registration ordering."""
 
+    # Hand-transcribed from the solar_battery fixture (Item-6 anchoring rule: the
+    # expectation is written independently, NEVER computed by the code under test →
+    # INV-E). Each is a Phase-1a Key_A alias (`{usage_qn}.{attr}`) whose target is
+    # the canonical channel `{usage_qn}__{attr}`. register_alias's phase-order guard
+    # (REQ-OR-04: target must already be in _canonical) registers these only because
+    # Phase 1a's register_scoped runs BEFORE its register_alias. Swap that order and
+    # the guard drops them — which the red-mutation gate below proves.
+    EXPECTED_KEY_A_ALIASES = {
+        "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model.total_allocation":
+            "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_allocation",
+        "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model.total_cost":
+            "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__total_cost",
+        "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model.material_cost":
+            "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__material_cost",
+    }
+
     @pytest.mark.req("REQ-ORCH-04")
-    def test_phase_ordering_static_analysis(self):
-        """Phase 1 registration calls appear before Phase 2/3/4 in build_output_registry."""
-        source = textwrap.dedent(inspect.getsource(build_output_registry))
-        tree = ast.parse(source)
+    def test_expected_key_a_aliases_present_solar_battery(self, extraction_snapshots):
+        """PRESENCE assertion (C1): each hand-transcribed Phase-1a Key_A alias
+        resolves to its canonical channel on the real corpus.
 
-        # Find register_scoped, register_sysml_qn (Phase 1) vs register_alias (Phase 2-4)
-        phase1_calls: list[int] = []
-        alias_calls: list[int] = []
-
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-                if node.func.attr in ("register_scoped", "register_sysml_qn"):
-                    phase1_calls.append(node.lineno)
-                elif node.func.attr == "register_alias":
-                    alias_calls.append(node.lineno)
-
-        assert len(phase1_calls) > 0, "No Phase 1 registration calls found"
-        assert len(alias_calls) > 0, "No alias registration calls found"
-
-        # All Phase 1 calls should start before the first non-Phase-1 alias call.
-        # Phase 1a also registers Key_A aliases (register_alias in Phase 1a loop),
-        # so we check that the first Phase 1 canonical registration is before
-        # Phase 2 CHAIN alias registration.
-        # Find Phase 2 markers: look for comments/code near alias calls
-        # Simpler: first register_scoped is before first register_alias
-        # Actually Phase 1a has register_alias too — check that register_scoped starts first
-        assert min(phase1_calls) < min(alias_calls), (
-            f"First Phase 1 canonical registration (line {min(phase1_calls)}) should be "
-            f"before first alias registration (line {min(alias_calls)})"
+        This is NOT a survivors-are-canonical check (which holds by construction —
+        the guard drops mis-ordered aliases before they enter _alias, so iterating
+        _alias can never see a dropped one). A phase-order regression that swaps
+        Phase-1a's register_scoped/register_alias order makes the expected alias
+        VANISH from the registry; this assertion then fails. Proven by the
+        red-mutation gate recorded in the Item 7 R4 table."""
+        snap = extraction_snapshots["solar_battery_model"]
+        registry = build_output_registry(
+            calc_usages=snap["calc_usages"],
+            calc_defs=snap["calc_defs"],
+            aggregation_data=snap["aggregation_expressions"],
+            computed_attributes=snap["computed_attributes"],
+            channel_aliases=snap.get("channel_aliases", []),
+            design_attributes=snap.get("design_attributes", {}),
+        )
+        missing = []
+        for alias, canonical in self.EXPECTED_KEY_A_ALIASES.items():
+            got = registry.alias_lookup(ScopedKey(alias))
+            if got is None or str(got) != canonical:
+                missing.append(f"{alias} → expected {canonical}, got {got}")
+        assert not missing, (
+            "Expected Phase-1a Key_A aliases absent (phase-order regression?):\n"
+            + "\n".join(missing)
         )
 
     @pytest.mark.req("REQ-ORCH-04")

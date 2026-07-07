@@ -1,0 +1,94 @@
+{
+  "snapshot_format_version": 2,
+  "model_name": "agg_literal_probe",
+  "captured_at": "2026-07-06T22:28:29.013284+00:00",
+  "compilation_results": {},
+  "calc_defs": [],
+  "calc_usages": [],
+  "design_attributes": {},
+  "hierarchy_data": {
+    "redefinitions": [
+      {
+        "owning_part_qn": "AggLiteralProbeLibrary__Assembly",
+        "attribute_name": "total_cost",
+        "redefinition_type": "expression",
+        "literal_value": null,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "sum(module.cost) + 5.0",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "design_overrides": [
+      {
+        "owning_part_qn": "AggLiteralProbeDesign__plant__assembly",
+        "attribute_name": "cost",
+        "redefinition_type": "literal",
+        "literal_value": 10.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [
+          "module",
+          "cost"
+        ],
+        "is_deep_path": true,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "multiplicities": [
+      {
+        "part_usage_name": "module",
+        "owning_part_def_qn": "AggLiteralProbeLibrary__Assembly",
+        "count": 3,
+        "count_attribute_name": null,
+        "default_value": null
+      }
+    ],
+    "aggregation_expressions": [
+      {
+        "owning_part_qn": "AggLiteralProbeLibrary__Assembly",
+        "owning_part_name": "Assembly",
+        "attribute_name": "total_cost",
+        "raw_expression_text": "sum(module.cost) + 5.0",
+        "transformed_expression": "(module.cost + 5.0)",
+        "sum_terms": [
+          {
+            "part_usage_name": "module",
+            "attribute_name": "cost",
+            "multiplicity_attr": null,
+            "multiplicity_count": null
+          }
+        ],
+        "singleton_terms": [],
+        "local_terms": [],
+        "input_channels": [
+          "module.cost"
+        ],
+        "entry_points": [],
+        "compilability": "unknown",
+        "has_unsupported_nodes": false,
+        "aliases": [],
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "warnings": [],
+    "part_usage_names": {
+      "AggLiteralProbeLibrary__Assembly": [
+        "module"
+      ]
+    },
+    "usage_type_map": {
+      "[\"AggLiteralProbeLibrary__Assembly\", \"module\"]": "AggLiteralProbeLibrary__Module"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": [],
+  "dropped_constraints": []
+}

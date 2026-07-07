@@ -164,24 +164,77 @@ def test_chain_spike_autoimpl_from_snapshot(tmp_path):
 # REQ-SNAP-19 (SC-1): live generation is byte-identical to snapshot generation.
 # License-gated; skips cleanly with no license.
 # ===========================================================================
+# Shape-bearing fixtures the parity gate covers (SC-D). Each has a committed v2 snapshot.
+# solar_battery is the baseline; the rest carry the wiring shapes a full-emission mis-wire
+# would hide: retyped parts, quoted owners, aliased aggregations, and the two IFE plant
+# idioms (the whole-plant value-fill and the plant-values headline).
+_SNAP19_FIXTURES = [
+    "solar_battery_model",
+    "retype_model",
+    "quoted_owner_formula",
+    "alias_agg_probe",
+    "ife_plant",
+    "plant_values",
+]
+
+
 @requires_license
 @pytest.mark.req("REQ-SNAP-19")
-def test_live_vs_snapshot_byte_identical(tmp_path):
-    """generate --models <abs> == generate --from-snapshot, byte-for-byte."""
+@pytest.mark.parametrize("fixture", _SNAP19_FIXTURES)
+def test_live_vs_snapshot_byte_identical(fixture, tmp_path):
+    """generate --models <abs> == generate --from-snapshot, byte-for-byte, per fixture.
+
+    Parametrized over the shape-bearing fixtures (SC-D): one gate, N shapes. A mis-wire on
+    any of them fails here.
+    """
     # Feed live an ABSOLUTE --models path so the parser emits the absolute
     # source_file the loader re-absolutizes against the committed snapshot's dir.
-    abs_models = REPO_ROOT / "tests/fixtures/solar_battery_model"
+    abs_models = REPO_ROOT / "tests/fixtures" / fixture
     live_out, snap_out = tmp_path / "live", tmp_path / "snap"
 
     live = _run_cli(
         "generate", "--models", str(abs_models),
-        "--output", str(live_out), "--package-name", "solar_battery", "--overwrite",
+        "--output", str(live_out), "--package-name", fixture, "--overwrite",
     )
     assert live.returncode == 0, live.stderr
 
     snap = _run_cli(
         "generate", "--from-snapshot", str(abs_models / "extraction_snapshot.json"),
-        "--output", str(snap_out), "--package-name", "solar_battery", "--overwrite",
+        "--output", str(snap_out), "--package-name", fixture, "--overwrite",
+    )
+    assert snap.returncode == 0, snap.stderr
+
+    # CHANNEL IDENTITY, not merely "fallback_entry_points vacated": the full-tree byte diff
+    # INCLUDES pipelines/*.yaml, whose module inputs name each wired source channel. An
+    # offline mis-wire that still empties fallback_entry_points changes a channel token in
+    # the YAML and fails here (the multi-hop EXPOSE precedent). Do NOT narrow this to a
+    # metadata-only or graph-only diff — the full tree IS the channel-identity assertion.
+    assert _tree_diff(live_out, snap_out) == []
+
+
+@requires_license
+@pytest.mark.req("REQ-SNAP-19")
+def test_fusion_tea_live_vs_snapshot(tmp_path):
+    """SC-D one-time leg: fusion-tea's real plant is byte-identical live vs snapshot.
+
+    The vendored whole-plant fixture (multi-file designs + library, the value-fill materializer
+    wiring the Meier chain) generates the same package from the live models and from the
+    committed v2 snapshot. Full-tree diff = channel identity: a whole-plant mis-wire (the
+    offline precedent abort-level checks miss) would change a wired channel in the YAML and
+    fail here. Absolute --models so the parser's source_file re-absolutizes to the snapshot dir.
+    """
+    models = REPO_ROOT / "tests/fixtures/fusion_tea"
+    live_out, snap_out = tmp_path / "live", tmp_path / "snap"
+
+    live = _run_cli(
+        "generate", "--models", str(models),
+        "--output", str(live_out), "--package-name", "fusion_tea", "--overwrite",
+    )
+    assert live.returncode == 0, live.stderr
+
+    snap = _run_cli(
+        "generate", "--from-snapshot", str(models / "extraction_snapshot.json"),
+        "--output", str(snap_out), "--package-name", "fusion_tea", "--overwrite",
     )
     assert snap.returncode == 0, snap.stderr
 
@@ -231,10 +284,6 @@ def test_live_vs_snapshot_byte_identical_symlinked(tmp_path):
 @pytest.mark.req("REQ-SNAP-18")
 def test_generation_timestamp_has_no_render_site():
     """generation_timestamp is a latent byte-identity trap — must stay unwired."""
-    out = subprocess.run(
-        ["grep", "-rn", "generation_timestamp", "src"],
-        cwd=REPO_ROOT, capture_output=True, text=True,
-    )
     # The only permitted mention is the template variable itself (never rendered
     # from Python): no .py passes it into a render() call.
     py_render = subprocess.run(

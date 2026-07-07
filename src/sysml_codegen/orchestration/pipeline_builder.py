@@ -37,7 +37,11 @@ from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
     compile_calc_def,
 )
-from sysml_codegen.extraction.usage_extractor import CalcUsageData, extract_calculation_usages
+from sysml_codegen.extraction.usage_extractor import (
+    CalcUsageData,
+    ExtractionReport,
+    extract_calculation_usages,
+)
 from sysml_codegen.orchestration.pipeline_context import (
     CodeGenerationError,
     PipelineContext,
@@ -45,8 +49,30 @@ from sysml_codegen.orchestration.pipeline_context import (
 )
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import build_computation_graph
+from sysml_codegen.resolution.supplied_values import materialize_supplied_values
 
 logger = logging.getLogger(__name__)
+
+
+def _render_extraction_report(report: ExtractionReport) -> None:
+    """Surface the usage-extraction report (D3-4), Item-4 house style.
+
+    Emits an always-present INFO summary (scanned/bindings/unbound), then one
+    WARN per collected diagnostic — but only when there is at least one, so a
+    clean model stays zero-WARNING (INV-6). The report was previously bound and
+    discarded, silencing every Family-1 dispatch diagnostic it carries.
+    """
+    logger.info(
+        "Usage extraction: %d usages, %d bindings, %d unbound params, "
+        "%d cross-file bindings, %d warning(s).",
+        report.total_usages,
+        report.total_bindings,
+        report.unbound_params,
+        report.cross_file_bindings,
+        len(report.warnings),
+    )
+    for warning in report.warnings:
+        logger.warning("Extraction: %s", warning)
 
 
 def _remove_formula_from_design_attrs(
@@ -482,6 +508,7 @@ def _register_partdef_expose_scoped_aliases(
     """
     part_usage_names = hierarchy_data.part_usage_names if hierarchy_data else None
     registered = 0
+    scanned = 0  # pattern-3: count part-def EXPOSE_PURE candidates scanned.
     for ca in computed_attrs:
         if ca.classification != ComputedAttributeClassification.EXPOSE_PURE:
             continue
@@ -490,6 +517,7 @@ def _register_partdef_expose_scoped_aliases(
         chain = ca.reference_chain
         if not chain or len(chain) < 2:
             continue
+        scanned += 1
         rel = ".".join(chain)  # calc-usage-rooted, e.g. "cost_calc.cost"
         # CA carries the raw ``::`` QN; calc usages key on the sanitized ``__``
         # EQN (e.g. "toy_plant::'Toy Plant'" -> "toy_plant__Toy_Plant"). Convert
@@ -506,9 +534,21 @@ def _register_partdef_expose_scoped_aliases(
             )
             registered += 1
 
-    if registered:
+    # Pattern-3 sentinel (zero-found ≠ silence): always report the scan, so a
+    # "scanned N, registered 0" is distinguishable from "nothing scanned". Only
+    # a real gap (scanned but none registered) escalates to WARN.
+    if scanned or registered:
         logger.info(
-            "Step 5.55: registered %d part-def EXPOSE scoped alias(es)", registered
+            "Step 5.55: part-def EXPOSE scoped aliases — scanned %d candidate(s), "
+            "registered %d.",
+            scanned,
+            registered,
+        )
+    if scanned and not registered:
+        logger.warning(
+            "Step 5.55: scanned %d part-def EXPOSE_PURE candidate(s) but "
+            "registered 0 scoped alias(es) — their channels did not resolve.",
+            scanned,
         )
     return registered
 
@@ -589,13 +629,27 @@ def _scope_aggregation_expressions(
 
     # Derive the design prefix from the first virtual CalcUsage QN.
     # The prefix is segment[0] of any virtual QN (e.g., "SolarBatteryDesign").
+    # D3-15: this is first-wins. If two designs coexist in one model, their
+    # aggregations share the first design's prefix and are mis-keyed silently.
+    # Collect the distinct prefixes and warn on >1 (INV-3) before taking the
+    # first — one model = one design is the expected shape.
     design_prefix: str | None = None
+    seen_prefixes: list[str] = []
     for usage in calc_usages:
         if not usage.is_template and usage.owning_part_def_qn:
             segments = usage.qualified_name.split("__")
-            if segments:
-                design_prefix = segments[0]
-            break
+            if segments and segments[0] not in seen_prefixes:
+                seen_prefixes.append(segments[0])
+    if seen_prefixes:
+        design_prefix = seen_prefixes[0]
+    if len(seen_prefixes) > 1:
+        logger.warning(
+            "Multiple design prefixes %s found; aggregation scoping keys off the "
+            "first ('%s') — a second design's aggregations will be mis-keyed "
+            "(D3-15).",
+            seen_prefixes,
+            design_prefix,
+        )
 
     for agg_expr in hierarchy_data.aggregation_expressions:
         dotted_paths = find_instance_paths_for_partdef(
@@ -637,15 +691,19 @@ def build_pipeline_context(
     """Build complete pipeline context from SysML models.
 
     This is the canonical initialization sequence used by all codegen scripts.
-    It performs the following 7-step sequence:
+    The major steps (see the inline ``Step N`` markers for the full sub-step order):
 
-    1. Load models via SysMLDataExtractor
-    2. Extract calculation definitions
-    3. Extract calculation usages with enhanced algorithm param detection
-    4. Extract design attributes for group derivation
-    5. Create parameter group deriver
-    6. Create backtracker and run dependency analysis
-    7. Build ComputationGraph (single source of truth)
+    1. Load models via SysMLDataExtractor (Step 1)
+    2. Extract calculation definitions (Step 2)
+    3. Extract calculation usages with enhanced algorithm param detection (Step 3)
+    4. Extract hierarchy, rewrite bindings, scope aggregation, build CHAIN aliases (Step 3.5)
+    5. Extract design attributes and computed attributes / EXPOSE_PURE aliases (Steps 4, 4.5)
+    6. Build the OutputRegistry — 4-phase registration incl. Phase 3b (Step 5.5)
+    7. Create the parameter group deriver — **at Step 5.7, after the registry**, once
+       design_attrs is FORMULA-free (INV-G)
+    8. Create backtracker and run dependency analysis (Step 6)
+    9. Compile expressions and classify compilability (Step 6.5)
+    10. Build ComputationGraph — single source of truth (Step 7)
 
     Args:
         model_paths: Paths to SysML model directories (library + designs)
@@ -680,15 +738,24 @@ def build_pipeline_context(
             "Ensure library models contain calc definitions."
         )
 
-    # Step 2.5: Report dropped constraint usages (REQ-EXT-09). Detection only —
-    # constraints are not executable, so this makes the silent drop loud.
-    extractor.report_dropped_constraints()
+    # Step 2.5: Report dropped constraint usages (REQ-EXT-09) and keep the
+    # manifest so the from-snapshot path can replay the same report (Item 4).
+    # Collect is single-path — this ctx is the one capture serializes (MF4).
+    constraint_manifest = extractor.report_dropped_constraints()
 
     # Step 3: Extract calculation usages with enhanced algorithm param detection
-    calc_usages, _report = extract_calculation_usages(
+    calc_usages, extraction_report = extract_calculation_usages(
         extractor.model,
         calc_defs=calc_defs,
     )
+    # D3-4: surface the usage-extraction report instead of discarding it. The
+    # report carries the Family-1 dispatch diagnostics (dropped usages,
+    # unresolved calc defs, unhandled/over-long bindings); discarding it defeated
+    # its purpose. Rendered on the live path here. (INV-2 parity to the
+    # from-snapshot path is limited: the usage-extraction warnings are computed at
+    # extraction time and are not serialized into the snapshot, so the offline
+    # path has no report to replay — see 27-snapshot-generation.md.)
+    _render_extraction_report(extraction_report)
 
     # Step 3.5: Extract hierarchy + rewrite bindings + scope aggregation + build CHAIN aliases
     hierarchy_data, scoped_agg_data, chain_aliases = _extract_hierarchy_and_rewrite_bindings(
@@ -738,15 +805,36 @@ def build_pipeline_context(
     # Step-4.5 removal stays for genuine (never-tentative) FORMULAs.
     _remove_formula_from_design_attrs(computed_attrs, design_attrs)
 
+    # Step 5.65 (Item 2, REQ-SVM-01..04): materialize supplied subsystem-attr values
+    # so Step-3 design-attribute resolution carries them to the plant-calc inputs and
+    # collapses renamed-consumer fan-out by source QN. The synthetic attrs enrich a
+    # GRAPH-ONLY copy (deriver + backtracker + graph builder); `design_attrs` stays the
+    # pure extraction boundary, so a snapshot captured from this run serializes only
+    # real attributes and the materializer reconstructs the synth ones at from-snapshot
+    # generate time from the raw redefinitions/overrides.
+    graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
+    if hierarchy_data is not None:
+        synth_attrs = materialize_supplied_values(
+            calc_usages,
+            hierarchy_data.redefinitions,
+            hierarchy_data.design_overrides,
+            hierarchy_data.usage_type_map,
+            design_attrs,
+        )
+        for attr in synth_attrs:
+            # Bucket by the attribute's own source file (the consuming usage's file) so
+            # it groups into a valid, existing parameter group.
+            graph_design_attrs.setdefault(Path(attr.source_file), []).append(attr)
+
     # Step 5.7: Create parameter group deriver, now that design_attrs reflects the
     # FINAL classifications (moved after confirm per INV-G).
-    group_deriver = ParameterGroupDeriver(design_attrs, calc_usages, calc_defs)
+    group_deriver = ParameterGroupDeriver(graph_design_attrs, calc_usages, calc_defs)
 
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(
         calc_usages,
         calc_defs,
-        design_attributes=design_attrs,
+        design_attributes=graph_design_attrs,
         output_registry=output_registry,
     )
     backtracking_result = backtracker.find_required_modules(
@@ -800,7 +888,7 @@ def build_pipeline_context(
     computation_graph = build_computation_graph(
         result=backtracking_result,
         calc_defs=calc_defs,
-        design_attrs=design_attrs,
+        design_attrs=graph_design_attrs,
         group_deriver=group_deriver,
         output_registry=output_registry,
         compilation_results=compilation_results,
@@ -828,6 +916,7 @@ def build_pipeline_context(
         hierarchy_data=hierarchy_data,
         aggregation_expressions=scoped_agg_data,
         channel_aliases=all_channel_aliases,
+        constraint_manifest=constraint_manifest,
         output_registry=output_registry,
     )
 

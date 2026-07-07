@@ -25,14 +25,19 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 # CRITICAL: Import shared types from agentic-mbse
 from agentic_mbse.sysml.types import BindingType
 
+from sysml_codegen.core.identifier_types import derive_module_type
 from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
     sanitize_name,
 )
-from sysml_codegen.core.identifier_types import derive_module_type
+from sysml_codegen.extraction.expression_utils import (
+    extract_feature_chain_segments,
+)
+from sysml_codegen.extraction.expression_utils import (
+    extract_literal_value as _extract_literal_value,
+)
 from sysml_codegen.extraction.expression_utils import (
     is_literal_expression as _is_literal_expression,
-    extract_literal_value as _extract_literal_value,
 )
 
 logger = logging.getLogger(__name__)
@@ -670,7 +675,7 @@ def _extract_bindings(
         if not param_name:
             continue
 
-        binding_info = _extract_single_binding(elem, member, param_name)
+        binding_info = _extract_single_binding(elem, member, param_name, warnings)
 
         if binding_info.binding_type == BindingType.UNBOUND:
             unbound_params.append(param_name)
@@ -684,8 +689,16 @@ def _extract_single_binding(
     usage_elem: Any,
     param_elem: Any,
     param_name: str,
+    warnings: list[str],
 ) -> BindingInfo:
-    """Extract binding info from a single parameter element."""
+    """Extract binding info from a single parameter element.
+
+    INV-1 (totality): every terminal dispatch arm is total and loud. An
+    unhandled binding-expression type (D3-1) and a 3+-segment chain the parser
+    cannot represent (D3-2) each route to a *distinct*, warned disposition —
+    never a silent UNBOUND reuse or a root-truncated CHAIN. `warnings` is the
+    list `_extract_bindings` already threads.
+    """
     if (
         not hasattr(param_elem, "feature_value_expression")
         or not param_elem.feature_value_expression
@@ -697,10 +710,33 @@ def _extract_single_binding(
         )
 
     expr = param_elem.feature_value_expression
+    usage_name = getattr(usage_elem, "name", None) or "?"
 
     # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
     # subtype of OE in SysIDE's type system (doc 19 invariant).
     if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
+        # D3-2 (LOUD-REJECT): a 3+-segment chain (station.array.derived_calc.
+        # derived_value) cannot be represented by the ≤2-segment parser. Count
+        # the real segments (count only — do NOT build the resolved path, that
+        # is the deferred [MULTIHOP-CHAIN-PARSE] feature) and hard-reject: warn
+        # and surface as an entry point, never truncate to the root segment.
+        segments = extract_feature_chain_segments(expr)
+        if len(segments) > 2:
+            warnings.append(
+                f"Chain binding for parameter '{param_name}' on usage "
+                f"'{usage_name}' has {len(segments)} segments "
+                f"({'.'.join(segments)}); multi-hop chains are not resolved — "
+                f"surfacing as an entry point (not truncated to root)."
+            )
+            return BindingInfo(
+                param_name=param_name,
+                source_path=None,
+                binding_type=BindingType.UNBOUND,
+                raw_expression=(
+                    "FeatureChainExpression (unresolved 3+-segment) -> "
+                    f"{'.'.join(segments)}"
+                ),
+            )
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)
         return BindingInfo(
@@ -745,11 +781,26 @@ def _extract_single_binding(
             expression_ast=expr,
         )
 
+    # INV-1 terminal arm (D3-1): the RHS is a binding expression of a type this
+    # dispatch does not handle (e.g. an InvocationExpression `Doubler(v=a)`).
+    # Doc 01-extraction.md:147 defines UNBOUND as "no binding expression at all"
+    # — but one DOES exist here, so the *silent* fall-through fabricated a JSON
+    # entry point with no diagnostic. WARN (naming param + node type) so the
+    # unsupported binding is loud. ADR-003 requires every input param to resolve
+    # to bound-or-entry-point (no third disposition), so it stays UNBOUND — but
+    # now a loud, warned entry point, not a silent one. (Design D1's "distinct
+    # disposition" is foreclosed by ADR-003; the finding's harm — the silence —
+    # is what the warning fixes.)
+    warnings.append(
+        f"Unhandled binding-expression type '{type(expr).__name__}' for "
+        f"parameter '{param_name}' on usage '{usage_name}' — not one of "
+        f"CHAIN/REFERENCE/LITERAL/EXPRESSION; surfacing as an entry point."
+    )
     return BindingInfo(
         param_name=param_name,
         source_path=None,
         binding_type=BindingType.UNBOUND,
-        raw_expression=f"Unknown expression type: {type(expr).__name__}",
+        raw_expression=f"Unhandled expression type: {type(expr).__name__}",
     )
 
 
@@ -786,13 +837,29 @@ def _parse_reference_expression(
     if not SysideAdapter.is_instance(expr, "FeatureReferenceExpression"):
         return None, None
 
+    # D3-3 (closed-by-construction). Invariant: SysIDE guarantees a resolved
+    # `referent` with a non-empty `qualified_name` for any
+    # FeatureReferenceExpression in successfully-parsed SysML (doc
+    # 16-computed-attributes.md:115-119). A (None, None) return below is
+    # therefore unreachable without a parser bug or partial SysML — if it fires,
+    # the param would double-vanish (filtered from both ledgers). Debug-guard it
+    # so the invariant violation is visible rather than silent; no fires-on-shape
+    # test (no reachable shape to feed).
     if not hasattr(expr, "referent") or expr.referent is None:
+        logger.debug(
+            "D3-3 invariant violation: FeatureReferenceExpression with no "
+            "resolved referent (SysIDE parser bug or partial SysML)."
+        )
         return None, None
 
     referent = expr.referent
     qname = getattr(referent, "qualified_name", None)
 
     if not qname:
+        logger.debug(
+            "D3-3 invariant violation: resolved referent has empty "
+            "qualified_name (SysIDE parser bug or partial SysML)."
+        )
         return None, None
 
     return str(qname), referent

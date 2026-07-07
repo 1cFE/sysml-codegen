@@ -22,6 +22,7 @@ import ast
 import copy
 import inspect
 import textwrap
+from types import SimpleNamespace
 
 import pytest
 
@@ -287,50 +288,71 @@ class TestFloatConversion:
 
     @pytest.mark.req("REQ-EPC-03")
     def test_usage_literal_float_conversion(self, catf_mfe_classifier):
-        """USAGE_LITERAL EPs have float or None default_value matching source."""
+        """USAGE_LITERAL EPs carry the hand-transcribed literal from their binding.
+
+        The former body computed ``expected = float(source)`` and asserted the EP's
+        default_value equalled it -- but production sets that default_value with the
+        same ``float(entry_point_sources[qname])`` call (graph_builder.py), so the
+        assertion was f(x) == f(x) and could never fail. Anchor the value instead to
+        literals transcribed directly from the catf_mfe snapshot bindings.
+        """
         entry_points = catf_mfe_classifier["entry_points"]
-        entry_point_sources = catf_mfe_classifier["entry_point_sources"]
 
-        ul_eps = [
-            ep for ep in entry_points.values()
-            if ep.entry_type == EntryPointType.USAGE_LITERAL
-        ]
+        # Anchored values: named USAGE_LITERAL EPs carry the transcribed literal.
+        expected_ul_defaults = {
+            # provenance: tests/fixtures/catf_mfe_model/extraction_snapshot.json:4527
+            #   (literal_value 1546.72 bound to auxiliary_load.gross_electric)
+            "CATF_MFE__catf_mfe_plant__auxiliary_load__gross_electric": 1546.72,
+            # provenance: catf_mfe_model/extraction_snapshot.json:2896
+            #   (literal_value 2079.41 bound to cryo_load.p_neutron)
+            "CATFMFEMagnets__catf_tf_system__cryo_load__p_neutron": 2079.41,
+            # provenance: catf_mfe_model/extraction_snapshot.json:4495
+            #   (literal_value 1104.22 bound to pump_load.p_thermal_electric)
+            "CATFMFEBlanket__catf_blanket__pump_load__p_thermal_electric": 1104.22,
+        }
+        for qname, expected in expected_ul_defaults.items():
+            ep = entry_points.get(qname)
+            assert ep is not None, f"USAGE_LITERAL EP {qname} missing from catf entry points"
+            assert ep.entry_type == EntryPointType.USAGE_LITERAL, (
+                f"{qname}: expected USAGE_LITERAL, got {ep.entry_type.name}"
+            )
+            assert ep.default_value == expected, (
+                f"UL EP {qname}: default={ep.default_value} != transcribed {expected}"
+            )
 
-        for ep in ul_eps:
-            if ep.default_value is not None:
+        # Independent shape check (value-agnostic): every UL default is float or None.
+        for ep in entry_points.values():
+            if ep.entry_type == EntryPointType.USAGE_LITERAL and ep.default_value is not None:
                 assert isinstance(ep.default_value, float), (
                     f"UL EP {ep.qualified_name}: default_value={ep.default_value} "
                     f"is {type(ep.default_value).__name__}, not float"
                 )
-                # Verify it matches the source
-                source = entry_point_sources.get(ep.qualified_name)
-                if source:
-                    try:
-                        expected = float(source)
-                        assert ep.default_value == expected, (
-                            f"UL EP {ep.qualified_name}: default={ep.default_value} "
-                            f"!= float(source)={expected}"
-                        )
-                    except (ValueError, TypeError):
-                        pass  # Non-numeric source -- default should be None
+
+        # Synthetic guard for the None path: an unparseable literal source is not a
+        # float, so production's float() conversion yields None rather than raising.
+        # provenance: hand-computed -- float("3+4") raises ValueError.
+        with pytest.raises(ValueError):
+            float("3+4")
 
     @pytest.mark.req("REQ-EPC-03")
     def test_unparseable_default_is_none(self, classifier_inputs):
-        """EPs with non-numeric default sources have default_value=None.
+        """A None default_value implies the raw source was genuinely unparseable.
 
-        Covers the float() failure path in all 3 classification branches:
-        - DESIGN_ATTRIBUTE: attr.default_value not parseable as float
-        - LIBRARY_DEFAULT: calc def input default not parseable as float
-        - USAGE_LITERAL: entry_point_sources[qname] not parseable as float
+        Verifies the invariant "classifier nulled the default => the raw source does
+        not parse as float" for the two branches that actually carry None-default EPs
+        in the fixtures (DESIGN_ATTRIBUTE, USAGE_LITERAL). Each branch asserts the raw
+        source independently -- it does not re-invoke the classifier's own conversion.
 
-        For each EP type, if the raw source value cannot be parsed as float,
-        the classifier should set default_value=None (not raise).
+        The former LIBRARY_DEFAULT branch re-invoked ``_get_library_default`` and
+        asserted it agreed with the classifier's own default_value (both produced by
+        the same call) -- a tautology, and vacuous besides: no LIBRARY_DEFAULT EP has a
+        None default in any fixture (every calc-def input default parses). The real
+        parse-path coverage for ``_get_library_default`` now lives in the anchored test
+        ``test_library_default_parsing_anchored`` below.
         """
         entry_points = classifier_inputs["entry_points"]
         entry_point_sources = classifier_inputs["entry_point_sources"]
         design_attr_by_qname = classifier_inputs["design_attr_by_qname"]
-        calc_def_map = classifier_inputs["calc_def_map"]
-        unbound_lookup = classifier_inputs["unbound_lookup"]
 
         for qname, ep in entry_points.items():
             if ep.default_value is not None:
@@ -343,25 +365,57 @@ class TestFloatConversion:
                     with pytest.raises((ValueError, TypeError)):
                         float(attr.default_value)
 
-            elif ep.entry_type == EntryPointType.LIBRARY_DEFAULT:
-                # Verify: _get_library_default returns None for this param
-                usage_info = unbound_lookup.get(qname)
-                if usage_info:
-                    usage, param_name = usage_info
-                    calc_def = calc_def_map.get(usage.calc_def_name)
-                    if calc_def:
-                        result = _get_library_default(calc_def, param_name)
-                        assert result is None, (
-                            f"LD EP {qname} has default_value=None but "
-                            f"_get_library_default returned {result}"
-                        )
-
             elif ep.entry_type == EntryPointType.USAGE_LITERAL:
                 # Verify: either no source, or source is unparseable
                 source = entry_point_sources.get(qname)
                 if source:
                     with pytest.raises((ValueError, TypeError)):
                         float(source)
+
+    @pytest.mark.req("REQ-EPC-03")
+    def test_library_default_parsing_anchored(self, solar_battery_classifier):
+        """_get_library_default parses numeric defaults to the transcribed float and
+        yields None (not a raise) for unparseable/absent defaults.
+
+        Replaces the vacuous, tautological LIBRARY_DEFAULT branch of
+        test_unparseable_default_is_none: the expected values here are transcribed from
+        the solar_battery snapshot's calc-def input defaults, not produced by the
+        function under test.
+        """
+        calc_def_map = solar_battery_classifier["calc_def_map"]
+
+        def find_calc_def(short_name):
+            match = next(
+                (cd for qn, cd in calc_def_map.items() if qn.split("::")[-1] == short_name),
+                None,
+            )
+            assert match is not None, f"calc def {short_name} not in solar_battery calc_def_map"
+            return match
+
+        numeric_cases = [
+            # (calc_def, param, expected). provenance: solar_battery snapshot calc-def defaults.
+            ("PVModuleCostCalc", "cost_per_watt", 1.07),   # provenance: solar snapshot:923
+            ("PVModuleCostCalc", "fab_factor", 0.45),      # provenance: solar snapshot:936
+            ("BatteryPackCostCalc", "cost_per_kwh", 171.5),  # provenance: solar snapshot:1428
+        ]
+        for cd_name, param, expected in numeric_cases:
+            calc_def = find_calc_def(cd_name)
+            assert _get_library_default(calc_def, param) == expected, (
+                f"_get_library_default({cd_name}, {param}) != transcribed {expected}"
+            )
+
+        # No fixture calc-def carries an unparseable default, so exercise the float()
+        # failure path with synthetic input attributes. An expression or placeholder
+        # default yields None; an absent default yields None -- neither raises.
+        # provenance: hand-computed -- float("1.0 / q_eng") and float("TBD") raise ValueError.
+        synthetic = SimpleNamespace(input_attributes=[
+            SimpleNamespace(name="ratio", default_value="1.0 / q_eng"),
+            SimpleNamespace(name="placeholder", default_value="TBD"),
+            SimpleNamespace(name="absent", default_value=None),
+        ])
+        assert _get_library_default(synthetic, "ratio") is None
+        assert _get_library_default(synthetic, "placeholder") is None
+        assert _get_library_default(synthetic, "absent") is None
 
     @pytest.mark.req("REQ-EPC-03")
     def test_get_library_default_real_calc_defs(self, solar_battery_classifier):

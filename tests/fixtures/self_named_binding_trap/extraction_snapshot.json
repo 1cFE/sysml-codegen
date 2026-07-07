@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 1,
+  "snapshot_format_version": 2,
   "model_name": "self_named_binding_trap",
-  "captured_at": "2026-07-06T02:09:11.256559+00:00",
+  "captured_at": "2026-07-06T19:03:24.581642+00:00",
   "compilation_results": {},
   "calc_defs": [
     {
@@ -43,7 +43,7 @@
         }
       ],
       "references": [],
-      "source_file": "tests/fixtures/self_named_binding_trap/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 5,
       "source_hash": "25fadb7c0b42b6452c81b22372a0e70a0fdaac95f591439d087b542fa5bb831a",
       "output_expression_asts": null,
@@ -76,7 +76,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "tests/fixtures/self_named_binding_trap/library.sysml",
+      "source_file": "library.sysml",
       "source_line": 31,
       "parent_part_path": "trap_plant",
       "qualified_name": "TrapDesign__trap_plant__avail_calc",
@@ -86,13 +86,13 @@
     }
   ],
   "design_attributes": {
-    "tests/fixtures/self_named_binding_trap/library.sysml": [
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/self_named_binding_trap/library.sysml": [
       {
         "name": "derated",
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "tests/fixtures/self_named_binding_trap/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 16,
         "parent_part": "",
         "qualified_name": "TrapLib__AvailabilityCalc__derated"
@@ -102,7 +102,7 @@
         "sysml_type": "Real",
         "default_value": "0.7",
         "unit": null,
-        "source_file": "tests/fixtures/self_named_binding_trap/library.sysml",
+        "source_file": "library.sysml",
         "source_line": 29,
         "parent_part": "",
         "qualified_name": "TrapLib__Trap_Plant__availability"
@@ -120,5 +120,6 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": []
+  "channel_aliases": [],
+  "dropped_constraints": []
 }
