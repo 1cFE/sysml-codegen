@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 253 |
-| PASS (test exists and passes) | 249 |
+| Total requirements | 255 |
+| PASS (test exists and passes) | 251 |
 | UNTESTED (no dedicated test) | 4 |
 | DEFERRED | 0 |
 | REQ families | 30 |
-| Distinct test files cited | 57 |
+| Distinct test files cited | 59 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -34,7 +34,7 @@ the documentation rather than executable code.
 - [AS — Aggregation Scoping](#as) (8/8 pass)
 - [AST — AST Dispatch Invariant](#ast) (10/10 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
-- [BT — Backtracker](#bt) (11/11 pass)
+- [BT — Backtracker](#bt) (13/13 pass)
 - [CA — Computed Attributes](#ca) (11/11 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
@@ -128,6 +128,8 @@ the documentation rather than executable code.
 | REQ-BT-09 | The FORMULA `::`-QN REFERENCE path SHALL per-segment sanitize (`sanitize_qualified_name`) before comparison/lookup so a quoted-owner QN matches the sanitized design-attribute QN (Bug A; six-site lockstep flip, INV-1) | `test_matcher_fixes_item7.py`, `test_dual_resolution.py` | PASS |
 | REQ-BT-10 | A design attribute owned by a part **def** (empty `parent_part`) SHALL match its binding via a leaf-unique fallback over design-part attributes (calc-def I/O excluded), returning a QN only when exactly one candidate exists, else None (Bug B; INV-2, no cross-wire) | `test_matcher_fixes_item7.py` | PASS |
 | REQ-BT-11 | `_resolve_chain_dispatch` SHALL query the structured `_scoped_alias` namespace (Step 1c) by splitting `source_path` at the last dot, trying the consumer-scope-prefixed key `(consumer_scope.prefix, leaf)` before the bare `(prefix, leaf)` (Item 10 #1 / D-D sibling disambiguation), ordered after Step 1b and before the unscoped Step 2 (INV-A: additive, only where the ladder fell through) | `test_sibling_channel_ambiguity.py`, `test_wi014_toy.py` | PASS |
+| REQ-BT-12 | For a 3+-segment CHAIN (`source_path.count(".") >= 2`), `_resolve_chain_dispatch` SHALL, after Step 2 misses, retry `scoped_lookup` over progressively shorter ancestor prefixes of the consumer scope (Step CLIMB, Item 2), collect every distinct non-self-reference hit, resolve iff exactly one, and refuse (return None → loud Step-4 fallback) on two or more — never silently pick (M-1 / INV-2b). Gated so 2-segment resolutions stay byte-identical (D4) | `test_dependency_backtracker.py`, `test_deep_cross_scope_probe.py` | PASS |
+| REQ-BT-13 | A 3+-segment CHAIN that reaches the Step-4 fallback SHALL emit a genuine `logger.warning` (WARNING level, distinct from the benign per-binding DEBUG line) naming the full untruncated chain, and surface as an entry point — never truncated to root, never silently wired (Item-5 loud-diagnostic contract, D3 home) | `test_dependency_backtracker.py` (fires-on-shape + silent-on-clean) | PASS |
 
 ### CA
 

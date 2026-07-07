@@ -73,9 +73,30 @@ Step 2:  Alias lookup (cross-scope)
          ScopedKey(source_path) → alias registry
          → CanonicalChannel or None
 
+Step CLIMB: Ancestor-scope climb (Item 2, gated source_path.count(".") >= 2)
+         For a deep (3+-segment) chain that missed the ladder above, retry
+         scoped_lookup with progressively shorter ancestor prefixes of
+         consumer_scope (drop trailing segments, down to the bare source_path).
+         The registry keys every output by its full design-prefix-stripped
+         instance path, so prefixing the whole path with the ancestor scope where
+         the chain root lives reconstructs the registered key. Collect EVERY
+         distinct non-self-reference hit: exactly one → resolve to it; two or more
+         → refuse (return None, fall to Step 4) — never silently pick (M-1 /
+         INV-2b). Gated to 3+-segment chains so every 2-segment resolution is
+         byte-identical. (Residual: first-segment shadowing — an inner scope
+         declares only the chain's first segment while an outer scope supplies the
+         full path — is a single-hit case the guard does not close; filed, not
+         built, as no corpus model exercises it.)
+
 Step 3:  Design attribute match → ENTRY_POINT
 
-Step 4:  Fallback → ENTRY_POINT (recorded for V11)
+Step 4:  Fallback → ENTRY_POINT (recorded for V11).
+         A 3+-segment CHAIN reaching here is genuinely unresolvable — extraction
+         no longer rejects deep chains (it emits a full-path CHAIN), so the loud
+         diagnostic moved here: a genuine logger.warning (WARNING level, distinct
+         from the benign per-binding DEBUG line) names the full untruncated chain,
+         and the param surfaces as an entry point — never truncated, never
+         silently wired (the Item-5 contract, in its new home).
 ```
 
 **REFERENCE bindings** (`::` in source_path) — `_resolve_reference_dispatch`:

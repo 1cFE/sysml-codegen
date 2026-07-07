@@ -60,8 +60,12 @@ and the deferred capabilities are built, not parked.
   `_resolve_aggregation_input_channel` deleted; Strategy D deleted and its lying docstring
   fixed; the cutover's parity gate compares against **the replaced function**, not only the
   backtracker; the IR family rows drop the "not-yet-wired" note and pin live code.
-- [ ] **SC-B (multi-hop chains)**: 3+-segment chain bindings resolve to a wired chain;
+- [x] **SC-B (multi-hop chains)**: 3+-segment chain bindings resolve to a wired chain;
   `deep_cross_scope_probe` Pattern A flips from a rejection pin to a resolved-chain pin.
+  Done: extraction emits full-path CHAIN (D1); backtracker gains an ancestor-scope climb +
+  ambiguity guard (D2/D4/M-1); the loud diagnostic moved to the backtracker Step-4 fallback
+  (D3). Both corpus chains wired (data_point via climb, base_metric via Step 1); re-capture
+  decomposed; live/offline parity green. See `.project/active/multihop-chain/plan.md`.
 - [ ] **SC-C (test gaps)**: REQ-DM-08, REQ-RES-05, and REQ-RES-08 each get an
   independently-anchored pinning test; their matrix rows flip UNTESTED→PASS.
 - [ ] **SC-D (classifier)**: the Step-2b owning-part prefix check accepts a

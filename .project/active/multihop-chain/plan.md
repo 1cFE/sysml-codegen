@@ -1,6 +1,6 @@
 # Implementation Plan: Resolved Multi-Hop Chain Bindings
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 **Branch:** truth-debt-epic
@@ -363,23 +363,17 @@ newly-supported chain shape is recorded either way).
 ("update `24-dual-resolution-architecture.md` CHAIN-dispatch section").
 
 **Specific file changes:**
-- [ ] Write the agentic-mbse MODELING_GUIDE impact note **in this repo** (e.g.
-      `.project/active/multihop-chain/agentic-mbse-impact.md`) — the newly-supported 3+-segment
-      calc-usage chain shape, for a later sync. Repo is `/home/reid/1cfe/agentic-mbse`, sandbox-blocked
-      this session (memory `agentic-mbse-repo-path`); do not fail the item on it. Disposition may be
-      "no change needed."
-- [ ] Update `docs/architecture/reference/24-dual-resolution-architecture.md` CHAIN-dispatch section to
-      document the new climb step + the M-1 ambiguity guard + the Step-4 multi-hop WARN, in this change (R1).
-- [ ] Verify the verification-matrix rows for the CHAIN/multi-hop family still read true; recount from
-      rows, not the summary (memory `verification-matrix-drift-modes`).
-- [ ] Epic Item 2 SC-B checkbox: flip in `.project/backlog/epic_truth_debt.md`.
+- [x] Wrote `.project/active/multihop-chain/agentic-mbse-impact.md` — R2 disposition "no change needed" (no new SysML construct/authoring rule; the deep chain is already valid SysML agentic-mbse parses). Shape recorded for a later sync.
+- [x] Updated `docs/architecture/reference/24-dual-resolution-architecture.md` CHAIN-dispatch block: added Step CLIMB (with M-1 guard + first-segment-shadowing residual) and annotated Step 4 with the multi-hop loud WARN.
+- [x] Verification matrix (recounted from rows): added REQ-BT-12 (climb + ambiguity guard) and REQ-BT-13 (Step-4 multi-hop loud WARN), both PASS. Bumped BT index 11→13, Total 253→255, PASS 249→251, Distinct test files 57→59 (two newly-cited: `test_dependency_backtracker.py`, `test_deep_cross_scope_probe.py`). Existing REQ-BT-11 still reads true (Step 1c unchanged).
+- [x] Epic Item 2 SC-B flipped in `.project/backlog/epic_truth_debt.md` (committed isolated to only my SC-B hunk; sibling SC-A/SC-G working-tree flips left uncommitted for their stages).
 
 ### Validation (Final Gates)
 **Automated:**
-- [ ] `uv run pytest tests/` → GREEN.
-- [ ] `ruff check src/` → **≤ 17** findings (do not regress).
-- [ ] `mypy src/` → **≤ 97** findings (Item 1 lowered it from 104; do not regress).
-- [ ] `git diff --stat` on baselines → only `deep_cross_scope_probe` changed.
+- [x] `uv run pytest tests/` → GREEN (2080 passed, 4 skipped, 5 xfailed).
+- [x] `ruff check src/` → 17 (== ceiling, no regress).
+- [x] `mypy src/` → 97 (== ceiling, no regress).
+- [x] `git status` on baselines → only `deep_cross_scope_probe` snapshot + baseline changed.
 
 **What We Know Works After This Phase:** the capability is documented, the agentic-mbse impact is
 recorded for sync, and all gates hold. Item 2 is implement-complete → suggest `/_my_audit`.
@@ -451,10 +445,14 @@ for live capture; the `--fixtures` filter is the byte-identity discipline). agen
 **Red/green after phase:** conformance 7/7 GREEN; full suite 2080 passed. Byte-identity: only the target fixture's snapshot + baseline moved. Gates: ruff 17, mypy 97.
 
 ### Phase 6 Completion
-**Completed:** — **R2 disposition:** — **Final gate numbers (ruff / mypy):** — **Deviations:** —
+**Completed:** 2026-07-07
+**R2 disposition:** No agentic-mbse change required (recorded in `agentic-mbse-impact.md`) — the deep chain is already valid SysML agentic-mbse parses; no new construct or authoring rule. Shape recorded for a later sync.
+**Docs:** doc 24 CHAIN-dispatch updated (Step CLIMB + Step-4 WARN); matrix gains REQ-BT-12/REQ-BT-13 (both PASS), counts recounted from rows.
+**Final gate numbers (ruff / mypy):** ruff 17 (ceiling), mypy 97 (ceiling) — no regression. Full suite 2080 passed.
+**Deviations:** committed the epic SC-B flip isolated to my hunk (git checkout HEAD + re-apply + commit + restore), because the epic file carried pre-existing sibling SC-A/SC-G flips at session start; left those uncommitted for their stages.
 
 ---
 
-**Status**: Draft → In Progress → Complete
+**Status**: Draft → In Progress → **Complete**
 </content>
 </invoke>
