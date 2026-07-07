@@ -1,6 +1,6 @@
 # Implementation Plan: Inherited-Attr Classifier Fix (flip the 5 xfails)
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 **Branch:** truth-debt-epic
@@ -63,11 +63,11 @@ for rel, target in getattr(part_element, "heritage", []):
 
 ### Validation
 **Automated:**
-- [ ] Probe prints `::`-form supertype QN and both asserts pass.
+- [x] Probe prints `::`-form supertype QN and both asserts pass.
 
 **Manual:**
-- [ ] The printed QN is a literal prefix of the inherited ref QN (`startswith(qn + "::")`).
-- [ ] Decision gate: PASS → proceed to Phase 1. FAIL (e.g. `__`-form, empty, or no Subclassification) → STOP, this is B1/B2 failing; re-probe format before writing any code.
+- [x] The printed QN is a literal prefix of the inherited ref QN (`startswith(qn + "::")`).
+- [x] Decision gate: PASS → proceeded to Phase 1 (B1/B2 confirmed).
 
 **What We Know Works After This Phase:**
 The ancestor chain is reachable in a prefix-matchable form. The mechanism is viable; the rest is bookkeeping.
@@ -315,11 +315,11 @@ Docs, matrix, and epic describe the fixed behavior with the correct severity; th
 Prove the whole change is green and within budget.
 
 ### Validation
-- [ ] Full suite green; **suite summary `xfailed` count 5 → 0** (verify the summary line moved).
-- [ ] `ruff check src/` ≤ 17.
-- [ ] `mypy src/` ≤ 97  *(tightens the design's ≤ 104 — see reconciliation note at top)*.
-- [ ] Byte-identity gate: only `tests/fixtures/unresolvable_attr_probe/` moved (re-confirm after all phases; `captured_at` reverted).
-- [ ] Matrix recount from rows holds.
+- [x] Full suite green; **suite summary `xfailed` count 5 → 0** (verify the summary line moved).
+- [x] `ruff check src/` ≤ 17.
+- [x] `mypy src/` ≤ 97  *(tightens the design's ≤ 104 — see reconciliation note at top)*.
+- [x] Byte-identity gate: only `tests/fixtures/unresolvable_attr_probe/` moved (re-confirm after all phases; `captured_at` reverted).
+- [x] Matrix recount from rows holds.
 
 **What We Know Works After This Phase:**
 Item 4 debt retired: classifier fixed, snapshot re-captured and reviewed, xfails flipped to real PASSes, D5 loud diagnostic added, docs/matrix/epic corrected — in one change.
@@ -372,8 +372,13 @@ R1 sweep, same change as the code. **doc 16** (`16-computed-attributes.md`): Ste
 **Validation:** every remaining "loud" in matrix+epic is a CHAIN-rejection (Item 2, e.g. REQ-BT-12/13) or Item-6 hygiene use — none tied to inherited-attr (grep-verified). e2e suite (`test_computed_attributes_e2e.py`) runs on `attr_expr_probe` (zero `:>`), so it does not move. No test asserts the matrix counts, so the recount has no test-side coupling.
 
 ### Phase 6 Completion
-_[fill]_
+All final gates GREEN.
+- **Full suite:** 2086 passed / 4 skipped / **0 xfailed** (was 2080 / 4 / 5). Movement: xfailed **5 → 0**; passed **+6** (−5 deleted `test_misclassification_documented` params were xfailed not passed; +3 unit predicate tests, +2 D5 tests, +1 new depth-2 classification param = +6). Matches the brief's ~2085+ prediction.
+- **ruff `src/`:** 17 (gate ≤ 17) — at ceiling, 0 added by this change.
+- **mypy `src/`:** 97 (gate ≤ 97) — at ceiling, 0 added.
+- **Byte-identity:** only `tests/fixtures/unresolvable_attr_probe/` moved across the whole change (the two `.sysml` + re-captured snapshot); `captured_at` reverted; every other baseline byte-identical (diff 994b397..HEAD confirmed).
+- **Matrix recount:** total 256 == sum of index denominators (verified).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete** (2026-07-07)
