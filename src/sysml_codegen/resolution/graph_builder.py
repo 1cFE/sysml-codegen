@@ -228,14 +228,11 @@ def build_computation_graph(
         group_deriver,
     )
 
-    # Step 5: Group entry points using EXISTING ParameterGroupDeriver
-    # This reuses the deriver's sophisticated grouping logic
-    param_groups = _group_entry_points_via_deriver(
-        entry_points=entry_points,
-        group_deriver=group_deriver,
-        backtracking_result=result,
-        calc_defs=calc_defs,
-    )
+    # Step 5 removed (D4b): the former _group_entry_points_via_deriver call bound
+    # param_groups here, but Step 6.6 unconditionally rebuilds it with ALL entry points
+    # and nothing reads it in between — the binding was fully discarded. Its non-float
+    # warning was a duplicate of Step 6.6's (both route through derive_groups()), so
+    # deletion loses no warning (pinned by test_silent_failure_sc5.py).
 
     # Step 6: Build CalcUsage pipeline modules from required_usages
     modules = []
@@ -327,9 +324,9 @@ def build_computation_graph(
     # entry_points dict and group_deriver.classify() directly), so this is safe.
     all_ep_names = set(entry_points.keys())
     raw_groups = group_deriver.derive_groups()
-    for group in raw_groups:
-        group.parameters = [
-            p for p in group.parameters
+    for dg in raw_groups:
+        dg.parameters = [
+            p for p in dg.parameters
             if p.name in all_ep_names
         ]
     filtered_groups = [g for g in raw_groups if g.parameters]
@@ -410,11 +407,11 @@ def build_computation_graph(
     # the rendered YAML — makes every entry_point_groups consumer deterministic.
     # Group names are unique per design file and parameter qualified_names are
     # unique within a group, so both sorts are total.
-    for group in param_groups:  # type: ignore[assignment]
-        # param_groups is the converted ParameterGroup list (params have
-        # qualified_name); the variable is typed from its earlier
-        # DerivedParameterGroup binding, so mypy needs the hints here.
-        group.parameters.sort(key=lambda p: p.qualified_name)  # type: ignore[attr-defined]
+    for group in param_groups:
+        # param_groups is the converted ParameterGroup list (params carry
+        # qualified_name). With the DerivedParameterGroup loop above renamed to `dg`
+        # (D4), `group` binds cleanly as ParameterGroup — no type: ignore needed.
+        group.parameters.sort(key=lambda p: p.qualified_name)
     param_groups = sorted(param_groups, key=lambda g: g.name)
 
     return ComputationGraph(
@@ -536,48 +533,13 @@ def _classify_entry_points(
     return result
 
 
-def _group_entry_points_via_deriver(
-    entry_points: dict[str, EntryPoint],
-    group_deriver: ParameterGroupDeriver,
-    backtracking_result: BacktrackingResult,
-    calc_defs: list,
-) -> list[ParameterGroup]:
-    """Use existing ParameterGroupDeriver for grouping, convert to Pydantic models.
-
-    This reuses existing deriver logic instead of duplicating it.
-
-    IMPORTANT: DerivedParameterGroup.parameters[].name contains QUALIFIED names
-    (per ADR-001 Phase 2), so we can look up directly in entry_points dict.
-
-    Note on source_file: dg.source_identifier is a filename like "physics.sysml",
-    not a full path. We store it as-is since it's used for display/grouping,
-    not file operations.
-
-    Args:
-        entry_points: Classified entry points by qualified name
-        group_deriver: ParameterGroupDeriver instance
-        backtracking_result: For filtering to true entry points
-        calc_defs: Calculation definitions (for API compatibility)
-
-    Returns:
-        List of ParameterGroup Pydantic models
-    """
-    # Get derived groups (already filtered for entry points only)
-    derived_groups = group_deriver.derive_groups_filtered(
-        backtracking_result,
-        calc_defs,
-    )
-
-    return _convert_derived_groups(derived_groups, entry_points)
-
-
 def _convert_derived_groups(
     derived_groups: list,
     entry_points: dict[str, EntryPoint],
 ) -> list[ParameterGroup]:
     """Convert DerivedParameterGroup list to ParameterGroup Pydantic models.
 
-    Shared by _group_entry_points_via_deriver (Step 5) and Step 6.6 rebuild.
+    Used by the Step 6.6 param_groups rebuild.
 
     Args:
         derived_groups: DerivedParameterGroup list (already filtered)

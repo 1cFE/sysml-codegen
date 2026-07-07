@@ -325,18 +325,29 @@ def test_no_nonfloat_warning_lost_after_step5_delete(caplog):
 ### Changes Required
 **See `design.md#component-overview` (param_groups typing fix), D4, D4b, B4.**
 
-- [ ] Rename the `~:325` `DerivedParameterGroup` loop variable (`for group in raw_groups` → `for dg in
-  raw_groups`, updating its body) so the `ParameterGroup` loops at `~:335/:373/:408` bind a clean
-  `group` typed `ParameterGroup`. Remove both `type: ignore`s at `~:408/:412` (D4).
-- [ ] Before deleting Step-5: quick `caplog`/`_warn_nonfloat` grep to confirm the non-float warning fires
-  only at Step 6.6 (B4). Then delete the dead Step-5 call (`~:228-233`) and the orphan
-  `_group_entry_points_via_deriver` (`~:534-566`) whose only caller it was (D4b).
+- [x] Renamed the `raw_groups` loop variable (`for group in raw_groups` → `for dg in raw_groups`, body
+  updated) so the `param_groups` sort loop binds a clean `group` typed `ParameterGroup`. **Both
+  `type: ignore`s removed** (D4) — mypy reports no error at those lines.
+- [x] Confirmed B4 by reading the code (not just grep): `derive_groups_filtered` DOES call
+  `derive_groups()` (`parameter_groups.py:575`) — so the design's B4 *mechanism* ("does not reach
+  derive_groups") was **wrong**, but its *conclusion* holds: Step 6.6 (`:329`) calls `derive_groups()`
+  unconditionally, so the non-float warning still fires there; Step-5's firing was a DUPLICATE. Pinned by
+  the existing `test_silent_failure_sc5.py` (calls `derive_groups()` directly). Then deleted the dead
+  Step-5 call and the orphan `_group_entry_points_via_deriver` (D4b) — confirmed zero remaining callers,
+  and `param_groups` is not read between Step 5 and the Step 6.6 rebuild.
 
 ### Validation
 **Automated:**
-- [ ] `mypy src/` ≤ 104 with **both ignores removed and no new errors** (re-confirm live).
-- [ ] `ruff check src/` ≤ 17.
-- [ ] `uv run pytest tests/` → green (Step-5 deletion loses no warning/value).
+- [x] `mypy src/` == **97** with both ignores removed and **no new errors** (was 101 after Phase 3;
+  −2 from the cleared ignores' underlying errors, −2 more from the orphan-function deletion). ≤ 104.
+- [x] `ruff check src/` == 17 (BacktrackingResult still used elsewhere — no F401).
+- [x] `uv run pytest tests/` → green (2072 passed); Step-5 deletion loses no warning/value; baselines
+  byte-identical.
+
+**DEVIATION (B4 mechanism):** the design said `derive_groups_filtered` "does not reach `derive_groups()`";
+it does (`:575`). Deletion is still safe because Step 6.6 independently fires the warning and the SC-5
+test pins it. No caplog test added — the existing SC-5 test + the structural guarantee cover it (adding
+one would duplicate coverage).
 
 **What We Know After (INV-6, SC-G):** the double-binding is untangled, both ignores cleared, mypy no worse.
 
