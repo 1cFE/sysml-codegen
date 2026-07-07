@@ -142,25 +142,68 @@ lookups (vs REQ-OR-06's "through typed lookup"). `test_output_registry.py::TestR
 already narrowed its own reading. Decide the intended contract, then fix REQ text + doc 10 +
 (possibly) code together — not a docs-only fix.
 
-### [DOCS-SCRUB-F4] `resolve_input()` cutover divergence (REQ-IR-05/07, REQ-RES-02)
+### [DOCS-SCRUB-F4] `resolve_input()` cutover divergence — RETIRED (PIPELINE-TRUTH Item 7)
 
-**Absorbed into PIPELINE-TRUTH Item 7**, extended by D7 (the whole IR family + parts
-of DRA-02/04/05 pin the dead module) and reframed per R4: docs 03/04/24 record the
-*intended* architecture with rationale — the module and its call site shipped in one
-commit (`d6c725f`) with only the final rewire skipped. **Presumption: land the
-cutover**; kill-criteria and preconditions in the epic item.
+**Retired 2026-07-06 by Item 7.** The three F4 kill probes ran and fired no kill
+(`.project/active/matrix-truth/probes/`), so the reconciliation direction resolved to
+**LAND-with-split**: Item 7 reframed the matrix rows + docs 03/04/05 to the true state
+(`resolve_input` is a parity-validated, not-yet-wired consolidation; the live path is
+`_resolve_aggregation_input_channel`), and the executable cutover is filed below as
+**[ITEM7-F4-CUTOVER]**. This filing is superseded by that one.
 
-**Source**: docs-scrub docs-03/04/05/06 pass, 2026-07-06. `resolve_input()` /
-`AGG_STRATEGIES` (`analysis/input_resolver.py`) has **zero production call sites** — only
-`test_input_resolver.py` / `test_dual_resolution.py` call it; the production aggregation
-path resolves SumTerm/SingletonTerm inline via `_resolve_aggregation_input_channel()` in
-`resolution/graph_builder.py`. But REQ-IR-05/REQ-IR-07/REQ-RES-02 say aggregation SHALL
-use `resolve_input()` with `AGG_STRATEGIES`, and the IR rows are marked PASS (pinned by
-tests that call the bypassed function directly). Either land the cutover or re-frame the
-REQs. Related smaller facts: Strategy D is a documented-intent no-op (returns `None` for
-every ref — the aggregation-EP dedup it promises never happens), and the `AGG_STRATEGIES`
-inline comment describes Strategy C's old mechanism. Docs 03/04/05 deliberately left the
-REQ-mirroring prose untouched pending this reconciliation.
+### [ITEM7-F4-CUTOVER] Wire aggregation resolution through `resolve_input()` — P2, executable follow-on
+
+**Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** Item 7's F4 reconciliation reframed the
+matrix/docs to the honest state but deliberately **split out the code cutover** (fallback
+refactor + baseline re-capture exceeds Item 7's 1.5–2 day budget; spec Open Question
+authorizes the split). This item carries the executable change, pickable cold.
+
+**Goal.** Make the live aggregation path call `resolve_input(AGG_STRATEGIES)` instead of
+the inline `_resolve_aggregation_input_channel` (`graph_builder.py:1212`), so the whole IR
+family finally pins live code.
+
+**The correct comparand (design-review M3 — DO NOT skip).** The cutover's safety-net
+parity suite MUST compare `resolve_input(AGG_STRATEGIES)` against
+**`_resolve_aggregation_input_channel`** — the function it replaces — not only the
+backtracker DFS. Probe (i) and Item 7's committed `TestResolveInputParityExtended` prove
+parity against the *backtracker*, which is general-correctness evidence, NOT
+parity-with-the-replaced-function. Add the `_resolve_aggregation_input_channel` comparand
+as this item's own gate before rewiring.
+
+**The EP-key reconciliation (design-review M4 — the load-bearing blocker).** See
+`.project/active/matrix-truth/probes/probe_iv_ep_key_divergence.md`. The live path builds
+the SumTerm entry-point QN as `{module_eqn}__{part_usage}_{attr}` (e.g.
+`…site_infra__raw_material_cost__permitting_raw_material_cost`); `resolve_input`'s leaf-only
+fallback builds `…site_infra__raw_material_cost__raw_material_cost` — which **already
+coexists in the same graph as the module's own output channel** (concrete baseline lines:
+`tests/fixtures/baseline_outputs/solar_battery/computation_graph.json:2472/2483/3270/3486`).
+A naive drop-in collides an input EP with an output-channel name and drops the part-usage
+disambiguator. Reconcile `resolve_input`'s fallback to the live richer EP construction
+(part_usage-prefixed QN, `_find_literal_redefinition` defaults, param-groups, multiplicity
+EPs, SingletonTerm "Try 2" direct-channel construction) BEFORE rewiring.
+
+**Scope.**
+1. Reconcile `resolve_input`'s fallback to the live path's richer EP construction (above).
+2. Rewire the 3 aggregation resolution call sites: `graph_builder.py:1444, 1539, 1640`
+   (`_resolve_aggregation_input_channel` calls in SumTerm / SingletonTerm / LocalTerm-EXPOSE
+   handling). Line numbers as of Item 7; re-verify at pickup.
+3. Re-capture baselines byte-identically, or land as a reviewed `scripts/capture_*.py`
+   diff (R3 / SC-G).
+4. **Delete Strategy D** — `DesignAttributeLookup` (`input_resolver.py:200`) is a
+   documented no-op (`return None`, zero live surface: probe ii → 0 key churn on
+   catf_mfe/solar_battery). Remove it from `AGG_STRATEGIES` and **fix its lying docstring**
+   ("included in AGG_STRATEGIES for future extensibility") — the residual ghost Item 7 left
+   noted, not fixed.
+
+**Safety-net evidence (probe pointers).** `.project/active/matrix-truth/probes/`:
+`probe_i_extended_parity.py` (+ run log, now committed as `TestResolveInputParityExtended`),
+`probe_ii_strategy_d_dedup.py` (+ run log — Strategy D delete justification),
+`probe_iii_module_drift.md` (byte-identical since COST-PATTERN birth),
+`probe_iv_ep_key_divergence.md` (the EP-key blocker above).
+
+**Done when:** IR rows re-pin the live path (drop the "not-yet-wired" family note),
+`_resolve_aggregation_input_channel` is deleted, Strategy D is gone, baselines are
+byte-identical or reviewed, and the parity gate runs against the replaced function.
 
 ### [DOCS-SCRUB-F3] Stale code docstrings found while verifying docs (one-line fixes)
 
