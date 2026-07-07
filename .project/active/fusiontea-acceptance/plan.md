@@ -334,6 +334,29 @@ The epic's real-world proof is assembled, recorded, and coordinated. SC-A/B/C/D 
 `test_pipeline_runner.py` still green.
 
 ### Phase 2 Completion
+**Completed:** 2026-07-06
+
+**Changes Made:**
+- `tests/conformance/test_snapshot_generation.py`: parametrized
+  `test_live_vs_snapshot_byte_identical` over `_SNAP19_FIXTURES` = [`solar_battery_model`,
+  `retype_model`, `quoted_owner_formula`, `alias_agg_probe`, `ife_plant`, `plant_values`]
+  — one gate, 6 shapes (was solar_battery only). Added an inline comment pinning WHY the
+  full-tree byte diff IS the channel-identity check (it includes `pipelines/*.yaml`, whose
+  module inputs name each wired source channel) and a "do not narrow to metadata-only" guard.
+
+**Verified at implement:** all six fixtures exist with committed **v2** snapshots — no
+missing capture to defer to Phase 4.
+
+**License note:** the syside license is LIVE in this session, so the `@requires_license`
+legs actually RAN (not skipped): all 6 parametrized fixtures + the symlinked leg PASS
+byte-identical. This satisfies Phase 4 leg B here.
+
+**R1 mis-wire probe (fires on the shape it claims):** repointed the ife_plant snapshot's
+cross-module channel source (`radial_build.magnet_volume_total` →
+`radial_build.MISWIRED_channel`) in the committed snapshot; snap-gen aborted V11 (the
+mis-wired channel mints no params key) and the parity test FAILED; snapshot reverted clean
+(`git checkout`, status empty). Confirms the gate catches a channel mis-wire.
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 ### Phase 5 Completion

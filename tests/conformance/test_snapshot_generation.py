@@ -164,27 +164,51 @@ def test_chain_spike_autoimpl_from_snapshot(tmp_path):
 # REQ-SNAP-19 (SC-1): live generation is byte-identical to snapshot generation.
 # License-gated; skips cleanly with no license.
 # ===========================================================================
+# Shape-bearing fixtures the parity gate covers (SC-D). Each has a committed v2 snapshot.
+# solar_battery is the baseline; the rest carry the wiring shapes a full-emission mis-wire
+# would hide: retyped parts, quoted owners, aliased aggregations, and the two IFE plant
+# idioms (the whole-plant value-fill and the plant-values headline).
+_SNAP19_FIXTURES = [
+    "solar_battery_model",
+    "retype_model",
+    "quoted_owner_formula",
+    "alias_agg_probe",
+    "ife_plant",
+    "plant_values",
+]
+
+
 @requires_license
 @pytest.mark.req("REQ-SNAP-19")
-def test_live_vs_snapshot_byte_identical(tmp_path):
-    """generate --models <abs> == generate --from-snapshot, byte-for-byte."""
+@pytest.mark.parametrize("fixture", _SNAP19_FIXTURES)
+def test_live_vs_snapshot_byte_identical(fixture, tmp_path):
+    """generate --models <abs> == generate --from-snapshot, byte-for-byte, per fixture.
+
+    Parametrized over the shape-bearing fixtures (SC-D): one gate, N shapes. A mis-wire on
+    any of them fails here.
+    """
     # Feed live an ABSOLUTE --models path so the parser emits the absolute
     # source_file the loader re-absolutizes against the committed snapshot's dir.
-    abs_models = REPO_ROOT / "tests/fixtures/solar_battery_model"
+    abs_models = REPO_ROOT / "tests/fixtures" / fixture
     live_out, snap_out = tmp_path / "live", tmp_path / "snap"
 
     live = _run_cli(
         "generate", "--models", str(abs_models),
-        "--output", str(live_out), "--package-name", "solar_battery", "--overwrite",
+        "--output", str(live_out), "--package-name", fixture, "--overwrite",
     )
     assert live.returncode == 0, live.stderr
 
     snap = _run_cli(
         "generate", "--from-snapshot", str(abs_models / "extraction_snapshot.json"),
-        "--output", str(snap_out), "--package-name", "solar_battery", "--overwrite",
+        "--output", str(snap_out), "--package-name", fixture, "--overwrite",
     )
     assert snap.returncode == 0, snap.stderr
 
+    # CHANNEL IDENTITY, not merely "fallback_entry_points vacated": the full-tree byte diff
+    # INCLUDES pipelines/*.yaml, whose module inputs name each wired source channel. An
+    # offline mis-wire that still empties fallback_entry_points changes a channel token in
+    # the YAML and fails here (the multi-hop EXPOSE precedent). Do NOT narrow this to a
+    # metadata-only or graph-only diff — the full tree IS the channel-identity assertion.
     assert _tree_diff(live_out, snap_out) == []
 
 
