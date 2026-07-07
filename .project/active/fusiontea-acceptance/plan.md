@@ -415,7 +415,20 @@ on the vendored fixture, `_tree_diff == []`. PASSES. (Derisk finding: needs the 
 on the docstring source paths; matches the existing SNAP-19 pattern.)
 
 ### Phase 5 Completion
+**Completed:** 2026-07-06
+
+- **Run report** written: `.project/active/fusiontea-acceptance/run-report.md` — both offender
+  states, run-C `270.1211779380445`, perturbed delta (`lcoe_calc__gain` 80→100 →
+  `216.55528392479388` hand-computed, matched), the recorded constraint-drop report, the
+  retirement checklist (all greps zero), and the coordination checklist discharged.
+- **Coordination notes** to fusion-tea recorded (report §"Coordination actions", all ✔);
+  R-6 per-attribute call logged (kept); vendored-runner provenance noted.
+- **Item-9 impact** appended (verification-matrix / release-note deltas + the one flagged
+  runner-completion deviation for the audit).
+- **Item-10 impact:** fusion-tea PR to open from `chore/retire-pipeline-truth-workarounds`.
+- **R2:** agentic-mbse impact **none new** — recorded explicitly.
+- Suggest `/_my_audit` before PR (the runner multi-output completion is the item to scrutinize).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete**

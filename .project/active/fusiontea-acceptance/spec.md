@@ -1,6 +1,6 @@
 # Spec: fusion-tea Acceptance & Workaround Retirement (PIPELINE-TRUTH Item 3)
 
-**Status:** Draft
+**Status:** Implementation Complete (SC-A/B/C/D discharged; see run-report.md)
 **Owner:** Reid W
 **Created:** 2026-07-06
 **Complexity:** HIGH
@@ -82,7 +82,7 @@ the fusion-tea repo directly, re-reads the report in a session with fusion-tea a
 
 ## Success Criteria
 
-- [ ] **SC-A (assemble the end state; zero offenders both states).** On fusion-tea's canonical
+- [x] **SC-A (assemble the end state; zero offenders both states).** On fusion-tea's canonical
   models, `generate` emits the full package with **zero V11 offenders, zero bridges, zero
   post-processing**, verified in **both** states: (i) *before* deleting `hif_driver_instance`
   (Item 2's mechanism (d) resolves both #9 and #10 in place → true zero); and (ii) *after*
@@ -90,7 +90,7 @@ the fusion-tea repo directly, re-reads the report in a session with fusion-tea a
   path (`hif_plant_pkg__hif_plant__driver__meier_cost__*`) → still zero, with the workaround
   reference gone. This is the epic's SC-A live gate (its license-free proxy is Item 2's SC-4).
 
-- [ ] **SC-B (run-C reproduces + is proven consumed).** fusion-tea's simplified `run_anchors.py`
+- [x] **SC-B (run-C reproduces + is proven consumed).** fusion-tea's simplified `run_anchors.py`
   — no bridge, no two-pass gamma feedback — reproduces run-C's lcoe of
   **$270.1211779380445/MWh at rel 1e-6** through the generated package alone, with anchors A/B
   as module-level checks and C as the full pipeline run. **Plus** the perturbed-input proof:
@@ -98,14 +98,14 @@ the fusion-tea repo directly, re-reads the report in a session with fusion-tea a
   the **hand-computed** target (computed independently of the executor, not read back from it).
   This closes the consumed-vs-baked-default hole.
 
-- [ ] **SC-C (every workaround deleted).** The retirement table is all-deleted upstream, not just
+- [x] **SC-C (every workaround deleted).** The retirement table is all-deleted upstream, not just
   deletable: `sanitize_names.py`, `hif_driver_instance` (+ channel re-anchor), the two-pass gamma
   feedback, and the hand-written input JSONs for wired values. After the change, the fusion-tea
   repo has **zero references** to `sanitize_names.py`, `hif_driver_instance`, or the two-pass
   feedback. (The teax OutputRouter/WriteHandler — T-1/T-2 — stays; it is out of epic scope by
   design.)
 
-- [ ] **SC-D (SNAP-19 parity parametrized + live leg).** The REQ-SNAP-19 live-vs-snapshot
+- [x] **SC-D (SNAP-19 parity parametrized + live leg).** The REQ-SNAP-19 live-vs-snapshot
   byte-parity test is parametrized over the shape-bearing fixtures — `retype_model`,
   `quoted_owner_formula`, `alias_agg_probe`, `ife_plant`, and Item 1's `plant_values` headline
   fixture — not `solar_battery` alone. Plus the fusion-tea live emission is byte-diffed against
