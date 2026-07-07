@@ -6,6 +6,20 @@
 
 ## Active Work
 
+### TRUTH-DEBT epic — 📋 SCOPED (Draft, 2026-07-06) — next up
+
+Retires the PIPELINE-TRUTH follow-on ledger in one epic (P2, ~7–9.5 days, 6 items). Absorbs
+the seven filings PIPELINE-TRUTH deliberately parked: F4 aggregation cutover (+ the
+graph_builder param-group typing, folded in), resolved multi-hop chain bindings, the three
+matrix test-gaps (DM-08/RES-05/RES-08), the inherited-attr classifier fix (flip the 5 xfails),
+the matrix sweep residue, and the D3 hygiene tail. No discovery sweep — every item carries
+implement-time evidence (probes, pins, filings with file:line). Carries R1–R4 forward verbatim.
+**Sequencing: lands before PUSH-DOWN** (Items 1/2/6 touch surfaces PUSH-DOWN moves).
+
+Epic doc: `.project/backlog/epic_truth_debt.md`. **Next action:** user review of scope +
+decomposition, then spec Item 1 (F4 cutover — critical-path head) plus Items 4 (classifier) and
+6 (hygiene) as the no-dependency parallel heads.
+
 ### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
 
 **The generated package is the truth.** fusion-tea's models generate, wire, and execute
