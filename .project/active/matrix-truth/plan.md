@@ -375,17 +375,27 @@ That every derived number recomputes cleanly from rows after all dispositions la
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION — leave empty now]
-
 ### Phase 0 Completion
-**Completed:** · **Actual Changes:** · **Issues:** · **Deviations:**
+**Completed:** 2026-07-06. **Gate ceiling (re-baselined):** ruff 17, mypy 104, suite 2066 passed / 4 skipped / 5 xfailed. **Row reality:** the matrix moved to **253 rows** since design (design said 249) — Item 2 added SVM (4) + AST-10; the summary block (252/240/12) and index are stale (AST index says 9/9 but the table has 10 rows). Re-verified all touched line numbers against the current file (IR 271–277, DRA 165–169, RES 447–454, ORCH-04 351, OR-05/06/08 336/337/339, PGD-06 381, PGD-08 383). **Fenced as landed-state:** REQ-SVM-01..04, doc-25 §, SNAP-19 parametrization. **Deviation:** the epic's expected grep count (249) is stale; real table-row count is 253 — recount uses table parsing, not the grep.
 
 ### Phase 1 Completion
+**Completed:** 2026-07-06 (commit 834695e — ONE atomic commit). **F4 verdict: LAND-with-split** (all 3 probes fired no kill; zero production callers confirmed by grep). **Files (the atomic set):** `test_dual_resolution.py` (+`TestResolveInputParityExtended`, probe-(i) permanent parametrization, counts hand-transcribed from probe_i_run_log.txt: plant_values mo0/ep3, plant_value_shapes mo0/ep1, spec_chain_twolevel mo1/ep1); `verification-matrix.md` (IR family note + IR-05/07 text→capability, DRA note + DRA-02, RES-02/08 text→live path, bottom RES-02 entry); `docs/reference/03-resolution-overview.md`, `04-input-resolver.md`, `05-module-factory.md` (status banners + every false "factory calls resolve_input" claim → live `_resolve_aggregation_input_channel`). **INV-A grep: zero surviving live-usage claims.** Suite 2069 (2066+3). **Deviation from design line refs:** call sites moved to graph_builder.py 1444/1539/1640 (design said 1437/1532/1633) — Item 5 churn.
+
 ### Phase 2 Completion
+**Completed:** 2026-07-06. Filed **[ITEM7-F4-CUTOVER]** carrying: correct comparand (parity vs `_resolve_aggregation_input_channel`, M3), EP-key blocker (probe_iv, M4), 3 rewire sites, byte-identity recapture, Strategy D deletion + docstring fix. Retired **DOCS-SCRUB-F4**.
+
 ### Phase 3 Completion
+**Completed:** 2026-07-06. **F2 = fix-text-to-code** (B3 confirmed: the `instance_attr_to_channel` dict feeds only guarded `register_alias`). Matrix REQ-OR-05/06/08 + doc-10 key-format section rewritten to actual registrations (Key_A guarded alias, Key_F scoped). **ORCH-04 restored** via `test_expected_key_a_aliases_present_solar_battery` (presence, hand-transcribed 3 Key_A aliases). **Red-mutation gate PROVEN:** swapping Phase-1a register_scoped/register_alias order → guard drops aliases (warns "phase ordering violation") → test RED; revert → GREEN; src reverted clean. Fixed 2 lying docstrings. Retired DOCS-SCRUB-F2.
+
 ### Phase 4 Completion
+**Completed:** 2026-07-06. Reframed 9 divergent-PASS rows to what the cited test verifies (CA-05, PY-01/03/05, GEN-02, SR-07, DM-06/07, GA-07) — status stays PASS, text now matches (INV-B). **PGD-08 confirmed honestly PASS** — its cited `test_matcher_fixes_item7.py` exists in `tests/unit/` (a sub-analysis wrongly reported it missing by only searching conformance/). EXT-09 confirmed DONE (no action).
+
 ### Phase 5 Completion
+**Completed:** 2026-07-06. Discharged 9 UNTESTED rows by cross-citing an existing pinning test (CA-08→test_computed_attributes; GEN-03→test_gen_schemas; GEN-07→test_gen_registry; RES-01→test_orchestrator; RES-02→test_backtracker/test_computed_attributes/test_factory_aggregation; RES-03→test_factory_purity; RES-04→test_graph_assembly; RES-06→test_factory_calc_usage; RES-07→test_input_resolver). **3 stay UNTESTED-argued** (DM-08, RES-05, RES-08 — no honest test to cite) → filed **[ITEM7-MATRIX-TEST-GAPS]**.
+
 ### Phase 6 Completion
+**Completed:** 2026-07-06. Added 6 row→test `# REQ-*` markers on pinning tests (BASE-05→test_yaml_baseline_comparison; BT-11→test_chamber_power_disambiguated_to_chamber_b; CA-10→test_shape4_wires_to_exact_channel; LVP-09→test_usage_type_map_indexes_usage_level_retype; OR-09→test_alias_collisions_collapse_to_one_summary; VBR-11→test_cost_per_joule_wired_to_gamma). **PGD-06** re-framed PENDING→UNTESTED-argued (inline `_parse_default_value`; accessor deleted by Item 8) → retired [ITEM7-PGD06]. **AST-10** confirmed legit (pinned by test_agg_literal_dispatch.py). **Xfail** documented as ONE parametrized contract (CA family note) + classifier fix filed [ITEM7-CLASSIFIER-FIX]. Full suite 2069 green.
+
 ### Phase 7 Completion
 ### Phase 8 Completion
 ### Phase 9 Completion

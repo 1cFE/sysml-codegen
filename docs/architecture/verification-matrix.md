@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 252 |
-| PASS (test exists and passes) | 240 |
-| UNTESTED (no dedicated test) | 12 |
+| Total requirements | 253 |
+| PASS (test exists and passes) | 249 |
+| UNTESTED (no dedicated test) | 4 |
 | DEFERRED | 0 |
 | REQ families | 30 |
-| Distinct test files cited | 56 |
+| Distinct test files cited | 57 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -25,17 +25,17 @@ the documentation rather than executable code.
 ## Index
 
 - [AS — Aggregation Scoping](#as) (8/8 pass)
-- [AST — AST Dispatch Invariant](#ast) (9/9 pass)
+- [AST — AST Dispatch Invariant](#ast) (10/10 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (11/11 pass)
-- [CA — Computed Attributes](#ca) (10/11 pass, 1 untested)
-- [DM — Data Models](#dm) (8/9 pass)
+- [CA — Computed Attributes](#ca) (11/11 pass)
+- [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
 - [EXT — Extraction](#ext) (14/14 pass)
 - [GA — Graph Assembly](#ga) (8/8 pass)
-- [GEN — Generation](#gen) (5/7 pass)
+- [GEN — Generation](#gen) (7/7 pass)
 - [HR — Hierarchy Resolver](#hr) (8/8 pass)
 - [IR — Input Resolver](#ir) (7/7 pass)
 - [LVP — Literal Value Propagation](#lvp) (9/9 pass)
@@ -44,12 +44,12 @@ the documentation rather than executable code.
 - [OR — Output Registry](#or) (9/9 pass)
 - [ORCH — Orchestration](#orch) (7/7 pass)
 - [OSR — Output Schema Rules](#osr) (7/7 pass)
-- [PGD — Parameter Group Deriver](#pgd) (8/8 pass)
+- [PGD — Parameter Group Deriver](#pgd) (7/8 pass, 1 untested)
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
 - [PY — Pipeline YAML](#py) (8/8 pass)
 - [REG — Module Registry](#reg) (8/8 pass)
-- [RES — Resolution Overview](#res) (0/8 pass)
+- [RES — Resolution Overview](#res) (6/8 pass, 2 untested)
 - [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (19/19 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
 - [SVM — Supplied-Value Materializer](#svm) (4/4 pass)
@@ -213,14 +213,14 @@ the documentation rather than executable code.
 | REQ-EXT-04 | Every aggregation expression SHALL be decomposed into typed terms: SumTerm, SingletonTerm... | `test_extractor.py` | PASS |
 | REQ-EXT-05 | Template calc usages (`is_template=True`) SHALL produce one virtual CalcUsageData per Par... | `test_extractor.py` | PASS |
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | `test_extractor.py` | PASS |
-| REQ-EXT-07 | `output_expression_asts` SHALL preserve raw SysIDE AST nodes for downstream expression co... | `test_extractor.py` | PASS |
+| REQ-EXT-07 | The `CalculationDefinitionData.output_expression_asts` field SHALL exist as `dict[str, Any]` and be nullified at the snapshot serialization boundary (raw-AST content is exercised via REQ-EXT-10's live-extraction population check, not here) | `test_extractor.py` | PASS |
 | REQ-EXT-08 | A `calc def` extracting with zero output attributes SHALL raise `ValueError` at extraction (V7), never reaching generation | `test_extractor.py` | PASS |
 | REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) SHALL be reported dropped: one INFO each + one summary WARN with the model-wide total | `test_extractor.py` | PASS |
 | REQ-EXT-10 | A direction-carrying `ReferenceUsage` member (named `return`, bare `in`) SHALL extract as a parameter; a named inline `return y : Real = expr` SHALL auto-implement | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-11 | A calc def with an anonymous `return` (empty `declared_name`) SHALL raise the V8 diagnostic before V7 | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-12 | The `return attribute y; y = expr` form SHALL extract `y` once with no double-ingestion (direction-None body ref excluded) | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-13 | `_build_part_usage_index` SHALL index each PartUsage under all its owned FeatureTyping targets and every user-model PartDef in `usage.types` (user-filtered), never by list position | `test_type_indexing.py` | PASS |
-| REQ-EXT-14 | Same-named templates from a retyped usage's super/subtype (same virtual QN) SHALL keep the most-specific owner + emit V9; differently-named templates SHALL both instantiate | `test_type_indexing.py` | PASS |
+| REQ-EXT-14 | Same-named templates from a retyped usage's super/subtype (same virtual QN) SHALL keep the most-specific owner + emit V9; differently-named templates SHALL both instantiate (the collision warning fires only for same-named clashes) | `test_type_indexing.py` | PASS |
 
 ### GA
 
@@ -493,7 +493,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level... | `test_gen_stencils.py` | PASS |
 | REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `test_gen_stencils.py` | PASS |
-| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 4-case decision tree | `test_gen_stencils.py` | PASS |
+| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 6-case decision tree (Item 5 split the unparseable leaf: preserve-on-transient / preserve-non-empty / regenerate-empty) | `test_gen_stencils.py` | PASS |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` prese... | `test_gen_stencils.py` | PASS |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `test_gen_stencils.py` | PASS |
 | REQ-SR-06 | Aggregation and computed-attribute modules are synthetic and always regenerated in practi... | `test_gen_stencils.py` | PASS |
@@ -532,39 +532,16 @@ the documentation rather than executable code.
 
 ## Untested Requirements
 
-These requirements have no dedicated conformance test. Most are cross-cutting
-architectural principles or documentation-only constraints.
+These requirements have no dedicated conformance test; each carries its argument in its matrix row above (INV-B).
 
-- **REQ-CA-08**: FORMULA compilation SHALL NOT resolve sibling FORMULA outputs
-  - Source: [reference/16-computed-attributes.md](reference/16-computed-attributes.md)
-- **REQ-DM-08**: Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str`
-  - Source: [reference/09-data-models.md](reference/09-data-models.md)
-- **REQ-GEN-03**: Multi-output modules (2+ outputs) SHALL get a `MultiOutput` schema in `schemas/`; single-output modules SHALL use `Root...
-  - Source: [reference/08-generation.md](reference/08-generation.md)
-- **REQ-GEN-07**: Every generated module SHALL be registered in `__init__.py` for TEAx framework discovery.
-  - Source: [reference/08-generation.md](reference/08-generation.md)
-- **REQ-RES-01**: Every ModuleInput SHALL resolve to exactly one of {`module_output`, `entry_point`}.
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-02**: Three live resolution mechanisms: CalcUsage backtracker DFS cascade (11); FORMULA attribute resolution map (16); aggregation `_resolve_aggregation_input_channel`. The consolidated `resolve_input()` is parity-validated but not yet wired ([ITEM7-F4-CUTOVER]).
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-03**: Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation of shared state (REQ-RES-03a: n...
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-04**: Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistry.
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-05**: The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups -> toposort -> validate.
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-06**: `binding_resolutions` from the backtracker SHALL be the single source of truth for CalcUsage input wiring. Key format: ...
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-07**: Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `Sco...
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-- **REQ-RES-08**: Consumer scope derivation SHALL apply to ALL resolution paths: backtracker (CalcUsage), attribute resolution map (FORMU...
-  - Source: [reference/03-resolution-overview.md](reference/03-resolution-overview.md)
-
----
+- **REQ-DM-08**: name fields SHALL use NewType wrappers — the wrappers exist but no test asserts field-level usage (filed `[ITEM7-MATRIX-TEST-GAPS]`).
+- **REQ-PGD-06**: numeric default resolves inline via `_parse_default_value` (live), but as a side-output of grouping — not independently asserted; the standalone accessor was deleted by Item 8.
+- **REQ-RES-05**: no test pins `build_computation_graph`'s internal sequence; `test_orchestrator.py` pins only the outer `build_pipeline_context` DAG (filed `[ITEM7-MATRIX-TEST-GAPS]`).
+- **REQ-RES-08**: no single test pins the cross-cutting "ALL paths" invariant; per-path derivation is verified (REQ-IR-07, REQ-DRA-04) (filed `[ITEM7-MATRIX-TEST-GAPS]`).
 
 ## Related Documents
 
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/` (33 test files)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (57 distinct test files cited by matrix rows — 41 in conformance/, 16 in unit/ + integration/)

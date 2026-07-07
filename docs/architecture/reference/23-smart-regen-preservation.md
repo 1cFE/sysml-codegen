@@ -13,7 +13,7 @@ changed, and upgrades stubs to auto-implementations when possible.
 |----|-------------|-------------|
 | REQ-SR-01 | Signature comparison SHALL use two-level matching: type-level (required) then field-level (optional) | `FunctionSignature.matches()` in `generation/preservation.py` (a parallel copy exists in `analysis/signature_extractor.py`) |
 | REQ-SR-02 | Field comparison SHALL be order-independent (sorted) | `sorted(self.input_fields) == sorted(other.input_fields)` |
-| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [4-case decision tree](#the-4-case-decision-tree) | 4 return paths in `should_regenerate_stencil()` (`generation/preservation.py`) |
+| REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the [6-case decision tree](#the-6-case-decision-tree) | 6 return paths in `should_regenerate_stencil()` (`generation/preservation.py`) — Item 5 split the unparseable leaf into preserve-on-transient / preserve-non-empty / regenerate-empty |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` present, `auto_impl_context` available | `_generate_stencils()` in `cli/__init__.py` checks all three |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `backup_implementation()` called before `write_text()` |
 | REQ-SR-06 | Aggregation and [computed-attribute](16-computed-attributes.md) modules are synthetic and always regenerated in practice | The unified `_generate_stencils()` processes all module types; synthetic modules lack handwritten content so the smart-regen path is a no-op |
@@ -103,11 +103,16 @@ input_fields = [inp.param_name for inp in module.inputs]
 
 ---
 
-## The 4-Case Decision Tree
+## The 6-Case Decision Tree
 
 **File**: `generation/preservation.py` (`should_regenerate_stencil()`)
 
 `should_regenerate_stencil(module, impl_path) -> tuple[bool, str]`
+
+Item 5 (D3-14, preserve-on-transient, INV-4) split the old `None -> (True, "Could
+not parse")` leaf into three outcomes: a transient read/parse failure on a
+**non-empty** impl now PRESERVES the handwritten file (never stubs over it), and
+only a genuinely-empty impl regenerates.
 
 ```
 impl_path.exists()?
@@ -118,7 +123,11 @@ impl_path.exists()?
        |
        _extract_signature_from_impl(impl_path) -> sig?
          |
-         +-- None  --> (True, "Could not parse")
+         +-- None (could not extract a signature)
+         |     |
+         |     +-- OSError reading the file --> (False, "Preserved on transient read error")
+         |     +-- file has non-empty content --> (False, "Preserved (non-empty, unparseable — transient)")
+         |     +-- file is empty              --> (True,  "Empty implementation (nothing to preserve)")
          |
          +-- sig exists
               |
