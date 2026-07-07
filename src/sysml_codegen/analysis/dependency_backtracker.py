@@ -570,6 +570,19 @@ class DependencyBacktracker:
         # DEBUG, not WARNING — it fired per binding and was the primary benign
         # noise. The post-assembly reconciliation summary (unwired remainder) and
         # V11 (wired remainder) are now the operator digest for genuine residue.
+        #
+        # Item 2 / D3 (M-2): a 3+-segment CHAIN that reaches here is genuinely
+        # unresolvable — the extraction reject moved here (extraction has no
+        # registry). Emit a GENUINE logger.warning (WARNING level, distinct from the
+        # benign DEBUG line above), naming the full untruncated chain, so the
+        # Item-5 loud-diagnostic contract holds at its new home. The fallback QN
+        # below is already full + untruncated (usage_qn__param).
+        if "::" not in source_path and source_path.count(".") >= 2:
+            logger.warning(
+                "Multi-hop chain unresolved: %s|%s source_path='%s' — surfacing as an "
+                "entry point (not truncated to root, not silently wired).",
+                usage.qualified_name, param_name, source_path,
+            )
         logger.debug(
             "Registry unresolved: %s|%s source_path='%s'",
             usage.qualified_name, param_name, source_path,

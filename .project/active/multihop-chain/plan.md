@@ -274,19 +274,15 @@ distinct WARNING — not folded into the deliberately-DEBUG benign line it sits 
 level requirement → design-review M-2; the never-truncated `fallback_qn` → design-review move 6.
 
 **Specific file changes:**
-- [ ] `analysis/dependency_backtracker.py:569-587` Step-4 fallback: before the existing `logger.debug`,
-      add `if "::" not in source_path and source_path.count(".") >= 2:` → `logger.warning(...)` naming
-      the full `source_path` and the `usage.qualified_name|param_name`. The existing DEBUG line stays for
-      the benign 2-segment/other cases. `fallback_qn` construction is unchanged (already full + untruncated).
-- [ ] Keep the entry-point disposition and `_fallback_entry_points.add(...)` exactly as today (the
-      "surfaces as an entry point" leg of the contract).
+- [x] `analysis/dependency_backtracker.py` Step-4 fallback: before the existing `logger.debug`, added `if "::" not in source_path and source_path.count(".") >= 2:` → `logger.warning(...)` naming the full `source_path` + `usage.qualified_name|param_name`. DEBUG line stays for benign cases; `fallback_qn` unchanged.
+- [x] Entry-point disposition + `_fallback_entry_points.add(...)` unchanged.
 
 ### Validation
 **Automated:**
-- [ ] `test_multihop_fallback_warns_loud_and_untruncated` → GREEN.
-- [ ] Silent-on-clean sibling → still GREEN (resolvable chain, no WARN).
-- [ ] `uv run pytest tests/` → suite otherwise unchanged; offline channel pins still RED (pre-recapture).
-- [ ] `ruff check src/`, `mypy src/` → no new findings.
+- [x] `test_multihop_fallback_warns_loud_and_untruncated` → GREEN (WARNING level, full untruncated `Design__scope__consumer__p`, chain named).
+- [x] Silent-on-clean sibling → GREEN (resolvable chain, no backtracker-logger WARN).
+- [x] `uv run pytest tests/` → 2076 passed; only the 3 offline channel pins RED (pre-recapture). No caplog test elsewhere broke.
+- [x] `ruff check src/` = 17, `mypy src/` = 97 → no new findings.
 
 **What We Know Works After This Phase:** the loud+never-truncated contract is preserved at its new home
 and pinned at WARNING level. All behavior code is now in place; only the fixture re-capture remains to
@@ -456,7 +452,10 @@ for live capture; the `--fixtures` filter is the byte-identity discipline). agen
 **Red/green after phase:** climb resolve/Step1-hit/refuse/gate GREEN; full suite 2075 passed. Remaining RED = fallback-WARN (Phase 4) + 3 offline pins (Phase 5). Gates: ruff 17, mypy 97.
 
 ### Phase 4 Completion
-**Completed:** — **Actual Changes:** — **Issues:** — **Deviations:** —
+**Completed:** 2026-07-07
+**Actual Changes:** `analysis/dependency_backtracker.py` `_resolve_binding_via_registry` Step 4 — genuine `logger.warning` for a 3+-segment CHAIN (`"::" not in source_path and count(".") >= 2`) before the benign DEBUG line; names full untruncated chain + `usage_qn|param`. Entry-point disposition unchanged.
+**Issues:** none. **Deviations:** none.
+**Red/green after phase:** all 6 backtracker unit tests GREEN; full suite 2076 passed. Remaining RED = 3 offline pins (Phase 5). Gates: ruff 17, mypy 97.
 
 ### Phase 5 Completion
 **Completed:** — **Actual Changes:** — **Stale-flip root-cause verdict:** — **Issues:** — **Deviations:** —
