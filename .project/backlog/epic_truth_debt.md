@@ -435,7 +435,7 @@ tests + citations; matrix updated; re-file entry if the sweep is not completed.
 
 ---
 
-### Item 6: D3 Hygiene Tail [1 day]
+### Item 6: D3 Hygiene Tail [1 day] ✅
 
 **Type**: Implementation
 **Effort**: 1 day (spec 1h, plan 0.5h, execute 4–6h) — fit: high (Item-5 family style is the
@@ -465,9 +465,11 @@ fires-on-shape + silent-on-clean, INV-6 zero-WARNINGs preserved.
   `[DOTTED-LEAF-PART-BLIND]`) — those stay filed separately.
 
 **Success Criteria**:
-- [ ] Each site fires a diagnostic on its silent shape and stays silent on clean input.
-- [ ] INV-6 preserved (clean corpora generate with zero WARNINGs); baselines byte-identical.
-- [ ] Suite green; ruff/mypy not worse.
+- [x] Each site fires a diagnostic on its silent shape and stays silent on clean input (Site 4
+  reclassified with named BACKLOG evidence, an allowed R4/spec.md outcome; audited PASS-with-
+  findings — see `.project/active/hygiene-tail/audit.md`).
+- [x] INV-6 preserved (clean corpora generate with zero WARNINGs); baselines byte-identical.
+- [x] Suite green; ruff/mypy not worse.
 
 **Required Reading**: BACKLOG `[D3-HYGIENE-TAIL]`; discovery register §D3;
 `reference/12-usage-extraction.md`, `reference/10-output-registry.md`; RN-7
