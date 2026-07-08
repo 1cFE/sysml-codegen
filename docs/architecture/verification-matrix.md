@@ -11,7 +11,7 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
 | REQ families | 30 |
-| Distinct test files cited | 65 |
+| Distinct test files cited | 66 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
