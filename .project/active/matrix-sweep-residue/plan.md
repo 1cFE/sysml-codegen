@@ -68,10 +68,10 @@ spec-review L1-3, but re-verify live at implement since Items 3/4/6 may have tou
 lines.
 
 ### R4 Reproduction (do first, before writing any new assertion)
-- [ ] Confirm `expression_compiler.py:217-223`'s internal `try/except` → `CompilationError` gate
+- [x] Confirm `expression_compiler.py:217-223`'s internal `try/except` → `CompilationError` gate
   still exists at HEAD and is still unreachable from any test in
   `tests/conformance/test_expression_compiler.py` (`TestReqEc04AstParseValidation`).
-- [ ] Confirm `test_aggregation_scoping.py:479-513`'s `if result is not None: assert resolved_count
+- [x] Confirm `test_aggregation_scoping.py:479-513`'s `if result is not None: assert resolved_count
   > 0` shape still stands unchanged at HEAD.
 
 ### Test Stencil (write first)
@@ -107,35 +107,35 @@ def test_every_registered_redefinition_alias_resolves():
 ### Changes Required
 
 **File:** `tests/conformance/test_expression_compiler.py` (~217-223 region's test class)
-- [ ] Add a fixture/case that forces invalid *emitted* Python through the compiler's own code
+- [x] Add a fixture/case that forces invalid *emitted* Python through the compiler's own code
   path (not a caller-side `ast.parse()` on the return value).
-- [ ] Assert `CompilationError` (or the gate's actual exception type — confirm at
+- [x] Assert `CompilationError` (or the gate's actual exception type — confirm at
   `expression_compiler.py:217-223`) is raised by the internal gate.
-- [ ] Mutation spot-check: comment out the gate's `raise`, run the new test → confirm RED, revert,
+- [x] Mutation spot-check: comment out the gate's `raise`, run the new test → confirm RED, revert,
   confirm GREEN.
 
 **File:** `tests/conformance/test_aggregation_scoping.py` (~479-513 region)
-- [ ] Enumerate the full registered redefinition-alias set (independently — not derived from the
+- [x] Enumerate the full registered redefinition-alias set (independently — not derived from the
   resolver's own internal state beyond what's needed to enumerate registrations; R1 anti-vacuity).
-- [ ] Assert each one resolves; replace or augment the `if result is not None: resolved_count > 0`
+- [x] Assert each one resolves; replace or augment the `if result is not None: resolved_count > 0`
   shape so a gap in the middle of the set can't hide behind the floor.
-- [ ] **Byte-identity gate (⚠BI, spec flag):** this touches the aggregation-scoping surface. Run
+- [x] **Byte-identity gate (⚠BI, spec flag):** this touches the aggregation-scoping surface. Run
   the full baseline comparison (`test_baselines.py`, `test_graph_assembly.py::TestBaselineComparison`)
   before and after — expect **zero** baseline diff (the test change adds coverage, not production
   behavior). If any baseline moves, stop and diagnose before continuing — that would mean the new
   assertion exposed a real behavior gap, which is out of this item's scope (file it, per Non-Goals).
-- [ ] Mutation spot-check: make one aliased target unresolvable in the fixture (or monkeypatch the
+- [x] Mutation spot-check: make one aliased target unresolvable in the fixture (or monkeypatch the
   resolver to skip one), run the new test → confirm RED, revert, confirm GREEN.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_expression_compiler.py tests/conformance/test_aggregation_scoping.py -v` → new tests pass.
-- [ ] Full suite → no regressions.
-- [ ] Byte-identity check on aggregation-scoping baselines → clean (per above).
-- [ ] `uv run ruff check src/`, `uv run mypy src/` → not worse than current gates.
+- [x] `uv run pytest tests/conformance/test_expression_compiler.py tests/conformance/test_aggregation_scoping.py -v` → new tests pass.
+- [x] Full suite → no regressions.
+- [x] Byte-identity check on aggregation-scoping baselines → clean (per above).
+- [x] `uv run ruff check src/`, `uv run mypy src/` → not worse than current gates.
 
 **Manual:**
-- [ ] Both mutation spot-checks run, RED confirmed, reverted, GREEN confirmed. Record the exact
+- [x] Both mutation spot-checks run, RED confirmed, reverted, GREEN confirmed. Record the exact
   mutation (line + change) in this plan's Implementation Notes for audit traceability.
 
 **What We Know Works After This Phase:** The two headline gates are mutation-proven — the spec's
@@ -477,6 +477,40 @@ See `CLAUDE.md` for install/test/lint commands. No new dependencies expected.
 _(TO BE FILLED DURING IMPLEMENTATION)_
 
 ### Phase 1 Completion
+**Completed:** 2026-07-08. Commit `4039b47`.
+**Changes Made:**
+- `tests/conformance/test_expression_compiler.py`: added
+  `TestReqEc04AstParseValidation.test_internal_gate_raises_on_invalid_emitted_python`. Constructs
+  a `BINARY_OP` `ExpressionAST` with operator `"~~"` (absent from `PYTHON_OPERATOR_MAP`), which
+  falls through to the raw-operator-string emission (`f" {ast.operator} "` at
+  `expression_compiler.py:198`), producing `(a ~~ b)` — invalid Python. Calls `compile_expression`
+  directly (no caller-side `ast.parse`), asserting `CompilationError` from the internal gate at
+  `:217-223`.
+- `tests/conformance/test_aggregation_scoping.py`: rewrote
+  `TestReqAS06Phase2AliasResolution.test_phase_2_alias_resolution`. Replaced the
+  `resolved_count > 0` floor with a loop over all 41 registered redefinition aliases (solar_battery
+  fixture), collecting any that fail `alias_lookup` into `unresolved`, then
+  `assert not unresolved`. Each resolved alias's `canonical_name` is still checked via
+  `scoped_lookup` as before.
+
+**Mutation spot-checks (both run live, not just described):**
+- EC-04: commented out the `except SyntaxError` gate's `raise` in
+  `expression_compiler.py:217-223` (kept `python_ast.parse` call, replaced the raise with `pass`)
+  → new test FAILED (`DID NOT RAISE CompilationError`). Reverted from `/tmp` backup → PASSED.
+- AS-06: patched the test loop so index 0's `alias_lookup` result is forced to `None` regardless
+  of registry state → new test FAILED with `AssertionError: 1/41 registered redefinition aliases
+  did not resolve: ['solar_battery_plant.solar_array.pv_module.capital_cost']`. Reverted from
+  `/tmp` backup → PASSED. (Confirms 41 is the real registered count in this fixture, matching the
+  spec's "40 of 41" framing.)
+
+**Issues Encountered:** None — both gates reproduced exactly as the spec described (R4 confirmed
+live, no drift from spec-review's original read).
+
+**Validation:** `test_expression_compiler.py` + `test_aggregation_scoping.py` targeted runs green;
+full suite 2108 passed / 4 skipped (was 2107/4 — +1 from the new EC-04 test; AS-06 replaced an
+existing test in place); `test_baselines.py` + `test_graph_assembly.py` (byte-identity proxy)
+55/55 green, no baseline file diff. `ruff check src/` 17 (unchanged), `mypy src/` 97 (unchanged).
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion
