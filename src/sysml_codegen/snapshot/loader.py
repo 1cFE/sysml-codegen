@@ -50,6 +50,52 @@ logger = logging.getLogger(__name__)
 _SOURCE_SENTINELS = frozenset({"unknown", "hierarchy"})
 
 
+def _require(
+    d: dict, field: str, default: Any, context: str, *, raise_on_missing: bool = False
+) -> Any:
+    """Return ``d[field]``, or the degraded default when the field is missing.
+
+    A handful of snapshot fields are load-bearing: defaulting them silently
+    masks a corrupt/missing value that changes wiring, keying, or type. This
+    fires a diagnostic instead of defaulting quietly. Keying fields (whose
+    default would mis-key the output registry) raise; the rest warn and
+    degrade.
+    """
+    if field in d:
+        return d[field]
+    if raise_on_missing:
+        raise SnapshotFormatError(
+            f"{context}: snapshot is missing load-bearing field {field!r} — "
+            f"this field keys the output registry, and a silent default would "
+            f"mis-key it. Recapture the snapshot."
+        )
+    logger.warning(
+        "%s: snapshot is missing load-bearing field %r — falling back to %r; "
+        "downstream wiring/typing is degraded.",
+        context,
+        field,
+        default,
+    )
+    return default
+
+
+def _require_binding_type(d: dict, context: str) -> BindingType:
+    """Return the deserialized ``binding_type``, warning if missing/empty.
+
+    A missing or falsy ``binding_type`` silently drops the binding to
+    ``UNBOUND`` today; that is load-bearing (it changes wiring), so it warns.
+    """
+    raw = d.get("binding_type")
+    if raw:
+        return BindingType(raw)
+    logger.warning(
+        "%s: snapshot has no binding_type (missing or empty) — the binding "
+        "is dropped to UNBOUND.",
+        context,
+    )
+    return BindingType.UNBOUND
+
+
 def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     """Load an extraction snapshot from a path and reconstruct typed instances.
 
@@ -261,16 +307,15 @@ def _check_source_freshness(snap: dict[str, Any], snapshot_path: Path) -> list[s
 
 def _deserialize_attribute_info(d: dict) -> AttributeInfo:
     """Reconstruct an AttributeInfo from a serialized dict."""
+    context = f"attribute {d.get('name', '?')!r}"
     return AttributeInfo(
         name=d["name"],
         sysml_type=d.get("sysml_type"),
         default_value=d.get("default_value"),
-        binding_type=(
-            BindingType(d["binding_type"]) if d.get("binding_type") else BindingType.UNBOUND
-        ),
+        binding_type=_require_binding_type(d, context),
         is_input=d.get("is_input", False),
         is_output=d.get("is_output", False),
-        python_type=d.get("python_type", "Any"),
+        python_type=_require(d, "python_type", "Any", context),
         description=d.get("description", ""),
         unit=d.get("unit"),
         source_line=d.get("source_line", 0),
@@ -314,6 +359,7 @@ def _deserialize_binding_info(d: dict) -> BindingInfo:
 
 def _deserialize_calc_usage(d: dict) -> CalcUsageData:
     """Reconstruct a CalcUsageData from a serialized dict."""
+    context = f"calc usage {d.get('instance_name', '?')!r}"
     return CalcUsageData(
         instance_name=d["instance_name"],
         calc_def_name=d["calc_def_name"],
@@ -323,15 +369,16 @@ def _deserialize_calc_usage(d: dict) -> CalcUsageData:
         unbound_params=d.get("unbound_params", []),
         source_file=Path(d["source_file"]),
         source_line=d.get("source_line", 0),
-        parent_part_path=d.get("parent_part_path", ""),
-        qualified_name=d.get("qualified_name", ""),
+        parent_part_path=_require(d, "parent_part_path", "", context),
+        qualified_name=_require(d, "qualified_name", "", context, raise_on_missing=True),
         is_template=d.get("is_template", False),
-        owning_part_def_qn=d.get("owning_part_def_qn"),
+        owning_part_def_qn=_require(d, "owning_part_def_qn", None, context),
     )
 
 
 def _deserialize_design_attribute(d: dict) -> DesignAttributeData:
     """Reconstruct a DesignAttributeData from a serialized dict."""
+    context = f"design attribute {d.get('name', '?')!r}"
     return DesignAttributeData(
         name=d["name"],
         sysml_type=d["sysml_type"],
@@ -340,7 +387,7 @@ def _deserialize_design_attribute(d: dict) -> DesignAttributeData:
         source_file=Path(d["source_file"]),
         source_line=d.get("source_line", 0),
         parent_part=d["parent_part"],
-        qualified_name=d.get("qualified_name", ""),
+        qualified_name=_require(d, "qualified_name", "", context, raise_on_missing=True),
     )
 
 

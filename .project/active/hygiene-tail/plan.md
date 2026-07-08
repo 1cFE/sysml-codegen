@@ -220,21 +220,22 @@ def test_clean_attr_dict_no_warn(caplog):               # silent-on-clean (R1 pa
 
 ### Changes Required
 **See spec** Problem site 1, `[INFERRED]` (line 108), Open Questions (site-1 raise carve-out).
-- [ ] `src/sysml_codegen/snapshot/loader.py` — add a family choke (e.g.
+- [x] `src/sysml_codegen/snapshot/loader.py` — add a family choke (e.g.
       `_require(d, field, context)` that returns `d[field]` or fires the diagnostic + returns the
       degraded default; raise instead of warn for any field Phase 0 marked keying/wiring). Route
       the load-bearing sites through it: `python_type` (`:273`), `qualified_name` (`:327`,
       `:343`), `binding_type` (`:268-270`), `parent_part_path` (`:326`), `owning_part_def_qn`
       (`:329`). Leave the benign `.get(default)` calls alone.
-- [ ] `tests/unit/test_hygiene_tail_loader.py` (NEW) — fires-on-shape + silent-on-clean per
+- [x] `tests/unit/test_hygiene_tail_loader.py` (NEW) — fires-on-shape + silent-on-clean per
       load-bearing field.
 
 ### Validation
-- [ ] `uv run pytest tests/unit/test_hygiene_tail_loader.py` → pass
-- [ ] `uv run pytest tests/conformance/test_baselines.py` → pass (baselines byte-identical: every
+- [x] `uv run pytest tests/unit/test_hygiene_tail_loader.py` → pass (9 passed)
+- [x] `uv run pytest tests/conformance/test_baselines.py` → pass (16 passed, byte-identical: every
       covered snapshot has the fields, so the choke never fires)
-- [ ] `uv run ruff check src/sysml_codegen/snapshot/loader.py` and
-      `uv run mypy src/sysml_codegen/snapshot/loader.py` → no new findings
+- [x] `uv run ruff check src/sysml_codegen/snapshot/loader.py` and
+      `uv run mypy src/sysml_codegen/snapshot/loader.py` → no new findings (ruff clean; mypy's
+      13-file/65-error output is all pre-existing in other modules, none in loader.py)
 
 **What We Know Works After This Phase:** a malformed snapshot missing a load-bearing field is
 loud; a valid snapshot is byte-identical and silent.
@@ -492,6 +493,12 @@ scripts / full pytest, not a bare `-c` probe (memory: `syside-license-via-script
 (new entry, TRUTH-DEBT Item 6 Phase 0 filings section).
 
 ### Phase 1 Completion (Site 1)
+**Completed:** 2026-07-07. Added `_require`/`_require_binding_type` chokes in
+`snapshot/loader.py`; routed `python_type`/`binding_type` (WARN) in
+`_deserialize_attribute_info`, `parent_part_path`/`owning_part_def_qn` (WARN) and
+`qualified_name` (RAISE) in `_deserialize_calc_usage`, and `qualified_name` (RAISE) in
+`_deserialize_design_attribute`. 9 new tests (5 fires-on-shape/raise, 3 silent-on-clean,
+1 clean-design-attribute). No deviations from plan.
 ### Phase 2 Completion (Site 3)
 ### Phase 3 Completion (Site 4)
 ### Phase 4 Completion (Site 2)
