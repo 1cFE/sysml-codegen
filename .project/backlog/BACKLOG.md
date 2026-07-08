@@ -29,7 +29,13 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing (updated 2026-07-06): start after TRUTH-DEBT (`epic_truth_debt.md`) lands.** The earlier ruling (after PIPELINE-TRUTH Items 5 & 8) is superseded: TRUTH-DEBT Items 1 (F4 cutover / `input_resolver` consolidation), 2 (multi-hop, touches `expression_utils` chain-follow), and 6 (D3 hygiene tail, touches loader / aggregation-compile / registry extraction) all edit the same extraction/resolution surfaces the push-down would move — so PUSH-DOWN now additionally waits on those three, so the moved code is born correct. See `.project/concepts/agentic-mbse-push-down-design.md`. |
+| [PUSH-DOWN] agentic-mbse Push-Down | Ready (4 items, 6–8 days) | Expression reconstruction; qualified-name split; hierarchy primitives/models; aggregation decomposition/gates. Design overrides, usage-type indexing, Python rewriting, aliases, scoping, and module construction stay in sysml-codegen. See `epic_push_down.md`. |
+
+PUSH-DOWN items:
+- [ ] Item 1 — Expression reconstruction push-down
+- [ ] Item 2 — Qualified-name utility split
+- [ ] Item 3 — Hierarchy primitives and data models
+- [ ] Item 4 — Aggregation decomposition and compatibility gates
 
 ---
 

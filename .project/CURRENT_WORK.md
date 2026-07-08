@@ -6,6 +6,27 @@
 
 ## Active Work
 
+### PUSH-DOWN Item 1 — Expression Reconstruction Push-Down — CERTIFIED
+
+Artifacts: `.project/active/expression-reconstruction-push-down/{spec,spec-review,design,design-review,plan}.md`.
+Spec review and design review are both Approved. Implementation is complete on
+`push-down-item1-expression` in both repos.
+
+Moved reusable expression reconstruction, feature-chain, chain-segment, and literal helpers into
+`agentic_mbse.sysml.expression`; sysml-codegen now keeps
+`sysml_codegen.extraction.expression_utils` as a compatibility shim. Level-6 C7 now uses shared
+`is_literal_node`, and the expression-profile close-out filed three follow-up rules in
+agentic-mbse backlog.
+
+Validation: agentic-mbse full suite `1247 passed, 1 skipped, 33 deselected`; sysml-codegen full
+suite `2119 passed, 4 skipped`; sysml-codegen snapshot-specific suite `87 passed`; touched-file
+ruff clean in both repos; sysml-codegen `ruff check src/` clean; `git diff -- tests/fixtures`
+empty. Remaining caveat: project-wide ruff/mypy baselines are still dirty outside this item
+(agentic mypy 104, sysml-codegen mypy 97, sysml-codegen full ruff 332).
+
+Audit: `.project/active/expression-reconstruction-push-down/audit.md` certifies the item. Next:
+run `$my-pre-pr` for PR preparation.
+
 ### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
 
 **The generated package is the truth.** fusion-tea's models generate, wire, and execute

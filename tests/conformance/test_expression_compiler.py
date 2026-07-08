@@ -23,9 +23,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from agentic_mbse.sysml import expression as shared_expression
 
-from tests.helpers.static_analysis import find_is_instance_calls_in_function
-
+from sysml_codegen.extraction import expression_utils as expression_utils_shim
 from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationError,
@@ -37,6 +37,7 @@ from sysml_codegen.extraction.expression_compiler import (
     compile_calc_def,
     compile_expression,
 )
+from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 # ---------------------------------------------------------------------------
 # Source paths for static analysis
@@ -672,16 +673,11 @@ class TestReqAst01DispatchOrdering:
             f"OE at line {calls['OperatorExpression']}"
         )
 
-    def test_dispatch_ordering_in_expression_utils(self):
-        """expression_utils.py reconstruct_expression: FCE line < OE line."""
-        calls = find_is_instance_calls_in_function(
-            EXPRESSION_UTILS_PATH, "reconstruct_expression"
-        )
-        assert "FeatureChainExpression" in calls
-        assert "OperatorExpression" in calls
-        assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
-            f"FCE at line {calls['FeatureChainExpression']} must precede "
-            f"OE at line {calls['OperatorExpression']}"
+    def test_expression_utils_delegates_reconstruction_to_shared_api(self):
+        """expression_utils.py keeps the compatibility path, not the moved body."""
+        assert (
+            expression_utils_shim.reconstruct_expression
+            is shared_expression.reconstruct_expression
         )
 
 

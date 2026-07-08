@@ -36,7 +36,6 @@ SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 ANALYSIS_DIR = SRC_ROOT / "analysis"
 
-EXPRESSION_UTILS_PATH = EXTRACTION_DIR / "expression_utils.py"
 EXPRESSION_COMPILER_PATH = EXTRACTION_DIR / "expression_compiler.py"
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
 USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
@@ -56,7 +55,6 @@ EXPRESSION_TYPE_NAMES = frozenset({
 
 # Sites where both FCE and OE are checked (the critical invariant sites)
 DUAL_CHECK_SITES = [
-    (EXPRESSION_UTILS_PATH, "reconstruct_expression"),
     (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
     (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
@@ -64,7 +62,6 @@ DUAL_CHECK_SITES = [
 ]
 
 DUAL_CHECK_IDS = [
-    "reconstruct_expression",
     "build_expression_ast",
     "_walk_aggregation_ast",
     "_extract_single_binding",
@@ -73,13 +70,11 @@ DUAL_CHECK_IDS = [
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
 CANONICAL_SITES = [
-    (EXPRESSION_UTILS_PATH, "reconstruct_expression"),
     (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
     (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
 ]
 
 CANONICAL_IDS = [
-    "reconstruct_expression",
     "build_expression_ast",
     "_walk_aggregation_ast",
 ]
@@ -140,7 +135,9 @@ class TestReqAst01FceBeforeOe:
     )
     def test_fce_before_oe_all_dual_check_sites(self, source_path, function_name):
         """FCE check line < OE check line in the given function."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls, (
             f"No is_instance call for FeatureChainExpression in "
             f"{source_path.name}:{function_name}"
@@ -173,7 +170,9 @@ class TestReqAst02CommentPresent:
     def test_invariant_comment_at_all_dual_check_sites(self, source_path, function_name):
         """Comment matching 'MUST be before OperatorExpression' appears within 5 lines
         above the FCE check in the given function."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls, (
             f"No is_instance call for FeatureChainExpression in "
             f"{source_path.name}:{function_name}"
@@ -208,7 +207,9 @@ class TestReqAst03CanonicalOrdering:
     )
     def test_canonical_ordering_fce_oe_fre(self, source_path, function_name):
         """Full canonical ordering: FCE < OE < FRE at if-chain sites."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
         assert "FeatureReferenceExpression" in calls
@@ -229,7 +230,9 @@ class TestReqAst03CanonicalOrdering:
     )
     def test_elif_sites_fce_before_oe(self, source_path, function_name):
         """Critical invariant: FCE < OE at elif-chain sites (full canonical not required)."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
 
@@ -250,28 +253,28 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 5 functions have both FCE and OE is_instance() checks."""
+        """Exactly 4 codegen functions have both FCE and OE is_instance() checks."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         dual_check = {
             key: types
             for key, types in all_dispatch.items()
             if "FeatureChainExpression" in types and "OperatorExpression" in types
         }
-        assert len(dual_check) == 5, (
-            f"Expected 5 dual-check sites (FCE+OE), found {len(dual_check)}: "
+        assert len(dual_check) == 4, (
+            f"Expected 4 dual-check sites (FCE+OE), found {len(dual_check)}: "
             f"{sorted(dual_check.keys())}"
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 8 functions dispatch on 2+ expression types (where ordering matters)."""
+        """Exactly 7 codegen functions dispatch on 2+ expression types."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         multi_type = {
             key: types
             for key, types in all_dispatch.items()
             if len(types) >= 2
         }
-        assert len(multi_type) == 8, (
-            f"Expected 8 multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 7, (
+            f"Expected 7 multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 
