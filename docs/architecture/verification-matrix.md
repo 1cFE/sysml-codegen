@@ -7,11 +7,11 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 | Metric | Count |
 |--------|-------|
 | Total requirements | 256 |
-| PASS (test exists and passes) | 251 |
-| UNTESTED (no dedicated test) | 4 |
+| PASS (test exists and passes) | 255 |
+| UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
 | REQ families | 30 |
-| Distinct test files cited | 59 |
+| Distinct test files cited | 62 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -165,7 +165,7 @@ the documentation rather than executable code.
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` an... | `test_data_models.py` | PASS |
 | REQ-DM-06 | The delegated data models (`ComputedAttributeData`, `ExpressionRef`, `PhantomDetectionReport`) are importable from their source modules (the doc-linking / no-duplication claim is not tested) | `test_data_models.py` | PASS |
 | REQ-DM-07 | Resolution-model field type annotations (`ComputationGraph`, `PipelineModule`, `ModuleInput`, `ParameterGroup`) match the documented containment hierarchy from doc 09 (no data-flow diagram is checked) | `test_data_models.py` | PASS |
-| REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | — *(no test asserts model fields USE the NewType wrappers vs bare `str`; the wrappers exist in `identifier_types.py` but field-level usage is unverified — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-DM-08 | The typed-registry **enforced surface** SHALL use NewType wrappers: the wrappers in `identifier_types.py` are genuine `NewType`s over their bases, the four `OutputRegistry` registry dicts are annotated `dict[NewType, NewType]`, and `make_scoped_key`/`make_canonical_channel` return their NewType. (The `resolution/models.py` field annotations remain bare `str` by design — documented in 09-data-models.md and filed `[DM08-MODEL-FIELD-TYPING]`; `register_alias`'s `\| str` unions are a designed boundary, not drift) | `test_dm08_enforced_surface.py` (AST-scan — PEP-526 `self.x` annotations never reach `__annotations__`) | PASS |
 | REQ-DM-09 | `ComputationGraph.output_aliases: list[OutputAlias]` SHALL be a serialized field (no `exclude`, contrast `fallback_entry_points`) carrying each EXPOSE_PURE modeler name, its canonical channel (validated to exist — INV-3), instance path, and `shape`; stable-sorted by `(instance_path, alias_name)` (INV-5) so regen yields no ordering-only diff | `test_data_models.py`, `test_graph_assembly.py` | PASS |
 
 ### DRA
@@ -464,10 +464,10 @@ the documentation rather than executable code.
 | REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade (11); FORMULA uses the pre-computed attribute resolution map (16); aggregation SumTerm/SingletonTerm uses `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`) — the F4 cutover wired it and deleted `_resolve_aggregation_input_channel` | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation o... | `test_factory_purity.py` | PASS |
 | REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_graph_assembly.py` | PASS |
-| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | — *(no test pins `build_computation_graph`'s internal sequence classify→build→rebuild→toposort→validate; `test_orchestrator.py` pins only the outer `build_pipeline_context` DAG order, REQ-ORCH-01 — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | `test_orchestrator.py` (`TestInnerStepOrdering` — source-order pin of `build_computation_graph`'s five internal milestones, distinct from the outer REQ-ORCH-01 pin; "rebuild groups" = `derive_groups()`) | PASS |
 | REQ-RES-06 | `binding_resolutions` from the backtracker SHALL be the single source of truth for CalcUs... | `test_factory_calc_usage.py` | PASS |
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's pa... | `test_input_resolver.py` | PASS |
-| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input(AGG_STRATEGIES)` (aggregation) via `ResolutionContext.consumer_scope` | — *(no single test pins the cross-cutting "ALL paths" invariant; per-path scope derivation is verified — REQ-IR-07 aggregation, REQ-DRA-04 CalcUsage-CHAIN — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-RES-08 | Consumer-scope application SHALL hold on each live resolution path, per that path's own mechanism: backtracker base leg (`_consumer_scope_dotted`, QN `segments[1:-1]`), backtracker ancestor-scope climb (Step CLIMB, 3+-segment chains), aggregation (`ResolutionContext.consumer_scope` from the module EQN, consumed by Strategy A's primary form), and FORMULA (owner-keyed resolution map — the owner IS the consumer; no dotted scope string). Per-path application over the enumerated paths, not an exhaustiveness proof | `test_res08_consumer_scope_paths.py` (four legs, hand-authored expectations over `plant_values`/`catf_mfe`/`solar_battery`/`deep_cross_scope_probe`) | PASS |
 
 ### SNAP
 
@@ -544,14 +544,16 @@ the documentation rather than executable code.
 
 These requirements have no dedicated conformance test; each carries its argument in its matrix row above (INV-B).
 
-- **REQ-DM-08**: name fields SHALL use NewType wrappers — the wrappers exist but no test asserts field-level usage (filed `[ITEM7-MATRIX-TEST-GAPS]`).
 - **REQ-PGD-06**: numeric default resolves inline via `_parse_default_value` (live), but as a side-output of grouping — not independently asserted; the standalone accessor was deleted by Item 8.
-- **REQ-RES-05**: no test pins `build_computation_graph`'s internal sequence; `test_orchestrator.py` pins only the outer `build_pipeline_context` DAG (filed `[ITEM7-MATRIX-TEST-GAPS]`).
-- **REQ-RES-08**: no single test pins the cross-cutting "ALL paths" invariant; per-path derivation is verified (REQ-IR-07, REQ-DRA-04) (filed `[ITEM7-MATRIX-TEST-GAPS]`).
+
+(TRUTH-DEBT Item 3 discharged the other three `[ITEM7-MATRIX-TEST-GAPS]` rows: REQ-DM-08
+via `test_dm08_enforced_surface.py` with its text reframed to the enforced surface,
+REQ-RES-05 via `TestInnerStepOrdering`, REQ-RES-08 via
+`test_res08_consumer_scope_paths.py` with its text reframed to the per-path mechanisms.)
 
 ## Related Documents
 
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (57 distinct test files cited by matrix rows — 41 in conformance/, 16 in unit/ + integration/)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (62 distinct test files cited by matrix rows — 44 in conformance/, 18 in unit/ + integration/)

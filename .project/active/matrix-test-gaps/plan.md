@@ -293,29 +293,55 @@ Land the matrix flips, both INV-B reframes, and the backlog filing **in the same
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION]
+**Execution mode:** implemented directly by the orchestrator (the account's weekly
+usage limit killed delegated headless sessions mid-epic). Same plan, same gates.
 
 ### Phase 1 Completion (DM-08)
-**Completed:** —
-**Mutation spot-check (red→green):** —
-**Actual Changes / Issues / Deviations:** —
+**Completed:** 2026-07-07 — `tests/conformance/test_dm08_enforced_surface.py` (3 tests).
+**Mutation spot-check (red→green):** `_scoped` re-annotated `dict[str, str]` →
+`test_registry_dict_annotations_name_newtypes` RED; revert → 3/3 GREEN. (Exactly the
+mutation `get_type_hints` would miss — PEP 526.)
+**Deviations:** none.
 
 ### Phase 2 Completion (RES-05)
-**Completed:** —
-**Mutation spot-check (red→green):** —
-**Actual Changes / Issues / Deviations:** —
+**Completed:** 2026-07-07 — `TestInnerStepOrdering` in `test_orchestrator.py`.
+**Mutation spot-check (red→green):** swapped `_validate_channel_references` above
+`_unified_topological_sort` → RED; revert → GREEN.
+**Deviations:** strengthened beyond the stencil — ALL three factory calls must sit inside
+the classify..derive_groups window (a single `min()` would let one drift).
 
 ### Phase 3 Completion (RES-08)
-**Completed:** —
-**Item-2 climb re-check result (Step CLIMB present? climb fixture used?):** —
-**Mutation spot-check(s) (red→green):** —
-**Actual Changes / Issues / Deviations / any bug filed:** —
+**Completed:** 2026-07-07 — `tests/conformance/test_res08_consumer_scope_paths.py` (4 legs).
+**Item-2 climb re-check:** Step CLIMB present (`dependency_backtracker.py:672-682`); neither
+plant fixture exercises it, so leg 2 loads `deep_cross_scope_probe` directly (the
+`chain_analysis` deep chain — resolves only at the ancestor scope; the test also asserts
+the consumer's own scope key MISSES, proving the climb is load-bearing).
+**Mutation spot-checks (red→green):** (1) `_consumer_scope_dotted` hardcoded `""` →
+base-leg RED; (2) climb gate short-circuited → climb-leg RED; both revert → 4/4 GREEN.
+**Deviations / substrate:** per-leg fixtures instead of plant_values-only (plant_values has
+one CalcUsage, zero aggregations, zero FORMULA attrs): base = plant_values + catf_mfe,
+climb = deep_cross_scope_probe, aggregation = solar_battery (whole-plant `capital_cost`;
+the test proves the unscoped key misses while the consumer-scoped key wires), FORMULA =
+attr_expr_probe. Aggregation leg is outcome-level (the wired channel) because the ctx is
+factory-local — the consumer-scope prefix is still the thing proven. Hand-derivation
+correction recorded: a child-aggregation channel repeats the attribute segment
+(`{instance_path}__{attr}__{attr}`) because the module EQN is `{instance_path}__{attr}`.
+No bug exposed; nothing filed from test authoring.
 
 ### Phase 4 Completion (truth-move + gates)
-**Completed:** —
-**Matrix recount (UNTESTED 4→1, PASS 249→252):** —
-**Gate results (suite / ruff / mypy / byte-identity):** —
+**Completed:** 2026-07-07.
+**Matrix recount (from rows):** 256 rows = 255 PASS + 1 UNTESTED (REQ-PGD-06). This also
+resolved the 256-vs-255 summary discrepancy Item 5 flagged: the old block said 251 PASS + 4
+UNTESTED = 255 ≠ 256 — the PASS count was undercounted by one; totals were right. Distinct
+test files cited: 62 (44 conformance, 18 unit+integration) — summary + Related Documents
+updated. Reframes: DM-08 (enforced surface) + RES-08 (per-path mechanisms incl. climb leg)
+in matrix + docs 09/03; RES-05 text unchanged (accurate), its doc row now cites the pin.
+`[DM08-MODEL-FIELD-TYPING]` filed. Bonus truth-fix: the stale conformance/conftest.py
+comment still describing the retired Pattern-A truncation (Item-2 residue) rewritten.
+**Gate results:** suite **2094 passed / 4 skipped / 0 xfailed** (+8 = 3 DM-08 + 1 RES-05 +
+4 RES-08); ruff src **17** (≤17); mypy **97** (≤97); new test files lint-clean;
+byte-identity clean (`git status` empty over `tests/fixtures/` and `src/`).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Complete (all 4 phases, 2026-07-07)

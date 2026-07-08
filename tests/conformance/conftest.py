@@ -53,12 +53,12 @@ SNAPSHOT_MODELS = [
     # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1).
     "plant_values",
     "plant_value_shapes",
-    # deep_cross_scope_probe is deliberately NOT registered here: its Pattern-A deep
-    # CHAIN (`station.array.derived_calc.derived_value`) truncates its source_path to the
-    # first segment (`station`) — a real extraction degradation the probe EXPOSES, which
-    # violates the global CHAIN-source_path invariant (test_extractor.py). Its drift pin
-    # (test_deep_cross_scope_probe.py) reads the graph directly and pins the truncation
-    # as an observed property, so it needs no session-snapshot registration.
+    # deep_cross_scope_probe is deliberately NOT registered here. Historically its
+    # Pattern-A deep CHAIN truncated to the first segment; TRUTH-DEBT Item 2 retired
+    # that (extraction now emits the full-path CHAIN and the backtracker climbs), but
+    # the probe stays unregistered: it is a dedicated-probe fixture whose pins
+    # (test_deep_cross_scope_probe.py, test_res08_consumer_scope_paths.py) load it
+    # directly, so it needs no session-snapshot registration.
 ]
 
 

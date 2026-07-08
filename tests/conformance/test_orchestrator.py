@@ -268,6 +268,61 @@ class TestStepOrdering:
         )
 
 
+class TestInnerStepOrdering:
+    """REQ-RES-05: build_computation_graph()'s INTERNAL milestones in source order.
+
+    Distinct from TestStepOrdering above, which pins the OUTER
+    build_pipeline_context DAG (REQ-ORCH-01) — a different function. This pins
+    the inner sequence the docs state (03-resolution-overview.md):
+    classify → build modules → rebuild groups → toposort → validate.
+
+    Documented-milestone → real-call-name map (the doc uses simplified names):
+    classify = _classify_entry_points; build modules = the three
+    _build_*_module factories; rebuild groups = derive_groups() (there is no
+    literal "rebuild_groups" call); toposort = _unified_topological_sort;
+    validate = _validate_channel_references.
+    """
+
+    @pytest.mark.req("REQ-RES-05")
+    def test_inner_step_ordering_source(self):
+        """The five milestones each appear, in the documented source order."""
+        milestones = [
+            ["_classify_entry_points"],
+            [
+                "_build_pipeline_module",
+                "_build_computed_attr_module",
+                "_build_aggregation_module",
+            ],
+            ["derive_groups"],
+            ["_unified_topological_sort"],
+            ["_validate_channel_references"],
+        ]
+        flat = [c for group in milestones for c in group]
+        lines = _get_call_lines_in_function(build_computation_graph, flat)
+
+        for group in milestones:
+            assert any(lines[c] for c in group), f"missing milestone: {group}"
+
+        # First occurrence of each milestone must be in documented order; for
+        # the build-modules milestone, ALL three factories must sit between
+        # classify and derive_groups (a single min() would let one drift).
+        classify_first = min(lines["_classify_entry_points"])
+        build_firsts = [min(lines[c]) for c in milestones[1] if lines[c]]
+        groups_first = min(lines["derive_groups"])
+        topo_first = min(lines["_unified_topological_sort"])
+        validate_first = min(lines["_validate_channel_references"])
+
+        for ln in build_firsts:
+            assert classify_first < ln < groups_first, (
+                f"a module factory call (line {ln}) is outside the "
+                f"classify({classify_first}) .. derive_groups({groups_first}) window"
+            )
+        assert groups_first < topo_first < validate_first, (
+            f"rebuild-groups({groups_first}) → toposort({topo_first}) → "
+            f"validate({validate_first}) out of source order"
+        )
+
+
 # ===========================================================================
 # FORMULA Removal (REQ-ORCH-03)
 # ===========================================================================

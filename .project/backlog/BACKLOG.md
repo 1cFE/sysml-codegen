@@ -297,6 +297,19 @@ pins the root cause). **Re-frame chosen over fix in Item 7:** the misclassificat
 matrix-truth item. Fix scope: teach the Step-2b check to accept a supertype-namespace QN for an
 inherited attribute. When landed, the xfail cases flip to PASS (xfail strict=False).
 
+### [DM08-MODEL-FIELD-TYPING] NewType-annotate the resolution-model name fields — P3
+
+**Filed by TRUTH-DEBT Item 3 (Route A ruling), 2026-07-07.** REQ-DM-08's original text
+claimed the *model fields* use NewType wrappers; at HEAD they are deliberately bare `str`
+(`resolution/models.py`: `EntryPoint.qualified_name`, `InputSource.qualified_name` /
+`producer_channel`, `ModuleOutput.channel_name`), and `09-data-models.md` documents the
+field↔format table with this deferral. Item 3 pinned the *enforced surface* (OutputRegistry
+dicts + `make_*` constructors, `test_dm08_enforced_surface.py`) and reframed the REQ text to
+match (INV-B). **Scope**: annotate the documented model fields with their NewTypes
+(field↔format table in doc 09 is the target list), update the DM-08 row + doc 09 note, and
+extend the AST-scan test to cover the widened surface. Pure typing churn — zero runtime
+change (NewType is erased), but touches many models; mypy must not regress.
+
 ### [TRUTH-DEBT-INHERITED-FORMULA-COMPILE] Compile inherited-attr FORMULAs into real modules — P3
 
 **Filed by TRUTH-DEBT Item 4, 2026-07-07.** Item 4 fixed *classification* — an attribute

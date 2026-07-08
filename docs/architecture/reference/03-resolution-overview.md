@@ -21,7 +21,7 @@ answer this question correctly across all reachable combinations.
 | REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade ([11](11-analysis-backtracker.md)). FORMULA uses pre-computed attribute resolution map ([16](16-computed-attributes.md)). Aggregation SumTerm/SingletonTerm uses `resolve_input()`/`AGG_STRATEGIES` ([04](04-input-resolver.md)) via the `_build_agg_input_source()` choke point ([05](05-module-factory.md)). Aggregation LocalTerm uses a factory-specific 3-strategy cascade, with its expose-alias reroute calling `resolve_input()` ([05](05-module-factory.md#4c-localterm)). | Call site inspection per module type |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation of shared state (REQ-RES-03a: no side effects). | Type signature + no external dict mutation in [module factory](05-module-factory.md) |
 | REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the [OutputRegistry](10-output-registry.md). | `_validate_channel_references()` in [graph assembly](07-graph-assembly.md) |
-| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups -> toposort -> validate. | Code structure of `build_computation_graph()` |
+| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups -> toposort -> validate. | Source-order pin: `test_orchestrator.py::TestInnerStepOrdering` ("rebuild groups" = `derive_groups()`) |
 | REQ-RES-06 | `binding_resolutions` from the [backtracker](11-analysis-backtracker.md) SHALL be the single source of truth for CalcUsage input wiring. Key format: `"{usage_qn}\|{param_name}"`. | Every CalcUsage input looked up in this dict; missing key = immediate `ValueError` |
 
 ## The Scope Problem
@@ -67,7 +67,7 @@ Prepending that scope to `source_path` produces a
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's parent scope to construct a `ScopedKey` lookup against the typed scoped registry ([10-output-registry](10-output-registry.md)). REFERENCE bindings (`::` in source_path) SHALL use `SysMLQN` lookup against the SysML QN registry. Cross-package CHAIN references fall through to the alias registry. | Typed dispatch in backtracker (REQ-BT-08) and typed strategies in `AGG_STRATEGIES` |
-| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `resolve_input()` (Aggregation) via `ResolutionContext.consumer_scope`. | Backtracker: `_consumer_scope_dotted()` in `dependency_backtracker.py`. resolve_input(): `ResolutionContext.consumer_scope`. FORMULA: scope via owning part QN. |
+| REQ-RES-08 | Consumer-scope application SHALL hold on each live resolution path, per that path's own mechanism: backtracker base leg (`_consumer_scope_dotted`), backtracker ancestor-scope climb (Step CLIMB), aggregation (`ResolutionContext.consumer_scope`, Strategy A primary form), and FORMULA (owner-keyed map — the owner IS the consumer; no dotted scope string). Per-path application over the enumerated paths, not an exhaustiveness proof. | `test_res08_consumer_scope_paths.py` (four legs, hand-authored expectations) |
 
 ## Why Resolution Is Hard
 
