@@ -54,6 +54,7 @@ def test_trap_baseline_recorded(trap_snapshot: dict) -> None:
     assert qns == {"TrapDesign__trap_plant__avail_calc"}, qns
 
 
+@pytest.mark.req("REQ-VBR-10")
 def test_self_named_binding_resolves_to_own_param(trap_snapshot: dict) -> None:
     """Degenerate baseline (mechanism D): the self-named ``in availability =
     availability`` resolves to the calc usage's OWN parameter, not the outer part

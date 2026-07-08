@@ -619,6 +619,7 @@ class TestBaselineComparison:
 
     @pytest.mark.baseline
     @pytest.mark.req("REQ-GA-01")
+    @pytest.mark.req("REQ-BASE-01")
     def test_baseline_comparison_solar_battery(self, solar_battery_graph):
         """ComputationGraph for solar_battery matches Phase 0 baseline."""
         baseline = self._load_baseline("solar_battery")
@@ -626,6 +627,7 @@ class TestBaselineComparison:
 
     @pytest.mark.baseline
     @pytest.mark.req("REQ-GA-01")
+    @pytest.mark.req("REQ-BASE-01")
     def test_baseline_comparison_chain_spike(self, chain_spike_graph):
         """ComputationGraph for chain_spike matches Phase 0 baseline."""
         baseline = self._load_baseline("chain_spike")
@@ -633,6 +635,7 @@ class TestBaselineComparison:
 
     @pytest.mark.baseline
     @pytest.mark.req("REQ-GA-01")
+    @pytest.mark.req("REQ-BASE-01")
     def test_baseline_comparison_attr_expr_probe(self, attr_expr_probe_graph):
         """ComputationGraph for attr_expr_probe matches Phase 0 baseline."""
         baseline = self._load_baseline("attr_expr_probe")

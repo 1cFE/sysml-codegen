@@ -104,7 +104,7 @@ the documentation rather than executable code.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-BASE-01 | ComputationGraph JSON matches captured baseline | `test_baselines.py` | PASS |
+| REQ-BASE-01 | ComputationGraph JSON matches captured baseline | `test_graph_assembly.py::TestBaselineComparison` (full-JSON compare; `test_baselines.py` only checks 3 keys exist) | PASS |
 | REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | `test_baselines.py` | PASS |
 | REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | `test_baselines.py` | PASS |
 | REQ-BASE-04 | execution_order length equals modules length in every baseline | `test_baselines.py` | PASS |
@@ -337,7 +337,7 @@ the documentation rather than executable code.
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `test_naming_conventions.py` | PASS |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→... | `test_naming_conventions.py` | PASS |
 | REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dott... | `test_naming_conventions.py` | PASS |
-| REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `test_alias_agg_probe_generation.py` | PASS |
+| REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `test_alias_agg_probe_generation.py`, `test_formula_quoted_owner.py` (FORMULA module_eqn/channel leg) | PASS |
 | REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path | `test_duplicate_path_failfast.py` | PASS |
 
 ### OR
@@ -538,7 +538,7 @@ the documentation rather than executable code.
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` so no two virtual instances share a binding object (divergent-sibling rewrite correctness; Item 10 precondition) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path`; it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py` | PASS |
-| REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py` | PASS |
+| REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py`, `test_self_named_binding_trap.py::test_self_named_binding_resolves_to_own_param` (the "else leave it as-is" clause) | PASS |
 | REQ-VBR-11 | The `_rewrite_specialized_chain` type-select SHALL be instance-aware: it SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`, `part_usage`) in `usage_type_map` before the declaring-def key, so a two-level specialization (usage-level `:>> driver : Subtype` on an inherited part usage) selects the specialized def where the declaring-def key sees only the base type | `test_spec_chain_twolevel.py` | PASS |
 
 ---

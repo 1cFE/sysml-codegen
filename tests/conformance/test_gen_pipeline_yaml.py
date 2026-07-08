@@ -567,6 +567,7 @@ class TestYamlBaselineComparison:
         )
 
     @pytest.mark.baseline
+    @pytest.mark.req("REQ-PY-08")
     def test_yaml_baseline_comparison_wi014_toy(self, template_env) -> None:
         """Item 11 shape A (REQ-PY-08): wi014_toy's committed YAML baseline matches
         the generated output, including the ``total_cost`` exit-point filename
