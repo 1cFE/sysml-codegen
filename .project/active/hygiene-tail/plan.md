@@ -166,19 +166,20 @@ Each probe is a throwaway script under `.project/active/hygiene-tail/probes/` (m
   now resolves it, the fixture needs a still-unresolvable dotted path.
 
 ### Changes Required
-- [ ] `.project/active/hygiene-tail/probes/` — one reproduce probe per site (throwaway)
-- [ ] `.project/active/hygiene-tail/probes/verdict.md` — per-site: reproduce result,
+- [x] `.project/active/hygiene-tail/probes/` — one reproduce probe per site (throwaway)
+- [x] `.project/active/hygiene-tail/probes/verdict.md` — per-site: reproduce result,
       corpus-scan result, chosen disposition (WARN / raise / synthetic-tripwire / re-file), and
       for Site 1 the settled load-bearing field list. This is the R4 audit trail.
-- [ ] For any **reclassified** site: record it in `.project/backlog/BACKLOG.md`
+- [x] For any **reclassified** site: record it in `.project/backlog/BACKLOG.md`
       (`[D3-HYGIENE-TAIL]`) and the discovery register (`§D3`) as reclassified-with-reason —
       **not** silently dropped. A re-file gets a named pointer (R4, epic discipline).
 
 ### Validation
 **Automated:**
-- [ ] Each probe runs offline (no license) and prints the reproduce verdict + scan count.
-- [ ] Corpus-scan predicate returns **0 hits** on clean fixtures for every candidate that will
-      become a WARN (the disposition gate).
+- [x] Each probe runs offline (no license) and prints the reproduce verdict + scan count.
+- [x] Corpus-scan predicate returns **0 hits** on clean fixtures for every candidate that will
+      become a WARN (the disposition gate). (Site 4 returned 5 hits — the gate did its job and
+      changed the disposition to reclassify, per above.)
 
 **What We Know Works After This Phase:**
 Per-site: whether the silent shape reproduces, on which fixture, what the diagnostic's trigger
@@ -459,9 +460,36 @@ scripts / full pytest, not a bare `-c` probe (memory: `syside-license-via-script
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 0 Completion
-**Completed:**
+**Completed:** 2026-07-07. Probes in `probes/probe_site{1,2,3,4}_*.py`, full verdict in
+`probes/verdict.md`.
+
 **Per-site verdict (reproduce / scan / disposition):**
-**Reclassifications recorded:**
+- **Site 1 (loader):** reproduces by construction; corpus scan 0 hits on all 5 candidate
+  fields. Disposition: WARN for `python_type`, `binding_type`, `parent_part_path`,
+  `owning_part_def_qn`; **RAISE** for `qualified_name` (both the calc_usage `:327` and
+  design_attribute `:343` sites — a keying field that would mis-key the registry).
+- **Site 2 (`.replace`):** reproduces on a real nested-name shape (`cost`/`cost_total` →
+  `inputs.inputs.cost_total`), confirming the spec-review L2-1 correction. Corpus scan 0
+  hits (no covered aggregation has nested names yet). Disposition: **FIX** the compile
+  choke with a word-boundary substitution — not a diagnostic, a correctness fix that is
+  byte-identical on the covered corpus.
+- **Site 3 (`type_map` Any):** reproduces at the unit level; reachability scan finds 0
+  non-primitive exit points in the corpus → latent-only today. Confirmed independent of
+  Site 1 (live `extractor.py:492` source) per spec L1-1. Disposition: WARN, pinned with a
+  constructed fixture (no real fixture exercises the shape yet).
+- **Site 4 (Phase-4 no-`else`):** **RECLASSIFIED.** Corpus scan found the identical
+  unresolved-lookup shape already firing on 5/15 real `SNAPSHOT_MODELS` fixtures today
+  (short-form vs. full-EQN key mismatch on transitive design-attribute defaults). A
+  mechanical sibling-copy WARN would break INV-6 on those 5 fixtures. This is the same
+  gap already deferred, undocumented in BACKLOG, at `parameter_groups.py:672-682`
+  (SC-5/D3-12 hazard-scoped-WARN note). Filed as
+  `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]` — a correct fix needs a cross-derivation
+  EP-omission check spanning two modules, which is design-level work, not a
+  single-choke mechanical hygiene fix. No code change to `output_registry_builder.py`
+  in this item; Phase 3 below records the reclassification only.
+
+**Reclassifications recorded:** Site 4 → `BACKLOG.md` `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`
+(new entry, TRUTH-DEBT Item 6 Phase 0 filings section).
 
 ### Phase 1 Completion (Site 1)
 ### Phase 2 Completion (Site 3)

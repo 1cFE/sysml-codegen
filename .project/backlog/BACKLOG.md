@@ -581,3 +581,35 @@ the new row and does not treat it as an orphan.
 - **[D3-HYGIENE-TAIL]** — **absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 6, 2026-07-06.** Consolidated hygiene entry (pointer: `.project/research/20260706_pipeline-truth-discovery.md` §D3). The benign-leaning silent sites not folded into a family fix: loader `.get` defaults on load-bearing fields, naive substring `.replace()` in aggregation compile, `type_map` "Any" exit-point skip, registry alias-rewrite no-not-found branch. Each is low blast-radius; batch them into one hardening pass. (Dead `_check_semantic_match` is Item 8's dead-code sweep — cross-referenced, not filed twice.)
 - **[MULTIHOP-CHAIN-PARSE]** — **absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 2, 2026-07-06.** Full multi-hop chain parsing follow-on (from D3-2). `extract_feature_chain_segments` (`expression_utils.py`) already yields all segments; Item 5 uses it for the COUNT only (loud-reject 3+-seg chains). Building the resolved multi-hop path is new capability — cheap (helper exists), unblocks deep cross-scope chains, and would let `deep_cross_scope_probe`'s Pattern-A pin assert a *resolved* chain instead of a loud rejection. Argued at Item 5 design; deferred as new-capability, not this item.
 - **Item-9 (agentic-mbse lockstep) impact accumulation from Item 5.** New diagnostics that agentic-mbse guidance/validation should teach & check: (1) the totality/uniqueness/exception invariants (INV-1..INV-5) as new-dispatch/lookup-site review rules; (2) `extract_feature_refs` under-report (D3-9 tripwire) — a non-literal AST root yielding zero refs is a traversal gap in agentic-mbse; (3) `str(direction)` repr and the non-float entry-point (SC-5) shape as modeling-guide anti-patterns. Recorded for Item 9 per R2; not implemented here.
+
+### TRUTH-DEBT Item 6 — D3 Hygiene Tail Phase 0 filings (2026-07-07)
+
+- **[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]** — **reclassified, not fixed, at Item 6 Phase 0.**
+  Site 4 (`orchestration/output_registry_builder.py:353-367`, Phase 4 transitive design-attribute
+  alias resolution) was expected to reproduce only synthetically ("reproduces cleanly" per the
+  plan) and get a mechanical sibling-copy `logger.warning` mirroring Phases 2/3. The Phase-0
+  corpus-scan gate found instead that the identical unresolved-lookup shape already fires on
+  **5 of 15 `SNAPSHOT_MODELS` fixtures today**: `solar_battery_model`
+  (`misc_hardware_cost` → `'allocation_model.total_allocation'`), `wi014_toy`
+  (`total_cost` → `'cost_calc.cost'`), `ife_plant` (`volume` → `'volume_calc.volume'`,
+  `lcoe` → `'lcoe_calc.lcoe'`), `plant_values` (`plant_cost` → `'cost_calc.plant_cost'`). Root
+  cause: these `default_value`s use a short leaf-instance dotted form (`"cost_calc.cost"`) but
+  all three of Phase 4's lookup keys are full-EQN forms — none ever match. A mechanical WARN
+  here would fire on all 5 currently-clean fixtures, breaking INV-6 [HARD]. No downstream binding
+  in the corpus references any of the 5 orphaned names, so the gap has no observable effect on
+  current generated output — which is exactly why the mechanical fix would have been a false-fire,
+  not a true one.
+
+  **This is the same underlying gap already discovered and deliberately deferred** at
+  `analysis/parameter_groups.py:672-682` (`_derive_from_design_attributes`), where a
+  present-but-unparseable design-attribute default is silently dropped from the derived JSON
+  parameter list. That code's own comment (citing SC-5/D3-12) states a naive WARN there
+  "over-fires on legitimate chain/reference defaults... resolved elsewhere, breaking INV-6," and
+  that the correct fix "needs the EP-omission membership check across the full derivation" —
+  deferred, and never filed until now.
+
+  **Filing:** a correct fix spans both sites (an EP-omission / cross-derivation membership check
+  that only warns when a transitive default resolves in *neither* Phase 4 *nor* the parameter-group
+  JSON path) — design-level work, not a single-choke mechanical hygiene fix. Out of Item 6's scope.
+  Evidence: `.project/active/hygiene-tail/probes/probe_site4_output_registry.py`,
+  `.project/active/hygiene-tail/probes/verdict.md`.
