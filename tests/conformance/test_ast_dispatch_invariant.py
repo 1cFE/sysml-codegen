@@ -41,6 +41,14 @@ HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
 USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
 PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
 EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
+AGENTIC_HIERARCHY_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "agentic-mbse"
+    / "src"
+    / "agentic_mbse"
+    / "sysml"
+    / "hierarchy.py"
+)
 
 # Expression type names used for dispatch site identification
 EXPRESSION_TYPE_NAMES = frozenset({
@@ -266,15 +274,29 @@ class TestReqAst04DispatchSiteGuardrail:
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 7 codegen functions dispatch on 2+ expression types."""
+        """Exactly 7 audited functions dispatch on 2+ expression types."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
+        shared_classifier_calls = find_is_instance_calls_in_function(
+            AGENTIC_HIERARCHY_PATH,
+            "classify_redefinition",
+            predicate=is_any_is_instance_call,
+        )
+        shared_classifier_types = {
+            name: line
+            for name, line in shared_classifier_calls.items()
+            if name in EXPRESSION_TYPE_NAMES
+        }
+        if len(shared_classifier_types) >= 2:
+            all_dispatch[("agentic_mbse/sysml/hierarchy.py", "classify_redefinition")] = (
+                shared_classifier_types
+            )
         multi_type = {
             key: types
             for key, types in all_dispatch.items()
             if len(types) >= 2
         }
         assert len(multi_type) == 7, (
-            f"Expected 7 multi-type dispatch functions, found {len(multi_type)}: "
+            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 

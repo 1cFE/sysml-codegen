@@ -173,7 +173,7 @@ item closes.
 
 **Deliverables**: `.project/active/qualified-name-utility-split/{spec,design,plan}.md`
 
-### Item 3: Hierarchy Primitives and Data Models
+### Item 3: Hierarchy Primitives and Data Models ✅
 
 **Type**: Code/Integration
 **Effort**: 1.5–2 days
@@ -192,9 +192,9 @@ item closes.
 **Out of Scope**: Design overrides, usage-type and part-usage indexing, hierarchy orchestration, `HierarchyExtractionResult`, scoping, and module construction.
 
 **Success Criteria**:
-- [ ] Design overrides and usage-type indexing remain in sysml-codegen.
-- [ ] Re-exports preserve type identity; snapshots remain byte-identical.
-- [ ] Hierarchy-profile validation impact is implemented or filed with fixture shapes and
+- [x] Design overrides and usage-type indexing remain in sysml-codegen.
+- [x] Re-exports preserve type identity; snapshots remain byte-identical.
+- [x] Hierarchy-profile validation impact is implemented or filed with fixture shapes and
   severity.
 
 **Deliverables**: `.project/active/hierarchy-primitives-models/{spec,design,plan}.md`

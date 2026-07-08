@@ -15,10 +15,9 @@ Phase 2:
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import patch
 
-import pytest
+from agentic_mbse.sysml import hierarchy as shared_hierarchy
 
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
@@ -40,7 +39,6 @@ from sysml_codegen.extraction.hierarchy_resolver import (
     extract_multiplicities,
     extract_redefinitions,
 )
-
 
 # ---------------------------------------------------------------------------
 # Mock AST Elements for expression_utils InvocationExpression tests
@@ -77,6 +75,15 @@ class MockOperatorExpression:
     def __init__(self, operator: str, operands: list):
         self.operator = operator
         self.operands = operands
+
+
+class MockNamedUsage:
+    """Minimal usage object for wrapper delegation tests."""
+
+    def __init__(self, name: str, owned_members: list | None = None, owned_redefinitions=None):
+        self.name = name
+        self.owned_members = owned_members or []
+        self.owned_redefinitions = owned_redefinitions
 
 
 class MockFeatureChainExpressionOperatorExpression:
@@ -232,8 +239,15 @@ class TestAggregationExpressionDataConstruction:
             owning_part_qn="Lib__Solar_Array",
             owning_part_name="Solar_Array",
             attribute_name="capital_cost",
-            raw_expression_text="sum(pv_module.capital_cost) + sum(inverter.capital_cost) + allocation_model.total_allocation + misc_hardware_cost",
-            transformed_expression="(((module_count * pv_module.capital_cost) + (inverter_count * inverter.capital_cost)) + allocation_model.total_allocation) + misc_hardware_cost",
+            raw_expression_text=(
+                "sum(pv_module.capital_cost) + sum(inverter.capital_cost) + "
+                "allocation_model.total_allocation + misc_hardware_cost"
+            ),
+            transformed_expression=(
+                "(((module_count * pv_module.capital_cost) + "
+                "(inverter_count * inverter.capital_cost)) + "
+                "allocation_model.total_allocation) + misc_hardware_cost"
+            ),
             sum_terms=[
                 SumTerm("pv_module", "capital_cost", "module_count", 20),
                 SumTerm("inverter", "capital_cost", "inverter_count", 4),
@@ -244,7 +258,11 @@ class TestAggregationExpressionDataConstruction:
             local_terms=[
                 LocalTerm("misc_hardware_cost"),
             ],
-            input_channels=["pv_module.capital_cost", "inverter.capital_cost", "allocation_model.total_allocation"],
+            input_channels=[
+                "pv_module.capital_cost",
+                "inverter.capital_cost",
+                "allocation_model.total_allocation",
+            ],
             entry_points=["module_count", "inverter_count"],
         )
         assert aed.owning_part_qn == "Lib__Solar_Array"
@@ -551,7 +569,10 @@ def _make_expression_redef_member(
     redef = MockRedefinition(redefined_feature=redefined)
     if operands is None:
         operands = [
-            MockInvocationExpression("sum", [MockFeatureChainExpression(["pv_module", "capital_cost"])]),
+            MockInvocationExpression(
+                "sum",
+                [MockFeatureChainExpression(["pv_module", "capital_cost"])],
+            ),
             MockFeatureReferenceExpression("misc_cost"),
         ]
     expr = MockOperatorExpression(operator, operands)
@@ -576,6 +597,52 @@ def _make_deep_path_redef_member(
         owned_redefinitions=[redef],
         feature_value_expression=expr,
     )
+
+
+def test_extract_redefinitions_wrapper_delegates(monkeypatch):
+    sentinel = [object()]
+    part = object()
+
+    monkeypatch.setattr(shared_hierarchy, "extract_redefinitions", lambda arg: sentinel)
+
+    assert extract_redefinitions(part) is sentinel
+
+
+def test_extract_multiplicities_wrapper_delegates(monkeypatch):
+    sentinel = [object()]
+    part = object()
+
+    monkeypatch.setattr(shared_hierarchy, "extract_multiplicities", lambda arg: sentinel)
+
+    assert extract_multiplicities(part) is sentinel
+
+
+def test_extract_design_overrides_delegates_classifier_and_keeps_plain_usage_policy(monkeypatch):
+    literal = RedefinitionData(
+        owning_part_qn="usage",
+        attribute_name="literal",
+        redefinition_type=RedefinitionType.LITERAL,
+        literal_value=1,
+    )
+    chain = RedefinitionData(
+        owning_part_qn="usage",
+        attribute_name="chain",
+        redefinition_type=RedefinitionType.CHAIN,
+        source_path="other.value",
+    )
+
+    def fake_classifier(member, owning_qn):
+        assert owning_qn == "plain_usage"
+        return literal if member.name == "literal_member" else chain
+
+    monkeypatch.setattr(shared_hierarchy, "classify_redefinition", fake_classifier)
+    usage = MockNamedUsage(
+        "plain_usage",
+        owned_members=[MockNamedUsage("literal_member"), MockNamedUsage("chain_member")],
+        owned_redefinitions=[],
+    )
+
+    assert extract_design_overrides([usage]) == [literal]
 
 
 # ---------------------------------------------------------------------------
@@ -879,7 +946,10 @@ def _make_solar_array_redef() -> RedefinitionData:
         attribute_name="capital_cost",
         redefinition_type=RedefinitionType.EXPRESSION,
         expression_ast=ast,
-        expression_text="sum(pv_module.capital_cost) + sum(inverter.capital_cost) + allocation_model.total_allocation + misc_hardware_cost",
+        expression_text=(
+            "sum(pv_module.capital_cost) + sum(inverter.capital_cost) + "
+            "allocation_model.total_allocation + misc_hardware_cost"
+        ),
     )
 
 
@@ -1230,7 +1300,10 @@ class TestWalkAggregationAstEvaluationUnwrap:
         result = build_aggregation_expression(redef, mults, part)
         assert result is not None
         assert "Evaluation" not in result.transformed_expression
-        assert "pv_module" in result.transformed_expression or "capital_cost" in result.transformed_expression
+        assert (
+            "pv_module" in result.transformed_expression
+            or "capital_cost" in result.transformed_expression
+        )
 
     def test_mixed_expression_with_evaluation_wrappers(self):
         """Full expression with Evaluation wrappers on both sum() terms."""
@@ -1247,7 +1320,11 @@ class TestWalkAggregationAstEvaluationUnwrap:
             attribute_name="capital_cost",
             redefinition_type=RedefinitionType.EXPRESSION,
             expression_ast=full_ast,
-            expression_text="sum(Evaluation(pv_module.capital_cost)) + sum(Evaluation(inverter.capital_cost)) + allocation_model.total_allocation + misc_hardware_cost",
+            expression_text=(
+                "sum(Evaluation(pv_module.capital_cost)) + "
+                "sum(Evaluation(inverter.capital_cost)) + "
+                "allocation_model.total_allocation + misc_hardware_cost"
+            ),
         )
         mults = _make_solar_array_multiplicities()
         part = _make_solar_array_part()

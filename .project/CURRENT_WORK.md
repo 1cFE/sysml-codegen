@@ -6,6 +6,30 @@
 
 ## Active Work
 
+### PUSH-DOWN Item 3 — Hierarchy Primitives and Data Models — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Artifacts:
+`.project/active/hierarchy-primitives-models/{spec,spec-review,design,design-review,plan}.md`.
+Item 1 and Item 2 are implemented, audited, and committed in both repos. This item starts only
+the hierarchy primitive/model split; no item-level PR closeout is planned because the user wants
+the whole PUSH-DOWN epic implemented before PR.
+
+Implemented shared `agentic_mbse.sysml.hierarchy` with primitive redefinition and multiplicity
+extraction; moved `RedefinitionType`, `RedefinitionData`, and `MultiplicityData` into
+agentic-mbse as field-identical standard-library models; sysml-codegen now re-exports the same
+runtime class objects and delegates primitive extraction through compatibility wrappers. Design
+overrides, aggregation, usage-type indexing, hierarchy orchestration, and `HierarchyExtractionResult`
+remain local to sysml-codegen. Hierarchy-profile rows that require codegen policy were filed in
+agentic-mbse backlog; missing instantiations remain covered by existing `L6_CALC_DEF_NO_INSTANTIATION`.
+
+Validation: agentic-mbse hierarchy test `10 passed`; agentic-mbse full suite `1278 passed, 1 skipped,
+33 deselected`; sysml-codegen focused hierarchy/model/dispatch suite `156 passed`; sysml-codegen full
+suite `2127 passed, 4 skipped`; sysml-codegen `ruff check src/` clean; touched-file ruff clean in
+agentic-mbse; `git diff -- tests/fixtures` empty. Remaining caveat: project-wide mypy baselines are
+still dirty but unchanged for this item (agentic-mbse 107, sysml-codegen 98). Audit:
+`.project/active/hierarchy-primitives-models/audit.md` certifies the item. No item-level PR closeout;
+continue to PUSH-DOWN Item 4.
+
 ### PUSH-DOWN Item 2 — Qualified-Name Utility Split — CERTIFIED
 
 Epic: `.project/backlog/epic_push_down.md`. Artifacts:

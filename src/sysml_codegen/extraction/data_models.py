@@ -14,13 +14,57 @@ BindingType is imported directly from agentic-mbse.
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 # Import shared types from agentic-mbse
-from agentic_mbse.sysml.data_models import AttributeInfo as BaseAttributeInfo
+from agentic_mbse.sysml.data_models import (
+    AttributeInfo as BaseAttributeInfo,
+)
 from agentic_mbse.sysml.types import BindingType, ExpressionRef
 
 from .expression_compiler import Compilability
+
+if TYPE_CHECKING:
+
+    class RedefinitionType(str, Enum):
+        """Type-checking mirror of the shared runtime enum."""
+
+        LITERAL = "literal"
+        CHAIN = "chain"
+        EXPRESSION = "expression"
+
+    @dataclass
+    class RedefinitionData:
+        """Type-checking mirror of the shared runtime dataclass."""
+
+        owning_part_qn: str
+        attribute_name: str
+        redefinition_type: RedefinitionType
+        literal_value: float | int | str | bool | None = None
+        source_path: str | None = None
+        expression_ast: Any = None
+        expression_text: str = ""
+        target_path: list[str] = field(default_factory=list)
+        is_deep_path: bool = False
+        source_file: Path = field(default_factory=lambda: Path("unknown"))
+        source_line: int = 0
+
+    @dataclass
+    class MultiplicityData:
+        """Type-checking mirror of the shared runtime dataclass."""
+
+        part_usage_name: str
+        owning_part_def_qn: str
+        count: int | None
+        count_attribute_name: str | None
+        default_value: int | None
+
+else:
+    from agentic_mbse.sysml.data_models import (  # type: ignore[import-untyped]
+        MultiplicityData,
+        RedefinitionData,
+        RedefinitionType,
+    )
 
 __all__ = [
     "AggregationExpressionData",
@@ -227,59 +271,6 @@ class ComputedAttributeData:
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
     reference_chain: list[str] | None = None
-
-
-# ---------------------------------------------------------------------------
-# Hierarchy Resolution Data Models (Item 3 — COST-PATTERN)
-# ---------------------------------------------------------------------------
-
-
-class RedefinitionType(str, Enum):
-    """Classification of a :>> redefinition's RHS expression."""
-
-    LITERAL = "literal"  # :>> wattage = 400.0
-    CHAIN = "chain"  # :>> capital_cost = cost_model.total_cost
-    EXPRESSION = "expression"  # :>> capital_cost = sum(pv_module.capital_cost) + ...
-
-
-@dataclass
-class RedefinitionData:
-    """Extracted data for a single :>> redefinition on a PartDef or design PartUsage.
-
-    Represents the resolution of one ReferenceUsage with owned_redefinitions.
-    """
-
-    owning_part_qn: str  # QN of the PartDef/PartUsage this :>> lives on
-    attribute_name: str  # The redefined attribute (e.g., "capital_cost")
-    redefinition_type: RedefinitionType
-    # For LITERAL:
-    literal_value: float | int | str | bool | None = None
-    # For CHAIN:
-    source_path: str | None = None  # e.g., "cost_model.total_cost"
-    # For EXPRESSION:
-    expression_ast: Any = None  # Raw syside AST for downstream transformation
-    expression_text: str = ""  # Display text from reconstruct_expression()
-    # Deep-path info (for design-level overrides):
-    target_path: list[str] = field(default_factory=list)
-    # e.g., ["pv_module", "wattage"] for :>> pv_module.wattage = 400.0
-    is_deep_path: bool = False
-    source_file: Path = field(default_factory=lambda: Path("unknown"))
-    source_line: int = 0
-
-
-@dataclass
-class MultiplicityData:
-    """Multiplicity information for a PartUsage within a PartDef.
-
-    count is defensively cast to int() at extraction time because
-    cached_lower_bound may return a float or other numeric type from syside.
-    """
-
-    part_usage_name: str  # e.g., "pv_module"
-    owning_part_def_qn: str  # QN of the owning PartDef (e.g., "Lib__Solar_Array")
-    count: int | None  # Resolved literal count (e.g., 20), or None if unresolvable
-    count_attribute_name: str | None  # Name of the multiplicity attribute (e.g., "module_count")
-    default_value: int | None  # Default value of the count attribute
 
 
 @dataclass

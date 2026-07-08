@@ -319,6 +319,41 @@ def test_req_dm_03_fields_multiplicity_data():
     assert len(actual) == 5
 
 
+def test_hierarchy_models_are_shared_class_objects():
+    from agentic_mbse.sysml import hierarchy as shared
+
+    from sysml_codegen.extraction import data_models as codegen
+
+    assert codegen.RedefinitionType is shared.RedefinitionType
+    assert codegen.RedefinitionData is shared.RedefinitionData
+    assert codegen.MultiplicityData is shared.MultiplicityData
+
+
+def test_hierarchy_model_ordered_field_contracts():
+    from sysml_codegen.extraction.data_models import MultiplicityData, RedefinitionData
+
+    assert [field.name for field in dataclasses.fields(RedefinitionData)] == [
+        "owning_part_qn",
+        "attribute_name",
+        "redefinition_type",
+        "literal_value",
+        "source_path",
+        "expression_ast",
+        "expression_text",
+        "target_path",
+        "is_deep_path",
+        "source_file",
+        "source_line",
+    ]
+    assert [field.name for field in dataclasses.fields(MultiplicityData)] == [
+        "part_usage_name",
+        "owning_part_def_qn",
+        "count",
+        "count_attribute_name",
+        "default_value",
+    ]
+
+
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_aggregation_expression_data():
     """AggregationExpressionData has exactly 15 fields."""
@@ -504,15 +539,15 @@ _PG = "sysml_codegen.analysis.parameter_groups"
 SOURCE_FILE_SPECS = [
     (_DM, "CalculationDefinitionData", "extraction/data_models.py"),
     (_DM, "PartDefinitionData", "extraction/data_models.py"),
-    (_DM, "RedefinitionData", "extraction/data_models.py"),
-    (_DM, "MultiplicityData", "extraction/data_models.py"),
+    (_DM, "RedefinitionData", "agentic_mbse/sysml/data_models.py"),
+    (_DM, "MultiplicityData", "agentic_mbse/sysml/data_models.py"),
     (_DM, "AggregationExpressionData", "extraction/data_models.py"),
     (_DM, "HierarchyExtractionResult", "extraction/data_models.py"),
     (_DM, "ScopedAggregationData", "extraction/data_models.py"),
     (_DM, "ComputedAttributeData", "extraction/data_models.py"),
     (_DM, "AttributeInfo", "extraction/data_models.py"),
     (_DM, "ComputedAttributeClassification", "extraction/data_models.py"),
-    (_DM, "RedefinitionType", "extraction/data_models.py"),
+    (_DM, "RedefinitionType", "agentic_mbse/sysml/data_models.py"),
     (_UE, "CalcUsageData", "extraction/usage_extractor.py"),
     (_UE, "BindingInfo", "extraction/usage_extractor.py"),
     (_EC, "Compilability", "extraction/expression_compiler.py"),

@@ -16,8 +16,9 @@ Key functions:
 
 import logging
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
+from agentic_mbse.sysml import hierarchy as shared_hierarchy  # type: ignore[import-untyped]
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import (
@@ -38,7 +39,6 @@ from sysml_codegen.extraction.expression_utils import (
     OPERATOR_MAP,
     extract_feature_chain_name,
     extract_feature_reference_name,
-    extract_literal_value,
     is_literal_expression,
     reconstruct_expression,
 )
@@ -82,93 +82,11 @@ def _chain_sibling_aliases_aggregation(
     return matches_leaf and sibling.attribute_name != agg_attribute_name
 
 
-def _extract_single_redefinition(
-    member: Any,
-    owning_qn: str,
-) -> RedefinitionData | None:
-    """Extract a single :>> redefinition from a ReferenceUsage member.
-
-    Shared helper used by both extract_redefinitions() (PartDef members)
-    and extract_design_overrides() (design PartUsage members). The two
-    callers differ only in their outer loops.
-
-    Args:
-        member: A ReferenceUsage element with non-empty owned_redefinitions.
-        owning_qn: Qualified name of the owning PartDef or PartUsage.
-
-    Returns:
-        RedefinitionData if the member has a value expression, None otherwise.
-    """
-    if not SysideAdapter.is_instance(member, "ReferenceUsage"):
-        return None
-
-    owned_redefs = getattr(member, "owned_redefinitions", None)
-    if not owned_redefs:
-        return None
-
-    redef = owned_redefs[0]
-    redefined_feature = redef.redefined_feature
-
-    # Check for deep-path (chaining_features)
-    chaining = list(getattr(redefined_feature, "chaining_features", []))
-    if chaining:
-        target_path = [sanitize_name(c.name) for c in chaining]
-        attr_name = target_path[-1]
-        is_deep_path = True
-    else:
-        attr_name = sanitize_name(getattr(redefined_feature, "name", None)) or sanitize_name(
-            getattr(member, "name", None)
-        )
-        target_path = []
-        is_deep_path = False
-
-    # Skip if no value expression (type-only redefinition)
-    expr = getattr(member, "feature_value_expression", None)
-    if expr is None:
-        return None
-
-    # Classify RHS
-    if is_literal_expression(expr):
-        return RedefinitionData(
-            owning_part_qn=owning_qn,
-            attribute_name=attr_name,
-            redefinition_type=RedefinitionType.LITERAL,
-            literal_value=extract_literal_value(expr),
-            target_path=target_path,
-            is_deep_path=is_deep_path,
-        )
-
-    if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
-        source_path = extract_feature_chain_name(expr)
-        return RedefinitionData(
-            owning_part_qn=owning_qn,
-            attribute_name=attr_name,
-            redefinition_type=RedefinitionType.CHAIN,
-            source_path=source_path,
-            target_path=target_path,
-            is_deep_path=is_deep_path,
-        )
-
-    if SysideAdapter.is_instance(expr, "FeatureReferenceExpression"):
-        source_path = extract_feature_reference_name(expr)
-        return RedefinitionData(
-            owning_part_qn=owning_qn,
-            attribute_name=attr_name,
-            redefinition_type=RedefinitionType.CHAIN,
-            source_path=source_path,
-            target_path=target_path,
-            is_deep_path=is_deep_path,
-        )
-
-    # EXPRESSION: OperatorExpression, InvocationExpression, or anything else
-    return RedefinitionData(
-        owning_part_qn=owning_qn,
-        attribute_name=attr_name,
-        redefinition_type=RedefinitionType.EXPRESSION,
-        expression_ast=expr,
-        expression_text=reconstruct_expression(expr),
-        target_path=target_path,
-        is_deep_path=is_deep_path,
+def _extract_single_redefinition(member: Any, owning_qn: str) -> RedefinitionData | None:
+    """Compatibility alias for the shared one-member redefinition classifier."""
+    return cast(
+        RedefinitionData | None,
+        shared_hierarchy.classify_redefinition(member, owning_qn),
     )
 
 
@@ -184,15 +102,7 @@ def extract_redefinitions(part_element: Any) -> list[RedefinitionData]:
     Returns:
         List of RedefinitionData for each :>> with a value expression.
     """
-    owning_qn = build_element_qualified_name(part_element)
-    results: list[RedefinitionData] = []
-
-    for member in getattr(part_element, "owned_members", []):
-        redef_data = _extract_single_redefinition(member, owning_qn)
-        if redef_data is not None:
-            results.append(redef_data)
-
-    return results
+    return cast(list[RedefinitionData], shared_hierarchy.extract_redefinitions(part_element))
 
 
 def _keep_plain_usage_override(redef_data: RedefinitionData) -> bool:
@@ -239,7 +149,10 @@ def extract_design_overrides(
         usage_qn = build_element_qualified_name(usage)
 
         for member in getattr(usage, "owned_members", []):
-            redef_data = _extract_single_redefinition(member, usage_qn)
+            redef_data = cast(
+                RedefinitionData | None,
+                shared_hierarchy.classify_redefinition(member, usage_qn),
+            )
             if redef_data is None:
                 continue
             if not is_part_redefines and not _keep_plain_usage_override(redef_data):
@@ -263,44 +176,7 @@ def extract_multiplicities(part_element: Any) -> list[MultiplicityData]:
         List of MultiplicityData for each PartUsage with multiplicity.
         Singletons (no multiplicity) are excluded.
     """
-    owning_qn = build_element_qualified_name(part_element)
-    results: list[MultiplicityData] = []
-
-    for member in getattr(part_element, "owned_members", []):
-        if not SysideAdapter.is_instance(member, "PartUsage"):
-            continue
-
-        mult = getattr(member, "multiplicity", None)
-        if mult is None:
-            continue  # Singleton
-
-        # Use cached_lower_bound (correct for [N] syntax) — spike Q5
-        raw_count = getattr(mult, "cached_lower_bound", None)
-        count = int(raw_count) if raw_count is not None else None
-
-        # Extract attribute name from upper_bound expression chain
-        count_attr_name = None
-        default_value = None
-        upper = getattr(mult, "upper_bound", None)
-        if upper and hasattr(upper, "referent"):
-            referent = upper.referent
-            count_attr_name = getattr(referent, "name", None)
-            fve = getattr(referent, "feature_value_expression", None)
-            if fve and hasattr(fve, "value"):
-                raw_default = fve.value
-                default_value = int(raw_default) if raw_default is not None else None
-
-        results.append(
-            MultiplicityData(
-                part_usage_name=sanitize_name(member.name),
-                owning_part_def_qn=owning_qn,
-                count=count,
-                count_attribute_name=count_attr_name,
-                default_value=default_value,
-            )
-        )
-
-    return results
+    return cast(list[MultiplicityData], shared_hierarchy.extract_multiplicities(part_element))
 
 
 # ---------------------------------------------------------------------------
