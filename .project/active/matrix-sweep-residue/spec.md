@@ -27,31 +27,39 @@ silently dropped.
 **Why now, and the drift risk this spec had to clear first.** The epic sequenced this item after
 Items 1 and 4 precisely because those items move matrix rows, and a disposition filed at Item 7's
 commit is a static-read verdict, not a fact at HEAD (R4). The re-verification below (this spec's
-mandated first act) confirms the risk was real: **REQ-CA-01's row text has already moved at HEAD**
-— it now reads "exactly one of the 5 stable values … the transient sixth … never survives"
-(`verification-matrix.md:142`), which is essentially the reframe the filing prescribed. So at
-least one of the 33 dispositions is already partly discharged, and every disposition below is a
-*candidate* the plan must reproduce at HEAD before acting, not a settled instruction.
+mandated first act, re-run against post-Item-3 HEAD) confirms the risk is real and ongoing: Items
+3 and 4 have both landed since the original filing and moved rows the sweep never touched — but
+**REQ-CA-01 itself is still live work, not discharged.** Every disposition below is a *candidate*
+the plan must reproduce at HEAD before acting, not a settled instruction.
 
-## Re-verification at HEAD (`42aad15`) — the mandated first act
+## Re-verification at HEAD (`9f37790`) — the mandated first act
 
 - **Row count:** 256 REQ rows (Item 4 added REQ-CA-12; matches the epic's expected recount).
-- **Status column:** 251 PASS + 4 UNTESTED + 0 DEFERRED. **Note a pre-existing 1-row summary
-  discrepancy:** 251 + 4 = 255 ≠ 256 total. This is the summary-drift mode (memory
-  `verification-matrix-drift-modes` #1/§summary); the end-of-item recount owns reconciling it (see
-  Success Criteria). It is not introduced by this item.
-- **The 4 UNTESTED rows:** REQ-DM-08 (`:168`), REQ-PGD-06 (`:397`), REQ-RES-05 (`:467`),
-  REQ-RES-08 (`:470`). Three (DM-08/RES-05/RES-08) are **Item 3's** rows; PGD-06 is nobody's
-  (its accessor was deleted dead by Item 8). **Item 5 touches none of them.**
-- **All 33 dispositioned rows still exist at HEAD** (grep-confirmed by REQ id at line start). No
-  row vanished; one (CA-01) had its text move under it.
-- **Item 3 coordination confirmed — no double-touch.** Item 3 (`matrix-test-gaps/spec.md`) owns
-  exactly DM-08, RES-05, RES-08 and lands two forced text reframes (DM-08, RES-08). **None of
-  those three REQ ids appears in any of Item 5's 33 rows.** Clean boundary.
-- **Item 4 coordination.** Item 4 (classifier) landed and touched the CA family (added CA-12,
-  reframed CA-01's text). Item 5's CA rows (CA-01, CA-06, CA-07, CA-11) must be re-judged against
-  the *post-Item-4* text — CA-01 is the confirmed drift; CA-06/07/11 read unchanged but the plan
-  re-verifies.
+- **Status column: 255 PASS + 1 UNTESTED + 0 DEFERRED — 255 + 1 = 256, no discrepancy.** Item 3
+  landed (`9f37790`) and flipped REQ-DM-08 and REQ-RES-08 to PASS with new dedicated tests
+  (`test_dm08_enforced_surface.py`, `test_res08_consumer_scope_paths.py`) and REQ-RES-05 to PASS
+  (`test_orchestrator.py::TestInnerStepOrdering`). The **only** remaining UNTESTED row is
+  REQ-PGD-06 (`:397`, dead accessor, nobody's item). The 256-vs-255 summary gap this spec
+  originally flagged (251+4=255≠256, under Item 1/4-era HEAD) is **resolved** — Item 3's PASS
+  flips corrected the undercounted PASS column. The end-of-item recount below stays as a
+  verification step (confirm the row-by-row total still reconciles after this item's own edits),
+  not a discrepancy hunt.
+- **All 33 dispositioned rows still exist at HEAD** (grep-confirmed by REQ id at line start).
+- **Item 3 coordination confirmed — no double-touch.** Item 3 (`matrix-test-gaps/spec.md`) landed
+  DM-08, RES-05, RES-08 with their own new tests and text reframes. **None of those three REQ ids
+  appears in any of Item 5's 33 rows** — checked directly against the current disposition table
+  (17 strengthen + 11 reframe + 5 cite lists below); clean boundary holds post-landing, not just
+  pre-landing.
+- **Item 4 coordination — CA-01 re-checked, reframe still needed.** Item 4 (classifier) landed and
+  touched the CA family (added CA-12; CA-01's text now reads "exactly one of the 5 stable values …
+  the transient sixth, `EXPOSE_CHAIN_TENTATIVE`, never survives the Phase-3b confirm pass to a
+  reader — INV-F"). That INV-F clause is **not a no-op** — no cited test asserts the transient
+  value is absent from reader-facing output after the confirm pass, and
+  `test_classification_exhaustive` (`test_computed_attributes.py:85`) treats
+  `EXPOSE_CHAIN_TENTATIVE` as a *valid* classification member, not an excluded one. **CA-01 stays
+  in the 11-reframe batch, unchanged from the original disposition: drop the INV-F over-claim,
+  reframe to "assign each attr exactly one enum member."** CA-06/07/11 read unchanged at HEAD; the
+  plan re-verifies them same as the rest.
 
 ## Success Criteria
 
@@ -71,8 +79,10 @@ least one of the 33 dispositions is already partly discharged, and every disposi
   stopping rule (see the sweep decision below); every row is dispositioned inline (reframe/cite in
   the same batch) or, where a real strengthen exceeds this item's budget, re-filed **with a named
   count and a matrix pointer**. No row left "not asserted swept."
-- [ ] **Matrix recounted from rows** after everything lands — including Items 3/4's landed moves —
-  and the 256-vs-255 summary discrepancy reconciled; no PASS row pins less than its text (INV-B).
+- [ ] **Matrix recounted from rows** after everything lands, confirming the row-by-row total still
+  reconciles with the summary/index/footer counts (the pre-Item-3 256-vs-255 gap is already
+  resolved — this is a verification step, not a discrepancy hunt); no PASS row pins less than its
+  text (INV-B).
 - [ ] **Suite green; baselines byte-identical** except where a strengthen deliberately adds a
   fixture, which lands under the byte-identity gate as a reviewed capture diff.
 
@@ -119,14 +129,14 @@ entry (the escape valve in Non-Goals), not force-strengthened.
 
 | REQ | Line | Disp | Reframe target (text → what the test checks) | Flags |
 |-----|------|------|----------------------------------------------|-------|
-| REQ-CA-01 | 142 | **REF** | "assign each attr exactly one enum member" (drop the over-claim about INV-F, which is CA-10's job). | ↺HEAD — **text already moved at HEAD** to the "5 stable + transient sixth" wording; re-check whether the reframe is already discharged and this row is a no-op. |
-| REQ-CA-06 | 148 | **REF** | LITERAL path is never exercised (only FORMULA/EXPOSE_ALIAS); reframe to those two, note LITERAL is the design-attr/entry-point path. | ↺HEAD (Item 4 touched CA family — re-verify) |
+| REQ-CA-01 | 142 | **REF** | "assign each attr exactly one enum member" (drop the INV-F over-claim — "the transient sixth… never survives… to a reader" — which is CA-10's job and is unpinned; `test_classification_exhaustive` even treats `EXPOSE_CHAIN_TENTATIVE` as a valid member). | Live work, confirmed at post-Item-3/4 HEAD — not a no-op. Re-verified in the Re-verification section above. |
+| REQ-CA-06 | 148 | **REF** | LITERAL path is never exercised (only FORMULA/EXPOSE_ALIAS); reframe to those two, note LITERAL is the design-attr/entry-point path. | Re-verify against post-Item-4 CA text (unchanged at HEAD per spot-check). |
 | REQ-AST-03 | 92 | **REF** | Cited test pins only the FCE<OE<FRE ordering clause, not literal-before-catch-all (that's AST-08). Reframe to the ordering clause. | |
 | REQ-DM-03 | 163 | **REF** | Compares field-NAME sets only. Reframe to "field name lists" (or strengthen — see below). | |
 | REQ-DM-04 | 164 | **REF** | Checks source file only, not parent class. Reframe to "importable from documented source file." | |
 | REQ-OSR-03 | 380 | **REF** | Template-fidelity only (both sides from same graph), not SysML-source match. Reframe, or add the output-registry PQN test to the citation. | |
 | REQ-SR-06 | 509 | **REF** | Grep-only static. Reframe to "all module types route through the single `_generate_stencils()`." | |
-| REQ-SNAP-18 | 495 | **REF** | Vacuous grep — the `generation_timestamp` token exists nowhere in the repo; the template-var premise is stale. Reframe to a regression guard. | |
+| REQ-SNAP-18 | 495 | **REF** | Vacuous grep — no production render site under `src/sysml_codegen` still passes `generation_timestamp` (the token survives only in the test itself, the matrix row, and `.project/` history; the template that once carried it, `pydantic_schema.py.jinja2`, is deleted); the template-var premise is stale. Reframe to a regression guard. | |
 | REQ-PMM-04 | 424 | **REF** | Asserts valid non-empty Python, not byte-identity vs a pre-migration baseline (that gate ran once at cutover). Reframe to the testable property. | |
 | REQ-PMM-05 | 425 | **REF** | Phased-sequence (add/create/deprecate/remove) is process, not a testable module property. Reframe to importable-variants + unchanged-fields. | |
 | REQ-AS-02 | 76 | **REF** | Strategy-1-before-2 short-circuit shown only via a disjoint fixture (no dual-match partdef); precedence inferred. Reframe, or add a dual-match case. | |
@@ -208,10 +218,10 @@ grep is the contract.
   force-applied.
 - **[HARD]** **Recount from rows, last (memory `verification-matrix-drift-modes`).** The
   summary/index/footer counts are regenerated from the row-by-row reality *after* all dispositions
-  land — and must reflect Items 3 and 4's landed row moves too (UNTESTED drops as Item 3 flips
-  DM-08/RES-05/RES-08). Reconcile the pre-existing 256-vs-255 summary discrepancy in the same
-  pass. Anchor the STATUS count on the status column, not a loose substring (many rows mention
-  other REQ ids / "UNTESTED" in prose).
+  land, confirming the total still reconciles (Item 3 already landed the DM-08/RES-05/RES-08 flips
+  and fixed the summary undercounting — this item's own edits must not reopen that gap). Anchor
+  the STATUS count on the status column, not a loose substring (many rows mention other REQ ids /
+  "UNTESTED" in prose).
 - **[INFERRED]** **DM-09 is one row with two defects, not two.** It appears in both the strengthen
   list (under-pins its text) and the citation list (docstring-only marker). Fix both in its single
   STR row; do not double-count it in the recount or re-file it as a separate citation.
@@ -242,9 +252,6 @@ grep is the contract.
   strengthen is unknown until the read runs. The plan sets the budget line (how many strengthens
   this item absorbs vs. re-files) after the D7 read produces the qualifying list. The decision to
   complete the *read* is fixed; the fix/re-file boundary is a plan-time budget call.
-- **The 256-vs-255 reconciliation mechanism** — whether the fix is correcting the summary PASS to
-  252 or finding an uncounted/mis-statused row. Resolved by the recount script at implement, not
-  guessed here.
 
 ---
 
@@ -259,7 +266,7 @@ grep is the contract.
     (`§The ~175-Row Sweep`) and the count-recount method.
   - Memory `verification-matrix-drift-modes` — recount-from-rows discipline; the drift modes
     (summary off-by-one, index counts, PASS-pins-narrower).
-  - `docs/architecture/verification-matrix.md` @ `42aad15` — recounted here.
+  - `docs/architecture/verification-matrix.md` @ `9f37790` — recounted here.
 - **Coordinated sibling:** `.project/active/matrix-test-gaps/spec.md` (Item 3) — owns DM-08,
   RES-05, RES-08; boundary confirmed disjoint.
 - **Plan:** `.project/active/matrix-sweep-residue/plan.md` (to be created — Item 5 skips design per
@@ -269,7 +276,7 @@ grep is the contract.
 
 **Next Steps:** After approval, proceed to `/_my_plan`. The plan must (1) produce the exact D7
 qualifying residue list by grep-minus-swept-minus-dispositioned; (2) sequence the 17 strengthens
-with their mutation spot-checks and byte-identity-gate captures; (3) batch the 11 reframes (CA-01
-re-checked for no-op) and the 5 citations as byte-safe edits; (4) set the residue fix/re-file
-budget line; (5) recount from rows last, reconciling the 256-vs-255 discrepancy and Items 3/4's
-landed moves.
+with their mutation spot-checks and byte-identity-gate captures; (3) batch the 11 reframes
+(including CA-01, confirmed live work, not a no-op) and the 5 citations as byte-safe edits; (4) set
+the residue fix/re-file budget line; (5) recount from rows last, confirming the total still
+reconciles after this item's own edits (the pre-Item-3 256-vs-255 gap is already resolved).
