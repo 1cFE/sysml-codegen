@@ -1,7 +1,7 @@
 # Epic: Truth-Debt Retirement
 
 **Epic ID**: TRUTH-DEBT
-**Status**: Draft
+**Status**: ✅ Completed (2026-07-08, orchestrated run — all 6 items implemented and audited)
 **Priority**: P2 (Medium)
 **Created**: 2026-07-06
 **Estimated Effort**: ~7–9.5 days (6 items; one 2-item critical path, four parallel)
@@ -70,18 +70,31 @@ and the deferred capabilities are built, not parked.
   independently-anchored pinning test; their matrix rows flip UNTESTED→PASS. Audited PASS
   (`.project/active/matrix-test-gaps/audit.md`); gate counts and mutation red→green not
   re-executed (sandbox-blocked), static tracing confirms everything else.
-- [ ] **SC-D (classifier)**: the Step-2b owning-part prefix check accepts a
+- [x] **SC-D (classifier)**: the Step-2b owning-part prefix check accepts a
   supertype-namespace QN; the parametrized xfail site (`test_computed_attributes.py:787`)
-  flips to PASS (5 cases); REQ text + matrix rows move in the same change.
-- [ ] **SC-E (sweep residue)**: REQ-EC-04 and REQ-AS-06 strengthened; the 17-strengthen list
+  flips to PASS (5 cases); REQ text + matrix rows move in the same change. Audited PASS
+  (`.project/active/classifier-fix/audit.md`); xfails 5→0 via `_ancestor_part_qns`
+  transitive heritage walk; Step-2b mutation RED→GREEN run live.
+- [x] **SC-E (sweep residue)**: REQ-EC-04 and REQ-AS-06 strengthened; the 17-strengthen list
   judged at spec; the 11 REQ-text reframes landed as one byte-safe batch; the 5 citation
   fixes landed; the ~46 unswept rows either completed or re-filed with a named count.
-- [ ] **SC-F (hygiene tail)**: the four D3 silent sites hardened family-style (fires-on-shape
+  Audited PASS-with-findings (`.project/active/matrix-sweep-residue/audit.md`): EC-04/AS-06
+  mutation-proven; 16 of 17 strengthens landed, REQ-PGD-03 honestly reclassified (audit
+  confirmed the "one group per file" claim fails on real fixtures); 32-row sweep residue
+  re-filed with a named count as `[ITEM5-SWEEP-RESIDUE-OVERFLOW]`.
+- [x] **SC-F (hygiene tail)**: the four D3 silent sites hardened family-style (fires-on-shape
   + silent-on-clean); INV-6 "clean fixtures generate with zero WARNINGs" preserved.
+  Audited PASS-with-findings (`.project/active/hygiene-tail/audit.md`): sites 1/2/3
+  hardened (loader chokes, whole-token agg compile, registry WARN), all 4 mutation probes
+  RED→GREEN live; site 4 reclassified with evidence (fires on 5/15 real fixtures, so a
+  WARN would break INV-6) and filed as `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`.
 - [x] **SC-G (typing)**: the graph_builder `param_groups` double-binding split (dead Step-5
   computation removed if confirmed); the two type-ignores cleared; **mypy ≤ 104**.
-- [ ] **SC-H (gates)**: full suite green; ruff ≤ 17; mypy ≤ 104; all baseline churn via
+- [x] **SC-H (gates)**: full suite green; ruff ≤ 17; mypy ≤ 104; all baseline churn via
   `scripts/capture_*.py` with reviewed diffs; matrix recounted from rows, not the summary.
+  At epic HEAD: suite **2120 passed / 4 skipped / 0 xfailed**; ruff src **17**; mypy src
+  **97**; matrix recount from rows **259 = 258 PASS + 1 UNTESTED** (REQ-PGD-06); all
+  re-captures (Items 2/4) via capture scripts with byte-identity gates, zero timestamp churn.
 
 ---
 
@@ -565,15 +578,51 @@ Item 6 (hygiene tail) ── independent; before PUSH-DOWN
 
 ## Lessons Learned (Post-Completion)
 
-*Fill in after epic is complete.*
+**What Went Well**:
+- **Reclassification as a first-class outcome paid off twice.** Item 5's REQ-PGD-03 ("one
+  group per file" is false on real fixtures) and Item 6's site 4 (the "silent" shape fires on
+  5/15 real fixtures, so a WARN would break INV-6) were both caught by the R4
+  reproduce-before-fix gate and filed instead of force-fixed. Both audits independently
+  confirmed the reclassifications were correct calls, not dodges.
+- **Phase-0 reproduce gates (Item 6) and disposition tables (Item 5) made the audits cheap.**
+  When the evidence for each decision is recorded at decision time, the auditor traces
+  rather than re-derives.
+- **Live mutation probes closed the sandbox gap.** Delegated audit sessions ran read-only;
+  each audit specified exact mutations (file/line/edit + expected failing test) and the
+  orchestrator ran them live. Every requested probe went RED under mutation, GREEN after
+  revert — no vacuous test slipped through.
+- **Byte-identity held the whole way.** The F4 cutover (Item 1), both re-captures (Items
+  2/4), and the sweep-flagged strengthens (CA-07/CA-11/SR-05, done at unit level instead of
+  via new fixtures) produced zero baseline churn outside the reviewed capture-script diffs.
 
-**What Went Well**: TBD
-**What Could Improve**: TBD
-**Surprises**: TBD
+**What Could Improve**:
+- **Usage limits shaped the run more than any technical risk.** The weekly limit killed two
+  opus sessions mid-stage; the monthly limit killed Item 6's implement at turn 126. Recovery
+  worked (resume the session, or the orchestrator does the stage inline), but future
+  orchestrated runs should start on sonnet for subtasks (as this one did after the first
+  hit) and keep stage sessions short enough to lose little on a cut.
+- **Headless sessions can't wait.** Two sessions ended by "scheduling a check-back" or
+  "pausing for background agents" — patterns that silently terminate a headless run. Stage
+  briefs should say up front: work synchronously, never pause.
+- **Epic-level SC boxes drifted behind item-level status.** Item audits updated their own
+  entries but not the epic's Success Criteria; the close-out had to reconcile. Item briefs
+  should name the epic boxes they discharge.
+
+**Surprises**:
+- **Item 5's honest residue arithmetic**: the "~46 unswept rows" from the spec turned out to
+  be 32 once computed exactly (232 D7-qualifying − 167 swept − 33 dispositioned); the named
+  re-file beat a padded "completed" claim.
+- **REQ-OR-03's warning is builder-level, not per-call** — the planned per-`register_alias`
+  assertion would have pinned something false; the implement session caught it and tested
+  both levels at their real call sites.
+- **The matrix footer's "62 distinct test files" was stale independent of this epic**, and
+  the per-directory split (44/18) was unreproducible because some file names exist in two
+  test directories; the close-out dropped the split rather than fake it.
 
 ---
 
-**Last Updated**: 2026-07-06
-**Next Action**: User review of scope and decomposition; then spec Item 1 (F4 cutover — the
-critical-path head) and, in parallel, Item 4 (classifier) and Item 6 (hygiene) as the
-no-dependency items.
+**Last Updated**: 2026-07-08
+**Next Action**: Human review of the branch (`truth-debt-epic`), then `/_my_close` and PR.
+Residue is filed, not hidden: `[ITEM5-SWEEP-RESIDUE-OVERFLOW]` (32 rows),
+`[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`, `[DM08-MODEL-FIELD-TYPING]`,
+`[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` (pre-existing), and the Item-1 deferral ledger.

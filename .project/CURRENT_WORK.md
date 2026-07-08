@@ -1,38 +1,41 @@
 # Current Work
 
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-08
 
 ---
 
 ## Active Work
 
-### TRUTH-DEBT Item 1 — F4 Aggregation-Resolution Cutover — ✅ certified PASS-WITH-NOTES (2026-07-06)
+### TRUTH-DEBT epic — ✅ COMPLETE (all 6 items implemented and audited, 2026-07-08)
 
-**Audit:** `.project/active/f4-cutover/audit.md`. All 7 phases + SC-A/SC-G verified (code + git).
-Byte-identity is git-proven (zero fixture churn across the whole impl range). One caveat: gate
-counts (2072/4/5, ruff 17, mypy 97) and the mutation spot-check are **static-only** — pytest/mypy/
-ruff were sandbox-blocked (approval-gated), so re-run the full gates once on a machine with
-execution access to convert those legs from static to executed. One cosmetic test nit (F1).
+Orchestrated run on branch `truth-debt-epic` (2026-07-06..08). All six items landed with
+per-item audits (PASS or PASS-with-findings, none blocking); every SC box checked in
+`.project/backlog/epic_truth_debt.md`, Lessons Learned filled.
 
+- **Item 1 (F4 cutover)**: live aggregation path = `resolve_input(AGG_STRATEGIES)`, Strategy D
+  + `_resolve_aggregation_input_channel` deleted; param_groups typing split; mypy 104→97.
+- **Item 2 (multi-hop chains)**: extraction emits full-path CHAIN; backtracker Step CLIMB with
+  distinct-channel refuse guard; loud Step-4 WARNING; live/offline parity green.
+- **Item 4 (classifier)**: Step-2b accepts ancestor-PartDef prefixes (`_ancestor_part_qns`);
+  the 5 xfails flipped to PASS; suite xfail count now 0.
+- **Item 3 (test gaps)**: DM-08 (AST-scan), RES-05 (inner-step ordering), RES-08 (four-leg
+  scope paths) pinned; rows UNTESTED→PASS.
+- **Item 6 (hygiene tail)**: loader load-bearing-field chokes, whole-token aggregation
+  compile (`cost`/`cost_total` fix), registry unmapped-type WARN; site 4 reclassified with
+  evidence (`[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`); all mutation probes RED→GREEN live.
+- **Item 5 (sweep residue)**: EC-04/AS-06 mutation-proven; 16/17 strengthens (PGD-03 honestly
+  reclassified — "one group per file" is false on real fixtures); 12 reframes; 5 citation
+  fixes; 32-row sweep remainder filed as `[ITEM5-SWEEP-RESIDUE-OVERFLOW]`.
 
-Critical-path head of TRUTH-DEBT. Wire the live aggregation path through
-`resolve_input(AGG_STRATEGIES)`, delete `_resolve_aggregation_input_channel` + Strategy D,
-and fold in the graph_builder `param_groups` typing split. Spec:
-`.project/active/f4-cutover/spec.md`.
+**Gates at epic HEAD (run live)**: suite **2120 passed / 4 skipped / 0 xfailed**; ruff src
+**17**; mypy src **97**; matrix **259 = 258 PASS + 1 UNTESTED** (recounted from rows);
+baselines byte-identical throughout (all re-captures via capture scripts).
 
-### TRUTH-DEBT epic — 📋 SCOPED (Draft, 2026-07-06) — next up
-
-Retires the PIPELINE-TRUTH follow-on ledger in one epic (P2, ~7–9.5 days, 6 items). Absorbs
-the seven filings PIPELINE-TRUTH deliberately parked: F4 aggregation cutover (+ the
-graph_builder param-group typing, folded in), resolved multi-hop chain bindings, the three
-matrix test-gaps (DM-08/RES-05/RES-08), the inherited-attr classifier fix (flip the 5 xfails),
-the matrix sweep residue, and the D3 hygiene tail. No discovery sweep — every item carries
-implement-time evidence (probes, pins, filings with file:line). Carries R1–R4 forward verbatim.
-**Sequencing: lands before PUSH-DOWN** (Items 1/2/6 touch surfaces PUSH-DOWN moves).
-
-Epic doc: `.project/backlog/epic_truth_debt.md`. **Next action:** user review of scope +
-decomposition, then spec Item 1 (F4 cutover — critical-path head) plus Items 4 (classifier) and
-6 (hygiene) as the no-dependency parallel heads.
+**Human actions**: review the branch, then `/_my_close` + PR. Filed residue:
+`[ITEM5-SWEEP-RESIDUE-OVERFLOW]`, `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`,
+`[DM08-MODEL-FIELD-TYPING]`, `[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` (pre-existing stale
+baseline, reproduces on the parent commit). PUSH-DOWN is now unblocked (its gate was
+Items 1/2/6).
 
 ### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
 
