@@ -1544,12 +1544,21 @@ def _build_aggregation_module(
         ))
         ref_to_inputs[l_term.attribute_name] = f"inputs.{l_term.attribute_name}"
 
-    # Compile expression: replace symbolic refs with inputs.X form
+    # Compile expression: replace symbolic refs with inputs.X form.
+    # Word-boundary substitution (not a plain .replace()): a naive substring
+    # replace re-corrupts itself when one ref is a substring of another, e.g.
+    # refs {cost, cost_total} — substituting cost_total first still leaves a
+    # bare "cost" inside the already-substituted "inputs.cost_total", and a
+    # subsequent .replace("cost", ...) matches it, producing
+    # "inputs.inputs.cost_total". \b anchors each ref to a whole token so a
+    # later pass can never match inside an earlier substitution's output.
     compiled_expression: str | None = None
     if not agg.expression.has_unsupported_nodes and agg.expression.transformed_expression:
         compiled = agg.expression.transformed_expression
         for ref in sorted(ref_to_inputs, key=len, reverse=True):
-            compiled = compiled.replace(ref, ref_to_inputs[ref])
+            # ref_to_inputs values are always "inputs.{identifier}" (built above from
+            # sanitized param names), so plain re.sub backslash-escaping never applies.
+            compiled = re.sub(rf"\b{re.escape(ref)}\b", ref_to_inputs[ref], compiled)
         compiled_expression = compiled
 
     # Single output

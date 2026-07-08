@@ -393,20 +393,25 @@ def test_disjoint_ref_names_unchanged(caplog):             # silent-on-clean / n
 ### Changes Required
 **See spec** Problem site 2 (corruption walkthrough), Open Questions (site-2 mitigation form),
 "R4 Reproduce-First" site 2.
-- [ ] `src/sysml_codegen/resolution/graph_builder.py:1530-1536` — apply the Phase-0-chosen
-      mechanism: token-boundary replace (word-level / `\b`), a placeholder pass, or a
-      diagnostic-only tripwire. Whichever, it must not change the compiled output for disjoint
-      ref sets (byte-identical baselines).
-- [ ] `tests/unit/test_hygiene_tail_agg_compile.py` (NEW) — fires/corrupts-on-nested-name +
+- [x] `src/sysml_codegen/resolution/graph_builder.py:~1547-1558` — applied the word-boundary
+      mechanism: `re.sub(rf"\b{re.escape(ref)}\b", ref_to_inputs[ref], compiled)` in place of
+      the plain `.replace()`. Does not change the compiled output for disjoint ref sets
+      (byte-identical baselines).
+- [x] `tests/unit/test_hygiene_tail_agg_compile.py` (NEW) — fires/corrupts-on-nested-name +
       unchanged-on-disjoint. Independent anchor: the hand-written expected compiled string.
-- [ ] If reclassified: add the synthetic fixture pin (or the re-file entry) recorded in Phase 0;
-      no `graph_builder.py` behavior change beyond the tripwire.
+- [x] Not reclassified (Phase 0 verdict: FIX, real reproduce, 0 corpus hits) — n/a.
 
 ### Validation
-- [ ] `uv run pytest tests/unit/test_hygiene_tail_agg_compile.py` → pass
-- [ ] `uv run pytest tests/conformance/test_baselines.py` → pass (disjoint-ref aggregations —
-      the whole covered corpus — compile byte-identically)
-- [ ] `ruff`/`mypy` on `src/sysml_codegen/resolution/graph_builder.py` → no new findings
+- [x] `uv run pytest tests/unit/test_hygiene_tail_agg_compile.py` → pass (2 passed)
+- [x] `uv run pytest tests/conformance/test_baselines.py` → pass (16 passed; disjoint-ref
+      aggregations — the whole covered corpus — compile byte-identically)
+- [x] `uv run pytest tests/unit/test_graph_builder_aggregation.py` → pass (39 passed, no
+      regression)
+- [x] `ruff`/`mypy` on `src/sysml_codegen/resolution/graph_builder.py` → no new findings (first
+      lambda-based attempt introduced a new mypy `Cannot infer type of lambda` finding; replaced
+      with a plain `re.sub` string replacement — `ref_to_inputs` values are always
+      `"inputs.{identifier}"`, never containing backslash-escape sequences, so no lambda is
+      needed to guard against `re.sub` backreference interpretation)
 
 **What We Know Works After This Phase:** a nested-attribute-name aggregation no longer silently
 corrupts (or trips a loud tripwire); disjoint-name aggregations are byte-identical.
@@ -520,6 +525,13 @@ reachability scan; silent-on-clean with `"float"`). No deviations.
 `BACKLOG.md` `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`. No production or test file touched
 in this phase; only the plan itself records the disposition.
 ### Phase 4 Completion (Site 2)
+**Completed:** 2026-07-07. Replaced the `.replace()` loop in `_build_aggregation_module`'s
+compile step with a word-boundary `re.sub`. 2 new tests (nested-name no-corrupt,
+disjoint-name unchanged); full existing aggregation suite (39 tests) and baselines (16 tests)
+still pass. One deviation: initial fix used a lambda-with-default-arg replacement to dodge
+`re.sub`'s backslash-escape handling in the replacement string; mypy flagged
+`Cannot infer type of lambda`, so switched to a plain string replacement (safe here since
+substitution values are always sanitized `inputs.{identifier}` strings).
 
 ---
 
