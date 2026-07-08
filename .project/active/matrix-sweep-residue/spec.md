@@ -63,27 +63,27 @@ the plan must reproduce at HEAD before acting, not a settled instruction.
 
 ## Success Criteria
 
-- [ ] **The high-value pair is strengthened and mutation-proven.** REQ-EC-04 (the expression
+- [x] **The high-value pair is strengthened and mutation-proven.** REQ-EC-04 (the expression
   compiler's internal parse-and-raise gate, `expression_compiler.py:217-223`, currently unpinned)
   and REQ-AS-06 (resolve-before-register gate; 40 of 41 aliases could be unresolvable and still
   pass) each gain an assertion that **fails under a deliberate mutation of the gate it now pins**
   (delete the gate / make an alias unresolvable → red).
-- [ ] **The 17-strengthen list is fully judged and dispositioned** per the table below — each row
+- [x] **The 17-strengthen list is fully judged and dispositioned** per the table below — each row
   either strengthened (assertion truly missing) or reframed (text over-claims), re-verified at
   HEAD, with byte-identity-gate flags on the fixture/regen-touching ones.
-- [ ] **The 11 reframes land as one byte-safe batch** (text-only edits, no code, baselines
+- [x] **The 11 reframes land as one byte-safe batch** (text-only edits, no code, baselines
   byte-identical) — with CA-01 re-checked for already-discharged.
 - [ ] **The 5 citation fixes land** (`# REQ-*` markers added / re-cited to the test that actually
   pins the claim).
-- [ ] **The ~46 unswept rows are decided:** the sweep's *read* is completed under the D7 leash +
+- [x] **The ~46 unswept rows are decided:** the sweep's *read* is completed under the D7 leash +
   stopping rule (see the sweep decision below); every row is dispositioned inline (reframe/cite in
   the same batch) or, where a real strengthen exceeds this item's budget, re-filed **with a named
   count and a matrix pointer**. No row left "not asserted swept."
-- [ ] **Matrix recounted from rows** after everything lands, confirming the row-by-row total still
+- [x] **Matrix recounted from rows** after everything lands, confirming the row-by-row total still
   reconciles with the summary/index/footer counts (the pre-Item-3 256-vs-255 gap is already
   resolved — this is a verification step, not a discrepancy hunt); no PASS row pins less than its
   text (INV-B).
-- [ ] **Suite green; baselines byte-identical** except where a strengthen deliberately adds a
+- [x] **Suite green; baselines byte-identical** except where a strengthen deliberately adds a
   fixture, which lands under the byte-identity gate as a reviewed capture diff.
 
 ## The disposition table (THIS IS THE CONTRACT for the plan)

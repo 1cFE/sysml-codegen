@@ -381,7 +381,7 @@ flipped xfails; matrix/REQ updates.
 
 ---
 
-### Item 5: Matrix Sweep Residue [1.5–2 days]
+### Item 5: Matrix Sweep Residue [1.5–2 days] ✅
 
 **Type**: Testing / Documentation
 **Effort**: 1.5–2 days (spec 2h, plan 1h, execute 8–11h) — fit: high (every row carries its
@@ -420,11 +420,11 @@ the same honesty discipline — no row left pinning less than its text, no silen
 - The three test-gap rows (Item 3) and the classifier rows (Item 4).
 
 **Success Criteria**:
-- [ ] REQ-EC-04 and REQ-AS-06 strengthened (each fails under a deliberate mutation of the gate
+- [x] REQ-EC-04 and REQ-AS-06 strengthened (each fails under a deliberate mutation of the gate
   it now pins); the 17-strengthen list fully judged.
-- [ ] 11 reframes + 5 citation fixes landed; baselines byte-identical.
-- [ ] The ~46 unswept rows completed OR re-filed with a named count and pointer.
-- [ ] Matrix recounts from rows; no PASS row pins less than its text.
+- [x] 11 reframes + 5 citation fixes landed; baselines byte-identical.
+- [x] The ~46 unswept rows completed OR re-filed with a named count and pointer.
+- [x] Matrix recounts from rows; no PASS row pins less than its text.
 
 **Required Reading**: BACKLOG `[ITEM7-MATRIX-SWEEP-RESIDUE]` (the full row-by-row list);
 `.project/active/matrix-truth/design.md` (the leashed-sweep heuristics + stopping rule); memory
