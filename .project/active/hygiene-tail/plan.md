@@ -327,28 +327,38 @@ def test_resolvable_transitive_default_no_warn(caplog):    # silent-on-clean
     assert _warns(caplog) == []
 ```
 
-### Changes Required
-**See spec** Problem site 4; `reference/10-output-registry.md` (Phase 4 semantics),
-`reference/12-virtual-binding-rewrite.md`.
-- [ ] `src/sysml_codegen/orchestration/output_registry_builder.py:363-367` — add an `else` after
-      the `if resolved:` that `logger.warning`s the dropped alias, matching the Phase-2/3 message
-      shape (alias key + unresolved `val`).
-- [ ] `tests/unit/test_hygiene_tail_output_registry.py` (NEW) — fires-on-shape + silent-on-clean;
-      model the fires test on the existing Phase-2/3 warn tests.
+### Changes Required — SUPERSEDED BY PHASE 0 RECLASSIFICATION
 
-### Validation
-- [ ] `uv run pytest tests/unit/test_hygiene_tail_output_registry.py` → pass
-- [ ] `uv run pytest tests/conformance/test_baselines.py` → pass
-- [ ] Re-confirm at pickup: if Item 2 has merged, the reproduce fixture's dotted path still fails
-      all three lookups (else pick a still-unresolvable path).
-- [ ] `ruff`/`mypy` on the touched file → no new findings
+**Not implemented.** Phase 0's corpus-scan gate found the naive predicate (unresolved
+transitive default) already firing on 5/15 real `SNAPSHOT_MODELS` fixtures today — a
+mechanical sibling-copy `logger.warning` here would break INV-6 [HARD] on those 5
+fixtures immediately, not just in theory. This is the same gap already deferred
+(undocumented) at `analysis/parameter_groups.py:672-682`. See
+`.project/active/hygiene-tail/probes/verdict.md` (Site 4) and `BACKLOG.md`
+`[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]` for full evidence and reasoning.
 
-**What We Know Works After This Phase:** an unresolved transitive alias is as loud as its Phase-2/3
-siblings; a resolvable one stays silent.
+- [x] ~~`src/sysml_codegen/orchestration/output_registry_builder.py:363-367` — add an `else`~~
+      — **not done**; not INV-6-safe as scoped (see above).
+- [x] ~~`tests/unit/test_hygiene_tail_output_registry.py` (NEW)~~ — **not created**; no code
+      change to test.
+- [x] Reclassification recorded in `BACKLOG.md` and the discovery register (§D3) — R4 audit
+      trail complete (done at Phase 0, cross-referenced here).
 
-**Commit:** `git add src/sysml_codegen/orchestration/output_registry_builder.py
-tests/unit/test_hygiene_tail_output_registry.py` → `feat(item6 site4): warn on dropped Phase-4
-transitive alias (R4)`.
+### Validation — N/A (no code change)
+
+**What We Know Works After This Phase:** Site 4's silent gap is real and already occurring on
+5 real fixtures, but a mechanical single-choke fix is not safe to ship — it needs a
+cross-derivation EP-omission check spanning `output_registry_builder.py` Phase 4 and
+`parameter_groups.py`'s design-attribute derivation, which is design-level work. Filed, not
+forced (R4).
+
+**Commit:** `git add .project/active/hygiene-tail/plan.md` → `chore(item6 site4): record
+Phase-4 reclassification disposition (no code change, R4)`.
+
+<!-- Original (superseded) commit line, kept for plan-history traceability:
+git add src/sysml_codegen/orchestration/output_registry_builder.py
+tests/unit/test_hygiene_tail_output_registry.py -> feat(item6 site4): warn on dropped Phase-4
+transitive alias (R4). -->
 
 ---
 
@@ -506,6 +516,9 @@ warning on an unmapped `python_type` for a `field_name="root"` exit point. 2 new
 (fires-on-shape with a constructed `"Any"` module — latent-tripwire pin per Phase 0's
 reachability scan; silent-on-clean with `"float"`). No deviations.
 ### Phase 3 Completion (Site 4)
+**Completed:** 2026-07-07. **Reclassified, no code change** — see Phase 0 verdict and
+`BACKLOG.md` `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`. No production or test file touched
+in this phase; only the plan itself records the disposition.
 ### Phase 4 Completion (Site 2)
 
 ---
