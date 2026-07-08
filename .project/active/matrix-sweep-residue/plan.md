@@ -240,46 +240,46 @@ default — unless the stronger assertion trivially falls out of an *existing* f
 fixture authored (spec's explicit rule: do not manufacture a fixture to upgrade these two).
 
 ### R4 Reproduction (do first)
-- [ ] Re-verify all 11 rows' current matrix text against HEAD (line numbers may have shifted —
+- [x] Re-verify all 11 rows' current matrix text against HEAD (line numbers may have shifted —
   the spec's line refs are `:142, :148, :92, :163, :164, :380, :509, :495, :424, :425, :76`).
-- [ ] Re-confirm CA-01 specifically: per the spec's revision (post spec-review), the INV-F clause
+- [x] Re-confirm CA-01 specifically: per the spec's revision (post spec-review), the INV-F clause
   is still live at HEAD and the reframe is a real edit, not a no-op. One grep check:
   `grep -n "EXPOSE_CHAIN_TENTATIVE" docs/architecture/verification-matrix.md tests/conformance/test_computed_attributes.py` —
   confirm the row still asserts INV-F and the test still treats the value as a valid member.
-- [ ] For DM-03 and AS-02: check whether an existing fixture already supports the stronger
+- [x] For DM-03 and AS-02: check whether an existing fixture already supports the stronger
   assertion (dual-match partdef for AS-02; type/optionality comparison for DM-03) without new
   authoring. If yes, note it — but default to reframe per spec's rule unless it's truly free.
 
 ### Changes Required
 **File:** `docs/architecture/verification-matrix.md` — 11 row-text edits, one per spec table B row:
-- [ ] REQ-CA-01 (`:142`) → "assign each attr exactly one enum member" (drop INV-F clause).
-- [ ] REQ-CA-06 (`:148`) → scope to FORMULA/EXPOSE_ALIAS; note LITERAL is the design-attr/entry-point path.
-- [ ] REQ-AST-03 (`:92`) → scope to the FCE<OE<FRE ordering clause.
-- [ ] REQ-DM-03 (`:163`) → "field name lists" (unless free strengthen found above).
-- [ ] REQ-DM-04 (`:164`) → "importable from documented source file."
-- [ ] REQ-OSR-03 (`:380`) → template-fidelity scope (or add the output-registry PQN citation — spec
+- [x] REQ-CA-01 (`:142`) → "assign each attr exactly one enum member" (drop INV-F clause).
+- [x] REQ-CA-06 (`:148`) → scope to FORMULA/EXPOSE_ALIAS; note LITERAL is the design-attr/entry-point path.
+- [x] REQ-AST-03 (`:92`) → scope to the FCE<OE<FRE ordering clause.
+- [x] REQ-DM-03 (`:163`) → "field name lists" (unless free strengthen found above).
+- [x] REQ-DM-04 (`:164`) → "importable from documented source file."
+- [x] REQ-OSR-03 (`:380`) → template-fidelity scope (or add the output-registry PQN citation — spec
   leaves this open; default to the cheaper reframe unless the citation add is trivial).
-- [ ] REQ-SR-06 (`:509`) → "all module types route through the single `_generate_stencils()`."
-- [ ] REQ-SNAP-18 (`:495`) → regression-guard framing; per spec-review L4-1, use the corrected
+- [x] REQ-SR-06 (`:509`) → "all module types route through the single `_generate_stencils()`."
+- [x] REQ-SNAP-18 (`:495`) → regression-guard framing; per spec-review L4-1, use the corrected
   rationale ("no production render site under `src/sysml_codegen` still passes
   `generation_timestamp`; the carrying template `pydantic_schema.py.jinja2` is deleted") — not
   "the token exists nowhere in the repo" (it still appears in the test itself and `.project/` docs).
-- [ ] REQ-PMM-04 (`:424`) → the testable property (valid non-empty Python), drop the
+- [x] REQ-PMM-04 (`:424`) → the testable property (valid non-empty Python), drop the
   byte-identity-vs-pre-migration-baseline claim.
-- [ ] REQ-PMM-05 (`:425`) → importable-variants + unchanged-fields, drop the phased-sequence claim.
-- [ ] REQ-AS-02 (`:76`) → scope to the observed precedence (unless a dual-match fixture already
+- [x] REQ-PMM-05 (`:425`) → importable-variants + unchanged-fields, drop the phased-sequence claim.
+- [x] REQ-AS-02 (`:76`) → scope to the observed precedence (unless a dual-match fixture already
   exists — else reframe).
 
 ### Validation
 **Automated:**
-- [ ] `git diff docs/architecture/verification-matrix.md` — confirm this commit touches *only* the
+- [x] `git diff docs/architecture/verification-matrix.md` — confirm this commit touches *only* the
   11 rows' text (no accidental line drift elsewhere).
-- [ ] Full suite → unaffected (doc-only change; suite should be a no-op run, but run it anyway to
+- [x] Full suite → unaffected (doc-only change; suite should be a no-op run, but run it anyway to
   confirm no accidental co-edit).
-- [ ] Byte-identity check on all baselines → must show **zero** diff (this phase is doc-only).
+- [x] Byte-identity check on all baselines → must show **zero** diff (this phase is doc-only).
 
 **Manual:**
-- [ ] Spot-read all 11 edited rows once more against their cited tests post-edit — confirm INV-B
+- [x] Spot-read all 11 edited rows once more against their cited tests post-edit — confirm INV-B
   (no PASS row pins less than its now-reframed text).
 
 **What We Know Works After This Phase:** 11 rows no longer over-claim; baselines untouched.
@@ -569,6 +569,20 @@ commits — zero baseline/fixture diff across all of Phase 2, including the 3 ro
 flagged ⚠BI.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-08. Commit `860e4de`.
+
+Landed all 11 spec-named reframes plus PGD-03 (12 total, folded in per the Phase 2 note) as one
+text-only batch. DM-03 and AS-02 stayed reframes (the default) -- checked both for a free
+strengthen first: DM-03's `_pydantic_field_names` helper compares names only (no
+type/optionality), and AS-02 has no dual-match part-def fixture to exercise the short-circuit
+directly, so neither had a stronger assertion falling out for free. CA-01 confirmed live work
+(not a no-op) per the spec's own re-verification. SNAP-18 used spec-review's corrected
+rationale verbatim.
+
+**Validation:** full suite 2120/4 unaffected (doc-only). `git status` clean on
+`tests/fixtures/baseline_outputs/` -- zero baseline touch. Diff scoped to exactly the 12 rows
+(`git diff --stat` shows only `verification-matrix.md`, 12 insertions/12 deletions).
+
 ### Phase 4 Completion
 ### Phase 5 Completion
 (residue exact count from step 5.0, rows landed vs. re-filed, stopping-rule trigger point)
