@@ -12,7 +12,6 @@ from dataclasses import dataclass
 import pytest
 
 from sysml_codegen.core.identifier_types import derive_module_type, make_scoped_key
-from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import (
     build_element_qualified_name,
     build_parameter_qualified_name,

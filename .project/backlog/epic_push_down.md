@@ -149,7 +149,7 @@ item closes.
 
 **Deliverables**: `.project/active/expression-reconstruction-push-down/{spec,design,plan}.md`
 
-### Item 2: Qualified-Name Utility Split
+### Item 2: Qualified-Name Utility Split ✅
 
 **Type**: Code/Integration
 **Effort**: 1–1.5 days
@@ -167,9 +167,9 @@ item closes.
 **Out of Scope**: Parameter/module/channel builders and `owning_part_leaf` (codegen alias/scoping policy).
 
 **Success Criteria**:
-- [ ] The shared API contains only the general subset; codegen builders remain local.
-- [ ] Name-profile validation impact is implemented or filed with fixture shapes and severity.
-- [ ] Both suites pass; baselines are byte-identical.
+- [x] The shared API contains only the general subset; codegen builders remain local.
+- [x] Name-profile validation impact is implemented or filed with fixture shapes and severity.
+- [x] Both suites pass; baselines are byte-identical.
 
 **Deliverables**: `.project/active/qualified-name-utility-split/{spec,design,plan}.md`
 

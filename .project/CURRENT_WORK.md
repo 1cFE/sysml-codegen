@@ -6,6 +6,27 @@
 
 ## Active Work
 
+### PUSH-DOWN Item 2 — Qualified-Name Utility Split — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Artifacts:
+`.project/active/qualified-name-utility-split/{spec,spec-review,design,design-review,plan}.md`.
+Spec review and design review are both Approved. Implementation is complete on the full
+PUSH-DOWN epic branch in both repos, with no item-level PR closeout.
+
+Moved pure qualified-name helpers into `agentic_mbse.sysml.qualified_names`; sysml-codegen now keeps
+`sysml_codegen.core.qualified_names` as a compatibility shim and retains codegen-owned module,
+channel, parameter, and owning-part builders locally. The `ITEM-SYNC-C8` backlog row was updated
+instead of duplicated: the shared sanitizer dependency is gone, while the sibling-scope Level-6
+collision collector remains filed.
+
+Validation: agentic-mbse targeted qualified-name suite `21 passed`; agentic-mbse full suite
+`1268 passed, 1 skipped, 33 deselected`; sysml-codegen targeted naming/shim suite `52 passed`;
+sysml-codegen full suite `2122 passed, 4 skipped`; touched-file ruff clean in both repos;
+sysml-codegen `ruff check src/` clean; `git diff -- tests/fixtures` empty. Remaining caveat:
+project-wide mypy baselines are still dirty outside this item (agentic-mbse 107, sysml-codegen 98).
+Audit: `.project/active/qualified-name-utility-split/audit.md` certifies the item. Next: continue
+PUSH-DOWN Item 3.
+
 ### PUSH-DOWN Item 1 — Expression Reconstruction Push-Down — CERTIFIED
 
 Artifacts: `.project/active/expression-reconstruction-push-down/{spec,spec-review,design,design-review,plan}.md`.
