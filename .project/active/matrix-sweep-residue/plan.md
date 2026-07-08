@@ -160,61 +160,61 @@ land without baseline churn.
 ### Rows (grouped by risk, not by table order — no-fixture rows first, fixture-touching last)
 
 **No new fixture, no baseline risk (do first):**
-- [ ] REQ-EPC-07 (`:211`) — deep-compare all 5 purity inputs against fresh copies.
-- [ ] REQ-ORCH-05 (`:368`) — set-membership over count floor (`test_orchestrator.py`).
-- [ ] REQ-ORCH-02 (`:365`) — observe the `binding_type` mutation, not just call order.
-- [ ] REQ-ORCH-06 (`:369`) — STR + CITE: re-cite REQ-PIPE-07 **and** assert `ctx.computation_graph`
+- [x] REQ-EPC-07 (`:211`) — deep-compare all 5 purity inputs against fresh copies.
+- [x] REQ-ORCH-05 (`:368`) — set-membership over count floor (`test_orchestrator.py`).
+- [x] REQ-ORCH-02 (`:365`) — observe the `binding_type` mutation, not just call order.
+- [x] REQ-ORCH-06 (`:369`) — STR + CITE: re-cite REQ-PIPE-07 **and** assert `ctx.computation_graph`
   identity in the ORCH-06 test body (spec's judgment: STR alone via re-cite would leave the row's
   own text unpinned).
-- [ ] REQ-OR-02 (`:349`, `test_output_registry.py`) — add `not hasattr(registry, "resolve")`
+- [x] REQ-OR-02 (`:349`, `test_output_registry.py`) — add `not hasattr(registry, "resolve")`
   negative assertion + cover the 4th lookup (`scoped_alias_lookup`).
-- [ ] REQ-OR-03 (`:350`, `test_output_registry.py`) — assert the `caplog` WARNING record is
+- [x] REQ-OR-03 (`:350`, `test_output_registry.py`) — assert the `caplog` WARNING record is
   actually emitted for the first-wins alias collision (R1 fires-on-shape).
-- [ ] REQ-PGD-03 (`:394`, `test_parameter_group_deriver.py`) — tighten `>=` to `==` distinct
+- [x] REQ-PGD-03 (`:394`, `test_parameter_group_deriver.py`) — tighten `>=` to `==` distinct
   source-file count.
-- [ ] REQ-REG-06 (`:453`, `test_gen_registry.py:539-579`) — de-circularize: derive the expected
+- [x] REQ-REG-06 (`:453`, `test_gen_registry.py:539-579`) — de-circularize: derive the expected
   primitive-type set independently from the graph, not from `_collect_exit_point_primitive_types`
   (R1 anti-vacuity — the named offender).
-- [ ] REQ-EPC-05 (`:209`) — add cross-group ParameterGroup uniqueness assertion.
-- [ ] REQ-BASE-04 (`:110`, `test_baselines.py`) — glob all 10 baseline dirs instead of the
+- [x] REQ-EPC-05 (`:209`) — add cross-group ParameterGroup uniqueness assertion.
+- [x] REQ-BASE-04 (`:110`, `test_baselines.py`) — glob all 10 baseline dirs instead of the
   4-model `MODELS` parametrize list (read-only widening; spec flags "no churn").
-- [ ] REQ-DM-09 (`:169`, `test_data_models.py` + `test_graph_assembly.py`) — strengthen to pin
+- [x] REQ-DM-09 (`:169`, `test_data_models.py` + `test_graph_assembly.py`) — strengthen to pin
   INV-5 stable-sort + INV-3 channel-existence validation + serialization-non-exclusion (not just
   the 4 field names); **and** add the `# REQ-DM-09` / `@pytest.mark.req` marker so tooling binds
   it (one row, two defects — do not double-count against the citation phase, per spec's
   INFERRED note).
-- [ ] REQ-PMM-02 (`:422`) — add the `ModuleOutput.default_value` field assertion.
+- [x] REQ-PMM-02 (`:422`) — add the `ModuleOutput.default_value` field assertion.
 
 **Byte-identity-flagged (⚠BI — new fixture or drives regen):**
-- [ ] REQ-CA-07 (`:149`, `test_computed_attributes.py`) — add an `x = x + 1` self-referencing
+- [x] REQ-CA-07 (`:149`, `test_computed_attributes.py`) — add an `x = x + 1` self-referencing
   fixture; assert on `input_names` directly (not a downstream string). Byte-identity check on any
   conformance baseline touched by the new fixture.
-- [ ] REQ-CA-11 (`:152`, `test_computed_attributes.py`) — add the unregistered shape-A case;
+- [x] REQ-CA-11 (`:152`, `test_computed_attributes.py`) — add the unregistered shape-A case;
   assert the warning names the real cause (R1 fires-on-shape). Byte-identity check as above.
-- [ ] REQ-SR-05 (`:508`) — drive the actual regen path (not isolated backup-mechanism test);
+- [x] REQ-SR-05 (`:508`) — drive the actual regen path (not isolated backup-mechanism test);
   assert backup-before-regen ordering. This one is expected to *invoke* `scripts/capture_*.py`
   machinery in the test — confirm it does not itself mutate committed baselines (use a temp
   output dir); if it must touch a real baseline path, land under the byte-identity gate as a
   reviewed capture diff (R3).
 
 ### R4 reproduction gate (before any edit in this phase)
-- [ ] Re-check each row's cited test still has the exact shape the spec table describes (line
+- [x] Re-check each row's cited test still has the exact shape the spec table describes (line
   numbers may have drifted from Items 3/4/6 landing concurrently on this branch). Log any drift in
   Implementation Notes; if a row's finding no longer reproduces, reclassify it (do not force-edit)
   and note why in the recount phase.
 
 ### Validation
 **Automated:**
-- [ ] Run each touched test file individually as it's edited.
-- [ ] Full suite after all 15 land → no regressions, 0 new xfail.
-- [ ] Byte-identity check specifically on: `test_computed_attributes.py` fixtures (CA-07, CA-11),
+- [x] Run each touched test file individually as it's edited.
+- [x] Full suite after all 15 land → no regressions, 0 new xfail.
+- [x] Byte-identity check specifically on: `test_computed_attributes.py` fixtures (CA-07, CA-11),
   any baseline SR-05's regen-drive touches. Expect clean; if not, stop and diagnose (R3) before
   committing — a real baseline move here is out of this item's scope.
-- [ ] `ruff check src/`, `mypy src/` → not worse than current gates (tests dir isn't gated but
+- [x] `ruff check src/`, `mypy src/` → not worse than current gates (tests dir isn't gated but
   keep it clean).
 
 **Manual:**
-- [ ] Mutation spot-check at least the two R1-flagged rows: REQ-REG-06 (break the independent
+- [x] Mutation spot-check at least the two R1-flagged rows: REQ-REG-06 (break the independent
   derivation so it would trivially pass if still circular — confirm the new test relies on the
   graph, not the SUT helper) and one diagnostic row (OR-03 or CA-11: suppress the warning emission
   → confirm RED).
@@ -512,6 +512,62 @@ existing test in place); `test_baselines.py` + `test_graph_assembly.py` (byte-id
 55/55 green, no baseline file diff. `ruff check src/` 17 (unchanged), `mypy src/` 97 (unchanged).
 
 ### Phase 2 Completion
+**Completed:** 2026-07-08. Commits `b6f7c62` (no-fixture batch, 10 rows) + `dff340f`
+(3 fixture-flagged rows).
+
+**14 of 15 landed as strengthens; 1 reclassified (not force-fixed):**
+- REQ-EPC-07, REQ-ORCH-05, REQ-ORCH-02, REQ-ORCH-06 (+ REQ-PIPE-07 re-cite), REQ-OR-02,
+  REQ-OR-03, REQ-REG-06 (R1 de-circularized + mutation-verified), REQ-EPC-05, REQ-BASE-04,
+  REQ-PMM-02, REQ-DM-09 (STR+CITE, real marker added) — see commit `b6f7c62` message for the
+  per-row mechanism.
+- REQ-CA-07, REQ-CA-11, REQ-SR-05 — see commit `dff340f` message. All three landed with
+  **zero byte-identity risk**: none touched a committed SysML fixture or baseline. CA-07 used
+  the existing mock-syside AST harness; CA-11 unit-tested `_build_attribute_resolution_map`
+  directly; SR-05 drove `_generate_stencils` against `tmp_path`. This is a deliberate deviation
+  from the plan's "add a fixture" framing for CA-07/CA-11 — the mock/unit-level route proves the
+  same claim (genuine self-reference / genuine unregistered-leaf case) without any baseline
+  regen risk, so it supersedes the ⚠BI framing rather than needing the gate.
+
+**R4 reclassification: REQ-PGD-03 does NOT reproduce as tighten-`>=`-to-`==`.** Computed
+distinct-source-file counts directly against `derive_groups()` output for all 3 fixtures:
+`solar_battery_model` 2 files → 2 groups (matches), `chain_spike_model` 2 files → **1 group**,
+`catf_mfe_model` 17 files → **12 groups**. Root cause: `_derive_from_design_attributes()`
+groups by `file_path.stem`, but a file whose design attributes are ALL non-literal-default (e.g.
+chain_spike's `library.sysml`, whose 3 attrs all have `default_value=None`) produces ZERO
+groups for that file; separately, `_derive_from_unbound_params_v2`'s groups merge into an
+existing group by name rather than adding one-per-file. "Grouping SHALL mirror SysML source
+file structure (one group per file)" does not hold on real fixtures — this is an over-claim,
+not an under-tested assertion. Per spec's own escape valve (Non-Goals: "if a reframe or
+residue-sweep row exposes a behavior gap... file it, don't build it"), I did NOT force-commit
+a test that fails on real data. Disposition for phase 6 recount: reclassify PGD-03 from STR to
+**left as-is with the existing `>=` floor** (already true and non-vacuous — it does catch total
+under-production); the "one group per file" *text* over-claims and should be reframed in a
+follow-on. Folded into Phase 3's byte-safe text batch (12th reframe, alongside the 11 named in
+the spec) — see Phase 3 notes below.
+
+**Mutation spot-checks:** REQ-REG-06 verified live (injected a bogus expected type into the
+cross-check assertion → immediate AssertionError; reverted). REQ-OR-03's WARNING assertion
+found the row's own citation shape needed correcting first (see below) before it could be
+verified — the count-summary WARNING lives in `output_registry_builder.py`, not
+`register_alias()` itself (which is DEBUG-level by design, Item 7/D5); test now asserts both
+levels honestly at their real call sites.
+
+**Unanticipated finding, corrected in-flight (not a plan deviation, a plan-consistent fix):**
+the original REQ-OR-03 row's "assert the warning record is emitted" instruction, if applied
+literally to `register_alias()` in isolation (as the old test's setup did), would have produced
+a test asserting something FALSE — `register_alias` only logs DEBUG per-collision (a deliberate
+Item 7/D5 design decision), the WARNING is a builder-level count-summary. Fixed by testing each
+level at its real call site (`test_alias_duplicate_warns_first_wins` for the DEBUG line +
+`test_alias_collision_emits_one_warning_count_summary` for the builder's WARNING, using the
+real `catf_mfe_model` fixture, which has 27 genuine collisions across 5 keys).
+
+**Validation:** targeted test files green throughout, full suite 2120 passed / 4 skipped (was
+2107/4 baseline — 2116 after batch 1, 2120 after batch 2). `ruff check src/` 17 (unchanged),
+`mypy src/` 97 (unchanged). Byte-identity: `git status` clean on
+`tests/fixtures/baseline_outputs/` and `docs/architecture/verification-matrix.md` after both
+commits — zero baseline/fixture diff across all of Phase 2, including the 3 rows originally
+flagged ⚠BI.
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 ### Phase 5 Completion
