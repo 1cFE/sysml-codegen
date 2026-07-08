@@ -123,22 +123,22 @@ This is the same INV-B discipline as DM-08 — a PASS row must not pin more or o
 
 ## Success Criteria
 
-- [ ] **REQ-DM-08** flips `UNTESTED → PASS`: a **source/AST-scan** static test pins the enforced
+- [x] **REQ-DM-08** flips `UNTESTED → PASS`: a **source/AST-scan** static test pins the enforced
   surface (as canonically defined above); the row's text is reframed to the enforced-surface claim;
   `[DM08-MODEL-FIELD-TYPING]` is filed for the model fields.
-- [ ] **REQ-RES-05** flips `UNTESTED → PASS`: a test pins `build_computation_graph`'s internal
+- [x] **REQ-RES-05** flips `UNTESTED → PASS`: a test pins `build_computation_graph`'s internal
   five-milestone sequence (classify → build modules → rebuild groups → toposort → validate) on
   the **real** function, distinct from the outer `build_pipeline_context` pin.
-- [ ] **REQ-RES-08** flips `UNTESTED → PASS`: a test enumerates the live resolution paths —
+- [x] **REQ-RES-08** flips `UNTESTED → PASS`: a test enumerates the live resolution paths —
   backtracker (CalcUsage) including the landed ancestor-scope climb leg, aggregation, and FORMULA —
   and asserts consumer-scope derivation on each, with each expectation written **independently** of
   the code under test (R1), over the `plant_values` cross-part fixtures; the row text is reframed
   (drop the false "via `ResolutionContext.consumer_scope`" universal).
 - [ ] Each of the three tests **fails under a deliberate production mutation** (spot-check recorded
   in close-out).
-- [ ] No expectation is computed from the code under test (R1 anti-pattern ban); every pin is
+- [x] No expectation is computed from the code under test (R1 anti-pattern ban); every pin is
   independently anchored.
-- [ ] The three matrix rows carry their new citations; recount-from-rows holds (UNTESTED drops from
+- [x] The three matrix rows carry their new citations; recount-from-rows holds (UNTESTED drops from
   4 to 1 — only REQ-PGD-06 remains UNTESTED); the summary/index counts reconcile to the rows.
 - [ ] Full suite green; baselines byte-identical (no baseline touch expected — this is pure
   test-authoring plus a matrix/text/doc reframe).

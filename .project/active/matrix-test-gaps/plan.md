@@ -90,7 +90,7 @@ def test_make_constructor_return_annotations_name_newtypes():
 
 **Boundary — exclude `register_alias` ([HARD], `spec.md:196-201`; review L3-4).** `register_alias` takes `ScopedKey | str` / `CanonicalChannel | str` by design (`output_registry.py:102-104`). The canonical surface is keys/values + constructors, **not** method params — so a scan scoped to (a)/(b)/(c) excludes it by construction. Do **not** broaden the target set to registration-method params.
 
-- [ ] `tests/conformance/test_dm08_enforced_surface.py` (NEW) — three tests per stencil; all expectations hand-authored.
+- [x] `tests/conformance/test_dm08_enforced_surface.py` (NEW) — three tests per stencil; all expectations hand-authored.
 
 ### Validation
 **Automated:**
@@ -153,7 +153,7 @@ class TestInnerStepOrdering:
 ```
 
 ### Changes Required
-- [ ] `tests/conformance/test_orchestrator.py` (MODIFY) — add `TestInnerStepOrdering`; import `build_computation_graph` if not already imported. Must **not** re-pin `build_pipeline_context` (the outer test at `:124` owns REQ-ORCH-01).
+- [x] `tests/conformance/test_orchestrator.py` (MODIFY) — add `TestInnerStepOrdering`; import `build_computation_graph` if not already imported. Must **not** re-pin `build_pipeline_context` (the outer test at `:124` owns REQ-ORCH-01).
 
 ### Validation
 **Automated:**
@@ -186,7 +186,7 @@ Each of the (now four) enumerated legs applies **the consumer's scope**, and eac
 
 ### Item-2 climb re-check (concrete — `spec.md:237-249`; review L3-2)
 This is a **confirmation, not a fork** (the climb landed at `91e073f`). At implement HEAD, before authoring leg 2:
-- [ ] Grep `_resolve_chain_dispatch` for the **"Step CLIMB"** block (`dependency_backtracker.py:652-682`): the ancestor loop `for i in range(len(scope_segments), -1, -1)` (`:675`) and the ambiguity guard `if len(climbed) == 1` (`:681`). Confirm both present (line numbers may have shifted as Item 2 closed out — re-grep, don't trust the number).
+- [x] Grep `_resolve_chain_dispatch` for the **"Step CLIMB"** block (`dependency_backtracker.py:652-682`): the ancestor loop `for i in range(len(scope_segments), -1, -1)` (`:675`) and the ambiguity guard `if len(climbed) == 1` (`:681`). Confirm both present (line numbers may have shifted as Item 2 closed out — re-grep, don't trust the number).
 - [ ] **Fixture check for the climb leg (real risk).** Confirm `plant_values` (or `plant_value_shapes`) actually contains a deep CHAIN whose reference resolves via the ancestor climb. If **neither** exercises CLIMB: the climb leg's substrate is the fixture that does — prefer a registered cross-part CHAIN fixture (`chain_override_probe` is session-registered, `conftest.py`), else read the deep-chain graph directly as `test_deep_cross_scope_probe.py` does (note `deep_cross_scope_probe` is deliberately **not** session-registered — `conftest.py:56-62`). Record which fixture backs leg 2. Never mock (R1, [HARD] `spec.md:179-181`).
 - [ ] If a later Item-2 phase reverted/reshaped the climb, adjust the climb-leg expectation to match HEAD (or, if fully reverted, drop leg 2 and note it). Do not assert a climb the code no longer does.
 
@@ -219,7 +219,7 @@ def test_formula_leg_scopes_by_owning_part_qn(plant_values_snapshot):
 ```
 
 ### Changes Required
-- [ ] `tests/conformance/test_res08_consumer_scope_paths.py` (NEW) — four legs (base, climb, aggregation, FORMULA), each with an independently hand-authored expectation over real `plant_values` (+ climb fixture per re-check). Reuse the fixture-loading pattern from `tests/conformance/conftest.py` (`extraction_snapshots`, `snapshot_fixture`) and the scope-derivation precedent in `test_dual_resolution.py`.
+- [x] `tests/conformance/test_res08_consumer_scope_paths.py` (NEW) — four legs (base, climb, aggregation, FORMULA), each with an independently hand-authored expectation over real `plant_values` (+ climb fixture per re-check). Reuse the fixture-loading pattern from `tests/conformance/conftest.py` (`extraction_snapshots`, `snapshot_fixture`) and the scope-derivation precedent in `test_dual_resolution.py`.
 - [ ] **If any leg EXPOSES a real bug** (e.g. a path that does not in fact scope to the consumer): file it explicitly with a matrix pointer, do **not** fix inline (Non-Goals, `spec.md:213-216`). A leg that reveals a bug does not flip its row to PASS — surface it in the close-out.
 
 ### Validation
@@ -244,22 +244,22 @@ Land the matrix flips, both INV-B reframes, and the backlog filing **in the same
 ### Changes Required
 
 **1. Flip the three matrix rows `UNTESTED → PASS` with new citations** (`docs/architecture/verification-matrix.md`):
-- [ ] REQ-DM-08 (`:165`) → PASS, cite `test_dm08_enforced_surface.py`; **reframe the row text** to the enforced-surface claim (the typed-registry surface uses NewType wrappers), citing `09-data-models.md:104` as the pre-existing admission that the model fields are not yet typed (`spec.md:68-75`).
-- [ ] REQ-RES-05 (`:464`) → PASS, cite `test_orchestrator.py` (`TestInnerStepOrdering`). **No text reframe** — RES-05's text is accurate as written (Non-Goals, `spec.md:222`).
-- [ ] REQ-RES-08 (`:467`) → PASS, cite `test_res08_consumer_scope_paths.py`; **reframe the row text** to the honest three-mechanism per-path claim — drop the false "via `ResolutionContext.consumer_scope`" universal; use the reframe target verbatim from `spec.md:114-120` (base leg + climb leg + aggregation + FORMULA owning-part; "per-path scope application over the enumerated paths, not an exhaustiveness proof").
+- [x] REQ-DM-08 (`:165`) → PASS, cite `test_dm08_enforced_surface.py`; **reframe the row text** to the enforced-surface claim (the typed-registry surface uses NewType wrappers), citing `09-data-models.md:104` as the pre-existing admission that the model fields are not yet typed (`spec.md:68-75`).
+- [x] REQ-RES-05 (`:464`) → PASS, cite `test_orchestrator.py` (`TestInnerStepOrdering`). **No text reframe** — RES-05's text is accurate as written (Non-Goals, `spec.md:222`).
+- [x] REQ-RES-08 (`:467`) → PASS, cite `test_res08_consumer_scope_paths.py`; **reframe the row text** to the honest three-mechanism per-path claim — drop the false "via `ResolutionContext.consumer_scope`" universal; use the reframe target verbatim from `spec.md:114-120` (base leg + climb leg + aggregation + FORMULA owning-part; "per-path scope application over the enumerated paths, not an exhaustiveness proof").
 
 **2. Update the "Untested Requirements" summary block** (`verification-matrix.md:544-547`):
-- [ ] Remove the DM-08, RES-05, RES-08 bullets (they are now PASS). **REQ-PGD-06 stays** (`:545`) — it is not this item's row (Non-Goals, `spec.md:217-219`).
+- [x] Remove the DM-08, RES-05, RES-08 bullets (they are now PASS). **REQ-PGD-06 stays** (`:545`) — it is not this item's row (Non-Goals, `spec.md:217-219`).
 
 **3. Reconcile the index counts (recount FROM the rows — memory `verification-matrix-drift-modes`)** (`verification-matrix.md:9-11`):
-- [ ] UNTESTED `4 → 1` (only REQ-PGD-06 remains); PASS `249 → 252`; Total `253` unchanged. **Recount by grepping the row table**, not by editing the summary block to match an assumption. Verify: `grep -c "| UNTESTED |"` over the row table == 1; PASS count + UNTESTED + any other == 253.
+- [x] UNTESTED `4 → 1` (only REQ-PGD-06 remains); PASS `249 → 252`; Total `253` unchanged. **Recount by grepping the row table**, not by editing the summary block to match an assumption. Verify: `grep -c "| UNTESTED |"` over the row table == 1; PASS count + UNTESTED + any other == 253.
 
 **4. Doc consistency (R1 close-the-loop):**
-- [ ] `09-data-models.md` — ensure the DM-08 reframe is consistent with the existing open-status admission at `:104` (no contradiction; the model fields remain documented as bare `str` with the deferral pointer).
-- [ ] `03-resolution-overview.md:70` — apply the RES-08 row-text reframe here too (the matrix row and this doc row must agree). Check `:185-206` (the RES-05 documented sequence) needs **no** change.
+- [x] `09-data-models.md` — ensure the DM-08 reframe is consistent with the existing open-status admission at `:104` (no contradiction; the model fields remain documented as bare `str` with the deferral pointer).
+- [x] `03-resolution-overview.md:70` — apply the RES-08 row-text reframe here too (the matrix row and this doc row must agree). Check `:185-206` (the RES-05 documented sequence) needs **no** change.
 
 **5. File `[DM08-MODEL-FIELD-TYPING]` in BACKLOG** (`.project/backlog/BACKLOG.md`):
-- [ ] New P3 entry, placed near the other typed-surface / graph_builder P3 filings (e.g. after `[GB-PARAMGROUPS-TYPING]` `:387`). Content: the still-open model-field typing (`EntryPoint.qualified_name`, `InputSource.qualified_name` / `producer_channel`, `ModuleOutput.channel_name` in `resolution/models.py`), with the doc's own pointer (`09-data-models.md:104`), noting Route A deferred it out of the test-authoring item (`spec.md:74-75`).
+- [x] New P3 entry, placed near the other typed-surface / graph_builder P3 filings (e.g. after `[GB-PARAMGROUPS-TYPING]` `:387`). Content: the still-open model-field typing (`EntryPoint.qualified_name`, `InputSource.qualified_name` / `producer_channel`, `ModuleOutput.channel_name` in `resolution/models.py`), with the doc's own pointer (`09-data-models.md:104`), noting Route A deferred it out of the test-authoring item (`spec.md:74-75`).
 
 ### Validation (Final Gates — run ONCE, at the end)
 **Automated:**
@@ -269,8 +269,8 @@ Land the matrix flips, both INV-B reframes, and the backlog filing **in the same
 - [ ] **Baselines byte-identical** — no baseline touch expected (test-only item). Confirm `git status` shows **zero** changes under `tests/fixtures/baseline_outputs/` and no snapshot churn. If any baseline moved, stop — a `src/` change leaked in (this item expects zero `src/` changes).
 
 **Manual:**
-- [ ] `git diff --stat` over `src/` → **empty** (zero production changes; mutations all reverted).
-- [ ] Recount reconciles: matrix summary counts == counts derived from the rows.
+- [x] `git diff --stat` over `src/` → **empty** (zero production changes; mutations all reverted).
+- [x] Recount reconciles: matrix summary counts == counts derived from the rows.
 
 **What We Know Works After This Phase:** three rows pin their text honestly and PASS; both reframes and the backlog filing landed with the tests; the matrix is internally consistent; the suite is green and baselines are untouched.
 
