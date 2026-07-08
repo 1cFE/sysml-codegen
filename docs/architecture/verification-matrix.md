@@ -73,7 +73,7 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-AS-01 | Each PartDef-level aggregation SHALL produce one `ScopedAggregationData` per design insta... | `test_aggregation_scoping.py` | PASS |
-| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) BEFORE child-walk fallback (Strate... | `test_aggregation_scoping.py` | PASS |
+| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) before child-walk fallback (Strategy 2), as observed on the disjoint fixture cases exercised (no dual-match part-def case exists to show the short-circuit directly) | `test_aggregation_scoping.py` | PASS |
 | REQ-AS-03 | Instance paths SHALL be converted from `__`-separated to dotted format with design prefix... | `test_aggregation_scoping.py` | PASS |
 | REQ-AS-04 | CHAIN aliases SHALL only be produced for non-deep-path redefinitions whose `source_path` ... | `test_aggregation_scoping.py` | PASS |
 | REQ-AS-05 | Phase 1b SHALL register a canonical channel for each `ScopedAggregationData` | `test_aggregation_scoping.py` | PASS |
@@ -89,7 +89,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | `test_ast_dispatch_invariant.py`, `test_expression_compiler.py` | PASS |
 | REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before Ope... | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-03 | Among reference/operator branches ordering SHALL be FCE, OE, FRE; literal/null branches SHALL dispatch before the invocation catch-all | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-03 | Among reference/operator branches, dispatch ordering SHALL be FCE, OE, FRE (the cited test pins this ordering clause only; literal-before-catch-all is REQ-AST-08's row) | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "uns... | `test_ast_dispatch_invariant.py` | PASS |
@@ -139,13 +139,13 @@ the documentation rather than executable code.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-CA-01 | Classification SHALL produce exactly one of the 5 stable values per attribute expression (the transient sixth, `EXPOSE_CHAIN_TENTATIVE`, never survives the Phase-3b confirm pass to a reader — INV-F) | `test_computed_attributes.py` | PASS |
+| REQ-CA-01 | Classification SHALL assign each attribute expression exactly one enum member | `test_computed_attributes.py` | PASS |
 | REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
 | REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
 | REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | `test_computed_attributes.py` | PASS |
 | REQ-CA-05 | No `EXPOSE_PURE` alias exists for a non-EXPOSE_PURE attribute; and all fixtures contain zero UNRESOLVABLE computed attributes (the "UNRESOLVABLE SHALL not generate modules/aliases" contract is unexercised — documented coverage gap) | `test_computed_attributes.py` | PASS |
-| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or ... | `test_computed_attributes.py` | PASS |
+| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA or EXPOSE_ALIAS as exercised (the LITERAL classification is exercised via the design-attribute/entry-point path, not this route) | `test_computed_attributes.py` | PASS |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | `test_computed_attributes.py` | PASS |
 | REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
@@ -160,8 +160,8 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-DM-01 | Every model referenced by another doc in this set SHALL appear here or have an explicit d... | `test_data_models.py` | PASS |
 | REQ-DM-02 | Every enum SHALL list ALL values with no omissions | `test_data_models.py` | PASS |
-| REQ-DM-03 | Field lists SHALL match source code (name, type, optionality) | `test_data_models.py` | PASS |
-| REQ-DM-04 | Every model SHALL state its parent class and source file location | `test_data_models.py` | PASS |
+| REQ-DM-03 | Field lists SHALL match source code (name) | `test_data_models.py` | PASS |
+| REQ-DM-04 | Every model SHALL be importable from its documented source file | `test_data_models.py` | PASS |
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` an... | `test_data_models.py` | PASS |
 | REQ-DM-06 | The delegated data models (`ComputedAttributeData`, `ExpressionRef`, `PhantomDetectionReport`) are importable from their source modules (the doc-linking / no-duplication claim is not tested) | `test_data_models.py` | PASS |
 | REQ-DM-07 | Resolution-model field type annotations (`ComputationGraph`, `PipelineModule`, `ModuleInput`, `ParameterGroup`) match the documented containment hierarchy from doc 09 (no data-flow diagram is checked) | `test_data_models.py` | PASS |
@@ -378,7 +378,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | `test_gen_schemas.py` | PASS |
 | REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `test_gen_schemas.py` | PASS |
-| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | `test_gen_schemas.py` | PASS |
+| REQ-OSR-03 | Generated MultiOutput schema field names SHALL match `PipelineModule.outputs[i].field_name` (template-fidelity; both sides are drawn from the same graph, not independently verified against the original SysML `output_attributes` names) | `test_gen_schemas.py` | PASS |
 | REQ-OSR-04 | SysML types SHALL map to Python types per the type mapping table | `test_gen_schemas.py` | PASS |
 | REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | `test_gen_schemas.py` | PASS |
 | REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | `test_gen_schemas.py` | PASS |
@@ -392,7 +392,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-PGD-01 | Every entry point SHALL be assigned to exactly one parameter group | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-02 | Four indexes SHALL be built with strict precedence: attr > binding > unbound > literal | `test_parameter_group_deriver.py` | PASS |
-| REQ-PGD-03 | Grouping SHALL mirror SysML source file structure (one group per file) | `test_parameter_group_deriver.py` | PASS |
+| REQ-PGD-03 | Grouping SHALL produce at least one group per source file with literal-default design attributes (not exactly one group per file -- a file whose attributes are all non-literal-default produces zero groups, and unbound-param-derived groups may merge into an existing group by name rather than adding one per file) | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-04 | `derive_groups_filtered()` SHALL remove parameters not in `backtracking_result.entry_poin... | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-06 | The deriver SHALL resolve each entry point's numeric default inline from its owning index (attr / binding / unbound / literal) via `_parse_default_value` in `_derive_from_*` | — *(no dedicated test: the numeric default is a side-output of `_derive_from_*` grouping, which REQ-PGD-01/08 pin; it is not independently asserted, and the standalone accessor that once pinned it was deleted as dead by Item 8)* | UNTESTED |
@@ -422,8 +422,8 @@ the documentation rather than executable code.
 | REQ-PMM-01 | `PipelineModule` SHALL carry all metadata needed by module wrapper generation (calc def n... | `test_pipeline_module_expansion.py` | PASS |
 | REQ-PMM-02 | `ModuleInput` and `ModuleOutput` SHALL carry `description` and `default_value` fields for... | `test_pipeline_module_expansion.py` | PASS |
 | REQ-PMM-03 | `PipelineModule` SHALL carry `calc_expressions` for stencil comment generation. | `test_pipeline_module_expansion.py` | PASS |
-| REQ-PMM-04 | Migration SHALL produce byte-identical output compared to pre-migration baselines. | `test_pipeline_module_expansion.py` | PASS |
-| REQ-PMM-05 | Migration SHALL proceed in phases: add fields, create variants, deprecate, remove. | `test_pipeline_module_expansion.py` | PASS |
+| REQ-PMM-04 | Every generated module SHALL remain valid, non-empty Python after the field migration (the one-time byte-identity-vs-pre-migration-baseline gate ran once at cutover and is not re-asserted here) | `test_pipeline_module_expansion.py` | PASS |
+| REQ-PMM-05 | Migrated modules SHALL be importable in all variants with fields unchanged (the phased-sequence claim -- add/create/deprecate/remove -- is a one-time process record, not a testable module property) | `test_pipeline_module_expansion.py` | PASS |
 
 ### PY
 
@@ -494,7 +494,7 @@ the documentation rather than executable code.
 | REQ-SNAP-15 | No provenance/version text appears in a generated artifact (INV-6) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-16 | CLI accepts exactly one extraction input; rejects `--design-path-filter` + snapshot (INV-7/V6) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-17 | CalcUsage auto-implements from a snapshot (SC-10) | `test_snapshot_generation.py` | PASS |
-| REQ-SNAP-18 | The lone `generation_timestamp` template var has zero render sites | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-18 | Regression guard: no production render site under `src/sysml_codegen` SHALL pass `generation_timestamp` -- the template that once carried it (`pydantic_schema.py.jinja2`) is deleted; the token still appears in the test itself, this row, and `.project/` history, so "the token exists nowhere in the repo" is not the claim | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-19 | Live generation is byte-identical to snapshot generation, incl. symlinked models (license-gated; skips cleanly without a license, verified live during Item 2) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-20 | A missing load-bearing field on a deserialized dict is loud (V7): `python_type`/`binding_type`/`parent_part_path`/`owning_part_def_qn` warn and degrade to their defaults; `qualified_name` (keying) raises `SnapshotFormatError`; benign fields keep their `.get(default)` silently (TRUTH-DEBT Item 6, Site 1) | `test_hygiene_tail_loader.py` | PASS |
 
@@ -509,7 +509,7 @@ the documentation rather than executable code.
 | REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 6-case decision tree (Item 5 split the unparseable leaf: preserve-on-transient / preserve-non-empty / regenerate-empty) | `test_gen_stencils.py` | PASS |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` prese... | `test_gen_stencils.py` | PASS |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `test_gen_stencils.py` | PASS |
-| REQ-SR-06 | Aggregation and computed-attribute modules are synthetic and always regenerated in practi... | `test_gen_stencils.py` | PASS |
+| REQ-SR-06 | All module types (including aggregation and FORMULA) SHALL route through the single unified `_generate_stencils()` smart-regen code path (static analysis; not a runtime proof that aggregation/FORMULA are always regenerated in practice) | `test_gen_stencils.py` | PASS |
 | REQ-SR-07 | Static: `_generate_stencils` source contains a `preserve_handwritten` + `output_path.exists()` branch whose body does not call `should_regenerate_stencil` (the skip behavior is not executed) | `test_gen_stencils.py` | PASS |
 
 ### SVM
