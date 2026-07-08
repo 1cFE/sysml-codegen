@@ -613,3 +613,41 @@ the new row and does not treat it as an orphan.
   JSON path) — design-level work, not a single-choke mechanical hygiene fix. Out of Item 6's scope.
   Evidence: `.project/active/hygiene-tail/probes/probe_site4_output_registry.py`,
   `.project/active/hygiene-tail/probes/verdict.md`.
+
+### [ITEM5-SWEEP-RESIDUE-OVERFLOW] D7 sweep completion — 21 rows read-spot-checked, not line-by-line deep-read — P3, test-coverage / matrix-honesty
+
+**Filed by TRUTH-DEBT Item 5 (matrix-sweep-residue), 2026-07-08.**
+
+Step 5.0's D7 qualifier grep (`SHALL|ALL|every|never|exactly|warn|fire|count`, case-insensitive)
+across all 259 current matrix rows returns 232 qualifying rows. Subtracting the ~167 the
+Item-7 register already swept and the 33 rows this item dispositioned in Phases 1-4 (17
+strengthen + 11 reframe + 5 cite) leaves **32 rows** as the concrete residue (the spec's ~46
+estimate included rows this item's own Phase 2 work re-verified/absorbed).
+
+Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-EPC-05/07
+already strengthened in Phase 2 = 21 unread here) were spot-checked (not individually
+line-by-line deep-read): REQ-GA-04's `TestNoSelfDependency` and REQ-LVP-04's LocalTerm-fallback
+assertions both read as real, non-vacuous checks matching their row text on inspection. No
+correctness lie or feature gap was found in the spot-check, consistent with the Item-7 register's
+finding that every prior deep-read row was PASS-pins-narrower, never a lie.
+
+**Stopping rule invoked:** the D7 stopping rule (0 new findings in 40 consecutive rows after the
+first 60) was not reached on row-count grounds — this pass stopped short of it, at the item's
+remaining implementation budget, having read 2 of 21 representative rows in the named families
+(GA-04, LVP-04) plus the row-text/citation check for all 21 during Step 5.0's grep pass. This is
+an **honest budget-bound stop**, not a claim the D7 heuristic's row-count threshold was hit --
+named separately per the plan's risk-management section (an unread residual vs. a
+read-but-too-big-to-fix residual are both named, separately).
+
+**Residue, named exactly:**
+- **21 rows** in EPC/GA/LVP families not individually deep-read beyond the spot-check above:
+  REQ-EPC-01, -02, -03, -04, -06, -08; REQ-GA-01, -02, -03, -05, -06, -07, -08; REQ-LVP-01, -02,
+  -03, -05, -06, -07, -08, -09.
+- **11 rows** elsewhere in the qualifying set (the "~21 spread across other families" the spec
+  named) not enumerated by REQ id in this filing -- reconstructing the exact list requires
+  re-running the Step 5.0 grep minus the 167+33+21 already accounted for; left as a precise
+  follow-on rather than guessed here.
+
+**Scope for the follow-on:** re-run the Step 5.0 grep, subtract this item's full disposition
+(33 dispositioned + 21 spot-checked here), deep-read the remainder under a fresh D7 budget, land
+cheap dispositions (reframe/cite) inline, re-file only genuine budget-exceeding strengthens.
