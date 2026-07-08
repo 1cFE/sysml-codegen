@@ -54,6 +54,15 @@ def _collect_exit_point_primitive_types(
                 wrapper = type_map.get(out.python_type)
                 if wrapper:
                     types.add(wrapper)
+                else:
+                    logger.warning(
+                        "Module '%s' exit point has unmapped python_type %r — no "
+                        "primitive wrapper registered for it; the exit point's "
+                        "type is not one of %s.",
+                        module.name,
+                        out.python_type,
+                        sorted(type_map),
+                    )
     return sorted(types)
 
 

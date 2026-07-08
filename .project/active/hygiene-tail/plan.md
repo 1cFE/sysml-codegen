@@ -276,20 +276,21 @@ def test_float_exit_point_no_warn(caplog):                 # silent-on-clean
 
 ### Changes Required
 **See spec** Problem site 3, Open Questions (site-1↔site-3 collapse).
-- [ ] `src/sysml_codegen/generation/registry.py:50-57` — in the `if wrapper:` branch, add an
+- [x] `src/sysml_codegen/generation/registry.py:50-57` — in the `if wrapper:` branch, add an
       `else` (or a `wrapper is None` guard) that `logger.warning`s the unmapped `python_type` on
       a `field_name="root"` exit point. Keep the skip behavior (importable-but-flagged); do not
       change the returned wrapper set on clean input.
-- [ ] `tests/unit/test_hygiene_tail_registry.py` (NEW) — fires-on-shape + silent-on-clean.
-- [ ] If Phase 0's reachability scan found **no** real non-`float` exit point: mark the
-      fires-on-shape test as the latent-tripwire pin and note it in the verdict; the diagnostic
-      still lands (it is correct, just latent).
+- [x] `tests/unit/test_hygiene_tail_registry.py` (NEW) — fires-on-shape + silent-on-clean.
+- [x] Phase 0's reachability scan found **no** real non-`float` exit point — the fires-on-shape
+      test is the latent-tripwire pin, noted in the verdict; the diagnostic still lands (correct,
+      just latent on the current corpus).
 
 ### Validation
-- [ ] `uv run pytest tests/unit/test_hygiene_tail_registry.py` → pass
-- [ ] `uv run pytest tests/conformance/test_baselines.py` → pass (no clean exit point is non-`float`
-      → no fire → byte-identical)
-- [ ] `ruff`/`mypy` on `src/sysml_codegen/generation/registry.py` → no new findings
+- [x] `uv run pytest tests/unit/test_hygiene_tail_registry.py` → pass (2 passed)
+- [x] `uv run pytest tests/conformance/test_baselines.py` → pass (16 passed; no clean exit point
+      is non-`float` → no fire → byte-identical)
+- [x] `ruff`/`mypy` on `src/sysml_codegen/generation/registry.py` → no new findings (ruff clean;
+      the one mypy hit at `:185` is pre-existing, outside the diff)
 
 **What We Know Works After This Phase:** an exit point with an unmapped `python_type` is loud;
 the all-`float` clean corpus is byte-identical and silent.
@@ -500,6 +501,10 @@ scripts / full pytest, not a bare `-c` probe (memory: `syside-license-via-script
 `_deserialize_design_attribute`. 9 new tests (5 fires-on-shape/raise, 3 silent-on-clean,
 1 clean-design-attribute). No deviations from plan.
 ### Phase 2 Completion (Site 3)
+**Completed:** 2026-07-07. Added an `else` branch to `_collect_exit_point_primitive_types`
+warning on an unmapped `python_type` for a `field_name="root"` exit point. 2 new tests
+(fires-on-shape with a constructed `"Any"` module — latent-tripwire pin per Phase 0's
+reachability scan; silent-on-clean with `"float"`). No deviations.
 ### Phase 3 Completion (Site 4)
 ### Phase 4 Completion (Site 2)
 
