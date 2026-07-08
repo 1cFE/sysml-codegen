@@ -167,6 +167,87 @@ class TestAttributeResolutionMap:
         assert resolution.kind == AttributeResolutionKind.EXPOSE_ALIAS
         assert resolution.channel_name == "Pkg__plant__alpha_split__p_alpha"
 
+    @pytest.mark.req("REQ-CA-11")
+    def test_shape_a_expose_pure_registered_leaf_is_silent(self, caplog):
+        """REQ-CA-11: shape-A (part def) EXPOSE_PURE whose leaf IS registered in
+        _scoped_alias resolves to LITERAL with no warning (Item 10/11 path)."""
+        from sysml_codegen.core.identifier_types import (
+            CanonicalChannel,
+            ScopedAliasKey,
+            ScopedKey,
+        )
+
+        ca = _make_computed_attr(
+            "total_cost", "plant", "Pkg::plant",
+            classification=ComputedAttributeClassification.EXPOSE_PURE,
+            compilability=Compilability.FULLY_COMPILABLE,
+            compiled_expression=None,
+        )
+        ca.is_on_part_definition = True
+
+        channel = CanonicalChannel("Pkg__plant_instance__cost_calc__total_cost")
+        output_registry = OutputRegistry()
+        output_registry.register_scoped(ScopedKey("plant_instance.total_cost"), channel)
+        output_registry.register_scoped_alias(
+            ScopedAliasKey(("plant_instance", "total_cost")), channel
+        )
+
+        with caplog.at_level(
+            logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+        ):
+            attr_map = _build_attribute_resolution_map(
+                computed_attrs=[ca],
+                design_attrs={},
+                output_registry=output_registry,
+                calc_usage_names=set(),
+            )
+
+        assert attr_map["plant"]["total_cost"].kind == AttributeResolutionKind.LITERAL
+        assert not any(
+            "no scoped alias registered" in r.getMessage() for r in caplog.records
+        )
+
+    @pytest.mark.req("REQ-CA-11")
+    def test_shape_a_expose_pure_unregistered_leaf_warns_naming_real_cause(
+        self, caplog
+    ):
+        """REQ-CA-11: shape-A (part def) EXPOSE_PURE whose leaf is NOT registered
+        in _scoped_alias warns, and the warning names the real cause (the attr,
+        its owning part, and the unresolved python_name) -- not the retired Item-1
+        generic malformed-refs message. Fires-on-shape (R1): the registered
+        sibling case above stays silent; this unregistered case must not."""
+        ca = _make_computed_attr(
+            "orphan_cost", "plant", "Pkg::plant",
+            classification=ComputedAttributeClassification.EXPOSE_PURE,
+            compilability=Compilability.FULLY_COMPILABLE,
+            compiled_expression=None,
+        )
+        ca.is_on_part_definition = True
+
+        with caplog.at_level(
+            logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+        ):
+            attr_map = _build_attribute_resolution_map(
+                computed_attrs=[ca],
+                design_attrs={},
+                output_registry=OutputRegistry(),  # nothing registered
+                calc_usage_names=set(),
+            )
+
+        assert attr_map["plant"]["orphan_cost"].kind == AttributeResolutionKind.LITERAL
+        warning_messages = [r.getMessage() for r in caplog.records]
+        assert any("no scoped alias registered" in m for m in warning_messages), (
+            f"Expected the real-cause warning, got: {warning_messages}"
+        )
+        assert any(
+            "orphan_cost" in m and "plant" in m for m in warning_messages
+        ), (
+            f"Expected the warning to name the attribute and owning part, "
+            f"got: {warning_messages}"
+        )
+        # The retired Item-1 generic warning must not fire for this case.
+        assert not any("could not identify instance/output" in m for m in warning_messages)
+
     def test_literal_attr_resolves_to_literal(self):
         """Design attr not in computed_attrs -> not in resolution map."""
         # No computed attrs, but a design attr for "length"

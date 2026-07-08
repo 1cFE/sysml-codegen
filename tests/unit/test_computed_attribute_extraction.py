@@ -750,6 +750,65 @@ class TestFormulaCompilation:
         assert remainder.compiled_expression is None
         assert remainder.compilability == Compilability.MANUAL_REQUIRED
 
+    @pytest.mark.req("REQ-CA-07")
+    def test_self_reference_excluded_from_input_names(
+        self, mock_syside_adapter, monkeypatch
+    ):
+        """`x = x + 1` (genuine self-reference) -- the extractor's self-exclusion
+        (computed_attribute_extractor.py:293-298) removes `x` from `input_names`
+        before compilation, so the self-ref resolves to an UNSUPPORTED node, not
+        an INPUT_REF, and compilation degrades to MANUAL_REQUIRED.
+
+        The conformance-level REQ-CA-07 tests (test_computed_attributes.py) only
+        assert the compiled string doesn't contain "inputs.x" -- true but vacuous
+        against attr_expr_probe, which has no attribute that references itself.
+        This constructs the actual self-referencing case and asserts on the
+        compiler's own classification of the reference (via compilability/
+        compiled_expression), not a downstream string search.
+        """
+        from sysml_codegen.extraction.computed_attribute_extractor import (
+            extract_computed_attributes,
+        )
+        from sysml_codegen.extraction.data_models import (
+            ComputedAttributeClassification,
+        )
+        from sysml_codegen.extraction.expression_compiler import Compilability
+
+        expr = MockOperatorExpression("+", [
+            MockFeatureReferenceExpression("x"),
+            MockLiteralRational(1.0),
+        ])
+        part = MockPartElement(
+            "test_part",
+            [
+                MockAttributeUsage("x", expr=expr, qualified_name="Pkg::test_part::x"),
+            ],
+            qualified_name="Pkg::test_part",
+        )
+
+        def mock_extract_feature_refs(expr_node, ignore_std_lib=True):
+            if isinstance(expr_node, MockOperatorExpression):
+                return _make_refs(("x", "Pkg::test_part::x"))
+            return []
+
+        monkeypatch.setattr(
+            "sysml_codegen.extraction.computed_attribute_extractor.extract_feature_refs",
+            mock_extract_feature_refs,
+        )
+
+        results, _aliases = extract_computed_attributes(None, part, calc_usage_names=set())
+
+        assert len(results) == 1
+        x_attr = results[0]
+        assert x_attr.classification == ComputedAttributeClassification.FORMULA
+        # The self-reference was excluded from input_names -> build_expression_ast
+        # cannot resolve "x" -> UNSUPPORTED node -> CompilationError caught ->
+        # graceful degradation, not a silently-wrong compiled expression.
+        assert x_attr.compiled_expression is None, (
+            "Self-reference must not compile to a (wrong) expression"
+        )
+        assert x_attr.compilability == Compilability.MANUAL_REQUIRED
+
 
 class TestExtractComputedAttributes:
     """Integration test for extract_computed_attributes() with mixed attribute types."""
