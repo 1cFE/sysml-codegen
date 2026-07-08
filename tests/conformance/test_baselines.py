@@ -81,3 +81,26 @@ class TestPipelineBaselines:
         assert isinstance(data["modules"], list)
         assert isinstance(data["execution_order"], list)
         assert isinstance(data["entry_point_groups"], list)
+
+
+@pytest.mark.req(id="REQ-BASE-04")
+def test_execution_order_matches_modules_all_baseline_dirs() -> None:
+    """execution_order length equals modules length in EVERY baseline dir.
+
+    The parametrized test above only covers the 4 models in MODELS, but
+    BASELINES_DIR holds 10 (also catf_mfe, deep_cross_scope_probe, ife_plant,
+    plant_values, plant_value_shapes, wi014_toy). This globs all of them --
+    read-only widening of an existing invariant, no new baseline captured, no
+    churn to any committed baseline.
+    """
+    baseline_paths = sorted(BASELINES_DIR.glob("*/computation_graph.json"))
+    assert len(baseline_paths) >= 10, (
+        f"Expected at least 10 baseline dirs with computation_graph.json, "
+        f"found {len(baseline_paths)}: {baseline_paths}"
+    )
+    for baseline_path in baseline_paths:
+        data = json.loads(baseline_path.read_text())
+        assert len(data["execution_order"]) == len(data["modules"]), (
+            f"{baseline_path.parent.name}: execution_order "
+            f"({len(data['execution_order'])}) != modules ({len(data['modules'])})"
+        )

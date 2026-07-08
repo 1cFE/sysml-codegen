@@ -389,6 +389,59 @@ class TestComputationGraphShape:
         assert all(isinstance(name, str) for name in graph.execution_order)
 
 
+class TestReqDm09OutputAliasesField:
+    """REQ-DM-09: `output_aliases` is a real serialized field (not `exclude=True`,
+    contrast `fallback_entry_points`), stable-sorted by `(instance_path,
+    alias_name)` (INV-5), and every entry's channel is a declared graph output
+    (INV-3). The prior test only pinned the 4 OutputAlias field names -- not
+    the sort, the validation, or the non-exclusion -- so a regression in any of
+    those could ship silently."""
+
+    @pytest.mark.req("REQ-DM-09")
+    def test_output_aliases_is_not_excluded_from_serialization(self):
+        """Contrast with `fallback_entry_points`, which IS `exclude=True`."""
+        fields = ComputationGraph.model_fields
+        assert fields["output_aliases"].exclude is not True, (
+            "output_aliases must be serialized (exclude != True)"
+        )
+        assert fields["fallback_entry_points"].exclude is True, (
+            "fallback_entry_points is the in-memory-only contrast case"
+        )
+
+    @pytest.mark.req("REQ-DM-09")
+    def test_output_aliases_stable_sorted_by_instance_and_alias_name(
+        self, catf_mfe_graph
+    ):
+        """catf_mfe_model has 44 output_aliases across many instance_paths --
+        enough entries to actually exercise the sort, unlike solar_battery's
+        single entry."""
+        graph = catf_mfe_graph
+        assert len(graph.output_aliases) > 1, (
+            "Need multiple output_aliases entries to test sort order"
+        )
+        keys = [(a.instance_path, a.alias_name) for a in graph.output_aliases]
+        assert keys == sorted(keys), (
+            "output_aliases is not sorted by (instance_path, alias_name)"
+        )
+
+    @pytest.mark.req("REQ-DM-09")
+    def test_every_output_alias_channel_is_a_declared_output(self, catf_mfe_graph):
+        """INV-3: every emitted OutputAlias's canonical_channel is a real
+        declared output channel, not a dangling reference."""
+        graph = catf_mfe_graph
+        declared_channels = {
+            output.channel_name for module in graph.modules for output in module.outputs
+        }
+        undeclared = [
+            a.canonical_channel
+            for a in graph.output_aliases
+            if a.canonical_channel not in declared_channels
+        ]
+        assert not undeclared, (
+            f"output_aliases entries reference undeclared channels: {undeclared}"
+        )
+
+
 # ===========================================================================
 # REQ-GA-06: execution_order matches module ordering
 # ===========================================================================

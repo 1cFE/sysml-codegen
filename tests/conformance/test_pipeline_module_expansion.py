@@ -323,6 +323,27 @@ class TestModuleOutputFieldPopulation:
                         f"unit={mo.unit!r}, expected={attr.unit!r}"
                     )
 
+    @pytest.mark.req("REQ-PMM-02")
+    def test_module_outputs_have_default_value(self, solar_battery_graph):
+        """ModuleOutput.default_value matches CalcDef output attribute default_value."""
+        graph, inputs = solar_battery_graph
+        mapping = _build_calcusage_module_to_calcdef_map(graph, inputs)
+
+        for module_name, calc_def in mapping.items():
+            module = next(m for m in graph.modules if m.name == module_name)
+            output_attr_by_name = {a.name: a for a in calc_def.output_attributes}
+            for mo in module.outputs:
+                if mo.field_name == "root" and len(calc_def.output_attributes) == 1:
+                    attr = calc_def.output_attributes[0]
+                else:
+                    attr = output_attr_by_name.get(mo.field_name)
+                if attr:
+                    assert mo.default_value == attr.default_value, (
+                        f"Module {module_name}, output {mo.field_name}: "
+                        f"default_value={mo.default_value!r}, "
+                        f"expected={attr.default_value!r}"
+                    )
+
 
 class TestFormulaModuleFieldPopulation:
     """REQ-PMM-01: FORMULA modules have metadata populated from ComputedAttributeData."""

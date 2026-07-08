@@ -181,14 +181,20 @@ class TestReqOR02:
 
     @pytest.mark.req("REQ-OR-02")
     def test_no_single_resolve_method(self):
-        """OutputRegistry has scoped_lookup, sysml_qn_lookup, alias_lookup."""
+        """OutputRegistry has 4 typed lookups (scoped, sysml_qn, alias,
+        scoped_alias) and no single catch-all `resolve()`."""
         registry = OutputRegistry()
         assert hasattr(registry, "scoped_lookup")
         assert hasattr(registry, "sysml_qn_lookup")
         assert hasattr(registry, "alias_lookup")
+        assert hasattr(registry, "scoped_alias_lookup")
         assert callable(registry.scoped_lookup)
         assert callable(registry.sysml_qn_lookup)
         assert callable(registry.alias_lookup)
+        assert callable(registry.scoped_alias_lookup)
+        assert not hasattr(registry, "resolve"), (
+            "OutputRegistry must not expose a single catch-all resolve() method"
+        )
 
     @pytest.mark.req("REQ-OR-02")
     @pytest.mark.parametrize("model_name", ["solar_battery_model"])
@@ -275,12 +281,51 @@ class TestReqOR03:
 
         alias_key = ScopedKey("plant.alias")
         registry.register_alias(alias_key, cc1)
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             registry.register_alias(alias_key, cc2)
 
         # First value should be retained
         result = registry.alias_lookup(alias_key)
         assert result == cc1
+
+        # register_alias itself demotes the per-collision line to DEBUG (Item 7 /
+        # D5) -- confirm that fires, and confirm the collision is actually counted
+        # (not silently absorbed) so the builder-level summary below has something
+        # to report on.
+        debug_records = [r for r in caplog.records if r.levelno == logging.DEBUG]
+        assert debug_records, "Expected a DEBUG record for the per-collision line"
+        assert registry.alias_collision_count == 1
+
+    @pytest.mark.req("REQ-OR-03")
+    def test_alias_collision_emits_one_warning_count_summary(self, caplog):
+        """build_output_registry SHALL emit exactly one WARNING count-summary
+        when alias collisions occur (Item 7 / D5) -- the per-collision DEBUG
+        lines are not, by themselves, a diagnosed collision. catf_mfe_model is
+        a real fixture with 27 collisions across 5 distinct keys."""
+        snap = load_extraction_snapshot(snapshot_fixture("catf_mfe_model"))
+        with caplog.at_level(logging.WARNING, logger="sysml_codegen.orchestration.output_registry_builder"):
+            registry = build_output_registry(
+                calc_usages=snap["calc_usages"],
+                calc_defs=snap["calc_defs"],
+                aggregation_data=snap["aggregation_expressions"],
+                computed_attributes=snap["computed_attributes"],
+                channel_aliases=snap["channel_aliases"],
+                design_attributes=snap.get("design_attributes", []),
+            )
+
+        assert registry.alias_collision_count > 0, (
+            "Fixture expected to produce alias collisions; if this fails the "
+            "fixture drifted -- pick another model with real collisions"
+        )
+        collision_warnings = [
+            r for r in caplog.records
+            if r.levelno == logging.WARNING and "alias collision" in r.message
+        ]
+        assert len(collision_warnings) == 1, (
+            f"Expected exactly one collision count-summary WARNING, got "
+            f"{len(collision_warnings)}"
+        )
+        assert str(registry.alias_collision_count) in collision_warnings[0].message
 
 
 # ===================================================================
