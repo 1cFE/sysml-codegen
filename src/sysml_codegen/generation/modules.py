@@ -16,8 +16,6 @@ import jinja2
 
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
 
-from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
-
 
 def _output_attr_name(out) -> str:
     """Get original output attribute name from ModuleOutput.

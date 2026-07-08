@@ -67,7 +67,11 @@ def _extract_signature_from_impl(impl_path: Path) -> FunctionSignature | None:
                 # Extract input parameter type
                 if len(node.args.args) > 0:
                     first_param = node.args.args[0]
-                    input_type = ast.unparse(first_param.annotation) if first_param.annotation else "Unknown"
+                    input_type = (
+                        ast.unparse(first_param.annotation)
+                        if first_param.annotation
+                        else "Unknown"
+                    )
                 else:
                     input_type = "Unknown"
 

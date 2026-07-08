@@ -6,37 +6,6 @@
 
 ## Active Work
 
-### TRUTH-DEBT epic — ✅ COMPLETE (all 6 items implemented and audited, 2026-07-08)
-
-Orchestrated run on branch `truth-debt-epic` (2026-07-06..08). All six items landed with
-per-item audits (PASS or PASS-with-findings, none blocking); every SC box checked in
-`.project/backlog/epic_truth_debt.md`, Lessons Learned filled.
-
-- **Item 1 (F4 cutover)**: live aggregation path = `resolve_input(AGG_STRATEGIES)`, Strategy D
-  + `_resolve_aggregation_input_channel` deleted; param_groups typing split; mypy 104→97.
-- **Item 2 (multi-hop chains)**: extraction emits full-path CHAIN; backtracker Step CLIMB with
-  distinct-channel refuse guard; loud Step-4 WARNING; live/offline parity green.
-- **Item 4 (classifier)**: Step-2b accepts ancestor-PartDef prefixes (`_ancestor_part_qns`);
-  the 5 xfails flipped to PASS; suite xfail count now 0.
-- **Item 3 (test gaps)**: DM-08 (AST-scan), RES-05 (inner-step ordering), RES-08 (four-leg
-  scope paths) pinned; rows UNTESTED→PASS.
-- **Item 6 (hygiene tail)**: loader load-bearing-field chokes, whole-token aggregation
-  compile (`cost`/`cost_total` fix), registry unmapped-type WARN; site 4 reclassified with
-  evidence (`[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`); all mutation probes RED→GREEN live.
-- **Item 5 (sweep residue)**: EC-04/AS-06 mutation-proven; 16/17 strengthens (PGD-03 honestly
-  reclassified — "one group per file" is false on real fixtures); 12 reframes; 5 citation
-  fixes; 32-row sweep remainder filed as `[ITEM5-SWEEP-RESIDUE-OVERFLOW]`.
-
-**Gates at epic HEAD (run live)**: suite **2120 passed / 4 skipped / 0 xfailed**; ruff src
-**17**; mypy src **97**; matrix **259 = 258 PASS + 1 UNTESTED** (recounted from rows);
-baselines byte-identical throughout (all re-captures via capture scripts).
-
-**Human actions**: review the branch, then `/_my_close` + PR. Filed residue:
-`[ITEM5-SWEEP-RESIDUE-OVERFLOW]`, `[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]`,
-`[DM08-MODEL-FIELD-TYPING]`, `[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` (pre-existing stale
-baseline, reproduces on the parent commit). PUSH-DOWN is now unblocked (its gate was
-Items 1/2/6).
-
 ### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
 
 **The generated package is the truth.** fusion-tea's models generate, wire, and execute
@@ -274,6 +243,13 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 
 
 ## Recently Completed
+
+### 2026-07-08: TRUTH-DEBT Epic
+- Archived all six audited items plus the epic ledger to `.project/completed/`.
+- Retired the F4 aggregation cutover, resolved multi-hop chain support, matrix test gaps,
+  inherited-attr classifier fix, matrix sweep residue, and D3 hygiene tail.
+- Pre-PR gates: 2120 passed / 4 skipped / 0 xfailed; ruff src clean; mypy src 97;
+  matrix 259 = 258 PASS + 1 UNTESTED.
 
 ### 2026-02-17: Phase 5 — E2E Pipeline Validation (5.2) — Checkpoint 5
 - 16 conformance tests in `tests/conformance/test_pipeline_e2e.py`

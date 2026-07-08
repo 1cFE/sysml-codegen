@@ -32,6 +32,7 @@ from sysml_codegen.core.models import (
     BindingResolutionType,
     ChannelAlias,
 )
+from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import (
     get_channel_name,
     get_module_name,
@@ -46,7 +47,6 @@ from sysml_codegen.extraction.data_models import (
     RedefinitionType,
     ScopedAggregationData,
 )
-from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
     Compilability,
@@ -305,7 +305,8 @@ def build_computation_graph(
                 )
 
     # Step 6.6b: Build EXPOSE_PURE alias map for aggregation LocalTerm resolution.
-    # Maps (owning_part_qn, python_name) -> expression_text (e.g., "allocation_model.total_allocation").
+    # Maps (owning_part_qn, python_name) -> expression_text.
+    # Example expression text: "allocation_model.total_allocation".
     # Used by _build_aggregation_module() to wire LocalTerms that are computed attribute aliases.
     # NOTE: ComputedAttributeData.owning_part_qualified_name uses "::" separator with raw names
     # (e.g., "SolarBatteryLibrary::'Solar Array'"), while AggregationExpressionData.owning_part_qn
@@ -1586,7 +1587,9 @@ def _build_aggregation_module(
         auto_impl_context=auto_impl_ctx,
         calc_def_name=agg.expression.attribute_name,
         calc_def_qualified_name=agg.expression.owning_part_qn,
-        calc_expressions=[agg.expression.raw_expression_text] if agg.expression.raw_expression_text else None,
+        calc_expressions=(
+            [agg.expression.raw_expression_text] if agg.expression.raw_expression_text else None
+        ),
         source_file=str(agg.expression.source_file),
         source_line=agg.expression.source_line,
     ), new_entry_points
@@ -1708,7 +1711,6 @@ def _build_pipeline_module(
 
     # Build inputs - ADR-003 Phase 7: FAIL FAST, NO FALLBACK
     inputs: list[ModuleInput] = []
-    input_attr_by_name = {a.name: a for a in calc_def.input_attributes}
     for input_attr in calc_def.input_attributes:
         param_name = input_attr.name
         mapping_key = f"{usage.qualified_name}|{param_name}"

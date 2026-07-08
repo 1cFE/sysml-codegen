@@ -65,7 +65,15 @@ class DomainKeywords:
             return cls(
                 power_keywords={"power", "load", "cooling", "heating", "pump", "cryo", "blanket"},
                 efficiency_keywords={"efficiency", "eta", "factor", "ratio", "carnot"},
-                physics_keywords={"fusion", "plasma", "neutron", "alpha", "thermal", "tritium", "magnet"},
+                physics_keywords={
+                    "fusion",
+                    "plasma",
+                    "neutron",
+                    "alpha",
+                    "thermal",
+                    "tritium",
+                    "magnet",
+                },
                 custom_keywords={"tokamak", "stellarator", "mfe", "ife", "radial"},
             )
         elif domain == "aerospace":

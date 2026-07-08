@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-08
 
 ---
 
@@ -77,25 +77,24 @@ Compounding factors the fix must address, not just the query:
 
 ## P2 - Medium Priority
 
-### [TRUTH-DEBT] Truth-Debt Retirement — the PIPELINE-TRUTH follow-on ledger
+### ~~[TRUTH-DEBT] Truth-Debt Retirement — the PIPELINE-TRUTH follow-on ledger~~ ✅
 
-**Filed 2026-07-06** as `epic_truth_debt.md`. **Status: Draft.** Estimated ~7–9.5 days (6
-items). Retires the work PIPELINE-TRUTH deliberately filed rather than rush: the F4
+**Filed 2026-07-06** as `epic_truth_debt.md`. **Status: Complete (2026-07-08).**
+Archived to: `.project/completed/20260708_epic_truth_debt.md`.
+
+Retired the work PIPELINE-TRUTH deliberately filed rather than rush: the F4
 aggregation-resolution cutover, resolved multi-hop chain support, the three matrix test-gaps,
-the inherited-attr classifier fix, the matrix sweep residue, and the D3 hygiene tail. No
-discovery sweep — every item carries implement-time evidence (probes, pins, filings with
-file:line). Carries forward R1–R4 verbatim. **Sequencing: lands before PUSH-DOWN** (Items 1/2/6
-touch extraction/resolution surfaces PUSH-DOWN moves — moved code is born correct).
+the inherited-attr classifier fix, the matrix sweep residue, and the D3 hygiene tail. All six
+items were implemented and audited; pre-PR gates recorded 2120 passed / 4 skipped /
+0 xfailed, ruff src clean, mypy src 97.
 
-Items (each absorbs a filing below):
-- [ ] Item 1 — F4 aggregation cutover (+ `[GB-PARAMGROUPS-TYPING]` folded in), lands first
-- [ ] Item 2 — resolved multi-hop chain bindings
-- [ ] Item 3 — matrix test-gap authoring (DM-08, RES-05, RES-08)
-- [ ] Item 4 — inherited-attr classifier fix (flip the 5 xfails)
-- [ ] Item 5 — matrix sweep residue
-- [ ] Item 6 — D3 hygiene tail
-
-See `.project/backlog/epic_truth_debt.md`.
+Items archived:
+- [x] Item 1 — F4 aggregation cutover (+ `[GB-PARAMGROUPS-TYPING]` folded in)
+- [x] Item 2 — resolved multi-hop chain bindings
+- [x] Item 3 — matrix test-gap authoring (DM-08, RES-05, RES-08)
+- [x] Item 4 — inherited-attr classifier fix (flip the 5 xfails)
+- [x] Item 5 — matrix sweep residue
+- [x] Item 6 — D3 hygiene tail
 
 ### [SYNC-F3] Shape-B leaf-collision filename edge (UPSTREAM-FINDINGS Item 12, F3)
 

@@ -161,7 +161,10 @@ def generate_derived_group_schema(
     if group.source_type == "design":
         description = f"Parameters from {group.source_identifier}.\n\nSource Type: Design file"
     else:
-        description = f"Parameters from library {group.source_identifier}.\n\nSource Type: Library (no defaults)"
+        description = (
+            f"Parameters from library {group.source_identifier}.\n\n"
+            "Source Type: Library (no defaults)"
+        )
 
     # Build template context
     context = {
@@ -179,7 +182,10 @@ def generate_derived_group_schema(
         schema_code += "\n"
 
     logger.info(
-        f"Generated derived schema '{group.class_name}' with {len(fields)} parameters: {output_path}"
+        "Generated derived schema '%s' with %d parameters: %s",
+        group.class_name,
+        len(fields),
+        output_path,
     )
 
     return schema_code

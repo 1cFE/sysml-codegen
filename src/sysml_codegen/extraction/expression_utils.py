@@ -8,7 +8,6 @@ from typing import Any
 
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-
 # Operator mapping for expression reconstruction (SysML text output)
 OPERATOR_MAP = {
     "and": " and ",

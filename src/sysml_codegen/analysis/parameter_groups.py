@@ -637,7 +637,10 @@ class ParameterGroupDeriver:
         calc_def_by_name = {cd.name: cd for cd in self.calc_defs}
 
         for qualified_name, (source_file, calc_def_name) in unbound_index.items():
-            file_stem = self._get_file_stem(str(source_file.stem) if hasattr(source_file, 'stem') else str(source_file))
+            source_stem = (
+                str(source_file.stem) if hasattr(source_file, "stem") else str(source_file)
+            )
+            file_stem = self._get_file_stem(source_stem)
             simple_name = qualified_name.split("__")[-1]
 
             default_value = None

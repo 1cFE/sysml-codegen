@@ -29,6 +29,7 @@ from sysml_codegen.core.qualified_names import sanitize_qualified_name
 
 if TYPE_CHECKING:
     from agentic_mbse.sysml.types import BindingInfo
+
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,8 @@ class BacktrackingResult(BaseModel):
             For literal bindings: str(literal_value) (for default value propagation).
         phantom_report: Report of suspected phantom entry points
         trace_log: Debug trace of resolution steps (for troubleshooting)
-        binding_resolutions: Unified mapping for ALL binding resolutions (entry_point OR module_output).
+        binding_resolutions: Unified mapping for ALL binding resolutions
+            (entry_point OR module_output).
             Key format: "{usage_qualified_name}|{param_name}".
             Value: Complete BindingResolution describing how the binding is wired.
             This is the SINGLE SOURCE OF TRUTH for binding resolution.
@@ -402,7 +404,9 @@ class DependencyBacktracker:
                     )
                     self._entry_point_context[resolution.qualified_name] = usage
                     if resolution.source_path:
-                        self._entry_point_sources[resolution.qualified_name] = resolution.source_path
+                        self._entry_point_sources[resolution.qualified_name] = (
+                            resolution.source_path
+                        )
 
             elif binding.binding_type == BindingType.EXPRESSION:
                 # EXPRESSION bindings: no dispatch path, treat as entry point
