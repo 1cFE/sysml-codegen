@@ -66,8 +66,10 @@ and the deferred capabilities are built, not parked.
   ambiguity guard (D2/D4/M-1); the loud diagnostic moved to the backtracker Step-4 fallback
   (D3). Both corpus chains wired (data_point via climb, base_metric via Step 1); re-capture
   decomposed; live/offline parity green. See `.project/active/multihop-chain/plan.md`.
-- [ ] **SC-C (test gaps)**: REQ-DM-08, REQ-RES-05, and REQ-RES-08 each get an
-  independently-anchored pinning test; their matrix rows flip UNTESTED→PASS.
+- [x] **SC-C (test gaps)**: REQ-DM-08, REQ-RES-05, and REQ-RES-08 each get an
+  independently-anchored pinning test; their matrix rows flip UNTESTED→PASS. Audited PASS
+  (`.project/active/matrix-test-gaps/audit.md`); gate counts and mutation red→green not
+  re-executed (sandbox-blocked), static tracing confirms everything else.
 - [ ] **SC-D (classifier)**: the Step-2b owning-part prefix check accepts a
   supertype-namespace QN; the parametrized xfail site (`test_computed_attributes.py:787`)
   flips to PASS (5 cases); REQ text + matrix rows move in the same change.
@@ -312,7 +314,8 @@ pinning test.
 **Success Criteria**:
 - [ ] Each of the three tests fails under a deliberate production mutation (spot-check noted in
   close-out).
-- [ ] Matrix rows flip UNTESTED→PASS; recount from rows holds.
+- [x] Matrix rows flip UNTESTED→PASS; recount from rows holds. Verified by audit
+  (recount 256 = 255 PASS + 1 UNTESTED, grepped from the row table directly).
 - [ ] Suite green; baselines byte-identical.
 
 **Required Reading**: BACKLOG `[ITEM7-MATRIX-TEST-GAPS]`;
