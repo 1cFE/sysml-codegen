@@ -295,32 +295,32 @@ fixture authored (spec's explicit rule: do not manufacture a fixture to upgrade 
 Land the 5 marker/traceability-only fixes from spec table C.
 
 ### Changes Required
-- [ ] REQ-BASE-01 (`:107`) — re-cite / add `# REQ-BASE-01` marker to
+- [x] REQ-BASE-01 (`:107`) — re-cite / add `# REQ-BASE-01` marker to
   `test_graph_assembly.py::TestBaselineComparison` (currently marked REQ-GA-01; confirm dual-marking
   convention used elsewhere in the file, or add a second marker line per existing pattern).
-- [ ] REQ-NC-08 (`:339`) — add `test_formula_quoted_owner.py` to the citation (FORMULA
+- [x] REQ-NC-08 (`:339`) — add `test_formula_quoted_owner.py` to the citation (FORMULA
   module_eqn/channel leg).
-- [ ] REQ-VBR-10 (`:538`) — add `test_self_named_binding_trap.py::test_self_named_binding_resolves_to_own_param`
+- [x] REQ-VBR-10 (`:538`) — add `test_self_named_binding_trap.py::test_self_named_binding_resolves_to_own_param`
   to the citation.
-- [ ] REQ-HR-08 (`:277`) — add a `# REQ-HR-08` marker at
+- [x] REQ-HR-08 (`:277`) — add a `# REQ-HR-08` marker at
   `test_virtual_binding_rewrite.py::TestChainOverrideFixtureCoverage` (currently marked REQ-VBR-04).
-- [ ] REQ-PY-08 (`:440`) — add `@pytest.mark.req("REQ-PY-08")` (or the project's actual marker
+- [x] REQ-PY-08 (`:440`) — add `@pytest.mark.req("REQ-PY-08")` (or the project's actual marker
   convention — check an existing marked test for the exact decorator/pattern) to the cited method
   in `test_gen_pipeline_yaml.py`; currently docstring-only.
 
 ### R4 Reproduction
-- [ ] Confirm each "claim IS pinned by" test still exists and still pins the claim at HEAD (grep
+- [x] Confirm each "claim IS pinned by" test still exists and still pins the claim at HEAD (grep
   each cited test name).
 
 ### Validation
 **Automated:**
-- [ ] Full suite → unaffected (markers/citations don't change test behavior).
-- [ ] If the project's matrix-tooling validates markers (check for a script/CI step that binds
+- [x] Full suite → unaffected (markers/citations don't change test behavior).
+- [x] If the project's matrix-tooling validates markers (check for a script/CI step that binds
   `# REQ-*` markers to matrix rows), run it and confirm the 5 rows now bind correctly.
-- [ ] Byte-identity check → zero diff (no production code touched).
+- [x] Byte-identity check → zero diff (no production code touched).
 
 **Manual:**
-- [ ] Confirm REQ-DM-09's docstring-only marker was fixed in phase 2 (its STR row), not
+- [x] Confirm REQ-DM-09's docstring-only marker was fixed in phase 2 (its STR row), not
   re-touched here — avoid double-editing the same test file's marker in two phases.
 
 **What We Know Works After This Phase:** All 5 citation gaps closed; matrix tooling (if any) binds
@@ -584,6 +584,19 @@ rationale verbatim.
 (`git diff --stat` shows only `verification-matrix.md`, 12 insertions/12 deletions).
 
 ### Phase 4 Completion
+**Completed:** 2026-07-08. Commit `d252752`.
+
+All 5 citations landed: REQ-BASE-01 (re-cited to `test_graph_assembly.py::TestBaselineComparison`,
+which now carries a real marker across all 3 methods), REQ-NC-08 (added `test_formula_quoted_owner.py`
+to citation), REQ-VBR-10 (added marker + citation to `test_self_named_binding_trap.py`'s
+resolves-to-own-param test), REQ-HR-08 (added marker to `TestChainOverrideFixtureCoverage`, confirmed
+the fixture's override sits on `part redefines`), REQ-PY-08 (added marker to the wi014_toy YAML
+baseline test). Confirmed no double-edit of REQ-DM-09's marker (that was fixed in its own STR row
+in Phase 2, not touched again here).
+
+**Validation:** targeted files 119/119 green, full suite 2120/4 unaffected, ruff/mypy unchanged
+(17/97), `git status` clean on `tests/fixtures/baseline_outputs/`.
+
 ### Phase 5 Completion
 (residue exact count from step 5.0, rows landed vs. re-filed, stopping-rule trigger point)
 ### Phase 6 Completion
