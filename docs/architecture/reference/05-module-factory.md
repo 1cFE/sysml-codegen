@@ -23,6 +23,7 @@ Item 1.) All three produce a [PipelineModule](09-data-models.md#resolution-model
 | REQ-MF-06 | SumTerm and SingletonTerm LITERAL fallback SHALL use `_find_literal_redefinition()` to propagate `:>>` default values. See [18](18-literal-value-propagation.md). | Entry point `default_value` matches `RedefinitionData.literal_value` when LITERAL redef exists |
 | REQ-MF-07 | LocalTerm resolution SHALL try: (1) sibling aggregation output, (2) [EXPOSE_PURE alias](16-computed-attributes.md), (3) entry point fallback -- in that order. | Three `if/elif/else` branches in LocalTerm loop; order-dependent (Strategy 1 checked first) |
 | REQ-MF-08 | Single-output modules SHALL use `field_name="root"`; multi-output SHALL use attribute names. | `len(outputs)==1 => outputs[0].field_name=="root"`; `len(outputs)>1 => field_name==attr.name` |
+| REQ-MF-09 | The aggregation compile step SHALL substitute each symbolic ref with its `inputs.X` form on **whole-token** boundaries (`re.sub(r"\bref\b", …)`), never a plain substring `.replace()`. | A ref that is a substring of another (`cost` / `cost_total`) SHALL NOT corrupt (`inputs.inputs.cost_total`); disjoint refs SHALL compile byte-identically. TRUTH-DEBT Item 6, Site 2; conformance: `test_hygiene_tail_agg_compile.py` |
 
 ## 1. The PipelineModule Data Model
 
@@ -198,7 +199,11 @@ Tries three strategies in order (REQ-MF-07):
 
 After all terms are processed, symbolic references (`pv_module.capital_cost`)
 are replaced with input references (`inputs.pv_module_capital_cost`) to produce
-`compiled_expression`. **Flags**: `is_aggregation=True`.
+`compiled_expression`. The substitution is **whole-token** (`re.sub(r"\bref\b", …)`),
+not a plain substring `.replace()`: a length-sorted `.replace()` still corrupts when
+one ref is a substring of another (`cost` matches inside an already-substituted
+`inputs.cost_total` → `inputs.inputs.cost_total`); the `\b` boundary blocks that
+(REQ-MF-09). **Flags**: `is_aggregation=True`.
 
 ### Concrete example
 

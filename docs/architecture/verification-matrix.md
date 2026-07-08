@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 256 |
-| PASS (test exists and passes) | 255 |
+| Total requirements | 259 |
+| PASS (test exists and passes) | 258 |
 | UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
 | REQ families | 30 |
-| Distinct test files cited | 62 |
+| Distinct test files cited | 65 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -46,7 +46,7 @@ the documentation rather than executable code.
 - [HR — Hierarchy Resolver](#hr) (8/8 pass)
 - [IR — Input Resolver](#ir) (7/7 pass)
 - [LVP — Literal Value Propagation](#lvp) (9/9 pass)
-- [MF — Module Factory](#mf) (8/8 pass)
+- [MF — Module Factory](#mf) (9/9 pass)
 - [NC — Naming Conventions](#nc) (9/9 pass)
 - [OR — Output Registry](#or) (9/9 pass)
 - [ORCH — Orchestration](#orch) (7/7 pass)
@@ -55,9 +55,9 @@ the documentation rather than executable code.
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
 - [PY — Pipeline YAML](#py) (8/8 pass)
-- [REG — Module Registry](#reg) (8/8 pass)
+- [REG — Module Registry](#reg) (9/9 pass)
 - [RES — Resolution Overview](#res) (6/8 pass, 2 untested)
-- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (19/19 pass)
+- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (20/20 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
 - [SVM — Supplied-Value Materializer](#svm) (4/4 pass)
 - [VBR — Virtual Binding Rewrite](#vbr) (11/11 pass)
@@ -322,6 +322,7 @@ the documentation rather than executable code.
 | REQ-MF-06 | SumTerm and SingletonTerm LITERAL fallback SHALL use `_find_literal_redefinition()` to pr... | `test_factory_aggregation.py` | PASS |
 | REQ-MF-07 | LocalTerm resolution SHALL try: (1) sibling aggregation output, (2) EXPOSE_PURE alias, (3... | `test_factory_aggregation.py` | PASS |
 | REQ-MF-08 | Single-output modules SHALL use `field_name="root"`; multi-output SHALL use attribute nam... | `test_factory_calc_usage.py` | PASS |
+| REQ-MF-09 | The aggregation compile step SHALL substitute each symbolic ref with its `inputs.X` form on whole-token boundaries (`re.sub(r"\bref\b", …)`), never a plain substring `.replace()` — a ref that is a substring of another (`cost`/`cost_total`) SHALL NOT corrupt to `inputs.inputs.cost_total`; disjoint refs compile byte-identically (TRUTH-DEBT Item 6, Site 2) | `test_hygiene_tail_agg_compile.py` | PASS |
 
 ### NC
 
@@ -453,6 +454,7 @@ the documentation rather than executable code.
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | `test_gen_registry.py` | PASS |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | `test_gen_registry.py` | PASS |
 | REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | `test_sc11_recheck.py` | PASS |
+| REQ-REG-09 | `_collect_exit_point_primitive_types` SHALL warn (not silently skip) on a single-output (`field_name="root"`) exit point whose `python_type` is outside `{float,int,str,bool}` — notably `"Any"` (latent on the current corpus, reachable live via `extractor.py:492`; TRUTH-DEBT Item 6, Site 3) | `test_hygiene_tail_registry.py` | PASS |
 
 ### RES
 
@@ -494,6 +496,7 @@ the documentation rather than executable code.
 | REQ-SNAP-17 | CalcUsage auto-implements from a snapshot (SC-10) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-18 | The lone `generation_timestamp` template var has zero render sites | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-19 | Live generation is byte-identical to snapshot generation, incl. symlinked models (license-gated; skips cleanly without a license, verified live during Item 2) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-20 | A missing load-bearing field on a deserialized dict is loud (V7): `python_type`/`binding_type`/`parent_part_path`/`owning_part_def_qn` warn and degrade to their defaults; `qualified_name` (keying) raises `SnapshotFormatError`; benign fields keep their `.get(default)` silently (TRUTH-DEBT Item 6, Site 1) | `test_hygiene_tail_loader.py` | PASS |
 
 ### SR
 

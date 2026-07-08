@@ -61,6 +61,7 @@ committed. Sentinels (`unknown`, `hierarchy`) pass through untouched.
 | **V4** version-current but no `compilation_results` | warn + degrade (CalcUsage auto-impl lost) |
 | **V5** every snapshot run | provenance banner to log/console (never into an artifact) |
 | **V6** `generate` extraction input | exactly one of `--models` / `--from-snapshot`; `--from-snapshot` + `--design-path-filter` is a hard error |
+| **V7** missing load-bearing field on a deserialized dict | not silently defaulted. A type/wiring/scoping field (`python_type`, `binding_type`, `parent_part_path`, `owning_part_def_qn`) warns and degrades to its default; a **keying** field (`qualified_name` on a calc usage or design attribute) raises `SnapshotFormatError` — a silent default would mis-key the output registry. The benign majority (`is_input`, `unit`, `source_line`, list fields, …) keeps its `.get(default)` untouched. TRUTH-DEBT Item 6, Site 1. |
 
 ## CLI
 
@@ -97,9 +98,13 @@ item adds REQ-SNAP-08+.
 | REQ-SNAP-17 | CalcUsage auto-implements from a snapshot (SC-10) | `test_snapshot_generation::test_chain_spike_autoimpl_from_snapshot` |
 | REQ-SNAP-18 | The lone `generation_timestamp` template var has zero render sites | `test_snapshot_generation::test_generation_timestamp_has_no_render_site` |
 | REQ-SNAP-19 | Live generation is byte-identical to snapshot generation, incl. symlinked (SC-1) | `test_snapshot_generation::test_live_vs_snapshot_byte_identical[_symlinked]` (license-gated) |
+| REQ-SNAP-20 | A missing load-bearing field on a deserialized dict is loud (V7): `python_type`/`binding_type`/`parent_part_path`/`owning_part_def_qn` warn and degrade; `qualified_name` (keying) raises `SnapshotFormatError`; benign fields keep their default silently (TRUTH-DEBT Item 6, Site 1) | `test_hygiene_tail_loader.py` (fires-on-shape/raise + silent-on-clean) |
 
 ## agentic-mbse impact
 
 **None** beyond this docs pointer. The item adds a generation input path; the
 executable SysML subset and the auditor are unchanged. This doc is the pointer
 noted for agentic-mbse consumers running generation from snapshots in CI (R2).
+The Item-6 load-bearing-field diagnostics (V7 / REQ-SNAP-20) live entirely in the
+in-repo snapshot loader — they do not touch the SysIDE adapter boundary, so there
+is no agentic-mbse lockstep surface.

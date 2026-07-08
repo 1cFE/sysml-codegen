@@ -1,8 +1,8 @@
 # Implementation Plan: D3 Hygiene Tail (four benign silent sites)
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-07
-**Last Updated:** 2026-07-07
+**Last Updated:** 2026-07-08
 **Branch:** truth-debt-epic
 **Epic:** TRUTH-DEBT — Item 6
 
@@ -427,21 +427,51 @@ substring collision (R4)`.
 Per-phase validation above is targeted (do **not** run the full suite while the parallel implement
 is running). The closing gate, run once at the end:
 
-- [ ] **Suite green:** `uv run pytest tests/` (coordinate timing with the parallel run).
-- [ ] **INV-6 final check:** the clean corpora still generate with **zero WARNINGs** — the
-      silent-on-clean tests plus the corpus-level assertion (`report.warnings == []` idiom,
-      `test_silent_failure_family1.py:133`). No new diagnostic fires on any clean fixture.
-- [ ] **Baselines byte-identical:** `uv run pytest tests/conformance/test_baselines.py`. No
-      covered model changed wiring or output. If a baseline moved, the shape was not benign —
-      **file it, do not force it** (spec Non-Goals); it leaves this item's scope.
-- [ ] **ruff ≤ 17, mypy ≤ 97:** `uv run ruff check src/` and `uv run mypy src/` — not worse than
-      the current baseline counts.
-- [ ] **R2 (agentic-mbse lockstep):** record the new-diagnostic surface for each site (likely
-      "no change needed" — these are in-repo loader/resolution/generation diagnostics), per the
-      epic R2 note.
-- [ ] **Docs loop (R4 step 4):** update the reference doc + modeling-assumptions/matrix rows for
-      each touched component in the same change — loader (`27-snapshot-generation.md`),
-      output registry (`10-output-registry.md`), and any matrix rows for the four sites.
+> **Gate-execution note (Phase 5 session).** The Phase-5 session ran under a permission
+> mode that blocks the test runner (`uv`, `pytest`, `python`, `ruff`, `mypy` all return
+> "requires approval") and is non-interactive, so no gate command could be re-executed —
+> confirmed both directly and via a subagent. The numbers below are from the **immediately
+> prior session's final run**, taken **after all four phases' code was committed** (commits
+> `c1e010d`→`53653a7`). Phase 5 changed **only docs** (`docs/architecture/reference/{05,20,27}*.md`,
+> `verification-matrix.md`, this plan) — no `src/` or `tests/` file, and no test parses those
+> docs (grep-verified: nothing under `tests/` reads `verification-matrix.md`). So the tree is
+> byte-identical to that green run and the gate results still hold. Flagged for the audit to
+> re-run in an approving session.
+
+- [x] **Suite green:** last run **2107 passed / 4 skipped / 0 xfailed** (`uv run pytest tests/`,
+      end of the code session). Pre-Item-6 baseline was 2094 passed; +13 = this item's new tests
+      (9 loader + 2 registry + 2 agg-compile). 2094 + 13 = 2107 ✓. **Not re-run in Phase 5** (see
+      note); tree unchanged since.
+- [x] **INV-6 final check:** no new diagnostic fires on any clean fixture. The three silent-on-clean
+      tests pass, and Phase 0's corpus-scan gate proved **0** clean-fixture fires for sites 1/2/3
+      (probe outputs recorded in `probes/verdict.md`). Site 4 — the one site whose predicate *did*
+      fire on 5/15 clean fixtures — was **reclassified, not shipped**, precisely so INV-6 holds.
+- [x] **Baselines byte-identical:** **16 passed** (`test_baselines.py`, run green in every harden
+      phase). No covered model changed wiring or output. **Not re-run in Phase 5**; no src change.
+- [x] **ruff ≤ 17, mypy ≤ 97:** held. `ruff check src/` = **17** (unchanged; touched files
+      `loader.py`/`registry.py`/`graph_builder.py` are each ruff-clean or carry only pre-existing
+      findings). `mypy src/` = **97** (unchanged; the only findings in touched files are
+      pre-existing — `registry.py:185`, `graph_builder.py:612/1668`, none introduced by this item;
+      the one lambda-typing regression from the first Site-2 attempt was removed before commit).
+      **Not re-run in Phase 5** (no src change since).
+- [x] **R2 (agentic-mbse lockstep):** **no change needed** for any of the three hardened sites.
+      All three diagnostics are in-repo and do not touch the SysIDE adapter boundary: Site 1 is the
+      snapshot loader (`snapshot/loader.py`), Site 3 is registry generation
+      (`generation/registry.py`), Site 2 is the aggregation module factory
+      (`resolution/graph_builder.py`). None consumes or extends `agentic_mbse.sysml.*`; the
+      executable SysML subset and the auditor are unchanged. Recorded explicitly in
+      `27-snapshot-generation.md` ("agentic-mbse impact"). Site 4 (reclassified) has no code
+      surface at all. So this item adds **zero** agentic-mbse lockstep obligations.
+- [x] **Docs loop (R4 step 4):** done in this change —
+      Site 1 → `reference/27-snapshot-generation.md` (V7 policy row + REQ-SNAP-20);
+      Site 3 → `reference/20-module-registry-generation.md` (REQ-REG-09);
+      Site 2 → `reference/05-module-factory.md` (compile prose + REQ-MF-09);
+      `verification-matrix.md` gained REQ-SNAP-20 / REQ-REG-09 / REQ-MF-09 with Summary
+      (256→259 total, 255→258 PASS, 62→65 test files) and Index (MF 9/9, REG 9/9, SNAP 20/20)
+      recounted. `modeling-assumptions.md` deliberately **untouched**: these three are internal
+      robustness diagnostics, not modeling-semantics assumptions; Site 4 (the one transitive-alias
+      / modeling-relevant site) had no code change. The originally-cited `10-output-registry.md`
+      needed no edit — Site 4's Phase-4 behavior is unchanged (reclassified).
 
 ---
 
@@ -533,6 +563,25 @@ still pass. One deviation: initial fix used a lambda-with-default-arg replacemen
 `Cannot infer type of lambda`, so switched to a plain string replacement (safe here since
 substitution values are always sanitized `inputs.{identifier}` strings).
 
+### Phase 5 Completion (Closing gate + docs loop)
+**Completed:** 2026-07-08. Docs loop landed for the three hardened sites: reference docs
+`27-snapshot-generation.md` (Site 1: V7 policy + REQ-SNAP-20), `20-module-registry-generation.md`
+(Site 3: REQ-REG-09), `05-module-factory.md` (Site 2: compile prose + REQ-MF-09); and
+`verification-matrix.md` (three new PASS rows; Summary 256→259 total / 255→258 PASS / 62→65 test
+files; Index MF 9/9, REG 9/9, SNAP 20/20). `modeling-assumptions.md` and `10-output-registry.md`
+left unchanged (internal diagnostics, not modeling semantics; Site 4 had no code change). R2:
+zero agentic-mbse lockstep obligations (all three diagnostics in-repo, no adapter boundary).
+
+**Deviation (blocker, recorded).** This session ran under a permission mode that blocks the test
+runner — `uv`, `pytest`, `python`, `ruff`, `mypy` all return "requires approval" and the session
+is non-interactive (confirmed directly and via a subagent). The gates could **not** be re-run
+here. They were last run green in the immediately-prior session *after* all code landed (suite
+2107/4/0, baselines 16, ruff 17, mypy 97); Phase 5 is docs-only and no test parses the edited
+docs, so the tree is byte-identical to that run and the results still hold. **Flagged for the
+audit to re-run in an approving session** — the one open verification action for this item.
+
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete** (2026-07-08; 3 sites hardened/fixed, Site 4
+reclassified. Final gates recorded from the prior code session — the Phase-5 session could not
+re-run them, see the Closing Gate note.)
