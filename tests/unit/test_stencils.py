@@ -22,6 +22,7 @@ import ast
 from pathlib import Path
 
 import jinja2
+import pytest
 
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.generation.stencils import (
@@ -628,3 +629,31 @@ class TestSmartRegenStubUpgrade:
 
         path = self._run_smart_regen(tmp_path, stub, module)
         assert "raise NotImplementedError" in path.read_text()
+
+    @pytest.mark.req("REQ-SR-05")
+    def test_backup_created_before_regen_through_real_stencil_path(self, tmp_path):
+        """REQ-SR-05: driven through the real `_generate_stencils` upgrade path
+        (not `backup_implementation()` called in isolation) -- a stub gets
+        upgraded to auto-impl, and a backup preserving the PRE-regen (stub)
+        content must exist in `handwritten/backup/` afterward. Writes only to
+        `tmp_path`, never a committed baseline (no byte-identity risk)."""
+        stub = 'def run_testcalc(inputs: TestCalcInput) -> float:\n    raise NotImplementedError("TODO")\n'
+        module = _make_pipeline_module(
+            auto_impl_context=_make_auto_impl_context(),
+            compilability=Compilability.FULLY_COMPILABLE,
+        )
+
+        path = self._run_smart_regen(tmp_path, stub, module)
+
+        # The stub was actually upgraded (regen happened).
+        assert "AUTO_IMPLEMENTED = True" in path.read_text()
+
+        # A backup of the PRE-regen stub content exists.
+        backup_dir = path.parent / "backup"
+        assert backup_dir.exists(), "backup_implementation was not called before regen"
+        backups = list(backup_dir.glob(f"{path.stem}_*.py"))
+        assert len(backups) == 1, f"Expected exactly one backup, found {backups}"
+        assert backups[0].read_text() == stub, (
+            "Backup content does not match the pre-regen stub -- backup ran "
+            "after the file was already overwritten, or backed up the wrong file"
+        )

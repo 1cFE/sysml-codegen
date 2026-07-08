@@ -18,7 +18,7 @@ with wrong values, caught in Phase A validation).
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` and `module_output` wiring | Example section present with 2+ modules |
 | REQ-DM-06 | Models with dedicated docs SHALL link to those docs, not duplicate detail | Delegation links for aggregation terms, expression compiler, etc. |
 | REQ-DM-07 | The data flow diagram SHALL show all pipeline stages and their primary I/O models | Diagram covers extraction → analysis → core → resolution → generation |
-| REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | Field type annotations use SysMLQN/EQN/PQN/CanonicalChannel/ScopedKey |
+| REQ-DM-08 | The typed-registry enforced surface SHALL use NewType wrappers: the wrappers are genuine `NewType`s, the four `OutputRegistry` registry dicts are annotated `dict[NewType, NewType]`, and `make_scoped_key`/`make_canonical_channel` return their NewType (model fields remain `str` by design — `[DM08-MODEL-FIELD-TYPING]`) | `test_dm08_enforced_surface.py` (AST-scan) |
 
 ## Data Flow
 ```
@@ -102,7 +102,9 @@ time. All downstream indexes, lookups, and registrations use typed names only.
 field carries. At HEAD the NewType annotations are enforced on `OutputRegistry`
 keys/values and the `make_*` constructors (`core/identifier_types.py`); the model
 fields listed are still annotated `str` in their dataclass/BaseModel definitions
-(REQ-DM-08 is open — see the verification matrix, where it is UNTESTED). Fields with
+(a deliberate deferral, filed `[DM08-MODEL-FIELD-TYPING]`; REQ-DM-08 now pins the
+enforced surface — `test_dm08_enforced_surface.py` — and its text names exactly that
+surface, per the matrix). Fields with
 no format constraint at all: `BindingInfo.param_name` (simple name),
 `PipelineModule.name` (module name = lowered EQN, could be typed later).
 

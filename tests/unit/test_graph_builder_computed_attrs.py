@@ -6,6 +6,7 @@ module building, and unified topological sort.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -165,6 +166,87 @@ class TestAttributeResolutionMap:
         resolution = attr_map["plant"]["p_alpha_out"]
         assert resolution.kind == AttributeResolutionKind.EXPOSE_ALIAS
         assert resolution.channel_name == "Pkg__plant__alpha_split__p_alpha"
+
+    @pytest.mark.req("REQ-CA-11")
+    def test_shape_a_expose_pure_registered_leaf_is_silent(self, caplog):
+        """REQ-CA-11: shape-A (part def) EXPOSE_PURE whose leaf IS registered in
+        _scoped_alias resolves to LITERAL with no warning (Item 10/11 path)."""
+        from sysml_codegen.core.identifier_types import (
+            CanonicalChannel,
+            ScopedAliasKey,
+            ScopedKey,
+        )
+
+        ca = _make_computed_attr(
+            "total_cost", "plant", "Pkg::plant",
+            classification=ComputedAttributeClassification.EXPOSE_PURE,
+            compilability=Compilability.FULLY_COMPILABLE,
+            compiled_expression=None,
+        )
+        ca.is_on_part_definition = True
+
+        channel = CanonicalChannel("Pkg__plant_instance__cost_calc__total_cost")
+        output_registry = OutputRegistry()
+        output_registry.register_scoped(ScopedKey("plant_instance.total_cost"), channel)
+        output_registry.register_scoped_alias(
+            ScopedAliasKey(("plant_instance", "total_cost")), channel
+        )
+
+        with caplog.at_level(
+            logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+        ):
+            attr_map = _build_attribute_resolution_map(
+                computed_attrs=[ca],
+                design_attrs={},
+                output_registry=output_registry,
+                calc_usage_names=set(),
+            )
+
+        assert attr_map["plant"]["total_cost"].kind == AttributeResolutionKind.LITERAL
+        assert not any(
+            "no scoped alias registered" in r.getMessage() for r in caplog.records
+        )
+
+    @pytest.mark.req("REQ-CA-11")
+    def test_shape_a_expose_pure_unregistered_leaf_warns_naming_real_cause(
+        self, caplog
+    ):
+        """REQ-CA-11: shape-A (part def) EXPOSE_PURE whose leaf is NOT registered
+        in _scoped_alias warns, and the warning names the real cause (the attr,
+        its owning part, and the unresolved python_name) -- not the retired Item-1
+        generic malformed-refs message. Fires-on-shape (R1): the registered
+        sibling case above stays silent; this unregistered case must not."""
+        ca = _make_computed_attr(
+            "orphan_cost", "plant", "Pkg::plant",
+            classification=ComputedAttributeClassification.EXPOSE_PURE,
+            compilability=Compilability.FULLY_COMPILABLE,
+            compiled_expression=None,
+        )
+        ca.is_on_part_definition = True
+
+        with caplog.at_level(
+            logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+        ):
+            attr_map = _build_attribute_resolution_map(
+                computed_attrs=[ca],
+                design_attrs={},
+                output_registry=OutputRegistry(),  # nothing registered
+                calc_usage_names=set(),
+            )
+
+        assert attr_map["plant"]["orphan_cost"].kind == AttributeResolutionKind.LITERAL
+        warning_messages = [r.getMessage() for r in caplog.records]
+        assert any("no scoped alias registered" in m for m in warning_messages), (
+            f"Expected the real-cause warning, got: {warning_messages}"
+        )
+        assert any(
+            "orphan_cost" in m and "plant" in m for m in warning_messages
+        ), (
+            f"Expected the warning to name the attribute and owning part, "
+            f"got: {warning_messages}"
+        )
+        # The retired Item-1 generic warning must not fire for this case.
+        assert not any("could not identify instance/output" in m for m in warning_messages)
 
     def test_literal_attr_resolves_to_literal(self):
         """Design attr not in computed_attrs -> not in resolution map."""
@@ -789,6 +871,77 @@ class TestBuildComputationGraphWithComputedAttrs:
         )
 
         assert len(graph.modules) == 0
+
+    def test_d5_formula_not_compilable_warns_no_module(self, caplog):
+        """D5 / INV-5 (fires-on-shape): a FORMULA that is not FULLY_COMPILABLE
+        emits a WARN naming the attr and produces no module — never a silent
+        fall-through. This is the loud delivery for the inherited-attr FORMULAs
+        the classifier fix produces (they stay MANUAL_REQUIRED).
+        """
+        _ensure_backtracking_result_rebuilt()
+
+        ca = _make_computed_attr(
+            "inherited_product",
+            "Derived_Component",
+            "UnresolvableAttrProbeLibrary::'Derived Component'",
+            compilability=Compilability.MANUAL_REQUIRED,
+        )
+        result = _make_minimal_backtracking_result()
+        group_deriver = _make_mock_group_deriver()
+
+        with caplog.at_level(
+            logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+        ):
+            graph = build_computation_graph(
+                result=result,
+                calc_defs=[],
+                design_attrs={},
+                group_deriver=group_deriver,
+                output_registry=OutputRegistry(),
+                computed_attributes=[ca],
+            )
+
+        assert len(graph.modules) == 0
+        d5 = [
+            r for r in caplog.records
+            if "FORMULA but not FULLY_COMPILABLE" in r.getMessage()
+        ]
+        assert len(d5) == 1, [r.getMessage() for r in caplog.records]
+        assert "inherited_product" in d5[0].getMessage()
+
+    def test_d5_fully_compilable_formula_builds_module_no_warning(self, caplog):
+        """D5 / INV-6 (silent-on-clean): a FULLY_COMPILABLE FORMULA builds its
+        module and emits NO D5 warning. Proves the diagnostic fires only on the
+        FORMULA+not-FULLY_COMPILABLE shape, so clean models stay zero-WARNING.
+        """
+        _ensure_backtracking_result_rebuilt()
+
+        ca = _make_computed_attr(
+            "area", "probe_design", "Pkg::probe_design",
+            compiled_expression="(inputs.length * inputs.width)",
+        )
+        result = _make_minimal_backtracking_result()
+        group_deriver = _make_mock_group_deriver()
+
+        with caplog.at_level(
+            logging.WARNING, logger="sysml_codegen.resolution.graph_builder"
+        ):
+            graph = build_computation_graph(
+                result=result,
+                calc_defs=[],
+                design_attrs={},
+                group_deriver=group_deriver,
+                output_registry=OutputRegistry(),
+                computed_attributes=[ca],
+            )
+
+        assert len(graph.modules) == 1
+        assert graph.modules[0].is_computed_attribute is True
+        d5 = [
+            r for r in caplog.records
+            if "FORMULA but not FULLY_COMPILABLE" in r.getMessage()
+        ]
+        assert d5 == [], [r.getMessage() for r in d5]
 
 
 # ---------------------------------------------------------------------------

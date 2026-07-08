@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 253 |
-| PASS (test exists and passes) | 249 |
-| UNTESTED (no dedicated test) | 4 |
+| Total requirements | 259 |
+| PASS (test exists and passes) | 258 |
+| UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
 | REQ families | 30 |
-| Distinct test files cited | 57 |
+| Distinct test files cited | 66 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -34,8 +34,8 @@ the documentation rather than executable code.
 - [AS — Aggregation Scoping](#as) (8/8 pass)
 - [AST — AST Dispatch Invariant](#ast) (10/10 pass)
 - [BASE — Baseline Conformance](#base) (6/6 pass)
-- [BT — Backtracker](#bt) (11/11 pass)
-- [CA — Computed Attributes](#ca) (11/11 pass)
+- [BT — Backtracker](#bt) (13/13 pass)
+- [CA — Computed Attributes](#ca) (12/12 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
@@ -46,7 +46,7 @@ the documentation rather than executable code.
 - [HR — Hierarchy Resolver](#hr) (8/8 pass)
 - [IR — Input Resolver](#ir) (7/7 pass)
 - [LVP — Literal Value Propagation](#lvp) (9/9 pass)
-- [MF — Module Factory](#mf) (8/8 pass)
+- [MF — Module Factory](#mf) (9/9 pass)
 - [NC — Naming Conventions](#nc) (9/9 pass)
 - [OR — Output Registry](#or) (9/9 pass)
 - [ORCH — Orchestration](#orch) (7/7 pass)
@@ -55,9 +55,9 @@ the documentation rather than executable code.
 - [PIPE — Pipeline](#pipe) (7/7 pass)
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
 - [PY — Pipeline YAML](#py) (8/8 pass)
-- [REG — Module Registry](#reg) (8/8 pass)
+- [REG — Module Registry](#reg) (9/9 pass)
 - [RES — Resolution Overview](#res) (6/8 pass, 2 untested)
-- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (19/19 pass)
+- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (20/20 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
 - [SVM — Supplied-Value Materializer](#svm) (4/4 pass)
 - [VBR — Virtual Binding Rewrite](#vbr) (11/11 pass)
@@ -73,7 +73,7 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-AS-01 | Each PartDef-level aggregation SHALL produce one `ScopedAggregationData` per design insta... | `test_aggregation_scoping.py` | PASS |
-| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) BEFORE child-walk fallback (Strate... | `test_aggregation_scoping.py` | PASS |
+| REQ-AS-02 | Instance discovery SHALL try direct match (Strategy 1) before child-walk fallback (Strategy 2), as observed on the disjoint fixture cases exercised (no dual-match part-def case exists to show the short-circuit directly) | `test_aggregation_scoping.py` | PASS |
 | REQ-AS-03 | Instance paths SHALL be converted from `__`-separated to dotted format with design prefix... | `test_aggregation_scoping.py` | PASS |
 | REQ-AS-04 | CHAIN aliases SHALL only be produced for non-deep-path redefinitions whose `source_path` ... | `test_aggregation_scoping.py` | PASS |
 | REQ-AS-05 | Phase 1b SHALL register a canonical channel for each `ScopedAggregationData` | `test_aggregation_scoping.py` | PASS |
@@ -89,7 +89,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-AST-01 | Every `is_instance()` dispatch that checks both FCE and OE SHALL check FCE first | `test_ast_dispatch_invariant.py`, `test_expression_compiler.py` | PASS |
 | REQ-AST-02 | Every dispatch site checking both FCE and OE SHALL include a comment: "MUST be before Ope... | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-03 | Among reference/operator branches ordering SHALL be FCE, OE, FRE; literal/null branches SHALL dispatch before the invocation catch-all | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-03 | Among reference/operator branches, dispatch ordering SHALL be FCE, OE, FRE (the cited test pins this ordering clause only; literal-before-catch-all is REQ-AST-08's row) | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "uns... | `test_ast_dispatch_invariant.py` | PASS |
@@ -104,7 +104,7 @@ the documentation rather than executable code.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-BASE-01 | ComputationGraph JSON matches captured baseline | `test_baselines.py` | PASS |
+| REQ-BASE-01 | ComputationGraph JSON matches captured baseline | `test_graph_assembly.py::TestBaselineComparison` (full-JSON compare; `test_baselines.py` only checks 3 keys exist) | PASS |
 | REQ-BASE-02 | Baseline JSON deserializes back to valid ComputationGraph | `test_baselines.py` | PASS |
 | REQ-BASE-03 | Registry __init__.py baseline is syntactically valid Python | `test_baselines.py` | PASS |
 | REQ-BASE-04 | execution_order length equals modules length in every baseline | `test_baselines.py` | PASS |
@@ -128,26 +128,29 @@ the documentation rather than executable code.
 | REQ-BT-09 | The FORMULA `::`-QN REFERENCE path SHALL per-segment sanitize (`sanitize_qualified_name`) before comparison/lookup so a quoted-owner QN matches the sanitized design-attribute QN (Bug A; six-site lockstep flip, INV-1) | `test_matcher_fixes_item7.py`, `test_dual_resolution.py` | PASS |
 | REQ-BT-10 | A design attribute owned by a part **def** (empty `parent_part`) SHALL match its binding via a leaf-unique fallback over design-part attributes (calc-def I/O excluded), returning a QN only when exactly one candidate exists, else None (Bug B; INV-2, no cross-wire) | `test_matcher_fixes_item7.py` | PASS |
 | REQ-BT-11 | `_resolve_chain_dispatch` SHALL query the structured `_scoped_alias` namespace (Step 1c) by splitting `source_path` at the last dot, trying the consumer-scope-prefixed key `(consumer_scope.prefix, leaf)` before the bare `(prefix, leaf)` (Item 10 #1 / D-D sibling disambiguation), ordered after Step 1b and before the unscoped Step 2 (INV-A: additive, only where the ladder fell through) | `test_sibling_channel_ambiguity.py`, `test_wi014_toy.py` | PASS |
+| REQ-BT-12 | For a 3+-segment CHAIN (`source_path.count(".") >= 2`), `_resolve_chain_dispatch` SHALL, after Step 2 misses, retry `scoped_lookup` over progressively shorter ancestor prefixes of the consumer scope (Step CLIMB, Item 2), collect every distinct non-self-reference hit, resolve iff exactly one, and refuse (return None → loud Step-4 fallback) on two or more — never silently pick (M-1 / INV-2b). Gated so 2-segment resolutions stay byte-identical (D4) | `test_dependency_backtracker.py`, `test_deep_cross_scope_probe.py` | PASS |
+| REQ-BT-13 | A 3+-segment CHAIN that reaches the Step-4 fallback SHALL emit a genuine `logger.warning` (WARNING level, distinct from the benign per-binding DEBUG line) naming the full untruncated chain, and surface as an entry point — never truncated to root, never silently wired (Item-5 loud-diagnostic contract, D3 home) | `test_dependency_backtracker.py` (fires-on-shape + silent-on-clean) | PASS |
 
 ### CA
 
 **Computed Attributes** — Component C05 — [reference/16-computed-attributes.md](reference/16-computed-attributes.md)
 
-**Known contract (Item 7):** one parametrized xfail site (`test_computed_attributes.py::TestInheritedAttrClassification::test_misclassification_documented`) produces N xfailed cases where an inherited attribute is classified EXPOSE_COMPUTED though FORMULA is correct — a supertype-namespace QN defeats the Step-2b prefix check. The misclassification is **loud** (EXPOSE_COMPUTED rejection, not silent wrong output) and no fusion-tea model hits it; the classifier fix is filed as `[ITEM7-CLASSIFIER-FIX]`. This is one documented contract, not five separate xfails.
+**Classification contract (Item 4, fixed):** an attribute that references only inherited and/or local attributes classifies FORMULA. An inherited attribute's QN resolves into the **supertype (ancestor PartDef)** namespace; Step-2b now prefix-matches the owning part QN OR any ancestor PartDef QN (`computed_attribute_extractor._ancestor_part_qns`), so an inherited-attr ref is a sibling, not a cross-namespace calc output. A genuine calc output (D3 `mixed_expose`) still classifies EXPOSE_COMPUTED — the over-correction control. Pinned positively by **REQ-CA-12** and the 7-row `TestInheritedAttrClassification` table; the old `test_misclassification_documented` xfail site is deleted (no vacuous parametrization). The prior framing called this misclassification "**loud** (EXPOSE_COMPUTED rejection)" — that was wrong: a misclassified inherited-attr FORMULA was a **silent no-op**, dropped by the graph builder with no module and no diagnostic (`graph_builder.py:269-288`; `test_computed_attributes_e2e.py`); only the "not a silent wrong value" half was true. The residual no-module outcome for these MANUAL_REQUIRED FORMULAs is now loud at generation via the graph-builder D5 diagnostic; actually compiling them is the filed follow-on `[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]`.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-CA-01 | Classification SHALL produce exactly one of the 5 stable values per attribute expression (the transient sixth, `EXPOSE_CHAIN_TENTATIVE`, never survives the Phase-3b confirm pass to a reader — INV-F) | `test_computed_attributes.py` | PASS |
+| REQ-CA-01 | Classification SHALL assign each attribute expression exactly one enum member | `test_computed_attributes.py` | PASS |
 | REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
 | REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
 | REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | `test_computed_attributes.py` | PASS |
 | REQ-CA-05 | No `EXPOSE_PURE` alias exists for a non-EXPOSE_PURE attribute; and all fixtures contain zero UNRESOLVABLE computed attributes (the "UNRESOLVABLE SHALL not generate modules/aliases" contract is unexercised — documented coverage gap) | `test_computed_attributes.py` | PASS |
-| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA, EXPOSE_ALIAS, or ... | `test_computed_attributes.py` | PASS |
+| REQ-CA-06 | `AttributeResolutionKind` SHALL classify each FORMULA input as FORMULA or EXPOSE_ALIAS as exercised (the LITERAL classification is exercised via the design-attribute/entry-point path, not this route) | `test_computed_attributes.py` | PASS |
 | REQ-CA-07 | FORMULA self-reference SHALL be excluded from `input_names` | `test_computed_attributes.py` | PASS |
 | REQ-CA-08 | FORMULA compilation SHALL NOT resolve sibling FORMULA outputs | `test_computed_attributes.py` | PASS |
 | REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
 | REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure` in `graph_builder.py`) for the resolvable case | `test_wi014_toy.py` | PASS |
+| REQ-CA-12 | A reference whose QN sits under the owning part OR any **ancestor PartDef** namespace SHALL be treated as a sibling (Step-2b widened via `_ancestor_part_qns`, transitive), so an attribute referencing only inherited/local attributes classifies FORMULA — not EXPOSE_COMPUTED; a reference under a top-level CalcDef namespace SHALL stay a `calc_ref` (D3 over-correction control, `mixed_expose`). A FORMULA computed attribute that reaches graph-build without being FULLY_COMPILABLE SHALL emit a WARN and produce no module (D5 — the no-module outcome is loud, never a silent drop) | `test_computed_attributes.py`, `test_computed_attribute_extraction.py`, `test_graph_builder_computed_attrs.py` | PASS |
 
 ### DM
 
@@ -157,24 +160,24 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-DM-01 | Every model referenced by another doc in this set SHALL appear here or have an explicit d... | `test_data_models.py` | PASS |
 | REQ-DM-02 | Every enum SHALL list ALL values with no omissions | `test_data_models.py` | PASS |
-| REQ-DM-03 | Field lists SHALL match source code (name, type, optionality) | `test_data_models.py` | PASS |
-| REQ-DM-04 | Every model SHALL state its parent class and source file location | `test_data_models.py` | PASS |
+| REQ-DM-03 | Field lists SHALL match source code (name) | `test_data_models.py` | PASS |
+| REQ-DM-04 | Every model SHALL be importable from its documented source file | `test_data_models.py` | PASS |
 | REQ-DM-05 | At least one populated `ComputationGraph` example SHALL demonstrate both `entry_point` an... | `test_data_models.py` | PASS |
 | REQ-DM-06 | The delegated data models (`ComputedAttributeData`, `ExpressionRef`, `PhantomDetectionReport`) are importable from their source modules (the doc-linking / no-duplication claim is not tested) | `test_data_models.py` | PASS |
 | REQ-DM-07 | Resolution-model field type annotations (`ComputationGraph`, `PipelineModule`, `ModuleInput`, `ParameterGroup`) match the documented containment hierarchy from doc 09 (no data-flow diagram is checked) | `test_data_models.py` | PASS |
-| REQ-DM-08 | Name fields with semantic format constraints SHALL use NewType wrappers, not bare `str` | — *(no test asserts model fields USE the NewType wrappers vs bare `str`; the wrappers exist in `identifier_types.py` but field-level usage is unverified — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-DM-08 | The typed-registry **enforced surface** SHALL use NewType wrappers: the wrappers in `identifier_types.py` are genuine `NewType`s over their bases, the four `OutputRegistry` registry dicts are annotated `dict[NewType, NewType]`, and `make_scoped_key`/`make_canonical_channel` return their NewType. (The `resolution/models.py` field annotations remain bare `str` by design — documented in 09-data-models.md and filed `[DM08-MODEL-FIELD-TYPING]`; `register_alias`'s `\| str` unions are a designed boundary, not drift) | `test_dm08_enforced_surface.py` (AST-scan — PEP-526 `self.x` annotations never reach `__annotations__`) | PASS |
 | REQ-DM-09 | `ComputationGraph.output_aliases: list[OutputAlias]` SHALL be a serialized field (no `exclude`, contrast `fallback_entry_points`) carrying each EXPOSE_PURE modeler name, its canonical channel (validated to exist — INV-3), instance path, and `shape`; stable-sorted by `(instance_path, alias_name)` (INV-5) so regen yields no ordering-only diff | `test_data_models.py`, `test_graph_assembly.py` | PASS |
 
 ### DRA
 
 **Dual Resolution Architecture** — Component X02 — [reference/24-dual-resolution-architecture.md](reference/24-dual-resolution-architecture.md)
 
-**Status (F4, Item 7):** the `resolve_input()` path these rows compare against is the not-yet-wired consolidation (see the [IR family note](#ir)); the parity checks compare it against the **backtracker DFS**, which is the live comparand, not against `_resolve_aggregation_input_channel` (the function the cutover replaces — [ITEM7-F4-CUTOVER]'s own gate). The live aggregation path is `_resolve_aggregation_input_channel`.
+**Status (F4 cutover LANDED, TRUTH-DEBT Item 1):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is now the **live** aggregation SumTerm/SingletonTerm resolution path — wired through the `_build_agg_input_source()` choke point in `graph_builder._build_aggregation_module`. The channel-only `_resolve_aggregation_input_channel` and the three inline entry-point fallbacks are deleted. These parity checks compare the live path against the **backtracker DFS** (the independent comparand).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs st... | `test_backtracker.py` | PASS |
-| REQ-DRA-02 | FORMULA SHALL use pre-computed attribute resolution map; aggregation SumTerm/SingletonTerm resolution is validated by `resolve_input()` (the not-yet-wired consolidation) against the backtracker — the live path is `_resolve_aggregation_input_channel` | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
+| REQ-DRA-02 | FORMULA SHALL use pre-computed attribute resolution map; aggregation SumTerm/SingletonTerm resolution runs live through `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`), parity-checked against the backtracker | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
 | REQ-DRA-03 | Both paths SHALL use typed registries (10-output-registry): `scoped_lookup(ScopedKey)` fo... | `test_backtracker.py`, `test_dual_resolution.py` | PASS |
 | REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.t... | `test_dual_resolution.py`, `test_input_resolver.py` | PASS |
 | REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produc... | `test_dual_resolution.py` | PASS |
@@ -277,7 +280,7 @@ the documentation rather than executable code.
 
 **Input Resolver** — Component C12 — [reference/04-input-resolver.md](reference/04-input-resolver.md)
 
-**Status (F4, Item 7):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is a **backtracker-parity-validated consolidation that is not yet wired to the live path** — it has zero production callers; the live aggregation path is `_resolve_aggregation_input_channel` (`graph_builder.py`). These rows pin the module's **capability**, not live usage: the skipif-gated `test_input_resolver.py` unit tests exercise the module directly, and `test_dual_resolution.py::TestResolveInputParityExtended` proves parity with the backtracker DFS over Item 1's fixtures (1 MODULE_OUTPUT + 5 entry-point checks) alongside the committed catf_mfe/solar_battery suite. Wiring is filed as `[ITEM7-F4-CUTOVER]`.
+**Status (F4 cutover LANDED, TRUTH-DEBT Item 1):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is now **live** — the aggregation SumTerm/SingletonTerm path calls it through `_build_agg_input_source()` in `graph_builder._build_aggregation_module`, and the LocalTerm expose-alias reroute takes its channel (D5 `module_output`-only guard). The deleted `_resolve_aggregation_input_channel` and the three inline fallbacks are gone; the cutover proved byte-identical baselines. These rows pin **live code**. Evidence: the skipif-gated `test_input_resolver.py` unit tests (incl. the surviving M3 new-side EP-key guard, the LocalTerm reroute pin, and MANUAL_REQUIRED preservation) and `test_dual_resolution.py::TestResolveInputParityExtended` (backtracker-DFS parity over Item 1's fixtures). Strategy D (`DesignAttributeLookup`) was deleted — zero live surface.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
@@ -285,9 +288,9 @@ the documentation rather than executable code.
 | REQ-IR-02 | Strategies SHALL execute in declared list order; first non-None result wins. | `test_input_resolver.py` | PASS |
 | REQ-IR-03 | Self-reference guard SHALL reject channels where the producing module EQN matches `ctx.mo... | `test_input_resolver.py` | PASS |
 | REQ-IR-04 | ResolutionContext SHALL be immutable (`frozen=True`); no strategy mutates it. | `test_input_resolver.py` | PASS |
-| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`) — the strategy list an aggregation caller receives once wired (capability, not live usage — see family note) | `test_input_resolver.py` | PASS |
+| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`); the live list is `[A, C, B, E]` — `DirectChannelConstruction` (E) reproduces the SingletonTerm Try-2 channel, Strategy D deleted | `test_input_resolver.py` | PASS |
 | REQ-IR-06 | Fallback SHALL produce an `entry_point` InputSource with qualified name `"{module_eqn}__{... | `test_input_resolver.py` | PASS |
-| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to (parity-validated; not yet the live aggregation path — see family note) | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
+| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to — this is the live aggregation path (F4 cutover landed) | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
 
 ### LVP
 
@@ -319,6 +322,7 @@ the documentation rather than executable code.
 | REQ-MF-06 | SumTerm and SingletonTerm LITERAL fallback SHALL use `_find_literal_redefinition()` to pr... | `test_factory_aggregation.py` | PASS |
 | REQ-MF-07 | LocalTerm resolution SHALL try: (1) sibling aggregation output, (2) EXPOSE_PURE alias, (3... | `test_factory_aggregation.py` | PASS |
 | REQ-MF-08 | Single-output modules SHALL use `field_name="root"`; multi-output SHALL use attribute nam... | `test_factory_calc_usage.py` | PASS |
+| REQ-MF-09 | The aggregation compile step SHALL substitute each symbolic ref with its `inputs.X` form on whole-token boundaries (`re.sub(r"\bref\b", …)`), never a plain substring `.replace()` — a ref that is a substring of another (`cost`/`cost_total`) SHALL NOT corrupt to `inputs.inputs.cost_total`; disjoint refs compile byte-identically (TRUTH-DEBT Item 6, Site 2) | `test_hygiene_tail_agg_compile.py` | PASS |
 
 ### NC
 
@@ -333,7 +337,7 @@ the documentation rather than executable code.
 | REQ-NC-05 | Channel names SHALL be PQNs — no separate channel concept exists | `test_naming_conventions.py` | PASS |
 | REQ-NC-06 | `sanitize_name()` SHALL apply 6 transforms in order: strip quotes, spaces→`_`, non-alnum→... | `test_naming_conventions.py` | PASS |
 | REQ-NC-07 | Registry keys SHALL use typed wrappers: scoped and alias registries use `ScopedKey` (dott... | `test_naming_conventions.py` | PASS |
-| REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `test_alias_agg_probe_generation.py` | PASS |
+| REQ-NC-08 | Identifier derivation SHALL sanitize each qualified-name segment before it becomes a class name, module file path, or FORMULA module_eqn/channel | `test_alias_agg_probe_generation.py`, `test_formula_quoted_owner.py` (FORMULA module_eqn/channel leg) | PASS |
 | REQ-NC-09 | Generation SHALL fail fast when two distinct SysML names sanitize to one output path, naming both source names and the shared path | `test_duplicate_path_failfast.py` | PASS |
 
 ### OR
@@ -374,7 +378,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-OSR-01 | Single-output modules SHALL use `RootModel[float]` with `field_name="root"` | `test_gen_schemas.py` | PASS |
 | REQ-OSR-02 | Multi-output modules (2+ outputs) SHALL generate a named `MultiOutput` subclass | `test_gen_schemas.py` | PASS |
-| REQ-OSR-03 | Output field names SHALL match SysML `output_attributes` names exactly | `test_gen_schemas.py` | PASS |
+| REQ-OSR-03 | Generated MultiOutput schema field names SHALL match `PipelineModule.outputs[i].field_name` (template-fidelity; both sides are drawn from the same graph, not independently verified against the original SysML `output_attributes` names) | `test_gen_schemas.py` | PASS |
 | REQ-OSR-04 | SysML types SHALL map to Python types per the type mapping table | `test_gen_schemas.py` | PASS |
 | REQ-OSR-05 | Output fields on `MultiOutput` MUST NOT have `default=...` values | `test_gen_schemas.py` | PASS |
 | REQ-OSR-06 | Aggregation and computed-attribute modules SHALL always be single-output (`"root"`) | `test_gen_schemas.py` | PASS |
@@ -388,7 +392,7 @@ the documentation rather than executable code.
 |--------|-------------|-----------|--------|
 | REQ-PGD-01 | Every entry point SHALL be assigned to exactly one parameter group | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-02 | Four indexes SHALL be built with strict precedence: attr > binding > unbound > literal | `test_parameter_group_deriver.py` | PASS |
-| REQ-PGD-03 | Grouping SHALL mirror SysML source file structure (one group per file) | `test_parameter_group_deriver.py` | PASS |
+| REQ-PGD-03 | Grouping SHALL produce at least one group per source file with literal-default design attributes (not exactly one group per file -- a file whose attributes are all non-literal-default produces zero groups, and unbound-param-derived groups may merge into an existing group by name rather than adding one per file) | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-04 | `derive_groups_filtered()` SHALL remove parameters not in `backtracking_result.entry_poin... | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-05 | `classify()` SHALL check indexes in precedence order and return group name or `None` | `test_parameter_group_deriver.py` | PASS |
 | REQ-PGD-06 | The deriver SHALL resolve each entry point's numeric default inline from its owning index (attr / binding / unbound / literal) via `_parse_default_value` in `_derive_from_*` | — *(no dedicated test: the numeric default is a side-output of `_derive_from_*` grouping, which REQ-PGD-01/08 pin; it is not independently asserted, and the standalone accessor that once pinned it was deleted as dead by Item 8)* | UNTESTED |
@@ -418,8 +422,8 @@ the documentation rather than executable code.
 | REQ-PMM-01 | `PipelineModule` SHALL carry all metadata needed by module wrapper generation (calc def n... | `test_pipeline_module_expansion.py` | PASS |
 | REQ-PMM-02 | `ModuleInput` and `ModuleOutput` SHALL carry `description` and `default_value` fields for... | `test_pipeline_module_expansion.py` | PASS |
 | REQ-PMM-03 | `PipelineModule` SHALL carry `calc_expressions` for stencil comment generation. | `test_pipeline_module_expansion.py` | PASS |
-| REQ-PMM-04 | Migration SHALL produce byte-identical output compared to pre-migration baselines. | `test_pipeline_module_expansion.py` | PASS |
-| REQ-PMM-05 | Migration SHALL proceed in phases: add fields, create variants, deprecate, remove. | `test_pipeline_module_expansion.py` | PASS |
+| REQ-PMM-04 | Every generated module SHALL remain valid, non-empty Python after the field migration (the one-time byte-identity-vs-pre-migration-baseline gate ran once at cutover and is not re-asserted here) | `test_pipeline_module_expansion.py` | PASS |
+| REQ-PMM-05 | Migrated modules SHALL be importable in all variants with fields unchanged (the phased-sequence claim -- add/create/deprecate/remove -- is a one-time process record, not a testable module property) | `test_pipeline_module_expansion.py` | PASS |
 
 ### PY
 
@@ -450,6 +454,7 @@ the documentation rather than executable code.
 | REQ-REG-06 | `CUSTOM_SCHEMA_TYPES` SHALL include all exit point primitive types used by any module | `test_gen_registry.py` | PASS |
 | REQ-REG-07 | Registry generation SHALL detect and report name collisions before rendering | `test_gen_registry.py` | PASS |
 | REQ-REG-08 | After parent-segment aliasing, registry SHALL re-check class-name uniqueness and fail fast on any residual collision | `test_sc11_recheck.py` | PASS |
+| REQ-REG-09 | `_collect_exit_point_primitive_types` SHALL warn (not silently skip) on a single-output (`field_name="root"`) exit point whose `python_type` is outside `{float,int,str,bool}` — notably `"Any"` (latent on the current corpus, reachable live via `extractor.py:492`; TRUTH-DEBT Item 6, Site 3) | `test_hygiene_tail_registry.py` | PASS |
 
 ### RES
 
@@ -458,13 +463,13 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-RES-01 | Every ModuleInput SHALL resolve to exactly one of {`module_output`, `entry_point`}. | `test_orchestrator.py` | PASS |
-| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade (11); FORMULA uses the pre-computed attribute resolution map (16); aggregation SumTerm/SingletonTerm uses `_resolve_aggregation_input_channel` (`graph_builder.py`). The consolidated `resolve_input()` is parity-validated but not yet wired ([ITEM7-F4-CUTOVER]) | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
+| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade (11); FORMULA uses the pre-computed attribute resolution map (16); aggregation SumTerm/SingletonTerm uses `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`) — the F4 cutover wired it and deleted `_resolve_aggregation_input_channel` | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation o... | `test_factory_purity.py` | PASS |
 | REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_graph_assembly.py` | PASS |
-| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | — *(no test pins `build_computation_graph`'s internal sequence classify→build→rebuild→toposort→validate; `test_orchestrator.py` pins only the outer `build_pipeline_context` DAG order, REQ-ORCH-01 — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | `test_orchestrator.py` (`TestInnerStepOrdering` — source-order pin of `build_computation_graph`'s five internal milestones, distinct from the outer REQ-ORCH-01 pin; "rebuild groups" = `derive_groups()`) | PASS |
 | REQ-RES-06 | `binding_resolutions` from the backtracker SHALL be the single source of truth for CalcUs... | `test_factory_calc_usage.py` | PASS |
 | REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's pa... | `test_input_resolver.py` | PASS |
-| REQ-RES-08 | Consumer scope derivation SHALL apply to ALL live resolution paths: backtracker (CalcUsage), attribute resolution map (FORMULA), and `_resolve_aggregation_input_channel` (aggregation) — and to the parity-validated `resolve_input()` via `ResolutionContext.consumer_scope` | — *(no single test pins the cross-cutting "ALL paths" invariant; per-path scope derivation is verified — REQ-IR-07 aggregation, REQ-DRA-04 CalcUsage-CHAIN — `[ITEM7-MATRIX-TEST-GAPS]`)* | UNTESTED |
+| REQ-RES-08 | Consumer-scope application SHALL hold on each live resolution path, per that path's own mechanism: backtracker base leg (`_consumer_scope_dotted`, QN `segments[1:-1]`), backtracker ancestor-scope climb (Step CLIMB, 3+-segment chains), aggregation (`ResolutionContext.consumer_scope` from the module EQN, consumed by Strategy A's primary form), and FORMULA (owner-keyed resolution map — the owner IS the consumer; no dotted scope string). Per-path application over the enumerated paths, not an exhaustiveness proof | `test_res08_consumer_scope_paths.py` (four legs, hand-authored expectations over `plant_values`/`catf_mfe`/`solar_battery`/`deep_cross_scope_probe`) | PASS |
 
 ### SNAP
 
@@ -489,8 +494,9 @@ the documentation rather than executable code.
 | REQ-SNAP-15 | No provenance/version text appears in a generated artifact (INV-6) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-16 | CLI accepts exactly one extraction input; rejects `--design-path-filter` + snapshot (INV-7/V6) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-17 | CalcUsage auto-implements from a snapshot (SC-10) | `test_snapshot_generation.py` | PASS |
-| REQ-SNAP-18 | The lone `generation_timestamp` template var has zero render sites | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-18 | Regression guard: no production render site under `src/sysml_codegen` SHALL pass `generation_timestamp` -- the template that once carried it (`pydantic_schema.py.jinja2`) is deleted; the token still appears in the test itself, this row, and `.project/` history, so "the token exists nowhere in the repo" is not the claim | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-19 | Live generation is byte-identical to snapshot generation, incl. symlinked models (license-gated; skips cleanly without a license, verified live during Item 2) | `test_snapshot_generation.py` | PASS |
+| REQ-SNAP-20 | A missing load-bearing field on a deserialized dict is loud (V7): `python_type`/`binding_type`/`parent_part_path`/`owning_part_def_qn` warn and degrade to their defaults; `qualified_name` (keying) raises `SnapshotFormatError`; benign fields keep their `.get(default)` silently (TRUTH-DEBT Item 6, Site 1) | `test_hygiene_tail_loader.py` | PASS |
 
 ### SR
 
@@ -503,7 +509,7 @@ the documentation rather than executable code.
 | REQ-SR-03 | `should_regenerate_stencil()` SHALL implement the 6-case decision tree (Item 5 split the unparseable leaf: preserve-on-transient / preserve-non-empty / regenerate-empty) | `test_gen_stencils.py` | PASS |
 | REQ-SR-04 | Stub upgrade SHALL require all 3 conditions: signature match, `NotImplementedError` prese... | `test_gen_stencils.py` | PASS |
 | REQ-SR-05 | Backup SHALL be created before every regeneration or upgrade | `test_gen_stencils.py` | PASS |
-| REQ-SR-06 | Aggregation and computed-attribute modules are synthetic and always regenerated in practi... | `test_gen_stencils.py` | PASS |
+| REQ-SR-06 | All module types (including aggregation and FORMULA) SHALL route through the single unified `_generate_stencils()` smart-regen code path (static analysis; not a runtime proof that aggregation/FORMULA are always regenerated in practice) | `test_gen_stencils.py` | PASS |
 | REQ-SR-07 | Static: `_generate_stencils` source contains a `preserve_handwritten` + `output_path.exists()` branch whose body does not call `should_regenerate_stencil` (the skip behavior is not executed) | `test_gen_stencils.py` | PASS |
 
 ### SVM
@@ -532,7 +538,7 @@ the documentation rather than executable code.
 | REQ-VBR-07 | Rewriting SHALL complete BEFORE any downstream processing (Step 3.5 ordering) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-08 | `_create_virtual_calc_usage` SHALL shallow-copy each `BindingInfo` so no two virtual instances share a binding object (divergent-sibling rewrite correctness; Item 10 precondition) | `test_virtual_binding_rewrite.py` | PASS |
 | REQ-VBR-09 | `_rewrite_virtual_bindings` SHALL NOT raise on a bare-name `source_path`; it logs DEBUG and skips the override match | `test_virtual_binding_rewrite.py` | PASS |
-| REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py` | PASS |
+| REQ-VBR-10 | Mechanism-D home (Item 10 #3): `_rewrite_specialized_chain` SHALL rewrite a `part_usage.attr` CHAIN binding through the retyped usage's specialized-def `:>>` chain (three-tier merge: usage override > specialized-def `:>>` > base def); and `_rescue_self_named_bindings` SHALL rewrite a full-QN self-reference (`in x = x`) to its upstream channel when an outer same-named EXPOSE resolves, else leave it as-is (the `self_named_binding_trap` negative) | `test_spec_chain_channel.py`, `test_self_named_rescue.py`, `test_self_named_binding_trap.py::test_self_named_binding_resolves_to_own_param` (the "else leave it as-is" clause) | PASS |
 | REQ-VBR-11 | The `_rewrite_specialized_chain` type-select SHALL be instance-aware: it SHALL try the consumer INSTANCE's path key (`usage.qualified_name.rsplit("__",1)[0]`, `part_usage`) in `usage_type_map` before the declaring-def key, so a two-level specialization (usage-level `:>> driver : Subtype` on an inherited part usage) selects the specialized def where the declaring-def key sees only the base type | `test_spec_chain_twolevel.py` | PASS |
 
 ---
@@ -541,14 +547,16 @@ the documentation rather than executable code.
 
 These requirements have no dedicated conformance test; each carries its argument in its matrix row above (INV-B).
 
-- **REQ-DM-08**: name fields SHALL use NewType wrappers — the wrappers exist but no test asserts field-level usage (filed `[ITEM7-MATRIX-TEST-GAPS]`).
 - **REQ-PGD-06**: numeric default resolves inline via `_parse_default_value` (live), but as a side-output of grouping — not independently asserted; the standalone accessor was deleted by Item 8.
-- **REQ-RES-05**: no test pins `build_computation_graph`'s internal sequence; `test_orchestrator.py` pins only the outer `build_pipeline_context` DAG (filed `[ITEM7-MATRIX-TEST-GAPS]`).
-- **REQ-RES-08**: no single test pins the cross-cutting "ALL paths" invariant; per-path derivation is verified (REQ-IR-07, REQ-DRA-04) (filed `[ITEM7-MATRIX-TEST-GAPS]`).
+
+(TRUTH-DEBT Item 3 discharged the other three `[ITEM7-MATRIX-TEST-GAPS]` rows: REQ-DM-08
+via `test_dm08_enforced_surface.py` with its text reframed to the enforced surface,
+REQ-RES-05 via `TestInnerStepOrdering`, REQ-RES-08 via
+`test_res08_consumer_scope_paths.py` with its text reframed to the per-path mechanisms.)
 
 ## Related Documents
 
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (57 distinct test files cited by matrix rows — 41 in conformance/, 16 in unit/ + integration/)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (66 distinct test files cited by matrix rows)

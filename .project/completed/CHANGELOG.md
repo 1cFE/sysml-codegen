@@ -4,6 +4,35 @@ Historical record of completed work.
 
 ---
 
+## [2026-07-08] - [TRUTH-DEBT] Truth-Debt Retirement
+
+**Type**: Epic
+**Duration**: ~2 days (created 2026-07-06; archived 2026-07-08)
+
+### Summary
+Retired the PIPELINE-TRUTH follow-on ledger in one pass. The live aggregation path now runs
+through `resolve_input(AGG_STRATEGIES)`, 3+-segment calc-usage chains resolve instead of
+hard-rejecting, matrix test gaps are pinned, inherited-attr classification is fixed, and the
+remaining sweep and hygiene debt is either closed or filed with named residue.
+
+### Deliverables
+- Archived item artifacts: `spec.md`, `design.md` where present, `plan.md`, `audit.md`, and
+  supporting probes/impact notes for six TRUTH-DEBT items.
+- Item 1: F4 aggregation-resolution cutover, Strategy D deletion, and `param_groups` typing cleanup.
+- Item 2: resolved multi-hop CHAIN bindings with loud fallback diagnostics and live/offline parity.
+- Item 3: REQ-DM-08, REQ-RES-05, and REQ-RES-08 test pins and matrix flips.
+- Item 4: inherited-attribute classifier fix, snapshot recapture, and xfail retirement.
+- Item 5: matrix sweep residue pass, EC-04/AS-06 mutation-proven strengthens, reframes, citations,
+  and named overflow filing.
+- Item 6: D3 hygiene-tail hardening for loader, aggregation compile, and registry warnings, plus
+  site-4 reclassification.
+- Pre-PR gates: 2120 passed / 4 skipped / 0 xfailed; ruff src clean; mypy src 97.
+
+### Lessons Learned
+- [TODO: Add lessons learned]
+
+---
+
 ## [2026-02-10] - [COST-PATTERN] Item 4: Pipeline Integration -- Hierarchy-Aware Module Generation
 
 **Type**: Epic Item (COST-PATTERN Item 4)

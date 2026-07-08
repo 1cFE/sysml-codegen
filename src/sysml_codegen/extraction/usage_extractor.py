@@ -715,27 +715,26 @@ def _extract_single_binding(
     # FeatureChainExpression MUST be before OperatorExpression -- FCE is a
     # subtype of OE in SysIDE's type system (doc 19 invariant).
     if SysideAdapter.is_instance(expr, "FeatureChainExpression"):
-        # D3-2 (LOUD-REJECT): a 3+-segment chain (station.array.derived_calc.
-        # derived_value) cannot be represented by the ≤2-segment parser. Count
-        # the real segments (count only — do NOT build the resolved path, that
-        # is the deferred [MULTIHOP-CHAIN-PARSE] feature) and hard-reject: warn
-        # and surface as an entry point, never truncate to the root segment.
+        # D1 (Item 2): a 3+-segment chain (station.array.derived_calc.derived_value)
+        # survives extraction as a full-path CHAIN binding. The ≤2-segment parser
+        # cannot represent it, so join the whole segment list into source_path and
+        # let the backtracker resolve it (scoped_lookup + ancestor-scope climb).
+        # The loud diagnostic for a genuinely unresolvable chain moved WITH the
+        # resolution to the backtracker Step-4 fallback (D3): extraction has no
+        # registry, so it cannot tell a resolvable chain from a dead one.
+        #
+        # N-1: the deep-chain arm intentionally sets ONLY source_path. It omits
+        # source_instance_elem / source_attribute_elem / is_cross_file — the
+        # backtracker consumes none of those for CHAIN resolution (only
+        # source_path). Do NOT reach into _parse_chain_expression to populate them.
         segments = extract_feature_chain_segments(expr)
         if len(segments) > 2:
-            warnings.append(
-                f"Chain binding for parameter '{param_name}' on usage "
-                f"'{usage_name}' has {len(segments)} segments "
-                f"({'.'.join(segments)}); multi-hop chains are not resolved — "
-                f"surfacing as an entry point (not truncated to root)."
-            )
+            full_path = ".".join(segments)
             return BindingInfo(
                 param_name=param_name,
-                source_path=None,
-                binding_type=BindingType.UNBOUND,
-                raw_expression=(
-                    "FeatureChainExpression (unresolved 3+-segment) -> "
-                    f"{'.'.join(segments)}"
-                ),
+                source_path=full_path,
+                binding_type=BindingType.CHAIN,
+                raw_expression=f"FeatureChainExpression -> {full_path}",
             )
         source_path, instance_elem, target_elem = _parse_chain_expression(expr)
         is_cross_file = _detect_cross_file_reference(usage_elem, instance_elem)

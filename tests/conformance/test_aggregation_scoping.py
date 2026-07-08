@@ -481,7 +481,15 @@ class TestReqAS06Phase2AliasResolution:
 
     @pytest.mark.req("REQ-AS-06")
     def test_phase_2_alias_resolution(self, solar_battery_snapshot):
-        """Build registry. Verify CHAIN aliases are resolvable via alias_lookup."""
+        """Build registry. Verify EVERY registered redefinition alias resolves.
+
+        The former body accepted a `resolved_count > 0` floor: as long as one of
+        the redefinition aliases resolved, the test passed even if the rest were
+        broken. This enumerates the full registered redefinition-alias set
+        (independently of the resolver's internals -- the set comes straight from
+        the snapshot fixture) and asserts each one resolves via alias_lookup, with
+        its canonical_name also resolvable via scoped_lookup.
+        """
         registry = build_output_registry(
             calc_usages=solar_battery_snapshot["calc_usages"],
             calc_defs=solar_battery_snapshot["calc_defs"],
@@ -497,20 +505,21 @@ class TestReqAS06Phase2AliasResolution:
         ]
         assert len(redef_aliases) > 0, "Should have redefinition aliases"
 
-        resolved_count = 0
+        unresolved = []
         for alias in redef_aliases:
-            # The alias_name should be in the alias registry
             result = registry.alias_lookup(ScopedKey(alias.alias_name))
-            if result is not None:
-                resolved_count += 1
-                # The resolved channel should also be findable via canonical_name
-                canonical_result = registry.scoped_lookup(ScopedKey(alias.canonical_name))
-                assert canonical_result is not None, (
-                    f"canonical_name {alias.canonical_name} should resolve via scoped_lookup"
-                )
+            if result is None:
+                unresolved.append(alias.alias_name)
+                continue
+            canonical_result = registry.scoped_lookup(ScopedKey(alias.canonical_name))
+            assert canonical_result is not None, (
+                f"canonical_name {alias.canonical_name} should resolve via scoped_lookup"
+            )
 
-        # At least some aliases should have resolved
-        assert resolved_count > 0, "At least some CHAIN aliases should be resolvable"
+        assert not unresolved, (
+            f"{len(unresolved)}/{len(redef_aliases)} registered redefinition aliases "
+            f"did not resolve: {unresolved}"
+        )
 
 
 # ---------------------------------------------------------------------------

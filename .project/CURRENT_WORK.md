@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-08
 
 ---
 
@@ -243,6 +243,13 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 
 
 ## Recently Completed
+
+### 2026-07-08: TRUTH-DEBT Epic
+- Archived all six audited items plus the epic ledger to `.project/completed/`.
+- Retired the F4 aggregation cutover, resolved multi-hop chain support, matrix test gaps,
+  inherited-attr classifier fix, matrix sweep residue, and D3 hygiene tail.
+- Pre-PR gates: 2120 passed / 4 skipped / 0 xfailed; ruff src clean; mypy src 97;
+  matrix 259 = 258 PASS + 1 UNTESTED.
 
 ### 2026-02-17: Phase 5 — E2E Pipeline Validation (5.2) — Checkpoint 5
 - 16 conformance tests in `tests/conformance/test_pipeline_e2e.py`

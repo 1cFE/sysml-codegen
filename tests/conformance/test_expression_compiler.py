@@ -358,6 +358,21 @@ class TestReqEc04AstParseValidation:
         with pytest.raises(CompilationError):
             compile_expression(node)
 
+    def test_internal_gate_raises_on_invalid_emitted_python(self):
+        """A BINARY_OP node with an operator absent from PYTHON_OPERATOR_MAP
+        falls through to the raw-operator-string emission path
+        (`f" {ast.operator} "` at expression_compiler.py:198), producing
+        syntactically invalid Python (e.g. `(a ~~ b)`). This must be caught
+        by the internal parse-and-raise gate at :217-223, not by a
+        caller-side `ast.parse()` on the return value -- there is no
+        caller here, only the direct call to `compile_expression`.
+        """
+        node = ExpressionAST.binary(
+            "~~", ExpressionAST.input_ref("a"), ExpressionAST.input_ref("b")
+        )
+        with pytest.raises(CompilationError, match="not valid Python"):
+            compile_expression(node)
+
 
 # ---------------------------------------------------------------------------
 # REQ-EC-05: Cycle detection

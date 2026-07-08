@@ -694,7 +694,17 @@ class SysMLDataExtractor:
         match = re.search(r'//\s*(\[?[A-Za-z°Ω²³/·⋅\-]+\]?)\s*(?:-|$|\s)', source_line)
         if match:
             unit = match.group(1).strip('[]')
-            if unit.lower() not in ['the', 'this', 'that', 'todo', 'note', 'fixme', 'energy', 'power']:
+            non_units = {
+                "the",
+                "this",
+                "that",
+                "todo",
+                "note",
+                "fixme",
+                "energy",
+                "power",
+            }
+            if unit.lower() not in non_units:
                 return unit
 
         return None

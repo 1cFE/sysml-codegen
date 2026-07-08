@@ -43,6 +43,14 @@ package UnresolvableAttrProbeDesign {
         :>> local_multiplier = 3.0;
     }
 
+    // Instantiate the depth-2 'Grandchild' — exercises the transitive ancestor
+    // walk (Grandchild -> Derived -> Base) at capture time (Item 4, D2/B2).
+    part grandchild_instance : 'Grandchild' {
+        :>> base_rate = 10.0;
+        :>> base_factor = 2.0;
+        :>> local_multiplier = 3.0;
+    }
+
     // Instantiate the design-side 'Design Derived' with concrete values
     part design_derived_instance : 'Design Derived' {
         :>> base_rate = 10.0;

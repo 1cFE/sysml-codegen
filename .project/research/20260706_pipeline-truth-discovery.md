@@ -111,6 +111,15 @@ names, Phase-4 silent skip where siblings warn, registry alias-rewrite no-not-fo
 branch, `type_map` "Any" exit-point skip, dead `_check_semantic_match`): → **FILED
 (Item 5 close):** one consolidated `[D3-HYGIENE-TAIL]` BACKLOG entry (`.project/backlog/BACKLOG.md`).
 Dead `_check_semantic_match` cross-referenced to Item 8's dead-code sweep, not filed twice.
+**Item 6 close-out (2026-07-07):** the four-site consolidated tail resolved 3-of-4 — loader
+`.get` load-bearing fields HARDENED (WARN 4 fields, RAISE `qualified_name`), aggregation
+`.replace()` FIXED (word-boundary substitution), `type_map` "Any" skip HARDENED (latent-only
+WARN tripwire). The Phase-4 registry alias-rewrite no-not-found branch **RECLASSIFIED**: the
+corpus-scan gate found the shape already firing on 5/15 real fixtures (short-form vs.
+full-EQN key mismatch), so a mechanical sibling-copy WARN would break INV-6; filed as
+`[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]` (`BACKLOG.md`), tied to the same deferred gap at
+`parameter_groups.py:672-682` (SC-5/D3-12 hazard-scoped-WARN note). See
+`.project/active/hygiene-tail/probes/verdict.md`.
 
 **Cross-repo pointer**: `extract_feature_refs` traversal coverage and `str(direction)`
 repr stability bottom out in agentic-mbse. → Item 9 (companion audit).

@@ -4,6 +4,69 @@
 **Based on**: `.project/research/20260220-163000_agentic-mbse-boundary-analysis.md`
 **Branch**: cost-pattern-refactor (1821 tests as of review)
 **Status**: Design — awaiting approval
+**Refreshed**: 2026-07-06 against HEAD `a2cdc18` (branch `truth-debt-epic-plan`) — see the
+Refresh Verdict below. Strategy stands; inventory re-verified per section. Gated on TRUTH-DEBT
+Items 1/2/6. Test-count anchor "1821" is stale (≥1636 test *functions* on HEAD before
+parametrization; recount at epic_plan).
+
+---
+
+## Refresh Verdict — 2026-07-06 (HEAD `a2cdc18`, branch `truth-debt-epic-plan`)
+
+**What this block is.** A verification pass, not a redesign. Every section below now
+carries a dated `> **[REFRESH 2026-07-06]**` callout with the corrections. The original
+analysis is left in place; read the callout for what changed. This doc was written on
+2026-02-20, before the PIPELINE-TRUTH epic (merged as PR #5) and before the just-defined
+TRUTH-DEBT epic. Both reshaped the exact files it inventories.
+
+**How much survives.** The *strategy* survives; the *inventory* is stale.
+
+- **Strategy — STANDS (~90%).** The two-tier split (pure SysML vs codegen), the phasing
+  (do expression reconstruction + qualified names first, hierarchy/aggregation second, defer
+  template detection), the re-export containment pattern, and the dataclass-not-Pydantic
+  ruling are all still the right shape. Nothing in PIPELINE-TRUTH invalidated the direction.
+- **Inventory — STALE (~40% of specific facts wrong).** Every line count is off (the files
+  grew 8–35%). Two files the doc treats as push-down inputs no longer exist
+  (`constraint_extractor.py`, `constraints.py`). The `snapshot_loader.py` test helper that
+  the whole R1 blast-radius argument rests on is gone. Four functions the doc names by hand
+  (`is_literal_expression`→still there but doc mis-names `extract_feature_ref_name`;
+  `_is_template_usage` deleted; `RedefinitionKind` is actually `RedefinitionType`) are wrong.
+  The biggest single correction: **`qualified_names.py` is no longer a pure-SysML file** — it
+  grew codegen-specific name builders (`get_module_name`, `get_channel_name`,
+  `build_parameter_qualified_name`), so Tier 1b changes from "whole file moves, 0 blast
+  radius" to "split the module, move only the general subset."
+
+**New governance the move must respect** (did not exist on 2026-02-20):
+
+- **INV-1..INV-5 dispatch/lookup invariants** (`reference/19-ast-dispatch-invariant.md` — note
+  the filename; it is not `19-expression-reconstruction.md`). INV-1 names
+  `hierarchy_resolver` `AGG_PYTHON_OPS` and `_extract_single_binding`; INV-5 names
+  `sanitize_name`. All three are inside the push-down set. Per R1, their fires-on-shape +
+  silent-on-clean tests MUST move with the code.
+- **Adapter hard-error (`TYPE_MAP` whitelist)** in `agentic-mbse/sysml/syside_adapter.py`.
+  Moved code that calls `SysideAdapter.is_instance("SomeType")` needs its type names in the
+  whitelist BEFORE the move, or extraction hard-errors. **Could not byte-verify** — the
+  agentic-mbse repo is outside this session's sandbox. Confirm at epic-plan pickup.
+- **Snapshot format v2** with a loader hard-gate (`SnapshotFormatError`, INV-2); baseline
+  churn runs under the `--fixtures` byte-identity discipline (memory `byte-identity-captured-at-churn`).
+- **Editable-install lockstep**: a mid-move state in agentic-mbse breaks the sysml-codegen
+  suite instantly (memory `orchestrated-run-gotchas`). The execution plan needs per-move
+  branch-parking so the two repos never sit half-migrated.
+
+**Gate status.** PUSH-DOWN is **blocked** on TRUTH-DEBT Items 1, 2, and 6 landing
+(`.project/backlog/epic_truth_debt.md`, "Sequencing Rulings"). Those items edit the exact
+surfaces this doc moves: Item 1 finalizes the aggregation-resolution path
+(`input_resolver.py` / `AGG_STRATEGIES`), Item 2 builds multi-hop chain resolution on
+`extract_feature_chain_segments` (a NEW `expression_utils` function), and Item 6 hardens the
+D3 silent sites (loader, aggregation compile) that overlap the moved code. Moving before they
+land means moving code that is about to change under you.
+
+**Recommended epic_plan timing.** Do NOT run the PUSH-DOWN epic_plan against this doc as-is —
+the stale inventory would seed wrong line counts, wrong blast-radius numbers, and a wrong
+Tier 1b plan. Either (a) run epic_plan **after TRUTH-DEBT closes**, re-verifying the
+now-doubly-changed files at that point, or (b) if epic_plan must be drafted sooner, drive it
+from the per-section callouts below, not the original tables. The callouts are the current
+truth; the original prose is preserved for provenance only.
 
 ---
 
@@ -87,6 +150,28 @@ codegen-specific logic, all in the same directory.
 > `reconstruct_expression` / `reconstruct_operator_expression` are born correct and the mass
 > baseline churn was reviewed once, in Item 6 — not re-litigated during the move.
 
+> **[REFRESH 2026-07-06]** — expression_utils.py is now **356 lines** (was 201).
+> Function inventory verified against HEAD:
+> - **STANDING**: `reconstruct_expression`, `extract_feature_chain_name`,
+>   `extract_literal_value`, `is_literal_expression`, `OPERATOR_MAP`.
+> - **NAME CORRECTION**: the doc's `extract_feature_ref_name` is actually
+>   `extract_feature_reference_name` (`expression_utils.py:225`). Fix in any epic_plan.
+> - **NEW** (PIPELINE-TRUTH Item 6 precedence work + Item 5 chain work):
+>   `binary_op_of` (`:121`), `needs_parens` (`:143`), `reconstruct_operator_expression`
+>   (`:162`), `extract_feature_chain_segments` (`:279`), plus constants `RANK`, `UNARY_RANK`,
+>   `RIGHT_ASSOC`. These are the precedence-aware parenthesization helpers and the
+>   segment-yielder. **They ALL move with the file** — same reasoning as the original rows.
+> - **LOAD-BEARING NEW FUNCTION**: `extract_feature_chain_segments` is what TRUTH-DEBT Item 2
+>   (multi-hop chains) and Item 5 build on. It is being actively changed in TRUTH-DEBT. This
+>   is a direct reason PUSH-DOWN must wait for Item 2 (gate confirmed).
+> - **Callers now 5, not 6**: `hierarchy_resolver`, `expression_compiler`, `extractor`,
+>   `usage_extractor`, `computed_attribute_extractor`. The 6th (`constraint_extractor`) is
+>   GONE (see Tier 3 callout).
+> - **New governance**: `reconstruct_operator_expression`'s dispatch is an INV-1 totality site
+>   (`reference/19-ast-dispatch-invariant.md`). Its fires-on-shape test
+>   (`test_ast_dispatch_invariant.py`, `test_expression_paren_helper.py`,
+>   `test_expression_reconstruction_fidelity.py`) MUST move with the code (R1).
+
 #### expression_utils.py (201 lines) -- ALL MOVES
 
 ```
@@ -130,6 +215,32 @@ text back from them. Any tool displaying SysML expressions needs this.
   different purposes. **Resolution**: add explicit docstring cross-references when
   extending `expression.py` to prevent caller confusion.
 
+> **[REFRESH 2026-07-06]** — **BIGGEST CORRECTION IN THE DOC.** qualified_names.py is now
+> **181 lines** (was 133) and is **no longer a pure-SysML file**. It grew codegen-specific
+> name builders. "ALL MOVES" is now WRONG — this must be a **split**, not a whole-file move.
+>
+> Function inventory against HEAD:
+> - **SysML-general → push-down eligible**: `sanitize_name` (`:14`),
+>   `build_element_qualified_name` (`:48`, now takes a `use_double_underscore` param — this
+>   partially answers Open Question #1 on the separator default), `sysml_to_python_qualified_name`
+>   (`:112`), `python_to_sysml_qualified_name` (`:133`), `sanitize_qualified_name` (`:117`),
+>   `extract_simple_name` (`:138`).
+> - **CODEGEN-SPECIFIC → STAY in sysml-codegen** (ADR-003 PQN/EQN/channel format, not SysML
+>   semantics): `build_parameter_qualified_name` (`:97`), `get_module_name` (`:102`),
+>   `get_channel_name` (`:107`), `owning_part_leaf` (`:149`).
+> - **NEW helper**: `_build_owner_chain_with_packages` (`:74`, private, supports
+>   `build_element_qualified_name`).
+> - **Hardened contract**: `sanitize_name` now carries the INV-5 guarantee — the result
+>   ALWAYS satisfies `.isidentifier()` and is never a keyword, and sibling names that collide
+>   on one EP/channel key **fail fast** at registration. Its fires-on-shape tests
+>   (`test_sanitize_invariance.py`, `test_silent_failure_sc4a1.py`) must move with it (R1).
+>
+> **Consequence for Tier 1b**: the "core/qualified_names.py becomes a 2-line re-export →
+> 0 files, NONE blast radius" claim is void. The general subset can re-export from
+> agentic-mbse, but the codegen builders stay behind, so `core/qualified_names.py` becomes a
+> mixed file (some local defs, some re-exports) — small blast radius, but not zero, and the
+> split point must be designed. Re-verify at epic_plan.
+
 #### core/qualified_names.py (133 lines) -- ALL MOVES
 
 ```
@@ -163,6 +274,30 @@ P1 exception: the function predates the pattern and remediation would require th
 
 ### Tier 2: Partially SysML (extract the core, keep codegen wrapper)
 
+> **[REFRESH 2026-07-06]** — hierarchy_resolver.py is now **742 lines** (was 575). The
+> SPLIT strategy STANDS, but two facts in the decomposition box are wrong:
+> - **Data models do NOT live here.** `RedefinitionData`, `MultiplicityData`, `SumTerm`,
+>   `SingletonTerm`, `LocalTerm`, `HierarchyExtractionResult`, and the enum live in
+>   `extraction/data_models.py` (`:237`–`:344`), not in hierarchy_resolver. The MOVES/STAYS
+>   box treats them as co-located; they are not. Any push-down of the models is a
+>   `data_models.py` edit.
+> - **Enum name**: it is `RedefinitionType` (`data_models.py:237`), not `RedefinitionKind`.
+> - **Function inventory** verified against HEAD. STANDING: `extract_redefinitions` (`:175`),
+>   `extract_multiplicities` (`:252`), `_walk_aggregation_ast` (`:386`), `_unwrap_invocation`
+>   (`:335`), `build_aggregation_expression` (`:523`, STAYS), `extract_design_overrides`
+>   (`:209`, STAYS). NEW: `AGG_PYTHON_OPS` (`:60`), `_agg_operator_str` (`:362`),
+>   `_AggregationContext` class (`:311`, stateful — note P6), `_chain_sibling_aliases_aggregation`
+>   (`:63`), `_extract_single_redefinition` (`:85`), `_keep_plain_usage_override` (`:198`),
+>   `_index_usage_level_retypes` (`:574`), `extract_hierarchy_data` (`:632`, top-level entry).
+> - **New governance**: `AGG_PYTHON_OPS` / `_agg_operator_str` is an **INV-1 totality site**
+>   (D3-8, named in `reference/19-ast-dispatch-invariant.md`) AND a TRUTH-DEBT Item 6 hygiene
+>   surface. Its fires-on-shape test must move with the aggregation code (R1), and Item 6 is a
+>   PUSH-DOWN gate for exactly this overlap.
+> - **Wider model coupling**: `RedefinitionData`/`RedefinitionType` are now imported across
+>   four layers — extraction, resolution (`input_resolver.py`, `supplied_values.py`),
+>   orchestration (`pipeline_builder.py`), and snapshot (`loader.py`). Moving the models
+>   multiplies the re-export surface well beyond what the original R1 row assumed.
+
 #### hierarchy_resolver.py (575 lines) -- SPLIT
 
 ```
@@ -189,6 +324,21 @@ P1 exception: the function predates the pattern and remediation would require th
 **Risk**: MEDIUM -- 93 tests across C09/C10 conformance suites reference these data models,
 plus ~424 tests transitively via `snapshot_loader.py`. Mitigated by keeping models as
 dataclasses (not forcing Pydantic conversion) and maintaining re-exports in `data_models.py`.
+
+> **[REFRESH 2026-07-06]** — usage_extractor.py is now **911 lines** (was 664) and the
+> template-detection surface was **refactored**, so the MOVES box is stale:
+> - **`_is_template_usage()` NO LONGER EXISTS** anywhere in src/ or tests/. Template handling
+>   is now `_find_instantiation_paths` (`:313`, STANDING), `_create_virtual_calc_usage`
+>   (`:372`, NEW), `_expand_template_calc_usages` (`:416`, NEW), backed by
+>   `_build_part_usage_index` (`:272`, NEW).
+> - NEW type-indexing helpers also landed here: `user_partdef_types` (`:173`),
+>   `_supertype_closure` (`:197`), `most_specific` (`:221`), `user_partdef_lookup` (`:256`)
+>   (covered by `test_type_indexing.py`, `test_type_mapping_consolidation.py`).
+> - `BindingInfo` (dataclass) STILL at `usage_extractor.py:55` — the R3 naming-collision with
+>   `agentic_mbse.sysml.types.BindingInfo` stands on the codegen side (the agentic-mbse side
+>   could not be byte-verified this pass; the repo is outside the sandbox).
+> - **Net**: Tier 2c (template detection) is still correctly DEFERRED, but its function
+>   inventory must be re-derived from the refactored names before any epic_plan touches it.
 
 #### usage_extractor.py (partial, ~71 lines) -- SPLIT
 
@@ -237,6 +387,22 @@ dataclasses (not forcing Pydantic conversion) and maintaining re-exports in `dat
   TOTAL: ~2,829 lines -- ALL codegen-coupled, zero ambiguity
 ```
 
+> **[REFRESH 2026-07-06]** — the Tier 3 table is **stale on constraints**:
+> - **`constraint_extractor.py` (261 ln) and `constraints.py` (262 ln) NO LONGER EXIST.**
+>   `ConstraintData` is gone. The successor is `extraction/constraint_report.py` (**176 ln**,
+>   NEW): a manifest/report renderer (`ConstraintManifestEntry`, `render_constraint_report`,
+>   `manifest_to_records` / `manifest_from_records`). This is a **codegen reporting artifact,
+>   not a SysML-general extractor** — it does NOT belong in the push-down set.
+> - **R7 is void.** The "constraint_extractor is a missed Tier 1 candidate" risk points at a
+>   file that no longer exists and a successor that is codegen-specific. Strike R7 at epic_plan.
+> - Other Tier 3 line counts drifted: `extractor.py` 653→**798**, `computed_attr_extr.py`
+>   275→**351**, `expression_compiler.py` 619→**618** (stable), `data_models.py` 367→**379**,
+>   `core/output_registry.py` 194→**266**, `core/identifier_types.py` 198→**215**. The Tier 3
+>   *conclusion* (all codegen-coupled, stays) is unchanged; only the numbers moved.
+> - **`expression_compiler._sanitize_name` STANDING** at `expression_compiler.py:167` (doc
+>   said 167-184). No `# INTENTIONAL DIVERGENCE` comment present yet, so the R8 pre-flight is
+>   still open, not done.
+
 **NOTE on `constraint_extractor.py`**: This file is more purely SysML than its Tier 3
 placement suggests. It imports only `SysideAdapter` from agentic-mbse and
 `reconstruct_expression` from `expression_utils`. Its `ConstraintData` dataclass contains
@@ -245,6 +411,38 @@ moves `reconstruct_expression` to agentic-mbse, `constraint_extractor.py` would 
 sysml-codegen dependencies — making it a natural Tier 1 candidate for a future phase.
 Not included in this plan because there is no second consumer yet, but it should be first
 in line when one appears.
+
+---
+
+## New Modules Since 2026-02-20 (do they change the boundary?) — [REFRESH 2026-07-06]
+
+Two modules landed after this doc was written. Neither is in the push-down set, but both
+affect the boundary analysis:
+
+- **`extraction/constraint_report.py` (176 ln)** — the successor to the deleted
+  `constraint_extractor.py`. Codegen reporting/manifest, **stays**. Answers a new open
+  question directly: *no*, it does not belong in the push-down set.
+
+- **`resolution/supplied_values.py` (302 ln)** — NEW resolution-layer module
+  (`materialize_supplied_values`, `_match_override`, `_resolve_value`, `_binding_target`). It
+  consumes `RedefinitionData` / `RedefinitionType` and materializes design/override values for
+  entry points. It lives in `resolution/`, **outside** the `extraction/` push-down scope, so
+  it does not move. But it matters for two reasons:
+  1. It **deepens the codegen coupling of `extract_design_overrides`** — the doc already keeps
+     that function in sysml-codegen (STAYS), and supplied_values is now a downstream consumer
+     of the same design-override data. Reinforces the "STAYS" call.
+  2. It is a **fourth importer** of the hierarchy data models (with graph_builder,
+     pipeline_builder, input_resolver), widening the re-export surface if the models push down.
+
+  Does supplied_values change what "codegen-specific" means for hierarchy code? **No** — it
+  confirms the existing line. The SysML-general half of hierarchy_resolver (what a redefinition
+  *is*) is still general; the design-override *materialization* is codegen resolution, now with
+  a dedicated module proving the point.
+
+- **`resolution/input_resolver.py` (279 ln)** — the `AGG_STRATEGIES` consolidation. Not new to
+  this pass, but it is the TRUTH-DEBT Item 1 (F4 cutover) surface and the "consolidation
+  PUSH-DOWN cares about" the epic's sequencing ruling names. Its aggregation-resolution path is
+  in flux until Item 1 lands — another reason for the gate.
 
 ---
 
@@ -333,6 +531,26 @@ After the push-down, each package answers a clean question:
 ---
 
 ## Blast Radius Analysis
+
+> **[REFRESH 2026-07-06]** — read before trusting any number in this section.
+> - **The R1 mechanism changed.** `tests/helpers/snapshot_loader.py` — the test helper the
+>   whole "~424 tests transitive" argument rests on — **no longer exists**. Snapshot loading is
+>   now a **production module**, `src/sysml_codegen/snapshot/loader.py` (format v2, hard-gated
+>   by `SnapshotFormatError`, INV-2). The hierarchy data models are imported by production code
+>   (graph_builder, pipeline_builder, input_resolver, supplied_values, snapshot/loader), not by
+>   a test helper. The re-export requirement in `data_models.py` **still stands**, but for
+>   production-import reasons, and the "~424 tests" figure is void — recount at epic_plan.
+> - **The conformance suite was restructured.** The `C09` / `C10` / `C16` suite names are gone;
+>   conformance tests are now descriptively named (`test_hierarchy_resolver.py`,
+>   `test_aggregation_scoping.py`, `test_virtual_binding_rewrite.py`, `test_type_indexing.py`,
+>   etc.). **Every per-suite test count below (93, 79, 46, 32, ...) is STALE** and must be
+>   recounted against the new files. The *shape* of the risk (which files carry it) is still
+>   right; the *magnitudes* are unverified.
+> - **`EXPRESSION_UTILS_PATH` shim-path risk STANDS.** Still asserted by
+>   `tests/conformance/test_expression_compiler.py` and `test_ast_dispatch_invariant.py`. The
+>   "shim must persist" containment note holds.
+> - **Tier 1a callers are 5, not 6** (constraint_extractor deleted): computed_attribute_extractor,
+>   expression_compiler, hierarchy_resolver, usage_extractor, extractor.
 
 ### Tier 1a: expression_utils -> agentic-mbse expression.py
 
@@ -567,6 +785,40 @@ After the push-down, each package answers a clean question:
 
 ## Execution Plan
 
+> **[REFRESH 2026-07-06]** — the phase *ordering* stands, but five constraints that did not
+> exist on 2026-02-20 now bind every phase. Fold these in at epic_plan:
+>
+> 1. **Gate: TRUTH-DEBT Items 1, 2, 6 land first.** Not optional. Item 1 finalizes the
+>    aggregation-resolution path (`input_resolver.py`), Item 2 changes
+>    `extract_feature_chain_segments` (a Phase-1 move target), Item 6 hardens loader /
+>    aggregation-compile silent sites (Phase-1/2 move targets). Moving before they land moves
+>    code that is about to change. (`epic_truth_debt.md`, "Sequencing Rulings".)
+> 2. **TYPE_MAP pre-mapping step (new Phase-0).** Before any code that calls
+>    `SysideAdapter.is_instance("TypeName")` moves into agentic-mbse, the type names must be in
+>    the adapter's `TYPE_MAP` whitelist — the adapter now **hard-errors** on unknown names.
+>    Enumerate the type-name literals in each moving function and confirm the whitelist first.
+>    (Orchestrator-verified 2026-07-06 against the `pipeline-truth-item4` checkout: the hard-error
+>    contract is live — `_get_type_map` + ValueError-on-unmapped at `syside_adapter.py:156/296`,
+>    `EXCLUDED_CONSTRAINT_TYPES = ("RequirementUsage",)` single-sourced at `:43`. Also verified:
+>    the second `BindingInfo` exists at `agentic_mbse/sysml/types.py:189` — the dataclass
+>    reconciliation in the move plan is a real task, not a stale suspicion. Re-confirm only if
+>    the companion PR has not merged by pickup.)
+> 3. **Invariant-test migration (R1).** The moving code carries INV-1 sites
+>    (`reconstruct_operator_expression` dispatch, `AGG_PYTHON_OPS`) and the INV-5 site
+>    (`sanitize_name`). Their fires-on-shape + silent-on-clean tests move **with** the code,
+>    cross-repo — they cannot be left pointing at a shimmed path.
+> 4. **Per-move branch-parking.** Editable installs mean a half-migrated agentic-mbse breaks
+>    the sysml-codegen suite instantly (memory `orchestrated-run-gotchas`). Each move is: land
+>    in agentic-mbse on a branch → re-export in sysml-codegen → green suite → merge, never
+>    leaving the pair half-done between sessions.
+> 5. **v2 capture discipline.** Any baseline churn runs through `scripts/capture_*.py` with the
+>    `--fixtures` selective-capture byte-identity gate (memory `byte-identity-captured-at-churn`);
+>    snapshots are format v2 and the loader hard-gates the version.
+>
+> **Phase-specific:** Phase 1 Step-2's re-export target for qualified_names must be the
+> **general subset only** (see the qualified_names callout) — the codegen name builders stay,
+> so this is a split, not a whole-file re-export.
+
 ### Phase 1: Do Now (LOW risk, HIGH value) -- ~334 lines
 
 | # | Move | Lines | Blast radius | Rollback |
@@ -663,6 +915,35 @@ Six patterns from the research that apply to all new agentic-mbse code:
 
 ## Open Questions
 
+> **[REFRESH 2026-07-06]** — dispositions against HEAD:
+> - **Q1 (separator default): PARTIALLY ANSWERED.** `build_element_qualified_name` now takes
+>   `use_double_underscore: bool = True` (`qualified_names.py:48`). The parameterization the
+>   question asked for exists; the only remaining decision is which default agentic-mbse ships
+>   (recommendation `::` still holds — flip the default, keep the param).
+> - **Q4 (two `BindingInfo` classes): STANDS.** Codegen side confirmed at
+>   `usage_extractor.py:55`; agentic-mbse side unverified (repo outside sandbox). Pre-flight
+>   rename still recommended.
+> - **Q5 (`is_literal_expression` divergence): STANDS.** Both functions still exist; the rename
+>   to `is_literal_node()` on push-down is still required.
+> - **Q6 (`_sanitize_name` divergence): STANDS, pre-flight NOT done.** Still at
+>   `expression_compiler.py:167`; no `# INTENTIONAL DIVERGENCE` comment present.
+>
+> **NEW open questions raised by this refresh:**
+> - **Q7. Where is the split line inside qualified_names.py?** The module is now mixed
+>   (SysML-general + codegen name builders). The push-down must move only the general subset
+>   and leave `get_module_name` / `get_channel_name` / `build_parameter_qualified_name` behind.
+>   Design the split — a new `agentic_mbse.sysml.qualified_names` for the general functions, and
+>   `core/qualified_names.py` keeps the codegen builders and re-exports the rest. Answer at design.
+> - **Q8. Does `constraint_report.py` belong in the push-down set?** ANSWERED: no — codegen
+>   reporting artifact, stays. (Strike R7 accordingly.)
+> - **Q9. Does `supplied_values.py` change what "codegen-specific" means for hierarchy code?**
+>   ANSWERED: no — it confirms the existing line (design-override *materialization* is codegen
+>   resolution; what a redefinition *is* stays SysML-general). But it is a 4th importer of the
+>   hierarchy data models — factor into the re-export surface for any model push-down.
+> - **Q10. Adapter TYPE_MAP whitelist coverage.** Which `is_instance` type-name literals do the
+>   moving functions use, and are they all whitelisted? Blocked this pass (repo outside sandbox);
+>   MUST be answered before Phase 1, since the adapter hard-errors on a miss.
+
 1. **`build_element_qualified_name()` separator default**: This function traverses
    `elem.owning_type` chains. In sysml-codegen, the default separator is `__` (ADR-003).
    In agentic-mbse, `::` (SysML native) is more appropriate. Recommendation: default to
@@ -706,6 +987,19 @@ Six patterns from the research that apply to all new agentic-mbse code:
 ---
 
 ## Summary Table
+
+> **[REFRESH 2026-07-06]** — the two tables below keep their *rows* but several cells are stale:
+> - **R1** ("snapshot_loader.py transitive dependency, ~424 tests"): the mechanism changed —
+>   `snapshot_loader.py` is gone, loading is now the production module `snapshot/loader.py`. The
+>   re-export requirement stands; the "~424 tests" count is void (recount at epic_plan).
+> - **R7** ("constraint_extractor is a missed Tier 1 candidate"): **VOID** — the file no longer
+>   exists; the successor `constraint_report.py` is codegen-specific. Strike R7.
+> - **R2, R5, R6, R8** stand (verified this pass where in-repo). **R3, R4** stand on the
+>   codegen side; the agentic-mbse side is unverified (repo outside sandbox).
+> - **Line counts in the summary** ("~200", "~133", "~300", "~100", "~261", "~71", "~70") are
+>   all pre-PIPELINE-TRUTH. Current: expression reconstruction ~356 (whole file, incl. new
+>   precedence helpers), qualified-names general subset only (module split, not ~181), hierarchy
+>   ~742 file. The "Total moving ~875" figure is stale — re-derive from the callouts.
 
 | What | Lines | Risk | Phase | Reuse unlocked |
 |------|-------|------|-------|---------------|

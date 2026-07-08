@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-08
 
 ---
 
@@ -29,7 +29,7 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing: the UPSTREAM-FINDINGS Item 6 prerequisite has landed (PR #3); new ruling — start after PIPELINE-TRUTH Items 5 (silent-failure hardening) and 8 (cleanup debt) land, since both modify the same extraction/ surfaces the push-down would move.** See `.project/concepts/agentic-mbse-push-down-design.md`. |
+| [PUSH-DOWN] agentic-mbse Push-Down Design | Design ready | Move reusable SysML semantics (~875 lines) from sysml-codegen extraction/ into agentic-mbse/sysml/. Phase 1 (LOW risk): expression_utils + qualified_names. Phase 2 (MEDIUM risk): hierarchy + aggregation. **Sequencing (updated 2026-07-06): start after TRUTH-DEBT (`epic_truth_debt.md`) lands.** The earlier ruling (after PIPELINE-TRUTH Items 5 & 8) is superseded: TRUTH-DEBT Items 1 (F4 cutover / `input_resolver` consolidation), 2 (multi-hop, touches `expression_utils` chain-follow), and 6 (D3 hygiene tail, touches loader / aggregation-compile / registry extraction) all edit the same extraction/resolution surfaces the push-down would move — so PUSH-DOWN now additionally waits on those three, so the moved code is born correct. See `.project/concepts/agentic-mbse-push-down-design.md`. |
 
 ---
 
@@ -76,6 +76,25 @@ Compounding factors the fix must address, not just the query:
   `elements_of_type` call site for the same subtype-blindness pattern.
 
 ## P2 - Medium Priority
+
+### ~~[TRUTH-DEBT] Truth-Debt Retirement — the PIPELINE-TRUTH follow-on ledger~~ ✅
+
+**Filed 2026-07-06** as `epic_truth_debt.md`. **Status: Complete (2026-07-08).**
+Archived to: `.project/completed/20260708_epic_truth_debt.md`.
+
+Retired the work PIPELINE-TRUTH deliberately filed rather than rush: the F4
+aggregation-resolution cutover, resolved multi-hop chain support, the three matrix test-gaps,
+the inherited-attr classifier fix, the matrix sweep residue, and the D3 hygiene tail. All six
+items were implemented and audited; pre-PR gates recorded 2120 passed / 4 skipped /
+0 xfailed, ruff src clean, mypy src 97.
+
+Items archived:
+- [x] Item 1 — F4 aggregation cutover (+ `[GB-PARAMGROUPS-TYPING]` folded in)
+- [x] Item 2 — resolved multi-hop chain bindings
+- [x] Item 3 — matrix test-gap authoring (DM-08, RES-05, RES-08)
+- [x] Item 4 — inherited-attr classifier fix (flip the 5 xfails)
+- [x] Item 5 — matrix sweep residue
+- [x] Item 6 — D3 hygiene tail
 
 ### [SYNC-F3] Shape-B leaf-collision filename edge (UPSTREAM-FINDINGS Item 12, F3)
 
@@ -177,6 +196,9 @@ already narrowed its own reading. Decide the intended contract, then fix REQ tex
 
 ### [ITEM7-F4-CUTOVER] Wire aggregation resolution through `resolve_input()` — P2, executable follow-on
 
+**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 1, 2026-07-06** — with `[GB-PARAMGROUPS-TYPING]`
+folded in (same graph_builder group-assembly region). Lands first among aggregation-resolution items.
+
 **Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** Item 7's F4 reconciliation reframed the
 matrix/docs to the honest state but deliberately **split out the code cutover** (fallback
 refactor + baseline re-capture exceeds Item 7's 1.5–2 day budget; spec Open Question
@@ -231,6 +253,8 @@ byte-identical or reviewed, and the parity gate runs against the replaced functi
 
 ### [ITEM7-MATRIX-TEST-GAPS] Three REQ rows lack a pinning test — P3, test-coverage
 
+**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 3, 2026-07-06.**
+
 **Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** The matrix reconciliation dispositioned
 most UNTESTED rows by cross-citing an existing component test, but three claims have no
 honest test to cite and are left UNTESTED with an argument in the matrix:
@@ -252,7 +276,15 @@ honest test to cite and are left UNTESTED with an argument in the matrix:
 None is feature work — all three are test-authoring. Kept out of Item 7 (matrix-truth budget;
 new-test authoring, not matrix reconciliation).
 
-### [ITEM7-CLASSIFIER-FIX] Inherited-attr EXPOSE_COMPUTED misclassification — P3, behind a loud xfail
+### [ITEM7-CLASSIFIER-FIX] Inherited-attr EXPOSE_COMPUTED misclassification — RESOLVED (TRUTH-DEBT Item 4)
+
+**✅ LANDED by TRUTH-DEBT Item 4, 2026-07-07.** Step-2b widened to prefix-match any ancestor
+PartDef QN (`computed_attribute_extractor._ancestor_part_qns`); snapshot re-captured (5 flips +
+a depth-2 case); the xfail site deleted for a positively-asserting 7-row table (REQ-CA-12); D5
+graph-builder diagnostic added. **The "loud" framing below was corrected to "silent no-op"** —
+the misclassification dropped silently at `graph_builder.py:269-288`, it was never a loud reject.
+
+**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 4, 2026-07-06.**
 
 **Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** `test_computed_attributes.py::TestInheritedAttrClassification::test_misclassification_documented`
 xfails N inherited-attribute patterns classified EXPOSE_COMPUTED where FORMULA is correct: an
@@ -264,7 +296,53 @@ pins the root cause). **Re-frame chosen over fix in Item 7:** the misclassificat
 matrix-truth item. Fix scope: teach the Step-2b check to accept a supertype-namespace QN for an
 inherited attribute. When landed, the xfail cases flip to PASS (xfail strict=False).
 
+### [DM08-MODEL-FIELD-TYPING] NewType-annotate the resolution-model name fields — P3
+
+**Filed by TRUTH-DEBT Item 3 (Route A ruling), 2026-07-07.** REQ-DM-08's original text
+claimed the *model fields* use NewType wrappers; at HEAD they are deliberately bare `str`
+(`resolution/models.py`: `EntryPoint.qualified_name`, `InputSource.qualified_name` /
+`producer_channel`, `ModuleOutput.channel_name`), and `09-data-models.md` documents the
+field↔format table with this deferral. Item 3 pinned the *enforced surface* (OutputRegistry
+dicts + `make_*` constructors, `test_dm08_enforced_surface.py`) and reframed the REQ text to
+match (INV-B). **Scope**: annotate the documented model fields with their NewTypes
+(field↔format table in doc 09 is the target list), update the DM-08 row + doc 09 note, and
+extend the AST-scan test to cover the widened surface. Pure typing churn — zero runtime
+change (NewType is erased), but touches many models; mypy must not regress.
+
+### [TRUTH-DEBT-INHERITED-FORMULA-COMPILE] Compile inherited-attr FORMULAs into real modules — P3
+
+**Filed by TRUTH-DEBT Item 4, 2026-07-07.** Item 4 fixed *classification* — an attribute
+referencing only inherited/local attrs now classifies FORMULA. But these stay
+`MANUAL_REQUIRED` and produce **no pipeline module**: the compiler's `input_names` is built
+from `owned_members` (`computed_attribute_extractor.py:188-191,247-249`), which per SysML v2
+excludes inherited attrs, so an inherited ref compiles to `UNSUPPORTED` →
+`compilability=MANUAL_REQUIRED`, `compiled_expression=None`. The D5 graph-builder diagnostic
+now makes that no-module outcome **loud** at generation, but it does not build the module.
+**Scope**: thread the ancestor PartDefs' attribute names into the FORMULA compiler's
+`input_names` (mirroring the ancestor-QN walk already added for classification) so an
+inherited-attr FORMULA compiles to a real module. Out of scope for Item 4 (classification-only,
+D1). No corpus model hits the shape today, so no baseline moves.
+
+### [TRUTH-DEBT-IFE-PLANT-CHAIN-STALE] `ife_plant` snapshot latently stale (pre-existing classifier drift) — P3
+
+**Filed by TRUTH-DEBT Item 4 B3 check, 2026-07-07; attribution corrected by Item 2's audit
+(multihop-chain/audit.md).** While reproducing B3 for Item 4, one **orthogonal** drift
+surfaced: `ife_plant` `radial_build.magnet_volume_total` is committed as `expose_pure` but
+live extraction now classifies it `expose_chain_tentative`. Confirmed pre-existing on the
+pre-Item-4 classifier (`0f75062`). The original filing attributed it to Item-2 multi-hop
+machinery; **Item 2's audit refuted that** — Item 2's entire source diff is
+`usage_extractor.py` + `dependency_backtracker.py`, neither on the attribute/classifier
+path, and it provably cannot produce the `expose_pure → expose_chain_tentative` transition.
+The drift is prior-epoch classifier staleness (pre-Item-2, from `891cf8e`), latent until
+`ife_plant` is re-captured. NOT an Item-4 effect either. Latent: the conformance suite reads the committed snapshot, so it is green
+today; it would surface on a future `ife_plant` re-capture. **Scope**: re-capture `ife_plant`
+and review the resulting diff (expect the one chain-classification flip and its downstream
+effects), landing it as a reviewed R3 diff. Deliberately not done in Item 4 (mixing Item-2
+drift into the Item-4 change would break the byte-identity carve-out).
+
 ### [ITEM7-MATRIX-SWEEP-RESIDUE] Deep-read sweep findings — P3, test-coverage / matrix-honesty
+
+**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 5, 2026-07-06.**
 
 **Filed by PIPELINE-TRUTH Item 7, 2026-07-06.** The leashed ~175-row deep-read sweep (Phase 8)
 ran to substantial completion via delegated per-family readers (~167 qualifying strong-word PASS
@@ -356,6 +434,9 @@ cross-module AST rework. Build it as its own scoped change, not opportunisticall
 the SC-11 assessment-verdict artifact.
 
 ### [GB-PARAMGROUPS-TYPING] graph_builder `param_groups` type-ignore cluster (D1-F4) — P3
+
+**Absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 1, 2026-07-06** — folded into the F4
+cutover (same graph_builder group-assembly region).
 
 **Filed by PIPELINE-TRUTH Item 8 (D1-F4), 2026-07-06.** The 2-ignore cluster
 (`resolution/graph_builder.py:408/412`, `[assignment]` + `[attr-defined]`) guards a genuine mypy
@@ -496,6 +577,76 @@ the new row and does not treat it as an orphan.
 
 ### PIPELINE-TRUTH Item 5 — Silent-Failure Hardening close-out filings (2026-07-06)
 
-- **[D3-HYGIENE-TAIL]** — consolidated hygiene entry (pointer: `.project/research/20260706_pipeline-truth-discovery.md` §D3). The benign-leaning silent sites not folded into a family fix: loader `.get` defaults on load-bearing fields, naive substring `.replace()` in aggregation compile, `type_map` "Any" exit-point skip, registry alias-rewrite no-not-found branch. Each is low blast-radius; batch them into one hardening pass. (Dead `_check_semantic_match` is Item 8's dead-code sweep — cross-referenced, not filed twice.)
-- **[MULTIHOP-CHAIN-PARSE]** — full multi-hop chain parsing follow-on (from D3-2). `extract_feature_chain_segments` (`expression_utils.py`) already yields all segments; Item 5 uses it for the COUNT only (loud-reject 3+-seg chains). Building the resolved multi-hop path is new capability — cheap (helper exists), unblocks deep cross-scope chains, and would let `deep_cross_scope_probe`'s Pattern-A pin assert a *resolved* chain instead of a loud rejection. Argued at Item 5 design; deferred as new-capability, not this item.
+- **[D3-HYGIENE-TAIL]** — **absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 6, 2026-07-06.** Consolidated hygiene entry (pointer: `.project/research/20260706_pipeline-truth-discovery.md` §D3). The benign-leaning silent sites not folded into a family fix: loader `.get` defaults on load-bearing fields, naive substring `.replace()` in aggregation compile, `type_map` "Any" exit-point skip, registry alias-rewrite no-not-found branch. Each is low blast-radius; batch them into one hardening pass. (Dead `_check_semantic_match` is Item 8's dead-code sweep — cross-referenced, not filed twice.)
+- **[MULTIHOP-CHAIN-PARSE]** — **absorbed into TRUTH-DEBT (`epic_truth_debt.md`) Item 2, 2026-07-06.** Full multi-hop chain parsing follow-on (from D3-2). `extract_feature_chain_segments` (`expression_utils.py`) already yields all segments; Item 5 uses it for the COUNT only (loud-reject 3+-seg chains). Building the resolved multi-hop path is new capability — cheap (helper exists), unblocks deep cross-scope chains, and would let `deep_cross_scope_probe`'s Pattern-A pin assert a *resolved* chain instead of a loud rejection. Argued at Item 5 design; deferred as new-capability, not this item.
 - **Item-9 (agentic-mbse lockstep) impact accumulation from Item 5.** New diagnostics that agentic-mbse guidance/validation should teach & check: (1) the totality/uniqueness/exception invariants (INV-1..INV-5) as new-dispatch/lookup-site review rules; (2) `extract_feature_refs` under-report (D3-9 tripwire) — a non-literal AST root yielding zero refs is a traversal gap in agentic-mbse; (3) `str(direction)` repr and the non-float entry-point (SC-5) shape as modeling-guide anti-patterns. Recorded for Item 9 per R2; not implemented here.
+
+### TRUTH-DEBT Item 6 — D3 Hygiene Tail Phase 0 filings (2026-07-07)
+
+- **[D3-HYGIENE-TAIL-SITE4-TRANSITIVE-ALIAS]** — **reclassified, not fixed, at Item 6 Phase 0.**
+  Site 4 (`orchestration/output_registry_builder.py:353-367`, Phase 4 transitive design-attribute
+  alias resolution) was expected to reproduce only synthetically ("reproduces cleanly" per the
+  plan) and get a mechanical sibling-copy `logger.warning` mirroring Phases 2/3. The Phase-0
+  corpus-scan gate found instead that the identical unresolved-lookup shape already fires on
+  **5 of 15 `SNAPSHOT_MODELS` fixtures today**: `solar_battery_model`
+  (`misc_hardware_cost` → `'allocation_model.total_allocation'`), `wi014_toy`
+  (`total_cost` → `'cost_calc.cost'`), `ife_plant` (`volume` → `'volume_calc.volume'`,
+  `lcoe` → `'lcoe_calc.lcoe'`), `plant_values` (`plant_cost` → `'cost_calc.plant_cost'`). Root
+  cause: these `default_value`s use a short leaf-instance dotted form (`"cost_calc.cost"`) but
+  all three of Phase 4's lookup keys are full-EQN forms — none ever match. A mechanical WARN
+  here would fire on all 5 currently-clean fixtures, breaking INV-6 [HARD]. No downstream binding
+  in the corpus references any of the 5 orphaned names, so the gap has no observable effect on
+  current generated output — which is exactly why the mechanical fix would have been a false-fire,
+  not a true one.
+
+  **This is the same underlying gap already discovered and deliberately deferred** at
+  `analysis/parameter_groups.py:672-682` (`_derive_from_design_attributes`), where a
+  present-but-unparseable design-attribute default is silently dropped from the derived JSON
+  parameter list. That code's own comment (citing SC-5/D3-12) states a naive WARN there
+  "over-fires on legitimate chain/reference defaults... resolved elsewhere, breaking INV-6," and
+  that the correct fix "needs the EP-omission membership check across the full derivation" —
+  deferred, and never filed until now.
+
+  **Filing:** a correct fix spans both sites (an EP-omission / cross-derivation membership check
+  that only warns when a transitive default resolves in *neither* Phase 4 *nor* the parameter-group
+  JSON path) — design-level work, not a single-choke mechanical hygiene fix. Out of Item 6's scope.
+  Evidence: `.project/active/hygiene-tail/probes/probe_site4_output_registry.py`,
+  `.project/active/hygiene-tail/probes/verdict.md`.
+
+### [ITEM5-SWEEP-RESIDUE-OVERFLOW] D7 sweep completion — 21 rows read-spot-checked, not line-by-line deep-read — P3, test-coverage / matrix-honesty
+
+**Filed by TRUTH-DEBT Item 5 (matrix-sweep-residue), 2026-07-08.**
+
+Step 5.0's D7 qualifier grep (`SHALL|ALL|every|never|exactly|warn|fire|count`, case-insensitive)
+across all 259 current matrix rows returns 232 qualifying rows. Subtracting the ~167 the
+Item-7 register already swept and the 33 rows this item dispositioned in Phases 1-4 (17
+strengthen + 11 reframe + 5 cite) leaves **32 rows** as the concrete residue (the spec's ~46
+estimate included rows this item's own Phase 2 work re-verified/absorbed).
+
+Of those 32, the 23 in the three named families (EPC 8, GA 8, LVP 9, minus REQ-EPC-05/07
+already strengthened in Phase 2 = 21 unread here) were spot-checked (not individually
+line-by-line deep-read): REQ-GA-04's `TestNoSelfDependency` and REQ-LVP-04's LocalTerm-fallback
+assertions both read as real, non-vacuous checks matching their row text on inspection. No
+correctness lie or feature gap was found in the spot-check, consistent with the Item-7 register's
+finding that every prior deep-read row was PASS-pins-narrower, never a lie.
+
+**Stopping rule invoked:** the D7 stopping rule (0 new findings in 40 consecutive rows after the
+first 60) was not reached on row-count grounds — this pass stopped short of it, at the item's
+remaining implementation budget, having read 2 of 21 representative rows in the named families
+(GA-04, LVP-04) plus the row-text/citation check for all 21 during Step 5.0's grep pass. This is
+an **honest budget-bound stop**, not a claim the D7 heuristic's row-count threshold was hit --
+named separately per the plan's risk-management section (an unread residual vs. a
+read-but-too-big-to-fix residual are both named, separately).
+
+**Residue, named exactly:**
+- **21 rows** in EPC/GA/LVP families not individually deep-read beyond the spot-check above:
+  REQ-EPC-01, -02, -03, -04, -06, -08; REQ-GA-01, -02, -03, -05, -06, -07, -08; REQ-LVP-01, -02,
+  -03, -05, -06, -07, -08, -09.
+- **11 rows** elsewhere in the qualifying set (the "~21 spread across other families" the spec
+  named) not enumerated by REQ id in this filing -- reconstructing the exact list requires
+  re-running the Step 5.0 grep minus the 167+33+21 already accounted for; left as a precise
+  follow-on rather than guessed here.
+
+**Scope for the follow-on:** re-run the Step 5.0 grep, subtract this item's full disposition
+(33 dispositioned + 21 spot-checked here), deep-read the remainder under a fresh D7 budget, land
+cheap dispositions (reframe/cite) inline, re-file only genuine budget-exceeding strengthens.

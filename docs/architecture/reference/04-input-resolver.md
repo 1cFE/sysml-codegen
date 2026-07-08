@@ -1,22 +1,23 @@
 # 04 -- Consolidated Input Resolver
 
-> **Status (F4 reconciliation, Item 7): built, parity-validated, NOT yet wired.**
-> `resolve_input()` and `AGG_STRATEGIES` have **zero production callers**. The
-> live aggregation path is `_resolve_aggregation_input_channel` (`graph_builder.py`),
-> not this module. This module was built in the COST-PATTERN commit but the final
-> rewire of the factory call sites was never done; it is parity-validated against
-> the backtracker DFS over the corpus (`test_dual_resolution.py`). The live-path
-> cutover — reconcile the fallback's entry-point construction to the live path,
-> rewire the three call sites, re-capture baselines — is filed as
-> `[ITEM7-F4-CUTOVER]`. Read the sections below as this module's **capability and
-> intended shape**, not as a description of the current live pipeline.
+> **Status (F4 cutover landed, TRUTH-DEBT Item 1): this IS the live aggregation
+> path.** Aggregation SumTerm/SingletonTerm resolution runs through
+> `resolve_input(ref, ctx, AGG_STRATEGIES)`, called via the choke-point helper
+> `_build_agg_input_source()` in `_build_aggregation_module` (`graph_builder.py`).
+> The old channel-only function `_resolve_aggregation_input_channel` is **deleted**.
+> The cutover reconciled the fallback's entry-point key to the live call sites'
+> part-usage-prefixed key, so baselines came out byte-identical, and it is
+> parity-validated against the backtracker DFS over the corpus
+> (`test_dual_resolution.py`). LocalTerm keeps its own simpler inline fallback,
+> but its expose-alias channel reroute now calls `resolve_input` (D5 guard).
+> Spec/design/plan in `.project/active/f4-cutover/`.
 
 ## Why this module exists
 
 Aggregation modules (SumTerm/SingletonTerm inputs) reimplement input resolution
 inline with different strategies and error handling. The consolidated input
-resolver is **designed to** replace these with one function and an explicit,
-ordered strategy chain (once wired — see the status note above).
+resolver replaces these with one function and an explicit, ordered strategy
+chain — it is the live SumTerm/SingletonTerm path (see the status note above).
 CalcUsage resolution stays in the [backtracker](11-analysis-backtracker.md) (DFS
 requires it — see [24](24-dual-resolution-architecture.md)). FORMULA modules use
 a [pre-computed attribute resolution map](16-computed-attributes.md) (not this
@@ -30,9 +31,9 @@ resolver). LocalTerm uses a [factory-specific cascade](05-module-factory.md#4c-l
 | REQ-IR-02 | Strategies SHALL execute in declared list order; first non-None result wins. | `for strategy in strategies: result = strategy(ref, ctx); if result: return ...` |
 | REQ-IR-03 | Self-reference guard SHALL reject channels where the producing module [EQN](15-naming-conventions.md) matches `ctx.module_eqn`. | Guard check after each strategy: `channel.rsplit("__", 1)[0] == ctx.module_eqn` triggers skip |
 | REQ-IR-04 | [ResolutionContext](#resolutioncontext) SHALL be immutable (`frozen=True`); no strategy mutates it. | `@dataclass(frozen=True)` on ResolutionContext; mutation raises `FrozenInstanceError` |
-| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`) — the strategy list an aggregation caller receives once wired. | `AGG_STRATEGIES[0] == ScopedRegistryLookup` and `AGG_STRATEGIES[1] == ChainRedefinitionFollow` |
+| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`) — the strategy list the live aggregation caller passes. | `AGG_STRATEGIES[0] == ScopedRegistryLookup` and `AGG_STRATEGIES[1] == ChainRedefinitionFollow` |
 | REQ-IR-06 | Fallback SHALL produce an `entry_point` [InputSource](#inputsource-output-model) with qualified name `"{module_eqn}__{param_name}"`. | `result.source_type == "entry_point"` and `result.qualified_name.startswith(ctx.module_eqn)` |
-| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to (parity — validated, not live). FORMULA modules use pre-computed [attribute resolution](16-computed-attributes.md) (not this resolver). CalcUsage uses the [backtracker cascade](11-analysis-backtracker.md); the live aggregation path is `_resolve_aggregation_input_channel` until `[ITEM7-F4-CUTOVER]`. | `test_dual_resolution.py::TestResolveInputParityExtended` + committed corpus suite |
+| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to (parity, and now the live path via `_build_agg_input_source()`). FORMULA modules use pre-computed [attribute resolution](16-computed-attributes.md) (not this resolver). CalcUsage uses the [backtracker cascade](11-analysis-backtracker.md). | `test_dual_resolution.py::TestResolveInputParityExtended` + committed corpus suite |
 
 ## Function signature
 
@@ -48,9 +49,9 @@ def resolve_input(
 SysML QN, or dotted path). The format of `ref` determines which typed registry
 path the strategies will query. **`ctx`**: Immutable context bag with typed
 [OutputRegistry](10-output-registry.md). **`strategies`**: Ordered strategy list;
-callers must pass explicitly. The aggregation caller (once wired) will pass
-`AGG_STRATEGIES` (REQ-IR-05). No default — and, at HEAD, no production caller at
-all (see the status note).
+callers must pass explicitly. The live aggregation caller
+(`_build_agg_input_source()` in `graph_builder.py`) passes `AGG_STRATEGIES`
+(REQ-IR-05). No default.
 
 Always returns an [InputSource](#inputsource-output-model) (REQ-IR-01). Never raises on
 unresolved refs -- the [fallback](#fallback) produces an entry point (REQ-IR-06).
@@ -173,15 +174,21 @@ chain's target. Includes cycle detection
 via a visited set. This connects [aggregation](13-aggregation-scoping.md) inputs
 to CalcUsage outputs through part hierarchy redefinitions.
 
-### D: DesignAttributeLookup
+### E: DirectChannelConstruction
 
-Documented design intent: match `ref` against `ctx.design_attrs` so that
-multiple modules binding the same design attribute share one
-[entry point](06-entry-point-classifier.md). **At HEAD it is a no-op**: it
-returns `None` for every ref -- design attributes are entry points, not module
-outputs, so there is no `CanonicalChannel` for a strategy to return. An
-unresolved ref falls through to the [fallback](#fallback), which builds the
-entry point QN from `ctx.module_eqn` (not from the design attribute's QN).
+Reproduces the SingletonTerm "Try 2" direct channel construction that no
+registry lookup covers. If `ref` is dotted, build a CalcUsage-format channel
+`get_channel_name("{instance_path}__{prefix-with-dots-as-__}", output_name)` and
+return it only if it exists in the registry's canonical channels; otherwise
+`None`. This resolves CalcUsage EQN-format targets and is a no-op for refs whose
+constructed channel is not registered (SumTerm array-child costs, LocalTerms).
+It is in-idiom with Strategy C's `{instance_path}__…` construction.
+
+(The former Strategy D `DesignAttributeLookup` was **deleted** in the F4 cutover:
+it was a return-None stub with zero live surface — design attributes are entry
+points, not module outputs, so it never had a `CanonicalChannel` to return.
+Unresolved refs still fall through to the [fallback](#fallback), which builds
+the entry point QN from `ctx.module_eqn`.)
 
 ## Truth table
 
@@ -191,7 +198,7 @@ entry point QN from `ctx.module_eqn` (not from the design attribute's QN).
 | `"catf_radial_build.magnet_surface_area"` (cross-package CHAIN) | `"catf_tf_system"` | **A** (alias) | scoped miss → `alias_lookup(ScopedKey("catf_radial_build.magnet_surface_area"))` → EXPOSE_PURE alias → `module_output` |
 | `"AttrExprProbeDesign::probe_design::area"` (REFERENCE) | `"probe_design"` | **B** | `sysml_qn_lookup(SysMLQN("AttrExprProbeDesign::probe_design::area"))` → Phase 1c key → `module_output` |
 | `"pv_module.capital_cost"` (`:>> calc_cost.total`) | `"plant.solar_array"` (agg) | **C** | follows CHAIN redef → `ScopedKey` → `scoped_lookup()` → upstream channel |
-| `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | fallback (D is a no-op) | `entry_point`, QN `"<module_eqn>__panel_efficiency"` |
+| `"panel_efficiency"` (matches design attr) | `"plant.solar_array"` | fallback (no strategy matches) | `entry_point`, QN `"<module_eqn>__panel_efficiency"` |
 | `"unknown_param"` | `"plant.battery_pack"` | fallback | `entry_point`, QN `"<module_eqn>__unknown_param"` |
 
 Row 1 is the critical case: a bare CHAIN `source_path` disambiguated by prepending
@@ -225,12 +232,18 @@ falls through to create an entry point.
 If no strategy matches (REQ-IR-06):
 
 ```python
-param_name = ref.rsplit(".", 1)[-1] if "." in ref else ref
+param_name = ref.replace(".", "_")
 return InputSource(
     source_type="entry_point",
     qualified_name=f"{ctx.module_eqn}__{param_name}",
 )
 ```
+
+The fallback QN was reconciled at the F4 cutover from a leaf-only rsplit to the
+part-usage-prefixed key `{module_eqn}__{ref-with-dots-as-underscores}` — the key
+the live call sites already minted. A leaf-only key would collide sibling
+part-usage inputs and clash with the module's own output channel; the
+reconciled key is what made the cutover baselines byte-identical.
 
 The caller registers the entry point in the mutable `entry_points` dict.
 The resolver itself is pure -- it decides the [InputSource](#inputsource-output-model),
@@ -257,7 +270,7 @@ AGG_STRATEGIES = [
     ScopedRegistryLookup,       # A: ScopedKey → scoped registry + alias registry
     ChainRedefinitionFollow,    # C: :>> chain → ScopedKey → scoped registry
     SysMLQNLookup,              # B: SysMLQN → SysML QN registry (for :: refs)
-    DesignAttributeLookup,      # D: design attr match → entry point
+    DirectChannelConstruction,  # E: CalcUsage-format channel construction (Try 2)
 ]
 ```
 
@@ -273,19 +286,19 @@ aggregation inputs ([SumTerms](05-module-factory.md#4a-sumterm)) almost always
 resolve through `:>>` chains rather than direct registry keys.
 
 ```python
-# Intended aggregation call site once wired (05-module-factory); NOT live at HEAD,
-# where the factory still calls _resolve_aggregation_input_channel directly:
+# Live aggregation call site (05-module-factory), inside _build_agg_input_source():
 source = resolve_input(ref, ctx, strategies=AGG_STRATEGIES)  # SumTerm/SingletonTerm
 ```
 
-## What this eliminates (once wired)
+## What this eliminated
 
-The cutover collapses aggregation resolution into `resolve_input()` call sites.
-CalcUsage resolution remains in the [backtracker](11-analysis-backtracker.md)
-([24](24-dual-resolution-architecture.md)); FORMULA already uses the pre-computed
+The cutover collapsed aggregation resolution into `resolve_input()` behind the
+`_build_agg_input_source()` choke point. CalcUsage resolution remains in the
+[backtracker](11-analysis-backtracker.md)
+([24](24-dual-resolution-architecture.md)); FORMULA uses the pre-computed
 attribute resolution map, not this resolver. For aggregation, ~160 lines of
-inline logic (`_resolve_aggregation_input_channel` + term-type fallbacks) become
-context construction + a single call — deferred to `[ITEM7-F4-CUTOVER]`.
+inline logic (the deleted `_resolve_aggregation_input_channel` + the three
+per-call-site term-type fallbacks) became context construction + a single call.
 
 ## Related Documents
 

@@ -44,7 +44,7 @@
       "references": [],
       "source_file": "library.sysml",
       "source_line": 5,
-      "source_hash": "48aec5511982b115a6e880e464f563fbf6542c52191d2389a08d4f5aff3ac718",
+      "source_hash": "1910eda7ad7606f8404c2bd35e6c120b8500bac5a7f7c85f2e5a5c01b08427d8",
       "output_expression_asts": null,
       "all_member_names": [
         "result",
@@ -87,26 +87,6 @@
   "design_attributes": {
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/design.sysml": [
       {
-        "name": "inherited_product",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "design.sysml",
-        "source_line": 26,
-        "parent_part": "",
-        "qualified_name": "UnresolvableAttrProbeDesign__Design_Derived__inherited_product"
-      },
-      {
-        "name": "mixed_product",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "design.sysml",
-        "source_line": 29,
-        "parent_part": "",
-        "qualified_name": "UnresolvableAttrProbeDesign__Design_Derived__mixed_product"
-      },
-      {
         "name": "mixed_expose",
         "sysml_type": "Real",
         "default_value": null,
@@ -115,16 +95,6 @@
         "source_line": 33,
         "parent_part": "",
         "qualified_name": "UnresolvableAttrProbeDesign__Design_Derived__mixed_expose"
-      },
-      {
-        "name": "inherited_sum",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "design.sysml",
-        "source_line": 36,
-        "parent_part": "",
-        "qualified_name": "UnresolvableAttrProbeDesign__Design_Derived__inherited_sum"
       }
     ],
     "/home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/library.sysml": [
@@ -137,26 +107,6 @@
         "source_line": 7,
         "parent_part": "",
         "qualified_name": "UnresolvableAttrProbeLibrary__SimpleCalc__result"
-      },
-      {
-        "name": "inherited_product",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "library.sysml",
-        "source_line": 32,
-        "parent_part": "",
-        "qualified_name": "UnresolvableAttrProbeLibrary__Derived_Component__inherited_product"
-      },
-      {
-        "name": "mixed_product",
-        "sysml_type": "Real",
-        "default_value": null,
-        "unit": null,
-        "source_file": "library.sysml",
-        "source_line": 35,
-        "parent_part": "",
-        "qualified_name": "UnresolvableAttrProbeLibrary__Derived_Component__mixed_product"
       }
     ]
   },
@@ -191,6 +141,45 @@
       },
       {
         "owning_part_qn": "UnresolvableAttrProbeDesign__derived_instance",
+        "attribute_name": "local_multiplier",
+        "redefinition_type": "literal",
+        "literal_value": 3.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__grandchild_instance",
+        "attribute_name": "base_rate",
+        "redefinition_type": "literal",
+        "literal_value": 10.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__grandchild_instance",
+        "attribute_name": "base_factor",
+        "redefinition_type": "literal",
+        "literal_value": 2.0,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "UnresolvableAttrProbeDesign__grandchild_instance",
         "attribute_name": "local_multiplier",
         "redefinition_type": "literal",
         "literal_value": 3.0,
@@ -269,7 +258,7 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/library.sysml"
         }
       ],
-      "classification": "expose_computed",
+      "classification": "formula",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": true,
@@ -296,7 +285,7 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/design.sysml"
         }
       ],
-      "classification": "expose_computed",
+      "classification": "formula",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": true,
@@ -360,7 +349,7 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/design.sysml"
         }
       ],
-      "classification": "expose_computed",
+      "classification": "formula",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": true,
@@ -387,7 +376,7 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/library.sysml"
         }
       ],
-      "classification": "expose_computed",
+      "classification": "formula",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": true,
@@ -414,7 +403,34 @@
           "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/library.sysml"
         }
       ],
-      "classification": "expose_computed",
+      "classification": "formula",
+      "compilability": "manual_required",
+      "compiled_expression": null,
+      "is_on_part_definition": true,
+      "source_file": "unknown",
+      "source_line": 0,
+      "reference_chain": null
+    },
+    {
+      "name": "grandchild_product",
+      "python_name": "grandchild_product",
+      "owning_part_name": "Grandchild",
+      "owning_part_qualified_name": "UnresolvableAttrProbeLibrary::Grandchild",
+      "expression_ast": null,
+      "expression_text": "base_rate * base_factor",
+      "references": [
+        {
+          "name": "base_rate",
+          "qualified_name": "UnresolvableAttrProbeLibrary::'Base Component'::base_rate",
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/library.sysml"
+        },
+        {
+          "name": "base_factor",
+          "qualified_name": "UnresolvableAttrProbeLibrary::'Base Component'::base_factor",
+          "document_path": "file:///home/reid/1cfe/sysml-codegen/tests/fixtures/unresolvable_attr_probe/library.sysml"
+        }
+      ],
+      "classification": "formula",
       "compilability": "manual_required",
       "compiled_expression": null,
       "is_on_part_definition": true,

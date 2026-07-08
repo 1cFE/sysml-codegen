@@ -29,6 +29,7 @@ from sysml_codegen.core.qualified_names import sanitize_qualified_name
 
 if TYPE_CHECKING:
     from agentic_mbse.sysml.types import BindingInfo
+
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,8 @@ class BacktrackingResult(BaseModel):
             For literal bindings: str(literal_value) (for default value propagation).
         phantom_report: Report of suspected phantom entry points
         trace_log: Debug trace of resolution steps (for troubleshooting)
-        binding_resolutions: Unified mapping for ALL binding resolutions (entry_point OR module_output).
+        binding_resolutions: Unified mapping for ALL binding resolutions
+            (entry_point OR module_output).
             Key format: "{usage_qualified_name}|{param_name}".
             Value: Complete BindingResolution describing how the binding is wired.
             This is the SINGLE SOURCE OF TRUTH for binding resolution.
@@ -402,7 +404,9 @@ class DependencyBacktracker:
                     )
                     self._entry_point_context[resolution.qualified_name] = usage
                     if resolution.source_path:
-                        self._entry_point_sources[resolution.qualified_name] = resolution.source_path
+                        self._entry_point_sources[resolution.qualified_name] = (
+                            resolution.source_path
+                        )
 
             elif binding.binding_type == BindingType.EXPRESSION:
                 # EXPRESSION bindings: no dispatch path, treat as entry point
@@ -570,6 +574,19 @@ class DependencyBacktracker:
         # DEBUG, not WARNING — it fired per binding and was the primary benign
         # noise. The post-assembly reconciliation summary (unwired remainder) and
         # V11 (wired remainder) are now the operator digest for genuine residue.
+        #
+        # Item 2 / D3 (M-2): a 3+-segment CHAIN that reaches here is genuinely
+        # unresolvable — the extraction reject moved here (extraction has no
+        # registry). Emit a GENUINE logger.warning (WARNING level, distinct from the
+        # benign DEBUG line above), naming the full untruncated chain, so the
+        # Item-5 loud-diagnostic contract holds at its new home. The fallback QN
+        # below is already full + untruncated (usage_qn__param).
+        if "::" not in source_path and source_path.count(".") >= 2:
+            logger.warning(
+                "Multi-hop chain unresolved: %s|%s source_path='%s' — surfacing as an "
+                "entry point (not truncated to root, not silently wired).",
+                usage.qualified_name, param_name, source_path,
+            )
         logger.debug(
             "Registry unresolved: %s|%s source_path='%s'",
             usage.qualified_name, param_name, source_path,
@@ -635,6 +652,38 @@ class DependencyBacktracker:
         channel = self._output_registry.alias_lookup(ScopedKey(source_path))
         if channel is not None and not self._is_self_reference(channel, usage):
             return channel
+
+        # Step CLIMB (Item 2, D2/D4): ancestor-scope climb for deep chains. When the
+        # ladder above misses, retry scoped_lookup with progressively shorter ancestor
+        # prefixes of the consumer scope. The registry keys every output by its full
+        # design-prefix-stripped instance path (make_scoped_key), so prefixing the whole
+        # source_path with the ancestor scope where the chain root actually lives
+        # reconstructs the registered key (B1). Example: consumer scope
+        # `measurement_system.analyzer` misses `station.array...`, but dropping
+        # `analyzer` yields `measurement_system.station.array.derived_calc.derived_value`
+        # — a hit. Gated to 3+-segment chains (D4): a 2-segment chain never enters here,
+        # so every existing resolution is byte-identical. Ordered last (INV-A): only
+        # adds a hit where the ladder fell through, never overrides one.
+        #
+        # M-1 / INV-2b ambiguity guard: collect EVERY distinct channel the prefixes
+        # reach and refuse (fall through to the loud Step-4 fallback) if two disagree —
+        # never silently pick one. This closes the case of two scopes both carrying the
+        # FULL path to different channels. It does NOT close first-segment shadowing (an
+        # inner scope declares only the chain's first segment while an outer scope
+        # supplies the full path → a single outer-channel hit that strict SysML lexical
+        # resolution would call unresolvable). No corpus model exercises that shape; it
+        # is a filed, documented assumption, not a built guard (design.md Non-Goals, B2).
+        if source_path.count(".") >= 2:
+            scope_segments = consumer_scope.split(".") if consumer_scope else []
+            climbed: set[str] = set()
+            for i in range(len(scope_segments), -1, -1):
+                prefix = ".".join(scope_segments[:i])
+                key = ScopedKey(f"{prefix}.{source_path}" if prefix else source_path)
+                channel = self._output_registry.scoped_lookup(key)
+                if channel is not None and not self._is_self_reference(channel, usage):
+                    climbed.add(channel)
+            if len(climbed) == 1:
+                return next(iter(climbed))
 
         return None
 

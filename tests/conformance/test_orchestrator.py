@@ -46,8 +46,10 @@ from sysml_codegen.resolution.models import (
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
-from tests.conftest import snapshot_fixture
+from tests.conftest import requires_license, snapshot_fixture
 from sysml_codegen.snapshot import load_extraction_snapshot
+
+FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 
 
 # ---------------------------------------------------------------------------
@@ -187,6 +189,70 @@ class TestStepOrdering:
             f"VBR (line {vbr_line}) should be before DependencyBacktracker (line {backtracker_line})"
         )
 
+    @pytest.mark.req("REQ-ORCH-02")
+    def test_virtual_binding_mutated_in_place_by_step_3_5(self):
+        """Step 3.5's rewrite actually mutates `binding_type` in the `CalcUsageData`
+        the rest of the pipeline reads -- not just source-order proof.
+
+        The source-order test above confirms VBR runs before the registry/backtracker
+        read `calc_usages`, but never observes that the rewrite itself changes
+        anything. This constructs a virtual binding backed by a design override (the
+        same shape `_rewrite_virtual_bindings`'s own unit tests use) and asserts the
+        binding's `binding_type` and `source_path` are different after the call --
+        the in-place mutation downstream steps depend on.
+        """
+        from agentic_mbse.sysml.types import BindingType
+
+        from sysml_codegen.extraction.data_models import (
+            HierarchyExtractionResult,
+            RedefinitionData,
+            RedefinitionType,
+        )
+        from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
+        from sysml_codegen.orchestration.pipeline_builder import _rewrite_virtual_bindings
+
+        binding = BindingInfo(
+            param_name="total_cost",
+            source_path="Lib::CostModel::total_cost",
+            binding_type=BindingType.REFERENCE,
+        )
+        usage = CalcUsageData(
+            instance_name="Design__plant__cost_model",
+            calc_def_name="CostModel",
+            calc_def_qualified_name="Lib__CostModel",
+            module_type="CostModelModule",
+            bindings=[binding],
+            qualified_name="Design__plant__cost_model",
+            is_template=False,
+            owning_part_def_qn=None,
+        )
+        hierarchy_data = HierarchyExtractionResult(
+            redefinitions=[],
+            design_overrides=[
+                RedefinitionData(
+                    owning_part_qn="Design__plant",
+                    attribute_name="total_cost",
+                    redefinition_type=RedefinitionType.LITERAL,
+                    literal_value=999.0,
+                    is_deep_path=False,
+                ),
+            ],
+            multiplicities=[],
+            aggregation_expressions=[],
+            warnings=[],
+        )
+        original_binding_type = binding.binding_type
+        original_source_path = binding.source_path
+
+        rewritten = _rewrite_virtual_bindings([usage], hierarchy_data)
+
+        assert rewritten == 1
+        assert usage.bindings[0].binding_type != original_binding_type, (
+            "binding_type was not mutated in place"
+        )
+        assert usage.bindings[0].binding_type == BindingType.LITERAL
+        assert usage.bindings[0].source_path != original_source_path
+
     @pytest.mark.req("REQ-ORCH-03")
     def test_formula_removal_before_pgd_in_source(self):
         """_extract_and_filter_computed_attributes (which calls _remove_formula_from_design_attrs)
@@ -265,6 +331,100 @@ class TestStepOrdering:
         assert len(between_calls) == 0, (
             f"Significant calls between build_computation_graph and PipelineContext: "
             f"{between_calls}"
+        )
+
+    @pytest.mark.req("REQ-ORCH-06")
+    @pytest.mark.req("REQ-PIPE-07")
+    @requires_license
+    def test_computation_graph_identity_is_the_generation_boundary(self):
+        """`PipelineContext.computation_graph` IS the object build_computation_graph
+        returned -- not a copy, not a re-derived value.
+
+        The source-order test above (`test_computation_graph_is_last_step`) proves
+        `build_computation_graph` runs immediately before `PipelineContext(...)` is
+        constructed, but never observes what actually flows into the field. This
+        runs the real pipeline against a small fixture and asserts object identity,
+        which is what makes ComputationGraph the generation boundary REQ-PIPE-07
+        also pins (`TestGenerationBoundary`): everything downstream of `ctx` must
+        see the exact same graph `build_computation_graph` produced.
+        """
+        from sysml_codegen.resolution import graph_builder
+
+        captured: list[ComputationGraph] = []
+        original = graph_builder.build_computation_graph
+
+        def _spy(*args, **kwargs):
+            graph = original(*args, **kwargs)
+            captured.append(graph)
+            return graph
+
+        import sysml_codegen.orchestration.pipeline_builder as pipeline_builder_module
+
+        pipeline_builder_module.build_computation_graph = _spy
+        try:
+            ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+        finally:
+            pipeline_builder_module.build_computation_graph = original
+
+        assert len(captured) == 1
+        assert ctx.computation_graph is captured[0], (
+            "PipelineContext.computation_graph is not the exact object "
+            "build_computation_graph returned"
+        )
+
+
+class TestInnerStepOrdering:
+    """REQ-RES-05: build_computation_graph()'s INTERNAL milestones in source order.
+
+    Distinct from TestStepOrdering above, which pins the OUTER
+    build_pipeline_context DAG (REQ-ORCH-01) — a different function. This pins
+    the inner sequence the docs state (03-resolution-overview.md):
+    classify → build modules → rebuild groups → toposort → validate.
+
+    Documented-milestone → real-call-name map (the doc uses simplified names):
+    classify = _classify_entry_points; build modules = the three
+    _build_*_module factories; rebuild groups = derive_groups() (there is no
+    literal "rebuild_groups" call); toposort = _unified_topological_sort;
+    validate = _validate_channel_references.
+    """
+
+    @pytest.mark.req("REQ-RES-05")
+    def test_inner_step_ordering_source(self):
+        """The five milestones each appear, in the documented source order."""
+        milestones = [
+            ["_classify_entry_points"],
+            [
+                "_build_pipeline_module",
+                "_build_computed_attr_module",
+                "_build_aggregation_module",
+            ],
+            ["derive_groups"],
+            ["_unified_topological_sort"],
+            ["_validate_channel_references"],
+        ]
+        flat = [c for group in milestones for c in group]
+        lines = _get_call_lines_in_function(build_computation_graph, flat)
+
+        for group in milestones:
+            assert any(lines[c] for c in group), f"missing milestone: {group}"
+
+        # First occurrence of each milestone must be in documented order; for
+        # the build-modules milestone, ALL three factories must sit between
+        # classify and derive_groups (a single min() would let one drift).
+        classify_first = min(lines["_classify_entry_points"])
+        build_firsts = [min(lines[c]) for c in milestones[1] if lines[c]]
+        groups_first = min(lines["derive_groups"])
+        topo_first = min(lines["_unified_topological_sort"])
+        validate_first = min(lines["_validate_channel_references"])
+
+        for ln in build_firsts:
+            assert classify_first < ln < groups_first, (
+                f"a module factory call (line {ln}) is outside the "
+                f"classify({classify_first}) .. derive_groups({groups_first}) window"
+            )
+        assert groups_first < topo_first < validate_first, (
+            f"rebuild-groups({groups_first}) → toposort({topo_first}) → "
+            f"validate({validate_first}) out of source order"
         )
 
 
@@ -545,22 +705,38 @@ class TestAggregationScoping:
     """REQ-ORCH-05: Each aggregation expression scoped to design instances."""
 
     @pytest.mark.req("REQ-ORCH-05")
-    def test_scoped_count_ge_expression_count_solar_battery(
+    def test_every_aggregation_expression_produces_a_scoped_instance(
         self, extraction_snapshots
     ):
-        """len(scoped_agg_data) >= len(aggregation_expressions) for solar_battery."""
+        """Every source expression appears in the scoped output at least once.
+
+        A bare `len(scoped) >= len(expressions)` count floor lets one
+        over-producing expression (multiple design instances) mask another
+        scoping to zero -- the totals can still satisfy `>=` while a real
+        expression is silently dropped. Assert set membership instead: every
+        (owning_part_qn, attribute_name) pair from the source expressions must
+        be represented by at least one scoped entry.
+        """
         snap = extraction_snapshots["solar_battery_model"]
         hierarchy_data = snap["hierarchy_data"]
         calc_usages = snap["calc_usages"]
 
-        agg_expression_count = len(hierarchy_data.aggregation_expressions)
-        assert agg_expression_count > 0, "solar_battery has no aggregation expressions"
+        expressions = hierarchy_data.aggregation_expressions
+        assert len(expressions) > 0, "solar_battery has no aggregation expressions"
 
         scoped = _scope_aggregation_expressions(hierarchy_data, calc_usages)
 
-        assert len(scoped) >= agg_expression_count, (
-            f"Scoped count ({len(scoped)}) < expression count ({agg_expression_count}). "
-            f"Some expressions produced zero instances."
+        scoped_ids = {
+            (s.expression.owning_part_qn, s.expression.attribute_name) for s in scoped
+        }
+        missing = [
+            (e.owning_part_qn, e.attribute_name)
+            for e in expressions
+            if (e.owning_part_qn, e.attribute_name) not in scoped_ids
+        ]
+        assert not missing, (
+            f"{len(missing)} aggregation expression(s) produced zero scoped "
+            f"instances: {missing}"
         )
 
 

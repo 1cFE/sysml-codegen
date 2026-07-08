@@ -62,7 +62,7 @@ except ImportError:
 try:
     from sysml_codegen.resolution.input_resolver import (
         ChainRedefinitionFollow,
-        DesignAttributeLookup,
+        DirectChannelConstruction,
         ScopedRegistryLookup,
         SysMLQNLookup,
     )
@@ -80,7 +80,7 @@ except ImportError:
     def SysMLQNLookup(ref, ctx):  # type: ignore[no-redef]
         raise NotImplementedError
 
-    def DesignAttributeLookup(ref, ctx):  # type: ignore[no-redef]
+    def DirectChannelConstruction(ref, ctx):  # type: ignore[no-redef]
         raise NotImplementedError
 
 
@@ -137,6 +137,22 @@ def _flatten_design_attrs(design_attrs_dict) -> dict:
                 flat[da.qualified_name] = da
             flat[da.name] = da
     return flat
+
+
+def _iter_agg_sum_singleton_terms(agg):
+    """Yield (ref, literal_lookup_key) for every SumTerm and dotted SingletonTerm of
+    an aggregation. literal_lookup_key is the (part_usage, attr) the inline block looks
+    up a LITERAL default for — pre-split fields for SumTerm, an rsplit for SingletonTerm.
+    Dotless SingletonTerms are skipped here (the M3 gate iterates dotted refs only, as
+    the old channel function returns None for them without a lookup)."""
+    for term in agg.expression.sum_terms:
+        ref = f"{term.part_usage_name}.{term.attribute_name}"
+        yield ref, (term.part_usage_name, term.attribute_name)
+    for s_term in agg.expression.singleton_terms:
+        if "." not in s_term.source_path:
+            continue
+        s_part_usage, s_attr = s_term.source_path.rsplit(".", 1)
+        yield s_term.source_path, (s_part_usage, s_attr)
 
 
 # ---------------------------------------------------------------------------
@@ -226,12 +242,14 @@ class TestReqIR02:
     @pytest.mark.req("REQ-IR-02")
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
     def test_strategy_ordering_matches_agg_strategies(self):
-        """AGG_STRATEGIES has exactly 4 entries in the documented order."""
+        """AGG_STRATEGIES has exactly 4 entries in order: A/C/B/E. The dead Strategy D
+        (DesignAttributeLookup) was deleted in the F4 cutover; Strategy E
+        (DirectChannelConstruction) reproduces the SingletonTerm Try-2 channel."""
         assert len(AGG_STRATEGIES) == 4
         assert AGG_STRATEGIES[0] is ScopedRegistryLookup
         assert AGG_STRATEGIES[1] is ChainRedefinitionFollow
         assert AGG_STRATEGIES[2] is SysMLQNLookup
-        assert AGG_STRATEGIES[3] is DesignAttributeLookup
+        assert AGG_STRATEGIES[3] is DirectChannelConstruction
 
 
 # ---------------------------------------------------------------------------
@@ -731,131 +749,129 @@ class TestStrategyC:
         assert channel is None
 
 
-class TestStrategyD:
-    """Strategy D: DesignAttributeLookup."""
-
-    @pytest.mark.req("REQ-IR-03")
-    @pytest.mark.skipif(not STRATEGIES_AVAILABLE, reason=SKIP_REASON)
-    def test_design_attr_match(self):
-        """Constructed ResolutionContext with a design attr matching the ref leaf name."""
-        registry, snap = _build_registry_from_snapshot("solar_battery_model")
-        redefs = snap["hierarchy_data"].redefinitions
-
-        # Construct design_attrs with a known name
-        from sysml_codegen.analysis.parameter_groups import DesignAttributeData
-
-        design_attrs = {
-            "test_param": DesignAttributeData(
-                name="test_param",
-                sysml_type="Real",
-                default_value="42.0",
-                unit=None,
-                source_file=Path("test.sysml"),
-                source_line=1,
-                parent_part="SolarArray",
-                qualified_name="SolarArray__test_param",
-            ),
-        }
-
-        ctx = ResolutionContext(
-            output_registry=registry,
-            redefinitions=redefs,
-            design_attrs=design_attrs,
-            module_eqn="Design__plant__solar_array__cost",
-            consumer_scope="plant.solar_array",
-            instance_path="Design__plant__solar_array",
-        )
-
-        # Strategy D should match ref leaf "test_param" against design_attrs
-        channel = DesignAttributeLookup("child.test_param", ctx)
-        # Returns design attr QN or None depending on implementation
-        # The key thing is no crash
-        assert channel is None or isinstance(channel, str)
+# Strategy D (DesignAttributeLookup) was a return-None stub with zero live surface
+# (probe ii); it was deleted in the F4 cutover. Its test went with it.
 
 
 # ---------------------------------------------------------------------------
 # Regression: Full pipeline baseline comparison
 # ---------------------------------------------------------------------------
-class TestRegression:
-    """Regression tests: resolve_input() produces identical wiring to current code."""
+class TestPhase1ValueHalf:
+    """Phase 1 value-half plumbing: the reconciled fallback key (D1) and Strategy E (D3)."""
 
-    @pytest.mark.req("REQ-IR-01")
+    @pytest.mark.req("REQ-IR-06")
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
-    def test_solar_battery_all_agg_inputs_match_baseline(self):
-        """Every solar_battery aggregation input via resolve_input() matches current
-        _resolve_aggregation_input_channel() behavior."""
-        from sysml_codegen.resolution.graph_builder import _resolve_aggregation_input_channel
+    def test_agg_fallback_key_is_dotted_underscored(self):
+        """resolve_input's entry-point fallback mints {module_eqn}__{ref.replace('.','_')},
+        not a leaf-only rsplit (INV-1)."""
+        registry, snap = _build_registry_from_snapshot("solar_battery_model")
+        agg_data = snap["aggregation_expressions"]
+        redefs = snap["hierarchy_data"].redefinitions
+        design_attrs = _flatten_design_attrs(snap.get("design_attributes", {}))
+        agg = agg_data[0]
+        ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
 
+        # A ref that no strategy resolves → fallback entry_point.
+        ref = "no_such_usage.no_such_attr"
+        result = resolve_input(ref, ctx, AGG_STRATEGIES)
+        assert result.source_type == "entry_point"
+        assert result.qualified_name == f"{ctx.module_eqn}__no_such_usage_no_such_attr"
+        # The disambiguating part-usage prefix survives (not the bare leaf).
+        assert not result.qualified_name.endswith("__no_such_attr")
+
+    @pytest.mark.req("REQ-IR-02")
+    @pytest.mark.skipif(not STRATEGIES_AVAILABLE, reason=SKIP_REASON)
+    def test_strategy_e_returns_channel_only_when_in_canonical(self):
+        """Strategy E is a no-op for dotless refs and for refs whose constructed channel
+        is not registered; it returns a channel only when the constructed CalcUsage-format
+        channel exists in canonical_channels."""
         registry, snap = _build_registry_from_snapshot("solar_battery_model")
         agg_data = snap["aggregation_expressions"]
         redefs = snap["hierarchy_data"].redefinitions
         design_attrs = _flatten_design_attrs(snap.get("design_attributes", {}))
 
-        mismatches = []
+        # No-op on a dotless ref.
+        any_ctx = _build_resolution_context_for_agg(agg_data[0], registry, redefs, design_attrs)
+        assert DirectChannelConstruction("bare_local", any_ctx) is None
+
+        # No-op on a dotted ref whose constructed channel is not registered.
+        assert DirectChannelConstruction("no_such_usage.no_such_out", any_ctx) is None
+
+        # Every channel E returns must exist in the registry (verified over all
+        # singleton terms across the corpus fixture).
+        returned = 0
         for agg in agg_data:
             ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
-
-            for term in agg.expression.sum_terms:
-                ref = f"{term.part_usage_name}.{term.attribute_name}"
-
-                # Current code result
-                old_channel = _resolve_aggregation_input_channel(
-                    ref, agg.instance_path, redefs, registry,
-                )
-
-                # New resolve_input result
-                new_result = resolve_input(ref, ctx, AGG_STRATEGIES)
-
-                if old_channel is not None:
-                    if new_result.source_type != "module_output":
-                        mismatches.append(
-                            f"{agg.module_eqn}/{ref}: old=module_output({old_channel}), "
-                            f"new={new_result.source_type}"
-                        )
-                    elif new_result.producer_channel != old_channel:
-                        mismatches.append(
-                            f"{agg.module_eqn}/{ref}: old={old_channel}, "
-                            f"new={new_result.producer_channel}"
-                        )
-                else:
-                    if new_result.source_type != "entry_point":
-                        mismatches.append(
-                            f"{agg.module_eqn}/{ref}: old=entry_point, "
-                            f"new={new_result.source_type}({new_result.producer_channel})"
-                        )
-
             for s_term in agg.expression.singleton_terms:
-                if "." not in s_term.source_path:
-                    continue
-                ref = s_term.source_path
+                ch = DirectChannelConstruction(s_term.source_path, ctx)
+                if ch is not None:
+                    assert ch in registry.canonical_channels
+                    returned += 1
+        # Strategy E exists to cover the SingletonTerm "Try 2" case; the fixture must
+        # exercise it at least once or the strategy is untested.
+        assert returned > 0, "Strategy E returned no channel on solar_battery — untested"
 
-                old_channel = _resolve_aggregation_input_channel(
-                    ref, agg.instance_path, redefs, registry,
-                )
 
-                new_result = resolve_input(ref, ctx, AGG_STRATEGIES)
+class TestRegression:
+    """Regression tests: resolve_input() produces identical wiring to current code."""
 
-                if old_channel is not None:
-                    if new_result.source_type != "module_output":
-                        mismatches.append(
-                            f"{agg.module_eqn}/{ref}: old=module_output({old_channel}), "
-                            f"new={new_result.source_type}"
-                        )
-                    elif new_result.producer_channel != old_channel:
-                        mismatches.append(
-                            f"{agg.module_eqn}/{ref}: old={old_channel}, "
-                            f"new={new_result.producer_channel}"
-                        )
-                else:
-                    if new_result.source_type != "entry_point":
-                        mismatches.append(
-                            f"{agg.module_eqn}/{ref}: old=entry_point, "
-                            f"new={new_result.source_type}({new_result.producer_channel})"
-                        )
+    # ==================================================================
+    # M3 GATE (INV-3): the new helper reproduces the FULL InputSource the
+    # executed old inline block produced — source_type, producer_channel,
+    # qualified_name, and param_group — over the aggregation fixtures, GREEN
+    # BEFORE the call-site rewire (design D2, spec [HARD] M3).
+    #
+    # The gate has two halves with different fates at cutover:
+    #   • OLD-COMPARAND half (test_m3_full_inputsource_parity): calls the
+    #     to-be-deleted _resolve_aggregation_input_channel + reproduces the old
+    #     fallback. DELETED in the Phase 3 cutover commit (cannot compile against
+    #     the deleted function).
+    #   • NEW-SIDE half (test_m3_reconciled_ep_key_survives): asserts the helper's
+    #     reconciled EP key against the formula, no deleted-function dependency.
+    #     SURVIVES as the permanent guard on the reconciled part-usage EP key.
+    # ==================================================================
 
-        assert not mismatches, (
-            f"{len(mismatches)} baseline mismatches:\n" + "\n".join(mismatches)
+    @pytest.mark.req("REQ-IR-01")
+    @pytest.mark.parametrize("model_name", ["solar_battery_model"])
+    @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
+    def test_m3_reconciled_ep_key_survives(self, model_name):
+        """NEW-SIDE HALF (permanent). Every aggregation input the helper falls back to
+        an entry point mints the reconciled part-usage-prefixed key
+        {module_eqn}__{ref.replace('.','_')} (INV-1) — the durable guard on the EP key
+        that a regenerable byte-identity baseline alone would not provide."""
+        from sysml_codegen.resolution.graph_builder import _build_agg_input_source
+        from tests.conformance.test_factory_aggregation import (
+            build_aggregation_factory_inputs,
         )
+
+        f = build_aggregation_factory_inputs(model_name)
+        registry = f["registry"]
+        redefs = f["redefinitions"]
+        usage_type_map = f["usage_type_map"]
+        group_deriver = f["group_deriver"]
+        entry_points = f["entry_points"]
+        design_attrs = _flatten_design_attrs(f["snap"].get("design_attributes", {}))
+
+        checked = 0
+        for agg in f["aggregation_data"]:
+            ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
+            owning_part_qn = agg.expression.owning_part_qn
+            for ref, lookup_key in _iter_agg_sum_singleton_terms(agg):
+                new_src, _manual = _build_agg_input_source(
+                    ref, ctx, lookup_key, redefs, usage_type_map,
+                    owning_part_qn, group_deriver, entry_points, {},
+                )
+                if new_src.source_type == "entry_point":
+                    assert new_src.qualified_name == (
+                        f"{agg.module_eqn}__{ref.replace('.', '_')}"
+                    ), f"{agg.module_eqn}/{ref}: EP key not reconciled"
+                    # param_group is deterministic from the QN (classify), so an equal
+                    # QN implies an equal group — assert it is populated when derivable.
+                    assert new_src.param_group == group_deriver.classify(
+                        new_src.qualified_name
+                    )
+                    checked += 1
+        assert checked > 0, f"{model_name}: no fallback EP exercised — gate is vacuous"
 
     @pytest.mark.req("REQ-IR-01")
     @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
@@ -879,3 +895,101 @@ class TestRegression:
         assert result.producer_channel is not None
         # Should point to cost_model CalcUsage output
         assert "cost_model" in result.producer_channel or "total_cost" in result.producer_channel
+
+
+class TestLocalTermExposeAliasReroutePin:
+    """Major 3 / D5: the LocalTerm expose-alias channel reroute (graph_builder.py) has
+    ZERO M3 coverage — the M3 gate iterates sum/singleton terms only. This permanent pin
+    guards it directly: resolve_input on the alias target yields a module_output whose
+    channel is registered, and the D5 module_output-only guard means a non-channel result
+    would leave the LocalTerm EP key at {module_eqn}__{attribute_name} (never adopting
+    resolve_input's never-None entry_point fallback as a channel).
+
+    NOTE: alias_agg_probe's snapshot carries no EXPOSE_PURE computed_attributes, so it
+    cannot exercise the reroute; solar_battery_model exercises the real Major-3 case
+    (misc_hardware_cost → allocation_model.total_allocation → channel)."""
+
+    @pytest.mark.req("REQ-DRA-04")
+    @pytest.mark.parametrize("model_name", ["solar_battery_model"])
+    @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
+    def test_localterm_reroute_module_output_only(self, model_name):
+        from tests.conformance.test_factory_aggregation import (
+            build_aggregation_factory_inputs,
+        )
+
+        f = build_aggregation_factory_inputs(model_name)
+        registry = f["registry"]
+        redefs = f["redefinitions"]
+        expose_aliases = f["expose_aliases"]
+        design_attrs = _flatten_design_attrs(f["snap"].get("design_attributes", {}))
+
+        channel_hits = 0
+        for agg in f["aggregation_data"]:
+            ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
+            for l_term in agg.expression.local_terms:
+                alias_key = (agg.expression.owning_part_qn, l_term.attribute_name)
+                alias_source = expose_aliases.get(alias_key)
+                if not alias_source:
+                    continue
+
+                new_result = resolve_input(alias_source, ctx, AGG_STRATEGIES)
+                if new_result.source_type == "module_output":
+                    # The reroute adopts this channel; it must be a real registered one.
+                    assert new_result.producer_channel in registry.canonical_channels
+                    channel_hits += 1
+                else:
+                    # D5 guard: a non-channel result is NOT adopted; LocalTerm falls
+                    # through to its own key {module_eqn}__{attribute_name} (unchanged).
+                    assert new_result.source_type == "entry_point"
+
+        assert channel_hits > 0, (
+            f"{model_name}: no LocalTerm expose-alias resolved to a channel — pin is vacuous"
+        )
+
+
+class TestManualRequiredPreserved:
+    """INV-2 / L3-2: a genuinely-unresolved aggregation term with no literal default
+    routed through _build_agg_input_source returns manual_required=True. Losing this
+    signal silently marks an unresolved term compilable — the regression class this epic
+    exists to kill. A resolved term returns manual_required=False."""
+
+    @pytest.mark.req("REQ-IR-06")
+    @pytest.mark.skipif(not INPUT_RESOLVER_AVAILABLE, reason=SKIP_REASON)
+    def test_unresolved_no_default_term_is_manual_required(self):
+        from sysml_codegen.resolution.graph_builder import _build_agg_input_source
+        from tests.conformance.test_factory_aggregation import (
+            build_aggregation_factory_inputs,
+        )
+
+        f = build_aggregation_factory_inputs("solar_battery_model")
+        registry = f["registry"]
+        redefs = f["redefinitions"]
+        usage_type_map = f["usage_type_map"]
+        group_deriver = f["group_deriver"]
+        entry_points = f["entry_points"]
+        design_attrs = _flatten_design_attrs(f["snap"].get("design_attributes", {}))
+        agg = f["aggregation_data"][0]
+        ctx = _build_resolution_context_for_agg(agg, registry, redefs, design_attrs)
+
+        # Unresolvable ref with no LITERAL redefinition → entry_point, manual_required.
+        src, manual = _build_agg_input_source(
+            "no_such_usage.no_such_attr", ctx, ("no_such_usage", "no_such_attr"),
+            redefs, usage_type_map, agg.expression.owning_part_qn,
+            group_deriver, entry_points, {},
+        )
+        assert src.source_type == "entry_point"
+        assert manual is True
+
+        # A term that resolves to a channel is never manual_required.
+        resolved_ref = None
+        for ref, _key in _iter_agg_sum_singleton_terms(agg):
+            if resolve_input(ref, ctx, AGG_STRATEGIES).source_type == "module_output":
+                resolved_ref = ref
+                break
+        assert resolved_ref is not None, "fixture has no channel-resolving agg term"
+        src2, manual2 = _build_agg_input_source(
+            resolved_ref, ctx, None, redefs, usage_type_map,
+            agg.expression.owning_part_qn, group_deriver, entry_points, {},
+        )
+        assert src2.source_type == "module_output"
+        assert manual2 is False

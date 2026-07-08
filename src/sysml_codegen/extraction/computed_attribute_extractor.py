@@ -61,6 +61,37 @@ def _is_wellformed_multihop_chain(
     return reference_chain[0] not in calc_usage_names
 
 
+def _ancestor_part_qns(part_element: Any) -> set[str]:
+    """Transitive ``::``-form QNs of a part's ancestor PartDefs.
+
+    Walks ``heritage`` for ``:>`` generalizations (``Subclassification``
+    relationships), keeps each supertype ``target``'s raw ``::``-form
+    ``qualified_name``, and recurses on the target element.
+
+    Deliberately NOT a clone of ``usage_extractor._supertype_closure`` — do not
+    unify them. Two intentional divergences:
+    - It recurses on the raw ``target`` element (there is no ``qn_to_partdef``
+      map at this leaf), so it also descends into library supertypes. Harmless:
+      a stdlib QN is never the namespace of a user inherited-attr ref.
+    - It returns raw ``::``-form QNs (via ``str(target.qualified_name)``), NOT
+      the sanitized ``__``-form ``build_element_qualified_name`` produces. The
+      classifier prefix-matches these against ``ref.qualified_name``, which is
+      also ``::``-form — routing through the ``__``-form helper would never
+      match (the ``::``-vs-``__`` trap).
+    """
+    result: set[str] = set()
+    stack: list[Any] = [part_element]
+    while stack:
+        for rel, target in getattr(stack.pop(), "heritage", []):
+            if not SysideAdapter.is_instance(rel, "Subclassification"):
+                continue
+            qn = str(getattr(target, "qualified_name", "") or "")
+            if qn and qn not in result:
+                result.add(qn)
+                stack.append(target)
+    return result
+
+
 def _classify_attribute_expression(
     refs: list[ExpressionRef],
     owning_part_qualified_name: str,
@@ -68,12 +99,15 @@ def _classify_attribute_expression(
     sibling_attr_names: set[str],
     expression_ast: Any,
     reference_chain: list[str] | None,
+    ancestor_part_qns: set[str] | None = None,
 ) -> ComputedAttributeClassification:
     """Classify an attribute expression by analyzing its feature references.
 
     Uses qualified-name resolution with positive identification:
     - Step 2a: filter CalcUsage instance refs (traversal artifacts)
-    - Step 2b: QN starts with owning part QN → sibling_ref
+    - Step 2b: QN starts with owning part QN — or an ancestor PartDef QN, so an
+      inherited attr (which SysIDE files under the supertype namespace) is a
+      sibling → sibling_ref
     - Step 2c: QN non-empty but different namespace → calc_ref
     - Step 2d: empty QN fallback to simple name matching
 
@@ -86,6 +120,11 @@ def _classify_attribute_expression(
             EXPOSE_COMPUTED distinction).
         reference_chain: Full dotted segments of a FeatureChainExpression (D9),
             or None. Drives the multi-hop EXPOSE_CHAIN_TENTATIVE gate (INV-E).
+        ancestor_part_qns: ``::``-form QNs of the owning part's ancestor
+            PartDefs (from ``_ancestor_part_qns``). A ref whose QN sits under
+            one of these is an inherited-attr sibling, not a cross-namespace
+            calc output. ``None``/empty for a part with no supertypes — then
+            Step-2b behaves exactly as the pre-inheritance-fix prefix check.
 
     Returns:
         Classification enum value.
@@ -110,6 +149,10 @@ def _classify_attribute_expression(
     unresolvable_refs: list[str] = []
 
     part_qn_prefix = owning_part_qualified_name + "::"
+    # Inherited attrs resolve into an ancestor PartDef's namespace, so a ref
+    # under any ancestor prefix is still a sibling. str.startswith accepts a
+    # tuple, so both checks are one call each.
+    ancestor_prefixes = tuple(a + "::" for a in (ancestor_part_qns or set()))
 
     # Step 2: classify each ref by positive identification
     for ref in refs:
@@ -119,8 +162,8 @@ def _classify_attribute_expression(
 
         qn = ref.qualified_name
         if qn:
-            # 2b: QN starts with owning part namespace → sibling
-            if qn.startswith(part_qn_prefix):
+            # 2b: QN starts with owning part OR an ancestor PartDef namespace → sibling
+            if qn.startswith(part_qn_prefix) or qn.startswith(ancestor_prefixes):
                 sibling_refs.append(ref.name)
             else:
                 # 2c: QN in different namespace → calc output ref
@@ -194,6 +237,11 @@ def extract_computed_attributes(
     part_qn = str(getattr(part_element, "qualified_name", "") or part_name)
     is_part_def = SysideAdapter.is_instance(part_element, "PartDefinition")
 
+    # Ancestor PartDef QNs (transient, computed once per part). An inherited attr
+    # resolves into an ancestor's namespace, so the classifier needs these to
+    # recognize it as a sibling rather than a cross-namespace calc output.
+    ancestor_part_qns = _ancestor_part_qns(part_element)
+
     results: list[ComputedAttributeData] = []
     aliases: list[ChannelAlias] = []
 
@@ -227,6 +275,7 @@ def extract_computed_attributes(
             sibling_attr_names=sibling_attr_names,
             expression_ast=expr,
             reference_chain=reference_chain,
+            ancestor_part_qns=ancestor_part_qns,
         )
 
         # Skip LITERAL

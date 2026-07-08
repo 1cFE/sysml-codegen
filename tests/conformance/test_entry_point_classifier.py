@@ -544,6 +544,21 @@ class TestOrphanEntryPoints:
                     f"graph but not in the system_design group"
                 )
 
+        # Cross-group uniqueness: no entry point belongs to more than one group.
+        seen: dict[str, str] = {}
+        duplicates: list[str] = []
+        for group in graph.entry_point_groups:
+            for p in group.parameters:
+                if p.qualified_name in seen and seen[p.qualified_name] != group.name:
+                    duplicates.append(
+                        f"{p.qualified_name} in both {seen[p.qualified_name]!r} "
+                        f"and {group.name!r}"
+                    )
+                seen[p.qualified_name] = group.name
+        assert not duplicates, (
+            f"Entry point(s) belong to more than one ParameterGroup: {duplicates}"
+        )
+
 
 # ===========================================================================
 # REQ-EPC-06: Groups rebuilt after FORMULA/Aggregation construction
@@ -619,27 +634,23 @@ class TestPureFunction:
             group_deriver,
         )
 
-        # Verify no mutation of inputs
+        # Verify no mutation of inputs -- deep-compare all five inputs against
+        # fresh copies of the untouched originals (dataclass __eq__ is structural,
+        # so this catches a mutated field even when keys/lengths are unchanged).
         assert ep_names_copy == copy.deepcopy(result.entry_points), (
             "entry_point_names was mutated by _classify_entry_points()"
         )
         assert ep_sources_copy == copy.deepcopy(result.entry_point_sources), (
             "entry_point_sources was mutated by _classify_entry_points()"
         )
-        # design_attrs: compare keys and value counts (deep equality of DesignAttributeData)
-        assert set(design_attrs_copy.keys()) == set(design_attrs.keys()), (
-            "design_attrs keys were mutated"
+        assert design_attrs_copy == copy.deepcopy(design_attrs), (
+            "design_attrs was mutated by _classify_entry_points()"
         )
-        for k in design_attrs_copy:
-            assert len(design_attrs_copy[k]) == len(design_attrs[k]), (
-                f"design_attrs[{k}] length changed"
-            )
-        # usages: compare length (CalcUsageData is a dataclass)
-        assert len(usages_copy) == len(result.required_usages), (
-            "usages list was mutated"
+        assert usages_copy == copy.deepcopy(result.required_usages), (
+            "required_usages was mutated by _classify_entry_points()"
         )
-        assert set(calc_def_map_copy.keys()) == set(calc_def_map.keys()), (
-            "calc_def_map keys were mutated"
+        assert calc_def_map_copy == copy.deepcopy(calc_def_map), (
+            "calc_def_map was mutated by _classify_entry_points()"
         )
 
 

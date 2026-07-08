@@ -148,6 +148,42 @@ def test_operator_expression_classified_as_expression():
     assert result.param_name == "test_param"
 
 
+def test_deep_chain_emits_full_path_chain_not_reject():
+    """D1 (Item 2): a 3+-segment FeatureChainExpression extracts as a full-path CHAIN,
+    not a hard-rejected UNBOUND. source_path carries every segment untruncated, and
+    the deep-chain arm sets ONLY source_path (N-1: element refs stay unset)."""
+    from unittest.mock import MagicMock, patch
+
+    from agentic_mbse.sysml.types import BindingType
+    from sysml_codegen.extraction.usage_extractor import _extract_single_binding
+
+    usage_elem = MagicMock()
+    param_elem = MagicMock()
+    mock_expr = MagicMock()
+    param_elem.feature_value_expression = mock_expr
+
+    def mock_is_instance(obj, type_name):
+        return obj is mock_expr and type_name == "FeatureChainExpression"
+
+    warnings: list[str] = []
+    with patch(
+        "sysml_codegen.extraction.usage_extractor.SysideAdapter.is_instance",
+        side_effect=mock_is_instance,
+    ), patch(
+        "sysml_codegen.extraction.usage_extractor.extract_feature_chain_segments",
+        return_value=["station", "array", "derived_calc", "derived_value"],
+    ):
+        result = _extract_single_binding(usage_elem, param_elem, "data_point", warnings)
+
+    assert result.binding_type == BindingType.CHAIN
+    assert result.source_path == "station.array.derived_calc.derived_value"  # full
+    # N-1: element refs intentionally unset on the deep-chain arm
+    assert result.source_instance_elem is None
+    assert result.source_attribute_elem is None
+    # No extraction-time warning: the loud diagnostic moved to the backtracker (D3)
+    assert warnings == []
+
+
 def test_operator_expression_stores_ast():
     """OperatorExpression binding stores raw AST on BindingInfo."""
     from unittest.mock import MagicMock, patch

@@ -42,12 +42,12 @@ from sysml_codegen.extraction.usage_extractor import (
     ExtractionReport,
     extract_calculation_usages,
 )
+from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.orchestration.pipeline_context import (
     CodeGenerationError,
     PipelineContext,
     SysMLParsingError,
 )
-from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.supplied_values import materialize_supplied_values
 

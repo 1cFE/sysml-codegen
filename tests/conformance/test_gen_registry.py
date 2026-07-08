@@ -550,12 +550,37 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
         self, model_name, all_registry_codes, all_graph_data,
     ):
         """Verify CUSTOM_SCHEMA_TYPES includes Float (used by single-output
-        modules) and any other primitive types."""
+        modules) and any other primitive types.
+
+        R1 anti-vacuity: the expected set is walked directly from
+        `graph.modules` here (same field shape `_collect_exit_point_primitive_types`
+        reads, but re-implemented independently in the test), not obtained by
+        calling the SUT helper -- a test that derives its own oracle from the
+        function under test can never catch a bug in that function.
+        """
         code = all_registry_codes[model_name]
         graph, _ = all_graph_data[model_name]
 
-        # Get expected exit point types from graph
-        exit_types = _collect_exit_point_primitive_types(graph.modules)
+        # Independent derivation (does not call _collect_exit_point_primitive_types):
+        # walk root-field single-output modules, map python_type -> wrapper name.
+        independent_type_map = {
+            "float": "Float",
+            "int": "Int",
+            "str": "String",
+            "bool": "Bool",
+        }
+        exit_types = {
+            independent_type_map[out.python_type]
+            for module in graph.modules
+            for out in module.outputs
+            if out.field_name == "root" and out.python_type in independent_type_map
+        }
+        assert exit_types, (
+            f"Expected at least one root-field exit point in {model_name}'s graph"
+        )
+        # Cross-check the SUT helper agrees with the independent derivation (not
+        # a substitute for it -- if this ever diverges, the helper has a bug).
+        assert set(_collect_exit_point_primitive_types(graph.modules)) == exit_types
 
         # Parse CUSTOM_SCHEMA_TYPES from generated code
         tree = ast.parse(code)

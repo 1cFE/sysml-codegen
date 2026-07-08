@@ -922,8 +922,13 @@ class TestRewriteCount:
 
 
 @pytest.mark.req("REQ-VBR-04")
+@pytest.mark.req("REQ-HR-08")
 class TestChainOverrideFixtureCoverage:
     """CHAIN design override with real SysML fixture data (closes C2 gap).
+
+    Also pins REQ-HR-08's "`part redefines` keeps all RHS types" leg: this
+    fixture's CHAIN override (RHS type CHAIN, not LITERAL) is scanned and kept
+    on a `part redefines` usage, unlike the plain-usage LITERAL-only gate.
 
     The chain_override_probe fixture has:
     - 1 LITERAL override: :>> base_cost = 100.0

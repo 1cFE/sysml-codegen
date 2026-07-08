@@ -129,8 +129,9 @@ classification path. See Known Issues below.
 Step 1: No refs at all                                → LITERAL
 Step 2: For each ref, classify by QN:
   2a: ref.name in calc_usage_names                    → skip (traversal artifact)
-  2b: ref.qualified_name starts with owning part QN   → sibling_ref
-      ⚠ KNOWN BUG: fails for inherited attrs (see Known Issues below)
+  2b: ref.qualified_name starts with owning part QN
+      OR any ANCESTOR PartDef QN (inherited-attr fix)  → sibling_ref
+      (ancestor QNs from _ancestor_part_qns, transitive heritage walk)
   2c: ref.qualified_name is non-empty, other namespace → calc_ref
   2d: empty QN, fallback to name matching             → sibling or unresolvable
       ⚠ Likely unreachable for valid SysML (see UNRESOLVABLE note above)
@@ -364,48 +365,49 @@ Workaround: promote the dependency to a separate CalcDef or use EXPOSE_PURE.
 
 ## Known Issues
 
-### Inherited Attribute Misclassification
+### Inherited Attribute Classification (fixed — TRUTH-DEBT Item 4)
 
-**Status**: Confirmed bug. 5 of 6 test patterns affected. Fix deferred to a
-future enhancement.
+**Status**: Fixed. Step-2b now recognizes inherited attributes as siblings.
+Pinned by REQ-CA-12 and the 7-row `TestInheritedAttrClassification` table.
 
-**Root cause**: When a PartDef inherits from a supertype via `:>` (e.g.,
-`part def 'Derived' :> 'Base'`), SysIDE resolves inherited attribute QNs to
-the **supertype's namespace**:
+**The shape**: when a PartDef inherits from a supertype via `:>` (e.g.,
+`part def 'Derived' :> 'Base'`), SysIDE resolves an inherited attribute's QN
+into the **supertype's namespace** — this is still true (the fix does not change
+what SysIDE reports; it reinterprets it):
 
 ```
 owning_part_qn:      "Library::'Derived Component'"
-inherited attr QN:   "Library::'Base Component'::base_rate"   ← supertype prefix
-expected (but wrong): "Library::'Derived Component'::base_rate"
+inherited attr QN:   "Library::'Base Component'::base_rate"   ← ancestor prefix
 ```
 
-Step 2b checks `qn.startswith(owning_part_qn + "::")`, which fails for
-inherited attrs. They fall through to Step 2c as `calc_ref` (different namespace
-= external CalcUsage output), pushing classification from FORMULA to
-**EXPOSE_COMPUTED**.
+**The fix**: Step-2b now prefix-matches the owning part QN **OR any ancestor
+PartDef QN**. The ancestor set is a transient transitive `heritage` walk
+(`_ancestor_part_qns` in `computed_attribute_extractor.py`, recursed on the raw
+supertype elements, returning `::`-form QNs). So an inherited-attr ref is
+recognized as a sibling and an attribute referencing only inherited/local attrs
+classifies **FORMULA**. A ref under a top-level CalcDef namespace is never an
+ancestor, so a genuine calc output (the D3 `mixed_expose` shape) still classifies
+EXPOSE_COMPUTED — the over-correction control.
 
-**Additional factor**: `sibling_attr_names` is built from `owned_members`, which
-per SysML v2 semantics only includes locally-declared attributes — inherited
-attributes are excluded. So even Step 2d's fallback name check can't rescue
-the classification.
+Note `sibling_attr_names` (from `owned_members`) still excludes inherited attrs
+per SysML v2 semantics — the fix works off the ancestor QN prefixes, not the
+name set, so it does not depend on the Step-2d fallback.
 
-**Impact**: Computed attributes referencing inherited attrs silently produce
-**no pipeline module** and **no compiled expression**. They appear in
-`computed_attributes` but EXPOSE_COMPUTED is currently unhandled,
-so they are silent no-ops in the pipeline.
-
-**Fix scope**: The classifier needs to walk the supertype chain when checking
-QN prefixes. Instead of checking only the immediate `owning_part_qn`, check if
-the QN starts with ANY ancestor PartDef's QN. This requires:
-
-1. **Extraction enrichment**: Extract supertype chain information from
-   SysIDE during `_extract_part_definitions()`.
-2. **Classifier fix**: Accept `ancestor_part_qns: set[str]` parameter
-   and augment the Step 2b prefix check.
+**Was it "loud"? No — it was a silent no-op (doc 16 was right).** A misclassified
+inherited-attr FORMULA landed EXPOSE_COMPUTED, which the graph builder dropped
+with no module, no compiled expression, and no diagnostic
+(`graph_builder.py:269-288`; `test_computed_attributes_e2e.py`). The matrix/epic
+"loud (EXPOSE_COMPUTED rejection)" framing was wrong; only the "not a silent
+wrong value" half was true. The classifier fix corrects the classification; the
+graph-builder **D5** diagnostic now makes the residual no-module outcome (these
+FORMULAs stay MANUAL_REQUIRED — their inherited refs are outside `input_names`)
+**loud at generation** instead of silent. Actually compiling them into modules is
+the filed follow-on `[TRUTH-DEBT-INHERITED-FORMULA-COMPILE]`.
 
 **Fixture coverage**: `tests/fixtures/unresolvable_attr_probe/` exercises this
-pattern with 5 xfailed tests in
-`test_computed_attributes.py::TestInheritedAttrClassification`.
+pattern — the formerly-xfailed cases now PASS as real FORMULA assertions, plus a
+depth-2 case (`'Grandchild' :> 'Derived Component' :> 'Base Component'`) proving
+the transitive ancestor walk.
 
 ### UNRESOLVABLE Likely Dead Code
 
