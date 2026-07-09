@@ -99,8 +99,11 @@ REAL_EQNS = [
 KNOWN_EQN_CHAINS = [
     (
         [
-            "SolarBatteryDesign", "solar_battery_plant",
-            "battery_system", "battery_pack", "cost_model",
+            "SolarBatteryDesign",
+            "solar_battery_plant",
+            "battery_system",
+            "battery_pack",
+            "cost_model",
         ],
         "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model",
     ),
@@ -236,9 +239,7 @@ class TestPQN:
     """Verifies PQN extends EQN with __{param_name}."""
 
     def test_pqn_extends_eqn(self):
-        result = build_parameter_qualified_name(
-            "Design__plant__cost_model", "total_cost"
-        )
+        result = build_parameter_qualified_name("Design__plant__cost_model", "total_cost")
         assert result == "Design__plant__cost_model__total_cost"
 
     @pytest.mark.parametrize(
@@ -260,21 +261,22 @@ class TestModuleName:
     """Verifies module name is lowercased EQN."""
 
     def test_module_name_is_lowered_eqn(self):
-        result = get_module_name(
-            "SolarBatteryDesign__solar_battery_plant__cost_model"
-        )
+        result = get_module_name("SolarBatteryDesign__solar_battery_plant__cost_model")
         assert result == "solarbatterydesign__solar_battery_plant__cost_model"
 
     # Hand-transcribed lowercased module name per REAL_EQNS row. Replaces the former
     # `assert result == eqn.lower()`, which recomputed get_module_name's own lowercasing
     # (a tautology). provenance: hand-transcribed lowercasing of each REAL_EQNS row.
     EXPECTED_MODULE_NAMES = {
-        "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model":
-            "solarbatterydesign__solar_battery_plant__battery_system__battery_pack__cost_model",
-        "CATFMFEPhysics__catf_physics__net_electric":
-            "catfmfephysics__catf_physics__net_electric",
-        "CATFMFEPhysics__catf_physics__alpha_neutron_split":
-            "catfmfephysics__catf_physics__alpha_neutron_split",
+        "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model": (
+            "solarbatterydesign__solar_battery_plant__battery_system__battery_pack__cost_model"
+        ),
+        "CATFMFEPhysics__catf_physics__net_electric": (
+            "catfmfephysics__catf_physics__net_electric"
+        ),
+        "CATFMFEPhysics__catf_physics__alpha_neutron_split": (
+            "catfmfephysics__catf_physics__alpha_neutron_split"
+        ),
     }
 
     @pytest.mark.parametrize("eqn", REAL_EQNS)

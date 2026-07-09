@@ -25,51 +25,63 @@ class TestExtractionModelsImportable:
 
     def test_calculation_definition_data(self):
         from sysml_codegen.extraction.data_models import CalculationDefinitionData
+
         assert CalculationDefinitionData is not None
 
     def test_calc_usage_data(self):
         from sysml_codegen.extraction.usage_extractor import CalcUsageData
+
         assert CalcUsageData is not None
 
     def test_calc_usage_data_reexport(self):
         """CalcUsageData should also be accessible via extraction.data_models re-export."""
         from sysml_codegen.extraction.usage_extractor import CalcUsageData
+
         assert CalcUsageData is not None
 
     def test_binding_info(self):
         from sysml_codegen.extraction.usage_extractor import BindingInfo
+
         assert BindingInfo is not None
 
     def test_part_definition_data(self):
         from sysml_codegen.extraction.data_models import PartDefinitionData
+
         assert PartDefinitionData is not None
 
     def test_redefinition_data(self):
         from sysml_codegen.extraction.data_models import RedefinitionData
+
         assert RedefinitionData is not None
 
     def test_multiplicity_data(self):
         from sysml_codegen.extraction.data_models import MultiplicityData
+
         assert MultiplicityData is not None
 
     def test_aggregation_expression_data(self):
         from sysml_codegen.extraction.data_models import AggregationExpressionData
+
         assert AggregationExpressionData is not None
 
     def test_scoped_aggregation_data(self):
         from sysml_codegen.extraction.data_models import ScopedAggregationData
+
         assert ScopedAggregationData is not None
 
     def test_computed_attribute_data(self):
         from sysml_codegen.extraction.data_models import ComputedAttributeData
+
         assert ComputedAttributeData is not None
 
     def test_hierarchy_extraction_result(self):
         from sysml_codegen.extraction.data_models import HierarchyExtractionResult
+
         assert HierarchyExtractionResult is not None
 
     def test_attribute_info(self):
         from sysml_codegen.extraction.data_models import AttributeInfo
+
         assert AttributeInfo is not None
 
 
@@ -79,19 +91,23 @@ class TestAnalysisModelsImportable:
 
     def test_backtracking_result(self):
         from sysml_codegen.analysis.dependency_backtracker import BacktrackingResult
+
         assert BacktrackingResult is not None
 
     def test_design_attribute_data(self):
         from sysml_codegen.analysis.parameter_groups import DesignAttributeData
+
         assert DesignAttributeData is not None
 
     def test_derived_parameter_group(self):
         from sysml_codegen.analysis.parameter_groups import DerivedParameterGroup
+
         assert DerivedParameterGroup is not None
 
     def test_parameter_source(self):
         """ParameterSource not in doc 09 but used by DerivedParameterGroup.parameters."""
         from sysml_codegen.analysis.parameter_groups import ParameterSource
+
         assert ParameterSource is not None
 
 
@@ -101,18 +117,22 @@ class TestCoreModelsImportable:
 
     def test_binding_resolution(self):
         from sysml_codegen.core.models import BindingResolution
+
         assert BindingResolution is not None
 
     def test_binding_resolution_type(self):
         from sysml_codegen.core.models import BindingResolutionType
+
         assert BindingResolutionType is not None
 
     def test_channel_alias(self):
         from sysml_codegen.core.models import ChannelAlias
+
         assert ChannelAlias is not None
 
     def test_output_registry(self):
         from sysml_codegen.core.output_registry import OutputRegistry
+
         assert OutputRegistry is not None
 
 
@@ -122,34 +142,42 @@ class TestResolutionModelsImportable:
 
     def test_computation_graph(self):
         from sysml_codegen.resolution.models import ComputationGraph
+
         assert ComputationGraph is not None
 
     def test_pipeline_module(self):
         from sysml_codegen.resolution.models import PipelineModule
+
         assert PipelineModule is not None
 
     def test_module_input(self):
         from sysml_codegen.resolution.models import ModuleInput
+
         assert ModuleInput is not None
 
     def test_module_output(self):
         from sysml_codegen.resolution.models import ModuleOutput
+
         assert ModuleOutput is not None
 
     def test_input_source(self):
         from sysml_codegen.resolution.models import InputSource
+
         assert InputSource is not None
 
     def test_entry_point(self):
         from sysml_codegen.resolution.models import EntryPoint
+
         assert EntryPoint is not None
 
     def test_entry_point_type(self):
         from sysml_codegen.resolution.models import EntryPointType
+
         assert EntryPointType is not None
 
     def test_parameter_group(self):
         from sysml_codegen.resolution.models import ParameterGroup
+
         assert ParameterGroup is not None
 
 
@@ -175,8 +203,12 @@ ENUM_SPECS = [
         "sysml_codegen.extraction.data_models",
         "ComputedAttributeClassification",
         {
-            "FORMULA", "EXPOSE_PURE", "EXPOSE_COMPUTED",
-            "EXPOSE_CHAIN_TENTATIVE", "LITERAL", "UNRESOLVABLE",
+            "FORMULA",
+            "EXPOSE_PURE",
+            "EXPOSE_COMPUTED",
+            "EXPOSE_CHAIN_TENTATIVE",
+            "LITERAL",
+            "UNRESOLVABLE",
         },
         id="ComputedAttributeClassification",
     ),
@@ -241,10 +273,19 @@ def test_req_dm_03_fields_calculation_definition_data():
     from sysml_codegen.extraction.data_models import CalculationDefinitionData
 
     expected = {
-        "name", "qualified_name", "doc_comment", "calc_expressions",
-        "input_attributes", "output_attributes", "references",
-        "source_file", "source_line", "source_hash",
-        "output_expression_asts", "all_member_names", "member_expressions",
+        "name",
+        "qualified_name",
+        "doc_comment",
+        "calc_expressions",
+        "input_attributes",
+        "output_attributes",
+        "references",
+        "source_file",
+        "source_line",
+        "source_hash",
+        "output_expression_asts",
+        "all_member_names",
+        "member_expressions",
     }
     actual = _dataclass_field_names(CalculationDefinitionData)
     assert actual == expected
@@ -256,10 +297,19 @@ def test_req_dm_03_fields_calc_usage_data():
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
 
     expected = {
-        "instance_name", "calc_def_name", "calc_def_qualified_name",
-        "module_type", "bindings", "unbound_params",
-        "source_file", "source_line", "parent_part_path",
-        "qualified_name", "is_template", "owning_part_def_qn", "raw_element",
+        "instance_name",
+        "calc_def_name",
+        "calc_def_qualified_name",
+        "module_type",
+        "bindings",
+        "unbound_params",
+        "source_file",
+        "source_line",
+        "parent_part_path",
+        "qualified_name",
+        "is_template",
+        "owning_part_def_qn",
+        "raw_element",
     }
     actual = _dataclass_field_names(CalcUsageData)
     assert actual == expected
@@ -271,9 +321,15 @@ def test_req_dm_03_fields_binding_info():
     from sysml_codegen.extraction.usage_extractor import BindingInfo
 
     expected = {
-        "param_name", "source_path", "binding_type", "is_cross_file",
-        "raw_expression", "source_instance_elem", "source_attribute_elem",
-        "literal_value", "expression_ast",
+        "param_name",
+        "source_path",
+        "binding_type",
+        "is_cross_file",
+        "raw_expression",
+        "source_instance_elem",
+        "source_attribute_elem",
+        "literal_value",
+        "expression_ast",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
@@ -284,8 +340,14 @@ def test_req_dm_03_fields_part_definition_data():
     from sysml_codegen.extraction.data_models import PartDefinitionData
 
     expected = {
-        "name", "qualified_name", "doc_comment", "attributes",
-        "constraints", "source_file", "source_line", "source_hash",
+        "name",
+        "qualified_name",
+        "doc_comment",
+        "attributes",
+        "constraints",
+        "source_file",
+        "source_line",
+        "source_hash",
     }
     actual = _dataclass_field_names(PartDefinitionData)
     assert actual == expected
@@ -297,9 +359,17 @@ def test_req_dm_03_fields_redefinition_data():
     from sysml_codegen.extraction.data_models import RedefinitionData
 
     expected = {
-        "owning_part_qn", "attribute_name", "redefinition_type",
-        "literal_value", "source_path", "expression_ast", "expression_text",
-        "target_path", "is_deep_path", "source_file", "source_line",
+        "owning_part_qn",
+        "attribute_name",
+        "redefinition_type",
+        "literal_value",
+        "source_path",
+        "expression_ast",
+        "expression_text",
+        "target_path",
+        "is_deep_path",
+        "source_file",
+        "source_line",
     }
     actual = _dataclass_field_names(RedefinitionData)
     assert actual == expected
@@ -311,8 +381,11 @@ def test_req_dm_03_fields_multiplicity_data():
     from sysml_codegen.extraction.data_models import MultiplicityData
 
     expected = {
-        "part_usage_name", "owning_part_def_qn", "count",
-        "count_attribute_name", "default_value",
+        "part_usage_name",
+        "owning_part_def_qn",
+        "count",
+        "count_attribute_name",
+        "default_value",
     }
     actual = _dataclass_field_names(MultiplicityData)
     assert actual == expected
@@ -361,11 +434,7 @@ def test_aggregation_term_models_are_shared_class_objects():
     from sysml_codegen.extraction import data_models as codegen
 
     assert codegen.SumTerm is shared_models.SumTerm is shared_aggregation.SumTerm
-    assert (
-        codegen.SingletonTerm
-        is shared_models.SingletonTerm
-        is shared_aggregation.SingletonTerm
-    )
+    assert codegen.SingletonTerm is shared_models.SingletonTerm is shared_aggregation.SingletonTerm
     assert codegen.LocalTerm is shared_models.LocalTerm is shared_aggregation.LocalTerm
 
 
@@ -388,12 +457,21 @@ def test_req_dm_03_fields_aggregation_expression_data():
     from sysml_codegen.extraction.data_models import AggregationExpressionData
 
     expected = {
-        "owning_part_qn", "owning_part_name", "attribute_name",
-        "raw_expression_text", "transformed_expression",
-        "sum_terms", "singleton_terms", "local_terms",
-        "input_channels", "entry_points",
-        "compilability", "has_unsupported_nodes", "aliases",
-        "source_file", "source_line",
+        "owning_part_qn",
+        "owning_part_name",
+        "attribute_name",
+        "raw_expression_text",
+        "transformed_expression",
+        "sum_terms",
+        "singleton_terms",
+        "local_terms",
+        "input_channels",
+        "entry_points",
+        "compilability",
+        "has_unsupported_nodes",
+        "aliases",
+        "source_file",
+        "source_line",
     }
     actual = _dataclass_field_names(AggregationExpressionData)
     assert actual == expected
@@ -405,9 +483,13 @@ def test_req_dm_03_fields_hierarchy_extraction_result():
     from sysml_codegen.extraction.data_models import HierarchyExtractionResult
 
     expected = {
-        "redefinitions", "design_overrides", "multiplicities",
-        "aggregation_expressions", "warnings",
-        "part_usage_names", "usage_type_map",
+        "redefinitions",
+        "design_overrides",
+        "multiplicities",
+        "aggregation_expressions",
+        "warnings",
+        "part_usage_names",
+        "usage_type_map",
     }
     actual = _dataclass_field_names(HierarchyExtractionResult)
     assert actual == expected
@@ -419,9 +501,13 @@ def test_req_dm_03_fields_backtracking_result():
     from sysml_codegen.analysis.dependency_backtracker import BacktrackingResult
 
     expected = {
-        "required_usages", "dependency_graph", "entry_points",
-        "entry_point_sources", "binding_resolutions",
-        "phantom_report", "trace_log",
+        "required_usages",
+        "dependency_graph",
+        "entry_points",
+        "entry_point_sources",
+        "binding_resolutions",
+        "phantom_report",
+        "trace_log",
         # Item 7 (REQ-GA-08 / D4): Step-4 fall-through set for the V11 collector.
         "fallback_entry_points",
     }
@@ -461,8 +547,11 @@ def test_req_dm_03_fields_computation_graph():
     from sysml_codegen.resolution.models import ComputationGraph
 
     expected = {
-        "modules", "entry_point_groups", "execution_order",
-        "fallback_entry_points", "output_aliases",
+        "modules",
+        "entry_point_groups",
+        "execution_order",
+        "fallback_entry_points",
+        "output_aliases",
     }
     actual = _pydantic_field_names(ComputationGraph)
     assert actual == expected
@@ -485,11 +574,22 @@ def test_req_dm_03_fields_pipeline_module():
     from sysml_codegen.resolution.models import PipelineModule
 
     expected = {
-        "name", "module_type", "inputs", "outputs", "execution_order",
-        "compilability", "compiled_expression",
-        "is_computed_attribute", "is_aggregation", "auto_impl_context",
-        "calc_def_name", "calc_def_qualified_name", "doc_comment",
-        "calc_expressions", "source_file", "source_line",
+        "name",
+        "module_type",
+        "inputs",
+        "outputs",
+        "execution_order",
+        "compilability",
+        "compiled_expression",
+        "is_computed_attribute",
+        "is_aggregation",
+        "auto_impl_context",
+        "calc_def_name",
+        "calc_def_qualified_name",
+        "doc_comment",
+        "calc_expressions",
+        "source_file",
+        "source_line",
     }
     actual = _pydantic_field_names(PipelineModule)
     assert actual == expected
@@ -531,8 +631,13 @@ def test_req_dm_03_fields_entry_point():
     from sysml_codegen.resolution.models import EntryPoint
 
     expected = {
-        "qualified_name", "simple_name", "entry_type",
-        "default_value", "source_calc_usage", "param_group", "python_type",
+        "qualified_name",
+        "simple_name",
+        "entry_type",
+        "default_value",
+        "source_calc_usage",
+        "param_group",
+        "python_type",
     }
     actual = _pydantic_field_names(EntryPoint)
     assert actual == expected
@@ -811,14 +916,17 @@ class TestDelegatedModelsImportable:
 
     def test_computed_attribute_data(self):
         from sysml_codegen.extraction.data_models import ComputedAttributeData
+
         assert ComputedAttributeData is not None
 
     def test_expression_ref(self):
         from agentic_mbse.sysml.types import ExpressionRef
+
         assert ExpressionRef is not None
 
     def test_phantom_detection_report(self):
         from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport
+
         assert PhantomDetectionReport is not None
 
 

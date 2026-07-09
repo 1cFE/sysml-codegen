@@ -119,10 +119,7 @@ def mock_extract_feature_refs(monkeypatch):
 
     def mock_efr(expr, ignore_std_lib=True):
         names = ref_map.get(id(expr), [])
-        return [
-            SimpleNamespace(name=n, qualified_name=n, element=None)
-            for n in names
-        ]
+        return [SimpleNamespace(name=n, qualified_name=n, element=None) for n in names]
 
     monkeypatch.setattr(
         "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
@@ -169,9 +166,7 @@ class TestReqEc01FceBeforeOe:
 
     def test_fce_dispatch_before_oe_in_source(self):
         """Static analysis: FCE is_instance check precedes OE is_instance check."""
-        calls = find_is_instance_calls_in_function(
-            EXPRESSION_COMPILER_PATH, "build_expression_ast"
-        )
+        calls = find_is_instance_calls_in_function(EXPRESSION_COMPILER_PATH, "build_expression_ast")
         assert "FeatureChainExpression" in calls, (
             "No is_instance call for FeatureChainExpression in build_expression_ast"
         )
@@ -236,9 +231,7 @@ class TestReqEc02NaryLeftFold:
                 MockFeatureReferenceExpression("c"),
             ],
         )
-        result = build_expression_ast(
-            node, input_names={"a", "b", "c"}, output_names=set()
-        )
+        result = build_expression_ast(node, input_names={"a", "b", "c"}, output_names=set())
         assert result.node_type == ExpressionNodeType.BINARY_OP
         assert result.left.node_type == ExpressionNodeType.BINARY_OP
         assert result.left.left.input_name == "a"
@@ -253,9 +246,7 @@ class TestReqEc02NaryLeftFold:
             "+",
             [MockFeatureReferenceExpression(n) for n in names],
         )
-        result = build_expression_ast(
-            node, input_names=set(names), output_names=set()
-        )
+        result = build_expression_ast(node, input_names=set(names), output_names=set())
         compiled = compile_expression(result)
         expected = (
             "((((((inputs.p1 + inputs.p2) + inputs.p3)"
@@ -272,9 +263,7 @@ class TestReqEc02NaryLeftFold:
                 MockFeatureReferenceExpression("y"),
             ],
         )
-        result = build_expression_ast(
-            node, input_names={"x", "y"}, output_names=set()
-        )
+        result = build_expression_ast(node, input_names={"x", "y"}, output_names=set())
         assert result.node_type == ExpressionNodeType.BINARY_OP
         assert result.left.node_type == ExpressionNodeType.INPUT_REF
         assert result.right.node_type == ExpressionNodeType.INPUT_REF
@@ -342,9 +331,7 @@ class TestReqEc04AstParseValidation:
             "-",
             ExpressionAST.binary(
                 "**",
-                ExpressionAST.binary(
-                    "+", ExpressionAST.literal(1.0), ExpressionAST.input_ref("r")
-                ),
+                ExpressionAST.binary("+", ExpressionAST.literal(1.0), ExpressionAST.input_ref("r")),
                 ExpressionAST.input_ref("n"),
             ),
             ExpressionAST.literal(1.0),
@@ -407,10 +394,7 @@ class TestReqEc05CycleDetection:
         calc_def, expr_asts = self._make_cycle(mock_extract_feature_refs)
         result = compile_calc_def(calc_def, expr_asts)
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert all(
-            r.compilability == Compilability.MANUAL_REQUIRED
-            for r in result.output_results
-        )
+        assert all(r.compilability == Compilability.MANUAL_REQUIRED for r in result.output_results)
 
     def test_cycle_produces_empty_execution_order(
         self, mock_syside_adapter, mock_extract_feature_refs
@@ -428,8 +412,7 @@ class TestReqEc05CycleDetection:
         result = compile_calc_def(calc_def, expr_asts)
         for r in result.output_results:
             assert "circular" in (r.unsupported_reason or ""), (
-                f"Output {r.output_name} missing 'circular' in reason: "
-                f"{r.unsupported_reason}"
+                f"Output {r.output_name} missing 'circular' in reason: {r.unsupported_reason}"
             )
 
 
@@ -522,16 +505,20 @@ class TestReqEc07UndeclaredIntermediates:
         assert by_name["hidden"].is_undeclared_intermediate is True
         assert by_name["hidden"].compilability == Compilability.FULLY_COMPILABLE
 
-    def test_iterative_chain_discovery(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
+    def test_iterative_chain_discovery(self, mock_syside_adapter, mock_extract_feature_refs):
         """4-deep chain: inter_a → inter_b → inter_c → inter_d → final_result."""
         calc_def = _make_calc_def(
             "ChainCalc",
             input_names=["i1", "i2"],
             output_names=["final_result"],
             all_member_names=[
-                "i1", "i2", "final_result", "inter_a", "inter_b", "inter_c", "inter_d"
+                "i1",
+                "i2",
+                "final_result",
+                "inter_a",
+                "inter_b",
+                "inter_c",
+                "inter_d",
             ],
         )
 
@@ -582,13 +569,15 @@ class TestReqEc07UndeclaredIntermediates:
         )
 
         assert result.execution_order == [
-            "inter_a", "inter_b", "inter_c", "inter_d", "final_result"
+            "inter_a",
+            "inter_b",
+            "inter_c",
+            "inter_d",
+            "final_result",
         ]
         assert result.overall_compilability == Compilability.FULLY_COMPILABLE
 
-    def test_undeclared_flag_set_correctly(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
+    def test_undeclared_flag_set_correctly(self, mock_syside_adapter, mock_extract_feature_refs):
         """is_undeclared_intermediate=True for discovered members, False for declared outputs."""
         calc_def = _make_calc_def(
             "FlagCalc",
@@ -663,9 +652,7 @@ class TestReqAst01DispatchOrdering:
 
     def test_dispatch_ordering_in_expression_compiler(self):
         """expression_compiler.py build_expression_ast: FCE line < OE line."""
-        calls = find_is_instance_calls_in_function(
-            EXPRESSION_COMPILER_PATH, "build_expression_ast"
-        )
+        calls = find_is_instance_calls_in_function(EXPRESSION_COMPILER_PATH, "build_expression_ast")
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
         assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
@@ -676,8 +663,7 @@ class TestReqAst01DispatchOrdering:
     def test_expression_utils_delegates_reconstruction_to_shared_api(self):
         """expression_utils.py keeps the compatibility path, not the moved body."""
         assert (
-            expression_utils_shim.reconstruct_expression
-            is shared_expression.reconstruct_expression
+            expression_utils_shim.reconstruct_expression is shared_expression.reconstruct_expression
         )
 
 
@@ -774,13 +760,8 @@ class TestCrossModelValidation:
             assert result.overall_compilability in (
                 Compilability.FULLY_COMPILABLE,
                 Compilability.MANUAL_REQUIRED,
-            ), (
-                f"{model_name}/{cd.name}: unexpected compilability "
-                f"{result.overall_compilability}"
-            )
-            assert len(result.execution_order) > 0, (
-                f"{model_name}/{cd.name}: empty execution_order"
-            )
+            ), f"{model_name}/{cd.name}: unexpected compilability {result.overall_compilability}"
+            assert len(result.execution_order) > 0, f"{model_name}/{cd.name}: empty execution_order"
             assert len(result.output_results) == len(output_names), (
                 f"{model_name}/{cd.name}: expected {len(output_names)} output_results, "
                 f"got {len(result.output_results)}"

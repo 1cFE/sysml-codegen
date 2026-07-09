@@ -95,14 +95,8 @@ class MockFeatureChainExpressionOperatorExpression:
     """
 
     def __init__(self, parts: list[str], operator: str = "."):
-        self.operands = (
-            [MockFeatureReferenceExpression(parts[0])] if parts else []
-        )
-        self.target_feature = (
-            type("Target", (), {"name": parts[-1]})()
-            if len(parts) > 1
-            else None
-        )
+        self.operands = [MockFeatureReferenceExpression(parts[0])] if parts else []
+        self.target_feature = type("Target", (), {"name": parts[-1]})() if len(parts) > 1 else None
         self.memberships = []
         self.operator = operator
 
@@ -804,9 +798,7 @@ class MockMultiplicityReferent:
     def __init__(self, name: str, default_value: int | None = None):
         self.name = name
         if default_value is not None:
-            self.feature_value_expression = type(
-                "FVE", (), {"value": default_value}
-            )()
+            self.feature_value_expression = type("FVE", (), {"value": default_value})()
         else:
             self.feature_value_expression = None
 
@@ -896,9 +888,7 @@ class TestMultiplicityExtraction:
         """pack_count default := 8 → default_value=8."""
         referent = MockMultiplicityReferent("pack_count", default_value=8)
         upper = MockUpperBound(referent)
-        mult = MockMultiplicityRange(
-            cached_lower_bound=8, upper_bound=upper
-        )
+        mult = MockMultiplicityRange(cached_lower_bound=8, upper_bound=upper)
         usage = MockPartUsageForMultiplicity("battery_pack", multiplicity=mult)
         part = MockPartDefinitionForRedef("Battery_System", owned_members=[usage])
         result = extract_multiplicities(part)
@@ -1126,9 +1116,7 @@ class TestSumTransformation:
             expression_text="filter(pv_module.capital_cost)",
         )
 
-        result = build_aggregation_expression(
-            redef, [], MockPartDefinitionForRedef("Solar_Array")
-        )
+        result = build_aggregation_expression(redef, [], MockPartDefinitionForRedef("Solar_Array"))
 
         assert result is not None
         assert result.has_unsupported_nodes is True
@@ -1152,9 +1140,7 @@ class TestSumTransformation:
             expression_text="left ?? right",
         )
 
-        result = build_aggregation_expression(
-            redef, [], MockPartDefinitionForRedef("Solar_Array")
-        )
+        result = build_aggregation_expression(redef, [], MockPartDefinitionForRedef("Solar_Array"))
 
         assert result is not None
         assert result.has_unsupported_nodes is True

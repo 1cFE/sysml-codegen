@@ -57,9 +57,7 @@ logger = logging.getLogger(__name__)
 AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}
 
 
-def _chain_sibling_aliases_aggregation(
-    sibling: RedefinitionData, agg_attribute_name: str
-) -> bool:
+def _chain_sibling_aliases_aggregation(sibling: RedefinitionData, agg_attribute_name: str) -> bool:
     """True if a CHAIN redefinition aliases the aggregation attribute (REQ-HR-07).
 
     A sibling aliases the aggregation when its ``source_path`` equals the attribute
@@ -72,9 +70,8 @@ def _chain_sibling_aliases_aggregation(
     """
     if sibling.redefinition_type != RedefinitionType.CHAIN or not sibling.source_path:
         return False
-    matches_leaf = (
-        sibling.source_path == agg_attribute_name
-        or sibling.source_path.endswith("." + agg_attribute_name)
+    matches_leaf = sibling.source_path == agg_attribute_name or sibling.source_path.endswith(
+        "." + agg_attribute_name
     )
     return matches_leaf and sibling.attribute_name != agg_attribute_name
 
@@ -218,8 +215,7 @@ def _agg_operator_str(operator: Any, ctx: _AggregationContext) -> str:
     if op_str is None:
         ctx.has_unsupported = True
         logger.warning(
-            "Unsupported operator '%s' in aggregation expression; "
-            "marking aggregation unsupported.",
+            "Unsupported operator '%s' in aggregation expression; marking aggregation unsupported.",
             op_key,
         )
         return f" {op_key} "
@@ -388,7 +384,9 @@ def build_aggregation_expression(
     # Walk the AST
     ctx = _AggregationContext()
     transformed = _walk_aggregation_ast(
-        redef.expression_ast, mult_lookup, ctx,
+        redef.expression_ast,
+        mult_lookup,
+        ctx,
     )
 
     return AggregationExpressionData(
@@ -549,9 +547,7 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
                     # BF-7: Find CHAIN-type aliases for this aggregation attribute
                     # e.g., :>> total_capex = capital_cost creates alias "total_capex"
                     for sibling in redefs:
-                        if _chain_sibling_aliases_aggregation(
-                            sibling, agg.attribute_name
-                        ):
+                        if _chain_sibling_aliases_aggregation(sibling, agg.attribute_name):
                             agg.aliases.append(sibling.attribute_name)
                     all_aggregations.append(agg)
 
@@ -562,9 +558,7 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     # Item 10 two-level specialization (Phase 8): index usage-level retypes of inherited
     # part usages, keyed by the container usage's instance QN. usage_type_map now carries
     # def-level entries only; pass it as the read-only base-type source before extending.
-    usage_type_map.update(
-        _index_usage_level_retypes(part_usages, usage_type_map, qn_to_partdef)
-    )
+    usage_type_map.update(_index_usage_level_retypes(part_usages, usage_type_map, qn_to_partdef))
 
     return HierarchyExtractionResult(
         redefinitions=all_redefinitions,

@@ -59,11 +59,13 @@ AGENTIC_AGGREGATION_PATH = (
 )
 
 # Expression type names used for dispatch site identification
-EXPRESSION_TYPE_NAMES = frozenset({
-    "FeatureChainExpression",
-    "OperatorExpression",
-    "FeatureReferenceExpression",
-})
+EXPRESSION_TYPE_NAMES = frozenset(
+    {
+        "FeatureChainExpression",
+        "OperatorExpression",
+        "FeatureReferenceExpression",
+    }
+)
 
 # ---------------------------------------------------------------------------
 # Dispatch site inventory (foundation for all audit tests)
@@ -105,8 +107,6 @@ ELIF_IDS = [
     "_extract_single_binding",
     "_extract_default_value",
 ]
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -155,12 +155,10 @@ class TestReqAst01FceBeforeOe:
             source_path, function_name, predicate=is_any_is_instance_call
         )
         assert "FeatureChainExpression" in calls, (
-            f"No is_instance call for FeatureChainExpression in "
-            f"{source_path.name}:{function_name}"
+            f"No is_instance call for FeatureChainExpression in {source_path.name}:{function_name}"
         )
         assert "OperatorExpression" in calls, (
-            f"No is_instance call for OperatorExpression in "
-            f"{source_path.name}:{function_name}"
+            f"No is_instance call for OperatorExpression in {source_path.name}:{function_name}"
         )
         assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
             f"{source_path.name}:{function_name}: "
@@ -190,8 +188,7 @@ class TestReqAst02CommentPresent:
             source_path, function_name, predicate=is_any_is_instance_call
         )
         assert "FeatureChainExpression" in calls, (
-            f"No is_instance call for FeatureChainExpression in "
-            f"{source_path.name}:{function_name}"
+            f"No is_instance call for FeatureChainExpression in {source_path.name}:{function_name}"
         )
 
         fce_line = calls["FeatureChainExpression"]
@@ -235,8 +232,7 @@ class TestReqAst03CanonicalOrdering:
         fre = calls["FeatureReferenceExpression"]
 
         assert fce < oe < fre, (
-            f"{source_path.name}:{function_name}: "
-            f"Expected FCE({fce}) < OE({oe}) < FRE({fre})"
+            f"{source_path.name}:{function_name}: Expected FCE({fce}) < OE({oe}) < FRE({fre})"
         )
 
     @pytest.mark.parametrize(
@@ -326,11 +322,7 @@ class TestReqAst04DispatchSiteGuardrail:
             all_dispatch[("agentic_mbse/sysml/aggregation.py", "_decompose_node")] = (
                 shared_aggregation_types
             )
-        multi_type = {
-            key: types
-            for key, types in all_dispatch.items()
-            if len(types) >= 2
-        }
+        multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
         assert len(multi_type) == 6, (
             f"Expected 6 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
@@ -389,8 +381,7 @@ class TestReqAst05SingletonTermClassification:
             f"Expected 1 SingletonTerm, got {len(ctx.singleton_terms)}"
         )
         assert "child" in ctx.singleton_terms[0].source_path, (
-            f"SingletonTerm source_path={ctx.singleton_terms[0].source_path!r} "
-            f"missing 'child'"
+            f"SingletonTerm source_path={ctx.singleton_terms[0].source_path!r} missing 'child'"
         )
         assert len(ctx.local_terms) == 0, (
             f"Expected 0 LocalTerms (FCE should not be classified as LocalTerm), "
@@ -457,9 +448,7 @@ class TestReqAst07ReconstructExpressionFormat:
             target_feature=SimpleNamespace(name="attr"),
         )
         result = reconstruct_expression(node)
-        assert result == "instance.attr", (
-            f"Expected 'instance.attr', got {result!r}"
-        )
+        assert result == "instance.attr", f"Expected 'instance.attr', got {result!r}"
 
     def test_reconstruct_expression_fce_no_dot_paren_format(self):
         """Dual-match FCE+OE mock -> result does NOT contain '.(' pattern (Bug A symptom)."""
@@ -470,9 +459,7 @@ class TestReqAst07ReconstructExpressionFormat:
             target_feature=SimpleNamespace(name="attr"),
         )
         result = reconstruct_expression(node)
-        assert ".(" not in result, (
-            f"Bug A regression: result contains '.(' pattern: {result!r}"
-        )
+        assert ".(" not in result, f"Bug A regression: result contains '.(' pattern: {result!r}"
 
     def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_snapshot):
         """No solar_battery transformed_expression contains the '.()' pattern."""
