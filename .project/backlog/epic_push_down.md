@@ -1,7 +1,7 @@
 # Epic: agentic-mbse Push-Down
 
 **Epic ID**: PUSH-DOWN
-**Status**: Ready
+**Status**: ✅ Certified
 **Priority**: P1 (High)
 **Created**: 2026-07-08
 **Estimated Effort**: 6–8 days
@@ -77,36 +77,36 @@ as a named validation profile; it must not depend on sysml-codegen implementatio
 
 ## Success Criteria
 
-- [ ] **SC-A (Phase 1 — expression + names)**: `expression_utils` functions extended into
+- [x] **SC-A (Phase 1 — expression + names)**: `expression_utils` functions extended into
   `agentic_mbse.sysml.expression` (with the `is_literal_node` rename and the
   `binding._extract_literal_value` fold-in); the SysML-general subset of `qualified_names`
   moves to a new `agentic_mbse.sysml.qualified_names`; sysml-codegen keeps working shims
   (`expression_utils.py` shim persists — conformance tests assert its path).
-- [ ] **SC-B (Phase 2 — hierarchy + aggregation)**: `extract_redefinitions` /
+- [x] **SC-B (Phase 2 — hierarchy + aggregation)**: `extract_redefinitions` /
   `extract_multiplicities` + `RedefinitionData` / `MultiplicityData` / `RedefinitionType`
   move to `agentic_mbse.sysml.hierarchy`; the aggregation decomposition core
   (`_walk_aggregation_ast`, `SumTerm` / `SingletonTerm` / `LocalTerm`) to
   `agentic_mbse.sysml.aggregation`; `hierarchy_resolver.py` becomes a thin wrapper (codegen
   text rewrite + design overrides stay); permanent re-exports in `data_models.py`; moved
   models stay dataclasses.
-- [ ] **SC-C (governance)**: the INV-1 (`reconstruct_operator_expression` dispatch,
+- [x] **SC-C (governance)**: the INV-1 (`reconstruct_operator_expression` dispatch,
   `AGG_PYTHON_OPS`) and INV-5 (`sanitize_name`) fires-on-shape + silent-on-clean tests move
   with the code (R1); TYPE_MAP whitelist re-verified per move; every move lands
   branch-parked (agentic-mbse branch → re-export → green suite → merge; the editable-install
   pair is never left half-migrated).
-- [ ] **SC-D (pre-flight hazards)**: the four standing hazards are resolved before their
+- [x] **SC-D (pre-flight hazards)**: the four standing hazards are resolved before their
   phase — `is_literal_expression`→`is_literal_node` rename (Q5), sysml-codegen `BindingInfo`
   renamed (Q4), `# INTENTIONAL DIVERGENCE` comment on `expression_compiler._sanitize_name`
   (Q6/R8), docstring cross-refs for `extract_feature_chain_name` vs `get_reference_name` (R6).
-- [ ] **SC-E (gates)**: both suites green at every landing point (anchors: sysml-codegen
+- [x] **SC-E (gates)**: both suites green at every landing point (anchors: sysml-codegen
   2120 passed / 4 skipped / 0 xfailed; agentic-mbse 1240 passed / 1 skipped); ruff src ≤ 17;
   mypy src ≤ 97; baselines byte-identical (zero capture churn expected — moves, not behavior
   changes); docs + matrix rows updated with the code per R1.
-- [ ] **SC-F (deferrals stay honest)**: Tier 2c (template detection, virtual binding) is
+- [x] **SC-F (deferrals stay honest)**: Tier 2c (template detection, virtual binding) is
   re-filed with its post-refactor function inventory (`_find_instantiation_paths`,
   `_expand_template_calc_usages`, ...), not silently dropped; `constraint_report.py` stays
   with a recorded disposition (Q8: codegen artifact).
-- [ ] **SC-G (checking profile)**: every pushed-down semantic helper either powers an existing
+- [x] **SC-G (checking profile)**: every pushed-down semantic helper either powers an existing
   agentic-mbse validation rule, adds a codegen-compatible profile rule, or files a named
   agentic-mbse backlog item with the exact rule, fixture shape, severity, and rationale. The
   profile is expressed as a contract over SysML facts, not by importing sysml-codegen.
@@ -304,4 +304,4 @@ item closes.
 ---
 
 **Last Updated**: 2026-07-08
-**Next Action**: Start Item 1 specification after external branch prerequisites merge.
+**Next Action**: Run whole-epic pre_pr/PR preparation.

@@ -6,6 +6,19 @@
 
 ## Active Work
 
+### PUSH-DOWN epic — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Epic audit:
+`.project/backlog/epic_push_down_audit.md`.
+
+All four PUSH-DOWN items are implemented and item-audited with `Certify` verdicts. The epic audit
+certifies the top-level success criteria SC-A through SC-G against the source concept-design,
+boundary research, TRUTH-DEBT sequencing ruling, and item audits. The reusable SysML semantic
+helpers now live in agentic-mbse; sysml-codegen keeps transformation policy, Python rendering,
+aliases, design overrides, scoping, pipeline assembly, and deferred template/virtual-binding work.
+No pre_pr or PR preparation was run during the audit stage. Next stage is whole-epic pre_pr/PR
+preparation only.
+
 ### PUSH-DOWN Item 4 — Aggregation Decomposition and Compatibility Gates — CERTIFIED
 
 Epic: `.project/backlog/epic_push_down.md`. Artifacts:
