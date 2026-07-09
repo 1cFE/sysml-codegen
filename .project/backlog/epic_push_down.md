@@ -199,7 +199,7 @@ item closes.
 
 **Deliverables**: `.project/active/hierarchy-primitives-models/{spec,design,plan}.md`
 
-### Item 4: Aggregation Decomposition and Compatibility Gates
+### Item 4: Aggregation Decomposition and Compatibility Gates ✅
 
 **Type**: Code/Integration
 **Effort**: 2–3 days
@@ -219,11 +219,11 @@ item closes.
 **Out of Scope**: Python rewriting, aliases, design overrides, usage-type indexing, scoping, graph resolution, module construction, template detection, and virtual-binding matching. These stay in sysml-codegen or deferred.
 
 **Success Criteria**:
-- [ ] Shared decomposition contains no Python source or codegen identifiers.
-- [ ] The local adapter reproduces existing aggregation data exactly.
-- [ ] Aggregation-profile validation impact is implemented or filed with fixture shapes and
+- [x] Shared decomposition contains no Python source or codegen identifiers.
+- [x] The local adapter reproduces existing aggregation data exactly.
+- [x] Aggregation-profile validation impact is implemented or filed with fixture shapes and
   severity.
-- [ ] Both suites pass; ruff/mypy do not regress; baselines are byte-identical.
+- [x] Both suites pass; ruff/mypy do not regress; baselines are byte-identical.
 
 **Deliverables**: `.project/active/aggregation-decomposition/{spec,design,plan}.md`
 

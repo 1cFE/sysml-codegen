@@ -59,11 +59,35 @@ if TYPE_CHECKING:
         count_attribute_name: str | None
         default_value: int | None
 
+    @dataclass
+    class SumTerm:
+        """Type-checking mirror of the shared runtime dataclass."""
+
+        part_usage_name: str
+        attribute_name: str
+        multiplicity_attr: str | None
+        multiplicity_count: int | None
+
+    @dataclass
+    class SingletonTerm:
+        """Type-checking mirror of the shared runtime dataclass."""
+
+        source_path: str
+
+    @dataclass
+    class LocalTerm:
+        """Type-checking mirror of the shared runtime dataclass."""
+
+        attribute_name: str
+
 else:
     from agentic_mbse.sysml.data_models import (  # type: ignore[import-untyped]
+        LocalTerm,
         MultiplicityData,
         RedefinitionData,
         RedefinitionType,
+        SingletonTerm,
+        SumTerm,
     )
 
 __all__ = [
@@ -271,30 +295,6 @@ class ComputedAttributeData:
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
     reference_chain: list[str] | None = None
-
-
-@dataclass
-class SumTerm:
-    """One sum() operand in an aggregation expression."""
-
-    part_usage_name: str  # e.g., "pv_module"
-    attribute_name: str  # e.g., "capital_cost"
-    multiplicity_attr: str | None  # e.g., "module_count" (None if singleton)
-    multiplicity_count: int | None  # e.g., 20
-
-
-@dataclass
-class SingletonTerm:
-    """A non-sum child attribute reference in an aggregation expression."""
-
-    source_path: str  # e.g., "allocation_model.total_allocation"
-
-
-@dataclass
-class LocalTerm:
-    """A PartDef-local attribute reference in an aggregation expression."""
-
-    attribute_name: str  # e.g., "misc_hardware_cost"
 
 
 @dataclass

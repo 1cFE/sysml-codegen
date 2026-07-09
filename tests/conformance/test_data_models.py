@@ -354,6 +354,34 @@ def test_hierarchy_model_ordered_field_contracts():
     ]
 
 
+def test_aggregation_term_models_are_shared_class_objects():
+    from agentic_mbse.sysml import aggregation as shared_aggregation
+    from agentic_mbse.sysml import data_models as shared_models
+
+    from sysml_codegen.extraction import data_models as codegen
+
+    assert codegen.SumTerm is shared_models.SumTerm is shared_aggregation.SumTerm
+    assert (
+        codegen.SingletonTerm
+        is shared_models.SingletonTerm
+        is shared_aggregation.SingletonTerm
+    )
+    assert codegen.LocalTerm is shared_models.LocalTerm is shared_aggregation.LocalTerm
+
+
+def test_aggregation_term_ordered_field_contracts():
+    from sysml_codegen.extraction.data_models import LocalTerm, SingletonTerm, SumTerm
+
+    assert [field.name for field in dataclasses.fields(SumTerm)] == [
+        "part_usage_name",
+        "attribute_name",
+        "multiplicity_attr",
+        "multiplicity_count",
+    ]
+    assert [field.name for field in dataclasses.fields(SingletonTerm)] == ["source_path"]
+    assert [field.name for field in dataclasses.fields(LocalTerm)] == ["attribute_name"]
+
+
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_aggregation_expression_data():
     """AggregationExpressionData has exactly 15 fields."""
@@ -541,6 +569,9 @@ SOURCE_FILE_SPECS = [
     (_DM, "PartDefinitionData", "extraction/data_models.py"),
     (_DM, "RedefinitionData", "agentic_mbse/sysml/data_models.py"),
     (_DM, "MultiplicityData", "agentic_mbse/sysml/data_models.py"),
+    (_DM, "SumTerm", "agentic_mbse/sysml/data_models.py"),
+    (_DM, "SingletonTerm", "agentic_mbse/sysml/data_models.py"),
+    (_DM, "LocalTerm", "agentic_mbse/sysml/data_models.py"),
     (_DM, "AggregationExpressionData", "extraction/data_models.py"),
     (_DM, "HierarchyExtractionResult", "extraction/data_models.py"),
     (_DM, "ScopedAggregationData", "extraction/data_models.py"),

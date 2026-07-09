@@ -6,6 +6,36 @@
 
 ## Active Work
 
+### PUSH-DOWN Item 4 — Aggregation Decomposition and Compatibility Gates — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Artifacts:
+`.project/active/aggregation-decomposition/{spec,spec-review,design,design-review,plan,audit}.md`.
+Spec review and design review both reached Approved after revision. This item moves neutral
+aggregation AST decomposition into agentic-mbse; sysml-codegen keeps Python rewriting, local
+`AggregationExpressionData` assembly, pipeline-facing identifiers, alias handling, and downstream
+resolution policy. No item-level PR closeout is planned because the user wants the whole PUSH-DOWN
+epic implemented before PR.
+
+Implemented `agentic_mbse.sysml.aggregation` with neutral aggregation decomposition, wrapper facts,
+diagnostics, dispatch-order guardrails, and no sysml-codegen imports. `SumTerm`, `SingletonTerm`,
+and `LocalTerm` now live in agentic-mbse and are re-exported by sysml-codegen as the same runtime
+class objects. sysml-codegen's aggregation builder now delegates raw decomposition to the shared
+module and renders local `AggregationExpressionData` through a compatibility adapter. The
+aggregation-profile loop filed three future rows in agentic-mbse backlog:
+`PUSH-DOWN-AGG-PROFILE-SUM-SHAPE`, `PUSH-DOWN-AGG-PROFILE-WRAPPER-SHAPE`, and
+`PUSH-DOWN-AGG-PROFILE-LITERAL-SHAPE`.
+
+Validation: agentic-mbse aggregation suite `12 passed`; shared expression/hierarchy/aggregation
+suite `93 passed`; agentic-mbse full suite `1290 passed, 1 skipped, 33 deselected, 6 warnings`;
+sysml-codegen local model/builder suite `166 passed`; sysml-codegen downstream compatibility suite
+`202 passed, 1 skipped`; sysml-codegen full suite `2138 passed, 4 skipped`; sysml-codegen
+`ruff check src/` clean; touched-file ruff clean in both repos; `git diff -- tests/fixtures` empty.
+Audit: `.project/active/aggregation-decomposition/audit.md` certifies the item. Audit reran the
+focused high-risk gates: sysml-codegen builder/model/literal/dispatch subset `190 passed`, and
+agentic-mbse aggregation suite `12 passed`. Remaining caveat: project-wide mypy baselines are still
+dirty but unchanged after cleanup (agentic-mbse 107, sysml-codegen 98). No item-level PR closeout was
+performed; continue to the PUSH-DOWN epic audit and PR preparation only through the whole-epic flow.
+
 ### PUSH-DOWN Item 3 — Hierarchy Primitives and Data Models — CERTIFIED
 
 Epic: `.project/backlog/epic_push_down.md`. Artifacts:

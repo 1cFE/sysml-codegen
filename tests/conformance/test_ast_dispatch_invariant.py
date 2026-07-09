@@ -49,6 +49,14 @@ AGENTIC_HIERARCHY_PATH = (
     / "sysml"
     / "hierarchy.py"
 )
+AGENTIC_AGGREGATION_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "agentic-mbse"
+    / "src"
+    / "agentic_mbse"
+    / "sysml"
+    / "aggregation.py"
+)
 
 # Expression type names used for dispatch site identification
 EXPRESSION_TYPE_NAMES = frozenset({
@@ -64,14 +72,14 @@ EXPRESSION_TYPE_NAMES = frozenset({
 # Sites where both FCE and OE are checked (the critical invariant sites)
 DUAL_CHECK_SITES = [
     (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
-    (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
+    (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
 ]
 
 DUAL_CHECK_IDS = [
     "build_expression_ast",
-    "_walk_aggregation_ast",
+    "agentic_aggregation._decompose_node",
     "_extract_single_binding",
     "_extract_default_value",
 ]
@@ -79,12 +87,12 @@ DUAL_CHECK_IDS = [
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
 CANONICAL_SITES = [
     (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
-    (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
+    (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
 ]
 
 CANONICAL_IDS = [
     "build_expression_ast",
-    "_walk_aggregation_ast",
+    "agentic_aggregation._decompose_node",
 ]
 
 # Sites that use elif chains -- FCE < OE is sufficient, full canonical not required
@@ -261,8 +269,22 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 4 codegen functions have both FCE and OE is_instance() checks."""
+        """Exactly 4 audited functions have both FCE and OE is_instance() checks."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
+        shared_aggregation_calls = find_is_instance_calls_in_function(
+            AGENTIC_AGGREGATION_PATH,
+            "_decompose_node",
+            predicate=is_any_is_instance_call,
+        )
+        shared_aggregation_types = {
+            name: line
+            for name, line in shared_aggregation_calls.items()
+            if name in EXPRESSION_TYPE_NAMES
+        }
+        if len(shared_aggregation_types) >= 2:
+            all_dispatch[("agentic_mbse/sysml/aggregation.py", "_decompose_node")] = (
+                shared_aggregation_types
+            )
         dual_check = {
             key: types
             for key, types in all_dispatch.items()
@@ -274,7 +296,7 @@ class TestReqAst04DispatchSiteGuardrail:
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 7 audited functions dispatch on 2+ expression types."""
+        """Exactly 6 audited functions dispatch on 2+ expression types."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_classifier_calls = find_is_instance_calls_in_function(
             AGENTIC_HIERARCHY_PATH,
@@ -290,13 +312,27 @@ class TestReqAst04DispatchSiteGuardrail:
             all_dispatch[("agentic_mbse/sysml/hierarchy.py", "classify_redefinition")] = (
                 shared_classifier_types
             )
+        shared_aggregation_calls = find_is_instance_calls_in_function(
+            AGENTIC_AGGREGATION_PATH,
+            "_decompose_node",
+            predicate=is_any_is_instance_call,
+        )
+        shared_aggregation_types = {
+            name: line
+            for name, line in shared_aggregation_calls.items()
+            if name in EXPRESSION_TYPE_NAMES
+        }
+        if len(shared_aggregation_types) >= 2:
+            all_dispatch[("agentic_mbse/sysml/aggregation.py", "_decompose_node")] = (
+                shared_aggregation_types
+            )
         multi_type = {
             key: types
             for key, types in all_dispatch.items()
             if len(types) >= 2
         }
-        assert len(multi_type) == 7, (
-            f"Expected 7 audited multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 6, (
+            f"Expected 6 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 

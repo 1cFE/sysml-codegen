@@ -26,6 +26,14 @@ from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "extraction"
 HIERARCHY_RESOLVER_PATH = SRC_DIR / "hierarchy_resolver.py"
+AGENTIC_AGGREGATION_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "agentic-mbse"
+    / "src"
+    / "agentic_mbse"
+    / "sysml"
+    / "aggregation.py"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -237,24 +245,24 @@ class TestReqHr04Multiplicity:
 
 
 # ---------------------------------------------------------------------------
-# REQ-HR-05: FCE before OE dispatch ordering in _walk_aggregation_ast
+# REQ-HR-05: FCE before OE dispatch ordering in shared aggregation decomposition
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.req("REQ-HR-05")
 class TestReqHr05DispatchOrdering:
-    """Static analysis: FCE checked before OE in _walk_aggregation_ast."""
+    """Static analysis: FCE checked before OE in shared aggregation decomposition."""
 
     def test_fce_before_oe_in_walk_aggregation_ast(self):
-        """In _walk_aggregation_ast(), FCE check appears before OE check."""
+        """In the shared aggregation decomposer, FCE check appears before OE check."""
         calls = find_is_instance_calls_in_function(
-            HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"
+            AGENTIC_AGGREGATION_PATH, "_decompose_node"
         )
         assert "FeatureChainExpression" in calls, (
-            "No is_instance call for FeatureChainExpression in _walk_aggregation_ast"
+            "No is_instance call for FeatureChainExpression in _decompose_node"
         )
         assert "OperatorExpression" in calls, (
-            "No is_instance call for OperatorExpression in _walk_aggregation_ast"
+            "No is_instance call for OperatorExpression in _decompose_node"
         )
         assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
             f"FCE check at line {calls['FeatureChainExpression']} must precede "
@@ -262,12 +270,11 @@ class TestReqHr05DispatchOrdering:
         )
 
     def test_fce_before_oe_comment_present(self):
-        """The FCE check in _walk_aggregation_ast() has the invariant comment."""
-        source = HIERARCHY_RESOLVER_PATH.read_text()
-        # Find the relevant section in _walk_aggregation_ast
+        """The FCE check in shared aggregation decomposition has the invariant comment."""
+        source = AGENTIC_AGGREGATION_PATH.read_text()
         assert "MUST be before OperatorExpression" in source, (
             "Invariant comment 'MUST be before OperatorExpression' not found in "
-            "hierarchy_resolver.py"
+            "agentic_mbse.sysml.aggregation"
         )
 
 
@@ -674,7 +681,7 @@ class TestAliasAggProbe:
         )
 
     def test_redefinition_types(self, alias_agg_probe_snapshot):
-        """3 redefinitions: 2 CHAIN (Widget.total_cost, WA.reported_cost), 1 EXPRESSION (WA.total_cost)."""
+        """Alias probe has two CHAIN redefinitions and one EXPRESSION redefinition."""
         from collections import Counter
 
         hd = alias_agg_probe_snapshot["hierarchy_data"]

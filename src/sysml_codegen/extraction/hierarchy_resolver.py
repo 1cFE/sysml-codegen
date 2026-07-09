@@ -18,7 +18,8 @@ import logging
 from collections.abc import Iterable
 from typing import Any, cast
 
-from agentic_mbse.sysml import hierarchy as shared_hierarchy  # type: ignore[import-untyped]
+import agentic_mbse.sysml.aggregation as shared_aggregation  # type: ignore[import-untyped]
+from agentic_mbse.sysml import hierarchy as shared_hierarchy
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from sysml_codegen.core.qualified_names import (
@@ -37,10 +38,6 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_utils import (
     OPERATOR_MAP,
-    extract_feature_chain_name,
-    extract_feature_reference_name,
-    is_literal_expression,
-    reconstruct_expression,
 )
 from sysml_codegen.extraction.usage_extractor import (
     most_specific,
@@ -205,36 +202,6 @@ class _AggregationContext:
         self.has_unsupported: bool = False
 
 
-_KNOWN_WRAPPER_FUNCTIONS = frozenset({"Evaluation", "evaluate", "collect", "select"})
-
-
-def _unwrap_invocation(node: Any, _depth: int = 0) -> Any:
-    """Unwrap InvocationExpression wrappers (Evaluation, collect, select, etc.).
-
-    Recursively peels off InvocationExpression layers to find the innermost
-    non-InvocationExpression node. Handles nested wrappers like
-    collect(Evaluation(FeatureChainExpression)).
-
-    Args:
-        node: AST node, potentially an InvocationExpression wrapper.
-        _depth: Recursion depth counter (max 3 to prevent infinite loops).
-
-    Returns:
-        The unwrapped node, or the original if no wrapper found.
-    """
-    if _depth >= 3:
-        return node
-    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
-        return node
-    if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
-        return node
-    if hasattr(node, "function") and hasattr(node.function, "name"):
-        operands = list(getattr(node, "operands", []))
-        if operands:
-            return _unwrap_invocation(operands[0], _depth + 1)
-    return node
-
-
 def _agg_operator_str(operator: Any, ctx: _AggregationContext) -> str:
     """Translate an aggregation operator to its Python spelling (D3-8).
 
@@ -259,16 +226,117 @@ def _agg_operator_str(operator: Any, ctx: _AggregationContext) -> str:
     return op_str
 
 
+def _apply_sum_term(
+    neutral_term: Any,
+    mult_lookup: dict[str, MultiplicityData],
+    ctx: _AggregationContext,
+) -> str:
+    part_name = neutral_term.part_usage_name
+    attr_name = neutral_term.attribute_name
+    chain_name = f"{part_name}.{attr_name}"
+    mult_data = mult_lookup.get(part_name)
+    if mult_data and mult_data.count_attribute_name:
+        ctx.sum_terms.append(
+            SumTerm(
+                part_usage_name=part_name,
+                attribute_name=attr_name,
+                multiplicity_attr=mult_data.count_attribute_name,
+                multiplicity_count=mult_data.count,
+            )
+        )
+        ctx.input_channels.append(chain_name)
+        ctx.entry_points.append(mult_data.count_attribute_name)
+        return f"({mult_data.count_attribute_name} * {chain_name})"
+
+    logger.warning(
+        "sum(%s) has no multiplicity data for '%s'",
+        chain_name,
+        part_name,
+    )
+    ctx.sum_terms.append(
+        SumTerm(
+            part_usage_name=part_name,
+            attribute_name=attr_name,
+            multiplicity_attr=None,
+            multiplicity_count=None,
+        )
+    )
+    ctx.input_channels.append(chain_name)
+    return chain_name
+
+
+def _render_neutral_aggregation_node(
+    node: Any,
+    decomposition: Any,
+    mult_lookup: dict[str, MultiplicityData],
+    ctx: _AggregationContext,
+) -> str:
+    """Render a shared neutral aggregation node using codegen-local policy."""
+    if isinstance(node, shared_aggregation.NullNode):
+        return ""
+
+    if isinstance(node, shared_aggregation.FeatureChainNode):
+        ctx.singleton_terms.append(SingletonTerm(source_path=node.source_path))
+        ctx.input_channels.append(node.source_path)
+        return node.source_path
+
+    if isinstance(node, shared_aggregation.FeatureReferenceNode):
+        ctx.local_terms.append(LocalTerm(attribute_name=node.attribute_name))
+        return node.attribute_name
+
+    if isinstance(node, shared_aggregation.LiteralNode):
+        return node.render_text
+
+    if isinstance(node, shared_aggregation.SumNode):
+        neutral_term = decomposition.sum_terms[node.term_index]
+        return _apply_sum_term(neutral_term, mult_lookup, ctx)
+
+    if isinstance(node, shared_aggregation.OperatorNode):
+        operands = [
+            _render_neutral_aggregation_node(op, decomposition, mult_lookup, ctx)
+            for op in node.operands
+        ]
+        if len(operands) == 2:
+            op_str = _agg_operator_str(node.operator, ctx)
+            return f"({operands[0]}{op_str}{operands[1]})"
+        if len(operands) == 1:
+            inner = operands[0]
+            if node.operator == "-":
+                return f"-{inner}"
+            return f"{node.operator}({inner})"
+        if operands:
+            op_str = _agg_operator_str(node.operator, ctx)
+            return op_str.join(operands)
+        return node.operator
+
+    if isinstance(node, shared_aggregation.InvocationNode):
+        if node.unsupported:
+            ctx.has_unsupported = True
+        args = ", ".join(
+            _render_neutral_aggregation_node(op, decomposition, mult_lookup, ctx)
+            for op in node.operands
+        )
+        return f"{node.function_name}({args})"
+
+    if isinstance(node, shared_aggregation.UnsupportedNode):
+        ctx.has_unsupported = True
+        logger.warning(node.diagnostic_message)
+        return node.fallback_render
+
+    ctx.has_unsupported = True
+    logger.warning(
+        "Unrecognized neutral aggregation node type: %s",
+        type(node).__name__,
+    )
+    return str(node)
+
+
 def _walk_aggregation_ast(
     node: Any,
     mult_lookup: dict[str, MultiplicityData],
     ctx: _AggregationContext,
 ) -> str:
-    """Recursively walk an aggregation expression AST.
-
-    Transforms sum() calls to parametric multiply, classifies operands
-    into SumTerm/SingletonTerm/LocalTerm, and builds the transformed
-    expression text. Collects results into ctx.
+    """Compatibility shim that renders the shared neutral decomposition locally.
 
     Args:
         node: AST node to process.
@@ -278,122 +346,13 @@ def _walk_aggregation_ast(
     Returns:
         Transformed expression text for this node.
     """
-    if node is None:
-        return ""
-
-    # FeatureChainExpression: child.attr → SingletonTerm
-    # MUST be before OperatorExpression — FCE is a subtype of OE in SysIDE's
-    # type system, so both is_instance() checks return True on the same node.
-    # The more specific check must come first.
-    if SysideAdapter.is_instance(node, "FeatureChainExpression"):
-        chain_name = extract_feature_chain_name(node)
-        ctx.singleton_terms.append(SingletonTerm(source_path=chain_name))
-        ctx.input_channels.append(chain_name)
-        return chain_name
-
-    # OperatorExpression: recurse into operands
-    if SysideAdapter.is_instance(node, "OperatorExpression"):
-        operator = getattr(node, "operator", "+")
-        operands = list(getattr(node, "operands", []))
-        if len(operands) == 2:
-            left = _walk_aggregation_ast(operands[0], mult_lookup, ctx)
-            right = _walk_aggregation_ast(operands[1], mult_lookup, ctx)
-            op_str = _agg_operator_str(operator, ctx)
-            return f"({left}{op_str}{right})"
-        if len(operands) == 1:
-            inner = _walk_aggregation_ast(operands[0], mult_lookup, ctx)
-            if operator == "-":
-                return f"-{inner}"
-            return f"{operator}({inner})"
-        if operands:
-            parts = [
-                _walk_aggregation_ast(op, mult_lookup, ctx)
-                for op in operands
-            ]
-            op_str = _agg_operator_str(operator, ctx)
-            return op_str.join(parts)
-        return operator
-
-    # FeatureReferenceExpression: local attribute → LocalTerm
-    if SysideAdapter.is_instance(node, "FeatureReferenceExpression"):
-        ref_name = extract_feature_reference_name(node)
-        ctx.local_terms.append(LocalTerm(attribute_name=ref_name))
-        return ref_name
-
-    # Literals: delegate to expression_utils. MUST precede the InvocationExpression
-    # catch-all below — every SysIDE node carries a derived KerML `.function.name`,
-    # so a literal operand would otherwise be mis-dispatched to the invocation branch
-    # and marked unsupported (REQ-AST-10; mirrors the Item-6 reconstruct_expression fix).
-    if is_literal_expression(node):
-        return reconstruct_expression(node)
-
-    # InvocationExpression: sum() → parametric multiply
-    if hasattr(node, "function") and hasattr(node.function, "name"):
-        func_name = node.function.name
-        operands = list(getattr(node, "operands", []))
-
-        if func_name == "sum" and operands:
-            operand = _unwrap_invocation(operands[0])
-            if SysideAdapter.is_instance(operand, "FeatureChainExpression"):
-                chain_name = extract_feature_chain_name(operand)
-            else:
-                chain_name = extract_feature_reference_name(operand)
-
-            parts = chain_name.split(".", 1)
-            if len(parts) == 2:
-                part_name, attr_name = parts
-                mult_data = mult_lookup.get(part_name)
-                if mult_data and mult_data.count_attribute_name:
-                    ctx.sum_terms.append(SumTerm(
-                        part_usage_name=part_name,
-                        attribute_name=attr_name,
-                        multiplicity_attr=mult_data.count_attribute_name,
-                        multiplicity_count=mult_data.count,
-                    ))
-                    ctx.input_channels.append(chain_name)
-                    ctx.entry_points.append(mult_data.count_attribute_name)
-                    return f"({mult_data.count_attribute_name} * {chain_name})"
-
-                # No multiplicity found — log warning, emit unresolved SumTerm
-                logger.warning(
-                    "sum(%s) has no multiplicity data for '%s'",
-                    chain_name,
-                    part_name,
-                )
-                ctx.sum_terms.append(SumTerm(
-                    part_usage_name=part_name,
-                    attribute_name=attr_name,
-                    multiplicity_attr=None,
-                    multiplicity_count=None,
-                ))
-                ctx.input_channels.append(chain_name)
-                return chain_name
-
-            # Single-element sum (unusual)
-            ctx.local_terms.append(LocalTerm(attribute_name=chain_name))
-            return chain_name
-
-        # Non-sum invocation — unwrap known wrappers before marking unsupported
-        if func_name in _KNOWN_WRAPPER_FUNCTIONS and operands:
-            unwrapped = _unwrap_invocation(node)
-            if unwrapped is not node:
-                return _walk_aggregation_ast(unwrapped, mult_lookup, ctx)
-
-        # Truly unsupported invocation — mark and reconstruct
-        ctx.has_unsupported = True
-        args = ", ".join(
-            _walk_aggregation_ast(op, mult_lookup, ctx)
-            for op in operands
-        )
-        return f"{func_name}({args})"
-
-    # Unknown node type
-    ctx.has_unsupported = True
-    logger.warning(
-        "Unrecognized AST node type in aggregation expression: %s",
-        type(node).__name__,
+    decomposition = shared_aggregation.decompose_aggregation_expression(node)
+    return _render_neutral_aggregation_node(
+        decomposition.root,
+        decomposition,
+        mult_lookup,
+        ctx,
     )
-    return str(node)
 
 
 def build_aggregation_expression(
