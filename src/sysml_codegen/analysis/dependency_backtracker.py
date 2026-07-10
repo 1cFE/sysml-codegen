@@ -28,9 +28,9 @@ from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
 
 if TYPE_CHECKING:
-    from agentic_mbse.sysml.types import BindingInfo
-
-    from sysml_codegen.extraction.usage_extractor import CalcUsageData
+    # The extraction-layer BindingInfo dataclass (CalcUsageData.bindings), NOT
+    # agentic_mbse.sysml.types.BindingInfo — two distinct same-named types (Q4).
+    from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
 
 logger = logging.getLogger(__name__)
 

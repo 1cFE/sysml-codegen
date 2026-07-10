@@ -17,7 +17,20 @@ from pathlib import Path
 from typing import Any
 
 # Import shared types from agentic-mbse
-from agentic_mbse.sysml.data_models import AttributeInfo as BaseAttributeInfo
+from agentic_mbse.sysml.data_models import (
+    AttributeInfo as BaseAttributeInfo,
+)
+
+# Permanent re-exports of the shared hierarchy/aggregation models (PUSH-DOWN).
+# agentic-mbse ships py.typed, so mypy checks the real classes — no mirrors.
+from agentic_mbse.sysml.data_models import (
+    LocalTerm,
+    MultiplicityData,
+    RedefinitionData,
+    RedefinitionType,
+    SingletonTerm,
+    SumTerm,
+)
 from agentic_mbse.sysml.types import BindingType, ExpressionRef
 
 from .expression_compiler import Compilability
@@ -227,83 +240,6 @@ class ComputedAttributeData:
     source_file: Path = field(default_factory=lambda: Path("unknown"))
     source_line: int = 0
     reference_chain: list[str] | None = None
-
-
-# ---------------------------------------------------------------------------
-# Hierarchy Resolution Data Models (Item 3 — COST-PATTERN)
-# ---------------------------------------------------------------------------
-
-
-class RedefinitionType(str, Enum):
-    """Classification of a :>> redefinition's RHS expression."""
-
-    LITERAL = "literal"  # :>> wattage = 400.0
-    CHAIN = "chain"  # :>> capital_cost = cost_model.total_cost
-    EXPRESSION = "expression"  # :>> capital_cost = sum(pv_module.capital_cost) + ...
-
-
-@dataclass
-class RedefinitionData:
-    """Extracted data for a single :>> redefinition on a PartDef or design PartUsage.
-
-    Represents the resolution of one ReferenceUsage with owned_redefinitions.
-    """
-
-    owning_part_qn: str  # QN of the PartDef/PartUsage this :>> lives on
-    attribute_name: str  # The redefined attribute (e.g., "capital_cost")
-    redefinition_type: RedefinitionType
-    # For LITERAL:
-    literal_value: float | int | str | bool | None = None
-    # For CHAIN:
-    source_path: str | None = None  # e.g., "cost_model.total_cost"
-    # For EXPRESSION:
-    expression_ast: Any = None  # Raw syside AST for downstream transformation
-    expression_text: str = ""  # Display text from reconstruct_expression()
-    # Deep-path info (for design-level overrides):
-    target_path: list[str] = field(default_factory=list)
-    # e.g., ["pv_module", "wattage"] for :>> pv_module.wattage = 400.0
-    is_deep_path: bool = False
-    source_file: Path = field(default_factory=lambda: Path("unknown"))
-    source_line: int = 0
-
-
-@dataclass
-class MultiplicityData:
-    """Multiplicity information for a PartUsage within a PartDef.
-
-    count is defensively cast to int() at extraction time because
-    cached_lower_bound may return a float or other numeric type from syside.
-    """
-
-    part_usage_name: str  # e.g., "pv_module"
-    owning_part_def_qn: str  # QN of the owning PartDef (e.g., "Lib__Solar_Array")
-    count: int | None  # Resolved literal count (e.g., 20), or None if unresolvable
-    count_attribute_name: str | None  # Name of the multiplicity attribute (e.g., "module_count")
-    default_value: int | None  # Default value of the count attribute
-
-
-@dataclass
-class SumTerm:
-    """One sum() operand in an aggregation expression."""
-
-    part_usage_name: str  # e.g., "pv_module"
-    attribute_name: str  # e.g., "capital_cost"
-    multiplicity_attr: str | None  # e.g., "module_count" (None if singleton)
-    multiplicity_count: int | None  # e.g., 20
-
-
-@dataclass
-class SingletonTerm:
-    """A non-sum child attribute reference in an aggregation expression."""
-
-    source_path: str  # e.g., "allocation_model.total_allocation"
-
-
-@dataclass
-class LocalTerm:
-    """A PartDef-local attribute reference in an aggregation expression."""
-
-    attribute_name: str  # e.g., "misc_hardware_cost"
 
 
 @dataclass

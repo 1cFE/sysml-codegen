@@ -26,6 +26,14 @@ from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "extraction"
 HIERARCHY_RESOLVER_PATH = SRC_DIR / "hierarchy_resolver.py"
+AGENTIC_AGGREGATION_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "agentic-mbse"
+    / "src"
+    / "agentic_mbse"
+    / "sysml"
+    / "aggregation.py"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -200,19 +208,15 @@ class TestReqHr04Multiplicity:
         list(SOLAR_BATTERY_MULTIPLICITIES.items()),
         ids=list(SOLAR_BATTERY_MULTIPLICITIES.keys()),
     )
-    def test_multiplicity_counts_correct(
-        self, solar_battery_snapshot, usage_name, expected_count
-    ):
+    def test_multiplicity_counts_correct(self, solar_battery_snapshot, usage_name, expected_count):
         """solar_battery: pv_module=20, inverter=4, battery_pack=8."""
         hd = solar_battery_snapshot["hierarchy_data"]
         mult_map = {m.part_usage_name: m for m in hd.multiplicities}
         assert usage_name in mult_map, (
-            f"Multiplicity for {usage_name} not found. "
-            f"Available: {list(mult_map.keys())}"
+            f"Multiplicity for {usage_name} not found. Available: {list(mult_map.keys())}"
         )
         assert mult_map[usage_name].count == expected_count, (
-            f"{usage_name}: expected count={expected_count}, "
-            f"got {mult_map[usage_name].count}"
+            f"{usage_name}: expected count={expected_count}, got {mult_map[usage_name].count}"
         )
 
     def test_multiplicity_integer_type(self, solar_battery_snapshot):
@@ -221,8 +225,7 @@ class TestReqHr04Multiplicity:
         for mult in hd.multiplicities:
             if mult.count is not None:
                 assert isinstance(mult.count, int), (
-                    f"{mult.part_usage_name}: count is {type(mult.count).__name__}, "
-                    f"expected int"
+                    f"{mult.part_usage_name}: count is {type(mult.count).__name__}, expected int"
                 )
 
     def test_count_attribute_name_populated(self, solar_battery_snapshot):
@@ -237,24 +240,22 @@ class TestReqHr04Multiplicity:
 
 
 # ---------------------------------------------------------------------------
-# REQ-HR-05: FCE before OE dispatch ordering in _walk_aggregation_ast
+# REQ-HR-05: FCE before OE dispatch ordering in shared aggregation decomposition
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.req("REQ-HR-05")
 class TestReqHr05DispatchOrdering:
-    """Static analysis: FCE checked before OE in _walk_aggregation_ast."""
+    """Static analysis: FCE checked before OE in shared aggregation decomposition."""
 
     def test_fce_before_oe_in_walk_aggregation_ast(self):
-        """In _walk_aggregation_ast(), FCE check appears before OE check."""
-        calls = find_is_instance_calls_in_function(
-            HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"
-        )
+        """In the shared aggregation decomposer, FCE check appears before OE check."""
+        calls = find_is_instance_calls_in_function(AGENTIC_AGGREGATION_PATH, "_decompose_node")
         assert "FeatureChainExpression" in calls, (
-            "No is_instance call for FeatureChainExpression in _walk_aggregation_ast"
+            "No is_instance call for FeatureChainExpression in _decompose_node"
         )
         assert "OperatorExpression" in calls, (
-            "No is_instance call for OperatorExpression in _walk_aggregation_ast"
+            "No is_instance call for OperatorExpression in _decompose_node"
         )
         assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
             f"FCE check at line {calls['FeatureChainExpression']} must precede "
@@ -262,12 +263,11 @@ class TestReqHr05DispatchOrdering:
         )
 
     def test_fce_before_oe_comment_present(self):
-        """The FCE check in _walk_aggregation_ast() has the invariant comment."""
-        source = HIERARCHY_RESOLVER_PATH.read_text()
-        # Find the relevant section in _walk_aggregation_ast
+        """The FCE check in shared aggregation decomposition has the invariant comment."""
+        source = AGENTIC_AGGREGATION_PATH.read_text()
         assert "MUST be before OperatorExpression" in source, (
             "Invariant comment 'MUST be before OperatorExpression' not found in "
-            "hierarchy_resolver.py"
+            "agentic_mbse.sysml.aggregation"
         )
 
 
@@ -327,9 +327,7 @@ class TestReqHr06SumTerms:
             f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
         )
         agg = hd.aggregation_expressions[0]
-        assert len(agg.sum_terms) == 1, (
-            f"Expected 1 sum_term, got {len(agg.sum_terms)}"
-        )
+        assert len(agg.sum_terms) == 1, f"Expected 1 sum_term, got {len(agg.sum_terms)}"
         st = agg.sum_terms[0]
         assert st.multiplicity_attr is None, (
             f"issue22 SumTerm should have multiplicity_attr=None, got {st.multiplicity_attr}"
@@ -399,9 +397,9 @@ class TestReqHr07AliasDetection:
         """The alias sibling redefinition has type=CHAIN, source_path='total_cost'."""
         hd = alias_agg_probe_snapshot["hierarchy_data"]
         alias_redef = [
-            r for r in hd.redefinitions
-            if r.attribute_name == "reported_cost"
-            and "Widget_Assembly" in r.owning_part_qn
+            r
+            for r in hd.redefinitions
+            if r.attribute_name == "reported_cost" and "Widget_Assembly" in r.owning_part_qn
         ]
         assert len(alias_redef) == 1, (
             f"Expected 1 'reported_cost' redef on Widget_Assembly, got {len(alias_redef)}"
@@ -432,9 +430,7 @@ class TestPartUsageNames:
         # At least Solar_Array and Battery_System should be present
         qn_keys = list(hd.part_usage_names.keys())
         solar_array_keys = [k for k in qn_keys if "Solar_Array" in k]
-        assert len(solar_array_keys) == 1, (
-            f"Expected one Solar_Array key, got {solar_array_keys}"
-        )
+        assert len(solar_array_keys) == 1, f"Expected one Solar_Array key, got {solar_array_keys}"
 
     def test_part_usage_names_child_names_correct(self, solar_battery_snapshot):
         """Solar_Array's children include {pv_module, inverter, array_bos}."""
@@ -443,8 +439,7 @@ class TestPartUsageNames:
         children = hd.part_usage_names[solar_array_key]
         expected = {"pv_module", "inverter", "array_bos"}
         assert expected.issubset(children), (
-            f"Solar_Array missing expected children: {expected - children}. "
-            f"Actual: {children}"
+            f"Solar_Array missing expected children: {expected - children}. Actual: {children}"
         )
 
     def test_part_usage_names_all_models(self, extraction_snapshots):
@@ -458,9 +453,7 @@ class TestPartUsageNames:
                 assert isinstance(names, set), (
                     f"{model_name}: part_usage_names[{qn}] is {type(names)}, expected set"
                 )
-                assert len(names) > 0, (
-                    f"{model_name}: part_usage_names[{qn}] is empty"
-                )
+                assert len(names) > 0, f"{model_name}: part_usage_names[{qn}] is empty"
 
 
 class TestUsageTypeMap:
@@ -477,19 +470,13 @@ class TestUsageTypeMap:
         """All usage_type_map keys are tuple[str, str] (deserialized correctly)."""
         hd = solar_battery_snapshot["hierarchy_data"]
         for key, value in hd.usage_type_map.items():
-            assert isinstance(key, tuple), (
-                f"usage_type_map key is {type(key)}, expected tuple"
-            )
-            assert len(key) == 2, (
-                f"usage_type_map key has {len(key)} elements, expected 2"
-            )
+            assert isinstance(key, tuple), f"usage_type_map key is {type(key)}, expected tuple"
+            assert len(key) == 2, f"usage_type_map key has {len(key)} elements, expected 2"
             assert isinstance(key[0], str) and isinstance(key[1], str), (
                 f"usage_type_map key elements are ({type(key[0])}, {type(key[1])}), "
                 f"expected (str, str)"
             )
-            assert isinstance(value, str), (
-                f"usage_type_map value is {type(value)}, expected str"
-            )
+            assert isinstance(value, str), f"usage_type_map value is {type(value)}, expected str"
 
 
 class TestTermTypeClassification:
@@ -566,17 +553,13 @@ class TestCrossModelIssue22:
         ``:>> widget.base_cost = 100.0`` — captured since Item 9 (REQ-HR-08).
         """
         hd = issue22_snapshot["hierarchy_data"]
-        assert len(hd.redefinitions) == 2, (
-            f"Expected 2 redefinitions, got {len(hd.redefinitions)}"
-        )
+        assert len(hd.redefinitions) == 2, f"Expected 2 redefinitions, got {len(hd.redefinitions)}"
         assert len(hd.design_overrides) == 1, (
             f"Expected 1 design_override (widget.base_cost), got {len(hd.design_overrides)}"
         )
         assert hd.design_overrides[0].target_path == ["widget", "base_cost"]
         assert hd.design_overrides[0].literal_value == 100.0
-        assert len(hd.multiplicities) == 1, (
-            f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
-        )
+        assert len(hd.multiplicities) == 1, f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
         assert len(hd.aggregation_expressions) == 1, (
             f"Expected 1 aggregation_expression, got {len(hd.aggregation_expressions)}"
         )
@@ -627,8 +610,7 @@ class TestDataIntegrity:
         """solar_battery has exactly 20 aggregation expressions, one per EXPRESSION-type redef."""
         hd = solar_battery_snapshot["hierarchy_data"]
         expression_redefs = [
-            r for r in hd.redefinitions
-            if r.redefinition_type == RedefinitionType.EXPRESSION
+            r for r in hd.redefinitions if r.redefinition_type == RedefinitionType.EXPRESSION
         ]
         assert len(hd.aggregation_expressions) == len(expression_redefs) == 20, (
             f"Expected 20 EXPRESSION redefs and 20 aggregation expressions, "
@@ -658,23 +640,19 @@ class TestAliasAggProbe:
         relaxation (REQ-HR-08), captured since.
         """
         hd = alias_agg_probe_snapshot["hierarchy_data"]
-        assert len(hd.redefinitions) == 3, (
-            f"Expected 3 redefinitions, got {len(hd.redefinitions)}"
-        )
+        assert len(hd.redefinitions) == 3, f"Expected 3 redefinitions, got {len(hd.redefinitions)}"
         assert len(hd.design_overrides) == 1, (
             f"Expected 1 design_override (widget.base_cost), got {len(hd.design_overrides)}"
         )
         assert hd.design_overrides[0].target_path == ["widget", "base_cost"]
         assert hd.design_overrides[0].literal_value == 50.0
-        assert len(hd.multiplicities) == 1, (
-            f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
-        )
+        assert len(hd.multiplicities) == 1, f"Expected 1 multiplicity, got {len(hd.multiplicities)}"
         assert len(hd.aggregation_expressions) == 1, (
             f"Expected 1 aggregation expression, got {len(hd.aggregation_expressions)}"
         )
 
     def test_redefinition_types(self, alias_agg_probe_snapshot):
-        """3 redefinitions: 2 CHAIN (Widget.total_cost, WA.reported_cost), 1 EXPRESSION (WA.total_cost)."""
+        """Alias probe has two CHAIN redefinitions and one EXPRESSION redefinition."""
         from collections import Counter
 
         hd = alias_agg_probe_snapshot["hierarchy_data"]
@@ -690,9 +668,7 @@ class TestAliasAggProbe:
         """Aggregation has 1 SumTerm: widget.total_cost with literal multiplicity (no attr)."""
         hd = alias_agg_probe_snapshot["hierarchy_data"]
         agg = hd.aggregation_expressions[0]
-        assert len(agg.sum_terms) == 1, (
-            f"Expected 1 sum_term, got {len(agg.sum_terms)}"
-        )
+        assert len(agg.sum_terms) == 1, f"Expected 1 sum_term, got {len(agg.sum_terms)}"
         st = agg.sum_terms[0]
         assert st.part_usage_name == "widget", (
             f"Expected part_usage_name='widget', got {st.part_usage_name!r}"
@@ -713,9 +689,7 @@ class TestAliasAggProbe:
         assert mult.part_usage_name == "widget", (
             f"Expected part_usage_name='widget', got {mult.part_usage_name!r}"
         )
-        assert mult.count == 3, (
-            f"Expected count=3, got {mult.count}"
-        )
+        assert mult.count == 3, f"Expected count=3, got {mult.count}"
         assert mult.count_attribute_name is None, (
             f"Expected count_attribute_name=None, got {mult.count_attribute_name!r}"
         )
@@ -728,8 +702,7 @@ class TestAliasAggProbe:
         for suffix in expected_suffixes:
             matching = [n for n in instance_names if n.endswith(suffix)]
             assert len(matching) >= 1, (
-                f"No CalcUsage instance ending with '{suffix}'. "
-                f"Actual: {instance_names}"
+                f"No CalcUsage instance ending with '{suffix}'. Actual: {instance_names}"
             )
 
     def test_report_calc_binds_through_alias(self, alias_agg_probe_snapshot):
@@ -755,20 +728,14 @@ class TestAliasAggProbe:
         """Widget_Assembly's part_usage_names includes 'widget'."""
         hd = alias_agg_probe_snapshot["hierarchy_data"]
         wa_keys = [k for k in hd.part_usage_names if "Widget_Assembly" in k]
-        assert len(wa_keys) == 1, (
-            f"Expected 1 Widget_Assembly key, got {wa_keys}"
-        )
+        assert len(wa_keys) == 1, f"Expected 1 Widget_Assembly key, got {wa_keys}"
         children = hd.part_usage_names[wa_keys[0]]
-        assert "widget" in children, (
-            f"Expected 'widget' in children, got {children}"
-        )
+        assert "widget" in children, f"Expected 'widget' in children, got {children}"
 
     def test_channel_alias_from_chain_redef(self, alias_agg_probe_snapshot):
         """Widget's ':>> total_cost = cost_model.unit_cost' produces a channel alias."""
         aliases = alias_agg_probe_snapshot["channel_aliases"]
-        assert len(aliases) >= 1, (
-            f"Expected at least 1 channel alias, got {len(aliases)}"
-        )
+        assert len(aliases) >= 1, f"Expected at least 1 channel alias, got {len(aliases)}"
         # The CHAIN redef on Widget produces a channel alias
         widget_aliases = [a for a in aliases if "Widget" in a.owning_part_qn]
         assert len(widget_aliases) >= 1, (

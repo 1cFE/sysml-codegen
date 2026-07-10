@@ -6,6 +6,133 @@
 
 ## Active Work
 
+### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
+
+Independent technical audit of PRs #8 (sysml-codegen) / #10 (agentic-mbse) found the code
+functionally sound but the certification record over-claiming (SC-D Q4/R8 falsely checked;
+Item 1's move not mechanical; mypy 97→98 misrecorded). All findings remediated same day —
+full audit + per-finding remediation record:
+`.project/backlog/epic_push_down_audit_independent.md`. Remediation highlights: Item 1
+expression bodies restored to the mechanical-move originals with the test mocks upgraded to
+the real syside shape; Q4 descoped with rationale (its live annotation bug in
+dependency_backtracker fixed — surfaced by mypy the moment `py.typed` landed); R8
+`# INTENTIONAL DIVERGENCE` marker added; `py.typed` added to agentic-mbse and the
+TYPE_CHECKING mirror dataclasses deleted (sysml-codegen mypy 98→77 vs main's 97); TYPE_MAP
+inventory tests de-self-certified; `**` added to shared SUPPORTED_OPERATORS; unary-minus
+render deviation recorded in Item 4's audit. Post-remediation gates: 2138/4 + 1290/1 green,
+ruff src clean, fixtures byte-identical. Epic and prior audit/pre_pr carry correction
+addenda. **Note for the PRs: the remediation commits are not yet made/pushed** — both repos
+have uncommitted working-tree changes on `push-down-item1-expression`.
+
+### PUSH-DOWN epic — CERTIFIED (superseded by the 2026-07-10 independent audit above)
+
+Epic: `.project/backlog/epic_push_down.md`. Epic audit:
+`.project/backlog/epic_push_down_audit.md`.
+
+All four PUSH-DOWN items are implemented and item-audited with `Certify` verdicts. The epic audit
+certifies the top-level success criteria SC-A through SC-G against the source concept-design,
+boundary research, TRUTH-DEBT sequencing ruling, and item audits. The reusable SysML semantic
+helpers now live in agentic-mbse; sysml-codegen keeps transformation policy, Python rendering,
+aliases, design overrides, scoping, pipeline assembly, and deferred template/virtual-binding work.
+No pre_pr or PR preparation was run during the audit stage. Next stage is whole-epic pre_pr/PR
+preparation only.
+
+### PUSH-DOWN Item 4 — Aggregation Decomposition and Compatibility Gates — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Artifacts:
+`.project/active/aggregation-decomposition/{spec,spec-review,design,design-review,plan,audit}.md`.
+Spec review and design review both reached Approved after revision. This item moves neutral
+aggregation AST decomposition into agentic-mbse; sysml-codegen keeps Python rewriting, local
+`AggregationExpressionData` assembly, pipeline-facing identifiers, alias handling, and downstream
+resolution policy. No item-level PR closeout is planned because the user wants the whole PUSH-DOWN
+epic implemented before PR.
+
+Implemented `agentic_mbse.sysml.aggregation` with neutral aggregation decomposition, wrapper facts,
+diagnostics, dispatch-order guardrails, and no sysml-codegen imports. `SumTerm`, `SingletonTerm`,
+and `LocalTerm` now live in agentic-mbse and are re-exported by sysml-codegen as the same runtime
+class objects. sysml-codegen's aggregation builder now delegates raw decomposition to the shared
+module and renders local `AggregationExpressionData` through a compatibility adapter. The
+aggregation-profile loop filed three future rows in agentic-mbse backlog:
+`PUSH-DOWN-AGG-PROFILE-SUM-SHAPE`, `PUSH-DOWN-AGG-PROFILE-WRAPPER-SHAPE`, and
+`PUSH-DOWN-AGG-PROFILE-LITERAL-SHAPE`.
+
+Validation: agentic-mbse aggregation suite `12 passed`; shared expression/hierarchy/aggregation
+suite `93 passed`; agentic-mbse full suite `1290 passed, 1 skipped, 33 deselected, 6 warnings`;
+sysml-codegen local model/builder suite `166 passed`; sysml-codegen downstream compatibility suite
+`202 passed, 1 skipped`; sysml-codegen full suite `2138 passed, 4 skipped`; sysml-codegen
+`ruff check src/` clean; touched-file ruff clean in both repos; `git diff -- tests/fixtures` empty.
+Audit: `.project/active/aggregation-decomposition/audit.md` certifies the item. Audit reran the
+focused high-risk gates: sysml-codegen builder/model/literal/dispatch subset `190 passed`, and
+agentic-mbse aggregation suite `12 passed`. Remaining caveat: project-wide mypy baselines are still
+dirty but unchanged after cleanup (agentic-mbse 107, sysml-codegen 98). No item-level PR closeout was
+performed; continue to the PUSH-DOWN epic audit and PR preparation only through the whole-epic flow.
+
+### PUSH-DOWN Item 3 — Hierarchy Primitives and Data Models — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Artifacts:
+`.project/active/hierarchy-primitives-models/{spec,spec-review,design,design-review,plan}.md`.
+Item 1 and Item 2 are implemented, audited, and committed in both repos. This item starts only
+the hierarchy primitive/model split; no item-level PR closeout is planned because the user wants
+the whole PUSH-DOWN epic implemented before PR.
+
+Implemented shared `agentic_mbse.sysml.hierarchy` with primitive redefinition and multiplicity
+extraction; moved `RedefinitionType`, `RedefinitionData`, and `MultiplicityData` into
+agentic-mbse as field-identical standard-library models; sysml-codegen now re-exports the same
+runtime class objects and delegates primitive extraction through compatibility wrappers. Design
+overrides, aggregation, usage-type indexing, hierarchy orchestration, and `HierarchyExtractionResult`
+remain local to sysml-codegen. Hierarchy-profile rows that require codegen policy were filed in
+agentic-mbse backlog; missing instantiations remain covered by existing `L6_CALC_DEF_NO_INSTANTIATION`.
+
+Validation: agentic-mbse hierarchy test `10 passed`; agentic-mbse full suite `1278 passed, 1 skipped,
+33 deselected`; sysml-codegen focused hierarchy/model/dispatch suite `156 passed`; sysml-codegen full
+suite `2127 passed, 4 skipped`; sysml-codegen `ruff check src/` clean; touched-file ruff clean in
+agentic-mbse; `git diff -- tests/fixtures` empty. Remaining caveat: project-wide mypy baselines are
+still dirty but unchanged for this item (agentic-mbse 107, sysml-codegen 98). Audit:
+`.project/active/hierarchy-primitives-models/audit.md` certifies the item. No item-level PR closeout;
+continue to PUSH-DOWN Item 4.
+
+### PUSH-DOWN Item 2 — Qualified-Name Utility Split — CERTIFIED
+
+Epic: `.project/backlog/epic_push_down.md`. Artifacts:
+`.project/active/qualified-name-utility-split/{spec,spec-review,design,design-review,plan}.md`.
+Spec review and design review are both Approved. Implementation is complete on the full
+PUSH-DOWN epic branch in both repos, with no item-level PR closeout.
+
+Moved pure qualified-name helpers into `agentic_mbse.sysml.qualified_names`; sysml-codegen now keeps
+`sysml_codegen.core.qualified_names` as a compatibility shim and retains codegen-owned module,
+channel, parameter, and owning-part builders locally. The `ITEM-SYNC-C8` backlog row was updated
+instead of duplicated: the shared sanitizer dependency is gone, while the sibling-scope Level-6
+collision collector remains filed.
+
+Validation: agentic-mbse targeted qualified-name suite `21 passed`; agentic-mbse full suite
+`1268 passed, 1 skipped, 33 deselected`; sysml-codegen targeted naming/shim suite `52 passed`;
+sysml-codegen full suite `2122 passed, 4 skipped`; touched-file ruff clean in both repos;
+sysml-codegen `ruff check src/` clean; `git diff -- tests/fixtures` empty. Remaining caveat:
+project-wide mypy baselines are still dirty outside this item (agentic-mbse 107, sysml-codegen 98).
+Audit: `.project/active/qualified-name-utility-split/audit.md` certifies the item. Next: continue
+PUSH-DOWN Item 3.
+
+### PUSH-DOWN Item 1 — Expression Reconstruction Push-Down — CERTIFIED
+
+Artifacts: `.project/active/expression-reconstruction-push-down/{spec,spec-review,design,design-review,plan}.md`.
+Spec review and design review are both Approved. Implementation is complete on
+`push-down-item1-expression` in both repos.
+
+Moved reusable expression reconstruction, feature-chain, chain-segment, and literal helpers into
+`agentic_mbse.sysml.expression`; sysml-codegen now keeps
+`sysml_codegen.extraction.expression_utils` as a compatibility shim. Level-6 C7 now uses shared
+`is_literal_node`, and the expression-profile close-out filed three follow-up rules in
+agentic-mbse backlog.
+
+Validation: agentic-mbse full suite `1247 passed, 1 skipped, 33 deselected`; sysml-codegen full
+suite `2119 passed, 4 skipped`; sysml-codegen snapshot-specific suite `87 passed`; touched-file
+ruff clean in both repos; sysml-codegen `ruff check src/` clean; `git diff -- tests/fixtures`
+empty. Remaining caveat: project-wide ruff/mypy baselines are still dirty outside this item
+(agentic mypy 104, sysml-codegen mypy 97, sysml-codegen full ruff 332).
+
+Audit: `.project/active/expression-reconstruction-push-down/audit.md` certifies the item. Next:
+run `$my-pre-pr` for PR preparation.
+
 ### PIPELINE-TRUTH epic — ✅ COMPLETE (all 10 items landed and audited PASS, 2026-07-06)
 
 **The generated package is the truth.** fusion-tea's models generate, wire, and execute

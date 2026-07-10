@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from agentic_mbse.sysml.types import BindingType, ExpressionRef  # type: ignore[import-untyped]
+from agentic_mbse.sysml.types import BindingType, ExpressionRef
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.core.models import ChannelAlias

@@ -36,19 +36,36 @@ SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 ANALYSIS_DIR = SRC_ROOT / "analysis"
 
-EXPRESSION_UTILS_PATH = EXTRACTION_DIR / "expression_utils.py"
 EXPRESSION_COMPILER_PATH = EXTRACTION_DIR / "expression_compiler.py"
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
 USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
 PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
 EXTRACTOR_PATH = EXTRACTION_DIR / "extractor.py"
+AGENTIC_HIERARCHY_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "agentic-mbse"
+    / "src"
+    / "agentic_mbse"
+    / "sysml"
+    / "hierarchy.py"
+)
+AGENTIC_AGGREGATION_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "agentic-mbse"
+    / "src"
+    / "agentic_mbse"
+    / "sysml"
+    / "aggregation.py"
+)
 
 # Expression type names used for dispatch site identification
-EXPRESSION_TYPE_NAMES = frozenset({
-    "FeatureChainExpression",
-    "OperatorExpression",
-    "FeatureReferenceExpression",
-})
+EXPRESSION_TYPE_NAMES = frozenset(
+    {
+        "FeatureChainExpression",
+        "OperatorExpression",
+        "FeatureReferenceExpression",
+    }
+)
 
 # ---------------------------------------------------------------------------
 # Dispatch site inventory (foundation for all audit tests)
@@ -56,32 +73,28 @@ EXPRESSION_TYPE_NAMES = frozenset({
 
 # Sites where both FCE and OE are checked (the critical invariant sites)
 DUAL_CHECK_SITES = [
-    (EXPRESSION_UTILS_PATH, "reconstruct_expression"),
     (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
-    (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
+    (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
 ]
 
 DUAL_CHECK_IDS = [
-    "reconstruct_expression",
     "build_expression_ast",
-    "_walk_aggregation_ast",
+    "agentic_aggregation._decompose_node",
     "_extract_single_binding",
     "_extract_default_value",
 ]
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
 CANONICAL_SITES = [
-    (EXPRESSION_UTILS_PATH, "reconstruct_expression"),
     (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
-    (HIERARCHY_RESOLVER_PATH, "_walk_aggregation_ast"),
+    (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
 ]
 
 CANONICAL_IDS = [
-    "reconstruct_expression",
     "build_expression_ast",
-    "_walk_aggregation_ast",
+    "agentic_aggregation._decompose_node",
 ]
 
 # Sites that use elif chains -- FCE < OE is sufficient, full canonical not required
@@ -94,8 +107,6 @@ ELIF_IDS = [
     "_extract_single_binding",
     "_extract_default_value",
 ]
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -140,14 +151,14 @@ class TestReqAst01FceBeforeOe:
     )
     def test_fce_before_oe_all_dual_check_sites(self, source_path, function_name):
         """FCE check line < OE check line in the given function."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls, (
-            f"No is_instance call for FeatureChainExpression in "
-            f"{source_path.name}:{function_name}"
+            f"No is_instance call for FeatureChainExpression in {source_path.name}:{function_name}"
         )
         assert "OperatorExpression" in calls, (
-            f"No is_instance call for OperatorExpression in "
-            f"{source_path.name}:{function_name}"
+            f"No is_instance call for OperatorExpression in {source_path.name}:{function_name}"
         )
         assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
             f"{source_path.name}:{function_name}: "
@@ -173,10 +184,11 @@ class TestReqAst02CommentPresent:
     def test_invariant_comment_at_all_dual_check_sites(self, source_path, function_name):
         """Comment matching 'MUST be before OperatorExpression' appears within 5 lines
         above the FCE check in the given function."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls, (
-            f"No is_instance call for FeatureChainExpression in "
-            f"{source_path.name}:{function_name}"
+            f"No is_instance call for FeatureChainExpression in {source_path.name}:{function_name}"
         )
 
         fce_line = calls["FeatureChainExpression"]
@@ -208,7 +220,9 @@ class TestReqAst03CanonicalOrdering:
     )
     def test_canonical_ordering_fce_oe_fre(self, source_path, function_name):
         """Full canonical ordering: FCE < OE < FRE at if-chain sites."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
         assert "FeatureReferenceExpression" in calls
@@ -218,8 +232,7 @@ class TestReqAst03CanonicalOrdering:
         fre = calls["FeatureReferenceExpression"]
 
         assert fce < oe < fre, (
-            f"{source_path.name}:{function_name}: "
-            f"Expected FCE({fce}) < OE({oe}) < FRE({fre})"
+            f"{source_path.name}:{function_name}: Expected FCE({fce}) < OE({oe}) < FRE({fre})"
         )
 
     @pytest.mark.parametrize(
@@ -229,7 +242,9 @@ class TestReqAst03CanonicalOrdering:
     )
     def test_elif_sites_fce_before_oe(self, source_path, function_name):
         """Critical invariant: FCE < OE at elif-chain sites (full canonical not required)."""
-        calls = find_is_instance_calls_in_function(source_path, function_name, predicate=is_any_is_instance_call)
+        calls = find_is_instance_calls_in_function(
+            source_path, function_name, predicate=is_any_is_instance_call
+        )
         assert "FeatureChainExpression" in calls
         assert "OperatorExpression" in calls
 
@@ -250,28 +265,66 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 5 functions have both FCE and OE is_instance() checks."""
+        """Exactly 4 audited functions have both FCE and OE is_instance() checks."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
+        shared_aggregation_calls = find_is_instance_calls_in_function(
+            AGENTIC_AGGREGATION_PATH,
+            "_decompose_node",
+            predicate=is_any_is_instance_call,
+        )
+        shared_aggregation_types = {
+            name: line
+            for name, line in shared_aggregation_calls.items()
+            if name in EXPRESSION_TYPE_NAMES
+        }
+        if len(shared_aggregation_types) >= 2:
+            all_dispatch[("agentic_mbse/sysml/aggregation.py", "_decompose_node")] = (
+                shared_aggregation_types
+            )
         dual_check = {
             key: types
             for key, types in all_dispatch.items()
             if "FeatureChainExpression" in types and "OperatorExpression" in types
         }
-        assert len(dual_check) == 5, (
-            f"Expected 5 dual-check sites (FCE+OE), found {len(dual_check)}: "
+        assert len(dual_check) == 4, (
+            f"Expected 4 dual-check sites (FCE+OE), found {len(dual_check)}: "
             f"{sorted(dual_check.keys())}"
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 8 functions dispatch on 2+ expression types (where ordering matters)."""
+        """Exactly 6 audited functions dispatch on 2+ expression types."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
-        multi_type = {
-            key: types
-            for key, types in all_dispatch.items()
-            if len(types) >= 2
+        shared_classifier_calls = find_is_instance_calls_in_function(
+            AGENTIC_HIERARCHY_PATH,
+            "classify_redefinition",
+            predicate=is_any_is_instance_call,
+        )
+        shared_classifier_types = {
+            name: line
+            for name, line in shared_classifier_calls.items()
+            if name in EXPRESSION_TYPE_NAMES
         }
-        assert len(multi_type) == 8, (
-            f"Expected 8 multi-type dispatch functions, found {len(multi_type)}: "
+        if len(shared_classifier_types) >= 2:
+            all_dispatch[("agentic_mbse/sysml/hierarchy.py", "classify_redefinition")] = (
+                shared_classifier_types
+            )
+        shared_aggregation_calls = find_is_instance_calls_in_function(
+            AGENTIC_AGGREGATION_PATH,
+            "_decompose_node",
+            predicate=is_any_is_instance_call,
+        )
+        shared_aggregation_types = {
+            name: line
+            for name, line in shared_aggregation_calls.items()
+            if name in EXPRESSION_TYPE_NAMES
+        }
+        if len(shared_aggregation_types) >= 2:
+            all_dispatch[("agentic_mbse/sysml/aggregation.py", "_decompose_node")] = (
+                shared_aggregation_types
+            )
+        multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
+        assert len(multi_type) == 6, (
+            f"Expected 6 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 
@@ -328,8 +381,7 @@ class TestReqAst05SingletonTermClassification:
             f"Expected 1 SingletonTerm, got {len(ctx.singleton_terms)}"
         )
         assert "child" in ctx.singleton_terms[0].source_path, (
-            f"SingletonTerm source_path={ctx.singleton_terms[0].source_path!r} "
-            f"missing 'child'"
+            f"SingletonTerm source_path={ctx.singleton_terms[0].source_path!r} missing 'child'"
         )
         assert len(ctx.local_terms) == 0, (
             f"Expected 0 LocalTerms (FCE should not be classified as LocalTerm), "
@@ -396,9 +448,7 @@ class TestReqAst07ReconstructExpressionFormat:
             target_feature=SimpleNamespace(name="attr"),
         )
         result = reconstruct_expression(node)
-        assert result == "instance.attr", (
-            f"Expected 'instance.attr', got {result!r}"
-        )
+        assert result == "instance.attr", f"Expected 'instance.attr', got {result!r}"
 
     def test_reconstruct_expression_fce_no_dot_paren_format(self):
         """Dual-match FCE+OE mock -> result does NOT contain '.(' pattern (Bug A symptom)."""
@@ -409,9 +459,7 @@ class TestReqAst07ReconstructExpressionFormat:
             target_feature=SimpleNamespace(name="attr"),
         )
         result = reconstruct_expression(node)
-        assert ".(" not in result, (
-            f"Bug A regression: result contains '.(' pattern: {result!r}"
-        )
+        assert ".(" not in result, f"Bug A regression: result contains '.(' pattern: {result!r}"
 
     def test_transformed_expressions_no_dot_paren_in_snapshots(self, solar_battery_snapshot):
         """No solar_battery transformed_expression contains the '.()' pattern."""
