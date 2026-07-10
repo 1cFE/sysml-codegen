@@ -7,7 +7,7 @@ All sysml-codegen identifier construction MUST use these functions.
 Do NOT construct qualified names via inline f-strings.
 """
 
-from agentic_mbse.sysml.qualified_names import (  # type: ignore[import-untyped]
+from agentic_mbse.sysml.qualified_names import (
     build_element_qualified_name,
     extract_simple_name,
     python_to_sysml_qualified_name,

@@ -4,7 +4,7 @@ The implementation lives in ``agentic_mbse.sysml.expression``. This module is a
 permanent compatibility path for sysml-codegen callers and conformance tests.
 """
 
-from agentic_mbse.sysml.expression import (  # type: ignore[import-untyped]
+from agentic_mbse.sysml.expression import (
     OPERATOR_MAP,
     RANK,
     RIGHT_ASSOC,

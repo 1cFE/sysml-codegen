@@ -164,6 +164,10 @@ PYTHON_OPERATOR_MAP: dict[str, str | None] = {
 # ---------------------------------------------------------------------------
 
 
+# INTENTIONAL DIVERGENCE from agentic_mbse.sysml.qualified_names.sanitize_name:
+# omits reserved-word suffixing on purpose. Do NOT "deduplicate" these two
+# sanitizers — replacing this with the shared version breaks expression
+# compilation (push-down design R8/Q6).
 def _sanitize_name(name: str) -> str:
     """Normalize a syside referent name to match extractor conventions.
 

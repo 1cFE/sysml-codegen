@@ -67,3 +67,13 @@ Marked:
 - Item 2 success criteria in the spec.
 - Item 2 success criteria in the PUSH-DOWN epic.
 - Current work status for Item 2.
+
+---
+
+## Addendum — 2026-07-10 (remediation)
+
+Independent epic audit findings closed: the mandated R8/Q6 `# INTENTIONAL DIVERGENCE`
+marker (certified done in epic SC-D but never added) now sits above
+`expression_compiler._sanitize_name`; the R4 P1-exception note for
+`build_element_qualified_name`'s duck-typed owner traversal was added to the
+`agentic_mbse.sysml.qualified_names` module docstring.

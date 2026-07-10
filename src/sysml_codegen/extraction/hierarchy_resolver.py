@@ -18,7 +18,7 @@ import logging
 from collections.abc import Iterable
 from typing import Any, cast
 
-import agentic_mbse.sysml.aggregation as shared_aggregation  # type: ignore[import-untyped]
+import agentic_mbse.sysml.aggregation as shared_aggregation
 from agentic_mbse.sysml import hierarchy as shared_hierarchy
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 

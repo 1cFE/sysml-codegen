@@ -166,3 +166,20 @@ Left open:
 - Top-level PUSH-DOWN epic success criteria are not marked here because this is an Item 4 audit, not
   an epic audit.
 - No pre_pr or PR closeout was performed.
+
+---
+
+## Addendum — 2026-07-10 (remediation + recorded deviation)
+
+Independent epic audit findings closed for this item:
+- **Recorded deviation (no code change): unary-minus render.** The pre-move code compared
+  the raw operator enum (`syside.Operator.Minus == "-"` is False), so real nodes rendered
+  `-(x)`; the shared decompose str-normalizes the operator, so the adapter now renders
+  `-x`. Python-semantically identical, unpinned edge, matches the previously *tested*
+  behavior; accepted as an improvement rather than reverted.
+- `**` added to shared `SUPPORTED_OPERATORS` (codegen `AGG_PYTHON_OPS` supports it via
+  `OPERATOR_MAP`; the omission would have made a future profile rule false-positive on a
+  compilable `x ** y` aggregation).
+- Dead field `InvocationNode.wrapper_disposition` (never assigned) removed.
+- `test_combined_type_map_inventory_is_mapped` now checks the inventory against the REAL
+  `SysideAdapter._get_type_map()` instead of a fake map built from the inventory.

@@ -101,3 +101,26 @@ Checked:
 - sysml-codegen fixture diff: empty
 
 Marked this item certified. Next stage is pre-PR cleanup and PR preparation.
+
+---
+
+## Addendum — 2026-07-10 (independent audit correction + remediation)
+
+The independent epic audit found this item's move was NOT mechanical, contradicting the
+"behavior preservation: met" verdict above. Two undocumented deviations in
+`agentic_mbse.sysml.expression`:
+
+1. The memberships fallback in `extract_feature_reference_name` /
+   `extract_feature_chain_name` was widened from the exact
+   `type(membership).__name__ == "Membership"` gate to
+   `== "Membership" or hasattr(membership, "member_element")`.
+2. `extract_feature_chain_name` / `extract_feature_chain_segments` gained
+   `instance_name` / `attr_name` fallback branches that exist on no syside node — only on
+   the test mock `MockFeatureChainExpression` — with new tests passing because of them.
+
+**Remediation (landed 2026-07-10):** all three function bodies restored to the pre-move
+originals; `MockFeatureChainExpression` now models the real syside shape
+(`operands[0]` root + `target_feature`), so the same tests pass against the mechanical
+bodies. Also: R6 cross-refs made bidirectional and
+`is_literal_node`/`is_literal_expression` docstrings disambiguated. Both suites green
+(2138/4, 1290/1); fixtures byte-identical.

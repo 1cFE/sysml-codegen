@@ -80,3 +80,27 @@ agentic-mbse only has unrelated untracked command-refresh project files.
 Marked the verified top-level epic success criteria in `.project/backlog/epic_push_down.md` and
 updated `.project/CURRENT_WORK.md` with the epic certification status. No item-level checkboxes were
 changed during this epic audit.
+
+---
+
+## Addendum — 2026-07-10 (correction after independent audit)
+
+The independent audit (`epic_push_down_audit_independent.md`, PRs #8/#10) contradicted two
+statements above; this addendum corrects the record.
+
+- **SC-D was NOT fully verified.** Q4 (`BindingInfo` rename) was never performed or
+  dispositioned by any item — the "resolved in the relevant item scopes" line had no
+  underlying item record. Q6/R8 (`# INTENTIONAL DIVERGENCE` marker) was likewise not done
+  during the epic. See the corrected SC-D text in `epic_push_down.md` for the actual
+  dispositions (Q4 descoped with rationale + annotation fix; R8 marker added in remediation).
+- **SC-E "mypy at unchanged known baseline" was inaccurate.** The epic landed at 98 vs
+  main's 97 (+1 via `Any`-returning wrappers, agentic-mbse shipped no `py.typed`).
+  Remediation added `py.typed`; post-remediation count is 77.
+- **Item 1 "behavior preservation: met" was over-certified.** Two undocumented deviations
+  existed in the moved expression helpers (membership-filter widening; mock-only
+  `instance_name`/`attr_name` fallbacks). Both were reverted to the mechanical-move bodies
+  in remediation; the test mocks now model the real syside node shape instead.
+
+Process lesson: this audit verified SC-D against the epic checklist without tracing each
+hazard to an item-level record. Hazards with no assigned item must be re-checked at the
+source, not assumed delivered.

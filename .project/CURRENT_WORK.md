@@ -6,7 +6,25 @@
 
 ## Active Work
 
-### PUSH-DOWN epic — CERTIFIED
+### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
+
+Independent technical audit of PRs #8 (sysml-codegen) / #10 (agentic-mbse) found the code
+functionally sound but the certification record over-claiming (SC-D Q4/R8 falsely checked;
+Item 1's move not mechanical; mypy 97→98 misrecorded). All findings remediated same day —
+full audit + per-finding remediation record:
+`.project/backlog/epic_push_down_audit_independent.md`. Remediation highlights: Item 1
+expression bodies restored to the mechanical-move originals with the test mocks upgraded to
+the real syside shape; Q4 descoped with rationale (its live annotation bug in
+dependency_backtracker fixed — surfaced by mypy the moment `py.typed` landed); R8
+`# INTENTIONAL DIVERGENCE` marker added; `py.typed` added to agentic-mbse and the
+TYPE_CHECKING mirror dataclasses deleted (sysml-codegen mypy 98→77 vs main's 97); TYPE_MAP
+inventory tests de-self-certified; `**` added to shared SUPPORTED_OPERATORS; unary-minus
+render deviation recorded in Item 4's audit. Post-remediation gates: 2138/4 + 1290/1 green,
+ruff src clean, fixtures byte-identical. Epic and prior audit/pre_pr carry correction
+addenda. **Note for the PRs: the remediation commits are not yet made/pushed** — both repos
+have uncommitted working-tree changes on `push-down-item1-expression`.
+
+### PUSH-DOWN epic — CERTIFIED (superseded by the 2026-07-10 independent audit above)
 
 Epic: `.project/backlog/epic_push_down.md`. Epic audit:
 `.project/backlog/epic_push_down_audit.md`.

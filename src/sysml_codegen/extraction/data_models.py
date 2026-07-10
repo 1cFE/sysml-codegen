@@ -14,81 +14,26 @@ BindingType is imported directly from agentic-mbse.
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 # Import shared types from agentic-mbse
 from agentic_mbse.sysml.data_models import (
     AttributeInfo as BaseAttributeInfo,
 )
+
+# Permanent re-exports of the shared hierarchy/aggregation models (PUSH-DOWN).
+# agentic-mbse ships py.typed, so mypy checks the real classes — no mirrors.
+from agentic_mbse.sysml.data_models import (
+    LocalTerm,
+    MultiplicityData,
+    RedefinitionData,
+    RedefinitionType,
+    SingletonTerm,
+    SumTerm,
+)
 from agentic_mbse.sysml.types import BindingType, ExpressionRef
 
 from .expression_compiler import Compilability
-
-if TYPE_CHECKING:
-
-    class RedefinitionType(str, Enum):
-        """Type-checking mirror of the shared runtime enum."""
-
-        LITERAL = "literal"
-        CHAIN = "chain"
-        EXPRESSION = "expression"
-
-    @dataclass
-    class RedefinitionData:
-        """Type-checking mirror of the shared runtime dataclass."""
-
-        owning_part_qn: str
-        attribute_name: str
-        redefinition_type: RedefinitionType
-        literal_value: float | int | str | bool | None = None
-        source_path: str | None = None
-        expression_ast: Any = None
-        expression_text: str = ""
-        target_path: list[str] = field(default_factory=list)
-        is_deep_path: bool = False
-        source_file: Path = field(default_factory=lambda: Path("unknown"))
-        source_line: int = 0
-
-    @dataclass
-    class MultiplicityData:
-        """Type-checking mirror of the shared runtime dataclass."""
-
-        part_usage_name: str
-        owning_part_def_qn: str
-        count: int | None
-        count_attribute_name: str | None
-        default_value: int | None
-
-    @dataclass
-    class SumTerm:
-        """Type-checking mirror of the shared runtime dataclass."""
-
-        part_usage_name: str
-        attribute_name: str
-        multiplicity_attr: str | None
-        multiplicity_count: int | None
-
-    @dataclass
-    class SingletonTerm:
-        """Type-checking mirror of the shared runtime dataclass."""
-
-        source_path: str
-
-    @dataclass
-    class LocalTerm:
-        """Type-checking mirror of the shared runtime dataclass."""
-
-        attribute_name: str
-
-else:
-    from agentic_mbse.sysml.data_models import (  # type: ignore[import-untyped]
-        LocalTerm,
-        MultiplicityData,
-        RedefinitionData,
-        RedefinitionType,
-        SingletonTerm,
-        SumTerm,
-    )
 
 __all__ = [
     "AggregationExpressionData",

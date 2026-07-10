@@ -54,3 +54,14 @@ Known baseline notes:
 
 - `sysml-codegen`: https://github.com/1cFE/sysml-codegen/pull/8
 - `agentic-mbse`: https://github.com/1cFE/agentic-mbse/pull/10
+
+---
+
+## Addendum — 2026-07-10 (mypy correction)
+
+This report recorded sysml-codegen mypy at 98 as "existing baseline." That was wrong: main
+was 97; the epic introduced +1 (shim/wrapper returns became `Any` — agentic-mbse had no
+`py.typed`). The 2026-07-10 remediation added `py.typed` to agentic-mbse, removed the
+`TYPE_CHECKING` mirror dataclasses and stale ignores, and fixed a `BindingInfo` annotation
+bug the typing surfaced. Post-remediation: sysml-codegen mypy 77; suites 2138/4 and 1290/1;
+ruff src clean; fixtures byte-identical.

@@ -93,3 +93,15 @@ delegates with tests proving delegation.
 Certified PUSH-DOWN Item 3. I verified the spec criteria, plan phases, design boundary, profile
 disposition, compatibility tests, and recorded validation evidence. I marked the spec success
 criteria and epic Item 3 criteria as complete. No pre-pr or item-level PR closeout was performed.
+
+---
+
+## Addendum — 2026-07-10 (remediation)
+
+Independent epic audit findings closed for this item's surfaces:
+- `test_direct_type_map_inventory_is_mapped` no longer monkeypatches a fake map built from
+  the inventory itself (true by construction); it now asserts the inventory against the
+  REAL `SysideAdapter._get_type_map()`.
+- The `TYPE_CHECKING` mirror dataclasses in sysml-codegen `extraction/data_models.py`
+  (an unpinned drift surface) were deleted: agentic-mbse now ships a `py.typed` marker, so
+  mypy checks the real shared classes directly. Runtime re-export identity unchanged.

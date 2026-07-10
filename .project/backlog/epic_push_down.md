@@ -94,18 +94,34 @@ as a named validation profile; it must not depend on sysml-codegen implementatio
   with the code (R1); TYPE_MAP whitelist re-verified per move; every move lands
   branch-parked (agentic-mbse branch → re-export → green suite → merge; the editable-install
   pair is never left half-migrated).
-- [x] **SC-D (pre-flight hazards)**: the four standing hazards are resolved before their
-  phase — `is_literal_expression`→`is_literal_node` rename (Q5), sysml-codegen `BindingInfo`
-  renamed (Q4), `# INTENTIONAL DIVERGENCE` comment on `expression_compiler._sanitize_name`
-  (Q6/R8), docstring cross-refs for `extract_feature_chain_name` vs `get_reference_name` (R6).
+- [x] **SC-D (pre-flight hazards)** *(corrected 2026-07-10 — the original `[x]` over-claimed;
+  see `epic_push_down_audit_independent.md`)*: actual dispositions —
+  - Q5 (`is_literal_expression`→`is_literal_node` rename): DONE during Item 1.
+  - Q4 (`BindingInfo` rename): **DESCOPED** — no item performed or dispositioned it. Rationale:
+    the collision is annotation-only, predates the epic, and the full rename touches many call
+    sites for hygiene value. Instead, the one live consequence was fixed in remediation:
+    `dependency_backtracker.py` annotated its parameter with the *agentic-mbse* `BindingInfo`
+    while receiving the local extraction dataclass — the import now points at
+    `extraction.usage_extractor.BindingInfo` with a disambiguating comment (caught by mypy
+    once `py.typed` landed). The rename itself stays open as future hygiene.
+  - Q6/R8 (`# INTENTIONAL DIVERGENCE` marker): NOT done during the epic (a pre-existing
+    docstring covered the substance); marker added in the 2026-07-10 remediation.
+  - R6 (docstring cross-refs): one-way only during the epic; made bidirectional in
+    remediation, plus `is_literal_node` / `is_literal_expression` disambiguation.
 - [x] **SC-E (gates)**: both suites green at every landing point (anchors: sysml-codegen
   2120 passed / 4 skipped / 0 xfailed; agentic-mbse 1240 passed / 1 skipped); ruff src ≤ 17;
   mypy src ≤ 97; baselines byte-identical (zero capture churn expected — moves, not behavior
   changes); docs + matrix rows updated with the code per R1.
+  *(Correction 2026-07-10: the epic as landed was mypy 98 vs main's 97 — the moved helpers
+  returned `Any` through the shims because agentic-mbse shipped no `py.typed`; the pre_pr
+  report misrecorded 98 as "existing baseline". Remediation added `py.typed` to agentic-mbse
+  and deleted the `TYPE_CHECKING` mirror dataclasses; sysml-codegen mypy is now 77.)*
 - [x] **SC-F (deferrals stay honest)**: Tier 2c (template detection, virtual binding) is
-  re-filed with its post-refactor function inventory (`_find_instantiation_paths`,
-  `_expand_template_calc_usages`, ...), not silently dropped; `constraint_report.py` stays
-  with a recorded disposition (Q8: codegen artifact).
+  re-filed with its post-refactor function inventory — the complete list is
+  `_find_instantiation_paths` (usage_extractor.py:313), `_create_virtual_calc_usage` (:372),
+  `_expand_template_calc_usages` (:416), `_build_part_usage_index` (:272), plus
+  `_rewrite_virtual_bindings` in pipeline_builder — not silently dropped; wait for a second
+  consumer. `constraint_report.py` stays with a recorded disposition (Q8: codegen artifact).
 - [x] **SC-G (checking profile)**: every pushed-down semantic helper either powers an existing
   agentic-mbse validation rule, adds a codegen-compatible profile rule, or files a named
   agentic-mbse backlog item with the exact rule, fixture shape, severity, and rationale. The
@@ -303,5 +319,5 @@ item closes.
 
 ---
 
-**Last Updated**: 2026-07-08
+**Last Updated**: 2026-07-10
 **Next Action**: Run whole-epic pre_pr/PR preparation.
