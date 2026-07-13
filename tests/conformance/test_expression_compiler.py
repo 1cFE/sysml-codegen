@@ -5,13 +5,13 @@ and REQ-AST-01 from design intent docs 14-expression-compiler.md and
 19-ast-dispatch-invariant.md.
 
 Testing strategy:
-- Pure compiler functions (compile_expression, classify_compilability, _collect_refs)
-  tested with constructed ExpressionAST IR -- no mocks needed.
-- SysIDE-dependent functions (build_expression_ast, compile_calc_def) tested with
-  mock SysIDE adapter -- acceptable per Ground Rule 1.
+- Pure renderer functions (render_calc_expression, collect_calc_refs,
+  classify_compilability) tested with constructed ExpressionIR trees -- no mocks needed
+  (CONSTRAINT-EXEC Item 13 re-anchored these from the retired ExpressionAST suite).
+- SysIDE-dependent functions (compile_calc_def) tested with mock SysIDE adapter --
+  acceptable per Ground Rule 1.
 - Cross-model validation uses real calc def metadata (names, attributes) from
   extraction snapshots with mock ASTs.
-- Static analysis tests parse source files with Python ast module.
 
 Requirements: REQ-EC-01 through REQ-EC-07, REQ-AST-01.
 """
@@ -26,26 +26,82 @@ import pytest
 from agentic_mbse.sysml import expression as shared_expression
 
 from sysml_codegen.extraction import expression_utils as expression_utils_shim
+from sysml_codegen.extraction.calc_compat_renderer import (
+    collect_calc_refs,
+    render_calc_expression,
+)
 from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationError,
     CompilationResult,
-    ExpressionAST,
-    ExpressionNodeType,
-    build_expression_ast,
     classify_compilability,
     compile_calc_def,
-    compile_expression,
 )
-from tests.helpers.static_analysis import find_is_instance_calls_in_function
 
 # ---------------------------------------------------------------------------
-# Source paths for static analysis
+# ExpressionIR construction helpers (render_calc_expression/collect_calc_refs fixtures)
 # ---------------------------------------------------------------------------
 
-SRC_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "extraction"
-EXPRESSION_COMPILER_PATH = SRC_DIR / "expression_compiler.py"
-EXPRESSION_UTILS_PATH = SRC_DIR / "expression_utils.py"
+
+def _ir_ref(name: str):
+    from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import FeatureReferenceNode
+
+    return FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=name, target=None, target_types=[], chain_segments=[]
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+
+
+def _ir_literal(value):
+    from agentic_mbse.sysml.expression_facts import LiteralFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import LiteralNode
+
+    if isinstance(value, int):
+        kind, category = "LiteralInteger", "integer"
+    else:
+        kind, category = "LiteralRational", "real"
+    return LiteralNode(
+        literal=LiteralFact(kind=kind, value=value, result_type=None),
+        operand_type=OperandTypeFact(category=category, enumeration=None, unit=None),
+    )
+
+
+def _ir_binary(op: str, left, right):
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(operator=op, operands=[left, right], operand_type=None)
+
+
+def _ir_unary(op: str, operand):
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(operator=op, operands=[operand], operand_type=None)
+
+
+def _ir_nary(op: str, *ref_names: str):
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(operator=op, operands=[_ir_ref(n) for n in ref_names], operand_type=None)
+
+
+def _ir_unit(value):
+    from agentic_mbse.sysml.expression_facts import OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import UnitAnnotationNode
+
+    return UnitAnnotationNode(
+        value=value,
+        unit_text="kg",
+        operand_type=OperandTypeFact(category="quantity", enumeration=None, unit=None),
+    )
+
+
+def _ir_unsupported(source_text: str, diagnostic: str):
+    from agentic_mbse.sysml.expression_ir import UnsupportedNode
+
+    return UnsupportedNode(node_kind="Mock", diagnostic=diagnostic, source_text=source_text)
 
 
 # ---------------------------------------------------------------------------
@@ -81,18 +137,6 @@ class MockFeatureChainExpression:
     pass
 
 
-class MockFeatureChainExpressionOperatorExpression:
-    """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
-
-    Class name contains both type names, triggering SysideAdapter.is_instance()'s
-    name-based fallback for both type checks.
-    """
-
-    def __init__(self, operator: str = ".", operands: list | None = None):
-        self.operator = operator
-        self.operands = operands or []
-
-
 @pytest.fixture
 def mock_syside_adapter(monkeypatch):
     """Monkeypatch SysideAdapter.is_instance to work with mock nodes."""
@@ -107,7 +151,7 @@ def mock_syside_adapter(monkeypatch):
         return type_map.get(type(node).__name__) == type_name
 
     monkeypatch.setattr(
-        "sysml_codegen.extraction.expression_compiler.SysideAdapter.is_instance",
+        "agentic_mbse.sysml.syside_adapter.SysideAdapter.is_instance",
         staticmethod(mock_is_instance),
     )
 
@@ -156,62 +200,10 @@ def _extract_name_sets(calc_def):
 
 
 # ---------------------------------------------------------------------------
-# REQ-EC-01: FCE before OE at dispatch site
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.req("REQ-EC-01")
-class TestReqEc01FceBeforeOe:
-    """FCE must be checked before OE in build_expression_ast to prevent mis-dispatch."""
-
-    def test_fce_dispatch_before_oe_in_source(self):
-        """Static analysis: FCE is_instance check precedes OE is_instance check."""
-        calls = find_is_instance_calls_in_function(EXPRESSION_COMPILER_PATH, "build_expression_ast")
-        assert "FeatureChainExpression" in calls, (
-            "No is_instance call for FeatureChainExpression in build_expression_ast"
-        )
-        assert "OperatorExpression" in calls, (
-            "No is_instance call for OperatorExpression in build_expression_ast"
-        )
-        assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
-            f"FCE check at line {calls['FeatureChainExpression']} must precede "
-            f"OE check at line {calls['OperatorExpression']}"
-        )
-
-    def test_fce_invariant_comment_present(self):
-        """The invariant comment 'MUST be before OperatorExpression' is present."""
-        source = EXPRESSION_COMPILER_PATH.read_text()
-        assert "MUST be before OperatorExpression" in source, (
-            "Missing invariant comment at FCE dispatch site in expression_compiler.py"
-        )
-
-    def test_fce_node_produces_unsupported_not_oe_error(self):
-        """Dual-match FCE+OE mock node produces 'feature chain' diagnostic.
-
-        Uses real SysideAdapter.is_instance name-based fallback (no monkeypatch).
-        """
-        node = MockFeatureChainExpressionOperatorExpression(
-            operator=".", operands=[MockFeatureReferenceExpression("x")]
-        )
-        result = build_expression_ast(node, input_names=set(), output_names=set())
-        assert result.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "feature chain" in result.reason
-        assert "unsupported operator" not in result.reason
-
-    def test_pure_oe_still_dispatches_correctly(self, mock_syside_adapter):
-        """Regression: OE-only mock node still handled by OE handler after FCE guard."""
-        node = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-            ],
-        )
-        result = build_expression_ast(node, input_names={"a", "b"}, output_names=set())
-        assert result.node_type == ExpressionNodeType.BINARY_OP
-        assert result.operator == "+"
-
-
+# REQ-EC-01 retired (CONSTRAINT-EXEC Item 13): its FCE-before-OE dispatch tests exercised
+# build_expression_ast directly. That raw-node dispatch responsibility moved cross-repo to
+# agentic-mbse's extract_expression_ir (its own tests); REQ-AST-01 in
+# test_ast_dispatch_invariant.py still audits every remaining in-repo dual-check site.
 # ---------------------------------------------------------------------------
 # REQ-EC-02: N-ary left-fold
 # ---------------------------------------------------------------------------
@@ -219,55 +211,31 @@ class TestReqEc01FceBeforeOe:
 
 @pytest.mark.req("REQ-EC-02")
 class TestReqEc02NaryLeftFold:
-    """N-ary operands must be left-folded into binary nodes."""
+    """N-ary operators render as left-folded binary parenthesization (re-anchored from the
+    retired build_expression_ast fold-structure suite onto render_calc_expression fed IR
+    directly -- CONSTRAINT-EXEC Item 13; agentic-mbse's extract_expression_ir does the actual
+    n-ary OperatorNode construction now, covered by its own tests)."""
 
-    def test_3_operand_left_fold_structure(self, mock_syside_adapter):
-        """3 operands → ((a + b) + c) binary tree."""
-        node = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-                MockFeatureReferenceExpression("c"),
-            ],
-        )
-        result = build_expression_ast(node, input_names={"a", "b", "c"}, output_names=set())
-        assert result.node_type == ExpressionNodeType.BINARY_OP
-        assert result.left.node_type == ExpressionNodeType.BINARY_OP
-        assert result.left.left.input_name == "a"
-        assert result.left.right.input_name == "b"
-        assert result.right.input_name == "c"
-        assert compile_expression(result) == "((inputs.a + inputs.b) + inputs.c)"
+    def test_3_operand_left_fold_structure(self):
+        """3 operands → ((a + b) + c)."""
+        ir = _ir_nary("+", "a", "b", "c")
+        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) + inputs.c)"
 
-    def test_7_operand_left_fold_structure(self, mock_syside_adapter):
+    def test_7_operand_left_fold_structure(self):
         """7 operands → 6 levels of nesting, all left-associated."""
         names = [f"p{i}" for i in range(1, 8)]
-        node = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression(n) for n in names],
-        )
-        result = build_expression_ast(node, input_names=set(names), output_names=set())
-        compiled = compile_expression(result)
+        ir = _ir_nary("+", *names)
+        compiled = render_calc_expression(ir, set(names), set())
         expected = (
             "((((((inputs.p1 + inputs.p2) + inputs.p3)"
             " + inputs.p4) + inputs.p5) + inputs.p6) + inputs.p7)"
         )
         assert compiled == expected
 
-    def test_2_operand_not_folded(self, mock_syside_adapter):
-        """Binary OE → single binary node, no extra nesting."""
-        node = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("x"),
-                MockFeatureReferenceExpression("y"),
-            ],
-        )
-        result = build_expression_ast(node, input_names={"x", "y"}, output_names=set())
-        assert result.node_type == ExpressionNodeType.BINARY_OP
-        assert result.left.node_type == ExpressionNodeType.INPUT_REF
-        assert result.right.node_type == ExpressionNodeType.INPUT_REF
-        assert compile_expression(result) == "(inputs.x * inputs.y)"
+    def test_2_operand_not_folded(self):
+        """2 operands → single binary node, no extra nesting."""
+        ir = _ir_binary("*", _ir_ref("x"), _ir_ref("y"))
+        assert render_calc_expression(ir, {"x", "y"}, set()) == "(inputs.x * inputs.y)"
 
 
 # ---------------------------------------------------------------------------
@@ -277,23 +245,16 @@ class TestReqEc02NaryLeftFold:
 
 @pytest.mark.req("REQ-EC-03")
 class TestReqEc03UnitStripping:
-    """Unit annotations ([value, unit]) must be stripped, preserving only value."""
+    """Unit annotations wrap a value node; the renderer strips to the value only
+    (re-anchored onto render_calc_expression fed a UnitAnnotationNode -- CONSTRAINT-EXEC
+    Item 13). The old no-operands-unsupported case tested build_expression_ast's raw-node
+    dispatch shape, which moved cross-repo with the extractor; a UnitAnnotationNode's
+    `value` field is non-optional by construction, so that case has no IR analogue here."""
 
-    def test_unit_bracket_strips_unit_preserves_value(self, mock_syside_adapter):
-        """`[` operator OE with [value, unit] → returns value subtree only."""
-        inner = MockLiteralRational(42.0)
-        unit_node = MockFeatureReferenceExpression("kg")
-        node = MockOperatorExpression("[", [inner, unit_node])
-        result = build_expression_ast(node, input_names=set(), output_names=set())
-        assert result.node_type == ExpressionNodeType.LITERAL
-        assert result.value == 42.0
-
-    def test_unit_bracket_no_operands_unsupported(self, mock_syside_adapter):
-        """`[` operator OE with no operands → UNSUPPORTED."""
-        node = MockOperatorExpression("[", [])
-        result = build_expression_ast(node, input_names=set(), output_names=set())
-        assert result.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "unit annotation" in result.reason
+    def test_unit_annotation_strips_unit_preserves_value(self):
+        """A unit-annotated literal renders as just the value."""
+        ir = _ir_unit(_ir_literal(42.0))
+        assert render_calc_expression(ir, set(), set()) == "42.0"
 
 
 # ---------------------------------------------------------------------------
@@ -303,63 +264,51 @@ class TestReqEc03UnitStripping:
 
 @pytest.mark.req("REQ-EC-04")
 class TestReqEc04AstParseValidation:
-    """Every compiled expression must validate via ast.parse()."""
+    """Every rendered expression must validate via ast.parse() (re-anchored onto
+    render_calc_expression fed IR -- CONSTRAINT-EXEC Item 13)."""
 
-    def test_all_compilable_node_types_produce_parseable_python(self):
-        """Compile one expression from each compilable node type → ast.parse succeeds."""
+    def test_all_renderable_node_kinds_produce_parseable_python(self):
+        """Render one expression from each renderable node kind → ast.parse succeeds."""
+        input_names = {"a", "b", "x", "voltage"}
+        member_names = {"material_cost"}
         test_cases = {
-            "BINARY_OP": ExpressionAST.binary(
-                "+", ExpressionAST.input_ref("a"), ExpressionAST.input_ref("b")
-            ),
-            "UNARY_OP": ExpressionAST.unary("-", ExpressionAST.input_ref("x")),
-            "LITERAL": ExpressionAST.literal(3.14),
-            "INPUT_REF": ExpressionAST.input_ref("voltage"),
-            "INTERMEDIATE_REF": ExpressionAST.intermediate_ref("material_cost"),
+            "BINARY_OP": _ir_binary("+", _ir_ref("a"), _ir_ref("b")),
+            "UNARY_OP": _ir_unary("-", _ir_ref("x")),
+            "LITERAL": _ir_literal(3.14),
+            "INPUT_REF": _ir_ref("voltage"),
+            "INTERMEDIATE_REF": _ir_ref("material_cost"),
         }
-        for label, ast_node in test_cases.items():
-            result = compile_expression(ast_node)
+        for label, ir in test_cases.items():
+            result = render_calc_expression(ir, input_names, member_names)
             python_ast.parse(result, mode="eval")
 
     def test_complex_nested_expression_parseable(self):
         """CRF-pattern (Pattern C) nested expression → ast.parse succeeds."""
-        one_plus_r = ExpressionAST.binary(
-            "+", ExpressionAST.literal(1.0), ExpressionAST.input_ref("r")
-        )
-        power_term = ExpressionAST.binary("**", one_plus_r, ExpressionAST.input_ref("n"))
-        numerator = ExpressionAST.binary("*", ExpressionAST.input_ref("r"), power_term)
-        denominator = ExpressionAST.binary(
+        one_plus_r = _ir_binary("+", _ir_literal(1.0), _ir_ref("r"))
+        power_term = _ir_binary("**", one_plus_r, _ir_ref("n"))
+        numerator = _ir_binary("*", _ir_ref("r"), power_term)
+        denominator = _ir_binary(
             "-",
-            ExpressionAST.binary(
-                "**",
-                ExpressionAST.binary("+", ExpressionAST.literal(1.0), ExpressionAST.input_ref("r")),
-                ExpressionAST.input_ref("n"),
-            ),
-            ExpressionAST.literal(1.0),
+            _ir_binary("**", _ir_binary("+", _ir_literal(1.0), _ir_ref("r")), _ir_ref("n")),
+            _ir_literal(1.0),
         )
-        crf = ExpressionAST.binary("/", numerator, denominator)
-        result = compile_expression(crf)
+        crf = _ir_binary("/", numerator, denominator)
+        result = render_calc_expression(crf, {"r", "n"}, set())
         python_ast.parse(result, mode="eval")
 
     def test_unsupported_node_raises_compilation_error(self):
-        """UNSUPPORTED node → CompilationError (not invalid Python)."""
-        node = ExpressionAST.unsupported("foo.bar", "not supported")
+        """UnsupportedNode → CompilationError (not invalid Python)."""
+        ir = _ir_unsupported("foo.bar", "not supported")
         with pytest.raises(CompilationError):
-            compile_expression(node)
+            render_calc_expression(ir, set(), set())
 
     def test_internal_gate_raises_on_invalid_emitted_python(self):
-        """A BINARY_OP node with an operator absent from PYTHON_OPERATOR_MAP
-        falls through to the raw-operator-string emission path
-        (`f" {ast.operator} "` at expression_compiler.py:198), producing
-        syntactically invalid Python (e.g. `(a ~~ b)`). This must be caught
-        by the internal parse-and-raise gate at :217-223, not by a
-        caller-side `ast.parse()` on the return value -- there is no
-        caller here, only the direct call to `compile_expression`.
-        """
-        node = ExpressionAST.binary(
-            "~~", ExpressionAST.input_ref("a"), ExpressionAST.input_ref("b")
-        )
-        with pytest.raises(CompilationError, match="not valid Python"):
-            compile_expression(node)
+        """A binary operator absent from the renderer's operator map raises
+        CompilationError before any caller-side ast.parse() would even run -- there is no
+        caller here, only the direct call to render_calc_expression."""
+        ir = _ir_binary("~~", _ir_ref("a"), _ir_ref("b"))
+        with pytest.raises(CompilationError, match="unsupported operator"):
+            render_calc_expression(ir, {"a", "b"}, set())
 
 
 # ---------------------------------------------------------------------------
@@ -648,17 +597,13 @@ class TestReqEc07UndeclaredIntermediates:
 
 @pytest.mark.req("REQ-AST-01")
 class TestReqAst01DispatchOrdering:
-    """Static analysis: FCE checked before OE at every dispatch site."""
+    """Static analysis: FCE checked before OE at every dispatch site.
 
-    def test_dispatch_ordering_in_expression_compiler(self):
-        """expression_compiler.py build_expression_ast: FCE line < OE line."""
-        calls = find_is_instance_calls_in_function(EXPRESSION_COMPILER_PATH, "build_expression_ast")
-        assert "FeatureChainExpression" in calls
-        assert "OperatorExpression" in calls
-        assert calls["FeatureChainExpression"] < calls["OperatorExpression"], (
-            f"FCE at line {calls['FeatureChainExpression']} must precede "
-            f"OE at line {calls['OperatorExpression']}"
-        )
+    The expression_compiler.py dispatch-ordering case retired (CONSTRAINT-EXEC Item 13):
+    build_expression_ast is gone, its dispatch responsibility moved cross-repo to
+    agentic-mbse's extract_expression_ir. test_ast_dispatch_invariant.py's REQ-AST-01 still
+    audits every remaining in-repo dual-check site.
+    """
 
     def test_expression_utils_delegates_reconstruction_to_shared_api(self):
         """expression_utils.py keeps the compatibility path, not the moved body."""
@@ -684,34 +629,30 @@ class TestCrossModelValidation:
         ids=["solar_battery", "catf_mfe", "chain_spike"],
     )
     def test_reference_resolution_with_real_attribute_names(
-        self, extraction_snapshots, model_name, mock_syside_adapter
+        self, extraction_snapshots, model_name
     ):
-        """Build mock FRE nodes using real attribute names → verify correct classification."""
+        """Build IR FRE nodes using real attribute names → verify correct classification
+        (re-anchored onto render_calc_expression -- CONSTRAINT-EXEC Item 13; classification
+        is now a render-time policy over caller-supplied name sets, not baked into the tree)."""
         snapshot = extraction_snapshots[model_name]
         for cd in snapshot["calc_defs"]:
             input_names, output_names = _extract_name_sets(cd)
 
             for name in input_names:
-                node = MockFeatureReferenceExpression(name)
-                result = build_expression_ast(
-                    node, input_names=input_names, output_names=output_names
+                ir = _ir_ref(name)
+                rendered = render_calc_expression(ir, input_names, output_names)
+                assert rendered == f"inputs.{name}", (
+                    f"{model_name}/{cd.name}: input '{name}' rendered as {rendered!r}, "
+                    f"expected 'inputs.{name}'"
                 )
-                assert result.node_type == ExpressionNodeType.INPUT_REF, (
-                    f"{model_name}/{cd.name}: input '{name}' classified as "
-                    f"{result.node_type}, expected INPUT_REF"
-                )
-                assert result.input_name == name
 
             for name in output_names:
-                node = MockFeatureReferenceExpression(name)
-                result = build_expression_ast(
-                    node, input_names=input_names, output_names=output_names
+                ir = _ir_ref(name)
+                rendered = render_calc_expression(ir, input_names, output_names)
+                assert rendered == name, (
+                    f"{model_name}/{cd.name}: output '{name}' rendered as {rendered!r}, "
+                    f"expected bare {name!r}"
                 )
-                assert result.node_type == ExpressionNodeType.INTERMEDIATE_REF, (
-                    f"{model_name}/{cd.name}: output '{name}' classified as "
-                    f"{result.node_type}, expected INTERMEDIATE_REF"
-                )
-                assert result.intermediate_name == name
 
     @pytest.mark.req("REQ-EC-06")
     @pytest.mark.parametrize(

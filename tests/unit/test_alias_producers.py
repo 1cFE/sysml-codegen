@@ -94,10 +94,6 @@ def mock_syside_adapter(monkeypatch):
         return type_map.get(type(node).__name__) == type_name
 
     monkeypatch.setattr(
-        "sysml_codegen.extraction.expression_compiler.SysideAdapter.is_instance",
-        staticmethod(mock_is_instance),
-    )
-    monkeypatch.setattr(
         "sysml_codegen.extraction.computed_attribute_extractor.SysideAdapter.is_instance",
         staticmethod(mock_is_instance),
     )

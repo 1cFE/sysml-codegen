@@ -1,18 +1,19 @@
 """Calc-compat renderer: ExpressionIR -> Python expression string.
 
-Productionized form of the S2 spike's ``probe4.compat_render``. Reproduces
-``expression_compiler.compile_expression``'s dialect byte-for-byte: n-ary left-fold,
-``^`` -> ``**``, unit-strip, ``str()`` literals, and the ``python_ast.parse`` validation.
+Productionized form of the S2 spike's ``probe4.compat_render``. Reproduces the retired
+calc compiler's dialect byte-for-byte (frozen in
+``tests/fixtures/golden/calc_compat_parity_golden.json``): n-ary left-fold, ``^`` -> ``**``,
+unit-strip, ``str()`` literals, and ``python_ast.parse`` validation.
 
 ``ExpressionIR`` (agentic-mbse-owned) carries feature references unclassified — only a
 ``source_name``. Classifying a reference as ``inputs.x`` (an input) or bare ``x`` (an
 intermediate) is calc-specific policy, so it happens here at render time from the caller's
-name sets, not baked into the tree the way ``build_expression_ast`` used to.
+name sets, not baked into the tree the way the retired syside-dispatch build step used to.
 
 Self-contained on purpose (own operator map, own copy of nothing borrowed from
 ``expression_compiler`` except the kept ``CompilationError`` symbol and ``_sanitize_name``):
-this module is what survives when ``expression_compiler`` sheds ``ExpressionAST`` and its two
-compile functions at Stage 4.
+this module is what survived ``expression_compiler``'s retired private syntax tree and its
+two compile functions.
 """
 
 from __future__ import annotations
@@ -33,9 +34,8 @@ from .expression_compiler import CompilationError, _sanitize_name
 
 __all__ = ["collect_calc_refs", "render_calc_expression"]
 
-# Mirrors expression_compiler.PYTHON_OPERATOR_MAP's arithmetic subset (the `[` unit-strip
-# entry is handled structurally via UnitAnnotationNode, not through this map). Kept as a
-# private copy so this module has no import that Stage 4 deletes out from under it.
+# Mirrors the retired expression_compiler dialect's arithmetic operator spacing (the `[`
+# unit-strip entry is handled structurally via UnitAnnotationNode, not through this map).
 _ARITHMETIC_OPERATOR_MAP: dict[str, str] = {
     "+": " + ",
     "-": " - ",
@@ -142,9 +142,9 @@ def collect_calc_refs(
     """Walk an already-rendered-clean IR and collect referenced names.
 
     Returns ``(input_refs, intermediate_refs)``, both pre-order, first-occurrence
-    deduplicated -- matching ``_collect_refs``'s traversal exactly (R3). Only called after
-    ``render_calc_expression`` succeeds, so every reachable reference already classifies
-    into one of the two sets; this walk does not re-validate that.
+    deduplicated -- matching the retired ``_collect_refs``'s traversal exactly (R3). Only
+    called after ``render_calc_expression`` succeeds, so every reachable reference already
+    classifies into one of the two sets; this walk does not re-validate that.
     """
     input_refs: list[str] = []
     intermediate_refs: list[str] = []

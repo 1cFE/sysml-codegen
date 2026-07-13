@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 # operator correctly *except* `^`, which it maps to Python bitwise-XOR (` ^ `);
 # in an aggregation (as in SysML) `^` is exponentiation and must become ` ** `.
 # The comparison/logical translations (`> < == != and or implies not ...`) are
-# kept as-is — swapping wholesale to PYTHON_OPERATOR_MAP would drop them and
+# kept as-is — swapping wholesale to an arithmetic-only map would drop them and
 # falsely trip has_unsupported on a valid `sum(x) > threshold` aggregation. An
 # operator absent from this map is genuinely untranslatable → has_unsupported.
 AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}

@@ -219,12 +219,6 @@ ENUM_SPECS = [
         id="Compilability",
     ),
     pytest.param(
-        "sysml_codegen.extraction.expression_compiler",
-        "ExpressionNodeType",
-        {"BINARY_OP", "UNARY_OP", "LITERAL", "INPUT_REF", "INTERMEDIATE_REF", "UNSUPPORTED"},
-        id="ExpressionNodeType",
-    ),
-    pytest.param(
         "sysml_codegen.core.models",
         "BindingResolutionType",
         {"ENTRY_POINT", "MODULE_OUTPUT"},
@@ -689,7 +683,6 @@ SOURCE_FILE_SPECS = [
     (_UE, "CalcUsageData", "extraction/usage_extractor.py"),
     (_UE, "BindingInfo", "extraction/usage_extractor.py"),
     (_EC, "Compilability", "extraction/expression_compiler.py"),
-    (_EC, "ExpressionNodeType", "extraction/expression_compiler.py"),
     (_CM, "BindingResolution", "core/models.py"),
     (_CM, "BindingResolutionType", "core/models.py"),
     (_CM, "ChannelAlias", "core/models.py"),

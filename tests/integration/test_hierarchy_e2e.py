@@ -415,7 +415,7 @@ class TestAggregationFCEOrdering:
         self, pipeline_context: PipelineContext,
     ):
         """Bug A2: FCE nodes must not produce 'unsupported operator: .' diagnostic.
-        This happens when FCE enters the OE handler in build_expression_ast()."""
+        This happens when FCE enters the OE handler in syside->IR dispatch."""
         for calc_name, comp_result in pipeline_context.compilation_results.items():
             for output_result in comp_result.output_results:
                 if output_result.unsupported_reason:

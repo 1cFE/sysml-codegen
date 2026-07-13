@@ -34,227 +34,168 @@ class TestCompilability:
         assert Compilability.UNKNOWN != Compilability.FULLY_COMPILABLE
 
 
-class TestExpressionNodeType:
-    """Tests for ExpressionNodeType enum."""
+def _ir_ref(name: str):
+    from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import FeatureReferenceNode
 
-    def test_enum_values(self):
-        from sysml_codegen.extraction.expression_compiler import ExpressionNodeType
-
-        assert ExpressionNodeType.BINARY_OP == "binary_op"
-        assert ExpressionNodeType.UNARY_OP == "unary_op"
-        assert ExpressionNodeType.LITERAL == "literal"
-        assert ExpressionNodeType.INPUT_REF == "input_ref"
-        assert ExpressionNodeType.INTERMEDIATE_REF == "intermediate_ref"
-        assert ExpressionNodeType.UNSUPPORTED == "unsupported"
-
-    def test_str_inheritance(self):
-        from sysml_codegen.extraction.expression_compiler import ExpressionNodeType
-
-        assert isinstance(ExpressionNodeType.BINARY_OP, str)
+    return FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=name, target=None, target_types=[], chain_segments=[]
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
 
 
-class TestExpressionASTFactories:
-    """Tests for ExpressionAST factory classmethods."""
+def _ir_chain_ref(name: str):
+    """A FeatureReferenceNode with non-empty chain_segments (an unsupported feature chain)."""
+    from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import FeatureReferenceNode
 
-    def test_binary_factory(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            ExpressionNodeType,
-        )
-
-        left = ExpressionAST.input_ref("a")
-        right = ExpressionAST.input_ref("b")
-        node = ExpressionAST.binary("+", left, right)
-        assert node.node_type == ExpressionNodeType.BINARY_OP
-        assert node.operator == "+"
-        assert node.left is left
-        assert node.right is right
-
-    def test_unary_factory(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            ExpressionNodeType,
-        )
-
-        operand = ExpressionAST.input_ref("x")
-        node = ExpressionAST.unary("-", operand)
-        assert node.node_type == ExpressionNodeType.UNARY_OP
-        assert node.operator == "-"
-        assert node.left is operand
-        assert node.right is None
-
-    def test_literal_factory(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            ExpressionNodeType,
-        )
-
-        node = ExpressionAST.literal(3.14)
-        assert node.node_type == ExpressionNodeType.LITERAL
-        assert node.value == 3.14
-
-    def test_literal_int_factory(self):
-        from sysml_codegen.extraction.expression_compiler import ExpressionAST
-
-        node = ExpressionAST.literal(42)
-        assert node.value == 42
-
-    def test_input_ref_factory(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            ExpressionNodeType,
-        )
-
-        node = ExpressionAST.input_ref("wattage")
-        assert node.node_type == ExpressionNodeType.INPUT_REF
-        assert node.input_name == "wattage"
-
-    def test_intermediate_ref_factory(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            ExpressionNodeType,
-        )
-
-        node = ExpressionAST.intermediate_ref("material_cost")
-        assert node.node_type == ExpressionNodeType.INTERMEDIATE_REF
-        assert node.intermediate_name == "material_cost"
-
-    def test_unsupported_factory(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            ExpressionNodeType,
-        )
-
-        node = ExpressionAST.unsupported("foo.bar", "feature chain not supported")
-        assert node.node_type == ExpressionNodeType.UNSUPPORTED
-        assert node.raw_text == "foo.bar"
-        assert node.reason == "feature chain not supported"
+    return FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=name, target=None, target_types=[], chain_segments=["a", "b"]
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
 
 
-class TestCompileExpression:
-    """Tests for compile_expression() IR→Python."""
+def _ir_literal(value):
+    from agentic_mbse.sysml.expression_facts import LiteralFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import LiteralNode
+
+    if isinstance(value, int):
+        kind, category = "LiteralInteger", "integer"
+    else:
+        kind, category = "LiteralRational", "real"
+    return LiteralNode(
+        literal=LiteralFact(kind=kind, value=value, result_type=None),
+        operand_type=OperandTypeFact(category=category, enumeration=None, unit=None),
+    )
+
+
+def _ir_binary(op: str, left, right):
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(operator=op, operands=[left, right], operand_type=None)
+
+
+def _ir_unary(op: str, operand):
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(operator=op, operands=[operand], operand_type=None)
+
+
+def _ir_unsupported(source_text: str, diagnostic: str):
+    from agentic_mbse.sysml.expression_ir import UnsupportedNode
+
+    return UnsupportedNode(node_kind="Mock", diagnostic=diagnostic, source_text=source_text)
+
+
+class TestRenderCalcExpression:
+    """Tests for render_calc_expression() ExpressionIR -> Python (re-anchored from the
+    retired ExpressionAST-based compile_expression() dialect suite, CONSTRAINT-EXEC Item 13)."""
 
     def test_input_ref(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.input_ref("wattage")
-        assert compile_expression(ast) == "inputs.wattage"
+        ir = _ir_ref("wattage")
+        assert render_calc_expression(ir, {"wattage"}, set()) == "inputs.wattage"
 
     def test_intermediate_ref(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.intermediate_ref("material_cost")
-        assert compile_expression(ast) == "material_cost"
+        ir = _ir_ref("material_cost")
+        assert render_calc_expression(ir, set(), {"material_cost"}) == "material_cost"
 
     def test_literal_float(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.literal(3.14)
-        assert compile_expression(ast) == "3.14"
+        ir = _ir_literal(3.14)
+        assert render_calc_expression(ir, set(), set()) == "3.14"
 
     def test_literal_int(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.literal(42)
-        assert compile_expression(ast) == "42"
+        ir = _ir_literal(42)
+        assert render_calc_expression(ir, set(), set()) == "42"
 
     def test_binary_op_over_parenthesized(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.binary(
-            "*",
-            ExpressionAST.input_ref("length"),
-            ExpressionAST.input_ref("width"),
+        ir = _ir_binary("*", _ir_ref("length"), _ir_ref("width"))
+        assert (
+            render_calc_expression(ir, {"length", "width"}, set())
+            == "(inputs.length * inputs.width)"
         )
-        assert compile_expression(ast) == "(inputs.length * inputs.width)"
 
     def test_unary_negation(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.unary("-", ExpressionAST.input_ref("x"))
-        assert compile_expression(ast) == "(-inputs.x)"
+        ir = _ir_unary("-", _ir_ref("x"))
+        assert render_calc_expression(ir, {"x"}, set()) == "(-inputs.x)"
 
     def test_unsupported_raises_compilation_error(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            CompilationError,
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+        from sysml_codegen.extraction.expression_compiler import CompilationError
 
-        ast = ExpressionAST.unsupported("foo.bar", "not supported")
+        ir = _ir_unsupported("foo.bar", "not supported")
         with pytest.raises(CompilationError):
-            compile_expression(ast)
+            render_calc_expression(ir, set(), set())
+
+    def test_feature_chain_raises_compilation_error(self):
+        """A FeatureReferenceNode with chain_segments is an unsupported feature chain."""
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+        from sysml_codegen.extraction.expression_compiler import CompilationError
+
+        ir = _ir_chain_ref("array.bos")
+        with pytest.raises(CompilationError, match="feature chain"):
+            render_calc_expression(ir, set(), {"array.bos"})
+
+    def test_unresolved_reference_raises_compilation_error(self):
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+        from sysml_codegen.extraction.expression_compiler import CompilationError
+
+        ir = _ir_ref("unknown_var")
+        with pytest.raises(CompilationError, match="unresolved reference"):
+            render_calc_expression(ir, {"x"}, {"y"})
+
+    def test_unsupported_operator_raises_compilation_error(self):
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+        from sysml_codegen.extraction.expression_compiler import CompilationError
+
+        ir = _ir_binary("??", _ir_ref("a"), _ir_ref("b"))
+        with pytest.raises(CompilationError, match="unsupported operator"):
+            render_calc_expression(ir, {"a", "b"}, set())
+
+    def test_caret_power_alias(self):
+        """^ operator maps to ** (Python power)."""
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+
+        ir = _ir_binary("^", _ir_ref("base"), _ir_ref("exp"))
+        assert render_calc_expression(ir, {"base", "exp"}, set()) == "(inputs.base ** inputs.exp)"
 
     def test_pattern_a_simple_binary(self):
         """Pattern A: area = length * width."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.binary(
-            "*",
-            ExpressionAST.input_ref("length"),
-            ExpressionAST.input_ref("width"),
-        )
-        result = compile_expression(ast)
+        ir = _ir_binary("*", _ir_ref("length"), _ir_ref("width"))
+        result = render_calc_expression(ir, {"length", "width"}, set())
         assert result == "(inputs.length * inputs.width)"
 
     def test_pattern_c_nested_with_power(self):
         """Pattern C: CRF = (r * (1+r)**n) / ((1+r)**n - 1)."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        # Build (1+r)**n subtree
-        one_plus_r = ExpressionAST.binary(
-            "+",
-            ExpressionAST.literal(1.0),
-            ExpressionAST.input_ref("discount_rate"),
-        )
-        power_term = ExpressionAST.binary(
-            "**", one_plus_r, ExpressionAST.input_ref("plant_lifetime")
-        )
+        one_plus_r = _ir_binary("+", _ir_literal(1.0), _ir_ref("discount_rate"))
+        power_term = _ir_binary("**", one_plus_r, _ir_ref("plant_lifetime"))
+        numerator = _ir_binary("*", _ir_ref("discount_rate"), power_term)
 
-        # Numerator: r * (1+r)**n
-        numerator = ExpressionAST.binary(
-            "*", ExpressionAST.input_ref("discount_rate"), power_term
-        )
+        one_plus_r_2 = _ir_binary("+", _ir_literal(1.0), _ir_ref("discount_rate"))
+        power_term_2 = _ir_binary("**", one_plus_r_2, _ir_ref("plant_lifetime"))
+        denominator = _ir_binary("-", power_term_2, _ir_literal(1.0))
 
-        # Denominator: (1+r)**n - 1
-        one_plus_r_2 = ExpressionAST.binary(
-            "+",
-            ExpressionAST.literal(1.0),
-            ExpressionAST.input_ref("discount_rate"),
-        )
-        power_term_2 = ExpressionAST.binary(
-            "**", one_plus_r_2, ExpressionAST.input_ref("plant_lifetime")
-        )
-        denominator = ExpressionAST.binary(
-            "-", power_term_2, ExpressionAST.literal(1.0)
-        )
-
-        crf = ExpressionAST.binary("/", numerator, denominator)
-        result = compile_expression(crf)
+        crf = _ir_binary("/", numerator, denominator)
+        result = render_calc_expression(crf, {"discount_rate", "plant_lifetime"}, set())
 
         expected = (
             "((inputs.discount_rate * ((1.0 + inputs.discount_rate)"
@@ -266,52 +207,57 @@ class TestCompileExpression:
 
     def test_pattern_d_literal_mixed_with_input(self):
         """Pattern D: p_fusion * 3.52 / 17.58."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        ast = ExpressionAST.binary(
-            "/",
-            ExpressionAST.binary(
-                "*",
-                ExpressionAST.input_ref("p_fusion"),
-                ExpressionAST.literal(3.52),
-            ),
-            ExpressionAST.literal(17.58),
+        ir = _ir_binary(
+            "/", _ir_binary("*", _ir_ref("p_fusion"), _ir_literal(3.52)), _ir_literal(17.58)
         )
-        assert compile_expression(ast) == "((inputs.p_fusion * 3.52) / 17.58)"
+        assert render_calc_expression(ir, {"p_fusion"}, set()) == "((inputs.p_fusion * 3.52) / 17.58)"
 
     def test_nested_binary_ops_correct_parenthesization(self):
         """Verify nested ops produce correct nesting: ((a + b) * c)."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        inner = ExpressionAST.binary(
-            "+",
-            ExpressionAST.input_ref("a"),
-            ExpressionAST.input_ref("b"),
-        )
-        outer = ExpressionAST.binary("*", inner, ExpressionAST.input_ref("c"))
-        assert compile_expression(outer) == "((inputs.a + inputs.b) * inputs.c)"
+        inner = _ir_binary("+", _ir_ref("a"), _ir_ref("b"))
+        outer = _ir_binary("*", inner, _ir_ref("c"))
+        assert render_calc_expression(outer, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) * inputs.c)"
 
-    def test_compile_expression_validates_with_ast_parse(self):
-        """compile_expression output should be valid Python (parseable)."""
+    def test_nary_3_operand_left_fold(self):
+        """3-operand n-ary operator, a + b + c -> ((a + b) + c) (agentic-mbse's extractor
+        already n-ary-folds at OperatorNode construction; the renderer left-folds the
+        operand list the same way build_expression_ast used to fold pairwise)."""
+        from agentic_mbse.sysml.expression_ir import OperatorNode
+
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+
+        ir = OperatorNode(
+            operator="+", operands=[_ir_ref("a"), _ir_ref("b"), _ir_ref("c")], operand_type=None
+        )
+        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) + inputs.c)"
+
+    def test_nary_7_operand_left_fold(self):
+        """7-operand sum (NetElectricPower pattern): left-folded."""
+        from agentic_mbse.sysml.expression_ir import OperatorNode
+
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+
+        names = ["p1", "p2", "p3", "p4", "p5", "p6", "p7"]
+        ir = OperatorNode(operator="+", operands=[_ir_ref(n) for n in names], operand_type=None)
+        result = render_calc_expression(ir, set(names), set())
+        expected = (
+            "((((((inputs.p1 + inputs.p2) + inputs.p3)"
+            " + inputs.p4) + inputs.p5) + inputs.p6) + inputs.p7)"
+        )
+        assert result == expected
+
+    def test_render_calc_expression_validates_with_ast_parse(self):
+        """render_calc_expression output should be valid Python (parseable)."""
         import ast as python_ast
 
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            compile_expression,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
 
-        expr = ExpressionAST.binary(
-            "+",
-            ExpressionAST.input_ref("x"),
-            ExpressionAST.literal(1.0),
-        )
-        result = compile_expression(expr)
+        expr = _ir_binary("+", _ir_ref("x"), _ir_literal(1.0))
+        result = render_calc_expression(expr, {"x"}, set())
         # Should not raise — result is valid Python expression
         python_ast.parse(result, mode="eval")
 
@@ -350,86 +296,57 @@ class TestSanitizeName:
         assert _sanitize_name("'my var'") == "my_var"
 
 
-class TestCollectRefs:
-    """Tests for _collect_refs() AST traversal."""
+class TestCollectCalcRefs:
+    """Tests for collect_calc_refs() IR traversal (re-anchored from the retired
+    ExpressionAST-based _collect_refs() suite, CONSTRAINT-EXEC Item 13)."""
 
     def test_single_input_ref(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            _collect_refs,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import collect_calc_refs
 
-        ast = ExpressionAST.input_ref("wattage")
-        input_refs, intermediate_refs = _collect_refs(ast)
+        ir = _ir_ref("wattage")
+        input_refs, intermediate_refs = collect_calc_refs(ir, {"wattage"}, set())
         assert input_refs == ["wattage"]
         assert intermediate_refs == []
 
     def test_single_intermediate_ref(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            _collect_refs,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import collect_calc_refs
 
-        ast = ExpressionAST.intermediate_ref("material_cost")
-        input_refs, intermediate_refs = _collect_refs(ast)
+        ir = _ir_ref("material_cost")
+        input_refs, intermediate_refs = collect_calc_refs(ir, set(), {"material_cost"})
         assert input_refs == []
         assert intermediate_refs == ["material_cost"]
 
     def test_mixed_tree(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            _collect_refs,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import collect_calc_refs
 
-        ast = ExpressionAST.binary(
-            "+",
-            ExpressionAST.input_ref("x"),
-            ExpressionAST.intermediate_ref("y"),
-        )
-        input_refs, intermediate_refs = _collect_refs(ast)
+        ir = _ir_binary("+", _ir_ref("x"), _ir_ref("y"))
+        input_refs, intermediate_refs = collect_calc_refs(ir, {"x"}, {"y"})
         assert input_refs == ["x"]
         assert intermediate_refs == ["y"]
 
     def test_duplicate_refs_deduplicated(self):
         """(a + a) should produce [a] not [a, a]."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            _collect_refs,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import collect_calc_refs
 
-        ast = ExpressionAST.binary(
-            "+",
-            ExpressionAST.input_ref("a"),
-            ExpressionAST.input_ref("a"),
-        )
-        input_refs, _ = _collect_refs(ast)
+        ir = _ir_binary("+", _ir_ref("a"), _ir_ref("a"))
+        input_refs, _ = collect_calc_refs(ir, {"a"}, set())
         assert input_refs == ["a"]
 
     def test_nested_binary_ops_left_to_right_preorder(self):
         """Refs collected in left-to-right pre-order traversal."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            _collect_refs,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import collect_calc_refs
 
         # (a + b) * c
-        inner = ExpressionAST.binary(
-            "+",
-            ExpressionAST.input_ref("a"),
-            ExpressionAST.input_ref("b"),
-        )
-        outer = ExpressionAST.binary("*", inner, ExpressionAST.input_ref("c"))
-        input_refs, _ = _collect_refs(outer)
+        inner = _ir_binary("+", _ir_ref("a"), _ir_ref("b"))
+        outer = _ir_binary("*", inner, _ir_ref("c"))
+        input_refs, _ = collect_calc_refs(outer, {"a", "b", "c"}, set())
         assert input_refs == ["a", "b", "c"]
 
     def test_literal_produces_no_refs(self):
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionAST,
-            _collect_refs,
-        )
+        from sysml_codegen.extraction.calc_compat_renderer import collect_calc_refs
 
-        ast = ExpressionAST.literal(42.0)
-        input_refs, intermediate_refs = _collect_refs(ast)
+        ir = _ir_literal(42.0)
+        input_refs, intermediate_refs = collect_calc_refs(ir, set(), set())
         assert input_refs == []
         assert intermediate_refs == []
 
@@ -504,7 +421,7 @@ class TestClassifyCompilability:
 
 
 # ---------------------------------------------------------------------------
-# Phase 3: build_expression_ast() + syside mock infrastructure
+# Syside mock infrastructure (compile_calc_def orchestration tests below)
 # ---------------------------------------------------------------------------
 
 
@@ -536,25 +453,6 @@ class MockFeatureChainExpression:
     pass
 
 
-class MockUnknownNode:
-    """Mock unrecognized syside node."""
-
-    pass
-
-
-class MockFeatureChainExpressionOperatorExpression:
-    """Mock that dual-matches both FeatureChainExpression and OperatorExpression.
-
-    Reproduces the SysIDE subtype relationship where FCE is a subtype of OE,
-    causing SysideAdapter.is_instance()'s name-based fallback to return True
-    for both type checks on the same node.
-    """
-
-    def __init__(self, operator: str, operands: list):
-        self.operator = operator
-        self.operands = operands
-
-
 @pytest.fixture
 def mock_syside_adapter(monkeypatch):
     """Monkeypatch SysideAdapter.is_instance to work with mock nodes."""
@@ -569,307 +467,9 @@ def mock_syside_adapter(monkeypatch):
         return TYPE_MAP.get(type(node).__name__) == type_name
 
     monkeypatch.setattr(
-        "sysml_codegen.extraction.expression_compiler.SysideAdapter.is_instance",
+        "agentic_mbse.sysml.syside_adapter.SysideAdapter.is_instance",
         staticmethod(mock_is_instance),
     )
-
-
-class TestBuildExpressionAST:
-    """Tests for build_expression_ast() syside→IR conversion."""
-
-    def test_pattern_a_simple_binary(self, mock_syside_adapter):
-        """Pattern A: area = length * width."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-            compile_expression,
-        )
-
-        node = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("length"),
-                MockFeatureReferenceExpression("width"),
-            ],
-        )
-        ast = build_expression_ast(
-            node, input_names={"length", "width"}, output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.BINARY_OP
-        assert ast.operator == "*"
-        assert ast.left.node_type == ExpressionNodeType.INPUT_REF
-        assert ast.left.input_name == "length"
-        assert ast.right.node_type == ExpressionNodeType.INPUT_REF
-        assert ast.right.input_name == "width"
-        assert compile_expression(ast) == "(inputs.length * inputs.width)"
-
-    def test_pattern_c_nested_with_power(self, mock_syside_adapter):
-        """Pattern C: CRF-like nested expression with **."""
-        from sysml_codegen.extraction.expression_compiler import (
-            build_expression_ast,
-            compile_expression,
-        )
-
-        # (1.0 + r) ** n
-        one_plus_r = MockOperatorExpression(
-            "+",
-            [
-                MockLiteralRational(1.0),
-                MockFeatureReferenceExpression("discount_rate"),
-            ],
-        )
-        power = MockOperatorExpression(
-            "**", [one_plus_r, MockFeatureReferenceExpression("n")]
-        )
-        # r * ((1+r)**n)
-        numerator = MockOperatorExpression(
-            "*",
-            [MockFeatureReferenceExpression("discount_rate"), power],
-        )
-        ast = build_expression_ast(
-            numerator, input_names={"discount_rate", "n"}, output_names=set()
-        )
-        result = compile_expression(ast)
-        assert (
-            result
-            == "(inputs.discount_rate * ((1.0 + inputs.discount_rate) ** inputs.n))"
-        )
-
-    def test_pattern_d_literal_mixed_with_input(self, mock_syside_adapter):
-        """Pattern D: p_fusion * 3.52 / 17.58."""
-        from sysml_codegen.extraction.expression_compiler import (
-            build_expression_ast,
-            compile_expression,
-        )
-
-        inner = MockOperatorExpression(
-            "*",
-            [
-                MockFeatureReferenceExpression("p_fusion"),
-                MockLiteralRational(3.52),
-            ],
-        )
-        outer = MockOperatorExpression("/", [inner, MockLiteralRational(17.58)])
-        ast = build_expression_ast(
-            outer, input_names={"p_fusion"}, output_names=set()
-        )
-        assert compile_expression(ast) == "((inputs.p_fusion * 3.52) / 17.58)"
-
-    def test_pattern_f_unit_annotation_stripping(self, mock_syside_adapter):
-        """Pattern F: [kg] annotation stripped, value preserved."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        # value [unit] is represented as OperatorExpression("[", [value, unit])
-        inner = MockLiteralRational(42.0)
-        unit_node = MockFeatureReferenceExpression("kg")
-        node = MockOperatorExpression("[", [inner, unit_node])
-        ast = build_expression_ast(
-            node, input_names=set(), output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.LITERAL
-        assert ast.value == 42.0
-
-    def test_nary_3_operand_left_fold(self, mock_syside_adapter):
-        """3-operand: a + b + c → ((a + b) + c)."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-            compile_expression,
-        )
-
-        node = MockOperatorExpression(
-            "+",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-                MockFeatureReferenceExpression("c"),
-            ],
-        )
-        ast = build_expression_ast(
-            node, input_names={"a", "b", "c"}, output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.BINARY_OP
-        # Left child: (a + b)
-        assert ast.left.node_type == ExpressionNodeType.BINARY_OP
-        assert ast.left.left.input_name == "a"
-        assert ast.left.right.input_name == "b"
-        # Right child: c
-        assert ast.right.input_name == "c"
-        assert compile_expression(ast) == "((inputs.a + inputs.b) + inputs.c)"
-
-    def test_nary_7_operand_left_fold(self, mock_syside_adapter):
-        """7-operand sum (NetElectricPower pattern): left-folded."""
-        from sysml_codegen.extraction.expression_compiler import (
-            build_expression_ast,
-            compile_expression,
-        )
-
-        names = ["p1", "p2", "p3", "p4", "p5", "p6", "p7"]
-        node = MockOperatorExpression(
-            "+",
-            [MockFeatureReferenceExpression(n) for n in names],
-        )
-        ast = build_expression_ast(
-            node, input_names=set(names), output_names=set()
-        )
-        result = compile_expression(ast)
-        expected = (
-            "((((((inputs.p1 + inputs.p2) + inputs.p3)"
-            " + inputs.p4) + inputs.p5) + inputs.p6) + inputs.p7)"
-        )
-        assert result == expected
-
-    def test_unary_negation(self, mock_syside_adapter):
-        """Unary negation: -(x) → (-inputs.x)."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-            compile_expression,
-        )
-
-        node = MockOperatorExpression(
-            "-", [MockFeatureReferenceExpression("x")]
-        )
-        ast = build_expression_ast(
-            node, input_names={"x"}, output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.UNARY_OP
-        assert ast.operator == "-"
-        assert compile_expression(ast) == "(-inputs.x)"
-
-    def test_feature_chain_unsupported(self, mock_syside_adapter):
-        """FeatureChainExpression → UNSUPPORTED."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureChainExpression()
-        ast = build_expression_ast(
-            node, input_names=set(), output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "feature chain" in ast.reason
-
-    def test_unknown_node_type_unsupported(self, mock_syside_adapter):
-        """Unknown node type → UNSUPPORTED."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockUnknownNode()
-        ast = build_expression_ast(
-            node, input_names=set(), output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "unknown node type" in ast.reason
-
-    def test_unresolved_reference_unsupported(self, mock_syside_adapter):
-        """Reference not in inputs, outputs, or members → UNSUPPORTED."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureReferenceExpression("unknown_var")
-        ast = build_expression_ast(
-            node, input_names={"x"}, output_names={"y"}
-        )
-        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "unresolved reference" in ast.reason
-        assert "unknown_var" in ast.reason
-
-    def test_undeclared_member_becomes_intermediate_ref(
-        self, mock_syside_adapter
-    ):
-        """Reference in all_member_names → INTERMEDIATE_REF."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureReferenceExpression("hidden_var")
-        ast = build_expression_ast(
-            node,
-            input_names={"x"},
-            output_names={"y"},
-            all_member_names={"hidden_var", "x", "y"},
-        )
-        assert ast.node_type == ExpressionNodeType.INTERMEDIATE_REF
-        assert ast.intermediate_name == "hidden_var"
-
-    def test_output_ref_becomes_intermediate_ref(self, mock_syside_adapter):
-        """Reference to a declared output → INTERMEDIATE_REF."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureReferenceExpression("material_cost")
-        ast = build_expression_ast(
-            node,
-            input_names=set(),
-            output_names={"material_cost", "total_cost"},
-        )
-        assert ast.node_type == ExpressionNodeType.INTERMEDIATE_REF
-        assert ast.intermediate_name == "material_cost"
-
-    def test_unsupported_operator(self, mock_syside_adapter):
-        """Unknown operator → UNSUPPORTED node."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockOperatorExpression(
-            "??",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-            ],
-        )
-        ast = build_expression_ast(
-            node, input_names={"a", "b"}, output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "unsupported operator" in ast.reason
-
-    def test_caret_power_alias(self, mock_syside_adapter):
-        """^ operator maps to ** (Python power)."""
-        from sysml_codegen.extraction.expression_compiler import (
-            build_expression_ast,
-            compile_expression,
-        )
-
-        node = MockOperatorExpression(
-            "^",
-            [
-                MockFeatureReferenceExpression("base"),
-                MockFeatureReferenceExpression("exp"),
-            ],
-        )
-        ast = build_expression_ast(
-            node, input_names={"base", "exp"}, output_names=set()
-        )
-        assert compile_expression(ast) == "(inputs.base ** inputs.exp)"
-
-    def test_sanitize_name_in_reference_resolution(self, mock_syside_adapter):
-        """Syside referent name with quotes gets sanitized before lookup."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureReferenceExpression("'my var'")
-        ast = build_expression_ast(
-            node, input_names={"my_var"}, output_names=set()
-        )
-        assert ast.node_type == ExpressionNodeType.INPUT_REF
-        assert ast.input_name == "my_var"
 
 
 # ---------------------------------------------------------------------------
@@ -924,7 +524,7 @@ def mock_extract_feature_refs(monkeypatch):
 class TestCompileCalcDef:
     """Tests for compile_calc_def() orchestrator.
 
-    Uses both mock_syside_adapter (for build_expression_ast) and
+    Uses both mock_syside_adapter (for extract_expression_ir's dispatch) and
     mock_extract_feature_refs (for dependency graph construction).
     """
 
@@ -1474,77 +1074,3 @@ class TestCompileCalcDefEdge6:
         )
 
 
-# ---------------------------------------------------------------------------
-# Bug A2: FCE/OE dispatch ordering in build_expression_ast()
-# ---------------------------------------------------------------------------
-
-
-class TestFCEBeforeOEOrdering:
-    """Bug A2: build_expression_ast() must dispatch FCE before OE.
-
-    These tests do NOT use the mock_syside_adapter monkeypatch — they rely on
-    SysideAdapter.is_instance()'s name-based fallback (type_name in
-    type(elem).__name__) to reproduce the real dual-match behavior where
-    FeatureChainExpression nodes also match OperatorExpression.
-    """
-
-    def test_dual_match_node_hits_fce_handler(self):
-        """A node matching both FCE and OE must produce the FCE diagnostic.
-
-        Without the fix, a dual-match node with operator='.' enters the OE
-        handler, producing 'unsupported operator: .' (since '.' is not in
-        PYTHON_OPERATOR_MAP). With the fix, FCE is checked first.
-        """
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureChainExpressionOperatorExpression(
-            operator=".",
-            operands=[MockFeatureReferenceExpression("array_bos")],
-        )
-        ast = build_expression_ast(node, input_names=set(), output_names=set())
-
-        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "feature chain expression" in ast.reason
-        assert "unsupported operator: ." not in ast.reason
-
-    def test_dual_match_node_raw_text_is_type_name(self):
-        """The unsupported node's raw_text should be the actual class name."""
-        from sysml_codegen.extraction.expression_compiler import (
-            build_expression_ast,
-        )
-
-        node = MockFeatureChainExpressionOperatorExpression(
-            operator=".",
-            operands=[MockFeatureReferenceExpression("array_bos")],
-        )
-        ast = build_expression_ast(node, input_names=set(), output_names=set())
-
-        assert ast.raw_text == "MockFeatureChainExpressionOperatorExpression"
-
-    def test_pure_oe_still_dispatches_after_reorder(self):
-        """An OperatorExpression that is NOT an FCE subtype still works.
-
-        Regression guard: the FCE-before-OE reorder must not break normal
-        OE handling for nodes that only match OperatorExpression.
-        """
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockOperatorExpression(
-            "??",
-            [
-                MockFeatureReferenceExpression("a"),
-                MockFeatureReferenceExpression("b"),
-            ],
-        )
-        ast = build_expression_ast(
-            node, input_names={"a", "b"}, output_names=set()
-        )
-
-        assert ast.node_type == ExpressionNodeType.UNSUPPORTED
-        assert "unsupported operator: ??" in ast.reason

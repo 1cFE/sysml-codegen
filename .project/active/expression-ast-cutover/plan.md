@@ -1,6 +1,6 @@
 # Implementation Plan: Calc-Seam Cutover — Retire ExpressionAST
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-13
 **Last Updated:** 2026-07-13
 **Branch:** constraint-exec-epic
@@ -239,34 +239,34 @@ def test_expression_ast_symbols_deleted():
 
 **See `design.md#component-overview`** for the full deletion list and the test-surface categorization (re-anchor vs retire).
 
-- [ ] **(1) Convert parity test to a committed golden (D4).** `test_calc_compat_parity.py` compares live `compile_expression` vs the renderer — it cannot survive deleting `compile_expression`. Its last act: freeze the old strings (+ ref lists) into a committed golden file, then assert the renderer against that golden forever. Capture the golden **before** deleting anything.
-- [ ] **(2) Re-anchor the renderer's inherited dialect tests** onto `render_calc_expression` (fed IR):
-  - [ ] `tests/unit/test_expression_compiler.py` — the ~237 dialect cases ("expression → expected Python string": `inputs.x`, `^`→`**`, unit-strip, n-ary fold, int/float literals, unresolved-ref → `CompilationError`) become `render_calc_expression` tests fed IR.
-  - [ ] `tests/conformance/test_expression_compiler.py` — the corpus/conformance dialect cases, same re-anchor.
-- [ ] **(3) Retire the old-tree-shape tests** (subject deleted):
-  - [ ] The `ExpressionAST`-construction / `ExpressionNodeType` cases in `tests/unit/test_expression_compiler.py`.
-  - [ ] The `ExpressionNodeType` data-model inventory rows in `tests/conformance/test_data_models.py:223-225,692`.
-  - [ ] The two `build_expression_ast`-FCE-dispatch unit tests in `tests/conformance/test_ast_dispatch_invariant.py:399-426` (raw-node dispatch now lives in agentic-mbse's extractor).
-- [ ] **(4) Update REQ-AST-04's two counts** (`tests/conformance/test_ast_dispatch_invariant.py`):
-  - [ ] `test_total_dispatch_function_count`: `assert len(multi_type) == 6` → `== 5` (line ~326) + docstring "Exactly 6" → "Exactly 5" (line ~295). Multi-type audited functions **6 → 5**.
-  - [ ] `test_total_dual_check_site_count`: `assert len(dual_check) == 4` → `== 3` (line ~289) + docstring "Exactly 4" → "Exactly 3" (line ~268). FCE+OE-ordered sites **4 → 3**.
-  - [ ] Add a comment on both: the raw-node FCE-before-OE dispatch responsibility for calc expressions moved cross-repo to the reused `extract_expression_ir` extractor (out of this repo's invariant scope). The renderer consumes `ExpressionIR` (isinstance on IR node classes), **not** raw-syside `is_instance()`, so it adds **no** dispatch site — do **not** add the renderer to the audited set.
-- [ ] **(5) Scrub comment-only mentions:**
-  - [ ] `tests/integration/test_hierarchy_e2e.py:418` and `tests/helpers/impl_execution.py:3` — stale symbol name in a docstring only.
-  - [ ] `src/sysml_codegen/extraction/hierarchy_resolver.py:54` — stale `PYTHON_OPERATOR_MAP` comment (N3; survives the grep gate's 3-symbol scope but scrub it when the symbol goes).
-  - [ ] `tests/unit/test_computed_attribute_extraction.py` — keep its `Compilability` import (kept symbol); its compiled-string assertions were re-anchored in Phase 2.
-- [ ] **(6) Confirm no `src/` or test reference to the three symbols remains** (grep both trees before deleting).
-- [ ] **(7) Delete** from `expression_compiler.py`: `ExpressionAST`, `ExpressionNodeType`, `PYTHON_OPERATOR_MAP`, `build_expression_ast`, `compile_expression`, `_collect_refs`. Keep `Compilability`, `CompilationResult`, `CalcDefCompilationResult`, `classify_compilability`, `compile_calc_def`, `_topological_sort`, `_sanitize_name`, `CompilationError`.
-- [ ] **(8) Add the grep gate** (`test_no_expression_ast.py`, INV-4).
+- [x] **(1) Convert parity test to a committed golden (D4).** `test_calc_compat_parity.py` compares live `compile_expression` vs the renderer — it cannot survive deleting `compile_expression`. Its last act: freeze the old strings (+ ref lists) into a committed golden file, then assert the renderer against that golden forever. Capture the golden **before** deleting anything.
+- [x] **(2) Re-anchor the renderer's inherited dialect tests** onto `render_calc_expression` (fed IR):
+  - [x] `tests/unit/test_expression_compiler.py` — the ~237 dialect cases ("expression → expected Python string": `inputs.x`, `^`→`**`, unit-strip, n-ary fold, int/float literals, unresolved-ref → `CompilationError`) become `render_calc_expression` tests fed IR.
+  - [x] `tests/conformance/test_expression_compiler.py` — the corpus/conformance dialect cases, same re-anchor.
+- [x] **(3) Retire the old-tree-shape tests** (subject deleted):
+  - [x] The `ExpressionAST`-construction / `ExpressionNodeType` cases in `tests/unit/test_expression_compiler.py`.
+  - [x] The `ExpressionNodeType` data-model inventory rows in `tests/conformance/test_data_models.py:223-225,692`.
+  - [x] The two `build_expression_ast`-FCE-dispatch unit tests in `tests/conformance/test_ast_dispatch_invariant.py:399-426` (raw-node dispatch now lives in agentic-mbse's extractor).
+- [x] **(4) Update REQ-AST-04's two counts** (`tests/conformance/test_ast_dispatch_invariant.py`):
+  - [x] `test_total_dispatch_function_count`: `assert len(multi_type) == 6` → `== 5` (line ~326) + docstring "Exactly 6" → "Exactly 5" (line ~295). Multi-type audited functions **6 → 5**.
+  - [x] `test_total_dual_check_site_count`: `assert len(dual_check) == 4` → `== 3` (line ~289) + docstring "Exactly 4" → "Exactly 3" (line ~268). FCE+OE-ordered sites **4 → 3**.
+  - [x] Add a comment on both: the raw-node FCE-before-OE dispatch responsibility for calc expressions moved cross-repo to the reused `extract_expression_ir` extractor (out of this repo's invariant scope). The renderer consumes `ExpressionIR` (isinstance on IR node classes), **not** raw-syside `is_instance()`, so it adds **no** dispatch site — do **not** add the renderer to the audited set.
+- [x] **(5) Scrub comment-only mentions:**
+  - [x] `tests/integration/test_hierarchy_e2e.py:418` and `tests/helpers/impl_execution.py:3` — stale symbol name in a docstring only.
+  - [x] `src/sysml_codegen/extraction/hierarchy_resolver.py:54` — stale `PYTHON_OPERATOR_MAP` comment (N3; survives the grep gate's 3-symbol scope but scrub it when the symbol goes).
+  - [x] `tests/unit/test_computed_attribute_extraction.py` — keep its `Compilability` import (kept symbol); its compiled-string assertions were re-anchored in Phase 2.
+- [x] **(6) Confirm no `src/` or test reference to the three symbols remains** (grep both trees before deleting).
+- [x] **(7) Delete** from `expression_compiler.py`: `ExpressionAST`, `ExpressionNodeType`, `PYTHON_OPERATOR_MAP`, `build_expression_ast`, `compile_expression`, `_collect_refs`. Keep `Compilability`, `CompilationResult`, `CalcDefCompilationResult`, `classify_compilability`, `compile_calc_def`, `_topological_sort`, `_sanitize_name`, `CompilationError`.
+- [x] **(8) Add the grep gate** (`test_no_expression_ast.py`, INV-4).
 
 ### Validation
 **Automated:**
-- [ ] Grep gate green: three symbols absent from `src/` (INV-4).
-- [ ] Manual grep of `tests/` for the three symbols → only the golden fixture's captured strings remain (no live import/call).
-- [ ] Golden-file parity test green (renderer vs frozen goldens).
-- [ ] REQ-AST-04 both counts green at 5 and 3.
-- [ ] Full `uv run pytest` green (this is the phase the spec's "full suite green" hinges on — M1), `mypy src/`, `ruff check src/` clean.
-- [ ] Snapshot/package byte-identity unchanged (deletion is producer-internal; no string moves).
+- [x] Grep gate green: three symbols absent from `src/` (INV-4).
+- [x] Manual grep of `tests/` for the three symbols → only the golden fixture's captured strings remain (no live import/call).
+- [x] Golden-file parity test green (renderer vs frozen goldens).
+- [x] REQ-AST-04 both counts green at 5 and 3.
+- [x] Full `uv run pytest` green (this is the phase the spec's "full suite green" hinges on — M1), `mypy src/`, `ruff check src/` clean.
+- [x] Snapshot/package byte-identity unchanged (deletion is producer-internal; no string moves).
 
 **What we know works after this phase:** `ExpressionAST` and its two compile functions are gone, the renderer owns the dialect contract with permanent golden coverage, the dispatch-invariant guardrail is re-derived, and no silent replacement remains.
 
@@ -393,6 +393,70 @@ unchanged).
 **Deviations:** None.
 
 ### Phase 4 Completion
+**Completed:** 2026-07-13
+**Actual changes:**
+- **(1) D4 golden.** Captured `tests/fixtures/golden/calc_compat_parity_golden.json` (155
+  output expressions, 28 fixtures) from the still-live old path before touching anything,
+  then rewrote `test_calc_compat_parity.py` to compare the renderer against that golden
+  instead of a live `compile_expression` call.
+- **(2)/(3) Re-anchor + retire the dialect/dispatch test surface** — `tests/unit/test_expression_compiler.py`:
+  retired `TestExpressionNodeType`, `TestExpressionASTFactories`, `TestBuildExpressionAST`
+  (~350 lines, syside-mock dispatch — moved cross-repo), `TestFCEBeforeOEOrdering`;
+  re-anchored `TestCompileExpression`→`TestRenderCalcExpression` and
+  `TestCollectRefs`→`TestCollectCalcRefs` onto hand-built `ExpressionIR` fed to
+  `render_calc_expression`/`collect_calc_refs` (new `_ir_*` helper factories, same pattern
+  `test_predicate_compiler.py` already uses for Item 7). `TestCompileCalcDef`/
+  `TestCompileCalcDefEdge6`/`TestSanitizeName`/`TestClassifyCompilability` untouched (already
+  exercise the new seam through `compile_calc_def`, or test kept symbols).
+  `tests/conformance/test_expression_compiler.py`: same pattern — retired
+  `TestReqEc01FceBeforeOe`, the dispatch case in `TestReqAst01DispatchOrdering`; re-anchored
+  `TestReqEc02NaryLeftFold`, `TestReqEc03UnitStripping` (one case retired — a
+  `UnitAnnotationNode`'s `value` is non-optional by construction, so the old
+  no-operands-unsupported case has no IR analogue), `TestReqEc04AstParseValidation`,
+  and `TestCrossModelValidation::test_reference_resolution_with_real_attribute_names`
+  (classification is now `render_calc_expression` policy, not baked into a build step).
+  `test_ast_dispatch_invariant.py`: retired `TestReqAst06ExpressionCompilerDiagnostic`
+  (its two tests exercised `build_expression_ast` directly).
+- **(4) REQ-AST-04 counts.** Dropped `build_expression_ast` from `DUAL_CHECK_SITES`/`_IDS`
+  and `CANONICAL_SITES`/`_IDS`; updated both hard-coded counts (4→3 dual-check, 6→5
+  multi-type) with a comment on why. Verified both failed pre-deletion (dispatch function
+  still physically present) and passed post-deletion — confirms the counts are real, not
+  vacuous.
+- **(5) Comment scrub.** `test_hierarchy_e2e.py:418`, `tests/helpers/impl_execution.py:3`,
+  `hierarchy_resolver.py:54` (N3), plus two comments this item's own Phase 0-2 work added
+  (`computed_attribute_extractor.py`, `test_computed_attribute_extraction.py`) and the two
+  docstring mentions inside `calc_compat_renderer.py` itself (rephrased to avoid the literal
+  banned substrings, since the grep gate scans all of `src/`, including the renderer's own
+  historical-context prose). Also dropped the now-orphaned `ExpressionNodeType` inventory
+  row from `test_data_models.py` (two spots) and the unused `EXPRESSION_COMPILER_PATH`/
+  `EXPRESSION_UTILS_PATH` constants + `find_is_instance_calls_in_function` import from
+  `test_expression_compiler.py` (conformance).
+- **(6)/(7) Delete.** Removed `ExpressionAST`, `ExpressionNodeType`, `PYTHON_OPERATOR_MAP`,
+  `build_expression_ast`, `compile_expression`, `_collect_refs` from `expression_compiler.py`
+  (234 lines). Kept `Compilability`, `CompilationResult`, `CalcDefCompilationResult`,
+  `classify_compilability`, `compile_calc_def`, `_topological_sort`, `_sanitize_name`,
+  `CompilationError`. Dropped the now-dead `python_ast`, `SysideAdapter`,
+  `extract_feature_reference_name` imports; updated the module docstring.
+- **(8) Grep gate.** Added `tests/conformance/test_no_expression_ast.py` (INV-4), scanning
+  `src/sysml_codegen` line-by-line for the three banned substrings.
+- **Unplanned fix: `mock_syside_adapter` fixtures.** Four test files' fixtures patched
+  `sysml_codegen.extraction.expression_compiler.SysideAdapter.is_instance` — that attribute
+  path no longer exists once `expression_compiler.py` stops importing `SysideAdapter` (its
+  dispatch moved to `extract_expression_ir`, called from `compile_calc_def` and the FORMULA
+  branch). `SysideAdapter` is one shared class object regardless of import path, so two
+  fixtures (`test_alias_producers.py`, `test_computed_attribute_extraction.py`) just dropped
+  the dead line (another patch line on the same file already covers the same class); the two
+  `test_expression_compiler.py` fixtures (unit + conformance), which had no other patch line,
+  redirected to the canonical source `agentic_mbse.sysml.syside_adapter.SysideAdapter.is_instance`.
+**Deviations:** None from the plan's order. The `mock_syside_adapter` fix above wasn't
+anticipated by the plan or design (both assumed only production call sites moved) but is a
+direct, unavoidable consequence of deleting `build_expression_ast`'s `SysideAdapter` import.
+**Validation:** grep gate green (zero hits in `src/`); REQ-AST-04 both counts green (confirmed
+red before the deletion, green after — not a vacuous assertion); full suite 2317 passed/23
+skipped (license env, all skips accounted for from earlier phases); mypy 76 (baseline,
+unchanged); ruff clean; extraction-snapshot re-capture — `captured_at`-only diffs, reverted;
+`capture_pipeline_baselines` — zero diff; `test_factory_purity` + `test_baselines` 26
+passed/1 skipped.
 
 ---
 

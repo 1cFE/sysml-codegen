@@ -287,8 +287,8 @@ def extract_computed_attributes(
 
         if classification == ComputedAttributeClassification.FORMULA:
             # Self-exclusion: exclude the attribute being classified from
-            # input_names so self-references become UNSUPPORTED (not INPUT_REF).
-            # Sanitize names so they match _sanitize_name() in build_expression_ast.
+            # input_names so self-references raise (unresolved reference).
+            # Sanitize names so they match the renderer's own _sanitize_name().
             input_names = {
                 _sanitize_name(n) for n in sibling_attr_names
             } - {_sanitize_name(attr_name)}

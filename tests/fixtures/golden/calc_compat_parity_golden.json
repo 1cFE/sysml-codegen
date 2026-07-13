@@ -1,0 +1,1520 @@
+{
+  "alias_agg_probe": {
+    "Margin_Calc": {
+      "margin": {
+        "expr": "(inputs.cost_basis * inputs.margin_rate)",
+        "input_refs": [
+          "cost_basis",
+          "margin_rate"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Report_Calc": {
+      "report_value": {
+        "expr": "inputs.cost_input",
+        "input_refs": [
+          "cost_input"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Unit_Cost_Calc": {
+      "unit_cost": {
+        "expr": "(inputs.base_cost * inputs.markup)",
+        "input_refs": [
+          "base_cost",
+          "markup"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "attr_expr_probe": {
+    "ScaleCalc": {
+      "result": {
+        "expr": "(inputs.value * inputs.factor)",
+        "input_refs": [
+          "value",
+          "factor"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SplitCalc": {
+      "half": {
+        "expr": "(inputs.total / 2.0)",
+        "input_refs": [
+          "total"
+        ],
+        "intermediate_refs": []
+      },
+      "quarter": {
+        "expr": "(inputs.total / 4.0)",
+        "input_refs": [
+          "total"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "catf_mfe_model": {
+    "AlphaNeutronSplit": {
+      "p_alpha": {
+        "expr": "((inputs.p_fusion * 3.52) / 17.58)",
+        "input_refs": [
+          "p_fusion"
+        ],
+        "intermediate_refs": []
+      },
+      "p_neutron": {
+        "expr": "((inputs.p_fusion * 14.06) / 17.58)",
+        "input_refs": [
+          "p_fusion"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "AuxiliarySystemsPower": {
+      "auxiliary_power": {
+        "expr": "(inputs.gross_electric * inputs.auxiliary_fraction)",
+        "input_refs": [
+          "gross_electric",
+          "auxiliary_fraction"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "BlanketThermalPower": {
+      "p_thermal": {
+        "expr": "(((inputs.m_neutron * inputs.p_neutron) + inputs.p_input) + ((inputs.eta_thermal * ((inputs.f_pump * inputs.eta_pump) + inputs.f_subsystem)) * (inputs.m_neutron * inputs.p_neutron)))",
+        "input_refs": [
+          "m_neutron",
+          "p_neutron",
+          "p_input",
+          "eta_thermal",
+          "f_pump",
+          "eta_pump",
+          "f_subsystem"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "CoolantPumpPower": {
+      "pump_power": {
+        "expr": "((inputs.f_pcppf * inputs.p_thermal_electric) / inputs.pump_efficiency)",
+        "input_refs": [
+          "f_pcppf",
+          "p_thermal_electric",
+          "pump_efficiency"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "CryoPumpRefrigeration": {
+      "refrigeration_power": {
+        "expr": "((thermal_load * (300.0 / inputs.operating_temp)) / inputs.carnot_efficiency)",
+        "input_refs": [
+          "operating_temp",
+          "carnot_efficiency"
+        ],
+        "intermediate_refs": [
+          "thermal_load"
+        ]
+      }
+    },
+    "EngineeringQFactor": {
+      "f_recirculating": {
+        "expr": "(1.0 / q_eng)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "q_eng"
+        ]
+      },
+      "p_net": {
+        "expr": "(inputs.p_electric_gross * (1.0 - f_recirculating))",
+        "input_refs": [
+          "p_electric_gross"
+        ],
+        "intermediate_refs": [
+          "f_recirculating"
+        ]
+      },
+      "q_eng": {
+        "expr": "(inputs.p_electric_gross / inputs.p_auxiliary_total)",
+        "input_refs": [
+          "p_electric_gross",
+          "p_auxiliary_total"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "GrossElectricPower": {
+      "p_electric_gross": {
+        "expr": "((inputs.eta_thermal * inputs.p_thermal) + (inputs.eta_direct * inputs.p_alpha))",
+        "input_refs": [
+          "eta_thermal",
+          "p_thermal",
+          "eta_direct",
+          "p_alpha"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "HeatingWallPlugPower": {
+      "wall_plug_power": {
+        "expr": "(inputs.delivered_power / inputs.heating_efficiency)",
+        "input_refs": [
+          "delivered_power",
+          "heating_efficiency"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "MagnetCryogenicLoad": {
+      "cooling_power": {
+        "expr": "((thermal_load_cryo / inputs.operating_temp) * (300.0 / inputs.carnot_efficiency))",
+        "input_refs": [
+          "operating_temp",
+          "carnot_efficiency"
+        ],
+        "intermediate_refs": [
+          "thermal_load_cryo"
+        ]
+      }
+    },
+    "MagnetSurfaceArea": {
+      "area": {
+        "expr": "(((((2.0 * 3.14159265359) * inputs.r_inner) * inputs.thickness) * inputs.kappa) * inputs.f_exposed)",
+        "input_refs": [
+          "r_inner",
+          "thickness",
+          "kappa",
+          "f_exposed"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "NetElectricPower": {
+      "p_net": {
+        "expr": "(inputs.p_electric_gross - p_parasitic_total)",
+        "input_refs": [
+          "p_electric_gross"
+        ],
+        "intermediate_refs": [
+          "p_parasitic_total"
+        ]
+      },
+      "p_parasitic_total": {
+        "expr": "((((((inputs.p_coils + inputs.p_heating) + inputs.p_pumps) + inputs.p_cryo) + inputs.p_vacuum) + inputs.p_tritium) + inputs.p_auxiliary)",
+        "input_refs": [
+          "p_coils",
+          "p_heating",
+          "p_pumps",
+          "p_cryo",
+          "p_vacuum",
+          "p_tritium",
+          "p_auxiliary"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "PlantEfficiency": {
+      "eta_plant": {
+        "expr": "(inputs.p_net / inputs.p_fusion)",
+        "input_refs": [
+          "p_net",
+          "p_fusion"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "PlasmaConfinement": {
+      "p_fusion": {
+        "expr": "inputs.p_fusion_input",
+        "input_refs": [
+          "p_fusion_input"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "ScientificQFactor": {
+      "q_sci": {
+        "expr": "(inputs.p_fusion / inputs.p_input)",
+        "input_refs": [
+          "p_fusion",
+          "p_input"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "ThermalCycleEfficiency": {
+      "eta_carnot": {
+        "expr": "((inputs.t_hot - inputs.t_cold) / inputs.t_hot)",
+        "input_refs": [
+          "t_hot",
+          "t_cold"
+        ],
+        "intermediate_refs": []
+      },
+      "eta_thermal": {
+        "expr": "(eta_carnot * inputs.eta_real)",
+        "input_refs": [
+          "eta_real"
+        ],
+        "intermediate_refs": [
+          "eta_carnot"
+        ]
+      }
+    },
+    "TorusMinorRadius": {
+      "a": {
+        "expr": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)",
+        "input_refs": [
+          "r_inner",
+          "r_outer",
+          "r_major"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "TorusSurfaceArea": {
+      "area": {
+        "expr": "((((2.0 * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.kappa)",
+        "input_refs": [
+          "r_major",
+          "a",
+          "kappa"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "TorusVolume": {
+      "volume": {
+        "expr": "((((((2.0 * 3.14159265359) * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.a) * inputs.kappa)",
+        "input_refs": [
+          "r_major",
+          "a",
+          "kappa"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "TritiumBreedingRatio": {
+      "tbr": {
+        "expr": "inputs.tbr_assumed",
+        "input_refs": [
+          "tbr_assumed"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "TritiumProcessingPower": {
+      "processing_power": {
+        "expr": "(inputs.fusion_power * inputs.processing_factor)",
+        "input_refs": [
+          "fusion_power",
+          "processing_factor"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "VacuumPumpPower": {
+      "pump_power": {
+        "expr": "((pump_power_per_unit * inputs.pump_count) / inputs.pump_efficiency)",
+        "input_refs": [
+          "pump_count",
+          "pump_efficiency"
+        ],
+        "intermediate_refs": [
+          "pump_power_per_unit"
+        ]
+      }
+    }
+  },
+  "chain_override_probe": {
+    "CalibrationCalc": {
+      "calibrated_factor": {
+        "expr": "(inputs.raw_factor * 1.1)",
+        "input_refs": [
+          "raw_factor"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SensorCostCalc": {
+      "total_cost": {
+        "expr": "(inputs.base_cost * inputs.sensitivity)",
+        "input_refs": [
+          "base_cost",
+          "sensitivity"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "chain_spike_model": {
+    "AreaCalc": {
+      "area": {
+        "expr": "(inputs.length * inputs.width)",
+        "input_refs": [
+          "length",
+          "width"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "CostCalc": {
+      "total_cost": {
+        "expr": "(inputs.area * inputs.rate)",
+        "input_refs": [
+          "area",
+          "rate"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SummaryCalc": {
+      "cost_per_area": {
+        "expr": "(inputs.cost / inputs.area)",
+        "input_refs": [
+          "cost",
+          "area"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "constraint_inline": {
+    "Noop": {
+      "y": {
+        "expr": "inputs.x",
+        "input_refs": [
+          "x"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "constraint_multi_instance": {
+    "Power_Calc": {
+      "p": {
+        "expr": "(inputs.r * 2.0)",
+        "input_refs": [
+          "r"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "d38_caret": {
+    "NoopCalc": {
+      "result": {
+        "expr": "inputs.x",
+        "input_refs": [
+          "x"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "deep_cross_scope_probe": {
+    "Analysis_Calc": {
+      "analysis_result": {
+        "expr": "(inputs.data_point - inputs.baseline)",
+        "input_refs": [
+          "data_point",
+          "baseline"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Core_Metric": {
+      "metric_value": {
+        "expr": "(inputs.input_val * 1.5)",
+        "input_refs": [
+          "input_val"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Derived_Metric": {
+      "derived_value": {
+        "expr": "(inputs.base_metric * inputs.factor)",
+        "input_refs": [
+          "base_metric",
+          "factor"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "expression_binding_probe": {
+    "CombinedCostCalc": {
+      "total_with_tax": {
+        "expr": "(inputs.combined_input * (1.0 + inputs.tax_rate))",
+        "input_refs": [
+          "combined_input",
+          "tax_rate"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "DeltaCalc": {
+      "delta": {
+        "expr": "(inputs.value_a - inputs.value_b)",
+        "input_refs": [
+          "value_a",
+          "value_b"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "PassthroughCalc": {
+      "result": {
+        "expr": "inputs.x",
+        "input_refs": [
+          "x"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "fusion_tea": {
+    "IFE_LCOE": {
+      "lcoe": {
+        "expr": "(((annual_capital_cost * pvf_construction) + (annual_operating_cost * pvf_operation)) / (annual_energy * pvf_operation))",
+        "input_refs": [],
+        "intermediate_refs": [
+          "annual_capital_cost",
+          "pvf_construction",
+          "annual_operating_cost",
+          "pvf_operation",
+          "annual_energy"
+        ]
+      }
+    },
+    "Meier_COE": {
+      "coe_cents_kwh": {
+        "expr": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability) * inputs.net_electric_power_gw))",
+        "input_refs": [
+          "total_capital_billions",
+          "availability",
+          "net_electric_power_gw"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Meier_HIF_Driver_Cost": {
+      "cost_billions": {
+        "expr": "(((0.32 + (0.088 * inputs.beam_energy_mj)) * (1.25 + (0.05 * inputs.num_chambers))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
+        "input_refs": [
+          "beam_energy_mj",
+          "num_chambers",
+          "rep_rate"
+        ],
+        "intermediate_refs": []
+      },
+      "gamma": {
+        "expr": "((cost_billions * 1000000000.0) / bank_energy_joules)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "cost_billions",
+          "bank_energy_joules"
+        ]
+      }
+    },
+    "Meier_Reactor_Cost": {
+      "reactor_cost_billions": {
+        "expr": "((0.66 * ((inputs.thermal_power_gw / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
+        "input_refs": [
+          "thermal_power_gw",
+          "num_units"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Meier_Total_Capital_Cost": {
+      "total_capital_billions": {
+        "expr": "(1.83 * ((inputs.reactor_cost + inputs.driver_cost) + inputs.target_factory_cost))",
+        "input_refs": [
+          "reactor_cost",
+          "driver_cost",
+          "target_factory_cost"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Recirculating_Power_Fraction": {
+      "f_recirc": {
+        "expr": "(1.0 / fusion_cycle_gain)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "fusion_cycle_gain"
+        ]
+      }
+    }
+  },
+  "ife_plant": {
+    "ChamberYieldCalc": {
+      "chamber_yield": {
+        "expr": "(inputs.blanket_multiple * inputs.yield_constant)",
+        "input_refs": [
+          "blanket_multiple",
+          "yield_constant"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "CoilVolume": {
+      "volume": {
+        "expr": "((inputs.radius * inputs.radius) * 3.14159)",
+        "input_refs": [
+          "radius"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "CryoLoad": {
+      "cooling_power": {
+        "expr": "(inputs.magnet_volume * 0.05)",
+        "input_refs": [
+          "magnet_volume"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "DriverPowerCalc": {
+      "driver_power": {
+        "expr": "(inputs.efficiency * inputs.bank_energy)",
+        "input_refs": [
+          "efficiency",
+          "bank_energy"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "HifCostCalc": {
+      "driver_cost": {
+        "expr": "(inputs.cost_per_joule * inputs.bank_energy)",
+        "input_refs": [
+          "cost_per_joule",
+          "bank_energy"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "PlantLcoe": {
+      "lcoe": {
+        "expr": "(((inputs.plant_cost_constant + inputs.om_cost_constant) + inputs.target_cost_constant) / (((inputs.availability * inputs.gain) * inputs.driver_efficiency) * inputs.thermal_efficiency))",
+        "input_refs": [
+          "plant_cost_constant",
+          "om_cost_constant",
+          "target_cost_constant",
+          "availability",
+          "gain",
+          "driver_efficiency",
+          "thermal_efficiency"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "invocation_binding_probe": {
+    "Doubler": {
+      "dbl": {
+        "expr": "(inputs.v * 2)",
+        "input_refs": [
+          "v"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "PassthroughCalc": {
+      "result": {
+        "expr": "inputs.x",
+        "input_refs": [
+          "x"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "issue22_model": {
+    "MarginCalc": {
+      "margin": {
+        "expr": "(inputs.component_total * inputs.margin_rate)",
+        "input_refs": [
+          "component_total",
+          "margin_rate"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "WidgetCostCalc": {
+      "cost": {
+        "expr": "(inputs.base_cost * inputs.markup_factor)",
+        "input_refs": [
+          "base_cost",
+          "markup_factor"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "plant_value_shapes": {
+    "ChamberSelectCalc": {
+      "rating": {
+        "expr": "(inputs.footprint * 2.0)",
+        "input_refs": [
+          "footprint"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "FlowCalc": {
+      "total": {
+        "expr": "(inputs.flow_rate * 10.0)",
+        "input_refs": [
+          "flow_rate"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Mixed_Output_Style": {
+      "doubled": {
+        "expr": "(inputs.base * 2.0)",
+        "input_refs": [
+          "base"
+        ],
+        "intermediate_refs": []
+      },
+      "tripled": {
+        "expr": "(inputs.base * 3.0)",
+        "input_refs": [
+          "base"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "NetCostCalc": {
+      "net_cost": {
+        "expr": "(inputs.revenue * 0.5)",
+        "input_refs": [
+          "revenue"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Quoted_Return_Calc": {
+      "scaled": {
+        "expr": "(inputs.amount * 1.5)",
+        "input_refs": [
+          "amount"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "RatedCostCalc": {
+      "cost": {
+        "expr": "(inputs.rate * 100.0)",
+        "input_refs": [
+          "rate"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "plant_values": {
+    "PlantCostCalc": {
+      "plant_cost": {
+        "expr": "((inputs.target_cost + inputs.chamber_cost) / inputs.driver_efficiency)",
+        "input_refs": [
+          "target_cost",
+          "chamber_cost",
+          "driver_efficiency"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "quoted_owner_formula": {
+    "ScaleCalc": {
+      "result": {
+        "expr": "(inputs.value * 2.0)",
+        "input_refs": [
+          "value"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "return_styles": {
+    "BareInC": {
+      "y": {
+        "expr": "(inputs.x * 4)",
+        "input_refs": [
+          "x"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "ControlA": {
+      "y": {
+        "expr": "(inputs.a * 2)",
+        "input_refs": [
+          "a"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "NamedReturnB": {
+      "y": {
+        "expr": "(inputs.b * 3)",
+        "input_refs": [
+          "b"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "retype_model": {
+    "HifCalc": {
+      "hif_out": {
+        "expr": "(inputs.q * 3.0)",
+        "input_refs": [
+          "q"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "IfeCalc": {
+      "ife_out": {
+        "expr": "(inputs.p * 2.0)",
+        "input_refs": [
+          "p"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SharedCalc": {
+      "shared_out": {
+        "expr": "(inputs.s + 1.0)",
+        "input_refs": [
+          "s"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "sample_model": {
+    "FinalCalc": {
+      "total": {
+        "expr": "(inputs.val_a + inputs.val_b)",
+        "input_refs": [
+          "val_a",
+          "val_b"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "FirstCalc": {
+      "doubled": {
+        "expr": "(inputs.base_value * 2.0)",
+        "input_refs": [
+          "base_value"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "MultiOutputCalc": {
+      "diff": {
+        "expr": "(inputs.x - inputs.y)",
+        "input_refs": [
+          "x",
+          "y"
+        ],
+        "intermediate_refs": []
+      },
+      "product": {
+        "expr": "(inputs.x * inputs.y)",
+        "input_refs": [
+          "x",
+          "y"
+        ],
+        "intermediate_refs": []
+      },
+      "sum": {
+        "expr": "(inputs.x + inputs.y)",
+        "input_refs": [
+          "x",
+          "y"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SecondCalc": {
+      "squared": {
+        "expr": "(inputs.input_val * inputs.input_val)",
+        "input_refs": [
+          "input_val"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SimpleCalc": {
+      "result": {
+        "expr": "(inputs.input_a + inputs.input_b)",
+        "input_refs": [
+          "input_a",
+          "input_b"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "self_named_binding_trap": {
+    "AvailabilityCalc": {
+      "derated": {
+        "expr": "(inputs.availability * 0.9)",
+        "input_refs": [
+          "availability"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "self_named_rescue": {
+    "SinkCalc": {
+      "result": {
+        "expr": "(inputs.throughput * 2.0)",
+        "input_refs": [
+          "throughput"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "SourceCalc": {
+      "throughput": {
+        "expr": "(inputs.raw * 1.5)",
+        "input_refs": [
+          "raw"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "sibling_channel_ambiguity": {
+    "PowerCalc": {
+      "power": {
+        "expr": "(inputs.fuel * 10.0)",
+        "input_refs": [
+          "fuel"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "TotalCalc": {
+      "total": {
+        "expr": "(inputs.chamber_power + 1.0)",
+        "input_refs": [
+          "chamber_power"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "solar_battery_model": {
+    "AllocationCostCalc": {
+      "fastener_cost": {
+        "expr": "(inputs.child_count * inputs.fastener_cost_per_child)",
+        "input_refs": [
+          "child_count",
+          "fastener_cost_per_child"
+        ],
+        "intermediate_refs": []
+      },
+      "material_portion": {
+        "expr": "(total_allocation * 0.8)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_allocation"
+        ]
+      },
+      "seal_cost": {
+        "expr": "(inputs.child_count * inputs.seal_cost_per_child)",
+        "input_refs": [
+          "child_count",
+          "seal_cost_per_child"
+        ],
+        "intermediate_refs": []
+      },
+      "total_allocation": {
+        "expr": "((fastener_cost + seal_cost) + wiring_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "fastener_cost",
+          "seal_cost",
+          "wiring_cost"
+        ]
+      },
+      "wiring_cost": {
+        "expr": "(inputs.total_child_mass * inputs.wiring_cost_per_kg)",
+        "input_refs": [
+          "total_child_mass",
+          "wiring_cost_per_kg"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "AnnualizedFinancialCalc": {
+      "annualized_capital_cost": {
+        "expr": "(capital_recovery_factor * inputs.total_capex)",
+        "input_refs": [
+          "total_capex"
+        ],
+        "intermediate_refs": [
+          "capital_recovery_factor"
+        ]
+      },
+      "capital_recovery_factor": {
+        "expr": "((inputs.discount_rate * ((1.0 + inputs.discount_rate) ** inputs.plant_lifetime)) / (((1.0 + inputs.discount_rate) ** inputs.plant_lifetime) - 1.0))",
+        "input_refs": [
+          "discount_rate",
+          "plant_lifetime"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "AnnualizedFuelCalc": {
+      "annual_fuel_cost": {
+        "expr": "(inputs.fuel_unit_cost * inputs.fuel_consumption)",
+        "input_refs": [
+          "fuel_unit_cost",
+          "fuel_consumption"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "AnnualizedOMCalc": {
+      "annual_om_cost": {
+        "expr": "(inputs.om_rate_per_kw_year * inputs.p_net_kw)",
+        "input_refs": [
+          "om_rate_per_kw_year",
+          "p_net_kw"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "ArrayBOSCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "((inputs.string_count * inputs.cost_per_string) + (inputs.panel_count * inputs.cost_per_panel_bos))",
+        "input_refs": [
+          "string_count",
+          "cost_per_string",
+          "panel_count",
+          "cost_per_panel_bos"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "BatteryBOSCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "(inputs.pack_count * inputs.cost_per_pack_bos)",
+        "input_refs": [
+          "pack_count",
+          "cost_per_pack_bos"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "BatteryPackCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "((inputs.capacity_kwh * inputs.cost_per_kwh) * inputs.chemistry_factor)",
+        "input_refs": [
+          "capacity_kwh",
+          "cost_per_kwh",
+          "chemistry_factor"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "ElectricalPanelCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "(inputs.base_cost + (inputs.circuit_count * inputs.cost_per_circuit))",
+        "input_refs": [
+          "base_cost",
+          "circuit_count",
+          "cost_per_circuit"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "EnergyProductionCalc": {
+      "annual_energy_mwh": {
+        "expr": "(((8760.0 * inputs.p_net_mw) * inputs.n_mod) * inputs.plant_availability)",
+        "input_refs": [
+          "p_net_mw",
+          "n_mod",
+          "plant_availability"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "HybridInverterCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "(inputs.power_rating * inputs.cost_per_watt)",
+        "input_refs": [
+          "power_rating",
+          "cost_per_watt"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "InverterCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "(inputs.power_rating * inputs.cost_per_watt)",
+        "input_refs": [
+          "power_rating",
+          "cost_per_watt"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "LCOECalc": {
+      "lcoe_per_mwh": {
+        "expr": "((inputs.annualized_capital_cost + ((inputs.annual_om_cost + inputs.annual_fuel_cost) * ((1.0 + inputs.yearly_inflation) ** inputs.plant_lifetime))) / inputs.annual_energy_mwh)",
+        "input_refs": [
+          "annualized_capital_cost",
+          "annual_om_cost",
+          "annual_fuel_cost",
+          "yearly_inflation",
+          "plant_lifetime",
+          "annual_energy_mwh"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "PVModuleCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "(inputs.wattage * inputs.cost_per_watt)",
+        "input_refs": [
+          "wattage",
+          "cost_per_watt"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    },
+    "PermittingCostCalc": {
+      "fab_cost": {
+        "expr": "0.0",
+        "input_refs": [],
+        "intermediate_refs": []
+      },
+      "idiot_index": {
+        "expr": "0.0",
+        "input_refs": [],
+        "intermediate_refs": []
+      },
+      "install_cost": {
+        "expr": "0.0",
+        "input_refs": [],
+        "intermediate_refs": []
+      },
+      "material_cost": {
+        "expr": "0.0",
+        "input_refs": [],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "(inputs.system_capacity_kw * inputs.cost_per_kw)",
+        "input_refs": [
+          "system_capacity_kw",
+          "cost_per_kw"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "RackingCostCalc": {
+      "fab_cost": {
+        "expr": "(material_cost * inputs.fab_factor)",
+        "input_refs": [
+          "fab_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "idiot_index": {
+        "expr": "(total_cost / material_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "total_cost",
+          "material_cost"
+        ]
+      },
+      "install_cost": {
+        "expr": "(material_cost * inputs.install_factor)",
+        "input_refs": [
+          "install_factor"
+        ],
+        "intermediate_refs": [
+          "material_cost"
+        ]
+      },
+      "material_cost": {
+        "expr": "(inputs.panel_count * inputs.cost_per_panel_rack)",
+        "input_refs": [
+          "panel_count",
+          "cost_per_panel_rack"
+        ],
+        "intermediate_refs": []
+      },
+      "total_cost": {
+        "expr": "((material_cost + fab_cost) + install_cost)",
+        "input_refs": [],
+        "intermediate_refs": [
+          "material_cost",
+          "fab_cost",
+          "install_cost"
+        ]
+      }
+    }
+  },
+  "spec_chain_channel": {
+    "LcoeCalc": {
+      "lcoe": {
+        "expr": "(inputs.cost_per_joule * 100.0)",
+        "input_refs": [
+          "cost_per_joule"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "MeierCost": {
+      "gamma": {
+        "expr": "(inputs.drive_power * 0.02)",
+        "input_refs": [
+          "drive_power"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "spec_chain_twolevel": {
+    "LcoeCalc": {
+      "lcoe": {
+        "expr": "(inputs.cost_per_joule * 100.0)",
+        "input_refs": [
+          "cost_per_joule"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "MaintCalc": {
+      "maint_cost": {
+        "expr": "(inputs.rate * 4.0)",
+        "input_refs": [
+          "rate"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "MeierCost": {
+      "gamma": {
+        "expr": "(inputs.drive_power * 0.02)",
+        "input_refs": [
+          "drive_power"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "ScaleCalc": {
+      "scaled": {
+        "expr": "(inputs.s * 10.0)",
+        "input_refs": [
+          "s"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "unresolvable_attr_probe": {
+    "SimpleCalc": {
+      "result": {
+        "expr": "(inputs.x * 2.0)",
+        "input_refs": [
+          "x"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  },
+  "wi014_toy": {
+    "Panel_Area": {
+      "area": {
+        "expr": "(inputs.length * inputs.width)",
+        "input_refs": [
+          "length",
+          "width"
+        ],
+        "intermediate_refs": []
+      }
+    },
+    "Panel_Cost": {
+      "cost": {
+        "expr": "(inputs.area * inputs.unit_cost)",
+        "input_refs": [
+          "area",
+          "unit_cost"
+        ],
+        "intermediate_refs": []
+      }
+    }
+  }
+}
