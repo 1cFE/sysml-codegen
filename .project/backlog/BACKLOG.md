@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-08
+**Last Updated**: 2026-07-12
 
 ---
 
@@ -29,7 +29,25 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
+| [CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies | Ready (15 items, ~20 days seq., 3 repos) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. See `epic_constraint_execution.md`. |
 | [PUSH-DOWN] agentic-mbse Push-Down | Ready (4 items, 6–8 days) | Expression reconstruction; qualified-name split; hierarchy primitives/models; aggregation decomposition/gates. Design overrides, usage-type indexing, Python rewriting, aliases, scoping, and module construction stay in sysml-codegen. See `epic_push_down.md`. |
+
+CONSTRAINT-EXEC items:
+- [ ] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)
+- [ ] Item 1 — Neutral constraint facts: production schemas + extraction (agentic-mbse)
+- [ ] Item 2 — ExpressionIR: production tree, extraction, serialization (agentic-mbse)
+- [ ] Item 3 — Executable profile: eligibility gates + named diagnostics (agentic-mbse)
+- [ ] Item 4 — Part-instance index: subtype closure + cardinality expansion
+- [ ] Item 5 — Concrete lowering: new phase, strict resolution, execution IDs
+- [ ] Item 6 — module_kind + generation-seam refactor (byte-identity gated)
+- [ ] Item 7 — Constraint module, Kleene compiler, aggregator, catalog generation
+- [ ] Item 8 — Snapshot v3: constraint facts load-bearing
+- [ ] Item 9 — Contracts + sealing: ModelContract / PackageContract
+- [ ] Item 10 — Model evaluator + typed entry production API (teax)
+- [ ] Item 11 — Study store, runner, and strategies (teax)
+- [ ] Item 12 — Study policy, query, and CLI surface (teax)
+- [ ] Item 13 — Calc-seam cutover: retire ExpressionAST (byte-identity gated)
+- [ ] Item 14 — Migration, docs, and IFE acceptance
 
 PUSH-DOWN items:
 - [ ] Item 1 — Expression reconstruction push-down
