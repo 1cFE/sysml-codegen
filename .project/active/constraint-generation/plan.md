@@ -119,9 +119,9 @@ def test_production_defaults_byte_identical():
 ### Changes Required
 **See design.md for:** the exact signature, the pin set derivation, and the "control drops / mechanism keeps" legs → `design.md` D1 and `design.md#validation-approach` (falsifiable exit test).
 
-- [ ] `tests/unit/test_exit_pin.py` (NEW) — control/mechanism legs + production-default byte-identity (capture a pre-D1 snapshot of the exit list to compare against).
-- [ ] `src/sysml_codegen/generation/pipeline.py` `_build_exit_points` — add `*, selected_channels=None, pin_report_channels=True`; compute `pinned = {m.outputs[0].channel_name for m in modules if m.module_kind is ModuleKind.REPORT_AGGREGATOR}`; include channel `ch` iff `(selected_channels is None or ch in selected_channels) or (pin_report_channels and ch in pinned)`. Default path unchanged in behavior.
-- [ ] `generate_pipeline_yaml` — forward an **optional** test-seam for `selected_channels`; production callers pass nothing.
+- [x] `tests/unit/test_exit_pin.py` (NEW) — control/mechanism legs + production-default byte-identity (capture a pre-D1 snapshot of the exit list to compare against).
+- [x] `src/sysml_codegen/generation/pipeline.py` `_build_exit_points` — add `*, selected_channels=None, pin_report_channels=True`; compute `pinned = {m.outputs[0].channel_name for m in modules if m.module_kind is ModuleKind.REPORT_AGGREGATOR}`; include channel `ch` iff `(selected_channels is None or ch in selected_channels) or (pin_report_channels and ch in pinned)`. Default path unchanged in behavior.
+- [x] `generate_pipeline_yaml` — forward an **optional** test-seam for `selected_channels`; production callers pass nothing.
 
 ### Validation
 **Automated:**
@@ -330,6 +330,25 @@ pre-existing, unrelated to this change (live-model/license-gated tests). `ruff c
 `mypy src/` — 76 errors, matching the recorded baseline exactly, none in new files.
 
 ### Phase 2 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- `src/sysml_codegen/generation/pipeline.py` `_build_exit_points` — added
+  `*, selected_channels=None, pin_report_channels=True`; production defaults untouched
+  behavior. `generate_pipeline_yaml` forwards an optional `selected_channels` test seam.
+- Created `tests/unit/test_exit_pin.py` — control/mechanism narrowed-exit pair,
+  production-defaults-capture-everything, and a uniform-narrowing sanity check.
+
+**Deviations from plan:** `pinned` is computed over every output of a
+`REPORT_AGGREGATOR` module (`for out in module.outputs`), not just `outputs[0]` as the
+plan's pseudocode wrote it — the aggregator is currently single-output but nothing in
+D1/INV-5 restricts it to one, and iterating all outputs costs nothing at production
+defaults (byte-identity test still passes).
+
+**Validation:** `uv run pytest tests/unit/test_exit_pin.py tests/unit/test_exit_point_aliases.py`
+— 10/10 pass (existing alias tests unaffected). `uv run pytest tests/` — 2020 passed (2017
+baseline + 3 new), same 23 failed / 96 errors baseline, no regressions. `ruff check` clean.
+`mypy src/` — 76 errors, baseline held.
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 ### Phase 5 Completion
