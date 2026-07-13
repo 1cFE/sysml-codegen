@@ -6,6 +6,17 @@
 
 ## Active Work
 
+### CONSTRAINT-EXEC Item 8 — Snapshot v3: Constraint Facts Load-Bearing — SPEC in progress (2026-07-12)
+
+Epic Item 8. Spec: `.project/active/snapshot-v3/spec.md`. Makes the neutral `ConstraintFacts`
+a load-bearing, versioned snapshot section (bump v2→v3), wires lowering into the from-snapshot
+rebuild path so live/snapshot produce byte-identical extended graphs, rejects stale/sectionless
+snapshots loudly, and flips `build_pipeline_context(lower_constraints_enabled=...)` default to
+True under a parity gate. Orchestrator decisions: (Q1) carve-out flag-off grandfather for
+`plant_values`/`fusion_tea` (the `gain` hierarchy-extraction gap becomes a named Item-14
+prerequisite, not just deferred); (Q2) serialize the neutral facts + part-instance occurrence
+data for true offline re-derivation parity. Next: `/_my_spec_review` then `/_my_design`.
+
 ### CONSTRAINT-EXEC Item 7 — Constraint Module, Kleene Compiler, Aggregator, Catalog Generation — SPEC in progress (2026-07-12)
 
 Epic Item 7. Spec: `.project/active/constraint-generation/spec.md`. Productionizes the S4
