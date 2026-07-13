@@ -1,7 +1,15 @@
 """Shared fail-loud error construction for generation seams (Item 6)."""
 
+from __future__ import annotations
 
-def unrenderable_module_kind_error(module, seam_name):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+    from sysml_codegen.resolution.models import PipelineModule
+
+
+def unrenderable_module_kind_error(module: PipelineModule, seam_name: str) -> CodeGenerationError:
     """Build the uniform refusal for a module_kind with no rendering at a seam."""
     # Lazy import mirrors the proven pattern at cli/__init__.py:195 (avoids any import cycle).
     from sysml_codegen.generation import CodeGenerationError
