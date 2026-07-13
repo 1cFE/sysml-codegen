@@ -426,34 +426,59 @@ def test_live_generate_grandfathered_still_halts_on_gain(fixture):
 the flip + exclusion component (design.md#component-overview); the intended live-CLI halt
 (design.md#key-decisions D3 sub-bullet).
 
-- [ ] **`orchestration/pipeline_builder.py:697`** — default `lower_constraints_enabled=True`; retire
-      the transitional comment block at `:856-863`.
-- [ ] **`snapshot/capture.py:20`** — add a `lower_constraints_enabled: bool = True` param to
-      `capture_snapshot`; thread it into `build_pipeline_context`. When False, the context stamps
-      `constraint_lowering_mode="grandfathered_off"`, keeps honest non-empty facts, empty occurrence
-      table (design.md#architecture "Capture data flow").
-- [ ] **`scripts/capture_extraction_snapshots.py`** — a named `GRANDFATHERED = {"plant_values",
-      "fusion_tea"}` set; in the MODELS loop, pass `lower_constraints_enabled=(name not in GRANDFATHERED)`
-      to `capture_snapshot`. Keep the set named + commented (loud on gap, design principle).
-- [ ] **`scripts/capture_extraction_snapshots.py:135`** (`_capture_extraction_only`) — also write the
-      three keys: `constraint_facts = extract_constraint_facts(extractor.model)`, mode
-      `grandfathered_off` (no pipeline → no lowering), empty table. Otherwise those v3 snapshots fail
-      INV-1 (design.md#implementation-notes "Extraction-only capture").
-- [ ] **`scripts/capture_pipeline_baselines.py`** — mirror the `GRANDFATHERED` set if/where the
-      baseline rebuild needs the mode (the offline path reads the mode from the snapshot, so the
-      baseline script may need no change beyond loading v3 — confirm during implementation).
-- [ ] **Test file** `tests/conformance/test_grandfather_carveout.py` (NEW).
+- [x] **`orchestration/pipeline_builder.py`** — default `lower_constraints_enabled=True`; retired
+      the transitional comment block, replaced with a Phase-4 note explaining the default and the
+      grandfather's scope (CLI unaffected).
+- [x] **`snapshot/capture.py`** — `capture_snapshot`'s `lower_constraints_enabled` param (added in
+      Phase 3's pull-forward with default `False`) is now default `True`; threaded into
+      `build_pipeline_context` (already wired in Phase 3).
+- [x] **`scripts/capture_extraction_snapshots.py`** — a named `GRANDFATHERED = frozenset({"plant_values",
+      "fusion_tea"})` set; in the `MODELS` loop, `lower_constraints_enabled=(model_name not in GRANDFATHERED)`
+      passed to `capture_snapshot`. Named + commented (loud on gap, design principle).
+- [x] **`scripts/capture_extraction_snapshots.py`** (`_capture_extraction_only`) — already wrote the
+      three keys as of Phase 2's pull-forward (facts via `extract_constraint_facts`, mode
+      `grandfathered_off`, empty table) — no further change needed here.
+- [x] **`scripts/capture_pipeline_baselines.py`** — confirmed no change needed: it only calls
+      `build_full_graph_from_snapshot(snapshot_path)`, which reads `constraint_lowering_mode` from the
+      already-captured v3 snapshot (Layer A) and dispatches accordingly — no `GRANDFATHERED` mirror
+      required on the Layer-B side.
+- [x] **Test file** `tests/conformance/test_grandfather_carveout.py` (NEW).
+- [x] **Deviation — 5 pre-existing tests updated for the default flip** (not originally listed, but
+      required: these tests asserted the *old* off-by-default behavior as their control/premise, and
+      the flip invalidates that premise, not the test's actual intent):
+      - `test_constraint_lowering.py::_load` — now passes `lower_constraints_enabled=False` explicitly
+        (these tests call `lower_constraints` manually afterward; the shared ctx must stay inert
+        regardless of fixture, including `constraint_blocked_owner` which would otherwise halt before
+        the test's own call).
+      - `test_constraint_lowering.py::test_wired_pipeline_path_lowers_when_enabled` → renamed
+        `..._by_default_and_is_inert_when_disabled`; adds a default-True assertion and keeps the
+        explicit-False/True cases.
+      - `test_constraint_pipeline_threading.py::test_roots_before_pruning_retains_producer_s4_reproduction`
+        — the "control" build now passes `lower_constraints_enabled=False` explicitly (it was relying
+        on the old implicit default for its control/lowered contrast).
+      - `test_constraint_pipeline_threading.py::test_blocked_profile_fixture_generates_when_flag_off`
+        → renamed `..._when_lowering_explicitly_disabled`; passes `False` explicitly (its premise —
+        "flag off is the default" — no longer holds; the opt-out mechanism itself still does).
+      - `test_orchestrator.py::test_computation_graph_identity_is_the_generation_boundary` — passes
+        `lower_constraints_enabled=False` explicitly (wi014_toy carries an admitted assertion; P3
+        EXTEND reassigns `computation_graph` to a new object, which is orthogonal to what this test
+        pins — identity up to the `build_computation_graph` boundary).
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_grandfather_carveout.py` → from-snapshot succeeds +
-      WARNING; live CLI halts on `gain`
-- [ ] `uv run ruff check src/`; `uv run mypy src/` → no new errors
-- [ ] Full suite still expected RED on committed-corpus loading until Phase 5.
+- [x] `uv run pytest tests/conformance/test_grandfather_carveout.py` → all 4 pass: from-snapshot
+      succeeds + WARNING (both fixtures); live CLI halts on `gain` (both fixtures) — verified the
+      exact halt message empirically (`PlantValuesDesign__plant.gain: unresolved actual 'gain'`,
+      `hif_plant_pkg__hif_plant.gain: ...`) before writing the assertion
+- [x] `uv run ruff check src/`; `uv run mypy src/` → clean; mypy 76 (baseline, no new errors)
+- [x] Full suite still expected RED on committed-corpus loading until Phase 5: 245 failed, 1324
+      passed (1320 + 4 new), 692 errors — identical failure/error set to Phase 3.
 
 **Manual:**
-- [ ] Confirm the `GRANDFATHERED` set is named and commented in both scripts, and the offline
-      WARNING names the specific ungenerated assertion.
+- [x] Confirmed the `GRANDFATHERED` set is named and commented in
+      `scripts/capture_extraction_snapshots.py`; the offline WARNING names the ungenerated-assertion
+      count (`caplog.text` assertion in the test). `capture_pipeline_baselines.py` needs no mirror
+      (confirmed above — it reads the mode from the already-captured snapshot).
 
 **What we know works after this phase:** the default is True on both surfaces; the two `gain`-blocked
 fixtures stay un-lowered and byte-identical behind a visible marker; the live CLI halt on `gain` is
@@ -619,7 +644,24 @@ orchestrator's brief added after this plan was written. (2) `capture_snapshot` g
 itself to capture a lowering-applied snapshot before the corpus default flips.
 
 ### Phase 4 Completion
-—
+**Completed:** 2026-07-13
+**Actual Changes:**
+- `orchestration/pipeline_builder.py`: `lower_constraints_enabled` default → `True`; transitional
+  comment replaced with the Phase-4 rationale (default + grandfather scope).
+- `snapshot/capture.py`: `capture_snapshot`'s `lower_constraints_enabled` default → `True`.
+- `scripts/capture_extraction_snapshots.py`: named `GRANDFATHERED` set; routed through the `MODELS`
+  capture loop.
+- `tests/conformance/test_grandfather_carveout.py` (NEW): 4 tests.
+- 5 pre-existing tests updated for the default flip (logged above): `test_constraint_lowering.py`
+  (`_load` helper + 1 renamed test), `test_constraint_pipeline_threading.py` (2 tests, one renamed),
+  `test_orchestrator.py` (1 test).
+**Issues:** The default flip surfaced 5 tests whose *assertions* encoded the old off-by-default
+behavior as their test setup/control, not their actual subject under test. None were spec/design
+violations — each was fixed by making the now-necessary `lower_constraints_enabled=False` explicit
+where the test's real intent needed lowering disabled, confirmed via a full-suite diff
+(`diff` against Phase 3's failure list) showing zero new failures beyond the fixed 5.
+**Deviations:** None beyond the test updates above, which are corrective (keeping existing tests'
+actual intent valid under the new default), not scope changes.
 
 ### Phase 5 Completion
 —

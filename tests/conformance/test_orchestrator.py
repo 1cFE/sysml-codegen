@@ -363,7 +363,13 @@ class TestStepOrdering:
 
         pipeline_builder_module.build_computation_graph = _spy
         try:
-            ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+            # lower_constraints_enabled=False: wi014_toy carries an admitted
+            # assertion, and P3 EXTEND reassigns `computation_graph` to a new
+            # object post-`build_computation_graph` (Item 5) — orthogonal to
+            # what this test pins (identity up to that boundary).
+            ctx = build_pipeline_context(
+                [FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=False
+            )
         finally:
             pipeline_builder_module.build_computation_graph = original
 

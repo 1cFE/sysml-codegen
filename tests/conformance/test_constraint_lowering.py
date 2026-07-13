@@ -33,7 +33,12 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 
 def _load(name: str):
-    ctx = build_pipeline_context([FIXTURES_DIR / name])
+    # lower_constraints_enabled=False: these tests call `lower_constraints`
+    # manually below to test it in isolation — the pipeline context itself
+    # must stay inert so a model with a halting/blocked assert (e.g.
+    # constraint_blocked_owner) doesn't raise before the test reaches its
+    # own `lower_constraints` call.
+    ctx = build_pipeline_context([FIXTURES_DIR / name], lower_constraints_enabled=False)
     occ_index = build_part_instance_index(ctx.extractor.model)
     facts = extract_constraint_facts(ctx.extractor.model)
     return ctx, occ_index, facts
@@ -334,13 +339,19 @@ def test_unassessed_usage_in_batch_neither_halts_nor_lowers():
 
 
 @requires_license
-def test_wired_pipeline_path_lowers_when_enabled():
-    """The Item 5 P1/P2/P3 threading, exercised end-to-end behind its flag.
+def test_wired_pipeline_path_lowers_by_default_and_is_inert_when_disabled():
+    """The Item 5 P1/P2/P3 threading, exercised end-to-end via the flag.
 
-    Default-off on the shared path until Item 8 restores live/snapshot parity;
-    this test proves the wired path works when enabled.
+    Default True since Item 8 Phase 4 (snapshot v3 restores live/snapshot
+    parity); explicitly passing `lower_constraints_enabled=False` still opts
+    out (the mechanism the grandfather set uses at capture time, D3).
     """
-    ctx_off = build_pipeline_context([FIXTURES_DIR / "constraint_multi_instance"])
+    ctx_default = build_pipeline_context([FIXTURES_DIR / "constraint_multi_instance"])
+    assert len(ctx_default.concrete_constraints) == 3
+
+    ctx_off = build_pipeline_context(
+        [FIXTURES_DIR / "constraint_multi_instance"], lower_constraints_enabled=False
+    )
     assert ctx_off.concrete_constraints == []
 
     ctx_on = build_pipeline_context(

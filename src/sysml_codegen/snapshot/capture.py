@@ -21,7 +21,7 @@ def capture_snapshot(
     model_paths: list[Path],
     output_path: Path,
     design_path_filter: str = "",
-    lower_constraints_enabled: bool = False,
+    lower_constraints_enabled: bool = True,
 ) -> Path:
     """Capture a versioned snapshot from live models and write it to output_path.
 
@@ -35,9 +35,8 @@ def capture_snapshot(
             CLI error, V6).
         lower_constraints_enabled: whether to run constraint lowering at capture
             time (Item 8, D3) — stamps ``constraint_lowering_mode`` accordingly.
-            Transitional default False until Item 8's Phase 4 flips it; the
-            named ``GRANDFATHERED`` set in the capture scripts routes it per
-            fixture.
+            Default True; the named ``GRANDFATHERED`` set in the capture scripts
+            passes False for the two carved-out fixtures.
 
     Returns:
         The output path written.

@@ -1,9 +1,9 @@
 """Phase 5: success-criteria fixtures locked, exercised through the wired
 `build_pipeline_context` path (`lower_constraints_enabled=True`).
 
-The shared default path (`lower_constraints_enabled=False`) is proven inert
-by the corpus byte-identity gate (plan.md Phase 5 Validation) — nothing here
-duplicates that; every test in this file passes the flag explicitly.
+Lowering defaults to True since Item 8 Phase 4; every test in this file that
+needs a genuine "lowering did not run" control passes `False` explicitly
+(there is no longer an implicit off-by-default path to rely on).
 """
 
 from __future__ import annotations
@@ -28,7 +28,10 @@ def test_roots_before_pruning_retains_producer_s4_reproduction():
     target = "toy_plant__demo_plant__area_calc.area"
 
     control = build_pipeline_context(
-        [FIXTURES_DIR / "wi014_toy"], targets=[target], include_all=False
+        [FIXTURES_DIR / "wi014_toy"],
+        targets=[target],
+        include_all=False,
+        lower_constraints_enabled=False,
     )
     control_names = {m.name for m in control.computation_graph.modules}
     assert "toy_plant__demo_plant__cost_calc" not in control_names
@@ -174,9 +177,11 @@ def test_wired_path_halts_on_profile_blocked_assert():
 
 
 @requires_license
-def test_blocked_profile_fixture_generates_when_flag_off():
-    """With the transitional default (flag off), the same model still builds a
-    pipeline context — the halt is scoped to the lowering-enabled path until
-    Item 8 flips the default."""
-    ctx = build_pipeline_context([FIXTURES_DIR / "constraint_blocked_profile"])
+def test_blocked_profile_fixture_generates_when_lowering_explicitly_disabled():
+    """Explicitly opting out of lowering (the grandfather mechanism, D3) still
+    builds a pipeline context inertly — the halt is scoped to the
+    lowering-enabled path, which is now the default (Item 8 Phase 4)."""
+    ctx = build_pipeline_context(
+        [FIXTURES_DIR / "constraint_blocked_profile"], lower_constraints_enabled=False
+    )
     assert ctx.concrete_constraints == []

@@ -702,7 +702,7 @@ def build_pipeline_context(
     targets: list[str] | None = None,
     include_all: bool = True,
     design_path_filter: str = "",
-    lower_constraints_enabled: bool = False,
+    lower_constraints_enabled: bool = True,
 ) -> PipelineContext:
     """Build complete pipeline context from SysML models.
 
@@ -861,14 +861,15 @@ def build_pipeline_context(
     # first (evaluate_profile) — a blocked assert halts here with a named
     # diagnostic; a non-admitted usage catalogs unassessed, never reaching the
     # strict resolver.
-    # TRANSITIONAL DEFAULT (Item 5 -> Item 8 seam): lowering is built and tested
-    # but default-off on the shared path, because snapshots cannot carry
-    # constraint facts until Item 8 (snapshot v3) — with it on, every
-    # constraint-bearing model diverges live-vs-snapshot (22 conformance
-    # failures, orchestrator-verified). Item 8 flips the default when its
-    # parity criterion (constraint-bearing fixture byte-identical live and
-    # from snapshot) is meetable. Callers that need lowering now (Item 5
-    # fixtures, Item 7 generation) pass lower_constraints_enabled=True.
+    # Default True (Item 8 Phase 4): snapshot v3 carries constraint facts +
+    # the resolved occurrence table, and Phase 3 proved from-snapshot
+    # regeneration re-lowers to a byte-identical graph/catalog on the clean
+    # fixtures — so live and offline stay in parity by default. The
+    # `plant_values`/`fusion_tea` pair is grandfathered flag-off via the
+    # named `GRANDFATHERED` set in the capture scripts (D3); their live CLI
+    # generation still halts on the `gain` gap (Item 14's prerequisite),
+    # unaffected by this default — the grandfather only ever routes through
+    # `capture_snapshot`'s `lower_constraints_enabled` param, never the CLI.
     concrete_constraints: list[ConcreteConstraint] = []
     part_occurrences: dict[str, list[InstanceOccurrence]] = {}
     if lower_constraints_enabled and constraint_facts.usages:

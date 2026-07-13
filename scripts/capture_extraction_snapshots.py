@@ -32,7 +32,6 @@ import json
 from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 
 from scripts.capture_filter import select_fixtures
-
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
 from sysml_codegen.orchestration.pipeline_builder import (
@@ -112,6 +111,16 @@ MODELS = {
     # acceptance run.
     "fusion_tea": FIXTURES_DIR / "fusion_tea",
 }
+
+# Constraint-lowering grandfather (Item 8, D3): these two fixtures assert real
+# constraints the `gain` hierarchy-extraction gap (Item 14's prerequisite)
+# blocks from lowering — capture them with lowering disabled
+# (`constraint_lowering_mode: "grandfathered_off"`) so the corpus stays
+# coherent under the default flip. Named and commented so growth is loud, not
+# silent drift (design.md#potential-risks). Live `generate --models
+# plant_values` is NOT exempted — it still halts on `gain` under the new
+# default, as intended (D3 sub-bullet).
+GRANDFATHERED = frozenset({"plant_values", "fusion_tea"})
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
 # or CHAIN overrides that produce unresolvable source paths)
@@ -219,7 +228,11 @@ def main(requested: str | None = None) -> None:
         if model_name not in selected:
             continue
         print(f"Processing {model_name} from {model_path}...")
-        out = capture_snapshot([model_path], model_path / "extraction_snapshot.json")
+        out = capture_snapshot(
+            [model_path],
+            model_path / "extraction_snapshot.json",
+            lower_constraints_enabled=(model_name not in GRANDFATHERED),
+        )
         _report(model_path, json.loads(out.read_text()))
 
     # Extraction-only fixtures cannot build the full pipeline; capture directly
