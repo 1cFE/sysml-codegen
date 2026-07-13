@@ -470,3 +470,23 @@ keeping `ConcreteConstraint` in `resolution/models.py` gives both a stable impor
 ---
 Next Step: After approval → `/_my_plan`. B1 is probe-settled; no blocking spike remains — first
 implement the occurrence→`ScopedKey` transform against `constraint_multi_instance`.
+
+---
+
+## Addendum: ladder as-built (audit cure, orchestrator, 2026-07-12)
+
+B4/D1's enumerated strict ladder (`scoped_lookup` → `alias_lookup` → design-attr-by-QN)
+understates the as-built resolver. Implementation evidence (hif_plant's profile-ADMIT
+`driver.efficiency`, plan.md third pass) widened it to **five** forms, all pre-authorized by
+B4's own amendment rule ("evidence of an in-profile actual hitting a missing rung grows the
+profile coverage; the terminal switch stays"):
+
+1. `scoped_lookup` (occurrence-scoped key)
+2. `alias_lookup`
+3. `scoped_alias_lookup`
+4. design-attribute by sanitized QN
+5. occurrence-scoped design-attribute match against supplied-value-materializer synthesized QNs
+
+The terminal remains `terminal_disposition(strict=True)` — always raises, fallback synthesis
+unreachable (mutation-verified RED/GREEN by the orchestrator at the real call site). No rung
+synthesizes an EP key (the F4 rule holds).

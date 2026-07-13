@@ -190,3 +190,15 @@ replace silent drops with named errors, and it does: blocked owner
   strength of the plan's live trace; not independently reproduced (execution blocked).
 - **Snapshot round-trip, module emission, fingerprinting** — out of scope (Items 7/8/9), not
   examined.
+
+---
+
+## Addendum: probes + cures executed by orchestrator (2026-07-12)
+
+- **Live tests:** all Item 5 test files (lowering conformance, pipeline threading, resolver units) → **28 passed** in the licensed env; plus the two new cure tests below (30 total after cures).
+- **Mutation probe:** first attempt hit a docstring occurrence of `strict=True` (stayed green — probe operator error, recorded for honesty); re-run at the real call site → exactly `test_strict_terminal_raises_never_synthesizes` FAILED → revert → 12 passed. The fallback-unreachable guard has teeth.
+- **Suite of record:** the implement session's native run (2202 passed / 4 skipped, mypy 76, ruff clean, corpus regenerate → empty diff). Orchestrator cross-env A/B additionally proved the wiring adds zero failures (identical 19 environmental cross-env failures at HEAD, HEAD^, and with/without wiring).
+- **Cure (note 2):** design.md addendum records the as-built five-rung ladder with its B4 authorization; terminal unchanged.
+- **Cure (note 3):** new `constraint_blocked_profile` fixture + two wired-path tests — the profile halt fires end-to-end through `build_pipeline_context(lower_constraints_enabled=True)` with a reason-grade message, and the same model still builds with the flag off (transitional semantics pinned). Both green in the licensed env; mypy 76 baseline; ruff clean.
+
+**Final verdict: Certify** (upgraded from Certify-with-notes; probes executed, both cures landed).

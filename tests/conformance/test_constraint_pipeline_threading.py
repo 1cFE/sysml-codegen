@@ -8,7 +8,10 @@ duplicates that; every test in this file passes the flag explicitly.
 
 from __future__ import annotations
 
+import pytest
+
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.resolution.graph_builder import (
     _validate_channel_references,
     collect_uncovered_params,
@@ -152,3 +155,28 @@ def test_inheritance_cross_check_instance_index_probe_oracle_unchanged():
     # by lowering having also run.
     assert len(concrete) > 0
     assert len(index.occurrences_of("InstanceIndexProbe__ConstrainedLeaf")) == 9
+
+
+@requires_license
+def test_wired_path_halts_on_profile_blocked_assert():
+    """Audit cure (note 3): the preflight halt fires end-to-end through the
+    wired pipeline, not only via direct lower_constraints calls."""
+    with pytest.raises(CodeGenerationError) as exc_info:
+        build_pipeline_context(
+            [FIXTURES_DIR / "constraint_blocked_profile"],
+            lower_constraints_enabled=True,
+        )
+    message = str(exc_info.value)
+    assert "not executable" in message
+    assert "exact" in message
+    # Reason-grade, not just "blocked" (block_real_equality family)
+    assert "equal" in message.lower()
+
+
+@requires_license
+def test_blocked_profile_fixture_generates_when_flag_off():
+    """With the transitional default (flag off), the same model still builds a
+    pipeline context — the halt is scoped to the lowering-enabled path until
+    Item 8 flips the default."""
+    ctx = build_pipeline_context([FIXTURES_DIR / "constraint_blocked_profile"])
+    assert ctx.concrete_constraints == []
