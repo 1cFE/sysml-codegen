@@ -254,7 +254,28 @@ cite that evidence and skip re-spiking; the classifier can be written directly a
 
 ## Resolutions
 
-_Filled in during Stage 4 — the design agent reads this section to incorporate the review._
+Incorporated 2026-07-12 (design agent, folding in `b1-probe-evidence.md`):
+
+- **C1 — Fixed.** D3 rewritten as node-type dispatch on the live `upper_bound`: `LiteralInteger`
+  with absent-or-equal `LiteralInteger` lower → admit (count = `u`); `LiteralInfinity` /
+  `FeatureReferenceExpression` / unequal literal range → block; `is_ordered`/`is_nonunique` read off
+  the **usage** → block; unrecognized node type → block (fail-closed default). The old "bounds
+  present, lower == upper on cached values" prose (which blocked `[3]`) is deleted. Research
+  Findings now carries the evidence table.
+- **C2 — Fixed.** `[3..3]` pinned as admit-fixed-3 (new D3/C2 note), with a dedicated test
+  (Validation #7).
+- **C3 — Fixed.** `InstanceOccurrence.part_def_qn` = the usage's own most-specific type via
+  `most_specific`, entry-independent; dedup key entry-independent (D5/D7, INV-4). Rejected-
+  alternative note explains the supertype-wins hazard on double-keyed retyped usages. B4 restated
+  as conditional on this.
+- **M1 — Fixed.** Cartesian / intermediate-multiplicity and multiplicity-under-subtype added as a
+  named test (Validation #8); Architecture step 3 states the product explicitly.
+- **M2 — Fixed.** New D8: classifier is live-node-only; `MultiplicityData` dropped from the index
+  entirely (inputs, imports, component list updated). Rejected cross-check option recorded with its
+  missing-data ambiguity. Carry-forward (1) challenge surfaced in the Surfacing note.
+- **m1 / m2 / m3 — Fixed.** Sort-key `None`/`int` invariant noted with a `-1`-sentinel option;
+  `_visited` cycle-guard replication called out in Implementation Notes; ordered-marker prose moved
+  from "range node" to the usage.
 
 ---
 

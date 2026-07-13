@@ -1,8 +1,9 @@
 # Design: Part-Instance Index — Subtype Closure and Cardinality Expansion
 
-**Status:** Draft
+**Status:** Draft (rev 2 — must-fixes C1–C3, M1–M2, minors folded in from design-review + B1/B2 evidence)
 **Owner:** Reid W
 **Created:** 2026-07-12 17:37 PDT
+**Revised:** 2026-07-12 (post design-review)
 **Branch:** constraint-exec-epic (commit 00ea1eb)
 **Epic:** CONSTRAINT-EXEC — Item 4
 **Complexity:** MEDIUM
@@ -22,6 +23,8 @@ tests the index and wires nothing.
 - **Spec brief:** `.project/active/part-instance-index/briefs/spec.md`
 - **Design brief:** `.project/active/part-instance-index/briefs/design.md`
 - **Spike S3:** `.project/active/spike-concrete-expansion-instance-index/` (findings, `probe_instance_index.py`, `model.sysml`)
+- **B1/B2 evidence:** `.project/active/part-instance-index/b1-probe-evidence.md` (live multiplicity surface, confirmed 2026-07-12; `probe_b1_multiplicity.py`)
+- **Design review:** `.project/active/part-instance-index/design-review.md` (Approved-with-must-fixes)
 - **Concept:** `.project/concepts/constraint-execution-and-design-space-studies-claude.md` ("Concrete Lowering"; Design Principle 5; Appendix B, S3)
 - **Reference:** `docs/architecture/reference/25-hierarchy-resolver.md` (multiplicity extraction)
 
@@ -45,16 +48,29 @@ tests the index and wires nothing.
   (`parent_def_qn`, `usage_name`) but **flattens that into a string**, discarding the per-segment
   owner the correct multiplicity key needs.
 
-**Multiplicity facts** (`MultiplicityData`, 5 fields only): `part_usage_name`,
-`owning_part_def_qn`, `count`, `count_attribute_name`, `default_value`
-(`data_models.py` re-export; `snapshot/loader.py:413`). Confirmed behavior
-(`docs/.../25-hierarchy-resolver.md:145-178`; `test_hierarchy_resolver.py:850-896`):
+**Multiplicity — the live surface (B1/B2 evidence, confirmed live SysIDE 0.8.4).** The gate reads
+the usage's live `multiplicity` node, not the extracted `MultiplicityData`. Per the evidence table
+(`b1-probe-evidence.md`), each shape is identified by the **node type of `upper_bound`** plus two
+flags on the **usage**:
 
-- Fixed `[3]` → `count=3`, `count_attribute_name=None`.
-- Parameterized `[module_count]` → `count=20` (cached **lower** bound), `count_attribute_name="module_count"`.
-- `count` is `cached_lower_bound`; `count_attribute_name` is `upper_bound.referent.name`.
-- **MultiplicityData carries no upper-bound, ordered, or unbounded marker.** See Bet B1 — this
-  is the crux the cardinality gate turns on.
+| shape | `upper_bound` node | `lower_bound` node | usage flags | verdict |
+|---|---|---|---|---|
+| `[3]` | `LiteralInteger(3)` | `None` | — | admit, count 3 |
+| `[3..3]` | `LiteralInteger(3)` | `LiteralInteger(3)` | — | admit, count 3 (C2) |
+| `[0..5]` | `LiteralInteger(5)` | `LiteralInteger(0)` | — | block (range) |
+| `[*]` | `LiteralInfinity` | `None` | — | block (unbounded) |
+| `[n]` (attr) | `FeatureReferenceExpression` | `None` | — | block (parameterized) |
+| `[3] ordered` | `LiteralInteger(3)` | `None` | `is_ordered=True` | block |
+| `[3] nonunique` | `LiteralInteger(3)` | `None` | `is_nonunique=True` | block |
+| singleton | `usage.multiplicity is None` | | | pass through (1 occurrence) |
+
+Two facts kill any cached-value or `MultiplicityData`-based gate: (1) `cached_upper_bound` is
+**exclusive** (4 for `[3]`), and (2) a parameterized `[n]` resolves its default into
+`cached_upper_bound` (non-`None`) — so a gate keyed on cached counts silently expands the default.
+**Node-type dispatch on `upper_bound` is mandatory.** For reference, `MultiplicityData` (5 fields:
+`part_usage_name`, `owning_part_def_qn`, `count`, `count_attribute_name`, `default_value`;
+`data_models.py`; `snapshot/loader.py:413`) still drives the aggregation path unchanged, but the
+index does **not** use it — see D8.
 
 **Blocking convention:** the codebase blocks with a named `Exception` subclass —
 `MissingCalcDefError`, `CircularDependencyError` (`graph_builder.py:75,1658`) — raised at the
@@ -89,45 +105,47 @@ It works by composing three existing facts the S3 probe already validated live:
    arm that quietly emits a reduced set. This is Design Principle 5 made mechanical: silence is
    never an outcome.
 
-The key insight is #3 read against the facts: `MultiplicityData` alone **cannot** prove "fixed
-literal" — a fixed `[3]` and an unbounded `[*]` can both surface with `count_attribute_name is
-None`. So the gate reads the **live multiplicity range node** (the same node
-`extract_multiplicities` already reads) to *positively confirm* a single literal bound, and
-treats everything it cannot confirm as blocking. Reading the live range is reading "live
-PartUsage heritage already exposed," which the spec's own [HARD] permits — see the Surfacing
-note below.
+The key insight is #3 read against the confirmed live surface (B1/B2 evidence): the extracted
+`MultiplicityData` **cannot** distinguish the shapes — a fixed `[3]` and a parameterized `[n]`
+both carry a non-`None` cached count, so any cached-value gate silently expands the parameter's
+default. The finiteness verdict lives only in the **node type of the live `upper_bound`**
+(`LiteralInteger` vs `LiteralInfinity` vs `FeatureReferenceExpression`) plus the usage's
+`is_ordered`/`is_nonunique` flags. So the gate dispatches on those live nodes to *positively
+confirm* a single literal bound and blocks everything else. Reading the live multiplicity node is
+reading "live PartUsage heritage already exposed," which the spec's own [HARD] permits — see the
+Surfacing note below.
 
 The index is **pure addition**: it reuses the existing part-usage index and heritage helpers
 read-only, and no existing discovery path calls it. Item 5 wires it in.
 
 ## Key Bets
 
-- **B1 — The live multiplicity range node exposes enough to positively identify a single fixed
-  literal count** (lower bound, upper bound, whether the bound is a literal vs an attribute
-  referent, and an ordered/nonunique marker). `extract_multiplicities` already reads
-  `cached_lower_bound`, `cached_upper_bound`, and `upper_bound.referent`, so the numeric bounds
-  are reachable; the ordered marker is the unconfirmed part. *If false → the gate cannot
-  fail-closed from live facts and would need a new extracted field, which the [HARD]
-  "no new SysIDE facts" forbids — the two constraints then genuinely conflict and must go back
-  to the owner.* **De-risk first (see Handoff).**
+B1 and B2 were the load-bearing bets; the orchestrator's live probe (`b1-probe-evidence.md`)
+**confirmed both as facts**. They are recorded here as settled evidence, not open risk.
 
-- **B2 — `extract_multiplicities` may omit non-fixed multiplicities entirely** (it excludes
-  singletons; a `[*]` or `[0..5]` might likewise produce no `MultiplicityData`). Therefore the
-  gate must decide finiteness from the **live usage node per path step**, not from
-  `MultiplicityData` *presence*. *If false and we relied on MultiplicityData presence → a
-  non-fixed member would look like a plain singleton and emit one silent occurrence — the exact
-  no-silent-drop violation the item exists to stop.* The design reads the live node precisely to
-  neutralize this bet; it is stated so the plan spikes it rather than trusts it.
+- **B1 — CONFIRMED. The live multiplicity node positively identifies a single fixed literal.**
+  `upper_bound`'s node type is `LiteralInteger` for a literal, `LiteralInfinity` for `[*]`,
+  `FeatureReferenceExpression` for a parameterized `[n]`; `is_ordered`/`is_nonunique` live on the
+  **usage**, not the range node. The gate dispatches on these (D3). No new extracted field is
+  needed, so the [HARD] "no new SysIDE facts" and Design Principle 5 no longer conflict.
+
+- **B2 — CONFIRMED, stronger than feared. Cached counts are untrustworthy for the gate.** A
+  parameterized `[n]` resolves its default into `cached_upper_bound` (non-`None`), so a gate keyed
+  on cached counts or `MultiplicityData` presence would silently expand the default — the exact
+  no-silent-drop violation. This is why the gate is node-type dispatch on the live `upper_bound`
+  and the classifier ignores `MultiplicityData` entirely (D8).
 
 - **B3 — Subtype-closure projection finds every constraint-only instance.** S3 proved 9/9 live,
   including the plain subtype the current lookup misses. *If false → a constraint-only instance
   is still invisible and its assertion silently never executes.*
 
-- **B4 — Retyped double-keying is the only source of duplicate occurrences, and dedup by
-  canonical instance path is complete.** A retyped usage is keyed under both its subtype and its
+- **B4 — Retyped double-keying is the only source of duplicate occurrences, and
+  entry-independent dedup is complete.** A retyped usage is keyed under both its subtype and its
   preserved supertype (`usage_extractor.py:284-289`), so closure projection reaches the same
-  path twice. *If false → the index double-counts an occurrence (Item 5 mints two constraint IDs
-  for one real element) or, if the dedup key is too coarse, drops a genuine sibling.*
+  usage from two entry types. B4 holds **only if** the occurrence's `part_def_qn` and the dedup
+  key are derived from the usage itself, not the closure-entry type (D5/D7/C3). *If false — if the
+  record carries the entry type — the two hits differ by `part_def_qn` and dedup keeps an
+  arbitrary one, recording the supertype as the concrete type and dropping the real subtype.*
 
 ## Key Decisions
 
@@ -146,15 +164,33 @@ read-only, and no existing discovery path calls it. Item 5 wires it in.
   owning def the correct key needs, so a new walker is the minimum that satisfies the criterion.
   The original finder is untouched (additive [HARD]).
 
-- **D3 — Fail-closed cardinality gate.** A path step expands **iff** its live multiplicity is a
-  single fixed integer literal: bounds present, lower == upper, bound is a literal (no attribute
-  referent, i.e. `count_attribute_name is None`), and not ordered/nonunique. Every other
-  shape — parameterized, `[lo..hi]` range, `[*]`, ordered — **blocks**. *Rejected: expand on
-  `count is not None` (the probe's gate, `probe_instance_index.py:70`)* — lets a parameterized
-  or unbounded count expand silently ([HARD]). *Rejected: expand on `count_attribute_name is
-  None` alone* — cannot distinguish `[3]` from `[*]` (B1), so it would silently expand a
-  non-finite shape. The parameterized case is fully decidable from `MultiplicityData`; the
-  range/ordered/unbounded cases need the live node (B1/B2).
+- **D3 — Fail-closed cardinality gate, by node-type dispatch on the live `upper_bound`** (re-pinned
+  to the B1 evidence table). For a usage's live `multiplicity` node:
+  - `usage.is_ordered` **or** `usage.is_nonunique` → **block** (read off the *usage*, not the range
+    node).
+  - else on the `upper_bound` node type:
+    - `LiteralInfinity` → **block** (`[*]`, unbounded).
+    - `FeatureReferenceExpression` (referent an attribute) → **block** (`[n]`, parameterized).
+    - `LiteralInteger(u)`:
+      - `lower_bound` node is `None` → **admit**, count = `u` (bare `[u]`).
+      - `lower_bound` node is `LiteralInteger(l)`, `l == u` → **admit**, count = `u` (`[u..u]`; see C2).
+      - `lower_bound` node is `LiteralInteger(l)`, `l != u` → **block** (`[lo..hi]` range).
+    - any other `upper_bound` node type → **block** (unrecognized ⇒ fail-closed).
+  - `usage.multiplicity is None` → singleton, pass through as one occurrence.
+
+  The gate reads the live nodes only — **not** cached bounds, **not** `MultiplicityData` (B2: a
+  parameterized default leaks into `cached_upper_bound`, so cached values lie). *Rejected: expand on
+  `count is not None` (the probe's gate, `probe_instance_index.py:70`)* — lets a parameterized or
+  unbounded count expand silently. *Rejected: "bounds present, lower == upper" on cached values (an
+  earlier draft of this gate)* — `[3]` presents as `lower_bound` node `None`, `cached 3/4`, so that
+  test blocks the simplest fixed case; the node-type dispatch above is what the live surface
+  actually supports.
+
+- **C2 decision — `[3..3]` (equal literal bounds) is admitted as fixed count 3.** It is
+  semantically identical to `[3]`. Recorded as an orchestrator decision (agent-grade), following
+  the review and evidence recommendation; a dedicated test pins it (Validation #7). *Rejected:
+  block `[3..3]`* — it is a determinate finite singleton set; blocking it would be a spurious
+  false-positive with no safety benefit.
 
 - **D4 — Blocking diagnostic: a `NonFiniteCardinalityError(Exception)` raised when the index is
   built/queried, naming `owning_part_def_qn` and `part_usage_name`.** *Rejected: raise at
@@ -167,10 +203,31 @@ read-only, and no existing discovery path calls it. Item 5 wires it in.
 - **D5 — Per-occurrence identity is a structured `InstanceOccurrence`; the human-readable
   `instance_path` string is derived, not primary.** A multiplicity member renders as
   `owner__…__member[index]` (brackets, matching the S3 probe spelling that round-tripped through
-  snapshot). Item 5 owns final `constraint_id` minting and any identifier sanitization; the index
-  only guarantees a stable, unique, structured identity. *Rejected: a bare string as the primary
-  type* — Item 5 needs the retained `(owning_def, feature, index)` structure to wire siblings and
-  key collisions; a flattened string throws it away.
+  snapshot). `InstanceOccurrence.part_def_qn` is the **most-specific user type of the usage node
+  itself** (via `most_specific`, `usage_extractor.py:221`), computed once from the usage —
+  **entry-independent**, never the closure-entry type the walk arrived through. Item 5 owns final
+  `constraint_id` minting and any identifier sanitization; the index only guarantees a stable,
+  unique, structured identity. *Rejected: a bare string as the primary type* — Item 5 needs the
+  retained `(owning_def, feature, index)` structure to wire siblings and key collisions.
+  *Rejected: `part_def_qn` = the closure-entry type* — a retyped `part :>> leaf : SpecializedLeaf`
+  is keyed under **both** `SpecializedLeaf` and its preserved supertype `ConstrainedLeaf`
+  (`usage_extractor.py:283-289`), so the walk reaches it from two entry types; setting the field to
+  the entry type makes the two records differ, and dedup (D7) would keep an arbitrary one —
+  `ConstrainedLeaf` sorts first and would wrongly win, recording the *supertype* as the concrete
+  type and dropping `SpecializedLeaf` (C3). The usage-derived type is identical from both entries.
+
+- **D8 — The classifier reads the live multiplicity node as its single source of truth; it does
+  not read `MultiplicityData` at all.** B1 proves the live `upper_bound` node yields both the
+  finiteness verdict and the count; B2 proves extraction *omits* the non-fixed shapes we most need
+  to block (and `[3..3]`), so `MultiplicityData` is absent exactly where a cross-check would
+  matter. The owning-def+feature key (INV-5) comes from the walk's `PathStep`
+  (`owning_def_qn`, `feature_name`), the same `(owning def, feature)` identity carry-forward (1) names,
+  — not from `MultiplicityData`. *Rejected: read `MultiplicityData` and cross-check the count* — it
+  introduces a missing-data ambiguity (is an absent `MultiplicityData` an inconsistency that
+  blocks, or benign?) with no benefit, since the live node is already authoritative and mandatory.
+  This challenges the [INHERITED] carry-forward (1) phrasing "keyed … on the extracted
+  `MultiplicityData`": the key *fields* are honored, but sourced from the live walk, because the
+  B1/B2 evidence shows `MultiplicityData` cannot be the finiteness authority. Surfaced, not silent.
 
 - **D6 — Deterministic order by a structured sort key**, `(tuple(segment_names), tuple(indices))`,
   with the string rendered after sorting. *Rejected: sort the rendered strings* — `member[10]`
@@ -183,10 +240,9 @@ read-only, and no existing discovery path calls it. Item 5 wires it in.
 
 ## Architecture
 
-**Inputs (read-only):** the live SysIDE `model`, and the extracted `list[MultiplicityData]`
-(from `HierarchyExtractionResult.multiplicities`) for owning-def+feature keying and the literal
-count. The gate additionally reads each path step's **live multiplicity range node** for the
-finite determination (B1/B2).
+**Inputs (read-only):** the live SysIDE `model` — and nothing else. Owning-def+feature keys and
+the fixed count both come from the live walk and each step's live `multiplicity` node (D8); the
+extracted `MultiplicityData` is not consumed.
 
 **Output:** a `PartInstanceIndex` object exposing:
 - `occurrences_of(part_def_qn) -> list[InstanceOccurrence]` — all concrete occurrences of a
@@ -201,15 +257,19 @@ finite determination (B1/B2).
 2. **Structured walk** — for each applicable type, the new walker yields structured paths
    (`list[PathStep(owning_def_qn, feature_name)]`), reusing `_build_part_usage_index` and the
    same owning-type recursion `_find_instantiation_paths` uses — but retaining each step.
-3. **Cardinality expansion** — for each step, classify its live multiplicity (D3). Fixed literal
-   → fan out into `count` indexed members; non-finite → raise `NonFiniteCardinalityError` (D4);
-   singleton → pass through. Expansion is a Cartesian product down the path (a fixed
-   `Bank[2]` containing `member[3]` yields 6 — see Non-Fixture Shapes).
-4. **Dedup + order** — collapse duplicate canonical paths (D7); sort by structured key (D6).
+3. **Cardinality expansion** — for each step, the classifier dispatches on the usage's live
+   `multiplicity` node (D3). Fixed literal → fan out into `count` indexed members; non-finite →
+   raise `NonFiniteCardinalityError` (D4); singleton → pass through. Expansion is a **Cartesian
+   product down the path**: a fixed `Bank[2]` containing `member[3]` yields 6 occurrences, each
+   carrying both step indices (`bank[i]__member[j]`). Every multiplicity on the path is gated, not
+   just the leaf.
+4. **Dedup + order** — collapse duplicate occurrences by entry-independent key (D7); sort by
+   structured key (D6).
 
-**Boundaries:** the index imports the three helpers from `usage_extractor` and
-`MultiplicityData` from `data_models`. It does **not** import or call `pipeline_builder`,
-`graph_builder`, or any generation code. Nothing existing imports it.
+**Boundaries:** the index imports `_build_part_usage_index`, `_supertype_closure`,
+`user_partdef_lookup`, and `most_specific` from `usage_extractor`. It does **not** import
+`MultiplicityData`, `pipeline_builder`, `graph_builder`, or any generation code. Nothing existing
+imports it.
 
 ## Required Invariants
 
@@ -222,9 +282,11 @@ finite determination (B1/B2).
   results across repeated live loads of the same model (D6; no reliance on `heritage`/`types`
   iteration order — closure and keys sort by QN string, as `most_specific` already does).
 - **INV-4 (occurrence uniqueness):** each concrete occurrence appears exactly once, carrying its
-  own identity (D5/D7). Fixed-multiplicity siblings are distinct occurrences, not copies.
+  own identity (D5/D7). The identity — `part_def_qn` and the dedup key — is derived from the usage,
+  **entry-independent**, so a double-keyed retyped usage collapses to one record with the correct
+  most-specific type (C3). Fixed-multiplicity siblings are distinct occurrences, not copies.
 - **INV-5 (collision-free keys):** multiplicity expansion keys by `(owning_part_def_qn,
-  part_usage_name)`, never bare leaf name (carry-forward (1)).
+  part_usage_name)` from the walk's `PathStep`, never bare leaf name (carry-forward (1)).
 
 ## Component Overview
 
@@ -232,12 +294,13 @@ finite determination (B1/B2).
   - `PathStep`, `InstanceOccurrence` — small frozen dataclasses (structured identity, D5).
   - `NonFiniteCardinalityError` — the blocking diagnostic (D4).
   - the structured-occurrence walker (D2) and the cardinality classifier (D3).
-  - `build_part_instance_index(model, multiplicities) -> PartInstanceIndex` and the
-    `PartInstanceIndex` query object.
-- **Reused, unchanged:** `_build_part_usage_index`, `_supertype_closure`, `user_partdef_lookup`
-  (`usage_extractor.py`); `MultiplicityData` (`data_models.py`).
+  - `build_part_instance_index(model) -> PartInstanceIndex` and the `PartInstanceIndex` query
+    object.
+- **Reused, unchanged:** `_build_part_usage_index`, `_supertype_closure`, `user_partdef_lookup`,
+  `most_specific` (`usage_extractor.py`).
 - **Test fixture** — the S3 `model.sysml`, promoted into `tests/fixtures/` and **extended** with
-  the collision shape and a blocking shape (see Validation).
+  the collision, blocking (`[n]`/`[*]`/`[0..5]`/ordered/nonunique), `[3..3]`, and
+  Cartesian/nested-multiplicity shapes (see Validation).
 
 ## Non-Goals
 
@@ -253,13 +316,22 @@ finite determination (B1/B2).
 - **Do not modify `_find_instantiation_paths`.** The walker is a *new* function that mirrors its
   owning-type recursion but yields `list[PathStep]` instead of a joined string. Copy the
   recursion shape (`owning_type` → `PartDefinition` recurse; else terminal); do not refactor the
-  original into a shared core in this item (that would risk INV-1).
+  original into a shared core in this item (that would risk INV-1). **Replicate the `_visited`
+  cycle guard** (`usage_extractor.py:335-337`) — without it the walker infinite-loops on cyclic
+  part containment. The two recursions must be kept in sync by hand; note it at both sites.
 - **The cardinality classifier is the risky surface.** Give it one job: return
   `Fixed(count) | NonFinite(reason)` for a `(usage_node, owning_def_qn, feature_name)`. It reads
-  the live multiplicity range; it cross-checks the literal count against the matching
-  `MultiplicityData` for consistency. Keep it a pure function so its truth table is unit-tested
-  directly against mock range nodes (as `test_hierarchy_resolver.py` mocks them).
-- **Sort keys carry integers, not `[10]` strings** (D6).
+  the usage's live `multiplicity` node and the usage's `is_ordered`/`is_nonunique` flags (D3) —
+  **and nothing else; no `MultiplicityData`** (D8). Dispatch on the `upper_bound` node *type*, not
+  on cached values (B2). Keep it a pure function so its truth table is unit-tested directly against
+  mock nodes (as `test_hierarchy_resolver.py` mocks multiplicity nodes).
+- **`part_def_qn` is computed from the usage, once, via `most_specific`** — entry-independent (C3),
+  so the dedup key is stable across both keying entries of a retyped usage.
+- **Sort keys carry integers, not `[10]` strings** (D6). The key `(tuple(segment_names),
+  tuple(indices))` compares `indices` only when `segment_names` are equal — which guarantees the
+  same feature and therefore aligned `None`/`int` positions, so a `None < int` `TypeError` never
+  arises. This is a real invariant the sort rests on; note it, or normalize `occurrence_index` to a
+  sortable sentinel (e.g. `-1` for singletons) so a future key change cannot reintroduce the hazard.
 - Interface sketch (illustrative, not implementation):
 
 ```python
@@ -271,7 +343,7 @@ class PathStep:
 
 @dataclass(frozen=True)
 class InstanceOccurrence:
-    part_def_qn: str               # concrete type instantiated (may be a subtype)
+    part_def_qn: str               # usage's own most-specific type (entry-independent, C3)
     steps: tuple[PathStep, ...]
     @property
     def instance_path(self) -> str: ...   # "root__bank__member[0]"
@@ -281,16 +353,17 @@ class NonFiniteCardinalityError(Exception): ...  # names owner + feature
 
 ## Potential Risks
 
-- **Ordered/unbounded API (B1).** If the live range node does not expose an ordered marker, the
-  gate cannot distinguish ordered from a plain fixed `[3]`. Mitigation: de-risk with a spike
-  before finalizing the classifier (Handoff); design stays fail-closed so an *unrecognized* shape
-  blocks rather than expands.
-- **Non-fixed multiplicity omitted by extraction (B2).** Mitigation: the gate decides from the
-  live usage node per step, not from `MultiplicityData` presence — a member with any
-  multiplicity range that is not a proven single literal blocks.
+- **Ordered/unbounded/parameterized detection (B1/B2) — retired by evidence.** The live surface is
+  confirmed sufficient (`b1-probe-evidence.md`); the gate dispatches on `upper_bound` node type and
+  usage flags. Residual: the classifier must handle an *unrecognized* `upper_bound` node type by
+  blocking (fail-closed default arm), so a future SysIDE change cannot silently expand.
+- **`nonunique` may fail model load.** The evidence notes a `nonunique` subsetting of a unique
+  feature emits a load-**error** diagnostic (`subsetting-uniqueness-conformance`), so such a model
+  may never reach the gate. The gate still blocks it if it does arrive; it does not rely on the
+  load error.
 - **Intermediate-container multiplicity.** A multiplicity on a container on the path (not just the
-  leaf) must expand or block too. The structured walk sees every step, so this is handled by
-  construction — but it is untested by S3; the fixture must cover it (Validation).
+  leaf) must expand or block too. The structured walk sees every step, so it is handled — and it is
+  now **explicitly tested** (Validation #8), not left to "by construction."
 - **Closure cost.** `_supertype_closure` runs per applicable candidate; for a large corpus this
   is O(defs × closure). Acceptable — the index is queried per constraint-owner, not per instance,
   and the corpus PartDef count is small. Note only; no premature caching.
@@ -314,16 +387,24 @@ item's.
 2. **Collision case** — extend the fixture so two definitions own a same-named `member` with
    **different** counts; assert each expands to its own count keyed by owning def (criterion #2).
    This is the test the probe asserted away (`probe_instance_index.py:74-77`).
-3. **Blocking** — add a parameterized `[n]` member (decidable from `MultiplicityData`) and assert
-   `NonFiniteCardinalityError` names owner+feature. Add an unbounded/ordered member to exercise
-   the live-range gate **once B1 is confirmed** (criterion #3).
+3. **Blocking** — add a parameterized `[n]` member and assert `NonFiniteCardinalityError` names
+   owner+feature. Add `[*]`, `[0..5]`, `[3] ordered`, and `[3] nonunique` members and assert each
+   blocks (criterion #3; B1 confirmed, so these run now — no gating on a future spike).
 4. **Determinism** — two fresh live loads produce identical ordered `instance_path` lists
    (criterion #4).
 5. **Byte-identity** — a corpus-regeneration test confirms adding the module perturbs no existing
    artifact (criterion #5). Since nothing calls the index, this is expected to hold trivially;
    the test guards against an accidental import-time side effect.
-6. **Classifier truth table** — unit tests over mock range nodes: fixed `[3]`→Fixed(3),
-   `[module_count]`→NonFinite, `[0..5]`→NonFinite, `[*]`→NonFinite, ordered→NonFinite.
+6. **Classifier truth table** — unit tests over mock multiplicity nodes, one row per B1 shape:
+   `[3]`→Fixed(3), `[3..3]`→Fixed(3), `[0..5]`→NonFinite, `[*]`→NonFinite, `[n]`→NonFinite,
+   `[3] ordered`→NonFinite, `[3] nonunique`→NonFinite, and an unrecognized `upper_bound` node
+   →NonFinite (fail-closed default).
+7. **`[3..3]` admit (C2)** — a dedicated fixture member `[3..3]` expands to exactly 3 occurrences,
+   pinning the equal-literal-bounds decision.
+8. **Cartesian / intermediate-multiplicity (M1)** — a container with `[2]` owning a `[3]` leaf
+   expands to exactly 6 occurrences with the right per-step indices (`c[i]__leaf[j]`); and a
+   multiplicity under a subtype (multiplicity reached via closure) expands correctly. Covers the
+   two shapes S3 never exercised.
 
 Manual: run the promoted fixture through the same licensed environment S3 used
 (`PYTHONPATH=…/sysml-codegen/src uv run --directory …/agentic-mbse`) — the codegen venv has no
@@ -331,36 +412,43 @@ SysIDE license (S3 findings §2; memory "syside license via scripts").
 
 ## Next-Stage Handoff
 
-- **Fixed:** module placement (D1), the fail-closed gate principle (D3), the diagnostic type and
-  its raise site (D4), owning-def+feature keying (INV-5), structured occurrence identity (D5),
-  determinism mechanism (D6), additive boundary (INV-1). The concept/spec settle these.
+- **Fixed:** module placement (D1); the node-type-dispatch gate (D3) and the `[3..3]`-admit
+  decision (C2); the classifier's live-node-only source of truth (D8); the diagnostic type and its
+  raise site (D4); owning-def+feature keying from the walk (INV-5); entry-independent occurrence
+  identity and dedup (D5/D7/C3); determinism mechanism (D6); additive boundary (INV-1). Concept,
+  spec, and B1/B2 evidence settle these.
 - **Open (plan decides):** exact `instance_path` spelling within the D5 convention; whether
-  `PartInstanceIndex` also offers a bulk `all_occurrences()`; fixture package name.
-- **De-risk first — before writing the classifier:** a throwaway spike (`/_my_spike`) that loads
-  a model with `[3]`, `[module_count]`, `[0..5]`, `[*]`, and an ordered member, and prints what
-  the live multiplicity range node exposes for each (bounds, referent, ordered marker) and what
-  `extract_multiplicities` emits for each. This confirms B1 and B2 — the two bets the whole
-  no-silent-drop guarantee rests on. If the ordered/unbounded markers are not reachable, **stop
-  and surface**: the [HARD] "no new SysIDE facts" and Design Principle 5 conflict, and the owner
-  must choose (extend extraction vs narrow the executable scope).
+  `PartInstanceIndex` also offers a bulk `all_occurrences()`; fixture package name; whether
+  `occurrence_index` uses `None` or a `-1` sentinel for singletons (m1).
+- **The B1/B2 de-risk spike is already done** (`b1-probe-evidence.md`). The plan cites that
+  evidence and writes the classifier directly against the truth table (Validation #6) — no further
+  spike. Build the classifier and its truth-table tests first; it is the load-bearing surface.
 
 ## Surfacing note (do not resolve silently)
 
 The spec's [HARD] says the index "consumes the existing extraction facts only: `MultiplicityData`
-(…) and the live PartUsage / PartDefinition heritage already exposed," and separately that the
-gate must "treat a present `count_attribute_name` (and **any ordered/unbounded marker**) as
-non-finite and block it." **`MultiplicityData`'s five fields carry no ordered or unbounded
-marker.** So a gate reading `MultiplicityData` alone cannot honor the second clause for
-range/ordered/unbounded shapes: it would either expand a non-finite multiplicity silently
-(violating Design Principle 5, the higher invariant) or block all multiplicities (breaking the
-`[3]`→3 success criterion).
+(…) and the live PartUsage / PartDefinition heritage already exposed," and separately that the gate
+must "treat a present `count_attribute_name` (and **any ordered/unbounded marker**) as non-finite
+and block it." **`MultiplicityData`'s five fields carry no ordered or unbounded marker**, and B2
+proves cached counts lie for parameterized shapes. So a gate reading `MultiplicityData` cannot
+honor the second clause without either expanding a non-finite multiplicity silently (violating
+Design Principle 5, the higher invariant) or blocking all multiplicities (breaking the `[3]`→3
+criterion).
 
-This design resolves the tension **toward no-silent-drop** by reading the *live multiplicity range
-node* — which the same [HARD]'s first clause explicitly permits ("the live PartUsage … heritage
-already exposed") and which `extract_multiplicities` already reads. It does **not** add an
-extracted field. The residual risk is B1 (is the ordered marker reachable on the live node?),
-quarantined to the de-risk spike above. Flagged here rather than resolved silently in code.
+This design resolves the tension **toward no-silent-drop** by reading the *live multiplicity node*
+— which the same [HARD]'s first clause explicitly permits ("the live PartUsage … heritage already
+exposed") and which the B1 probe confirmed is sufficient. It does **not** add an extracted field.
+Two consequences, both surfaced not silent:
+
+1. **The classifier does not read `MultiplicityData` at all (D8).** The [INHERITED] carry-forward
+   (1) phrasing "keyed … on the extracted `MultiplicityData`" is honored in its *intent* — keys are
+   `(owning_part_def_qn, part_usage_name)` — but sourced from the live walk's `PathStep`, because
+   the evidence shows `MultiplicityData` cannot be the finiteness authority and is absent for the
+   non-fixed shapes.
+2. The earlier B1-risk is retired; the gate is pinned to the confirmed live surface. No open
+   spike remains.
 
 ---
 
-**Next Step:** After approval → `/_my_spike` (confirm B1/B2), then `/_my_plan` or `/_my_implement`.
+**Next Step:** B1/B2 already confirmed (`b1-probe-evidence.md`) and must-fixes folded in →
+`/_my_plan` or `/_my_implement`. No further spike.
