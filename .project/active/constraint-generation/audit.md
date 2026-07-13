@@ -241,3 +241,16 @@ actually run the suite should confirm the author-reported gates before any epic-
 certification.
 
 ARTIFACT: .project/active/constraint-generation/audit.md
+
+---
+
+## Addendum: cures verified + gates executed by orchestrator (2026-07-13)
+
+Phase 6 (audit cures) landed all four requirements: SC-2 execution tests (indeterminate,
+negated/inline), SC-3 modeled-default override flip, break-the-YAML executor failure, and the
+three Phase-4 CI regression pins (session-verified RED on isolated revert). Orchestrator
+re-ran the gates with the license env: full suite **2236 passed / 0 failed**, regression pins
+3/3, mypy **76 = baseline**, ruff clean.
+
+**Final verdict: Certify** (upgraded from Certify-with-notes; both notes cured and gates
+independently executed).
