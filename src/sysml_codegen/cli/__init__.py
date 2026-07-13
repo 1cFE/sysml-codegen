@@ -607,6 +607,38 @@ def _generate_tests(
     logger.info(f"Generated runnable tests: {output_path.name}")
 
 
+def _seal_package(
+    ctx: PipelineContext,
+    config: GenerationConfig,
+) -> None:
+    """Step 9: seal the generated package (D1).
+
+    Order is the seal-well-formedness invariant (INV-3): every covered artifact must be
+    final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
+    last, never in its own coverage.
+    """
+    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, build_model_contract, seal_package
+    from sysml_codegen.contracts.serialize import write_contract_json
+
+    contracts_dir = config.output_path / "contracts"
+    contracts_dir.mkdir(parents=True, exist_ok=True)
+
+    # (1) ModelContract — pure graph projection, written first.
+    model_contract = build_model_contract(ctx.computation_graph)
+    write_contract_json(contracts_dir / "model_contract.json", model_contract)
+
+    # (2) The canonical verifier, copied verbatim (INV-8 drift guard).
+    verify_source = Path(__file__).resolve().parent.parent / "contracts" / "verify.py"
+    shutil.copy(verify_source, contracts_dir / "verify.py")
+
+    # (3)+(4) Seal everything now on disk (including the two files above) and write the
+    # seal last — it is the only thing excluded from its own coverage.
+    package_contract = seal_package(
+        config.output_path, config.package_name, DEFAULT_COVERAGE_POLICY
+    )
+    write_contract_json(contracts_dir / "package_contract.json", package_contract)
+
+
 def cmd_generate(args: argparse.Namespace) -> int:
     """Run the code generation command."""
     # Configure logging
@@ -666,6 +698,34 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
         [models_path], output_path, design_path_filter=args.design_path_filter
     )
     logger.info(f"Wrote snapshot to {out}")
+    return 0
+
+
+def cmd_seal(args: argparse.Namespace) -> int:
+    """Re-seal an existing generated package (D2).
+
+    Recomputes the ``PackageContract`` only — graph-free, license-free — over a package
+    directory that has already been sealed once by ``generate``. Use this after editing a
+    handwritten stencil to make the seal match the edited bytes again.
+    """
+    level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+
+    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, seal_package
+    from sysml_codegen.contracts.serialize import write_contract_json
+
+    package_dir: Path = args.package_dir
+    model_contract_path = package_dir / "contracts" / "model_contract.json"
+    if not model_contract_path.is_file():
+        logger.error(
+            f"{model_contract_path} not found. `seal` re-seals a package `generate` has "
+            "already sealed once (D2) — it does not build a ModelContract from scratch."
+        )
+        return 1
+
+    package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
+    write_contract_json(package_dir / "contracts" / "package_contract.json", package_contract)
+    logger.info(f"Re-sealed {package_dir} as {args.package_name!r}")
     return 0
 
 
@@ -811,6 +871,29 @@ def main() -> None:
     )
     snap_parser.set_defaults(func=cmd_snapshot)
 
+    # Seal subcommand — re-seal a generated package in place (D1/D2)
+    seal_parser = subparsers.add_parser(
+        "seal",
+        help="Re-seal a generated package (recomputes the PackageContract only)"
+    )
+    seal_parser.add_argument(
+        "package_dir",
+        type=Path,
+        help="Path to the generated package directory"
+    )
+    seal_parser.add_argument(
+        "--package-name",
+        type=str,
+        required=True,
+        help="Package name to record in the seal"
+    )
+    seal_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose logging"
+    )
+    seal_parser.set_defaults(func=cmd_seal)
+
     # Install-commands subcommand
     install_parser = subparsers.add_parser(
         "install-commands",
@@ -932,6 +1015,11 @@ def run_codegen(config: GenerationConfig) -> bool:
 
         logger.info("Generating runnable tests...")
         _generate_tests(ctx, config, template_env)
+
+        # Step 9: Seal the package (D1) — over final on-disk state, both live and
+        # from-snapshot paths alike (D8).
+        logger.info("Sealing package...")
+        _seal_package(ctx, config)
 
         logger.info("Code generation complete")
         return True

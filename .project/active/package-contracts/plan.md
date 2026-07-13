@@ -265,21 +265,21 @@ def test_reseal_after_stencil_edit(tmp_path):         # D1/D2 re-seal workflow
 **See `design.md` for:** Step 9 flow (`design.md:203-214`); D1 seal-as-Step-9 + `seal` subcommand;
 D2 re-seal recomputes PackageContract only; INV-3 seal ordering; D8 both-paths.
 
-- [ ] `tests/conformance/test_seal_step9.py` (NEW, write first) — three files emitted + fresh seal
+- [x] `tests/conformance/test_seal_step9.py` (NEW, write first) — three files emitted + fresh seal
   verifies; emitted `verify.py` byte-identical to source (INV-8); re-seal workflow (seal → edit →
   invalid → `seal` → valid; MC bytes unchanged); ordering (`package_contract.json` written last and
   excluded from its own coverage — INV-3).
-- [ ] `src/sysml_codegen/cli/__init__.py` — add `_seal_package(ctx, config)` and call it as Step 9
+- [x] `src/sysml_codegen/cli/__init__.py` — add `_seal_package(ctx, config)` and call it as Step 9
   in `run_codegen`, after `_generate_tests` and before `return True`
   (`cli/__init__.py:934-937`). Order (INV-3): (1) `build_model_contract` + write
   `model_contract.json`; (2) copy canonical `verify.py` verbatim; (3) `seal_package` over the dir
   (now covering both); (4) write `package_contract.json` last.
-- [ ] `src/sysml_codegen/cli/__init__.py` — add `cmd_seal(args)` and a `seal` subparser
+- [x] `src/sysml_codegen/cli/__init__.py` — add `cmd_seal(args)` and a `seal` subparser
   (mirror the `generate`/`snapshot` wiring at `cli/__init__.py:715-812`; `set_defaults(func=
   cmd_seal)`). Re-seal recomputes the PackageContract over an existing dir; validates
   `model_contract.json` is present + covered; does **not** rebuild the ModelContract (D2 — graph-free,
   license-free).
-- [ ] Update generation tests that assert on the generated file set — the three new `contracts/`
+- [x] Update generation tests that assert on the generated file set — the three new `contracts/`
   files are an **expected** additive diff. Candidates to check: `tests/integration/test_full_pipeline.py`
   (`.rglob("*.py")` sweeps at `:88,:460` now include `contracts/verify.py` — it is valid stdlib
   Python, so syntax checks pass; confirm no test asserts an *exact* file count/set). No committed
@@ -288,16 +288,16 @@ D2 re-seal recomputes PackageContract only; INV-3 seal ordering; D8 both-paths.
 
 ### Validation
 **Automated (offline — sealing is license-free):**
-- [ ] `uv run pytest tests/conformance/test_seal_step9.py` → pass.
-- [ ] `uv run pytest tests/` → green (update any exact-file-set assertion to include the three
+- [x] `uv run pytest tests/conformance/test_seal_step9.py` → pass.
+- [x] `uv run pytest tests/` → green (update any exact-file-set assertion to include the three
   contract files; that is an expected-diff class for generated packages, not a baseline change).
-- [ ] `uv run mypy src/` → 76 baseline; `uv run ruff check src/` → clean.
+- [x] `uv run mypy src/` → 76 baseline; `uv run ruff check src/` → clean.
 
 **Manual:**
-- [ ] `uv run sysml-codegen generate --from-snapshot
+- [x] `uv run sysml-codegen generate --from-snapshot
   tests/fixtures/chain_spike_model/extraction_snapshot.json --output /tmp/c9 --package-name
   chain_spike --overwrite` → `/tmp/c9/contracts/` has all three files.
-- [ ] `uv run sysml-codegen seal /tmp/c9 --package-name chain_spike` (after editing a stencil) →
+- [x] `uv run sysml-codegen seal /tmp/c9 --package-name chain_spike` (after editing a stencil) →
   re-verify passes.
 
 **What We Know Works After This Phase:** Generation emits a self-verifying package on both live and
@@ -459,6 +459,31 @@ false-positive, both noted above.
 equivalent intent, more robust. No scope changes.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- `src/sysml_codegen/cli/__init__.py`: added `_seal_package(ctx, config)` (Step 9 orchestration,
+  INV-3 ordering as designed); wired it into `run_codegen` right after `_generate_tests`, before
+  `return True`. Added `cmd_seal(args)` (D2 re-seal: validates `contracts/model_contract.json`
+  exists, recomputes only the `PackageContract`, returns 1 with a clear message if the package was
+  never sealed by `generate`) and the `seal` subparser (`package_dir` positional, `--package-name`
+  required, `--verbose`).
+- Created `tests/conformance/test_seal_step9.py` (5 tests) — three files emitted + fresh seal
+  verifies; INV-8 verbatim-copy byte-identity; INV-3 seal-excludes-itself ordering; full D1/D2
+  re-seal workflow (edit stencil → invalid → `seal` → valid, MC bytes unchanged); `cmd_seal`
+  rejects a directory with no prior `model_contract.json`.
+- No exact-file-set assertions existed anywhere in the suite to update — swept
+  `tests/integration/test_full_pipeline.py` and the whole tree; the only `rglob("*.py")` sweeps
+  check *content* (no `FusionParams`, no hardcoded package name), which the new `contracts/verify.py`
+  passes trivially (valid stdlib Python, no such strings).
+- Manual verification: `sysml-codegen generate --from-snapshot ... --output /tmp/c9` produced all
+  three `contracts/` files; editing a handwritten stencil then `sysml-codegen seal /tmp/c9
+  --package-name chain_spike` re-sealed and `verify_package` returned `ok=True` with zero
+  diagnostics.
+**Validation:** `test_seal_step9.py` 5/5 pass; full suite 2067 passed / 23 failed / 96 errors
+(unchanged baseline, 2062→2067 passed); mypy 76 baseline held; ruff clean.
+**Issues Encountered:** None.
+**Deviations from Plan:** None.
+
 ### Phase 4 Completion
 
 ---
