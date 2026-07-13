@@ -204,15 +204,15 @@ Because `compilation_results` carry compiled *strings* (not the tree) and Phases
 ```
 
 ### Changes Required
-- [ ] No source change. If any is needed here, a Phase-1/2 gate was wrong — stop and fix upstream.
-- [ ] `test_factory_purity` green over committed snapshots.
-- [ ] `generate --from-snapshot` over each committed snapshot → package byte-identical to baseline (timestamps excepted).
-- [ ] Re-capture snapshots **only** if the capture *shape* changed (it must not) — and only as a reviewed diff. Expectation: no re-capture.
+- [x] No source change. If any is needed here, a Phase-1/2 gate was wrong — stop and fix upstream.
+- [x] `test_factory_purity` green over committed snapshots.
+- [x] `generate --from-snapshot` over each committed snapshot → package byte-identical to baseline (timestamps excepted).
+- [x] Re-capture snapshots **only** if the capture *shape* changed (it must not) — and only as a reviewed diff. Expectation: no re-capture.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_factory_purity.py tests/conformance/test_snapshot_generation.py` → green.
-- [ ] `--from-snapshot` package diff empty (timestamp-churn reverted).
+- [x] `uv run pytest tests/conformance/test_factory_purity.py tests/conformance/test_snapshot_generation.py` → green.
+- [x] `--from-snapshot` package diff empty (timestamp-churn reverted).
 
 **What we know works after this phase:** the whole snapshot→package replay path is byte-identical on the IR producer. Safe to delete the old path.
 
@@ -381,6 +381,17 @@ license-related); mypy 76 (baseline, unchanged); ruff clean; extraction-snapshot
 `test_factory_purity` + `test_baselines` 26 passed/1 skipped.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-13
+**Actual changes:** None (verification-only, as planned). Ran the existing gates:
+`test_factory_purity.py` + `test_snapshot_generation.py` (license env, so the live-vs-snapshot
+byte-for-byte cases ran rather than skipped) — 24 passed/1 skipped (skip is a pre-existing
+missing baseline for `solar_battery_model`, unrelated to this item). Also ran
+`generate --from-snapshot` directly against `solar_battery_model`'s committed snapshot into a
+scratch dir — completed cleanly, 108 files generated, no errors/warnings beyond the
+pre-existing module-name-collision-alias warning. No re-capture needed (capture shape
+unchanged).
+**Deviations:** None.
+
 ### Phase 4 Completion
 
 ---
