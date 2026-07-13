@@ -374,6 +374,52 @@ def _expand_owner_instances(
     return [(sanitize_qualified_name(usage.identity.qualified_name or owner_qn), "")]
 
 
+def collect_bare_actual_demand(
+    facts: ConstraintFacts,
+    occ_index: OccurrenceIndex,
+    calc_usages: list[CalcUsageData],
+) -> list[tuple[str, str, str | None]]:
+    """The demand set (D2) the supplied-value materializer needs beyond calc-usage
+    bindings: ``(instance_scope, source_path, source_file)`` for every ADMIT
+    constraint usage's feature-reference actual.
+
+    A constraint actual referenced by nothing else (e.g. a self-named ``in gain =
+    gain`` with no calc-usage binding of its own) is otherwise invisible to
+    ``materialize_supplied_values``, which only scans ``calc_usages`` bindings — so
+    an instance self-redefinition (D2) it alone could resolve never gets synthesized.
+    This is a read-only probe, not authoritative: it reuses the same profile
+    evaluation and owner-instance expansion ``lower_constraints`` performs later, and
+    any usage that would fail expansion there is simply skipped here — the real,
+    authoritative failure (if any) happens in ``lower_constraints`` itself.
+    """
+    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+    profile = evaluate_profile(facts)
+    admit_qns = {
+        decision.identity.qualified_name
+        for decision in profile.decisions
+        if decision.eligibility is Eligibility.ADMIT
+    }
+    demand: list[tuple[str, str, str | None]] = []
+    for usage in facts.usages:
+        if usage.identity.qualified_name not in admit_qns:
+            continue
+        try:
+            owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
+        except (NonFiniteCardinalityError, CodeGenerationError):
+            continue
+        source_file = usage.location.file if usage.location is not None else None
+        for actual in usage.actuals:
+            if actual.name is None or not isinstance(actual.value, FeatureReferenceNode):
+                continue
+            dotted = _reference_dotted(actual.value.reference)
+            if not dotted:
+                continue
+            for owner_instance_path, _occ_scope in owner_instances:
+                demand.append((owner_instance_path, dotted, source_file))
+    return demand
+
+
 def _source_local_identity(usage: ConstraintUsageFact) -> tuple[str, tuple]:
     """The usage's source-local identity (D3 `[HARD]`): its simple name when
     named, else its ``LocationFact`` rendering — the anonymous-assertion

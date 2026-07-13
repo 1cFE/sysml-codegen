@@ -15,6 +15,7 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
 from sysml_codegen.analysis.constraint_lowering import (
+    collect_bare_actual_demand,
     extend_graph_with_constraints,
     lower_constraints,
 )
@@ -838,12 +839,25 @@ def build_pipeline_context(
     # generate time from the raw redefinitions/overrides.
     graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
     if hierarchy_data is not None:
+        # D2: widen the demand set to a constraint actual with no calc-usage binding
+        # of its own (a self-named `in gain = gain`) — otherwise invisible to the
+        # calc-usage-only sweep above. Read-only probe (collect_bare_actual_demand
+        # docstring); gated the same as the real `lower_constraints` call below so it
+        # never runs when lowering itself won't.
+        constraint_actual_demand = (
+            collect_bare_actual_demand(
+                constraint_facts, build_part_instance_index(extractor.model), calc_usages
+            )
+            if lower_constraints_enabled and constraint_facts.usages
+            else []
+        )
         synth_attrs = materialize_supplied_values(
             calc_usages,
             hierarchy_data.redefinitions,
             hierarchy_data.design_overrides,
             hierarchy_data.usage_type_map,
             design_attrs,
+            constraint_actual_demand=constraint_actual_demand,
         )
         for attr in synth_attrs:
             # Bucket by the attribute's own source file (the consuming usage's file) so

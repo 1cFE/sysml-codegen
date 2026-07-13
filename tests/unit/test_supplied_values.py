@@ -171,6 +171,52 @@ def test_in_part_leg_scoped_by_owner_no_cross_wire():
     assert out == []  # unrelated owner → no synthesis, no cross-wire
 
 
+def test_gain_self_redef_materializes():
+    """D2: an instance self-redefinition (`:>> gain = 80.0` owned by the instance
+    itself, empty target_path) synthesizes for a bare-name binding (`in gain = gain`),
+    the tier fusion_tea's `hif_plant.sysml:87` needs to lower 'Viability Threshold'."""
+    usage = _usage("gain")
+    out = materialize_supplied_values(
+        [usage],
+        redefinitions=[],
+        design_overrides=[_override(_SCOPE, "gain", 80.0)],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)[f"{_SCOPE}__gain"].default_value == "80.0"
+
+
+def test_gain_self_redef_does_not_shadow_tier1_bare_override():
+    """R2: the self-redef tier sits below tier 1 — a genuine bare override block on a
+    sub-part instance (`owning_part_qn == f'{instance_scope}__{part_usage}'`) still
+    wins when both are present."""
+    usage = _usage("gain")
+    tier1_override = _override(f"{_SCOPE}__gain", "gain", 1.0)  # bare override block
+    self_redef_override = _override(_SCOPE, "gain", 80.0)  # instance self-redef
+    out = materialize_supplied_values(
+        [usage],
+        redefinitions=[],
+        design_overrides=[tier1_override, self_redef_override],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)[f"{_SCOPE}__gain"].default_value == "1.0"
+
+
+def test_gain_self_redef_scoped_to_bare_name_binding_only():
+    """The self-redef tier is demand-scoped to bare-name bindings (part_usage ==
+    attr); a dotted binding to the same instance/attr shape must not match it."""
+    usage = _usage("driver.gain")
+    out = materialize_supplied_values(
+        [usage],
+        redefinitions=[],
+        design_overrides=[_override(_SCOPE, "gain", 80.0)],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert out == []
+
+
 def test_collision_guard_real_attr_wins_and_warns(caplog):
     """F3/REQ-SVM-03: a real design attribute covering the source QN is not overwritten;
     the materializer skips synthesis and WARNs."""

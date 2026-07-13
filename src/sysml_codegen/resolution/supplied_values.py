@@ -127,6 +127,12 @@ def _match_override(
             # Bare override block (shape b): `part :>> target_factory { :>> ... }`;
             # owner QN is the sub-part instance itself.
             matched = ov.owning_part_qn == f"{instance_scope}__{part_usage}"
+            if not matched and part_usage == attr:
+                # Instance self-redefinition tier (D2): a bare-name binding
+                # (`in gain = gain`, where part_usage collapses to attr) whose
+                # `:>>` override is owned by the instance itself, not a sub-part.
+                # Sits below the tier-1 branches above so it never shadows them.
+                matched = ov.owning_part_qn == instance_scope
         if not matched:
             continue
         if ov.redefinition_type == RedefinitionType.LITERAL and ov.literal_value is not None:
@@ -203,6 +209,7 @@ def materialize_supplied_values(
     design_overrides: list[RedefinitionData] | None,
     usage_type_map: dict[tuple[str, str], str] | None,
     real_design_attrs: dict[Path, list[DesignAttributeData]],
+    constraint_actual_demand: list[tuple[str, str, str | None]] | None = None,
 ) -> list[DesignAttributeData]:
     """Synthesize design attributes for supplied subsystem-attr values (REQ-SVM-01..04).
 
@@ -210,6 +217,13 @@ def materialize_supplied_values(
     references AND that has a LITERAL supplied value. Never overwrites a real captured
     design attribute (REQ-SVM-03, real wins + WARN). Non-literal-only supplied values
     are skipped loudly with a count summary (REQ-SVM-04 / INV-7).
+
+    ``constraint_actual_demand`` (D2) widens the demand set to a constraint actual
+    that has no calc-usage binding of its own — ``(instance_scope, source_path,
+    source_file)`` triples, e.g. from
+    :func:`~sysml_codegen.analysis.constraint_lowering.collect_bare_actual_demand`.
+    Without it, an instance self-redefinition only a constraint's actual references
+    (a self-named ``in gain = gain``) is invisible to this scan.
     """
     redefinitions = redefinitions or []
     design_overrides = design_overrides or []
@@ -230,56 +244,72 @@ def materialize_supplied_values(
     scanned = 0
     applied = 0
 
-    for usage in calc_usages:
-        qn = usage.qualified_name
-        if not qn or "__" not in qn:
+    def _demand() -> list[tuple[str, str, str | None, Path]]:
+        """Unify calc-usage bindings and constraint-actual demand into one sweep:
+        ``(instance_scope, source_path, owning_part_def_qn, source_file)``. An
+        entry with no resolvable source file (constraint demand only — an
+        anonymous assertion with no LocationFact) cannot be bucketed and is
+        dropped from the sweep."""
+        out: list[tuple[str, str, str | None, Path]] = []
+        for usage in calc_usages:
+            qn = usage.qualified_name
+            if not qn or "__" not in qn:
+                continue
+            instance_scope = qn.rsplit("__", 1)[0]
+            for binding in usage.bindings:
+                if binding.source_path:
+                    out.append(
+                        (instance_scope, binding.source_path, usage.owning_part_def_qn,
+                         usage.source_file)
+                    )
+        for instance_scope, source_path, source_file in constraint_actual_demand or []:
+            if source_file is None:
+                continue
+            out.append((instance_scope, source_path, None, Path(source_file)))
+        return out
+
+    for instance_scope, source_path, owning_part_def_qn, source_file in _demand():
+        target = _binding_target(source_path, instance_scope)
+        if target is None:
             continue
-        instance_scope = qn.rsplit("__", 1)[0]
-        for binding in usage.bindings:
-            source_path = binding.source_path
-            if not source_path:
-                continue
-            target = _binding_target(source_path, instance_scope)
-            if target is None:
-                continue
-            scanned += 1
-            value, saw_non_literal = _resolve_value(
-                target,
-                instance_scope,
-                usage.owning_part_def_qn,
-                redefinitions,
-                design_overrides,
-                usage_type_map,
+        scanned += 1
+        value, saw_non_literal = _resolve_value(
+            target,
+            instance_scope,
+            owning_part_def_qn,
+            redefinitions,
+            design_overrides,
+            usage_type_map,
+        )
+        if value is None:
+            if saw_non_literal:
+                non_literal_skips.append(f"{target.part_usage}.{target.attr}")
+            continue
+        applied += 1
+        # REQ-SVM-03 collision guard: a real captured design attribute wins.
+        if target.qn in real_qns or (target.name, target.parent_part) in real_name_parent:
+            logger.warning(
+                "supplied-value materializer: a real design attribute already covers "
+                "%s (%s.%s); keeping the real value, skipping synthesis (REQ-SVM-03).",
+                target.qn,
+                target.parent_part,
+                target.name,
             )
-            if value is None:
-                if saw_non_literal:
-                    non_literal_skips.append(f"{target.part_usage}.{target.attr}")
-                continue
-            applied += 1
-            # REQ-SVM-03 collision guard: a real captured design attribute wins.
-            if target.qn in real_qns or (target.name, target.parent_part) in real_name_parent:
-                logger.warning(
-                    "supplied-value materializer: a real design attribute already covers "
-                    "%s (%s.%s); keeping the real value, skipping synthesis (REQ-SVM-03).",
-                    target.qn,
-                    target.parent_part,
-                    target.name,
-                )
-                continue
-            synth[target.qn] = DesignAttributeData(
-                name=target.name,
-                sysml_type="Real",
-                default_value=str(value),
-                unit=None,
-                # Group the supplied value with the consuming usage's file so it lands
-                # in a valid, existing parameter group (the sentinel filename would
-                # render an invalid Python schema class). A design-supplied value is a
-                # JSON-fillable key like any design attribute (D1).
-                source_file=usage.source_file,
-                source_line=0,
-                parent_part=target.parent_part,
-                qualified_name=target.qn,
-            )
+            continue
+        synth[target.qn] = DesignAttributeData(
+            name=target.name,
+            sysml_type="Real",
+            default_value=str(value),
+            unit=None,
+            # Group the supplied value with the consuming usage's file so it lands
+            # in a valid, existing parameter group (the sentinel filename would
+            # render an invalid Python schema class). A design-supplied value is a
+            # JSON-fillable key like any design attribute (D1).
+            source_file=source_file,
+            source_line=0,
+            parent_part=target.parent_part,
+            qualified_name=target.qn,
+        )
 
     # REQ-SVM-04 / INV-7: count summary, Item-5 sentinel style. Silent-on-clean: a run
     # with zero non-literal skips emits an INFO summary only, never a WARNING.
