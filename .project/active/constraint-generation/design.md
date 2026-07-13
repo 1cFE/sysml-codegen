@@ -100,27 +100,65 @@ registry templates (same block shape), the `MultiOutput` single-field channel id
   `parse_expression` → `serialize_expression`. *If false → the same-IR generation guard
   cannot distinguish a real mutation from serializer noise, and either false-fails or lets a
   class/catalog divergence through.*
-- **B4.** teax's scalar-persistence work is merged on the epic branch (memory:
-  [[teax-scalar-persistence-fixed]]), so file-backed exit writers persist the report. *If
-  false → execution acceptance can construct the report but cannot persist it beside ordinary
-  outputs.*
+- **B4.** teax now carries the scalar-persistence work at its HEAD (memory
+  [[teax-scalar-persistence-fixed]]: the `RootModel[float]` exit writers no longer reproduce
+  as missing), so file-backed exit writers persist the report. *If false → execution
+  acceptance can construct the report but cannot persist it beside ordinary outputs.* Note the
+  source tension: S4's findings describe these as **uncommitted** teax working-tree changes
+  absent from HEAD `c9e1e85`; the memory says they are fixed at teax HEAD and the S4-era
+  finding is stale. B4 rides on the memory being current — the plan pins which teax state the
+  execution lane runs against before relying on it (N5).
+- **B5.** The compiled predicate's leaf names (`_leaf_ref_names(predicate_ir)`) are a subset of
+  the module's `ModuleInput.param_name`s, so `run()` can wire resolved actuals into the
+  predicate **by name**. Item 5 sets input names from `actual.name` /
+  `sanitize_name(formal local)` (`constraint_lowering.py:548-566, 738`); the predicate's leaf
+  names come from the same IR, so they *should* coincide — but nothing proves it, and it is the
+  single most likely integration break. *If false → `run()` raises a `TypeError`/missing-kwarg
+  at execution (or silently drops a formal), and no module runs.* Asserted at generation: the
+  module-wrapper emitter checks `leaf_names ⊆ input param_names` and errors naming the
+  `constraint_id` on any predicate leaf without a matching input.
 
 ## Key Decisions
 
-- **D1 — Exit-ancestry: explicit exit membership (pinned report channel).** The pipeline
-  generator computes exits as `selected_exits ∪ pinned_exits`, where `pinned_exits` =
-  `{report channel of each REPORT_AGGREGATOR module}` and `selected_exits` is today's
-  capture-everything set. Under capture-everything the pin is redundant, but it is the
-  load-bearing mechanism the narrowed-exit test toggles. *Rejected: a generation-time
-  ancestry assertion — it only detects absence; under a genuine narrowing it fails generation
-  rather than delivering the report, which is the opposite of the falsifiable test's
-  "report present under the narrowed exit."*
-- **D2 — Kleene compiler home: `src/sysml_codegen/generation/predicate_compiler.py`,**
-  porting `s2_ir.compile_predicate`/`margin_expression`/the `_KLEENE_RUNTIME` block. Input is
-  `ConcreteConstraint.predicate_ir` re-parsed via `agentic_mbse.sysml.expression_ir.parse_expression`
-  (Item 2's landed IR, not the spike's `s2_ir`). *Rejected: evaluating in the module at run
-  time — S2 showed raw IEEE returns a confident `False` from `1.0/0.0`; only compiled Kleene
-  code carries `unknown`.*
+- **D1 — Exit-ancestry: explicit exit membership (pinned report channel), with a test-only
+  narrowing seam.** `_build_exit_points` (`generation/pipeline.py:228`) is unconditional
+  capture-everything: it appends every output of every module, with no `selected`/`targets`
+  filter anywhere in `src/`. There is no production surface that can drop the report channel,
+  so the falsifiable control leg cannot be built against the code as-is. Fix: give
+  `_build_exit_points` two keyword parameters whose **production defaults reproduce today's
+  output byte-for-byte** —
+
+  ```python
+  def _build_exit_points(modules, alias_filenames, *,
+                         selected_channels=None,       # None ⇒ capture-everything (default)
+                         pin_report_channels=True):    # REPORT_AGGREGATOR outputs always kept
+      pinned = {m.outputs[0].channel_name for m in modules
+                if m.module_kind is ModuleKind.REPORT_AGGREGATOR}
+      # include channel ch iff:
+      #   (selected_channels is None or ch in selected_channels)
+      #   or (pin_report_channels and ch in pinned)
+  ```
+
+  With `selected_channels=None` every channel passes the first clause, so the pin is a no-op
+  and the emitted YAML is identical to today (INV-7). The pin only does work when a *narrowed*
+  `selected_channels` is supplied. `generate_pipeline_yaml` forwards an optional test-seam so a
+  kept test can drive the full render narrowed; production callers pass nothing. The two legs
+  (Validation Approach) inject a narrowed set that excludes the report: control = narrowed +
+  `pin_report_channels=False` → report **absent**; mechanism = same narrowed set +
+  `pin_report_channels=True` → report **present**. *Rejected: a generation-time ancestry
+  assertion — it only detects absence; under a genuine narrowing it fails generation rather
+  than delivering the report, the opposite of "report present under the narrowed exit."*
+  There is **no** production exit-narrowing feature — the pin guarantees membership
+  structurally; narrowing exists only in the test (restated in Non-Goals).
+- **D2 — Kleene compiler home: `src/sysml_codegen/generation/predicate_compiler.py`.** It
+  re-authors S2's `compile_predicate`/`margin_expression`/`_KLEENE_RUNTIME` semantics **against
+  Item 2's `expression_ir` node algebra** — this is a rewrite, not a copy: the landed
+  `expression_ir` has different node kinds/fields than the spike's pydantic `IRNode`, so the
+  tree-walk is rebuilt while the emitted Python (leaf `_cmp`, `_and/_or/_not`, margin) matches
+  S2's proven output. Input is `ConcreteConstraint.predicate_ir` re-parsed via
+  `agentic_mbse.sysml.expression_ir.parse_expression`. *Rejected: evaluating in the module at
+  run time — S2 showed raw IEEE returns a confident `False` from `1.0/0.0`; only compiled
+  Kleene code carries `unknown`.*
 - **D3 — Compile-once emitted once: a shared per-package predicates module.** The compiled
   function + one Kleene-runtime block are emitted a single time per definition into
   `modules/constraints/predicates.py`; each class-per-assertion module imports its function.
@@ -140,9 +178,13 @@ registry templates (same block shape), the `MultiOutput` single-field channel id
   Item 7 assembles it from `ctx.concrete_constraints` (concrete entries) + `ctx.constraint_facts`
   (source records), computes the fingerprint once (sha256 of canonical JSON), and sets it on
   the graph before generation; the aggregator's `CATALOG_FINGERPRINT` and the
-  `contracts/constraint_catalog.json` both read that one value. *Rejected: threading `ctx`
-  into a standalone catalog emitter — it breaks the "generation reads only the graph"
-  invariant the codebase rests on.*
+  `contracts/constraint_catalog.json` both read that one value. Each concrete entry carries its
+  `predicate_ir` (so INV-2's arm (b) can run). Response metadata (the margin's sign) is
+  **derived at generation** from predicate structure — the simple-inequality shape that fixes a
+  sign — and is **optional**: absent for a compound predicate that reports status only. It is
+  never carried from upstream and never a required field. *Rejected: threading `ctx` into a
+  standalone catalog emitter — it breaks the "generation reads only the graph" invariant the
+  codebase rests on.*
 - **D7 — Templates: new for the constraint-specific bodies, reuse for the structural ones.**
   New: `constraint_module.py.jinja2`, `report_aggregator.py.jinja2`,
   `constraint_predicates.py.jinja2`, `constraint_types.py.jinja2`. Reuse (extended context
@@ -171,7 +213,10 @@ registry templates (same block shape), the `MultiOutput` single-field channel id
   constraints, so a model that asserts nothing still produces the `not_assessed` report
   surface. This is a one-condition change at `constraint_lowering.py:761`. **Surfaced** as an
   Item 5 touch-point (see Potential Risks) rather than resolved silently — a truly
-  constraint-free model never triggers lowering, so byte-identity is unaffected.
+  constraint-free model never triggers lowering, so byte-identity is unaffected. The
+  aggregator's `agg_inputs` stays sourced from `eligible` (not `concrete`): a zero-eligible
+  model yields an empty-input aggregator (headline `not_assessed`), never a validation failure
+  on a non-eligible record's `evaluation_channel=None`.
 
 ## Architecture
 
@@ -196,10 +241,19 @@ unchanged; the shared predicates module and `constraint_types.py` are written du
 
 - **INV-1.** One compiled predicate function per definition; N classes per assertion; classes
   import the shared function (never inline-duplicate it).
-- **INV-2 (same-IR guard).** Each generated class's compiled predicate serialization-equals
-  its catalog concrete-entry `predicate_ir`; a mismatch is a loud `CodeGenerationError` naming
-  the `constraint_id`. Catching criterion: mutate one `predicate_ir` after lowering →
-  generation fails, naming that id.
+- **INV-2 (same-IR generation guard).** Under D3 there is one compiled function per
+  `definition_qn`, so the guard is a *data-level* check on the catalog concrete entries, not a
+  per-class re-compile-and-compare. Two arms, both before the single compile: (a) round-trip
+  stability per entry — `serialize(parse(entry.predicate_ir)) == entry.predicate_ir` (B3); and
+  (b) byte-agreement — all concrete entries sharing a `definition_qn` carry the identical
+  `predicate_ir` string. A violation of either is a loud `CodeGenerationError` naming the
+  `constraint_id`. Catching criterion: mutate one entry's `predicate_ir` after lowering →
+  arm (b) fails, naming that id. This is Item 7's *generation-time* arm; it does not
+  re-implement or contradict Item 5's *lowering-time* same-IR guard
+  (`constraint_lowering.py:524-536`), which already checks the profile-walked predicate against
+  the lowered one — a different arm at a different stage. **Note:** the catalog's concrete
+  entries must carry `predicate_ir` for arm (b) to run; S4 put it only on the source records
+  (`s4_lib.py:883-898`), so Item 7's `ConstraintCatalog` (D6) adds it to each concrete entry.
 - **INV-3.** A constraint module never raises on an adverse verdict. Only missing inputs,
   schema-validation failure, thrown predicate code, or a missing aggregator field are
   execution failures.
@@ -269,6 +323,10 @@ guarantees membership; narrowing is exercised only by the kept test's seam.
   plain codegen venv (no simkit; teax `.venv` broken — memory [[teax-simkit-execution-env]]).
   Mitigation: a pytest marker gates them out of the default suite; document the agentic-mbse-venv
   + `sys.path` incantation. "Suite green" (byte-identity, offline) stays in the default lane.
+  Because the execution lane runs by hand and outside CI, a regression there is silently missed
+  unless recorded: the plan writes each manual run's result (date, teax state, pass/fail per
+  criterion) durably — an appended log in this feature directory — so an unrun or failing lane
+  is visible, not assumed green (N6).
 - **`_get_python_path` runs before the module-wrapper guard.** If it assumes
   `calc_def_qualified_name` it crashes before the seam. Verify it already tolerates constraint
   kinds (Item 6's faildloud test reaches the guard, so likely yes) and add explicit derivation
@@ -283,20 +341,51 @@ Item 5's graph nodes and entry points are consumed as-is; the only Item 5 change
 
 ## Validation Approach
 
-- **Reproduce the S4 slice** end-to-end under real simkit: both truth values, identical
-  ordinary outputs, correct verdicts/margins, report persisted (spec SC-1).
+Two lanes. The **offline lane** (default `uv run pytest`, no simkit) is CI-enforceable and
+carries the safety-critical compiler tests and every generation-time check. The **execution
+lane** (D10, agentic-mbse venv + teax-simkit on `sys.path`) runs the real-simkit end-to-end
+criteria and is not in default CI (see N6 note).
+
+Offline lane:
+
+- **Compiler-level Kleene unit tests (M2), committed, probe3-style — the safety-critical
+  core.** Assert directly on `compile_predicate`'s emitted-function output (load and call it),
+  one case per rendered semantic, because end-to-end tests exercise happy paths and will not
+  catch a wrong propagation cell — a wrong cell reads as a *confident wrong verdict*, the exact
+  failure the feature exists to prevent. Cells: non-finite leaf → `unknown` /
+  `indeterminate` / `margin=None`; `true or unknown → true`; `false and unknown → false`;
+  `not unknown → unknown`; negated-polarity status (a `false` predicate under a negated
+  assertion is `satisfied`); negated-inequality margin **sign flip**; and the **`-0.0 → 0.0`
+  boundary normalization** — new code S2 never tested (S2 only *masked* signed zero with
+  `math.isclose`; it performs no normalization), so this cell is written with zero prior test
+  behind it and must be covered explicitly.
+- **Same-IR guard:** mutate one concrete entry's `predicate_ir` → generation fails naming the
+  id (INV-2, arm (b)); a serializer-noise round-trip failure trips arm (a).
+- **Leaf-name reconciliation (B5):** a fixture whose predicate leaf lacks a matching
+  `ModuleInput` → generation errors naming the `constraint_id`.
+- **Byte-identity:** constraint-free corpus regenerates byte-identically (INV-7); the D1 exit
+  parameters at their production defaults change no bytes.
+- **Falsifiable exit test (D1), at the exit-builder layer:** drive `_build_exit_points` with a
+  narrowed `selected_channels` that excludes the report channel. Control leg
+  (`pin_report_channels=False`) → the emitted exit list **omits** the report; mechanism leg
+  (`pin_report_channels=True`, same narrowed set) → it **includes** it. This is the load-bearing
+  proof the pin is not riding capture-everything; it needs no simkit.
+- **Determinism:** two live loads of a constraint-bearing fixture produce identical catalog
+  fingerprints (INV-8, the Item 8 handoff gate — not an Item 7 live/snapshot parity gate).
+
+Execution lane (real simkit):
+
+- **Reproduce the S4 slice** end-to-end: both truth values, identical ordinary outputs,
+  correct verdicts/margins, report persisted (spec SC-1).
 - **Cover the S4 gaps:** zero-assertion aggregator, indeterminate point, negated + inline
   assertions, multi-instance expansion (N modules, N aggregator fields, one shared predicate).
 - **Modeled-default override:** default applies when unset; overriding flips the verdict; the
   default is entry-point-sourced, not baked (INV-6).
-- **Falsifiable exit test (D1):** control leg (pin disabled + exit narrowed) drops the report;
-  mechanism leg (pin on, same narrowing) keeps it.
 - **Break-the-YAML:** rewire an upstream evaluation → missing result surfaces as an execution
   failure *through the executor* (INV-4 end-to-end).
-- **Same-IR guard:** mutate one `predicate_ir` → generation fails naming the id (INV-2).
-- **Byte-identity:** constraint-free corpus regenerates byte-identically (INV-7).
-- **Determinism:** two live loads of a constraint-bearing fixture produce identical catalog
-  fingerprints (INV-8, the Item 8 handoff gate — not an Item 7 live/snapshot parity gate).
+- **End-to-end exit narrowing (optional companion to the exit-builder test):** render a full
+  narrowed `pipeline.yaml` via the `generate_pipeline_yaml` test-seam and execute it; the
+  control leg writes no `constraint_report.json`, the mechanism leg writes it.
 
 ## Next-Stage Handoff
 
@@ -305,9 +394,11 @@ Item 5's graph nodes and entry points are consumed as-is; the only Item 5 change
   and decisions D1–D11 above.
 - **Open for the plan:** exact template text; the `_get_python_path` derivation; the precise
   reconciliation of predicate args vs module inputs in `run()`; test-lane marker/env wiring.
-- **De-risk first:** D3's shared-predicates-module import path under a *two-instance-of-one-
-  definition* fixture (the case S4 never ran) — it is the one place the compile-once emission
-  and the class-per-assertion identity meet, and the most likely to surprise.
+- **De-risk first:** two things S4 never ran. (1) D3's shared-predicates-module import path
+  under a *two-instance-of-one-definition* fixture — the one place compile-once emission and
+  class-per-assertion identity meet. (2) The leaf-name / input-name reconciliation (B5) — the
+  single most likely integration break; a fixture where the predicate leaf and the module input
+  are known to coincide, plus the negative fixture that proves the generation-time check fires.
 
 ---
 
