@@ -6,6 +6,24 @@
 
 ## Active Work
 
+### CONSTRAINT-EXEC Item 4 — Part-Instance Index (Subtype Closure + Cardinality Expansion) — spec in progress
+
+Epic: `.project/backlog/epic_constraint_execution.md` (Item 4). Spec:
+`.project/active/part-instance-index/spec.md`. Production part-structure-owned instance index
+(subtype closure, retyped-path dedup, fixed-multiplicity expansion) so constraint lowering
+(Item 5) finds instances of constraint-only definitions. Consumes no fact schemas; additive to
+calc-driven discovery (byte-identity gate). S3 fixture promoted.
+
+### CONSTRAINT-EXEC Item 6 — `module_kind` and the Generation-Seam Refactor — spec in progress
+
+Epic: `.project/backlog/epic_constraint_execution.md` (Item 6). Spec:
+`.project/active/module-kind-refactor/spec.md`. Pure refactor: replace the two Boolean flags
+on `PipelineModule` (`is_computed_attribute`, `is_aggregation`) with a real five-member
+`module_kind` enum and make the four calc-shaped generation seams (S4-named) dispatch on it,
+byte-identically for existing kinds. Clears the path for Item 7 (constraint emission). Spec
+finding: `module_kind` is a graph field, not an extraction-snapshot field, so this is
+decoupled from Item 8's snapshot v3 bump.
+
 ### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
 
 Independent technical audit of PRs #8 (sysml-codegen) / #10 (agentic-mbse) found the code
