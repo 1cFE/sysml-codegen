@@ -78,12 +78,12 @@ def test_boundary_margin_normalizes_signed_zero():
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_predicate_compiler.py` → all cells pass
-- [ ] `uv run pytest tests/` → no regressions
-- [ ] `uv run ruff check src/`; `uv run mypy src/` (no new errors above baseline)
+- [x] `uv run pytest tests/unit/test_predicate_compiler.py` → all cells pass
+- [x] `uv run pytest tests/` → no regressions
+- [x] `uv run ruff check src/`; `uv run mypy src/` (no new errors above baseline)
 
 **Manual:**
-- [ ] Cross-check emitted source against S2's `probe3_nonfinite_kleene.py` expected output for the shared cells — the emitted Python (leaf `_cmp`, `_and/_or/_not`, margin) must match S2's proven form.
+- [x] Cross-check emitted source against S2's `probe3_nonfinite_kleene.py` expected output for the shared cells — the emitted Python (leaf `_cmp`, `_and/_or/_not`, margin) must match S2's proven form.
 
 **What We Know Works After This Phase:** the Kleene compiler produces correct three-valued Python from the landed IR, independently of any generation or runtime. The riskiest new machinery is proven first.
 
@@ -125,8 +125,8 @@ def test_production_defaults_byte_identical():
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_exit_pin.py` → both legs behave; defaults byte-identical
-- [ ] `uv run pytest tests/` → no regressions (existing pipeline-yaml tests unchanged)
+- [x] `uv run pytest tests/unit/test_exit_pin.py` → both legs behave; defaults byte-identical
+- [x] `uv run pytest tests/` → no regressions (existing pipeline-yaml tests unchanged)
 
 **What We Know Works After This Phase:** the report channel's exit membership is structural (INV-5), proven falsifiably without simkit, and production output is unchanged (INV-7 for the exit list).
 
@@ -260,15 +260,15 @@ Emitting constraint code disturbs no calc-driven generation: a constraint-free c
 ### Changes Required
 **See design.md for:** INV-7 byte-identity → `design.md#validation-approach`; INV-8 determinism as the Item-8 handoff gate (NOT an Item 7 live/snapshot parity gate) → spec SC "Handoff gate to Item 8" and D6/INV-8.
 
-- [ ] Constraint-free corpus regenerates byte-identically (timestamps excepted) — reuse the epic's byte-identity gate discipline ([[byte-identity-captured-at-churn]]: timestamp-only diff check + revert).
-- [ ] Two live loads of a constraint-bearing fixture → identical catalog fingerprints (INV-8). This is the **handoff** to Item 8, not a live/snapshot parity gate (a current snapshot cannot carry facts until Item 8 — spec).
-- [ ] `uv run pytest tests/` → full offline suite green.
-- [ ] `uv run mypy src/` → at the recorded **76-error baseline**, no new errors. (Baseline per orchestrator brief; if the pre-Item-7 count differs, record the true baseline before asserting "no regression.")
-- [ ] `uv run ruff check src/` → clean.
+- [x] Constraint-free corpus regenerates byte-identically (timestamps excepted) — reuse the epic's byte-identity gate discipline ([[byte-identity-captured-at-churn]]: timestamp-only diff check + revert). Confirmed via the existing baseline-comparison suites (`test_graph_assembly.py::TestBaselineComparison`, `test_pipeline_e2e.py::TestBaselineComparison`, `test_e2e_output_registry.py::TestYamlDiffValidation`) — all green against committed baselines that predate Item 7, with `lower_constraints_enabled` at its Item-8-gated default (`False`) so none of these corpora ever touch the new code paths.
+- [x] Two live loads of a constraint-bearing fixture → identical catalog fingerprints (INV-8). This is the **handoff** to Item 8, not a live/snapshot parity gate (a current snapshot cannot carry facts until Item 8 — spec). New `tests/conformance/test_constraint_catalog_determinism.py`.
+- [x] `uv run pytest tests/` → full offline suite green.
+- [x] `uv run mypy src/` → at the recorded **76-error baseline**, no new errors.
+- [x] `uv run ruff check src/` → clean.
 
 ### Validation
 **Automated:**
-- [ ] All four gates above pass.
+- [x] All four gates above pass.
 
 **What We Know Works After This Phase:** Item 7 is offline-complete and non-disruptive; Item 8 has deterministic fingerprints to build snapshot parity on.
 
@@ -427,10 +427,35 @@ license-dependent and hold unchanged). `ruff check` clean. `mypy src/` — 76 er
 held.
 
 ### Phase 5 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- `tests/conformance/test_constraint_catalog_determinism.py` (NEW) — INV-8 (two live loads of
+  `constraint_multi_instance` fingerprint identically; two different fixtures fingerprint
+  differently, ruling out a trivially-constant fingerprint).
+
+**Deviations from plan:** none.
+
+**Issues Encountered:** none new — Phase 4 already surfaced and fixed the correctness
+issues that would otherwise have shown up here as a determinism or byte-identity failure.
+
+**Validation:**
+- Byte-identity (INV-7): `test_graph_assembly.py::TestBaselineComparison`,
+  `test_pipeline_e2e.py::TestBaselineComparison`, `test_e2e_output_registry.py::TestYamlDiffValidation`
+  — 11/11 pass against pre-Item-7 committed baselines.
+- Determinism (INV-8): 2/2 pass.
+- `SYSIDE_LICENSE_KEY=<key> uv run pytest tests/` — **2233 passed, 4 skipped, 3 deselected
+  (execution-marked), zero failures, zero errors.**
+- `uv run ruff check src/` — clean.
+- `uv run mypy src/` — 76 errors, baseline held exactly (same count and same files as the
+  pre-Item-7 baseline recorded at the start of Phase 1).
+
+**What We Know Works After This Phase:** Item 7 is complete — offline generation, the
+execution lane, and the full test suite are all green with no baseline regression. Item 8 has
+deterministic catalog fingerprints to build snapshot parity on.
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → **Complete**
 
 ---
 
