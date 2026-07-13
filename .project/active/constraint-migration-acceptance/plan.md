@@ -130,17 +130,18 @@ def test_every_manifest_usage_has_a_catalog_carrier(constraint_bearing_ctx):
 ### Changes Required
 **See `design.md#key-decisions` D1 (the two carrier surfaces), D1b (inverted inventory arm), and `design.md#implementation-notes` ("Mapping-test join key").**
 
-- [ ] **Pin the three data surfaces** (MF2): manifest from `extractor.collect_constraint_manifest()` (`extraction/extractor.py:112`); eligible carriers from `graph.constraint_catalog.concrete_entries` grouped by `usage_qualified_name`; unassessed carriers from `ctx.concrete_constraints` where `eligible=False` (`pipeline_context.py:119`) — **not** the catalog (`assemble_constraint_catalog` filters eligible-only, `constraint_catalog.py:76`). *Equivalent cleaner home:* join against the full `lower_constraints` output (`constraint_lowering.py:436`), which carries both dispositions in one list.
-- [ ] **Join key:** usage qualified name, with source location as the anonymous-assertion tiebreak — the same identity `_source_local_identity` uses (`constraint_lowering.py:379`). **Confirm the two identity renderings agree on the anonymous case before locking** (`design.md#implementation-notes`).
-- [ ] **Name the justified carrier-free category** (design-review B1 hidden bet): requirement-side excluded usages that map to unassessed, plus the tightly-justified set the lowering explicitly skips (e.g. `requirement_def` owners). Do **not** let it absorb surprises — an unrecognized carrier-free usage fails loudly.
-- [ ] **catf_mfe counts (R1):** the 65 plain `constraint {}` usages land eligible or unassessed depending on how `evaluate_profile` treats a non-asserted inline constraint. Run extraction (license) to fix the expected split; this sets the test's *counts*, not its *structure*. If any of the 65 come back BLOCK, that is a real finding (catf_mfe would be halting today) — surface it (R1).
-- [ ] **Optionally** the D1b inventory-visibility assertion (inverted, safe direction only — unused defs stay legitimate).
+- [x] **Pin the three data surfaces** (MF2): manifest from `extractor.collect_constraint_manifest()` (`extraction/extractor.py:112`); eligible carriers from `graph.constraint_catalog.concrete_entries` grouped by `usage_qualified_name`; unassessed carriers from `ctx.concrete_constraints` where `eligible=False` (`pipeline_context.py:119`) — **not** the catalog.
+- [x] **Join key:** `owner_qualified_name::constraint_name`, matching `usage.identity.qualified_name`/`ConcreteConstraint.usage_qualified_name` exactly for every named usage — verified empirically across the whole fixture corpus (zero anonymous constraint usages exist today). The anonymous case is documented and raises loudly rather than silently mis-joining if one is ever added (`_usage_identity`).
+- [x] **Name the justified carrier-free category**: `ConstraintKind.REQUIREMENT`/`SATISFY` — requirement-side usages the manifest sweeps but lowering never admits (they land unassessed via the `requirement_def` owner-kind branch, e.g. `item4_require`'s `within_budget`/`demo_req`, not exercised in this test's fixture set since that fixture has no calc defs to build a full graph). An unrecognized carrier-free usage still fails loudly — no catch-all.
+- [x] **catf_mfe counts (R1), confirmed empirically:** all 65 plain `constraint {}` usages land `eligible=False` unassessed; zero BLOCK. Pinned as a dedicated test (`test_catf_mfe_65_plain_constraints_land_unassessed_not_block`), not just folded into counts.
+- [x] **D1b inventory-visibility assertion** — landed, but reshaped: `ConstraintCatalogEntry` carries no per-entry definition-QN field to join against (it's per-*usage*, not per-*definition* — Core Concept), so the test asserts the inventory-completeness property `assemble_constraint_catalog` guarantees by construction (`source_records` == every `ConstraintDefinition` in `constraint_facts.definitions`) rather than a per-entry join.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_constraint_migration_mapping.py` → passes as a **kept** test (not a one-time check).
-- [ ] Runs over the constraint-bearing fixture set (derive at implement; includes `catf_mfe`, `fusion_tea`, `plant_values`).
-- [ ] License leg (if the mapping test needs live extraction for any fixture) skips cleanly without a license.
+- [x] `uv run pytest tests/conformance/test_constraint_migration_mapping.py` → 11 passed, kept test.
+- [x] Runs over the constraint-bearing fixture set: `catf_mfe_model`, `fusion_tea`, `plant_values`, `wi014_toy`, `constraint_inline`, `constraint_multi_instance` (`ife_plant` excluded — zero constraint usages; `item4_require` excluded — no calc defs, covered directly in `test_extractor.py`, re-anchored in Phase 3).
+- [x] License-gated (`@requires_license`); skips cleanly without a license.
+- [x] Full suite 2335 passed / 23 skipped; `ruff check src/` clean; `mypy src/` 76 (baseline unchanged).
 
 **What We Know Works After This Phase:**
 The migration invariant is proven as a kept guard. Every manifest usage is demonstrably carried, INV-A holds, and the retirement in Phase 3 is now authorized by a green proof.
@@ -343,6 +344,10 @@ The epic closes where it started — the IFE sweep's hand-coded rule is dead, re
 **Issues encountered:** the from-snapshot rebuild path (`graph_rebuild.py`) needed the identical demand-widening as the live path — missed on the first pass, caught by the full suite (`test_fusion_tea_snapshot.py`, `test_fusion_tea_acceptance.py` failures) before it reached byte-identity. The acceptance runtime tests also exposed the pipeline-runner module-naming bug on their first real exercise of a constraint module end-to-end (fixed above, test-harness-only, no production change).
 
 ### Phase 2 Completion
+**Completed:** 2026-07-13
+**Changes made:** New `tests/conformance/test_constraint_migration_mapping.py` (11 tests): the kept no-silent-drop mapping test parametrized over the 6 constraint-bearing full-pipeline fixtures, the catf_mfe R1 empirical pin, and the D1b inventory-completeness test. No production code changed this phase.
+**Deviations:** D1b landed against the actual schema (per-usage, not per-definition — no dangling-reference field exists to join on) rather than the plan's literal per-entry join sketch; `item4_require` excluded from the fixture set (no calc defs; its manifest-classification behavior is already covered in `test_extractor.py`, which Phase 3 re-anchors).
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 ### Phase 5 Completion
