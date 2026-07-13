@@ -29,15 +29,18 @@ staged-decision ordering S2 set is already satisfied when this item runs.
 
 ## Success Criteria
 
-- [ ] The calc-compiler seam produces its Python expression strings through the
+- [x] The calc-compiler seam produces its Python expression strings through the
       `ExpressionIR` + compat-renderer path; `build_expression_ast` + `compile_expression`
-      are no longer called to compile calc outputs.
-- [ ] Every corpus calc expression renders **byte-identically** through the IR path before
+      are no longer called to compile calc outputs. *(Audit: static-verified — seam + computed-attr
+      both flipped; old functions deleted.)*
+- [x] Every corpus calc expression renders **byte-identically** through the IR path before
       each consumer flips (the S2 proof kept as a test until `ExpressionAST` is deleted).
+      *(Audit: static-verified — live parity ran Phases 0–3, frozen to D4 golden; live pass = Probe P1/P4.)*
 - [ ] Generated packages are byte-identical after **each** staged step (not only at the end),
       timestamps excepted, against the post-Item-8 corpus baseline.
-- [ ] `ExpressionAST`, `build_expression_ast`, and `compile_expression` are deleted; a grep
+- [x] `ExpressionAST`, `build_expression_ast`, and `compile_expression` are deleted; a grep
       gate proves those three symbols no longer appear in `sysml-codegen/src`.
+      *(Audit: static-verified — independent whole-family grep of src clean; grep gate present.)*
 - [ ] The serialized calc-compilation section round-trips byte-identically after the seam
       flips, and `generate --from-snapshot` packages stay byte-identical; baselines
       re-captured only if the capture shape changes, as a reviewed diff.

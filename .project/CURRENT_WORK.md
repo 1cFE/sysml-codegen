@@ -85,6 +85,22 @@ Design decisions (all four spec Open Questions resolved, matching orchestrator g
 
 Next: `/_my_plan` (design_review only if a contested call surfaces — this is the S4-proven shape).
 
+### CONSTRAINT-EXEC Item 13 — Calc-Seam Cutover: Retire ExpressionAST — AUDITED: Certify-with-notes (2026-07-13)
+
+**Audit (2026-07-13):** `audit.md` — Certify-with-notes. Implementation is complete and correct
+by every static measure: seam + computed-attr flipped onto `ExpressionIR` + `calc_compat_renderer`,
+the six retired symbols deleted, grep gate green, corpus byte-identical across the item (git-clean,
+only 3 new golden files added), INV-1/3/4 + M2/M3 conformant, REQ-AST-04 invariant still dynamic
+(3/5). The 4→23 skip jump is fully accounted for (1+1+17 content-gated golden skips; no masked
+failures) and the count is arithmetically consistent only with a license-present run. Both unplanned
+fixes (literal kind-keying, mock-adapter redirect) are structural + regression-tested. **Notes:**
+this sandboxed session could not execute pytest/mypy/ruff, so live green suite / mypy-76 / ruff /
+`@requires_license` golden pass are plan-claimed + statically corroborated, not audit-reproduced —
+Requested Live Probes P1–P4 in audit.md list the exact confirmations. Minor latent: `_render_operator`
+treats any 1-operand node as unary minus without a `== "-"` guard (harmless under the corpus gate).
+
+---
+
 ### CONSTRAINT-EXEC Item 13 — Calc-Seam Cutover: Retire ExpressionAST — DESIGN reviewed, must-fixes folded (2026-07-13)
 
 Epic Item 13. Spec: `.project/active/expression-ast-cutover/spec.md`; Design:
