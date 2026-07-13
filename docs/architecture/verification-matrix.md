@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 259 |
-| PASS (test exists and passes) | 258 |
+| Total requirements | 264 |
+| PASS (test exists and passes) | 263 |
 | UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
-| REQ families | 30 |
-| Distinct test files cited | 66 |
+| REQ families | 31 |
+| Distinct test files cited | 71 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -36,6 +36,7 @@ the documentation rather than executable code.
 - [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (13/13 pass)
 - [CA — Computed Attributes](#ca) (12/12 pass)
+- [CL — Constraint Lowering & Catalog](#cl) (5/5 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
@@ -152,6 +153,23 @@ the documentation rather than executable code.
 | REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure` in `graph_builder.py`) for the resolvable case | `test_wi014_toy.py` | PASS |
 | REQ-CA-12 | A reference whose QN sits under the owning part OR any **ancestor PartDef** namespace SHALL be treated as a sibling (Step-2b widened via `_ancestor_part_qns`, transitive), so an attribute referencing only inherited/local attributes classifies FORMULA — not EXPOSE_COMPUTED; a reference under a top-level CalcDef namespace SHALL stay a `calc_ref` (D3 over-correction control, `mixed_expose`). A FORMULA computed attribute that reaches graph-build without being FULLY_COMPILABLE SHALL emit a WARN and produce no module (D5 — the no-module outcome is loud, never a silent drop) | `test_computed_attributes.py`, `test_computed_attribute_extraction.py`, `test_graph_builder_computed_attrs.py` | PASS |
 
+### CL
+
+**Constraint Lowering & Catalog** — Items 5-9, Item 14 — [reference/28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md)
+
+Partial register (Item 14 docs pass): these five rows cover the mechanisms Item 14
+directly touched or verified test-first; the full Items 5-9 surface (module wiring
+detail, occurrence expansion, tracking-key correlation) is broader than this pass
+re-derives from scratch and is named here as a known gap, not silently covered.
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-CL-01 | `resolve_actual`'s strict ladder SHALL resolve a bound actual through, in order: registry scoped/alias/scoped-alias lookup, occurrence-scoped design attribute, definition-scoped target QN, definition-scoped base-literal-default (Item 14 D2-twin) — before the shared terminal-disposition switch (`strict=True`, never synthesizes) | `test_constraint_resolver.py` | PASS |
+| REQ-CL-02 | Every concrete entry expanded from one `ConstraintUsageFact` SHALL share one compile-once predicate (grouped by `usage_qualified_name`), even across N owner-instance occurrences | `test_constraint_emission.py` | PASS |
+| REQ-CL-03 | `assemble_constraint_catalog` SHALL build `source_records` from every `ConstraintDefinition` in the model's facts (visible even with zero eligible entries) and `concrete_entries` from eligible concrete constraints only, fingerprinted deterministically | `test_constraint_emission.py` | PASS |
+| REQ-CL-04 | The manifest->catalog mapping SHALL be total and silent-drop-free: every usage `collect_constraint_manifest` sweeps has a catalog carrier (eligible or unassessed) or is a named, justified requirement/satisfy exclusion | `test_constraint_migration_mapping.py` | PASS |
+| REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_constraint_graph_extension.py` | PASS |
+
 ### DM
 
 **Data Models** — Component C01 — [reference/09-data-models.md](reference/09-data-models.md)
@@ -225,7 +243,7 @@ the documentation rather than executable code.
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | `test_extractor.py` | PASS |
 | REQ-EXT-07 | The `CalculationDefinitionData.output_expression_asts` field SHALL exist as `dict[str, Any]` and be nullified at the snapshot serialization boundary (raw-AST content is exercised via REQ-EXT-10's live-extraction population check, not here) | `test_extractor.py` | PASS |
 | REQ-EXT-08 | A `calc def` extracting with zero output attributes SHALL raise `ValueError` at extraction (V7), never reaching generation | `test_extractor.py` | PASS |
-| REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) SHALL be reported dropped: one INFO each + one summary WARN with the model-wide total | `test_extractor.py` | PASS |
+| REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) swept by `collect_constraint_manifest` SHALL have a catalog carrier — an eligible concrete entry or an explicit unassessed record — with nothing silently absent (Item 14 re-anchor; the drop-manifest report this row originally pinned is retired) | `test_extractor.py`, `test_constraint_migration_mapping.py` | PASS |
 | REQ-EXT-10 | A direction-carrying `ReferenceUsage` member (named `return`, bare `in`) SHALL extract as a parameter; a named inline `return y : Real = expr` SHALL auto-implement | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-11 | A calc def with an anonymous `return` (empty `declared_name`) SHALL raise the V8 diagnostic before V7 | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-12 | The `return attribute y; y = expr` form SHALL extract `y` once with no double-ingestion (direction-None body ref excluded) | `test_return_style_extraction.py` | PASS |

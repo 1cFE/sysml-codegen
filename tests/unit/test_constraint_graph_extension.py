@@ -91,6 +91,7 @@ def test_module_output_input_wires_producer_channel_no_mint():
     assert extended.entry_point_groups == []  # nothing minted
 
 
+@pytest.mark.req("REQ-CL-05")
 def test_design_attribute_input_mints_deduped_entry_point():
     attr = DesignAttributeData(
         name="threshold",

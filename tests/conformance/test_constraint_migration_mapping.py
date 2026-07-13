@@ -76,6 +76,7 @@ def _is_justified_carrier_free(entry) -> bool:
 
 @requires_license
 @pytest.mark.req("REQ-EXT-09")
+@pytest.mark.req("REQ-CL-04")
 @pytest.mark.parametrize("fixture", CONSTRAINT_BEARING_FIXTURES)
 def test_every_manifest_usage_has_a_catalog_carrier(fixture):
     ctx = build_pipeline_context([FIXTURES_DIR / fixture])

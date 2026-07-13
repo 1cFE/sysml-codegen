@@ -397,36 +397,51 @@ For the full identifier taxonomy and naming rules, see [15-naming-conventions.md
 
 ---
 
-## 8. Constraints Are Not Executable
+## 8. Constraints Execute Under a Profile — Block List and Fallback
 
-> **Constraint predicates are dropped. They are not compiled to pipeline modules and never appear in generated output.**
+> **A constraint predicate the executable profile ADMITs lowers into a real pipeline module and
+> executes; one it BLOCKs halts generation loudly, naming why; everything else catalogs unassessed.**
 
 SysML lets a modeler attach `constraint` usages to calc defs, part defs, and part usages — for
 example a physical-consistency check like `outer_radius == inner_radius + thickness`, or a
-plausibility bound like `0.0 < efficiency`. These express intent, but sysml-codegen has no execution
-path for them today: there is no boolean-output module, no assertion channel, and nothing downstream
-reads a constraint. So every constraint usage in the model is **dropped**.
+plausibility bound like `eta * gain >= threshold`. Through Item 4, sysml-codegen had no execution path
+for any of them and dropped every one, loudly. Items 5-9 built the real path (see
+[28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md) for the
+mechanism); this section teaches what a modeler should now expect.
 
-**Why the drop is loud, not silent.** A dropped constraint is a real modeling gap — the modeler may
-believe a viability gate is being enforced when it is not. At orchestration time the pipeline sweeps
-every `ConstraintUsage` **including its subtypes** — so an `assert constraint`
-(`AssertConstraintUsage`) and a `require`/plain predicate are both seen — and reports them
-(REQ-EXT-09). `RequirementUsage` and its `satisfy` subtype (`SatisfyRequirementUsage`) are
-requirement-side, not dropped predicates, and are **excluded** from the drop count. The report is:
-one always-present summary `INFO` — `scanned N ConstraintUsage (incl. subtypes), reported M droppable
-(K assert, J require/plain), excluded E requirement/satisfy` — then one `INFO` per dropped predicate
-naming its owner, then one summary `WARNING` only when `M > 0`. The scanned/excluded breakdown keeps
-an empty result distinguishable from a blind query and a swept-and-excluded `satisfy` observable.
+**The three outcomes.** `agentic-mbse`'s executable profile (`evaluate_profile`) classifies every
+swept `ConstraintUsage` (subtypes included) exactly one way:
 
-The report is available on **both** the live path and the `generate --from-snapshot` path: the
-manifest is serialized into the snapshot and the same renderer replays it offline (identical output,
-no license). `catf_mfe` has dozens of benign inline constraints, so the report is a single summary
-WARN plus per-constraint INFO — never per-constraint WARN noise.
+- **ADMIT** — the predicate lowers: every formal strictly resolves to a real producer channel, a
+  design attribute, or a modeled default, and the constraint becomes a pipeline module whose
+  evaluation is a real output channel.
+- **BLOCK** — generation halts before any lowering, naming every offending usage and its reason. This
+  is the one loud, hard-stop diagnostic (never a silent drop, never retried with a fallback).
+- **unassessed** — a requirement-side usage (`RequirementUsage`/`SatisfyRequirementUsage`, excluded
+  from execution by design) or an out-of-profile owner (e.g. a `requirement_def` owner) is cataloged
+  defensively — one record, no expansion, no formal resolution, no node — never silently absent.
 
-**What a modeler needing an enforced gate should do.** There is no in-model mechanism yet. Encode the
-check as a calc def that outputs the quantity you care about (e.g. a margin or a boolean-as-Real), so
-it flows through the pipeline as a normal output channel, and gate on that value downstream. Compiling
-`constraint`/`assert` predicates into boolean-output modules is a deferred epic.
+**The block list.** A predicate BLOCKs for an unsupported construct or operand shape, most commonly:
+an invocation expression (`block_invocation`), a feature-chain reference the profile cannot resolve
+(`block_feature_chain`), `xor`/`implies` operators (`block_xor`/`block_implies`), an assert-by-reference
+form (`block_assert_by_reference`), a real-valued or quantity-typed `==`/`!=` comparison with no
+tolerance band (`block_real_equality_requires_tolerance`), or a comparison across incompatible/unknown
+units (`block_unit_conversion_required`, `block_incompatible_dimensions`, `block_unknown_exact_unit`).
+**The real-equality idiom:** model a tolerance band explicitly as two inequalities
+(`x - tol <= y` and `y <= x + tol`) rather than `x == y` — the profile admits an inequality
+comparison on real/quantity operands, never a bare equality one.
+
+**Every manifest entry has a carrier — the migration invariant.** `collect_constraint_manifest()`
+still sweeps the model exactly as before (REQ-EXT-09) — it is the license-free proof surface a kept
+conformance test (`test_constraint_migration_mapping.py`) reads directly, not a generation-time
+report anymore. That test proves, for every constraint-bearing fixture, that each swept usage has a
+catalog carrier: an eligible concrete entry, an explicit unassessed record, or a named,
+justified requirement/satisfy exclusion — nothing silently absent.
+
+**What a modeler needing an enforced gate should do.** Author an `assert constraint` (or bare
+`constraint`/`require constraint`) against a defined `constraint def`, bind every formal to a real
+value in scope, and keep any equality check as an explicit two-inequality tolerance band. If the
+profile BLOCKs it, the generation error names the exact construct to fix.
 
 ---
 

@@ -194,15 +194,16 @@ The doc surfaces in Appendix A are the complete in-repo set (verified surfaces),
 
 ### Changes Required
 **See `design.md` Appendix A (sysml-codegen verified surfaces) and spec Docs requirements.**
-- [ ] Flip `docs/architecture/modeling-assumptions.md:400` §8 → teach the executable profile + block list (invocation, conditional, temporal, unit conversion, real-valued equality) and the real-equality → **explicit two-inequality-band** idiom.
-- [ ] Update cross-refs: `reference/01-extraction.md:20`, `reference/02-orchestration.md:40`, `verification-matrix.md:228`.
-- [ ] Add/extend architecture reference docs: lowering phase, catalog, contracts, evaluator, study layer.
-- [ ] `verification-matrix.md`: add rows for the new REQ families (constraint lowering, generation, catalog, contracts, study); **recount index family counts + STATUS from actual table rows** (memory `verification-matrix-drift-modes` — the index counts and missing REQ families are the real drift, not the summary block).
+- [x] Flip `docs/architecture/modeling-assumptions.md` §8 (retitled "Constraints Execute Under a Profile") → teaches the three profile outcomes (ADMIT/BLOCK/unassessed), the verified block list (invocation, feature-chain, xor/implies, assert-by-reference, real-equality-requires-tolerance, unit-conversion), and the real-equality → **explicit two-inequality-band** idiom.
+- [x] Updated cross-refs: `reference/01-extraction.md` (REQ-EXT-09 row re-anchored onto the catalog), `reference/02-orchestration.md` (step table: 2.5's retired report row replaced by 2.6 constraint-facts extraction, added 5.65 materializer-widening and [P1 RESOLVE]/[P4 CATALOG] rows), `verification-matrix.md` (REQ-EXT-09 row text + new CL family).
+- [x] Added `reference/28-constraint-lowering-and-catalog.md` — the lowering phase (strict resolve_actual ladder incl. Item 14's def-scoped rung), the catalog (source_records/concrete_entries/fingerprint), the contracts seam pointer, and explicit note that the executable profile (agentic-mbse) and study layer (teax) are documented in their own repos, not duplicated here.
+- [x] `verification-matrix.md`: added the **CL — Constraint Lowering & Catalog** family (5 rows, partial register — noted as covering what Item 14 touched/verified, not the full Items 5-9 surface), each row backed by a new `@pytest.mark.req` marker on an existing test. Recounted: Total 259→264, PASS 258→263, families 30→31, distinct test files 66→71 (all recounted from actual table rows, not incremented by assumption).
 
 ### Validation
-- [ ] `grep -rn "not executable" docs/` → only historical/decision-record mentions remain; no authoring guidance still teaches the retired behavior.
-- [ ] `grep -o 'REQ-[A-Z]*-[0-9]*' docs/architecture/reference/*.md | sort -u` cross-checks the matrix; every new REQ family has a row.
-- [ ] Index family counts + STATUS recounted and consistent (not just the summary block).
+- [x] `grep -rn "not executable" docs/` → zero hits (the new reference doc describes the block list without using that literal phrase).
+- [x] `grep -rln "report_dropped_constraints\|render_constraint_report" docs/` → zero hits.
+- [x] Index family counts + summary table recounted directly from the table rows (`grep -c '| PASS |$'`, `grep -oE '^### [A-Z]+' | wc -l`, etc.), not assumed from the old numbers.
+- [x] Full suite 2329 passed / 23 skipped; `ruff check src/` clean; `mypy src/` 76 (baseline unchanged).
 
 **What We Know Works After This Phase:**
 This repo's docs teach the built system. (agentic-mbse and teax docs land in S-MBSE / S-TEAX — Appendices A/B.)
@@ -355,6 +356,10 @@ The epic closes where it started — the IFE sweep's hand-coded rule is dead, re
 **Deviation:** kept `collect_constraint_manifest`/`ConstraintManifestEntry`/`ConstraintKind`/`OwnerKind` alive (design's Appendix B literally named `collect_constraint_manifest` as a deletion target, but Phase 2's kept mapping test depends on calling it directly — deleting it would break the very proof Phase 3's retirement is supposed to be authorized by). Recorded as a plan/design inconsistency resolved in favor of the kept test's requirement.
 
 ### Phase 4 Completion
+**Completed:** 2026-07-13
+**Changes made:** Flipped `modeling-assumptions.md` §8; added `reference/28-constraint-lowering-and-catalog.md`; updated `01-extraction.md`/`02-orchestration.md` cross-refs; added the CL family (5 rows) to `verification-matrix.md` with 5 new `@pytest.mark.req` markers on existing tests (`test_constraint_resolver.py` x2, `test_constraint_emission.py` x2, `test_constraint_graph_extension.py` x1); recounted index/summary numbers from actual table rows.
+**Deviation:** the CL family is an explicitly partial register (5 rows), not a full sweep of Items 5-9's surface — recorded in the doc itself (`verification-matrix.md`) rather than silently presented as complete, per the register discipline (memory `verification-matrix-drift-modes`).
+
 ### Phase 5 Completion
 ### Phase 6 Completion
 

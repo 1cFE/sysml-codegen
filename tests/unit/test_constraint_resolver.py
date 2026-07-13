@@ -147,6 +147,7 @@ def test_ladder_falls_to_occurrence_scoped_design_attribute():
     assert result.design_attribute_qn == "Design__c__cell__driver__efficiency"
 
 
+@pytest.mark.req("REQ-CL-01")
 def test_ladder_falls_to_design_attribute():
     registry = OutputRegistry()
     attr = DesignAttributeData(
@@ -175,6 +176,7 @@ def test_ladder_falls_to_design_attribute():
     assert result.design_attribute_qn == "Design__threshold"
 
 
+@pytest.mark.req("REQ-CL-01")
 def test_ladder_falls_to_def_scoped_base_default():
     """The constraint-actual twin of ADR-001's LIBRARY_DEFAULT: a bare-name
     reference to an attribute carrying only a base-def literal default (no

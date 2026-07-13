@@ -119,6 +119,7 @@ def _module_for(constraint_id: str, module_type: str, param_names: list[str]) ->
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.req("REQ-CL-02")
 def test_two_instances_of_one_definition_share_one_compiled_predicate():
     concrete = [
         _concrete("C1", "Pkg__Cell_1"),
@@ -209,6 +210,7 @@ def test_same_ir_clean_entries_pass():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.req("REQ-CL-03")
 def test_catalog_assembled_with_zero_eligible_entries():
     unassessed = ConcreteConstraint(
         constraint_id="U1",
