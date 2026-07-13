@@ -1,6 +1,6 @@
 # Implementation Plan: Contracts and Sealing — `ModelContract` / `PackageContract`
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-13
 **Last Updated:** 2026-07-13
 **Epic:** CONSTRAINT-EXEC — Item 9
@@ -62,14 +62,11 @@ license, because the live extraction leg does. All Phase 1–3 tests run offline
 `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest <targets>`.
 Offline runs use plain `uv run pytest <targets>`.
 
-**⚠️ Item 8 gating (SC-4 snapshot leg) — read before Phase 4.** Item 8's parity implementation has
-landed (Phase 3 at `e38110b`: `test_live_vs_snapshot_byte_identical`, constraint-parity fixtures
-`wi014_toy` / `constraint_multi_instance` / `constraint_inline`). It is **not yet audit-certified**
-(no certify commit). So: author and run the Phase 4 fingerprint-parity canary now against the
-landed parity — it will pass if parity holds. **But its green is only as authoritative as Item 8's
-certification.** If Item 8's audit surfaces a parity regression and re-lands, this canary MUST be
-re-run at Item 8 certification. State that loudly in the Phase 4 completion note; do not certify
-Item 9's SC-4 as final while Item 8 is uncertified.
+**✅ Item 8 gating (SC-4 snapshot leg) — resolved.** Item 8 is now **CERTIFIED** (`847bbba`,
+"Item 8 audit CERTIFIED: gate matrix + parity + flip + grandfather verified; probes executed
+(mutation RED/GREEN)"). The Phase 4 fingerprint-parity canary ran live against the certified
+parity (not merely the landed-but-uncertified state this note originally gated on) — see the
+Phase 4 completion note for the run record. No deferral remains; SC-4 is final for this item.
 
 ---
 
@@ -340,33 +337,33 @@ def test_fingerprints_stable_live_vs_snapshot(fixture, tmp_path):
 **See `design.md` for:** SC-4 (`design.md:356-357`); De-risk-first canary (`design.md:382-385`);
 INV-5; the Item 8 parity risk (`design.md:326-328`).
 
-- [ ] `tests/conformance/test_fingerprint_stability.py` (NEW, write first) — offline
+- [x] `tests/conformance/test_fingerprint_stability.py` (NEW, write first) — offline
   cross-session leg (two from-snapshot generations, compare both fingerprints) + `@requires_license`
   live-vs-snapshot leg over the landed Item 8 constraint-parity fixtures (`wi014_toy`,
   `constraint_multi_instance` — mirror `tests/conformance/test_snapshot_constraint_parity.py:24-40`).
   Compare the extracted `semantic_fingerprint` / `executable_fingerprint` fields directly (a
   fingerprint diff pinpoints a parity regression better than a raw tree diff).
-- [ ] No source changes expected. If the live-vs-snapshot leg diverges, the divergence is an **Item 8
+- [x] No source changes expected. If the live-vs-snapshot leg diverges, the divergence is an **Item 8
   artifact-parity regression** surfaced by this canary — do not patch it in Item 9; surface it
   against Item 8 (`design.md:384-385`).
 
 ### Validation
 **Automated (offline leg):**
-- [ ] `uv run pytest tests/conformance/test_fingerprint_stability.py -k across_independent` → pass.
+- [x] `uv run pytest tests/conformance/test_fingerprint_stability.py -k across_independent` → pass.
 
 **Automated (license leg — Item-8-contingent):**
-- [ ] `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest
+- [x] `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest
   tests/conformance/test_fingerprint_stability.py -k live_vs_snapshot` → pass against landed Item 8
   parity. **⚠️ Re-run at Item 8 certification** (see the gating note at the top); record the result
   and the Item-8 commit it was run against in the completion note.
 
 **Final gate wall:**
-- [ ] `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest tests/` → full suite
+- [x] `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest tests/` → full suite
   green (license env so `@requires_license` tests run, not skip — auto-memory
   `syside-license-key-explicit-env-needed`).
-- [ ] `uv run mypy src/` → 76-error baseline, no new errors.
-- [ ] `uv run ruff check src/` → clean.
-- [ ] Corpus/baseline check: `baseline_outputs/` (graph + registry only) is untouched by sealing —
+- [x] `uv run mypy src/` → 76-error baseline, no new errors.
+- [x] `uv run ruff check src/` → clean.
+- [x] Corpus/baseline check: `baseline_outputs/` (graph + registry only) is untouched by sealing —
   confirm no committed baseline churned; the three `contracts/` files live in generated output, an
   expected-diff class for generated packages, not a committed baseline.
 
@@ -485,6 +482,33 @@ equivalent intent, more robust. No scope changes.
 **Deviations from Plan:** None.
 
 ### Phase 4 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- Created `tests/conformance/test_fingerprint_stability.py` (3 tests) — offline cross-session leg
+  (two independent from-snapshot generations of `chain_spike_model`, both fingerprints compared)
+  + `@requires_license` live-vs-snapshot leg parametrized over `wi014_toy` and
+  `constraint_multi_instance`.
+- No source changes (as expected — this phase is a canary, not new functionality).
+**Validation:**
+- Offline leg: `uv run pytest tests/conformance/test_fingerprint_stability.py -k
+  across_independent` → 1/1 pass.
+- License leg: `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest
+  tests/conformance/test_fingerprint_stability.py -k live_vs_snapshot` → 2/2 pass, run against
+  Item 8 CERTIFIED at `847bbba` (the gating note above is resolved — this is the certified run,
+  not a provisional one that needs a re-run).
+- Final gate wall (license env): `uv run pytest tests/` → 2281 passed, 4 skipped, 7 deselected,
+  0 failed — fully green, `@requires_license` tests running (not skipping) per
+  `syside-license-key-explicit-env-needed`.
+- `uv run mypy src/` → 76-error baseline held, no new errors.
+- `uv run ruff check src/` → clean.
+- Baseline/corpus check: `git status --short -- baseline_outputs/` empty — `tests/fixtures/
+  baseline_outputs/` (graph + registry only) untouched by sealing, as expected.
+**Issues Encountered:** None — SC-4 held on both legs on the first run.
+**Deviations from Plan:** None.
+
+**Epic status note:** Item 9 (Contracts and Sealing) is complete — all four phases implemented,
+tested, and gated. SC-4 is proven final (not provisional) because Item 8 certified before this
+phase ran.
 
 ---
-**Status:** Draft → In Progress → Complete
+**Status:** Complete
