@@ -64,8 +64,9 @@ The old world and the new world describe the *same set of constraint usages* wit
 verdicts. The migration does not delete one surface and hope the other covers it — it **proves, as a
 kept test, that every usage the manifest reported is carried by the catalog**, then deletes the
 manifest. The proof is a per-usage join: sweep the manifest, sweep the catalog, and show a total
-function from each manifest droppable entry to its catalog carrier — an eligible concrete entry (≥1,
-grouped by `usage_qualified_name`) or an explicit unassessed record — with nothing silently absent.
+function from each manifest droppable entry to its carrier — an eligible concrete entry (≥1, grouped
+by `usage_qualified_name`, in the catalog) or an explicit unassessed record (in
+`ctx.concrete_constraints`) — with nothing silently absent.
 Requirement-side entries (the manifest's *excluded* set) map to unassessed or are legitimately
 carrier-free, and the test records that distinction rather than hiding it.
 
@@ -77,20 +78,22 @@ through the study layer. The gain fix is the enabling precondition: without it t
 executable assertion in the corpus (`'Viability Threshold'`) cannot lower, so acceptance is
 unreachable.
 
-The design's load-bearing insight: **the correspondence is manifest-usage ↔ catalog-usage-carrier,
-not manifest ↔ source-record.** The spec and concept say "source record," but source records are
-per-definition and cannot carry an inline constraint (which has no definition) or distinguish N
-instances of one usage. Reading it as the per-usage carrier is what makes the invariant both
-satisfiable and honest.
+The design's load-bearing insight: **the concept's "source record" is per *usage*, and the join
+realizes exactly that.** Concept line 102 defines a source record as "a source record per asserted or
+applied constraint *usage*." So the migration invariant — every manifest entry maps to one source
+record — is satisfiable **as written**; the per-usage join over the catalog's concrete entries plus
+the unassessed records is that invariant faithfully realized. What narrowed is Item 7's *landed*
+`ConstraintCatalogSourceRecord` (`models.py:325`), which is per-*definition* — a **naming
+divergence** between the concept's vocabulary and the shipped field, not a concept amendment and not
+an Item 7 rework. The mapping test proves the per-usage property through the join; the divergence is
+documented for the epic close-out.
 
-> **Surfaced premise conflict (capture-fidelity Law 4).** The spec/concept say each manifest entry
-> "maps to exactly one *source record*." Taken literally against the built catalog, that is
-> unsatisfiable: source records are per-definition, an inline constraint has no definition, and one
-> usage fans out to N instance occurrences. This design reinterprets the invariant as manifest-usage
-> → per-usage carrier (concrete entries / unassessed record), with a separate arm asserting every
-> source record is referenced. Spec line 159 ("the catalog carries it as source record + concrete
-> entry / inventory") supports this reading. **Flagged for the design_review / owner to confirm** —
-> not resolved silently. See D1.
+> **Recorded naming divergence (not a premise conflict).** Concept: "source record" = per applied
+> *usage*. Landed catalog: `ConstraintCatalogSourceRecord` = per *definition*, with the per-usage
+> identity living on the concrete entry / unassessed record instead. The join over those records is
+> the concept's source-record semantics under a different field name. No Item 7 catalog rework;
+> recorded here so the epic close-out notes the vocabulary vs field-name gap.
+> [Orchestrator decision, agent-grade.]
 
 ## Key Bets
 
@@ -114,21 +117,36 @@ satisfiable and honest.
 
 ## Key Decisions
 
-- **D1. The 1:1 mapping test joins manifest-usage → catalog-usage-carrier, keyed by usage identity.**
-  *Rejected: manifest → `source_records` (definitions) — the spec's literal wording — because it is
-  many-to-one, cannot carry inline constraints, and erases the instance fan-out. Rejected: a count
-  match — the spec explicitly forbids it.* The carrier is the set of concrete entries sharing the
-  usage's `usage_qualified_name`, or its unassessed record. The test additionally asserts every
-  `source_record` (definition) is referenced by ≥1 usage — the vocabulary-coverage arm.
+- **D1. The 1:1 mapping test joins manifest-usage → per-usage catalog carrier, keyed by usage
+  identity, reading two surfaces.** The carrier is either (a) the eligible concrete entries sharing
+  the usage's `usage_qualified_name` in `graph.constraint_catalog.concrete_entries`, or (b) the
+  usage's `eligible=False` unassessed record in **`ctx.concrete_constraints`** — *not* the catalog:
+  `assemble_constraint_catalog` filters to eligible (`constraint_catalog.py:76`), so unassessed
+  records never reach `concrete_entries`. The no-silent-drop test reads both surfaces together.
+  *Rejected: a count match — the spec forbids it. Rejected: joining to `source_records` — those are
+  the landed per-definition field (naming divergence, Core Concept), not the per-usage carrier.*
+- **D1b. No every-definition-referenced arm.** An unused `ConstraintDefinition` is authoring
+  inventory, not execution coverage (concept line 102: "never appears as unassessed"). If a
+  visibility assertion is wanted, invert it: an unused definition appears as a `source_record` and is
+  **never** counted unassessed — asserting inventory stays visible without being miscounted as a
+  dropped/uncovered constraint.
 - **D2. Fix the `gain` gap by adding an instance-self-redefinition tier to the materializer.** The
-  new case matches a redef/override whose `owning_part_qn == instance_scope` and
-  `attribute_name == target.attr` with no `target_path`, for a bare-name binding target — synthesizing
-  one design attribute keyed `{instance_scope}__{attr}`. *Rejected (Item 8 decision records, do not
-  relitigate): (b) convert the pair to expected-halt fixtures; (c) pre-filter via the Item 3 profile.*
+  self-redefinition lands in the **`design_overrides`** bucket (verified in the `fusion_tea` snapshot:
+  `owning_part_qn = "hif_plant_pkg__hif_plant"` — the instance QN itself — `attribute_name = "gain"`,
+  `redefinition_type = "literal"`, `literal_value = 80.0`, `target_path = []`). The new case matches a
+  `design_overrides` entry whose `owning_part_qn == instance_scope` (the instance) with empty
+  `target_path` and `attribute_name == target.attr`, for a bare-name binding target — synthesizing one
+  design attribute keyed `{instance_scope}__{attr}`. Today tier 1's bare branch instead tests
+  `owning_part_qn == f"{instance_scope}__{part_usage}"` (`supplied_values.py:129`), which the instance
+  self-override never satisfies. *Rejected (Item 8 decision records, do not relitigate): (b) convert
+  the pair to expected-halt fixtures; (c) pre-filter via the Item 3 profile.*
 - **D3. Remove `dropped_constraints` within format v3, no version bump.** Serializer stops emitting
   the key (`serializer.py:133`); loader stops reading it (`loader.py:238-239`). *Rejected: a v3→v4
   bump — it would force re-capture of all 29 golden snapshots (pure churn) when the catalog is
-  already the load-bearing v3 section and old snapshots' vestigial key loads harmlessly.*
+  already the load-bearing v3 section and old snapshots' vestigial key loads harmlessly.* Consequence:
+  the committed corpus becomes **heterogeneous** — the two re-captured snapshots (`plant_values`,
+  `fusion_tea`) omit `dropped_constraints`, the other 27 retain it as an ignored vestige. Both load;
+  the byte-identity gate expects exactly those two files to change.
 - **D4. The acceptance comparison is built by replaying the grid through both rules once, in the same
   run, then deleting the hand rule.** *Rejected: capture a golden of the old classifications first,
   compare against it later — it adds a golden-provenance question (FACTS.md notes the ground truth's
@@ -148,8 +166,9 @@ the fusion fixtures) and acceptance (assertion executes).
 (1) gain fix ─┬─→ (2) manifest retirement + 1:1 test + REQ-EXT-09 re-anchor   [sysml-codegen]
               └─→ (4) IFE acceptance: regen lowered → study-layer verdict      [fusion-tea]
                         → row-by-row compare → prepare-once benchmark
+(5b) teax loader seal wiring ──→ (4)   [precondition: acceptance loads a sealed IFE package]
 (3) docs flip across agentic-mbse / sysml-codegen / teax   [3 repos, parallel to 2/4]
-(5) three seams: GENERATOR_MISMATCH · teax loader seal · tracking-key note   [sysml-codegen/teax]
+(5) three seams: GENERATOR_MISMATCH · teax loader seal (5b) · tracking-key note   [sysml-codegen/teax]
 ```
 
 **Repo split** (orchestrator sequences the sessions):
@@ -164,8 +183,10 @@ the fusion fixtures) and acceptance (assertion executes).
 `report_dropped_constraints` (`extraction/extractor.py:98,112`), the whole `constraint_report.py`
 render/serialize helpers, the two blanket warnings (`constraint_report.py:125-141`), the
 `dropped_constraints` snapshot section (`serializer.py:133`, `loader.py:238`, `capture.py:67`), the
-call site (`pipeline_builder.py:760`), and the from-snapshot replay (`snapshot_context.py:45`).
-**Keep (explicit non-goal):** the generation-halt at `constraint_lowering.py:481`.
+call site (`pipeline_builder.py:760`), the from-snapshot replay (`snapshot_context.py:45`), the
+`constraint_manifest` ctx field (`pipeline_context.py:110`), and its snapshot-context pass-through
+(`snapshot_context.py:86`). **Keep (explicit non-goal):** the generation-halt at
+`constraint_lowering.py:481`.
 
 ## Required Invariants
 
@@ -188,7 +209,8 @@ call site (`pipeline_builder.py:760`), and the from-snapshot replay (`snapshot_c
   one new precedence case (D2). Demand-scoped and literal-only like the existing tiers, so it fires
   only for a referenced bare-name binding whose attribute has a top-level instance `:>>` literal.
 - **Manifest→catalog mapping test** (`tests/conformance/`, re-anchoring the REQ-EXT-09 family) — W2.
-  A kept test asserting the total per-usage function (D1) and the vocabulary-coverage arm. Replaces
+  A kept test asserting the total per-usage function over both carrier surfaces (D1); optionally the
+  inventory-visibility assertion (D1b: unused defs appear as source_records, never counted unassessed). Replaces
   `TestReqExt09ConstraintDropDiagnostic`, `TestConstraintRequireAndExclusion`,
   `TestConstraintDroppablePolicyParity` (`test_extractor.py:893-1044`) and the wi014 manifest
   round-trip (`test_snapshot_contract.py:91`).
@@ -197,9 +219,10 @@ call site (`pipeline_builder.py:760`), and the from-snapshot replay (`snapshot_c
   the hand rule at `:82` to a study-layer verdict; emits the D5 comparison table; records the
   prepare-once benchmark. LCOE overlay at `:84` stays hand-coded (study policy).
 - **Seam dispositions** — W5. GENERATOR_MISMATCH (`contracts/verify.py:24`): wire a
-  `generator_version` axis or document-and-remove the dead reachability expectation. teax loader
-  seal wiring: load-by-declared-name + runtime marker + strict choice (exercised for real by the
-  acceptance load). tracking-key note: names correlate, never equate across fingerprint boundaries.
+  `generator_version` axis or document-and-remove the dead reachability expectation. **teax loader
+  seal wiring (W5b) is a precondition of W4** — load-by-declared-name + runtime marker + strict
+  choice, exercised for real when acceptance loads the sealed IFE package; it must land before W4
+  runs. tracking-key note: names correlate, never equate across fingerprint boundaries.
 
 ## Non-Goals
 
@@ -221,9 +244,11 @@ call site (`pipeline_builder.py:760`), and the from-snapshot replay (`snapshot_c
   uv run …`; the live-vs-snapshot byte-diff of `fusion_tea` needs an **absolute** `--models` path
   (memory `item3-fusiontea-acceptance-facts`). The sweep must route through the study layer, not call
   generated impls directly (today's `sweep_ife.py` does the latter).
-- **Boundary detection.** The comparison must compute `eta*G` per point and flag any row where
-  `eta*G == threshold` (10.0) — that is where hand `>` and modeled `>=` diverge. One such row is a
-  real semantic difference to report in the acceptance table, not a mismatch to reconcile away.
+- **Boundary detection (epsilon window, not `==`).** The comparison must compute `eta*G` per point
+  and flag any row within an epsilon window of the threshold — `abs(eta*G - 10.0) <= eps` — not a
+  literal `== 10.0`, which floating-point grid arithmetic will silently miss. That window is where
+  hand `>` and modeled `>=` diverge; a flagged row is a real semantic difference to report in the
+  acceptance table, not a mismatch to reconcile away.
 
 ## Potential Risks
 
@@ -301,8 +326,9 @@ Items 10–12 added); the tracking-key correlation note (W5c) lands here.
 Retire: `constraint_report.py` (render + `manifest_to_records`/`manifest_from_records`),
 `extractor.py:98,112` (`report_dropped_constraints`, `collect_constraint_manifest`),
 `pipeline_builder.py:760`, `snapshot_context.py:45`, `serializer.py:133`, `loader.py:238-239`,
-`capture.py:67`. Keep: `constraint_lowering.py:481`. Re-anchor tests: `test_extractor.py:893-1044`,
-`test_snapshot_contract.py:91`.
+`capture.py:67`, the `constraint_manifest` ctx field (`pipeline_context.py:110`) and its
+snapshot-context pass-through (`snapshot_context.py:86`). Keep: `constraint_lowering.py:481`.
+Re-anchor tests: `test_extractor.py:893-1044`, `test_snapshot_contract.py:91`.
 
 ---
-Next Step: `/_my_design_review` (fresh session), then `/_my_plan` or `/_my_implement`.
+Next Step: design_review complete (Approved-with-must-fixes, all applied) → `/_my_plan` or `/_my_implement`.

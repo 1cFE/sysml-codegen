@@ -6,24 +6,29 @@
 
 ## Active Work
 
-### CONSTRAINT-EXEC Item 14 — Migration, Docs, and IFE Acceptance — DESIGN DONE (2026-07-13)
+### CONSTRAINT-EXEC Item 14 — Migration, Docs, and IFE Acceptance — DESIGN APPROVED-w-MUST-FIXES, REVISED (2026-07-13)
 
 Epic Item 14 (closing item). Spec: `.project/active/constraint-migration-acceptance/spec.md`;
-Design: `.project/active/constraint-migration-acceptance/design.md`.
+Design: `.project/active/constraint-migration-acceptance/design.md`; Review: `design-review.md`
+(Approved-with-must-fixes, all applied).
 
-**Design (2026-07-13):** Five workstreams across four repos. Key findings: (1) the manifest and
-`extract_constraint_facts` sweep the *identical* `ConstraintUsage` population, so a per-usage 1:1
-mapping is possible — but the carrier is the **concrete entry / unassessed record (per-usage), not
-the source record (per-definition)**; the spec's "source record" wording is a **surfaced premise
-conflict** (unsatisfiable literally — inline constraints have no definition), reinterpreted and
-flagged for design_review/owner. (2) The `gain` gap is a materializer *tier miss* on an instance
-self-redefinition (`owning_part_qn == instance_scope`, no target_path) — fix = one new precedence
-case. (3) Snapshot `dropped_constraints` removal stays **within v3** (no bump; loader already
-tolerant). (4) Acceptance builds the comparison by one-run replay of both rules then deletes the
-hand rule; committed table flags the `>`/`>=` boundary row. Open for implement: catf_mfe
-eligible/unassessed *counts* (needs license, R1); exact agentic-mbse/teax doc file set (needs
-access); study-layer CLI-vs-API. **De-risk first: the gain fix (W1)** — precondition for W2's
-populated catalog and W4 acceptance. Next: `/_my_design_review` (fresh session).
+**Design (2026-07-13, revised post-review):** Five workstreams across four repos. Key findings:
+(1) the manifest and `extract_constraint_facts` sweep the *identical* `ConstraintUsage` population,
+so a per-usage 1:1 mapping is provable. Concept line 102 defines "source record" as per applied
+*usage*, so the migration invariant is satisfiable **as written**; the per-usage join realizes it.
+The landed Item 7 `ConstraintCatalogSourceRecord` (per-*definition*) is a **recorded naming
+divergence** (no Item 7 rework), noted for epic close-out. The join reads two surfaces: catalog
+`concrete_entries` (eligible) + **`ctx.concrete_constraints`** (eligible=False unassessed — NOT the
+catalog, which filters to eligible). No every-definition-referenced arm (unused defs are legitimate
+inventory, never counted unassessed). (2) The `gain` gap is a materializer *tier miss* on an
+instance self-redefinition — verified in `design_overrides` (`owning_part_qn = hif_plant_pkg__hif_plant`,
+empty `target_path`, literal 80.0); fix = one new precedence case. (3) Snapshot `dropped_constraints`
+removal stays **within v3** (heterogeneous corpus after: 2 re-captured omit the key, 27 keep it as
+vestige). (4) Acceptance: one-run replay of both rules then delete the hand rule; committed table
+flags the `>`/`>=` boundary via an **epsilon window**, not `== 10.0`. W5b (teax loader seal wiring)
+is now a **precondition of W4**. Open for implement: catf_mfe eligible/unassessed *counts* (needs
+license, R1); exact agentic-mbse/teax doc file set (needs access); study-layer CLI-vs-API.
+**De-risk first: the gain fix (W1).** Next: `/_my_plan` or `/_my_implement`.
 
 **Prior (spec):** Spec: `.project/active/constraint-migration-acceptance/spec.md`.
 Retires the drop-manifest era (1:1 manifest→catalog mapping as a kept test; delete manifest +
