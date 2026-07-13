@@ -194,10 +194,10 @@ def test_verifier_imports_nothing_from_sysml_codegen():  # INV-8 (import scan)
 **See `design.md` for:** `verify_package` signature (`design.md:218-234`); D4 bidirectional/fatal;
 D5 advisory env-compat; load-by-declared-name (`design.md:312-314`); INV-4/INV-8.
 
-- [ ] `tests/unit/test_verify_package.py` (NEW, write first) — tamper/missing/extra, env-compat
+- [x] `tests/unit/test_verify_package.py` (NEW, write first) — tamper/missing/extra, env-compat
   advisory-then-strict, name-mismatch diagnostic, `verify_package_or_raise` raises on `not ok`,
   import-scan (INV-8 half that doesn't need Step 9).
-- [ ] `src/sysml_codegen/contracts/verify.py` (NEW) — `Diagnostic(kind, path, message)`,
+- [x] `src/sysml_codegen/contracts/verify.py` (NEW) — `Diagnostic(kind, path, message)`,
   `VerificationResult(ok, diagnostics)`, `verify_package(package_dir, package_name,
   runtime_version=None, strict=False)`, `verify_package_or_raise(...)`. Reads
   `contracts/package_contract.json`, applies the **recorded** `coverage_policy`. Integrity: each
@@ -209,9 +209,9 @@ D5 advisory env-compat; load-by-declared-name (`design.md:312-314`); INV-4/INV-8
 
 ### Validation
 **Automated (offline):**
-- [ ] `uv run pytest tests/unit/test_verify_package.py` → all pass (SC-1, SC-2, SC-3).
-- [ ] `uv run pytest tests/` → no regressions.
-- [ ] `uv run mypy src/` → 76 baseline; `uv run ruff check src/` → clean.
+- [x] `uv run pytest tests/unit/test_verify_package.py` → all pass (SC-1, SC-2, SC-3).
+- [x] `uv run pytest tests/` → no regressions.
+- [x] `uv run mypy src/` → 76 baseline; `uv run ruff check src/` → clean.
 
 **Manual:** grep-confirm `verify.py` has no `sysml_codegen` / `agentic_mbse` / template / non-stdlib
 import (the B3 property that lets a teax env verify without sysml-codegen installed).
@@ -425,6 +425,39 @@ Do NOT `git commit` — the orchestrator commits.
 the plan's own `DEFAULT_COVERAGE_POLICY` pattern, not a scope change).
 
 ### Phase 2 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- Created `src/sysml_codegen/contracts/verify.py` — stdlib-only (`hashlib`, `json`, `re`,
+  `dataclasses`, `pathlib`); `Diagnostic`, `VerificationResult`, `verify_package`,
+  `verify_package_or_raise`; the six `Diagnostic.kind` constants (P3): `TAMPER`, `MISSING`,
+  `EXTRA`, `GENERATOR_MISMATCH`, `RUNTIME_MISMATCH`, `NAME_MISMATCH`. Duplicates (does not
+  import) `seal.py`'s `_glob_to_regex` per D7's stdlib-only constraint.
+- Re-exported `verify_package`/`verify_package_or_raise`/`Diagnostic`/`VerificationResult`
+  from `contracts/__init__.py` for in-repo ergonomics; the emitted copy inside a generated
+  package remains the self-contained file (INV-8, Phase 3).
+- **`GENERATOR_MISMATCH` is defined but not currently produced by `verify_package`.** The
+  design's fixed `verify_package` signature (`design.md:218-225`) takes one env axis —
+  `runtime_version`, compared against the seal's `runtime_contract_version` (→
+  `RUNTIME_MISMATCH`). There is no loading-environment `generator_version` parameter to
+  compare against, and `verify.py` cannot import `sysml_codegen.__version__` (stdlib-only,
+  D7) to read one itself. `GENERATOR_MISMATCH` stays in the enum per P3 but is currently
+  unreachable from this function; flagging this now rather than silently dropping the kind
+  or unilaterally widening the fixed signature.
+- Created `tests/unit/test_verify_package.py` (10 tests) — tamper/missing/extra (SC-1/SC-2),
+  env-compat advisory-then-strict (SC-3), env-compat skipped on `runtime_version=None`,
+  name-mismatch, `verify_package_or_raise` raise/pass-through, untampered-package-verifies,
+  AST-based import scan (INV-8 half). The import scan uses `ast.parse` rather than the plan
+  stencil's substring check — the substring form false-positives on `verify.py`'s own
+  docstring, which legitimately mentions `sysml_codegen.contracts.seal` in prose.
+**Validation:** `test_verify_package.py` 10/10 pass; full suite 2062 passed / 23 failed / 96
+errors (unchanged baseline, 2052→2062 passed with identical failure/error counts); mypy 76
+baseline held; ruff clean (one import-order fix applied via `ruff check --fix` on
+`contracts/__init__.py`).
+**Issues Encountered:** None beyond the GENERATOR_MISMATCH gap and the substring-scan
+false-positive, both noted above.
+**Deviations from Plan:** Import-scan test implementation (AST instead of substring) —
+equivalent intent, more robust. No scope changes.
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 

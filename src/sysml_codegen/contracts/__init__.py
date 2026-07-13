@@ -17,6 +17,12 @@ from sysml_codegen.contracts.models import (
     PackageContract,
 )
 from sysml_codegen.contracts.seal import DEFAULT_COVERAGE_POLICY, seal_package
+from sysml_codegen.contracts.verify import (
+    Diagnostic,
+    VerificationResult,
+    verify_package,
+    verify_package_or_raise,
+)
 from sysml_codegen.contracts.versions import RUNTIME_CONTRACT_VERSION, generator_version
 
 __all__ = [
@@ -26,9 +32,13 @@ __all__ = [
     "ContractOutput",
     "ContractParameter",
     "CoveragePolicy",
+    "Diagnostic",
     "ModelContract",
     "PackageContract",
+    "VerificationResult",
     "build_model_contract",
     "generator_version",
     "seal_package",
+    "verify_package",
+    "verify_package_or_raise",
 ]
