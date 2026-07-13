@@ -577,4 +577,4 @@ REQ-RES-05 via `TestInnerStepOrdering`, REQ-RES-08 via
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (66 distinct test files cited by matrix rows)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (71 distinct test files cited by matrix rows)

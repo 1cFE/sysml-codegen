@@ -674,3 +674,19 @@ read-but-too-big-to-fix residual are both named, separately).
 **Scope for the follow-on:** re-run the Step 5.0 grep, subtract this item's full disposition
 (33 dispositioned + 21 spot-checked here), deep-read the remainder under a fresh D7 budget, land
 cheap dispositions (reframe/cite) inline, re-file only genuine budget-exceeding strengthens.
+
+## CONSTRAINT-EXEC follow-ons (registered at epic close, 2026-07-13)
+
+The fusion-tea IFE acceptance (Item 14 Appendix C) was the first real multi-entry-channel
+whole-plant package through the full sealed-package → study-layer path; it surfaced three
+integration gaps, each bridged consumer-side in fusion-tea (`exploration/ife_e2e/study/findings.md`)
+and each a claim-narrowing on a certified item that should become real work, not a permanent adapter:
+
+- **[CE-F1] Standalone catalog emission (sysml-codegen, Item 9 surface).** teax's study layer
+  reads a standalone `contracts/constraint_catalog.json`; generation embeds the catalog in
+  `model_contract.json` under different field names. Decide one canonical shape and align both sides.
+- **[CE-F2] Multi-channel CandidateBridge (teax, Item 12 surface).** The bridge builds only one
+  entry channel's typed model; real packages have several. Extend to the full EntryPoint set.
+- **[CE-F3] PreparedEvaluator hardcoded fixture class (teax, Item 10 surface).** `__init__`
+  hardcodes `ToyPlantParams`, contradicting the runtime-never-references-generated-classes
+  invariant's spirit; derive from the package contract instead.
