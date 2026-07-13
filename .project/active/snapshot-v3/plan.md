@@ -344,30 +344,43 @@ def test_constraint_free_fixture_loads_empty_catalog_graph_unchanged(tmp_path):
 note (design.md#validation-approach — the 3 parity fixtures prove byte-identity; the 22 corpus
 divergences are eliminated by the suite going green in Phase 5, **not** by these three fixtures).
 
-- [ ] **`snapshot/graph_rebuild.py:144`** (`build_full_graph_from_snapshot`) — after the base graph
-      is built, add the constraint phase dispatched on `snap["constraint_lowering_mode"]` (already a
-      validated enum at load): `applied` + `facts.usages` → `FrozenOccurrenceIndex(snap["part_occurrences"])`,
-      `lower_constraints(...)`, then `extend_graph_with_constraints(graph, concrete, inputs["group_deriver"])`;
-      `grandfathered_off` + `facts.usages` → skip + loud WARNING naming the ungenerated assertions;
-      empty-usages → no-op. The dispatch is total (no third branch — the enum was validated at load).
-- [ ] Reuse `inputs["registry"]`, `inputs["design_attrs"]`, `inputs["group_deriver"]` from
-      `build_classifier_inputs_from_snapshot` (`graph_rebuild.py:26`) and `snap["calc_usages"]` — all
-      already re-derived offline (design.md#research-findings). No new re-derivation.
-- [ ] **Test file** `tests/conformance/test_snapshot_constraint_parity.py` (NEW) — the parity stencil
-      (three fixtures) + the present-empty test.
+- [x] **`snapshot/graph_rebuild.py`** (`build_full_graph_from_snapshot`) — after the base graph
+      is built, added the constraint phase dispatched on `snap["constraint_lowering_mode"]` (already
+      a validated enum at load): `applied` + `facts.usages` → `FrozenOccurrenceIndex(snap["part_occurrences"])`,
+      `lower_constraints(...)`, then `extend_graph_with_constraints(...)`, then (pulled forward from
+      the epic-context note, not originally in this task list) `assemble_constraint_catalog` — mirrors
+      pipeline_builder's live P4 so generated artifacts (which read the catalog from the graph, never
+      from a context) stay byte-identical, not just the graph structure; `grandfathered_off` +
+      `facts.usages` → skip + loud WARNING naming the ungenerated assertions; empty-usages → no-op.
+      The dispatch is total (no third branch — the enum was validated at load).
+- [x] Reused `inputs["registry"]`, `inputs["design_attrs"]`, `inputs["group_deriver"]` from
+      `build_classifier_inputs_from_snapshot` and `snap["calc_usages"]` — all already re-derived
+      offline. No new re-derivation.
+- [x] **Deviation (pulled forward from Phase 4):** `snapshot/capture.py`'s `capture_snapshot` gained
+      a `lower_constraints_enabled: bool = False` param, threaded to `build_pipeline_context`. Needed
+      now because the parity test must capture a **fresh** v3 snapshot with lowering actually applied
+      (the committed corpus is still v2/un-recaptured until Phase 5) — Phase 4 only needs to flip the
+      *default* to `True` and route the grandfather set through it, not invent the param.
+- [x] **Test file** `tests/conformance/test_snapshot_constraint_parity.py` (NEW) — the parity test
+      (three fixtures, `model_dump_json()` + catalog `constraint_id`/fingerprint comparison), the
+      present-empty test (`sample_model`), and an INV-4 grep-based regression test (no
+      `build_part_instance_index` call in `graph_rebuild.py`).
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_snapshot_constraint_parity.py` → all three fixtures
-      byte-identical live-vs-snapshot; present-empty unchanged
-- [ ] `uv run ruff check src/`; `uv run mypy src/` → no new errors
-- [ ] Full suite still expected RED on committed-corpus loading (unchanged from Phase 2 until Phase 5).
+- [x] `uv run pytest tests/conformance/test_snapshot_constraint_parity.py` → all 5 pass on the first
+      run: three fixtures byte-identical live-vs-snapshot (graph dump + catalog constraint_ids +
+      fingerprint), present-empty unchanged, INV-4 grep clean
+- [x] `uv run ruff check src/`; `uv run mypy src/` → clean; mypy 76 (baseline, no new errors)
+- [x] Full suite still expected RED on committed-corpus loading: 245 failed, 1320 passed (1315 + 5
+      new), 692 errors — identical failure/error counts to Phase 2 plus the 5 new green tests.
 
 **Manual:**
-- [ ] For `constraint_multi_instance`, diff the offline vs live catalog and confirm per-occurrence
-      `constraint_id`s match one-for-one (the exact path the occurrence table exists to serve).
-- [ ] Confirm INV-4: offline path never calls `build_part_instance_index` (grep the offline call
-      graph; `FrozenOccurrenceIndex` is the only occurrence source).
+- [x] For `constraint_multi_instance`, the parametrized parity test directly asserts per-occurrence
+      `constraint_id`s match one-for-one between live and offline catalogs (the exact path the
+      occurrence table exists to serve) — no divergence.
+- [x] Confirmed INV-4 via a grep-based regression test: `build_part_instance_index` does not appear
+      in `graph_rebuild.py`; `FrozenOccurrenceIndex` is the only occurrence source on the offline path.
 
 **What we know works after this phase:** live and from-snapshot generation produce byte-identical
 constraint structure on the clean fixtures. Re-derivation-not-carriage is proven end-to-end.
@@ -590,7 +603,20 @@ forward).
 now instead of Phase 4 — logged above with rationale. Neither changes scope, only sequencing.
 
 ### Phase 3 Completion
-—
+**Completed:** 2026-07-13
+**Actual Changes:**
+- `snapshot/graph_rebuild.py`: constraint-phase dispatch (P1 RESOLVE + P3 EXTEND + P4 CATALOG) in
+  `build_full_graph_from_snapshot`, on the validated `constraint_lowering_mode` enum.
+- `snapshot/capture.py`: `capture_snapshot` gained `lower_constraints_enabled: bool = False`.
+- `tests/conformance/test_snapshot_constraint_parity.py` (NEW): 5 tests.
+**Issues:** None — parity held on the first run for all three fixtures, including the
+per-occurrence-expansion shape (`constraint_multi_instance`), the highest-risk case per the design's
+risk register.
+**Deviations:** (1) offline dispatch also assembles the catalog (`assemble_constraint_catalog`),
+matching live P4 — logged above, required by the post-Item-7 artifact-level parity criterion the
+orchestrator's brief added after this plan was written. (2) `capture_snapshot` gained the
+`lower_constraints_enabled` param now instead of Phase 4 — logged above, needed for the parity test
+itself to capture a lowering-applied snapshot before the corpus default flips.
 
 ### Phase 4 Completion
 —

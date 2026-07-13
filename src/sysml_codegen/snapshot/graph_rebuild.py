@@ -9,10 +9,16 @@ the constraint is behavioral (never invoke), not import-graph.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
+from sysml_codegen.analysis.constraint_lowering import (
+    extend_graph_with_constraints,
+    lower_constraints,
+)
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.analysis.parameter_groups import ParameterGroupDeriver
+from sysml_codegen.analysis.part_instance_index import FrozenOccurrenceIndex
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
     _classify_entry_points,
@@ -20,7 +26,13 @@ from sysml_codegen.resolution.graph_builder import (
 )
 from sysml_codegen.resolution.models import ComputationGraph
 from sysml_codegen.resolution.supplied_values import materialize_supplied_values
+from sysml_codegen.snapshot import (
+    CONSTRAINT_LOWERING_MODE_APPLIED,
+    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
+)
 from sysml_codegen.snapshot.loader import load_extraction_snapshot
+
+logger = logging.getLogger(__name__)
 
 
 def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
@@ -173,5 +185,40 @@ def build_full_graph_from_snapshot(
         channel_aliases=snap.get("channel_aliases", []),
         include_all=True,
     )
+
+    # [P1 RESOLVE + P3 EXTEND] (Item 8): offline re-lowering, dispatched on the
+    # load-validated mode enum (total — no third branch, the loader already
+    # rejected any other value). P2 (roots-before-pruning) is inert offline:
+    # include_all=True above already put every calc usage's producer channel in
+    # the graph, so a constraint's bound_channel never dangles (design.md#key-bets B3).
+    facts = snap["constraint_facts"]
+    mode = snap["constraint_lowering_mode"]
+    if mode == CONSTRAINT_LOWERING_MODE_APPLIED and facts.usages:
+        occ_index = FrozenOccurrenceIndex(snap["part_occurrences"])
+        concrete = lower_constraints(
+            facts,
+            occ_index=occ_index,
+            registry=inputs["registry"],
+            design_attrs=inputs["design_attrs"],
+            calc_usages=snap["calc_usages"],
+        )
+        if concrete:
+            graph = extend_graph_with_constraints(graph, concrete, inputs["group_deriver"])
+            # [P4 CATALOG] (Item 7 / D6): mirrors pipeline_builder.py's live P4 —
+            # every generation seam reads the catalog from the graph, never from
+            # a context, so live and from-snapshot artifacts stay byte-identical
+            # only if both assemble it the same way.
+            from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+
+            graph.constraint_catalog = assemble_constraint_catalog(concrete, facts)
+    elif mode == CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF and facts.usages:
+        logger.warning(
+            "Snapshot %s was captured with constraint lowering disabled "
+            "(grandfathered) but carries %d constraint assertion(s) — these "
+            "assertions are NOT generated into this graph. Recapture with "
+            "lowering enabled to include them.",
+            snapshot_path,
+            len(facts.usages),
+        )
 
     return graph, inputs

@@ -21,6 +21,7 @@ def capture_snapshot(
     model_paths: list[Path],
     output_path: Path,
     design_path_filter: str = "",
+    lower_constraints_enabled: bool = False,
 ) -> Path:
     """Capture a versioned snapshot from live models and write it to output_path.
 
@@ -32,6 +33,11 @@ def capture_snapshot(
         design_path_filter: Substring filter applied at capture time; its effect
             is baked into the snapshot (so re-applying it at generation is a hard
             CLI error, V6).
+        lower_constraints_enabled: whether to run constraint lowering at capture
+            time (Item 8, D3) — stamps ``constraint_lowering_mode`` accordingly.
+            Transitional default False until Item 8's Phase 4 flips it; the
+            named ``GRANDFATHERED`` set in the capture scripts routes it per
+            fixture.
 
     Returns:
         The output path written.
@@ -39,7 +45,11 @@ def capture_snapshot(
     # Local import: build_pipeline_context is the syside-invoking entry point.
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
-    ctx = build_pipeline_context(model_paths, design_path_filter=design_path_filter)
+    ctx = build_pipeline_context(
+        model_paths,
+        design_path_filter=design_path_filter,
+        lower_constraints_enabled=lower_constraints_enabled,
+    )
     assert ctx.constraint_facts is not None  # build_pipeline_context always populates it
 
     snapshot = serialize_extraction_snapshot(
