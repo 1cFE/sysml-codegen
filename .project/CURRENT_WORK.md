@@ -6,6 +6,17 @@
 
 ## Active Work
 
+### CONSTRAINT-EXEC Item 7 — Constraint Module, Kleene Compiler, Aggregator, Catalog Generation — SPEC in progress (2026-07-12)
+
+Epic Item 7. Spec: `.project/active/constraint-generation/spec.md`. Productionizes the S4
+vertical-slice emitters: fills the five `module_kind` generation seams (module-wrapper,
+pipeline-yaml, registry, test-gen, stencil) so `CONSTRAINT`/`REPORT_AGGREGATOR` modules
+render for real. Owner gate resolved: module identity = class-per-concrete-assertion
+([OWNER] Reid 2026-07-12, decided with the aggregator/class scale benchmark in the item
+directory). Live/snapshot byte-identity is spec'd as the Item 8 handoff gate, not an Item 7
+exit gate (snapshots can't carry facts until Item 8). Next: `/_my_spec_review`, then
+`/_my_design`.
+
 ### CONSTRAINT-EXEC Item 5 — Concrete Constraint Lowering — SPEC REVISED post-review (2026-07-12)
 
 Spec review verdict Approved-with-must-fixes (`spec-review.md`); all 12 findings discharged
