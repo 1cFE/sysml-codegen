@@ -21,6 +21,12 @@ from pathlib import Path
 TAMPER = "TAMPER"
 MISSING = "MISSING"
 EXTRA = "EXTRA"
+# Reserved seam (Item 14 W5a disposition): the seal records `generator_version`
+# (seal.py), but `verify_package` has no caller-supplied expected value to compare
+# it against — no CLI flag or loader default establishes one, unlike
+# `runtime_version`. Kept as a named diagnostic kind for a future generator-version
+# axis; never produced today, so it no longer participates in the `strict` fatal
+# check below (that expectation was dead — nothing could ever raise it).
 GENERATOR_MISMATCH = "GENERATOR_MISMATCH"
 RUNTIME_MISMATCH = "RUNTIME_MISMATCH"
 NAME_MISMATCH = "NAME_MISMATCH"
@@ -170,7 +176,7 @@ def verify_package(
             )
 
     fatal = any(d.kind in _INTEGRITY_KINDS for d in diagnostics) or (
-        strict and any(d.kind in (GENERATOR_MISMATCH, RUNTIME_MISMATCH) for d in diagnostics)
+        strict and any(d.kind is RUNTIME_MISMATCH for d in diagnostics)
     )
     return VerificationResult(ok=not fatal, diagnostics=diagnostics)
 

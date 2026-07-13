@@ -217,12 +217,13 @@ Dispose of the reserved-but-unreachable `GENERATOR_MISMATCH` diagnostic (`contra
 
 ### Changes Required
 **See spec Known Requirements → Small recorded seams (GENERATOR_MISMATCH).**
-- [ ] Inspect `contracts/verify.py:24` and its reachability expectation. Decide wire-vs-document.
-- [ ] If document-and-remove: remove the dead expectation, add a one-line reserved-seam note (decision-record phrasing, not an instruction to future agents — capture-fidelity Law 3).
-- [ ] Record the disposition in the run report.
+- [x] Inspected `contracts/verify.py`: `GENERATOR_MISMATCH` is defined, exported, and named in the `strict` fatal-check tuple — but no call path ever appends it as a diagnostic (unlike `RUNTIME_MISMATCH`/`NAME_MISMATCH`, no caller-supplied "expected generator version" parameter exists to compare `seal["generator_version"]` against; no CLI flag, no loader default establishes one). **Disposition: document-and-remove** — wiring it would mean inventing a new comparison axis with no established caller/producer side, and would touch `verify_package`'s signature while the parallel teax session (W5b) is actively wiring against that exact signature (`verify_package(dir, name, runtime_version, strict)`) — changing it now risks a collision.
+- [x] Removed the dead expectation: `strict`'s fatal check now only tests `RUNTIME_MISMATCH` (never `GENERATOR_MISMATCH`, which could never fire). Added a reserved-seam note at the constant's definition (decision-record phrasing: what's reserved and why nothing produces it today, not an instruction to future agents).
+- [x] Added `test_generator_mismatch_is_a_reserved_unproducible_kind` (confirms it's importable, never emitted, doesn't affect `strict`).
+- [x] Recorded in the run report (Phase 6).
 
 ### Validation
-- [ ] The chosen disposition is recorded; if wired, a test exercises the new axis; if documented, the dead expectation is gone and no test asserts unreachable reachability.
+- [x] The chosen disposition (document-and-remove) is recorded; the dead expectation is gone (`strict`'s fatal check no longer names `GENERATOR_MISMATCH`); a test confirms no reachability, replacing the absence of a prior dead-reachability assumption. `ruff check src/` clean; `mypy src/` 76 (unchanged); full suite 2330 passed / 23 skipped.
 
 **What We Know Works After This Phase:**
 The in-repo seam (W5a) is swept. The teax seams (W5b loader seal, W5c tracking-key note) land in S-TEAX (Appendix B).
@@ -361,6 +362,10 @@ The epic closes where it started — the IFE sweep's hand-coded rule is dead, re
 **Deviation:** the CL family is an explicitly partial register (5 rows), not a full sweep of Items 5-9's surface — recorded in the doc itself (`verification-matrix.md`) rather than silently presented as complete, per the register discipline (memory `verification-matrix-drift-modes`).
 
 ### Phase 5 Completion
+**Completed:** 2026-07-13
+**Changes made:** `contracts/verify.py` — removed `GENERATOR_MISMATCH` from the `strict` fatal-check tuple (it could never fire), added a reserved-seam comment. New test `test_generator_mismatch_is_a_reserved_unproducible_kind` in `test_verify_package.py`.
+**Deviation/reasoning:** chose document-and-remove over wiring, specifically to avoid touching `verify_package`'s signature while the parallel teax session (Appendix B, W5b) wires its loader against that exact signature — a scope-fence decision, not a technical limitation of wiring itself.
+
 ### Phase 6 Completion
 
 ---

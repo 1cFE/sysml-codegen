@@ -13,6 +13,7 @@ from sysml_codegen.contracts.seal import DEFAULT_COVERAGE_POLICY, seal_package
 from sysml_codegen.contracts.serialize import write_contract_json
 from sysml_codegen.contracts.verify import (
     EXTRA,
+    GENERATOR_MISMATCH,
     MISSING,
     NAME_MISMATCH,
     RUNTIME_MISMATCH,
@@ -98,6 +99,17 @@ def test_name_mismatch_is_a_diagnostic(tmp_path):
     result = verify_package(d, "other_name")
     assert not result.ok
     assert any(x.kind == NAME_MISMATCH for x in result.diagnostics)
+
+
+def test_generator_mismatch_is_a_reserved_unproducible_kind(tmp_path):
+    """Item 14 W5a: GENERATOR_MISMATCH is a named, reserved diagnostic kind — no
+    call path ever produces it (no caller-supplied expected generator version
+    exists to compare against, unlike runtime_version), and it no longer
+    participates in the `strict` fatal check (that expectation was dead)."""
+    d = _sealed(tmp_path / "pkg")
+    result = verify_package(d, "pkg", runtime_version=None, strict=True)
+    assert result.ok
+    assert not any(x.kind == GENERATOR_MISMATCH for x in result.diagnostics)
 
 
 def test_verify_package_or_raise_raises_on_not_ok(tmp_path):
