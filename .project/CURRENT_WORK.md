@@ -6,7 +6,20 @@
 
 ## Active Work
 
-### CONSTRAINT-EXEC Item 4 — Part-Instance Index (Subtype Closure + Cardinality Expansion) — spec in progress
+### CONSTRAINT-EXEC Item 4 — Part-Instance Index (Subtype Closure + Cardinality Expansion) — audited CERTIFY-WITH-NOTES (2026-07-12)
+
+**Audit:** `.project/active/part-instance-index/audit.md`. Core deliverable solid: `occurrences_of`
+(the Item-5 entry point) is correct — fail-closed node-type cardinality gate, subtype-closure
+projection, entry-independent identity, integer-index ordering, set dedup. All five success
+criteria have correct tests; additive boundary structurally clean (three phase commits add six
+files, modify none). **Must-fix:** `all_occurrences()` / `all_source_owners()` silently swallow
+`NonFiniteCardinalityError` per-def — a third disposition (skip) reachable through a
+completeness-named public method, silently narrowing INV-2. Real defect in waiting: if Item 5
+iterates via the bulk API, a constraint-owning def with a blocked multiplicity vanishes with no
+signal (Design Principle 5 violation). Cure before Item 5: surface the blocked set, or remove/rename
+the bulk API. **Notes:** sandbox blocked all execution — live/venv gates (9/9 oracle, collision,
+4 blocking shapes, determinism, Cartesian; suite 2161/4; mypy 77; ruff) listed as Probes A–D for
+the orchestrator; verified statically only. Spec/epic checkboxes left unmarked pending probes + cure.
 
 Epic: `.project/backlog/epic_constraint_execution.md` (Item 4). Spec:
 `.project/active/part-instance-index/spec.md`. Production part-structure-owned instance index
@@ -14,7 +27,19 @@ Epic: `.project/backlog/epic_constraint_execution.md` (Item 4). Spec:
 (Item 5) finds instances of constraint-only definitions. Consumes no fact schemas; additive to
 calc-driven discovery (byte-identity gate). S3 fixture promoted.
 
-### CONSTRAINT-EXEC Item 6 — `module_kind` and the Generation-Seam Refactor — spec reviewed + revised
+### CONSTRAINT-EXEC Item 6 — `module_kind` and the Generation-Seam Refactor — audited CERTIFY-WITH-NOTES (2026-07-12)
+
+**Audit:** `.project/active/module-kind-refactor/audit.md`. Static gates all pass by execution
+(INV-4 zero-hit grep, baseline-diff shape = exact two-out/two-in-plus-null on 9 files,
+`output_schema_type` inert). All six dispatch sites + three construction sites + 7 seam-entry
+tests traced-correct against the design (incl. M1 two-arm, M2 registry guard-pass). Both test
+deletions sound (unconstructible under a single-value enum); docstring reword keeps INV-4 green.
+**Notes:** (1) sandbox blocked all Python execution — full suite / ruff / mypy / guard-mutation
+RED-GREEN recorded green but not run here; listed as probes P1–P4 in audit.md for the orchestrator.
+(2) spec "mypy clean" not literally met (78 pre-existing errors; reframed as "no new errors",
+consistent with standing project debt). Spec criteria 2 + 4 marked; 1/3/5/6 pending P1–P4.
+
+
 
 Epic: `.project/backlog/epic_constraint_execution.md` (Item 6). Spec:
 `.project/active/module-kind-refactor/spec.md`. Pure refactor: replace the two Boolean flags
