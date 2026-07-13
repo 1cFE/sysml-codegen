@@ -236,13 +236,13 @@ The in-repo seam (W5a) is swept. The teax seams (W5b loader seal, W5c tracking-k
 Once S-CODEGEN, S-MBSE, S-TEAX, and S-FUSION have all landed, check the epic's top-level Success Criteria and Item 14's boxes with evidence links, and write the Item 14 close-out report. This phase is resumable — it collects evidence from the four sessions' reports.
 
 ### Changes Required
-- [ ] Reconcile the **epic** Success Criteria (`epic_constraint_execution.md:39-47`) — Acceptance, migration mapping, byte-identity, docs — each box traceable to a landed item or this item's evidence.
-- [ ] Reconcile **Item 14's** boxes (`epic_constraint_execution.md`, Item 14 entry): migration mapping green + grep-clean; IFE grid 100% match + hand rule deleted; docs in all three repos.
-- [ ] Write the close-out report `.project/active/constraint-migration-acceptance/run-report.md`: W1 byte-identity result, W2 mapping-test + grep-clean, W3 per-repo doc deltas, **W4 acceptance table** (see Appendix C — committed under fusion-tea's harness dir; link it here), W5 seam dispositions, the prepare-once benchmark, and the recorded **naming-divergence note** (concept "source record" per-usage vs landed `ConstraintCatalogSourceRecord` per-definition — `design.md#core-concept`, the boxed decision: invariant **met as written**, no amendment).
+- [~] Reconcile the **epic** Success Criteria (`epic_constraint_execution.md:39-47`) — checked the boxes this repo's evidence fully supports (migration mapping/retirement, byte-identity), left the cross-repo/acceptance-dependent boxes unchecked with `[~]` partial-evidence notes and commit pointers, per the scope fence (no self-certifying work other sessions haven't landed).
+- [~] Reconciled **Item 14's** boxes (`epic_constraint_execution.md`, Item 14 entry): migration mapping green + grep-clean checked; IFE grid acceptance left pending (S-FUSION); docs checked for sysml-codegen only, agentic-mbse/teax left pending.
+- [x] Wrote the close-out report `.project/active/constraint-migration-acceptance/run-report.md`: W1 byte-identity result, W2 mapping-test + grep-clean, W3 (sysml-codegen slice) doc deltas, W4/prepare-once benchmark marked pending (S-FUSION), W5 seam dispositions, and the recorded naming-divergence note (invariant met as written, no amendment).
 
 ### Validation
-- [ ] Every epic + Item 14 box is checked with an evidence link (no self-certification — numbers pasted from real runs).
-- [ ] Suggest `/_my_audit` before PR (workflow-accountability).
+- [x] Every box this repo's evidence supports is checked with a commit-hash evidence link; every acceptance/cross-repo-dependent box is left unchecked or `[~]` with a named reason, not self-certified.
+- Suggest `/_my_audit` before PR once S-MBSE/S-TEAX/S-FUSION land and this reconcile is re-run to close the remaining boxes.
 
 **What We Know Works After This Phase:**
 The epic closes where it started — the IFE sweep's hand-coded rule is dead, replaced by the generated assertion, with 100% grid agreement (or a surfaced boundary row).
@@ -367,6 +367,9 @@ The epic closes where it started — the IFE sweep's hand-coded rule is dead, re
 **Deviation/reasoning:** chose document-and-remove over wiring, specifically to avoid touching `verify_package`'s signature while the parallel teax session (Appendix B, W5b) wires its loader against that exact signature — a scope-fence decision, not a technical limitation of wiring itself.
 
 ### Phase 6 Completion
+**Completed:** 2026-07-13 (partial — sysml-codegen slice only)
+**Changes made:** Reconciled `epic_constraint_execution.md`'s Item 14 entry and epic-level Success Criteria, checking only the boxes this repo's evidence fully supports (migration mapping + retirement + grep-clean, byte-identity gates, sysml-codegen docs) with commit-hash evidence links; left acceptance-dependent and cross-repo boxes unchecked/`[~]` with named pending-session notes. Wrote `run-report.md` (W1/W2/W3/W5 filled in with evidence; W4/prepare-once benchmark marked pending S-FUSION).
+**Not done (explicitly out of this session's scope):** S-MBSE, S-TEAX, S-FUSION sessions; the final full reconcile once those land.
 
 ---
 
