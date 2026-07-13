@@ -158,6 +158,18 @@ class ModuleOutput(BaseModel):
     unit: str | None = None
 
 
+class ModuleKind(str, Enum):
+    """Kind of a pipeline module — set once at construction, dispatched on at every
+    generation seam. Replaces the accreted is_computed_attribute / is_aggregation
+    Booleans (Item 6)."""
+
+    CALCULATION = "calculation"
+    FORMULA = "formula"
+    AGGREGATION = "aggregation"
+    CONSTRAINT = "constraint"
+    REPORT_AGGREGATOR = "report_aggregator"
+
+
 class PipelineModule(BaseModel):
     """A module in the pipeline configuration.
 
@@ -178,8 +190,8 @@ class PipelineModule(BaseModel):
     execution_order: int
     compilability: Compilability = Compilability.UNKNOWN
     compiled_expression: str | None = None
-    is_computed_attribute: bool = False
-    is_aggregation: bool = False
+    module_kind: ModuleKind
+    output_schema_type: str | None = None
     auto_impl_context: dict | None = None
     # Metadata from CalcDef / ComputedAttributeData / AggregationExpressionData
     calc_def_name: str | None = None
