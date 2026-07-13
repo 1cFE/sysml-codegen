@@ -14,6 +14,13 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from agentic_mbse.sysml.executable_profile import (
+    PROFILE_SEMANTIC_VERSION,
+    Eligibility,
+    EligibilityDiagnostic,
+    UsageDecision,
+    evaluate_profile,
+)
 from agentic_mbse.sysml.expression_ir import (
     FeatureReferenceNode,
     LiteralNode,
@@ -382,15 +389,40 @@ def lower_constraints(
     Catalog ordering is by ``constraint_id`` (INV-4); duplicate IDs raise via
     :func:`assert_unique_constraint_ids` before returning.
     """
+    assert PROFILE_SEMANTIC_VERSION == "executable-profile/v1", (
+        f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
+        "review before re-pinning"
+    )
+    profile = evaluate_profile(facts)
+    blocking = [d for d in profile.decisions if d.eligibility is Eligibility.BLOCK]
+    if blocking:
+
+        def _describe(decision: UsageDecision, diag: EligibilityDiagnostic) -> str:
+            name = decision.identity.qualified_name or decision.identity.name or "<anonymous>"
+            where = (
+                f"{decision.location.file}:{decision.location.line}"
+                if decision.location
+                else "<no location>"
+            )
+            return f"  - {name} at {where}: {diag.construct} ({diag.reason})"
+
+        lines = [_describe(d, diag) for d in blocking for diag in d.diagnostics]
+        raise CodeGenerationError(
+            "Constraint generation halted — the following asserted constraints are not "
+            "executable:\n" + "\n".join(lines)
+        )
+
     design_attr_by_qn = _design_attr_index(design_attrs)
     formal_default_by_qn = _formal_default_index(facts)
     concrete: list[ConcreteConstraint] = []
 
-    for usage in facts.usages:
+    for usage, decision in zip(facts.usages, profile.decisions, strict=True):
         kind = usage.owner.owning_definition.kind
         usage_qn = usage.identity.qualified_name or "<anonymous>"
 
-        if kind not in ("part_def", "calc_def", "package"):
+        if kind not in ("part_def", "calc_def", "package") or (
+            decision.eligibility is not Eligibility.ADMIT
+        ):
             local, _id_component = _source_local_identity(usage)
             concrete.append(
                 ConcreteConstraint(
@@ -418,9 +450,20 @@ def lower_constraints(
 
         is_negated = guard_polarity(is_negated=usage.is_negated, usage_qualified_name=usage_qn)
         local, id_component = _source_local_identity(usage)
-        predicate_ir = (
-            serialize_expression(usage.predicate) if usage.predicate is not None else None
+        # Same-IR guarantee (Item 3 D7/I5), two arms: object identity for inline usages
+        # (single-parse in-process path); serialization equality for definition-typed
+        # usages, whose effective predicate is the definition's object — a different
+        # instance than usage.predicate by construction (Item 3 audit correction).
+        effective = decision.effective_predicate
+        assert effective is usage.predicate or (
+            effective is not None
+            and usage.predicate is not None
+            and serialize_expression(effective) == serialize_expression(usage.predicate)
+        ), (
+            f"same-IR violation (Item 3 I5/D7) for {usage_qn}: the profile walked a "
+            "different predicate than the one about to be lowered"
         )
+        predicate_ir = serialize_expression(effective) if effective is not None else None
 
         actual_by_target: dict[str, object] = {}
         for actual in usage.actuals:

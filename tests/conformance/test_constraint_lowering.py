@@ -177,7 +177,10 @@ def test_package_owned_expands_once():
         is_negated=False,
         actuals=[],
         omitted_default_formals=[],
-        predicate=None,
+        # Item 3 preflight: a predicate-less assert now correctly blocks
+        # (block_missing_predicate), so this expansion test carries a real
+        # admitted predicate to stay on the admit path.
+        predicate=_admitted_predicate(),
         inherited_into=[],
     )
     facts = ConstraintFacts(
@@ -195,3 +198,136 @@ def test_package_owned_expands_once():
     assert cc.eligible is True
     assert cc.owner_kind == "package"
     assert cc.evaluation_channel is not None
+
+
+# ---------------------------------------------------------------------------
+# Item 3 preflight wiring (applied by orchestrator from the ready-to-apply
+# brief in agentic-mbse .project/active/executable-profile/sysml-codegen-wiring.md).
+# ---------------------------------------------------------------------------
+
+
+def _real_literal(value: float):
+    from agentic_mbse.sysml.expression_facts import LiteralFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import LiteralNode
+
+    return LiteralNode(
+        literal=LiteralFact(kind="LiteralRational", value=value, result_type="Real"),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+
+
+def _admitted_predicate():
+    """A profile-admitted static scalar comparison: 1.0 <= 2.0."""
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(
+        operator="<=",
+        operands=[_real_literal(1.0), _real_literal(2.0)],
+        operand_type=None,
+    )
+
+
+def _blocked_predicate():
+    """A profile-blocked construct: real-valued equality (block_real_equality)."""
+    from agentic_mbse.sysml.expression_ir import OperatorNode
+
+    return OperatorNode(
+        operator="==",
+        operands=[_real_literal(1.0), _real_literal(2.0)],
+        operand_type=None,
+    )
+
+
+def _package_assert(qn: str, predicate) -> ConstraintUsageFact:
+    return ConstraintUsageFact(
+        identity=_identity(qn, qn.rsplit("__", 1)[-1]),
+        location=None,
+        source=ConstraintSource(
+            form="inline",
+            effective_predicate_source=_identity(qn, None),
+            constraint_definition=None,
+            referenced_feature_target=None,
+            asserted_constraint=_identity(qn, None),
+        ),
+        owner=OwnerFact(
+            owner=None,
+            owning_definition=OwningDefinitionFact(kind="package", qualified_name="Design"),
+        ),
+        scope=_identity(qn, None),
+        membership_kind=None,
+        is_negated=False,
+        actuals=[],
+        omitted_default_formals=[],
+        predicate=predicate,
+        inherited_into=[],
+    )
+
+
+def _facts(usages) -> ConstraintFacts:
+    return ConstraintFacts(
+        schema_version="constraint-facts/v1",
+        definitions=[],
+        usages=list(usages),
+        contexts=[],
+        diagnostics=[],
+    )
+
+
+def test_preflight_halts_on_blocked_assert_before_any_lowering():
+    facts = _facts(
+        [
+            _package_assert("Design__ok_assert", _admitted_predicate()),
+            _package_assert("Design__blocked_assert", _blocked_predicate()),
+        ]
+    )
+    with pytest.raises(CodeGenerationError) as exc_info:
+        lower_constraints(facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[])
+    message = str(exc_info.value)
+    assert "not executable" in message
+    assert "Design__blocked_assert" in message
+    # Reason-grade diagnostic, not just "blocked"
+    assert "equal" in message.lower() or "==" in message
+
+
+def test_admitted_assert_predicate_ir_unchanged_by_wiring():
+    predicate = _admitted_predicate()
+    facts = _facts([_package_assert("Design__ok_assert", predicate)])
+    concrete = lower_constraints(
+        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+    )
+    assert len(concrete) == 1
+    assert concrete[0].eligible is True
+    assert concrete[0].predicate_ir == serialize_expression(predicate)
+
+
+def test_unassessed_usage_in_batch_neither_halts_nor_lowers():
+    satisfy = ConstraintUsageFact(
+        identity=_identity("Design__sat", "sat", kind="SatisfyRequirementUsage"),
+        location=None,
+        source=ConstraintSource(
+            form="satisfy",
+            effective_predicate_source=None,
+            constraint_definition=None,
+            referenced_feature_target=None,
+            asserted_constraint=None,
+        ),
+        owner=OwnerFact(
+            owner=None,
+            owning_definition=OwningDefinitionFact(kind="package", qualified_name="Design"),
+        ),
+        scope=_identity("Design__sat", None),
+        membership_kind=None,
+        is_negated=None,
+        actuals=[],
+        omitted_default_formals=[],
+        predicate=None,
+        inherited_into=[],
+    )
+    facts = _facts([satisfy, _package_assert("Design__ok_assert", _admitted_predicate())])
+    concrete = lower_constraints(
+        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+    )
+    by_qn = {c.usage_qualified_name: c for c in concrete}
+    assert by_qn["Design__sat"].eligible is False
+    assert by_qn["Design__sat"].predicate_ir is None
+    assert by_qn["Design__ok_assert"].eligible is True
