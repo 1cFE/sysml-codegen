@@ -20,8 +20,13 @@ generation is now in place on this branch:
   a deterministic `constraint_id`, an `evaluation_channel`, and a serialized `predicate_ir`
   — and extends the `ComputationGraph` with `CONSTRAINT` and `REPORT_AGGREGATOR`
   `PipelineModule`s.
-- Item 6 gave `PipelineModule` a `module_kind` and left the five generation seams
-  failing loud on `CONSTRAINT` / `REPORT_AGGREGATOR` with "wired in Item 7."
+- Item 6 gave `PipelineModule` a `module_kind` and left the generation seams failing loud
+  on `CONSTRAINT` / `REPORT_AGGREGATOR` with "wired in Item 7." S4 named **four** calc-shaped
+  seams it had to route around (python-path/duplicate-check, registry class naming,
+  module-wrapper rendering, stencil rendering); Item 6 realized the fail-loud refusal at
+  **five** generation entry points — module-wrapper (`modules.py`), pipeline-yaml, registry,
+  test-gen, and stencil/backlog-report (`generation/errors.py` `unrenderable_module_kind_error`).
+  Same surface, finer granularity: Item 7 fills all of them.
 
 What is missing is the emission itself. Nothing generates the predicate code, the
 constraint-module class, the aggregator, the runtime `ConstraintEvaluation` /
@@ -31,7 +36,7 @@ dies before it reaches runnable code.
 The S4 vertical-slice spike proved this whole surface end-to-end under the real TEAx
 runtime, with zero production-code changes, using test-only emitters
 (`.project/active/spike-vertical-slice-constraint-execution/s4_lib.py`). Item 7
-productionizes those proven shapes: it fills the five seams so a modeled assertion runs
+productionizes those proven shapes: it fills those seams so a modeled assertion runs
 as an ordinary graph module and its verdict (`satisfied | violated | indeterminate`) is
 data beside the ordinary outputs, never an exception.
 
@@ -44,10 +49,19 @@ data beside the ordinary outputs, never an exception.
       ordinary outputs.
 - [ ] **The cases S4 did not exercise all execute correctly:** the zero-assertion
       aggregator; an indeterminate (non-finite) point; negated and inline assertions at
-      execution; multi-instance expansion (N instances → N wired modules, N aggregator
-      fields); and modeled-default formals.
-- [ ] **Exit-ancestry holds under a deliberately narrowed exit** — a kept test that
-      narrows the YAML exit and confirms the report channel is still an exit ancestor.
+      execution; and multi-instance expansion (N instances → N wired modules, N aggregator
+      fields).
+- [ ] **Modeled-default formals are overridable contract parameters at runtime.** The
+      generated package exposes the defaulted formal as an input parameter; not overriding
+      it uses the modeled default and the verdict matches; overriding it to a different
+      value changes the verdict. The default is wired through the entry point, not baked
+      into the predicate.
+- [ ] **Exit-ancestry holds under a deliberately narrowed exit, proven falsifiably.** A
+      control leg first shows the incidental path alone would DROP the report: with the
+      guaranteed-ancestry mechanism disabled or mocked and the exit narrowed, the report
+      channel is absent from execution. The mechanism leg then shows the report present
+      under the same narrowed exit. A test that passes under incidental capture-everything
+      is not acceptance.
 - [ ] **Break-the-YAML** — a kept test that removes/rewires an upstream evaluation and
       confirms the missing result surfaces as an execution failure *through the executor*,
       not a silent gap.
@@ -75,9 +89,21 @@ data beside the ordinary outputs, never an exception.
   arguments; usage-level wiring decides only what the YAML feeds into those arguments —
   no per-instance predicate rewriting. The compiler's input is
   `ConcreteConstraint.predicate_ir`, a serialized IR string re-parsed at compile time via
-  `agentic_mbse.sysml.expression_ir.parse_expression`. The serialization-equality
-  same-IR arm applies: identical serialized IR compiles identically.
-  *(S2/S4; wiring note in agentic-mbse `sysml-codegen-wiring.md`; Item 3 design D7.)*
+  `agentic_mbse.sysml.expression_ir.parse_expression`.
+  **Identity bridges the two levels:** one compiled predicate function per *definition*
+  (compile-once), and N generated classes per concrete assertion — each embedding its own
+  `constraint_id` and wiring its resolved actuals into the shared function. This is
+  consistent with class-per-concrete-assertion module identity: the classes multiply,
+  the compiled predicate does not. *(S2/S4; wiring note in agentic-mbse
+  `sysml-codegen-wiring.md`; Item 3 design D7.)*
+- **[HARD]** The serialization-equality **same-IR arm** is enforced at generation, not
+  assumed: each generated constraint class's compiled predicate must serialization-equal
+  its catalog concrete-entry `predicate_ir` — asserted at generation time (the compiler is
+  deterministic on identical IR, so a mismatch means the class and its catalog record
+  disagree). A predicate/catalog divergence is a loud generation error naming the
+  `constraint_id`, never a silent mismatch. *Catching criterion:* mutate one `predicate_ir`
+  after lowering → generation fails, naming that `constraint_id`. *(S2 serialization
+  round-trip; Item 3 design D7 same-IR arm.)*
 - **[HARD]** The profile gate strictly precedes compilation. The compiler strip-renders
   unit annotations and is **not** a unit safety net — a unit-mismatched comparison would
   otherwise compile to a bare-float comparison. Item 7 relies on Item 3 having already
@@ -122,6 +148,18 @@ data beside the ordinary outputs, never an exception.
 - **[HARD]** The generated module validates its inputs inside `run()`; producer and
   consumer channel types match exactly; every constraint and report schema is registered.
   *(Concept Required Invariants.)*
+- **[INHERITED]** A formal with no supplied actual is legal only when it has a **modeled
+  default**: the default applies, and the formal is exposed as an **overridable contract
+  parameter** retaining that default — eligible for explicit study selection, never
+  automatically a study variable. Item 5 already mints this as a `LIBRARY_DEFAULT` entry
+  point in the `constraint_defaults` group (`constraint_lowering.py:602`, `731-736`) and
+  sources the module input from it. Item 7's obligation is to render that entry-point-sourced
+  input as an ordinary contract parameter — it must **not** bake the default into the
+  compiled predicate as a constant, or the parameter stops being overridable. *(Concept
+  Architectural Bets: "a missing actual is legal only when the formal has a modeled default:
+  the default applies, and the formal is exposed as an overridable contract parameter
+  retaining that default — eligible for explicit study selection, never a study variable
+  automatically.")*
 
 ### Aggregator
 
@@ -143,8 +181,10 @@ data beside the ordinary outputs, never an exception.
   membership or a generation-time ancestry assertion, never incidentally by riding the
   capture-everything exit. In the S4 slice the report channel reached the exit only because
   the generated exit captured every surviving module output; that breaks the moment the
-  exit is narrowed. Production must make the ancestry non-incidental. Which of the two
-  mechanisms is a design decision (see Open Questions). *(S4 carry-forward (1).)*
+  exit is narrowed. Production must make the ancestry non-incidental, and the narrowed-exit
+  test proves it *falsifiably* (control leg drops the report without the mechanism; see
+  Success Criteria). Which of the two mechanisms is a design decision (see Open Questions).
+  *(S4 carry-forward (1).)*
 - **[INHERITED]** `ConstraintReport` carries the catalog fingerprint, the assessed count,
   the ordered results, and the headline. *(Concept; S4 `ConstraintReport`.)*
 
@@ -155,9 +195,12 @@ data beside the ordinary outputs, never an exception.
     form, membership kind, polarity, scope, source location, display expression, and
     referenced-definition metadata when one exists;
   - a **concrete entry** per executable expansion, keyed by `constraint_id`, referencing
-    its source record and adding concrete owner, execution eligibility, response metadata,
-    and the recorded producer binding (`ConcreteConstraintInput.bound_channel` — Item 5's
-    B1 adjudication; recorded, never hidden).
+    its source record and adding concrete owner, execution eligibility, *optional* response
+    metadata, and the recorded producer binding (`ConcreteConstraintInput.bound_channel` —
+    Item 5's B1 adjudication; recorded, never hidden).
+  Response metadata is **derived at generation** from predicate structure (the
+  simple-inequality shape that fixes a margin's sign), not carried from upstream, and is
+  optional — absent for a compound predicate that reports status only.
   *(Concept "Catalog, Evaluation, and Report"; Item 5 `ConcreteConstraint` / `...Input`.)*
 - **[INHERITED]** An unused `ConstraintDefinition` is authoring inventory, never unassessed
   coverage — it never appears as unassessed. Non-assert kinds appear in the catalog as
