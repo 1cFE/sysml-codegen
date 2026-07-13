@@ -114,33 +114,33 @@ def test_zero_constraint_graph_seals(tmp_path):  # SC-6 / INV-7
 **See `design.md` for:** Component Overview (`design.md:263-281`); serialization policies
 (`design.md:196-201`); seal data flow (`design.md:203-214`); D6 catalog-by-value; INV-2/INV-6/INV-7.
 
-- [ ] `tests/unit/test_contract_models.py` (NEW, write first) — graph-only, determinism,
+- [x] `tests/unit/test_contract_models.py` (NEW, write first) — graph-only, determinism,
   zero-constraint, and the two-policy serialization (compact fingerprint payload vs pretty on-disk
   bytes; assert `model_contract.json` bytes are byte-stable across two builds → INV-6).
-- [ ] `src/sysml_codegen/contracts/__init__.py` (NEW) — package + public exports.
-- [ ] `src/sysml_codegen/contracts/versions.py` (NEW) — `RUNTIME_CONTRACT_VERSION = "1.0.0"` (P4);
+- [x] `src/sysml_codegen/contracts/__init__.py` (NEW) — package + public exports.
+- [x] `src/sysml_codegen/contracts/versions.py` (NEW) — `RUNTIME_CONTRACT_VERSION = "1.0.0"` (P4);
   `generator_version()` reads `sysml_codegen.__version__` (`src/sysml_codegen/__init__.py:9`).
-- [ ] `src/sysml_codegen/contracts/models.py` (NEW) — `ModelContract`, `PackageContract` pydantic
+- [x] `src/sysml_codegen/contracts/models.py` (NEW) — `ModelContract`, `PackageContract` pydantic
   BaseModels (fields per `design.md:265-269`); `constraint_catalog: ConstraintCatalog | None`
   imported from `resolution/models.py:357` (embed by value, `null` on None — D6).
-- [ ] `src/sysml_codegen/contracts/model_contract.py` (NEW) — `build_model_contract(graph) ->
+- [x] `src/sysml_codegen/contracts/model_contract.py` (NEW) — `build_model_contract(graph) ->
   ModelContract`: project `entry_point_groups[].parameters` + `modules[].outputs` + catalog +
   `evaluation_semantics` tag; compute `semantic_fingerprint = sha256(_canonical_json(payload
   without the fingerprint field))` then insert (`design.md:302-303`). Imports no I/O (INV-1).
-- [ ] `src/sysml_codegen/contracts/seal.py` (NEW) — `DEFAULT_COVERAGE_POLICY` (P1);
+- [x] `src/sysml_codegen/contracts/seal.py` (NEW) — `DEFAULT_COVERAGE_POLICY` (P1);
   `seal_package(dir, name, policy) -> PackageContract`: walk under policy, hash every covered file
   into `artifact_hashes` (`{rel_path: sha256}`), `executable_fingerprint = sha256("\n".join(sorted
   "path:hash"))`, record `coverage_policy` + `generator_version` + `runtime_contract_version`. Pure
   over the directory (this is also the re-seal entry point — D1/D2).
-- [ ] Serialization helpers: reuse `_canonical_json` per P2; on-disk writer = `json.dumps(...,
+- [x] Serialization helpers: reuse `_canonical_json` per P2; on-disk writer = `json.dumps(...,
   indent=2, sort_keys=True, ensure_ascii=True) + "\n"` (`design.md:199-201`).
 
 ### Validation
 **Automated (offline):**
-- [ ] `uv run pytest tests/unit/test_contract_models.py` → all pass.
-- [ ] `uv run pytest tests/` → no regressions (new package is additive; nothing imports it yet).
-- [ ] `uv run mypy src/` → still at the 76-error baseline, no new errors.
-- [ ] `uv run ruff check src/` → clean.
+- [x] `uv run pytest tests/unit/test_contract_models.py` → all pass.
+- [x] `uv run pytest tests/` → no regressions (new package is additive; nothing imports it yet).
+- [x] `uv run mypy src/` → still at the 76-error baseline, no new errors.
+- [x] `uv run ruff check src/` → clean.
 
 **What We Know Works After This Phase:** The two fingerprints are stable pure functions;
 `build_model_contract` is graph-only (SC-5); a zero-constraint graph seals (SC-6); on-disk contract
@@ -396,6 +396,34 @@ Do NOT `git commit` — the orchestrator commits.
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- Created `src/sysml_codegen/contracts/{__init__,models,versions,model_contract,seal,serialize}.py`
+  — `ModelContract`/`PackageContract`/`CoveragePolicy`/`ContractParameter`/`ContractOutput`
+  pydantic models; `build_model_contract(graph)`; `seal_package(dir, name, policy)`;
+  `DEFAULT_COVERAGE_POLICY`; `RUNTIME_CONTRACT_VERSION`/`generator_version()`;
+  `write_contract_json` on-disk writer.
+- `_canonical_json` reused verbatim (imported) from `generation.constraint_catalog` — no import
+  cycle (contracts is a new leaf package); P2 resolved without lifting to a shared helper.
+- `seal.py`'s `_glob_to_regex` implements `**`-aware glob matching (a bare `fnmatch` translation
+  of `"**/__pycache__/**"` fails to match a top-level `__pycache__/x.pyc` because the pattern's
+  literal `/` before `__pycache__` has nothing to match against) — not in the original plan text,
+  needed once `DEFAULT_COVERAGE_POLICY`'s `**/__pycache__/**` pattern was tested against a real
+  top-level case. Documented in the docstring as duplicated-not-imported into `verify.py` (Phase 2)
+  per D7's stdlib-only constraint.
+- `evaluation_semantics` tag set to `"kleene-three-valued"` (not S4's `"kleene-three-valued-s4"`)
+  — matches the concept doc's evaluation-semantics language; the design left the exact string
+  unspecified.
+- Created `tests/unit/test_contract_models.py` (7 tests) — graph-only (INV-1), fingerprint
+  determinism, zero-constraint (SC-6/INV-7), on-disk byte-stability (INV-6), no-circularity
+  (INV-2), field projection.
+**Validation:** `test_contract_models.py` 7/7 pass; full suite 2052 passed / 23 failed / 96 errors
+(unchanged from the pre-existing no-license baseline — confirmed via `git stash` comparison, went
+2045→2052 passed with identical failure/error counts); mypy 76-error baseline held; ruff clean.
+**Issues Encountered:** None outside the glob-matcher gap noted above.
+**Deviations from Plan:** None beyond the glob-matcher addition (an implementation necessity of
+the plan's own `DEFAULT_COVERAGE_POLICY` pattern, not a scope change).
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion
