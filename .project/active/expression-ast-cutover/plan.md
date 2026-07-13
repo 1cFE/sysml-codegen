@@ -174,15 +174,15 @@ def test_computed_attr_golden():
 **See `design.md` for:** the empty-`member_names` rationale → `design.md#architecture` (`computed_attribute_extractor` bullet).
 
 **Specific changes:**
-- [ ] **Golden capture (before the flip):** capture each computed attribute's current `compiled_expression` + `compilability`.
-- [ ] `src/sysml_codegen/extraction/computed_attribute_extractor.py:300-306` — replace `build_expression_ast(...)` + `compile_expression(ast_ir)` with `extract_expression_ir(expr)` + `render_calc_expression(ir, input_names, member_names=set())`, keeping the `try/except CompilationError` → `MANUAL_REQUIRED` + `logger.warning` structure at `:308-316` unchanged.
-- [ ] The `Compilability` import stays (kept symbol); `build_expression_ast`/`compile_expression` imports here go dead but the symbols still exist until Phase 4 (leave the import until Phase 4's sweep, or drop it now if lint flags unused — either is fine as long as the symbols aren't deleted).
+- [x] **Golden capture (before the flip):** capture each computed attribute's current `compiled_expression` + `compilability`.
+- [x] `src/sysml_codegen/extraction/computed_attribute_extractor.py:300-306` — replace `build_expression_ast(...)` + `compile_expression(ast_ir)` with `extract_expression_ir(expr)` + `render_calc_expression(ir, input_names, member_names=set())`, keeping the `try/except CompilationError` → `MANUAL_REQUIRED` + `logger.warning` structure at `:308-316` unchanged.
+- [x] The `Compilability` import stays (kept symbol); `build_expression_ast`/`compile_expression` imports here go dead but the symbols still exist until Phase 4 (leave the import until Phase 4's sweep, or drop it now if lint flags unused — either is fine as long as the symbols aren't deleted).
 
 ### Validation
 **Automated:**
-- [ ] Computed-attr golden green (INV-1).
-- [ ] Snapshot re-capture + timestamp-churn revert → byte-identical; `capture_pipeline_baselines` + `test_factory_purity` green.
-- [ ] Full `uv run pytest`, `mypy src/`, `ruff check src/` clean.
+- [x] Computed-attr golden green (INV-1).
+- [x] Snapshot re-capture + timestamp-churn revert → byte-identical; `capture_pipeline_baselines` + `test_factory_purity` green.
+- [x] Full `uv run pytest`, `mypy src/`, `ruff check src/` clean.
 
 **What we know works after this phase:** both production consumers render from `ExpressionIR`. The old functions are now called only by tests and the still-live parity test.
 
@@ -356,6 +356,30 @@ byte-identical; `capture_pipeline_baselines` — zero diff; `test_factory_purity
 `test_baselines` 26 passed/1 skipped.
 
 ### Phase 2 Completion
+**Completed:** 2026-07-13
+**Actual changes:**
+- Captured `tests/fixtures/golden/computed_attribute_golden.json` (pre-flip, live, 87
+  computed attrs across 12 fixtures).
+- Added `tests/conformance/test_computed_attribute_golden.py` (`@requires_license`),
+  per-fixture comparison of `classification`/`compilability`/`compiled_expression` against
+  the golden.
+- `computed_attribute_extractor.py`'s FORMULA branch (`:300-306`) now calls
+  `extract_expression_ir` + `render_calc_expression(ir, input_names, member_names=set())` —
+  the empty `member_names` reproduces today's `output_names=set()`/`all_member_names=None`
+  behavior (any non-input ref -> `CompilationError` -> `MANUAL_REQUIRED`, unchanged
+  `try/except`+`logger.warning` structure). No circular-import issue here (this module
+  doesn't import back from `calc_compat_renderer`, unlike `expression_compiler.py`), so the
+  import is at module level. `build_expression_ast`/`compile_expression` imports dropped
+  (only this one call site used them here); the symbols themselves stay in
+  `expression_compiler.py` until Phase 4.
+**Deviations:** None.
+**Validation:** computed-attribute golden 12 passed/17 skipped (fixtures with no computed
+attrs); Phase 0/1 goldens+parity still green; full suite 2350 passed/23 skipped (license
+env, all skips accounted for — no computed attrs / no baseline / no matching scenario, none
+license-related); mypy 76 (baseline, unchanged); ruff clean; extraction-snapshot re-capture —
+`captured_at`-only diffs, reverted; `capture_pipeline_baselines` — zero diff;
+`test_factory_purity` + `test_baselines` 26 passed/1 skipped.
+
 ### Phase 3 Completion
 ### Phase 4 Completion
 
