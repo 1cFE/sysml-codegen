@@ -7,8 +7,8 @@ instantiation-path finder in ``usage_extractor.py`` and never through it: this m
 is additive, imported by nothing else in this item (Item 5 wires it in).
 """
 
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
@@ -358,3 +358,85 @@ def build_part_instance_index(model: Any) -> PartInstanceIndex:
         part_usage_index=_build_part_usage_index(model),
         qn_to_partdef=user_partdef_lookup(model),
     )
+
+
+class OccurrenceIndex(Protocol):
+    """Structural surface :func:`~sysml_codegen.analysis.constraint_lowering.lower_constraints`
+    needs from an occurrence source — the only method it calls (design.md#key-bets B1).
+    :class:`PartInstanceIndex`, :class:`RecordingOccurrenceIndex`, and
+    :class:`FrozenOccurrenceIndex` all satisfy this by duck typing; the Protocol exists
+    for mypy clarity, not runtime dispatch."""
+
+    def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]: ...
+
+
+@dataclass
+class RecordingOccurrenceIndex:
+    """Capture-time wrapper: delegates ``occurrences_of`` to a live index and
+    records every ``(owner_eqn -> result)`` it answered.
+
+    Snapshot v3 (Item 8) serializes ``.recorded`` as the ``part_occurrences``
+    section — the exact transcript of the queries the real ``lower_constraints``
+    call made (MF3), so the offline replay never needs a second owner-selection
+    path.
+    """
+
+    _inner: PartInstanceIndex
+    recorded: dict[str, list[InstanceOccurrence]] = field(default_factory=dict)
+
+    def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]:
+        result = self._inner.occurrences_of(part_def_qn)
+        self.recorded[part_def_qn] = result
+        return result
+
+
+class FrozenOccurrenceIndexCorruptionError(Exception):
+    """Raised when offline lowering queries an owner absent from the frozen
+    occurrence table — the table is the recorded transcript of every query the
+    real capture-time lowering made (D2), so a missing key means the snapshot is
+    corrupt or was captured against a different model, never that the owner has
+    zero occurrences."""
+
+
+class FrozenOccurrenceIndex:
+    """Offline replay dual of :class:`RecordingOccurrenceIndex`: answers
+    ``occurrences_of`` by dict lookup into a table deserialized from a v3
+    snapshot. A missing key raises (D2) — never ``[]`` — because the table is a
+    closed transcript, not a live query surface."""
+
+    def __init__(self, table: dict[str, list[InstanceOccurrence]]):
+        self._table = table
+
+    def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]:
+        if part_def_qn not in self._table:
+            raise FrozenOccurrenceIndexCorruptionError(
+                f"owner {part_def_qn!r} was queried but is absent from the frozen "
+                "occurrence table — the table must contain every owner the real "
+                "capture-time lowering queried. Recapture the snapshot."
+            )
+        return self._table[part_def_qn]
+
+
+def deserialize_part_occurrences(
+    data: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[InstanceOccurrence]]:
+    """Rebuild the ``part_occurrences`` snapshot section into
+    ``InstanceOccurrence`` objects, the inverse of ``_serialize_value`` over a
+    ``RecordingOccurrenceIndex.recorded`` table."""
+    return {
+        owner_eqn: [
+            InstanceOccurrence(
+                part_def_qn=occ["part_def_qn"],
+                steps=tuple(
+                    PathStep(
+                        owning_def_qn=step["owning_def_qn"],
+                        feature_name=step["feature_name"],
+                        occurrence_index=step["occurrence_index"],
+                    )
+                    for step in occ["steps"]
+                ),
+            )
+            for occ in occurrences
+        ]
+        for owner_eqn, occurrences in data.items()
+    }

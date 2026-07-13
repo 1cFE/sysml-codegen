@@ -26,7 +26,11 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
-from sysml_codegen.analysis.part_instance_index import build_part_instance_index
+from sysml_codegen.analysis.part_instance_index import (
+    InstanceOccurrence,
+    RecordingOccurrenceIndex,
+    build_part_instance_index,
+)
 from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
@@ -862,15 +866,20 @@ def build_pipeline_context(
     # from snapshot) is meetable. Callers that need lowering now (Item 5
     # fixtures, Item 7 generation) pass lower_constraints_enabled=True.
     concrete_constraints: list[ConcreteConstraint] = []
+    part_occurrences: dict[str, list[InstanceOccurrence]] = {}
     if lower_constraints_enabled and constraint_facts.usages:
-        occ_index = build_part_instance_index(extractor.model)
+        # Recording wrapper (Item 8, MF3): the table serialized into snapshot v3
+        # is exactly the transcript of the `occurrences_of` queries this real
+        # `lower_constraints` call makes — never a re-derived owner set.
+        recorder = RecordingOccurrenceIndex(build_part_instance_index(extractor.model))
         concrete_constraints = lower_constraints(
             constraint_facts,
-            occ_index=occ_index,
+            occ_index=recorder,
             registry=output_registry,
             design_attrs=graph_design_attrs,
             calc_usages=calc_usages,
         )
+        part_occurrences = recorder.recorded
 
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(
@@ -1005,7 +1014,8 @@ def build_pipeline_context(
         constraint_manifest=constraint_manifest,
         output_registry=output_registry,
         concrete_constraints=concrete_constraints,
-        constraint_facts=constraint_facts if constraint_facts.usages else None,
+        constraint_facts=constraint_facts,
+        part_occurrences=part_occurrences,
     )
 
 

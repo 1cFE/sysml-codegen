@@ -131,40 +131,48 @@ re-derives them from a real snapshot — the end-to-end version.)
 **See design.md for:** the occurrence-table concept (design.md#core-concept); the two thin wrappers
 (design.md#component-overview); B1/B2 (design.md#key-bets).
 
-- [ ] **`analysis/part_instance_index.py`** — add `RecordingOccurrenceIndex` (wraps a live
+- [x] **`analysis/part_instance_index.py`** — add `RecordingOccurrenceIndex` (wraps a live
       `PartInstanceIndex`, delegates `occurrences_of`, records each `owner_eqn → result` into
       `.recorded`) and `FrozenOccurrenceIndex` (holds the table, `occurrences_of(qn)` = dict lookup,
-      **raises on a missing key** — corruption, never `[]`, per design.md#key-decisions D2). Optional
-      but recommended: a `typing.Protocol` `OccurrenceIndex` with just `occurrences_of` that both
-      wrappers and `PartInstanceIndex` satisfy structurally (design's open question — lower only
-      calls `occurrences_of`; the Protocol is for mypy clarity, not runtime).
-- [ ] **`analysis/part_instance_index.py`** (or a sibling `serialize` helper) — `deserialize_part_occurrences(dict) -> dict[str, list[InstanceOccurrence]]`
+      **raises on a missing key** — corruption, never `[]`, per design.md#key-decisions D2). Added
+      the `OccurrenceIndex` Protocol; `constraint_lowering.lower_constraints`/`_expand_owner_instances`
+      now type `occ_index` as `OccurrenceIndex` (mypy clarity, duck-typed at runtime).
+- [x] **`analysis/part_instance_index.py`** (or a sibling `serialize` helper) — `deserialize_part_occurrences(dict) -> dict[str, list[InstanceOccurrence]]`
       rebuilding `InstanceOccurrence(part_def_qn, steps=tuple(PathStep(...)))` from the serialized
       shape. Serialization is `_serialize_value` (no hand-rolled dicts — `InstanceOccurrence`/`PathStep`
       are plain frozen dataclasses; design.md#implementation-notes).
-- [ ] **`orchestration/pipeline_builder.py:865`** — inside the existing
+- [x] **`orchestration/pipeline_builder.py:865`** — inside the existing
       `if lower_constraints_enabled and constraint_facts.usages:` block, wrap the already-built
       `occ_index` in `RecordingOccurrenceIndex(occ_index)` and pass the **wrapper** to
       `lower_constraints(..., occ_index=recorder, ...)`. After the call, `recorder.recorded` is the
       table (MF3 — inherits lowering's exact `part_def`-kind + `ADMIT`-eligible filter, no second
       owner-selection path). A `NonFiniteCardinalityError` still surfaces from the real call and
       halts, same as today.
-- [ ] **`orchestration/pipeline_context.py`** — add fields `constraint_facts` and `part_occurrences`
-      (design.md#component-overview D4); populate both in `build_pipeline_context`. (The
-      `constraint_lowering_mode` field lands in Phase 2 with the serializer.)
-- [ ] **Test file** `tests/unit/test_occurrence_roundtrip_parity.py` (NEW) — the stencil above,
+- [x] **`orchestration/pipeline_context.py`** — added `part_occurrences` field; `constraint_facts` was
+      already a field (Item 5) and is now **always** populated (dropped the
+      `if constraint_facts.usages else None` guard) so snapshot v3 can serialize an honest facts
+      section for every model, constraint-bearing or not (design.md#component-overview D4). No
+      downstream reader relied on the old None-when-empty behavior (grepped clean). The
+      `constraint_lowering_mode` field lands in Phase 2 with the serializer.
+- [x] **Test file** `tests/unit/test_occurrence_roundtrip_parity.py` (NEW) — the stencil above,
       plus one negative assertion that `FrozenOccurrenceIndex.occurrences_of("nonexistent")` raises.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_occurrence_roundtrip_parity.py` → passes
-- [ ] `uv run pytest tests/` → **full suite green** (Phase 1 changes nothing that loads snapshots;
-      the default stays False, so existing capture/generation is unaffected)
-- [ ] `uv run ruff check src/`; `uv run mypy src/` → no new errors
+- [x] `uv run pytest tests/unit/test_occurrence_roundtrip_parity.py` → passes (both the round-trip +
+      parity test and the missing-owner negative test, on the first run — B1/B2 held with no
+      surprises)
+- [x] `uv run pytest tests/` → **full suite green**: 2238 passed, 4 skipped (2236 baseline + 2 new)
+- [x] `uv run ruff check src/`; `uv run mypy src/` → clean; mypy 76 errors, identical to baseline
+      (no new errors)
 
 **Manual:**
-- [ ] Confirm the recorded table has one entry per queried `part_def`-kind owner and the occurrence
+- [x] Confirm the recorded table has one entry per queried `part_def`-kind owner and the occurrence
       lists match `occurrences_of` sort order (spot-check against the fixture's two instances).
+      Verified indirectly: the round-trip assertion `reloaded_table == table` is frozen-dataclass
+      equality over the full table, and the parity assertion proves the recorded occurrences drive
+      offline lowering to the same 3 `constraint_id`s as live — a sort or content divergence would
+      have failed either assertion.
 
 **What we know works after this phase:** the occurrence-table bet (B2) holds on the multi-instance
 shape — offline re-lowering from carried inputs re-derives byte-identical `constraint_id`s. The
@@ -521,10 +529,23 @@ where staleness becomes a hard boundary. Explicit, accepted, not an oversight.
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:** —
-**Actual Changes:** —
-**Issues:** —
-**Deviations:** —
+**Completed:** 2026-07-13
+**Actual Changes:**
+- `analysis/part_instance_index.py`: `OccurrenceIndex` Protocol, `RecordingOccurrenceIndex`,
+  `FrozenOccurrenceIndex` (+ `FrozenOccurrenceIndexCorruptionError`), `deserialize_part_occurrences`.
+- `analysis/constraint_lowering.py`: `occ_index` parameter type widened `PartInstanceIndex` →
+  `OccurrenceIndex` on `_expand_owner_instances` and `lower_constraints`.
+- `orchestration/pipeline_context.py`: new `part_occurrences` field; `constraint_facts` docstring
+  updated (always populated, no behavior change to the field itself here — the None-when-empty
+  guard was removed at the call site in `pipeline_builder.py`).
+- `orchestration/pipeline_builder.py`: wraps `occ_index` in `RecordingOccurrenceIndex` inside the
+  P1 RESOLVE block; `constraint_facts` is now passed to `PipelineContext` unconditionally;
+  `part_occurrences=recorder.recorded` (or `{}` when lowering did not run) threaded through.
+- `tests/unit/test_occurrence_roundtrip_parity.py` (NEW): the B1/B2 spike, 2 tests.
+**Issues:** None — the spike passed on the first run, no `instance_path` reorder or index loss.
+**Deviations:** None from the plan's stencil beyond using the real `_serialize_value`/
+`constraint_facts.serialize`/`parse` entry points (as the stencil already anticipated) rather than
+hand-rolled JSON.
 
 ### Phase 2 Completion
 —

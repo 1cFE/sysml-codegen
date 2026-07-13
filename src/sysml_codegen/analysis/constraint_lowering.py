@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
 
     from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
-    from sysml_codegen.analysis.part_instance_index import PartInstanceIndex
+    from sysml_codegen.analysis.part_instance_index import OccurrenceIndex
     from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
     from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
@@ -331,11 +331,11 @@ def _design_attr_index(
 
 
 def _expand_owner_instances(
-    usage: ConstraintUsageFact, occ_index: PartInstanceIndex, calc_usages: list[CalcUsageData]
+    usage: ConstraintUsageFact, occ_index: OccurrenceIndex, calc_usages: list[CalcUsageData]
 ) -> list[tuple[str, str]]:
     """The owner-kind axis (D5): ``(owner_instance_path, occurrence_scope)`` pairs.
 
-    ``part_def`` → one pair per :meth:`PartInstanceIndex.occurrences_of` occurrence
+    ``part_def`` → one pair per :meth:`OccurrenceIndex.occurrences_of` occurrence
     (INV-3). ``calc_def`` → one pair per matching concrete calc usage (existing
     calc-usage discovery, not the part index). ``package`` → already concrete:
     exactly one pair, at top-level scope. Any other kind is the caller's
@@ -436,7 +436,7 @@ def _formal_default_index(facts: ConstraintFacts) -> dict[str, str | None]:
 def lower_constraints(
     facts: ConstraintFacts,
     *,
-    occ_index: PartInstanceIndex,
+    occ_index: OccurrenceIndex,
     registry: OutputRegistry,
     design_attrs: dict[Path, list[DesignAttributeData]],
     calc_usages: list[CalcUsageData],

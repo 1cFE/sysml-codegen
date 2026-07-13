@@ -19,6 +19,7 @@ from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
 )
+from sysml_codegen.analysis.part_instance_index import InstanceOccurrence
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.extraction.constraint_report import ConstraintManifestEntry
@@ -119,8 +120,16 @@ class PipelineContext:
 
     # Neutral constraint facts from Step 2.6 (Item 5) — the source-level vocabulary
     # `generation/constraint_catalog.py` reads for the catalog's `source_records` (D6).
-    # `None` when the model has zero constraint usages (no lowering ran).
+    # Always populated (may carry empty `usages`) so snapshot v3 (Item 8) can
+    # serialize an honest facts section on every model, constraint-bearing or not.
     constraint_facts: "ConstraintFacts | None" = None
+
+    # Resolved per-owner occurrence table, captured as the exact transcript of the
+    # real `lower_constraints` call's `occurrences_of` queries (Item 8, MF3) via
+    # `RecordingOccurrenceIndex`. Empty when lowering did not run. Serialized into
+    # the snapshot as `part_occurrences` so offline re-lowering replays it through
+    # a `FrozenOccurrenceIndex` with no live model.
+    part_occurrences: dict[str, list[InstanceOccurrence]] = field(default_factory=dict)
 
 
 __all__ = [
