@@ -30,7 +30,7 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import CalcDefCompilationResult
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
 
 
 class SysMLParsingError(Exception):
@@ -107,6 +107,12 @@ class PipelineContext:
 
     # OutputRegistry from Step 5.5 (None if not yet constructed).
     output_registry: OutputRegistry | None = None
+
+    # Concrete constraint catalog from [P1 RESOLVE] (Item 5, D7). Empty when no
+    # constraint facts are admitted. Carries eligible (executable) and
+    # unassessed (eligible=False) records alike, until Item 7's catalog
+    # runtime exists.
+    concrete_constraints: list[ConcreteConstraint] = field(default_factory=list)
 
 
 __all__ = [

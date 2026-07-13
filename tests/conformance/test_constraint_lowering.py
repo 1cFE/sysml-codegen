@@ -331,3 +331,21 @@ def test_unassessed_usage_in_batch_neither_halts_nor_lowers():
     assert by_qn["Design__sat"].eligible is False
     assert by_qn["Design__sat"].predicate_ir is None
     assert by_qn["Design__ok_assert"].eligible is True
+
+
+@requires_license
+def test_wired_pipeline_path_lowers_when_enabled():
+    """The Item 5 P1/P2/P3 threading, exercised end-to-end behind its flag.
+
+    Default-off on the shared path until Item 8 restores live/snapshot parity;
+    this test proves the wired path works when enabled.
+    """
+    ctx_off = build_pipeline_context([FIXTURES_DIR / "constraint_multi_instance"])
+    assert ctx_off.concrete_constraints == []
+
+    ctx_on = build_pipeline_context(
+        [FIXTURES_DIR / "constraint_multi_instance"], lower_constraints_enabled=True
+    )
+    assert len(ctx_on.concrete_constraints) == 3
+    module_names = {m.name for m in ctx_on.computation_graph.modules}
+    assert "constraint_report_aggregator" in module_names

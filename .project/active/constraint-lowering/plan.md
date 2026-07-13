@@ -196,9 +196,17 @@ def test_requirement_def_owner_cataloged_unassessed():   # offline hand-built fa
 
 ## Phase 4: Threading into `build_pipeline_context` + roots-before-pruning + P3 extension
 
-**STATUS: BLOCKED — pipeline-builder wiring reverted after breaking the existing corpus.
-`extend_graph_with_constraints` (P3) is implemented, tested, and committed. The P1/P2 call
-sites in `pipeline_builder.py` are NOT wired — see "Blocking finding" below before resuming.**
+**STATUS (updated 2026-07-12, second pass): owner decision received — Item 3's executable-
+profile preflight is now wired into `lower_constraints` (commit `a1fe7a4`, applied by the
+orchestrator while this session was paused). P1/P2/P3 threading into `pipeline_builder.py` has
+been RE-APPLIED (this pass) on top of that gate. Code changes are believed correct — they are
+byte-identical to the wiring that worked before the first-pass revert, now sitting behind
+Item 3's preflight — but **could not be executed or verified this session**: the shell in this
+turn blocks all code execution (`uv run`, `.venv/bin/python`, `.venv/bin/pytest`, even
+`bash -c "echo hi"` require approval that never resolves; only inert commands like `git`,
+`ls`, `grep` work). This is a harder block than the "flaky keyring" the owner anticipated — no
+test, mypy, ruff, or corpus-capture command ran at all. See Phase 4 Completion (second pass)
+below for exactly what remains to verify before this phase can be marked done.
 
 ### Goal
 Wire the three guarded threading points (P1 resolve, P2 inject roots, P3 extend) into `pipeline_builder`, extract facts via `extract_constraint_facts`, and add `extend_graph_with_constraints`. Guarded so P1–P3 no-op when no constraint facts are admitted (INV-7).
@@ -482,10 +490,73 @@ revert in place.
   scoped Item-5 design amendment, accepting the byte-identity re-verification cost D1 flagged.
 None of these are Phase-4 implementation calls; they change the item's scope or sequencing.
 
+### Phase 4 Completion — second pass (owner decision applied; execution-blocked)
+
+**Owner decision (option (a)+(b) hybrid, received 2026-07-12):** land Item 3's preflight
+first (done upstream, `a1fe7a4`), then redo the P1/P2 wiring unchanged on top of it, since the
+profile gate inside `lower_constraints` is what makes the shared pipeline path safe.
+
+**Re-applied this pass:**
+- `pipeline_builder.py`: Step 2.6 (`extract_constraint_facts`), P1 RESOLVE after Step 5.7,
+  P2 INJECT before Step 6's `find_required_modules`, P3 EXTEND after Step 7 — identical to the
+  wiring reverted in the first pass (git-diff-verified against that revert: only the import
+  block differs, adding the same four imports as before).
+- `pipeline_context.py`: `concrete_constraints: list[ConcreteConstraint]` field, identical to
+  the first pass.
+
+**NOT done this pass — could not execute anything:**
+- No test run (`test_constraint_lowering.py`'s 9 conformance tests incl. the three new Item-3
+  wiring tests, the full suite, `test_wi014_toy.py`, etc.).
+- No mypy / ruff run on the re-applied wiring.
+- No corpus regenerate / byte-identity diff check (`scripts/capture_pipeline_baselines.py`).
+- **The owner's step 2 conditional could not be resolved.** Whether `fusion_tea/hif_plant`'s
+  `driver.efficiency` assertion is profile-ADMIT (needing `scoped_alias_lookup` added to the
+  strict ladder) or profile-BLOCK/other (moot, ladder unchanged) is an empirical question that
+  requires running `evaluate_profile` against the live `hif_plant` fixture — not answerable by
+  reading source. Reasoning from the Item 3 epic scope text alone (`epic_constraint_execution.md`
+  Item 3 §4: "Block with named diagnostics: assert-by-reference, ... **feature chains**, unit
+  conversion") suggests a chain reference like `driver.efficiency` is more likely to land on
+  BLOCK than ADMIT-with-missing-rung — but that is a plausible reading, not a verified one, and
+  if it lands on BLOCK the corpus model still fails to generate (now via Item 3's preflight
+  error instead of Item 5's resolver error), which per the owner's step 3 instruction is itself
+  an owner-visible finding to report, not something to resolve unilaterally.
+- **No decision made on widening the strict ladder.** Correctly gated on the empirical check
+  above, which could not run.
+- Phase 5 not started (depends on Phase 4 being verified).
+
+**What actually happened to block execution:** every command that invokes an interpreter —
+`uv run ...`, `.venv/bin/python -c "..."`, `.venv/bin/pytest ...`, even a bare
+`bash -c "echo hi"` — returned "This command requires approval" with no prompt path available
+in this non-interactive session. Plain commands (`git`, `ls`, `grep`, `pwd`, `echo`) worked
+throughout. This reproduced consistently across ~6 distinct attempts with different
+invocations, so it reads as a turn-level sandbox policy change, not a one-off flake. It is a
+harder failure than the license-keyring flakiness anticipated in the brief — no code executed
+at all, license or otherwise.
+
+**Next step:** re-run this phase's validation block (below) in a session where code execution
+is permitted. The code changes here are believed correct (identical to the previously-working
+wiring, now sitting behind Item 3's gate) but are **unverified** and should be treated as such
+until a real test run confirms them.
+
+**Also could not commit:** `git add`/`git commit` also returned "requires approval" this turn
+(only read-only git commands — `status`, `diff`, `log` — worked), so the wiring changes to
+`pipeline_builder.py` and `pipeline_context.py` are **present in the working tree but
+uncommitted**. `git status` at end of session:
+```
+ M .project/CURRENT_WORK.md
+ M .project/active/constraint-lowering/plan.md
+ M .project/active/module-kind-refactor/spec.md
+ M src/sysml_codegen/orchestration/pipeline_builder.py
+ M src/sysml_codegen/orchestration/pipeline_context.py
+```
+The first two `.project/` files and `module-kind-refactor/spec.md` predate this session (not
+touched here, per the standing instruction not to touch `.project/` outside
+`constraint-lowering/`). Whoever resumes this needs to review the two `src/` diffs, run the
+validation block, and commit (or discard) accordingly — do not assume they're safe to commit
+blind given the unverified state above.
+
 ### Phase 5 Completion
-**Not started — blocked on Phase 4's owner decision above** (Phase 5 is the corpus-wide
-success-criteria + byte-identity gate, which cannot be meaningfully attempted while P1/P2
-threading is unresolved).
+**Not started — blocked on Phase 4 verification (execution-blocked this session, see above).**
 
 ---
 

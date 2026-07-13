@@ -6,7 +6,17 @@
 
 ## Active Work
 
-### CONSTRAINT-EXEC Item 5 — Concrete Constraint Lowering — SPEC IN PROGRESS (2026-07-12)
+### CONSTRAINT-EXEC Item 5 — Concrete Constraint Lowering — SPEC REVISED post-review (2026-07-12)
+
+Spec review verdict Approved-with-must-fixes (`spec-review.md`); all 12 findings discharged
+against the landed Item 1/2 types at `.project/reference/agentic-mbse-landed/`. Key
+reconciliations: expansion now dispatches on the real four-value `OwningDefinitionFact.kind`
+(part_def/calc_def/package/requirement_def, each disposition stated); resolution is one ordered
+procedure (registry owner-scope → design-attr EP → modeled default → error); anonymous identity
+uses the landed `LocationFact`; the owner-kind × source-form axes are named orthogonal (inline
+and definition_typed both lower); multi-instance + inline are new success criteria S4 never
+proved. Next: `/_my_design`.
+
 
 Epic: `.project/backlog/epic_constraint_execution.md` (Item 5). Spec:
 `.project/active/constraint-lowering/spec.md`. New pipeline phase (after aliases/registry/

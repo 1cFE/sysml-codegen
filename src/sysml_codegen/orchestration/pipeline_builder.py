@@ -10,9 +10,14 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
+from sysml_codegen.analysis.constraint_lowering import (
+    extend_graph_with_constraints,
+    lower_constraints,
+)
 from sysml_codegen.analysis.dependency_backtracker import (
     DependencyBacktracker,
 )
@@ -21,6 +26,7 @@ from sysml_codegen.analysis.parameter_groups import (
     ParameterGroupDeriver,
     extract_design_attributes,
 )
+from sysml_codegen.analysis.part_instance_index import build_part_instance_index
 from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
@@ -49,6 +55,7 @@ from sysml_codegen.orchestration.pipeline_context import (
     SysMLParsingError,
 )
 from sysml_codegen.resolution.graph_builder import build_computation_graph
+from sysml_codegen.resolution.models import ConcreteConstraint, ConstraintInputResolution
 from sysml_codegen.resolution.supplied_values import materialize_supplied_values
 
 logger = logging.getLogger(__name__)
@@ -687,6 +694,7 @@ def build_pipeline_context(
     targets: list[str] | None = None,
     include_all: bool = True,
     design_path_filter: str = "",
+    lower_constraints_enabled: bool = False,
 ) -> PipelineContext:
     """Build complete pipeline context from SysML models.
 
@@ -742,6 +750,14 @@ def build_pipeline_context(
     # manifest so the from-snapshot path can replay the same report (Item 4).
     # Collect is single-path — this ctx is the one capture serializes (MF4).
     constraint_manifest = extractor.report_dropped_constraints()
+
+    # Step 2.6 (Item 5): extract neutral constraint facts. P1/P2/P3 below are
+    # guarded on `constraint_facts.usages` being non-empty (INV-7) — when no
+    # assertion exists in the model, lowering never runs and the corpus is
+    # byte-identical to the pre-Item-5 pipeline. `lower_constraints` itself
+    # runs the Item 3 executable-profile preflight before touching the
+    # registry, so an out-of-profile/blocked assert is caught there, not here.
+    constraint_facts = extract_constraint_facts(extractor.model)
 
     # Step 3: Extract calculation usages with enhanced algorithm param detection
     calc_usages, extraction_report = extract_calculation_usages(
@@ -830,6 +846,32 @@ def build_pipeline_context(
     # FINAL classifications (moved after confirm per INV-G).
     group_deriver = ParameterGroupDeriver(graph_design_attrs, calc_usages, calc_defs)
 
+    # [P1 RESOLVE] (Item 5): expand + strictly resolve every constraint fact into
+    # concrete graph structure. Guarded on non-empty usages (INV-7) — the output
+    # registry and graph_design_attrs are final here, and occ_index is built once
+    # for this call. lower_constraints runs the Item 3 executable-profile preflight
+    # first (evaluate_profile) — a blocked assert halts here with a named
+    # diagnostic; a non-admitted usage catalogs unassessed, never reaching the
+    # strict resolver.
+    # TRANSITIONAL DEFAULT (Item 5 -> Item 8 seam): lowering is built and tested
+    # but default-off on the shared path, because snapshots cannot carry
+    # constraint facts until Item 8 (snapshot v3) — with it on, every
+    # constraint-bearing model diverges live-vs-snapshot (22 conformance
+    # failures, orchestrator-verified). Item 8 flips the default when its
+    # parity criterion (constraint-bearing fixture byte-identical live and
+    # from snapshot) is meetable. Callers that need lowering now (Item 5
+    # fixtures, Item 7 generation) pass lower_constraints_enabled=True.
+    concrete_constraints: list[ConcreteConstraint] = []
+    if lower_constraints_enabled and constraint_facts.usages:
+        occ_index = build_part_instance_index(extractor.model)
+        concrete_constraints = lower_constraints(
+            constraint_facts,
+            occ_index=occ_index,
+            registry=output_registry,
+            design_attrs=graph_design_attrs,
+            calc_usages=calc_usages,
+        )
+
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(
         calc_usages,
@@ -837,8 +879,32 @@ def build_pipeline_context(
         design_attributes=graph_design_attrs,
         output_registry=output_registry,
     )
+
+    # [P2 INJECT] (Item 5): each module_output-resolved constraint input channel
+    # joins the backtracking roots BEFORE pruning (spec Roots-before-pruning,
+    # S4-proven), so a calculation whose only consumer is an assertion survives.
+    # Reuses `_find_usage_for_channel` unchanged.
+    constraint_root_targets: list[str] = []
+    for bound_channel in sorted(
+        {
+            inp.bound_channel
+            for c in concrete_constraints
+            for inp in c.inputs
+            if inp.resolution == ConstraintInputResolution.MODULE_OUTPUT
+            and inp.bound_channel is not None
+        }
+    ):
+        producing_usage = backtracker._find_usage_for_channel(bound_channel)  # noqa: SLF001
+        if producing_usage is None:
+            raise CodeGenerationError(
+                f"no producing usage for constraint root channel '{bound_channel}' "
+                "(a resolved module_output binding must name a real producer)"
+            )
+        output_name = bound_channel.rsplit("__", 1)[1]
+        constraint_root_targets.append(f"{producing_usage.instance_name}.{output_name}")
+
     backtracking_result = backtracker.find_required_modules(
-        targets or [],
+        (targets or []) + constraint_root_targets,
         include_all=include_all,
     )
 
@@ -902,6 +968,16 @@ def build_pipeline_context(
         include_all=include_all,
     )
 
+    # [P3 EXTEND] (Item 5): append constraint + report-aggregator nodes and
+    # mint their entry points. Guarded on eligible constraints existing —
+    # `extend_graph_with_constraints` itself no-ops the aggregator when none
+    # are eligible, but skipping the call entirely when nothing was resolved
+    # keeps the corpus byte-identical with zero re-validation cost (INV-7).
+    if concrete_constraints:
+        computation_graph = extend_graph_with_constraints(
+            computation_graph, concrete_constraints, group_deriver
+        )
+
     return PipelineContext(
         extractor=extractor,
         calc_defs=calc_defs,
@@ -918,6 +994,7 @@ def build_pipeline_context(
         channel_aliases=all_channel_aliases,
         constraint_manifest=constraint_manifest,
         output_registry=output_registry,
+        concrete_constraints=concrete_constraints,
     )
 
 

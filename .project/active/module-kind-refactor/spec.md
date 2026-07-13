@@ -34,12 +34,12 @@ for existing kinds is the entire acceptance gate.
   the Boolean flags gone. "Fixture corpus" here is the generated package artifacts — modules,
   stencils, schemas, pipeline YAML, registry `__init__.py`, JSON templates — for every model under
   `tests/`. This is the core gate.
-- [ ] `PipelineModule` carries a single `module_kind` enum with five members (calculation, formula,
+- [x] `PipelineModule` carries a single `module_kind` enum with five members (calculation, formula,
   aggregation, constraint, report_aggregator); the two Boolean flags no longer exist anywhere.
 - [ ] The four seams S4 named dispatch on `module_kind`. A `PipelineModule` with
   `module_kind == constraint` (or `report_aggregator`) reaching any of them **fails loud** — never
   takes the calc path, never skips — guarded by unit tests in this item, exercised for real in Item 7.
-- [ ] Every current flag consumer is migrated — `src/` **and** `tests/` (the four seams, the other
+- [x] Every current flag consumer is migrated — `src/` **and** `tests/` (the four seams, the other
   src consumers, 22 test files, and the baseline-comparison harnesses). A repo-wide grep for
   `is_computed_attribute` and `is_aggregation` returns zero hits.
 - [ ] The committed `computation_graph.json` baselines are regenerated to carry `module_kind`
