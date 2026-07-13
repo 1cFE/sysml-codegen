@@ -15,3 +15,12 @@ assertions; even thousands are cheap). The concept's module-fusion revisit trigg
 measured aggregator-schema limit") is far beyond realistic scale. The S4 runtime finding
 stands: a YAML module instance cannot learn its own key at run time, which is what forced
 class-per-concrete-assertion in the slice; id-injection would require new runtime machinery.
+
+---
+
+## GATE RESOLVED [OWNER]
+
+**Module identity = class-per-concrete-assertion** (Reid, 2026-07-12, orchestrated-run gate,
+decided with the benchmark above). ID-injection rejected: requires new teax runtime machinery
+(a YAML module instance cannot learn its own key) and re-proving the executed slice. Module
+fusion remains a documented far-future revisit past measured scale.
