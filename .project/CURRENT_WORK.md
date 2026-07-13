@@ -6,7 +6,95 @@
 
 ## Active Work
 
-### CONSTRAINT-EXEC Item 8 — Snapshot v3: Constraint Facts Load-Bearing — SPEC in progress (2026-07-12)
+### CONSTRAINT-EXEC Item 9 — Contracts and Sealing (ModelContract / PackageContract) — DESIGN complete (2026-07-13)
+
+Epic Item 9. Spec: `.project/active/package-contracts/spec.md`; Design:
+`.project/active/package-contracts/design.md`. Derives a graph-only `ModelContract` (parameter/
+output IDs, catalog-by-value, evaluation semantics, semantic fingerprint) and seals packages with
+a `PackageContract` (self-describing content-hash seal over generated + preserved artifacts +
+generator/runtime versions), verified on load with named diagnostics. Three S4 gaps closed
+(declared coverage set, missing-file detection, env-compat).
+
+Design decisions (all four spec Open Questions resolved, matching orchestrator guidance):
+- **Stencil/re-seal (D1/D2):** seal is Step 9 of `run_codegen` over final on-disk state (stubs or
+  preserved handwritten alike); a `seal` subcommand re-seals in place, recomputing **only** the
+  PackageContract (graph-free, license-free — the ModelContract is stencil-independent). A modified
+  stencil invalidating the seal until re-sealed is correct behavior.
+- **Env-compat (D5):** integrity checks always fatal; env-compat advisory-by-default,
+  strict-promotable. `generator_version` = `sysml_codegen.__version__`; `runtime_contract_version`
+  = pinned generator constant; the loading env's runtime marker is **injected at verify** (teax
+  passes its own) — generation never reads teax (keeps snapshot determinism).
+- **Format/canonicalization (D3):** `contracts/{model_contract,package_contract}.json` + a
+  stdlib-only `verify.py`. Fingerprint payloads reuse Item 7's `_canonical_json`
+  (`constraint_catalog.py:56`); on-disk bytes pretty-but-deterministic. Seal self-describes its
+  coverage policy + enumerated set (closes the coverage-set gap).
+- **teax seam (D7 + verify_package sig):** the `verify_package(dir, name, runtime_version, strict)`
+  signature and self-describing seal are fixed here; teax loader wiring (load-by-declared-name,
+  inject runtime marker, choose strict) is a mechanical Item 10 / Item 14 change, **not** this item.
+  A stdlib-only verifier is shipped verbatim inside the package so a teax env without sysml-codegen
+  can verify.
+- **Snapshot (D8):** contracts recomputed at generation on both paths, never persisted in the
+  snapshot; fingerprint parity inherits Item 8's byte-identity (the one SC-4 canary to run
+  live-vs-snapshot once Item 8 certifies).
+
+Next: `/_my_plan` (design_review only if a contested call surfaces — this is the S4-proven shape).
+
+### CONSTRAINT-EXEC Item 13 — Calc-Seam Cutover: Retire ExpressionAST — DESIGN reviewed, must-fixes folded (2026-07-13)
+
+Epic Item 13. Spec: `.project/active/expression-ast-cutover/spec.md`; Design:
+`.project/active/expression-ast-cutover/design.md`; Review:
+`.project/active/expression-ast-cutover/design-review.md` (Approved-with-must-fixes).
+Design-review must-fixes M1–M3 and nice-to-haves N1–N5 folded into design.md:
+- **M1** Stage-4 test surface scoped (~240 refs across 7 files): categorized retire /
+  re-anchor-onto-renderer; REQ-AST-04 dispatch counts updated 6→5 (multi-type) and 4→3 (FCE+OE),
+  since the renderer consumes IR (not raw-syside is_instance) and raw-node dispatch moves to the
+  reused agentic-mbse extractor.
+- **M2** literal rule pinned: `str(int|float value)` keyed on IR literal type. Orchestrator
+  settled B4 with evidence (production_facts.json: LiteralInteger→int, LiteralRational→float) —
+  no cross-repo fix; restated as evidence-backed fact, Stage-0 corpus gate (incl. integer output)
+  as backstop.
+- **M3** seam `member_names = output_names ∪ all_member_names` (cite `expression_compiler.py:388-393`).
+- **N1–N5** folded: Stage-0 production name-set provenance; dead renderer error-branch premise
+  stated; stale `hierarchy_resolver.py:54` comment; Item 8 already landed (df5ed97) so corpus is
+  fixed not moving (rebaseline onto HEAD); integer-literal calc output in the Stage-0 iterator.
+Remaining open (plan task 0, de-risk first): the extractor's public single-node entry point (R1). Executes S2's extract-and-migrate
+decision: move the three real `ExpressionAST` consumers (calc-compiler seam, computed
+attributes, snapshot replay of their results) onto `ExpressionIR` + a compat renderer, each a
+byte-identity-gated step, then delete `ExpressionAST` (grep gate on
+`ExpressionAST`/`build_expression_ast`/`compile_expression`). Orchestrator decision:
+**Option A** — retire ExpressionAST only, sysml-codegen-scoped.
+
+Design decisions:
+- **D1 renderer home:** new `extraction/calc_compat_renderer.py`, sibling-in-role to
+  `generation/predicate_compiler.py` — NOT a shared dual-mode module (`str`/`repr` and
+  `inputs.`/bare divergences + cross-layer use make merging a fork-per-branch; the two
+  renderers over one `ExpressionIR` is what the concept endorses).
+- **D2 extractor:** reuse agentic-mbse's landed syside→`ExpressionIR` extractor, not a
+  codegen-side rebuild (a second extraction path is the drift this epic removes). **Open,
+  de-risk-first:** confirm a public single-node entry point exists; if only whole-facts
+  extraction is exposed, a thin agentic-mbse wrapper is a cross-repo scope note (surfaced).
+- **D3 error parity:** renderer keeps `compile_expression`'s `python_ast.parse` validation and
+  raises the existing `CompilationError` so callers' `MANUAL_REQUIRED` fallback is unchanged.
+- **D4 deletion:** at cutover, convert the live old-vs-new parity test into a committed golden
+  so byte-identity stays gated after the old code is gone.
+- **Stages (each one commit, old code lives till Stage 4):** 0 land renderer+parity proof →
+  1 flip seam → 2 flip computed attrs → 3 verify snapshot replay → 4 delete+grep gate.
+  Per-stage comparand = the exact replaced function's output, golden-captured before the flip
+  (F4 rule). B1 (landed extractor renders byte-identically) is re-proven by the Stage-0 test,
+  not inherited from the spike.
+
+Baseline = post-Item-8 corpus; implement sequences after Item 8 certifies. Next:
+`/_my_design_review` (this item retires load-bearing code) then `/_my_plan`.
+
+### CONSTRAINT-EXEC Item 8 — Snapshot v3: Constraint Facts Load-Bearing — CERTIFIED (2026-07-13)
+
+**Audit:** `.project/active/snapshot-v3/audit.md` — Certify. All 5 spec success criteria met.
+Full suite 2256 passed (orchestrator-executed under license env); mypy 76 (baseline); ruff clean;
+mode-enum mutation probe confirms the rejection gate has teeth. Live/snapshot graph+catalog parity
+holds → **Item 9's fingerprint-stability canary preconditions are satisfied.** Grandfathered pair
+(`plant_values`/`fusion_tea`) captured flag-off, baselines byte-identical; the `gain` gap remains a
+named Item-14 prerequisite. d38_caret's `unhandled` drop cleared as pre-existing drift.
+
 
 Epic Item 8. Spec: `.project/active/snapshot-v3/spec.md`. Makes the neutral `ConstraintFacts`
 a load-bearing, versioned snapshot section (bump v2→v3), wires lowering into the from-snapshot

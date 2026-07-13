@@ -345,7 +345,7 @@ The seam is confirmed; Items 9–11 may freeze schemas against it. See
 
 ---
 
-### Item 8: Snapshot v3 — Constraint Facts Load-Bearing
+### Item 8: Snapshot v3 — Constraint Facts Load-Bearing ✅
 
 **Type**: Implementation (sysml-codegen)
 **Effort**: 1 day (spec 1h, design 2h, plan 1h, execute 5h)
@@ -363,9 +363,9 @@ The seam is confirmed; Items 9–11 may freeze schemas against it. See
 - The facts schema itself (Item 1); graph rebuild logic beyond wiring facts in.
 
 **Success Criteria**:
-- [ ] Both rejection cases fire with re-capture messages (kept tests, mirroring S3's strict boundary).
-- [ ] A constraint-bearing fixture generates byte-identically live and from snapshot.
-- [ ] Re-captured corpus shows only expected diffs; conformance suite green.
+- [x] Both rejection cases fire with re-capture messages (kept tests, mirroring S3's strict boundary).
+- [x] A constraint-bearing fixture generates byte-identically live and from snapshot.
+- [x] Re-captured corpus shows only expected diffs; conformance suite green.
 
 **Required Reading**: concept Required Invariants (snapshot bullets) + S3/S4 results and carry-forwards; memory: byte-identity captured_at churn.
 

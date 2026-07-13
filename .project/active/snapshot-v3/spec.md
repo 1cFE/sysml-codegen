@@ -57,24 +57,24 @@ The first three are the epic's Item-8 acceptance bar. The last two are the two n
 responsibilities this item inherits from the run (the default flip and the `gain` handoff),
 stated as their own criteria so they can't be folded into the others.
 
-- [ ] **Both rejection cases fire with re-capture messages** (kept tests, mirroring the
+- [x] **Both rejection cases fire with re-capture messages** (kept tests, mirroring the
       existing strict version hard-gate). An old-version snapshot is rejected by the version
       gate; a current-version (v3) snapshot **missing the constraint-facts section** fails with
       a re-capture instruction — it never loads as an empty catalog.
-- [ ] **A constraint-bearing fixture generates byte-identically live and from snapshot** — same
+- [x] **A constraint-bearing fixture generates byte-identically live and from snapshot** — same
       artifacts, same `constraint_id`s, same catalog ordering — through
       `generate --from-snapshot`. The parity fixture is one that lowers cleanly
       (`wi014_toy` / S4's model, or `constraint_multi_instance`), not one carrying an unrelated
       extraction gap.
-- [ ] **Re-captured corpus shows only expected diffs; conformance suite green.** Constraint-free
+- [x] **Re-captured corpus shows only expected diffs; conformance suite green.** Constraint-free
       fixtures regenerate byte-identically (timestamps excepted). Constraint-bearing fixtures
       that lower cleanly gain constraint structure — a reviewable, expected diff. The two
       grandfathered fixtures (below) stay byte-identical (un-lowered).
-- [ ] **The default flips, under the parity gate.** `build_pipeline_context`'s
+- [x] **The default flips, under the parity gate.** `build_pipeline_context`'s
       `lower_constraints_enabled` defaults **True**; the from-snapshot path lowers from carried
       facts. The 22 previously-measured live/snapshot divergences are eliminated (they become
       the parity test's baseline expectation, now met).
-- [ ] **The two `gain`-blocked fixtures are grandfathered honestly.** `plant_values` and
+- [x] **The two `gain`-blocked fixtures are grandfathered honestly.** `plant_values` and
       `fusion_tea` are generated/captured **flag-off** (today's un-lowered behavior, baselines
       byte-identical) behind a loud, named exclusion list, because their `'Viability Threshold'`
       assertion hits the `gain` hierarchy-extraction gap and would halt lowering. The gap is
