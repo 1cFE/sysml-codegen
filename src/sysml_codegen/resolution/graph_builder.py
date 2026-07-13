@@ -63,6 +63,7 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     OutputAlias,
     ParameterGroup,
@@ -1180,7 +1181,7 @@ def _build_computed_attr_module(
         execution_order=0,  # Assigned during unified toposort
         compilability=Compilability.FULLY_COMPILABLE,
         compiled_expression=ca.compiled_expression,
-        is_computed_attribute=True,
+        module_kind=ModuleKind.FORMULA,
         auto_impl_context=_build_simple_auto_impl_context(
             ca.compiled_expression, ca.python_name,
         ),
@@ -1583,7 +1584,7 @@ def _build_aggregation_module(
         execution_order=0,  # Reassigned during unified toposort
         compilability=compilability,
         compiled_expression=compiled_expression,
-        is_aggregation=True,
+        module_kind=ModuleKind.AGGREGATION,
         auto_impl_context=auto_impl_ctx,
         calc_def_name=agg.expression.attribute_name,
         calc_def_qualified_name=agg.expression.owning_part_qn,
@@ -1786,6 +1787,7 @@ def _build_pipeline_module(
         inputs=inputs,
         outputs=outputs,
         execution_order=execution_order,
+        module_kind=ModuleKind.CALCULATION,
         calc_def_name=calc_def.name,
         calc_def_qualified_name=calc_def.qualified_name,
         doc_comment=calc_def.doc_comment,
