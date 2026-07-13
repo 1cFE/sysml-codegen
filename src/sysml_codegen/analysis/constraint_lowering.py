@@ -30,9 +30,8 @@ from agentic_mbse.sysml.expression_ir import (
 
 from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
 from sysml_codegen.analysis.part_instance_index import NonFiniteCardinalityError
-from sysml_codegen.core.identifier_types import ScopedKey
+from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.qualified_names import sanitize_name, sanitize_qualified_name
-from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConcreteConstraint,
@@ -56,6 +55,23 @@ if TYPE_CHECKING:
     from sysml_codegen.analysis.part_instance_index import PartInstanceIndex
     from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
+    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+
+def _generation_error(message: str) -> CodeGenerationError:
+    """Construct a ``CodeGenerationError``, imported lazily.
+
+    ``orchestration/__init__.py`` eagerly imports ``pipeline_builder``, which
+    imports this module (Item 5's pipeline wiring) — a module-level import of
+    ``sysml_codegen.orchestration.pipeline_context`` here would make importing
+    this module *first* (e.g. a test importing ``constraint_lowering`` before
+    anything else touches ``orchestration``) circular. Matches the same late-
+    import pattern already used in
+    :func:`~sysml_codegen.analysis.dependency_backtracker.terminal_disposition`.
+    """
+    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+    return CodeGenerationError(message)
 
 
 def occurrence_scope(instance_path: str) -> str:
@@ -107,11 +123,14 @@ def resolve_actual(
     registry: OutputRegistry,
     design_attr_by_qn: dict[str, DesignAttributeData],
 ) -> ConcreteConstraintInput:
-    """Resolve one constraint actual through the ordered strict ladder (D1 amended).
+    """Resolve one constraint actual through the ordered strict ladder (D1 amended,
+    R5-widened — see the ``scoped_alias_lookup`` rung below).
 
     ``scoped_lookup`` (occurrence-scoped key first, then the shared de-indexed
-    key — B1) → ``alias_lookup`` (same two keys) → design-attribute match on
-    the reference's target QN → the shared terminal-disposition switch
+    key — B1) → ``alias_lookup`` (same two keys) → ``scoped_alias_lookup``
+    (same two keys, structured ``(scope, leaf)`` — R5 amendment) →
+    design-attribute match on the reference's target QN → the shared
+    terminal-disposition switch
     (:func:`~sysml_codegen.analysis.dependency_backtracker.terminal_disposition`,
     always called ``strict=True`` — constraint actuals never take the lenient
     calc-path fallback, INV-2. The switch itself supports both dispositions;
@@ -158,13 +177,65 @@ def resolve_actual(
                     bound_channel=str(channel),
                 )
 
-    # Design-attribute match on the reference's target QN. `reference.target
-    # .qualified_name` is SysML `::`-form (per-segment quoted, e.g.
-    # "toy_plant::'Toy Plant'::plant_budget"); the design-attribute index is
-    # keyed by the same EQN `__`-form every other identifier in this repo
-    # uses (`attr.qualified_name`), so the `::`->`__` sanitize is required
-    # before comparing — bare `.qualified_name` never matches (verified
-    # against wi014_toy live).
+        # scoped_alias_lookup (R5 amendment, evidence-driven): a structured
+        # part-def EXPOSE alias (backtracker Step 1c) that plain scoped_lookup/
+        # alias_lookup — both flat ScopedKey namespaces — cannot reach. Proven
+        # in-profile and needed live: `fusion_tea`'s `hif_plant.eta` actual
+        # (`driver.efficiency`) is profile-ADMIT (Item 3 does not block it) yet
+        # unresolvable without this rung — verified against the live fixture,
+        # not a hypothetical. Split at the LAST dot into (prefix, leaf), same
+        # occ-key-then-deindexed order as every other rung above.
+        if "." in dotted:
+            prefix, leaf = dotted.rsplit(".", 1)
+            deindexed_prefix = _deindexed_scope(prefix)
+            for scope_candidate in (occ_scope, deindexed_scope):
+                if not scope_candidate:
+                    continue
+                key_prefix = deindexed_prefix if scope_candidate == deindexed_scope else prefix
+                channel = registry.scoped_alias_lookup(
+                    ScopedAliasKey((f"{scope_candidate}.{key_prefix}", leaf))
+                )
+                if channel is not None:
+                    return ConcreteConstraintInput(
+                        formal_name=formal_name,
+                        resolution=ConstraintInputResolution.MODULE_OUTPUT,
+                        bound_channel=str(channel),
+                    )
+            channel = registry.scoped_alias_lookup(ScopedAliasKey((prefix, leaf)))
+            if channel is None and deindexed_prefix != prefix:
+                channel = registry.scoped_alias_lookup(ScopedAliasKey((deindexed_prefix, leaf)))
+            if channel is not None:
+                return ConcreteConstraintInput(
+                    formal_name=formal_name,
+                    resolution=ConstraintInputResolution.MODULE_OUTPUT,
+                    bound_channel=str(channel),
+                )
+
+    # Design-attribute match, two forms tried in occurrence-then-definition order
+    # (R5 amendment #2, evidence-driven — see below):
+    #
+    # (i) Occurrence-scoped materialized QN: `{owner_instance_path}__{dotted
+    #     chain, "." -> "__"}`. The supplied-value materializer
+    #     (`resolution/supplied_values.py`, threaded into `graph_design_attrs`
+    #     the caller passes as `design_attrs`) synthesizes exactly this QN shape
+    #     for a `:>>` redefinition/override reached through a chain — proven
+    #     live against `fusion_tea`'s `hif_plant.eta` actual (`driver.efficiency`
+    #     resolves via the synthesized `hif_plant_pkg__hif_plant__driver__
+    #     efficiency`, not any registry channel or alias: `efficiency` is a
+    #     `:>>` literal redefinition on the driver instance, not a calc output).
+    # (ii) Definition-scoped target QN: `reference.target.qualified_name` is
+    #     SysML `::`-form (e.g. "toy_plant::'Toy Plant'::plant_budget");
+    #     sanitized to the EQN `__`-form every design attribute is keyed by
+    #     (verified against `wi014_toy` live).
+    if dotted:
+        occ_attr_qn = f"{usage_qualified_name}__{'__'.join(dotted.split('.'))}"
+        if occ_attr_qn in design_attr_by_qn:
+            return ConcreteConstraintInput(
+                formal_name=formal_name,
+                resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+                design_attribute_qn=occ_attr_qn,
+            )
+
     target_qn_sysml = reference.target.qualified_name if reference.target else None
     target_qn = sanitize_qualified_name(target_qn_sysml) if target_qn_sysml else None
     if target_qn is not None and target_qn in design_attr_by_qn:
@@ -209,7 +280,7 @@ def assert_unique_constraint_ids(concrete: list[ConcreteConstraint]) -> None:
     for c in concrete:
         prior = seen.get(c.constraint_id)
         if prior is not None:
-            raise CodeGenerationError(
+            raise _generation_error(
                 f"constraint_id collision: '{c.constraint_id}' minted for both "
                 f"'{prior.owner_instance_path}' and '{c.owner_instance_path}' "
                 "(generation error, never silently kept — D3/INV-4)"
@@ -240,7 +311,7 @@ def guard_polarity(*, is_negated: bool | None, usage_qualified_name: str) -> boo
     carrying whatever the fact actually holds (usually ``None``).
     """
     if is_negated is None:
-        raise CodeGenerationError(
+        raise _generation_error(
             f"{usage_qualified_name}: is_negated is None (nullable-fact guard, INV-8) "
             "— the executable profile expects a polarity-known assertion"
         )
@@ -278,13 +349,13 @@ def _expand_owner_instances(
         try:
             occurrences = occ_index.occurrences_of(owner_eqn)
         except NonFiniteCardinalityError as error:
-            raise CodeGenerationError(
+            raise _generation_error(
                 f"{usage.identity.qualified_name}: owner '{owner_eqn}' is reached only "
                 f"through a non-finite multiplicity ({error}) — cannot expand to "
                 "concrete instances (generation error, never a silent skip)"
             ) from error
         if not occurrences:
-            raise CodeGenerationError(
+            raise _generation_error(
                 f"{usage.identity.qualified_name}: owner '{owner_eqn}' has no concrete "
                 "instances — an expected instance cannot be formed (validation error)"
             )
@@ -293,7 +364,7 @@ def _expand_owner_instances(
     if kind == "calc_def":
         matches = [cu for cu in calc_usages if cu.calc_def_qualified_name == owner_qn]
         if not matches:
-            raise CodeGenerationError(
+            raise _generation_error(
                 f"{usage.identity.qualified_name}: owner '{owner_qn}' (calc_def) has no "
                 "concrete calc usages — an expected instance cannot be formed"
             )
@@ -313,7 +384,7 @@ def _source_local_identity(usage: ConstraintUsageFact) -> tuple[str, tuple]:
     if usage.location is not None:
         loc = usage.location
         return "anon", (f"{loc.file}:{loc.line}:{loc.column}",)
-    raise CodeGenerationError(
+    raise _generation_error(
         f"{usage.identity.qualified_name or '<unknown>'}: anonymous assertion has no "
         "LocationFact — cannot form a source-local identity (D3 `[HARD]`)"
     )
@@ -336,7 +407,7 @@ def _resolve_formal(
     """
     if not isinstance(value, FeatureReferenceNode):
         kind = type(value).__name__ if value is not None else "None"
-        raise CodeGenerationError(
+        raise _generation_error(
             f"{usage_qualified_name}.{formal_name}: actual value is not a feature "
             f"reference (got {kind}) — the executable profile expects a reference actual"
         )
@@ -407,7 +478,7 @@ def lower_constraints(
             return f"  - {name} at {where}: {diag.construct} ({diag.reason})"
 
         lines = [_describe(d, diag) for d in blocking for diag in d.diagnostics]
-        raise CodeGenerationError(
+        raise _generation_error(
             "Constraint generation halted — the following asserted constraints are not "
             "executable:\n" + "\n".join(lines)
         )
@@ -731,7 +802,7 @@ def extend_graph_with_constraints(
     _validate_channel_references(extended.modules)
     uncovered = collect_uncovered_params(extended)
     if uncovered:
-        raise CodeGenerationError(f"V11 coverage violations in extended graph: {uncovered}")
+        raise _generation_error(f"V11 coverage violations in extended graph: {uncovered}")
     return extended
 
 

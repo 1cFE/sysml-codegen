@@ -15,7 +15,7 @@ from sysml_codegen.analysis.constraint_lowering import (
 )
 from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
-from sysml_codegen.core.identifier_types import CanonicalChannel, ScopedKey
+from sysml_codegen.core.identifier_types import CanonicalChannel, ScopedAliasKey, ScopedKey
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 
@@ -92,6 +92,59 @@ def test_ladder_falls_to_alias_lookup():
     )
     assert result.resolution == "module_output"
     assert result.bound_channel == "Real__chan"
+
+
+def test_ladder_falls_to_scoped_alias_lookup():
+    """R5 amendment: a structured part-def EXPOSE alias (backtracker Step 1c
+    shape) that plain scoped_lookup/alias_lookup cannot reach — proven
+    necessary live against fusion_tea's hif_plant.eta actual."""
+    registry = OutputRegistry()
+    registry.register_scoped(ScopedKey("elsewhere.chan"), CanonicalChannel("Real__chan"))
+    registry.register_scoped_alias(
+        ScopedAliasKey(("c.cell.driver", "efficiency")), CanonicalChannel("Real__chan")
+    )
+    ref = _reference(chain_segments=["driver", "efficiency"])
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="c.cell",
+        formal_name="eta",
+        usage_qualified_name="Design__c__cell__viability",
+        registry=registry,
+        design_attr_by_qn={},
+    )
+    assert result.resolution == "module_output"
+    assert result.bound_channel == "Real__chan"
+
+
+def test_ladder_falls_to_occurrence_scoped_design_attribute():
+    """R5 amendment #2: the supplied-value materializer's occurrence-scoped
+    synthesized QN (`{owner_instance_path}__{chain}`) for a `:>>` redefinition
+    reached through a chain reference — distinct from the definition-scoped
+    target-QN rung below, and tried first."""
+    registry = OutputRegistry()
+    attr = DesignAttributeData(
+        name="efficiency",
+        sysml_type="Real",
+        default_value="0.35",
+        unit=None,
+        source_file=None,
+        source_line=1,
+        parent_part="Design",
+        qualified_name="Design__c__cell__driver__efficiency",
+    )
+    ref = _reference(
+        chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency"
+    )
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="c.cell",
+        formal_name="eta",
+        usage_qualified_name="Design__c__cell",
+        registry=registry,
+        design_attr_by_qn={"Design__c__cell__driver__efficiency": attr},
+    )
+    assert result.resolution == "design_attribute"
+    assert result.design_attribute_qn == "Design__c__cell__driver__efficiency"
 
 
 def test_ladder_falls_to_design_attribute():

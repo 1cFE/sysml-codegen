@@ -555,10 +555,130 @@ touched here, per the standing instruction not to touch `.project/` outside
 validation block, and commit (or discard) accordingly — do not assume they're safe to commit
 blind given the unverified state above.
 
+### Phase 4 Completion — third pass: verified, ladder amendments landed
+
+**Execution restored this session.** Full suite 2202 passed / 4 skipped; mypy 76 (baseline
+unchanged); ruff clean; corpus regenerate → empty diff (flag off ⇒ pipeline untouched, INV-7
+holds honestly, not assumed).
+
+**Corpus sweep with `lower_constraints_enabled=True`, per owner instruction 3 — enumerated:**
+- `wi014_toy`, `constraint_multi_instance`, `constraint_inline`: lower cleanly, gain deliberate
+  constraint graph structure (CONSTRAINT + REPORT_AGGREGATOR nodes, minted EPs) — a reviewable
+  diff, not a byte-identity failure (Item 7 consumes this; flag stays off by default until
+  Item 8 flips it).
+- `catf_mfe_model`: 65 usages, all catalog `unassessed` (0 eligible) — Item 3's preflight
+  correctly neither halts nor lowers them (confirms the `a1fe7a4` fix for the
+  `RadiusConsistency`-class failure that broke this exact fixture in the first pass).
+- `constraint_blocked_owner`: correctly raises a named generation error (unchanged from Phase 3).
+- `fusion_tea`, `plant_values`: **two distinct findings, one fixed this pass, one open** — see
+  below. Both fixtures share the same `'Viability Threshold'` constraint pattern
+  (`in eta = driver.efficiency; in gain = gain;`).
+
+**Owner's step-2 conditional, resolved empirically (not by reading spec text):** `hif_plant.eta`'s
+`driver.efficiency` actual *is* profile-`ADMIT` (Item 3 does not block a chain reference here),
+so it does need ladder coverage — confirming the anticipated case, though the actual missing
+mechanism differed from the anticipated fix:
+- **What was needed, and landed:** two rungs, not one.
+  1. `scoped_alias_lookup` (as anticipated) — added between `alias_lookup` and the
+     design-attribute step, mirroring the backtracker's Step 1c exactly (occ-scope-prefixed key
+     first, then bare `(prefix, leaf)`).
+  2. **Not anticipated, discovered live:** `driver.efficiency` doesn't actually resolve through
+     `scoped_alias_lookup` at all — `hif_plant`'s registry has zero scoped-alias entries
+     matching it. It resolves through the supplied-value materializer's **occurrence-scoped
+     synthesized design attribute** (`resolution/supplied_values.py`; `efficiency` is a `:>>`
+     literal redefinition on the driver instance, materialized as
+     `hif_plant_pkg__hif_plant__driver__efficiency` — an instance-scoped QN built exactly as
+     `{owner_instance_path}__{dotted chain}`, distinct from the reference's own
+     definition-scoped `target.qualified_name`). Added as a second design-attribute matching
+     form, tried before the existing definition-scoped `target_qn` match. Both amendments are
+     still squarely inside the design's existing "design-attr-by-QN" / registry-lookup ladder
+     steps (D1) — no new resolution *category*, two more concrete key shapes tried within the
+     categories D1 already blessed.
+  Verified: `hif_plant.eta` now resolves cleanly (was: `unresolved actual 'driver.efficiency'`).
+  Mini byte-identity re-check re-run after landing both (R2 discipline, same as Phase 2's
+  switch extraction) — empty diff, confirmed above.
+  New offline tests: `test_ladder_falls_to_scoped_alias_lookup`,
+  `test_ladder_falls_to_occurrence_scoped_design_attribute`
+  (`tests/unit/test_constraint_resolver.py`) — hand-built registry/design-attr fixtures, no
+  live model needed, mirroring the two live shapes exactly.
+- **Open finding — NOT fixed, explicitly not chased further (per owner instruction 3, "STOP
+  and report which"):** the *same* `'Viability Threshold'` usage's other actual, `in gain =
+  gain;`, still fails: `unresolved actual 'gain'`. Root cause traced to `hif_plant.sysml:87`'s
+  `:>> gain = 80.0` — a **top-level design-instance self-redefinition** that
+  `materialize_supplied_values` does not synthesize an attribute for at all (confirmed:
+  `hierarchy_data.redefinitions` carries no `gain` entry; the materializer's synthesized-attribute
+  list for `fusion_tea` has 7 entries, none for `gain`). This is a **hierarchy-extraction gap**,
+  not a constraint-lowering resolver gap — outside Item 5's ownership (Item 5 consumes
+  `hierarchy_data`/`graph_design_attrs` as given; it does not own their correctness). Both
+  `fusion_tea` and `plant_values` hit this identical `gain` failure. **Neither fixture can fully
+  lower under the flag today** — but since the flag defaults to `False` on the shared path
+  (Item 8's transitional gate), this does not block Phase 5's required gates (byte-identity with
+  flag off; S4-reproduction/multi-instance/inline/determinism with flag on, none of which touch
+  `fusion_tea`/`plant_values`). **Named handoff for Item 8's spec** (alongside the flip): resolve
+  the `gain`-class hierarchy-extraction gap, or accept `fusion_tea`/`plant_values` as fixtures
+  where lowering stays partial/unassessed until it's fixed.
+- **Circular-import bug found and fixed independently (unrelated to the ladder work, discovered
+  while adding the new offline tests):** `constraint_lowering.py`'s module-level
+  `from sysml_codegen.orchestration.pipeline_context import CodeGenerationError` created a real
+  cycle once `pipeline_builder.py` started importing `constraint_lowering` (the committed Phase
+  4 wiring, `0d6eba1`) — importing `constraint_lowering` as the entry point (e.g. running
+  `test_constraint_resolver.py` in isolation) triggered
+  `orchestration/__init__.py`'s eager `pipeline_builder` import mid-way through
+  `constraint_lowering`'s own top-level execution, before `extend_graph_with_constraints` was
+  defined. It "worked" in the full suite only by luck of collection order. Fixed with a
+  `_generation_error()` lazy-import helper, matching the existing repo convention in
+  `dependency_backtracker.terminal_disposition`. Verified: `test_constraint_resolver.py` now
+  passes standalone.
+
 ### Phase 5 Completion
-**Not started — blocked on Phase 4 verification (execution-blocked this session, see above).**
+
+All six spec success criteria proven, live, through the wired path
+(`tests/conformance/test_constraint_pipeline_threading.py`, NEW, 6 tests + the existing 10 in
+`test_constraint_lowering.py` = 16 live/wiring tests total):
+
+1. **S4 reproduction** (`test_roots_before_pruning_retains_producer_s4_reproduction`) —
+   `wi014_toy`, minimal target `area_calc.area`, `include_all=False`: control (flag off) prunes
+   `cost_calc`; lowered (flag on) retains it only via the resolved constraint root, plus gains
+   `constraint_report_aggregator`. Verified empirically before writing the test (not assumed).
+2. **Strict resolution — no fallback** (`test_strict_resolution_no_fallback_v11_and_channel_refs_pass`)
+   — `_validate_channel_references` + `collect_uncovered_params` re-run independently on the
+   wired path's extended graph (not just relying on `extend_graph_with_constraints` having
+   raised internally); `fallback_entry_points` is empty. Unresolvable-actual → named
+   `CodeGenerationError`, never a synthesized EP: covered by the Phase 2/3 unit + conformance
+   suites (`test_strict_terminal_raises_never_synthesizes`-equivalent cases already pass).
+3. **Deterministic identity** (`test_deterministic_identity_across_repeated_live_loads`) — two
+   independent fresh `build_pipeline_context` calls on `constraint_multi_instance` produce
+   byte-identical `constraint_id` lists, in `constraint_id` order (INV-4).
+4. **Corpus byte-identity** — regenerate → empty diff, confirmed above (flag off on the shared
+   path, per Item 8's transitional gate).
+5. **Multi-instance** (`test_multi_instance_end_to_end_through_wired_path`) — 3 concrete
+   constraints, 3 distinct `constraint_id`s, 3 distinct evaluation channels, through the real
+   wired pipeline (not just `lower_constraints` in isolation, which Phase 3 already covered).
+6. **Inline** (`test_inline_end_to_end_through_wired_path`) — inline-form assertion lowers
+   through the real wired pipeline, selecting the usage predicate, no formals/actuals.
+
+Plus the inheritance cross-check (`test_inheritance_cross_check_instance_index_probe_oracle_unchanged`):
+`instance_index_probe`'s Item-4 9-instance oracle count is unchanged after lowering also runs
+against it (exercised via `lower_constraints` + `build_part_instance_index` directly, since
+`instance_index_probe` is deliberately calc-free and `build_pipeline_context` requires ≥1 calc
+def).
+
+**Gates:**
+- `uv run pytest tests/` → 2202 passed, 4 skipped.
+- `uv run pytest tests/conformance/test_constraint_pipeline_threading.py tests/conformance/test_constraint_lowering.py` → 16 passed.
+- `uv run mypy src/` → 76 errors (baseline unchanged).
+- `uv run ruff check src/` → clean.
+- Corpus regenerate (`scripts/capture_pipeline_baselines.py`) → empty diff, nothing to revert.
+- `tests/conformance/test_baselines.py` → 17 passed.
+
+**Known limitation carried forward (not a Phase 5 gap):** `fusion_tea`/`plant_values` cannot
+fully lower under the flag due to the `gain` hierarchy-extraction gap above — named as an Item 8
+handoff item, not resolved here.
 
 ---
 
-**Status:** Draft → In Progress (Phases 1–3 complete; Phase 4 partial — P3 landed, P1/P2
-wiring blocked on an owner decision, see Phase 4 Completion notes; Phase 5 not started)
+**Status:** Complete. All five phases landed: data contract (1), strict resolver + shared
+terminal switch (2), four-kind expansion (3), pipeline threading behind
+`lower_constraints_enabled` with Item 3's preflight gating it (4), full success-criteria +
+corpus-gate verification (5). One follow-up item handed to Item 8 (the `gain`-class hierarchy-
+extraction gap blocking `fusion_tea`/`plant_values` specifically).
