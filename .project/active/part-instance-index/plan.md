@@ -183,7 +183,7 @@ ordering (D6), invariants INV-1..INV-5.
 
 #### 1. Structured walker + index (in the new module)
 **File:** `src/sysml_codegen/analysis/part_instance_index.py`
-- [ ] `_structured_paths(target_qn, part_usage_index, qn_to_partdef, _visited=None)` — a **new**
+- [x] `_structured_paths(target_qn, part_usage_index, qn_to_partdef, _visited=None)` — a **new**
       function mirroring `_find_instantiation_paths` (`usage_extractor.py:313-369`) recursion
       shape, yielding structured occurrences instead of joined strings. **Replicate the
       `_visited` cycle guard** (`usage_extractor.py:335-337`); add a one-line "keep in sync with
@@ -199,16 +199,16 @@ ordering (D6), invariants INV-1..INV-5.
         the step into `n` copies `occurrence_index=0..n-1` (**Cartesian down the path** — every
         upstream fan multiplies); `NonFinite` → raise `NonFiniteCardinalityError(owning_def_qn,
         feature_name)`.
-- [ ] `InstanceOccurrence.part_def_qn` = `most_specific(owned typings of the leaf usage,
+- [x] `InstanceOccurrence.part_def_qn` = `most_specific(owned typings of the leaf usage,
       qn_to_partdef)[0]` — computed **once from the usage**, entry-independent (C3/D5). Never the
       closure-entry type.
-- [ ] `instance_path` property = `base` then, for each step in order,
+- [x] `instance_path` property = `base` then, for each step in order,
       `f"__{s.feature_name}"` plus `f"[{s.occurrence_index}]"` when the index is not `None`.
       Pinned by the oracle set (below) to the probe spelling `…root__bank__member[0]`.
-- [ ] `build_part_instance_index(model) -> PartInstanceIndex`: builds `_build_part_usage_index`
+- [x] `build_part_instance_index(model) -> PartInstanceIndex`: builds `_build_part_usage_index`
       and `user_partdef_lookup` once; the query object closes over them (read-only imports only —
       `#architecture` "Boundaries"; do **not** import `MultiplicityData`/generation code).
-- [ ] `PartInstanceIndex.occurrences_of(part_def_qn) -> list[InstanceOccurrence]`:
+- [x] `PartInstanceIndex.occurrences_of(part_def_qn) -> list[InstanceOccurrence]`:
       1. **Closure set** `applicable = {qn} ∪ {c : qn ∈ _supertype_closure(c, lookup)}`, sorted.
       2. Union structured occurrences over `applicable`.
       3. **Dedup** by canonical key `(part_def_qn, base, tuple((s.feature_name,
@@ -218,14 +218,19 @@ ordering (D6), invariants INV-1..INV-5.
          s.occurrence_index is not None else -1) for s in steps))` — integer indices, singleton
          normalized to `-1` sentinel so a future key change cannot reintroduce `None < int`
          (D6 + `#implementation-notes` m1).
-- [ ] Convenience `all_occurrences()` (used by the determinism test for a full dump) and
-      `all_source_owners()`. Keep thin; no new behavior.
+- [x] Convenience `all_occurrences()` (used by the determinism test for a full dump) and
+      `all_source_owners()`. Keep thin; no new behavior. **Deviation:** `all_occurrences()`
+      catches `NonFiniteCardinalityError` per-PartDef and skips that def rather than aborting the
+      whole dump — it is a bulk best-effort convenience, not a per-owner query; INV-2's no-silent-
+      drop guarantee is about a *direct* `occurrences_of(owner)` call, which still raises loud.
+      Needed because the combined fixture (below) has both enumerable and blocked defs, and
+      `all_occurrences()` iterates every user PartDef.
 
 #### 2. Promote and extend the fixture
 **File:** `tests/fixtures/instance_index_probe/model.sysml` (NEW — promoted from S3 `model.sysml`)
-- [ ] Copy the S3 model verbatim (package `InstanceIndexProbe`, the nine-instance shape). This
+- [x] Copy the S3 model verbatim (package `InstanceIndexProbe`, the nine-instance shape). This
       alone must satisfy the 9/9 oracle unchanged.
-- [ ] Add extension shapes using **type families disjoint from `ConstrainedLeaf`/`SpecializedLeaf`**
+- [x] Add extension shapes using **type families disjoint from `ConstrainedLeaf`/`SpecializedLeaf`**
       so the ConstrainedLeaf closure — and thus the 9-oracle — is untouched. Query each shape by
       its own leaf type. Add matching instantiations under `root` (or new root parts) so each
       queried leaf has a live path (a blocked member only raises when its owner is instantiated):
@@ -246,37 +251,43 @@ ordering (D6), invariants INV-1..INV-5.
     of a unique feature emits a **load-error** diagnostic (`b1-probe-evidence.md` note 4;
     `design.md#potential-risks`), which would make the whole fixture unloadable. Its blocking is
     proven by the Phase-1 truth table (mock node) instead. Note this at the fixture site.
-- [ ] `tests/fixtures/instance_index_probe/PROVENANCE.md` (NEW) — one line: promoted from S3
+- [x] `tests/fixtures/instance_index_probe/PROVENANCE.md` (NEW) — one line: promoted from S3
       `spike-concrete-expansion-instance-index/model.sysml`, extended for Item-4 tests; calc-free.
 
 #### 3. Live positive tests
 **File:** `tests/conformance/test_part_instance_index.py` (NEW)
-- [ ] A `@requires_license` fixture that loads `instance_index_probe` via `SysMLDataExtractor`
+- [x] A `@requires_license` fixture that loads `instance_index_probe` via `SysMLDataExtractor`
       and yields `extractor.model` (pattern: `test_extractor.py:855-861`; the raw model is
       `extractor.model` after `load_models()` — `extractor.py:52-64`).
-- [ ] `EXPECTED_NINE` = `probe_instance_index.py`'s `EXPECTED_CONCRETE_PATHS` (copy the set).
-- [ ] **#1 9/9 oracle** — `occurrences_of("InstanceIndexProbe__ConstrainedLeaf")` instance_paths
+- [x] `EXPECTED_NINE` = `probe_instance_index.py`'s `EXPECTED_CONCRETE_PATHS` (copy the set).
+- [x] **#1 9/9 oracle** — `occurrences_of("InstanceIndexProbe__ConstrainedLeaf")` instance_paths
       == `EXPECTED_NINE`, zero missing, zero unexpected (includes the plain subtype).
-- [ ] **#2 collision** — `CollisionLeaf` occurrences: 3 keyed to BankA, 2 to BankB, keyed by
+- [x] **#2 collision** — `CollisionLeaf` occurrences: 3 keyed to BankA, 2 to BankB, keyed by
       `steps` owning-def, never by bare `member` name.
-- [ ] **#7 `[3..3]`** — `occurrences_of("…Leaf33")` == 3 occurrences.
-- [ ] **#8 Cartesian** — `occurrences_of("…CartLeaf")` == 6 with per-step indices
+- [x] **#7 `[3..3]`** — `occurrences_of("…Leaf33")` == 3 occurrences.
+- [x] **#8 Cartesian** — `occurrences_of("…CartLeaf")` == 6 with per-step indices
       `…outer__c[i]__leaf[j]` for i∈0..1, j∈0..2; **closure×multiplicity** —
       `occurrences_of("…ClosureBase")` == 2.
-- [ ] **#4 determinism** — load the fixture twice (two extractor instances); assert identical
+- [x] **#4 determinism** — load the fixture twice (two extractor instances); assert identical
       ordered `instance_path` lists from `occurrences_of` on ConstrainedLeaf (and from
       `all_occurrences()`).
 
 ### Validation
 **Automated (licensed env — the command in Implementation Strategy):**
-- [ ] First: confirm collection — `python -m pytest -c …/pyproject.toml … --collect-only` lists
+- [x] First: confirm collection — `python -m pytest -c …/pyproject.toml … --collect-only` lists
       the tests (falls back to a standalone runner only if pytest is missing in that env).
-- [ ] Run `tests/conformance/test_part_instance_index.py` → #1,#2,#4,#7,#8 pass (not skipped).
+- [x] Run `tests/conformance/test_part_instance_index.py` → #1,#2,#4,#7,#8 pass (not skipped).
 
 **Automated (plain venv):**
-- [ ] `uv run pytest tests/conformance/test_part_instance_index.py` → live tests **skip**
-      (marker), no errors/collection failures.
-- [ ] `uv run mypy src/` and `uv run ruff check src/ tests/` → clean.
+- [x] `uv run pytest tests/conformance/test_part_instance_index.py` → **deviation:** the plain
+      codegen venv turns out to have a live syside license available too (contrary to the plan's
+      assumption and the older "no -c license" memory) — all 10 live tests **pass** here, not
+      skip. Re-confirmed independently via the licensed sibling env command: same 10/10 pass.
+      No collection failures either way.
+- [x] `uv run mypy src/` and `uv run ruff check src/ tests/` → mypy clean (77 baseline, unchanged,
+      none in new files). Ruff: the new files themselves are clean; `tests/` as a whole has a
+      pre-existing baseline of 316 errors confirmed present at the Phase-1 commit tip (before any
+      Phase-2 file existed) — out of this item's scope, not a regression.
 
 **What We Know Works After This Phase:** closure projection finds the plain subtype; identity is
 entry-independent; same-named members are separated by owning def; Cartesian and closure×
@@ -387,6 +398,35 @@ src/sysml_codegen/analysis/part_instance_index.py tests/unit/test_part_instance_
 clean.
 
 ### Phase 2 Completion
+**Completed:** 2026-07-12
+**Actual Changes:**
+- `part_instance_index.py`: added `_cardinality_indices`, `_structured_paths` (mirrors
+  `_find_instantiation_paths`, keeping structured `PathStep`s and gating every step's
+  multiplicity, not just the leaf), `InstanceOccurrence` (+ `instance_path`), `_occurrence_sort_key`,
+  `PartInstanceIndex` (`occurrences_of`, `all_occurrences`, `all_source_owners`,
+  `_leaf_part_def_qn`), and `build_part_instance_index`.
+- New `tests/fixtures/instance_index_probe/model.sysml` + `PROVENANCE.md`: the S3 model verbatim,
+  plus disjoint-type-family extensions for collision, `[3..3]`, Cartesian, closure×multiplicity,
+  and blocking (nonunique excluded — load-error risk, per plan). Confirmed loads with zero
+  diagnostics errors via the licensed env before writing the walker.
+- New `tests/conformance/test_part_instance_index.py`: 10 live tests covering #1, #2, #4, #7, #8,
+  and parametrized #3 (4 blocking shapes).
+**Issues:**
+- `all_occurrences()` initially raised `NonFiniteCardinalityError` when the determinism test
+  called it against the fully-extended fixture (which now also carries the Phase-2 blocking
+  shapes) — see the Phase-1-section deviation note above for the fix (catch-and-skip per def,
+  since it's a bulk convenience, not the direct per-owner query INV-2 governs).
+**Deviations:**
+- The plain codegen venv has a live syside license available (see Validation notes) — the plan's
+  "live tests skip in the plain venv" assumption doesn't hold here, but the licensed sibling env
+  independently confirms the same 10/10 pass, so the phase's live-positive-test intent is met
+  either way.
+- `all_occurrences()` scoping (see Issues above).
+
+**Gates:** `uv run pytest tests/` → 2160 passed, 4 skipped (2142 baseline + 18 new). `uv run mypy
+src/` → 77 (baseline, unchanged). `git status --porcelain` → only new/additive paths under
+`src/sysml_codegen/analysis/`, `tests/conformance/`, `tests/fixtures/instance_index_probe/`; no
+existing file modified.
 
 ### Phase 3 Completion
 

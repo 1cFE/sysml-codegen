@@ -12,6 +12,16 @@ from typing import Any
 
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
+from sysml_codegen.core.qualified_names import build_element_qualified_name, sanitize_name
+from sysml_codegen.extraction.usage_extractor import (
+    _build_part_usage_index,
+    _supertype_closure,
+    most_specific,
+    owned_feature_typing_targets,
+    user_partdef_lookup,
+    user_partdef_types,
+)
+
 
 @dataclass(frozen=True)
 class PathStep:
@@ -108,3 +118,208 @@ def classify_cardinality(usage: Any, owning_def_qn: str, feature_name: str) -> F
     if lower == upper:
         return Fixed(count=upper)
     return NonFinite(reason=f"'{feature_name}' has a multiplicity range [{lower}..{upper}]")
+
+
+def _cardinality_indices(usage: Any, owning_def_qn: str, feature_name: str) -> list[int | None]:
+    """Return the occurrence indices a usage's own multiplicity fans into.
+
+    A singleton (``usage.multiplicity is None``) fans into a single step with index
+    ``None``. A gated ``Fixed(n)`` fans into ``n`` indexed copies. ``NonFinite``
+    raises — every multiplicity on a queried path is gated, not just the leaf
+    (design.md#potential-risks "intermediate-container multiplicity").
+    """
+    if usage.multiplicity is None:
+        return [None]
+    verdict = classify_cardinality(usage, owning_def_qn, feature_name)
+    if isinstance(verdict, NonFinite):
+        raise NonFiniteCardinalityError(owning_def_qn, feature_name, verdict.reason)
+    return list(range(verdict.count))
+
+
+def _structured_paths(
+    target_part_def_qn: str,
+    part_usage_index: dict[str, list[Any]],
+    _visited: set[str] | None = None,
+) -> list[tuple[tuple[PathStep, ...], Any]]:
+    """Structured sibling of ``_find_instantiation_paths`` (usage_extractor.py:313-369).
+
+    Mirrors its owning-type recursion but keeps each step's ``(owning_def_qn,
+    feature_name, occurrence_index)`` instead of flattening to a joined string, and
+    gates every step's multiplicity — not just the leaf — via
+    ``_cardinality_indices``. Keep this walker in sync with
+    ``_find_instantiation_paths`` by hand if that function's recursion shape
+    changes; it is not modified here (INV-1: the original stays untouched).
+
+    Returns ``(path, usage)`` pairs, where ``usage`` is the PartUsage that produced
+    the path at *this* invocation (i.e. typed as ``target_part_def_qn``) — callers
+    use it to compute the leaf's entry-independent ``part_def_qn`` (D5/C3).
+    """
+    if _visited is None:
+        _visited = set()
+    if target_part_def_qn in _visited:
+        return []
+    _visited = _visited | {target_part_def_qn}
+
+    usages = part_usage_index.get(target_part_def_qn, [])
+    if not usages:
+        return []
+
+    seen: set[tuple[PathStep, ...]] = set()
+    result: list[tuple[tuple[PathStep, ...], Any]] = []
+
+    for usage in usages:
+        usage_name = sanitize_name(getattr(usage, "name", ""))
+        owning_type = getattr(usage, "owning_type", None)
+        if owning_type is not None and SysideAdapter.is_instance(owning_type, "PartDefinition"):
+            # Recursive step: usage is a feature of a PartDefinition. Recurse to
+            # find every live instance of that owning def, then fan this usage's
+            # own multiplicity onto each — the Cartesian product down the path.
+            parent_def_qn = build_element_qualified_name(owning_type)
+            parent_paths = _structured_paths(parent_def_qn, part_usage_index, _visited)
+            for parent_path, _parent_usage in parent_paths:
+                for index in _cardinality_indices(usage, parent_def_qn, usage_name):
+                    path = parent_path + (PathStep(parent_def_qn, usage_name, index),)
+                    if path not in seen:
+                        seen.add(path)
+                        result.append((path, usage))
+        else:
+            # Terminal step: owned by a Package or a PartUsage, not a PartDefinition.
+            base = build_element_qualified_name(getattr(usage, "owner", None))
+            for index in _cardinality_indices(usage, base, usage_name):
+                path = (PathStep(base, usage_name, index),)
+                if path not in seen:
+                    seen.add(path)
+                    result.append((path, usage))
+
+    return result
+
+
+@dataclass(frozen=True)
+class InstanceOccurrence:
+    """One concrete part occurrence: a structured path plus its own type.
+
+    ``part_def_qn`` is the usage's own most-specific user type (D5) — computed
+    once from the usage itself, never from the closure-entry type the walk
+    arrived through, so a double-keyed retyped usage collapses to one record
+    with the correct (sub)type (C3).
+    """
+
+    part_def_qn: str
+    steps: tuple[PathStep, ...]
+
+    @property
+    def instance_path(self) -> str:
+        """Human-readable path, e.g. ``InstanceIndexProbe__root__bank__member[0]``."""
+        rendered = self.steps[0].owning_def_qn
+        for step in self.steps:
+            rendered += f"__{step.feature_name}"
+            if step.occurrence_index is not None:
+                rendered += f"[{step.occurrence_index}]"
+        return rendered
+
+
+def _occurrence_sort_key(
+    occurrence: InstanceOccurrence,
+) -> tuple[tuple[str, ...], tuple[int, ...]]:
+    """Deterministic order (D6): integer indices, never rendered-string order.
+
+    Singleton steps normalize to ``-1`` so a future key change cannot reintroduce
+    a ``None < int`` comparison hazard; comparing ``indices`` only matters when
+    ``segment_names`` already match, so aligned positions are guaranteed.
+    """
+    segment_names = tuple(step.feature_name for step in occurrence.steps)
+    indices = tuple(
+        step.occurrence_index if step.occurrence_index is not None else -1
+        for step in occurrence.steps
+    )
+    return segment_names, indices
+
+
+class PartInstanceIndex:
+    """Query object over the live model's concrete part occurrences.
+
+    Constructed once per model via :func:`build_part_instance_index`; closes over
+    the part-usage index and user-PartDef lookup so ``occurrences_of`` never
+    rescans the model.
+    """
+
+    def __init__(self, part_usage_index: dict[str, list[Any]], qn_to_partdef: dict[str, Any]):
+        self._part_usage_index = part_usage_index
+        self._qn_to_partdef = qn_to_partdef
+        self._user_qn_set = set(qn_to_partdef)
+
+    def _leaf_part_def_qn(self, usage: Any) -> str:
+        """The usage's own most-specific user type, entry-independent (D5/C3)."""
+        key_qns = set(user_partdef_types(usage, self._user_qn_set))
+        for target in owned_feature_typing_targets(usage):
+            target_qn = build_element_qualified_name(target)
+            if target_qn in self._user_qn_set:
+                key_qns.add(target_qn)
+        winner, _incomparable = most_specific(sorted(key_qns), self._qn_to_partdef)
+        assert winner is not None  # the usage was found keyed under a user PartDef QN
+        return winner
+
+    def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]:
+        """All concrete occurrences of ``part_def_qn``, over its subtype closure.
+
+        Multiplicity-expanded, deduped, and deterministically ordered (D6/D7).
+        Raises :class:`NonFiniteCardinalityError` if a non-finite multiplicity lies
+        on the path to any occurrence (INV-2: no silent drop).
+        """
+        applicable = sorted(
+            {part_def_qn}
+            | {
+                candidate_qn
+                for candidate_qn in self._qn_to_partdef
+                if part_def_qn in _supertype_closure(candidate_qn, self._qn_to_partdef)
+            }
+        )
+        occurrences: set[InstanceOccurrence] = set()
+        for applicable_type in applicable:
+            for path, usage in _structured_paths(applicable_type, self._part_usage_index):
+                occurrences.add(InstanceOccurrence(self._leaf_part_def_qn(usage), path))
+        return sorted(occurrences, key=_occurrence_sort_key)
+
+    def all_occurrences(self) -> list[InstanceOccurrence]:
+        """Every *enumerable* concrete occurrence in the model, deduped and ordered.
+
+        A thin union of :meth:`occurrences_of` over every user PartDef — for
+        full-dump diagnostics and the determinism test, not a distinct algorithm.
+        This is a bulk best-effort dump, not a per-owner query: a PartDef whose own
+        occurrences hit a non-finite multiplicity is skipped here rather than
+        aborting the whole dump. INV-2's no-silent-drop guarantee is about a
+        *direct* :meth:`occurrences_of` call on the affected owner, which still
+        raises loud; skipping it here only omits it from this bulk convenience.
+        """
+        combined: set[InstanceOccurrence] = set()
+        for part_def_qn in sorted(self._qn_to_partdef):
+            try:
+                combined.update(self.occurrences_of(part_def_qn))
+            except NonFiniteCardinalityError:
+                continue
+        return sorted(combined, key=_occurrence_sort_key)
+
+    def all_source_owners(self) -> list[str]:
+        """Every owning part-definition QN appearing in any occurrence's path."""
+        return sorted(
+            {
+                step.owning_def_qn
+                for occurrence in self.all_occurrences()
+                for step in occurrence.steps
+            }
+        )
+
+
+def build_part_instance_index(model: Any) -> PartInstanceIndex:
+    """Build a :class:`PartInstanceIndex` over a live SysIDE model.
+
+    Builds the part-usage index and user-PartDef lookup once; the returned query
+    object closes over them. Read-only over ``usage_extractor``'s helpers — does
+    not import ``MultiplicityData``, ``pipeline_builder``, or any generation code
+    (design.md Boundaries), and nothing existing imports this module in this item
+    (INV-1).
+    """
+    return PartInstanceIndex(
+        part_usage_index=_build_part_usage_index(model),
+        qn_to_partdef=user_partdef_lookup(model),
+    )
