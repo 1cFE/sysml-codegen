@@ -607,15 +607,21 @@ def _pascal(s: str) -> str:
 
 
 def _constraint_module_type(c: ConcreteConstraint) -> str:
-    """A deterministic placeholder ``module_type`` (S4 convention).
+    """Deterministic ``module_type`` (D9: "adopt Item 5's placeholder scheme as production").
 
     Item 5 sets the CONSTRAINT node's ``name`` (= ``constraint_id``) and
     ``evaluation_channel``; generated-class identity is Item 7's decision
-    (design.md Implementation Notes, Appendix A). This derivation is a
-    structurally-valid placeholder — ``PipelineModule.module_type`` is a
-    required field — not a claim on Item 7's class-identity design.
+    (design.md Implementation Notes, Appendix A).
+
+    ``owner_instance_path`` carries ``[i]`` occurrence brackets for a part_def owner with
+    multiple occurrences (e.g. ``cell[0]``) — stripped/renamed to ``_i`` before Pascal-casing
+    so every occurrence still gets a *distinct* class name (``Cell0ConstraintModule``,
+    ``Cell1ConstraintModule``, ...) that is also a valid Python identifier (execution-lane
+    finding: a bracket character reaching an import statement is a ``SyntaxError``, not a
+    generation-time failure — caught only by actually executing the generated package).
     """
     inst_local = "__".join(c.owner_instance_path.split("__")[1:]) or c.owner_instance_path
+    inst_local = inst_local.replace("[", "_").replace("]", "")
     base = _pascal(f"{inst_local}_{c.source_local_identity}")
     namespace = c.owner_instance_path.split("__")[0].lower()
     return f"{namespace}.{base}ConstraintModule"
@@ -724,7 +730,11 @@ def extend_graph_with_constraints(
             elif inp.resolution == ConstraintInputResolution.DESIGN_ATTRIBUTE:
                 qn = inp.design_attribute_qn
                 assert qn is not None  # invariant of DESIGN_ATTRIBUTE resolution
-                gname = mint(qn, EntryPointType.DESIGN_ATTRIBUTE, None)
+                gname = mint(
+                    qn,
+                    EntryPointType.DESIGN_ATTRIBUTE,
+                    group_deriver.design_attribute_default_value(qn),
+                )
                 source = InputSource(
                     source_type="entry_point", param_group=gname, qualified_name=qn
                 )
@@ -763,9 +773,17 @@ def extend_graph_with_constraints(
     # `pipeline_builder.py`), even with zero eligible constraints — a model that asserts
     # nothing still produces the `not_assessed` report surface. `agg_inputs` stays sourced
     # from `eligible` (empty list here is fine — zero-required-field aggregator input).
+    # `param_name` is sanitized (not the raw `constraint_id`): it becomes both a YAML
+    # wiring key and the aggregator's exact-schema Pydantic field name (Item 7 D5), which
+    # must be a valid Python identifier — `constraint_id` embeds `owner_instance_path`,
+    # which carries `[i]` occurrence brackets for a multi-occurrence part_def owner
+    # (execution-lane finding: an aggregator field like `cell[0]__nonneg__<sha>` is a
+    # `SyntaxError` in the generated class body). `evaluation_channel` (the wiring target)
+    # and `ConstraintEvaluation.constraint_id` (the runtime evidence string) are untouched —
+    # only this Python-identifier site changes.
     agg_inputs = [
         ModuleInput(
-            param_name=c.constraint_id,
+            param_name=sanitize_name(c.constraint_id),
             python_type="ConstraintEvaluation",
             source=InputSource(
                 source_type="module_output", producer_channel=c.evaluation_channel

@@ -211,8 +211,14 @@ def render_report_aggregator(
     template_env: jinja2.Environment,
     package_name: str = "generated_code",
 ) -> str:
-    """Render the exact-schema report aggregator (D5, D11)."""
-    constraint_ids = [e.constraint_id for e in catalog.concrete_entries]
+    """Render the exact-schema report aggregator (D5, D11).
+
+    Field names come from ``module.inputs`` (already-sanitized ``param_name``s, the same
+    identifiers the pipeline YAML wires evaluations to), not ``catalog.concrete_entries``'
+    raw ``constraint_id``s directly — see the sanitization note in
+    ``extend_graph_with_constraints``'s aggregator-input construction (Item 5/7 boundary).
+    """
+    constraint_ids = [inp.param_name for inp in module.inputs]
     class_name = module.module_type.split(".")[-1]
     context = {
         "package_name": package_name,

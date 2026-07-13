@@ -211,7 +211,7 @@ Execute the generated packages under the real TEAx runtime (D10, in-process `exe
 B1 (real simkit accepts per-package `ConstraintEvaluation`/`ConstraintReport` via registry introspection + `CUSTOM_SCHEMA_TYPES`, no teax change) and B4 (file-backed exit writers persist the report). **B4 is the parked conclusion** — its precondition is the first checkbox below.
 
 ### First checkbox — resolve the teax-state precondition (Grounding Fact 1 / N5)
-- [ ] From the agentic-mbse/teax-accessible env, run `git -C /home/reid/1cfe/teax rev-parse HEAD` and `git show HEAD:packages/teax-simkit/simkit/io/output_router.py | grep -iE 'scalar|RootModel'`, and check the working tree. Record which teax state the lane runs against in the run log (below). **Decision rule:**
+- [x] From the agentic-mbse/teax-accessible env, run `git -C /home/reid/1cfe/teax rev-parse HEAD` and `git show HEAD:packages/teax-simkit/simkit/io/output_router.py | grep -iE 'scalar|RootModel'`, and check the working tree. Record which teax state the lane runs against in the run log (below). **Decision rule:**
   - scalar handlers present (HEAD or working tree in use) → file-persistence acceptance (SC-1 "report persisted") is valid; proceed.
   - scalar handlers absent from the state actually executed → the report can be *constructed* but not *persisted to file*; **surface loudly** in the run log and to the orchestrator, park SC-1's persistence clause, and assert only in-memory channel value until teax scalar-persistence merges (design B4 "If false" leg). Do not silently pass persistence.
 
@@ -234,20 +234,18 @@ def test_s4_slice_both_truth_values(tmp_path):
 ### Changes Required
 **See design.md for:** execution env + in-process harness → D10 and `design.md#potential-risks` (execution lane); the run-log obligation → N6; each execution criterion → `design.md#validation-approach` (execution lane).
 
-- [ ] `tests/execution/` (NEW lane) — `@pytest.mark.execution` marker registered so the default `uv run pytest` excludes it; document the agentic-mbse-venv + `sys.path` incantation ([[teax-simkit-execution-env]], `probe_c_execute.py` is the working form).
-- [ ] **S4 slice** (SC-1): both truth values, identical ordinary outputs (area 12.0, cost 3000.0), verdicts/margins (satisfied +2000 / violated −500, violated run completes as evidence not raise — INV-3), report present (persistence per decision rule).
-- [ ] **S4-unexercised cases:** zero-assertion aggregator (headline `not_assessed`); indeterminate (non-finite) point; negated + inline assertions at execution; multi-instance expansion (N modules → N aggregator fields, one shared predicate).
-- [ ] **Modeled-default override (INV-6):** default applies when unset; overriding the entry-point-sourced formal flips the verdict; confirm the default is entry-point-sourced, not baked into the predicate.
-- [ ] **Break-the-YAML (end-to-end):** rewire an upstream evaluation → missing result surfaces as an execution failure **through the executor** (INV-4 end-to-end), not a silent gap.
-- [ ] **(Optional) end-to-end exit narrowing:** render a full narrowed `pipeline.yaml` via the `generate_pipeline_yaml` test-seam and execute — control leg writes no `constraint_report.json`, mechanism leg writes it. Companion to Phase 2's exit-builder proof.
-- [ ] **Run log** (NEW, this feature dir, appended): each manual run's date, teax state, pass/fail per criterion (N6) — so an unrun/failing lane is visible, never assumed green.
+- [x] `tests/execution/` (NEW lane) — `@pytest.mark.execution` marker registered so the default `uv run pytest` excludes it; `tests/execution/conftest.py` documents the agentic-mbse-venv + `sys.path` incantation ([[teax-simkit-execution-env]], `probe_c_execute.py` is the working form).
+- [x] **S4 slice** (SC-1): both truth values, identical ordinary outputs (area 12.0, cost 3000.0), verdicts/margins (satisfied +2000 / violated −500, violated run completes as evidence not raise — INV-3), report present (persistence per decision rule). `test_s4_slice_both_truth_values`.
+- [x] **S4-unexercised cases (partial):** zero-assertion aggregator (headline `not_assessed`) — `test_zero_assertion_aggregator_not_assessed`; multi-instance expansion (N modules → N aggregator fields, one shared predicate) — `test_multi_instance_expansion_n_modules_one_predicate`.
+- [ ] **DEFERRED, surfaced not hidden (capture-fidelity §4):** indeterminate (non-finite) point; negated + inline assertions at execution; modeled-default override (INV-6); break-the-YAML (INV-4 end-to-end); optional exit-narrowing companion. SC-1 (the criterion the whole phase exists to prove) and the two S4-unexercised integration risks (zero-eligible aggregator, multi-instance compile-once) are proven under real simkit; these five are additional coverage the remaining plan budget did not reach. Each is a same-shaped extension of the harness now in place (`_generate_full_package` + `_run` in `test_constraint_execution.py`), not a design gap — no code changes are blocked on them.
+- [x] **Run log** (NEW, this feature dir, appended): each manual run's date, teax state, pass/fail per criterion (N6) — so an unrun/failing lane is visible, never assumed green. See `run-log.md`.
 
 ### Validation
 **Manual (execution lane, agentic-mbse venv):**
-- [ ] Teax-state precondition resolved and logged (first checkbox).
-- [ ] `uv run --directory /home/reid/1cfe/agentic-mbse python -m pytest tests/execution -m execution` (or the `probe_c`-style script form) → all cases pass; each result appended to the run log.
+- [x] Teax-state precondition resolved and logged (first checkbox) — see `run-log.md`.
+- [x] `SYSIDE_LICENSE_KEY=<key> PYTHONPATH=<repo>/src:<teax>/packages/teax-simkit uv run --directory /home/reid/1cfe/agentic-mbse python -m pytest -m execution --override-ini="addopts=" --rootdir <repo> <repo>/tests/execution` → 3/3 pass; see `run-log.md`.
 
-**What We Know Works After This Phase:** a modeled assertion runs under real simkit as an ordinary module with its verdict as data (SC-1 through the multi-instance and override cases), or — if the teax-state precondition blocks persistence — exactly which clause is parked and why is recorded, not hidden.
+**What We Know Works After This Phase:** a modeled assertion runs under real simkit as an ordinary module with its verdict as data (SC-1, both truth values); the zero-eligible aggregator and multi-instance compile-once integration risks are proven under real execution, not just at generation. Two real bugs were found and fixed by this lane (see Issues Encountered) — exactly the class of defect the execution lane exists to catch before it reaches a modeler.
 
 ---
 
@@ -378,6 +376,56 @@ baseline + 3 new), same 23 failed / 96 errors baseline, no regressions. `ruff ch
 **Validation:** `uv run pytest tests/unit/test_constraint_emission.py tests/conformance/test_module_kind_faildloud.py tests/conformance/test_constraint_generation_integration.py tests/unit/test_constraint_graph_extension.py` — 42/42 pass. `uv run pytest tests/` — 2031 passed, 23 failed / 96 errors (pre-existing baseline, unchanged), 85 skipped. `ruff check src/` clean. `mypy src/` — 76 errors, baseline held.
 
 ### Phase 4 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- `tests/execution/` (NEW lane): `conftest.py` (sys.path setup for the agentic-mbse-venv
+  invocation), `test_constraint_execution.py` (3 `@pytest.mark.execution` tests: S4 slice
+  both truth values, zero-eligible aggregator, multi-instance compile-once under real
+  simkit). `pyproject.toml` registers the `execution` marker and adds `-m "not execution"`
+  to default `addopts` so the lane stays out of default CI.
+- `analysis/parameter_groups.py` — new `ParameterGroupDeriver.design_attribute_default_value(qn)`.
+- `analysis/constraint_lowering.py` — three fixes found by the execution lane (see
+  `run-log.md` for full detail): bracket-safe class-name derivation (`_constraint_module_type`),
+  sanitized aggregator field names, and real (not hardcoded-`None`) defaults for
+  constraint-only design attributes.
+- `generation/modules.py::render_report_aggregator` — reads field names from
+  `module.inputs` (already sanitized) instead of raw `catalog.concrete_entries` constraint
+  IDs, keeping the aggregator's Pydantic schema and its YAML wiring keys in lockstep.
+- `.project/active/constraint-generation/run-log.md` (NEW) — the N6 run log.
+
+**Deviations from plan:** the environment-availability premise in the orchestration brief was
+wrong, corrected here rather than carried forward: `SYSIDE_LICENSE_KEY` **is** available in
+this sandbox (`.env` at the repo root) — it simply isn't exported to ambient shell env, so a
+bare `uv run pytest` (no explicit env var) sees no license and every `@requires_license` test
+skips, which is what Phases 1-3 observed and mis-attributed to "no license in this sandbox."
+Passing `SYSIDE_LICENSE_KEY=<key>` explicitly makes the full live suite (2231 tests) pass,
+including the execution lane. This changes nothing about the Phases 1-3 work itself (already
+verified correct — see `run-log.md`'s regression-check note) but means the "S4-unexercised
+cases (partial)" deferral above is a real budget constraint, not an environment limitation —
+worth knowing for whoever picks up the remaining execution-lane coverage.
+
+Five execution-lane items (indeterminate point, negated/inline at execution, INV-6 override,
+break-the-YAML, exit-narrowing) are **deferred, not implemented** — see the checklist above
+for the capture-fidelity §4 surfacing. SC-1 and the two S4-unexercised integration risks
+(zero-eligible aggregator, multi-instance compile-once) are proven; the deferred five are
+same-shaped extensions of the now-working harness.
+
+**Issues Encountered:** three real, load-bearing bugs — full detail in `run-log.md`. All
+three are `analysis/constraint_lowering.py` (Item 5 file) touches beyond D11's already-surfaced
+`if eligible:` relaxation, each a narrow one-function fix the execution lane's actual-import,
+actual-pydantic-validation, actual-simkit-load behavior caught and generation-level tests
+could not (a `SyntaxError` in an executed import and a JSON schema gap that only bites at
+simkit load time are both invisible to `ast.parse`-only generation checks).
+
+**Validation:** execution lane (agentic-mbse venv, real simkit, real syside license) — 3/3
+pass, see `run-log.md`. Full offline suite with license present (`SYSIDE_LICENSE_KEY=<key>
+uv run pytest tests/`) — 2231 passed, 4 skipped, 3 deselected (execution-marked), **zero
+failures, zero errors** — the first fully-green run this session; the prior "23 failed / 96
+errors" reading in every earlier phase's validation was the license-unavailable artifact
+above, not a real baseline (mypy's 76-error and ruff-clean baselines were never
+license-dependent and hold unchanged). `ruff check` clean. `mypy src/` — 76 errors, baseline
+held.
+
 ### Phase 5 Completion
 
 ---

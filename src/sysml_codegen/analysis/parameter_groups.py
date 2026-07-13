@@ -501,6 +501,27 @@ class ParameterGroupDeriver:
 
         return None
 
+    def design_attribute_default_value(self, qualified_name: str) -> float | None:
+        """The design attribute's own literal default, if it has one and it's numeric.
+
+        Mirrors the `DesignAttributeData.default_value` -> `float` conversion already used
+        for calc-referenced DESIGN_ATTRIBUTE entry points (`graph_builder.py`); a
+        constraint-only design attribute (referenced by an assert's actual but no calc)
+        needs the same real default, not a hardcoded `None` (Item 7 / D6 fix, surfaced —
+        `extend_graph_with_constraints` minted every DESIGN_ATTRIBUTE entry point with
+        `default_value=None` regardless of the attribute's actual literal).
+        """
+        entry = self._attr_index.get(qualified_name)
+        if entry is None:
+            return None
+        _file_path, attr = entry
+        if attr.default_value is None:
+            return None
+        try:
+            return float(attr.default_value)
+        except (TypeError, ValueError):
+            return None
+
     def derive_groups(self) -> list[DerivedParameterGroup]:
         """Derive all parameter groups from model data."""
         design_groups = self._derive_from_design_attributes()
