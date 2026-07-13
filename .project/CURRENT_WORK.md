@@ -6,6 +6,19 @@
 
 ## Active Work
 
+### CONSTRAINT-EXEC Item 5 — Concrete Constraint Lowering — SPEC IN PROGRESS (2026-07-12)
+
+Epic: `.project/backlog/epic_constraint_execution.md` (Item 5). Spec:
+`.project/active/constraint-lowering/spec.md`. New pipeline phase (after aliases/registry/
+supplied-value materialization, before backtracking): expand assertions per concrete instance
+(Item 4 index for part-def-owned, calc-usage discovery for calc-def-owned, once for
+direct-usage-owned), strictly resolve actuals through one shared resolver seam with an explicit
+strict mode (unresolved = generation error, never synthesis — heeds the F4 EP-key-collapse
+lesson), join constraint input channels as backtracking roots before pruning, and mint
+deterministic `constraint_id`s. Produces the extended ComputationGraph structure +
+`ConcreteConstraint` data; module/compiler/aggregator emission is Item 7. Depends on Items 1, 2,
+4 (all landed on the epic branch).
+
 ### CONSTRAINT-EXEC Item 4 — Part-Instance Index (Subtype Closure + Cardinality Expansion) — audited CERTIFY-WITH-NOTES (2026-07-12)
 
 **Audit:** `.project/active/part-instance-index/audit.md`. Core deliverable solid: `occurrences_of`
