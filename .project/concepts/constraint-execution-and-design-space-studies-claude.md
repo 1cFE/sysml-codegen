@@ -318,6 +318,20 @@ Six spikes (S1–S6) plus a deferred seventh (S7). Each names the assumption it 
 
 *[AGENT] S6 review carry-forwards (2026-07-12, verified: probe re-run three times — 58/58 checks green, identical case order and count, only the temp workroot differing; direct crash child exits 137):* (1) the deferral prerequisite is **already satisfied** — teax `main`'s tip is `7560d65`, the merged scalar-persistence work S5 closed with, so the S6 findings' citation of unmerged `77bb6d0` is stale and the S4-package repeat is unblocked, pending only scheduling; (2) candidate identity is positional (`c{index:04d}` from the proposal sequence), so resume idempotency *presupposes* a deterministic proposal order — guaranteed for prepared/grid strategies, and exactly the replay property S7 must establish before adaptive ones; spec must state the minting rule and why it is positional (content-based IDs would collapse deliberate replicates); (3) the crash-safety proof binds to the store's journal settings (`WAL`, `synchronous=FULL`) and to the invariant that a final-path artifact is always complete (staging dedup trusts `exists()`) — both belong in the store contract as required behavior, not implementation detail.
 
+*[AGENT] S6 S4-package repeat — done, 2026-07-12 (epic Item 0):* the deferred repeat now
+ran. S6's machinery drove S4's real sealed package through an S5-shaped prepared-pipeline
+evaluator with zero runner/store changes — all three verdict classes committed as
+`completed` cases with real evidence (indeterminate reachable only via a NaN budget through
+the typed in-memory entry into the generated Kleene predicate), invalid proposal stayed a
+`ProposalRecord`, crash-before-commit + resume reproduced the uninterrupted run, and
+prepare-once measured ~64× over rebuild on the real package. Eight evaluator-interface
+mismatches surfaced, all schema/naming/wiring (typed-entry is channel→model→field not a flat
+parameter-ID map; proposal-validity vs non-finite-input are different axes; runner needs an
+injected validation seam; evaluator protocol drops `attempt_number`; headline
+underscore/hyphen vocabulary; non-finite evidence JSON encoding; no-persist still needs write
+handlers; package-load names by declared package name) — none architectural, distributed to
+Items 9–11. See `../../../teax/.project/active/constraint-study-integration-spike/findings.md`.
+
 ### S7 — Adaptive-resume (`teax`, deferred; gates adaptive strategies)
 
 **Intent:** settle general feedback transaction order — the part S6 cannot falsify.
