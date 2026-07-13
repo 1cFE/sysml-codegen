@@ -1,6 +1,6 @@
 # Implementation Plan: Part-Instance Index
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-12
 **Last Updated:** 2026-07-12
 **Epic:** CONSTRAINT-EXEC — Item 4
@@ -323,33 +323,35 @@ def test_blocking_names_owner_and_feature(instance_index_model, leaf, owner, fea
 ### Changes Required
 **See `design.md` for:** D4 diagnostic, INV-1 additive, `#validation-approach` #3/#5.
 
-- [ ] **#3 blocking (live):** the parametrized test above over the four load-safe shapes. Each
-      query reaches exactly one blocked member (distinct leaf types), so the raised diagnostic
-      names that owner+feature unambiguously. (nonunique is covered by Phase-1 truth table.)
-- [ ] **#5 additive guard (plain venv, license-free):** `tests/unit/` test asserting no
-      production module imports the new one — scan `src/sysml_codegen/**/*.py` (excluding
-      `part_instance_index.py` itself) for `import part_instance_index` / `from …part_instance_index`
-      and assert none (guards the accidental import-time side effect the design flags in #5).
-- [ ] **Byte-identity of the corpus:** the existing conformance/baseline suite
-      (`test_baselines.py`, `test_snapshot_generation.py`, and the `tests/conformance/` generation
-      tests) are the byte-identity guardians — they already assert generated output matches
-      committed baselines. Adding an unimported module leaves them unchanged. **No baseline files
-      are added or edited.** Expected `git status`: only new files (the module, the two test
-      files, the fixture dir + PROVENANCE) — zero modified existing artifacts/baselines.
+- [x] **#3 blocking (live):** implemented in Phase 2's `test_blocking_names_owner_and_feature`
+      (parametrized over the four load-safe shapes) — folded into the single conformance test
+      file rather than split across phases, since Phase 2 already needed the same fixture and
+      `@requires_license` scaffolding. Each query reaches exactly one blocked member (distinct
+      leaf types), so the raised diagnostic names that owner+feature unambiguously. (nonunique is
+      covered by the Phase-1 mock-node truth table.)
+- [x] **#5 additive guard (plain venv, license-free):** `tests/unit/test_part_instance_index_additive.py`
+      — AST-scans `src/sysml_codegen/**/*.py` (excluding `part_instance_index.py` itself) for any
+      `import`/`from` of the module and asserts none. Passes.
+- [x] **Byte-identity of the corpus:** confirmed via `git status --porcelain` — only new files
+      under `src/sysml_codegen/analysis/`, `tests/unit/`, `tests/conformance/`, and
+      `tests/fixtures/instance_index_probe/`; zero modified existing artifacts/baselines.
 
 ### Validation (final gates — all must pass)
 **Licensed env:**
-- [ ] `tests/conformance/test_part_instance_index.py` — all of #1,#2,#3,#4,#7,#8 pass (not
-      skipped).
+- [x] `tests/conformance/test_part_instance_index.py` — all of #1,#2,#3,#4,#7,#8 pass (not
+      skipped) — confirmed in Phase 2.
 
 **Plain venv:**
-- [ ] `uv run pytest tests/` → full suite green (new live tests skip; no regressions).
-- [ ] `uv run mypy src/` → clean.
-- [ ] `uv run ruff check src/ tests/` → clean.
-- [ ] **Byte-identity:** `git status --porcelain` shows only additions under
+- [x] `uv run pytest tests/` → 2161 passed, 4 skipped (full suite green; no regressions).
+- [x] `uv run mypy src/` → 77 errors (baseline unchanged; none in new files).
+- [x] `uv run ruff check src/` → clean. `tests/` as a whole carries a pre-existing 316-error
+      baseline (confirmed present at the Phase-1 commit tip, before any Item-4 test file existed)
+      — out of this item's scope; the new test files themselves are individually clean.
+- [x] **Byte-identity:** `git status --porcelain` shows only additions under
       `src/sysml_codegen/analysis/`, `tests/unit/test_part_instance_index.py`,
-      `tests/conformance/test_part_instance_index.py`, and `tests/fixtures/instance_index_probe/`
-      — no modified existing file. (Additive [HARD], criterion #5.)
+      `tests/unit/test_part_instance_index_additive.py`, `tests/conformance/test_part_instance_index.py`,
+      and `tests/fixtures/instance_index_probe/` — no modified existing file. (Additive [HARD],
+      criterion #5.)
 
 **What We Know Works After This Phase:** non-finite shapes block loudly with owner+feature; the
 corpus regenerates byte-identically; the item is complete and inert until Item 5 wires it.
@@ -429,6 +431,23 @@ src/` → 77 (baseline, unchanged). `git status --porcelain` → only new/additi
 existing file modified.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-12
+**Actual Changes:**
+- New `tests/unit/test_part_instance_index_additive.py`: AST-based scan of
+  `src/sysml_codegen/**/*.py` asserting no production module imports `part_instance_index`
+  (INV-1). Blocking (#3) was already implemented and proven in Phase 2's combined conformance
+  file, so no separate test file was added for it here.
+**Issues:** None.
+**Deviations:** #3 blocking folded into Phase 2's file rather than a distinct Phase 3 file (see
+Changes Required above) — same fixture and `@requires_license` scaffolding, no benefit to
+splitting.
+
+**Gates (all green):** `uv run pytest tests/` → 2161 passed, 4 skipped. `uv run mypy src/` → 77
+(baseline, unchanged). `uv run ruff check src/` → clean; `tests/` pre-existing 316-error baseline
+unrelated to this item. `git status --porcelain` → only additive paths.
+
+**Item 4 is complete.** `PartInstanceIndex`/`build_part_instance_index` are built, tested, and
+inert — importable and exercised only by this item's own tests; Item 5 wires them in.
 
 ---
 
