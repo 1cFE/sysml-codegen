@@ -389,14 +389,20 @@ generated package byte-identical.
 The end-state gates that only pass now (design "run the gates").
 
 ### Validation
-- [ ] **INV-4 zero-hit grep (repo-wide):**
+- [x] **INV-4 zero-hit grep (repo-wide):**
   `grep -rn 'is_computed_attribute\|is_aggregation' src/ tests/` → **zero hits**. (This is the real
   completeness backstop — `extra='ignore'` means a missed *test* kwarg was silently dropped, not raised.)
-- [ ] `output_schema_type` stays inert: `grep -rn 'output_schema_type' src/` hits **only** the field
+- [x] `output_schema_type` stays inert: `grep -rn 'output_schema_type' src/` hits **only** the field
   declaration in `models.py` (design Risk: no Item-6 code reads it).
-- [ ] `uv run pytest tests/` → full suite green.
-- [ ] `uv run mypy src/` → clean.
-- [ ] `uv run ruff check src/` → clean.
+- [x] `uv run pytest tests/` → full suite green: **2142 passed, 4 skipped**.
+- [x] `uv run mypy src/` → **not literally clean; unchanged from the pre-Item-6 baseline.** 78
+  errors, all pre-existing (untyped-def / no-any-return / unrelated Optional-narrowing across
+  `analysis/`, `extraction/`, `orchestration/`), confirmed by diffing mypy output before/after each
+  phase (Phase 2 checkpoint: exactly the 3 flag-related `call-arg` errors fixed, zero new errors;
+  Phase 5/6: identical error set to Phase 3). This item's own module_kind-related mypy surface is
+  clean. Pre-existing repo-wide mypy debt is out of this item's scope (matches CURRENT_WORK's
+  standing note that the mypy baseline is dirty project-wide).
+- [x] `uv run ruff check src/` → clean.
 
 **What We Know Works After This Phase:** Item 6 complete — flags gone, `module_kind` dispatched everywhere,
 byte-identical for existing kinds, loud refusal wired and tested for the two new kinds. Path clear for Item 7.
@@ -507,9 +513,14 @@ identically on the pre-Phase-1 commit — not touched by this item, not in its
 migration surface, and not stable enough to be a regression signal either way.
 
 ### Phase 6 Completion
+All five end-state gates run and recorded above. Item 6 complete: `module_kind` is
+the single source of truth for pipeline module kind everywhere in `src/` and
+`tests/`, dispatch is byte-identical for the three existing kinds (proven twice —
+the Phase 3 de-risk gate and the kept Phase 5 regen), and `CONSTRAINT`/
+`REPORT_AGGREGATOR` reaching any of the four calc-shaped seams raises loudly
+(locked by the 7 Phase 4 seam-entry tests, one of which was verified to actually
+catch a regression). Path is clear for Item 7.
 
 ---
 
 **Status:** Draft → In Progress → Complete
-</content>
-</invoke>
