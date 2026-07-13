@@ -175,17 +175,20 @@ def test_requirement_def_owner_cataloged_unassessed():   # offline hand-built fa
 
 **See design.md for:** `#core-concept` (two orthogonal axes), `#key-decisions` (D5, D5-IR, D6, D7), `#the-resolver-seam-p1-heart` (predicate selection, blocked-owner surfacing), `#key-bets` (B2), `#required-invariants` (INV-1, INV-3), `#appendix-b` (fixtures).
 
-- [ ] **`analysis/constraint_lowering.py`** — `lower_constraints(...)`: (1) expand on `owner.owning_definition.kind` — `part_def`→`occ_index.occurrences_of(owner_qn)` (per-owner call raises `NonFiniteCardinalityError`; catch → named generation error with owner+feature), `calc_def`→existing calc-usage discovery, `package`→once, `requirement_def`/other→`unassessed`; (2) select predicate via `source.effective_predicate_source` (`inline`→`usage.predicate`, `definition_typed`→`ConstraintDefinitionFact.predicate`), serialize the *effective* IR (D5-IR); (3) resolve each formal via Phase 2 `resolve_actual`; (4) mint id, set `evaluation_channel`; (5) sort catalog by `constraint_id` (INV-4); (6) `_assert_unique_ids`.
-- [ ] **Fixtures (NEW)** — `tests/fixtures/constraint_multi_instance/` (per design Appendix B + `probe_b1_channels.py` skeleton: `Cell{power_calc{out p}}`; `Container{part cell:Cell[3]; assert constraint <bound>(cell.power_calc.p)}`; **package-level design instance** `part def Design{part c:Container;}`), `tests/fixtures/constraint_inline/` (assert owning predicate inline; single instance), `tests/fixtures/constraint_blocked_owner/` (MF2: constraint-owning def reached through non-finite multiplicity `[*]`/parameterized/ranged; keep blocked leaf a disjoint type per design model-shape note). Each with a `PROVENANCE.md`.
-- [ ] **`tests/conformance/test_constraint_lowering.py`** (NEW) — stencil above; add offline `requirement_def`-unassessed + `package`-owned single-expand cases with hand-built facts.
+- [x] **`analysis/constraint_lowering.py`** — `lower_constraints(facts, *, occ_index, registry, design_attrs, calc_usages) -> list[ConcreteConstraint]`: `_expand_owner_instances` dispatches on `owner.owning_definition.kind` — `part_def`→`occ_index.occurrences_of(owner_qn)` (catches `NonFiniteCardinalityError` → named `CodeGenerationError` with owner+feature), `calc_def`→matches `CalcUsageData.calc_def_qualified_name`, `package`→once at top scope, `requirement_def`/other→`unassessed` (D7, handled inline in `lower_constraints`, no expansion attempted). Predicate: **no selection logic needed** — `ConstraintUsageFact.predicate` already carries the source-form-selected effective predicate (extraction resolves it at fact-construction time, `constraint_extraction.py::_usage_fact`); Item 5 only serializes it (D5-IR) via `serialize_expression`. Each formal resolved via Phase 2 `resolve_actual`; `constraint_id` minted per instance; catalog sorted + `assert_unique_constraint_ids` run before returning.
+- [x] **Fixtures (NEW)** — `tests/fixtures/constraint_multi_instance/`, `tests/fixtures/constraint_inline/`, `tests/fixtures/constraint_blocked_owner/`, each with a `PROVENANCE.md`. See Phase 3 Implementation Notes for the `constraint_multi_instance` deviation from the Appendix B prose sketch (assert nested in `Cell`, not `Container`) and the trivial calc-def additions needed to satisfy `build_pipeline_context`'s Step-2 requirement.
+- [x] **`tests/conformance/test_constraint_lowering.py`** (NEW) — 6 tests: multi-instance (3 IDs/channels/shared binding), blocked-owner generation error (2 tests), inline predicate selection, offline `requirement_def`-unassessed, offline `package`-owned single-expand.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/conformance/test_constraint_lowering.py` → pass (live tests run in this venv)
-- [ ] `uv run mypy src/` / `ruff check src/` → clean
+- [x] `uv run pytest tests/conformance/test_constraint_lowering.py` → 6 passed (live, licensed)
+- [x] `uv run pytest tests/` → 2182 passed, 4 skipped (full suite, no regressions; deleted the now-obsolete Item-4 additive-guard test, see notes)
+- [x] `uv run mypy src/` → 76 errors (unchanged from Phase 2 baseline, none in touched files)
+- [x] `uv run ruff check src/` → clean
+- [x] Corpus regenerate (`scripts/capture_pipeline_baselines.py`) → empty diff (Phase 3 doesn't touch `pipeline_builder`, as expected)
 
 **Manual:**
-- [ ] Load `constraint_multi_instance` and confirm `occurrences_of` returns 3 and the de-indexed scoped key is the only registry hit (matches `b1-probe-evidence.md`).
+- [x] Live-probed `constraint_multi_instance`: `occurrences_of("constraint_multi_instance__Cell")` returns 3; the occurrence-scoped key misses and the de-indexed scoped key is the only registry hit (matches `b1-probe-evidence.md`) — asserted by `test_multi_instance_three_ids_three_channels_shared_binding`.
 
 **What We Know Works After This Phase:** `lower_constraints` produces the correct catalog for all four owner-kinds, multi-instance siblings with recorded shared bindings, inline predicate selection, and the blocked-owner error — all without touching `pipeline_builder`.
 
@@ -316,6 +319,17 @@ def test_determinism_repeated_live_load(constraint_multi_instance_model):
 **Issues Encountered:** None.
 
 **Deviations from Plan:**
+- **Correction discovered during Phase 3 fixture probing, applied retroactively to Phase 2
+  (surfaced, capture-fidelity law 4):** live extraction shows `ConstraintUsageFact.membership_kind`
+  is `None` for every ordinary top-level `assert constraint` — including S4's own proven
+  `wi014_toy::affordable` case — and is populated only for a `RequirementConstraintMembership`
+  (the `requirement_def` / out-of-profile territory Item 5 already catalogs unassessed, D7).
+  The design's INV-8 guard assumed `membership_kind` would read `"assert"` for in-profile
+  usages (S4 hardcoded that literal rather than reading it live); guarding on it as designed
+  would reject 100% of real in-profile input. Renamed `guard_nullable_facts` to `guard_polarity`,
+  scoped to `is_negated` only; `membership_kind` passes through to `ConcreteConstraint`
+  unguarded, carrying whatever the fact actually holds (normally `None`). Test file updated
+  to match (`test_polarity_guard_*`, was `test_nullable_guard_*`).
 - Used the repo's existing `CodeGenerationError` (`orchestration/pipeline_context.py`) instead
   of inventing a new `GenerationError` type — the plan's test stencils used `GenerationError`
   as a placeholder name; the repo already has exactly this class and every other item (Item 6,
@@ -351,6 +365,48 @@ def test_determinism_repeated_live_load(constraint_multi_instance_model):
   (`test_switch_shared_lenient_path_still_synthesizes` / `test_switch_strict_raises_naming_actual`).
 
 ### Phase 3 Completion
+**Completed:** 2026-07-12
+**Changes Made:**
+- `analysis/constraint_lowering.py`: added `_design_attr_index`, `_formal_default_index`,
+  `_expand_owner_instances`, `_source_local_identity`, `_resolve_formal`, `lower_constraints`.
+- `tests/fixtures/{constraint_multi_instance,constraint_inline,constraint_blocked_owner}/`
+  (NEW): `model.sysml` + `PROVENANCE.md` each.
+- `tests/conformance/test_constraint_lowering.py` (NEW): 6 tests.
+- Deleted `tests/unit/test_part_instance_index_additive.py` — its entire assertion was "no
+  production module imports `part_instance_index` yet" (Item 4's additive-boundary guard,
+  explicitly scoped "until Item 5" in its own docstring). This item is exactly the wiring
+  that test existed to forbid until now; its job is done, so it was removed rather than kept
+  red or patched with an allowlist.
+
+**Issues Encountered — two genuine findings surfaced during implementation, not deferred:**
+1. **`membership_kind` premise conflict (see Phase 2 notes above for the fix).** Discovered
+   here, while probing the fixtures live, and corrected retroactively in `guard_polarity`.
+2. **The environment's syside license needs `SYSIDE_LICENSE_KEY` exported explicitly to make
+   an isolated conformance-file pytest run see it** (`../agentic-mbse/.env` only auto-loads
+   when something in the import graph pulls in `agentic_mbse.cli`, which the full suite's
+   collection does incidentally but a single `pytest tests/conformance/test_constraint_lowering.py`
+   run does not). Exported `SYSIDE_LICENSE_KEY` for this session's shell; no code change.
+   One full-suite run showed a transient 23-failed/96-error flake (looked like resource
+   contention on first cold model load); two subsequent full runs were clean — treated as a
+   flake, not a regression (isolated re-runs of the same files were consistently green).
+
+**Deviations from Plan:**
+- `lower_constraints`'s signature drops `group_deriver` and `strict` from the plan's stencil.
+  `group_deriver` is only needed to place *newly minted* entry points into their derived
+  groups — that's Phase 4's `extend_graph_with_constraints` job (S4's own split: `lower_constraints`
+  never took a deriver either). `strict` was never going to be called `False` from this function
+  (constraint lowering IS the strict path); a parameter with exactly one legal value in
+  production is not a real parameter. Both omissions keep `lower_constraints` to one job:
+  expand + resolve + mint, nothing about downstream graph placement.
+- `constraint_multi_instance`'s model differs from the Appendix B prose sketch (assert nested
+  in `Cell`, self-scoped, not in `Container` referencing `cell.power_calc.p`) — see the
+  fixture's `PROVENANCE.md` for the full reasoning (placing it in `Container` would expand to
+  exactly one instance, not three, since `Container` itself is a singleton under `Design`).
+- Formal names for `modeled_default` inputs are recovered from the omitted formal's QN leaf
+  (`sanitize_name(formal_qn.rsplit("::", 1)[-1])`) since `omitted_default_formals` is
+  `list[str]` (QNs only, per the landed `constraint_facts.py` schema), not `FormalFact` objects;
+  the default IR itself is looked up via a QN index built from `facts.definitions` up front.
+
 ### Phase 4 Completion
 ### Phase 5 Completion
 

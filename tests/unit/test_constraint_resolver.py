@@ -9,7 +9,7 @@ import pytest
 from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, IdentityFact
 
 from sysml_codegen.analysis.constraint_lowering import (
-    guard_nullable_facts,
+    guard_polarity,
     occurrence_scope,
     resolve_actual,
 )
@@ -156,21 +156,10 @@ def test_switch_strict_raises_naming_actual():
         )
 
 
-def test_nullable_guard_raises_on_none_is_negated():
+def test_polarity_guard_raises_on_none_is_negated():
     with pytest.raises(CodeGenerationError, match="is_negated"):
-        guard_nullable_facts(
-            is_negated=None, membership_kind="assert", usage_qualified_name="Design__c__nonneg"
-        )
+        guard_polarity(is_negated=None, usage_qualified_name="Design__c__nonneg")
 
 
-def test_nullable_guard_raises_on_none_membership_kind():
-    with pytest.raises(CodeGenerationError, match="membership_kind"):
-        guard_nullable_facts(
-            is_negated=False, membership_kind=None, usage_qualified_name="Design__c__nonneg"
-        )
-
-
-def test_nullable_guard_passes_through_when_both_present():
-    assert guard_nullable_facts(
-        is_negated=False, membership_kind="assert", usage_qualified_name="Design__c__nonneg"
-    ) == (False, "assert")
+def test_polarity_guard_passes_through_when_present():
+    assert guard_polarity(is_negated=False, usage_qualified_name="Design__c__nonneg") is False
