@@ -1235,6 +1235,10 @@ class TestCompileCalcDef:
         )
 
         result_ast = MockFeatureChainExpression()
+        # A real FeatureChainExpression always carries >=1 operand (the dotted-path
+        # segments); give the mock one so agentic-mbse's extractor populates
+        # chain_segments the way it would for a live node, not an empty-class stand-in.
+        result_ast.operands = [MockFeatureReferenceExpression("sensor")]
         expression_asts = {"result": result_ast}
 
         ref_map = mock_extract_feature_refs

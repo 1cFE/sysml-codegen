@@ -135,18 +135,18 @@ def test_compile_calc_def_golden():
 **See `design.md` for:** the exact swap site and what stays → `design.md#architecture` (`compile_calc_def` bullet); seam name sets (M3) → `design.md#architecture` ("Seam name sets"); ref-collection dedup → `design.md#architecture` ("Ref collection moves onto the IR").
 
 **Specific changes:**
-- [ ] **Golden capture (before touching the loop):** capture each corpus calc def's current `CalcDefCompilationResult` into a committed golden. This is the comparand `compile_calc_def` produced *today* (F4 lesson: the exact replaced function's output, not a downstream proxy).
-- [ ] `src/sysml_codegen/extraction/expression_compiler.py:580-602` — replace the `build_expression_ast` → `compile_expression` → `_collect_refs` triple with `extract_expression_ir(ast_node)` → `render_calc_expression(ir, input_names, member_names)` → `collect_calc_refs(ir, input_names, member_names)`, keeping the `try/except CompilationError` → `MANUAL_REQUIRED` structure exactly.
-- [ ] **M3 seam sets:** `input_names = {a.name for a in calc_def.input_attributes}`; `member_names = output_names ∪ all_member_names`. Do **not** pass only `all_member_names` trusting it to contain declared outputs — the union is what reproduces serialized `intermediate_refs`.
-- [ ] Old symbols (`build_expression_ast`, `compile_expression`, `_collect_refs`, `ExpressionAST`) **stay** — deleted in Phase 4. Only the call site moves.
+- [x] **Golden capture (before touching the loop):** capture each corpus calc def's current `CalcDefCompilationResult` into a committed golden. This is the comparand `compile_calc_def` produced *today* (F4 lesson: the exact replaced function's output, not a downstream proxy).
+- [x] `src/sysml_codegen/extraction/expression_compiler.py:580-602` — replace the `build_expression_ast` → `compile_expression` → `_collect_refs` triple with `extract_expression_ir(ast_node)` → `render_calc_expression(ir, input_names, member_names)` → `collect_calc_refs(ir, input_names, member_names)`, keeping the `try/except CompilationError` → `MANUAL_REQUIRED` structure exactly.
+- [x] **M3 seam sets:** `input_names = {a.name for a in calc_def.input_attributes}`; `member_names = output_names ∪ all_member_names`. Do **not** pass only `all_member_names` trusting it to contain declared outputs — the union is what reproduces serialized `intermediate_refs`.
+- [x] Old symbols (`build_expression_ast`, `compile_expression`, `_collect_refs`, `ExpressionAST`) **stay** — deleted in Phase 4. Only the call site moves.
 
 ### Validation
 **Automated:**
-- [ ] Golden test green: post-flip `CalcDefCompilationResult` == pre-flip golden (INV-1).
-- [ ] Phase-0 parity test still green (both paths still exist).
-- [ ] **Snapshot re-capture gate (license):** `env $(...) uv run python scripts/capture_extraction_snapshots.py` → run timestamp-churn revert → `compilation_results` section byte-identical (INV-2/INV-3).
-- [ ] **License-free:** `capture_pipeline_baselines` + `test_factory_purity` green; generated packages byte-identical.
-- [ ] Full `uv run pytest`, `mypy src/`, `ruff check src/` clean.
+- [x] Golden test green: post-flip `CalcDefCompilationResult` == pre-flip golden (INV-1).
+- [x] Phase-0 parity test still green (both paths still exist).
+- [x] **Snapshot re-capture gate (license):** `env $(...) uv run python scripts/capture_extraction_snapshots.py` → run timestamp-churn revert → `compilation_results` section byte-identical (INV-2/INV-3).
+- [x] **License-free:** `capture_pipeline_baselines` + `test_factory_purity` green; generated packages byte-identical.
+- [x] Full `uv run pytest`, `mypy src/`, `ruff check src/` clean.
 
 **What we know works after this phase:** the primary calc seam produces its strings and ref lists through the IR path with zero byte movement in the snapshot's `compilation_results` and in generated packages.
 
@@ -312,6 +312,49 @@ skipped (license env, no license-gated test skipped); mypy 76 errors (baseline, 
 ruff clean.
 
 ### Phase 1 Completion
+**Completed:** 2026-07-13
+**Actual changes:**
+- Captured `tests/fixtures/golden/calc_def_compilation_golden.json` (pre-flip, live, 104 calc
+  defs across 28 fixtures) via a one-off capture run before touching the seam.
+- Added `tests/conformance/test_compile_calc_def_golden.py` (`@requires_license`), asserting
+  post-flip `compile_calc_def` output equals the golden field-for-field per fixture.
+- `expression_compiler.py`: `compile_calc_def`'s per-output triple now calls
+  `extract_expression_ir` → `render_calc_expression`/`collect_calc_refs` (imported locally
+  inside `compile_calc_def`, not at module level — `calc_compat_renderer` imports
+  `CompilationError`/`_sanitize_name` back from this module, so a top-level import would be
+  circular). M3 seam set: `member_names = output_names | (all_member_names or set())`.
+  `build_expression_ast`/`compile_expression`/`_collect_refs`/`ExpressionAST` untouched, still
+  present, still used by their own unit tests.
+- Renderer fix found by this flip (not by Phase 0, which only exercised real syside data):
+  `_render_literal` keyed on `operand_type.category`, which is `"unresolved"` whenever
+  `cached_result_type` isn't available (real syside calc literals always resolve it, but a
+  hand-built mock node in the existing unit-test surface doesn't). Re-keyed on
+  `literal.kind` (the syside class name) instead, using the exact substring-fallback
+  convention `SysideAdapter.is_instance` already uses for mocks
+  (`"LiteralInteger" in kind`) — matches real data exactly (`kind` is already
+  `"LiteralInteger"`/`"LiteralRational"` there) and fixes the mock case without touching
+  category/resolution at all.
+- Two pre-existing `tests/unit/test_expression_compiler.py` `TestCompileCalcDef` mock-based
+  tests broke on the flip and needed narrow fixes (not deferred to Phase 4, since Phase 4
+  only owns the *build_expression_ast-level* dialect/dispatch test migration — these are
+  *compile_calc_def*-level orchestration tests, which now exercise the new seam directly):
+  `test_edge5_feature_chain_returns_manual`'s `MockFeatureChainExpression()` was an empty
+  class with no operands, so agentic-mbse's chain-segment extraction found nothing and the
+  renderer's `chain_segments`-based rejection (mirroring `predicate_compiler.py`'s identical
+  check) never fired; gave it one operand so it behaves like a real FCE node. mypy also
+  flagged `extract_expression_ir`'s `ExpressionIR | None` return type at the two new call
+  sites; added an explicit `if ir is None: raise CompilationError(...)` guard (ast_node was
+  already checked non-None, so this is an invariant guard, not new production behavior).
+**Deviations:** None from the plan's staging/comparand. The renderer literal-keying change is
+an amendment to Phase 0's `calc_compat_renderer.py`, not a Phase 1 file, but landed in this
+commit since Phase 1's flip is what exposed the gap (Phase 0's corpus has no unresolved-type
+literals to catch it).
+**Validation:** golden test 28 passed/1 skipped; parity test still 28 passed/1 skipped; full
+suite 2338 passed/6 skipped (license env); mypy 76 (baseline, unchanged); ruff clean;
+extraction-snapshot re-capture — 29 `captured_at`-only diffs, reverted, `compilation_results`
+byte-identical; `capture_pipeline_baselines` — zero diff; `test_factory_purity` +
+`test_baselines` 26 passed/1 skipped.
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion

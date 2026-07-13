@@ -87,16 +87,19 @@ def _render(node: ExpressionIR, input_names: set[str], member_names: set[str]) -
 
 
 def _render_literal(node: LiteralNode) -> str:
-    # Keyed on the recovered type category, not the raw Python type -- the landed
-    # extractor keeps LiteralInteger values as int and LiteralRational as float (B4), so
-    # this reproduces the old path's str(raw_syside_value) exactly: `4` stays "4",
-    # `4.0` stays "4.0".
-    if node.operand_type.category == "integer":
-        return str(int(node.literal.value))
-    if node.operand_type.category == "real":
-        return str(float(node.literal.value))
+    # Keyed on literal.kind (the syside class name -- "LiteralInteger"/"LiteralRational"),
+    # not operand_type.category: category depends on cached_result_type resolution, a
+    # separate step that can be "unresolved" even when the literal's own value is already
+    # correctly typed. kind is the same substring-fallback convention
+    # SysideAdapter.is_instance itself uses for mocks (`type_name in type(elem).__name__`).
+    # The landed extractor keeps LiteralInteger values as int and LiteralRational as float
+    # (B4), so str() alone reproduces the old path's str(raw_syside_value) exactly: `4`
+    # stays "4", `4.0` stays "4.0" -- no numeric coercion needed or wanted.
+    kind = node.literal.kind
+    if "LiteralInteger" in kind or "LiteralRational" in kind:
+        return str(node.literal.value)
     raise CompilationError(
-        f"unsupported literal category in calc expression: {node.operand_type.category!r}"
+        f"unsupported literal kind in calc expression: {kind!r}"
     )
 
 

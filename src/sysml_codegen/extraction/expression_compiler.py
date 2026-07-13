@@ -16,10 +16,15 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
 from agentic_mbse.sysml.expression import extract_feature_refs
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
 from .expression_utils import extract_feature_reference_name
+
+# NOTE: calc_compat_renderer imports CompilationError/_sanitize_name from this module, so
+# render_calc_expression/collect_calc_refs are imported inside compile_calc_def (not at
+# module level) to avoid a circular import.
 
 
 class Compilability(str, Enum):
@@ -480,6 +485,10 @@ def compile_calc_def(
         CalcDefCompilationResult with per-output results and overall
         compilability.
     """
+    # Local import: calc_compat_renderer imports CompilationError/_sanitize_name from this
+    # module, so importing it at module level here would be circular.
+    from .calc_compat_renderer import collect_calc_refs, render_calc_expression
+
     input_names = {attr.name for attr in calc_def.input_attributes}
     output_names = {attr.name for attr in calc_def.output_attributes}
 
@@ -576,17 +585,19 @@ def compile_calc_def(
             )
             continue
 
-        # Build IR
-        ir = build_expression_ast(
-            ast_node,
-            input_names,
-            output_names,
-            all_member_names=all_member_names,
-        )
+        # M3: member_names is the union declared-outputs + all owned members, mirroring
+        # build_expression_ast's three-way classification exactly -- passing only
+        # all_member_names (trusting it to contain declared outputs) would under-classify.
+        member_names = output_names | (all_member_names or set())
+        ir = extract_expression_ir(ast_node)
+        if ir is None:
+            # extract_expression_ir returns None only for a None input; ast_node was just
+            # checked non-None above, so this would mean the extractor's contract broke.
+            raise CompilationError(f"extract_expression_ir returned None for {name!r}")
 
         # Compile to Python
         try:
-            python_expr = compile_expression(ir)
+            python_expr = render_calc_expression(ir, input_names, member_names)
         except CompilationError as e:
             output_results.append(
                 CompilationResult(
@@ -599,7 +610,7 @@ def compile_calc_def(
             continue
 
         # Collect refs
-        input_refs, intermediate_refs = _collect_refs(ir)
+        input_refs, intermediate_refs = collect_calc_refs(ir, input_names, member_names)
 
         output_results.append(
             CompilationResult(
