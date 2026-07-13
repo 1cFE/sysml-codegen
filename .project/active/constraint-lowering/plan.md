@@ -72,15 +72,15 @@ def test_unassessed_shape_carries_kind_and_no_node():
 
 **See design.md for:** `#key-decisions` (D3, D4, D5-IR), `#required-invariants` (INV-4, INV-8), `#implementation-notes` (canonical-tuple stability, `sha256[:16]` width N1), `#appendix-a` (`constraint_id` encoding row).
 
-- [ ] **`resolution/models.py`** — add `ConcreteConstraintInput` (resolution-tagged `module_output` | `design_attribute` | `modeled_default`; for `module_output` carries the recorded `bound_channel`, INV-3) and `ConcreteConstraint` (`constraint_id`, source identity/form, owner-instance identity, `membership_kind`, `polarity`/`expected_value`, `predicate_ir: str` per D5-IR, `inputs: list[ConcreteConstraintInput]`, `evaluation_channel: str | None`, `eligible: bool`, optional `tracking_key`). Pydantic scalar/str fields only — **no** `arbitrary_types_allowed`.
-- [ ] **`analysis/constraint_lowering.py`** (NEW) — `mint_constraint_id(...)`: prefix `{instance_path}__{source_local}` sanitized (`source_local` = usage simple name, else `anon`) + `__` + `sha256[:16]` of the canonical tuple `(source_local_full, owner_instance_identity, membership_kind, polarity)`. Canonicalize with the repo's `_canonical_json` idiom (sort_keys/fixed separators, R3). Add a post-expansion `_assert_unique_ids(concrete)` raising a generation error on any duplicate (D3, INV-4).
-- [ ] **`tests/unit/test_concrete_constraint_model.py`** (NEW) — stencil above + `expected_value` from negation, and the `eligible=False` unassessed record.
+- [x] **`resolution/models.py`** — add `ConcreteConstraintInput` (resolution-tagged `module_output` | `design_attribute` | `modeled_default`; for `module_output` carries the recorded `bound_channel`, INV-3) and `ConcreteConstraint` (`constraint_id`, source identity/form, owner-instance identity, `membership_kind`, `polarity`/`expected_value`, `predicate_ir: str` per D5-IR, `inputs: list[ConcreteConstraintInput]`, `evaluation_channel: str | None`, `eligible: bool`, optional `tracking_key`). Pydantic scalar/str fields only — **no** `arbitrary_types_allowed`.
+- [x] **`analysis/constraint_lowering.py`** (NEW) — `mint_constraint_id(...)`: prefix `{instance_path}__{source_local}` sanitized (`source_local` = usage simple name, else `anon`) + `__` + `sha256[:16]` of the canonical tuple `(source_local_full, owner_instance_identity, membership_kind, polarity)`. Canonicalize with `json.dumps(sort_keys=True, separators=(",", ":"))` (the same idiom `expression_ir._canonical_json` uses; this repo has no pre-existing local helper of that name — R3). Added `assert_unique_constraint_ids(concrete)` raising `CodeGenerationError` (the repo's existing generation-error class — no new exception type invented) on any duplicate `constraint_id` (D3, INV-4).
+- [x] **`tests/unit/test_concrete_constraint_model.py`** (NEW) — 5 tests: determinism + collision-distinct IDs, JSON round-trip, unassessed shape, duplicate-raises, distinct-passes.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_concrete_constraint_model.py` → pass
-- [ ] `uv run mypy src/` → clean (no `arbitrary_types_allowed` needed)
-- [ ] `uv run ruff check src/` → pass
+- [x] `uv run pytest tests/unit/test_concrete_constraint_model.py` → 5 passed
+- [x] `uv run mypy src/` → 77 errors (baseline unchanged, none in new files)
+- [x] `uv run ruff check src/` → clean
 
 **What We Know Works After This Phase:** the catalog record shape, deterministic collision-checked IDs, and JSON round-trip — the contract Items 7/8 import. No pipeline touched.
 
@@ -303,6 +303,26 @@ def test_determinism_repeated_live_load(constraint_multi_instance_model):
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 1 Completion
+**Completed:** 2026-07-12
+**Changes Made:**
+- `resolution/models.py`: added `ConstraintInputResolution`, `ConcreteConstraintInput`,
+  `ConcreteConstraint` (plain str/scalar Pydantic fields, no `arbitrary_types_allowed`);
+  exported in `__all__` alongside `ModuleKind` (was missing from `__all__` before this item).
+- `analysis/constraint_lowering.py` (NEW): `mint_constraint_id()`, `assert_unique_constraint_ids()`.
+- `tests/unit/test_concrete_constraint_model.py` (NEW): 5 tests, all passing.
+
+**Issues Encountered:** None.
+
+**Deviations from Plan:**
+- Used the repo's existing `CodeGenerationError` (`orchestration/pipeline_context.py`) instead
+  of inventing a new `GenerationError` type — the plan's test stencils used `GenerationError`
+  as a placeholder name; the repo already has exactly this class and every other item (Item 6,
+  etc.) raises it for generation-time failures, so reusing it keeps one error type across the
+  codebase rather than two doing the same job.
+- No `_canonical_json` helper existed in this repo (design's R3 note assumed one); used
+  `json.dumps(sort_keys=True, separators=(",", ":"))` inline, matching the idiom the landed
+  `expression_ir._canonical_json` (agentic-mbse) already uses.
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion

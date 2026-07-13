@@ -239,6 +239,89 @@ class OutputAlias(BaseModel):
         return f"{self.instance_path}__{self.alias_name}.json"
 
 
+class ConstraintInputResolution(str, Enum):
+    """How one concrete constraint's formal was resolved (Item 5 / D1 terminal switch)."""
+
+    MODULE_OUTPUT = "module_output"
+    DESIGN_ATTRIBUTE = "design_attribute"
+    MODELED_DEFAULT = "modeled_default"
+
+
+class ConcreteConstraintInput(BaseModel):
+    """One resolved formal on a :class:`ConcreteConstraint` (Item 5 / D4).
+
+    Exactly one of the resolution-tagged fields is populated, matching
+    ``resolution``:
+    - ``module_output``: ``bound_channel`` carries the producer channel the
+      strict resolver actually bound — the occurrence-scoped key when it hit,
+      else the shared de-indexed channel (B1-settled; recorded, never hidden,
+      per INV-3).
+    - ``design_attribute``: ``design_attribute_qn`` carries the minted entry
+      point's real qualified name (F4-safe, QN-deduped per INV-5).
+    - ``modeled_default``: ``default_ir`` carries the formal's own default,
+      serialized the same way as ``predicate_ir`` (D5-IR).
+    """
+
+    formal_name: str
+    resolution: ConstraintInputResolution
+    bound_channel: str | None = None
+    design_attribute_qn: str | None = None
+    default_ir: str | None = None
+
+
+class ConcreteConstraint(BaseModel):
+    """One concrete, expanded assertion (Item 5 / D4, D5-IR, D7).
+
+    Attributes:
+        constraint_id: Deterministic execution identity (D3/N1); catalog
+            ordering is by this field (INV-4).
+        usage_qualified_name: The source ``ConstraintUsageFact``'s qualified
+            name (identity, not per-occurrence).
+        source_local_identity: The usage's simple name when named, else its
+            ``LocationFact`` rendering — the anonymous-assertion identity
+            (spec `[HARD]`).
+        source_form: ``ConstraintSource.form`` (``inline`` / ``definition_typed``
+            / other out-of-profile forms).
+        owner_kind: ``OwningDefinitionFact.kind`` (``part_def`` / ``calc_def`` /
+            ``package`` / ``requirement_def``).
+        owner_qualified_name: The resolved owning definition's qualified name.
+        owner_instance_path: This concrete instance's own identity — an
+            :class:`~sysml_codegen.analysis.part_instance_index.InstanceOccurrence`
+            path for ``part_def`` owners, the calc-usage/package-usage
+            qualified name otherwise.
+        membership_kind: ``assert`` (nullable-guarded upstream, INV-8).
+        is_negated: Polarity (nullable-guarded upstream, INV-8).
+        expected_value: Derived from ``is_negated`` (``not is_negated``).
+        predicate_ir: The *effective* predicate (selected per source-form),
+            serialized via ``serialize_expression`` (D5-IR) — a plain string,
+            no ``arbitrary_types_allowed``. ``None`` for an unassessed record.
+        inputs: Resolved formals, ordered as extracted.
+        evaluation_channel: This instance's own output channel (INV-3).
+            ``None`` for an unassessed record (D7) — no executable node.
+        eligible: ``False`` for a defensively cataloged unassessed record
+            (``requirement_def`` / out-of-profile source form, D7); ``True``
+            for a normally lowered, executable assertion.
+        tracking_key: Optional author-controlled correlation key (D8); never
+            part of ``constraint_id``.
+    """
+
+    constraint_id: str
+    usage_qualified_name: str
+    source_local_identity: str
+    source_form: str
+    owner_kind: str
+    owner_qualified_name: str
+    owner_instance_path: str
+    membership_kind: str | None
+    is_negated: bool | None
+    expected_value: bool | None
+    predicate_ir: str | None = None
+    inputs: list[ConcreteConstraintInput] = Field(default_factory=list)
+    evaluation_channel: str | None = None
+    eligible: bool = True
+    tracking_key: str | None = None
+
+
 class ComputationGraph(BaseModel):
     """The complete computation graph derived from BacktrackingResult.
 
@@ -274,10 +357,14 @@ __all__ = [
     "BindingResolution",
     "BindingResolutionType",
     "ComputationGraph",
+    "ConcreteConstraint",
+    "ConcreteConstraintInput",
+    "ConstraintInputResolution",
     "EntryPoint",
     "EntryPointType",
     "InputSource",
     "ModuleInput",
+    "ModuleKind",
     "ModuleOutput",
     "OutputAlias",
     "ParameterGroup",
