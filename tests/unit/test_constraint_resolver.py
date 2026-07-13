@@ -106,7 +106,10 @@ def test_ladder_falls_to_design_attribute():
         parent_part="Design",
         qualified_name="Design__threshold",
     )
-    ref = _reference(source_name="threshold", target_qn="Design__threshold")
+    # target_qn is SysML `::`-form (per-segment quoted) -- exactly what the live
+    # reference.target.qualified_name carries; resolve_actual sanitizes it to
+    # the EQN `__`-form before matching design_attr_by_qn.
+    ref = _reference(source_name="threshold", target_qn="Design::threshold")
     result = resolve_actual(
         reference=ref,
         occ_scope="c.cell",

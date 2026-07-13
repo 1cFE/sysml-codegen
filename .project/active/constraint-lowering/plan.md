@@ -196,6 +196,10 @@ def test_requirement_def_owner_cataloged_unassessed():   # offline hand-built fa
 
 ## Phase 4: Threading into `build_pipeline_context` + roots-before-pruning + P3 extension
 
+**STATUS: BLOCKED — pipeline-builder wiring reverted after breaking the existing corpus.
+`extend_graph_with_constraints` (P3) is implemented, tested, and committed. The P1/P2 call
+sites in `pipeline_builder.py` are NOT wired — see "Blocking finding" below before resuming.**
+
 ### Goal
 Wire the three guarded threading points (P1 resolve, P2 inject roots, P3 extend) into `pipeline_builder`, extract facts via `extract_constraint_facts`, and add `extend_graph_with_constraints`. Guarded so P1–P3 no-op when no constraint facts are admitted (INV-7).
 
@@ -231,7 +235,7 @@ def test_extended_graph_passes_v11_and_channel_refs(constraint_multi_instance_mo
   - **P2** at Step 6 (`:840`): append each `module_output`-resolved input channel to the `find_required_modules` target list via `_find_usage_for_channel` (`dependency_backtracker.py:466`, unchanged), **before pruning**.
   - **P3** after Step 7 (`:888-903`): `extend_graph_with_constraints(computation_graph, concrete, group_deriver)` → +1 CONSTRAINT node per concrete (own evaluation channel), +1 REPORT_AGGREGATOR, mint DESIGN_ATTRIBUTE EPs (QN-keyed, QN-deduped, placed in derived groups; reuse the existing deriver, N3), re-run `_validate_channel_references` + `collect_uncovered_params`.
   - Thread `concrete` / constraint data onto `PipelineContext` (for tests to assert `ConcreteConstraint` records until Item 7's catalog runtime exists, D7).
-- [ ] **`analysis/constraint_lowering.py`** — `extend_graph_with_constraints(graph, concrete, group_deriver) -> ComputationGraph` (P3 body; mirror `s4_lib.py` `extend_graph`, `:475-570`; sort params by QN, groups by name for determinism).
+- [x] **`analysis/constraint_lowering.py`** — `extend_graph_with_constraints(graph, concrete, group_deriver) -> ComputationGraph` (P3 body; mirror `s4_lib.py` `extend_graph`, `:475-570`; sort params by QN, groups by name for determinism). **Done, offline-tested. Not yet called from `pipeline_builder` — see STATUS/Blocked note above.**
 - [ ] **`tests/conformance/test_constraint_pipeline_threading.py`** (NEW) — stencil above. Note: the `wi014_toy` reproduction needs an assert-carrying variant; if `wi014_toy` has no assert, add the assert to the fixture copy used for the lowered run per design `#validation-approach` (S4's model).
 
 ### Validation
@@ -407,9 +411,83 @@ def test_determinism_repeated_live_load(constraint_multi_instance_model):
   `list[str]` (QNs only, per the landed `constraint_facts.py` schema), not `FormalFact` objects;
   the default IR itself is looked up via a QN index built from `facts.definitions` up front.
 
-### Phase 4 Completion
+### Phase 4 Completion — PARTIAL, blocked before final wiring
+
+**Completed 2026-07-12:**
+- `analysis/constraint_lowering.py`: `extend_graph_with_constraints` (P3), `_constraint_module_type`,
+  `_literal_float`, `_group_for_qn` — landed, offline-tested (`tests/unit/test_constraint_graph_extension.py`,
+  8 tests, all passing without a live model — pure data transformation over
+  `ComputationGraph`/`ConcreteConstraint`/`ParameterGroupDeriver`).
+- **Real bug fixed in `resolve_actual` (Phase 2's design-attribute rung):** `reference.target
+  .qualified_name` is SysML `::`-form (e.g. `"toy_plant::'Toy Plant'::plant_budget"`); the
+  design-attribute index is keyed by EQN `__`-form (`attr.qualified_name`, e.g.
+  `"toy_plant__Toy_Plant__plant_budget"`). The original code compared them directly and never
+  matched anything with a `::` in it. Fixed by applying `sanitize_qualified_name` before the
+  lookup — verified against `wi014_toy`'s own `plant_budget` actual (this is exactly the case
+  S4 proved worked; it was broken in my Phase 2 code, not a limitation of the approach).
+  `tests/unit/test_constraint_resolver.py::test_ladder_falls_to_design_attribute` updated to
+  use a realistic `::`-form `target_qn` (it had been silently testing the wrong input shape).
+
+**Attempted and reverted — the P1/P2 threading into `pipeline_builder.build_pipeline_context`:**
+Wiring `lower_constraints` unconditionally into the shared pipeline entry point broke the
+existing corpus. This is not the QN bug above (fixed and verified separately, still applied);
+after that fix, two more failures remained, tracked to two genuine, unresolved gaps the design
+itself names as risks but that only bite at whole-corpus scale:
+
+1. **Item 3 (executable-profile eligibility) does not exist in this codebase.**
+   `epic_constraint_execution.md` Item 3 ("Executable Profile — Eligibility Gates") is a
+   separate, unimplemented epic item (agentic-mbse + sysml-codegen preflight hook,
+   ~1.5 days). Design's B3 explicitly names this: *"Every fact reaching lowering is
+   profile-admitted (Item 3 upstream)... If false → lowering meets requirement_def/
+   out-of-profile forms or None polarity on the normal path; the defensive branches (D7,
+   nullable-guard) fire as errors, which is correct behavior but means Item 3 has a gap."*
+   That gap is not hypothetical: `catf_mfe`'s `RadiusConsistency` assertion (owner-kind
+   `part_def`, but not an `AssertConstraintUsage` subtype that carries `is_negated`) hits
+   `guard_polarity` and correctly raises — but nothing upstream filtered it out first, so an
+   ordinary `catf_mfe` codegen run now fails outright. Item 5's own Non-Goals disclaim this
+   ("Profile eligibility decisions — Item 3 has already gated what reaches lowering") — true
+   of the design's assumption, false of this codebase's current state.
+2. **The strict ladder (D1, scoped_lookup → alias_lookup → design-attr-by-QN) is narrower
+   than the calc backtracker's full ladder, exactly as risk R5 predicts.** `fusion_tea`'s
+   `hif_plant.eta` assertion references `driver.efficiency` through a structured
+   part-def-EXPOSE alias the calc path resolves via `scoped_alias_lookup` (backtracker Step
+   1c) — a rung the strict ladder deliberately omits (D1's amendment added only
+   `alias_lookup`). R5's own mitigation note says growing the ladder is a legitimate response
+   *if evidence shows an omitted rung is in-profile* — but D1's rejected-alternative already
+   weighed and declined "fully unifying the backtracker's ladder" for byte-identity-risk
+   reasons. Deciding whether/how far to grow the strict ladder for real corpus models is a
+   design-level call, not a Phase-4 implementation detail.
+
+Both are premise conflicts between the design (written assuming Item 3 exists and assuming
+the strict ladder's coverage was sufficient) and the evidence (neither holds once wired
+across every existing fixture, not just the three new ones). Chasing each corpus failure by
+further widening the strict ladder ad hoc would recreate exactly the "unified ladder" D1
+explicitly rejected; silently catching lowering errors at the call site to keep the corpus
+green would violate INV-2, the invariant Item 5 exists to establish. Neither is a call I
+should make unilaterally.
+
+**Reverted:** the `pipeline_builder.py` P1/P2 call sites and the `PipelineContext
+.concrete_constraints` field (git-checked-out back to the pre-Phase-4 committed state — clean
+diff, verified via `git status`/`git diff`). The P3 function they would have called
+(`extend_graph_with_constraints`) stays landed and tested; only the *wiring* is reverted.
+Full suite green (2190 passed / 4 skipped) and corpus regenerate is an empty diff with the
+revert in place.
+
+**Options for the owner (next step before resuming Phase 4/5):**
+- (a) Land Item 3 first (its own spec/design/plan cycle), then re-attempt P1/P2 wiring.
+- (b) Scope P1/P2 to run only for models known to be in-profile (e.g. an opt-in flag on
+  `build_pipeline_context`, or restrict to the three new Item-5 fixtures) until Item 3 lands —
+  a narrower, reversible wiring that doesn't touch the shared default path.
+- (c) Deliberately widen the strict ladder (add `scoped_alias_lookup` at minimum) as a
+  scoped Item-5 design amendment, accepting the byte-identity re-verification cost D1 flagged.
+None of these are Phase-4 implementation calls; they change the item's scope or sequencing.
+
 ### Phase 5 Completion
+**Not started — blocked on Phase 4's owner decision above** (Phase 5 is the corpus-wide
+success-criteria + byte-identity gate, which cannot be meaningfully attempted while P1/P2
+threading is unresolved).
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress (Phases 1–3 complete; Phase 4 partial — P3 landed, P1/P2
+wiring blocked on an owner decision, see Phase 4 Completion notes; Phase 5 not started)

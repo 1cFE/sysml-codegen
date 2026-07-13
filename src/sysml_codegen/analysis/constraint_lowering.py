@@ -14,7 +14,12 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from agentic_mbse.sysml.expression_ir import FeatureReferenceNode, serialize_expression
+from agentic_mbse.sysml.expression_ir import (
+    FeatureReferenceNode,
+    LiteralNode,
+    parse_expression,
+    serialize_expression,
+)
 
 from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
 from sysml_codegen.analysis.part_instance_index import NonFiniteCardinalityError
@@ -22,16 +27,25 @@ from sysml_codegen.core.identifier_types import ScopedKey
 from sysml_codegen.core.qualified_names import sanitize_name, sanitize_qualified_name
 from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.resolution.models import (
+    ComputationGraph,
     ConcreteConstraint,
     ConcreteConstraintInput,
     ConstraintInputResolution,
+    EntryPoint,
+    EntryPointType,
+    InputSource,
+    ModuleInput,
+    ModuleKind,
+    ModuleOutput,
+    ParameterGroup,
+    PipelineModule,
 )
 
 if TYPE_CHECKING:
     from agentic_mbse.sysml.constraint_facts import ConstraintFacts, ConstraintUsageFact
     from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
 
-    from sysml_codegen.analysis.parameter_groups import DesignAttributeData
+    from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
     from sysml_codegen.analysis.part_instance_index import PartInstanceIndex
     from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
@@ -137,7 +151,15 @@ def resolve_actual(
                     bound_channel=str(channel),
                 )
 
-    target_qn = reference.target.qualified_name if reference.target else None
+    # Design-attribute match on the reference's target QN. `reference.target
+    # .qualified_name` is SysML `::`-form (per-segment quoted, e.g.
+    # "toy_plant::'Toy Plant'::plant_budget"); the design-attribute index is
+    # keyed by the same EQN `__`-form every other identifier in this repo
+    # uses (`attr.qualified_name`), so the `::`->`__` sanitize is required
+    # before comparing — bare `.qualified_name` never matches (verified
+    # against wi014_toy live).
+    target_qn_sysml = reference.target.qualified_name if reference.target else None
+    target_qn = sanitize_qualified_name(target_qn_sysml) if target_qn_sysml else None
     if target_qn is not None and target_qn in design_attr_by_qn:
         return ConcreteConstraintInput(
             formal_name=formal_name,
@@ -458,11 +480,225 @@ def lower_constraints(
     return concrete
 
 
+# ---------------------------------------------------------------------------
+# P3 EXTEND: graph structure + minted entry points (Phase 4).
+# ---------------------------------------------------------------------------
+
+AGGREGATOR_MODULE_NAME = "constraint_report_aggregator"
+_CONSTRAINT_DEFAULTS_GROUP = "constraint_defaults"
+
+
+def _pascal(s: str) -> str:
+    return "".join(part.capitalize() for part in s.split("_") if part)
+
+
+def _constraint_module_type(c: ConcreteConstraint) -> str:
+    """A deterministic placeholder ``module_type`` (S4 convention).
+
+    Item 5 sets the CONSTRAINT node's ``name`` (= ``constraint_id``) and
+    ``evaluation_channel``; generated-class identity is Item 7's decision
+    (design.md Implementation Notes, Appendix A). This derivation is a
+    structurally-valid placeholder — ``PipelineModule.module_type`` is a
+    required field — not a claim on Item 7's class-identity design.
+    """
+    inst_local = "__".join(c.owner_instance_path.split("__")[1:]) or c.owner_instance_path
+    base = _pascal(f"{inst_local}_{c.source_local_identity}")
+    namespace = c.owner_instance_path.split("__")[0].lower()
+    return f"{namespace}.{base}ConstraintModule"
+
+
+def _literal_float(serialized_ir: str | None) -> float | None:
+    """A modeled default's numeric value, if the default IR is a plain literal."""
+    if serialized_ir is None:
+        return None
+    ir = parse_expression(serialized_ir)
+    if not isinstance(ir, LiteralNode):
+        return None
+    try:
+        return float(ir.literal.value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _group_for_qn(
+    qn: str, derived_groups: list, existing: list[ParameterGroup]
+) -> tuple[str, str, str]:
+    """The derived group ``(name, class_name, source_identifier)`` owning ``qn``.
+
+    Mirrors S4's ``group_for`` (`s4_lib.py:490-494`): search the deriver's own
+    groups first (the authoritative classification), falling back to
+    ``system_design`` / ``SystemDesign`` for a QN no derived group claims (a
+    synthetic per-constraint default has no design-attribute home).
+    """
+    for group in existing:
+        if any(p.qualified_name == qn for p in group.parameters):
+            return group.name, group.class_name, str(group.source_file)
+    for dg in derived_groups:
+        if any(ps.name == qn for ps in dg.parameters):
+            return dg.name, dg.class_name, dg.source_identifier
+    return "system_design", "SystemDesign", "hierarchy"
+
+
+def extend_graph_with_constraints(
+    graph: ComputationGraph,
+    concrete: list[ConcreteConstraint],
+    group_deriver: ParameterGroupDeriver,
+) -> ComputationGraph:
+    """P3 EXTEND: append constraint + report-aggregator nodes, mint entry points.
+
+    One ``CONSTRAINT`` module per **eligible** concrete assertion (own
+    evaluation channel, INV-3), one ``REPORT_AGGREGATOR`` module when at least
+    one assertion is eligible (one required input per assertion, S4
+    convention). Unassessed records (``eligible=False``, D7) contribute
+    neither — no node, no minted EP, per design.
+
+    Minted ``DESIGN_ATTRIBUTE`` entry points are QN-keyed and QN-deduped
+    (INV-5, F4-safe) into their derived parameter group (reuses the same
+    ``group_deriver`` instance built earlier in the pipeline — additive,
+    post-Step-7, no mutation-after-read hazard, N3). Modeled-default formals
+    mint a ``LIBRARY_DEFAULT`` entry point scoped to the owning constraint
+    (``{constraint_id}__{formal}``) — a per-instance formal, not a shared
+    design attribute, so it is never QN-deduped against another constraint's.
+
+    Re-runs ``_validate_channel_references`` and ``collect_uncovered_params``
+    on the extended graph (INV-6) — raises naming the uncovered params on
+    violation.
+    """
+    from sysml_codegen.resolution.graph_builder import (
+        _validate_channel_references,
+        collect_uncovered_params,
+    )
+
+    modules = [m.model_copy(deep=True) for m in graph.modules]
+    groups = [g.model_copy(deep=True) for g in graph.entry_point_groups]
+    eligible = [c for c in concrete if c.eligible]
+    derived_groups = group_deriver.derive_groups()
+    existing_param_qns = {p.qualified_name for g in groups for p in g.parameters}
+
+    def mint(qn: str, entry_type: EntryPointType, default_value: float | None) -> str:
+        """Mint (or reuse) an entry point; returns its param_group name."""
+        gname, gclass, gsource = _group_for_qn(qn, derived_groups, groups)
+        if qn in existing_param_qns:
+            return gname
+        target = next((g for g in groups if g.name == gname), None)
+        if target is None:
+            target = ParameterGroup(
+                name=gname, class_name=gclass, source_file=Path(gsource), parameters=[]
+            )
+            groups.append(target)
+        target.parameters.append(
+            EntryPoint(
+                qualified_name=qn,
+                simple_name=qn.split("__")[-1],
+                entry_type=entry_type,
+                default_value=default_value,
+                param_group=gname,
+            )
+        )
+        existing_param_qns.add(qn)
+        return gname
+
+    order = len(modules)
+    for c in eligible:
+        assert c.evaluation_channel is not None  # invariant of eligible=True (lower_constraints)
+        inputs: list[ModuleInput] = []
+        for inp in c.inputs:
+            if inp.resolution == ConstraintInputResolution.MODULE_OUTPUT:
+                source = InputSource(
+                    source_type="module_output", producer_channel=inp.bound_channel
+                )
+            elif inp.resolution == ConstraintInputResolution.DESIGN_ATTRIBUTE:
+                qn = inp.design_attribute_qn
+                assert qn is not None  # invariant of DESIGN_ATTRIBUTE resolution
+                gname = mint(qn, EntryPointType.DESIGN_ATTRIBUTE, None)
+                source = InputSource(
+                    source_type="entry_point", param_group=gname, qualified_name=qn
+                )
+            else:  # MODELED_DEFAULT
+                qn = f"{c.constraint_id}__{inp.formal_name}"
+                gname = mint(qn, EntryPointType.LIBRARY_DEFAULT, _literal_float(inp.default_ir))
+                source = InputSource(
+                    source_type="entry_point", param_group=gname, qualified_name=qn
+                )
+            inputs.append(
+                ModuleInput(param_name=inp.formal_name, python_type="float", source=source)
+            )
+
+        modules.append(
+            PipelineModule(
+                name=c.constraint_id.lower(),
+                module_type=_constraint_module_type(c),
+                inputs=inputs,
+                outputs=[
+                    ModuleOutput(
+                        field_name="evaluation",
+                        python_type="ConstraintEvaluation",
+                        channel_name=c.evaluation_channel,
+                    )
+                ],
+                execution_order=order,
+                module_kind=ModuleKind.CONSTRAINT,
+                calc_def_name=None,
+                calc_def_qualified_name=None,
+            )
+        )
+        order += 1
+
+    if eligible:
+        agg_inputs = [
+            ModuleInput(
+                param_name=c.constraint_id,
+                python_type="ConstraintEvaluation",
+                source=InputSource(
+                    source_type="module_output", producer_channel=c.evaluation_channel
+                ),
+            )
+            for c in eligible
+        ]
+        modules.append(
+            PipelineModule(
+                name=AGGREGATOR_MODULE_NAME,
+                module_type="constraints.ConstraintReportAggregatorModule",
+                inputs=agg_inputs,
+                outputs=[
+                    ModuleOutput(
+                        field_name="constraint_report",
+                        python_type="ConstraintReport",
+                        channel_name="constraint_report",
+                    )
+                ],
+                execution_order=order,
+                module_kind=ModuleKind.REPORT_AGGREGATOR,
+                calc_def_name=None,
+                calc_def_qualified_name=None,
+            )
+        )
+
+    for g in groups:
+        g.parameters.sort(key=lambda p: p.qualified_name)
+    groups.sort(key=lambda g: g.name)
+
+    extended = ComputationGraph(
+        modules=modules,
+        entry_point_groups=groups,
+        execution_order=[m.name for m in modules],
+        fallback_entry_points=set(graph.fallback_entry_points),
+        output_aliases=graph.output_aliases,
+    )
+    _validate_channel_references(extended.modules)
+    uncovered = collect_uncovered_params(extended)
+    if uncovered:
+        raise CodeGenerationError(f"V11 coverage violations in extended graph: {uncovered}")
+    return extended
+
+
 __all__ = [
+    "AGGREGATOR_MODULE_NAME",
     "ConcreteConstraint",
     "ConcreteConstraintInput",
     "ConstraintInputResolution",
     "assert_unique_constraint_ids",
+    "extend_graph_with_constraints",
     "guard_polarity",
     "lower_constraints",
     "mint_constraint_id",
