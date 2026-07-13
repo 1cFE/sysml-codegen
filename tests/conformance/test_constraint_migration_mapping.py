@@ -124,7 +124,9 @@ def test_catf_mfe_65_plain_constraints_land_unassessed_not_block(caplog):
 
 @requires_license
 @pytest.mark.req("REQ-EXT-09")
-@pytest.mark.parametrize("fixture", ["fusion_tea", "plant_values", "wi014_toy", "constraint_inline"])
+@pytest.mark.parametrize(
+    "fixture", ["fusion_tea", "plant_values", "wi014_toy", "constraint_inline"]
+)
 def test_catalog_source_records_cover_every_constraint_definition(fixture):
     """D1b (inverted, safe direction): `source_records` is built from every
     `ConstraintDefinition` in the model (`assemble_constraint_catalog`), not filtered

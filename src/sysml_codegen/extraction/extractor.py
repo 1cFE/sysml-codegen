@@ -19,7 +19,6 @@ from sysml_codegen.extraction.constraint_report import (
     ConstraintKind,
     ConstraintManifestEntry,
     OwnerKind,
-    render_constraint_report,
 )
 from sysml_codegen.extraction.data_models import (
     AttributeInfo,
@@ -94,20 +93,6 @@ class SysMLDataExtractor:
                 calc_defs.append(calc_data)
 
         return calc_defs
-
-    def report_dropped_constraints(self) -> list[ConstraintManifestEntry]:
-        """Run the constraint drop report on the live model (REQ-EXT-09).
-
-        Collects the subtype-aware manifest, renders it to the extractor logger,
-        and returns the manifest so the caller can serialize it for the
-        ``generate --from-snapshot`` replay (the collect step is single-path —
-        MF4). Render lives in the pure ``constraint_report`` module and is called
-        identically on the from-snapshot path, so the two reports are identical
-        by construction (INV-B).
-        """
-        manifest = self.collect_constraint_manifest()
-        render_constraint_report(manifest, logger)
-        return manifest
 
     def collect_constraint_manifest(
         self, *, include_subtypes: bool = True

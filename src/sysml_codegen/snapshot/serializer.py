@@ -27,10 +27,6 @@ from typing import TYPE_CHECKING, Any
 from agentic_mbse.sysml.constraint_facts import serialize as serialize_constraint_facts
 from pydantic import BaseModel
 
-from sysml_codegen.extraction.constraint_report import (
-    ConstraintManifestEntry,
-    manifest_to_records,
-)
 from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
 
 if TYPE_CHECKING:
@@ -63,7 +59,6 @@ def serialize_extraction_snapshot(
     part_occurrences: dict[str, list[InstanceOccurrence]],
     constraint_lowering_mode: str,
     compilation_results: dict[str, Any] | None = None,
-    constraint_manifest: list[ConstraintManifestEntry] | None = None,
     output_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Serialize full extraction output to a versioned JSON-safe dict.
@@ -87,8 +82,6 @@ def serialize_extraction_snapshot(
             8, D3) — always present.
         compilation_results: dict[str, CalcDefCompilationResult] keyed by
             calc_def.name (SC-10). Absent/None → empty block; loader degrades.
-        constraint_manifest: model-wide dropped-constraint manifest (Item 4).
-            Absent/None → empty ``dropped_constraints`` array.
         output_dir: If provided, Path fields (and Path dict keys) are made
             relative to this dir — the snapshot's own directory (D1). The loader
             re-absolutizes against the same anchor, so the round-trip is exact.
@@ -127,10 +120,6 @@ def serialize_extraction_snapshot(
             _serialize_value(ca, output_dir) for ca in computed_attributes
         ],
         "channel_aliases": [_serialize_value(ca, output_dir) for ca in channel_aliases],
-        # Model-wide dropped-constraint manifest, stable enum tokens, order
-        # preserved (D2/D8/INV-G). The from-snapshot path replays the drop report
-        # from this. Empty list for constraint-free models.
-        "dropped_constraints": manifest_to_records(constraint_manifest or []),
     }
 
 

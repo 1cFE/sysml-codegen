@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 3,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-13T10:34:38.191545+00:00",
+  "captured_at": "2026-07-13T10:57:50.912143+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -3260,16 +3260,6 @@
       "canonical_name": "meier_coe_calc.coe_cents_kwh",
       "owning_part_qn": "hif_plant_pkg::hif_plant",
       "source": "expose_pure"
-    }
-  ],
-  "dropped_constraints": [
-    {
-      "owner_kind": "part_def",
-      "owner_name": "IFE_Power_Plant",
-      "owner_qualified_name": "ife_plant::'IFE Power Plant'",
-      "constraint_name": "viability",
-      "constraint_kind": "assert",
-      "source_line": 155
     }
   ]
 }

@@ -64,7 +64,6 @@ def capture_snapshot(
         part_occurrences=ctx.part_occurrences,
         constraint_lowering_mode=ctx.constraint_lowering_mode,
         compilation_results=ctx.compilation_results,
-        constraint_manifest=ctx.constraint_manifest,
         output_dir=output_path.parent,
     )
 

@@ -24,7 +24,6 @@ from agentic_mbse.sysml.types import BindingType, ExpressionRef
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.part_instance_index import deserialize_part_occurrences
 from sysml_codegen.core.models import ChannelAlias
-from sysml_codegen.extraction.constraint_report import manifest_from_records
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
     AttributeInfo,
@@ -233,11 +232,6 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
             ChannelAlias.model_validate(d) for d in raw["channel_aliases"]
         ],
         "compilation_results": _load_compilation_results(raw, snapshot_path),
-        # Model-wide dropped-constraint manifest (Item 4). Additive: a snapshot
-        # captured before this field just yields an empty manifest.
-        "constraint_manifest": manifest_from_records(
-            raw.get("dropped_constraints", [])
-        ),
     }
 
     # source_file re-absolutization (D1/D8): lexical absolute join against the

@@ -23,11 +23,14 @@ from sysml_codegen.extraction.constraint_report import (
     ConstraintKind,
     ConstraintManifestEntry,
     OwnerKind,
-    render_constraint_report,
 )
 from sysml_codegen.extraction.expression_compiler import CalcDefCompilationResult
-from sysml_codegen.snapshot import SnapshotFormatError, load_extraction_snapshot
-from tests.conftest import snapshot_fixture
+from sysml_codegen.snapshot import (
+    SnapshotFormatError,
+    build_full_graph_from_snapshot,
+    load_extraction_snapshot,
+)
+from tests.conftest import FIXTURES_DIR, requires_license, snapshot_fixture
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -83,15 +86,20 @@ def test_v1_snapshot_is_rejected(tmp_path):
 
 
 # ===========================================================================
-# REQ-EXT-09 / INV-B: the constraint manifest survives serialize -> commit ->
-# load, and the from-snapshot render matches a golden fragment (Item 4). This is
-# the committed-snapshot leg — it runs license-free on the re-captured v2
-# snapshot, so it only holds once Phase 5's re-capture has landed.
+# REQ-EXT-09 (Item 14 W2 re-anchor): the manifest->catalog mapping, not the
+# retired drop-manifest render, is what the committed wi014_toy snapshot proves.
+# The manifest is swept live (no snapshot round-trip left to prove — Item 14
+# retired the manifest's own snapshot section); the catalog carrier is read from
+# the committed, re-captured snapshot (INV-B: live and offline agree).
 # ===========================================================================
+@requires_license
 @pytest.mark.req("REQ-EXT-09")
-def test_wi014_manifest_roundtrips_through_committed_snapshot(caplog):
-    snap = load_extraction_snapshot(snapshot_fixture("wi014_toy"))
-    manifest = snap["constraint_manifest"]
+def test_wi014_manifest_joins_to_committed_snapshot_catalog_entry():
+    from sysml_codegen.extraction.extractor import SysMLDataExtractor
+
+    extractor = SysMLDataExtractor([FIXTURES_DIR / "wi014_toy"])
+    assert extractor.load_models()
+    manifest = extractor.collect_constraint_manifest()
     # Golden fragment: the assert constraint at toy_plant.sysml:51, part-def-owned.
     golden = ConstraintManifestEntry(
         owner_kind=OwnerKind.PART_DEF,
@@ -101,14 +109,19 @@ def test_wi014_manifest_roundtrips_through_committed_snapshot(caplog):
         constraint_kind=ConstraintKind.ASSERT,
         source_line=51,
     )
-    assert manifest == [golden], "the assert manifest must survive the snapshot round-trip"
+    assert manifest == [golden], "the live manifest sweep must match the golden fragment"
 
-    # ...and the from-snapshot render reports it as a dropped predicate.
-    with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
-        render_constraint_report(manifest, logging.getLogger("sysml_codegen.extraction.extractor"))
-    msgs = [r.getMessage() for r in caplog.records]
-    assert any("scanned 1" in m and "1 assert" in m for m in msgs)
-    assert any("affordable" in m and "is not executable" in m for m in msgs)
+    # The committed snapshot's catalog carries the same usage as an eligible
+    # entry (D1's manifest->catalog join, mirroring test_constraint_migration_mapping.py).
+    graph, _inputs = build_full_graph_from_snapshot(snapshot_fixture("wi014_toy"))
+    usage_qn = f"{golden.owner_qualified_name}::{golden.constraint_name}"
+    assert graph.constraint_catalog is not None
+    eligible_usage_qns = {
+        e.usage_qualified_name for e in graph.constraint_catalog.concrete_entries
+    }
+    assert usage_qn in eligible_usage_qns, (
+        f"committed snapshot catalog has no eligible carrier for {usage_qn}"
+    )
 
 
 # ===========================================================================

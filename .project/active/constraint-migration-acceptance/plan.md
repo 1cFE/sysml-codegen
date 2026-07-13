@@ -167,16 +167,17 @@ grep -rn "dropped_constraints" src/    # snapshot section gone from serializer/l
 ### Changes Required
 **See `design.md` Appendix B (retirement grep targets) and D3 (within-v3 removal). Do NOT touch the kept generation-halt at `constraint_lowering.py:481` (explicit non-goal).**
 
-- [ ] **Delete** (Appendix B, grep-verifiable): `constraint_report.py` (render + `manifest_to_records`/`manifest_from_records`), `extractor.py:98,112`, `pipeline_builder.py:760`, `snapshot_context.py:45` (replay), `serializer.py:133`, `loader.py:238-239`, `capture.py:67`, the two blanket warnings (`constraint_report.py:125-141`), **plus NTH1:** the `constraint_manifest` ctx field (`pipeline_context.py:110`) and its snapshot-context pass-through (`snapshot_context.py:86`).
-- [ ] **Re-anchor REQ-EXT-09 tests** (not merely delete): `TestReqExt09ConstraintDropDiagnostic`, `TestConstraintRequireAndExclusion`, `TestConstraintDroppablePolicyParity` (`test_extractor.py:893-1044`) and the wi014 manifest round-trip (`test_snapshot_contract.py:91`) re-anchor onto the mapping test + catalog contents. Map each retained assertion from "manifest reported it dropped" → "catalog carries it as concrete entry / unassessed / inventory."
-- [ ] **D3 heterogeneous corpus (NTH3):** the serializer stops emitting `dropped_constraints`; the two re-captured fixtures (Phase 1) omit the key, the other 27 retain it as an ignored vestige. **Sequence the final `plant_values`/`fusion_tea` re-capture after this deletion** so those two files are captured once, clean (avoids a double re-capture). The INV-C timestamp reviewer expects those two to change for **two** reasons (gain fix + key removal).
+- [x] **Delete** (Appendix B, grep-verifiable): the render/serialize half of `constraint_report.py` (render + `manifest_to_records`/`manifest_from_records`, the two blanket warnings), `extractor.py`'s `report_dropped_constraints`, `pipeline_builder.py`'s call site, `snapshot_context.py`'s replay + ctx pass-through, `serializer.py`'s `dropped_constraints` emission, `loader.py`'s `dropped_constraints` read, `capture.py`'s pass-through, the `constraint_manifest` ctx field (`pipeline_context.py`). **Deviation (documented, not a stop):** `collect_constraint_manifest` (the pure sweep) and `ConstraintManifestEntry`/`ConstraintKind`/`OwnerKind` are KEPT, not deleted — Phase 2's kept mapping test calls the sweep directly and would break if it were removed; only the report/render/snapshot-replay wiring around it retired.
+- [x] **Re-anchor REQ-EXT-09 tests**: `TestReqExt09ConstraintDropDiagnostic` (catf_mfe span + unassessed count, wi014 eligible-catalog membership), the `item4_require` sentinel test (re-anchored to manifest kind counts, no report call), the wi014 manifest round-trip in `test_snapshot_contract.py` (re-anchored to live sweep + committed-snapshot catalog join). `TestConstraintRequireAndExclusion`'s other two tests and `TestConstraintDroppablePolicyParity` were unaffected (no report call) and needed no change. Deleted `tests/unit/test_constraint_report.py` entirely (its whole subject — render/serialize — no longer exists).
+- [x] **D3 heterogeneous corpus:** re-captured `plant_values`/`fusion_tea` a second time (after the serializer stopped emitting the key) so those two omit it cleanly; the other 27 retain it as an ignored vestige — verified via a full re-capture + byte-identity check, then reverted the 27 (the key-removal touches every fresh capture, but only these two fixtures are meant to be re-captured).
 
 ### Validation
 **Automated:**
-- [ ] The three grep-clean commands return **zero** (INV-B).
-- [ ] `uv run pytest tests/conformance/test_extractor.py tests/conformance/test_snapshot_contract.py` → re-anchored family green.
-- [ ] `uv run pytest tests/` → no regressions; old snapshots still load (loader `.get()` tolerance).
-- [ ] Byte-identity gate re-run: still exactly `plant_values` + `fusion_tea` changed (now for gain + key-removal reasons).
+- [x] The three grep-clean commands (`render_constraint_report`/`report_dropped_constraints`, `not executable`, `dropped_constraints`) return **zero** in `src/`.
+- [x] `uv run pytest tests/conformance/test_extractor.py tests/conformance/test_snapshot_contract.py` → re-anchored family green.
+- [x] `uv run pytest tests/` → 2329 passed / 23 skipped, no regressions; old snapshots still load.
+- [x] Byte-identity re-verified: `plant_values`/`fusion_tea` are the only two committed snapshots without `dropped_constraints`.
+- [x] `ruff check src/` clean; `mypy src/` 76 (baseline unchanged).
 
 **What We Know Works After This Phase:**
 The rival surface is gone, grep-clean holds, and the REQ-EXT-09 family reads the catalog. The migration (spec workstream 2) is complete in-repo.
@@ -349,6 +350,10 @@ The epic closes where it started — the IFE sweep's hand-coded rule is dead, re
 **Deviations:** D1b landed against the actual schema (per-usage, not per-definition — no dangling-reference field exists to join on) rather than the plan's literal per-entry join sketch; `item4_require` excluded from the fixture set (no calc defs; its manifest-classification behavior is already covered in `test_extractor.py`, which Phase 3 re-anchors).
 
 ### Phase 3 Completion
+**Completed:** 2026-07-13
+**Changes made:** Retired the drop-manifest report/render/serialize/replay surface across `constraint_report.py`, `extractor.py`, `pipeline_builder.py`, `pipeline_context.py`, `snapshot_context.py`, `serializer.py`, `loader.py`, `capture.py`, `scripts/capture_extraction_snapshots.py`; re-anchored `test_extractor.py`'s REQ-EXT-09 classes and `test_snapshot_contract.py`'s wi014 round-trip onto the catalog; deleted `tests/unit/test_constraint_report.py`; re-captured `plant_values`/`fusion_tea` a second time so both omit `dropped_constraints` cleanly (heterogeneous corpus, D3).
+**Deviation:** kept `collect_constraint_manifest`/`ConstraintManifestEntry`/`ConstraintKind`/`OwnerKind` alive (design's Appendix B literally named `collect_constraint_manifest` as a deletion target, but Phase 2's kept mapping test depends on calling it directly — deleting it would break the very proof Phase 3's retirement is supposed to be authorized by). Recorded as a plan/design inconsistency resolved in favor of the kept test's requirement.
+
 ### Phase 4 Completion
 ### Phase 5 Completion
 ### Phase 6 Completion

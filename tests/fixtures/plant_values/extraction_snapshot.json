@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 3,
   "model_name": "plant_values",
-  "captured_at": "2026-07-13T10:34:38.032429+00:00",
+  "captured_at": "2026-07-13T10:57:50.753772+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -796,15 +796,5 @@
       ]
     }
   ],
-  "channel_aliases": [],
-  "dropped_constraints": [
-    {
-      "owner_kind": "part_def",
-      "owner_name": "Power_Plant",
-      "owner_qualified_name": "PlantValuesLib::'Power Plant'",
-      "constraint_name": "viability",
-      "constraint_kind": "assert",
-      "source_line": 105
-    }
-  ]
+  "channel_aliases": []
 }

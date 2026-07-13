@@ -755,11 +755,6 @@ def build_pipeline_context(
             "Ensure library models contain calc definitions."
         )
 
-    # Step 2.5: Report dropped constraint usages (REQ-EXT-09) and keep the
-    # manifest so the from-snapshot path can replay the same report (Item 4).
-    # Collect is single-path — this ctx is the one capture serializes (MF4).
-    constraint_manifest = extractor.report_dropped_constraints()
-
     # Step 2.6 (Item 5): extract neutral constraint facts. P1/P2/P3 below are
     # guarded on `constraint_facts.usages` being non-empty (INV-7) — when no
     # assertion exists in the model, lowering never runs and the corpus is
@@ -1030,7 +1025,6 @@ def build_pipeline_context(
         hierarchy_data=hierarchy_data,
         aggregation_expressions=scoped_agg_data,
         channel_aliases=all_channel_aliases,
-        constraint_manifest=constraint_manifest,
         output_registry=output_registry,
         concrete_constraints=concrete_constraints,
         constraint_facts=constraint_facts,
