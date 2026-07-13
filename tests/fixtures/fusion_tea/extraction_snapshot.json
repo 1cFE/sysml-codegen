@@ -1,8 +1,8 @@
 {
   "snapshot_format_version": 3,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-13T08:24:20.825689+00:00",
-  "constraint_lowering_mode": "grandfathered_off",
+  "captured_at": "2026-07-13T10:34:38.191545+00:00",
+  "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
       {
@@ -783,7 +783,20 @@
       }
     ]
   },
-  "part_occurrences": {},
+  "part_occurrences": {
+    "ife_plant__IFE_Power_Plant": [
+      {
+        "part_def_qn": "ife_plant__IFE_Power_Plant",
+        "steps": [
+          {
+            "owning_def_qn": "hif_plant_pkg",
+            "feature_name": "hif_plant",
+            "occurrence_index": null
+          }
+        ]
+      }
+    ]
+  },
   "compilation_results": {
     "Meier_HIF_Driver_Cost": {
       "calc_def_name": "Meier_HIF_Driver_Cost",

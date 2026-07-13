@@ -13,6 +13,7 @@ import logging
 from pathlib import Path
 
 from sysml_codegen.analysis.constraint_lowering import (
+    collect_bare_actual_demand,
     extend_graph_with_constraints,
     lower_constraints,
 )
@@ -84,12 +85,28 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
     # The backtracker (below) is the real seam — it, not build_computation_graph,
     # runs `_resolve_to_design_attribute`.
     hierarchy_data = snap["hierarchy_data"]
+    # D2 (Item 14): widen the demand set to a constraint actual with no calc-usage
+    # binding of its own — mirrors pipeline_builder.py's live Step 5.65 so the
+    # offline rebuild stays in parity (a snapshot captured `applied` already ran
+    # this widened materializer live; re-deriving it identically here is what
+    # makes from-snapshot regeneration byte-identical, not merely non-crashing).
+    constraint_actual_demand = (
+        collect_bare_actual_demand(
+            snap["constraint_facts"],
+            FrozenOccurrenceIndex(snap["part_occurrences"]),
+            snap["calc_usages"],
+        )
+        if snap["constraint_lowering_mode"] == CONSTRAINT_LOWERING_MODE_APPLIED
+        and snap["constraint_facts"].usages
+        else []
+    )
     synth_attrs = materialize_supplied_values(
         snap["calc_usages"],
         hierarchy_data.redefinitions,
         hierarchy_data.design_overrides,
         hierarchy_data.usage_type_map,
         snap["design_attributes"],
+        constraint_actual_demand=constraint_actual_demand,
     )
     for attr in synth_attrs:
         # Bucket by the attribute's own source file (the consuming usage's file) so it

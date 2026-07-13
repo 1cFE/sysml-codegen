@@ -175,6 +175,65 @@ def test_ladder_falls_to_design_attribute():
     assert result.design_attribute_qn == "Design__threshold"
 
 
+def test_ladder_falls_to_def_scoped_base_default():
+    """The constraint-actual twin of ADR-001's LIBRARY_DEFAULT: a bare-name
+    reference to an attribute carrying only a base-def literal default (no
+    `:>>` override, no channel) resolves via `{owner_def_qn}__{name}` — a real,
+    already-captured design attribute, recognized through a third key shape,
+    not synthesized (plant_values' `attribute gain : Real = 40.0`, read bare in
+    the owning part's own assert `in gain = gain`)."""
+    registry = OutputRegistry()
+    attr = DesignAttributeData(
+        name="gain",
+        sysml_type="Real",
+        default_value="40.0",
+        unit=None,
+        source_file=None,
+        source_line=1,
+        parent_part="Power_Plant",
+        qualified_name="Lib__Power_Plant__gain",
+    )
+    ref = _reference(source_name="gain", target_qn="Lib::'Power Plant'::viability::gain")
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="plant",
+        formal_name="gain",
+        usage_qualified_name="Design__plant",
+        registry=registry,
+        design_attr_by_qn={"Lib__Power_Plant__gain": attr},
+        owner_def_qn="Lib__Power_Plant",
+    )
+    assert result.resolution == "design_attribute"
+    assert result.design_attribute_qn == "Lib__Power_Plant__gain"
+
+
+def test_ladder_def_scoped_base_default_not_reached_without_owner_def_qn():
+    """Demand-scoped: with no `owner_def_qn` (the calc-path callers of
+    `resolve_actual`-adjacent machinery never pass one), the rung is inert and
+    the ladder still raises rather than guessing."""
+    registry = OutputRegistry()
+    attr = DesignAttributeData(
+        name="gain",
+        sysml_type="Real",
+        default_value="40.0",
+        unit=None,
+        source_file=None,
+        source_line=1,
+        parent_part="Power_Plant",
+        qualified_name="Lib__Power_Plant__gain",
+    )
+    ref = _reference(source_name="gain", target_qn="Lib::'Power Plant'::viability::gain")
+    with pytest.raises(CodeGenerationError):
+        resolve_actual(
+            reference=ref,
+            occ_scope="plant",
+            formal_name="gain",
+            usage_qualified_name="Design__plant",
+            registry=registry,
+            design_attr_by_qn={"Lib__Power_Plant__gain": attr},
+        )
+
+
 def test_strict_terminal_raises_never_synthesizes():
     registry = OutputRegistry()
     ref = _reference(source_name="unresolvable_actual_name")

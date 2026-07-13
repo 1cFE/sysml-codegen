@@ -8,8 +8,9 @@ that the calc still wires — `collect_uncovered_params` flags all three (V11 tr
 These pins assert specific observed properties (SC-3), not whole-snapshot bytes:
   - the exact three-offender set covering mechanisms (a)/(b)/(c) [Item 2 flips it];
   - per-mechanism, that its entry point is valueless (`default_value is None`);
-  - the assert-constraint substrate: the constraint is invisible to extraction today
-    (the CONSTRAINT-SILENCE bug — Item 4 flips it).
+  - the assert-constraint substrate: never a calc usage (constraints are their own fact
+    stream), and — since Item 14 closed the `gain` gap — now lowers into a real
+    constraint module and catalog entry (Item 4's CONSTRAINT-SILENCE pin inverted).
 """
 
 from __future__ import annotations
@@ -103,34 +104,37 @@ def test_plant_cost_anchor_hand_transcribed():
     assert abs((10.0 + 7.0) / 0.35 - 48.5714285714) < 1e-9
 
 
-def test_assert_constraint_is_invisible_today():
-    """Item 4 substrate (CONSTRAINT-SILENCE): the `assert constraint viability` usage and
-    its three binding sub-shapes (cross-part `in eta = driver.efficiency`, self-named
-    `in gain = gain`, unbound-defaulted `threshold`) are authored in the source but are
-    INVISIBLE to extraction today — the snapshot carries no constraint usage and no
-    binding tokens. Pinned as the observed absence; Item 4 flips it (makes the constraint
-    and its bindings visible to the drop report)."""
+def test_assert_constraint_is_absent_from_calc_usages():
+    """The `assert constraint viability` usage is never a calc usage — constraints are a
+    separate fact stream (`constraint_facts`), extracted and lowered independently of
+    `collect_calculation_usages`. True before and after Item 14; unaffected by whether
+    the constraint lowers."""
     snap = json.loads(snapshot_fixture("plant_values").read_text())
     usage_names = {cu.get("qualified_name") for cu in snap["calc_usages"]}
-    # The only extracted usage is the plant cost calc — the assert constraint is dropped.
     assert usage_names == {"PlantValuesDesign__plant__cost_calc"}
     assert "PlantValuesDesign__plant__viability" not in usage_names
-    # Structural (not raw-byte counts): if the constraint were visible it would surface as a
-    # graph module / usage named `viability` with an `eta` input bound to driver.efficiency.
-    # Assert against parsed graph structures that neither exists.
+
+
+def test_assert_constraint_now_lowers(caplog):
+    """Item 14 (D2 + its constraint-actual demand widening, plus the def-scoped
+    base-default rung for `gain`'s plain-attribute shape): the `assert constraint
+    viability` usage and its three binding sub-shapes (cross-part `in eta =
+    driver.efficiency`, self-named `in gain = gain`, unbound-defaulted `threshold`) now
+    lower into a real constraint module and catalog entry — inverts the old
+    CONSTRAINT-SILENCE pin (`test_assert_constraint_is_invisible_today`, Item 4 era),
+    which asserted the opposite (grandfathered on the `gain` gap this item closes)."""
     graph = _graph()
-    assert not any("viability" in m.name for m in graph.modules)
+    assert any("viability" in m.name for m in graph.modules)
     input_params = {inp.param_name for m in graph.modules for inp in m.inputs}
-    assert "eta" not in input_params  # the constraint's cross-part binding never surfaces
-    ep_qns = {ep.qualified_name for g in graph.entry_point_groups for ep in g.parameters}
-    assert not any("viability" in q for q in ep_qns)
+    assert "eta" in input_params
+    assert graph.constraint_catalog is not None
+    assert any(e.constraint_id for e in graph.constraint_catalog.concrete_entries)
 
 
-def test_constraint_defaulted_param_leaks_to_design_attrs():
-    """Observed diagnostic (Item 4 substrate): while the assert constraint usage is
-    invisible, the constraint def's unbound-defaulted param `threshold` leaks into
-    `design_attributes` (parent 'Viability Threshold'). Recorded so Item 4's fix — which
-    should surface the constraint properly, not via this leak — has a before-state."""
+def test_constraint_defaulted_param_still_in_design_attrs():
+    """The constraint def's unbound-defaulted param `threshold` still leaks into
+    `design_attributes` (parent 'Viability Threshold') — an extraction-side artifact
+    independent of whether the constraint lowers, present before and after Item 14."""
     snap = json.loads(snapshot_fixture("plant_values").read_text())
     design_names = {a["name"] for v in snap["design_attributes"].values() for a in v}
     assert "threshold" in design_names

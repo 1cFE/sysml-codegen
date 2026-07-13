@@ -20,9 +20,11 @@ def test_design_overrides_reaches_materializer_from_snapshot():
     real = graph_rebuild.materialize_supplied_values
     captured: dict = {}
 
-    def spy(calc_usages, redefinitions, design_overrides, usage_type_map, real_design_attrs):
+    def spy(calc_usages, redefinitions, design_overrides, usage_type_map, real_design_attrs,
+            **kwargs):
         captured["design_overrides"] = design_overrides
-        return real(calc_usages, redefinitions, design_overrides, usage_type_map, real_design_attrs)
+        return real(calc_usages, redefinitions, design_overrides, usage_type_map,
+                    real_design_attrs, **kwargs)
 
     with patch.object(graph_rebuild, "materialize_supplied_values", spy):
         graph_rebuild.build_full_graph_from_snapshot(snapshot_fixture("plant_values"))

@@ -122,6 +122,7 @@ def resolve_actual(
     usage_qualified_name: str,
     registry: OutputRegistry,
     design_attr_by_qn: dict[str, DesignAttributeData],
+    owner_def_qn: str | None = None,
 ) -> ConcreteConstraintInput:
     """Resolve one constraint actual through the ordered strict ladder (D1 amended,
     R5-widened — see the ``scoped_alias_lookup`` rung below).
@@ -129,7 +130,10 @@ def resolve_actual(
     ``scoped_lookup`` (occurrence-scoped key first, then the shared de-indexed
     key — B1) → ``alias_lookup`` (same two keys) → ``scoped_alias_lookup``
     (same two keys, structured ``(scope, leaf)`` — R5 amendment) →
-    design-attribute match on the reference's target QN → the shared
+    design-attribute match on the reference's target QN → a base-def literal
+    default (the constraint-actual twin of ADR-001's LIBRARY_DEFAULT: a modeled
+    value, not synthesis — INV-2 forbids inventing a value the model doesn't
+    carry, not recognizing one via a third key shape) → the shared
     terminal-disposition switch
     (:func:`~sysml_codegen.analysis.dependency_backtracker.terminal_disposition`,
     always called ``strict=True`` — constraint actuals never take the lenient
@@ -244,6 +248,22 @@ def resolve_actual(
             resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
             design_attribute_qn=target_qn,
         )
+
+    # (iii) Definition-scoped base-def literal default: `{owner_def_qn}__{dotted
+    # chain}`. Covers an attribute that carries only a plain base-def default
+    # (no `:>>` override, no channel) — e.g. `plant_values`' `attribute gain :
+    # Real = 40.0`, read bare in the same part's own assert (`in gain = gain`).
+    # The calc backtracker's Step 3 has an equivalent def-level fallback; constraint
+    # actuals had none until this rung. Real, already-captured attribute — same
+    # dedup-by-QN discipline as (i)/(ii) above, no new EP-key shape (F4).
+    if dotted and owner_def_qn:
+        def_attr_qn = f"{owner_def_qn}__{'__'.join(dotted.split('.'))}"
+        if def_attr_qn in design_attr_by_qn:
+            return ConcreteConstraintInput(
+                formal_name=formal_name,
+                resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+                design_attribute_qn=def_attr_qn,
+            )
 
     # Terminal disposition (D1): strict=True makes fallback synthesis
     # physically unreachable — this call always raises (INV-2).
@@ -444,6 +464,7 @@ def _resolve_formal(
     usage_qualified_name: str,
     registry: OutputRegistry,
     design_attr_by_qn: dict[str, DesignAttributeData],
+    owner_def_qn: str | None = None,
 ) -> ConcreteConstraintInput:
     """Resolve one bound actual's value to a :class:`ConcreteConstraintInput`.
 
@@ -464,6 +485,7 @@ def _resolve_formal(
         usage_qualified_name=usage_qualified_name,
         registry=registry,
         design_attr_by_qn=design_attr_by_qn,
+        owner_def_qn=owner_def_qn,
     )
 
 
@@ -588,6 +610,7 @@ def lower_constraints(
                 continue
             actual_by_target[actual.name] = actual.value
 
+        owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
         owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
         for owner_instance_path, occ_scope in owner_instances:
             inputs: list[ConcreteConstraintInput] = []
@@ -600,6 +623,7 @@ def lower_constraints(
                         usage_qualified_name=owner_instance_path,
                         registry=registry,
                         design_attr_by_qn=design_attr_by_qn,
+                        owner_def_qn=owner_def_qn,
                     )
                 )
             for formal_qn in usage.omitted_default_formals:

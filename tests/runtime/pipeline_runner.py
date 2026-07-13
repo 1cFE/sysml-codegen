@@ -15,6 +15,7 @@ consumes it sight-unseen.
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import json
 import sys
 import types
@@ -110,10 +111,27 @@ def _load_entry_values(package_dir: Path) -> dict[str, float]:
 
 
 def _module_import_path(package: str, module_type: str) -> tuple[str, str]:
-    """Map a YAML module_type (`namespace.ClassNameModule`) to (import_path, class)."""
+    """Map a YAML module_type (`namespace.ClassNameModule`) to (import_path, class).
+
+    Two file-naming conventions coexist in a generated package (`cli/__init__.py
+    _get_python_path`): a calc/aggregation/formula module's file stem strips the
+    trailing "Module" from the class name; a constraint/report-aggregator module's
+    file stem is the whole class name lowercased, as-is (D9) — no stripping. This
+    runner has only the YAML's module_type string, not the module_kind that
+    disambiguates them in generation, so it tries the calc convention first and
+    falls back to the constraint convention if that file doesn't exist.
+    """
     namespace, class_name = module_type.rsplit(".", 1)
-    file_stem = class_name[:-6].lower() if class_name.endswith("Module") else class_name.lower()
-    return f"{package}.modules.{namespace}.{file_stem}", class_name
+    stripped_stem = class_name[:-6].lower() if class_name.endswith("Module") else class_name.lower()
+    full_stem = class_name.lower()
+    if stripped_stem != full_stem and not _module_file_exists(package, namespace, stripped_stem):
+        return f"{package}.modules.{namespace}.{full_stem}", class_name
+    return f"{package}.modules.{namespace}.{stripped_stem}", class_name
+
+
+def _module_file_exists(package: str, namespace: str, file_stem: str) -> bool:
+    spec = importlib.util.find_spec(f"{package}.modules.{namespace}.{file_stem}")
+    return spec is not None
 
 
 def _resolve_source(

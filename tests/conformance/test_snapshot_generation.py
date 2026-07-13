@@ -169,19 +169,21 @@ def test_chain_spike_autoimpl_from_snapshot(tmp_path):
 # a full-emission mis-wire would hide: retyped parts, quoted owners, aliased
 # aggregations, and ife_plant (an IFE plant idiom).
 #
-# `plant_values` is deliberately NOT in this list (Item 8, D3): it is
-# constraint-lowering grandfathered, and under the Item 8 Phase-4 default the
-# live CLI leg now halts loudly on the unresolved `gain` actual — the
-# intended, accepted signal, not a regression (see
-# test_grandfather_carveout.py::test_live_generate_grandfathered_still_halts_on_gain,
-# which covers exactly this halt). A live-vs-snapshot byte-diff can't run when
-# the live leg doesn't produce output.
+# `plant_values`/`fusion_tea` joined this list in Item 14 Phase 1: they were
+# constraint-lowering grandfathered (Item 8, D3) because the `gain`
+# hierarchy-extraction gap blocked lowering and the live CLI leg halted. Item 14
+# closes that gap, so both fixtures now generate lowered, live and offline alike
+# (the old halt-and-skip-byte-diff special case,
+# test_fusion_tea_snapshot_generates_grandfathered_and_live_halts_on_gain, is
+# retired — this parametrization supersedes it).
 _SNAP19_FIXTURES = [
     "solar_battery_model",
     "retype_model",
     "quoted_owner_formula",
     "alias_agg_probe",
     "ife_plant",
+    "plant_values",
+    "fusion_tea",
 ]
 
 
@@ -217,40 +219,6 @@ def test_live_vs_snapshot_byte_identical(fixture, tmp_path):
     # the YAML and fails here (the multi-hop EXPOSE precedent). Do NOT narrow this to a
     # metadata-only or graph-only diff — the full tree IS the channel-identity assertion.
     assert _tree_diff(live_out, snap_out) == []
-
-
-@requires_license
-@pytest.mark.req("REQ-SNAP-19")
-def test_fusion_tea_snapshot_generates_grandfathered_and_live_halts_on_gain(tmp_path):
-    """SC-D one-time leg, updated for Item 8's grandfather (D3).
-
-    fusion_tea is constraint-lowering grandfathered: its committed snapshot
-    carries `constraint_lowering_mode: "grandfathered_off"`, so `--from-snapshot`
-    still generates the full whole-plant package (multi-file designs + library,
-    the value-fill materializer wiring the Meier chain) with no constraint
-    structure. Before Item 8 Phase 4, live generation matched this byte-for-byte
-    (SC-D's original assertion); since the default flip, live generation now
-    also attempts lowering and halts loudly on the unresolved `gain` actual —
-    intended, not a regression (D3 sub-bullet; mirrors
-    test_grandfather_carveout.py::test_live_generate_grandfathered_still_halts_on_gain).
-    A byte-diff can't run when the live leg produces no output, so this test now
-    asserts each leg's real, current behavior instead.
-    """
-    models = REPO_ROOT / "tests/fixtures/fusion_tea"
-    live_out, snap_out = tmp_path / "live", tmp_path / "snap"
-
-    live = _run_cli(
-        "generate", "--models", str(models),
-        "--output", str(live_out), "--package-name", "fusion_tea", "--overwrite",
-    )
-    assert live.returncode != 0
-    assert "unresolved actual 'gain'" in live.stderr
-
-    snap = _run_cli(
-        "generate", "--from-snapshot", str(models / "extraction_snapshot.json"),
-        "--output", str(snap_out), "--package-name", "fusion_tea", "--overwrite",
-    )
-    assert snap.returncode == 0, snap.stderr
 
 
 @requires_license

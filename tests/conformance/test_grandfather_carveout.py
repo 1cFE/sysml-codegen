@@ -1,59 +1,49 @@
-"""Item 8 Phase 4: the plant_values/fusion_tea grandfather carve-out (D3, INV-5).
+"""Item 14 Phase 1: the plant_values/fusion_tea grandfather carve-out retires (INV-D).
 
-Both fixtures assert real constraints the `gain` hierarchy-extraction gap
-(Item 14's prerequisite) blocks from lowering. Captured with
-`lower_constraints_enabled=False`, they stamp `constraint_lowering_mode:
-"grandfathered_off"` — the offline path reads that marker and skips lowering,
-loudly, rather than silently inferring "don't lower" from an empty facts/
-occurrence section. The live CLI is NOT exempted: under the new default it
-still halts on the unresolved `gain` actual, exactly as before this item.
+Both fixtures asserted real constraints the `gain` hierarchy-extraction gap blocked from
+lowering (Item 8's carve-out). Item 14 closes that gap (D2: the instance-self-redef tier
++ the constraint-actual demand widening it needs; D2-twin: the def-scoped base-default
+rung for a bare-name actual with no `:>>` override at all) — both fixtures now lower under
+the DEFAULT (`lower_constraints_enabled=True`), live and offline alike. The named
+`GRANDFATHERED` exclusion set in the capture script is now empty (INV-D); this file
+inverts every assertion the old carve-out made.
 
-Captures fresh into `tmp_path` rather than reading the committed corpus —
-Phase 5 re-captures the committed snapshots; until then they are still v2 and
-would fail the version gate before this test could exercise anything.
+The `lower_constraints_enabled=False` capture-time opt-out mechanism itself is not
+retired (Item 8's grandfather mechanism may still be needed for a future gap) — only its
+application to these two fixtures is. `test_snapshot_v3_gate.py` / `capture.py`'s own
+tests still cover the flag generically.
+
+Captures fresh into `tmp_path` rather than reading the committed corpus — Phase 1 also
+re-captures the committed snapshots; this file is independent of that re-capture.
 """
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
-from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.snapshot import build_full_graph_from_snapshot, capture_snapshot
 from tests.conftest import FIXTURES_DIR, requires_license
 
 
 @requires_license
 @pytest.mark.parametrize("fixture", ["plant_values", "fusion_tea"])
-def test_grandfathered_snapshot_captures_honest_facts_and_skips_offline(fixture, tmp_path, caplog):
+def test_grandfathered_fixture_now_lowers(fixture, tmp_path):
+    """INV-D: a fresh default capture (lowering enabled) assembles a real catalog —
+    the assertion the old carve-out's `grandfathered_off` marker prevented."""
     snap_path = capture_snapshot(
-        [FIXTURES_DIR / fixture],
-        tmp_path / "extraction_snapshot.json",
-        lower_constraints_enabled=False,
+        [FIXTURES_DIR / fixture], tmp_path / "extraction_snapshot.json"
     )
-    raw = json.loads(snap_path.read_text())
-    assert raw["constraint_lowering_mode"] == "grandfathered_off"
-    assert raw["constraint_facts"]["usages"], (
-        f"{fixture}: grandfathered facts must stay honest/non-empty, never a "
-        "dishonest empty section (D3, rejected alternative)"
-    )
-    assert raw["part_occurrences"] == {}
-
-    import logging
-
-    with caplog.at_level(logging.WARNING):
-        graph, _inputs = build_full_graph_from_snapshot(snap_path)
-    assert graph.constraint_catalog is None  # lowering skipped, no catalog assembled
-    assert "grandfather" in caplog.text.lower()
+    graph, _inputs = build_full_graph_from_snapshot(snap_path)
+    assert graph.constraint_catalog is not None
+    assert any(e.constraint_id for e in graph.constraint_catalog.concrete_entries)
 
 
 @requires_license
 @pytest.mark.parametrize("fixture", ["plant_values", "fusion_tea"])
-def test_live_generate_grandfathered_still_halts_on_gain(fixture):
-    """The grandfather is scoped to the capture scripts, never the CLI (D3
-    sub-bullet) — live generation under the new default still halts loudly on
-    the unresolved `gain` actual, the honest signal Item 14 clears."""
-    with pytest.raises(CodeGenerationError, match="gain"):
-        build_pipeline_context([FIXTURES_DIR / fixture])
+def test_live_generate_grandfathered_no_longer_halts_on_gain(fixture):
+    """Inverts the old carve-out's halt assertion: live generation under the default
+    now resolves `gain` and assembles the catalog instead of raising."""
+    ctx = build_pipeline_context([FIXTURES_DIR / fixture])
+    assert ctx.computation_graph.constraint_catalog is not None
+    assert any(e.constraint_id for e in ctx.computation_graph.constraint_catalog.concrete_entries)

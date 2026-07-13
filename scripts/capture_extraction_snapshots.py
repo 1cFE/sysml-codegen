@@ -118,15 +118,15 @@ MODELS = {
     "constraint_multi_instance": FIXTURES_DIR / "constraint_multi_instance",
 }
 
-# Constraint-lowering grandfather (Item 8, D3): these two fixtures assert real
-# constraints the `gain` hierarchy-extraction gap (Item 14's prerequisite)
-# blocks from lowering — capture them with lowering disabled
-# (`constraint_lowering_mode: "grandfathered_off"`) so the corpus stays
-# coherent under the default flip. Named and commented so growth is loud, not
-# silent drift (design.md#potential-risks). Live `generate --models
-# plant_values` is NOT exempted — it still halts on `gain` under the new
-# default, as intended (D3 sub-bullet).
-GRANDFATHERED = frozenset({"plant_values", "fusion_tea"})
+# Constraint-lowering grandfather (Item 8, D3 — RETIRED Item 14 Phase 1, INV-D):
+# plant_values/fusion_tea were captured with lowering disabled because the `gain`
+# hierarchy-extraction gap blocked `'Viability Threshold'` from lowering. Item 14
+# closes that gap (the instance-self-redef tier + its constraint-actual demand
+# widening, plus the def-scoped base-default rung for plant_values' distinct
+# shape) — both fixtures now capture and generate lowered under the default like
+# every other fixture. Kept empty (not deleted) so a future real gap has a named
+# place to register, per the original design's intent (design.md#potential-risks).
+GRANDFATHERED: frozenset[str] = frozenset()
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
 # or CHAIN overrides that produce unresolvable source paths)

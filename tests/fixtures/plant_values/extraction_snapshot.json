@@ -1,8 +1,8 @@
 {
   "snapshot_format_version": 3,
   "model_name": "plant_values",
-  "captured_at": "2026-07-13T08:24:20.661918+00:00",
-  "constraint_lowering_mode": "grandfathered_off",
+  "captured_at": "2026-07-13T10:34:38.032429+00:00",
+  "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
       {
@@ -482,7 +482,20 @@
       }
     ]
   },
-  "part_occurrences": {},
+  "part_occurrences": {
+    "PlantValuesLib__Power_Plant": [
+      {
+        "part_def_qn": "PlantValuesLib__Power_Plant",
+        "steps": [
+          {
+            "owning_def_qn": "PlantValuesDesign",
+            "feature_name": "plant",
+            "occurrence_index": null
+          }
+        ]
+      }
+    ]
+  },
   "compilation_results": {
     "PlantCostCalc": {
       "calc_def_name": "PlantCostCalc",
