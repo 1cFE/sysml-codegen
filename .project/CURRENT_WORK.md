@@ -6,6 +6,20 @@
 
 ## Active Work
 
+### CONSTRAINT-EXEC Item 14 — Migration, Docs, and IFE Acceptance — SPEC IN PROGRESS (2026-07-13)
+
+Epic Item 14 (closing item). Spec: `.project/active/constraint-migration-acceptance/spec.md`.
+Retires the drop-manifest era (1:1 manifest→catalog mapping as a kept test; delete manifest +
+both blanket warnings; re-anchor the REQ-EXT-09 family on the catalog), flips authoring +
+architecture docs across all three repos, sweeps three recorded seams (GENERATOR_MISMATCH env
+axis, teax loader seal wiring, tracking-key correlation note), and passes the concept's IFE
+acceptance. **First work = the `gain` gap fix** (`materialize_supplied_values` must synthesize a
+top-level design-instance `:>>` self-redefinition) so `fusion_tea`'s `'Viability Threshold'`
+lowers and the two grandfathered fixtures re-land lowered (Item 8's GRANDFATHERED set → empty).
+**Surfaced blocker for implement:** fusion-tea (and agentic-mbse/teax) are outside this session's
+sandbox — the verbatim hand-coded viability rule and grid-classification ground truth could not be
+pinned; access must be granted before implement. Next: `/_my_spec_review` (fresh session).
+
 ### CONSTRAINT-EXEC Item 9 — Contracts and Sealing (ModelContract / PackageContract) — AUDIT: Certify-with-notes (2026-07-13)
 
 **Audit (2026-07-13):** `audit.md` written; verdict **Certify-with-notes**, contingent on the
