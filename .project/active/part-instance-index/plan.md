@@ -102,14 +102,14 @@ B1 table (`#research-findings`), classifier notes (`#implementation-notes`).
 
 #### 1. New module skeleton
 **File:** `src/sysml_codegen/analysis/part_instance_index.py` (NEW)
-- [ ] Frozen dataclasses `PathStep`, `InstanceOccurrence` per the `design.md#implementation-notes`
+- [x] Frozen dataclasses `PathStep`, `InstanceOccurrence` per the `design.md#implementation-notes`
       sketch (`InstanceOccurrence` filled out in Phase 2). `PathStep(owning_def_qn: str,
       feature_name: str, occurrence_index: int | None)`.
-- [ ] `NonFiniteCardinalityError(Exception)` (D4) — message names `owning_part_def_qn` and
+- [x] `NonFiniteCardinalityError(Exception)` (D4) — message names `owning_part_def_qn` and
       `part_usage_name`.
-- [ ] Classifier result types: `@dataclass(frozen=True) class Fixed: count: int` and
+- [x] Classifier result types: `@dataclass(frozen=True) class Fixed: count: int` and
       `@dataclass(frozen=True) class NonFinite: reason: str`.
-- [ ] `classify_cardinality(usage_node, owning_def_qn, feature_name) -> Fixed | NonFinite`, pure.
+- [x] `classify_cardinality(usage_node, owning_def_qn, feature_name) -> Fixed | NonFinite`, pure.
       Called only for usages **with** a multiplicity node (singleton is the walker's job, Phase 2).
       Dispatch exactly D3:
       - `usage.is_ordered` or `usage.is_nonunique` → `NonFinite`.
@@ -130,18 +130,18 @@ set that same attribute.
 
 #### 2. Truth-table tests
 **File:** `tests/unit/test_part_instance_index.py` (NEW)
-- [ ] Local mock node classes (mirror `test_hierarchy_resolver.py:806-839`): a range mock with
+- [x] Local mock node classes (mirror `test_hierarchy_resolver.py:806-839`): a range mock with
       `upper_bound`/`lower_bound`, and per-node mocks whose class names are `LiteralInteger`,
       `LiteralInfinity`, `FeatureReferenceExpression`, plus one `UnknownNode`.
-- [ ] One test per B1 row (Validation #6): `[3]`→Fixed(3), `[3..3]`→Fixed(3), `[0..5]`→NonFinite,
+- [x] One test per B1 row (Validation #6): `[3]`→Fixed(3), `[3..3]`→Fixed(3), `[0..5]`→NonFinite,
       `[*]`→NonFinite, `[n]`→NonFinite, `[3] ordered`→NonFinite, `[3] nonunique`→NonFinite,
       unrecognized-`upper_bound`→NonFinite.
 
 ### Validation
 **Automated (plain venv):**
-- [ ] `uv run pytest tests/unit/test_part_instance_index.py` → all 8 rows pass.
-- [ ] `uv run mypy src/sysml_codegen/analysis/part_instance_index.py` → clean.
-- [ ] `uv run ruff check src/sysml_codegen/analysis/part_instance_index.py` → clean.
+- [x] `uv run pytest tests/unit/test_part_instance_index.py` → all 8 rows pass.
+- [x] `uv run mypy src/sysml_codegen/analysis/part_instance_index.py` → clean.
+- [x] `uv run ruff check src/sysml_codegen/analysis/part_instance_index.py` → clean.
 
 **What We Know Works After This Phase:** the fail-closed gate reproduces the confirmed live
 surface, license-free, including the `[3..3]` admit and the fail-closed default arm.
@@ -364,10 +364,27 @@ See `design.md#potential-risks`. Phase-specific:
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:**
+**Completed:** 2026-07-12
 **Actual Changes:**
-**Issues:**
-**Deviations:**
+- New `src/sysml_codegen/analysis/part_instance_index.py`: `PathStep`, `Fixed`, `NonFinite`,
+  `NonFiniteCardinalityError`, `classify_cardinality`. `InstanceOccurrence` deferred to Phase 2
+  per plan.
+- New `tests/unit/test_part_instance_index.py`: 8 truth-table tests, one per B1 row, mirroring
+  the `test_hierarchy_resolver.py` mock-node idiom.
+- Extended `probe_b1_multiplicity.py`'s `describe()` already prints `.value` for lower/upper
+  bound sub-attributes (no new line needed); ran it live via the licensed sibling env
+  (`UV_CACHE_DIR=/tmp/agentic-mbse-uv-cache uv run --directory /home/reid/1cfe/agentic-mbse
+  python <abs path to probe_b1_multiplicity.py>`) and confirmed `upper_bound.value == 3` for the
+  `fixed3` usage's `LiteralInteger` node — the accessor the classifier reads. Output matches
+  `b1-probe-evidence.md` exactly for all 8 shapes.
+**Issues:** None.
+**Deviations:** None — `.value` was the confirmed accessor, as `expression_utils.py` and
+`parameter_groups.py` already use for `LiteralInteger` elsewhere in this codebase.
+
+**Gates:** `uv run pytest tests/unit/test_part_instance_index.py` → 8/8 pass. `uv run mypy src/`
+→ 77 errors (baseline unchanged, none in the new file). `uv run ruff check
+src/sysml_codegen/analysis/part_instance_index.py tests/unit/test_part_instance_index.py` →
+clean.
 
 ### Phase 2 Completion
 
