@@ -248,7 +248,16 @@ extracted `MultiplicityData` is not consumed.
 - `occurrences_of(part_def_qn) -> list[InstanceOccurrence]` — all concrete occurrences of a
   definition over its subtype closure, deterministically ordered, multiplicity expanded or
   blocked. This is the Item-5 entry point.
-- (optional convenience) `all_source_owners()` / `all_occurrences()` for tests and diagnostics.
+- (optional convenience) `all_source_owners() -> SourceOwnersResult` / `all_occurrences() ->
+  AllOccurrencesResult` for tests and diagnostics. **Cured post-audit** (Certify-with-notes,
+  `audit.md`): the initial implementation silently `continue`d past a
+  `NonFiniteCardinalityError` per definition while building these bulk dumps — a third
+  disposition INV-2 forbids, reachable through a completeness-named public method. Both now
+  return a small result object — `occurrences`/`owners` plus a `blocked: dict[str, str]` mapping
+  each affected PartDef QN to the diagnostic message — so a bulk caller can never mistake a
+  partial dump for a complete one. `occurrences_of` itself is unaffected: a direct call on a
+  blocked owner still raises loud (INV-2 holds without qualification for the specified Item-5
+  entry point).
 
 **Data flow, per `occurrences_of(owner_qn)`:**
 

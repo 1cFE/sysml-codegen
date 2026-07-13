@@ -235,6 +235,35 @@ def _occurrence_sort_key(
     return segment_names, indices
 
 
+@dataclass(frozen=True)
+class AllOccurrencesResult:
+    """Result of a bulk occurrence dump: occurrences plus every blocked definition.
+
+    Cured post-audit (Certify-with-notes, part-instance-index/audit.md): the prior
+    ``all_occurrences()`` silently ``continue``d past a
+    :class:`NonFiniteCardinalityError` per definition — a third disposition INV-2
+    forbids, reachable through a completeness-named public method. ``blocked`` maps
+    each affected PartDef QN to the diagnostic message that fired while enumerating
+    it, so a bulk caller can never mistake a partial dump for a complete one.
+    """
+
+    occurrences: list[InstanceOccurrence]
+    blocked: dict[str, str]
+
+
+@dataclass(frozen=True)
+class SourceOwnersResult:
+    """Result of a bulk source-owner dump: owners plus every blocked definition.
+
+    Same cure as :class:`AllOccurrencesResult` — ``all_source_owners()`` is a thin
+    wrapper over :meth:`PartInstanceIndex.all_occurrences` and inherited the same
+    silent omission, so it carries the same ``blocked`` mapping forward.
+    """
+
+    owners: list[str]
+    blocked: dict[str, str]
+
+
 class PartInstanceIndex:
     """Query object over the live model's concrete part occurrences.
 
@@ -280,34 +309,40 @@ class PartInstanceIndex:
                 occurrences.add(InstanceOccurrence(self._leaf_part_def_qn(usage), path))
         return sorted(occurrences, key=_occurrence_sort_key)
 
-    def all_occurrences(self) -> list[InstanceOccurrence]:
-        """Every *enumerable* concrete occurrence in the model, deduped and ordered.
+    def all_occurrences(self) -> AllOccurrencesResult:
+        """Every concrete occurrence in the model, plus every blocked definition.
 
         A thin union of :meth:`occurrences_of` over every user PartDef — for
         full-dump diagnostics and the determinism test, not a distinct algorithm.
-        This is a bulk best-effort dump, not a per-owner query: a PartDef whose own
-        occurrences hit a non-finite multiplicity is skipped here rather than
-        aborting the whole dump. INV-2's no-silent-drop guarantee is about a
-        *direct* :meth:`occurrences_of` call on the affected owner, which still
-        raises loud; skipping it here only omits it from this bulk convenience.
+        This is a bulk best-effort dump, not a per-owner query, but it is not
+        silent about it either (cured post-audit): a PartDef whose own occurrences
+        hit a non-finite multiplicity is omitted from ``occurrences`` and instead
+        recorded in ``blocked`` (QN -> the diagnostic message), so a caller can
+        never mistake a partial dump for a complete one. :meth:`occurrences_of`
+        itself is unaffected — a direct call on the affected owner still raises
+        loud (INV-2).
         """
         combined: set[InstanceOccurrence] = set()
+        blocked: dict[str, str] = {}
         for part_def_qn in sorted(self._qn_to_partdef):
             try:
                 combined.update(self.occurrences_of(part_def_qn))
-            except NonFiniteCardinalityError:
-                continue
-        return sorted(combined, key=_occurrence_sort_key)
-
-    def all_source_owners(self) -> list[str]:
-        """Every owning part-definition QN appearing in any occurrence's path."""
-        return sorted(
-            {
-                step.owning_def_qn
-                for occurrence in self.all_occurrences()
-                for step in occurrence.steps
-            }
+            except NonFiniteCardinalityError as error:
+                blocked[part_def_qn] = str(error)
+        return AllOccurrencesResult(
+            occurrences=sorted(combined, key=_occurrence_sort_key),
+            blocked=blocked,
         )
+
+    def all_source_owners(self) -> SourceOwnersResult:
+        """Every owning part-definition QN appearing in any enumerable occurrence's
+        path, plus every blocked definition (cured post-audit; see
+        :meth:`all_occurrences`, whose ``blocked`` mapping this carries forward)."""
+        result = self.all_occurrences()
+        owners = sorted(
+            {step.owning_def_qn for occurrence in result.occurrences for step in occurrence.steps}
+        )
+        return SourceOwnersResult(owners=owners, blocked=result.blocked)
 
 
 def build_part_instance_index(model: Any) -> PartInstanceIndex:

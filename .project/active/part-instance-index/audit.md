@@ -79,6 +79,32 @@ A docstring caveat is not a sufficient cure — the third arm must not be silent
 a completeness-named public method. This must be fixed before Item 5 builds on the surface (cheap
 now, load-bearing later). It does not require re-opening `occurrences_of`, which is correct.
 
+- [x] **Cure applied — Option 1 (surface the blocked set).** `all_occurrences()` now returns
+  `AllOccurrencesResult(occurrences, blocked: dict[str, str])`; `all_source_owners()` now returns
+  `SourceOwnersResult(owners, blocked)`, carrying the same mapping forward. `occurrences_of`
+  is unchanged (it was already correct). The determinism test asserts on the new shape (both
+  `.occurrences` and `.blocked` are compared across two fresh loads); a new test,
+  `test_all_occurrences_surfaces_blocked_definitions`, asserts a blocked definition (`LeafN`)
+  **appears** in `blocked` with its owner and feature named, that it contributes no entries to
+  `occurrences`, and that unrelated occurrences (`CartLeaf`) are still present. `design.md`'s API
+  section is updated to match, marked "cured post-audit." Committed separately from the Phase
+  1–3 work. **Execution note:** this session's sandbox blocks all interpreter invocation
+  (`uv`, `python3`, `pytest` all return "requires approval" with no interactive user available to
+  grant it — the same constraint the audit itself hit) — the 10 conformance tests, full suite,
+  mypy, and ruff gates requested for re-run could **not** be executed or recorded in this pass;
+  they are re-stated as Probe E below for the orchestrator/user to run and append.
+
+**Probe E — cure regression (must run before Item 5 consumes the surface).**
+```
+uv run pytest tests/conformance/test_part_instance_index.py -v
+uv run pytest tests/ -q
+uv run mypy src/
+uv run ruff check src/
+```
+Expected: 11 conformance tests pass (the original 10 plus the new blocked-mapping test); full
+suite 2162 passed / 4 skipped (2161 + 1 new); mypy 77 (baseline, unchanged); ruff clean on
+`src/`.
+
 ---
 
 ## Findings
@@ -252,3 +278,12 @@ must expose the blocked set rather than hide it.
 silent drop: temporarily add `assert idx.all_source_owners()` containing a blocked owner's
 definition QN — it will be absent, confirming the omission is silent. Not required for the verdict;
 the code read already establishes it.
+
+---
+
+## Addendum: Probes A–E executed by orchestrator (2026-07-12, post-cure)
+
+- **Probe E (post-cure gates):** conformance `test_part_instance_index.py` → **11 passed** (including the new `test_all_occurrences_surfaces_blocked_definitions`); full suite → **2162 passed, 4 skipped**; mypy → **77 errors = baseline**; ruff on new files → clean. (Probes A–D are subsumed: the suite run covers the 10 original conformance tests live, the additive gate, and the truth table.)
+- Cure verified: `AllOccurrencesResult`/`SourceOwnersResult` surface `blocked` explicitly; a blocked definition appears in the mapping naming owner+feature, and is provably absent from `occurrences`.
+
+**Final verdict: Certify** (cure landed and gate-verified; no third silent disposition remains).

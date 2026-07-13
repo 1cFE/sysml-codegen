@@ -219,12 +219,14 @@ ordering (D6), invariants INV-1..INV-5.
          normalized to `-1` sentinel so a future key change cannot reintroduce `None < int`
          (D6 + `#implementation-notes` m1).
 - [x] Convenience `all_occurrences()` (used by the determinism test for a full dump) and
-      `all_source_owners()`. Keep thin; no new behavior. **Deviation:** `all_occurrences()`
-      catches `NonFiniteCardinalityError` per-PartDef and skips that def rather than aborting the
-      whole dump — it is a bulk best-effort convenience, not a per-owner query; INV-2's no-silent-
-      drop guarantee is about a *direct* `occurrences_of(owner)` call, which still raises loud.
-      Needed because the combined fixture (below) has both enumerable and blocked defs, and
-      `all_occurrences()` iterates every user PartDef.
+      `all_source_owners()`. Keep thin; no new behavior. **Cured post-audit** (`audit.md`
+      Certify-with-notes, priority finding): the original catch-and-skip on
+      `NonFiniteCardinalityError` was adjudicated a real silent-drop defect — a third disposition
+      INV-2 forbids, reachable through a completeness-named public method. Both methods now return
+      a small result object (`AllOccurrencesResult` / `SourceOwnersResult`) carrying the dumped
+      items plus a `blocked: dict[str, str]` mapping (PartDef QN -> diagnostic message), so a
+      caller can never mistake a partial dump for a complete one. `occurrences_of` is unchanged.
+      See the cure commit and `audit.md`'s checked cure box for the full record.
 
 #### 2. Promote and extend the fixture
 **File:** `tests/fixtures/instance_index_probe/model.sysml` (NEW — promoted from S3 `model.sysml`)
@@ -423,7 +425,8 @@ clean.
   "live tests skip in the plain venv" assumption doesn't hold here, but the licensed sibling env
   independently confirms the same 10/10 pass, so the phase's live-positive-test intent is met
   either way.
-- `all_occurrences()` scoping (see Issues above).
+- `all_occurrences()` scoping (see Issues above) — **later adjudicated a real defect by audit and
+  cured post-audit**; see the "Cure (post-audit)" entry after Phase 3 Completion below.
 
 **Gates:** `uv run pytest tests/` → 2160 passed, 4 skipped (2142 baseline + 18 new). `uv run mypy
 src/` → 77 (baseline, unchanged). `git status --porcelain` → only new/additive paths under
@@ -449,6 +452,41 @@ unrelated to this item. `git status --porcelain` → only additive paths.
 **Item 4 is complete.** `PartInstanceIndex`/`build_part_instance_index` are built, tested, and
 inert — importable and exercised only by this item's own tests; Item 5 wires them in.
 
+### Cure (post-audit): `all_occurrences()` / `all_source_owners()` silent-skip
+**Completed:** 2026-07-12 (same day, follow-up commit after audit)
+**Source:** `audit.md`, priority finding — Certify-with-notes, one required must-fix.
+
+**What changed:**
+- `all_occurrences()` now returns `AllOccurrencesResult(occurrences: list[InstanceOccurrence],
+  blocked: dict[str, str])` instead of a bare list. A `NonFiniteCardinalityError` hit while
+  enumerating a given PartDef is caught and recorded as `blocked[part_def_qn] = str(error)`
+  instead of being silently swallowed.
+- `all_source_owners()` now returns `SourceOwnersResult(owners: list[str], blocked: dict[str,
+  str])`, carrying the same `blocked` mapping forward (it is a thin wrapper over
+  `all_occurrences()`).
+- `occurrences_of()` is unchanged — it was already correct per the audit.
+- `test_determinism` updated to assert on `.occurrences` and `.blocked` across two fresh loads.
+- New test `test_all_occurrences_surfaces_blocked_definitions` asserts a blocked definition
+  (`LeafN`) appears in `blocked` (naming its owner and feature), contributes zero entries to
+  `occurrences`, and that unrelated occurrences (`CartLeaf`) are still present — proving the dump
+  is honest about what it drops rather than either hiding it or aborting wholesale.
+- `design.md`'s API section updated to match, marked "cured post-audit."
+- `audit.md`'s priority finding now has a checked cure box recording Option 1 was applied.
+
+**Scope:** additive/behavior-preserving-for-callers-who-check — only `part_instance_index.py`,
+`tests/conformance/test_part_instance_index.py`, `design.md`, and `audit.md` touched. No existing
+file outside Item 4's own artifacts modified. Nothing calls `all_occurrences()` /
+`all_source_owners()` outside this item's own tests (INV-1 holds).
+
+**Execution note (unresolved — needs orchestrator/user follow-up):** this session's sandbox
+returns "requires approval" for every `uv`, `python3`, and `pytest` invocation, with no
+interactive user available to grant it in this pass — the same constraint `audit.md`'s
+"Execution note" already documented for the original implementation. **The 10 (now 11)
+conformance tests, the full suite, mypy, and ruff were not re-run in this pass** — they are
+restated as `audit.md` Probe E for the orchestrator/user to run and append before Item 5 consumes
+the surface. The code change itself was verified by hand (types, control flow, and the two
+touched call sites), not by execution.
+
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** Draft → In Progress → Complete → Cured (execution gates pending re-run, see Probe E)

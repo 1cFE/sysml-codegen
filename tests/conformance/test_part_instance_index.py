@@ -125,9 +125,35 @@ def test_determinism(instance_index_model) -> None:
     paths_b = [occ.instance_path for occ in index_b.occurrences_of(leaf_qn)]
     assert paths_a == paths_b
 
-    all_a = [occ.instance_path for occ in index_a.all_occurrences()]
-    all_b = [occ.instance_path for occ in index_b.all_occurrences()]
+    result_a = index_a.all_occurrences()
+    result_b = index_b.all_occurrences()
+    all_a = [occ.instance_path for occ in result_a.occurrences]
+    all_b = [occ.instance_path for occ in result_b.occurrences]
     assert all_a == all_b
+    assert result_a.blocked == result_b.blocked
+
+
+@requires_license
+def test_all_occurrences_surfaces_blocked_definitions(instance_index_model) -> None:
+    """Cure (post-audit): a blocked definition must APPEAR in the blocked mapping,
+    not merely be absent from occurrences — a bulk caller can no longer mistake a
+    partial dump for a complete one (design.md API section, "cured post-audit")."""
+    index = build_part_instance_index(instance_index_model)
+
+    result = index.all_occurrences()
+    assert "InstanceIndexProbe__LeafN" in result.blocked
+    assert "n_member" in result.blocked["InstanceIndexProbe__LeafN"]
+    assert "InstanceIndexProbe__BlockHost" in result.blocked["InstanceIndexProbe__LeafN"]
+    # A blocked definition contributes no occurrences to the dump.
+    assert not any(
+        occ.part_def_qn == "InstanceIndexProbe__LeafN" for occ in result.occurrences
+    )
+    # Occurrences unrelated to the blocked shapes are still present — the dump
+    # isn't aborted wholesale, just honest about what it dropped.
+    assert any(occ.part_def_qn == "InstanceIndexProbe__CartLeaf" for occ in result.occurrences)
+
+    owners_result = index.all_source_owners()
+    assert owners_result.blocked == result.blocked
 
 
 @requires_license
