@@ -67,14 +67,14 @@ def test_boundary_margin_normalizes_signed_zero():
 ### Changes Required
 **See design.md for:** compiler home + rewrite rationale → `design.md` D2; compile-once shape → D3; margin/polarity/boundary rules → `design.md#implementation-notes` and Known-Requirements Kleene block; the exact cell list → `design.md#validation-approach` (offline lane, Kleene unit tests).
 
-- [ ] `tests/unit/test_predicate_compiler.py` (NEW) — one test per rendered semantic cell, each loading and calling the emitted function:
-  - [ ] non-finite leaf → `unknown` / `indeterminate` / `margin=None`
-  - [ ] `true or unknown → true`; `false and unknown → false`; `not unknown → unknown`
-  - [ ] negated-polarity status (a `false` predicate under a negated assertion is `satisfied`)
-  - [ ] negated-inequality margin **sign flip**
-  - [ ] `-0.0 → 0.0` boundary normalization — **new cell, zero prior test** (S2 only masked signed zero with `math.isclose`; it never normalized). Write it explicitly.
-  - [ ] compound predicate → `margin is None` (margin only for simple inequalities)
-- [ ] `src/sysml_codegen/generation/predicate_compiler.py` (NEW) — `compile_predicate(ir, fn_name, negated) -> (source, args)`, `margin_expression(...)`, and the `_KLEENE_RUNTIME` block (leaf `_cmp`, `_and/_or/_not`). Walks landed `expression_ir` nodes; strip-renders `UnitAnnotationNode` (B2 — units already gated by Item 3; the compiler is **not** a unit safety net and must not re-check). `args = _leaf_ref_names(ir)`.
+- [x] `tests/unit/test_predicate_compiler.py` (NEW) — one test per rendered semantic cell, each loading and calling the emitted function:
+  - [x] non-finite leaf → `unknown` / `indeterminate` / `margin=None`
+  - [x] `true or unknown → true`; `false and unknown → false`; `not unknown → unknown`
+  - [x] negated-polarity status (a `false` predicate under a negated assertion is `satisfied`)
+  - [x] negated-inequality margin **sign flip**
+  - [x] `-0.0 → 0.0` boundary normalization — **new cell, zero prior test** (S2 only masked signed zero with `math.isclose`; it never normalized). Write it explicitly.
+  - [x] compound predicate → `margin is None` (margin only for simple inequalities)
+- [x] `src/sysml_codegen/generation/predicate_compiler.py` (NEW) — `compile_predicate(ir, fn_name, negated) -> (source, args)`, `margin_expression(...)`, and the `_KLEENE_RUNTIME` block (leaf `_cmp`, `_and/_or/_not`). Walks landed `expression_ir` nodes; strip-renders `UnitAnnotationNode` (B2 — units already gated by Item 3; the compiler is **not** a unit safety net and must not re-check). `args = _leaf_ref_names(ir)`.
 
 ### Validation
 **Automated:**
@@ -297,6 +297,38 @@ Emitting constraint code disturbs no calc-driven generation: a constraint-free c
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
+**Completed:** 2026-07-12
+**Changes Made:**
+- Created `src/sysml_codegen/generation/predicate_compiler.py` — `compile_predicate`,
+  `margin_expression`, `load_predicate`, the `_KLEENE_RUNTIME` block. Rebuilt against the
+  landed `expression_ir` node algebra (`LiteralNode`/`FeatureReferenceNode`/`OperatorNode`/
+  `UnitAnnotationNode`/`InvocationNode`/`UnsupportedNode`), not S2's pydantic `IRNode`.
+- Created `tests/unit/test_predicate_compiler.py` — 11 tests, one per semantic cell plus
+  leaf-name ordering, equality-blocked, and feature-chain-unsupported guards. Tests build
+  `ExpressionIR` trees directly via dataclass constructors — the plan's stencil calling
+  `parse_expression("a > b")` was pseudocode: `parse_expression` reconstructs *canonical
+  JSON*, not SysML source text, so there is no string-to-IR parser to call here.
+
+**Deviations from plan:**
+- The emitted predicate function returns a `_PredicateResult` NamedTuple with fields
+  `actual_value`/`status`/`margin` (matching `ConstraintEvaluation`'s vocabulary directly),
+  not S2's `dict` with a `value` key — the plan's own test stencil (`r.status`, `r.actual_value`)
+  already assumes attribute access, so this is conforming to the stencil's evidence, not a
+  new decision.
+- `-0.0` normalization implemented as a `_norm0(x)` runtime helper (`0.0 if x == 0.0 else x`)
+  wrapping the margin expression, rather than post-processing — keeps the emitted function
+  self-contained and the normalization visible at the call site in the generated source.
+
+**Issues Encountered:** none — the landed IR's node shapes (`operand_type.category` for
+numeric/boolean dispatch, `reference.chain_segments` for the feature-chain guard) mapped
+cleanly onto S2's dispatch logic once the field names were substituted.
+
+**Validation:** `uv run pytest tests/unit/test_predicate_compiler.py` — 11/11 pass.
+`uv run pytest tests/` — 2017+11 passed, 23 failed / 96 errors, identical to the pre-change
+baseline (confirmed by running the full suite before adding the new test file) — all
+pre-existing, unrelated to this change (live-model/license-gated tests). `ruff check` clean.
+`mypy src/` — 76 errors, matching the recorded baseline exactly, none in new files.
+
 ### Phase 2 Completion
 ### Phase 3 Completion
 ### Phase 4 Completion
