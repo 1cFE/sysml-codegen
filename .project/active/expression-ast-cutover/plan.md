@@ -87,26 +87,26 @@ def test_calc_compat_parity(fixture):
 
 #### 1. Renderer module
 **File:** `src/sysml_codegen/extraction/calc_compat_renderer.py` (NEW)
-- [ ] `render_calc_expression(ir, input_names, member_names) -> str` — pure IR→Python walk.
-  - [ ] **Literals (M2):** render keyed on IR literal type — `LiteralInteger` → `str(int(value))`, `LiteralRational` → `str(float(value))`. Reproduces the raw syside value the old path passed through `str()` (`4`→`"4"`, `4.0`→`"4.0"`). B4 confirms the landed extractor preserves the int/float type; this rule is the actual byte-identity failure mode and is gated by N5 in this phase.
-  - [ ] **Operators/structure:** `PYTHON_OPERATOR_MAP` spacing (`" + "`), `^`→`" ** "`, unary→`(-x)`, n-ary left-fold with parens at every step, unit-strip to the value operand.
-  - [ ] **Feature refs:** `inputs.{name}` when name ∈ `input_names`; bare `{name}` when name ∈ `member_names`; else raise `CompilationError` (D3 — the kept symbol, so caller `except CompilationError` → `MANUAL_REQUIRED` is unchanged).
-  - [ ] Call **this module's** `_sanitize_name` (import from `expression_compiler`), not the shared sanitizer — its divergence is load-bearing (`expression_compiler.py:167`).
-  - [ ] Final `python_ast.parse(result, mode="eval")` validation; raise `CompilationError` on unparseable output (D3).
-- [ ] `collect_calc_refs(ir, input_names, member_names) -> (input_refs, intermediate_refs)` — walk `FeatureReferenceNode` leaves, classify against the *same* sets, preserve **pre-order first-occurrence dedup** so ref lists stay byte-identical (B3/R3).
+- [x] `render_calc_expression(ir, input_names, member_names) -> str` — pure IR→Python walk.
+  - [x] **Literals (M2):** render keyed on IR literal type — `LiteralInteger` → `str(int(value))`, `LiteralRational` → `str(float(value))`. Reproduces the raw syside value the old path passed through `str()` (`4`→`"4"`, `4.0`→`"4.0"`). B4 confirms the landed extractor preserves the int/float type; this rule is the actual byte-identity failure mode and is gated by N5 in this phase.
+  - [x] **Operators/structure:** `PYTHON_OPERATOR_MAP` spacing (`" + "`), `^`→`" ** "`, unary→`(-x)`, n-ary left-fold with parens at every step, unit-strip to the value operand.
+  - [x] **Feature refs:** `inputs.{name}` when name ∈ `input_names`; bare `{name}` when name ∈ `member_names`; else raise `CompilationError` (D3 — the kept symbol, so caller `except CompilationError` → `MANUAL_REQUIRED` is unchanged).
+  - [x] Call **this module's** `_sanitize_name` (import from `expression_compiler`), not the shared sanitizer — its divergence is load-bearing (`expression_compiler.py:167`).
+  - [x] Final `python_ast.parse(result, mode="eval")` validation; raise `CompilationError` on unparseable output (D3).
+- [x] `collect_calc_refs(ir, input_names, member_names) -> (input_refs, intermediate_refs)` — walk `FeatureReferenceNode` leaves, classify against the *same* sets, preserve **pre-order first-occurrence dedup** so ref lists stay byte-identical (B3/R3).
 
 #### 2. Parity test
 **File:** `tests/conformance/test_calc_compat_parity.py` (NEW — write first)
-- [ ] Implement the stencil. Iterate the calc corpus **fixture-only** (design "Implementation Notes": committed fixtures subsume probe4's synthetic SCRATCH shapes — `-(a+b)`, `a**b**c`, 7-ary sums, nested parens).
-- [ ] **N5:** confirm the iterator includes `return_styles`' integer-literal outputs (`out y = a * 2`, `out y = x * 4`) so the literal rule is gated here.
-- [ ] **N1:** name sets derived exactly as `compile_calc_def` does (`input_attributes`, `output_attributes ∪ all_member_names`), not re-derived by walking `owned_elements`.
-- [ ] Assert both the expression **string** and the `(input_refs, intermediate_refs)` tuple (INV-1 comparand is the full result, not just the string — R3).
+- [x] Implement the stencil. Iterate the calc corpus **fixture-only** (design "Implementation Notes": committed fixtures subsume probe4's synthetic SCRATCH shapes — `-(a+b)`, `a**b**c`, 7-ary sums, nested parens).
+- [x] **N5:** confirm the iterator includes `return_styles`' integer-literal outputs (`out y = a * 2`, `out y = x * 4`) so the literal rule is gated here.
+- [x] **N1:** name sets derived exactly as `compile_calc_def` does (`input_attributes`, `output_attributes ∪ all_member_names`), not re-derived by walking `owned_elements`.
+- [x] Assert both the expression **string** and the `(input_refs, intermediate_refs)` tuple (INV-1 comparand is the full result, not just the string — R3).
 
 ### Validation
 **Automated:**
-- [ ] `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest tests/conformance/test_calc_compat_parity.py` → all pass (not skip — see env note).
-- [ ] `uv run pytest` (full suite), `mypy src/`, `ruff check src/` → clean.
-- [ ] `test_factory_purity` + `capture_pipeline_baselines` unchanged (no production path flipped, so no baseline movement expected).
+- [x] `env $(grep -v '^#' ~/1cfe/agentic-mbse/.env | xargs) uv run pytest tests/conformance/test_calc_compat_parity.py` → all pass (not skip — see env note).
+- [x] `uv run pytest` (full suite), `mypy src/`, `ruff check src/` → clean.
+- [x] `test_factory_purity` + `capture_pipeline_baselines` unchanged (no production path flipped, so no baseline movement expected).
 
 **What we know works after this phase:** the landed extractor + renderer reproduce `compile_expression` byte-for-byte (strings + ref lists) over the whole corpus, including int/float literals. B1, B2, B4, M2 proven. No consumer has moved yet.
 
@@ -287,8 +287,29 @@ def test_expression_ast_symbols_deleted():
 [TO BE FILLED DURING IMPLEMENTATION — leave empty now]
 
 ### Phase 0 Completion
-**Completed:** …
-**Actual changes / issues / deviations:** …
+**Completed:** 2026-07-13
+**Actual changes:**
+- Added `src/sysml_codegen/extraction/calc_compat_renderer.py` (`render_calc_expression`,
+  `collect_calc_refs`) — self-contained, own operator-map copy, imports only the kept
+  `CompilationError`/`_sanitize_name` from `expression_compiler` (both survive Stage 4).
+- Added `tests/conformance/test_calc_compat_parity.py`, `@requires_license`, parametrized
+  over the union of `capture_extraction_snapshots.py`'s `MODELS` + `EXTRACTION_ONLY_MODELS`
+  (29 fixtures, reused rather than re-listed so the corpus can't drift from the capture
+  script's). For every calc def with `output_expression_asts`, compiles each output through
+  both the old (`build_expression_ast`→`compile_expression`/`_collect_refs`) and new
+  (`extract_expression_ir`→`render_calc_expression`/`collect_calc_refs`) paths and asserts
+  byte-identical strings and ref-list tuples. Name sets derived exactly as `compile_calc_def`
+  derives them (N1).
+- Result: 28 fixtures with calc output expressions all byte-identical (strings + refs);
+  `agg_literal_probe` has none, skips cleanly. `return_styles`' two integer-literal outputs
+  (N5) passed — B1/B2/B4/M2 confirmed live with the landed extractor, not just by evidence.
+**Deviations:** None from the plan's stencil. `_ARITHMETIC_OPERATOR_MAP` is a private copy
+of `PYTHON_OPERATOR_MAP`'s arithmetic subset rather than an import — `PYTHON_OPERATOR_MAP` is
+one of the Stage-4 deletions, so importing it would have made the renderer's survival
+dependent on a symbol scheduled to disappear.
+**Validation:** parity test 28 passed/1 skipped (license env); full suite 2310 passed/5
+skipped (license env, no license-gated test skipped); mypy 76 errors (baseline, unchanged);
+ruff clean.
 
 ### Phase 1 Completion
 ### Phase 2 Completion
