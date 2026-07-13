@@ -16,9 +16,13 @@ import os
 from pathlib import Path
 from typing import Any
 
+from agentic_mbse.sysml import constraint_facts as constraint_facts_module
+from agentic_mbse.sysml.constraint_facts import CONSTRAINT_FACTS_SCHEMA_VERSION
+from agentic_mbse.sysml.expression_ir import EXPRESSION_IR_SCHEMA_VERSION
 from agentic_mbse.sysml.types import BindingType, ExpressionRef
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
+from sysml_codegen.analysis.part_instance_index import deserialize_part_occurrences
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.extraction.constraint_report import manifest_from_records
 from sysml_codegen.extraction.data_models import (
@@ -42,7 +46,11 @@ from sysml_codegen.extraction.expression_compiler import (
     CompilationResult,
 )
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
-from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION, SnapshotFormatError
+from sysml_codegen.snapshot import (
+    SNAPSHOT_FORMAT_VERSION,
+    VALID_CONSTRAINT_LOWERING_MODES,
+    SnapshotFormatError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +124,12 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
             aggregation_expressions: list[ScopedAggregationData]
             computed_attributes: list[ComputedAttributeData]
             channel_aliases: list[ChannelAlias]
+            constraint_facts: ConstraintFacts (Item 8 — always present, gated;
+                may carry empty usages)
+            part_occurrences: dict[str, list[InstanceOccurrence]] (Item 8 —
+                always present, gated; empty when lowering did not run)
+            constraint_lowering_mode: "applied" | "grandfathered_off" (Item 8 —
+                always present, gated)
             compilation_results: dict[str, CalcDefCompilationResult] (SC-10;
                 empty if the snapshot predates the section — degrades with a warning)
             stale_sources: list[str] of re-absolutized source files whose on-disk
@@ -139,10 +153,69 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
             "`scripts/capture_extraction_snapshots.py`."
         )
 
+    # Constraint-facts load-bearing gate (Item 8, MF1/MF2 — INV-8): every v3
+    # section raises with a re-capture instruction, never a raw KeyError, and
+    # never a silent degrade-with-warning (unlike compilation_results below).
+    constraint_facts_raw = _require(
+        raw, "constraint_facts", None, str(snapshot_path), raise_on_missing=True
+    )
+    part_occurrences_raw = _require(
+        raw, "part_occurrences", None, str(snapshot_path), raise_on_missing=True
+    )
+    constraint_lowering_mode = _require(
+        raw, "constraint_lowering_mode", None, str(snapshot_path), raise_on_missing=True
+    )
+    if not isinstance(constraint_facts_raw, dict) or "schema_version" not in constraint_facts_raw:
+        raise SnapshotFormatError(
+            f"Snapshot {snapshot_path}: constraint_facts is malformed (not a dict, "
+            "or missing schema_version) — this section is load-bearing. "
+            "Recapture the snapshot."
+        )
+    if constraint_facts_raw["schema_version"] != CONSTRAINT_FACTS_SCHEMA_VERSION:
+        raise SnapshotFormatError(
+            f"Snapshot {snapshot_path}: constraint_facts schema_version "
+            f"{constraint_facts_raw['schema_version']!r} does not match the tool's "
+            f"{CONSTRAINT_FACTS_SCHEMA_VERSION!r}. Recapture the snapshot."
+        )
+    bad_ir_versions = sorted(
+        {
+            v
+            for v in _scan_expression_ir_versions(constraint_facts_raw)
+            if v != EXPRESSION_IR_SCHEMA_VERSION
+        }
+    )
+    if bad_ir_versions:
+        raise SnapshotFormatError(
+            f"Snapshot {snapshot_path}: constraint_facts embeds expression-ir "
+            f"schema_version(s) {bad_ir_versions!r}, tool expects "
+            f"{EXPRESSION_IR_SCHEMA_VERSION!r}. Recapture the snapshot."
+        )
+    if constraint_lowering_mode not in VALID_CONSTRAINT_LOWERING_MODES:
+        raise SnapshotFormatError(
+            f"Snapshot {snapshot_path}: constraint_lowering_mode "
+            f"{constraint_lowering_mode!r} is not a recognized mode (expected one "
+            f"of {sorted(VALID_CONSTRAINT_LOWERING_MODES)!r}) — an unrecognized "
+            "mode must never be silently skipped. Recapture the snapshot."
+        )
+    # Coordinated-pair skew guard (mirrors PROFILE_SEMANTIC_VERSION at
+    # constraint_lowering.py:463): the code-level pins must still match what this
+    # loader was written against, independent of the data-level checks above.
+    assert CONSTRAINT_FACTS_SCHEMA_VERSION == "constraint-facts/v1", (
+        f"agentic-mbse constraint-facts schema changed ({CONSTRAINT_FACTS_SCHEMA_VERSION}); "
+        "review before re-pinning"
+    )
+    assert EXPRESSION_IR_SCHEMA_VERSION == "expression-ir/v1", (
+        f"agentic-mbse expression-ir schema changed ({EXPRESSION_IR_SCHEMA_VERSION}); "
+        "review before re-pinning"
+    )
+
     snapshot_dir = snapshot_path.parent
     snap: dict[str, Any] = {
         "model_name": raw["model_name"],
         "captured_at": raw["captured_at"],
+        "constraint_facts": constraint_facts_module.parse(json.dumps(constraint_facts_raw)),
+        "part_occurrences": deserialize_part_occurrences(part_occurrences_raw),
+        "constraint_lowering_mode": constraint_lowering_mode,
         "calc_defs": [_deserialize_calc_def(d) for d in raw["calc_defs"]],
         "calc_usages": [_deserialize_calc_usage(d) for d in raw["calc_usages"]],
         "design_attributes": {
@@ -179,6 +252,27 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
 
 
 # --- Format-contract helpers (version / compilation_results / source_file) ---
+
+
+def _scan_expression_ir_versions(obj: Any) -> list[str]:
+    """Shallow recursive token scan collecting every embedded expression-ir
+    ``schema_version`` inside a facts dict (Item 8, NH5).
+
+    A data-level guard, not only the code-pin assert below: a torn
+    ``expression-ir/v2`` node is rejected here rather than relied on
+    ``constraint_facts.parse`` to reject downstream.
+    """
+    versions: list[str] = []
+    if isinstance(obj, dict):
+        version = obj.get("schema_version")
+        if isinstance(version, str) and version.startswith("expression-ir/"):
+            versions.append(version)
+        for value in obj.values():
+            versions.extend(_scan_expression_ir_versions(value))
+    elif isinstance(obj, list):
+        for item in obj:
+            versions.extend(_scan_expression_ir_versions(item))
+    return versions
 
 
 def _load_compilation_results(

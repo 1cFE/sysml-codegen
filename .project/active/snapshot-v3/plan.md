@@ -232,52 +232,70 @@ load order (design.md#architecture "Load / rejection"); the mode×section matrix
 (design.md#architecture); the gate-message idiom and facts-embedding note (design.md#implementation-notes);
 D5 (design.md#key-decisions).
 
-- [ ] **`snapshot/__init__.py:15`** — `SNAPSHOT_FORMAT_VERSION = 3`; update the version comment.
-      Add the mode constants: `CONSTRAINT_LOWERING_MODE_APPLIED = "applied"`,
+- [x] **`snapshot/__init__.py:15`** — `SNAPSHOT_FORMAT_VERSION = 3`; update the version comment.
+      Added the mode constants: `CONSTRAINT_LOWERING_MODE_APPLIED = "applied"`,
       `CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF = "grandfathered_off"`,
       `VALID_CONSTRAINT_LOWERING_MODES = frozenset({...})`.
-- [ ] **`orchestration/pipeline_context.py`** — add the `constraint_lowering_mode` field (Phase 1
-      added the other two). Populate in `build_pipeline_context`: `"applied"` when lowering ran,
-      `"grandfathered_off"` when `lower_constraints_enabled=False` (Phase 4 routes the flag).
-- [ ] **`snapshot/serializer.py`** — `serialize_extraction_snapshot` writes the three keys:
+- [x] **`orchestration/pipeline_context.py`** — added the `constraint_lowering_mode` field (Phase 1
+      added the other two). Populated in `build_pipeline_context`: `"applied"` when
+      `lower_constraints_enabled=True`, `"grandfathered_off"` otherwise (Phase 4 routes the flag —
+      for now this tracks the same flag that gates lowering itself).
+- [x] **`snapshot/serializer.py`** — `serialize_extraction_snapshot` writes the three keys:
       `constraint_facts` = `json.loads(constraint_facts.serialize(facts))` (canonical bytes preserved,
-      not re-derived); `part_occurrences` = `_serialize_value(table)` with **`sorted()` owner keys**
-      (INV-7 / MF4 — `snapshot_to_json` does not `sort_keys`); `constraint_lowering_mode` = the mode
-      string (always present). Thread the three new params through from `capture.py`.
-- [ ] **`snapshot/capture.py:44`** — pass `ctx.constraint_facts`, `ctx.part_occurrences`,
-      `ctx.constraint_lowering_mode` into `serialize_extraction_snapshot`.
-- [ ] **`snapshot/loader.py`** (after the version gate at `:140`) — the eight-step order from
+      not re-derived); `part_occurrences` = `_serialize_value(occurrences, output_dir)` per owner with
+      **`sorted()` owner keys** (INV-7 / MF4); `constraint_lowering_mode` = the mode string (always
+      present, now a required keyword param — no default, since design mandates it's never absent).
+- [x] **`snapshot/capture.py:44`** — pass `ctx.constraint_facts`, `ctx.part_occurrences`,
+      `ctx.constraint_lowering_mode` into `serialize_extraction_snapshot` (with an `assert
+      ctx.constraint_facts is not None` for mypy narrowing — build_pipeline_context always populates it).
+- [x] **`snapshot/loader.py`** (after the version gate) — the eight-step order from
       design.md#architecture: (2) all three keys via `_require(raise_on_missing=True)`; (3) facts is
       a dict carrying `schema_version` (torn dict raises here, not downstream); (4) facts
       `schema_version == CONSTRAINT_FACTS_SCHEMA_VERSION`; (5) scan embedded predicate nodes for
-      `expression-ir/*` `schema_version`, any `!= EXPRESSION_IR_SCHEMA_VERSION` raises (NH5 — a
-      shallow recursive token scan over the facts dict collecting `schema_version` values that start
-      `"expression-ir/"`); (6) `mode ∈ VALID_CONSTRAINT_LOWERING_MODES` else raise (MF2); (7) code-pin
-      asserts for both version constants (mirrors `PROFILE_SEMANTIC_VERSION` at
-      `constraint_lowering.py:463`); (8) deserialize facts via `constraint_facts.parse`, occurrences
-      via `deserialize_part_occurrences` (Phase 1), mode string — join the `snap` dict.
-- [ ] **Parse-entry decision (design open question):** try `constraint_facts.parse(json.dumps(section))`
-      first; if the round-trip test proves it not byte-exact, add a dict-taking `parse` entry. The
-      **round-trip test is the arbiter** — keep whichever passes `test_facts_section_roundtrips_byte_identical`.
-- [ ] **Test file** — extend `tests/unit/test_hygiene_tail_loader.py` with the matrix stencil above
-      (cells a–h) + the round-trip test. Build the v3/v2 fixture snapshots in a `tmp_path` (capture
-      `constraint_multi_instance` live, or hand-assemble a minimal v3 dict).
+      `expression-ir/*` `schema_version` via new `_scan_expression_ir_versions` (NH5 — a shallow
+      recursive token scan), any `!= EXPRESSION_IR_SCHEMA_VERSION` raises; (6) `mode ∈
+      VALID_CONSTRAINT_LOWERING_MODES` else raise (MF2); (7) code-pin asserts for both version
+      constants (mirrors `PROFILE_SEMANTIC_VERSION` at `constraint_lowering.py:463`); (8) deserialize
+      facts via `constraint_facts.parse`, occurrences via `deserialize_part_occurrences` (Phase 1),
+      mode string — joined into the `snap` dict.
+- [x] **Parse-entry decision (design open question) resolved:** `constraint_facts.parse(json.dumps(section))`
+      IS byte-exact — `test_facts_and_occurrences_roundtrip_byte_identical` proves it. No dict-taking
+      `parse` entry needed.
+- [x] **Test file** — new `tests/unit/test_snapshot_v3_gate.py` (not an extension of
+      `test_hygiene_tail_loader.py`, which tests individual deserializer helpers on hand-built dicts —
+      this needs the full `load_extraction_snapshot` gate on a full snapshot dict, matching
+      `test_snapshot_contract.py`'s style instead) with the matrix stencil (cells a–h), the v2-rejection
+      test, and the round-trip test. Built the v3 fixture by hand-bumping the still-v2 committed
+      `chain_spike_model` snapshot + a locally-constructed `ConstraintFacts` (one package-owned admitted
+      assert, license-free, mirrors `test_constraint_lowering.py`'s non-license-gated builders) so cell
+      (g)'s embedded expression-ir scan has a real node to corrupt.
+- [x] **Deviation (pulled forward from Phase 4):** `scripts/capture_extraction_snapshots.py`'s
+      `_capture_extraction_only` now also passes the three new params (facts via
+      `extract_constraint_facts`, mode `grandfathered_off`, empty table) — done now rather than in
+      Phase 4, because Phase 2's serializer signature change (three new **required** params) breaks
+      that call site immediately, not just at Phase 4's flag-flip. Left everything else in
+      `capture_extraction_snapshots.py`/`capture_pipeline_baselines.py` for Phase 4/5 as planned.
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/unit/test_hygiene_tail_loader.py` → all matrix cells raise
-      `SnapshotFormatError` with the right message; round-trip byte-identical
-- [ ] `uv run pytest tests/unit/test_occurrence_roundtrip_parity.py` → still green
-- [ ] `uv run ruff check src/`; `uv run mypy src/` → no new errors
-- [ ] **Full suite is expected RED here** on snapshot-loading tests (committed v2 corpus no longer
-      loads — see the surfacing note above). Record which tests are red and confirm they are all
-      and only snapshot-loading tests; anything else red is a real regression.
+- [x] `uv run pytest tests/unit/test_snapshot_v3_gate.py` → all 10 tests pass: 8 matrix cells raise
+      `SnapshotFormatError` with the right message + "recapture"; v2-rejection; round-trip byte-identical
+- [x] `uv run pytest tests/unit/test_occurrence_roundtrip_parity.py` → still green
+- [x] `uv run ruff check src/`; `uv run mypy src/` → clean; mypy 76 (baseline, no new errors)
+- [x] **Full suite is expected RED here** on snapshot-loading tests: 245 failed, 1315 passed, 692
+      errors. Traced every failure/error to the version-gate rejection (`grep`'d the run output for
+      non-snapshot causes — every failure/error is downstream of `tests/conformance/conftest.py`'s
+      session-scoped `extraction_snapshots` fixture, which loads every committed v2 snapshot and now
+      hits the version gate). Nothing else is red.
 
 **Manual:**
-- [ ] Read one generated v3 snapshot: three new keys present, facts section canonical/sorted,
-      `part_occurrences` owner keys sorted, mode `"applied"`.
-- [ ] Verify every rejection message names the missing/bad section and ends with a re-capture
-      instruction (grep the messages).
+- [x] Read a generated v3 snapshot dict in the round-trip test: three new keys present, facts section
+      canonical (byte-identical to `constraint_facts.serialize` output), `part_occurrences` owner keys
+      sorted (verified by construction — `serializer.py` builds the dict via `sorted(...)`), mode
+      `"applied"`.
+- [x] Verify every rejection message names the missing/bad section and ends with a re-capture
+      instruction — asserted directly in the test (`"recapture" in str(exc_info.value).lower()`) for
+      every matrix cell.
 
 **What we know works after this phase:** a v3 snapshot carries honest facts + occurrences + mode;
 the load boundary raises loudly on all eight corruption cells and never `KeyError`s. The silence
@@ -548,7 +566,28 @@ where staleness becomes a hard boundary. Explicit, accepted, not an oversight.
 hand-rolled JSON.
 
 ### Phase 2 Completion
-—
+**Completed:** 2026-07-13
+**Actual Changes:**
+- `snapshot/__init__.py`: `SNAPSHOT_FORMAT_VERSION = 3`; `CONSTRAINT_LOWERING_MODE_APPLIED`,
+  `CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF`, `VALID_CONSTRAINT_LOWERING_MODES`.
+- `orchestration/pipeline_context.py`: `constraint_lowering_mode: str = "grandfathered_off"` field.
+- `orchestration/pipeline_builder.py`: computes and threads the mode string into `PipelineContext`.
+- `snapshot/serializer.py`: `serialize_extraction_snapshot` gains three required keyword params
+  (`constraint_facts`, `part_occurrences`, `constraint_lowering_mode`); writes them into the
+  returned dict, `part_occurrences` with sorted owner keys.
+- `snapshot/capture.py`: threads `ctx.constraint_facts`/`ctx.part_occurrences`/`ctx.constraint_lowering_mode`.
+- `snapshot/loader.py`: the eight-step gate (all three keys required, facts well-formed, facts
+  version pin, embedded expression-ir version scan, mode enum, code-pin asserts, deserialize);
+  new `_scan_expression_ir_versions` helper.
+- `scripts/capture_extraction_snapshots.py`: `_capture_extraction_only` now also emits the three
+  keys (pulled forward from Phase 4 — see deviation above).
+- `tests/unit/test_snapshot_v3_gate.py` (NEW): 10 tests — the 8-cell rejection matrix, v2-rejection,
+  round-trip.
+**Issues:** None beyond the deviation already logged above (extraction-only capture fix pulled
+forward).
+**Deviations:** (1) test file is new (`test_snapshot_v3_gate.py`), not an extension of
+`test_hygiene_tail_loader.py` — logged above with rationale. (2) `_capture_extraction_only` fixed
+now instead of Phase 4 — logged above with rationale. Neither changes scope, only sequencing.
 
 ### Phase 3 Completion
 —

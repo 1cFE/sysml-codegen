@@ -40,6 +40,7 @@ def capture_snapshot(
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
     ctx = build_pipeline_context(model_paths, design_path_filter=design_path_filter)
+    assert ctx.constraint_facts is not None  # build_pipeline_context always populates it
 
     snapshot = serialize_extraction_snapshot(
         model_name=model_paths[0].name,
@@ -50,6 +51,9 @@ def capture_snapshot(
         aggregation_expressions=ctx.aggregation_expressions,
         computed_attributes=ctx.computed_attributes,
         channel_aliases=ctx.channel_aliases,
+        constraint_facts=ctx.constraint_facts,
+        part_occurrences=ctx.part_occurrences,
+        constraint_lowering_mode=ctx.constraint_lowering_mode,
         compilation_results=ctx.compilation_results,
         constraint_manifest=ctx.constraint_manifest,
         output_dir=output_path.parent,

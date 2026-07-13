@@ -131,6 +131,13 @@ class PipelineContext:
     # a `FrozenOccurrenceIndex` with no live model.
     part_occurrences: dict[str, list[InstanceOccurrence]] = field(default_factory=dict)
 
+    # "applied" when this build ran lowering (`lower_constraints_enabled=True`),
+    # "grandfathered_off" when it did not (Item 8, D3). Decouples "facts present"
+    # from "lower offline" so the two flip surfaces (live default, offline
+    # dispatch) can move together without silently dropping the grandfathered
+    # pair's assertions.
+    constraint_lowering_mode: str = "grandfathered_off"
+
 
 __all__ = [
     "CodeGenerationError",

@@ -22,8 +22,9 @@ import datetime
 import json
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from agentic_mbse.sysml.constraint_facts import serialize as serialize_constraint_facts
 from pydantic import BaseModel
 
 from sysml_codegen.extraction.constraint_report import (
@@ -31,6 +32,11 @@ from sysml_codegen.extraction.constraint_report import (
     manifest_to_records,
 )
 from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
+
+if TYPE_CHECKING:
+    from agentic_mbse.sysml.constraint_facts import ConstraintFacts
+
+    from sysml_codegen.analysis.part_instance_index import InstanceOccurrence
 
 # Fields that hold live SysIDE Java objects — always nullify.
 _AST_FIELDS = frozenset({
@@ -53,6 +59,9 @@ def serialize_extraction_snapshot(
     aggregation_expressions: list[Any],
     computed_attributes: list[Any],
     channel_aliases: list[Any],
+    constraint_facts: ConstraintFacts,
+    part_occurrences: dict[str, list[InstanceOccurrence]],
+    constraint_lowering_mode: str,
     compilation_results: dict[str, Any] | None = None,
     constraint_manifest: list[ConstraintManifestEntry] | None = None,
     output_dir: Path | None = None,
@@ -68,6 +77,14 @@ def serialize_extraction_snapshot(
         aggregation_expressions: List of ScopedAggregationData.
         computed_attributes: List of ComputedAttributeData.
         channel_aliases: List of ChannelAlias.
+        constraint_facts: the neutral ``ConstraintFacts`` (Item 1) — always
+            present, embedded via its own canonical ``serialize()`` (bytes
+            preserved, not re-derived). May carry empty ``usages``.
+        part_occurrences: the resolved per-owner occurrence table (Item 8, MF3)
+            — the transcript of the capture-time ``lower_constraints`` call's
+            ``occurrences_of`` queries. ``{}`` when lowering did not run.
+        constraint_lowering_mode: ``"applied"`` or ``"grandfathered_off"`` (Item
+            8, D3) — always present.
         compilation_results: dict[str, CalcDefCompilationResult] keyed by
             calc_def.name (SC-10). Absent/None → empty block; loader degrades.
         constraint_manifest: model-wide dropped-constraint manifest (Item 4).
@@ -78,12 +95,20 @@ def serialize_extraction_snapshot(
 
     Returns:
         JSON-safe dict suitable for json.dumps(). The top-level
-        ``snapshot_format_version`` gates loading (INV-2).
+        ``snapshot_format_version`` gates loading (INV-6).
     """
     return {
         "snapshot_format_version": SNAPSHOT_FORMAT_VERSION,
         "model_name": model_name,
         "captured_at": datetime.datetime.now(datetime.UTC).isoformat(),
+        "constraint_lowering_mode": constraint_lowering_mode,
+        "constraint_facts": json.loads(serialize_constraint_facts(constraint_facts)),
+        # Owner keys emitted sorted (INV-7/MF4) — snapshot_to_json does not
+        # sort_keys, so an unsorted dict would churn this section every capture.
+        "part_occurrences": {
+            owner_eqn: _serialize_value(occurrences, output_dir)
+            for owner_eqn, occurrences in sorted(part_occurrences.items())
+        },
         "compilation_results": {
             str(name): _serialize_value(cr, output_dir)
             for name, cr in (compilation_results or {}).items()

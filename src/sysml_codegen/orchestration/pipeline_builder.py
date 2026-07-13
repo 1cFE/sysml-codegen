@@ -61,6 +61,10 @@ from sysml_codegen.orchestration.pipeline_context import (
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import ConcreteConstraint, ConstraintInputResolution
 from sysml_codegen.resolution.supplied_values import materialize_supplied_values
+from sysml_codegen.snapshot import (
+    CONSTRAINT_LOWERING_MODE_APPLIED,
+    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1016,6 +1020,11 @@ def build_pipeline_context(
         concrete_constraints=concrete_constraints,
         constraint_facts=constraint_facts,
         part_occurrences=part_occurrences,
+        constraint_lowering_mode=(
+            CONSTRAINT_LOWERING_MODE_APPLIED
+            if lower_constraints_enabled
+            else CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF
+        ),
     )
 
 

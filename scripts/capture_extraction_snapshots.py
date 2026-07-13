@@ -29,6 +29,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
 
+from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
+
 from scripts.capture_filter import select_fixtures
 
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
@@ -38,6 +40,7 @@ from sysml_codegen.orchestration.pipeline_builder import (
     _extract_hierarchy_and_rewrite_bindings,
 )
 from sysml_codegen.snapshot import (
+    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
     capture_snapshot,
     serialize_extraction_snapshot,
     snapshot_to_json,
@@ -170,6 +173,12 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         aggregation_expressions=scoped_agg_data,
         computed_attributes=computed_attrs,
         channel_aliases=all_aliases,
+        # Extraction-only never builds a pipeline, so lowering never runs (Item
+        # 8, INV-1): the facts are extracted honestly, the mode is the
+        # grandfather value, and the occurrence table is empty.
+        constraint_facts=extract_constraint_facts(extractor.model),
+        part_occurrences={},
+        constraint_lowering_mode=CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
         compilation_results={},  # extraction-only: no graph, no compilation
         # Manifest is model-wide and does not need the graph, so the
         # extraction-only path must carry it too — otherwise a constraint-bearing
