@@ -109,6 +109,15 @@ remove.
   `python_expression`, same `input_refs`/`intermediate_refs` ordering, same `compilability`.
   *If false → the serialized snapshot section churns and downstream graphs shift; caught by the
   snapshot round-trip + `test_factory_purity` gates.*
+- **B4 (settled — evidence, not open bet). The landed extractor preserves the integer-vs-float
+  literal distinction, so `str(literal.value)` reproduces the old string.** The old path renders
+  `str(raw_syside_value)`: an integer literal `4` → `"4"`, a rational `4.0` → `"4.0"`. This was
+  the one bet that, if false, forced a cross-repo fix (a `Real`-normalizing IR would make `"4"`
+  unrecoverable). **Orchestrator settled it with evidence:** the landed `extract_expression_ir`
+  keeps `LiteralInteger` values as Python `int` (`1`, `100`) and `LiteralRational` as `float`
+  (`2.0`, `12.0`) — confirmed in `production_facts.json`, and `LiteralFact.kind` carries the
+  metaclass. So `str(value)` renders `4` and `4.0` correctly with no cross-repo change. The
+  Stage-0 corpus gate (which includes integer-literal calc outputs, N5) stays as the backstop.
 
 ## Key Decisions
 
@@ -170,13 +179,22 @@ Producer side only changes; everything downstream of the compiled string is unto
   intermediate discovery, topological sort (`expression_compiler.py:486-533`). Only the
   per-output `build_expression_ast`+`compile_expression`+`_collect_refs` triple inside the loop
   (`:580-602`) swaps to `extract_ir`+`render`+IR-ref-collect. The orchestration does not move.
+- **Seam name sets (M3, byte-identity-critical).** At the `compile_calc_def` seam the renderer
+  gets `input_names = {a.name for a in calc_def.input_attributes}` and
+  `member_names = output_names ∪ all_member_names`. This mirrors `build_expression_ast`'s
+  three-way classification exactly (`expression_compiler.py:388-393`): a ref renders as
+  `inputs.x` when in `input_names`, and as bare `x` (an intermediate) when in `output_names`
+  **or** `all_member_names`. Passing only `all_member_names` — trusting it to contain declared
+  outputs — is the mistake to avoid; the union is what reproduces the serialized
+  `intermediate_refs`.
 - **`computed_attribute_extractor`** swaps its one `build_expression_ast`+`compile_expression`
-  call (`:300-306`) for the same renderer, passing `input_names = siblings − self`, empty
-  member set (so any non-input ref errors → `MANUAL_REQUIRED`, as today via UNSUPPORTED).
+  call (`:300-306`) for the same renderer, passing `input_names = siblings − self` and an
+  **empty** `member_names` (so any non-input ref errors → `MANUAL_REQUIRED`, as today via
+  UNSUPPORTED — the path's `output_names=set()`, `all_member_names=None` today).
 - **Ref collection moves onto the IR.** `_collect_refs` walks ExpressionAST INPUT_REF/
-  INTERMEDIATE_REF nodes; the replacement walks `FeatureReferenceNode` leaves and classifies
-  against the same name sets, preserving pre-order first-occurrence dedup so
-  `input_refs`/`intermediate_refs` stay byte-identical (B3).
+  INTERMEDIATE_REF nodes; the replacement (`collect_calc_refs`) walks `FeatureReferenceNode`
+  leaves and classifies against the *same* `input_names` / `member_names` sets, preserving
+  pre-order first-occurrence dedup so `input_refs`/`intermediate_refs` stay byte-identical (B3).
 
 ## Required Invariants
 
@@ -205,6 +223,34 @@ Producer side only changes; everything downstream of the compiled string is unto
 - **`tests/.../test_calc_compat_parity.py`** (new) — the S2 proof, productionized: old-vs-new
   over the corpus while both paths exist; converts to a golden-file test at deletion (D4).
 - **Grep gate** — a test (or CI check) asserting INV-4 over `src/`.
+- **Test surface retired/re-anchored at Stage 4 (M1) — seven files, ~240 references.** Deleting
+  the three symbols (plus `ExpressionNodeType`, `PYTHON_OPERATOR_MAP`, `_collect_refs`) breaks
+  tests that import or exercise them. Stage 4 owns the transfer; per-stage suite-green holds
+  because these references live untouched until Stage 4. Categorized:
+  - **Re-anchor onto the renderer (behavior/dialect contract the renderer inherits):**
+    `tests/unit/test_expression_compiler.py` (238 refs — the bulk; its *dialect* cases
+    "expression → expected Python string": `inputs.x`, `^`→`**`, unit-strip, n-ary fold,
+    int/float literals, unresolved-ref → `CompilationError` become `render_calc_expression`
+    tests fed IR); `tests/conformance/test_expression_compiler.py` (61 — corpus/conformance
+    dialect).
+  - **Retire (subject deleted — tests of the old tree's internal shape):** the
+    `ExpressionAST`-construction / `ExpressionNodeType` cases in `test_expression_compiler.py`;
+    the `ExpressionNodeType` data-model inventory rows in
+    `tests/conformance/test_data_models.py:223-225,692`; the two
+    `build_expression_ast`-FCE-dispatch unit tests in
+    `tests/conformance/test_ast_dispatch_invariant.py:399-426` (raw-node dispatch now lives in
+    agentic-mbse's extractor).
+  - **REQ-AST-04 invariant update** (`test_ast_dispatch_invariant.py:263-327`): the renderer
+    consumes `ExpressionIR` (isinstance on IR node classes), **not** raw-syside `is_instance()`,
+    so it adds **no** dispatch site. Deleting `build_expression_ast` drops the two hard-coded
+    counts: multi-type audited functions **6 → 5**, FCE+OE-ordered sites **4 → 3**. Update both
+    with a comment that the raw-node FCE-before-OE dispatch responsibility moved cross-repo to
+    the reused extractor (out of this repo's invariant scope). Do **not** add the renderer to the
+    audited set.
+  - **Comment-only, trivial:** `tests/integration/test_hierarchy_e2e.py:418` and
+    `tests/helpers/impl_execution.py:3` name a symbol in a docstring only — scrub the stale
+    mention. `tests/unit/test_computed_attribute_extraction.py` keeps its `Compilability` import
+    (kept symbol); its compiled-string assertions re-anchor with Stage 2.
 
 ## Non-Goals
 
@@ -216,11 +262,40 @@ convergence onto `ExpressionIR` is a named future coordinated-pair item.
 
 - **Corpus = the `tests/fixtures/*` models that carry calc output expressions**, the same set
   probe4/probe5 and the pipeline baselines already cover (`scripts/capture_pipeline_baselines.py`,
-  `test_factory_purity`). The parity test iterates them the way probe4 does.
-- **Renderer must match `compile_expression` exactly:** `str(value)` literals (not `repr`),
-  `PYTHON_OPERATOR_MAP` spacing (`" + "`, `^`→`" ** "`), unary as `(-x)`, unit-strip to the
-  value operand, `inputs.{name}` for inputs and bare name for intermediates, then
-  `python_ast.parse` validation (D3).
+  `test_factory_purity`). The parity test iterates them fixture-only — verified to cover probe4's
+  synthetic SCRATCH shapes, which committed fixtures now subsume (`-(a + b)`, `a ** b ** c`,
+  7-ary sums, nested parens; unary/power/n-ary/nested). **N5:** the iterator must include an
+  integer-literal calc-def output — `return_styles` has two (`out y = a * 2`, `out y = x * 4`) —
+  so the literal rule (below) is gated at Stage 0, not only at Stage 2's computed-attr golden.
+- **N1 — Stage-0 name-set provenance.** The `input_names`/`member_names` fed to *both* paths in
+  the parity assertion must be the sets `compile_calc_def` derives (`input_attributes`,
+  `output_attributes ∪ all_member_names`), not re-derived probe4-style by walking `owned_elements`
+  by direction. A green Stage-0 built on non-production name sets proves less than it looks;
+  Stage-1's full-`CalcDefCompilationResult` comparand backstops it, but build Stage 0 right.
+- **Renderer must match `compile_expression` exactly:**
+  - **Literals (M2):** render integer literals as `str(int(value))` and reals as
+    `str(float(value))`, keyed on the IR node's literal type (`LiteralInteger` → int,
+    `LiteralRational` → float; B4 confirms the extractor preserves this). This reproduces the raw
+    syside value the old path passed through `str()` unmodified — `4` stays `"4"`, `4.0` stays
+    `"4.0"`. This is the actual byte-identity failure mode; the Stage-0 corpus gate (with N5's
+    integer output) proves it.
+  - **Operators/structure:** `PYTHON_OPERATOR_MAP` spacing (`" + "`, `^`→`" ** "`), unary as
+    `(-x)`, unit-strip to the value operand, `inputs.{name}` for inputs and bare name for
+    intermediates, then `python_ast.parse` validation (D3). Keep calling this module's
+    `_sanitize_name` (its intentional divergence from the shared sanitizer is load-bearing —
+    `expression_compiler.py:167`), not the shared one.
+- **N2 — the renderer error branch is dead for the corpus; byte-identity does not hinge on
+  error-string parity.** Across every committed snapshot the only serialized `unsupported_reason`
+  is `"no expression AST"` (an **orchestration**-level reason from `compile_calc_def:573`,
+  untouched by the swap). No renderer-path reason string (`"unresolved reference"`,
+  `"unsupported operator"`, feature-chain) is serialized anywhere in the corpus, and the
+  computed-attr path *logs* its reason without persisting it
+  (`computed_attribute_extractor.py:308-316`). So full-`CalcDefCompilationResult` equality holds
+  without the renderer reproducing the old error text — the error route is safe but effectively
+  unexercised by the gate.
+- **N3 — stale comment.** `hierarchy_resolver.py:54` mentions `PYTHON_OPERATOR_MAP` in a comment;
+  it survives deletion (comment, outside the grep-gate's 3-symbol scope) but scrub it when the
+  symbol goes.
 - **License incantation for the plan:** export the key from `.env` before the live legs, e.g.
   `set -a; source .env; set +a` then `uv run pytest -m requires_license` / the capture script.
   Snapshot-replay legs need no license.
@@ -235,13 +310,16 @@ convergence onto `ExpressionIR` is a named future coordinated-pair item.
 - **R2 — landed extractor ≠ spike extractor (B1).** The real tree shape may differ from
   `s2_ir`'s (n-ary normalization, unit node shape). *Mitigation:* the Stage-0 parity test proves
   byte-identity with the *landed* extractor before any flip; a divergence is a renderer fix, not
-  a cutover failure.
+  a cutover failure. **The literal int/float sub-case (B4) is settled by evidence — no longer a
+  risk** (`production_facts.json`: `LiteralInteger` → int, `LiteralRational` → float).
 - **R3 — ref-list ordering drift.** IR ref collection must reproduce `_collect_refs` pre-order
   dedup exactly, or the serialized section churns. *Mitigation:* INV-1 comparand is the full
   `CalcDefCompilationResult` (strings **and** ref lists), not just the expression string.
-- **R4 — Item 8 concurrency.** Baseline is the post-Item-8 corpus; Item 8 re-captures snapshots
-  concurrently. *Mitigation:* orchestrator sequences implement after Item 8 certifies; rebaseline
-  against the certified corpus and run the timestamp-churn check.
+- **R4 — Item 8 already landed (was concurrency; N4 downgrade).** Item 8 Phase 5 (`df5ed97`,
+  "corpus re-capture at v3 — item complete") is committed on this branch, so the post-Item-8
+  corpus is **fixed, not moving** — the coupling is de-risked. *Action:* rebaseline the plan onto
+  current HEAD (the design's base commit predates `df5ed97`) and treat the v3 corpus as the fixed
+  baseline; still run the timestamp-churn revert on any re-capture.
 
 ## Integration Strategy — Staging and Comparands
 
@@ -266,11 +344,16 @@ its commit. Deletion is last and is the only hard-to-reverse step.
   packages stay byte-identical over committed snapshots (license-free) and the serialized
   `compilation_results` round-trips byte-identically. Re-capture only if the capture *shape*
   changed (it must not), as a reviewed diff.
-- **Stage 4 — delete + grep gate.** Convert the parity test to a committed golden (D4); delete
-  `ExpressionAST`, `ExpressionNodeType`, `PYTHON_OPERATOR_MAP`, `build_expression_ast`,
-  `compile_expression`, `_collect_refs`; add the grep gate (INV-4). *Order:* convert test →
-  confirm no `src/` reference remains → delete symbols → add grep gate. *Rollback:* revert this
-  commit to restore the old path (Stages 1–2 still green on it).
+- **Stage 4 — retire test surface + delete + grep gate.** This stage is *not* "delete symbols +
+  grep gate" — it owns the ~240-reference test surface (M1, see Component Overview). *Order:*
+  (1) convert the parity test to a committed golden (D4); (2) re-anchor the renderer's inherited
+  dialect tests onto `render_calc_expression` and retire the old-tree-shape tests; (3) update
+  REQ-AST-04's two counts (6→5, 4→3) and retire the `build_expression_ast` dispatch unit tests;
+  (4) scrub the comment-only mentions; (5) confirm no `src/` **or test** reference to the three
+  symbols remains; (6) delete `ExpressionAST`, `ExpressionNodeType`, `PYTHON_OPERATOR_MAP`,
+  `build_expression_ast`, `compile_expression`, `_collect_refs` and the stale
+  `hierarchy_resolver.py:54` comment (N3); (7) add the grep gate (INV-4). *Rollback:* revert this
+  commit to restore the old path and its tests (Stages 1–2 still green on it).
 
 ## Validation Approach
 
@@ -287,9 +370,13 @@ its commit. Deletion is last and is the only hard-to-reverse step.
 
 - **Fixed:** the four-stage order and per-stage comparands (INV-1); one renderer module in
   `extraction/` (D1); reuse-not-rebuild the extractor (D2); shape frozen (INV-3); grep-gate
-  scope (INV-4); deletion last.
+  scope (INV-4); deletion last. **Post-review pins:** seam `member_names = output_names ∪
+  all_member_names` (M3); literal rule `str(int|float value)` keyed on IR literal type, B4
+  settled by evidence (M2); Stage-4 test surface scoped and categorized, incl. REQ-AST-04
+  counts 6→5 / 4→3 (M1).
 - **Open:** the extractor's public single-node entry point (R1) — **resolve first**, license-free.
-- **De-risk first:** R1, then B1 via the Stage-0 parity test. Do not wire any consumer until the
+- **De-risk first:** R1, then B1/B2 via the Stage-0 parity test built on production name sets
+  (N1) and including an integer-literal calc output (N5). Do not wire any consumer until the
   Stage-0 test is green with the landed extractor.
 
 ---
