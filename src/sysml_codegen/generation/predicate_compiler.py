@@ -28,8 +28,10 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 __all__ = [
+    "KLEENE_RUNTIME_SOURCE",
     "PredicateCompileError",
     "compile_predicate",
+    "function_source_only",
     "load_predicate",
     "margin_expression",
 ]
@@ -89,6 +91,9 @@ def _norm0(x):
     """Normalize an exact-boundary signed zero (-0.0) to 0.0 (`[HARD]`)."""
     return 0.0 if x == 0.0 else x
 '''
+
+
+KLEENE_RUNTIME_SOURCE = _KLEENE_RUNTIME
 
 
 class PredicateCompileError(Exception):
@@ -207,6 +212,21 @@ def {fn_name}({", ".join(args)}):
     return _PredicateResult(actual_value=value, status=status, margin={margin})
 '''
     return src, args
+
+
+def function_source_only(full_source: str) -> str:
+    """Strip the leading ``_KLEENE_RUNTIME`` prelude from one `compile_predicate` output.
+
+    D3: the shared predicates module emits the runtime block once, then each definition's
+    function body — never one runtime block per function. ``full_source`` must be a string
+    `compile_predicate` produced (it always starts with the runtime prelude).
+    """
+    if not full_source.startswith(_KLEENE_RUNTIME):
+        raise PredicateCompileError(
+            "function_source_only expects a compile_predicate() output (runtime-prelude "
+            "prefixed source)"
+        )
+    return full_source[len(_KLEENE_RUNTIME) :]
 
 
 def load_predicate(src: str, fn_name: str) -> Any:

@@ -162,41 +162,41 @@ def test_same_ir_mutation_fails_naming_id(constraint_graph):
 **See design.md for:** seam-by-seam map → `design.md#appendix-a`; evidence schemas → `design.md#appendix-b` (D5); catalog assembly + fingerprint → D6; naming scheme → D9; the same-IR two-arm guard → INV-2 and `design.md#implementation-notes`; B5 assertion → B5 and Implementation Notes ("predicate args vs module inputs").
 
 **Catalog + schemas:**
-- [ ] `src/sysml_codegen/generation/constraint_catalog.py` (NEW) — assemble `ConstraintCatalog` from `ctx.concrete_constraints` + `ctx.constraint_facts`, add `predicate_ir` to each **concrete entry** (INV-2 arm (b) needs it; S4 put it only on source records), compute sha256-of-canonical-JSON fingerprint once, set on graph before generation.
-- [ ] `resolution/models.py` — `ConstraintCatalog` model; **optional** `ConstraintCatalog` field on `ComputationGraph` (defaults `None` → constraint-free serializes no field, INV-7).
-- [ ] `src/sysml_codegen/templates/constraint_types.py.jinja2` (NEW) + wire into `_generate_schemas` — `ConstraintEvaluation` / `ConstraintReport` per Appendix B; gated on catalog presence.
+- [x] `src/sysml_codegen/generation/constraint_catalog.py` (NEW) — assemble `ConstraintCatalog` from `ctx.concrete_constraints` + `ctx.constraint_facts`, add `predicate_ir` to each **concrete entry** (INV-2 arm (b) needs it; S4 put it only on source records), compute sha256-of-canonical-JSON fingerprint once, set on graph before generation.
+- [x] `resolution/models.py` — `ConstraintCatalog` model; **optional** `ConstraintCatalog` field on `ComputationGraph` (defaults `None` → constraint-free serializes no field, INV-7).
+- [x] `src/sysml_codegen/templates/constraint_types.py.jinja2` (NEW) + wire into `_generate_schemas` — `ConstraintEvaluation` / `ConstraintReport` per Appendix B; gated on catalog presence.
 
 **Seams (render three, skip three, path helper):**
-- [ ] `src/sysml_codegen/templates/constraint_predicates.py.jinja2` + `constraint_module.py.jinja2` + `report_aggregator.py.jinja2` (NEW).
-- [ ] `generation/modules.py` — render `CONSTRAINT` (import shared predicate, embed `constraint_id`, build evidence; **assert `leaf_names ⊆ input param_names`** naming the id on failure — B5) and `REPORT_AGGREGATOR` (exact schema one-required-field-per-eligible + `extra="forbid"`, headline precedence). Shared predicates module written once during `_generate_modules` (D3).
-- [ ] `generation/pipeline.py` — render constraint/aggregator YAML block (same shape as calc, D7) [exit pin already in Phase 2].
-- [ ] `generation/registry.py` — 4th partition (constraint + aggregator, class from `module_type`) + `constraint_types` imports into `CUSTOM_SCHEMA_TYPES`.
-- [ ] `generation/test_gen.py`, `generation/stencils.py` (incl. backlog-report) — **skip** constraint kinds like FORMULA/AGGREGATION (D8).
-- [ ] `cli/__init__.py` `_get_python_path` / `_check_duplicate_output_paths` — derive constraint/aggregator paths from `module_type`/`name`, not `calc_def_qualified_name`. (Verify whether Item 6's faildloud path already tolerates constraint kinds; add explicit derivation if it crashes first — design#potential-risks.)
+- [x] `src/sysml_codegen/templates/constraint_predicates.py.jinja2` + `constraint_module.py.jinja2` + `report_aggregator.py.jinja2` (NEW).
+- [x] `generation/modules.py` — render `CONSTRAINT` (import shared predicate, embed `constraint_id`, build evidence; **assert `leaf_names ⊆ input param_names`** naming the id on failure — B5) and `REPORT_AGGREGATOR` (exact schema one-required-field-per-eligible + `extra="forbid"`, headline precedence). Shared predicates module written once during `_generate_modules` (D3).
+- [x] `generation/pipeline.py` — render constraint/aggregator YAML block (same shape as calc, D7) [exit pin already in Phase 2].
+- [x] `generation/registry.py` — 4th partition (constraint + aggregator, class from `module_type`) + `constraint_types` imports into `CUSTOM_SCHEMA_TYPES`.
+- [x] `generation/test_gen.py`, `generation/stencils.py` (incl. backlog-report) — **skip** constraint kinds like FORMULA/AGGREGATION (D8).
+- [x] `cli/__init__.py` `_get_python_path` / `_check_duplicate_output_paths` — derive constraint/aggregator paths from `module_type`/`name`, not `calc_def_qualified_name`. (Item 6's faildloud path did NOT already tolerate constraint kinds — both raised via `unrenderable_module_kind_error`; explicit derivation added to both.)
 
 **Same-IR guard (INV-2), before the single compile:**
-- [ ] arm (a) round-trip stability per entry: `serialize(parse(entry.predicate_ir)) == entry.predicate_ir` (B3);
-- [ ] arm (b) byte-agreement: all concrete entries sharing a `definition_qn` carry identical `predicate_ir`; violation → `CodeGenerationError` naming the id.
+- [x] arm (a) round-trip stability per entry: `serialize(parse(entry.predicate_ir)) == entry.predicate_ir` (B3);
+- [x] arm (b) byte-agreement: all concrete entries sharing a `definition_qn` carry identical `predicate_ir`; violation → `CodeGenerationError` naming the id.
 
 **Item 5 touch (D11):**
-- [ ] `analysis/constraint_lowering.py` `if eligible:` (~line 761) — relax so the `REPORT_AGGREGATOR` module emits whenever lowering ran (zero-eligible → empty-input aggregator, headline `not_assessed`). `agg_inputs` stays sourced from `eligible`. Guard with a zero-assertion fixture; constraint-free path (no lowering) untouched.
+- [x] `analysis/constraint_lowering.py` `if eligible:` (~line 761) — relax so the `REPORT_AGGREGATOR` module emits whenever lowering ran (zero-eligible → empty-input aggregator, headline `not_assessed`). `agg_inputs` stays sourced from `eligible`. Guard with a zero-assertion fixture; constraint-free path (no lowering) untouched.
 
 **Flip the faildloud suite:**
-- [ ] `tests/conformance/test_module_kind_faildloud.py` — invert the six refuse-tests: module-wrapper / pipeline-yaml / registry assert real rendering; test-gen / stencil / backlog-report assert clean skip; duplicate-path check tolerates constraint kinds.
+- [x] `tests/conformance/test_module_kind_faildloud.py` — invert the six refuse-tests: module-wrapper / pipeline-yaml / registry assert real rendering; test-gen / stencil / backlog-report assert clean skip; duplicate-path check tolerates constraint kinds.
 
 **Fixtures (NEW, generation-level):**
-- [ ] two-instance-of-one-definition fixture (compile-once × class-per-assertion);
-- [ ] B5 negative fixture (predicate leaf with no matching input);
-- [ ] the S4-slice fixture, generated and asserted at the artifact level.
+- [x] two-instance-of-one-definition fixture (compile-once × class-per-assertion) — hand-built in `test_constraint_emission.py` (offline) and the real `constraint_multi_instance` fixture (three occurrences, `@requires_license`) in `test_constraint_generation_live.py`.
+- [x] B5 negative fixture (predicate leaf with no matching input) — `test_constraint_emission.py::test_leaf_without_matching_input_fails_generation_naming_id`.
+- [x] the S4-slice fixture (`wi014_toy`), generated and asserted at the artifact level — `test_constraint_generation_live.py::test_s4_slice_generation_level_reproduction` (`@requires_license`).
 
 ### Validation
 **Automated (generation-level, offline, `lower_constraints_enabled=True`):**
-- [ ] `uv run pytest tests/unit/test_constraint_emission.py tests/conformance/test_module_kind_faildloud.py` → two-instance shares one predicate; B5 negative fires; same-IR mutation fails naming id; six seams behave.
-- [ ] Generate the S4-slice package; assert on generated artifacts (constraint module class, aggregator exact schema, `schemas/constraint_types.py`, registry `CUSTOM_SCHEMA_TYPES`, `predicates.py`) — the S4 generation-level reproduction.
-- [ ] `uv run pytest tests/` → no regressions.
+- [x] `uv run pytest tests/unit/test_constraint_emission.py tests/conformance/test_module_kind_faildloud.py` → two-instance shares one predicate; B5 negative fires; same-IR mutation fails naming id; six seams behave. (17/17 pass.)
+- [x] Generate the S4-slice package; assert on generated artifacts (constraint module class, aggregator exact schema, `schemas/constraint_types.py`, registry `CUSTOM_SCHEMA_TYPES`, `predicates.py`) — the S4 generation-level reproduction. Two forms: `test_constraint_generation_integration.py` (offline, hand-built graph mirroring the S4 shape, runs in this sandbox) and `test_constraint_generation_live.py` (real `wi014_toy`, `@requires_license`, skips here for lack of a syside license — see Grounding/Risk notes; correctness verified by inspection against the same functions the offline test exercises).
+- [x] `uv run pytest tests/` → no regressions. 2031 passed / 23 failed / 96 errors / 85 skipped — the 23/96 are the pre-existing license-gated baseline (identical set to Phases 1-2); the extra 2 skips are the new `@requires_license` tests.
 
 **Manual:**
-- [ ] Diff a generated constraint module against S4's `s4_lib.py` emitter output — shapes match (productionizing the proven form).
+- [x] Diff a generated constraint module against S4's `s4_lib.py` emitter output — shapes match: predicate import + call, exact input schema, `MultiOutput` output class, `run()` validates all inputs then calls the predicate with its leaf-arg subset, `ConstraintEvaluation` construction from the verdict. Two intentional productionizing changes from the S4 shape: (1) the compiled function returns a `_PredicateResult` NamedTuple (`actual_value`/`status`/`margin` attributes) rather than S4's dict with a `value` key — Phase 1's committed test stencil already assumed attribute access; (2) the compiled predicate is shared (D3, one file per definition) rather than S4's inline-per-class emission.
 
 **What We Know Works After This Phase:** production generation emits the full constraint surface offline; compile-once and B5 are proven at generation; the same-IR guard catches divergence. The only thing not yet proven is real-simkit execution.
 
@@ -350,6 +350,33 @@ baseline + 3 new), same 23 failed / 96 errors baseline, no regressions. `ruff ch
 `mypy src/` — 76 errors, baseline held.
 
 ### Phase 3 Completion
+**Completed:** 2026-07-13
+**Changes Made:**
+- `resolution/models.py` — `ConstraintCatalog`/`ConstraintCatalogEntry`/`ConstraintCatalogSourceRecord`; `ComputationGraph.constraint_catalog` (`Optional`, `exclude=True` — matches `fallback_entry_points`'s in-memory-artifact pattern, needed to keep constraint-free JSON baselines byte-identical, INV-7).
+- `generation/constraint_catalog.py` (NEW) — `assemble_constraint_catalog`, `assert_same_ir` (INV-2 both arms), `predicate_definition_key` (compile-once grouping key = `usage_qualified_name`, the source assertion's identity — a part_def owner's N occurrences share one).
+- `generation/predicate_compiler.py` — added `KLEENE_RUNTIME_SOURCE` and `function_source_only()` exports so the shared predicates module can emit the runtime block once and N function bodies, not N copies of the runtime.
+- `generation/modules.py` — `compile_shared_predicates`, `render_constraint_predicates_module`, `render_constraint_module` (B5 assertion inline), `render_report_aggregator`; `generate_teax_module` dispatches to these for `CONSTRAINT`/`REPORT_AGGREGATOR` given an optional `catalog`/`compiled_predicates` kwarg pair.
+- `generation/pipeline.py`, `generation/registry.py` — render constraint/aggregator kinds (removed the Item-6 refusal; registry adds a 4th partition + `constraint_types` schema imports).
+- `generation/test_gen.py`, `generation/stencils.py` — constraint kinds now `continue` (skip) instead of raising (D8).
+- `cli/__init__.py` — `_get_python_path`/`_raw_source_name` derive constraint/aggregator paths from `module_type` directly (it's already Python-dotted, not a SysML QN); `_generate_schemas` writes `constraint_types.py` when a catalog exists; `_generate_modules` compiles the shared predicates once and writes `modules/constraints/predicates.py` before the per-module loop; `_generate_stencils` skips constraint kinds before reaching `_get_python_path`.
+- `analysis/constraint_lowering.py` — D11: the aggregator now emits unconditionally whenever `extend_graph_with_constraints` runs (the `if eligible:` gate removed; `agg_inputs` still sourced from `eligible`, so it's `[]` for a zero-eligible model).
+- Templates: `constraint_types.py.jinja2`, `constraint_predicates.py.jinja2`, `constraint_module.py.jinja2`, `report_aggregator.py.jinja2` (all NEW).
+- Tests: `tests/unit/test_constraint_emission.py` (compile-once, B5 positive/negative, same-IR both arms, D11 zero-eligible catalog), flipped `tests/conformance/test_module_kind_faildloud.py` (6 renders/skips + duplicate-path tolerance), `tests/conformance/test_constraint_generation_integration.py` (offline full-surface generation + `ast.parse` on every artifact), `tests/conformance/test_constraint_generation_live.py` (`@requires_license`, real `wi014_toy` + `constraint_multi_instance`).
+- Updated two pre-existing locked-field-count tests (`test_data_models.py`, `test_graph_assembly.py`) for the new `ComputationGraph` field, and two D11-superseded tests in `test_constraint_graph_extension.py` (the old "no aggregator when zero eligible" assertions inverted).
+
+**Deviations from plan:**
+- `assemble_constraint_catalog` returns a `ConstraintCatalog` unconditionally when called (never `None`) rather than `None` on zero-eligible — required for D11: the aggregator (which always renders when this function ran) needs a catalog to read `CATALOG_FINGERPRINT` from even with `concrete_entries == []`. `graph.constraint_catalog` itself is still `None` for a genuinely constraint-free model (the call site in `pipeline_builder.py` only invokes assembly inside `if concrete_constraints:`), so INV-7 is unaffected.
+- Compile-once grouping key is `usage_qualified_name`, not a `definition_qn` field (no such field exists on `ConcreteConstraint`/`ConstraintCatalogEntry`) — it *is* the source assertion's identity, which is what D3's "one definition" means for a part_def owner expanded to N occurrences.
+- `PythonModulePath` for constraint/aggregator kinds is derived directly from `module_type`'s dotted segments (not routed through `SysMLQualifiedName`/`from_sysml`, since `module_type` is already Python-form) — file stem is the whole final segment lowercased (D9 "file stem lowercased"), not a separately snake-cased name like S4's probe convention.
+- The `wi014_toy`/`constraint_multi_instance` generation-level tests are `@requires_license` and could not be executed in this sandbox (no syside license — confirmed via direct probe, matches [[syside-license-via-scripts-not-dashc]] except full pytest also lacks one here). Correctness cross-checked against `test_constraint_generation_integration.py`, which exercises the identical `cli._generate_*` call sequence offline against a hand-built graph shaped like the S4 slice, and passes.
+
+**Issues Encountered:**
+- First full-suite run after the `ComputationGraph` field addition broke 4 pre-existing byte-identity/locked-field tests (JSON baseline comparisons showed a stray `"constraint_catalog": null`, plus two field-count assertions) — fixed by adding `exclude=True` (matching `fallback_entry_points`) and updating the two locked-field-set tests, which is expected "graph-rev discipline" per their own docstrings, not a bug.
+- The D11 change broke two existing tests that asserted the *old* eligible-gated aggregator behavior (`test_constraint_graph_extension.py`) — expected, per the design's own note that this is a surfaced Item-5 touch; both updated to assert the new (aggregator-always-present) behavior instead.
+- mypy briefly regressed to 77 (one new error: `evaluation_channel` typed `str | None` on `ConcreteConstraint` vs required `str` on `ConstraintCatalogEntry`) — fixed with an explicit `assert ... is not None` matching the identical pattern already used in `constraint_lowering.py` for the same invariant.
+
+**Validation:** `uv run pytest tests/unit/test_constraint_emission.py tests/conformance/test_module_kind_faildloud.py tests/conformance/test_constraint_generation_integration.py tests/unit/test_constraint_graph_extension.py` — 42/42 pass. `uv run pytest tests/` — 2031 passed, 23 failed / 96 errors (pre-existing baseline, unchanged), 85 skipped. `ruff check src/` clean. `mypy src/` — 76 errors, baseline held.
+
 ### Phase 4 Completion
 ### Phase 5 Completion
 

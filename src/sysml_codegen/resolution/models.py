@@ -322,6 +322,53 @@ class ConcreteConstraint(BaseModel):
     tracking_key: str | None = None
 
 
+class ConstraintCatalogSourceRecord(BaseModel):
+    """One reusable ``constraint def``'s identity and formals (Item 7 / D6).
+
+    Assembled from ``ctx.constraint_facts.definitions`` — the source-level vocabulary a
+    concrete entry's ``predicate_ir`` was compiled from. Carries no predicate IR itself
+    (each concrete entry already carries its own effective ``predicate_ir``); this is the
+    handoff-level record of what definitions exist, for Item 8/9 consumers.
+    """
+
+    definition_qualified_name: str
+    formal_names: list[str] = Field(default_factory=list)
+
+
+class ConstraintCatalogEntry(BaseModel):
+    """One concrete, eligible assertion's catalog record (Item 7 / D6).
+
+    A thin, catalog-shaped projection of :class:`ConcreteConstraint` — every field a
+    generation seam or a same-IR guard reads, nothing else. ``predicate_ir`` is carried on
+    every entry (not just the source record) so the same-IR guard's arm (b) (byte-agreement
+    across entries sharing one definition) can run at the catalog level (INV-2).
+    """
+
+    constraint_id: str
+    usage_qualified_name: str
+    owner_instance_path: str
+    membership_kind: str | None
+    is_negated: bool | None
+    expected_value: bool | None
+    predicate_ir: str | None
+    evaluation_channel: str
+
+
+class ConstraintCatalog(BaseModel):
+    """The full constraint catalog embedded on :class:`ComputationGraph` (Item 7 / D6).
+
+    Assembled once from ``ctx.concrete_constraints`` (eligible entries) and
+    ``ctx.constraint_facts`` (source records), fingerprinted once (sha256 of canonical JSON
+    over ``source_records`` + ``concrete_entries``), and set on the graph before generation —
+    every seam that needs catalog data reads it from here, never from ``ctx`` (Appendix A/D6:
+    "generation reads only the graph").
+    """
+
+    source_records: list[ConstraintCatalogSourceRecord] = Field(default_factory=list)
+    concrete_entries: list[ConstraintCatalogEntry] = Field(default_factory=list)
+    fingerprint: str
+
+
 class ComputationGraph(BaseModel):
     """The complete computation graph derived from BacktrackingResult.
 
@@ -344,6 +391,12 @@ class ComputationGraph(BaseModel):
             real generated output — **not** excluded (contrast
             ``fallback_entry_points``): it is serialized on every graph and
             drives the named exit-point captures in the pipeline YAML.
+        constraint_catalog: The assembled :class:`ConstraintCatalog` (CONSTRAINT-EXEC
+            Item 7 / D6), ``None`` when no constraint facts admitted (INV-7).
+            In-memory generation-boundary artifact like ``fallback_entry_points`` —
+            ``exclude=True`` keeps a constraint-free corpus's committed JSON baselines
+            byte-identical; carrying catalog data into the persisted snapshot is
+            Item 8's scope, not this field's.
     """
 
     modules: list[PipelineModule]
@@ -351,6 +404,7 @@ class ComputationGraph(BaseModel):
     execution_order: list[str]
     fallback_entry_points: set[str] = Field(default_factory=set, exclude=True)
     output_aliases: list[OutputAlias] = Field(default_factory=list)
+    constraint_catalog: ConstraintCatalog | None = Field(default=None, exclude=True)
 
 
 __all__ = [
@@ -359,6 +413,9 @@ __all__ = [
     "ComputationGraph",
     "ConcreteConstraint",
     "ConcreteConstraintInput",
+    "ConstraintCatalog",
+    "ConstraintCatalogEntry",
+    "ConstraintCatalogSourceRecord",
     "ConstraintInputResolution",
     "EntryPoint",
     "EntryPointType",

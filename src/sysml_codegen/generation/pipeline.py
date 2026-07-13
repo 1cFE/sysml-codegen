@@ -132,11 +132,7 @@ def _module_to_context(
     Returns:
         Dict with name, instance_name, type, inputs, outputs
     """
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
     from sysml_codegen.resolution.models import ModuleKind
-
-    if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
-        raise unrenderable_module_kind_error(module, "pipeline-yaml")
 
     return {
         "name": (

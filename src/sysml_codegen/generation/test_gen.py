@@ -39,18 +39,21 @@ def generate_test_implementations(
     Returns:
         Generated Python test code string
     """
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
     from sysml_codegen.resolution.models import ModuleKind
 
     modules = []
     calc_count = 0
 
     for module in graph.modules:
-        # Skip FORMULA and aggregation modules
-        if module.module_kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):
+        # Skip FORMULA, aggregation, and constraint/report-aggregator modules (D8:
+        # fully generated, no handwritten implementation to test).
+        if module.module_kind in (
+            ModuleKind.FORMULA,
+            ModuleKind.AGGREGATION,
+            ModuleKind.CONSTRAINT,
+            ModuleKind.REPORT_AGGREGATOR,
+        ):
             continue
-        if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
-            raise unrenderable_module_kind_error(module, "test-gen")
 
         calc_count += 1
 

@@ -758,35 +758,39 @@ def extend_graph_with_constraints(
         )
         order += 1
 
-    if eligible:
-        agg_inputs = [
-            ModuleInput(
-                param_name=c.constraint_id,
-                python_type="ConstraintEvaluation",
-                source=InputSource(
-                    source_type="module_output", producer_channel=c.evaluation_channel
-                ),
-            )
-            for c in eligible
-        ]
-        modules.append(
-            PipelineModule(
-                name=AGGREGATOR_MODULE_NAME,
-                module_type="constraints.ConstraintReportAggregatorModule",
-                inputs=agg_inputs,
-                outputs=[
-                    ModuleOutput(
-                        field_name="constraint_report",
-                        python_type="ConstraintReport",
-                        channel_name="constraint_report",
-                    )
-                ],
-                execution_order=order,
-                module_kind=ModuleKind.REPORT_AGGREGATOR,
-                calc_def_name=None,
-                calc_def_qualified_name=None,
-            )
+    # D11: the aggregator emits whenever this function runs at all (the constraint
+    # pathway is active — see the `if concrete_constraints:` call-site guard in
+    # `pipeline_builder.py`), even with zero eligible constraints — a model that asserts
+    # nothing still produces the `not_assessed` report surface. `agg_inputs` stays sourced
+    # from `eligible` (empty list here is fine — zero-required-field aggregator input).
+    agg_inputs = [
+        ModuleInput(
+            param_name=c.constraint_id,
+            python_type="ConstraintEvaluation",
+            source=InputSource(
+                source_type="module_output", producer_channel=c.evaluation_channel
+            ),
         )
+        for c in eligible
+    ]
+    modules.append(
+        PipelineModule(
+            name=AGGREGATOR_MODULE_NAME,
+            module_type="constraints.ConstraintReportAggregatorModule",
+            inputs=agg_inputs,
+            outputs=[
+                ModuleOutput(
+                    field_name="constraint_report",
+                    python_type="ConstraintReport",
+                    channel_name="constraint_report",
+                )
+            ],
+            execution_order=order,
+            module_kind=ModuleKind.REPORT_AGGREGATOR,
+            calc_def_name=None,
+            calc_def_qualified_name=None,
+        )
+    )
 
     for g in groups:
         g.parameters.sort(key=lambda p: p.qualified_name)

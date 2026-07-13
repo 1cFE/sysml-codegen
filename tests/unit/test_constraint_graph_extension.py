@@ -186,15 +186,24 @@ def test_modeled_default_mints_library_default_scoped_to_constraint():
     assert all_params[0].default_value == 2.5
 
 
-def test_unassessed_record_contributes_no_node_no_mint():
+def test_unassessed_record_contributes_no_constraint_node_no_mint():
+    """No CONSTRAINT node and no minted entry point for an unassessed record — but the
+    aggregator DOES still appear (D11): the constraint pathway is active (this function
+    ran at all), so a zero-eligible model still gets the `not_assessed` report surface."""
     graph = _empty_graph()
     cc = _cc("id1", [], eligible=False)
     extended = extend_graph_with_constraints(graph, [cc], _deriver())
-    assert extended.modules == []
     assert extended.entry_point_groups == []
+    assert not any(m.module_kind == ModuleKind.CONSTRAINT for m in extended.modules)
+    assert [m.name for m in extended.modules] == [AGGREGATOR_MODULE_NAME]
+    aggregator = extended.modules[0]
+    assert aggregator.inputs == []  # zero-eligible -> zero-required-field aggregator input
 
 
-def test_aggregator_appears_only_when_eligible_nonempty():
+def test_aggregator_appears_whenever_lowering_ran_d11():
+    """D11: the aggregator emits whenever `extend_graph_with_constraints` runs at all,
+    with real inputs when eligible constraints exist and zero inputs when they don't —
+    never absent."""
     graph = _graph_with_producer("Design__c__power_calc__p")
     cc = _cc(
         "id1",
@@ -210,11 +219,13 @@ def test_aggregator_appears_only_when_eligible_nonempty():
     assert any(m.name == AGGREGATOR_MODULE_NAME for m in extended.modules)
     assert any(m.module_kind == ModuleKind.REPORT_AGGREGATOR for m in extended.modules)
 
-    # All-unassessed: no aggregator either.
+    # All-unassessed: the aggregator still appears (D11), with zero required inputs.
     extended_empty = extend_graph_with_constraints(
         _empty_graph(), [_cc("id2", [], eligible=False)], _deriver()
     )
-    assert not any(m.name == AGGREGATOR_MODULE_NAME for m in extended_empty.modules)
+    agg_modules = [m for m in extended_empty.modules if m.name == AGGREGATOR_MODULE_NAME]
+    assert len(agg_modules) == 1
+    assert agg_modules[0].inputs == []
 
 
 def test_v11_violation_raises_on_uncovered_module_output():

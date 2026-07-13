@@ -977,6 +977,16 @@ def build_pipeline_context(
         computation_graph = extend_graph_with_constraints(
             computation_graph, concrete_constraints, group_deriver
         )
+        # [P4 CATALOG] (Item 7 / D6): assemble the ConstraintCatalog and set it on the graph
+        # before generation — every generation seam reads it from the graph, never from ctx
+        # (Appendix A). `assemble_constraint_catalog` returns None when every concrete record
+        # is unassessed (D7, zero eligible), so a facts-bearing-but-nothing-admitted model
+        # still leaves the graph's `constraint_catalog` at its INV-7-preserving default.
+        from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+
+        computation_graph.constraint_catalog = assemble_constraint_catalog(
+            concrete_constraints, constraint_facts
+        )
 
     return PipelineContext(
         extractor=extractor,
@@ -995,6 +1005,7 @@ def build_pipeline_context(
         constraint_manifest=constraint_manifest,
         output_registry=output_registry,
         concrete_constraints=concrete_constraints,
+        constraint_facts=constraint_facts if constraint_facts.usages else None,
     )
 
 

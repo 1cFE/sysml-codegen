@@ -10,11 +10,18 @@ Usage:
     code = generate_teax_module(module, template_env, output_path)
 """
 
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import jinja2
 
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+from sysml_codegen.core.qualified_names import sanitize_qualified_name
+
+if TYPE_CHECKING:
+    from sysml_codegen.resolution.models import ConstraintCatalog, PipelineModule
 
 
 def _output_attr_name(out) -> str:
@@ -83,16 +90,164 @@ def _build_module_docstring_from_graph(module) -> str:
     return "\n".join(lines)
 
 
+# ---------------------------------------------------------------------------
+# Constraint + report-aggregator rendering (Item 7 / D2, D3, D9).
+# ---------------------------------------------------------------------------
+
+PREDICATES_MODULE_IMPORT_PATH = "modules.constraints.predicates"
+
+
+def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str, str, list[str]]]:
+    """One compiled function per distinct source definition (D3, INV-1).
+
+    Runs the same-IR guard (INV-2) first, then compiles once per
+    ``predicate_definition_key`` — every concrete entry sharing that key (a part_def owner's
+    N occurrences) imports the same emitted function rather than duplicating it. Returns
+    ``{definition_key: (fn_name, full_source, arg_names)}``; ``full_source`` is a standalone
+    ``compile_predicate`` output (runtime prelude included).
+    """
+    from agentic_mbse.sysml.expression_ir import parse_expression
+
+    from sysml_codegen.generation.constraint_catalog import (
+        assert_same_ir,
+        predicate_definition_key,
+    )
+    from sysml_codegen.generation.predicate_compiler import compile_predicate
+
+    assert_same_ir(catalog.concrete_entries)
+    compiled: dict[str, tuple[str, str, list[str]]] = {}
+    for entry in catalog.concrete_entries:
+        key = predicate_definition_key(entry)
+        if key in compiled:
+            continue
+        assert entry.predicate_ir is not None  # guarded by assert_same_ir above
+        fn_name = f"constraint_pred_{sanitize_qualified_name(key).lower()}"
+        ir = parse_expression(entry.predicate_ir)
+        src, args = compile_predicate(ir, fn_name, negated=bool(entry.is_negated))
+        compiled[key] = (fn_name, src, args)
+    return compiled
+
+
+def render_constraint_predicates_module(
+    compiled: dict[str, tuple[str, str, list[str]]],
+    template_env: jinja2.Environment,
+) -> str:
+    """Render the shared predicates module: one Kleene runtime block + N function bodies."""
+    from sysml_codegen.generation.predicate_compiler import (
+        KLEENE_RUNTIME_SOURCE,
+        function_source_only,
+    )
+
+    functions = [
+        {"usage_qualified_name": key, "source": function_source_only(src).strip("\n")}
+        for key, (_fn_name, src, _args) in compiled.items()
+    ]
+    template = template_env.get_template("constraint_predicates.py.jinja2")
+    code = template.render(runtime_source=KLEENE_RUNTIME_SOURCE.strip("\n"), functions=functions)
+    if not code.endswith("\n"):
+        code += "\n"
+    return code
+
+
+def render_constraint_module(
+    module: PipelineModule,
+    catalog: ConstraintCatalog,
+    compiled: dict[str, tuple[str, str, list[str]]],
+    template_env: jinja2.Environment,
+    package_name: str = "generated_code",
+) -> str:
+    """Render one class-per-assertion constraint module (D9 naming, B5 reconciliation)."""
+    from sysml_codegen.generation.constraint_catalog import predicate_definition_key
+
+    entry = next(
+        (e for e in catalog.concrete_entries if e.constraint_id.lower() == module.name), None
+    )
+    if entry is None:
+        raise _generation_error(
+            f"module {module.name!r} (kind=constraint) has no matching catalog entry — "
+            "the catalog and the graph's constraint modules have diverged"
+        )
+    fn_name, _src, args = compiled[predicate_definition_key(entry)]
+
+    input_names = [inp.param_name for inp in module.inputs]
+    missing = [a for a in args if a not in input_names]
+    if missing:
+        raise _generation_error(
+            f"{entry.constraint_id}: predicate leaf(s) {missing} have no matching module "
+            f"input among {input_names} — leaf-name/input-name reconciliation failed (B5)"
+        )
+
+    class_name = module.module_type.split(".")[-1]
+    base_name = class_name.removesuffix("ConstraintModule")
+    observed_dict = "{" + ", ".join(f'"{a}": float({a})' for a in args) + "}"
+
+    context = {
+        "constraint_id": entry.constraint_id,
+        "usage_qualified_name": entry.usage_qualified_name,
+        "owner_instance_path": entry.owner_instance_path,
+        "package_name": package_name,
+        "predicates_import_path": f"{package_name}.{PREDICATES_MODULE_IMPORT_PATH}",
+        "predicate_fn_name": fn_name,
+        "input_class_name": f"{base_name}ConstraintInput",
+        "output_class_name": f"{base_name}ConstraintOutput",
+        "class_name": class_name,
+        "module_name": module.name,
+        "input_names": input_names,
+        "run_signature": ", ".join(f"{n}: float" for n in input_names),
+        "run_call": ", ".join(f"{n}={n}" for n in input_names),
+        "predicate_call": ", ".join(f"{a}={a}" for a in args),
+        "observed_dict": observed_dict,
+    }
+    template = template_env.get_template("constraint_module.py.jinja2")
+    code = template.render(**context)
+    if not code.endswith("\n"):
+        code += "\n"
+    return code
+
+
+def render_report_aggregator(
+    module: PipelineModule,
+    catalog: ConstraintCatalog,
+    template_env: jinja2.Environment,
+    package_name: str = "generated_code",
+) -> str:
+    """Render the exact-schema report aggregator (D5, D11)."""
+    constraint_ids = [e.constraint_id for e in catalog.concrete_entries]
+    class_name = module.module_type.split(".")[-1]
+    context = {
+        "package_name": package_name,
+        "expected_ids": repr(tuple(constraint_ids)),
+        "constraint_ids": constraint_ids,
+        "class_name": class_name,
+        "module_name": module.name,
+        "catalog_fingerprint": catalog.fingerprint,
+    }
+    template = template_env.get_template("report_aggregator.py.jinja2")
+    code = template.render(**context)
+    if not code.endswith("\n"):
+        code += "\n"
+    return code
+
+
+def _generation_error(message: str) -> Exception:
+    from sysml_codegen.generation import CodeGenerationError
+
+    return CodeGenerationError(message)
+
+
 def generate_teax_module(
     module,
     template_env: jinja2.Environment,
     output_path: Path,
     package_name: str = "generated_code",
+    *,
+    catalog: ConstraintCatalog | None = None,
+    compiled_predicates: dict[str, tuple[str, str, list[str]]] | None = None,
 ) -> str:
     """Generate TEAx module wrapper from PipelineModule.
 
-    Handles all module types: CalcUsage, FORMULA, and aggregation.
-    Derives class names, import paths, and template context from
+    Handles all module types: CalcUsage, FORMULA, aggregation, constraint, and
+    report-aggregator. Derives class names, import paths, and template context from
     PipelineModule fields.
 
     Args:
@@ -100,10 +255,33 @@ def generate_teax_module(
         template_env: Jinja2 environment with templates loaded
         output_path: Path where module will be written (for reference)
         package_name: Python package name
+        catalog: The graph's ConstraintCatalog — required when ``module.module_kind`` is
+            ``CONSTRAINT`` or ``REPORT_AGGREGATOR`` (Item 7 / D6); ``None`` otherwise.
+        compiled_predicates: The compile-once map from :func:`compile_shared_predicates` —
+            required alongside ``catalog`` when ``module.module_kind`` is ``CONSTRAINT``.
 
     Returns:
         Generated Python code string
     """
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind is ModuleKind.CONSTRAINT:
+        if catalog is None or compiled_predicates is None:
+            raise _generation_error(
+                f"module {module.name!r} (kind=constraint) needs the graph's "
+                "ConstraintCatalog and its compiled predicates to render"
+            )
+        return render_constraint_module(
+            module, catalog, compiled_predicates, template_env, package_name
+        )
+    if module.module_kind is ModuleKind.REPORT_AGGREGATOR:
+        if catalog is None:
+            raise _generation_error(
+                f"module {module.name!r} (kind=report_aggregator) needs the graph's "
+                "ConstraintCatalog to render"
+            )
+        return render_report_aggregator(module, catalog, template_env, package_name)
+
     multi_output = len(module.outputs) > 1
 
     input_attributes = [

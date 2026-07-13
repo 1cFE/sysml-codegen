@@ -217,12 +217,7 @@ def generate_registry(
         "",
     ]
 
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
     from sysml_codegen.resolution.models import ModuleKind
-
-    for m in graph.modules:
-        if m.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
-            raise unrenderable_module_kind_error(m, "registry")
 
     # Split modules by type (same processing order as original)
     calcusage_modules = [
@@ -230,6 +225,11 @@ def generate_registry(
     ]
     formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
     aggregation_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
+    constraint_modules = [
+        m
+        for m in graph.modules
+        if m.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR)
+    ]
 
     # 1. CalcUsage modules (sorted imports, deduplicated by calc_def_name)
     seen_names: set[str] = set()
@@ -285,6 +285,36 @@ def generate_registry(
         aggregation_imports.append(f"from {import_module} import {class_name}")
     aggregation_imports.sort()
     imports.extend(aggregation_imports)
+
+    # 4. Constraint + report-aggregator modules (Item 7 / D9). module_type is already a
+    # Python-dotted path (not a SysML "::" qualified name) — derive directly, matching
+    # cli._get_python_path's constraint-kind branch. Sorted for deterministic output.
+    constraint_imports: list[str] = []
+    for module in constraint_modules:
+        module_type_full = module.module_type
+        class_name = module_type_full.split(".")[-1]
+        parts = module_type_full.split(".")
+        directory = "/".join(parts[:-1])
+        filename = parts[-1].lower()
+        import_path = f"{directory}.{filename}" if directory else filename
+
+        all_modules.append({
+            "class_name": class_name,
+            "module_type": module_type_full,
+        })
+        import_module = f"{package_name}.modules.{import_path}"
+        constraint_imports.append(f"from {import_module} import {class_name}")
+    constraint_imports.sort()
+    imports.extend(constraint_imports)
+
+    if graph.constraint_catalog is not None:
+        schema_imports.append(
+            f"from {package_name}.schemas.constraint_types "
+            "import ConstraintEvaluation as ConstraintEvaluation, "
+            "ConstraintReport as ConstraintReport"
+        )
+        schema_imports.sort()
+        group_names = [*group_names, "ConstraintEvaluation", "ConstraintReport"]
 
     # Resolve class name collisions
     all_modules, imports = _resolve_class_name_collisions(all_modules, imports)

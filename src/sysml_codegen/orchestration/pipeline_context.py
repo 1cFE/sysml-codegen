@@ -9,7 +9,7 @@ that generation/ consumes only ComputationGraph.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sysml_codegen.analysis.dependency_backtracker import (
     BacktrackingResult,
@@ -31,6 +31,9 @@ from sysml_codegen.extraction.data_models import (
 from sysml_codegen.extraction.expression_compiler import CalcDefCompilationResult
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
 from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
+
+if TYPE_CHECKING:
+    from agentic_mbse.sysml.constraint_facts import ConstraintFacts
 
 
 class SysMLParsingError(Exception):
@@ -113,6 +116,11 @@ class PipelineContext:
     # unassessed (eligible=False) records alike, until Item 7's catalog
     # runtime exists.
     concrete_constraints: list[ConcreteConstraint] = field(default_factory=list)
+
+    # Neutral constraint facts from Step 2.6 (Item 5) — the source-level vocabulary
+    # `generation/constraint_catalog.py` reads for the catalog's `source_records` (D6).
+    # `None` when the model has zero constraint usages (no lowering ran).
+    constraint_facts: "ConstraintFacts | None" = None
 
 
 __all__ = [

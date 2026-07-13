@@ -1,9 +1,10 @@
-"""Conformance tests for the module_kind fail-loud contract (Item 6 / INV-3).
+"""Conformance tests for the module_kind seam contract (Item 6 fail-loud -> Item 7 fill-in).
 
-A CONSTRAINT (or REPORT_AGGREGATOR) module has no rendering at any of the four
-calc-shaped generation seams until Item 7 wires it. Each seam's entry point
-must raise CodeGenerationError rather than silently skipping the module or
-mis-rendering it as a calculation.
+Item 6 made every calc-shaped seam refuse a CONSTRAINT/REPORT_AGGREGATOR module rather than
+mis-render it as a calculation. Item 7 fills in three of those seams for real (module-wrapper,
+pipeline-yaml, registry) and turns the other three into clean skips (test-gen, stencil,
+backlog-report) — D8. This file flips the six original refuse-assertions accordingly; the
+duplicate-path check (the S4 "fourth calc-shaped seam") also now tolerates constraint kinds.
 """
 
 from __future__ import annotations
@@ -12,14 +13,29 @@ from pathlib import Path
 
 import jinja2
 import pytest
+from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, OperandTypeFact
+from agentic_mbse.sysml.expression_ir import (
+    FeatureReferenceNode,
+    OperatorNode,
+    serialize_expression,
+)
 
 from sysml_codegen.generation import CodeGenerationError
-from sysml_codegen.generation.modules import generate_teax_module
+from sysml_codegen.generation.modules import compile_shared_predicates, generate_teax_module
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
 from sysml_codegen.generation.registry import generate_registry
-from sysml_codegen.generation.stencils import generate_implementation
+from sysml_codegen.generation.stencils import generate_backlog_report
 from sysml_codegen.generation.test_gen import generate_test_implementations
-from sysml_codegen.resolution.models import ComputationGraph, ModuleKind, PipelineModule
+from sysml_codegen.resolution.models import (
+    ComputationGraph,
+    ConstraintCatalog,
+    ConstraintCatalogEntry,
+    InputSource,
+    ModuleInput,
+    ModuleKind,
+    ModuleOutput,
+    PipelineModule,
+)
 
 TEMPLATE_DIR = Path(__file__).parent.parent.parent / "src" / "sysml_codegen" / "templates"
 
@@ -34,82 +50,198 @@ def template_env():
     )
 
 
+def _ref(name: str) -> FeatureReferenceNode:
+    return FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=name, target=None, target_types=[], chain_segments=[]
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+
+
+def _predicate_ir() -> str:
+    ir = OperatorNode(operator=">", operands=[_ref("a"), _ref("b")], operand_type=None)
+    return serialize_expression(ir)
+
+
+def _catalog() -> ConstraintCatalog:
+    entry = ConstraintCatalogEntry(
+        constraint_id="C1",
+        usage_qualified_name="Pkg::Def::assert1",
+        owner_instance_path="Pkg__Def",
+        membership_kind="assert",
+        is_negated=False,
+        expected_value=True,
+        predicate_ir=_predicate_ir(),
+        evaluation_channel="c1__evaluation",
+    )
+    return ConstraintCatalog(concrete_entries=[entry], fingerprint="deadbeef")
+
+
 def _constraint_module() -> PipelineModule:
     return PipelineModule(
         name="c1",
-        module_type="C1Module",
-        inputs=[],
-        outputs=[],
+        module_type="pkg.C1ConstraintModule",
+        inputs=[
+            ModuleInput(
+                param_name="a",
+                python_type="float",
+                source=InputSource(source_type="module_output", producer_channel="upstream__a"),
+            ),
+            ModuleInput(
+                param_name="b",
+                python_type="float",
+                source=InputSource(source_type="module_output", producer_channel="upstream__b"),
+            ),
+        ],
+        outputs=[
+            ModuleOutput(
+                field_name="evaluation",
+                python_type="ConstraintEvaluation",
+                channel_name="c1__evaluation",
+            )
+        ],
         execution_order=0,
         module_kind=ModuleKind.CONSTRAINT,
     )
 
 
-def _graph_with_constraint() -> ComputationGraph:
-    return ComputationGraph(
-        modules=[_constraint_module()], entry_point_groups=[], execution_order=["c1"]
+def _aggregator_module() -> PipelineModule:
+    return PipelineModule(
+        name="constraint_report_aggregator",
+        module_type="constraints.ConstraintReportAggregatorModule",
+        inputs=[
+            ModuleInput(
+                param_name="C1",
+                python_type="ConstraintEvaluation",
+                source=InputSource(source_type="module_output", producer_channel="c1__evaluation"),
+            )
+        ],
+        outputs=[
+            ModuleOutput(
+                field_name="constraint_report",
+                python_type="ConstraintReport",
+                channel_name="constraint_report",
+            )
+        ],
+        execution_order=1,
+        module_kind=ModuleKind.REPORT_AGGREGATOR,
     )
 
 
-def test_registry_seam_refuses_constraint(template_env):
-    """The critical fails-open seam: partition-by-equality silently drops an
-    unmatched kind unless the guard-pass raises first (design-review M2)."""
-    graph = _graph_with_constraint()
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        generate_registry(
-            graph=graph,
-            package_name="pkg",
-            template_env=template_env,
-            output_path=Path("/tmp/test_registry.py"),
+def _graph_with_constraint() -> ComputationGraph:
+    return ComputationGraph(
+        modules=[_constraint_module(), _aggregator_module()],
+        entry_point_groups=[],
+        execution_order=["c1", "constraint_report_aggregator"],
+        constraint_catalog=_catalog(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Render: module-wrapper, pipeline-yaml, registry
+# ---------------------------------------------------------------------------
+
+
+def test_module_wrapper_renders_constraint(template_env):
+    catalog = _catalog()
+    compiled = compile_shared_predicates(catalog)
+    code = generate_teax_module(
+        _constraint_module(),
+        template_env=template_env,
+        output_path=Path("/tmp/test_wrapper.py"),
+        catalog=catalog,
+        compiled_predicates=compiled,
+    )
+    assert "class C1ConstraintModule" in code
+    assert "CONSTRAINT_ID = \"C1\"" in code
+    assert "def run(self, a: float, b: float)" in code
+
+
+def test_module_wrapper_renders_report_aggregator(template_env):
+    catalog = _catalog()
+    code = generate_teax_module(
+        _aggregator_module(),
+        template_env=template_env,
+        output_path=Path("/tmp/test_agg.py"),
+        catalog=catalog,
+    )
+    assert "class ConstraintReportAggregatorModule" in code
+    assert 'CATALOG_FINGERPRINT = "deadbeef"' in code
+    assert "C1: ConstraintEvaluation" in code
+
+
+def test_module_wrapper_without_catalog_still_refuses(template_env):
+    """A caller that forgets to pass the catalog gets a loud, named error — not a
+    silent mis-render — distinct from Item 6's generic unrenderable-kind refusal."""
+    with pytest.raises(CodeGenerationError, match="ConstraintCatalog"):
+        generate_teax_module(
+            _constraint_module(), template_env=template_env, output_path=Path("/tmp/x.py")
         )
 
 
-def test_check_duplicate_output_paths_refuses_constraint():
+def test_generate_pipeline_yaml_renders_constraint(template_env):
+    yaml_text = generate_pipeline_yaml(
+        _graph_with_constraint(), package_name="pkg", template_env=template_env
+    )
+    assert "c1__evaluation" in yaml_text
+    assert "constraint_report" in yaml_text
+
+
+def test_registry_seam_renders_constraint(template_env):
+    code = generate_registry(
+        graph=_graph_with_constraint(),
+        package_name="pkg",
+        template_env=template_env,
+        output_path=Path("/tmp/test_registry.py"),
+    )
+    assert "C1ConstraintModule" in code
+    assert "ConstraintReportAggregatorModule" in code
+    assert "ConstraintEvaluation" in code and "ConstraintReport" in code
+
+
+def test_check_duplicate_output_paths_tolerates_constraint():
     from sysml_codegen.cli import _check_duplicate_output_paths
 
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        _check_duplicate_output_paths([_constraint_module()])
+    _check_duplicate_output_paths([_constraint_module(), _aggregator_module()])  # no raise
 
 
-def test_generate_teax_module_refuses_constraint(template_env):
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        generate_teax_module(
-            _constraint_module(),
-            template_env=template_env,
-            output_path=Path("/tmp/test_wrapper.py"),
-        )
+# ---------------------------------------------------------------------------
+# Skip: test-gen, stencil, backlog-report (D8)
+# ---------------------------------------------------------------------------
 
 
-def test_generate_implementation_refuses_constraint(template_env):
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        generate_implementation(
-            _constraint_module(),
-            template_env=template_env,
-            output_path=Path("/tmp/test_impl.py"),
-        )
+def test_generate_test_implementations_skips_constraint(template_env):
+    content = generate_test_implementations(
+        _graph_with_constraint(),
+        package_name="pkg",
+        template_env=template_env,
+        output_path=Path("/tmp/test_gen.py"),
+    )
+    assert "C1" not in content
+    assert "constraint_report_aggregator" not in content
 
 
-def test_generate_backlog_report_refuses_constraint():
-    from sysml_codegen.generation.stencils import generate_backlog_report
-
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        generate_backlog_report(
-            _graph_with_constraint(), output_path=Path("/tmp/BACKLOG.md"), package_name="pkg"
-        )
-
-
-def test_generate_pipeline_yaml_refuses_constraint(template_env):
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        generate_pipeline_yaml(
-            _graph_with_constraint(), package_name="pkg", template_env=template_env
-        )
+def test_generate_backlog_report_skips_constraint():
+    markdown = generate_backlog_report(
+        _graph_with_constraint(), output_path=Path("/tmp/BACKLOG.md"), package_name="pkg"
+    )
+    assert "C1" not in markdown
+    assert "constraint_report_aggregator" not in markdown
 
 
-def test_generate_test_implementations_refuses_constraint(template_env):
-    with pytest.raises(CodeGenerationError, match="constraint"):
-        generate_test_implementations(
-            _graph_with_constraint(),
-            package_name="pkg",
-            template_env=template_env,
-            output_path=Path("/tmp/test_gen.py"),
-        )
+def test_generate_stencils_skips_constraint(tmp_path):
+    """The stencil seam's skip happens at the orchestration loop (cli._generate_stencils),
+    not inside the single-module `generate_implementation` (which has no rendering for a
+    constraint kind by design — the loop never reaches it for one)."""
+    from sysml_codegen.cli import GenerationConfig, _generate_stencils, _get_template_env
+
+    config = GenerationConfig(output_path=tmp_path, package_name="pkg")
+    (tmp_path / "handwritten").mkdir(parents=True)
+
+    class _Ctx:
+        computation_graph = _graph_with_constraint()
+
+    _generate_stencils(_Ctx(), config, _get_template_env())
+    written = list((tmp_path / "handwritten").rglob("*.py"))
+    assert written == []

@@ -206,7 +206,6 @@ def generate_backlog_report(
     Returns:
         Generated markdown string
     """
-    from sysml_codegen.generation.errors import unrenderable_module_kind_error
     from sysml_codegen.resolution.models import ModuleKind
 
     items = []
@@ -223,7 +222,8 @@ def generate_backlog_report(
                 auto_agg_count += 1
             continue
         elif module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
-            raise unrenderable_module_kind_error(module, "backlog-report")
+            # D8: fully generated, no handwritten implementation to backlog.
+            continue
 
         # Skip FULLY_COMPILABLE CalcUsage modules
         if module.auto_impl_context is not None:

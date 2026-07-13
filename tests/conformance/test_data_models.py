@@ -537,12 +537,13 @@ def test_req_dm_03_fields_channel_alias():
 
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_computation_graph():
-    """ComputationGraph has exactly 5 fields.
+    """ComputationGraph has exactly 6 fields.
 
     Item 7 (REQ-GA-08) adds ``fallback_entry_points`` (in-memory analysis
     artifact, ``exclude=True`` — not serialized) for the V11 collector.
     Item 11 (REQ-DM-09) adds ``output_aliases`` (serialized) for the surfaced
-    EXPOSE_PURE names.
+    EXPOSE_PURE names. CONSTRAINT-EXEC Item 7 (D6) adds ``constraint_catalog``
+    (in-memory generation-boundary artifact, ``exclude=True`` — not serialized).
     """
     from sysml_codegen.resolution.models import ComputationGraph
 
@@ -552,10 +553,11 @@ def test_req_dm_03_fields_computation_graph():
         "execution_order",
         "fallback_entry_points",
         "output_aliases",
+        "constraint_catalog",
     }
     actual = _pydantic_field_names(ComputationGraph)
     assert actual == expected
-    assert len(actual) == 5
+    assert len(actual) == 6
 
 
 @pytest.mark.req("REQ-DM-09")

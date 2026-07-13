@@ -153,6 +153,12 @@ def _get_python_path(module):
     from sysml_codegen.generation.errors import unrenderable_module_kind_error
     from sysml_codegen.resolution.models import ModuleKind
 
+    if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+        # module_type is already a Python-dotted path (D9 naming), not a SysML "::"
+        # qualified name — derive directly rather than routing through from_sysml.
+        # D9: "file stem lowercased" — the whole final segment, lowercased as-is.
+        parts = module.module_type.split(".")
+        return PythonModulePath(directory="/".join(parts[:-1]), filename=parts[-1].lower())
     if module.module_kind == ModuleKind.FORMULA:
         sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
     elif module.module_kind == ModuleKind.AGGREGATION:
@@ -180,6 +186,8 @@ def _raw_source_name(module: PipelineModule) -> str:
         return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
     if module.module_kind in (ModuleKind.AGGREGATION, ModuleKind.CALCULATION):
         return module.calc_def_qualified_name or module.name
+    if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+        return module.name
     raise unrenderable_module_kind_error(module, "raw-source-name")
 
 
@@ -286,11 +294,14 @@ def _generate_schemas(
 ) -> None:
     """Generate Pydantic schemas for multi-output modules."""
     from sysml_codegen.generation import generate_multioutput_model
+    from sysml_codegen.resolution.models import ModuleKind
 
     schemas_dir = config.output_path / "schemas"
 
     multioutput_count = 0
     for module in ctx.computation_graph.modules:
+        if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+            continue
         if len(module.outputs) < 2:
             continue
         output_path = schemas_dir / f"{module.calc_def_name.lower()}_output.py"
@@ -307,6 +318,17 @@ def _generate_schemas(
 
     logger.info(f"Generated {multioutput_count} multi-output schemas")
 
+    # Item 7 / D4: per-package evidence schemas, gated on a constraint catalog existing
+    # on the graph. A constraint-free corpus writes nothing here (INV-7).
+    catalog = ctx.computation_graph.constraint_catalog
+    if catalog is not None:
+        template = template_env.get_template("constraint_types.py.jinja2")
+        code = template.render()
+        if not code.endswith("\n"):
+            code += "\n"
+        (schemas_dir / "constraint_types.py").write_text(code)
+        logger.info("Generated constraint evidence schemas: constraint_types.py")
+
 
 def _generate_modules(
     ctx: PipelineContext,
@@ -315,9 +337,30 @@ def _generate_modules(
 ) -> None:
     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
     from sysml_codegen.generation import generate_teax_module
+    from sysml_codegen.generation.modules import (
+        compile_shared_predicates,
+        render_constraint_predicates_module,
+    )
+    from sysml_codegen.resolution.models import ModuleKind
 
     modules_dir = config.output_path / "modules"
     module_count = 0
+
+    catalog = ctx.computation_graph.constraint_catalog
+    compiled_predicates = None
+
+    if catalog is not None:
+        # Item 7 / D3: the shared predicates module, written once, before the per-module
+        # loop so every constraint module's import path already exists on disk.
+        compiled_predicates = compile_shared_predicates(catalog)
+        namespace_dir = modules_dir / "constraints"
+        namespace_dir.mkdir(parents=True, exist_ok=True)
+        _ensure_package_init_files(
+            modules_dir, "constraints", '"""Namespace package for generated modules."""\n',
+        )
+        predicates_code = render_constraint_predicates_module(compiled_predicates, template_env)
+        (namespace_dir / "predicates.py").write_text(predicates_code)
+        logger.debug("Generated shared constraint predicates: modules/constraints/predicates.py")
 
     for module in ctx.computation_graph.modules:
         python_path = _get_python_path(module)
@@ -332,12 +375,22 @@ def _generate_modules(
             )
 
         output_path = modules_dir / python_path.full_path
-        code = generate_teax_module(
-            module,
-            template_env,
-            output_path,
-            config.package_name,
-        )
+        if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+            code = generate_teax_module(
+                module,
+                template_env,
+                output_path,
+                config.package_name,
+                catalog=catalog,
+                compiled_predicates=compiled_predicates,
+            )
+        else:
+            code = generate_teax_module(
+                module,
+                template_env,
+                output_path,
+                config.package_name,
+            )
         if code:
             output_path.write_text(code)
             module_count += 1
@@ -357,6 +410,7 @@ def _generate_stencils(
         generate_implementation,
         should_regenerate_stencil,
     )
+    from sysml_codegen.resolution.models import ModuleKind
 
     handwritten_dir = config.output_path / "handwritten"
     backup_dir = handwritten_dir / "backup"
@@ -364,6 +418,9 @@ def _generate_stencils(
     stats = {"new": 0, "preserved": 0, "regenerated": 0}
 
     for module in ctx.computation_graph.modules:
+        if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+            # D8: fully generated, no handwritten implementation to stencil.
+            continue
         python_path = _get_python_path(module)
 
         # Create namespace subdirectory with __init__.py in all intermediates

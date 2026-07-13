@@ -355,18 +355,19 @@ class TestNoSelfDependency:
 # ===========================================================================
 class TestComputationGraphShape:
     """REQ-GA-05: ComputationGraph has exactly modules, entry_point_groups,
-    execution_order, fallback_entry_points, output_aliases."""
+    execution_order, fallback_entry_points, output_aliases, constraint_catalog."""
 
     @pytest.mark.req("REQ-GA-05")
     def test_computation_graph_has_exactly_three_fields(self):
-        """ComputationGraph model has exactly 5 fields.
+        """ComputationGraph model has exactly 6 fields.
 
         Item 7 (REQ-GA-08) adds ``fallback_entry_points`` — an in-memory
         analysis artifact (``exclude=True``, kept out of the serialized graph)
         that the V11 collector reads. Item 11 (REQ-DM-09) adds
         ``output_aliases`` — a serialized field carrying the surfaced EXPOSE_PURE
-        names. This exact-set flip red-then-green is the graph-rev discipline
-        working.
+        names. CONSTRAINT-EXEC Item 7 (D6) adds ``constraint_catalog`` — another
+        in-memory, ``exclude=True`` generation-boundary artifact. This exact-set
+        flip red-then-green is the graph-rev discipline working.
         """
         assert set(ComputationGraph.model_fields.keys()) == {
             "modules",
@@ -374,6 +375,7 @@ class TestComputationGraphShape:
             "execution_order",
             "fallback_entry_points",
             "output_aliases",
+            "constraint_catalog",
         }
 
     @pytest.mark.req("REQ-GA-05")
