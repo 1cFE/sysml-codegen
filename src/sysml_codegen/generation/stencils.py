@@ -39,12 +39,17 @@ def _get_module_sysml_qn(module) -> str:
     - FORMULA: owning part QN only → append "::calc_def_name"
     - Aggregation: owning part QN with __ separator → use module.name with :: separator
     """
-    if module.is_computed_attribute:
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind == ModuleKind.FORMULA:
         return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.is_aggregation:
+    elif module.module_kind == ModuleKind.AGGREGATION:
         return module.name.replace("__", "::")
-    else:
+    elif module.module_kind == ModuleKind.CALCULATION:
         return module.calc_def_qualified_name
+    else:
+        raise unrenderable_module_kind_error(module, "stencil")
 
 
 def _build_stub_docstring_from_graph(module) -> str:
@@ -201,19 +206,24 @@ def generate_backlog_report(
     Returns:
         Generated markdown string
     """
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
     items = []
     auto_formula_count = 0
     auto_agg_count = 0
 
     for module in graph.modules:
-        if module.is_computed_attribute:
+        if module.module_kind == ModuleKind.FORMULA:
             if module.auto_impl_context is not None:
                 auto_formula_count += 1
             continue
-        if module.is_aggregation:
+        elif module.module_kind == ModuleKind.AGGREGATION:
             if module.auto_impl_context is not None:
                 auto_agg_count += 1
             continue
+        elif module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+            raise unrenderable_module_kind_error(module, "backlog-report")
 
         # Skip FULLY_COMPILABLE CalcUsage modules
         if module.auto_impl_context is not None:

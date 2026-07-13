@@ -217,13 +217,19 @@ def generate_registry(
         "",
     ]
 
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    for m in graph.modules:
+        if m.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+            raise unrenderable_module_kind_error(m, "registry")
+
     # Split modules by type (same processing order as original)
     calcusage_modules = [
-        m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
+        m for m in graph.modules if m.module_kind == ModuleKind.CALCULATION
     ]
-    formula_modules = [m for m in graph.modules if m.is_computed_attribute]
-    aggregation_modules = [m for m in graph.modules if m.is_aggregation]
+    formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
+    aggregation_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
 
     # 1. CalcUsage modules (sorted imports, deduplicated by calc_def_name)
     seen_names: set[str] = set()

@@ -150,13 +150,17 @@ def _get_template_env() -> jinja2.Environment:
 def _get_python_path(module):
     """Get PythonModulePath from PipelineModule (all module types)."""
     from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
 
-    if module.is_computed_attribute:
+    if module.module_kind == ModuleKind.FORMULA:
         sysml_qn = f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.is_aggregation:
+    elif module.module_kind == ModuleKind.AGGREGATION:
         sysml_qn = module.name.replace("__", "::")
-    else:
+    elif module.module_kind == ModuleKind.CALCULATION:
         sysml_qn = module.calc_def_qualified_name
+    else:
+        raise unrenderable_module_kind_error(module, "python-path")
     sqn = SysMLQualifiedName(sysml_qn)
     return PythonModulePath.from_sysml(sqn)
 
@@ -169,9 +173,14 @@ def _raw_source_name(module: PipelineModule) -> str:
     plus the raw attribute name; for a calc-usage module the raw calc-def QN.
     Both are raw (never sanitized) on every module type that can collide.
     """
-    if module.is_computed_attribute:
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind == ModuleKind.FORMULA:
         return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    return module.calc_def_qualified_name or module.name
+    if module.module_kind in (ModuleKind.AGGREGATION, ModuleKind.CALCULATION):
+        return module.calc_def_qualified_name or module.name
+    raise unrenderable_module_kind_error(module, "raw-source-name")
 
 
 def _check_duplicate_output_paths(modules: list[PipelineModule]) -> None:

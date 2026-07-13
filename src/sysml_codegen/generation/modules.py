@@ -37,12 +37,17 @@ def _get_module_sysml_qn(module) -> str:
     - FORMULA: owning part QN only → append "::calc_def_name"
     - Aggregation: owning part QN with __ separator → use module.name with :: separator
     """
-    if module.is_computed_attribute:
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind == ModuleKind.FORMULA:
         return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.is_aggregation:
+    elif module.module_kind == ModuleKind.AGGREGATION:
         return module.name.replace("__", "::")
-    else:
+    elif module.module_kind == ModuleKind.CALCULATION:
         return module.calc_def_qualified_name
+    else:
+        raise unrenderable_module_kind_error(module, "module-wrapper")
 
 
 def _build_module_docstring_from_graph(module) -> str:

@@ -124,12 +124,18 @@ def _module_to_context(
     Returns:
         Dict with name, instance_name, type, inputs, outputs
     """
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+        raise unrenderable_module_kind_error(module, "pipeline-yaml")
+
     return {
         "name": (
             f"source: aggregation ({module.module_type})"
-            if module.is_aggregation
+            if module.module_kind == ModuleKind.AGGREGATION
             else f"source: computed_attribute ({module.module_type})"
-            if module.is_computed_attribute
+            if module.module_kind == ModuleKind.FORMULA
             else module.module_type
         ),
         "instance_name": module.name,
