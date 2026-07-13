@@ -29,7 +29,7 @@ import pytest
 import yaml
 
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
 import jinja2
 
@@ -513,11 +513,11 @@ class TestModuleCommentFormat:
                     if module_name in module_lookup:
                         module = module_lookup[module_name]
                         comment = stripped[2:]  # Strip "# "
-                        if module.is_aggregation:
+                        if module.module_kind == ModuleKind.AGGREGATION:
                             assert comment.startswith("source: aggregation"), (
                                 f"Aggregation module {module_name} has wrong comment: {stripped}"
                             )
-                        elif module.is_computed_attribute:
+                        elif module.module_kind == ModuleKind.FORMULA:
                             assert comment.startswith("source: computed_attribute"), (
                                 f"FORMULA module {module_name} has wrong comment: {stripped}"
                             )

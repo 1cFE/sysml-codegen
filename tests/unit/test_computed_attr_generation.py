@@ -24,6 +24,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
@@ -62,7 +63,7 @@ def _make_computed_attr(
 def _make_pipeline_module(
     name: str = "test_module",
     module_type: str = "TestModule",
-    is_computed_attribute: bool = False,
+    module_kind: ModuleKind = ModuleKind.CALCULATION,
 ) -> PipelineModule:
     return PipelineModule(
         name=name,
@@ -73,7 +74,7 @@ def _make_pipeline_module(
             channel_name=f"{name}__out",
         )],
         execution_order=0,
-        is_computed_attribute=is_computed_attribute,
+        module_kind=module_kind,
     )
 
 
@@ -95,7 +96,7 @@ def _make_formula_module(
             channel_name=f"{name}__out",
         )],
         execution_order=0,
-        is_computed_attribute=True,
+        module_kind=ModuleKind.FORMULA,
         calc_def_name=attr_name,
         calc_def_qualified_name=owning_part_qn.replace("::", "__"),
         auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attr_name, "expression": f"(inputs.{attr_name}_input)"}], "output_count": 1, "single_output_expression": f"(inputs.{attr_name}_input)"} if auto_impl else None,
@@ -123,7 +124,7 @@ class TestPipelineYamlComment:
         module = _make_pipeline_module(
             name="part__area",
             module_type="part.AreaModule",
-            is_computed_attribute=True,
+            module_kind=ModuleKind.FORMULA,
         )
         channel_field_map = {"part__area__out": "root"}
 
@@ -137,7 +138,7 @@ class TestPipelineYamlComment:
         module = _make_pipeline_module(
             name="my_calc",
             module_type="MyCalcModule",
-            is_computed_attribute=False,
+            module_kind=ModuleKind.CALCULATION,
         )
         channel_field_map = {"my_calc__out": "root"}
 
@@ -147,11 +148,11 @@ class TestPipelineYamlComment:
         assert "computed_attribute" not in ctx["name"]
 
     def test_type_field_unchanged(self):
-        """The 'type' field always uses module_type regardless of is_computed_attribute."""
+        """The 'type' field always uses module_type regardless of module_kind."""
         module = _make_pipeline_module(
             name="part__area",
             module_type="part.AreaModule",
-            is_computed_attribute=True,
+            module_kind=ModuleKind.FORMULA,
         )
         channel_field_map = {"part__area__out": "root"}
 

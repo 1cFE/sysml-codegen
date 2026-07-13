@@ -84,7 +84,7 @@ serialization diff and forces every construction site to state the kind (design 
 
 **File:** `src/sysml_codegen/resolution/models.py`
 
-- [ ] Add `ModuleKind` above `PipelineModule` (mirror `EntryPointType` at `models.py:24`, which is the
+- [x] Add `ModuleKind` above `PipelineModule` (mirror `EntryPointType` at `models.py:24`, which is the
   proven `str`-Enum pattern — `from enum import Enum` is already imported at `:13`):
   ```python
   class ModuleKind(str, Enum):
@@ -97,7 +97,7 @@ serialization diff and forces every construction site to state the kind (design 
       CONSTRAINT = "constraint"
       REPORT_AGGREGATOR = "report_aggregator"
   ```
-- [ ] In `PipelineModule`, **replace lines 181–182** (`is_computed_attribute` / `is_aggregation`) with,
+- [x] In `PipelineModule`, **replace lines 181–182** (`is_computed_attribute` / `is_aggregation`) with,
   at the same position (after `compiled_expression:180`, before `auto_impl_context:183`):
   ```python
       module_kind: ModuleKind
@@ -106,8 +106,8 @@ serialization diff and forces every construction site to state the kind (design 
   `module_kind` is **required, no default** (design D2 — load-bearing, not stylistic).
 
 ### Validation
-- [ ] `uv run mypy src/sysml_codegen/resolution/models.py` → clean.
-- [ ] Import probe: `uv run python -c "from sysml_codegen.resolution.models import ModuleKind, PipelineModule; print(ModuleKind.FORMULA.value)"` → prints `formula`.
+- [x] `uv run mypy src/sysml_codegen/resolution/models.py` → clean.
+- [x] Import probe: `uv run python -c "from sysml_codegen.resolution.models import ModuleKind, PipelineModule; print(ModuleKind.FORMULA.value)"` → prints `formula`.
 
 **What We Know Works After This Phase:** The enum and field exist and import. **Full suite is RED** —
 every construction site now raises a Pydantic "field required" error for `module_kind`. Expected.
@@ -127,18 +127,18 @@ graph construction works again.
 ### Changes Required
 **File:** `src/sysml_codegen/resolution/graph_builder.py`
 
-- [ ] `:1183` (formula site, `PipelineModule(` at `:1175`): replace `is_computed_attribute=True,` with
+- [x] `:1183` (formula site, `PipelineModule(` at `:1175`): replace `is_computed_attribute=True,` with
   `module_kind=ModuleKind.FORMULA,`.
-- [ ] `:1586` (aggregation site, `PipelineModule(` at `:1578`): replace `is_aggregation=True,` with
+- [x] `:1586` (aggregation site, `PipelineModule(` at `:1578`): replace `is_aggregation=True,` with
   `module_kind=ModuleKind.AGGREGATION,`.
-- [ ] `:1783` (calc-usage site, sets **neither** flag today): add `module_kind=ModuleKind.CALCULATION,`
+- [x] `:1783` (calc-usage site, sets **neither** flag today): add `module_kind=ModuleKind.CALCULATION,`
   to the `PipelineModule(...)` kwargs.
-- [ ] Ensure `ModuleKind` is imported in `graph_builder.py` (it constructs `PipelineModule`; add to the
+- [x] Ensure `ModuleKind` is imported in `graph_builder.py` (it constructs `PipelineModule`; add to the
   existing `from sysml_codegen.resolution.models import ...` line).
 
 ### Validation
-- [ ] `uv run mypy src/sysml_codegen/resolution/graph_builder.py` → clean.
-- [ ] Build probe (a fixture snapshot builds a graph and every module carries a kind):
+- [x] `uv run mypy src/sysml_codegen/resolution/graph_builder.py` → clean.
+- [x] Build probe (a fixture snapshot builds a graph and every module carries a kind):
   ```
   uv run python -c "from sysml_codegen.snapshot import build_full_graph_from_snapshot; \
   g,_=build_full_graph_from_snapshot('tests/fixtures/wi014_toy/extraction_snapshot.json'); \
@@ -168,7 +168,7 @@ shape below; do NOT apply a blanket three-arm rule (design-review M1/m4).**
 **New file — `src/sysml_codegen/generation/errors.py`** (design Component Overview; helper *imports*
 `CodeGenerationError`, which is **defined in `orchestration/pipeline_context.py:48`** and re-exported via
 `generation/__init__.py` — do not hunt for it under `generation/`):
-- [ ] Create `unrenderable_module_kind_error(module, seam_name)` returning a `CodeGenerationError` with
+- [x] Create `unrenderable_module_kind_error(module, seam_name)` returning a `CodeGenerationError` with
   the design D4 message form:
   ```python
   def unrenderable_module_kind_error(module, seam_name):
@@ -180,20 +180,20 @@ shape below; do NOT apply a blanket three-arm rule (design-review M1/m4).**
           f"Refusing rather than mis-rendering it as a calculation."
       )
   ```
-- [ ] Each seam imports it: `from sysml_codegen.generation.errors import unrenderable_module_kind_error`
+- [x] Each seam imports it: `from sysml_codegen.generation.errors import unrenderable_module_kind_error`
   (fall back to a function-local import if a file hits a circular import).
 
 **Seam 1a — `_get_python_path` (`cli/__init__.py:150–161`), three-arm.** Rekey the existing
 computed/agg/else chain; add the raise:
-- [ ] `if module.is_computed_attribute:` → `if module.module_kind == ModuleKind.FORMULA:` (body unchanged)
-- [ ] `elif module.is_aggregation:` → `elif module.module_kind == ModuleKind.AGGREGATION:` (body unchanged)
-- [ ] `else:` (calc body) → `elif module.module_kind == ModuleKind.CALCULATION:` (body unchanged)
-- [ ] add `else: raise unrenderable_module_kind_error(module, "python-path")`
+- [x] `if module.is_computed_attribute:` → `if module.module_kind == ModuleKind.FORMULA:` (body unchanged)
+- [x] `elif module.is_aggregation:` → `elif module.module_kind == ModuleKind.AGGREGATION:` (body unchanged)
+- [x] `else:` (calc body) → `elif module.module_kind == ModuleKind.CALCULATION:` (body unchanged)
+- [x] add `else: raise unrenderable_module_kind_error(module, "python-path")`
 
 **Seam 1b — `_raw_source_name` (`cli/__init__.py:164–174`), TWO-arm — NOT three (design-review M1).**
 Today aggregation shares the calc `else`. After:
-- [ ] `if module.is_computed_attribute:` → `if module.module_kind == ModuleKind.FORMULA:` (return `{qn}::{name}` unchanged)
-- [ ] the shared `return module.calc_def_qualified_name or module.name` line becomes the
+- [x] `if module.is_computed_attribute:` → `if module.module_kind == ModuleKind.FORMULA:` (return `{qn}::{name}` unchanged)
+- [x] the shared `return module.calc_def_qualified_name or module.name` line becomes the
   **`AGGREGATION`+`CALCULATION`** arm:
   ```python
       if module.module_kind in (ModuleKind.AGGREGATION, ModuleKind.CALCULATION):
@@ -202,21 +202,21 @@ Today aggregation shares the calc `else`. After:
   ```
   **Do not** give `AGGREGATION` its own arm and **do not** route it to the raise — this runs for *every*
   module in `_check_duplicate_output_paths`, so either mistake breaks every aggregation module.
-- [ ] `_check_duplicate_output_paths` (`cli/__init__.py:177–222`) needs **no logic change** — it now
+- [x] `_check_duplicate_output_paths` (`cli/__init__.py:177–222`) needs **no logic change** — it now
   raises via the two helpers for unrenderable kinds.
 
 **Seam 2 — `generate_registry` (`registry.py:220–226` split).** Repartition by kind and add a guard pass:
-- [ ] Add, **before** the split, a guard pass that raises (this is the seam that **fails open** — a kind
+- [x] Add, **before** the split, a guard pass that raises (this is the seam that **fails open** — a kind
   matching no list is silently dropped, design-review M2):
   ```python
       for m in graph.modules:
           if m.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
               raise unrenderable_module_kind_error(m, "registry")
   ```
-- [ ] `calcusage_modules = [... if not m.is_computed_attribute and not m.is_aggregation]` →
+- [x] `calcusage_modules = [... if not m.is_computed_attribute and not m.is_aggregation]` →
   `[... if m.module_kind == ModuleKind.CALCULATION]`
-- [ ] `formula_modules = [... if m.is_computed_attribute]` → `[... if m.module_kind == ModuleKind.FORMULA]`
-- [ ] `aggregation_modules = [... if m.is_aggregation]` → `[... if m.module_kind == ModuleKind.AGGREGATION]`
+- [x] `formula_modules = [... if m.is_computed_attribute]` → `[... if m.module_kind == ModuleKind.FORMULA]`
+- [x] `aggregation_modules = [... if m.is_aggregation]` → `[... if m.module_kind == ModuleKind.AGGREGATION]`
   (each list's naming+dedup body unchanged)
 
 **Seam 3 — `_get_module_sysml_qn` (`modules.py:32–45`), three-arm.** Rekey identically to Seam 1a
@@ -227,43 +227,43 @@ Float-wrapper body (`modules.py:102–154`) untouched (D5).
 `else: raise …(module, "stencil")`.
 
 **Seam 4b — auto-impl counter (`stencils.py:208–216`, in `generate_backlog_report`), guard-`continue`.**
-- [ ] `if module.is_computed_attribute:` → `if module.module_kind == ModuleKind.FORMULA:` (keeps its
+- [x] `if module.is_computed_attribute:` → `if module.module_kind == ModuleKind.FORMULA:` (keeps its
   `auto_formula_count` body + `continue`)
-- [ ] `if module.is_aggregation:` → `elif module.module_kind == ModuleKind.AGGREGATION:` (keeps its
+- [x] `if module.is_aggregation:` → `elif module.module_kind == ModuleKind.AGGREGATION:` (keeps its
   `auto_agg_count` body + `continue`)
-- [ ] add before falling through to the CalcUsage body:
+- [x] add before falling through to the CalcUsage body:
   `elif module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR): raise unrenderable_module_kind_error(module, "backlog-report")`
   (the CalcUsage path — the `else` — stays for `CALCULATION`)
 
 **Reader — pipeline source label (`pipeline.py:127–134`, in `_module_to_context`), a ternary.** A ternary
 cannot raise inline (design-review m4). Hoist a guard above the `return`:
-- [ ] before the `return {`: `if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR): raise unrenderable_module_kind_error(module, "pipeline-yaml")`
-- [ ] rekey the ternary labels byte-identically: `if module.is_aggregation` → `if module.module_kind == ModuleKind.AGGREGATION`; `if module.is_computed_attribute` → `if module.module_kind == ModuleKind.FORMULA` (the trailing `else module.module_type` covers `CALCULATION`).
+- [x] before the `return {`: `if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR): raise unrenderable_module_kind_error(module, "pipeline-yaml")`
+- [x] rekey the ternary labels byte-identically: `if module.is_aggregation` → `if module.module_kind == ModuleKind.AGGREGATION`; `if module.is_computed_attribute` → `if module.module_kind == ModuleKind.FORMULA` (the trailing `else module.module_type` covers `CALCULATION`).
 
 **Reader — test-gen skip (`test_gen.py:47`, in `generate_test_implementations`), an `or`-guard.**
-- [ ] `if module.is_computed_attribute or module.is_aggregation:` →
+- [x] `if module.is_computed_attribute or module.is_aggregation:` →
   `if module.module_kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):` (keeps `continue`)
-- [ ] add: `if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR): raise unrenderable_module_kind_error(module, "test-gen")` (before the CalcUsage body)
+- [x] add: `if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR): raise unrenderable_module_kind_error(module, "test-gen")` (before the CalcUsage body)
 
-- [ ] Import `ModuleKind` in each of the six edited src files.
+- [x] Import `ModuleKind` in each of the six edited src files.
 
 ### Validation
-- [ ] `uv run mypy src/sysml_codegen/` → clean.
-- [ ] `uv run ruff check src/` → clean.
-- [ ] **DE-RISK GATE (first proof point).** Regenerate the committed baselines and inspect — this is a
+- [x] `uv run mypy src/sysml_codegen/` → clean.
+- [x] `uv run ruff check src/` → clean.
+- [x] **DE-RISK GATE (first proof point).** Regenerate the committed baselines and inspect — this is a
   throwaway check; the *kept* regen happens atomically in Phase 5, so revert after:
   ```
   uv run python scripts/capture_pipeline_baselines.py
   uv run python scripts/capture_baseline_yaml.py
   git diff --stat tests/fixtures/baseline_outputs/ tests/fixtures/baseline_yaml/
   ```
-  - [ ] EXPECT: exactly the **9** flag-carrying `computation_graph.json` change; `sample_model/computation_graph.json`
+  - [x] EXPECT: exactly the **9** flag-carrying `computation_graph.json` change; `sample_model/computation_graph.json`
     unchanged (zero modules); **all `registry_init.py` unchanged**; **all `baseline_yaml/*.yaml` unchanged**.
     A changed `registry_init.py` or `.yaml` is a Seam-2 / pipeline-reader bug — stop and fix.
-  - [ ] Spot-check one hunk: `git diff tests/fixtures/baseline_outputs/wi014_toy/computation_graph.json`
+  - [x] Spot-check one hunk: `git diff tests/fixtures/baseline_outputs/wi014_toy/computation_graph.json`
     → per module: `-is_computed_attribute`, `-is_aggregation`, `+module_kind: "<value>"`,
     `+output_schema_type: null`; **nothing else** (design `#baseline-diff-spec`).
-  - [ ] Revert: `git checkout tests/fixtures/baseline_outputs/ tests/fixtures/baseline_yaml/`
+  - [x] Revert: `git checkout tests/fixtures/baseline_outputs/ tests/fixtures/baseline_yaml/`
 
 **What We Know Works After This Phase:** `src/` reads only `module_kind`; regenerated real output is
 byte-identical modulo the intended `module_kind` swap (B2/B3 proven). **Suite still RED** — test files
@@ -299,24 +299,24 @@ def test_registry_seam_refuses_constraint():
 ```
 
 ### Changes Required
-- [ ] Write **7 seam-entry tests**, each constructing a graph/module with `module_kind=CONSTRAINT` and
+- [x] Write **7 seam-entry tests**, each constructing a graph/module with `module_kind=CONSTRAINT` and
   asserting the **entry point** (not the inner QN helper) raises `CodeGenerationError` with the kind in
   the message. **Reuse template_env / output_path setup from `tests/conformance/test_gen_module_wrappers.py`
   and `test_gen_registry.py`** rather than reconstructing it. The 7 entry points (verified names):
-  - [ ] `generate_registry(graph, ...)` — `registry.py:185`. **The critical fails-open seam** (call this
+  - [x] `generate_registry(graph, ...)` — `registry.py:185`. **The critical fails-open seam** (call this
     one out in a comment).
-  - [ ] `_check_duplicate_output_paths([constraint_module])` — `cli/__init__.py:177`.
-  - [ ] `generate_teax_module(constraint_module, template_env, output_path)` — `modules.py:81` (per-module).
-  - [ ] `generate_implementation(constraint_module, template_env, output_path)` — `stencils.py:151` (per-module).
-  - [ ] `generate_backlog_report(graph, ...)` — `stencils.py:189` (the auto-impl counter, Seam 4b).
-  - [ ] `generate_pipeline_yaml(graph, ...)` — `pipeline.py:25`.
-  - [ ] `generate_test_implementations(graph, ...)` — `test_gen.py:22`.
-- [ ] Confirm the exact `ComputationGraph` / `PipelineModule` constructor kwargs by mirroring an existing
+  - [x] `_check_duplicate_output_paths([constraint_module])` — `cli/__init__.py:177`.
+  - [x] `generate_teax_module(constraint_module, template_env, output_path)` — `modules.py:81` (per-module).
+  - [x] `generate_implementation(constraint_module, template_env, output_path)` — `stencils.py:151` (per-module).
+  - [x] `generate_backlog_report(graph, ...)` — `stencils.py:189` (the auto-impl counter, Seam 4b).
+  - [x] `generate_pipeline_yaml(graph, ...)` — `pipeline.py:25`.
+  - [x] `generate_test_implementations(graph, ...)` — `test_gen.py:22`.
+- [x] Confirm the exact `ComputationGraph` / `PipelineModule` constructor kwargs by mirroring an existing
   conformance test (some seams take `template_env`, `output_path`, `package_name`).
 
 ### Validation
-- [ ] `uv run pytest tests/conformance/test_module_kind_faildloud.py -v` → all 7 pass.
-- [ ] Sanity: temporarily deleting the registry guard-pass makes `test_registry_seam_refuses_constraint`
+- [x] `uv run pytest tests/conformance/test_module_kind_faildloud.py -v` → all 7 pass.
+- [x] Sanity: temporarily deleting the registry guard-pass makes `test_registry_seam_refuses_constraint`
   **fail** (proves the test catches the fails-open regression). Restore the guard.
 
 **What We Know Works After This Phase:** The fail-loud contract is real and enforced at every seam entry.
@@ -342,9 +342,9 @@ site; the grep is the completeness check):
 grep -rn 'is_computed_attribute\|is_aggregation' tests/
 ```
 
-- [ ] **Regenerate + KEEP the 9 graph baselines** (`sample_model` unchanged is correct):
+- [x] **Regenerate + KEEP the 9 graph baselines** (`sample_model` unchanged is correct):
   `uv run python scripts/capture_pipeline_baselines.py`  (this run's output is committed by the orchestrator)
-- [ ] Migrate the **15 test `.py` files** (mechanical, per the grep). Patterns:
+- [x] Migrate the **15 test `.py` files** (mechanical, per the grep). Patterns:
   - Factory kwargs: `is_computed_attribute=True` → `module_kind=ModuleKind.FORMULA`; `is_aggregation=True`
     → `module_kind=ModuleKind.AGGREGATION`; a module that set neither → `module_kind=ModuleKind.CALCULATION`
     (now required — any factory building a `PipelineModule` must pass it).
@@ -360,21 +360,21 @@ grep -rn 'is_computed_attribute\|is_aggregation' tests/
     `tests/unit/test_aggregation_generation.py`, `test_computed_attr_generation.py`,
     `test_graph_builder_aggregation.py`, `test_graph_builder_computed_attrs.py`, `test_stencils.py`.
     *(Reconcile against the live grep — it is the source of truth.)*
-- [ ] **Comparison harnesses (lockstep with the regen) — `bm[...]` reads move to `module_kind`:**
+- [x] **Comparison harnesses (lockstep with the regen) — `bm[...]` reads move to `module_kind`:**
   - `tests/conformance/test_pipeline_e2e.py:86–90` (`m.is_* == bm["is_*"]`) and its module-partition
     reads at `:94,118,330–360` → compare `m.module_kind == ModuleKind(bm["module_kind"])`, partition by kind.
   - `tests/conformance/test_graph_assembly.py:563–567` and `:224–228,571,600` → same.
-- [ ] **Ordered field-inventory test (`test_data_models.py:576–596`)** — it is a **set** plus
+- [x] **Ordered field-inventory test (`test_data_models.py:576–596`)** — it is a **set** plus
   `assert len(actual) == 16`. Remove `"is_computed_attribute"` and `"is_aggregation"`; add `"module_kind"`
   and `"output_schema_type"`. Count stays **16** (2 out, 2 in), so the `len == 16` line is unchanged.
   (Position is not load-bearing for this set-based test, but declaration order still matters for the
   baseline serialization — already handled in Phase 1.)
 
 ### Validation
-- [ ] `uv run pytest tests/conformance/` → green (byte-identity vehicle: package regen-compare + baseline
+- [x] `uv run pytest tests/conformance/` → green (byte-identity vehicle: package regen-compare + baseline
   round-trip INV-5 via `test_baselines.py`).
-- [ ] `uv run pytest tests/` → green (full suite).
-- [ ] `git diff --stat tests/fixtures/baseline_outputs/` → the 9 JSONs changed, `registry_init.py` files
+- [x] `uv run pytest tests/` → green (full suite).
+- [x] `git diff --stat tests/fixtures/baseline_outputs/` → the 9 JSONs changed, `registry_init.py` files
   unchanged, `sample_model` unchanged. `git diff tests/fixtures/baseline_yaml/` → empty (regenerate if you
   reverted it in Phase 3: `uv run python scripts/capture_baseline_yaml.py` then confirm no diff).
 
@@ -430,17 +430,81 @@ snapshot field).
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION]
-
 ### Phase 1 Completion
+Added `ModuleKind` and swapped the flags exactly as specified. `uv run mypy
+src/sysml_codegen/resolution/models.py` clean; import probe printed `formula`.
 
 ### Phase 2 Completion
+Set `module_kind=` at all three sites verbatim per the design table. Confirmed via
+mypy diff against the pre-Phase-2 commit that the only new/removed errors were the
+three flag-related `call-arg` errors (now fixed); the other 18 mypy errors are
+pre-existing baseline noise unrelated to this refactor (unchanged before/after).
+Build probe (`build_full_graph_from_snapshot` on wi014_toy) printed `{'calculation'}`
+— needed `Path(...)` around the snapshot arg since the function takes a `Path`, not
+a bare string (plan snippet's minor gap, not a design issue).
 
 ### Phase 3 Completion
+Rewrote all six dispatch sites + created `generation/errors.py` exactly per the
+design's per-site shapes (Seam 1b two-arm AGGREGATION-joins-CALCULATION verified
+correct). mypy/ruff clean (mypy: 78 errors post- vs 81 pre-, net improvement, same
+pre-existing unrelated errors). **De-risk gate**: regenerated the 9 baselines +
+baseline_yaml; diff was exactly the two-out/two-in-plus-null swap on all 9, zero
+change to `registry_init.py` or any `.yaml`; spot-checked `wi014_toy` hunk-by-hunk
+against the design's baseline-diff spec (exact match); reverted per protocol.
 
 ### Phase 4 Completion
+Wrote the 7 seam-entry tests. Sanity check performed and passed: temporarily
+removing the registry guard-pass made `test_registry_seam_refuses_constraint` fail
+(`DID NOT RAISE`), proving the test actually catches the fails-open regression;
+guard restored, full 7/7 green again.
 
 ### Phase 5 Completion
+Grep found **22** test `.py` files (not 15) — matches the design's Research
+Findings count, not the plan's original estimate; migrated all 22 mechanically.
+
+**Deviations from plan:**
+- **Wider construction surface than the flag-grep.** `grep PipelineModule(` across
+  `tests/` found several more files with zero flag hits (relying on the old
+  `False`/`False` default = calc-usage): `test_stencils.py`,
+  `test_duplicate_path_failfast.py`, `test_exit_point_aliases.py`,
+  `test_hygiene_tail_registry.py`, `test_output_aliases.py`,
+  `test_registry_generation.py`, `test_uncovered_params.py`, and the *other*
+  `tests/unit/test_data_models.py` (distinct from the grep-listed
+  `tests/conformance/test_data_models.py`). Design's Pydantic-gotcha note called
+  this exactly: `extra='ignore'` doesn't loud-fail a removed kwarg, but the new
+  *required* field does loud-fail a missing one — so the full-suite run surfaced
+  every one of these as a `ValidationError: module_kind Field required`, which is
+  how they were all found and fixed. All given `module_kind=ModuleKind.CALCULATION`.
+- **Two tests deleted, not migrated** (impossible/redundant states under the enum):
+  `test_aggregation_takes_priority_over_computed_attr` in
+  `test_aggregation_generation.py` set both flags True simultaneously to test the
+  old seam's priority order — `module_kind` is a single value, so this state is no
+  longer constructible; the priority question is moot. `test_is_aggregation_false`
+  in `test_factory_formula.py` asserted a FORMULA module isn't also an aggregation
+  — now structurally guaranteed by the enum, so folded away (the sibling
+  `test_is_computed_attribute_true` was kept, renamed `test_module_kind_is_formula`,
+  asserting `module_kind == ModuleKind.FORMULA` directly).
+- **`ModuleKind(str, Enum)` docstring reworded.** The Phase-1 docstring text itself
+  named the old flags (`Replaces the accreted is_computed_attribute / is_aggregation
+  Booleans`), which would have failed Phase 6's own INV-4 zero-hit grep. Reworded to
+  describe the same fact without naming the flags verbatim; no behavior change.
+
+**Baseline regen (kept):** `capture_pipeline_baselines.py` + `capture_baseline_yaml.py`.
+`git diff --stat`: the same 9 `computation_graph.json` files, `sample_model`
+unchanged, all `registry_init.py` and `baseline_yaml/*.yaml` byte-identical.
+
+**Gates run:** `uv run pytest tests/` → **2142 passed, 4 skipped** (the 4 skips are
+pre-existing, unrelated to this item). `grep -rn 'is_computed_attribute\|is_aggregation'
+src/ tests/` → **zero hits**. `uv run ruff check src/` → clean.
+`uv run mypy src/sysml_codegen/` → 78 errors, all pre-existing (same set as the
+Phase 3 baseline, confirmed by diffing against the pre-refactor commit).
+
+**Noted, not fixed (pre-existing, order-dependent flake, unrelated to Item 6):**
+`tests/conformance/test_snapshot_generation.py` occasionally fails inside a full
+`pytest tests/` run with `ERROR: agentic-mbse is not installed` from a CLI
+subprocess, then passes on immediate re-run (isolated or full-suite). Reproduces
+identically on the pre-Phase-1 commit — not touched by this item, not in its
+migration surface, and not stable enough to be a regression signal either way.
 
 ### Phase 6 Completion
 

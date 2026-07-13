@@ -32,6 +32,7 @@ from sysml_codegen.generation.stencils import (
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     PipelineModule,
 )
@@ -99,8 +100,7 @@ def _make_pipeline_module(
         outputs=outputs,
         execution_order=0,
         compilability=compilability,
-        is_computed_attribute=False,
-        is_aggregation=False,
+        module_kind=ModuleKind.CALCULATION,
         calc_def_name=calc_def_name,
         calc_def_qualified_name=qualified_name,
         doc_comment="Test calculation",

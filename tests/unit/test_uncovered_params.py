@@ -45,6 +45,7 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ParameterGroup,
     PipelineModule,
 )
@@ -232,6 +233,7 @@ def test_unwired_fallthrough_partition():
         ],
         outputs=[],
         execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
     )
     group = ParameterGroup(
         name="design_params",

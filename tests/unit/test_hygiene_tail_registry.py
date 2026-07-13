@@ -16,7 +16,12 @@ from __future__ import annotations
 import logging
 
 from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-from sysml_codegen.resolution.models import Compilability, ModuleOutput, PipelineModule
+from sysml_codegen.resolution.models import (
+    Compilability,
+    ModuleKind,
+    ModuleOutput,
+    PipelineModule,
+)
 
 
 def _warns(caplog):
@@ -37,6 +42,7 @@ def _module_with_root_output(python_type: str) -> PipelineModule:
         ],
         execution_order=0,
         compilability=Compilability.FULLY_COMPILABLE,
+        module_kind=ModuleKind.CALCULATION,
     )
 
 

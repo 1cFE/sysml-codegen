@@ -37,7 +37,7 @@ from sysml_codegen.generation.preservation import (
 )
 from sysml_codegen.generation.stencils import generate_implementation
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
-from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
+from sysml_codegen.resolution.models import ComputationGraph, ModuleKind, PipelineModule
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
 )
@@ -93,7 +93,7 @@ def _get_calcusage_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Get CalcUsage PipelineModules (not FORMULA or aggregation)."""
     return [
         m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
+        if m.module_kind == ModuleKind.CALCULATION
     ]
 
 

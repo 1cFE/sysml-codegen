@@ -27,7 +27,7 @@ from sysml_codegen.generation.schemas import (
     generate_multioutput_model,
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
@@ -458,7 +458,7 @@ class TestAggregationAndFormulaAlwaysSingleOutput:
     ):
         graph, _ = all_graph_data[model_name]
 
-        agg_modules = [m for m in graph.modules if m.is_aggregation]
+        agg_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
         if not agg_modules:
             pytest.skip(f"No aggregation modules in {model_name}")
 
@@ -487,7 +487,7 @@ class TestAggregationAndFormulaAlwaysSingleOutput:
     ):
         graph, _ = all_graph_data[model_name]
 
-        formula_modules = [m for m in graph.modules if m.is_computed_attribute]
+        formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
         if not formula_modules:
             pytest.skip(f"No FORMULA modules in {model_name}")
 

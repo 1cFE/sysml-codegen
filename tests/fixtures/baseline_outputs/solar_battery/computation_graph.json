@@ -54,8 +54,8 @@
       "execution_order": 0,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -119,8 +119,8 @@
       "execution_order": 1,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -252,8 +252,8 @@
       "execution_order": 2,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -417,8 +417,8 @@
       "execution_order": 3,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -606,8 +606,8 @@
       "execution_order": 4,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -784,8 +784,8 @@
       "execution_order": 5,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -949,8 +949,8 @@
       "execution_order": 6,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -1114,8 +1114,8 @@
       "execution_order": 7,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -1291,8 +1291,8 @@
       "execution_order": 8,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -1468,8 +1468,8 @@
       "execution_order": 9,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -1610,8 +1610,8 @@
       "execution_order": 10,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -1764,8 +1764,8 @@
       "execution_order": 11,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -1861,8 +1861,8 @@
       "execution_order": 12,
       "compilability": "fully_compilable",
       "compiled_expression": "(inputs.p_net_mw * 1000.0)",
-      "is_computed_attribute": true,
-      "is_aggregation": false,
+      "module_kind": "formula",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -1961,8 +1961,8 @@
       "execution_order": 13,
       "compilability": "fully_compilable",
       "compiled_expression": "(((inputs.module_count * inputs.pv_module_fabrication_cost) + (inputs.inverter_count * inputs.inverter_fabrication_cost)) + inputs.array_bos_fabrication_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2061,8 +2061,8 @@
       "execution_order": 14,
       "compilability": "fully_compilable",
       "compiled_expression": "(((inputs.module_count * inputs.pv_module_installation_cost) + (inputs.inverter_count * inputs.inverter_installation_cost)) + inputs.array_bos_installation_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2149,8 +2149,8 @@
       "execution_order": 15,
       "compilability": "fully_compilable",
       "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_capital_cost) + inputs.hybrid_inverter_capital_cost) + inputs.battery_bos_capital_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2237,8 +2237,8 @@
       "execution_order": 16,
       "compilability": "fully_compilable",
       "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_raw_material_cost) + inputs.hybrid_inverter_raw_material_cost) + inputs.battery_bos_raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2325,8 +2325,8 @@
       "execution_order": 17,
       "compilability": "fully_compilable",
       "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_fabrication_cost) + inputs.hybrid_inverter_fabrication_cost) + inputs.battery_bos_fabrication_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2413,8 +2413,8 @@
       "execution_order": 18,
       "compilability": "fully_compilable",
       "compiled_expression": "(((inputs.pack_count * inputs.battery_pack_installation_cost) + inputs.hybrid_inverter_installation_cost) + inputs.battery_bos_installation_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2489,8 +2489,8 @@
       "execution_order": 19,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.racking_raw_material_cost + inputs.electrical_panel_raw_material_cost) + inputs.permitting_raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2565,8 +2565,8 @@
       "execution_order": 20,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.racking_fabrication_cost + inputs.electrical_panel_fabrication_cost) + inputs.permitting_fabrication_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2641,8 +2641,8 @@
       "execution_order": 21,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.racking_installation_cost + inputs.electrical_panel_installation_cost) + inputs.permitting_installation_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2717,8 +2717,8 @@
       "execution_order": 22,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.racking_capital_cost + inputs.electrical_panel_capital_cost) + inputs.permitting_capital_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2829,8 +2829,8 @@
       "execution_order": 23,
       "compilability": "fully_compilable",
       "compiled_expression": "((((inputs.module_count * inputs.pv_module_capital_cost) + (inputs.inverter_count * inputs.inverter_capital_cost)) + inputs.array_bos_capital_cost) + inputs.misc_hardware_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -2941,8 +2941,8 @@
       "execution_order": 24,
       "compilability": "fully_compilable",
       "compiled_expression": "((((inputs.module_count * inputs.pv_module_raw_material_cost) + (inputs.inverter_count * inputs.inverter_raw_material_cost)) + inputs.array_bos_raw_material_cost) + inputs.allocation_model_material_portion)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3005,8 +3005,8 @@
       "execution_order": 25,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3070,8 +3070,8 @@
       "execution_order": 26,
       "compilability": "fully_compilable",
       "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3146,8 +3146,8 @@
       "execution_order": 27,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.solar_array_fabrication_cost + inputs.battery_system_fabrication_cost) + inputs.site_infra_fabrication_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3222,8 +3222,8 @@
       "execution_order": 28,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.solar_array_installation_cost + inputs.battery_system_installation_cost) + inputs.site_infra_installation_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3286,8 +3286,8 @@
       "execution_order": 29,
       "compilability": "fully_compilable",
       "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3362,8 +3362,8 @@
       "execution_order": 30,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.solar_array_capital_cost + inputs.battery_system_capital_cost) + inputs.site_infra_capital_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3426,8 +3426,8 @@
       "execution_order": 31,
       "compilability": "fully_compilable",
       "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3502,8 +3502,8 @@
       "execution_order": 32,
       "compilability": "fully_compilable",
       "compiled_expression": "((inputs.solar_array_raw_material_cost + inputs.battery_system_raw_material_cost) + inputs.site_infra_raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3586,8 +3586,8 @@
       "execution_order": 33,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [
           {
@@ -3665,8 +3665,8 @@
       "execution_order": 34,
       "compilability": "fully_compilable",
       "compiled_expression": "(inputs.capital_cost / inputs.raw_material_cost)",
-      "is_computed_attribute": false,
-      "is_aggregation": true,
+      "module_kind": "aggregation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -3777,8 +3777,8 @@
       "execution_order": 35,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [

@@ -48,6 +48,7 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
@@ -424,7 +425,7 @@ class TestComputedAttrModule:
         # Naming
         assert module.name == "attrexprprobedesign__probe_design__area"
         assert "areaModule" in module.module_type  # lowercase element name
-        assert module.is_computed_attribute is True
+        assert module.module_kind == ModuleKind.FORMULA
         assert module.compilability == Compilability.FULLY_COMPILABLE
 
         # Inputs: length and width
@@ -581,7 +582,7 @@ class TestUnifiedToposort:
                 channel_name="part__area__area",
             )],
             execution_order=0,
-            is_computed_attribute=True,
+            module_kind=ModuleKind.FORMULA,
         )
 
         # CalcUsage module consumes "part__area__area"
@@ -601,6 +602,7 @@ class TestUnifiedToposort:
                 channel_name="part__cost_calc__cost",
             )],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         sorted_modules = _unified_topological_sort([calc_module, formula_module])
@@ -620,7 +622,7 @@ class TestUnifiedToposort:
                 channel_name="part__area__area",
             )],
             execution_order=0,
-            is_computed_attribute=True,
+            module_kind=ModuleKind.FORMULA,
         )
 
         cost_module = PipelineModule(
@@ -639,7 +641,7 @@ class TestUnifiedToposort:
                 channel_name="part__cost__cost",
             )],
             execution_order=0,
-            is_computed_attribute=True,
+            module_kind=ModuleKind.FORMULA,
         )
 
         sorted_modules = _unified_topological_sort([cost_module, area_module])
@@ -659,6 +661,7 @@ class TestUnifiedToposort:
                 channel_name="module_a__result",
             )],
             execution_order=99,  # Wrong order initially
+            module_kind=ModuleKind.CALCULATION,
         )
 
         module_b = PipelineModule(
@@ -677,6 +680,7 @@ class TestUnifiedToposort:
                 channel_name="module_b__result",
             )],
             execution_order=0,  # Wrong order initially
+            module_kind=ModuleKind.CALCULATION,
         )
 
         sorted_modules = _unified_topological_sort([module_b, module_a])
@@ -697,6 +701,7 @@ class TestUnifiedToposort:
                 channel_name="module_x__out",
             )],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         module_y = PipelineModule(
@@ -708,6 +713,7 @@ class TestUnifiedToposort:
                 channel_name="module_y__out",
             )],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         sorted_modules = _unified_topological_sort([module_x, module_y])
@@ -723,6 +729,7 @@ class TestUnifiedToposort:
             inputs=[],
             outputs=[ModuleOutput(field_name="root", python_type="float", channel_name="a__out")],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
         mod_b = PipelineModule(
             name="b", module_type="BModule",
@@ -732,6 +739,7 @@ class TestUnifiedToposort:
             )],
             outputs=[ModuleOutput(field_name="root", python_type="float", channel_name="b__out")],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
         mod_c = PipelineModule(
             name="c", module_type="CModule",
@@ -741,6 +749,7 @@ class TestUnifiedToposort:
             )],
             outputs=[ModuleOutput(field_name="root", python_type="float", channel_name="c__out")],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         sorted_modules = _unified_topological_sort([mod_c, mod_b, mod_a])
@@ -759,6 +768,7 @@ class TestUnifiedToposort:
             )],
             outputs=[ModuleOutput(field_name="root", python_type="float", channel_name="a__out")],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
         mod_b = PipelineModule(
             name="b", module_type="BModule",
@@ -768,6 +778,7 @@ class TestUnifiedToposort:
             )],
             outputs=[ModuleOutput(field_name="root", python_type="float", channel_name="b__out")],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         with pytest.raises(CircularDependencyError, match="Circular dependency"):
@@ -820,7 +831,7 @@ class TestBuildComputationGraphWithComputedAttrs:
         )
 
         assert len(graph.modules) == 1
-        assert graph.modules[0].is_computed_attribute is False
+        assert graph.modules[0].module_kind == ModuleKind.CALCULATION
 
     def test_formula_module_appears_in_graph(self):
         """FORMULA computed attr produces a PipelineModule in the graph."""
@@ -845,7 +856,7 @@ class TestBuildComputationGraphWithComputedAttrs:
 
         assert len(graph.modules) == 1
         module = graph.modules[0]
-        assert module.is_computed_attribute is True
+        assert module.module_kind == ModuleKind.FORMULA
         assert module.compilability == Compilability.FULLY_COMPILABLE
         assert "area" in module.name
 
@@ -936,7 +947,7 @@ class TestBuildComputationGraphWithComputedAttrs:
             )
 
         assert len(graph.modules) == 1
-        assert graph.modules[0].is_computed_attribute is True
+        assert graph.modules[0].module_kind == ModuleKind.FORMULA
         d5 = [
             r for r in caplog.records
             if "FORMULA but not FULLY_COMPILABLE" in r.getMessage()

@@ -45,6 +45,7 @@ from sysml_codegen.resolution.graph_builder import (
 from sysml_codegen.resolution.models import (
     EntryPoint,
     EntryPointType,
+    ModuleKind,
     PipelineModule,
 )
 from sysml_codegen.snapshot import load_extraction_snapshot
@@ -465,8 +466,8 @@ class TestTermTypeHandling:
 
         assert found_wired_singleton, "No SingletonTerm with successful channel resolution found"
 
-    def test_is_aggregation_true(self, agg_inputs):
-        """module.is_aggregation == True for all aggregation modules."""
+    def test_module_kind_equals_aggregation(self, agg_inputs):
+        """module.module_kind == ModuleKind.AGGREGATION for all aggregation modules."""
         ep_working = copy.deepcopy(agg_inputs["entry_points"])
         for agg in agg_inputs["aggregation_data"]:
             module, _new_eps = _build_aggregation_module(
@@ -478,8 +479,8 @@ class TestTermTypeHandling:
                 expose_aliases=agg_inputs["expose_aliases"],
                 usage_type_map=agg_inputs["usage_type_map"],
             )
-            assert module.is_aggregation is True, (
-                f"Module {module.name} should have is_aggregation=True"
+            assert module.module_kind == ModuleKind.AGGREGATION, (
+                f"Module {module.name} should have module_kind=ModuleKind.AGGREGATION"
             )
 
     def test_has_unsupported_nodes_forces_manual_required(self, solar_battery_agg):

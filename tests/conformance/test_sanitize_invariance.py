@@ -37,6 +37,7 @@ from sysml_codegen.core.qualified_names import sanitize_name
 from sysml_codegen.orchestration.snapshot_context import (
     build_pipeline_context_from_snapshot,
 )
+from sysml_codegen.resolution.models import ModuleKind
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 _IDENTIFIER_SAFE = re.compile(r"[A-Za-z0-9_]+")
@@ -86,7 +87,7 @@ def _build_all_modules(graph) -> list[dict]:
     all_modules: list[dict] = []
     seen: set[str] = set()
     for m in graph.modules:
-        if not m.is_computed_attribute and not m.is_aggregation:
+        if m.module_kind == ModuleKind.CALCULATION:
             if m.calc_def_name in seen:
                 continue
             seen.add(m.calc_def_name)
@@ -94,12 +95,12 @@ def _build_all_modules(graph) -> list[dict]:
                 {"class_name": f"{m.calc_def_name}Module", "module_type": m.module_type}
             )
     for m in graph.modules:
-        if m.is_computed_attribute:
+        if m.module_kind == ModuleKind.FORMULA:
             all_modules.append(
                 {"class_name": m.module_type.split(".")[-1], "module_type": m.module_type}
             )
     for m in graph.modules:
-        if m.is_aggregation:
+        if m.module_kind == ModuleKind.AGGREGATION:
             all_modules.append(
                 {"class_name": m.module_type.split(".")[-1], "module_type": m.module_type}
             )

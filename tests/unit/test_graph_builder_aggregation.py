@@ -37,6 +37,7 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
@@ -475,12 +476,11 @@ class TestBuildAggregationModule:
         module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
         assert module.compilability == Compilability.MANUAL_REQUIRED
 
-    def test_module_is_aggregation_true(self):
-        """PipelineModule.is_aggregation == True."""
+    def test_module_kind_equals_aggregation(self):
+        """PipelineModule.module_kind == ModuleKind.AGGREGATION."""
         agg = _make_scoped_agg(sum_terms=[])
         module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
-        assert module.is_aggregation is True
-        assert module.is_computed_attribute is False
+        assert module.module_kind == ModuleKind.AGGREGATION
 
     def test_module_naming(self):
         """Module name and type follow ADR-003."""
@@ -637,6 +637,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
         agg_module = PipelineModule(
             name="agg__capital_cost",
@@ -656,7 +657,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
         system_module = PipelineModule(
             name="system__financial",
@@ -678,6 +679,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         # Pass in reverse order to verify sort works
@@ -700,6 +702,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=99,
+            module_kind=ModuleKind.CALCULATION,
         )
         m2 = PipelineModule(
             name="m2",
@@ -719,7 +722,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=99,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         sorted_modules = _unified_topological_sort([m2, m1])
@@ -809,7 +812,7 @@ class TestOrphanEntryPointsSurfaced:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         result = self._collect_orphans([module], entry_points, [])
@@ -845,7 +848,7 @@ class TestOrphanEntryPointsSurfaced:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         result = self._collect_orphans([module], entry_points, [])
@@ -913,7 +916,7 @@ class TestOrphanEntryPointsSurfaced:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         result = self._collect_orphans([module], entry_points, [existing_group])

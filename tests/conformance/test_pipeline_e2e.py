@@ -26,6 +26,7 @@ import pytest
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     EntryPointType,
+    ModuleKind,
 )
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
@@ -83,15 +84,12 @@ def _compare_graph_to_baseline(graph: ComputationGraph, baseline: dict):
         assert m.execution_order == bm["execution_order"], (
             f"Module {m.name}: order {m.execution_order} vs {bm['execution_order']}"
         )
-        assert m.is_computed_attribute == bm["is_computed_attribute"], (
-            f"Module {m.name}: is_computed_attribute mismatch"
-        )
-        assert m.is_aggregation == bm["is_aggregation"], (
-            f"Module {m.name}: is_aggregation mismatch"
+        assert m.module_kind == ModuleKind(bm["module_kind"]), (
+            f"Module {m.name}: module_kind mismatch"
         )
 
         # Verify compilability for FORMULA/aggregation modules (set by factory)
-        if m.is_computed_attribute or m.is_aggregation:
+        if m.module_kind in (ModuleKind.FORMULA, ModuleKind.AGGREGATION):
             assert m.compilability.value == bm["compilability"], (
                 f"Module {m.name}: compilability {m.compilability.value} "
                 f"vs {bm['compilability']}"
@@ -115,7 +113,7 @@ def _compare_graph_to_baseline(graph: ComputationGraph, baseline: dict):
     baseline_normalized = json.loads(json.dumps(baseline))
 
     for gm, bm in zip(graph_json["modules"], baseline_normalized["modules"]):
-        if not gm["is_computed_attribute"] and not gm["is_aggregation"]:
+        if gm["module_kind"] == ModuleKind.CALCULATION.value:
             bm["compilability"] = gm["compilability"]
         # Normalize source_file: snapshot uses relative paths,
         # capture script uses absolute paths
@@ -327,11 +325,11 @@ class TestModuleTypes:
         graph = solar_battery_graph
 
         has_calc_usage = any(
-            not m.is_computed_attribute and not m.is_aggregation
+            m.module_kind == ModuleKind.CALCULATION
             for m in graph.modules
         )
-        has_formula = any(m.is_computed_attribute for m in graph.modules)
-        has_aggregation = any(m.is_aggregation for m in graph.modules)
+        has_formula = any(m.module_kind == ModuleKind.FORMULA for m in graph.modules)
+        has_aggregation = any(m.module_kind == ModuleKind.AGGREGATION for m in graph.modules)
 
         assert has_calc_usage, "No CalcUsage modules in solar_battery graph"
         assert has_formula, "No FORMULA modules in solar_battery graph"
@@ -343,21 +341,21 @@ class TestModuleTypes:
         graph = catf_mfe_graph
 
         has_calc_usage = any(
-            not m.is_computed_attribute and not m.is_aggregation
+            m.module_kind == ModuleKind.CALCULATION
             for m in graph.modules
         )
         assert has_calc_usage, "No CalcUsage modules in catf_mfe graph"
 
         # Document which types are present (catf_mfe may not have all 3)
-        has_formula = any(m.is_computed_attribute for m in graph.modules)
-        has_aggregation = any(m.is_aggregation for m in graph.modules)
+        has_formula = any(m.module_kind == ModuleKind.FORMULA for m in graph.modules)
+        has_aggregation = any(m.module_kind == ModuleKind.AGGREGATION for m in graph.modules)
 
         calc_usage_count = sum(
             1 for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
+            if m.module_kind == ModuleKind.CALCULATION
         )
-        formula_count = sum(1 for m in graph.modules if m.is_computed_attribute)
-        agg_count = sum(1 for m in graph.modules if m.is_aggregation)
+        formula_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.FORMULA)
+        agg_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION)
 
         # Informational: log module type breakdown
         assert calc_usage_count > 0, "Expected at least one CalcUsage module"

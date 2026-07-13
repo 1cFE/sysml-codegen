@@ -33,7 +33,7 @@ from sysml_codegen.core.identifier_types import (
     PythonModulePath,
     SysMLQualifiedName,
 )
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
 from sysml_codegen.snapshot import (
     build_classifier_inputs_from_snapshot,
@@ -342,10 +342,10 @@ class TestImportPathsMatchFilesystem:
         # Count expected from graph: unique calc_def_names per module type
         unique_calcusage = {
             m.calc_def_name for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
+            if m.module_kind == ModuleKind.CALCULATION
         }
-        formula_count = sum(1 for m in graph.modules if m.is_computed_attribute)
-        agg_count = sum(1 for m in graph.modules if m.is_aggregation)
+        formula_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.FORMULA)
+        agg_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION)
 
         expected = len(unique_calcusage) + formula_count + agg_count
         assert len(module_list) == expected, (

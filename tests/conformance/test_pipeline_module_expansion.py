@@ -33,6 +33,7 @@ from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     PipelineModule,
 )
@@ -106,18 +107,18 @@ def _calcusage_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Filter to CalcUsage modules (not FORMULA, not aggregation)."""
     return [
         m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
+        if m.module_kind == ModuleKind.CALCULATION
     ]
 
 
 def _formula_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Filter to FORMULA modules."""
-    return [m for m in graph.modules if m.is_computed_attribute]
+    return [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
 
 
 def _aggregation_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Filter to aggregation modules."""
-    return [m for m in graph.modules if m.is_aggregation]
+    return [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
 
 
 def _build_calcusage_module_to_calcdef_map(
@@ -576,8 +577,7 @@ class TestMigrationCoexistence:
             assert isinstance(module.outputs, list)
             assert isinstance(module.execution_order, int)
             assert isinstance(module.compilability, Compilability)
-            assert isinstance(module.is_computed_attribute, bool)
-            assert isinstance(module.is_aggregation, bool)
+            assert isinstance(module.module_kind, ModuleKind)
 
             for inp in module.inputs:
                 assert isinstance(inp.param_name, str)

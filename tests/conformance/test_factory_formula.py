@@ -5,7 +5,7 @@ Design intent: 05-module-factory.md (Section 3), 16-computed-attributes.md
 
 Tests verify _build_computed_attr_module() behavior with real extraction data:
 - Returns PipelineModule with correct naming and flags
-- is_computed_attribute=True, FULLY_COMPILABLE for all FORMULA modules
+- module_kind=FORMULA, FULLY_COMPILABLE for all FORMULA modules
 - Inputs parsed from compiled_expression, wired via attribute resolution map
 - FORMULA/EXPOSE_ALIAS inputs -> module_output, LITERAL inputs -> entry_point
 - Single output with field_name="root" and PQN channel name
@@ -43,6 +43,7 @@ from sysml_codegen.resolution.graph_builder import (
 from sysml_codegen.resolution.models import (
     EntryPoint,
     EntryPointType,
+    ModuleKind,
     PipelineModule,
 )
 from sysml_codegen.snapshot import load_extraction_snapshot
@@ -336,8 +337,8 @@ class TestPipelineModuleConstruction:
 class TestFormulaFlags:
     """Verify FORMULA-specific flags on produced modules."""
 
-    def test_is_computed_attribute_true(self, formula_inputs):
-        """is_computed_attribute == True for every FORMULA module."""
+    def test_module_kind_is_formula(self, formula_inputs):
+        """module_kind == FORMULA for every FORMULA module."""
         formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap = (
             formula_inputs
         )
@@ -346,8 +347,8 @@ class TestFormulaFlags:
         )
 
         for module, ca in modules:
-            assert module.is_computed_attribute is True, (
-                f"FORMULA module {module.name} should have is_computed_attribute=True"
+            assert module.module_kind == ModuleKind.FORMULA, (
+                f"FORMULA module {module.name} should have module_kind=FORMULA"
             )
 
     def test_compilability_fully_compilable(self, formula_inputs):
@@ -363,20 +364,6 @@ class TestFormulaFlags:
             assert module.compilability == Compilability.FULLY_COMPILABLE, (
                 f"FORMULA module {module.name} compilability should be FULLY_COMPILABLE, "
                 f"got {module.compilability}"
-            )
-
-    def test_is_aggregation_false(self, formula_inputs):
-        """is_aggregation == False for every FORMULA module."""
-        formula_cas, resolution_map, entry_points, design_attrs, group_deriver, snap = (
-            formula_inputs
-        )
-        modules = _build_all_formula_modules(
-            formula_cas, resolution_map, entry_points, design_attrs, group_deriver
-        )
-
-        for module, ca in modules:
-            assert module.is_aggregation is False, (
-                f"FORMULA module {module.name} should have is_aggregation=False"
             )
 
     def test_raises_on_missing_compiled_expression(self, attr_expr_probe_formula):

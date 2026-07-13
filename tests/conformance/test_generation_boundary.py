@@ -19,6 +19,7 @@ import pytest
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.resolution.models import (
     ComputationGraph,
+    ModuleKind,
 )
 
 from sysml_codegen.snapshot import (
@@ -253,7 +254,7 @@ class TestAutoImplDispatch:
         # CalcUsage module and force it non-compilable.
         calc_usage = next(
             m for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
+            if m.module_kind == ModuleKind.CALCULATION
         )
         module = calc_usage.model_copy(
             update={"compilability": Compilability.UNKNOWN, "auto_impl_context": None}
@@ -330,7 +331,7 @@ class TestGraphOnlyBacklog:
         # Should contain table rows for non-auto-impl CalcUsage modules
         non_auto = [
             m for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
+            if m.module_kind == ModuleKind.CALCULATION
             and m.auto_impl_context is None
         ]
         if non_auto:
@@ -361,7 +362,7 @@ class TestGraphOnlyTestGen:
         # Should have test classes for CalcUsage modules
         calcusage_count = sum(
             1 for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
+            if m.module_kind == ModuleKind.CALCULATION
         )
         assert len(test_classes) == calcusage_count
 
@@ -391,7 +392,7 @@ class TestGraphOnlyPreservation:
         # Find a CalcUsage module with a single output
         module = next(
             m for m in graph.modules
-            if not m.is_computed_attribute and not m.is_aggregation
+            if m.module_kind == ModuleKind.CALCULATION
             and len(m.outputs) == 1
         )
 
@@ -437,9 +438,9 @@ class TestAllModuleTypesRender:
                 f"Module {module.name}: generate_teax_module_from_graph returned empty"
             )
 
-            if module.is_computed_attribute:
+            if module.module_kind == ModuleKind.FORMULA:
                 formula_count += 1
-            elif module.is_aggregation:
+            elif module.module_kind == ModuleKind.AGGREGATION:
                 agg_count += 1
             else:
                 calcusage_count += 1

@@ -161,10 +161,11 @@ def test_binding_info_has_expression_ast_field():
 
 def test_pipeline_module_has_compilability_field():
     """PipelineModule.compilability defaults to UNKNOWN (backward compat)."""
-    from sysml_codegen.resolution.models import PipelineModule
+    from sysml_codegen.resolution.models import ModuleKind, PipelineModule
     from sysml_codegen.extraction.expression_compiler import Compilability
 
     m = PipelineModule(
-        name="t", module_type="T", inputs=[], outputs=[], execution_order=0
+        name="t", module_type="T", inputs=[], outputs=[], execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
     )
     assert m.compilability == Compilability.UNKNOWN

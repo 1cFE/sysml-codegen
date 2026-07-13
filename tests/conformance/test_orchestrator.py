@@ -41,6 +41,7 @@ from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     EntryPointType,
+    ModuleKind,
     PipelineModule,
 )
 from sysml_codegen.snapshot import (
@@ -911,11 +912,15 @@ class TestAllThreeModuleTypes:
     def test_all_three_module_types_solar_battery(self, solar_battery_graph):
         """solar_battery graph has CalcUsage, FORMULA, and Aggregation modules."""
         has_calc_usage = any(
-            not m.is_computed_attribute and not m.is_aggregation
+            m.module_kind == ModuleKind.CALCULATION
             for m in solar_battery_graph.modules
         )
-        has_formula = any(m.is_computed_attribute for m in solar_battery_graph.modules)
-        has_aggregation = any(m.is_aggregation for m in solar_battery_graph.modules)
+        has_formula = any(
+            m.module_kind == ModuleKind.FORMULA for m in solar_battery_graph.modules
+        )
+        has_aggregation = any(
+            m.module_kind == ModuleKind.AGGREGATION for m in solar_battery_graph.modules
+        )
 
         assert has_calc_usage, "No CalcUsage modules in solar_battery graph"
         assert has_formula, "No FORMULA modules in solar_battery graph"

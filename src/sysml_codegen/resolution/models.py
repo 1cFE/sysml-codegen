@@ -160,8 +160,8 @@ class ModuleOutput(BaseModel):
 
 class ModuleKind(str, Enum):
     """Kind of a pipeline module — set once at construction, dispatched on at every
-    generation seam. Replaces the accreted is_computed_attribute / is_aggregation
-    Booleans (Item 6)."""
+    generation seam. Replaces the two accreted Boolean flags PipelineModule carried
+    before Item 6."""
 
     CALCULATION = "calculation"
     FORMULA = "formula"
