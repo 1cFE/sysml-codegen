@@ -34,6 +34,48 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+def terminal_disposition(
+    *, usage_qualified_name: str, param_name: str, source_path: str, strict: bool
+) -> str:
+    """The one place the calc and constraint resolution paths diverge (Item 5 / D1).
+
+    Both the calc backtracker's Step 4 and constraint lowering's strict resolver
+    terminal step call this — a shared switch, not two independently-tuned
+    fallback branches, so they cannot silently diverge (spec `[HARD]`
+    strict-resolution).
+
+    ``strict=False`` (the calc path, unchanged behavior): synthesizes the
+    ``{usage_qn}__{param}`` fallback entry-point QN — byte-identical to the
+    pre-extraction inline code.
+
+    ``strict=True`` (constraint actuals, Item 5 / INV-2): raises, naming the
+    actual. No fallback, no entry-point synthesis — the synthesis branch below
+    is physically unreachable in this mode.
+    """
+    if strict:
+        # Late import: sysml_codegen.orchestration.pipeline_context imports this
+        # module (DependencyBacktracker, BacktrackingResult), so a module-level
+        # import here would be circular.
+        from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+        raise CodeGenerationError(
+            f"{usage_qualified_name}.{param_name}: unresolved actual '{source_path}' "
+            "(strict mode: no fallback, no entry-point synthesis — INV-2)"
+        )
+    if "::" not in source_path and source_path.count(".") >= 2:
+        logger.warning(
+            "Multi-hop chain unresolved: %s|%s source_path='%s' — surfacing as an "
+            "entry point (not truncated to root, not silently wired).",
+            usage_qualified_name, param_name, source_path,
+        )
+    logger.debug(
+        "Registry unresolved: %s|%s source_path='%s'",
+        usage_qualified_name, param_name, source_path,
+    )
+    return f"{usage_qualified_name}__{param_name}"
+
+
 class CircularDependencyError(Exception):
     """Raised when circular dependency detected during backtracking."""
 
@@ -581,17 +623,12 @@ class DependencyBacktracker:
         # benign DEBUG line above), naming the full untruncated chain, so the
         # Item-5 loud-diagnostic contract holds at its new home. The fallback QN
         # below is already full + untruncated (usage_qn__param).
-        if "::" not in source_path and source_path.count(".") >= 2:
-            logger.warning(
-                "Multi-hop chain unresolved: %s|%s source_path='%s' — surfacing as an "
-                "entry point (not truncated to root, not silently wired).",
-                usage.qualified_name, param_name, source_path,
-            )
-        logger.debug(
-            "Registry unresolved: %s|%s source_path='%s'",
-            usage.qualified_name, param_name, source_path,
+        fallback_qn = terminal_disposition(
+            usage_qualified_name=usage.qualified_name,
+            param_name=param_name,
+            source_path=source_path,
+            strict=False,
         )
-        fallback_qn = f"{usage.qualified_name}__{param_name}"
         # Record the fall-through so the V11 collector can find genuinely
         # uncovered wired inputs (Item 7 / D4). Only bound bindings that failed
         # every resolution strategy reach here.
@@ -935,4 +972,5 @@ __all__ = [
     "CircularDependencyError",
     "DependencyBacktracker",
     "TargetNotFoundError",
+    "terminal_disposition",
 ]
