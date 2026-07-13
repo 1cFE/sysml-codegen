@@ -156,3 +156,29 @@ def test_semantic_fingerprint_excludes_itself():
 def test_model_contract_projects_graph_fields(field):
     mc = build_model_contract(_graph_with_constraints())
     assert getattr(mc, field), f"expected at least one projected {field}"
+
+
+def test_glob_matcher_bodies_identical_across_seal_and_verify():
+    """Drift guard (Item 9 audit Finding 1): the coverage-glob matcher is
+    deliberately duplicated in seal.py (producer) and verify.py (stdlib-only
+    consumer, D7). Their executable code must stay identical — docstrings may
+    differ — or seal-time and verify-time coverage decisions silently diverge.
+    (_is_covered differs by design: typed CoveragePolicy vs raw dict.)"""
+    import ast
+    import inspect
+    import textwrap
+
+    from sysml_codegen.contracts import seal, verify
+
+    def code_body(fn):
+        tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
+        fdef = tree.body[0]
+        # drop a leading docstring expression if present
+        body = fdef.body
+        if body and isinstance(body[0], ast.Expr) and isinstance(
+            getattr(body[0], "value", None), ast.Constant
+        ):
+            body = body[1:]
+        return [ast.dump(node) for node in body]
+
+    assert code_body(seal._glob_to_regex) == code_body(verify._glob_to_regex)

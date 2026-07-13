@@ -36,25 +36,34 @@ three gaps into requirements.
 
 ## Success Criteria
 
-- [ ] **Tamper fails load.** A modified generated *or* preserved (handwritten) artifact fails
+- [x] **Tamper fails load.** A modified generated *or* preserved (handwritten) artifact fails
   load verification with a named diagnostic identifying the offending file.
-- [ ] **Stale-file detection.** An unhashed extra file in the package fails load verification
+  *(Audit 2026-07-13: `test_tamper_fails` — TAMPER names the file, through the load path.)*
+- [x] **Stale-file detection.** An unhashed extra file in the package fails load verification
   with a named diagnostic; a coverage-set file that is absent from disk also fails (the
   missing-file half S4 never covered).
-- [ ] **Environment compatibility.** A package whose recorded generator/runtime version is
+  *(Audit: `test_extra_fails` + `test_missing_fails`; both halves closed.)*
+- [x] **Environment compatibility.** A package whose recorded generator/runtime version is
   incompatible with the loading environment fails or flags load verification with a named
   diagnostic (fatal-vs-advisory and the version source are design decisions — see Open
   Questions).
-- [ ] **Fingerprint stability.** The `PackageContract` executable fingerprint and the
+  *(Audit: `test_env_compat_advisory_then_strict` — runtime axis, advisory/strict. Note:
+  `GENERATOR_MISMATCH` axis reserved-but-unreachable; deferred to Item 10/14 — see audit.md.)*
+- [x] **Fingerprint stability.** The `PackageContract` executable fingerprint and the
   `ModelContract` semantic fingerprint each reproduce byte-exactly across independent live
   loads, snapshot generation, and separate sessions (S4 demonstrated this for the executable
   fingerprint — keep it). Contingent on Item 8's byte-identical live/snapshot artifacts.
-- [ ] **ModelContract is graph-only.** Building the `ModelContract` touches no filesystem and
+  *(Audit: offline + `@requires_license` live-vs-snapshot legs; plan records green vs Item 8
+  `847bbba`. License-leg re-run requested as a live probe.)*
+- [x] **ModelContract is graph-only.** Building the `ModelContract` touches no filesystem and
   no YAML — it is a pure function of `ComputationGraph` fields (test-enforced: no file or
   template read on the `ModelContract` path).
-- [ ] **Zero-constraint packages seal.** A package with no admitted constraints still produces
+  *(Audit: holds by construction (clean import set); `test_model_contract_is_graph_only` is a
+  partial guard — catches `builtins.open` only. See audit.md Finding 3.)*
+- [x] **Zero-constraint packages seal.** A package with no admitted constraints still produces
   a well-formed `ModelContract` and `PackageContract` (the contract path never assumes a
   catalog exists).
+  *(Audit: `test_zero_constraint_graph_seals` — `null` catalog, stable fingerprint.)*
 
 ## Known Requirements
 

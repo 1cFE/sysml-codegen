@@ -6,7 +6,17 @@
 
 ## Active Work
 
-### CONSTRAINT-EXEC Item 9 — Contracts and Sealing (ModelContract / PackageContract) — DESIGN complete (2026-07-13)
+### CONSTRAINT-EXEC Item 9 — Contracts and Sealing (ModelContract / PackageContract) — AUDIT: Certify-with-notes (2026-07-13)
+
+**Audit (2026-07-13):** `audit.md` written; verdict **Certify-with-notes**, contingent on the
+listed live probes (test execution was blocked this session; evidence is static reading + plan's
+recorded green runs). All SC-1…SC-6 and D1–D8 / INV-1…INV-8 traced to code+tests. Notes (non-blocking):
+(1) the two `_glob_to_regex` copies (seal producer / verify consumer) have **no drift guard** — add
+a body-equality test; (2) `GENERATOR_MISMATCH` is an unreachable-but-reserved enum kind (documented
+seam — wire a `generator_version` axis at Item 10/14 or remove); (3) SC-5 graph-only test is a
+partial guard (purity holds by construction). Probe list in `audit.md`.
+
+
 
 Epic Item 9. Spec: `.project/active/package-contracts/spec.md`; Design:
 `.project/active/package-contracts/design.md`. Derives a graph-only `ModelContract` (parameter/
