@@ -1,7 +1,217 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "ife_plant",
-  "captured_at": "2026-07-06T19:03:24.501904+00:00",
+  "captured_at": "2026-07-13T08:24:20.581537+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "IfePlantLib::'Ife Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hif Plant",
+          "qualified_name": "IfePlantDesign::'Hif Plant'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Hif Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "IfePlantDesign::'Hif Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Base Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "IfePlantLib::'Hif Driver'"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Ife Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "baseline_plant",
+          "qualified_name": "IfePlantDesign::baseline_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Ife Power Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantDesign::'Hif Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hif_plant",
+          "qualified_name": "IfePlantDesign::hif_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantDesign::'Hif Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Base Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hif Driver",
+          "qualified_name": "IfePlantLib::'Hif Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Reaction Chamber'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_a",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::chamber_a"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Reaction Chamber'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Reaction Chamber'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_b",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::chamber_b"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Reaction Chamber'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Shielded Core'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "core",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::core"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Shielded Core'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Base Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Base Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Shielded Core",
+          "qualified_name": "IfePlantLib::'Shielded Core'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "IfePlantLib::Coil"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "tf_coil",
+          "qualified_name": "IfePlantSubsystems::radial_build::tf_coil"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::Coil",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "PlantLcoe": {
       "calc_def_name": "PlantLcoe",

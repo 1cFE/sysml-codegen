@@ -1,7 +1,37 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "self_named_rescue",
-  "captured_at": "2026-07-06T19:03:24.525524+00:00",
+  "captured_at": "2026-07-13T08:24:20.622588+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "RescueLib::'Rescue Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "rescue_plant",
+          "qualified_name": "RescueDesign::rescue_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "RescueLib::'Rescue Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "SourceCalc": {
       "calc_def_name": "SourceCalc",

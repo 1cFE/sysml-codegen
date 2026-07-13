@@ -1,7 +1,16 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "quoted_owner_formula",
-  "captured_at": "2026-07-06T19:03:24.509396+00:00",
+  "captured_at": "2026-07-13T08:24:20.591041+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "ScaleCalc": {
       "calc_def_name": "ScaleCalc",

@@ -1,7 +1,506 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "solar_battery_model",
-  "captured_at": "2026-07-06T19:03:24.237788+00:00",
+  "captured_at": "2026-07-13T08:24:15.661919+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Solar Battery Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "solar_battery_plant",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Solar Battery Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery System'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_system",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant::battery_system"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery System'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Site Infrastructure'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "site_infra",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant::site_infra"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Site Infrastructure'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Solar Array'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "solar_array",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant::solar_array"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Solar Array'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Array BOS",
+          "qualified_name": "SolarBatteryLibrary::'Array BOS'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Battery BOS",
+          "qualified_name": "SolarBatteryLibrary::'Battery BOS'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Battery Pack",
+          "qualified_name": "SolarBatteryLibrary::'Battery Pack'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Battery System",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery BOS'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_bos",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'::battery_bos"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery BOS'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery Pack'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_pack",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'::battery_pack"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery Pack'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Hybrid Inverter'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hybrid_inverter",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'::hybrid_inverter"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Hybrid Inverter'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Electrical Panel",
+          "qualified_name": "SolarBatteryLibrary::'Electrical Panel'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hybrid Inverter",
+          "qualified_name": "SolarBatteryLibrary::'Hybrid Inverter'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "PV Module",
+          "qualified_name": "SolarBatteryLibrary::'PV Module'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Permitting & Interconnect",
+          "qualified_name": "SolarBatteryLibrary::'Permitting & Interconnect'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Racking & Mounting",
+          "qualified_name": "SolarBatteryLibrary::'Racking & Mounting'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Site Infrastructure",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Electrical Panel'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "electrical_panel",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'::electrical_panel"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Electrical Panel'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Permitting & Interconnect'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "permitting",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'::permitting"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Permitting & Interconnect'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Racking & Mounting'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "racking",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'::racking"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Racking & Mounting'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Solar Array",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Array BOS'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "array_bos",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'::array_bos"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Array BOS'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'String Inverter'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "inverter",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'::inverter"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'String Inverter'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'PV Module'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "pv_module",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'::pv_module"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'PV Module'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Solar Battery Plant",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery System'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_system",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'::battery_system"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery System'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Site Infrastructure'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "site_infra",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'::site_infra"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Site Infrastructure'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Solar Array'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "solar_array",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'::solar_array"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Solar Array'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "String Inverter",
+          "qualified_name": "SolarBatteryLibrary::'String Inverter'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "PVModuleCostCalc": {
       "calc_def_name": "PVModuleCostCalc",

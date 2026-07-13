@@ -1,7 +1,77 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "chain_override_probe",
-  "captured_at": "2026-07-06T19:03:24.572784+00:00",
+  "captured_at": "2026-07-13T08:24:20.872455+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "ChainOverrideLibrary::'Instrument Package'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "instrument_design",
+          "qualified_name": "ChainOverrideDesign::instrument_design"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ChainOverrideLibrary::'Instrument Package'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ChainOverrideLibrary::Sensor"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "sensor",
+          "qualified_name": "ChainOverrideDesign::instrument_design::sensor"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ChainOverrideLibrary::Sensor",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ChainOverrideLibrary::Sensor"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "sensor",
+          "qualified_name": "ChainOverrideLibrary::'Instrument Package'::sensor"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ChainOverrideLibrary::Sensor",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [
     {

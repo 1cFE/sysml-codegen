@@ -110,6 +110,12 @@ MODELS = {
     # by the supplied-value materializer. The license-free stand-in for Item 3's live
     # acceptance run.
     "fusion_tea": FIXTURES_DIR / "fusion_tea",
+    # Constraint-lowering parity fixtures (Item 8, D6). Both were used to prove
+    # live/snapshot byte-identity in Phase 3 but had no committed snapshot —
+    # registered here so the corpus carries one and the parity gate is
+    # reproducible from committed state, not only from a fresh capture.
+    "constraint_inline": FIXTURES_DIR / "constraint_inline",
+    "constraint_multi_instance": FIXTURES_DIR / "constraint_multi_instance",
 }
 
 # Constraint-lowering grandfather (Item 8, D3): these two fixtures assert real

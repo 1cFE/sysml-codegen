@@ -1,7 +1,91 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "spec_chain_twolevel",
-  "captured_at": "2026-07-06T19:03:24.533133+00:00",
+  "captured_at": "2026-07-13T08:24:20.638409+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "TwoLevelLib::'IFE Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hif_plant",
+          "qualified_name": "TwoLevelDesign::hif_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TwoLevelLib::'IFE Power Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "TwoLevelLib::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "TwoLevelDesign::hif_plant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TwoLevelLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "TwoLevelLib::'HIF Driver'"
+        ]
+      },
+      {
+        "general_types": [
+          "TwoLevelLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "HIF Driver",
+          "qualified_name": "TwoLevelLib::'HIF Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "TwoLevelLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "TwoLevelLib::'IFE Power Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TwoLevelLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MeierCost": {
       "calc_def_name": "MeierCost",

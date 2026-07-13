@@ -1,8 +1,8 @@
 # Implementation Plan: Snapshot v3 — Constraint Facts Load-Bearing
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-07-12
-**Last Updated:** 2026-07-12
+**Last Updated:** 2026-07-13
 **Epic:** CONSTRAINT-EXEC — Item 8
 **Branch:** constraint-exec-epic
 
@@ -516,17 +516,49 @@ expected-diff classes + the grandfathered-pair caveat (classes 1–4 in their sn
 excludes them); the two known stale baselines (design.md#potential-risks — `deep_cross_scope`,
 `ife_plant`, reviewed not waved through).
 
-- [ ] **Add `constraint_inline` + `constraint_multi_instance` to `MODELS`** in both capture scripts
+- [x] **Add `constraint_inline` + `constraint_multi_instance` to `MODELS`** in both capture scripts
       (design.md#key-decisions D6) so they gain committed v3 snapshots + baselines.
-- [ ] **Re-capture Layer A** (extraction snapshots, needs license) per-fixture: every fixture → v3 +
-      facts section; clean constraint fixtures gain occurrences + `mode:"applied"`; the grandfathered
-      pair captures flag-off (`mode:"grandfathered_off"`, honest non-empty facts, empty table).
-- [ ] **Re-capture Layer B** (pipeline baselines, license-free from Layer A) per-fixture: clean
-      constraint fixtures gain constraint structure; constraint-free unchanged; grandfathered unchanged.
-- [ ] **Timestamp-churn revert** across the corpus (memory `byte-identity-captured_at-churn`): diff,
-      revert any file whose only change is `captured_at`.
-- [ ] **Deliberate diff review** — walk each remaining diff against the six classes below; investigate
-      anything outside. Re-examine the two known stale baselines explicitly.
+- [x] **Re-capture Layer A** (extraction snapshots, needs license) — ran a full corpus capture (not
+      per-fixture, since every fixture needs the version bump + 3 new keys regardless): all 29
+      fixtures (23 full-pipeline + 6 extraction-only) → v3 + facts section; clean constraint fixtures
+      (`wi014_toy`, `catf_mfe_model`, `constraint_inline`, `constraint_multi_instance`) gain honest
+      facts/occurrences/`mode:"applied"`; the grandfathered pair (`plant_values`, `fusion_tea`)
+      captured flag-off (`mode:"grandfathered_off"`, honest non-empty facts, empty table — verified
+      by direct inspection).
+- [x] **Re-capture Layer B** (pipeline baselines, license-free from Layer A): only `catf_mfe` and
+      `wi014_toy` baselines changed (constraint structure added — the only two fixtures with
+      admitted/unassessed constraint usages among the baseline-tracked set); everything else
+      byte-identical, confirmed via `git diff --stat`.
+- [x] **Deviation — Layer C discovered mid-phase:** `scripts/capture_baseline_yaml.py` (a third,
+      license-free baseline layer the plan's four-step sequence didn't name) also needed re-running —
+      `wi014_toy.yaml` was stale (missing the constraint modules), caught by
+      `test_yaml_baseline_comparison_wi014_toy`. Re-ran it; only `wi014_toy.yaml` changed, same
+      class-5 pattern as Layer B.
+- [x] **Timestamp-churn revert:** not applicable this phase — every fixture's extraction snapshot has
+      substantive changes (classes 1–4 below), so no file's diff is captured_at-only. The discipline
+      applies to a future re-capture where nothing else changes.
+- [x] **Deliberate diff review** — walked every extraction-snapshot diff programmatically (top-level
+      key-set diff, old vs new, per fixture) against the classes below; one exception found and
+      reviewed (`d38_caret`, logged below). The two design-flagged stale baselines (`deep_cross_scope`
+      [captured as `deep_cross_scope_probe`], `ife_plant`) show ONLY the three new keys added — no
+      other drift, confirmed via the same programmatic diff.
+- [x] **Deviation — one out-of-band diff found and reviewed, not one of the six classes:**
+      `d38_caret/extraction_snapshot.json` also lost a stale `"unhandled": false` field on one
+      `BindingInfo` dict. Traced via `git log -S` to a prior, unrelated commit ("item5 Phase 1: Family
+      1 total-and-loud extraction dispatch") that removed the `unhandled` field from `BindingInfo`
+      and explicitly noted "the extraction snapshot also drops the stale `unhandled` field
+      (serialization catch-up)" — `d38_caret` simply hadn't been re-captured since. Confirmed no other
+      fixture shows this diff (grepped the whole corpus). Benign, pre-existing drift unrelated to
+      Item 8; surfaced honestly here rather than silently absorbed into the re-capture.
+- [x] **Mid-epic red interaction with an existing test, resolved by inspection, not a code change:**
+      `test_capture_fixtures_filter.py::test_extraction_filter_touches_only_named` re-captures
+      `sample_model` then runs `git checkout --` on it in a `finally` block to stay side-effect-free —
+      which reverts it to whatever HEAD holds. Mid-phase (before this commit), HEAD still held the
+      pre-Phase-5 v2 bytes, so running the full suite silently reverted `sample_model`'s working-tree
+      re-capture back to v2, surfacing as a flaky-looking `test_clean_fixture_zero_warnings[sample_model]`
+      failure. Root-caused via `git log -S`/reproduction (not a guess); resolves itself once this
+      phase's re-capture is committed (the checkout then restores identical v3 bytes, a no-op). No
+      code or test change needed — re-ran the affected fixture's capture once more before committing.
 
 **Expected-diff classes (the review checklist — NH2 extends spec class 2 to all three keys):**
 1. `snapshot_format_version: 2 → 3` on every snapshot.
@@ -542,15 +574,47 @@ excludes them); the two known stale baselines (design.md#potential-risks — `de
 
 ### Validation
 **Automated:**
-- [ ] `uv run pytest tests/` → **full suite green** (this is the phase gate; the 22 corpus-wide
-      conformance divergences are eliminated here, distinct from the 3 parity fixtures — NH3)
-- [ ] `uv run ruff check src/`; `uv run mypy src/` → no new errors
-- [ ] `git status` / `git diff --stat -- tests/fixtures` shows only the expected-diff classes
+- [x] `uv run pytest tests/` → **full suite green**: 2256 passed, 4 skipped (2255 + 1 self-resolving
+      after commit — see the `test_extraction_filter_touches_only_named` note above), 7 deselected.
+      The 22 corpus-wide conformance divergences the flip was blocked on are eliminated (NH3).
+- [x] `uv run ruff check src/`; `uv run mypy src/` → clean; mypy 76 (baseline, no new errors)
+- [x] `git status` / `git diff --stat -- tests/fixtures` shows only the expected-diff classes (verified
+      programmatically per-fixture, see above)
 
 **Manual:**
-- [ ] Every remaining fixture diff is classified into 1–5 (6 reverted); the two grandfathered fixtures
-      show classes 1–4 in their snapshots but byte-identical Layer-B graphs.
-- [ ] `deep_cross_scope` and `ife_plant` stale baselines reviewed and their diffs explained, not waved.
+- [x] Every fixture diff classified into 1–4 (class 6 doesn't apply — no captured_at-only diffs
+      existed this phase); the two grandfathered fixtures show classes 1–4 in their snapshots but
+      byte-identical Layer-B graphs (confirmed: neither `plant_values` nor `fusion_tea` appears in the
+      Layer-B `git diff --stat`).
+- [x] `deep_cross_scope_probe` and `ife_plant` stale baselines reviewed: both show ONLY the three new
+      keys added, nothing else — the "known stale" risk didn't materialize into an actual extra diff.
+- [x] **Test-suite fixups required by the two structurally-changed baselines** (`catf_mfe`,
+      `wi014_toy` — not anticipated in the original Phase 5 task list, needed because Phase 5 is the
+      first point these fixtures' generated artifacts actually change):
+      - `test_gen_registry.py`: `test_module_count_matches_inputs` and
+        `test_schema_imports_match_entry_point_groups` didn't account for CONSTRAINT/REPORT_AGGREGATOR
+        modules or the `constraint_types` schema import — both formulas extended.
+      - `test_gen_schemas.py`: `test_single_output_uses_root_field` and
+        `test_output_channels_use_pqn_format` pinned calc-module naming conventions that CONSTRAINT/
+        REPORT_AGGREGATOR modules deliberately don't follow (`field_name="evaluation"`/
+        `"constraint_report"`, and REPORT_AGGREGATOR's singleton `channel_name="constraint_report"`
+        has no `__`) — both now exempt those two module kinds.
+      - `test_pipeline_module_expansion.py`: `test_all_modules_have_metadata_fields` required
+        `calc_def_name`/`source_file` on every module; CONSTRAINT/REPORT_AGGREGATOR modules carry
+        neither (not derived from a calc_def) — exempted.
+      - `test_gen_pipeline_yaml.py::test_yaml_baseline_comparison_wi014_toy` — fixed by re-running
+        Layer C (`capture_baseline_yaml.py`), not a test-code change.
+      - `test_snapshot_generation.py` (SC-1/SC-D parity): `plant_values` removed from
+        `_SNAP19_FIXTURES` and `test_fusion_tea_live_vs_snapshot` rewritten (renamed
+        `test_fusion_tea_snapshot_generates_grandfathered_and_live_halts_on_gain`) — both fixtures'
+        live CLI leg now legitimately halts on `gain` under the Phase 4 default, so a live-vs-snapshot
+        byte-diff can no longer run; each test now asserts the real current behavior of both legs.
+      - `test_snapshot_v3_gate.py::test_v2_snapshot_rejected_by_version_gate` (my own Phase 2 test) —
+        no longer reads a committed snapshot expecting it to still be v2; hand-bumps a v3 snapshot
+        down to v2 instead.
+      None of these are scope changes — each test's *actual* invariant (module metadata completeness,
+      naming conventions, parity where it can still run) is intact; only the CONSTRAINT/
+      REPORT_AGGREGATOR module kind's known, designed exceptions needed encoding.
 
 **What we know works after this phase:** the whole corpus is at v3, live/snapshot parity holds across
 the conformance suite, and the default flip is landed under a green gate.
@@ -664,8 +728,27 @@ where the test's real intent needed lowering disabled, confirmed via a full-suit
 actual intent valid under the new default), not scope changes.
 
 ### Phase 5 Completion
-—
+**Completed:** 2026-07-13
+**Actual Changes:**
+- `scripts/capture_extraction_snapshots.py`, `scripts/capture_pipeline_baselines.py`: added
+  `constraint_inline`/`constraint_multi_instance` to `MODELS` (D6).
+- Re-captured Layer A (all 29 committed extraction snapshots → v3), Layer B (pipeline baselines —
+  only `catf_mfe`, `wi014_toy` changed), Layer C (`baseline_yaml` — only `wi014_toy.yaml` changed,
+  the deviation logged above).
+- 5 test files updated for the two structurally-changed fixtures' new constraint modules
+  (`test_gen_registry.py`, `test_gen_schemas.py`, `test_pipeline_module_expansion.py`,
+  `test_snapshot_generation.py`, `test_snapshot_v3_gate.py`) — logged in Validation above.
+**Issues:** Two non-obvious ones, both root-caused (not guessed) and logged above as deviations: the
+`d38_caret` stale-`unhandled`-field drop (pre-existing, unrelated to Item 8), and the
+`test_extraction_filter_touches_only_named` self-revert interaction with an uncommitted mid-phase
+state (resolves on commit, no code change).
+**Deviations:** All logged above at their point of discovery: Layer C's existence, the `d38_caret`
+out-of-band diff, the self-reverting test interaction, and the 5 test-file fixups for the
+CONSTRAINT/REPORT_AGGREGATOR module-kind exceptions. None are scope changes — each preserves the
+original invariant while encoding the new, designed exception.
+
+**Full suite: 2256 passed, 4 skipped, 7 deselected. mypy 76 (baseline). ruff clean on `src/`.**
 
 ---
 
-**Status:** Draft → In Progress → Complete
+**Status:** ~~Draft~~ → ~~In Progress~~ → **Complete** (all 5 phases landed 2026-07-13)

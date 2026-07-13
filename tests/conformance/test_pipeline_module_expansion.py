@@ -423,11 +423,19 @@ class TestCrossModelMetadata:
     @pytest.mark.req("REQ-PMM-01")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS)
     def test_all_modules_have_metadata_fields(self, all_graph_data, model_name):
-        """All modules in graph have calc_def_name and source_file populated."""
+        """All modules in graph have calc_def_name and source_file populated.
+
+        CONSTRAINT and REPORT_AGGREGATOR modules (Item 8) are exempt — they are
+        not derived from any calc_def or source location, so both fields are
+        structurally None for them, by design.
+        """
         graph, inputs = all_graph_data[model_name]
         assert len(graph.modules) > 0, f"No modules in {model_name}"
+        exempt_kinds = {ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR}
 
         for module in graph.modules:
+            if module.module_kind in exempt_kinds:
+                continue
             assert module.calc_def_name is not None, (
                 f"Model {model_name}, module {module.name}: calc_def_name is None"
             )

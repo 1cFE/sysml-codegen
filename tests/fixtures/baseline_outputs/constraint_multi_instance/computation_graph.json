@@ -1,0 +1,266 @@
+{
+  "modules": [
+    {
+      "name": "constraint_multi_instance__the_design__c__cell__power_calc",
+      "module_type": "constraint_multi_instance.Power_CalcModule",
+      "inputs": [
+        {
+          "param_name": "r",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "model_params",
+            "qualified_name": "constraint_multi_instance__Cell__cell_rating",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "constraint_multi_instance__the_design__c__cell__power_calc__p",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "fully_compilable",
+      "compiled_expression": null,
+      "module_kind": "calculation",
+      "output_schema_type": null,
+      "auto_impl_context": {
+        "execution_steps": [],
+        "output_expressions": [
+          {
+            "name": "p",
+            "expression": "(inputs.r * 2.0)"
+          }
+        ],
+        "output_count": 1,
+        "single_output_expression": "(inputs.r * 2.0)"
+      },
+      "calc_def_name": "Power_Calc",
+      "calc_def_qualified_name": "constraint_multi_instance::'Power Calc'",
+      "doc_comment": "",
+      "calc_expressions": [
+        "p = r * 2.0"
+      ],
+      "source_file": "model.sysml",
+      "source_line": 4
+    },
+    {
+      "name": "constraint_multi_instance__the_design__c__cell[0]__nonneg__5993bca31703d2d1",
+      "module_type": "constraint_multi_instance.TheDesignCCell0NonnegConstraintModule",
+      "inputs": [
+        {
+          "param_name": "p",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_multi_instance__the_design__c__cell__power_calc__p"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "evaluation",
+          "python_type": "ConstraintEvaluation",
+          "channel_name": "constraint_multi_instance__the_design__c__cell[0]__nonneg__5993bca31703d2d1__evaluation",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "constraint",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    },
+    {
+      "name": "constraint_multi_instance__the_design__c__cell[1]__nonneg__a2a2b85c4b80089f",
+      "module_type": "constraint_multi_instance.TheDesignCCell1NonnegConstraintModule",
+      "inputs": [
+        {
+          "param_name": "p",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_multi_instance__the_design__c__cell__power_calc__p"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "evaluation",
+          "python_type": "ConstraintEvaluation",
+          "channel_name": "constraint_multi_instance__the_design__c__cell[1]__nonneg__a2a2b85c4b80089f__evaluation",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "constraint",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    },
+    {
+      "name": "constraint_multi_instance__the_design__c__cell[2]__nonneg__53df666e4d2f4530",
+      "module_type": "constraint_multi_instance.TheDesignCCell2NonnegConstraintModule",
+      "inputs": [
+        {
+          "param_name": "p",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_multi_instance__the_design__c__cell__power_calc__p"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "evaluation",
+          "python_type": "ConstraintEvaluation",
+          "channel_name": "constraint_multi_instance__the_design__c__cell[2]__nonneg__53df666e4d2f4530__evaluation",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 3,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "constraint",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    },
+    {
+      "name": "constraint_report_aggregator",
+      "module_type": "constraints.ConstraintReportAggregatorModule",
+      "inputs": [
+        {
+          "param_name": "constraint_multi_instance_the_design_c_cell_0_nonneg_5993bca31703d2d1",
+          "python_type": "ConstraintEvaluation",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_multi_instance__the_design__c__cell[0]__nonneg__5993bca31703d2d1__evaluation"
+          },
+          "description": null,
+          "default_value": null
+        },
+        {
+          "param_name": "constraint_multi_instance_the_design_c_cell_1_nonneg_a2a2b85c4b80089f",
+          "python_type": "ConstraintEvaluation",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_multi_instance__the_design__c__cell[1]__nonneg__a2a2b85c4b80089f__evaluation"
+          },
+          "description": null,
+          "default_value": null
+        },
+        {
+          "param_name": "constraint_multi_instance_the_design_c_cell_2_nonneg_53df666e4d2f4530",
+          "python_type": "ConstraintEvaluation",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_multi_instance__the_design__c__cell[2]__nonneg__53df666e4d2f4530__evaluation"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "constraint_report",
+          "python_type": "ConstraintReport",
+          "channel_name": "constraint_report",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 4,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "report_aggregator",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "model_params",
+      "class_name": "ModelParams",
+      "source_file": "model.sysml",
+      "parameters": [
+        {
+          "qualified_name": "constraint_multi_instance__Cell__cell_rating",
+          "simple_name": "cell_rating",
+          "entry_type": "design_attribute",
+          "default_value": 10.0,
+          "source_calc_usage": null,
+          "param_group": "model_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "constraint_multi_instance__the_design__c__cell__power_calc",
+    "constraint_multi_instance__the_design__c__cell[0]__nonneg__5993bca31703d2d1",
+    "constraint_multi_instance__the_design__c__cell[1]__nonneg__a2a2b85c4b80089f",
+    "constraint_multi_instance__the_design__c__cell[2]__nonneg__53df666e4d2f4530",
+    "constraint_report_aggregator"
+  ],
+  "output_aliases": []
+}

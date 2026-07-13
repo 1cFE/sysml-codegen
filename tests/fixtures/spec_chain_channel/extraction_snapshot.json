@@ -1,7 +1,104 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "spec_chain_channel",
-  "captured_at": "2026-07-06T19:03:24.514749+00:00",
+  "captured_at": "2026-07-13T08:24:20.603439+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "SpecChainLib::Variant"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "spec_chain_plant",
+          "qualified_name": "SpecChainDesign::spec_chain_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SpecChainLib::Variant",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SpecChainLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "HIF Driver",
+          "qualified_name": "SpecChainLib::'HIF Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SpecChainLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "SpecChainLib::Facility::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SpecChainLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SpecChainLib::Facility"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Variant",
+          "qualified_name": "SpecChainLib::Variant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SpecChainLib::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "SpecChainLib::Variant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SpecChainLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "SpecChainLib::'HIF Driver'"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MeierCost": {
       "calc_def_name": "MeierCost",

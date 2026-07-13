@@ -1,7 +1,2991 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "catf_mfe_model",
-  "captured_at": "2026-07-06T19:03:24.383634+00:00",
+  "captured_at": "2026-07-13T08:24:20.395382+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "physics",
+          "qualified_name": "CATF_MFE::catf_mfe_plant::fusion_island::physics"
+        },
+        "inherited_constraints": [
+          "CATFMFEPhysics::catf_physics::PowerBalanceConsistency",
+          "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal",
+          "CATFMFEPhysics::catf_physics::ViabilityCheck"
+        ],
+        "redefinitions": [],
+        "types": [
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "vacuum",
+          "qualified_name": "CATF_MFE::catf_mfe_plant::fusion_island::vacuum"
+        },
+        "inherited_constraints": [
+          "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency"
+        ],
+        "redefinitions": [],
+        "types": [
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": [
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "RadiusConsistency",
+          "qualified_name": "FusionComponents::'Radial Build Layer'::RadiusConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/radial_build.sysml",
+          "line": 55
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Radial Build Layer",
+            "qualified_name": "FusionComponents::'Radial Build Layer'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "FusionComponents::'Radial Build Layer'"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "RadiusConsistency",
+          "qualified_name": "FusionComponents::'Radial Build Layer'::RadiusConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveRadii",
+          "qualified_name": "FusionPhysicsGeometry::TorusMinorRadius::PositiveRadii"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "line": 59
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TorusMinorRadius",
+            "qualified_name": "FusionPhysicsGeometry::TorusMinorRadius"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysicsGeometry::TorusMinorRadius"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveRadii",
+          "qualified_name": "FusionPhysicsGeometry::TorusMinorRadius::PositiveRadii"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 69
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "MagnetCryogenicLoad",
+            "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "EnergyConservation",
+          "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::EnergyConservation"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 69
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "AlphaNeutronSplit",
+            "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "EnergyConservation",
+          "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::EnergyConservation"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePower",
+          "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::PositivePower"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 75
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "AlphaNeutronSplit",
+            "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePower",
+          "qualified_name": "FusionPhysics_PowerBalance::AlphaNeutronSplit::PositivePower"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableCryoTemp",
+          "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::ReasonableCryoTemp"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 76
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "MagnetCryogenicLoad",
+            "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableCryoTemp",
+          "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::ReasonableCryoTemp"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor::PositivePowers"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 80
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "ScientificQFactor",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor::PositivePowers"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "CarnotEfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::CarnotEfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 81
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "MagnetCryogenicLoad",
+            "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "CarnotEfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::MagnetCryogenicLoad::CarnotEfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableRange",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor::ReasonableRange"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 85
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "ScientificQFactor",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableRange",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::ScientificQFactor::ReasonableRange"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ThicknessConsistency",
+          "qualified_name": "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency"
+        },
+        "inherited_into": [
+          "CATF_MFE::catf_mfe_plant::fusion_island::vacuum"
+        ],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/vacuum.sysml",
+          "line": 87
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_vacuum_vessel",
+            "qualified_name": "CATFMFEVacuum::catf_vacuum_vessel"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFEVacuum"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ThicknessConsistency",
+          "qualified_name": "CATFMFEVacuum::catf_vacuum_vessel::ThicknessConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysicsGeometry::TorusVolume::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "line": 101
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TorusVolume",
+            "qualified_name": "FusionPhysicsGeometry::TorusVolume"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysicsGeometry::TorusVolume"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysicsGeometry::TorusVolume::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableElongation",
+          "qualified_name": "FusionPhysicsGeometry::TorusVolume::ReasonableElongation"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "line": 106
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TorusVolume",
+            "qualified_name": "FusionPhysicsGeometry::TorusVolume"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysicsGeometry::TorusVolume"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableElongation",
+          "qualified_name": "FusionPhysicsGeometry::TorusVolume::ReasonableElongation"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInput",
+          "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::PositiveInput"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 122
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "CoolantPumpPower",
+            "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInput",
+          "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::PositiveInput"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PowerBalanceConsistency",
+          "qualified_name": "CATFMFEPhysics::catf_physics::PowerBalanceConsistency"
+        },
+        "inherited_into": [
+          "CATF_MFE::catf_mfe_plant::fusion_island::physics"
+        ],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/physics.sysml",
+          "line": 125
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_physics",
+            "qualified_name": "CATFMFEPhysics::catf_physics"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFEPhysics"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PowerBalanceConsistency",
+          "qualified_name": "CATFMFEPhysics::catf_physics::PowerBalanceConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "TemperaturePhysical",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::TemperaturePhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "line": 125
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "ThermalCycleEfficiency",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "TemperaturePhysical",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::TemperaturePhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableFraction",
+          "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::ReasonableFraction"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 127
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "CoolantPumpPower",
+            "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableFraction",
+          "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::ReasonableFraction"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "Phase1PositivePower",
+          "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase1PositivePower"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/confinement.sysml",
+          "line": 127
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "PlasmaConfinement",
+            "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "Phase1PositivePower",
+          "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase1PositivePower"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 130
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "BlanketThermalPower",
+            "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableTemperatures",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::ReasonableTemperatures"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "line": 130
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "ThermalCycleEfficiency",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableTemperatures",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::ReasonableTemperatures"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PumpEfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::PumpEfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 132
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "CoolantPumpPower",
+            "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PumpEfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::CoolantPumpPower::PumpEfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "Phase1ReasonableTBR",
+          "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase1ReasonableTBR"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/neutronics.sysml",
+          "line": 132
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TritiumBreedingRatio",
+            "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "Phase1ReasonableTBR",
+          "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase1ReasonableTBR"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "Phase2PlasmaParametersPhysical",
+          "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase2PlasmaParametersPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/confinement.sysml",
+          "line": 133
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "PlasmaConfinement",
+            "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "Phase2PlasmaParametersPhysical",
+          "qualified_name": "FusionPhysics_Confinement::PlasmaConfinement::Phase2PlasmaParametersPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ViabilityCheck",
+          "qualified_name": "CATFMFEPhysics::catf_physics::ViabilityCheck"
+        },
+        "inherited_into": [
+          "CATF_MFE::catf_mfe_plant::fusion_island::physics"
+        ],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/physics.sysml",
+          "line": 134
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_physics",
+            "qualified_name": "CATFMFEPhysics::catf_physics"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFEPhysics"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ViabilityCheck",
+          "qualified_name": "CATFMFEPhysics::catf_physics::ViabilityCheck"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableMultiplication",
+          "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::ReasonableMultiplication"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 135
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "BlanketThermalPower",
+            "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableMultiplication",
+          "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::ReasonableMultiplication"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "RealEfficiencyRange",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::RealEfficiencyRange"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "line": 136
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "ThermalCycleEfficiency",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "RealEfficiencyRange",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::RealEfficiencyRange"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "Phase2SelfSufficiency",
+          "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase2SelfSufficiency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/neutronics.sysml",
+          "line": 138
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TritiumBreedingRatio",
+            "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "Phase2SelfSufficiency",
+          "qualified_name": "FusionPhysics_Neutronics::TritiumBreedingRatio::Phase2SelfSufficiency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableEfficiencies",
+          "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::ReasonableEfficiencies"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 140
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "BlanketThermalPower",
+            "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableEfficiencies",
+          "qualified_name": "FusionPhysics_PowerBalance::BlanketThermalPower::ReasonableEfficiencies"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ThermalEfficiencyPhysical",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::ThermalEfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "line": 141
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "ThermalCycleEfficiency",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ThermalEfficiencyPhysical",
+          "qualified_name": "FusionPhysics_Thermal::ThermalCycleEfficiency::ThermalEfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableParasiticTotal",
+          "qualified_name": "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal"
+        },
+        "inherited_into": [
+          "CATF_MFE::catf_mfe_plant::fusion_island::physics"
+        ],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/physics.sysml",
+          "line": 142
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_physics",
+            "qualified_name": "CATFMFEPhysics::catf_physics"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFEPhysics"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableParasiticTotal",
+          "qualified_name": "CATFMFEPhysics::catf_physics::ReasonableParasiticTotal"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysicsGeometry::TorusSurfaceArea::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "line": 146
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TorusSurfaceArea",
+            "qualified_name": "FusionPhysicsGeometry::TorusSurfaceArea"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysicsGeometry::TorusSurfaceArea"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysicsGeometry::TorusSurfaceArea::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::PositivePowers"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 150
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "EngineeringQFactor",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::PositivePowers"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ThicknessConsistency",
+          "qualified_name": "FusionComponents::'Vacuum Vessel'::ThicknessConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/vacuum.sysml",
+          "line": 155
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Vacuum Vessel",
+            "qualified_name": "FusionComponents::'Vacuum Vessel'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "FusionComponents::'Vacuum Vessel'"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ThicknessConsistency",
+          "qualified_name": "FusionComponents::'Vacuum Vessel'::ThicknessConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ViabilityCheck",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::ViabilityCheck"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 155
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "EngineeringQFactor",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ViabilityCheck",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::ViabilityCheck"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "TotalThicknessConsistency",
+          "qualified_name": "FusionComponents::'Shield Assembly'::TotalThicknessConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/shield.sysml",
+          "line": 160
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Shield Assembly",
+            "qualified_name": "FusionComponents::'Shield Assembly'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "FusionComponents::'Shield Assembly'"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "TotalThicknessConsistency",
+          "qualified_name": "FusionComponents::'Shield Assembly'::TotalThicknessConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableRange",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::ReasonableRange"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 160
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "EngineeringQFactor",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableRange",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::EngineeringQFactor::ReasonableRange"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PumpingSpeedConsistency",
+          "qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/vacuum.sysml",
+          "line": 169
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_vacuum_pumping",
+            "qualified_name": "CATFMFEVacuum::catf_vacuum_pumping"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFEVacuum"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PumpingSpeedConsistency",
+          "qualified_name": "CATFMFEVacuum::catf_vacuum_pumping::PumpingSpeedConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "CompositionConsistency",
+          "qualified_name": "CATFMFEShield::catf_shield::CompositionConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/shield.sysml",
+          "line": 171
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_shield",
+            "qualified_name": "CATFMFEShield::catf_shield"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFEShield"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "CompositionConsistency",
+          "qualified_name": "CATFMFEShield::catf_shield::CompositionConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveDelivered",
+          "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::PositiveDelivered"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 171
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "HeatingWallPlugPower",
+            "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveDelivered",
+          "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::PositiveDelivered"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "EfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::EfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 176
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "HeatingWallPlugPower",
+            "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "EfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::EfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableEfficiency",
+          "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::ReasonableEfficiency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 181
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "HeatingWallPlugPower",
+            "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableEfficiency",
+          "qualified_name": "FusionAnalysesThermalLoads::HeatingWallPlugPower::ReasonableEfficiency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysicsGeometry::MagnetSurfaceArea::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "line": 185
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "MagnetSurfaceArea",
+            "qualified_name": "FusionPhysicsGeometry::MagnetSurfaceArea"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysicsGeometry::MagnetSurfaceArea"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionPhysicsGeometry::MagnetSurfaceArea::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::PositivePowers"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 193
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "GrossElectricPower",
+            "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::PositivePowers"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ThermalEfficiencyPhysical",
+          "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::ThermalEfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 198
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "GrossElectricPower",
+            "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ThermalEfficiencyPhysical",
+          "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::ThermalEfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "DirectConversionRange",
+          "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::DirectConversionRange"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 203
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "GrossElectricPower",
+            "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "DirectConversionRange",
+          "qualified_name": "FusionPhysics_PowerBalance::GrossElectricPower::DirectConversionRange"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::PositivePowers"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 212
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "PlantEfficiency",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositivePowers",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::PositivePowers"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "HeatLoadBalance",
+          "qualified_name": "FusionComponents::Divertor::HeatLoadBalance"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/divertor.sysml",
+          "line": 216
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Divertor",
+            "qualified_name": "FusionComponents::Divertor"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "FusionComponents::Divertor"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "HeatLoadBalance",
+          "qualified_name": "FusionComponents::Divertor::HeatLoadBalance"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "EfficiencyPhysical",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::EfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 217
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "PlantEfficiency",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "EfficiencyPhysical",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::EfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "TotalThicknessConsistency",
+          "qualified_name": "FusionComponents::'First Wall'::TotalThicknessConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/first_wall.sysml",
+          "line": 220
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "First Wall",
+            "qualified_name": "FusionComponents::'First Wall'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "FusionComponents::'First Wall'"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "TotalThicknessConsistency",
+          "qualified_name": "FusionComponents::'First Wall'::TotalThicknessConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableEfficiency",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::ReasonableEfficiency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "line": 222
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "PlantEfficiency",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableEfficiency",
+          "qualified_name": "FusionPhysics_PerformanceMetrics::PlantEfficiency::ReasonableEfficiency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 224
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "VacuumPumpPower",
+            "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "VacuumPressure",
+          "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::VacuumPressure"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 229
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "VacuumPumpPower",
+            "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "VacuumPressure",
+          "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::VacuumPressure"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "EfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::EfficiencyPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 234
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "VacuumPumpPower",
+            "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "EfficiencyPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::VacuumPumpPower::EfficiencyPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveGrossElectric",
+          "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::PositiveGrossElectric"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 260
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "NetElectricPower",
+            "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveGrossElectric",
+          "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::PositiveGrossElectric"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "NonNegativeParasitics",
+          "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::NonNegativeParasitics"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 265
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "NetElectricPower",
+            "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "NonNegativeParasitics",
+          "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::NonNegativeParasitics"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableParasiticFraction",
+          "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::ReasonableParasiticFraction"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "line": 272
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "NetElectricPower",
+            "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableParasiticFraction",
+          "qualified_name": "FusionPhysics_PowerBalance::NetElectricPower::ReasonableParasiticFraction"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::PositiveInputs"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 282
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "CryoPumpRefrigeration",
+            "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveInputs",
+          "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::PositiveInputs"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "CryogenicTemp",
+          "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::CryogenicTemp"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 287
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "CryoPumpRefrigeration",
+            "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "CryogenicTemp",
+          "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::CryogenicTemp"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "CarnotPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::CarnotPhysical"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 292
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "CryoPumpRefrigeration",
+            "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "CarnotPhysical",
+          "qualified_name": "FusionAnalysesThermalLoads::CryoPumpRefrigeration::CarnotPhysical"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveFusion",
+          "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower::PositiveFusion"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 332
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TritiumProcessingPower",
+            "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveFusion",
+          "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower::PositiveFusion"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableFactor",
+          "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower::ReasonableFactor"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 337
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "TritiumProcessingPower",
+            "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableFactor",
+          "qualified_name": "FusionAnalysesThermalLoads::TritiumProcessingPower::ReasonableFactor"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveGross",
+          "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower::PositiveGross"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 376
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "AuxiliarySystemsPower",
+            "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "PositiveGross",
+          "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower::PositiveGross"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableFraction",
+          "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower::ReasonableFraction"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "line": 381
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "CalculationDefinition",
+            "name": "AuxiliarySystemsPower",
+            "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower"
+          },
+          "owning_definition": {
+            "kind": "calc_def",
+            "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "ReasonableFraction",
+          "qualified_name": "FusionAnalysesThermalLoads::AuxiliarySystemsPower::ReasonableFraction"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "TotalRadiusConsistency",
+          "qualified_name": "CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml",
+          "line": 605
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_radial_build",
+            "qualified_name": "CATFMFERadialBuild::catf_radial_build"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFERadialBuild"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "TotalRadiusConsistency",
+          "qualified_name": "CATFMFERadialBuild::catf_radial_build::TotalRadiusConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "LayerContinuity",
+          "qualified_name": "CATFMFERadialBuild::catf_radial_build::LayerContinuity"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml",
+          "line": 612
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_radial_build",
+            "qualified_name": "CATFMFERadialBuild::catf_radial_build"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFERadialBuild"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "LayerContinuity",
+          "qualified_name": "CATFMFERadialBuild::catf_radial_build::LayerContinuity"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      },
+      {
+        "actuals": [],
+        "identity": {
+          "kind": "ConstraintUsage",
+          "name": "RadiusThicknessConsistency",
+          "qualified_name": "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency"
+        },
+        "inherited_into": [],
+        "is_negated": null,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml",
+          "line": 630
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartUsage",
+            "name": "catf_radial_build",
+            "qualified_name": "CATFMFERadialBuild::catf_radial_build"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "CATFMFERadialBuild"
+          }
+        },
+        "predicate": null,
+        "scope": {
+          "kind": "ConstraintUsage",
+          "name": "RadiusThicknessConsistency",
+          "qualified_name": "CATFMFERadialBuild::catf_radial_build::RadiusThicknessConsistency"
+        },
+        "source": {
+          "asserted_constraint": null,
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "ConstraintCheck",
+            "qualified_name": "Constraints::ConstraintCheck"
+          },
+          "effective_predicate_source": null,
+          "form": "plain_usage",
+          "referenced_feature_target": null
+        }
+      }
+    ]
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MagnetCryogenicLoad": {
       "calc_def_name": "MagnetCryogenicLoad",

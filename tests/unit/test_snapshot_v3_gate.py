@@ -7,11 +7,13 @@ every corruption cell raises ``SnapshotFormatError`` with a re-capture
 instruction, never a raw ``KeyError``, and an unrecognized
 ``constraint_lowering_mode`` is corruption, never a silent skip (MF2).
 
-Fixtures are hand-mutated from a still-v2 committed snapshot (this phase
-predates the corpus re-capture in Phase 5 — the committed corpus is v2 until
-then) plus a locally-built, license-free ``ConstraintFacts`` carrying one real
-predicate, so the embedded expression-ir version check (cell g) has something
-to scan.
+Fixtures are hand-mutated from a committed v3 snapshot plus a locally-built,
+license-free ``ConstraintFacts`` carrying one real predicate (substituted in
+place of the fixture's own facts section), so the embedded expression-ir
+version check (cell g) has something to scan. The v2-rejection test hand-bumps
+a v3 snapshot back down to v2, rather than relying on any committed snapshot
+still being v2 (Phase 5 re-captured the whole corpus at v3 — INV-6 forbids
+v2/v3 coexistence).
 """
 
 from __future__ import annotations
@@ -87,7 +89,9 @@ def _facts_with_predicate() -> ConstraintFacts:
 
 
 def _v3_snapshot_dict() -> dict[str, Any]:
-    """A still-v2 committed snapshot, hand-bumped to v3 with a valid facts section."""
+    """A committed v3 snapshot with its constraint section replaced by a
+    locally-built, predicate-bearing facts object (so cell (g)'s embedded
+    expression-ir scan has a real node to corrupt)."""
     raw = json.loads(snapshot_fixture("chain_spike_model").read_text())
     raw["snapshot_format_version"] = 3
     raw["constraint_facts"] = json.loads(
@@ -182,8 +186,11 @@ def test_v3_corruption_raises_with_recapture_message(tmp_path, mutate, match):
 
 
 def test_v2_snapshot_rejected_by_version_gate(tmp_path):
+    # Phase 5 re-captured the corpus at v3 (INV-6: no v2/v3 coexistence), so a
+    # v2 fixture is hand-built here rather than read off a committed snapshot.
     v2 = json.loads(snapshot_fixture("chain_spike_model").read_text())
-    assert v2["snapshot_format_version"] == 2
+    assert v2["snapshot_format_version"] == 3
+    v2["snapshot_format_version"] = 2
     with pytest.raises(SnapshotFormatError, match="format version"):
         load_extraction_snapshot(_write_tmp(v2, tmp_path))
 

@@ -1,7 +1,83 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "issue22_model",
-  "captured_at": "2026-07-06T19:03:24.455027+00:00",
+  "captured_at": "2026-07-13T08:24:20.484066+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "Issue22Library::WidgetAssembly"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "assembly",
+          "qualified_name": "Issue22Design::plant::assembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "Issue22Library::WidgetAssembly",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Issue22Library::CostBearer"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Widget",
+          "qualified_name": "Issue22Library::Widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Issue22Library::CostBearer"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "WidgetAssembly",
+          "qualified_name": "Issue22Library::WidgetAssembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Issue22Library::Widget"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "widget",
+          "qualified_name": "Issue22Library::WidgetAssembly::widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "Issue22Library::Widget",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "WidgetCostCalc": {
       "calc_def_name": "WidgetCostCalc",

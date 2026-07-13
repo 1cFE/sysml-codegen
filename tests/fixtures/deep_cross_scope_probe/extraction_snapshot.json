@@ -1,7 +1,137 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "deep_cross_scope_probe",
-  "captured_at": "2026-07-07T07:53:36.024080+00:00",
+  "captured_at": "2026-07-13T08:24:20.706839+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "DeepCrossScopeConsumer::Analyzer"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "analyzer",
+          "qualified_name": "DeepCrossScopeDesign::measurement_system::analyzer"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "DeepCrossScopeConsumer::Analyzer",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "DeepCrossScopeProducer::'Monitoring Station'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "station",
+          "qualified_name": "DeepCrossScopeDesign::measurement_system::station"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "DeepCrossScopeProducer::'Monitoring Station'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "DeepCrossScopeProducer::'Sensor Array'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "array",
+          "qualified_name": "DeepCrossScopeDesign::measurement_system::station::array"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "DeepCrossScopeProducer::'Sensor Array'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "DeepCrossScopeProducer::Sensor"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "sensor",
+          "qualified_name": "DeepCrossScopeDesign::measurement_system::station::array::sensor"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "DeepCrossScopeProducer::Sensor",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "DeepCrossScopeProducer::'Sensor Array'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "array",
+          "qualified_name": "DeepCrossScopeProducer::'Monitoring Station'::array"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "DeepCrossScopeProducer::'Sensor Array'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "DeepCrossScopeProducer::Sensor"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "sensor",
+          "qualified_name": "DeepCrossScopeProducer::'Sensor Array'::sensor"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "DeepCrossScopeProducer::Sensor",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "Core_Metric": {
       "calc_def_name": "Core_Metric",

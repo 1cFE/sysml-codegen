@@ -1,7 +1,83 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "d38_caret",
-  "captured_at": "2026-07-06T22:57:06.532051+00:00",
+  "captured_at": "2026-07-13T08:24:20.717925+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "D38Lib::Pack"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "pack",
+          "qualified_name": "D38Design::plant::pack"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "D38Lib::Pack",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "D38Lib::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Cell",
+          "qualified_name": "D38Lib::Cell"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "D38Lib::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Pack",
+          "qualified_name": "D38Lib::Pack"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "D38Lib::Cell"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "cell",
+          "qualified_name": "D38Lib::Pack::cell"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "D38Lib::Cell",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "NoopCalc": {
       "calc_def_name": "NoopCalc",
@@ -91,7 +167,6 @@
           "source_attribute_elem": null,
           "literal_value": 1.0,
           "expression_ast": null,
-          "unhandled": false,
           "source_instance_name": null,
           "source_attribute_name": null
         }

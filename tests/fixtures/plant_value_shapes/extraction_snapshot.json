@@ -1,7 +1,142 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "plant_value_shapes",
-  "captured_at": "2026-07-06T19:03:24.551428+00:00",
+  "captured_at": "2026-07-13T08:24:20.686392+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L4'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chain_unit",
+          "qualified_name": "PlantValueShapesDesign::shapes_design::chain_unit"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValueShapesLib::'Chain L4'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chamber Unit'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_unit",
+          "qualified_name": "PlantValueShapesDesign::shapes_design::chamber_unit"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValueShapesLib::'Chamber Unit'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Flow Sub'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "flow_unit",
+          "qualified_name": "PlantValueShapesDesign::shapes_design::flow_unit"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValueShapesLib::'Flow Sub'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L1'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L2",
+          "qualified_name": "PlantValueShapesLib::'Chain L2'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L2'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L3",
+          "qualified_name": "PlantValueShapesLib::'Chain L3'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L3'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L4",
+          "qualified_name": "PlantValueShapesLib::'Chain L4'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L4'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L5",
+          "qualified_name": "PlantValueShapesLib::'Chain L5'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Flow Base'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Flow Sub",
+          "qualified_name": "PlantValueShapesLib::'Flow Sub'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "NetCostCalc": {
       "calc_def_name": "NetCostCalc",

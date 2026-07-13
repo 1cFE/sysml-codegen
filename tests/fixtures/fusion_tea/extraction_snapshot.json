@@ -1,7 +1,789 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-07T00:32:56.883512+00:00",
+  "captured_at": "2026-07-13T08:24:20.825689+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "costed_component::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS Account",
+          "qualified_name": "cas_hierarchy::'CAS Account'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS20 Land",
+          "qualified_name": "cas_hierarchy::'CAS20 Land'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS21 Structures",
+          "qualified_name": "cas_hierarchy::'CAS21 Structures'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS22 Power Core",
+          "qualified_name": "cas_hierarchy::'CAS22 Power Core'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS23 Turbine Plant",
+          "qualified_name": "cas_hierarchy::'CAS23 Turbine Plant'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS24 Electric Plant",
+          "qualified_name": "cas_hierarchy::'CAS24 Electric Plant'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS25 Heat Rejection",
+          "qualified_name": "cas_hierarchy::'CAS25 Heat Rejection'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS26 Miscellaneous",
+          "qualified_name": "cas_hierarchy::'CAS26 Miscellaneous'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS27 Special Materials",
+          "qualified_name": "cas_hierarchy::'CAS27 Special Materials'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS Account'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS90 Indirect Costs",
+          "qualified_name": "cas_hierarchy::'CAS90 Indirect Costs'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "HIF Driver",
+          "qualified_name": "hif_driver::'HIF Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "hif_driver::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hif_driver_instance",
+          "qualified_name": "hif_driver::hif_driver_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "hif_driver::'HIF Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_plant::'IFE Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hif_plant",
+          "qualified_name": "hif_plant_pkg::hif_plant"
+        },
+        "inherited_constraints": [
+          "ife_plant::'IFE Power Plant'::viability"
+        ],
+        "redefinitions": [],
+        "types": [
+          "ife_plant::'IFE Power Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "hif_driver::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "hif_plant_pkg::hif_plant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "hif_driver::'HIF Driver'"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'Reaction Chamber'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber",
+          "qualified_name": "ife_plant::'IFE Power Plant'::chamber"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'Reaction Chamber'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "ife_plant::'IFE Power Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'Target Factory'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "target_factory",
+          "qualified_name": "ife_plant::'IFE Power Plant'::target_factory"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'Target Factory'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS22 Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS22.1.1 First Wall Blanket",
+          "qualified_name": "ife_subsystems::'CAS22.1.1 First Wall Blanket'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS22 Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS22.1.2 Shield",
+          "qualified_name": "ife_subsystems::'CAS22.1.2 Shield'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS22 Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS22.1.3 Driver",
+          "qualified_name": "ife_subsystems::'CAS22.1.3 Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS22 Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS22.1.5 Primary Structure",
+          "qualified_name": "ife_subsystems::'CAS22.1.5 Primary Structure'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "cas_hierarchy::'CAS22 Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "CAS22.1.8 Target Factory",
+          "qualified_name": "ife_subsystems::'CAS22.1.8 Target Factory'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'CAS22.1.3 Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "IFE Driver",
+          "qualified_name": "ife_subsystems::'IFE Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'CAS22.1.1 First Wall Blanket'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "blanket",
+          "qualified_name": "ife_subsystems::'Reaction Chamber'::blanket"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'CAS22.1.1 First Wall Blanket'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'CAS22.1.2 Shield'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "shield",
+          "qualified_name": "ife_subsystems::'Reaction Chamber'::shield"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'CAS22.1.2 Shield'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'CAS22.1.5 Primary Structure'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "structure",
+          "qualified_name": "ife_subsystems::'Reaction Chamber'::structure"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ife_subsystems::'CAS22.1.5 Primary Structure'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ife_subsystems::'CAS22.1.8 Target Factory'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Target Factory",
+          "qualified_name": "ife_subsystems::'Target Factory'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [
+      {
+        "formals": [
+          {
+            "default": null,
+            "has_default": false,
+            "name": "eta",
+            "qualified_name": "fusion_cycle::'Viability Threshold'::eta",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          },
+          {
+            "default": null,
+            "has_default": false,
+            "name": "gain",
+            "qualified_name": "fusion_cycle::'Viability Threshold'::gain",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          },
+          {
+            "default": {
+              "kind": "literal",
+              "literal": {
+                "kind": "LiteralRational",
+                "result_type": "ScalarValues::Rational",
+                "value": 10.0
+              },
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            "has_default": true,
+            "name": "threshold",
+            "qualified_name": "fusion_cycle::'Viability Threshold'::threshold",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          }
+        ],
+        "identity": {
+          "kind": "ConstraintDefinition",
+          "name": "Viability Threshold",
+          "qualified_name": "fusion_cycle::'Viability Threshold'"
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "operator",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "operands": [
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "eta",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "eta",
+                      "qualified_name": "fusion_cycle::'Viability Threshold'::eta"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                },
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "gain",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "gain",
+                      "qualified_name": "fusion_cycle::'Viability Threshold'::gain"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                }
+              ],
+              "operator": "*",
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "threshold",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "threshold",
+                  "qualified_name": "fusion_cycle::'Viability Threshold'::threshold"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        }
+      }
+    ],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": [
+      {
+        "actuals": [
+          {
+            "direction": "in",
+            "formal_targets": [
+              "fusion_cycle::'Viability Threshold'::eta"
+            ],
+            "name": "eta",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [
+                  "driver",
+                  "efficiency"
+                ],
+                "source_name": "driver.efficiency",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "efficiency",
+                  "qualified_name": "ife_subsystems::'IFE Driver'::efficiency"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          },
+          {
+            "direction": "in",
+            "formal_targets": [
+              "fusion_cycle::'Viability Threshold'::gain"
+            ],
+            "name": "gain",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "gain",
+                "target": {
+                  "kind": "ReferenceUsage",
+                  "name": "gain",
+                  "qualified_name": "ife_plant::'IFE Power Plant'::viability::gain"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          }
+        ],
+        "identity": {
+          "kind": "AssertConstraintUsage",
+          "name": "viability",
+          "qualified_name": "ife_plant::'IFE Power Plant'::viability"
+        },
+        "inherited_into": [
+          "hif_plant_pkg::hif_plant"
+        ],
+        "is_negated": false,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml",
+          "line": 155
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [
+          "fusion_cycle::'Viability Threshold'::threshold"
+        ],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "IFE Power Plant",
+            "qualified_name": "ife_plant::'IFE Power Plant'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "ife_plant::'IFE Power Plant'"
+          }
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "operator",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "operands": [
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "eta",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "eta",
+                      "qualified_name": "fusion_cycle::'Viability Threshold'::eta"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                },
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "gain",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "gain",
+                      "qualified_name": "fusion_cycle::'Viability Threshold'::gain"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                }
+              ],
+              "operator": "*",
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "threshold",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "threshold",
+                  "qualified_name": "fusion_cycle::'Viability Threshold'::threshold"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        },
+        "scope": {
+          "kind": "AssertConstraintUsage",
+          "name": "viability",
+          "qualified_name": "ife_plant::'IFE Power Plant'::viability"
+        },
+        "source": {
+          "asserted_constraint": {
+            "kind": "AssertConstraintUsage",
+            "name": "viability",
+            "qualified_name": "ife_plant::'IFE Power Plant'::viability"
+          },
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "Viability Threshold",
+            "qualified_name": "fusion_cycle::'Viability Threshold'"
+          },
+          "effective_predicate_source": {
+            "kind": "ConstraintDefinition",
+            "name": "Viability Threshold",
+            "qualified_name": "fusion_cycle::'Viability Threshold'"
+          },
+          "form": "definition_typed",
+          "referenced_feature_target": null
+        }
+      }
+    ]
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "Meier_HIF_Driver_Cost": {
       "calc_def_name": "Meier_HIF_Driver_Cost",

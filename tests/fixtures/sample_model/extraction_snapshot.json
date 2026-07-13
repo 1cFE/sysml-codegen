@@ -1,7 +1,16 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "sample_model",
-  "captured_at": "2026-07-06T19:05:19.823191+00:00",
+  "captured_at": "2026-07-13T08:35:47.912098+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MultiOutputCalc": {
       "calc_def_name": "MultiOutputCalc",

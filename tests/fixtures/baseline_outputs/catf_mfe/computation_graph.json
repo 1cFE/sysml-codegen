@@ -3471,6 +3471,33 @@
       ],
       "source_file": "library/physics/performance_metrics.sysml",
       "source_line": 206
+    },
+    {
+      "name": "constraint_report_aggregator",
+      "module_type": "constraints.ConstraintReportAggregatorModule",
+      "inputs": [],
+      "outputs": [
+        {
+          "field_name": "constraint_report",
+          "python_type": "ConstraintReport",
+          "channel_name": "constraint_report",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 42,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "report_aggregator",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
     }
   ],
   "entry_point_groups": [
@@ -4113,7 +4140,8 @@
     "catfmfephysics__catf_physics__gross_electric",
     "catfmfephysics__catf_physics__net_electric",
     "catfmfephysics__catf_physics__q_engineering",
-    "catfmfephysics__catf_physics__plant_efficiency"
+    "catfmfephysics__catf_physics__plant_efficiency",
+    "constraint_report_aggregator"
   ],
   "output_aliases": [
     {

@@ -1,7 +1,146 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "retype_model",
-  "captured_at": "2026-07-06T19:03:24.476719+00:00",
+  "captured_at": "2026-07-13T08:24:20.528760+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "RetypeLibrary::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "plain_hif",
+          "qualified_name": "RetypeDesign::retype_design::plain_hif"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "RetypeLibrary::'HIF Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "RetypeLibrary::Variant"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "the_variant",
+          "qualified_name": "RetypeDesign::retype_design::the_variant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "RetypeLibrary::Variant",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "RetypeLibrary::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "HIF Driver",
+          "qualified_name": "RetypeLibrary::'HIF Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "RetypeLibrary::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "RetypeLibrary::Facility::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "RetypeLibrary::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "RetypeLibrary::'IFE Driver'",
+          "RetypeLibrary::'Other Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "multi",
+          "qualified_name": "RetypeLibrary::MultiHolder::multi"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "RetypeLibrary::'IFE Driver'",
+          "RetypeLibrary::'Other Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "RetypeLibrary::Facility"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Variant",
+          "qualified_name": "RetypeLibrary::Variant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "RetypeLibrary::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "RetypeLibrary::Variant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "RetypeLibrary::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "RetypeLibrary::'HIF Driver'"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "IfeCalc": {
       "calc_def_name": "IfeCalc",

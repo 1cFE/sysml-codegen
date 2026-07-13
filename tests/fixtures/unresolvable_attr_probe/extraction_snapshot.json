@@ -1,7 +1,116 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "unresolvable_attr_probe",
-  "captured_at": "2026-07-06T19:03:24.578129+00:00",
+  "captured_at": "2026-07-13T08:24:20.886553+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Base Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Design Derived",
+          "qualified_name": "UnresolvableAttrProbeDesign::'Design Derived'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Derived Component'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "derived_instance",
+          "qualified_name": "UnresolvableAttrProbeDesign::derived_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "UnresolvableAttrProbeLibrary::'Derived Component'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeDesign::'Design Derived'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "design_derived_instance",
+          "qualified_name": "UnresolvableAttrProbeDesign::design_derived_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "UnresolvableAttrProbeDesign::'Design Derived'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::Grandchild"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "grandchild_instance",
+          "qualified_name": "UnresolvableAttrProbeDesign::grandchild_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "UnresolvableAttrProbeLibrary::Grandchild",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Base Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Derived Component",
+          "qualified_name": "UnresolvableAttrProbeLibrary::'Derived Component'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Derived Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Grandchild",
+          "qualified_name": "UnresolvableAttrProbeLibrary::Grandchild"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [
     {

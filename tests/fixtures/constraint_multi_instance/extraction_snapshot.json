@@ -1,0 +1,507 @@
+{
+  "snapshot_format_version": 3,
+  "model_name": "constraint_multi_instance",
+  "captured_at": "2026-07-13T08:24:20.853024+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "constraint_multi_instance::Cell"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "cell",
+          "qualified_name": "constraint_multi_instance::Container::cell"
+        },
+        "inherited_constraints": [
+          "constraint_multi_instance::Cell::nonneg"
+        ],
+        "redefinitions": [],
+        "types": [
+          "constraint_multi_instance::Cell",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "constraint_multi_instance::Container"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "c",
+          "qualified_name": "constraint_multi_instance::Design::c"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "constraint_multi_instance::Container",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "constraint_multi_instance::Design"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "the_design",
+          "qualified_name": "constraint_multi_instance::the_design"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "constraint_multi_instance::Design",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [
+      {
+        "formals": [
+          {
+            "default": null,
+            "has_default": false,
+            "name": "p",
+            "qualified_name": "constraint_multi_instance::'Nonneg Power'::p",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          }
+        ],
+        "identity": {
+          "kind": "ConstraintDefinition",
+          "name": "Nonneg Power",
+          "qualified_name": "constraint_multi_instance::'Nonneg Power'"
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "p",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "p",
+                  "qualified_name": "constraint_multi_instance::'Nonneg Power'::p"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "literal",
+              "literal": {
+                "kind": "LiteralRational",
+                "result_type": "ScalarValues::Rational",
+                "value": 0.0
+              },
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        }
+      }
+    ],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": [
+      {
+        "actuals": [
+          {
+            "direction": "in",
+            "formal_targets": [
+              "constraint_multi_instance::'Nonneg Power'::p"
+            ],
+            "name": "p",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [
+                  "power_calc",
+                  "p"
+                ],
+                "source_name": "power_calc.p",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "p",
+                  "qualified_name": "constraint_multi_instance::'Power Calc'::p"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          }
+        ],
+        "identity": {
+          "kind": "AssertConstraintUsage",
+          "name": "nonneg",
+          "qualified_name": "constraint_multi_instance::Cell::nonneg"
+        },
+        "inherited_into": [
+          "constraint_multi_instance::Container::cell"
+        ],
+        "is_negated": false,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_multi_instance/model.sysml",
+          "line": 24
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Cell",
+            "qualified_name": "constraint_multi_instance::Cell"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "constraint_multi_instance::Cell"
+          }
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "p",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "p",
+                  "qualified_name": "constraint_multi_instance::'Nonneg Power'::p"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "literal",
+              "literal": {
+                "kind": "LiteralRational",
+                "result_type": "ScalarValues::Rational",
+                "value": 0.0
+              },
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        },
+        "scope": {
+          "kind": "AssertConstraintUsage",
+          "name": "nonneg",
+          "qualified_name": "constraint_multi_instance::Cell::nonneg"
+        },
+        "source": {
+          "asserted_constraint": {
+            "kind": "AssertConstraintUsage",
+            "name": "nonneg",
+            "qualified_name": "constraint_multi_instance::Cell::nonneg"
+          },
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "Nonneg Power",
+            "qualified_name": "constraint_multi_instance::'Nonneg Power'"
+          },
+          "effective_predicate_source": {
+            "kind": "ConstraintDefinition",
+            "name": "Nonneg Power",
+            "qualified_name": "constraint_multi_instance::'Nonneg Power'"
+          },
+          "form": "definition_typed",
+          "referenced_feature_target": null
+        }
+      }
+    ]
+  },
+  "part_occurrences": {
+    "constraint_multi_instance__Cell": [
+      {
+        "part_def_qn": "constraint_multi_instance__Cell",
+        "steps": [
+          {
+            "owning_def_qn": "constraint_multi_instance",
+            "feature_name": "the_design",
+            "occurrence_index": null
+          },
+          {
+            "owning_def_qn": "constraint_multi_instance__Design",
+            "feature_name": "c",
+            "occurrence_index": null
+          },
+          {
+            "owning_def_qn": "constraint_multi_instance__Container",
+            "feature_name": "cell",
+            "occurrence_index": 0
+          }
+        ]
+      },
+      {
+        "part_def_qn": "constraint_multi_instance__Cell",
+        "steps": [
+          {
+            "owning_def_qn": "constraint_multi_instance",
+            "feature_name": "the_design",
+            "occurrence_index": null
+          },
+          {
+            "owning_def_qn": "constraint_multi_instance__Design",
+            "feature_name": "c",
+            "occurrence_index": null
+          },
+          {
+            "owning_def_qn": "constraint_multi_instance__Container",
+            "feature_name": "cell",
+            "occurrence_index": 1
+          }
+        ]
+      },
+      {
+        "part_def_qn": "constraint_multi_instance__Cell",
+        "steps": [
+          {
+            "owning_def_qn": "constraint_multi_instance",
+            "feature_name": "the_design",
+            "occurrence_index": null
+          },
+          {
+            "owning_def_qn": "constraint_multi_instance__Design",
+            "feature_name": "c",
+            "occurrence_index": null
+          },
+          {
+            "owning_def_qn": "constraint_multi_instance__Container",
+            "feature_name": "cell",
+            "occurrence_index": 2
+          }
+        ]
+      }
+    ]
+  },
+  "compilation_results": {
+    "Power_Calc": {
+      "calc_def_name": "Power_Calc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "p",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.r * 2.0)",
+          "input_refs": [
+            "r"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "p"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "Power_Calc",
+      "qualified_name": "constraint_multi_instance::'Power Calc'",
+      "doc_comment": "",
+      "calc_expressions": [
+        "p = r * 2.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "r",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "p",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "model.sysml",
+      "source_line": 4,
+      "source_hash": "e4eb22e013dbb07f45044fb37f2f6f889cb9c95525cdeeca70096dfc479b984b",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "p",
+        "r"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "constraint_multi_instance__the_design__c__cell__power_calc",
+      "calc_def_name": "Power_Calc",
+      "calc_def_qualified_name": "constraint_multi_instance::'Power Calc'",
+      "module_type": "constraint_multi_instance.Power_CalcModule",
+      "bindings": [
+        {
+          "param_name": "r",
+          "source_path": "constraint_multi_instance::Cell::cell_rating",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> constraint_multi_instance::Cell::cell_rating",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "cell_rating"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "model.sysml",
+      "source_line": 21,
+      "parent_part_path": "the_design.c.cell",
+      "qualified_name": "constraint_multi_instance__the_design__c__cell__power_calc",
+      "is_template": false,
+      "owning_part_def_qn": "constraint_multi_instance__Cell",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_multi_instance/model.sysml": [
+      {
+        "name": "p",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 6,
+        "parent_part": "",
+        "qualified_name": "constraint_multi_instance__Power_Calc__p"
+      },
+      {
+        "name": "cell_rating",
+        "sysml_type": "Real",
+        "default_value": "10.0",
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 20,
+        "parent_part": "",
+        "qualified_name": "constraint_multi_instance__Cell__cell_rating"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [],
+    "multiplicities": [
+      {
+        "part_usage_name": "cell",
+        "owning_part_def_qn": "constraint_multi_instance__Container",
+        "count": 3,
+        "count_attribute_name": null,
+        "default_value": null
+      }
+    ],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {
+      "constraint_multi_instance__Container": [
+        "cell"
+      ],
+      "constraint_multi_instance__Design": [
+        "c"
+      ]
+    },
+    "usage_type_map": {
+      "[\"constraint_multi_instance__Container\", \"cell\"]": "constraint_multi_instance__Cell",
+      "[\"constraint_multi_instance__Design\", \"c\"]": "constraint_multi_instance__Container"
+    }
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": [],
+  "dropped_constraints": [
+    {
+      "owner_kind": "part_def",
+      "owner_name": "Cell",
+      "owner_qualified_name": "constraint_multi_instance::Cell",
+      "constraint_name": "nonneg",
+      "constraint_kind": "assert",
+      "source_line": 24
+    }
+  ]
+}

@@ -346,12 +346,24 @@ class TestImportPathsMatchFilesystem:
         }
         formula_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.FORMULA)
         agg_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION)
+        # Item 8: a constraint-bearing model may also register CONSTRAINT
+        # modules (one class per concrete constraint) and a shared
+        # REPORT_AGGREGATOR class (at most one, present whenever any
+        # assertion — eligible or unassessed — was cataloged).
+        constraint_count = sum(1 for m in graph.modules if m.module_kind == ModuleKind.CONSTRAINT)
+        report_aggregator_count = sum(
+            1 for m in graph.modules if m.module_kind == ModuleKind.REPORT_AGGREGATOR
+        )
 
-        expected = len(unique_calcusage) + formula_count + agg_count
+        expected = (
+            len(unique_calcusage) + formula_count + agg_count
+            + constraint_count + report_aggregator_count
+        )
         assert len(module_list) == expected, (
             f"Registry has {len(module_list)} modules but expected {expected} "
             f"(calc_defs={len(unique_calcusage)}, FORMULA={formula_count}, "
-            f"agg={agg_count}) in {model_name}"
+            f"agg={agg_count}, constraint={constraint_count}, "
+            f"report_aggregator={report_aggregator_count}) in {model_name}"
         )
 
 
@@ -607,7 +619,11 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
     def test_schema_imports_match_entry_point_groups(
         self, model_name, all_registry_codes, all_graph_data,
     ):
-        """Number of schema imports matches len(graph.entry_point_groups)."""
+        """Number of schema imports matches len(graph.entry_point_groups),
+        plus one dedicated `constraint_types` import when the graph carries a
+        constraint catalog (Item 8) — `ConstraintEvaluation`/`ConstraintReport`
+        are the report aggregator's own output types, not derived from any
+        input entry-point group."""
         code = all_registry_codes[model_name]
         graph, _ = all_graph_data[model_name]
         package_name = MODEL_IDS[model_name]
@@ -616,10 +632,15 @@ class TestCustomSchemaTypesIncludesExitPrimitives:
             line for line in _extract_import_lines(code)
             if f"from {package_name}.schemas." in line
         ]
+        constraint_schema_imports = sum(
+            1 for line in schema_imports if f"{package_name}.schemas.constraint_types" in line
+        )
 
-        assert len(schema_imports) == len(graph.entry_point_groups), (
+        expected = len(graph.entry_point_groups) + constraint_schema_imports
+        assert len(schema_imports) == expected, (
             f"Schema imports ({len(schema_imports)}) != entry_point_groups "
-            f"({len(graph.entry_point_groups)}) in {model_name}"
+            f"({len(graph.entry_point_groups)}) + constraint_types "
+            f"({constraint_schema_imports}) in {model_name}"
         )
 
 

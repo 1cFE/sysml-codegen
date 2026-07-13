@@ -1,0 +1,77 @@
+{
+  "modules": [
+    {
+      "name": "constraint_inline__the_host__positive__f09be415bd21dd95",
+      "module_type": "constraint_inline.TheHostPositiveConstraintModule",
+      "inputs": [],
+      "outputs": [
+        {
+          "field_name": "evaluation",
+          "python_type": "ConstraintEvaluation",
+          "channel_name": "constraint_inline__the_host__positive__f09be415bd21dd95__evaluation",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "constraint",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    },
+    {
+      "name": "constraint_report_aggregator",
+      "module_type": "constraints.ConstraintReportAggregatorModule",
+      "inputs": [
+        {
+          "param_name": "constraint_inline_the_host_positive_f09be415bd21dd95",
+          "python_type": "ConstraintEvaluation",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "constraint_inline__the_host__positive__f09be415bd21dd95__evaluation"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "constraint_report",
+          "python_type": "ConstraintReport",
+          "channel_name": "constraint_report",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 1,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "report_aggregator",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    }
+  ],
+  "entry_point_groups": [],
+  "execution_order": [
+    "constraint_inline__the_host__positive__f09be415bd21dd95",
+    "constraint_report_aggregator"
+  ],
+  "output_aliases": []
+}

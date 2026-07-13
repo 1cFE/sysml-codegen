@@ -1,7 +1,83 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "alias_agg_probe",
-  "captured_at": "2026-07-06T19:03:24.462488+00:00",
+  "captured_at": "2026-07-13T08:24:20.498810+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::'Widget Assembly'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "assembly",
+          "qualified_name": "AliasAggProbeDesign::plant::assembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AliasAggProbeLibrary::'Widget Assembly'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Widget Assembly",
+          "qualified_name": "AliasAggProbeLibrary::'Widget Assembly'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::Widget"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "widget",
+          "qualified_name": "AliasAggProbeLibrary::'Widget Assembly'::widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AliasAggProbeLibrary::Widget",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Widget",
+          "qualified_name": "AliasAggProbeLibrary::Widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "Unit_Cost_Calc": {
       "calc_def_name": "Unit_Cost_Calc",

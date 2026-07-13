@@ -1,7 +1,311 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "wi014_toy",
-  "captured_at": "2026-07-06T19:03:24.482993+00:00",
+  "captured_at": "2026-07-13T08:24:20.541119+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "toy_plant::'Toy Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "demo_plant",
+          "qualified_name": "toy_plant::demo_plant"
+        },
+        "inherited_constraints": [
+          "toy_plant::'Toy Plant'::affordable"
+        ],
+        "redefinitions": [],
+        "types": [
+          "toy_plant::'Toy Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [
+      {
+        "formals": [
+          {
+            "default": null,
+            "has_default": false,
+            "name": "budget",
+            "qualified_name": "toy_library::'Cost Within Budget'::budget",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          },
+          {
+            "default": null,
+            "has_default": false,
+            "name": "cost",
+            "qualified_name": "toy_library::'Cost Within Budget'::cost",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          }
+        ],
+        "identity": {
+          "kind": "ConstraintDefinition",
+          "name": "Cost Within Budget",
+          "qualified_name": "toy_library::'Cost Within Budget'"
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "cost",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "cost",
+                  "qualified_name": "toy_library::'Cost Within Budget'::cost"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "budget",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "budget",
+                  "qualified_name": "toy_library::'Cost Within Budget'::budget"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": "<=",
+          "schema_version": "expression-ir/v1"
+        }
+      }
+    ],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": [
+      {
+        "actuals": [
+          {
+            "direction": "in",
+            "formal_targets": [
+              "toy_library::'Cost Within Budget'::budget"
+            ],
+            "name": "budget",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "plant_budget",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "plant_budget",
+                  "qualified_name": "toy_plant::'Toy Plant'::plant_budget"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          },
+          {
+            "direction": "in",
+            "formal_targets": [
+              "toy_library::'Cost Within Budget'::cost"
+            ],
+            "name": "cost",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [
+                  "cost_calc",
+                  "cost"
+                ],
+                "source_name": "cost_calc.cost",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "cost",
+                  "qualified_name": "toy_library::'Panel Cost'::cost"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          }
+        ],
+        "identity": {
+          "kind": "AssertConstraintUsage",
+          "name": "affordable",
+          "qualified_name": "toy_plant::'Toy Plant'::affordable"
+        },
+        "inherited_into": [
+          "toy_plant::demo_plant"
+        ],
+        "is_negated": false,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/wi014_toy/toy_plant.sysml",
+          "line": 51
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Toy Plant",
+            "qualified_name": "toy_plant::'Toy Plant'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "toy_plant::'Toy Plant'"
+          }
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "cost",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "cost",
+                  "qualified_name": "toy_library::'Cost Within Budget'::cost"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "budget",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "budget",
+                  "qualified_name": "toy_library::'Cost Within Budget'::budget"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": "<=",
+          "schema_version": "expression-ir/v1"
+        },
+        "scope": {
+          "kind": "AssertConstraintUsage",
+          "name": "affordable",
+          "qualified_name": "toy_plant::'Toy Plant'::affordable"
+        },
+        "source": {
+          "asserted_constraint": {
+            "kind": "AssertConstraintUsage",
+            "name": "affordable",
+            "qualified_name": "toy_plant::'Toy Plant'::affordable"
+          },
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "Cost Within Budget",
+            "qualified_name": "toy_library::'Cost Within Budget'"
+          },
+          "effective_predicate_source": {
+            "kind": "ConstraintDefinition",
+            "name": "Cost Within Budget",
+            "qualified_name": "toy_library::'Cost Within Budget'"
+          },
+          "form": "definition_typed",
+          "referenced_feature_target": null
+        }
+      }
+    ]
+  },
+  "part_occurrences": {
+    "toy_plant__Toy_Plant": [
+      {
+        "part_def_qn": "toy_plant__Toy_Plant",
+        "steps": [
+          {
+            "owning_def_qn": "toy_plant",
+            "feature_name": "demo_plant",
+            "occurrence_index": null
+          }
+        ]
+      }
+    ]
+  },
   "compilation_results": {
     "Panel_Area": {
       "calc_def_name": "Panel_Area",

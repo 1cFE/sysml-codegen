@@ -1,7 +1,77 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "sibling_channel_ambiguity",
-  "captured_at": "2026-07-06T19:03:24.520470+00:00",
+  "captured_at": "2026-07-13T08:24:20.614361+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "SiblingLib::'Twin Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "twin_plant",
+          "qualified_name": "SiblingDesign::twin_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SiblingLib::'Twin Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SiblingLib::Chamber"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_a",
+          "qualified_name": "SiblingLib::'Twin Plant'::chamber_a"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SiblingLib::Chamber",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SiblingLib::Chamber"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_b",
+          "qualified_name": "SiblingLib::'Twin Plant'::chamber_b"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SiblingLib::Chamber",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "PowerCalc": {
       "calc_def_name": "PowerCalc",

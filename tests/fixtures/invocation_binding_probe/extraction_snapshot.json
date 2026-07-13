@@ -1,7 +1,16 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "invocation_binding_probe",
-  "captured_at": "2026-07-06T23:04:40.940617+00:00",
+  "captured_at": "2026-07-13T08:24:20.905849+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [
     {

@@ -73,6 +73,10 @@ MODELS = {
     "plant_values": "plant_values",
     "plant_value_shapes": "plant_value_shapes",
     "deep_cross_scope_probe": "deep_cross_scope_probe",
+    # Constraint-lowering parity fixtures (Item 8, D6) — see the matching
+    # comment in capture_extraction_snapshots.py.
+    "constraint_inline": "constraint_inline",
+    "constraint_multi_instance": "constraint_multi_instance",
 }
 
 

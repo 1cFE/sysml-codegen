@@ -1,7 +1,37 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "self_named_binding_trap",
-  "captured_at": "2026-07-06T19:03:24.581642+00:00",
+  "captured_at": "2026-07-13T08:24:20.892726+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "TrapLib::'Trap Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "trap_plant",
+          "qualified_name": "TrapDesign::trap_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TrapLib::'Trap Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [
     {

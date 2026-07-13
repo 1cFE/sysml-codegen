@@ -1,7 +1,488 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 3,
   "model_name": "plant_values",
-  "captured_at": "2026-07-06T19:03:24.540912+00:00",
+  "captured_at": "2026-07-13T08:24:20.661918+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "PlantValuesLib::'Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "plant",
+          "qualified_name": "PlantValuesDesign::plant"
+        },
+        "inherited_constraints": [
+          "PlantValuesLib::'Power Plant'::viability"
+        ],
+        "redefinitions": [],
+        "types": [
+          "PlantValuesLib::'Power Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValuesLib::'Hif Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "PlantValuesDesign::plant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValuesLib::'Base Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "PlantValuesLib::'Hif Driver'"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValuesLib::'Base Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hif Driver",
+          "qualified_name": "PlantValuesLib::'Hif Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValuesLib::'Reaction Chamber'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber",
+          "qualified_name": "PlantValuesLib::'Power Plant'::chamber"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValuesLib::'Reaction Chamber'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValuesLib::'Base Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "PlantValuesLib::'Power Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValuesLib::'Base Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValuesLib::'Target Factory'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "target_factory",
+          "qualified_name": "PlantValuesLib::'Power Plant'::target_factory"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValuesLib::'Target Factory'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [
+      {
+        "formals": [
+          {
+            "default": null,
+            "has_default": false,
+            "name": "eta",
+            "qualified_name": "PlantValuesLib::'Viability Threshold'::eta",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          },
+          {
+            "default": null,
+            "has_default": false,
+            "name": "gain",
+            "qualified_name": "PlantValuesLib::'Viability Threshold'::gain",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          },
+          {
+            "default": {
+              "kind": "literal",
+              "literal": {
+                "kind": "LiteralRational",
+                "result_type": "ScalarValues::Rational",
+                "value": 10.0
+              },
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            "has_default": true,
+            "name": "threshold",
+            "qualified_name": "PlantValuesLib::'Viability Threshold'::threshold",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          }
+        ],
+        "identity": {
+          "kind": "ConstraintDefinition",
+          "name": "Viability Threshold",
+          "qualified_name": "PlantValuesLib::'Viability Threshold'"
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "operator",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "operands": [
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "eta",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "eta",
+                      "qualified_name": "PlantValuesLib::'Viability Threshold'::eta"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                },
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "gain",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "gain",
+                      "qualified_name": "PlantValuesLib::'Viability Threshold'::gain"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                }
+              ],
+              "operator": "*",
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "threshold",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "threshold",
+                  "qualified_name": "PlantValuesLib::'Viability Threshold'::threshold"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        }
+      }
+    ],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": [
+      {
+        "actuals": [
+          {
+            "direction": "in",
+            "formal_targets": [
+              "PlantValuesLib::'Viability Threshold'::eta"
+            ],
+            "name": "eta",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [
+                  "driver",
+                  "efficiency"
+                ],
+                "source_name": "driver.efficiency",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "efficiency",
+                  "qualified_name": "PlantValuesLib::'Base Driver'::efficiency"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          },
+          {
+            "direction": "in",
+            "formal_targets": [
+              "PlantValuesLib::'Viability Threshold'::gain"
+            ],
+            "name": "gain",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "gain",
+                "target": {
+                  "kind": "ReferenceUsage",
+                  "name": "gain",
+                  "qualified_name": "PlantValuesLib::'Power Plant'::viability::gain"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          }
+        ],
+        "identity": {
+          "kind": "AssertConstraintUsage",
+          "name": "viability",
+          "qualified_name": "PlantValuesLib::'Power Plant'::viability"
+        },
+        "inherited_into": [
+          "PlantValuesDesign::plant"
+        ],
+        "is_negated": false,
+        "location": {
+          "column": 9,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/plant_values/library.sysml",
+          "line": 105
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [
+          "PlantValuesLib::'Viability Threshold'::threshold"
+        ],
+        "owner": {
+          "owner": {
+            "kind": "PartDefinition",
+            "name": "Power Plant",
+            "qualified_name": "PlantValuesLib::'Power Plant'"
+          },
+          "owning_definition": {
+            "kind": "part_def",
+            "qualified_name": "PlantValuesLib::'Power Plant'"
+          }
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "operator",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "operands": [
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "eta",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "eta",
+                      "qualified_name": "PlantValuesLib::'Viability Threshold'::eta"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                },
+                {
+                  "kind": "feature_ref",
+                  "operand_type": {
+                    "category": "real",
+                    "enumeration": null,
+                    "unit": null
+                  },
+                  "reference": {
+                    "chain_segments": [],
+                    "source_name": "gain",
+                    "target": {
+                      "kind": "AttributeUsage",
+                      "name": "gain",
+                      "qualified_name": "PlantValuesLib::'Viability Threshold'::gain"
+                    },
+                    "target_types": [
+                      "ScalarValues::Real",
+                      "Base::DataValue",
+                      "Base::Anything"
+                    ]
+                  },
+                  "schema_version": "expression-ir/v1"
+                }
+              ],
+              "operator": "*",
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "threshold",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "threshold",
+                  "qualified_name": "PlantValuesLib::'Viability Threshold'::threshold"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        },
+        "scope": {
+          "kind": "AssertConstraintUsage",
+          "name": "viability",
+          "qualified_name": "PlantValuesLib::'Power Plant'::viability"
+        },
+        "source": {
+          "asserted_constraint": {
+            "kind": "AssertConstraintUsage",
+            "name": "viability",
+            "qualified_name": "PlantValuesLib::'Power Plant'::viability"
+          },
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "Viability Threshold",
+            "qualified_name": "PlantValuesLib::'Viability Threshold'"
+          },
+          "effective_predicate_source": {
+            "kind": "ConstraintDefinition",
+            "name": "Viability Threshold",
+            "qualified_name": "PlantValuesLib::'Viability Threshold'"
+          },
+          "form": "definition_typed",
+          "referenced_feature_target": null
+        }
+      }
+    ]
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "PlantCostCalc": {
       "calc_def_name": "PlantCostCalc",
