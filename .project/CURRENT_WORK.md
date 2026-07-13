@@ -14,7 +14,7 @@ Epic: `.project/backlog/epic_constraint_execution.md` (Item 4). Spec:
 (Item 5) finds instances of constraint-only definitions. Consumes no fact schemas; additive to
 calc-driven discovery (byte-identity gate). S3 fixture promoted.
 
-### CONSTRAINT-EXEC Item 6 — `module_kind` and the Generation-Seam Refactor — spec in progress
+### CONSTRAINT-EXEC Item 6 — `module_kind` and the Generation-Seam Refactor — spec reviewed + revised
 
 Epic: `.project/backlog/epic_constraint_execution.md` (Item 6). Spec:
 `.project/active/module-kind-refactor/spec.md`. Pure refactor: replace the two Boolean flags
