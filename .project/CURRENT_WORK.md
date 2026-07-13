@@ -17,7 +17,17 @@ True under a parity gate. Orchestrator decisions: (Q1) carve-out flag-off grandf
 prerequisite, not just deferred); (Q2) serialize the neutral facts + part-instance occurrence
 data for true offline re-derivation parity. Next: `/_my_spec_review` then `/_my_design`.
 
-### CONSTRAINT-EXEC Item 7 — Constraint Module, Kleene Compiler, Aggregator, Catalog Generation — SPEC in progress (2026-07-12)
+### CONSTRAINT-EXEC Item 7 — Constraint Module, Kleene Compiler, Aggregator, Catalog Generation — CERTIFY-WITH-NOTES (audited 2026-07-13)
+
+**Audit verdict (2026-07-13):** Certify-with-notes — see `audit.md`. Core delivered and
+statically correct (Kleene compiler, exit pin D1, INV-2/B5 guards, D11, 3 Phase-4 fixes,
+SC-1/SC-4). Two open notes: (1) three spec success criteria deferred — SC-2 indeterminate/
+negated-inline at execution, SC-3 modeled-default override, Break-the-YAML — SC-3 and
+Break-the-YAML have no test at any level; (2) the three Phase-4 bug fixes have no CI/offline
+regression test (only the manual execution lane catches them). Audit was **static-only** —
+the session could not execute python, so suite-green/mypy/ruff/3-of-3-execution are
+author-reported from run-log.md, not independently re-run.
+
 
 Epic Item 7. Spec: `.project/active/constraint-generation/spec.md`. Productionizes the S4
 vertical-slice emitters: fills the five `module_kind` generation seams (module-wrapper,
