@@ -237,7 +237,7 @@ def test_s4_slice_both_truth_values(tmp_path):
 - [x] `tests/execution/` (NEW lane) — `@pytest.mark.execution` marker registered so the default `uv run pytest` excludes it; `tests/execution/conftest.py` documents the agentic-mbse-venv + `sys.path` incantation ([[teax-simkit-execution-env]], `probe_c_execute.py` is the working form).
 - [x] **S4 slice** (SC-1): both truth values, identical ordinary outputs (area 12.0, cost 3000.0), verdicts/margins (satisfied +2000 / violated −500, violated run completes as evidence not raise — INV-3), report present (persistence per decision rule). `test_s4_slice_both_truth_values`.
 - [x] **S4-unexercised cases (partial):** zero-assertion aggregator (headline `not_assessed`) — `test_zero_assertion_aggregator_not_assessed`; multi-instance expansion (N modules → N aggregator fields, one shared predicate) — `test_multi_instance_expansion_n_modules_one_predicate`.
-- [ ] **DEFERRED, surfaced not hidden (capture-fidelity §4):** indeterminate (non-finite) point; negated + inline assertions at execution; modeled-default override (INV-6); break-the-YAML (INV-4 end-to-end); optional exit-narrowing companion. SC-1 (the criterion the whole phase exists to prove) and the two S4-unexercised integration risks (zero-eligible aggregator, multi-instance compile-once) are proven under real simkit; these five are additional coverage the remaining plan budget did not reach. Each is a same-shaped extension of the harness now in place (`_generate_full_package` + `_run` in `test_constraint_execution.py`), not a design gap — no code changes are blocked on them.
+- [x] **Indeterminate point + negated/inline assertions + modeled-default override + break-the-YAML — CURED in Phase 6** (audit-required). Only the optional exit-narrowing companion stays undone (explicitly optional per this checklist's own original text).
 - [x] **Run log** (NEW, this feature dir, appended): each manual run's date, teax state, pass/fail per criterion (N6) — so an unrun/failing lane is visible, never assumed green. See `run-log.md`.
 
 ### Validation
@@ -455,7 +455,70 @@ deterministic catalog fingerprints to build snapshot parity on.
 
 ---
 
-**Status:** Draft → In Progress → **Complete**
+## Phase 6: Audit cures
+
+### Goal
+`audit.md` certified Item 7 with notes, requiring cures before close: SC-2's execution half
+(indeterminate point, negated + inline assertions), SC-3 (modeled-default override), the
+Break-the-YAML kept test, and CI regression pins for the three Phase-4 bug fixes (Finding 1 —
+those fixes were previously caught only by the manual, non-CI execution lane).
+
+### Changes Required
+- [x] **SC-2 execution cases** — `tests/execution/test_constraint_execution.py`:
+  `test_indeterminate_point_at_execution` (a non-finite operand overridden via the JSON entry
+  file reads as `indeterminate`, `actual_value is None`, `margin is None`);
+  `test_negated_inline_assertion_at_execution` (negated inline assertion, correct status and
+  sign-flipped margin under real execution).
+- [x] **SC-3 modeled-default override** — `test_modeled_default_override_flips_verdict`: the
+  defaulted formal (`{constraint_id}__threshold`) is a real JSON entry key; not overriding it
+  uses the modeled default (satisfied); overriding it flips the verdict (violated).
+- [x] **Break-the-YAML** — `test_break_the_yaml_surfaces_execution_failure`: after a clean
+  baseline run, the aggregator's YAML input reference to the constraint's evaluation channel
+  is rewired to a nonexistent channel (the constraint module's own output declaration is left
+  untouched — a pure wiring gap, not a renamed-everywhere no-op); re-executing raises through
+  the executor rather than silently producing a wrong or partial report.
+- [x] **CI regression pins** — `tests/unit/test_phase4_bugfix_regressions.py` (NEW, offline,
+  no simkit/license needed): `test_occurrence_indexed_constraint_modules_have_valid_class_names_and_parse`
+  (bug a: bracket-strip in `_constraint_module_type`), `test_occurrence_indexed_aggregator_fields_are_valid_identifiers_and_parse`
+  (bug b: `sanitize_name(c.constraint_id)`), `test_constraint_only_design_attribute_gets_real_default_not_none`
+  (bug c: `design_attribute_default_value`). Each was verified to go RED by reverting its fix
+  in isolation (`git checkout` afterward to restore) — see `run-log.md`'s Phase-6 entry for
+  the exact before/after failure text.
+
+All four cures reuse the existing `_generate_full_package`/`_run` execution harness and the
+`extend_graph_with_constraints`/`assemble_constraint_catalog` production machinery — no new
+design decisions, no changes to `src/` beyond what Phases 1-5 already landed.
+
+### Validation
+**Automated:**
+- [x] Execution lane (agentic-mbse venv, real simkit): 7/7 pass (3 prior + 4 new). See
+  `run-log.md`.
+- [x] `SYSIDE_LICENSE_KEY=<key> uv run pytest tests/` → 2236 passed, 4 skipped, 7 deselected
+  (execution-marked), zero failures, zero errors.
+- [x] `uv run ruff check src/` → clean.
+- [x] `uv run mypy src/` → 76 errors, baseline held exactly.
+- [x] Byte-identity (INV-7) re-confirmed: `test_graph_assembly.py::TestBaselineComparison`,
+  `test_pipeline_e2e.py::TestBaselineComparison`, `test_e2e_output_registry.py::TestYamlDiffValidation`
+  — 11/11 pass.
+
+**What We Know Works After This Phase:** every named spec success criterion (SC-1 through
+SC-4, Break-the-YAML) has a passing end-to-end test under real simkit; the three Phase-4 bug
+fixes each have an offline CI test that would fail on revert. The audit's two findings are
+both closed.
+
+### Phase 6 Completion
+**Completed:** 2026-07-13
+**Changes Made:** see Changes Required above; full detail in `run-log.md`'s "audit cures
+(Phase 6)" entry.
+**Deviations from plan:** none — the audit's cure list was followed exactly.
+**Issues Encountered:** none — every new test passed on first execution against the
+already-fixed Phase-4 code; the regression-pin RED/GREEN verification (revert → fail →
+restore → pass) was the only extra step, done once per bug to confirm each pin is load-bearing.
+**Validation:** see Automated checklist above.
+
+---
+
+**Status:** Draft → In Progress → Complete → **Audit cures complete**
 
 ---
 

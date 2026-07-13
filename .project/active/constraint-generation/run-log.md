@@ -88,3 +88,40 @@ the *first* fully-green run of the full suite in this session; every prior "23 f
 errors" baseline reading in this epic's Phases 1-3 was a sandbox license-availability
 artifact (`SYSIDE_LICENSE_KEY` not exported to ambient shell env), not a real baseline — see
 the memory note filed alongside this run log.
+
+## 2026-07-13 — audit cures (Phase 6)
+
+Same teax state as the entry above (`main` HEAD `7560d65` an ancestor of the checked-out
+`constraint-exec-epic` HEAD) — not re-verified independently this run since nothing in
+teax/simkit changed between the two runs in the same session.
+
+**New execution-lane tests (invocation identical to the entry above):**
+
+| Test | Result | Criterion |
+|---|---|---|
+| `test_indeterminate_point_at_execution` | PASS | SC-2: non-finite operand -> `indeterminate`, `actual_value is None`, `margin is None` |
+| `test_negated_inline_assertion_at_execution` | PASS | SC-2: negated inline assertion, correct status + sign-flipped margin |
+| `test_modeled_default_override_flips_verdict` | PASS | SC-3: unmodified default -> satisfied; overriding the entry parameter -> violated |
+| `test_break_the_yaml_surfaces_execution_failure` | PASS (raises as required) | Break-the-YAML: rewiring the aggregator's evaluation-channel reference in the generated YAML surfaces as an execution failure through the executor, not a silent gap |
+
+Full execution lane after the additions: **7/7 pass** (the 3 from the prior run plus these 4).
+
+**New offline CI regression pins** (`tests/unit/test_phase4_bugfix_regressions.py`) —
+verified to go RED on revert (each fix was reverted in isolation, the corresponding test
+failed with the exact bug's symptom, then the fix was restored via `git checkout`):
+
+| Test | Reverted fix | Failure reproduced |
+|---|---|---|
+| `test_occurrence_indexed_constraint_modules_have_valid_class_names_and_parse` | bracket-strip in `_constraint_module_type` | `'TheDesignCCell[0]NonnegConstraintModule'.isidentifier()` is `False` |
+| `test_occurrence_indexed_aggregator_fields_are_valid_identifiers_and_parse` | `sanitize_name(c.constraint_id)` | raw bracketed `constraint_id` used as a field name fails `.isidentifier()` |
+| `test_constraint_only_design_attribute_gets_real_default_not_none` | `design_attribute_default_value` wiring | minted entry point's `default_value` is `None` instead of `5000.0` |
+
+**Full-suite regression check (codegen venv, license present):**
+`SYSIDE_LICENSE_KEY=<key> uv run pytest tests/` -> **2236 passed, 4 skipped, 7 deselected
+(execution-marked), zero failures, zero errors.** `ruff check src/` clean. `mypy src/` — 76
+errors, baseline held exactly. Byte-identity (INV-7) re-confirmed:
+`test_graph_assembly.py::TestBaselineComparison`,
+`test_pipeline_e2e.py::TestBaselineComparison`,
+`test_e2e_output_registry.py::TestYamlDiffValidation` — 11/11 pass.
+
+All four audit cures (SC-2, SC-3, Break-the-YAML, three CI regression pins) are closed.
