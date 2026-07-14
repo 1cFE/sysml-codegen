@@ -1,6 +1,6 @@
 # Design: Docs + Explainer-Brief Refresh (post-CONSTRAINT-EXEC)
 
-**Status:** Draft
+**Status:** Complete (implemented 2026-07-13)
 **Owner:** Reid W
 **Created:** 2026-07-13
 **Branch:** constraint-exec-epic (sysml-codegen home; touches agentic-mbse, teax, fusion-tea)

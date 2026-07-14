@@ -1,6 +1,6 @@
 # Implementation Plan: Docs + Explainer-Brief Refresh (post-CONSTRAINT-EXEC)
 
-**Status:** Draft
+**Status:** Complete (implemented 2026-07-13)
 **Created:** 2026-07-13
 **Last Updated:** 2026-07-13
 **Branch:** constraint-exec-epic (sysml-codegen home; touches agentic-mbse, teax, fusion-tea)
@@ -96,30 +96,30 @@ reword), INV-1/2/3/5 (inherited-history bars), Implementation Notes (historical-
 Re-read each target region before editing (design cites were verified at 556e391; confirm they
 still match):
 
-- [ ] **Snapshot v3** — `27-snapshot-generation.md`: `:37` "Current: **1**" → **3**; `:40-43`
+- [x] **Snapshot v3** — `27-snapshot-generation.md`: `:37` "Current: **1**" → **3**; `:40-43`
       format-schema key list gains the **constraint-facts** section; `:58-64` narrative gains a
       **v2→v3 migration note**. (SC-1; survey L15-18)
-- [ ] **Snapshot matrix text** — `verification-matrix.md:506` REQ-SNAP-09: reword V1/V2 narration to
+- [x] **Snapshot matrix text** — `verification-matrix.md:506` REQ-SNAP-09: reword V1/V2 narration to
       cover v3 (reword in place, same REQ ID; count-neutral).
-- [ ] **ExpressionIR symbol set** — replace retired `ExpressionAST`/`build_expression_ast()`/
+- [x] **ExpressionIR symbol set** — replace retired `ExpressionAST`/`build_expression_ast()`/
       `compile_expression()` with `ExpressionIR` + current symbols (`compile_calc_def`,
       `classify_compilability`; rendering in `extraction/calc_compat_renderer.py`) across:
       `14-expression-compiler.md` (pervasive, ~lines 28-226); `16-computed-attributes.md`
       (`:15,62,156,157`); `19-ast-dispatch-invariant.md` (`:42,89`). (SC-1; survey L19-25)
-- [ ] **Matrix rows REQ-AST-06 (`:96`) and REQ-CA-02 (`:144`)** — reword text to name current
+- [x] **Matrix rows REQ-AST-06 (`:96`) and REQ-CA-02 (`:144`)** — reword text to name current
       symbols, **preserve the REQ IDs** (D5, count-neutral). Each reworded row must still describe
       what its cited test pins — confirm against the Test File column.
-- [ ] **ModuleKind gap (09-data-models.md)** — document all five `ModuleKind` values
+- [x] **ModuleKind gap (09-data-models.md)** — document all five `ModuleKind` values
       (`CALCULATION`/`FORMULA`/`AGGREGATION`/`CONSTRAINT`/`REPORT_AGGREGATOR`,
       `resolution/models.py:161-170`) on `PipelineModule.module_kind` (`:193`, required), **replacing
       the two retired bool-flag description**; add `constraint_catalog` to the `ComputationGraph`
       field list. (SC-2; survey L33-37)
-- [ ] **Render seams (08-generation.md)** — document the constraint + report-aggregator render
+- [x] **Render seams (08-generation.md)** — document the constraint + report-aggregator render
       seams. (SC-2)
-- [ ] **Lowering phase + REQ-PIPE-06 (00-pipeline-overview.md)** — name the constraint-lowering
+- [x] **Lowering phase + REQ-PIPE-06 (00-pipeline-overview.md)** — name the constraint-lowering
       phase in the step narrative; correct REQ-PIPE-06 (`:22` "all three module types"). (SC-2;
       survey L37)
-- [ ] **Lowering phase in overview narrative (overview.md)** — add the constraint-lowering phase to
+- [x] **Lowering phase in overview narrative (overview.md)** — add the constraint-lowering phase to
       the 7-step narrative. (SC-2; survey L38) **Do NOT touch the `:218` family count here** — that
       is finalized in Phase 2 after the recount.
 
@@ -146,9 +146,9 @@ git -C /home/reid/1cfe/sysml-codegen commit -- <same paths> \
 ```
 
 ### Validation
-- [ ] Retired-symbol grep clean outside marked history (gate above).
-- [ ] `09-data-models.md` shows all five ModuleKind values + `constraint_catalog`.
-- [ ] `git -C /home/reid/1cfe/sysml-codegen status` shows only the intended paths staged (no
+- [x] Retired-symbol grep clean outside marked history (gate above).
+- [x] `09-data-models.md` shows all five ModuleKind values + `constraint_catalog`.
+- [x] `git -C /home/reid/1cfe/sysml-codegen status` shows only the intended paths staged (no
       `.claude/`, no `.project/research/`).
 
 **What We Know Works After This Phase:** every existing sysml-codegen doc that taught a retired
@@ -186,24 +186,24 @@ Families = 32 (31 + CON), and `overview.md:218` equals 32 = gate green (SC-3, IN
 **See `design.md` for:** D1 (CON family shape, candidate rows, the `contract INV-*` vs design
 `INV-*` namespace split), D2 (doc 29 home + scope), INV-4 (recount procedure).
 
-- [ ] **New doc `29-contracts-and-sealing.md`** — cover `ModelContract`/`PackageContract`
+- [x] **New doc `29-contracts-and-sealing.md`** — cover `ModelContract`/`PackageContract`
       (`contracts/models.py:51,92`), `seal_package` (`contracts/seal.py:57`), verify-on-load
       (`contracts/verify.py`, `verify_package`), and the `seal` CLI subcommand
       (`cli/__init__.py:704,876`). One-concept-per-file; embedded catalog is the current reality
       (INV-3). (SC-3; D2)
-- [ ] **Doc 28 forward pointer** — `28-constraint-lowering-and-catalog.md:76-80` "Contracts (seam
+- [x] **Doc 28 forward pointer** — `28-constraint-lowering-and-catalog.md:76-80` "Contracts (seam
       disposition)" stub becomes a forward pointer to doc 29. (D2)
-- [ ] **CON matrix family** — add `CON — Contracts & Sealing` to the family Index and the
+- [x] **CON matrix family** — add `CON — Contracts & Sealing` to the family Index and the
       Requirements-by-Family section; rows anchored to `test_contract_models.py` (unit) and
       `test_seal_step9.py` (conformance). Settle exact row count/wording from D1's candidate list;
       follow the CL precedent of a short register + honest "partial coverage" note if the doc'd
       surface exceeds the pinned rows. Use `contract INV-*` labels only where D1 does (distinct
       namespace from this design's INV-1..6). (SC-3; D1)
-- [ ] **Recount (INV-4)** — after CON lands, recompute from the **family Index**: families 31→**32**;
+- [x] **Recount (INV-4)** — after CON lands, recompute from the **family Index**: families 31→**32**;
       total reqs +N(CON rows); distinct test files **+2** (confirm `test_contract_models.py` /
       `test_seal_step9.py` are net-new citations — neither appeared in a prior matrix-row grep).
       Update the **summary block AND the Index counts** together.
-- [ ] **overview.md:218** — set "29 requirement families" to **32** (= the recounted matrix family
+- [x] **overview.md:218** — set "29 requirement families" to **32** (= the recounted matrix family
       count). Register doc 29 (and doc 28 if still absent) in `overview.md`'s doc-list and component
       tables (`overview.md:148-192`). (INV-4; D2)
 
@@ -219,9 +219,9 @@ git -C /home/reid/1cfe/sysml-codegen commit -- <same paths> \
 ```
 
 ### Validation
-- [ ] Recount gate green: Index families = 32, summary = 32, `overview.md:218` = 32, all three agree.
-- [ ] Distinct-test-files count reflects +2 (confirm the two files were net-new).
-- [ ] Doc 29 covers all four contract/seal surfaces; doc 28 stub now points forward.
+- [x] Recount gate green: Index families = 32, summary = 32, `overview.md:218` = 32, all three agree.
+- [x] Distinct-test-files count reflects +2 (confirm the two files were net-new).
+- [x] Doc 29 covers all four contract/seal surfaces; doc 28 stub now points forward.
 
 **What We Know Works After This Phase:** contracts/sealing has a durable home and a tested matrix
 family; the matrix is internally consistent across summary / Index / overview.
@@ -264,18 +264,18 @@ grep -n '253\|30 families' .project/active/EXPLAINER_PROMPT.md
 EXPOSE_COMPUTED rejected — and not to resurrect retired ones). D4 (banner).
 
 **These are two distinct edits to the same file — list them separately:**
-- [ ] **Narrative slotting** — retire stale caveats ("constraints are dropped … no execution path",
+- [x] **Narrative slotting** — retire stale caveats ("constraints are dropped … no execution path",
       `resolve_input()` unwired); re-anchor to current HEAD; slot the eight areas into the existing
       4-act structure per the survey's map. Keep still-true honest caveats at their current hedge.
       (SC-6 bar a, narrative)
-- [ ] **Buildability infrastructure refresh (INV-6)** — (a) each of the eight areas gets a
+- [x] **Buildability infrastructure refresh (INV-6)** — (a) each of the eight areas gets a
       **responsibility-map row** naming its owner (module/symbol) and its reference-doc pointer,
       including the new/renamed homes (docs 28 and 29); (b) the **reading list** names the concrete
       data-source files (the new docs + `test_contract_models.py` / `test_seal_step9.py` for
       contracts/sealing); (c) any **reuse-guidance delta** vs the Gen-1 machinery is stated; (d) the
       stale reading-list count (`~:189` "253 … 30 families") corrected to the Phase-2 recount.
       (SC-6 bar a, buildability; INV-6)
-- [ ] **Gen-1 HTML banner (D4)** — insert a small fixed banner at top-of-`<body>` in
+- [x] **Gen-1 HTML banner (D4)** — insert a small fixed banner at top-of-`<body>` in
       `.project/diagrams/new_pipeline_explainer.html`: "Superseded — predates CONSTRAINT-EXEC /
       PIPELINE-TRUTH; see `EXPLAINER_PROMPT.md` for the current brief." One-element insert only;
       patching the 268 KB content is a Non-Goal.
@@ -290,11 +290,11 @@ git -C /home/reid/1cfe/sysml-codegen commit -- <same paths> \
 ```
 
 ### Validation
-- [ ] Mechanical grep clean (gate a); eight areas present; buildability rows + reading-list sources
+- [x] Mechanical grep clean (gate a); eight areas present; buildability rows + reading-list sources
       present; cited matrix counts = 32 families (match Phase 2).
-- [ ] Judgment spot-read (gate b): sample ~5-8 remaining claims, verify each against `src/` — none
+- [x] Judgment spot-read (gate b): sample ~5-8 remaining claims, verify each against `src/` — none
       contradicted.
-- [ ] Banner renders at top-of-body; Gen-1 content otherwise untouched.
+- [x] Banner renders at top-of-body; Gen-1 content otherwise untouched.
 
 **What We Know Works After This Phase:** the v2 brief is truthful and buildable-from-the-brief-alone;
 a reader opening the Gen-1 HTML directly sees the supersession signal.
@@ -328,12 +328,12 @@ Retired vocabulary zero-hit after edit = gate green (SC-4).
 full architecture doc — durability is the bar: the page must stand on its own for the mental model
 so it survives `.project/` archival).
 
-- [ ] **Decision-table reword** — `docs/subtype-enumeration-decision-table.md:13-14,18,24,33-35`:
+- [x] **Decision-table reword** — `docs/subtype-enumeration-decision-table.md:13-14,18,24,33-35`:
       speak profile vocabulary; drop `is_droppable_constraint` / "dropped predicates" / "documented
       v2 limitation, revisited by the constraint-execution epic". (SC-4; survey L47-50)
-- [ ] **MODELING_GUIDE.md:280** — patterns index no longer says "constraints.md | … not
+- [x] **MODELING_GUIDE.md:280** — patterns index no longer says "constraints.md | … not
       executable". (SC-4; survey L51-52)
-- [ ] **New durable page** — a real `docs/` page carrying the core mental model for ConstraintFacts
+- [x] **New durable page** — a real `docs/` page carrying the core mental model for ConstraintFacts
       (neutral schemas + extraction, Item 1) and production `ExpressionIR` (Item 2): what each is,
       why it exists, key types/modules — then a pointer to the archived `.project/` design artifacts
       for full depth. Settle the precise location in the `docs/` tree (unread this session — inspect
@@ -353,10 +353,10 @@ git -C /home/reid/1cfe/agentic-mbse commit -- <same paths> \
 ```
 
 ### Validation
-- [ ] Re-grep cites matched before editing (or a miss recorded).
-- [ ] Retired vocabulary gone; MODELING_GUIDE:280 corrected; new page stands alone for the mental
+- [x] Re-grep cites matched before editing (or a miss recorded).
+- [x] Retired vocabulary gone; MODELING_GUIDE:280 corrected; new page stands alone for the mental
       model (pointer rot would not erase the core story).
-- [ ] Staged paths only; no unrelated files.
+- [x] Staged paths only; no unrelated files.
 
 **What We Know Works After This Phase:** agentic-mbse no longer contradicts its own `constraints.md`;
 ConstraintFacts/ExpressionIR have a durable home.
@@ -388,7 +388,7 @@ grep -n 'entry_models' docs/evaluation-and-study.md
 
 **See `design.md` for:** Architecture "teax" bullet.
 
-- [ ] **`docs/evaluation-and-study.md`** (`:51` currently describes typed entry generically) —
+- [x] **`docs/evaluation-and-study.md`** (`:51` currently describes typed entry generically) —
       document the `entry_models` property as the channel→typed-model map derived from the pipeline
       spec (defined `evaluator.py:107`). (SC-5; survey L59-62)
 
@@ -402,8 +402,8 @@ git -C /home/reid/1cfe/teax commit -- docs/evaluation-and-study.md \
 ```
 
 ### Validation
-- [ ] Re-grep cite matched before editing.
-- [ ] `entry_models` documented as the channel→typed-model map.
+- [x] Re-grep cite matched before editing.
+- [x] `entry_models` documented as the channel→typed-model map.
 
 **What We Know Works After This Phase:** teax docs name the mechanism callers use for entry types.
 
@@ -438,13 +438,13 @@ python -m py_compile exploration/ife_e2e/study/bench_prepare_once.py exploration
 **See `design.md` for:** Architecture "fusion-tea" bullet, Implementation Notes "alias sequencing
 caveat" (default is *drop*, decided at orchestration 2026-07-13).
 
-- [ ] **`pipeline-walkthrough.html`** (repo root) — add a pointer/retirement note only (settled: note
+- [x] **`pipeline-walkthrough.html`** (repo root) — add a pointer/retirement note only (settled: note
       only, not a content rewrite). (SC-7; survey L88)
-- [ ] **`bench_prepare_once.py:36,61`** — drop the `module.ToyPlantParams = module.IfePlantParams`
+- [x] **`bench_prepare_once.py:36,61`** — drop the `module.ToyPlantParams = module.IfePlantParams`
       alias at both sites. (SC-7; survey L90-91)
-- [ ] **`run_viability_study.py:135`** — drop the alias; **`:130`** — remove the now-stale comment.
+- [x] **`run_viability_study.py:135`** — drop the alias; **`:130`** — remove the now-stale comment.
       (SC-7)
-- [ ] Note in the commit body: after the drop, the scripts require a teax with CE-F3 (`0d606a4`);
+- [x] Note in the commit body: after the drop, the scripts require a teax with CE-F3 (`0d606a4`);
       they are exploration drivers (not CI-gated) already running against epic-branch teax — safe.
 
 **Minimal check (this is the one code change):** `py_compile` of the two edited scripts (gate above).
@@ -461,9 +461,9 @@ git -C /home/reid/1cfe/fusion-tea commit -- <same paths> \
 ```
 
 ### Validation
-- [ ] Re-grep cites matched before editing (or a miss recorded).
-- [ ] `ToyPlantParams` zero-hit under `exploration/ife_e2e/study/`; both scripts `py_compile` clean.
-- [ ] Walkthrough carries the retirement note.
+- [x] Re-grep cites matched before editing (or a miss recorded).
+- [x] `ToyPlantParams` zero-hit under `exploration/ife_e2e/study/`; both scripts `py_compile` clean.
+- [x] Walkthrough carries the retirement note.
 
 **What We Know Works After This Phase:** fusion-tea has no stale alias residue and its walkthrough
 signals its own staleness.
@@ -481,12 +481,12 @@ None new — this is administrative close-out (SC-9 + tracking hygiene).
 
 ### Changes Required
 
-- [ ] **BACKLOG** — `.project/backlog/BACKLOG.md` (NOT a repo-root `BACKLOG.md` — that path does not
+- [x] **BACKLOG** — `.project/backlog/BACKLOG.md` (NOT a repo-root `BACKLOG.md` — that path does not
       exist): register the **v2 HTML build** follow-on (`pipeline_explainer_v2.html`), pointing at
       the refreshed `EXPLAINER_PROMPT.md` brief. Not built here. (SC-9)
-- [ ] **CURRENT_WORK** — `.project/CURRENT_WORK.md`: update the docs-explainer-refresh entry to
+- [x] **CURRENT_WORK** — `.project/CURRENT_WORK.md`: update the docs-explainer-refresh entry to
       reflect completion across the four repos.
-- [ ] **Checkbox reconciliation** — tick the Success-Criteria boxes in `spec.md` and mark
+- [x] **Checkbox reconciliation** — tick the Success-Criteria boxes in `spec.md` and mark
       `design.md`/this `plan.md` status Complete; fill the Implementation Notes section below with
       what actually changed and any cite drift found.
 
@@ -503,9 +503,9 @@ git -C /home/reid/1cfe/sysml-codegen commit -- <same paths> \
 ```
 
 ### Validation
-- [ ] BACKLOG carries the v2 HTML follow-on pointing at the brief.
-- [ ] CURRENT_WORK + spec/design/plan checkboxes reconciled.
-- [ ] **Do NOT push** — the orchestrator pushes all four repos at the end.
+- [x] BACKLOG carries the v2 HTML follow-on pointing at the brief.
+- [x] CURRENT_WORK + spec/design/plan checkboxes reconciled.
+- [x] **Do NOT push** — the orchestrator pushes all four repos at the end.
 
 **What We Know Works After This Phase:** the follow-on is registered; tracking reflects the completed
 sweep.
@@ -533,32 +533,183 @@ executable check is `py_compile` on the two fusion-tea scripts (Phase 6). agenti
 [TO BE FILLED DURING IMPLEMENTATION]
 
 ### Phase 1 Completion
-**Completed:**
+**Completed:** 2026-07-13
 **Actual Changes:**
-**Cite drift / issues:**
+- `27-snapshot-generation.md`: version 1→3; added the three v3 sections (`constraint_facts`,
+  `part_occurrences`, `constraint_lowering_mode`) to the format-schema list; added a v2→v3
+  migration note (hard cutover, no coexistence).
+- `verification-matrix.md`: REQ-SNAP-09 reworded (current: 3, no coexistence); REQ-AST-06
+  reworded + Test File re-pointed to `test_expression_compiler.py` (see drift note);
+  REQ-CA-02 reworded to the ExpressionIR render path; REQ-EC-02 reworded off `BINARY_OP`;
+  REQ-PIPE-06 reworded off "all three module types" onto `module_kind`.
+- `14-expression-compiler.md`: pervasive rewrite of the compiler flow to the current two-step
+  path (`extract_expression_ir` → `render_calc_expression`, orchestrated by
+  `compile_calc_def`); IR section rewritten to agentic-mbse's `ExpressionIR` tagged union; REQ
+  rows, example, reference-handling, pipelines table, related-docs all re-projected. Retired
+  symbols remain only in explicitly-marked "this replaced X in Item 13" history notes.
+- `16-computed-attributes.md`: REQ-CA-02 + FORMULA-compilation steps re-anchored to the render
+  path; the two `is_computed_attribute=True` occurrences (`:61`, example `:340`) → `module_kind=ModuleKind.FORMULA`.
+- `19-ast-dispatch-invariant.md`: REQ-AST-06 reworded; dual-check table's `build_expression_ast`
+  row removed with a cross-repo note (see drift).
+- `09-data-models.md`: PipelineModule bool-flag description → `module_kind` (5 values, required)
+  + `output_schema_type`; added `constraint_catalog` + a `ConstraintCatalog` entry to the
+  ComputationGraph section; model_fields count 5→6 (confirmed by `test_graph_assembly.py:372`);
+  enum table's retired `ExpressionNodeType` row → `ModuleKind`; concrete example uses
+  `module_kind=`; corrected a stale `¹` footnote (inherited-attr "misclassified" claim — doc 16
+  documents it FIXED, TRUTH-DEBT Item 4).
+- `08-generation.md`: new "Module-Kind Render Seams" section (per-seam CONSTRAINT/REPORT_AGGREGATOR
+  dispatch table, shared predicates module, fail-loud `unrenderable_module_kind_error`), pointing
+  at doc 28 for mechanism.
+- `00-pipeline-overview.md`: REQ-PIPE-06 reworded; constraint-lowering phase ([P1 RESOLVE], Step
+  5.7) named in the Step-5 narrative; "3 module types" claims corrected. `overview.md`:
+  constraint-lowering phase added to the 7-step narrative + nav index (did NOT touch `:218` — Phase 2).
+
+**Cite drift / issues (discoveries beyond the survey inventory):**
+1. **REQ-AST-06 was retired in CONSTRAINT-EXEC Item 13**, not merely symbol-renamed. Its cited
+   test (`test_ast_dispatch_invariant.py`) explicitly retired it (lines 399-403) and moved
+   feature-chain-rejection coverage to `test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error`.
+   Applied D5's intent: kept the REQ ID, reworded to the render path, and re-pointed the matrix
+   Test File to the actually-covering test. Count-neutral (both test files remain cited elsewhere).
+2. **Doc 19 dispatch inventory drifted beyond the `:89` cite.** `build_expression_ast` dropped
+   (Item 13); `reconstruct_expression` moved cross-repo to agentic-mbse `sysml/expression.py`;
+   the audited aggregation dispatch is now agentic `_decompose_node` (per `DUAL_CHECK_SITES`).
+   Fixed the flagged `build_expression_ast` row and framed the prose table as illustrative,
+   pointing at the authoritative `DUAL_CHECK_SITES`. **FOLLOW-ON:** a full doc-19 dispatch-inventory
+   re-audit (the `reconstruct_expression`/`_walk_aggregation_ast` rows, the "8 functions / 6
+   files" claim) is out of this item's surveyed scope — flag for a doc-19 audit.
+3. **`ExpressionNodeType` enum** (doc 09 enum table) was retired with the `ExpressionAST` path —
+   replaced with `ModuleKind` + a retirement footnote (INV-5 on an edited doc).
+4. **MAJOR SURFACING — `is_computed_attribute`/`is_aggregation` → `module_kind` migration is
+   un-swept in the MF family.** The retired bool flags survive as LIVE claims in
+   `05-module-factory.md` (pervasive: `:20` REQ-MF-03, `:41-42`, `:110`, `:128`, `:206`, `:228`),
+   `22-output-schema-rules.md:179`, and `verification-matrix.md:337` (REQ-MF-03 — its own cited
+   test `test_factory_formula.py` now pins `module_kind==ModuleKind.FORMULA`). This coherent
+   surface was NOT in the survey inventory. Left OUT of scope per B1 + the "no full verify-every-doc
+   scrub" Non-Goal, and to avoid a matrix-vs-doc-05 divergence a partial fix would create. Fixed
+   only the doc-09 / doc-16 occurrences that fell inside docs this phase already edited.
+   **RECOMMENDED FOLLOW-ON: a "module_kind migration doc sweep" (doc 05 + doc 22 + MF matrix family).**
 
 ### Phase 2 Completion
-**Completed:**
+**Completed:** 2026-07-13
 **Recount result (families / total reqs / distinct test files):**
-**Issues:**
+- Families **31 → 32** (Index count and body `### ` header count both = 32; agree).
+- Total reqs **264 → 274** (+10 CON rows; matrix REQ-row count = 274, matches summary).
+- PASS **263 → 273** (274 − 1 UNTESTED).
+- Distinct test files **71 → 73** (+2 net-new: `test_contract_models.py`, `test_seal_step9.py`;
+  both confirmed uncited before this phase, `grep -c` = 0). Verified column-scoped: distinct
+  test files in REQ rows = 73; removing the two CON files = 71 (exactly the prior baseline). A
+  raw whole-doc grep returns 74 because `test_computed_attributes_e2e.py` appears only in a CA
+  prose note, never a Test File column — it was never in the baseline 71 either. Summary,
+  Index, and `overview.md` all agree at 32 families.
+- `overview.md` family count was **29** (a pre-existing 2-family lag behind the matrix's 31) →
+  set to **32**.
+
+**Actual Changes:**
+- New `29-contracts-and-sealing.md` — covers `ModelContract` / `PackageContract`,
+  `build_model_contract` (graph-only, INV-1/INV-2 fingerprint), `seal_package` (coverage
+  policy, executable fingerprint), verify-on-load (`verify_package` diagnostics + verbatim
+  emission), Step-9 three-file emission, and the `seal` subcommand. Embedded-catalog framed as
+  current reality; CE-F1 (standalone catalog emission) referenced as an open follow-on (INV-3).
+- CON matrix family: Index entry + 10-row `### CON` block (REQ-CON-01..10) anchored to the two
+  test files; short "register + indirect-coverage note" per the CL precedent.
+- Doc 28 "Contracts (seam disposition)" stub → forward pointer to doc 29.
+- `overview.md`: doc 29 + doc 28 registered in the Deep-dives table (new "Constraint execution &
+  contracts" row) and Component Index (C28 Constraint Lowering & Catalog, C29 Contracts & Sealing).
+
+**Issues:** CON row count settled at 10 (D1 listed ~9 candidates; I mapped all 13 collected test
+cases from the two files onto 10 behavior-distinct rows, folding no-circularity into the
+fingerprint row and keeping the glob-matcher drift guard as its own row). Used `contract INV-*`
+labels only, with the namespace note, per D1.
 
 ### Phase 3 Completion
-**Completed:**
+**Completed:** 2026-07-13
+**Actual Changes:**
+- `EXPLAINER_PROMPT.md`: (1) narrative — re-anchored the header/branch/epic from
+  `pipeline-truth-epic` to `constraint-exec-epic`; retired the two now-false caveats
+  ("constraints are dropped / no execution path", "resolve_input not yet wired") into a
+  clearly-framed RETIRED block; kept the two still-true caveats at their hedge
+  (`attribute :>> = <expr>` dropped; EXPOSE_COMPUTED rejected); added CE-F1/F2 embedded-catalog
+  caveat; slotted the eight areas (module_kind coloring in L1; lowering/catalog/Kleene in L3;
+  contracts/sealing + executable profile in §2; snapshot v3 in the responsibility row + reading
+  list; new §8 constraint-execution centerpiece; new §9 teax study layer). (2) buildability infra
+  (INV-6) — 8 new responsibility-map rows (owner + doc pointer, incl. docs 09/28/29 and teax);
+  reading list gained docs 09/28/29, a new "constraint-execution data sources" item naming
+  `test_contract_models.py` / `test_seal_step9.py` + `constraint_lowering.py` /
+  `predicate_compiler.py`, corrected counts (253/30 families → **274/32**), and the CONSTRAINT-EXEC
+  epic archive; reuse-guidance delta stated (Gen-1 machinery ~70–80% reusable, content a rewrite).
+- `new_pipeline_explainer.html`: one sticky deprecation banner at top-of-`<body>` (D4);
+  268KB content otherwise untouched.
+
 **Judgment spot-read (claims sampled → verdict):**
-**Issues:**
+1. F4 cutover landed — `resolve_input(AGG_STRATEGIES)` called live (`graph_builder.py:1304,1517`),
+   `_resolve_aggregation_input_channel` deleted (no src def; commit `58adf4d`). → retiring the
+   caveat is TRUTHFUL, not a lie. ✓
+2. `collect_constraint_manifest` survives (`extractor.py:97`) → INV-2 bar met. ✓
+3. CE-F1 / CE-F2 registered as open follow-ons (`BACKLOG.md:685,688`), epic archived → INV-3 met. ✓
+4. Kleene: non-finite leaf → `unknown`/None with correct connective propagation
+   (`predicate_compiler.py:4-6`). ✓
+5. Snapshot v3 sections (`constraint_facts`/`part_occurrences`/`constraint_lowering_mode`),
+   ModelContract graph-only, seal CLI re-seal, REPORT_AGGREGATOR roll-up — all verified in
+   Phases 1–2. ✓
+6. teax `entry_models` — named in `docs/evaluation-and-study.md`; property confirmed in Phase 5.
+No sampled claim contradicted by HEAD.
+
+**Issues:** The spec/design listed "resolve_input() unwired" as a stale caveat to retire; I
+confirmed it actually landed at HEAD before retiring it (would otherwise have been a lie). Fixed
+a reading-list numbering collision from the inserted item.
 
 ### Phase 4 Completion
-**Completed:**
-**Cite re-grep result:**
-**Durable-page location chosen:**
+**Completed:** 2026-07-13 (agentic-mbse `constraint-exec-epic`)
+**Cite re-grep result:** All cites matched at HEAD before editing — decision-table `:13-14`
+(is_droppable_constraint/EXCLUDED_CONSTRAINT_TYPES), `:18` (report_dropped_constraints, dropped
+predicates), `:35` (documented v2 limitation, revisited by the epic); MODELING_GUIDE `:280`
+("not executable"). No misses.
+**Actual Changes:**
+- `subtype-enumeration-decision-table.md`: reframed the droppability intro as the
+  requirement-side exclusion (not "constraints unexecutable"); added a post-epic note that
+  CONSTRAINT-EXEC landed (asserts lower & execute); row 1 dropped the retired
+  `report_dropped_constraints` symbol (→ `collect_constraint_manifest` only) and "dropped
+  predicates" → "executable constraint usages (lowered under the profile)"; the `:35`
+  "documented v2 limitation, revisited by the epic" → "SysML v2 modelling reality; the epic has
+  landed." Links to the new durable page + `constraints.md`.
+- `MODELING_GUIDE.md:280`: "not executable" → "execution under the profile (ADMIT/BLOCK/unassessed)".
+- New durable page `docs/constraint-facts-and-expression-ir.md` — carries the standalone mental
+  model for `ConstraintFacts` (neutral schemas + `extract_constraint_facts`, Item 1) and
+  `ExpressionIR` (production predicate tree + `extract_expression_ir`, Item 2), then points to
+  the `.project/` artifacts for depth.
+**Durable-page location chosen:** `docs/constraint-facts-and-expression-ir.md` (top-level `docs/`,
+survives `.project/` archival — the D3 durability bar). No central docs index exists to register
+it (`source-index.md` is a SOURCE_INDEX *guide*, not a table of contents); discovery is via the
+decision-table link + the page's own back-links to `constraints.md`.
+**DEVIATION (surfaced per capture-fidelity Law 4):** the spec/design SC-4 said "no
+`is_droppable_constraint`", but that symbol is **live at HEAD** (`syside_adapter.py:418`, consumed
+by both repos as the requirement-side exclusion). Deleting an accurate reference to a live,
+load-bearing symbol would make the doc contradict HEAD (INV-5). Resolution: retired the *drop
+framing* built around it (which is what the survey actually flagged as stale) and **kept** the
+symbol reference, reframed as the requirement-side exclusion it truly is. So the literal gate
+grep still shows one `is_droppable_constraint` hit by design — the retired *vocabulary* ("dropped
+predicates", the retired `report_dropped_constraints` symbol, "revisited by the epic") is
+zero-hit.
 
 ### Phase 5 Completion
 **Completed:**
 **Cite re-grep result:**
 
 ### Phase 6 Completion
-**Completed:**
-**py_compile result:**
+**Completed:** 2026-07-13 (fusion-tea `main`)
+**Cite re-grep result:** matched — `bench_prepare_once.py:36,61`, `run_viability_study.py:135`
+(alias) + `:129-133` (stale comment). No misses.
+**Actual Changes:** dropped the `module.ToyPlantParams = module.IfePlantParams` alias at all
+three sites; removed the stale "third named gap" comment block in `run_viability_study.py`;
+added a sticky retirement banner to `pipeline-walkthrough.html` (note only, no content rewrite).
+**py_compile result:** `python` not on PATH; ran via `python3 -m py_compile` — both scripts
+COMPILE OK. Both scripts grep-clean of `ToyPlantParams`.
+**Note:** `exploration/ife_e2e/study/findings.md` still mentions `ToyPlantParams` (lines 89-93) —
+that is a spike *findings* doc recording why the bridge historically existed (a decision record in
+its designated home), not one of the driver scripts and not a live claim about HEAD. Out of the
+surveyed scope; left as history. The two code drivers (the item's only code change) are clean.
+Sequencing caveat noted in the commit: the scripts now require a teax with CE-F3 (`0d606a4`) —
+they are exploration drivers already running against epic-branch teax, so safe.
 
 ### Phase 7 Completion
 **Completed:**

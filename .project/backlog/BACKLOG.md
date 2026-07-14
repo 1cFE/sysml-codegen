@@ -692,4 +692,32 @@ and each a claim-narrowing on a certified item that should become real work, not
   model from the pipeline spec; consumers migrated; a source-scan guard test now blocks any
   model-specific fixture symbol in simkit source (the leak class the import-scan isolation leg
   cannot see). fusion-tea's alias bridge in the two driver scripts is now unnecessary (harmless;
-  retire with the docs sweep).
+  retire with the docs sweep — **done** 2026-07-13, docs-explainer-refresh Phase 6, fusion-tea `bfff2b4f`).
+
+## docs-explainer-refresh follow-ons (registered at item close, 2026-07-13)
+
+The docs-explainer-refresh sweep re-projected the four repos' teaching surfaces onto
+post-CONSTRAINT-EXEC HEAD and rewrote `EXPLAINER_PROMPT.md` into a buildable v2 brief. It
+registered three follow-ons:
+
+- **[V2-HTML-BUILD] Build `pipeline_explainer_v2.html` from the refreshed brief — P2.** The
+  deliverable of docs-explainer-refresh was the *brief* (`.project/active/EXPLAINER_PROMPT.md`),
+  re-anchored to `constraint-exec-epic` HEAD with the eight constraint-exec areas slotted and its
+  buildability infrastructure refreshed (responsibility-map rows, reading-list data sources,
+  corrected matrix counts 274/32, reuse-guidance delta). This item is the actual v2 HTML build a
+  separate agent picks up: build the self-contained interactive explainer per the brief, save to
+  `.project/diagrams/pipeline_explainer_v2.html` (do not overwrite the deprecated Gen-1
+  `new_pipeline_explainer.html`). Not built by the refresh item ([OWNER] 2026-07-13: "update the
+  EXPLAINER_PROMPT.md. I will have another agent pick this up.").
+- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — P3.** The refresh fixed
+  the surveyed `build_expression_ast` cite but found the wider `19-ast-dispatch-invariant.md`
+  prose table (`reconstruct_expression` now in agentic-mbse `sysml/expression.py`; the audited
+  aggregation dispatch is now agentic `_decompose_node`) and the "8 functions / 6 files" claim
+  drifted vs the test's current `DUAL_CHECK_SITES`. Out of the refresh's surveyed scope; the table
+  now points at the authoritative test inventory. A full doc-19 re-audit reconciles the prose.
+- **[MODULEKIND-DOC-SWEEP] Sweep the retired `is_computed_attribute`/`is_aggregation` → `module_kind`
+  migration through the MF family — P3.** The refresh corrected doc 09 + doc 16, but the retired
+  bool flags survive as live claims in `05-module-factory.md` (pervasive), `22-output-schema-rules.md:179`,
+  and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
+  `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would
+  split the matrix from doc 05); this item sweeps them together.

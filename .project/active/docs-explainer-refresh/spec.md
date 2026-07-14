@@ -1,6 +1,6 @@
 # Spec: Docs + Explainer-Brief Refresh (post-CONSTRAINT-EXEC)
 
-**Status:** Draft
+**Status:** Complete (implemented 2026-07-13)
 **Owner:** Reid W
 **Created:** 2026-07-13
 **Complexity:** MEDIUM
@@ -23,7 +23,7 @@ file they open.
 
 ## Success Criteria
 
-- [ ] **The surveyed inventory is corrected.** (Scope: the stale claims inventoried in
+- [x] **The surveyed inventory is corrected.** (Scope: the stale claims inventoried in
       `staleness-survey.md` + the named gap areas — not a repo-wide scrub; see Non-Goals.)
       - Snapshot docs say v3 with the constraint-facts section and a v2→v3 note
         (27-snapshot-generation.md, REQ-SNAP-09).
@@ -32,23 +32,23 @@ file they open.
         `ExpressionAST`/`build_expression_ast`/`compile_expression` references outside
         deliberate historical notes.
       - `overview.md` family count matches the matrix.
-- [ ] **The new machinery is documented where its siblings are.** `ModuleKind` (all five
+- [x] **The new machinery is documented where its siblings are.** `ModuleKind` (all five
       values) appears in 09-data-models.md (PipelineModule, replacing the retired bool-flag
       description; ComputationGraph gains `constraint_catalog`), 08-generation.md (constraint +
       report-aggregator render seams), and 00-pipeline-overview.md (REQ-PIPE-06 corrected; the
       lowering phase named in the step narrative and `overview.md`).
-- [ ] **Contracts/sealing has a home.** A reference doc covers `ModelContract` /
+- [x] **Contracts/sealing has a home.** A reference doc covers `ModelContract` /
       `PackageContract`, `seal_package`, verify-on-load, and the `seal` CLI subcommand; the
       verification matrix covers the family (shape of the family is design's call).
-- [ ] **agentic-mbse teaches one story.** `docs/subtype-enumeration-decision-table.md` speaks
+- [x] **agentic-mbse teaches one story.** `docs/subtype-enumeration-decision-table.md` speaks
       profile vocabulary (no `is_droppable_constraint` / "dropped predicates" / "revisited by
       the constraint-execution epic"); `MODELING_GUIDE.md:280` no longer says "not executable";
       ConstraintFacts and ExpressionIR have a durable `docs/` home (depth is design's call —
       at minimum an architecture pointer that survives `.project/` archival).
-- [ ] **teax names the mechanism.** `docs/evaluation-and-study.md` documents the
+- [x] **teax names the mechanism.** `docs/evaluation-and-study.md` documents the
       `entry_models` property (channel → typed model, derived from the pipeline spec) as the
       way callers obtain entry types.
-- [ ] **`EXPLAINER_PROMPT.md` is a truthful, buildable v2 brief.** Two bars, audited
+- [x] **`EXPLAINER_PROMPT.md` is a truthful, buildable v2 brief.** Two bars, audited
       differently:
       - *Mechanical checklist:* re-anchored off current HEAD (not `pipeline-truth-epic`);
         stale caveats retired ("constraints are dropped", `resolve_input()` unwired — grep
@@ -60,20 +60,20 @@ file they open.
       - *Judgment bar (Item 10's bar):* a spot-read of the remaining claims finds **no claim
         contradicted by HEAD**. The auditor samples claims and checks them against code; this
         is a read-and-verify pass, not a grep.
-- [ ] **New/edited docs keep the inherited history straight.** Checkable bar for the
+- [x] **New/edited docs keep the inherited history straight.** Checkable bar for the
       `[INHERITED]` cautions below: any doc this item writes or edits (a) describes
       `lower_constraints_enabled` as landed history (default-on, GRANDFATHERED empty) — never
       as a live drop path; (b) does not claim `collect_constraint_manifest` was removed; (c)
       references CE-F1 (standalone catalog emission) and CE-F2 (multi-channel bridge) as open
       follow-ons, never as landed behavior.
-- [ ] **fusion-tea residue closed.** `pipeline-walkthrough.html` carries a pointer/retirement
+- [x] **fusion-tea residue closed.** `pipeline-walkthrough.html` carries a pointer/retirement
       note; the two `ife_e2e/study` driver scripts drop the now-unneeded `ToyPlantParams`
       alias (default is *drop*, decided at orchestration 2026-07-13; three alias sites —
       `bench_prepare_once.py:36,61`, `run_viability_study.py:135` — plus the stale comment at
       `run_viability_study.py:130`. Sequencing caveat: the scripts then require a teax with
       CE-F3 (`0d606a4`); they are exploration drivers, not CI-gated, and already run against
       the epic-branch teax).
-- [ ] **The v2 HTML build is registered as its own follow-on item** (BACKLOG), pointing at the
+- [x] **The v2 HTML build is registered as its own follow-on item** (BACKLOG), pointing at the
       refreshed brief — not built here.
 
 ## Known Requirements

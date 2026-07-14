@@ -6,17 +6,25 @@
 
 ## Active Work
 
-### docs-explainer-refresh — SPEC DRAFTED (2026-07-13), ready for spec_review/design
+### docs-explainer-refresh — ✅ IMPLEMENTED (2026-07-13, all 7 phases; awaiting audit)
 
-Post-CONSTRAINT-EXEC docs + explainer-brief refresh across four repos. Spec:
-`.project/active/docs-explainer-refresh/spec.md`; evidence:
-`staleness-survey.md` alongside (spec-time survey — do not re-research). Scope: fix the
-surveyed stale claims (snapshot v1→v3 docs, retired ExpressionAST symbols, family counts),
-document the uncovered machinery (ModuleKind + constraint/aggregator seams, contracts/sealing
-reference + matrix family), reconcile agentic-mbse's decision table + MODELING_GUIDE index to
-the profile story, name teax's `entry_models`, and rewrite `EXPLAINER_PROMPT.md` truthful
-post-epic ([OWNER]: brief only — `pipeline_explainer_v2.html` build is a separate follow-on
-another agent picks up). Next: `/_my_spec_review` (fresh session), then `/_my_design`.
+Post-CONSTRAINT-EXEC docs + explainer-brief refresh across four repos. Spec/design/plan in
+`.project/active/docs-explainer-refresh/`. All 7 phases landed as one commit per phase per repo
+(not yet pushed — orchestrator pushes):
+- **sysml-codegen** (`constraint-exec-epic`): `0fad7bf` re-project stale surfaces onto HEAD
+  (snapshot v3, ExpressionIR, ModuleKind, lowering phase); `78a6a7d` new doc 29 contracts/sealing
+  + CON matrix family + recount to 32 families; `dbc60b8` `EXPLAINER_PROMPT.md` re-anchored + Gen-1
+  banner; Phase-7 close-out commit (this one).
+- **agentic-mbse** (`constraint-exec-epic`, PR #11): `9e24c93` decision-table reword + durable
+  ConstraintFacts/ExpressionIR page.
+- **teax** (`constraint-exec-epic`, PR #3): `4c96b99` document `PreparedEvaluator.entry_models`.
+- **fusion-tea** (`main`): `bfff2b4f` drop `ToyPlantParams` alias + walkthrough retirement note.
+
+Matrix recount landed at 32 families / 274 reqs / 73 test files (summary/Index/overview agree).
+Discoveries surfaced (registered in `.project/backlog/BACKLOG.md`): `[V2-HTML-BUILD]` (the actual
+v2 HTML build, [OWNER]: another agent), `[DOC19-DISPATCH-REAUDIT]`, `[MODULEKIND-DOC-SWEEP]`. See
+the plan's Implementation Notes for the full per-phase record + the `is_droppable_constraint`
+live-symbol deviation. Next: `/_my_audit`.
 
 ### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
 
