@@ -23,13 +23,15 @@ file they open.
 
 ## Success Criteria
 
-- [ ] **No doc contradicts HEAD.** The specific stale claims inventoried in
-      `staleness-survey.md` are corrected: snapshot docs say v3 with the constraint-facts
-      section and a v2→v3 note (27-snapshot-generation.md, REQ-SNAP-09); expression docs
-      (14/16/19-*.md + matrix rows REQ-AST-06, REQ-CA-02) teach `ExpressionIR` and the current
-      symbol set with zero remaining `ExpressionAST`/`build_expression_ast`/`compile_expression`
-      references outside deliberate historical notes; `overview.md` family count matches the
-      matrix.
+- [ ] **The surveyed inventory is corrected.** (Scope: the stale claims inventoried in
+      `staleness-survey.md` + the named gap areas — not a repo-wide scrub; see Non-Goals.)
+      - Snapshot docs say v3 with the constraint-facts section and a v2→v3 note
+        (27-snapshot-generation.md, REQ-SNAP-09).
+      - Expression docs (14/16/19-*.md + matrix rows REQ-AST-06, REQ-CA-02) teach
+        `ExpressionIR` and the current symbol set with zero remaining
+        `ExpressionAST`/`build_expression_ast`/`compile_expression` references outside
+        deliberate historical notes.
+      - `overview.md` family count matches the matrix.
 - [ ] **The new machinery is documented where its siblings are.** `ModuleKind` (all five
       values) appears in 09-data-models.md (PipelineModule, replacing the retired bool-flag
       description; ComputationGraph gains `constraint_catalog`), 08-generation.md (constraint +
@@ -46,16 +48,31 @@ file they open.
 - [ ] **teax names the mechanism.** `docs/evaluation-and-study.md` documents the
       `entry_models` property (channel → typed model, derived from the pipeline spec) as the
       way callers obtain entry types.
-- [ ] **`EXPLAINER_PROMPT.md` is a truthful, buildable v2 brief.** Re-anchored off
-      `pipeline-truth-epic` HEAD; stale caveats retired ("constraints are dropped",
-      `resolve_input()` unwired); the eight constraint-exec artifact areas slotted per the
-      survey's mapping (lowering phase, `module_kind` as a 4th+5th module family with colors,
-      Kleene modules as an Act-3 hard part, report aggregator, catalog, contracts/sealing in
-      the diagnostics-as-contract frame, snapshot v3 in operational reality, teax study layer
-      as the top-of-stack consumer). Same bar Item 10 used: **no claim contradicted by HEAD**.
+- [ ] **`EXPLAINER_PROMPT.md` is a truthful, buildable v2 brief.** Two bars, audited
+      differently:
+      - *Mechanical checklist:* re-anchored off current HEAD (not `pipeline-truth-epic`);
+        stale caveats retired ("constraints are dropped", `resolve_input()` unwired — grep
+        clean); the eight constraint-exec artifact areas slotted per the survey's mapping
+        (lowering phase, `module_kind` as a 4th+5th module family with colors, Kleene modules
+        as an Act-3 hard part, report aggregator, catalog, contracts/sealing in the
+        diagnostics-as-contract frame, snapshot v3 in operational reality, teax study layer
+        as the top-of-stack consumer).
+      - *Judgment bar (Item 10's bar):* a spot-read of the remaining claims finds **no claim
+        contradicted by HEAD**. The auditor samples claims and checks them against code; this
+        is a read-and-verify pass, not a grep.
+- [ ] **New/edited docs keep the inherited history straight.** Checkable bar for the
+      `[INHERITED]` cautions below: any doc this item writes or edits (a) describes
+      `lower_constraints_enabled` as landed history (default-on, GRANDFATHERED empty) — never
+      as a live drop path; (b) does not claim `collect_constraint_manifest` was removed; (c)
+      references CE-F1 (standalone catalog emission) and CE-F2 (multi-channel bridge) as open
+      follow-ons, never as landed behavior.
 - [ ] **fusion-tea residue closed.** `pipeline-walkthrough.html` carries a pointer/retirement
-      note; the two `ife_e2e/study` driver scripts drop (or mark historical) the now-unneeded
-      `ToyPlantParams` alias.
+      note; the two `ife_e2e/study` driver scripts drop the now-unneeded `ToyPlantParams`
+      alias (default is *drop*, decided at orchestration 2026-07-13; three alias sites —
+      `bench_prepare_once.py:36,61`, `run_viability_study.py:135` — plus the stale comment at
+      `run_viability_study.py:130`. Sequencing caveat: the scripts then require a teax with
+      CE-F3 (`0d606a4`); they are exploration drivers, not CI-gated, and already run against
+      the epic-branch teax).
 - [ ] **The v2 HTML build is registered as its own follow-on item** (BACKLOG), pointing at the
       refreshed brief — not built here.
 
