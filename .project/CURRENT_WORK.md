@@ -6,11 +6,16 @@
 
 ## Active Work
 
-### docs-explainer-refresh — ✅ IMPLEMENTED (2026-07-13, all 7 phases; awaiting audit)
+### docs-explainer-refresh — ✅ COMPLETE: audited Certify, pushed to the open PRs (2026-07-13)
 
-Post-CONSTRAINT-EXEC docs + explainer-brief refresh across four repos. Spec/design/plan in
-`.project/active/docs-explainer-refresh/`. All 7 phases landed as one commit per phase per repo
-(not yet pushed — orchestrator pushes):
+Post-CONSTRAINT-EXEC docs + explainer-brief refresh across four repos, run as a full
+orchestrated pipeline (spec_review → design → design_review → plan → implement → audit; all
+artifacts + stage briefs in `.project/active/docs-explainer-refresh/`). Audit
+PASS-WITH-NOTES cured to **Certify**: the three cross-repo legs probe-verified by the
+orchestrator (addendum in `audit.md`), Phase 5/7 notes reconstructed. Branches pushed
+(sysml-codegen/agentic-mbse full; teax already carried `4c96b99` via a concurrent owner push)
+with appended-commit comments on PRs #9 / #11 / teax#3; fusion-tea `bfff2b4f` stays local per
+the merge sequencing in Up Next. All 7 phases landed as one commit per phase per repo:
 - **sysml-codegen** (`constraint-exec-epic`): `0fad7bf` re-project stale surfaces onto HEAD
   (snapshot v3, ExpressionIR, ModuleKind, lowering phase); `78a6a7d` new doc 29 contracts/sealing
   + CON matrix family + recount to 32 families; `dbc60b8` `EXPLAINER_PROMPT.md` re-anchored + Gen-1
@@ -24,7 +29,7 @@ Matrix recount landed at 32 families / 274 reqs / 73 test files (summary/Index/o
 Discoveries surfaced (registered in `.project/backlog/BACKLOG.md`): `[V2-HTML-BUILD]` (the actual
 v2 HTML build, [OWNER]: another agent), `[DOC19-DISPATCH-REAUDIT]`, `[MODULEKIND-DOC-SWEEP]`. See
 the plan's Implementation Notes for the full per-phase record + the `is_droppable_constraint`
-live-symbol deviation. Next: `/_my_audit`.
+live-symbol deviation.
 
 ### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
 
@@ -468,12 +473,9 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 1. **Merge the CONSTRAINT-EXEC PR wave** (human): agentic-mbse #11 FIRST, then sysml-codegen #9
    (imports #11's symbols); teax rwestwood89/teax#3 independent; after #11+#9 merge, push
    fusion-tea: `git -C ~/1cfe/fusion-tea push origin main` (4 acceptance commits waiting).
-2. **docs-explainer-refresh**: `/_my_spec_review` in a fresh session, then `/_my_design`
-   (spec + staleness survey in `.project/active/docs-explainer-refresh/`; another agent picks
-   this up per owner).
+2. **pipeline_explainer_v2.html build** (`[V2-HTML-BUILD]`, P2): the refreshed
+   `EXPLAINER_PROMPT.md` is landed and buildable — another agent picks this up.
 3. **CE-F1/F2 follow-ons** (BACKLOG): standalone catalog emission (sysml-codegen/teax shape
    decision) and multi-channel CandidateBridge (teax). CE-F3 is fixed.
-4. **pipeline_explainer_v2.html build** — follow-on after the refreshed EXPLAINER_PROMPT.md
-   lands (registered via the docs-explainer-refresh spec).
 
 ---
