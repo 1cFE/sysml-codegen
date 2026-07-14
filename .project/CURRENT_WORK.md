@@ -1,258 +1,10 @@
 # Current Work
 
-**Last Updated**: 2026-07-08
+**Last Updated**: 2026-07-13
 
 ---
 
 ## Active Work
-
-### CONSTRAINT-EXEC Item 14 — Migration, Docs, and IFE Acceptance — DESIGN APPROVED-w-MUST-FIXES, REVISED (2026-07-13)
-
-Epic Item 14 (closing item). Spec: `.project/active/constraint-migration-acceptance/spec.md`;
-Design: `.project/active/constraint-migration-acceptance/design.md`; Review: `design-review.md`
-(Approved-with-must-fixes, all applied).
-
-**Design (2026-07-13, revised post-review):** Five workstreams across four repos. Key findings:
-(1) the manifest and `extract_constraint_facts` sweep the *identical* `ConstraintUsage` population,
-so a per-usage 1:1 mapping is provable. Concept line 102 defines "source record" as per applied
-*usage*, so the migration invariant is satisfiable **as written**; the per-usage join realizes it.
-The landed Item 7 `ConstraintCatalogSourceRecord` (per-*definition*) is a **recorded naming
-divergence** (no Item 7 rework), noted for epic close-out. The join reads two surfaces: catalog
-`concrete_entries` (eligible) + **`ctx.concrete_constraints`** (eligible=False unassessed — NOT the
-catalog, which filters to eligible). No every-definition-referenced arm (unused defs are legitimate
-inventory, never counted unassessed). (2) The `gain` gap is a materializer *tier miss* on an
-instance self-redefinition — verified in `design_overrides` (`owning_part_qn = hif_plant_pkg__hif_plant`,
-empty `target_path`, literal 80.0); fix = one new precedence case. (3) Snapshot `dropped_constraints`
-removal stays **within v3** (heterogeneous corpus after: 2 re-captured omit the key, 27 keep it as
-vestige). (4) Acceptance: one-run replay of both rules then delete the hand rule; committed table
-flags the `>`/`>=` boundary via an **epsilon window**, not `== 10.0`. W5b (teax loader seal wiring)
-is now a **precondition of W4**. Open for implement: catf_mfe eligible/unassessed *counts* (needs
-license, R1); exact agentic-mbse/teax doc file set (needs access); study-layer CLI-vs-API.
-**De-risk first: the gain fix (W1).** Next: `/_my_plan` or `/_my_implement`.
-
-**Prior (spec):** Spec: `.project/active/constraint-migration-acceptance/spec.md`.
-Retires the drop-manifest era (1:1 manifest→catalog mapping as a kept test; delete manifest +
-both blanket warnings; re-anchor the REQ-EXT-09 family on the catalog), flips authoring +
-architecture docs across all three repos, sweeps three recorded seams (GENERATOR_MISMATCH env
-axis, teax loader seal wiring, tracking-key correlation note), and passes the concept's IFE
-acceptance. **First work = the `gain` gap fix** (`materialize_supplied_values` must synthesize a
-top-level design-instance `:>>` self-redefinition) so `fusion_tea`'s `'Viability Threshold'`
-lowers and the two grandfathered fixtures re-land lowered (Item 8's GRANDFATHERED set → empty).
-**Surfaced blocker for implement:** fusion-tea (and agentic-mbse/teax) are outside this session's
-sandbox — the verbatim hand-coded viability rule and grid-classification ground truth could not be
-pinned; access must be granted before implement. Next: `/_my_spec_review` (fresh session).
-
-### CONSTRAINT-EXEC Item 9 — Contracts and Sealing (ModelContract / PackageContract) — AUDIT: Certify-with-notes (2026-07-13)
-
-**Audit (2026-07-13):** `audit.md` written; verdict **Certify-with-notes**, contingent on the
-listed live probes (test execution was blocked this session; evidence is static reading + plan's
-recorded green runs). All SC-1…SC-6 and D1–D8 / INV-1…INV-8 traced to code+tests. Notes (non-blocking):
-(1) the two `_glob_to_regex` copies (seal producer / verify consumer) have **no drift guard** — add
-a body-equality test; (2) `GENERATOR_MISMATCH` is an unreachable-but-reserved enum kind (documented
-seam — wire a `generator_version` axis at Item 10/14 or remove); (3) SC-5 graph-only test is a
-partial guard (purity holds by construction). Probe list in `audit.md`.
-
-
-
-Epic Item 9. Spec: `.project/active/package-contracts/spec.md`; Design:
-`.project/active/package-contracts/design.md`. Derives a graph-only `ModelContract` (parameter/
-output IDs, catalog-by-value, evaluation semantics, semantic fingerprint) and seals packages with
-a `PackageContract` (self-describing content-hash seal over generated + preserved artifacts +
-generator/runtime versions), verified on load with named diagnostics. Three S4 gaps closed
-(declared coverage set, missing-file detection, env-compat).
-
-Design decisions (all four spec Open Questions resolved, matching orchestrator guidance):
-- **Stencil/re-seal (D1/D2):** seal is Step 9 of `run_codegen` over final on-disk state (stubs or
-  preserved handwritten alike); a `seal` subcommand re-seals in place, recomputing **only** the
-  PackageContract (graph-free, license-free — the ModelContract is stencil-independent). A modified
-  stencil invalidating the seal until re-sealed is correct behavior.
-- **Env-compat (D5):** integrity checks always fatal; env-compat advisory-by-default,
-  strict-promotable. `generator_version` = `sysml_codegen.__version__`; `runtime_contract_version`
-  = pinned generator constant; the loading env's runtime marker is **injected at verify** (teax
-  passes its own) — generation never reads teax (keeps snapshot determinism).
-- **Format/canonicalization (D3):** `contracts/{model_contract,package_contract}.json` + a
-  stdlib-only `verify.py`. Fingerprint payloads reuse Item 7's `_canonical_json`
-  (`constraint_catalog.py:56`); on-disk bytes pretty-but-deterministic. Seal self-describes its
-  coverage policy + enumerated set (closes the coverage-set gap).
-- **teax seam (D7 + verify_package sig):** the `verify_package(dir, name, runtime_version, strict)`
-  signature and self-describing seal are fixed here; teax loader wiring (load-by-declared-name,
-  inject runtime marker, choose strict) is a mechanical Item 10 / Item 14 change, **not** this item.
-  A stdlib-only verifier is shipped verbatim inside the package so a teax env without sysml-codegen
-  can verify.
-- **Snapshot (D8):** contracts recomputed at generation on both paths, never persisted in the
-  snapshot; fingerprint parity inherits Item 8's byte-identity (the one SC-4 canary to run
-  live-vs-snapshot once Item 8 certifies).
-
-Next: `/_my_plan` (design_review only if a contested call surfaces — this is the S4-proven shape).
-
-### CONSTRAINT-EXEC Item 13 — Calc-Seam Cutover: Retire ExpressionAST — AUDITED: Certify-with-notes (2026-07-13)
-
-**Audit (2026-07-13):** `audit.md` — Certify-with-notes. Implementation is complete and correct
-by every static measure: seam + computed-attr flipped onto `ExpressionIR` + `calc_compat_renderer`,
-the six retired symbols deleted, grep gate green, corpus byte-identical across the item (git-clean,
-only 3 new golden files added), INV-1/3/4 + M2/M3 conformant, REQ-AST-04 invariant still dynamic
-(3/5). The 4→23 skip jump is fully accounted for (1+1+17 content-gated golden skips; no masked
-failures) and the count is arithmetically consistent only with a license-present run. Both unplanned
-fixes (literal kind-keying, mock-adapter redirect) are structural + regression-tested. **Notes:**
-this sandboxed session could not execute pytest/mypy/ruff, so live green suite / mypy-76 / ruff /
-`@requires_license` golden pass are plan-claimed + statically corroborated, not audit-reproduced —
-Requested Live Probes P1–P4 in audit.md list the exact confirmations. Minor latent: `_render_operator`
-treats any 1-operand node as unary minus without a `== "-"` guard (harmless under the corpus gate).
-
----
-
-### CONSTRAINT-EXEC Item 13 — Calc-Seam Cutover: Retire ExpressionAST — DESIGN reviewed, must-fixes folded (2026-07-13)
-
-Epic Item 13. Spec: `.project/active/expression-ast-cutover/spec.md`; Design:
-`.project/active/expression-ast-cutover/design.md`; Review:
-`.project/active/expression-ast-cutover/design-review.md` (Approved-with-must-fixes).
-Design-review must-fixes M1–M3 and nice-to-haves N1–N5 folded into design.md:
-- **M1** Stage-4 test surface scoped (~240 refs across 7 files): categorized retire /
-  re-anchor-onto-renderer; REQ-AST-04 dispatch counts updated 6→5 (multi-type) and 4→3 (FCE+OE),
-  since the renderer consumes IR (not raw-syside is_instance) and raw-node dispatch moves to the
-  reused agentic-mbse extractor.
-- **M2** literal rule pinned: `str(int|float value)` keyed on IR literal type. Orchestrator
-  settled B4 with evidence (production_facts.json: LiteralInteger→int, LiteralRational→float) —
-  no cross-repo fix; restated as evidence-backed fact, Stage-0 corpus gate (incl. integer output)
-  as backstop.
-- **M3** seam `member_names = output_names ∪ all_member_names` (cite `expression_compiler.py:388-393`).
-- **N1–N5** folded: Stage-0 production name-set provenance; dead renderer error-branch premise
-  stated; stale `hierarchy_resolver.py:54` comment; Item 8 already landed (df5ed97) so corpus is
-  fixed not moving (rebaseline onto HEAD); integer-literal calc output in the Stage-0 iterator.
-Remaining open (plan task 0, de-risk first): the extractor's public single-node entry point (R1). Executes S2's extract-and-migrate
-decision: move the three real `ExpressionAST` consumers (calc-compiler seam, computed
-attributes, snapshot replay of their results) onto `ExpressionIR` + a compat renderer, each a
-byte-identity-gated step, then delete `ExpressionAST` (grep gate on
-`ExpressionAST`/`build_expression_ast`/`compile_expression`). Orchestrator decision:
-**Option A** — retire ExpressionAST only, sysml-codegen-scoped.
-
-Design decisions:
-- **D1 renderer home:** new `extraction/calc_compat_renderer.py`, sibling-in-role to
-  `generation/predicate_compiler.py` — NOT a shared dual-mode module (`str`/`repr` and
-  `inputs.`/bare divergences + cross-layer use make merging a fork-per-branch; the two
-  renderers over one `ExpressionIR` is what the concept endorses).
-- **D2 extractor:** reuse agentic-mbse's landed syside→`ExpressionIR` extractor, not a
-  codegen-side rebuild (a second extraction path is the drift this epic removes). **Open,
-  de-risk-first:** confirm a public single-node entry point exists; if only whole-facts
-  extraction is exposed, a thin agentic-mbse wrapper is a cross-repo scope note (surfaced).
-- **D3 error parity:** renderer keeps `compile_expression`'s `python_ast.parse` validation and
-  raises the existing `CompilationError` so callers' `MANUAL_REQUIRED` fallback is unchanged.
-- **D4 deletion:** at cutover, convert the live old-vs-new parity test into a committed golden
-  so byte-identity stays gated after the old code is gone.
-- **Stages (each one commit, old code lives till Stage 4):** 0 land renderer+parity proof →
-  1 flip seam → 2 flip computed attrs → 3 verify snapshot replay → 4 delete+grep gate.
-  Per-stage comparand = the exact replaced function's output, golden-captured before the flip
-  (F4 rule). B1 (landed extractor renders byte-identically) is re-proven by the Stage-0 test,
-  not inherited from the spike.
-
-Baseline = post-Item-8 corpus; implement sequences after Item 8 certifies. Next:
-`/_my_design_review` (this item retires load-bearing code) then `/_my_plan`.
-
-### CONSTRAINT-EXEC Item 8 — Snapshot v3: Constraint Facts Load-Bearing — CERTIFIED (2026-07-13)
-
-**Audit:** `.project/active/snapshot-v3/audit.md` — Certify. All 5 spec success criteria met.
-Full suite 2256 passed (orchestrator-executed under license env); mypy 76 (baseline); ruff clean;
-mode-enum mutation probe confirms the rejection gate has teeth. Live/snapshot graph+catalog parity
-holds → **Item 9's fingerprint-stability canary preconditions are satisfied.** Grandfathered pair
-(`plant_values`/`fusion_tea`) captured flag-off, baselines byte-identical; the `gain` gap remains a
-named Item-14 prerequisite. d38_caret's `unhandled` drop cleared as pre-existing drift.
-
-
-Epic Item 8. Spec: `.project/active/snapshot-v3/spec.md`. Makes the neutral `ConstraintFacts`
-a load-bearing, versioned snapshot section (bump v2→v3), wires lowering into the from-snapshot
-rebuild path so live/snapshot produce byte-identical extended graphs, rejects stale/sectionless
-snapshots loudly, and flips `build_pipeline_context(lower_constraints_enabled=...)` default to
-True under a parity gate. Orchestrator decisions: (Q1) carve-out flag-off grandfather for
-`plant_values`/`fusion_tea` (the `gain` hierarchy-extraction gap becomes a named Item-14
-prerequisite, not just deferred); (Q2) serialize the neutral facts + part-instance occurrence
-data for true offline re-derivation parity. Next: `/_my_spec_review` then `/_my_design`.
-
-### CONSTRAINT-EXEC Item 7 — Constraint Module, Kleene Compiler, Aggregator, Catalog Generation — CERTIFY-WITH-NOTES (audited 2026-07-13)
-
-**Audit verdict (2026-07-13):** Certify-with-notes — see `audit.md`. Core delivered and
-statically correct (Kleene compiler, exit pin D1, INV-2/B5 guards, D11, 3 Phase-4 fixes,
-SC-1/SC-4). Two open notes: (1) three spec success criteria deferred — SC-2 indeterminate/
-negated-inline at execution, SC-3 modeled-default override, Break-the-YAML — SC-3 and
-Break-the-YAML have no test at any level; (2) the three Phase-4 bug fixes have no CI/offline
-regression test (only the manual execution lane catches them). Audit was **static-only** —
-the session could not execute python, so suite-green/mypy/ruff/3-of-3-execution are
-author-reported from run-log.md, not independently re-run.
-
-
-Epic Item 7. Spec: `.project/active/constraint-generation/spec.md`. Productionizes the S4
-vertical-slice emitters: fills the five `module_kind` generation seams (module-wrapper,
-pipeline-yaml, registry, test-gen, stencil) so `CONSTRAINT`/`REPORT_AGGREGATOR` modules
-render for real. Owner gate resolved: module identity = class-per-concrete-assertion
-([OWNER] Reid 2026-07-12, decided with the aggregator/class scale benchmark in the item
-directory). Live/snapshot byte-identity is spec'd as the Item 8 handoff gate, not an Item 7
-exit gate (snapshots can't carry facts until Item 8). Next: `/_my_spec_review`, then
-`/_my_design`.
-
-### CONSTRAINT-EXEC Item 5 — Concrete Constraint Lowering — SPEC REVISED post-review (2026-07-12)
-
-Spec review verdict Approved-with-must-fixes (`spec-review.md`); all 12 findings discharged
-against the landed Item 1/2 types at `.project/reference/agentic-mbse-landed/`. Key
-reconciliations: expansion now dispatches on the real four-value `OwningDefinitionFact.kind`
-(part_def/calc_def/package/requirement_def, each disposition stated); resolution is one ordered
-procedure (registry owner-scope → design-attr EP → modeled default → error); anonymous identity
-uses the landed `LocationFact`; the owner-kind × source-form axes are named orthogonal (inline
-and definition_typed both lower); multi-instance + inline are new success criteria S4 never
-proved. Next: `/_my_design`.
-
-
-Epic: `.project/backlog/epic_constraint_execution.md` (Item 5). Spec:
-`.project/active/constraint-lowering/spec.md`. New pipeline phase (after aliases/registry/
-supplied-value materialization, before backtracking): expand assertions per concrete instance
-(Item 4 index for part-def-owned, calc-usage discovery for calc-def-owned, once for
-direct-usage-owned), strictly resolve actuals through one shared resolver seam with an explicit
-strict mode (unresolved = generation error, never synthesis — heeds the F4 EP-key-collapse
-lesson), join constraint input channels as backtracking roots before pruning, and mint
-deterministic `constraint_id`s. Produces the extended ComputationGraph structure +
-`ConcreteConstraint` data; module/compiler/aggregator emission is Item 7. Depends on Items 1, 2,
-4 (all landed on the epic branch).
-
-### CONSTRAINT-EXEC Item 4 — Part-Instance Index (Subtype Closure + Cardinality Expansion) — audited CERTIFY-WITH-NOTES (2026-07-12)
-
-**Audit:** `.project/active/part-instance-index/audit.md`. Core deliverable solid: `occurrences_of`
-(the Item-5 entry point) is correct — fail-closed node-type cardinality gate, subtype-closure
-projection, entry-independent identity, integer-index ordering, set dedup. All five success
-criteria have correct tests; additive boundary structurally clean (three phase commits add six
-files, modify none). **Must-fix:** `all_occurrences()` / `all_source_owners()` silently swallow
-`NonFiniteCardinalityError` per-def — a third disposition (skip) reachable through a
-completeness-named public method, silently narrowing INV-2. Real defect in waiting: if Item 5
-iterates via the bulk API, a constraint-owning def with a blocked multiplicity vanishes with no
-signal (Design Principle 5 violation). Cure before Item 5: surface the blocked set, or remove/rename
-the bulk API. **Notes:** sandbox blocked all execution — live/venv gates (9/9 oracle, collision,
-4 blocking shapes, determinism, Cartesian; suite 2161/4; mypy 77; ruff) listed as Probes A–D for
-the orchestrator; verified statically only. Spec/epic checkboxes left unmarked pending probes + cure.
-
-Epic: `.project/backlog/epic_constraint_execution.md` (Item 4). Spec:
-`.project/active/part-instance-index/spec.md`. Production part-structure-owned instance index
-(subtype closure, retyped-path dedup, fixed-multiplicity expansion) so constraint lowering
-(Item 5) finds instances of constraint-only definitions. Consumes no fact schemas; additive to
-calc-driven discovery (byte-identity gate). S3 fixture promoted.
-
-### CONSTRAINT-EXEC Item 6 — `module_kind` and the Generation-Seam Refactor — audited CERTIFY-WITH-NOTES (2026-07-12)
-
-**Audit:** `.project/active/module-kind-refactor/audit.md`. Static gates all pass by execution
-(INV-4 zero-hit grep, baseline-diff shape = exact two-out/two-in-plus-null on 9 files,
-`output_schema_type` inert). All six dispatch sites + three construction sites + 7 seam-entry
-tests traced-correct against the design (incl. M1 two-arm, M2 registry guard-pass). Both test
-deletions sound (unconstructible under a single-value enum); docstring reword keeps INV-4 green.
-**Notes:** (1) sandbox blocked all Python execution — full suite / ruff / mypy / guard-mutation
-RED-GREEN recorded green but not run here; listed as probes P1–P4 in audit.md for the orchestrator.
-(2) spec "mypy clean" not literally met (78 pre-existing errors; reframed as "no new errors",
-consistent with standing project debt). Spec criteria 2 + 4 marked; 1/3/5/6 pending P1–P4.
-
-
-
-Epic: `.project/backlog/epic_constraint_execution.md` (Item 6). Spec:
-`.project/active/module-kind-refactor/spec.md`. Pure refactor: replace the two Boolean flags
-on `PipelineModule` (`is_computed_attribute`, `is_aggregation`) with a real five-member
-`module_kind` enum and make the four calc-shaped generation seams (S4-named) dispatch on it,
-byte-identically for existing kinds. Clears the path for Item 7 (constraint emission). Spec
-finding: `module_kind` is a graph field, not an extraction-snapshot field, so this is
-decoupled from Item 8's snapshot v3 bump.
 
 ### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
 
@@ -618,6 +370,18 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 
 
 ## Recently Completed
+
+### 2026-07-13: CONSTRAINT-EXEC Epic — Constraint Execution and Design-Space Studies
+- All 15 items (0–14) implemented, adversarially reviewed, and audit-certified across four
+  repos in one orchestrated run; independent findings audit reproduced every sampled claim
+  exactly (`completed/20260713_epic_constraint_execution_audit_independent.md`).
+- Modeled `assert constraint` now lowers to Kleene-compiled graph modules + exact-schema report
+  aggregator; snapshots carry constraint facts (v3); packages seal with verified-on-load
+  contracts; crash-safe study layer (evaluator → store/runner → policy/query/CLI); IFE
+  acceptance 2294/2301 + 7 model-favoring boundary rows ([OWNER] ratified); hand viability rule
+  deleted. CE-F3 fixed post-run (teax `0d606a4`); CE-F1/F2 registered follow-ons.
+- Gates at close: sysml-codegen 2330/23, mypy 76 baseline, ruff clean; agentic-mbse 1401/1;
+  teax fully green 262 (pre-existing path bug also fixed, `1b63272`).
 
 ### 2026-07-08: TRUTH-DEBT Epic
 - Archived all six audited items plus the epic ledger to `.project/completed/`.
