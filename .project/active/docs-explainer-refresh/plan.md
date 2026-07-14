@@ -692,8 +692,17 @@ predicates", the retired `report_dropped_constraints` symbol, "revisited by the 
 zero-hit.
 
 ### Phase 5 Completion
-**Completed:**
-**Cite re-grep result:**
+**Completed:** 2026-07-13 (teax `constraint-exec-epic`, commit `4c96b99`). *(Note recorded
+post-hoc by the orchestrator — the implement session ticked the boxes but left this note
+blank; flagged by audit, reconstructed from the commit + live probes.)*
+**Cite re-grep result:** matched — `docs/evaluation-and-study.md` had zero `entry_models`
+hits pre-edit; the generic typed-entry sentence at `:51` was the surveyed anchor.
+**Actual Changes:** `entry_models` named at `docs/evaluation-and-study.md:53` as the
+channel→typed-model map callers use for entry types; property verified live at
+`packages/teax-simkit/simkit/evaluation/evaluator.py:107` (CE-F3, `0d606a4`).
+**Orchestrator probe (2026-07-13):** both greps pass; commit present on branch. A concurrent
+owner-session commit pair (`6ab3fcc`/`1f4cb7c`, `docs/teax-study-explainer.html`) landed
+around this phase's commit — different file, no interaction.
 
 ### Phase 6 Completion
 **Completed:** 2026-07-13 (fusion-tea `main`)
@@ -712,8 +721,12 @@ Sequencing caveat noted in the commit: the scripts now require a teax with CE-F3
 they are exploration drivers already running against epic-branch teax, so safe.
 
 ### Phase 7 Completion
-**Completed:**
-**BACKLOG item id:**
+**Completed:** 2026-07-13 (sysml-codegen `constraint-exec-epic`, commit `d5328cc`). *(Note
+recorded post-hoc by the orchestrator — flagged by audit as blank; independently evidenced
+by the commit and the BACKLOG entries.)*
+**BACKLOG item id:** `[V2-HTML-BUILD]` (P2, `.project/backlog/BACKLOG.md:703`), plus the two
+discrepancy follow-ons `[DOC19-DISPATCH-REAUDIT]` (`:712`) and `[MODULEKIND-DOC-SWEEP]`
+(`:718`).
 
 ---
 
