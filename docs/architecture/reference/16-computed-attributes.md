@@ -12,7 +12,7 @@ compiles FORMULA patterns into Python code via the [expression compiler](14-expr
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
 | REQ-CA-01 | Classification SHALL produce exactly one of 5 values per attribute expression | `_classify_attribute_expression()` returns single `ComputedAttributeClassification` enum |
-| REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expression()` | Compilation path in extractor; compilability set to `FULLY_COMPILABLE` on success |
+| REQ-CA-02 | FORMULA attributes SHALL compile to Python via the ExpressionIR render path (`extract_expression_ir()` + `render_calc_expression()`) | Compilation path in extractor; compilability set to `FULLY_COMPILABLE` on success |
 | REQ-CA-03 | PartUsage-level EXPOSE_PURE SHALL produce a Phase-3 `ChannelAlias`; PartDef-level EXPOSE_PURE (shape A, `total_cost = cost_calc.cost` on a `part def`) SHALL be expanded per design instance into the structured `_scoped_alias` namespace by `_register_partdef_expose_scoped_aliases` (Item 10 #4), not silently skipped | `test_wi014_toy.py::test_wi014_toy_shape_a_resolves_offline_via_scoped_alias` — `("demo_plant","total_cost")` maps to the `demo_plant__…__cost_calc__cost` channel |
 | REQ-CA-10 | A well-formed multi-hop feature chain (part-typed waypoints, `reference_chain` ≥ 2 segments) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE` at the leaf (INV-E gate), then finalized in the registry confirm pass (Phase 3b) — resolved to a canonical channel → `EXPOSE_PURE` + alias, else reverted to `FORMULA`. No downstream reader may observe a surviving tentative (INV-F) | Leaf tag: `test_computed_attribute_extraction.py::test_multihop_chain_tagged_tentative`; confirm-pass flips: `test_ife_plant.py::test_cross_part_inputs_pinned_or_baseline` (direct-calc-output terminal) and `test_computed_attributes_e2e.py::test_catf_mfe_wired_after_item10` (alias-terminal hop) |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | Returns `LITERAL`; excluded by caller before adding to `ComputedAttributeData` list |
@@ -58,8 +58,8 @@ attribute dc_capacity = panel_count * panel_wattage;
 ```
 
 **Pipeline effect**: generates a synthetic [`PipelineModule`](09-data-models.md) with
-`is_computed_attribute=True` (REQ-CA-02). The expression compiles to Python via
-`build_expression_ast()` + `compile_expression()` ([expression compiler](14-expression-compiler.md)). Inputs wire to sibling
+`module_kind=ModuleKind.FORMULA` (REQ-CA-02). The expression compiles to Python via
+`extract_expression_ir()` + `render_calc_expression()` ([expression compiler](14-expression-compiler.md)). Inputs wire to sibling
 attribute channels or [entry points](06-entry-point-classifier.md).
 
 ### EXPOSE_PURE
@@ -153,8 +153,10 @@ For FORMULA attributes, the extractor immediately compiles the expression:
 
 1. Build `input_names` from sibling attributes (excluding self to prevent
    circular self-reference — REQ-CA-07).
-2. Call `build_expression_ast(expr, input_names, output_names=set())`.
-3. Call `compile_expression(ast_ir)` to produce Python string.
+2. Call `extract_expression_ir(expr)` to get the `ExpressionIR` tree (agentic-mbse).
+3. Call `render_calc_expression(ir, input_names, member_names=set())` to produce the Python
+   string. (`member_names` is empty here — a FORMULA cannot read sibling FORMULA outputs; see
+   the [FORMULA-to-FORMULA limitation](#formula-to-formula-limitation).)
 4. If compilation succeeds: `compilability = FULLY_COMPILABLE`.
 5. If `CompilationError`: `compilability = MANUAL_REQUIRED`, `compiled_expression = None`.
 
@@ -335,7 +337,7 @@ PipelineModule(
         ModuleInput("panel_wattage", source=entry_point("...solar_array__panel_wattage")),
     ],
     outputs=[ModuleOutput("root", channel="...solar_array__dc_capacity__dc_capacity")],
-    is_computed_attribute=True,
+    module_kind=ModuleKind.FORMULA,
     compilability=FULLY_COMPILABLE,
     compiled_expression="(inputs.panel_count * inputs.panel_wattage)",
 )

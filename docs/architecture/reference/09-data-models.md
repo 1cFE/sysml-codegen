@@ -51,7 +51,7 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 | `RedefinitionType` | `LITERAL`, `CHAIN`, `EXPRESSION` | `extraction/data_models.py` |
 | `ComputedAttributeClassification` ¹ | `FORMULA`, `EXPOSE_PURE`, `EXPOSE_COMPUTED`, `EXPOSE_CHAIN_TENTATIVE`, `LITERAL`, `UNRESOLVABLE` | `extraction/data_models.py` |
 | `Compilability` | `FULLY_COMPILABLE`, `PARTIALLY_COMPILABLE`, `MANUAL_REQUIRED`, `UNKNOWN` | `extraction/expression_compiler.py` |
-| `ExpressionNodeType` | `BINARY_OP`, `UNARY_OP`, `LITERAL`, `INPUT_REF`, `INTERMEDIATE_REF`, `UNSUPPORTED` | `extraction/expression_compiler.py` |
+| `ModuleKind` ² | `CALCULATION`, `FORMULA`, `AGGREGATION`, `CONSTRAINT`, `REPORT_AGGREGATOR` | `resolution/models.py` |
 | `BindingResolutionType` | `ENTRY_POINT`, `MODULE_OUTPUT` | `core/models.py` |
 | `EntryPointType` | `LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL` | `resolution/models.py` |
 
@@ -60,11 +60,18 @@ Every value listed (REQ-DM-02). These are the most common source of doc bugs.
 > pass (`build_output_registry`, `orchestration/output_registry_builder.py`) to
 > `EXPOSE_PURE` or reverted to `FORMULA`. No downstream reader ever observes it
 > (INV-F raises). `UNRESOLVABLE` is likely unreachable for well-formed SysML (SysIDE
-> always resolves attribute QNs). It exists as a defensive fallback. Inherited
-> attributes from supertypes are currently misclassified as `EXPOSE_COMPUTED` instead
-> of `FORMULA` due to Step 2b namespace prefix check failure — see
-> [16-computed-attributes](16-computed-attributes.md) Known Issues §Inherited
-> Attribute Misclassification.
+> always resolves attribute QNs). It exists as a defensive fallback. An attribute
+> referencing only inherited and/or local attributes classifies `FORMULA` (Step-2b now
+> prefix-matches the owning part QN OR any ancestor PartDef QN — the inherited-attr fix,
+> TRUTH-DEBT Item 4) — see [16-computed-attributes](16-computed-attributes.md) Known
+> Issues §Inherited Attribute Classification.
+>
+> ² `ModuleKind` is set once at `PipelineModule` construction and dispatched on at every
+> generation seam (`resolution/models.py`, CONSTRAINT-EXEC Item 6). It replaced the two
+> accreted Boolean flags `is_computed_attribute` / `is_aggregation` the module carried
+> before. (The retired `ExpressionNodeType` enum — `BINARY_OP` / `UNARY_OP` / … — went
+> with the `ExpressionAST` path in Item 13; the current IR is agentic-mbse's
+> `ExpressionIR`, see [14-expression-compiler](14-expression-compiler.md).)
 
 ## Name Type Wrappers
 
@@ -248,13 +255,25 @@ See [10-output-registry](10-output-registry.md) for the 4-phase protocol and typ
 **ComputationGraph** (BaseModel, `resolution/models.py`)
 `modules: list[PipelineModule]`, `entry_point_groups: list[ParameterGroup]`,
 `execution_order: list[str]`, `output_aliases: list[OutputAlias]`.
-The model also declares `fallback_entry_points: set[str]` but with `exclude=True`
-(Item 7 — an in-memory analysis artifact kept out of the serialized graph), so it
-is not a serialized field and is omitted from this list. `output_aliases` is the
-deliberate contrast (Item 11 / REQ-DM-09): a genuine schema field with **no**
-`exclude`, so it serializes on every graph (empty `[]` when the model has no
-EXPOSE_PURE derived attribute) and appears in the field-set conformance test.
-`ComputationGraph.model_fields` therefore has 5 entries; the serialized set is 4.
+The model also declares two `exclude=True` fields, both in-memory generation-boundary
+artifacts kept out of the serialized graph (so a constraint-free corpus's committed baselines
+stay byte-identical): `fallback_entry_points: set[str]` (Item 7) and
+`constraint_catalog: ConstraintCatalog | None` (CONSTRAINT-EXEC Item 7 / D6 — the assembled
+constraint catalog embedded on the graph, `None` when no constraint facts were admitted).
+Both are omitted from the serialized set. `output_aliases` is the deliberate contrast (Item 11
+/ REQ-DM-09): a genuine schema field with **no** `exclude`, so it serializes on every graph
+(empty `[]` when the model has no EXPOSE_PURE derived attribute) and appears in the field-set
+conformance test. `ComputationGraph.model_fields` therefore has 6 entries; the serialized set
+is 4.
+
+**ConstraintCatalog** (BaseModel, `resolution/models.py`)
+`source_records: list[ConstraintCatalogSourceRecord]`, `concrete_entries:
+list[ConstraintCatalogEntry]`, `fingerprint: str`. Assembled once from the pipeline context's
+concrete constraints (eligible entries) and constraint facts (source records), fingerprinted
+(sha256 of canonical JSON over the two lists), and set on the graph before generation — every
+seam that needs catalog data reads it from the graph, never from the context (CONSTRAINT-EXEC
+Item 7 / D6, "generation reads only the graph"). See
+[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md).
 
 **OutputAlias** (BaseModel, `resolution/models.py`)
 `alias_name: str`, `canonical_channel: str`, `instance_path: str`,
@@ -270,10 +289,19 @@ channel (INV-3). See [16-computed-attributes](16-computed-attributes.md) and
 **PipelineModule** (BaseModel, `resolution/models.py`)
 `name: str`, `module_type: str`, `inputs: list[ModuleInput]`, `outputs: list[ModuleOutput]`,
 `execution_order: int`, `compilability: Compilability`, `compiled_expression: str | None`,
-`is_computed_attribute: bool`, `is_aggregation: bool`, `auto_impl_context: dict | None`.
+`module_kind: ModuleKind` (**required**), `output_schema_type: str | None`,
+`auto_impl_context: dict | None`.
 Metadata carried from CalcDef / ComputedAttributeData / AggregationExpressionData:
 `calc_def_name: str | None`, `calc_def_qualified_name: str | None`, `doc_comment: str | None`,
 `calc_expressions: list[str] | None`, `source_file: str | None`, `source_line: int | None`.
+
+`module_kind` is the module's family, set once at construction and dispatched on at every
+generation seam (see [08-generation](08-generation.md)). It has five values —
+`CALCULATION`, `FORMULA`, `AGGREGATION`, `CONSTRAINT`, `REPORT_AGGREGATOR` — and **replaced**
+the two accreted Boolean flags `is_computed_attribute` / `is_aggregation` the module carried
+before CONSTRAINT-EXEC Item 6. `CONSTRAINT` (a lowered modeled assertion) and
+`REPORT_AGGREGATOR` (the run-report roll-up) are the two families the flag pair could not
+name.
 
 **ModuleInput** (BaseModel, `resolution/models.py`)
 `param_name: str`, `python_type: str`, `source: InputSource`,
@@ -321,7 +349,8 @@ ComputationGraph(modules=[
           qualified_name="BatteryPackCostCalc__cost_per_kwh")),
     ],
     outputs=[ModuleOutput("total_cost", "float", "battery_pack__cost_model__total_cost")],
-    execution_order=0, compilability=Compilability.FULLY_COMPILABLE,
+    execution_order=0, module_kind=ModuleKind.CALCULATION,
+    compilability=Compilability.FULLY_COMPILABLE,
     compiled_expression="capacity_kwh * cost_per_kwh"),
   PipelineModule(name="battery_system__total_cost", module_type="BatterySystemTotalCostModule",
     inputs=[
@@ -330,7 +359,7 @@ ComputationGraph(modules=[
           producer_channel="battery_pack__cost_model__total_cost")),
     ],
     outputs=[ModuleOutput("root", "float", "battery_system__total_cost__root")],
-    execution_order=1, is_aggregation=True),
+    execution_order=1, module_kind=ModuleKind.AGGREGATION),
 ], entry_point_groups=[
   ParameterGroup(name="design_params", class_name="DesignParams",
     source_file=Path("SolarBatteryDesign.sysml"), parameters=[

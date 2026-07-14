@@ -31,6 +31,8 @@ Generated package
 
 Orchestration (`orchestration/pipeline_builder.py`) coordinates these steps, threading intermediate data through a `PipelineContext`. See [02-orchestration](reference/02-orchestration.md) for the step-by-step sequence and ordering constraints.
 
+Within Step 5, after the output registry is final, a **constraint-lowering phase** ([P1 RESOLVE], `analysis/constraint_lowering.py`) turns eligible modeled assertions into two further module kinds — `CONSTRAINT` (a lowered predicate) and `REPORT_AGGREGATOR` (the run-report roll-up) — and assembles the `ConstraintCatalog` embedded on the graph. A constraint-free model produces neither and a byte-identical graph. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md).
+
 There is a second, license-free path into the same pipeline. `sysml-codegen snapshot` captures a versioned extraction snapshot from live models (`capture_snapshot` in `snapshot/capture.py` -- this capture step needs the live syside license). `generate --from-snapshot` (mutually exclusive with `--models`) then rebuilds the same `PipelineContext` from that JSON via `build_pipeline_context_from_snapshot` (`orchestration/snapshot_context.py`) -- Steps 2-7 run unchanged, with no license at runtime. The snapshot format carries a `snapshot_format_version` that hard-errors on mismatch. See [27-snapshot-generation](reference/27-snapshot-generation.md).
 
 ---
@@ -135,7 +137,7 @@ sysml_codegen/
    - [11-analysis-backtracker](reference/11-analysis-backtracker.md) -- dependency tracing via DFS
    - [03-resolution-overview](reference/03-resolution-overview.md) -- why input resolution is hard (270 combinations)
    - [06-entry-point-classifier](reference/06-entry-point-classifier.md) -- three entry point types
-   - [05-module-factory](reference/05-module-factory.md) -- three module types as pure data
+   - [05-module-factory](reference/05-module-factory.md) -- the three calc module kinds as pure data (constraint kinds in [28](reference/28-constraint-lowering-and-catalog.md))
    - [07-graph-assembly](reference/07-graph-assembly.md) -- topological sort and validation
    - [08-generation](reference/08-generation.md) -- Jinja2 rendering to Python, YAML, JSON
 4. **Data models** -- [09-data-models](reference/09-data-models.md) as a reference companion to any of the above

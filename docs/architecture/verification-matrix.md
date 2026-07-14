@@ -93,7 +93,7 @@ the documentation rather than executable code.
 | REQ-AST-03 | Among reference/operator branches, dispatch ordering SHALL be FCE, OE, FRE (the cited test pins this ordering clause only; literal-before-catch-all is REQ-AST-08's row) | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "uns... | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-06 | A feature-chain reference in a CalcDef output SHALL be rejected as unsupported by the renderer (`calc_compat_renderer._render_reference`), not misread as an operator | `test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error` | PASS |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(n... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal/`NullExpression` branches (via `is_instance`) before the invocation catch-all | `test_expression_reconstruction_fidelity.py`, offline totality guard | PASS |
 | REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand iff it binds looser than its parent, or equal and on the associativity-unfavored side | `test_expression_reconstruction_fidelity.py`, `test_expression_paren_helper.py` | PASS |
@@ -141,7 +141,7 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-CA-01 | Classification SHALL assign each attribute expression exactly one enum member | `test_computed_attributes.py` | PASS |
-| REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
+| REQ-CA-02 | FORMULA attributes SHALL compile to Python via the ExpressionIR render path (`extract_expression_ir()` + `render_calc_expression()`) | `test_computed_attributes.py` | PASS |
 | REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
 | REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | `test_computed_attributes.py` | PASS |
@@ -207,7 +207,7 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype ... | `test_expression_compiler.py` | PASS |
-| REQ-EC-02 | N-ary operands SHALL be left-folded into binary `BINARY_OP` nodes | `test_expression_compiler.py` | PASS |
+| REQ-EC-02 | N-ary operands SHALL be left-folded into nested binary operations | `test_expression_compiler.py` | PASS |
 | REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `test_expression_compiler.py` | PASS |
 | REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | `test_expression_compiler.py` | PASS |
 | REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `test_expression_compiler.py` | PASS |
@@ -428,7 +428,7 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 | REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 | REQ-PIPE-04 | `execution_order` SHALL be a valid topological sort -- no module reads from a module that... | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 | REQ-PIPE-05 | Every EntryPoint SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIB... | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
-| REQ-PIPE-06 | The graph SHALL include all three module types: CalcUsage, FORMULA, and Aggregation. | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
+| REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules (the `CONSTRAINT` / `REPORT_AGGREGATOR` families appear when constraints are lowered) | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 | REQ-PIPE-07 | Generation SHALL produce output exclusively from `ComputationGraph` -- no back-references... | `test_gen_module_wrappers.py`, `test_generation_boundary.py`, `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 
 ### PMM
@@ -503,7 +503,7 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 | REQ-SNAP-06 | Path fields are Path instances, not strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-07 | Enum fields are typed enum instances, not raw strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-08 | Promoted snapshot helpers live only in `src`; no second copy (INV-3) | `test_snapshot_contract.py` | PASS |
-| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` is a hard error before deserialization (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` (current: 3) is a hard error before deserialization — no v1/v2/v3 coexistence (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-10 | Re-captured expression-bearing snapshot carries `compilation_results` (INV-5) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-11 | Version-current snapshot missing `compilation_results` degrades with a warning (V4) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-12 | Stale source hash warns; run continues (V3) | `test_snapshot_contract.py` | PASS |

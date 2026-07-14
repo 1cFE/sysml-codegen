@@ -34,8 +34,18 @@ path).
 
 Top-level keys of `extraction_snapshot.json`:
 
-- `snapshot_format_version` (int) — gates loading. Current: **1** (`sysml_codegen.snapshot.SNAPSHOT_FORMAT_VERSION`).
+- `snapshot_format_version` (int) — gates loading. Current: **3** (`sysml_codegen.snapshot.SNAPSHOT_FORMAT_VERSION`).
 - `model_name`, `captured_at` (provenance).
+- `constraint_facts` — the neutral `ConstraintFacts` (agentic-mbse Item 1),
+  serialized via `agentic_mbse.sysml.constraint_facts.serialize`. Always present
+  (v3). The extraction-boundary predicate facts the offline path re-lowers from.
+- `part_occurrences` — `{owner_eqn: [occurrences]}`, the resolved per-owner
+  occurrence table (the transcript of the capture-time `lower_constraints` call);
+  `{}` when lowering did not run. Owner keys emitted sorted (INV-7/MF4).
+- `constraint_lowering_mode` — `"applied"` or `"grandfathered_off"` (Item 8, D3),
+  always present. `"grandfathered_off"` means the snapshot was captured with
+  lowering disabled and the offline path must skip re-lowering loudly, never infer
+  it from an empty section.
 - `compilation_results` — `{calc_def_name: CalcDefCompilationResult}`, the lowered
   Python expression strings that let a CalcUsage stencil auto-implement (SC-10).
 - `calc_defs`, `calc_usages`, `design_attributes`, `hierarchy_data`,
@@ -62,6 +72,14 @@ committed. Sentinels (`unknown`, `hierarchy`) pass through untouched.
 | **V5** every snapshot run | provenance banner to log/console (never into an artifact) |
 | **V6** `generate` extraction input | exactly one of `--models` / `--from-snapshot`; `--from-snapshot` + `--design-path-filter` is a hard error |
 | **V7** missing load-bearing field on a deserialized dict | not silently defaulted. A type/wiring/scoping field (`python_type`, `binding_type`, `parent_part_path`, `owning_part_def_qn`) warns and degrades to its default; a **keying** field (`qualified_name` on a calc usage or design attribute) raises `SnapshotFormatError` — a silent default would mis-key the output registry. The benign majority (`is_input`, `unit`, `source_line`, list fields, …) keeps its `.get(default)` untouched. TRUTH-DEBT Item 6, Site 1. |
+
+**v2 → v3 migration (CONSTRAINT-EXEC Item 8).** v3 added the three top-level
+constraint sections above (`constraint_facts`, `part_occurrences`,
+`constraint_lowering_mode`) so the offline path can re-lower modeled assertions
+without a license. The version gate is a hard cutover, not a compatibility shim:
+there is **no v2/v3 coexistence** (V1/V2 above), so a v1 or v2 snapshot is a hard
+error and every committed snapshot was re-captured at v3 in the same change. The
+loader never up-migrates an old snapshot in place.
 
 ## CLI
 
