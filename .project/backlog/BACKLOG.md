@@ -687,6 +687,9 @@ and each a claim-narrowing on a certified item that should become real work, not
   `model_contract.json` under different field names. Decide one canonical shape and align both sides.
 - **[CE-F2] Multi-channel CandidateBridge (teax, Item 12 surface).** The bridge builds only one
   entry channel's typed model; real packages have several. Extend to the full EntryPoint set.
-- **[CE-F3] PreparedEvaluator hardcoded fixture class (teax, Item 10 surface).** `__init__`
-  hardcodes `ToyPlantParams`, contradicting the runtime-never-references-generated-classes
-  invariant's spirit; derive from the package contract instead.
+- **[CE-F3] PreparedEvaluator hardcoded fixture class (teax, Item 10 surface).** ✅ FIXED
+  (2026-07-13, teax `0d606a4`, owner-approved): `entry_models` property derives channel → typed
+  model from the pipeline spec; consumers migrated; a source-scan guard test now blocks any
+  model-specific fixture symbol in simkit source (the leak class the import-scan isolation leg
+  cannot see). fusion-tea's alias bridge in the two driver scripts is now unnecessary (harmless;
+  retire with the docs sweep).
