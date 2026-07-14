@@ -72,12 +72,13 @@ never appears in `concrete_entries` — it stays visible only in
 split the manifest->catalog mapping test (`test_constraint_migration_mapping.py`,
 D1/INV-A) proves total: every usage the manifest sweeps lands in one of the two.
 
-## Contracts (seam disposition)
+## Contracts
 
-`contracts/verify.py` carries a `GENERATOR_MISMATCH` diagnostic reserved for a
-generator-version mismatch. Its disposition (wired vs. documented-and-removed) is
-recorded in this item's run report — see `.project/active/constraint-migration-
-acceptance/run-report.md`.
+The constraint catalog this component assembles is embedded by value on the package's
+semantic `ModelContract`, which — with the physical `PackageContract` seal and the
+emitted verifier — is documented in its own reference doc:
+[29-contracts-and-sealing](29-contracts-and-sealing.md). (`contracts/verify.py` carries
+a `GENERATOR_MISMATCH` diagnostic reserved for a generator-version mismatch.)
 
 ## What lives elsewhere
 

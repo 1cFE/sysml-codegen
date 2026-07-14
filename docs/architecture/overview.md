@@ -156,6 +156,7 @@ sysml_codegen/
 | Hierarchy resolution | [25](reference/25-hierarchy-resolver.md) |
 | PipelineModule migration | [26](reference/26-pipeline-module-migration.md) |
 | Snapshot-driven generation | [27](reference/27-snapshot-generation.md) |
+| Constraint execution & contracts | [28](reference/28-constraint-lowering-and-catalog.md), [29](reference/29-contracts-and-sealing.md) |
 
 ---
 
@@ -190,6 +191,8 @@ sysml_codegen/
 | C25 | JSON Template + Schema Generator | [08](reference/08-generation.md) | `generation/entry_point.py` |
 | C26 | PipelineModule Migration | [26](reference/26-pipeline-module-migration.md) | Cross-cutting (resolution + generation) |
 | C27 | Typed Registry Design Intent | [10](reference/10-output-registry.md) | Cross-cutting (core + analysis + resolution) |
+| C28 | Constraint Lowering & Catalog | [28](reference/28-constraint-lowering-and-catalog.md) | `analysis/constraint_lowering.py`, `generation/constraint_catalog.py`, `generation/predicate_compiler.py` |
+| C29 | Contracts & Sealing | [29](reference/29-contracts-and-sealing.md) | `contracts/model_contract.py`, `contracts/seal.py`, `contracts/verify.py` |
 | X01 | Type Mapping Consistency | [08](reference/08-generation.md) | `generation/type_mapping.py` |
 | X02 | Resolution Consistency | [24](reference/24-dual-resolution-architecture.md) | Cross-cutting (C11, C12, C14-C16) |
 
@@ -217,7 +220,7 @@ The following open issues are documented in the codebase. None block current pip
 
 ## Verification
 
-REQ-* tags are tracked across 29 requirement families; the [verification matrix](verification-matrix.md) summary carries the authoritative counts. A small remainder is marked UNTESTED there (design-only constraints or cross-cutting principles verified indirectly).
+REQ-* tags are tracked across 32 requirement families; the [verification matrix](verification-matrix.md) summary carries the authoritative counts. A small remainder is marked UNTESTED there (design-only constraints or cross-cutting principles verified indirectly).
 
 See [verification-matrix.md](verification-matrix.md) for the full REQ-to-test traceability matrix.
 

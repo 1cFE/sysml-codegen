@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 264 |
-| PASS (test exists and passes) | 263 |
+| Total requirements | 274 |
+| PASS (test exists and passes) | 273 |
 | UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
-| REQ families | 31 |
-| Distinct test files cited | 71 |
+| REQ families | 32 |
+| Distinct test files cited | 73 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -37,6 +37,7 @@ the documentation rather than executable code.
 - [BT — Backtracker](#bt) (13/13 pass)
 - [CA — Computed Attributes](#ca) (12/12 pass)
 - [CL — Constraint Lowering & Catalog](#cl) (5/5 pass)
+- [CON — Contracts & Sealing](#con) (10/10 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
@@ -169,6 +170,30 @@ re-derives from scratch and is named here as a known gap, not silently covered.
 | REQ-CL-03 | `assemble_constraint_catalog` SHALL build `source_records` from every `ConstraintDefinition` in the model's facts (visible even with zero eligible entries) and `concrete_entries` from eligible concrete constraints only, fingerprinted deterministically | `test_constraint_emission.py` | PASS |
 | REQ-CL-04 | The manifest->catalog mapping SHALL be total and silent-drop-free: every usage `collect_constraint_manifest` sweeps has a catalog carrier (eligible or unassessed) or is a named, justified requirement/satisfy exclusion | `test_constraint_migration_mapping.py` | PASS |
 | REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_constraint_graph_extension.py` | PASS |
+
+### CON
+
+**Contracts & Sealing** — Item 9 — [reference/29-contracts-and-sealing.md](reference/29-contracts-and-sealing.md)
+
+Register covering the two contracts (`ModelContract` semantic identity,
+`PackageContract` physical seal), fingerprint determinism, seal/verify parity, and the
+emit/re-seal/subcommand wiring. The `contract INV-*` labels are the contracts
+machinery's own numbering (a distinct namespace from the matrix REQ IDs). The
+`verify_package` diagnostic surface beyond the verbatim-emission guard is exercised
+indirectly via the emitted verifier.
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-CON-01 | `build_model_contract` SHALL be a pure function of the `ComputationGraph` — no filesystem, no templates (contract INV-1) | `test_contract_models.py` | PASS |
+| REQ-CON-02 | Both fingerprints SHALL be deterministic; `semantic_fingerprint` SHALL exclude itself from its own payload (contract INV-2, no circularity) | `test_contract_models.py` | PASS |
+| REQ-CON-03 | A constraint-free graph SHALL still seal into a well-formed, stable contract (contract INV-7) | `test_contract_models.py` | PASS |
+| REQ-CON-04 | On-disk `ModelContract` JSON bytes SHALL be a deterministic function of the graph (contract INV-6) | `test_contract_models.py` | PASS |
+| REQ-CON-05 | The `seal.py` and `verify.py` glob-matcher bodies SHALL stay byte-identical (drift guard) | `test_contract_models.py` | PASS |
+| REQ-CON-06 | `generate` SHALL emit three `contracts/` files (`model_contract.json`, `package_contract.json`, `verify.py`) and the result SHALL verify on load | `test_seal_step9.py` | PASS |
+| REQ-CON-07 | The emitted `contracts/verify.py` SHALL be byte-identical to the canonical verifier (contract INV-8 drift guard) | `test_seal_step9.py` | PASS |
+| REQ-CON-08 | The seal SHALL exclude its own `package_contract.json` from coverage | `test_seal_step9.py` | PASS |
+| REQ-CON-09 | Re-sealing after a stencil edit SHALL recompute only the `PackageContract` (graph-free) | `test_seal_step9.py` | PASS |
+| REQ-CON-10 | The `seal` subcommand SHALL require an already-sealed package (an existing `ModelContract`) | `test_seal_step9.py` | PASS |
 
 ### DM
 
