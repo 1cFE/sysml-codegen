@@ -6,6 +6,18 @@
 
 ## Active Work
 
+### docs-explainer-refresh — SPEC DRAFTED (2026-07-13), ready for spec_review/design
+
+Post-CONSTRAINT-EXEC docs + explainer-brief refresh across four repos. Spec:
+`.project/active/docs-explainer-refresh/spec.md`; evidence:
+`staleness-survey.md` alongside (spec-time survey — do not re-research). Scope: fix the
+surveyed stale claims (snapshot v1→v3 docs, retired ExpressionAST symbols, family counts),
+document the uncovered machinery (ModuleKind + constraint/aggregator seams, contracts/sealing
+reference + matrix family), reconcile agentic-mbse's decision table + MODELING_GUIDE index to
+the profile story, name teax's `entry_models`, and rewrite `EXPLAINER_PROMPT.md` truthful
+post-epic ([OWNER]: brief only — `pipeline_explainer_v2.html` build is a separate follow-on
+another agent picks up). Next: `/_my_spec_review` (fresh session), then `/_my_design`.
+
 ### PUSH-DOWN epic — INDEPENDENTLY AUDITED + REMEDIATED: CERTIFIED (2026-07-10)
 
 Independent technical audit of PRs #8 (sysml-codegen) / #10 (agentic-mbse) found the code
