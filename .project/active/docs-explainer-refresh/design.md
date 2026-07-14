@@ -31,11 +31,11 @@ Verified in this session (sysml-codegen HEAD):
   (confirmed via `tests/unit/test_contract_models.py:79-84`).
 - `08-generation.md`, `09-data-models.md`, `00-pipeline-overview.md` have **zero** hits for
   `ModuleKind`/`module_kind`/`constraint_catalog`/`report_aggregator`. Gap confirmed.
-- Contract/seal machinery is real and well-tested but undocumented: `test_contract_models.py`
-  (10 tests: graph-only build, deterministic semantic+executable fingerprints, zero-constraint
-  seal, stable on-disk bytes, glob-matcher drift guard) and `test_seal_step9.py` (6 tests: three
-  emitted files, verbatim verifier, seal-excludes-itself, re-seal recomputes only PackageContract,
-  `seal` subcommand). Neither file is cited in the verification matrix; neither carries
+- Contract/seal machinery is real and tested but undocumented: `test_contract_models.py`
+  (7 test functions, 8 collected — one 2-way parametrize: graph-only build, deterministic
+  semantic+executable fingerprints, zero-constraint seal, stable on-disk bytes, glob-matcher drift
+  guard) and `test_seal_step9.py` (5 tests: three emitted files, verbatim verifier,
+  seal-excludes-itself, re-seal recomputes only PackageContract, `seal` subcommand). Neither file is cited in the verification matrix; neither carries
   `@pytest.mark.req` marks (unlike SNAP rows) — the matrix anchors rows via the Test File column,
   so req-marks are not a prerequisite.
 - Matrix summary: 264 reqs / 31 families / 71 test files (`verification-matrix.md:9-14`); Index at
@@ -103,10 +103,13 @@ the edit, a reader opening *that* surface must not be able to reach a claim HEAD
   `test_zero_constraint_graph_seals`), lives in different test files, and the survey explicitly
   names contracts/sealing as a *missing family*, not a CL gap. Follow the CL precedent of a short
   register with an honest "partial coverage" note if the doc'd surface exceeds the pinned rows.
-  Candidate rows (plan settles exact count/text): graph-only build (INV-1), deterministic
+  Candidate rows (plan settles exact count/text): graph-only build (contract INV-1), deterministic
   semantic + executable fingerprints, zero-constraint seal, stable on-disk bytes, three emitted
-  files + verify-on-load, verbatim emitted verifier (INV-8), seal-excludes-itself-from-coverage,
-  re-seal recomputes only PackageContract, `seal` subcommand requires an existing ModelContract.
+  files + verify-on-load, verbatim emitted verifier (contract INV-8), seal-excludes-itself-from-
+  coverage, re-seal recomputes only PackageContract, `seal` subcommand requires an existing
+  ModelContract. (The `contract INV-*` labels are the contracts machinery's own numbering in
+  `contracts/*.py` + the two test files — a **distinct namespace** from this design's Required
+  Invariants INV-1..6, which is what SC-8 audits against.)
 
 - **D2 — Contracts doc home: new `29-contracts-and-sealing.md`.** Covers `ModelContract` /
   `PackageContract` (`contracts/models.py`), `seal_package` (`contracts/seal.py:57`), verify-on-load
@@ -159,8 +162,12 @@ is specified from verified survey cites for an implementer with those repos in r
   `08-generation.md` (constraint + report-aggregator render seams), `00-pipeline-overview.md` +
   `overview.md` (lowering phase named in the step narrative).
 - *New doc + family:* `29-contracts-and-sealing.md` (D2) and the `CON` matrix family (D1).
-- *Explainer brief:* `EXPLAINER_PROMPT.md` re-anchored to current HEAD (D-nothing-new; content
-  re-projection per the survey's eight-area slot map).
+- *Explainer brief:* `EXPLAINER_PROMPT.md` re-anchored to current HEAD (content re-projection per
+  the survey's eight-area slot map) **and** its buildability infrastructure refreshed (INV-6):
+  responsibility-map rows + reading-list data sources for the eight areas (incl. docs 28/29 and the
+  two contract test files), reuse-guidance delta, and the stale reading-list matrix counts corrected.
+  Narrative slotting and infrastructure refresh are two distinct edits to the same file — the plan
+  should list them separately.
 
 **agentic-mbse (from survey cites):** decision-table reword to profile vocabulary
 (`docs/subtype-enumeration-decision-table.md:13-14,18,24,33-35` — drop `is_droppable_constraint` /
@@ -195,6 +202,17 @@ The `[INHERITED]` cautions are checkable bars any doc this item writes or edits 
   neither appeared in a matrix row grep). This is the known matrix drift trap.
 - **INV-5.** No new stale symbol: every symbol an edited doc names greps clean in `src/`, unless it
   is an explicitly-marked historical note.
+- **INV-6 (explainer buildability).** The refreshed `EXPLAINER_PROMPT.md` must be buildable by the
+  v2 HTML agent **from the brief alone** — truthful prose is not enough. Concretely, the refresh must
+  update the brief's *buildability infrastructure*, not just its narrative: (a) each of the eight new
+  constraint-exec areas has a **responsibility-map row** naming its owner (module/symbol) and its
+  reference-doc pointer, including the new/renamed homes (docs 28 and 29); (b) the **reading list**
+  names the concrete data-source files for those areas (the new docs + `test_contract_models.py` /
+  `test_seal_step9.py` for contracts/sealing); (c) any **reuse-guidance** delta vs the Gen-1
+  machinery is stated. One hard sub-check: the brief's cited matrix counts / family number match the
+  recounted matrix (INV-4) — the reading list currently reads a stale "253 … 30 families"
+  (`EXPLAINER_PROMPT.md:~189`), which must be corrected. This makes "buildable" auditable, not
+  implicit; SC-6's mechanical checklist discharges it.
 
 ## Component Overview
 
@@ -209,7 +227,7 @@ Surfaces and their action (the "components" of a docs sweep):
 | `00-pipeline-overview.md`, `overview.md` | sysml-codegen | REQ-PIPE-06; lowering phase in narrative; family count |
 | `29-contracts-and-sealing.md` (new) | sysml-codegen | contracts/sealing reference doc (D2) |
 | `verification-matrix.md` | sysml-codegen | new CON family (D1); count recount (INV-4) |
-| `EXPLAINER_PROMPT.md` | sysml-codegen | re-anchor to HEAD; slot eight areas; retire caveats |
+| `EXPLAINER_PROMPT.md` | sysml-codegen | re-anchor to HEAD; slot eight areas; retire caveats; refresh buildability infra (INV-6) |
 | `new_pipeline_explainer.html` | sysml-codegen | in-file deprecation banner (D4) |
 | BACKLOG | sysml-codegen | register v2 HTML build follow-on |
 | `subtype-enumeration-decision-table.md`, `MODELING_GUIDE.md:280` | agentic-mbse | profile vocabulary reword |
@@ -235,10 +253,13 @@ Surfaces and their action (the "components" of a docs sweep):
   a retired symbol *if* clearly framed as history — INV-5 is about live claims, not history.
 - **Explainer brief has a two-bar audit:** (a) *mechanical* — grep-clean of "constraints are
   dropped" / `resolve_input()`-unwired caveats, eight areas slotted per the survey map, anchor is
-  current HEAD (not `pipeline-truth-epic`); (b) *judgment* — a spot-read of remaining claims finds
-  none contradicted by HEAD. Keep the honest caveats that are *still* true (e.g.
-  `attribute :>> attr = <expression>` silently dropped; EXPOSE_COMPUTED rejected) at their current
-  hedge; do not strengthen or resurrect retired ones.
+  current HEAD (not `pipeline-truth-epic`), **plus the buildability infrastructure refreshed per
+  INV-6** (responsibility-map rows, reading-list data sources, reuse-guidance delta, corrected
+  matrix counts); (b) *judgment* — a spot-read of remaining claims finds none contradicted by HEAD.
+  Keep the honest caveats that are *still* true (e.g. `attribute :>> attr = <expression>` silently
+  dropped; EXPOSE_COMPUTED rejected) at their current hedge; do not strengthen or resurrect retired
+  ones. Note the two INV namespaces do not collide: this design's Required Invariants are INV-1..6;
+  the `contract INV-*` labels in D1 are the contracts machinery's own numbering.
 - **fusion-tea alias sequencing caveat:** after the alias drop, the two driver scripts require a
   teax with CE-F3 (`0d606a4`). They are exploration drivers, not CI-gated, and already run against
   the epic-branch teax — so this is safe, but note it in the change.
@@ -272,7 +293,10 @@ Each success criterion maps to a check:
   family exists and the recounted totals agree across matrix summary, Index, and `overview.md:218`.
 - *Cross-repo (SC-4/5/7):* re-grep each survey cite in-repo; confirm the retired vocabulary is gone,
   `entry_models` is documented, the walkthrough note and alias drop are in place.
-- *Explainer (SC-6):* run the mechanical grep checklist, then the judgment spot-read.
+- *Explainer (SC-6):* run the mechanical grep checklist **and the INV-6 buildability audit** — every
+  one of the eight areas has a responsibility-map row (owner + reference-doc pointer, incl. 28/29),
+  reading-list data sources (incl. the two contract test files), and any reuse-guidance delta; the
+  brief's cited matrix counts match the recounted matrix — then the judgment spot-read.
 - *Inherited history (SC-8):* audit every written/edited doc against INV-1/2/3.
 - *Follow-on (SC-9):* the v2 HTML build item is in BACKLOG pointing at the brief.
 
@@ -286,6 +310,23 @@ Each success criterion maps to a check:
   unread this session).
 - **De-risk first:** the matrix recount (INV-4) and the cross-repo re-grep (B2) — both are cheap and
   both are where a silent wrong-story or count divergence would slip through.
+
+## Design-Review Resolutions
+
+Applied 2026-07-13 from `design-review.md` (verdict Revise; approach sound, three tightenings).
+
+- **[Major] SC-6 secured truth, not buildability → Fixed.** Added **INV-6 (explainer
+  buildability)** requiring the refresh to update the brief's buildability infrastructure —
+  responsibility-map rows (owner + reference-doc pointer, incl. docs 28/29), reading-list data
+  sources (incl. `test_contract_models.py` / `test_seal_step9.py` for contracts), reuse-guidance
+  delta, and corrected matrix counts (the stale "253 … 30 families"). Routed into the Architecture
+  explainer line, the Implementation-Notes two-bar audit, and Validation SC-6 so the plan and
+  auditor both see it.
+- **[Minor] INV-N namespace collision → Fixed.** D1's parentheticals now read `contract INV-1` /
+  `contract INV-8`, with an explicit note that the contracts machinery's numbering is a distinct
+  namespace from this design's Required Invariants INV-1..6 (what SC-8 audits against).
+- **[Minor] Overstated test counts → Fixed.** Research Findings now reads 7 functions / 8 collected
+  for `test_contract_models.py` and 5 for `test_seal_step9.py`.
 
 ---
 Next Step: After approval → `/_my_plan` (multi-repo, multi-surface — a checklist plan keeps the
