@@ -457,7 +457,15 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 
 ## Up Next
 
-1. Phase 6: Generation Layer Validation (C20-C25, X01)
-2. Phase 7: Structural Refactoring & Dead Code Removal
+1. **Merge the CONSTRAINT-EXEC PR wave** (human): agentic-mbse #11 FIRST, then sysml-codegen #9
+   (imports #11's symbols); teax rwestwood89/teax#3 independent; after #11+#9 merge, push
+   fusion-tea: `git -C ~/1cfe/fusion-tea push origin main` (4 acceptance commits waiting).
+2. **docs-explainer-refresh**: `/_my_spec_review` in a fresh session, then `/_my_design`
+   (spec + staleness survey in `.project/active/docs-explainer-refresh/`; another agent picks
+   this up per owner).
+3. **CE-F1/F2 follow-ons** (BACKLOG): standalone catalog emission (sysml-codegen/teax shape
+   decision) and multi-channel CandidateBridge (teax). CE-F3 is fixed.
+4. **pipeline_explainer_v2.html build** — follow-on after the refreshed EXPLAINER_PROMPT.md
+   lands (registered via the docs-explainer-refresh spec).
 
 ---
