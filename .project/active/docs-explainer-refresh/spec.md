@@ -41,8 +41,11 @@ file they open.
       `PackageContract`, `seal_package`, verify-on-load, and the `seal` CLI subcommand; the
       verification matrix covers the family (shape of the family is design's call).
 - [x] **agentic-mbse teaches one story.** `docs/subtype-enumeration-decision-table.md` speaks
-      profile vocabulary (no `is_droppable_constraint` / "dropped predicates" / "revisited by
-      the constraint-execution epic"); `MODELING_GUIDE.md:280` no longer says "not executable";
+      profile vocabulary (no "dropped predicates" / "revisited by the constraint-execution
+      epic"; `is_droppable_constraint` stays — amended at implementation 2026-07-13: it is a
+      live symbol at HEAD, `syside_adapter.py:418`, so the doc keeps the accurate reference
+      reframed as the requirement-side exclusion and retires only the drop *framing*; the
+      [HARD] code-is-truth requirement wins over the surveyed vocabulary list); `MODELING_GUIDE.md:280` no longer says "not executable";
       ConstraintFacts and ExpressionIR have a durable `docs/` home (depth is design's call —
       at minimum an architecture pointer that survives `.project/` archival).
 - [x] **teax names the mechanism.** `docs/evaluation-and-study.md` documents the
