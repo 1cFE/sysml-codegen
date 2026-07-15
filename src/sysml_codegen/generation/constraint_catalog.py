@@ -83,7 +83,10 @@ def assemble_constraint_catalog(
     ]
     concrete_entries = []
     for c in eligible:
-        assert c.evaluation_channel is not None  # invariant of eligible=True
+        if c.evaluation_channel is None:  # enforced by ConcreteConstraint's validator
+            raise RuntimeError(
+                f"eligible constraint {c.constraint_id!r} has no evaluation_channel"
+            )
         concrete_entries.append(
             ConstraintCatalogEntry(
                 constraint_id=c.constraint_id,

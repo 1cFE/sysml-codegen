@@ -528,10 +528,11 @@ def lower_constraints(
     Catalog ordering is by ``constraint_id`` (INV-4); duplicate IDs raise via
     :func:`assert_unique_constraint_ids` before returning.
     """
-    assert PROFILE_SEMANTIC_VERSION == "executable-profile/v1", (
-        f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
-        "review before re-pinning"
-    )
+    if PROFILE_SEMANTIC_VERSION != "executable-profile/v1":
+        raise RuntimeError(
+            f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
+            "review before re-pinning"
+        )
     profile = evaluate_profile(facts)
     blocking = [d for d in profile.decisions if d.eligibility is Eligibility.BLOCK]
     if blocking:
@@ -594,14 +595,16 @@ def lower_constraints(
         # usages, whose effective predicate is the definition's object — a different
         # instance than usage.predicate by construction (Item 3 audit correction).
         effective = decision.effective_predicate
-        assert effective is usage.predicate or (
+        same_ir = effective is usage.predicate or (
             effective is not None
             and usage.predicate is not None
             and serialize_expression(effective) == serialize_expression(usage.predicate)
-        ), (
-            f"same-IR violation (Item 3 I5/D7) for {usage_qn}: the profile walked a "
-            "different predicate than the one about to be lowered"
         )
+        if not same_ir:
+            raise _generation_error(
+                f"same-IR violation (Item 3 I5/D7) for {usage_qn}: the profile walked a "
+                "different predicate than the one about to be lowered"
+            )
         predicate_ir = serialize_expression(effective) if effective is not None else None
 
         actual_by_target: dict[str, object] = {}
@@ -790,7 +793,10 @@ def extend_graph_with_constraints(
 
     order = len(modules)
     for c in eligible:
-        assert c.evaluation_channel is not None  # invariant of eligible=True (lower_constraints)
+        if c.evaluation_channel is None:  # enforced by ConcreteConstraint's validator
+            raise RuntimeError(
+                f"eligible constraint {c.constraint_id!r} has no evaluation_channel"
+            )
         inputs: list[ModuleInput] = []
         for inp in c.inputs:
             if inp.resolution == ConstraintInputResolution.MODULE_OUTPUT:
@@ -799,7 +805,11 @@ def extend_graph_with_constraints(
                 )
             elif inp.resolution == ConstraintInputResolution.DESIGN_ATTRIBUTE:
                 qn = inp.design_attribute_qn
-                assert qn is not None  # invariant of DESIGN_ATTRIBUTE resolution
+                if qn is None:  # enforced by ConcreteConstraintInput's validator
+                    raise RuntimeError(
+                        f"DESIGN_ATTRIBUTE input {inp.formal_name!r} on "
+                        f"{c.constraint_id!r} has no design_attribute_qn"
+                    )
                 gname = mint(
                     qn,
                     EntryPointType.DESIGN_ATTRIBUTE,

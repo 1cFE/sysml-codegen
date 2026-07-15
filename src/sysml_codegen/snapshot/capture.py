@@ -49,7 +49,8 @@ def capture_snapshot(
         design_path_filter=design_path_filter,
         lower_constraints_enabled=lower_constraints_enabled,
     )
-    assert ctx.constraint_facts is not None  # build_pipeline_context always populates it
+    if ctx.constraint_facts is None:  # build_pipeline_context always populates it
+        raise RuntimeError("build_pipeline_context returned no constraint_facts")
 
     snapshot = serialize_extraction_snapshot(
         model_name=model_paths[0].name,

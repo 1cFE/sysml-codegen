@@ -285,7 +285,10 @@ class PartInstanceIndex:
             if target_qn in self._user_qn_set:
                 key_qns.add(target_qn)
         winner, _incomparable = most_specific(sorted(key_qns), self._qn_to_partdef)
-        assert winner is not None  # the usage was found keyed under a user PartDef QN
+        if winner is None:  # the usage was found keyed under a user PartDef QN
+            raise RuntimeError(
+                f"no most-specific user PartDef for usage typed by {sorted(key_qns)!r}"
+            )
         return winner
 
     def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]:

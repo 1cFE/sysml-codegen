@@ -199,14 +199,17 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     # Coordinated-pair skew guard (mirrors PROFILE_SEMANTIC_VERSION at
     # constraint_lowering.py:463): the code-level pins must still match what this
     # loader was written against, independent of the data-level checks above.
-    assert CONSTRAINT_FACTS_SCHEMA_VERSION == "constraint-facts/v1", (
-        f"agentic-mbse constraint-facts schema changed ({CONSTRAINT_FACTS_SCHEMA_VERSION}); "
-        "review before re-pinning"
-    )
-    assert EXPRESSION_IR_SCHEMA_VERSION == "expression-ir/v1", (
-        f"agentic-mbse expression-ir schema changed ({EXPRESSION_IR_SCHEMA_VERSION}); "
-        "review before re-pinning"
-    )
+    # Explicit raises, not asserts — these must survive `python -O`.
+    if CONSTRAINT_FACTS_SCHEMA_VERSION != "constraint-facts/v1":
+        raise RuntimeError(
+            f"agentic-mbse constraint-facts schema changed ({CONSTRAINT_FACTS_SCHEMA_VERSION}); "
+            "review before re-pinning"
+        )
+    if EXPRESSION_IR_SCHEMA_VERSION != "expression-ir/v1":
+        raise RuntimeError(
+            f"agentic-mbse expression-ir schema changed ({EXPRESSION_IR_SCHEMA_VERSION}); "
+            "review before re-pinning"
+        )
 
     snapshot_dir = snapshot_path.parent
     snap: dict[str, Any] = {
