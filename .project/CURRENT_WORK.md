@@ -1,10 +1,38 @@
 # Current Work
 
-**Last Updated**: 2026-07-13
+**Last Updated**: 2026-07-14
 
 ---
 
 ## Active Work
+
+### CONSTRAINT-EXEC code-quality remediation — ✅ COMPLETE (2026-07-14)
+
+The independent code-quality review
+(`.project/research/20260713-213722_constraint-exec-pr-code-quality.md`) was verified
+finding-by-finding against the code (census numbers reproduced exactly; both "impossible"
+model states construction-probed; unary-plus reachability traced through the agentic-mbse IR
+builder). Verification disagreed with the review on two points only: graph-extension
+*validation* is shared, not duplicated, and its "ordering" is an append counter, not a
+reimplemented topo sort. Its pre-merge bar then landed as four commits on
+`constraint-exec-epic`:
+
+- `5785055` — ConcreteConstraint/Input model validators + rejection tests (tagged-union
+  resolution fields; eligible ⇒ predicate_ir + evaluation_channel; expected_value derives
+  from is_negated). Preserved pinned edge: MODELED_DEFAULT's `default_ir` may be None.
+- `baca960` — both IR renderers: one-operand render now requires operator `-` (a modeled
+  `+x` silently rendered as `(-x)` — reachable, not latent); arity + identifier validation
+  in the predicate compiler (raw IndexError → PredicateCompileError).
+- `c756fc7` — load-bearing asserts → explicit errors (version pins, same-IR, capture
+  presence, eligibility dereferences, most-specific-PartDef) so they survive `python -O`.
+- `05690f0` — resolver precedence-under-conflict pins (6 two-rungs-both-match tests) +
+  path-grammar characterization (brackets, empty segments, chain-vs-source_name).
+
+Gates at close: licensed suite **2364 passed / 23 skipped** (was 2330/23; +34 new tests),
+`tests/fixtures` byte-identical throughout, ruff clean on touched files, mypy at the 76
+baseline. The architectural remainder is registered as `[CONSTRAINT-ARCH-UNIFY]` (P1) and
+`[EXIT-PIN-SEAM]` (P3) in `BACKLOG.md` — merging PR #9 does not bless the current parallel
+ladders / triple walker / mirrored live-offline phases as the permanent architecture.
 
 ### docs-explainer-refresh — ✅ COMPLETE: audited Certify, pushed to the open PRs (2026-07-13)
 

@@ -721,3 +721,47 @@ registered three follow-ons:
   and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
   `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would
   split the matrix from doc 05); this item sweeps them together.
+
+## CONSTRAINT-EXEC code-quality follow-on (registered 2026-07-14)
+
+Source: the independent code-quality review
+(`.project/research/20260713-213722_constraint-exec-pr-code-quality.md`), findings verified
+against the code 2026-07-14. The review's small correctness/hardening items landed pre-merge on
+`constraint-exec-epic` (model validators + rejection tests; renderer unary/arity/identifier
+guards; load-bearing asserts → explicit errors; resolver precedence-under-conflict and
+path-grammar pins — commits `5785055`, `baca960`, `c756fc7`, `05690f0`). The architectural debt
+below is the recorded, owned remainder — merging the PR does not bless it as the permanent
+constraint architecture.
+
+- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance/resolution infrastructure — P1 `[AGENT]`
+  (ratified for filing by owner 2026-07-14; priority is agent-graded).** One refactor design,
+  staged behind the existing byte-identity and parity gates, with these explicitly in scope:
+  1. *Canonical typed paths and resolution requests.* `InstancePath`/`ReferencePath`/
+     `ConstraintDemand` (named type replacing the `(instance_scope, source_path, source_file)`
+     tuples in `supplied_values.py:206-269`) with validated conversions to EQN / dotted scope /
+     de-indexed scope / SysML QN. The `NewType` identifiers validate nothing today
+     (`identifier_types.py`); every consumer does raw string surgery.
+  2. *One resolver ladder.* `resolve_actual` (`constraint_lowering.py:117-276`) and the calc
+     ladder (`dependency_backtracker.py:480-838`) are independently ordered algorithms sharing
+     only `terminal_disposition`; the design-review-predicted drift already happened (climb,
+     self-reference rejection, and SysML-QN rungs exist on one side only). Normalize both into
+     one registry-owned ordered strategy; `strict`/`lenient` differ only at terminal disposition.
+     Precedence pins now exist (`test_constraint_resolver.py`) to protect the migration.
+  3. *One part-structure index.* Collapse the three concrete-instance walkers
+     (`usage_extractor._find_instantiation_paths`, `part_instance_index._structured_paths`
+     — hand-synced by docstring decree — and `pipeline_builder.find_instance_paths_for_partdef`
+     with its first-wins multi-design heuristic) into one index built once per pipeline; project
+     legacy strings at the edges until byte-identity gates permit deleting the old walkers.
+     Also split the snapshot transport adapters out of `part_instance_index.py:363-442`.
+  4. *Shared live/offline phases.* `pipeline_builder.py` and `snapshot/graph_rebuild.py`
+     mirror the demand→materialize→lower→extend→catalog sequence by convention and import each
+     other's private helpers; all live-vs-snapshot parity legs are license-gated, so the default
+     environment cannot see drift. Extract callable phase objects both orchestrators consume.
+  5. *Graph extension folded into assembly.* `extend_graph_with_constraints` re-implements
+     entry-point grouping/minting/module construction after the main build (validation it
+     already shares); move constraint module/EP factories into graph assembly and run one
+     grouping, topological sort, and validation pass across every module kind.
+- **[EXIT-PIN-SEAM] Decide the exit-selection seam — P3.** `generation/pipeline.py:233-288`
+  carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production
+  always no-op; disclosed in design-review and docstring). Either real exit selection owns this
+  API or the test proves capture-everything behavior without dormant production branches.
