@@ -9,6 +9,7 @@ reconstructs canonical JSON, not SysML source text, so hand-built trees are the 
 
 from __future__ import annotations
 
+import pytest
 from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, LiteralFact, OperandTypeFact
 from agentic_mbse.sysml.expression_ir import FeatureReferenceNode, LiteralNode, OperatorNode
 
@@ -158,3 +159,89 @@ def test_feature_chain_unsupported():
         assert "feature chain" in str(e)
     else:
         raise AssertionError("expected PredicateCompileError for feature-chain leaf")
+
+
+# --- IR shape validation (code-quality remediation, 2026-07-14) --------------------
+# Finding 12: malformed arity raised raw IndexError, a one-operand `+` silently
+# rendered as negation, and leaf names were interpolated into the generated
+# signature unvalidated. All now raise PredicateCompileError.
+
+
+def _unary(op: str, operand) -> OperatorNode:
+    return OperatorNode(operator=op, operands=[operand], operand_type=None)
+
+
+def test_unary_minus_still_compiles_and_negates():
+    ir = _cmp_node(">=", _unary("-", _ref("x")), _lit_real(0.0))
+    fn, args = _compile_and_load(ir, "p", negated=False)
+    assert args == ["x"]
+    assert fn(x=-3.0).status == "satisfied"  # -(-3) = 3 >= 0
+    assert fn(x=3.0).status == "violated"
+
+
+def test_unary_plus_raises_not_silent_negation():
+    ir = _cmp_node(">=", _unary("+", _ref("x")), _lit_real(0.0))
+    with pytest.raises(PredicateCompileError, match="unsupported unary operator"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_comparison_wrong_arity_raises_typed_error():
+    ir = OperatorNode(operator=">", operands=[_ref("a")], operand_type=None)
+    with pytest.raises(PredicateCompileError, match="needs 2 operands"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_margin_expression_wrong_arity_raises_typed_error():
+    ir = OperatorNode(operator="<", operands=[_ref("a")], operand_type=None)
+    with pytest.raises(PredicateCompileError, match="needs 2 operands"):
+        margin_expression(ir, negated=False)
+
+
+def test_not_wrong_arity_raises_typed_error():
+    inner = _cmp_node(">", _ref("a"), _ref("b"))
+    ir = OperatorNode(operator="not", operands=[inner, inner], operand_type=None)
+    with pytest.raises(PredicateCompileError, match="exactly 1 operand"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_connective_zero_operands_raises_typed_error():
+    ir = OperatorNode(operator="and", operands=[], operand_type=None)
+    with pytest.raises(PredicateCompileError, match="at least 2 operands"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_zero_operand_arithmetic_raises_typed_error():
+    bad = OperatorNode(operator="+", operands=[], operand_type=None)
+    ir = _cmp_node(">", bad, _lit_real(0.0))
+    with pytest.raises(PredicateCompileError, match="no operands"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_unsafe_leaf_identifier_raises():
+    ir = _cmp_node(">", _ref("net cost"), _lit_real(0.0))
+    with pytest.raises(PredicateCompileError, match="not a safe Python identifier"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_keyword_leaf_identifier_raises():
+    ir = _cmp_node(">", _ref("lambda"), _lit_real(0.0))
+    with pytest.raises(PredicateCompileError, match="not a safe Python identifier"):
+        compile_predicate(ir, "p", negated=False)
+
+
+def test_unsafe_fn_name_raises():
+    ir = _cmp_node(">", _ref("a"), _ref("b"))
+    with pytest.raises(PredicateCompileError, match="not a Python identifier"):
+        compile_predicate(ir, "bad name", negated=False)
+
+
+def test_nameless_reference_raises():
+    ref = FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=None, target=None, target_types=[], chain_segments=[]
+        ),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+    ir = _cmp_node(">", ref, _lit_real(0.0))
+    with pytest.raises(PredicateCompileError, match="nameless feature reference"):
+        compile_predicate(ir, "p", negated=False)

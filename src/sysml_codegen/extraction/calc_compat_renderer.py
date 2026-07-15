@@ -127,6 +127,8 @@ def _render_operator(
     if not node.operands:
         raise CompilationError(f"operator with no operands: {node.operator}")
     if len(node.operands) == 1:
+        if node.operator != "-":
+            raise CompilationError(f"unsupported unary operator: {node.operator}")
         operand = _render(node.operands[0], input_names, member_names)
         return f"(-{operand})"
     parts = [_render(operand, input_names, member_names) for operand in node.operands]

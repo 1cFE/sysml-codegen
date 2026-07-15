@@ -15,6 +15,7 @@ excludes a unit-mismatched comparison before this module ever sees the IR.
 
 from __future__ import annotations
 
+import keyword
 import math
 from typing import Any
 
@@ -111,13 +112,21 @@ def _compile_numeric(n: ExpressionIR) -> str:
     if isinstance(n, FeatureReferenceNode):
         if n.reference.chain_segments:
             raise PredicateCompileError("feature chain not supported in profile v1")
-        return n.reference.source_name or "_unnamed"
+        if not n.reference.source_name:
+            raise PredicateCompileError("nameless feature reference in numeric position")
+        return n.reference.source_name
     if isinstance(n, UnitAnnotationNode):
         return _compile_numeric(n.value)
     if isinstance(n, OperatorNode):
         if n.operator in ARITHMETIC_OPS:
             py_op = "**" if n.operator in ("**", "^") else n.operator
+            if not n.operands:
+                raise PredicateCompileError(f"operator {n.operator!r} with no operands")
             if len(n.operands) == 1:
+                if n.operator != "-":
+                    raise PredicateCompileError(
+                        f"unsupported unary operator: {n.operator!r}"
+                    )
                 return f"(-{_compile_numeric(n.operands[0])})"
             parts = [_compile_numeric(o) for o in n.operands]
             expr = parts[0]
@@ -135,14 +144,26 @@ def _compile_boolean(n: ExpressionIR) -> str:
             raise PredicateCompileError(
                 "equality blocked in profile v1 (type-proof pending S1)"
             )
+        if len(n.operands) != 2:
+            raise PredicateCompileError(
+                f"comparison {n.operator!r} needs 2 operands, got {len(n.operands)}"
+            )
         a = _compile_numeric(n.operands[0])
         b = _compile_numeric(n.operands[1])
         return f"_cmp({n.operator!r}, {a}, {b})"
     if isinstance(n, OperatorNode) and n.operator in ("and", "or"):
+        if len(n.operands) < 2:
+            raise PredicateCompileError(
+                f"{n.operator!r} needs at least 2 operands, got {len(n.operands)}"
+            )
         fn = "_and" if n.operator == "and" else "_or"
         parts = ", ".join(_compile_boolean(o) for o in n.operands)
         return f"{fn}({parts})"
     if isinstance(n, OperatorNode) and n.operator == "not":
+        if len(n.operands) != 1:
+            raise PredicateCompileError(
+                f"'not' needs exactly 1 operand, got {len(n.operands)}"
+            )
         return f"_not({_compile_boolean(n.operands[0])})"
     if isinstance(n, LiteralNode) and n.operand_type.category == "boolean":
         return repr(n.literal.value)
@@ -177,6 +198,10 @@ def margin_expression(n: ExpressionIR, negated: bool) -> str | None:
     """
     if not (isinstance(n, OperatorNode) and n.operator in _BOUNDARY_COMPARISON_OPS):
         return None
+    if len(n.operands) != 2:
+        raise PredicateCompileError(
+            f"comparison {n.operator!r} needs 2 operands, got {len(n.operands)}"
+        )
     a = _compile_numeric(n.operands[0])
     b = _compile_numeric(n.operands[1])
     raw = f"({b} - {a})" if n.operator in ("<", "<=") else f"({a} - {b})"
@@ -194,8 +219,15 @@ def compile_predicate(
     (``satisfied``/``violated``/``indeterminate``, polarity applied), and ``margin`` (signed
     float or ``None``) — the field names match :class:`ConstraintEvaluation` directly.
     """
+    if not fn_name.isidentifier() or keyword.iskeyword(fn_name):
+        raise PredicateCompileError(f"function name {fn_name!r} is not a Python identifier")
     args: list[str] = []
     _leaf_ref_names(ir, args)
+    for arg in args:
+        if not arg.isidentifier() or keyword.iskeyword(arg):
+            raise PredicateCompileError(
+                f"leaf reference {arg!r} is not a safe Python identifier"
+            )
     body = _compile_boolean(ir)
     margin = margin_expression(ir, negated) or "None"
     expected = "False" if negated else "True"

@@ -134,6 +134,17 @@ class TestRenderCalcExpression:
         ir = _ir_unary("-", _ir_ref("x"))
         assert render_calc_expression(ir, {"x"}, set()) == "(-inputs.x)"
 
+    def test_unary_plus_raises_compilation_error(self):
+        """A one-operand `+` must not silently render as negation (code-quality
+        review finding 12: both renderers treated ANY single-operand arithmetic
+        operator as unary minus, so a modeled `+x` became `(-x)` — a sign flip)."""
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+        from sysml_codegen.extraction.expression_compiler import CompilationError
+
+        ir = _ir_unary("+", _ir_ref("x"))
+        with pytest.raises(CompilationError, match="unsupported unary operator"):
+            render_calc_expression(ir, {"x"}, set())
+
     def test_unsupported_raises_compilation_error(self):
         from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
         from sysml_codegen.extraction.expression_compiler import CompilationError
