@@ -280,3 +280,201 @@ def test_polarity_guard_raises_on_none_is_negated():
 
 def test_polarity_guard_passes_through_when_present():
     assert guard_polarity(is_negated=False, usage_qualified_name="Design__c__nonneg") is False
+
+
+# --- precedence under conflict (code-quality remediation, 2026-07-14) ---------------
+# Every ladder test above registers one MATCHING rung at a time, so a reordered
+# ladder could change behavior while all of them stay green (review finding 5).
+# These tests register two rungs that BOTH match and pin which one wins — the
+# current, deliberate ladder order. If you reorder the ladder, these fail first.
+
+
+def _attr(qualified_name: str, name: str = "attr") -> DesignAttributeData:
+    return DesignAttributeData(
+        name=name,
+        sysml_type="Real",
+        default_value="1.0",
+        unit=None,
+        source_file=None,
+        source_line=1,
+        parent_part="Design",
+        qualified_name=qualified_name,
+    )
+
+
+def test_precedence_occurrence_key_beats_deindexed_key():
+    registry = OutputRegistry()
+    registry.register_scoped(
+        ScopedKey("the_design.c.cell[0].power_calc.p"), CanonicalChannel("OccChan__p")
+    )
+    registry.register_scoped(
+        ScopedKey("the_design.c.cell.power_calc.p"), CanonicalChannel("DeixChan__p")
+    )
+    ref = _reference(chain_segments=["power_calc", "p"])
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="the_design.c.cell[0]",
+        formal_name="p",
+        usage_qualified_name="Design__c__cell0__bound",
+        registry=registry,
+        design_attr_by_qn={},
+    )
+    assert result.bound_channel == "OccChan__p"
+
+
+def test_precedence_scoped_lookup_beats_alias_lookup():
+    registry = OutputRegistry()
+    registry.register_scoped(ScopedKey("c.cell.aliased"), CanonicalChannel("ScopedChan"))
+    registry.register_alias(ScopedKey("c.cell.aliased"), CanonicalChannel("AliasChan"))
+    ref = _reference(chain_segments=["aliased"])
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="c.cell",
+        formal_name="a",
+        usage_qualified_name="Design__c__cell__nonneg",
+        registry=registry,
+        design_attr_by_qn={},
+    )
+    assert result.bound_channel == "ScopedChan"
+
+
+def test_precedence_flat_scoped_beats_structured_scoped_alias():
+    registry = OutputRegistry()
+    registry.register_scoped(
+        ScopedKey("c.cell.driver.efficiency"), CanonicalChannel("FlatChan")
+    )
+    registry.register_scoped_alias(
+        ScopedAliasKey(("c.cell.driver", "efficiency")), CanonicalChannel("StructChan")
+    )
+    ref = _reference(chain_segments=["driver", "efficiency"])
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="c.cell",
+        formal_name="eta",
+        usage_qualified_name="Design__c__cell__viability",
+        registry=registry,
+        design_attr_by_qn={},
+    )
+    assert result.bound_channel == "FlatChan"
+
+
+def test_precedence_channel_beats_design_attribute():
+    registry = OutputRegistry()
+    registry.register_scoped(ScopedKey("c.cell.power_calc.p"), CanonicalChannel("Chan__p"))
+    ref = _reference(chain_segments=["power_calc", "p"])
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="c.cell",
+        formal_name="p",
+        usage_qualified_name="Design__c__cell",
+        registry=registry,
+        design_attr_by_qn={
+            "Design__c__cell__power_calc__p": _attr("Design__c__cell__power_calc__p", "p")
+        },
+    )
+    assert result.resolution == "module_output"
+    assert result.bound_channel == "Chan__p"
+
+
+def test_precedence_occurrence_qn_beats_target_qn_design_attribute():
+    registry = OutputRegistry()
+    occ_qn = "Design__c__cell__driver__efficiency"
+    target_qn_eqn = "Lib__Driver__efficiency"
+    ref = _reference(
+        chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency"
+    )
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="c.cell",
+        formal_name="eta",
+        usage_qualified_name="Design__c__cell",
+        registry=registry,
+        design_attr_by_qn={
+            occ_qn: _attr(occ_qn, "efficiency"),
+            target_qn_eqn: _attr(target_qn_eqn, "efficiency"),
+        },
+    )
+    assert result.resolution == "design_attribute"
+    assert result.design_attribute_qn == occ_qn
+
+
+def test_precedence_target_qn_beats_def_scoped_base_default():
+    registry = OutputRegistry()
+    target_eqn = "Lib__Power_Plant__viability__gain"
+    def_eqn = "Lib__Power_Plant__gain"
+    ref = _reference(source_name="gain", target_qn="Lib::'Power Plant'::viability::gain")
+    result = resolve_actual(
+        reference=ref,
+        occ_scope="plant",
+        formal_name="gain",
+        usage_qualified_name="Design__plant",
+        registry=registry,
+        design_attr_by_qn={
+            target_eqn: _attr(target_eqn, "gain"),
+            def_eqn: _attr(def_eqn, "gain"),
+        },
+        owner_def_qn="Lib__Power_Plant",
+    )
+    assert result.resolution == "design_attribute"
+    assert result.design_attribute_qn == target_eqn
+
+
+# --- path-grammar characterization (adversarial inputs) -----------------------------
+# occurrence_scope/_deindexed_scope/_reference_dotted do raw string surgery with no
+# validation (review finding 4). These pin today's exact behavior on malformed input
+# so any future change to the path grammar is a visible, deliberate decision.
+
+
+def test_occurrence_scope_single_segment_yields_empty_scope():
+    assert occurrence_scope("cell") == ""
+    assert occurrence_scope("") == ""
+
+
+def test_deindexed_scope_strips_well_formed_brackets():
+    from sysml_codegen.analysis.constraint_lowering import _deindexed_scope
+
+    assert _deindexed_scope("c.cell[0]") == "c.cell"
+    assert _deindexed_scope("a[0].b[12]") == "a.b"
+
+
+def test_deindexed_scope_unclosed_bracket_drops_rest_of_string():
+    from sysml_codegen.analysis.constraint_lowering import _deindexed_scope
+
+    assert _deindexed_scope("c.cell[0") == "c.cell"
+    assert _deindexed_scope("c.cell[0.driver") == "c.cell"
+
+
+def test_deindexed_scope_stray_close_bracket_is_dropped():
+    from sysml_codegen.analysis.constraint_lowering import _deindexed_scope
+
+    assert _deindexed_scope("c]cell") == "ccell"
+
+
+def test_deindexed_scope_nested_brackets_close_at_first_rbracket():
+    from sysml_codegen.analysis.constraint_lowering import _deindexed_scope
+
+    # skip is a bool, not a depth counter: the first ] re-enables copying and
+    # the second ] is dropped as a stray close.
+    assert _deindexed_scope("a[b[0]]") == "a"
+
+
+def test_reference_dotted_chain_wins_over_source_name():
+    from sysml_codegen.analysis.constraint_lowering import _reference_dotted
+
+    ref = _reference(source_name="disagrees", chain_segments=["a", "b"])
+    assert _reference_dotted(ref) == "a.b"
+
+
+def test_reference_dotted_empty_chain_falls_to_source_name_else_none():
+    from sysml_codegen.analysis.constraint_lowering import _reference_dotted
+
+    assert _reference_dotted(_reference(source_name="x")) == "x"
+    assert _reference_dotted(_reference()) is None
+
+
+def test_reference_dotted_preserves_empty_chain_segments():
+    from sysml_codegen.analysis.constraint_lowering import _reference_dotted
+
+    # An empty segment survives the join — the ladder key simply misses.
+    ref = _reference(chain_segments=["a", ""])
+    assert _reference_dotted(ref) == "a."
