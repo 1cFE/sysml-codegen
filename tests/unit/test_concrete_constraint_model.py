@@ -89,3 +89,86 @@ def test_assert_unique_constraint_ids_passes_on_distinct():
     a = _make_cc("id_0", "Design__c__cell[0]")
     b = _make_cc("id_1", "Design__c__cell[1]")
     assert_unique_constraint_ids([a, b])  # no raise
+
+
+# --- invariant enforcement (code-quality remediation, 2026-07-14) ---------------
+# The docstrings always claimed these states were impossible; the models now
+# reject them at construction instead of relying on downstream asserts.
+
+
+def test_input_module_output_requires_bound_channel():
+    # The review's original probe: wrong arm populated, right arm empty.
+    with pytest.raises(ValueError, match="must not populate 'design_attribute_qn'"):
+        ConcreteConstraintInput(
+            formal_name="p",
+            resolution=ConstraintInputResolution.MODULE_OUTPUT,
+            bound_channel=None,
+            design_attribute_qn="Design__c__wrong",
+        )
+    # And the pure-missing case:
+    with pytest.raises(ValueError, match="requires 'bound_channel'"):
+        ConcreteConstraintInput(
+            formal_name="p",
+            resolution=ConstraintInputResolution.MODULE_OUTPUT,
+        )
+
+
+def test_input_rejects_field_from_other_resolution_arm():
+    with pytest.raises(ValueError, match="must not populate 'design_attribute_qn'"):
+        ConcreteConstraintInput(
+            formal_name="p",
+            resolution=ConstraintInputResolution.MODULE_OUTPUT,
+            bound_channel="Design__c__cell__power_calc__p",
+            design_attribute_qn="Design__c__also_set",
+        )
+
+
+def test_input_design_attribute_requires_qn():
+    with pytest.raises(ValueError, match="requires 'design_attribute_qn'"):
+        ConcreteConstraintInput(
+            formal_name="p",
+            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+        )
+
+
+def test_input_modeled_default_allows_absent_default_ir():
+    # Pinned edge: a formal with no recorded default mints a defaultless
+    # LIBRARY_DEFAULT entry point downstream (test_phase4_bugfix_regressions).
+    inp = ConcreteConstraintInput(
+        formal_name="zero",
+        resolution=ConstraintInputResolution.MODELED_DEFAULT,
+        default_ir=None,
+    )
+    assert inp.default_ir is None
+
+
+def test_input_modeled_default_rejects_channel():
+    with pytest.raises(ValueError, match="must not populate 'bound_channel'"):
+        ConcreteConstraintInput(
+            formal_name="zero",
+            resolution=ConstraintInputResolution.MODELED_DEFAULT,
+            bound_channel="Design__c__cell__power_calc__p",
+        )
+
+
+def test_eligible_requires_predicate_ir_and_channel():
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["predicate_ir"] = None
+    with pytest.raises(ValueError, match="has no predicate_ir"):
+        ConcreteConstraint(**kwargs)
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["evaluation_channel"] = None
+    with pytest.raises(ValueError, match="has no evaluation_channel"):
+        ConcreteConstraint(**kwargs)
+
+
+def test_unassessed_record_stays_constructible():
+    cc = _make_cc("id_0", "Design__c__cell", eligible=False)
+    assert cc.eligible is False and cc.predicate_ir is None
+
+
+def test_expected_value_must_derive_from_polarity():
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["is_negated"] = True  # expected_value stays True -> inconsistent
+    with pytest.raises(ValueError, match="does not derive from is_negated"):
+        ConcreteConstraint(**kwargs)

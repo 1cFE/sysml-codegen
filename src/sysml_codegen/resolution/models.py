@@ -14,7 +14,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # Import shared types from core for re-export (backward compatibility)
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
@@ -250,16 +250,19 @@ class ConstraintInputResolution(str, Enum):
 class ConcreteConstraintInput(BaseModel):
     """One resolved formal on a :class:`ConcreteConstraint` (Item 5 / D4).
 
-    Exactly one of the resolution-tagged fields is populated, matching
-    ``resolution``:
+    Only the resolution-tagged field matching ``resolution`` is populated
+    (enforced by a model validator):
     - ``module_output``: ``bound_channel`` carries the producer channel the
       strict resolver actually bound — the occurrence-scoped key when it hit,
       else the shared de-indexed channel (B1-settled; recorded, never hidden,
-      per INV-3).
+      per INV-3). Required.
     - ``design_attribute``: ``design_attribute_qn`` carries the minted entry
-      point's real qualified name (F4-safe, QN-deduped per INV-5).
+      point's real qualified name (F4-safe, QN-deduped per INV-5). Required.
     - ``modeled_default``: ``default_ir`` carries the formal's own default,
-      serialized the same way as ``predicate_ir`` (D5-IR).
+      serialized the same way as ``predicate_ir`` (D5-IR). May be ``None``
+      when the formal has no recorded default — graph extension then mints a
+      defaultless ``LIBRARY_DEFAULT`` entry point the user must supply
+      (pinned by ``test_phase4_bugfix_regressions``).
     """
 
     formal_name: str
@@ -267,6 +270,26 @@ class ConcreteConstraintInput(BaseModel):
     bound_channel: str | None = None
     design_attribute_qn: str | None = None
     default_ir: str | None = None
+
+    @model_validator(mode="after")
+    def _resolution_field_matches_tag(self) -> "ConcreteConstraintInput":
+        required_by_tag: dict[ConstraintInputResolution, str | None] = {
+            ConstraintInputResolution.MODULE_OUTPUT: "bound_channel",
+            ConstraintInputResolution.DESIGN_ATTRIBUTE: "design_attribute_qn",
+            ConstraintInputResolution.MODELED_DEFAULT: None,  # default_ir may be absent
+        }
+        tag_field = required_by_tag[self.resolution]
+        allowed = tag_field if tag_field is not None else "default_ir"
+        for field in ("bound_channel", "design_attribute_qn", "default_ir"):
+            if field != allowed and getattr(self, field) is not None:
+                raise ValueError(
+                    f"resolution={self.resolution.value!r} must not populate {field!r}"
+                )
+        if tag_field is not None and getattr(self, tag_field) is None:
+            raise ValueError(
+                f"resolution={self.resolution.value!r} requires {tag_field!r}"
+            )
+        return self
 
 
 class ConcreteConstraint(BaseModel):
@@ -320,6 +343,30 @@ class ConcreteConstraint(BaseModel):
     evaluation_channel: str | None = None
     eligible: bool = True
     tracking_key: str | None = None
+
+    @model_validator(mode="after")
+    def _eligible_requires_executable_fields(self) -> "ConcreteConstraint":
+        if self.eligible:
+            if self.predicate_ir is None:
+                raise ValueError(
+                    f"eligible constraint {self.constraint_id!r} has no predicate_ir "
+                    "(profile ADMIT guarantees an effective predicate)"
+                )
+            if self.evaluation_channel is None:
+                raise ValueError(
+                    f"eligible constraint {self.constraint_id!r} has no evaluation_channel"
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _expected_value_derives_from_polarity(self) -> "ConcreteConstraint":
+        derived = (not self.is_negated) if self.is_negated is not None else None
+        if self.expected_value != derived:
+            raise ValueError(
+                f"constraint {self.constraint_id!r}: expected_value={self.expected_value!r} "
+                f"does not derive from is_negated={self.is_negated!r}"
+            )
+        return self
 
 
 class ConstraintCatalogSourceRecord(BaseModel):
