@@ -752,7 +752,9 @@ constraint architecture.
      — hand-synced by docstring decree — and `pipeline_builder.find_instance_paths_for_partdef`
      with its first-wins multi-design heuristic) into one index built once per pipeline; project
      legacy strings at the edges until byte-identity gates permit deleting the old walkers.
-     Also split the snapshot transport adapters out of `part_instance_index.py:363-442`.
+     Also split the snapshot transport adapters out of `part_instance_index.py:363-442`. Before
+     collapsing the walkers, add differential singleton parity and edge characterizations for
+     cycles, diamonds, zero/multiple blocked definitions, and multi-digit occurrence indices.
   4. *Shared live/offline phases.* `pipeline_builder.py` and `snapshot/graph_rebuild.py`
      mirror the demand→materialize→lower→extend→catalog sequence by convention and import each
      other's private helpers; all live-vs-snapshot parity legs are license-gated, so the default
@@ -765,3 +767,48 @@ constraint architecture.
   carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production
   always no-op; disclosed in design-review and docstring). Either real exit selection owns this
   API or the test proves capture-everything behavior without dormant production branches.
+
+## CONSTRAINT-EXEC remediation audit follow-on (registered 2026-07-17)
+
+Source: independent audit
+`.project/active/constraint-exec-code-quality-remediation/audit.md` at sysml-codegen
+commit `c2967f0`, using clean companion executable-profile commit `9e24c93`. These are
+`[AGENT]` findings. They are not owner-originated settled requirements.
+
+- **[CONSTRAINT-FORMAL-COVERAGE] Bind actuals by formal target and prove total formal coverage —
+  P1 `[AGENT]`.** `lower_constraints` keys bindings by `ActualFact.name`, ignores
+  `ActualFact.formal_targets`, and never subtracts actual/default bindings from the referenced
+  definition's formal set (`constraint_lowering.py:610-639`). A required formal with no actual or
+  default therefore lowers with no input, and an actual whose local name differs from its target is
+  assigned the wrong formal name. Implement target-QN-to-definition-formal matching; reject zero,
+  multiple, and duplicate targets; require every formal to resolve through exactly one actual or an
+  explicitly omitted modeled default; and add probes for renamed actuals and missing required
+  formals. This restores `.project/completed/20260713_constraint-lowering/spec.md:150-164`.
+- **[PROFILE-COMPILER-PARITY] Make executable-profile admission total for predicate compilation —
+  P1 `[AGENT]`.** Clean companion profile v1 admits proven Boolean/string/integer/same-enum
+  equality and currently admits arithmetic nodes without arity checks; the predicate compiler
+  rejects all equality, unary `+`, and zero-operand arithmetic. Reconcile the versioned profile and
+  compiler deliberately: implement every admitted equality category, block unsupported shapes in
+  the profile or support them downstream, and add a differential gate proving every `ADMIT` IR
+  compiles. Centralize ExpressionIR arity/unary/identifier validation for both renderers, add the
+  missing calc zero-operand test, and reduce the new C901 13 `_compile_numeric` branch density while
+  doing the shared visitor/validation work.
+- **[CONSTRAINT-MODEL-INVARIANTS] Close the remaining eligible/unassessed model states — P2
+  `[AGENT]`.** `ConcreteConstraint` still accepts an eligible constraint with null polarity and an
+  ineligible constraint with executable payload; `ConstraintCatalogEntry` independently permits
+  null executable fields; generation coerces null polarity with `bool(None)`. Enforce the full
+  relationship in both model shapes: eligible implies non-null predicate, evaluation channel,
+  polarity, and derived expectation; unassessed implies no executable payload. Remove the coercion
+  and add negative construction tests for both directions.
+- **[PART-INDEX-TIEBREAK] Complete the occurrence ordering key — P2 `[AGENT]`.**
+  `_occurrence_sort_key` uses only feature names and occurrence indices. Different owning
+  definitions or leaf PartDefs can tie, after which set iteration makes output order depend on
+  `PYTHONHASHSEED`. Include owning-definition identity and `part_def_qn` in a total structural key;
+  pin equal-segment, different-root ordering across multiple hash seeds.
+- **[CONTRACT-VERIFY-BOUNDARY] Normalize missing and malformed package seals — P2 `[AGENT]`.**
+  `verify_package` advertises `VerificationResult` but missing seals, invalid JSON, and absent keys
+  escape as filesystem/JSON/key exceptions; its strict runtime mismatch check also uses string
+  identity. Define diagnostics for unreadable/malformed seals, validate the schema before indexing,
+  use value equality, and test missing file, malformed JSON, missing keys, and the emitted-verifier
+  byte-identity gate. This finding was already present in the 2026-07-13 research but was not in the
+  earlier follow-on backlog.

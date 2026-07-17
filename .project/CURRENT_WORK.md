@@ -1,12 +1,28 @@
 # Current Work
 
-**Last Updated**: 2026-07-14
+**Last Updated**: 2026-07-17
 
 ---
 
 ## Active Work
 
-### CONSTRAINT-EXEC code-quality remediation — ✅ COMPLETE (2026-07-14)
+### CONSTRAINT-EXEC code-quality remediation — AUDITED: NEEDS WORK (2026-07-17)
+
+An independent audit at `c2967f0` verified the four focused remediation commits but did not
+certify the work. Two P1 contract defects remain: constraint lowering ignores
+`ActualFact.formal_targets` and does not reject uncovered required formals; the executable profile
+admits IR shapes, including proven integer equality, that the predicate compiler rejects. The new
+eligibility validators are also incomplete, occurrence sorting has a hash-seed-dependent tie, and
+package verification does not normalize missing or malformed seals. Audit:
+`.project/active/constraint-exec-code-quality-remediation/audit.md`. All unresolved work
+is filed in `BACKLOG.md` as `[CONSTRAINT-FORMAL-COVERAGE]`, `[PROFILE-COMPILER-PARITY]`,
+`[CONSTRAINT-MODEL-INVARIANTS]`, `[PART-INDEX-TIEBREAK]`, and
+`[CONTRACT-VERIFY-BOUNDARY]`.
+
+The three companion agentic-mbse audit cures are committed and pushed at `82fef09`. Paired
+sysml-codegen compatibility with that exact revision remains the next stage.
+
+The initial remediation pass completed on 2026-07-14 as follows.
 
 The independent code-quality review
 (`.project/research/20260713-213722_constraint-exec-pr-code-quality.md`) was verified
@@ -28,9 +44,11 @@ reimplemented topo sort. Its pre-merge bar then landed as four commits on
 - `05690f0` — resolver precedence-under-conflict pins (6 two-rungs-both-match tests) +
   path-grammar characterization (brackets, empty segments, chain-vs-source_name).
 
-Gates at close: licensed suite **2364 passed / 23 skipped** (was 2330/23; +34 new tests),
-`tests/fixtures` byte-identical throughout, ruff clean on touched files, mypy at the 76
-baseline. The architectural remainder is registered as `[CONSTRAINT-ARCH-UNIFY]` (P1) and
+Reported gates at the remediation close: licensed suite **2364 passed / 23 skipped** (was 2330/23;
++34 new tests), `tests/fixtures` byte-identical throughout, Ruff clean on the remediation scope,
+mypy at the 76 baseline. The independent audit verified touched production files as Ruff-clean; one
+touched test file retains five pre-existing whole-file violations. The architectural remainder is
+registered as `[CONSTRAINT-ARCH-UNIFY]` (P1) and
 `[EXIT-PIN-SEAM]` (P3) in `BACKLOG.md` — merging PR #9 does not bless the current parallel
 ladders / triple walker / mirrored live-offline phases as the permanent architecture.
 
