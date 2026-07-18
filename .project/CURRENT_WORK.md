@@ -1,26 +1,96 @@
 # Current Work
 
-**Last Updated**: 2026-07-17
+**Last Updated**: 2026-07-18
 
 ---
 
 ## Active Work
 
-### CONSTRAINT-EXEC code-quality remediation — AUDITED: NEEDS WORK (2026-07-17)
+### Numerical constraint executable profile — CERTIFIED (2026-07-18)
 
-An independent audit at `c2967f0` verified the four focused remediation commits but did not
-certify the work. Two P1 contract defects remain: constraint lowering ignores
-`ActualFact.formal_targets` and does not reject uncovered required formals; the executable profile
-admits IR shapes, including proven integer equality, that the predicate compiler rejects. The new
-eligibility validators are also incomplete, occurrence sorting has a hash-seed-dependent tie, and
-package verification does not normalize missing or malformed seals. Audit:
-`.project/active/constraint-exec-code-quality-remediation/audit.md`. All unresolved work
-is filed in `BACKLOG.md` as `[CONSTRAINT-FORMAL-COVERAGE]`, `[PROFILE-COMPILER-PARITY]`,
-`[CONSTRAINT-MODEL-INVARIANTS]`, `[PART-INDEX-TIEBREAK]`, and
-`[CONTRACT-VERIFY-BOUNDARY]`.
+**Audit verdict: Certify** (`.project/active/numerical-constraint-profile/audit.md`). All 8 spec
+success criteria verified against code/tests, not just records: totality/execution, split-equality
+outcomes, both-tools warnings, catalog `excluded_records` with the eligible⇔exclusion validator
+(construction-probed unrepresentable), live/snapshot value parity, frozen golden untouched, v3 pin
+in both repos (companion `05cde35`). Parent-remediation booking (`096c29f`) for the mid-run licensed
+failure confirmed genuine. Not independently rerun: full licensed corpora, mypy/ruff/`-O`, the R4
+reversal experiment. Item changes are still uncommitted in the working tree.
 
-The three companion agentic-mbse audit cures are committed and pushed at `82fef09`. Paired
-sysml-codegen compatibility with that exact revision remains the next stage.
+
+Dedicated CONSTRAINT-EXEC Item 3 contract correction:
+`.project/active/numerical-constraint-profile/{spec,spec-review,design,design-review,plan}.md`.
+Spec reviewed and revised in-session (owner resolved all findings; three-way rule: admitted
+numerical claims execute, malformed numerical claims error naming the fix, non-numerical
+statements warn in both tools and never block generation). Design approved after review — key
+owner-ratified calls: numerical-claim **containment** decides force (mixed `(x > 0) and flag`
+errors), one tagged exclusion payload on `ConcreteConstraint` projected into catalog
+`excluded_records`, single v3 pin at shared lowering, location-fallback rendering. Plan is 5
+phases, agentic-mbse first (profile v3 + answer key → L4/L6 → codegen re-pin → exclusion/catalog
++ re-capture → end-to-end families + gates).
+
+All five phases are complete. Agentic-mbse profile v3 core landed as `b251e95`; L4/L6 consumers
+and the exact compatible companion state landed as `05cde35`. Codegen now pins v3, renders fixes
+on malformed numerical halts, warns once per non-numerical statement, validates a total exclusion
+payload, and projects excluded statements into the constraint catalog. New live families prove
+warn-and-continue with an admitted numerical sibling and error-force containment for
+`(value > 0.0) and flag`; the warning, graph, and complete catalog are identical live/offline.
+
+R4 proved the inherited-inline licensed failure predated Phase 3. Commit `096c29f` corrected the
+parent remediation's invalid empty-design-attributes regression harness, and `aaa579e` refreshed
+its stale inline baseline. Final licensed codegen evidence is **2450 passed, 26 skipped, 8
+deselected**; optimized focused evidence is **125 passed**. The exact `05cde35` companion archive
+passed **1491 tests, 1 skipped, 5 deselected**. Targeted mypy and touched-file Ruff/format passed.
+The next stage is an independent `$my-audit`; do not self-certify this implementation.
+
+### CONSTRAINT-EXEC code-quality remediation — AUDIT CURES IN PROGRESS; NUMERICAL PROFILE SPECIFIED (2026-07-18)
+
+The four decision-independent audit cures are implemented in the dirty worktree. Profile-v2
+quantity references and the complete admitted arithmetic/ordering operator matrix now compile;
+the committed `constraint_inline` snapshot renders and executes with its owner feature wired as a
+module input; constraint/catalog assignment validation is transactional and catalog assembly
+revalidates before filtering/fingerprinting; and package verification validates digest/path/
+fingerprint semantics while normalizing artifact I/O failures. The active design addendum and
+amended execution record are in
+`.project/active/constraint-exec-code-quality-remediation/{design,plan}.md`.
+
+Focused validation passed **149 tests with 13 license skips** in both normal and optimized Python.
+The committed inline snapshot executed under the documented agentic-mbse/TEAx environment (**1
+passed**). The exact companion profile suite at `82fef09` passed **113 tests**. Targeted mypy passed
+on all five touched production files; touched-file Ruff/format, `git diff --check`, fixture
+preservation, and the production placeholder scan passed.
+
+The owner resolved the remaining contract choice on 2026-07-18: preserve the generated numerical
+data path and narrow executable admission. The dedicated numerical-profile item is now implemented
+and its final combined gates are green. The parent remediation still needs its independent audit
+and closeout; the numerical implementation record is not self-certification.
+
+#### Independent audit basis
+
+The independent audit verified the formal-target binding and total occurrence-ordering cures. It
+did not certify the full remediation. Exact companion profile v2 still admits quantity-reference
+predicates the compiler rejects, while newly admitted non-real equality has no typed generated
+input/evidence path. The committed inline-constraint fixture also lowers to a module whose
+predicate leaf has no matching input.
+
+Two local boundary gaps remain. Construction-time model validators can be bypassed by assignment,
+which can silently drop a mutated constraint during catalog or graph assembly. Package verification
+does not validate fingerprint derivation or artifact-path containment, and recorded artifact I/O
+can still escape as a raw exception. The affected plan checkboxes were reopened and the unresolved
+work is registered in `.project/backlog/BACKLOG.md`. Full evidence is in
+`.project/active/constraint-exec-code-quality-remediation/audit.md`.
+
+Independent focused validation passed in normal mode (**174 passed, 5 skipped, 7 deselected**).
+The same changed scope under `python -O` produced **173 passed, 5 skipped**, plus the one unrelated
+pre-existing assertion-dependent failure. Touched-file Ruff and formatting, `git diff --check`,
+fixture preservation, and the placeholder scan passed. Targeted mypy remains non-green on the
+imported project surface.
+
+The implementing agent's broader, carried evidence remains: exact companion compatibility **92
+passed**; combined remediation **189 passed, 18 skipped**; optimized remediation **138 passed, 18
+skipped**; and the unlicensed full suite **2,107 passed, 197 skipped, 7 deselected, 23 failed, 96
+errors**, with the failures/errors reported as license-dependent. The independent audit did not
+rerun the full suite or reproduce the exact 92-test command, so these results are implementation
+evidence rather than independent certification.
 
 The initial remediation pass completed on 2026-07-14 as follows.
 

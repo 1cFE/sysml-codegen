@@ -25,7 +25,6 @@ from typing import Any
 import pytest
 from agentic_mbse.sysml import constraint_facts as constraint_facts_module
 from agentic_mbse.sysml.constraint_facts import (
-    CONSTRAINT_FACTS_SCHEMA_VERSION,
     ConstraintFacts,
     ConstraintSource,
     ConstraintUsageFact,
@@ -80,7 +79,6 @@ def _facts_with_predicate() -> ConstraintFacts:
         inherited_into=[],
     )
     return ConstraintFacts(
-        schema_version=CONSTRAINT_FACTS_SCHEMA_VERSION,
         definitions=[],
         usages=[usage],
         contexts=[],
@@ -94,9 +92,7 @@ def _v3_snapshot_dict() -> dict[str, Any]:
     expression-ir scan has a real node to corrupt)."""
     raw = json.loads(snapshot_fixture("chain_spike_model").read_text())
     raw["snapshot_format_version"] = 3
-    raw["constraint_facts"] = json.loads(
-        constraint_facts_module.serialize(_facts_with_predicate())
-    )
+    raw["constraint_facts"] = json.loads(constraint_facts_module.serialize(_facts_with_predicate()))
     raw["part_occurrences"] = {}
     raw["constraint_lowering_mode"] = "applied"
     return raw

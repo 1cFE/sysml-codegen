@@ -4,8 +4,7 @@ The kept proof the migration invariant rests on: every constraint usage the
 retiring drop-manifest (`extractor.collect_constraint_manifest()`) would have
 reported has a carrier in the catalog era — either an eligible concrete entry
 (`graph.constraint_catalog.concrete_entries`, grouped by `usage_qualified_name`)
-or an explicit `eligible=False` unassessed record (`ctx.concrete_constraints` —
-NOT the catalog, which `assemble_constraint_catalog` filters to eligible-only).
+or an explicit catalog `excluded_records` projection of the validated exclusion payload.
 This test must be green BEFORE Phase 3 deletes the manifest era — the proof
 precedes the retirement it authorizes.
 
@@ -33,6 +32,7 @@ CONSTRAINT_BEARING_FIXTURES = [
     "wi014_toy",
     "constraint_inline",
     "constraint_multi_instance",
+    "constraint_non_numerical",
 ]
 
 # Requirement-side kinds the manifest sweeps but the profile/lowering never
@@ -110,9 +110,11 @@ def test_catf_mfe_65_plain_constraints_land_unassessed_not_block(caplog):
     ctx = build_pipeline_context([FIXTURES_DIR / "catf_mfe_model"])
     assert len(ctx.concrete_constraints) == 65
     assert all(not c.eligible for c in ctx.concrete_constraints)
-    assert ctx.computation_graph.constraint_catalog is None or not (
-        ctx.computation_graph.constraint_catalog.concrete_entries
-    )
+    catalog = ctx.computation_graph.constraint_catalog
+    assert catalog is not None
+    assert catalog.concrete_entries == []
+    assert len(catalog.excluded_records) == 65
+    assert all(record.exclusion.kind == "unassessed_form" for record in catalog.excluded_records)
 
     profile = evaluate_profile(ctx.constraint_facts)
     dispositions = {d.eligibility for d in profile.decisions}

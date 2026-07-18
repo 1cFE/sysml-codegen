@@ -60,9 +60,7 @@ def _predicate_ir(op: str = ">") -> str:
 
 
 def _empty_facts() -> ConstraintFacts:
-    return ConstraintFacts(
-        schema_version="constraint-facts/v1", definitions=[], usages=[], contexts=[], diagnostics=[]
-    )
+    return ConstraintFacts(definitions=[], usages=[], contexts=[], diagnostics=[])
 
 
 def _concrete(
@@ -205,6 +203,19 @@ def test_same_ir_clean_entries_pass():
     assert_same_ir(catalog.concrete_entries)  # no raise
 
 
+def test_mutated_catalog_polarity_fails_before_compilation():
+    catalog = assemble_constraint_catalog([_concrete("C1", "Pkg__Cell_1")], _empty_facts())
+    with pytest.raises(ValueError):
+        catalog.concrete_entries[0].is_negated = None
+    compile_shared_predicates(catalog)
+
+
+def test_catalog_filter_revalidates_model_copy_before_fingerprinting():
+    invalid = _concrete("C1", "Pkg__Cell_1").model_copy(update={"eligible": False})
+    with pytest.raises(ValueError, match="unassessed.*executable payload"):
+        assemble_constraint_catalog([invalid], _empty_facts())
+
+
 # ---------------------------------------------------------------------------
 # D11: catalog assembled even with zero eligible entries
 # ---------------------------------------------------------------------------
@@ -227,7 +238,53 @@ def test_catalog_assembled_with_zero_eligible_entries():
         inputs=[],
         evaluation_channel=None,
         eligible=False,
+        exclusion={
+            "kind": "unassessed_form",
+            "reasons": [],
+            "location": "<no location>",
+        },
     )
     catalog = assemble_constraint_catalog([unassessed], _empty_facts())
     assert catalog.concrete_entries == []
+    assert [record.constraint_id for record in catalog.excluded_records] == ["U1"]
+    assert catalog.excluded_records[0].exclusion.kind == "unassessed_form"
     assert catalog.fingerprint  # still deterministic/non-empty
+
+
+def test_catalog_projects_excluded_records_in_id_order():
+    def excluded(constraint_id: str, kind: str, reasons: list[str]) -> ConcreteConstraint:
+        return ConcreteConstraint(
+            constraint_id=constraint_id,
+            usage_qualified_name=f"Pkg::{constraint_id}",
+            source_local_identity=constraint_id,
+            source_form="inline",
+            owner_kind="part_def",
+            owner_qualified_name="Pkg::Cell",
+            owner_instance_path="Pkg__cell",
+            membership_kind="assert",
+            is_negated=False,
+            expected_value=None,
+            predicate_ir=None,
+            inputs=[],
+            evaluation_channel=None,
+            eligible=False,
+            exclusion={
+                "kind": kind,
+                "reasons": reasons,
+                "location": "model.sysml:12:4",
+            },
+        )
+
+    catalog = assemble_constraint_catalog(
+        [
+            excluded("B", "non_numerical", ["warn_b", "warn_a"]),
+            excluded("A", "unsupported_owner", []),
+        ],
+        _empty_facts(),
+    )
+
+    assert [record.constraint_id for record in catalog.excluded_records] == ["A", "B"]
+    projected = catalog.excluded_records[1]
+    assert projected.exclusion.kind == "non_numerical"
+    assert projected.exclusion.reasons == ["warn_b", "warn_a"]
+    assert projected.exclusion.location == "model.sysml:12:4"

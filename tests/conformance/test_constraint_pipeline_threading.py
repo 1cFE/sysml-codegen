@@ -95,9 +95,7 @@ def test_multi_instance_end_to_end_through_wired_path():
         [FIXTURES_DIR / "constraint_multi_instance"], lower_constraints_enabled=True
     )
     assert len(ctx.concrete_constraints) == 3
-    constraint_modules = [
-        m for m in ctx.computation_graph.modules if m.module_kind == "constraint"
-    ]
+    constraint_modules = [m for m in ctx.computation_graph.modules if m.module_kind == "constraint"]
     assert len(constraint_modules) == 3
     assert len({m.outputs[0].channel_name for m in constraint_modules}) == 3
 
@@ -196,10 +194,7 @@ def test_inheritance_cross_check_instance_index_probe_oracle_unchanged():
         "InstanceIndexProbe__root__specialized__leaf",
     }
     assert all(
-        [
-            (input_.formal_name, input_.design_attribute_qn)
-            for input_ in constraint.inputs
-        ]
+        [(input_.formal_name, input_.design_attribute_qn) for input_ in constraint.inputs]
         == [("reading", "InstanceIndexProbe__ConstrainedLeaf__reading")]
         for constraint in concrete
     )
@@ -218,8 +213,8 @@ def test_wired_path_halts_on_profile_blocked_assert():
     message = str(exc_info.value)
     assert "not executable" in message
     assert "exact" in message
-    # Reason-grade, not just "blocked" (block_real_equality family)
-    assert "equal" in message.lower()
+    assert "block_real_equality_requires_tolerance" in message
+    assert "two-inequality" in message
 
 
 @requires_license

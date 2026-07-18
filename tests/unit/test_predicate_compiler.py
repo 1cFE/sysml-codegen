@@ -10,8 +10,18 @@ reconstructs canonical JSON, not SysML source text, so hand-built trees are the 
 from __future__ import annotations
 
 import pytest
-from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, LiteralFact, OperandTypeFact
-from agentic_mbse.sysml.expression_ir import FeatureReferenceNode, LiteralNode, OperatorNode
+from agentic_mbse.sysml.expression_facts import (
+    FeatureReferenceFact,
+    LiteralFact,
+    OperandTypeFact,
+    UnitFact,
+)
+from agentic_mbse.sysml.expression_ir import (
+    FeatureReferenceNode,
+    LiteralNode,
+    OperatorNode,
+    UnitAnnotationNode,
+)
 
 from sysml_codegen.generation.predicate_compiler import (
     PredicateCompileError,
@@ -21,13 +31,14 @@ from sysml_codegen.generation.predicate_compiler import (
 )
 
 
-def _ref(name: str) -> FeatureReferenceNode:
+def _ref(name: str, category: str = "real", enumeration: str | None = None) -> FeatureReferenceNode:
     return FeatureReferenceNode(
         reference=FeatureReferenceFact(
             source_name=name, target=None, target_types=[], chain_segments=[]
         ),
-        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+        operand_type=OperandTypeFact(category=category, enumeration=enumeration, unit=None),
     )
+
 
 def _chain_ref(name: str) -> FeatureReferenceNode:
     return FeatureReferenceNode(
@@ -45,10 +56,43 @@ def _lit_real(value: float) -> LiteralNode:
     )
 
 
+_METRE = UnitFact(unit="SI::metre", dimension="ISQBase::LengthUnit")
+
+
+def _quantity_ref(name: str) -> FeatureReferenceNode:
+    return FeatureReferenceNode(
+        reference=FeatureReferenceFact(
+            source_name=name, target=None, target_types=[], chain_segments=[]
+        ),
+        operand_type=OperandTypeFact(category="quantity", enumeration=None, unit=_METRE),
+    )
+
+
+def _quantity_literal(value: int) -> UnitAnnotationNode:
+    return UnitAnnotationNode(
+        value=_lit_value(value, "integer"),
+        unit_text="m",
+        operand_type=OperandTypeFact(category="quantity", enumeration=None, unit=_METRE),
+    )
+
+
 def _lit_bool(value: bool) -> LiteralNode:
     return LiteralNode(
         literal=LiteralFact(kind="LiteralBoolean", value=value, result_type="boolean"),
         operand_type=OperandTypeFact(category="boolean", enumeration=None, unit=None),
+    )
+
+
+def _lit_value(value: object, category: str, enumeration: str | None = None) -> LiteralNode:
+    kind = {
+        "boolean": "LiteralBoolean",
+        "integer": "LiteralInteger",
+        "string": "LiteralString",
+        "enum": "LiteralString",
+    }[category]
+    return LiteralNode(
+        literal=LiteralFact(kind=kind, value=value, result_type=category),
+        operand_type=OperandTypeFact(category=category, enumeration=enumeration, unit=None),
     )
 
 
@@ -58,6 +102,10 @@ def _cmp_node(op: str, a, b) -> OperatorNode:
 
 def _bool_op(op: str, *operands) -> OperatorNode:
     return OperatorNode(operator=op, operands=list(operands), operand_type=None)
+
+
+def _unary(op: str, operand) -> OperatorNode:
+    return OperatorNode(operator=op, operands=[operand], operand_type=None)
 
 
 def _compile_and_load(ir, fn_name: str, negated: bool = False):
@@ -141,14 +189,89 @@ def test_leaf_ref_names_dedup_first_occurrence_order():
     assert args == ["a", "b", "c"]
 
 
-def test_equality_blocked():
-    ir = _cmp_node("==", _ref("a"), _ref("b"))
-    try:
+@pytest.mark.parametrize(
+    ("category", "enumeration", "left", "right"),
+    [
+        ("boolean", None, True, True),
+        ("string", None, "tea", "coffee"),
+        ("integer", None, 7, 7),
+        ("enum", "Synthetic::Color", "red", "blue"),
+    ],
+)
+def test_profile_v3_rejects_all_equality_categories(category, enumeration, left, right):
+    ir = _cmp_node(
+        "==",
+        _lit_value(left, category, enumeration),
+        _lit_value(right, category, enumeration),
+    )
+    with pytest.raises(PredicateCompileError, match="profile preflight must exclude"):
+        compile_predicate(ir, "p")
+
+
+def test_equality_rejected_before_observation_handling():
+    ir = _cmp_node("==", _ref("a", "integer"), _ref("b", "integer"))
+    with pytest.raises(PredicateCompileError, match="profile preflight must exclude"):
+        compile_predicate(ir, "p")
+
+
+@pytest.mark.parametrize(
+    ("ir", "values", "expected"),
+    [
+        (_cmp_node("<=", _quantity_ref("a"), _quantity_ref("b")), {"a": 1, "b": 2}, True),
+        (_cmp_node("<=", _quantity_ref("a"), _quantity_literal(2)), {"a": 3}, False),
+        (
+            _cmp_node("<=", _unary("+", _quantity_ref("a")), _quantity_literal(2)),
+            {"a": 2},
+            True,
+        ),
+        (
+            _cmp_node(
+                "<=",
+                OperatorNode(
+                    operator="*",
+                    operands=[_lit_value(2, "integer"), _quantity_ref("a")],
+                    operand_type=None,
+                ),
+                _quantity_literal(3),
+            ),
+            {"a": 2},
+            False,
+        ),
+        (
+            _cmp_node(
+                "<=",
+                OperatorNode(
+                    operator="/",
+                    operands=[_quantity_ref("a"), _quantity_ref("b")],
+                    operand_type=None,
+                ),
+                _lit_value(2, "integer"),
+            ),
+            {"a": 6, "b": 3},
+            True,
+        ),
+    ],
+    ids=["quantity-refs", "quantity-literal", "quantity-unary", "scalar-product", "ratio"],
+)
+def test_profile_v3_quantity_numeric_cases_compile(ir, values, expected):
+    fn, _args = _compile_and_load(ir, "p")
+    assert fn(**values).actual_value is expected
+
+
+def test_integer_power_is_real_for_equality_admission():
+    power = OperatorNode(
+        operator="**",
+        operands=[_lit_value(2, "integer"), _lit_value(3, "integer")],
+        operand_type=None,
+    )
+    with pytest.raises(PredicateCompileError, match="not admitted"):
+        compile_predicate(_cmp_node("==", power, _lit_value(8, "integer")), "p")
+
+
+def test_not_equal_remains_profile_blocked():
+    ir = _cmp_node("!=", _ref("a", "integer"), _ref("b", "integer"))
+    with pytest.raises(PredicateCompileError, match="not admitted by executable-profile/v3"):
         compile_predicate(ir, "p", negated=False)
-    except PredicateCompileError as e:
-        assert "equality blocked" in str(e)
-    else:
-        raise AssertionError("expected PredicateCompileError for equality operator")
 
 
 def test_feature_chain_unsupported():
@@ -167,10 +290,6 @@ def test_feature_chain_unsupported():
 # signature unvalidated. All now raise PredicateCompileError.
 
 
-def _unary(op: str, operand) -> OperatorNode:
-    return OperatorNode(operator=op, operands=[operand], operand_type=None)
-
-
 def test_unary_minus_still_compiles_and_negates():
     ir = _cmp_node(">=", _unary("-", _ref("x")), _lit_real(0.0))
     fn, args = _compile_and_load(ir, "p", negated=False)
@@ -179,9 +298,21 @@ def test_unary_minus_still_compiles_and_negates():
     assert fn(x=3.0).status == "violated"
 
 
-def test_unary_plus_raises_not_silent_negation():
+def test_unary_plus_compiles_as_identity():
     ir = _cmp_node(">=", _unary("+", _ref("x")), _lit_real(0.0))
-    with pytest.raises(PredicateCompileError, match="unsupported unary operator"):
+    fn, args = _compile_and_load(ir, "p", negated=False)
+    assert args == ["x"]
+    assert fn(x=3.0).status == "satisfied"
+    assert fn(x=-3.0).status == "violated"
+
+
+def test_optional_literal_operand_fact_fails_loudly_in_direct_compiler_api():
+    malformed = LiteralNode(
+        literal=LiteralFact(kind="LiteralInteger", value=1, result_type="integer"),
+        operand_type=None,
+    )
+    ir = _cmp_node(">", malformed, _lit_real(0.0))
+    with pytest.raises(PredicateCompileError, match="missing operand_type"):
         compile_predicate(ir, "p", negated=False)
 
 

@@ -4,7 +4,6 @@ from types import SimpleNamespace
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Phase 2: Data models + pure compiler functions
 # ---------------------------------------------------------------------------
@@ -134,16 +133,22 @@ class TestRenderCalcExpression:
         ir = _ir_unary("-", _ir_ref("x"))
         assert render_calc_expression(ir, {"x"}, set()) == "(-inputs.x)"
 
-    def test_unary_plus_raises_compilation_error(self):
-        """A one-operand `+` must not silently render as negation (code-quality
-        review finding 12: both renderers treated ANY single-operand arithmetic
-        operator as unary minus, so a modeled `+x` became `(-x)` — a sign flip)."""
+    def test_unary_plus_renders_as_identity(self):
+        """Profile v2 admits unary sign, so `+x` preserves the operand."""
+        from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
+
+        ir = _ir_unary("+", _ir_ref("x"))
+        assert render_calc_expression(ir, {"x"}, set()) == "(+inputs.x)"
+
+    def test_zero_operand_arithmetic_raises_compilation_error(self):
+        from agentic_mbse.sysml.expression_ir import OperatorNode
+
         from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
         from sysml_codegen.extraction.expression_compiler import CompilationError
 
-        ir = _ir_unary("+", _ir_ref("x"))
-        with pytest.raises(CompilationError, match="unsupported unary operator"):
-            render_calc_expression(ir, {"x"}, set())
+        ir = OperatorNode(operator="+", operands=[], operand_type=None)
+        with pytest.raises(CompilationError, match="operator with no operands"):
+            render_calc_expression(ir, set(), set())
 
     def test_unsupported_raises_compilation_error(self):
         from sysml_codegen.extraction.calc_compat_renderer import render_calc_expression
@@ -223,7 +228,9 @@ class TestRenderCalcExpression:
         ir = _ir_binary(
             "/", _ir_binary("*", _ir_ref("p_fusion"), _ir_literal(3.52)), _ir_literal(17.58)
         )
-        assert render_calc_expression(ir, {"p_fusion"}, set()) == "((inputs.p_fusion * 3.52) / 17.58)"
+        assert (
+            render_calc_expression(ir, {"p_fusion"}, set()) == "((inputs.p_fusion * 3.52) / 17.58)"
+        )
 
     def test_nested_binary_ops_correct_parenthesization(self):
         """Verify nested ops produce correct nesting: ((a + b) * c)."""
@@ -231,7 +238,10 @@ class TestRenderCalcExpression:
 
         inner = _ir_binary("+", _ir_ref("a"), _ir_ref("b"))
         outer = _ir_binary("*", inner, _ir_ref("c"))
-        assert render_calc_expression(outer, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) * inputs.c)"
+        assert (
+            render_calc_expression(outer, {"a", "b", "c"}, set())
+            == "((inputs.a + inputs.b) * inputs.c)"
+        )
 
     def test_nary_3_operand_left_fold(self):
         """3-operand n-ary operator, a + b + c -> ((a + b) + c) (agentic-mbse's extractor
@@ -244,7 +254,10 @@ class TestRenderCalcExpression:
         ir = OperatorNode(
             operator="+", operands=[_ir_ref("a"), _ir_ref("b"), _ir_ref("c")], operand_type=None
         )
-        assert render_calc_expression(ir, {"a", "b", "c"}, set()) == "((inputs.a + inputs.b) + inputs.c)"
+        assert (
+            render_calc_expression(ir, {"a", "b", "c"}, set())
+            == "((inputs.a + inputs.b) + inputs.c)"
+        )
 
     def test_nary_7_operand_left_fold(self):
         """7-operand sum (NetElectricPower pattern): left-folded."""
@@ -400,14 +413,9 @@ class TestClassifyCompilability:
 
         results = [
             CompilationResult("a", Compilability.FULLY_COMPILABLE, "expr_a"),
-            CompilationResult(
-                "b", Compilability.PARTIALLY_COMPILABLE, "expr_b"
-            ),
+            CompilationResult("b", Compilability.PARTIALLY_COMPILABLE, "expr_b"),
         ]
-        assert (
-            classify_compilability(results)
-            == Compilability.PARTIALLY_COMPILABLE
-        )
+        assert classify_compilability(results) == Compilability.PARTIALLY_COMPILABLE
 
     def test_empty_list_returns_manual(self):
         from sysml_codegen.extraction.expression_compiler import (
@@ -467,7 +475,7 @@ class MockFeatureChainExpression:
 @pytest.fixture
 def mock_syside_adapter(monkeypatch):
     """Monkeypatch SysideAdapter.is_instance to work with mock nodes."""
-    TYPE_MAP = {
+    type_map = {
         "MockOperatorExpression": "OperatorExpression",
         "MockFeatureReferenceExpression": "FeatureReferenceExpression",
         "MockLiteralRational": "LiteralRational",
@@ -475,7 +483,7 @@ def mock_syside_adapter(monkeypatch):
     }
 
     def mock_is_instance(node, type_name):
-        return TYPE_MAP.get(type(node).__name__) == type_name
+        return type_map.get(type(node).__name__) == type_name
 
     monkeypatch.setattr(
         "agentic_mbse.sysml.syside_adapter.SysideAdapter.is_instance",
@@ -520,10 +528,7 @@ def mock_extract_feature_refs(monkeypatch):
 
     def mock_efr(expr, ignore_std_lib=True):
         names = ref_map.get(id(expr), [])
-        return [
-            SimpleNamespace(name=n, qualified_name=n, element=None)
-            for n in names
-        ]
+        return [SimpleNamespace(name=n, qualified_name=n, element=None) for n in names]
 
     monkeypatch.setattr(
         "sysml_codegen.extraction.expression_compiler.extract_feature_refs",
@@ -607,31 +612,18 @@ class TestCompileCalcDef:
 
         # Verify individual expressions
         by_name = {r.output_name: r for r in result.output_results}
-        assert (
-            by_name["material_cost"].python_expression
-            == "(inputs.unit_cost * inputs.quantity)"
-        )
-        assert (
-            by_name["fab_cost"].python_expression
-            == "(material_cost * 1.2)"
-        )
-        assert (
-            by_name["total_cost"].python_expression
-            == "(fab_cost + (fab_cost * inputs.margin))"
-        )
+        assert by_name["material_cost"].python_expression == "(inputs.unit_cost * inputs.quantity)"
+        assert by_name["fab_cost"].python_expression == "(material_cost * 1.2)"
+        assert by_name["total_cost"].python_expression == "(fab_cost + (fab_cost * inputs.margin))"
 
-    def test_pattern_e_pi_as_repeated_literal(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
+    def test_pattern_e_pi_as_repeated_literal(self, mock_syside_adapter, mock_extract_feature_refs):
         """Pattern E: pi faithfully reproduced as literal, no math.pi."""
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
             compile_calc_def,
         )
 
-        calc_def = _make_calc_def(
-            "CircleCalc", input_names=["radius"], output_names=["area"]
-        )
+        calc_def = _make_calc_def("CircleCalc", input_names=["radius"], output_names=["area"])
 
         # area = 3.14159265 * radius * radius (3-operand left-fold)
         area_ast = MockOperatorExpression(
@@ -651,10 +643,7 @@ class TestCompileCalcDef:
 
         assert result.overall_compilability == Compilability.FULLY_COMPILABLE
         by_name = {r.output_name: r for r in result.output_results}
-        assert (
-            by_name["area"].python_expression
-            == "((3.14159265 * inputs.radius) * inputs.radius)"
-        )
+        assert by_name["area"].python_expression == "((3.14159265 * inputs.radius) * inputs.radius)"
 
     def test_edge1_unresolved_reference_verdict_escalation(
         self, mock_syside_adapter, mock_extract_feature_refs
@@ -697,9 +686,7 @@ class TestCompileCalcDef:
 
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
         by_name = {r.output_name: r for r in result.output_results}
-        assert (
-            by_name["good"].compilability == Compilability.FULLY_COMPILABLE
-        )
+        assert by_name["good"].compilability == Compilability.FULLY_COMPILABLE
         assert by_name["bad"].compilability == Compilability.MANUAL_REQUIRED
         assert "unresolved reference" in by_name["bad"].unsupported_reason
 
@@ -742,14 +729,8 @@ class TestCompileCalcDef:
         result = compile_calc_def(calc_def, expression_asts)
 
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert all(
-            r.compilability == Compilability.MANUAL_REQUIRED
-            for r in result.output_results
-        )
-        assert any(
-            "circular" in (r.unsupported_reason or "")
-            for r in result.output_results
-        )
+        assert all(r.compilability == Compilability.MANUAL_REQUIRED for r in result.output_results)
+        assert any("circular" in (r.unsupported_reason or "") for r in result.output_results)
 
     def test_edge3_missing_ast_partial_compilability(
         self, mock_syside_adapter, mock_extract_feature_refs
@@ -784,13 +765,8 @@ class TestCompileCalcDef:
 
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
         by_name = {r.output_name: r for r in result.output_results}
-        assert (
-            by_name["compiled"].compilability
-            == Compilability.FULLY_COMPILABLE
-        )
-        assert (
-            by_name["missing"].compilability == Compilability.MANUAL_REQUIRED
-        )
+        assert by_name["compiled"].compilability == Compilability.FULLY_COMPILABLE
+        assert by_name["missing"].compilability == Compilability.MANUAL_REQUIRED
         assert "no expression AST" in by_name["missing"].unsupported_reason
 
     def test_edge4_unsupported_operator_verdict_escalation(
@@ -824,10 +800,7 @@ class TestCompileCalcDef:
         result = compile_calc_def(calc_def, expression_asts)
 
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert (
-            result.output_results[0].compilability
-            == Compilability.MANUAL_REQUIRED
-        )
+        assert result.output_results[0].compilability == Compilability.MANUAL_REQUIRED
         assert "unsupported" in result.output_results[0].unsupported_reason
 
     def test_edge5_feature_chain_returns_manual(
@@ -858,13 +831,9 @@ class TestCompileCalcDef:
         result = compile_calc_def(calc_def, expression_asts)
 
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
-        assert "feature chain" in (
-            result.output_results[0].unsupported_reason or ""
-        )
+        assert "feature chain" in (result.output_results[0].unsupported_reason or "")
 
-    def test_undeclared_intermediates_4_chain(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
+    def test_undeclared_intermediates_4_chain(self, mock_syside_adapter, mock_extract_feature_refs):
         """Undeclared intermediates: 4-chain (MagnetCryogenicLoad pattern)."""
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
@@ -964,14 +933,8 @@ class TestCompileCalcDef:
 
         # Verify compiled expressions
         assert by_name["inter_a"].python_expression == "(inputs.i1 * 2.0)"
-        assert (
-            by_name["inter_b"].python_expression
-            == "(inter_a + inputs.i2)"
-        )
-        assert (
-            by_name["final_result"].python_expression
-            == "(inter_d * 0.5)"
-        )
+        assert by_name["inter_b"].python_expression == "(inter_a + inputs.i2)"
+        assert by_name["final_result"].python_expression == "(inter_d * 0.5)"
 
     def test_overall_compilability_is_worst_case(
         self, mock_syside_adapter, mock_extract_feature_refs
@@ -1006,18 +969,14 @@ class TestCompileCalcDef:
         # One FULLY + one MANUAL → overall MANUAL
         assert result.overall_compilability == Compilability.MANUAL_REQUIRED
 
-    def test_single_output_fully_compilable(
-        self, mock_syside_adapter, mock_extract_feature_refs
-    ):
+    def test_single_output_fully_compilable(self, mock_syside_adapter, mock_extract_feature_refs):
         """Simple single-output CalcDef compiles to FULLY_COMPILABLE."""
         from sysml_codegen.extraction.expression_compiler import (
             Compilability,
             compile_calc_def,
         )
 
-        calc_def = _make_calc_def(
-            "SimpleCalc", input_names=["a", "b"], output_names=["result"]
-        )
+        calc_def = _make_calc_def("SimpleCalc", input_names=["a", "b"], output_names=["result"])
 
         result_ast = MockOperatorExpression(
             "+",
@@ -1036,10 +995,7 @@ class TestCompileCalcDef:
         assert result.overall_compilability == Compilability.FULLY_COMPILABLE
         assert result.calc_def_name == "SimpleCalc"
         assert result.execution_order == ["result"]
-        assert (
-            result.output_results[0].python_expression
-            == "(inputs.a + inputs.b)"
-        )
+        assert result.output_results[0].python_expression == "(inputs.a + inputs.b)"
         assert result.output_results[0].input_refs == ["a", "b"]
 
 
@@ -1060,9 +1016,7 @@ class TestCompileCalcDefEdge6:
             compile_calc_def,
         )
 
-        calc_def = _make_calc_def(
-            "ExposeCalc", input_names=["a"], output_names=["result"]
-        )
+        calc_def = _make_calc_def("ExposeCalc", input_names=["a"], output_names=["result"])
 
         result_ast = MockOperatorExpression(
             "*",
@@ -1079,9 +1033,4 @@ class TestCompileCalcDefEdge6:
         result = compile_calc_def(calc_def, expression_asts)
 
         assert result.overall_compilability == Compilability.FULLY_COMPILABLE
-        assert (
-            result.output_results[0].python_expression
-            == "(inputs.a * 2.0)"
-        )
-
-
+        assert result.output_results[0].python_expression == "(inputs.a * 2.0)"

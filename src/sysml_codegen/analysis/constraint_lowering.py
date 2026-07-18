@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from agentic_mbse.sysml.executable_profile import (
     PROFILE_SEMANTIC_VERSION,
@@ -22,8 +23,12 @@ from agentic_mbse.sysml.executable_profile import (
     evaluate_profile,
 )
 from agentic_mbse.sysml.expression_ir import (
+    ExpressionIR,
     FeatureReferenceNode,
+    InvocationNode,
     LiteralNode,
+    OperatorNode,
+    UnitAnnotationNode,
     parse_expression,
     serialize_expression,
 )
@@ -36,6 +41,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConcreteConstraint,
     ConcreteConstraintInput,
+    ConstraintExclusion,
     ConstraintInputResolution,
     EntryPoint,
     EntryPointType,
@@ -48,7 +54,13 @@ from sysml_codegen.resolution.models import (
 )
 
 if TYPE_CHECKING:
-    from agentic_mbse.sysml.constraint_facts import ConstraintFacts, ConstraintUsageFact
+    from agentic_mbse.sysml.constraint_facts import (
+        ActualFact,
+        ConstraintDefinitionFact,
+        ConstraintFacts,
+        ConstraintUsageFact,
+        FormalFact,
+    )
     from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
 
     from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
@@ -56,6 +68,9 @@ if TYPE_CHECKING:
     from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
     from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+
+logger = logging.getLogger(__name__)
 
 
 def _generation_error(message: str) -> CodeGenerationError:
@@ -145,9 +160,7 @@ def resolve_actual(
 
     if dotted:
         occ_key = ScopedKey(f"{occ_scope}.{dotted}" if occ_scope else dotted)
-        deindexed_key = ScopedKey(
-            f"{deindexed_scope}.{dotted}" if deindexed_scope else dotted
-        )
+        deindexed_key = ScopedKey(f"{deindexed_scope}.{dotted}" if deindexed_scope else dotted)
 
         channel = registry.scoped_lookup(occ_key)
         if channel is not None:
@@ -456,6 +469,28 @@ def _source_local_identity(usage: ConstraintUsageFact) -> tuple[str, tuple]:
     )
 
 
+def _render_location(decision: UsageDecision) -> str:
+    location = decision.location
+    if location is None:
+        return "<no location>"
+    return f"{location.file}:{location.line}:{location.column}"
+
+
+def _exclusion_for(decision: UsageDecision, owner_kind: str) -> ConstraintExclusion:
+    """Project profile/owner policy into one total non-execution payload."""
+    kind: Literal["non_numerical", "unassessed_form", "unsupported_owner"]
+    if owner_kind not in ("part_def", "calc_def", "package"):
+        kind = "unsupported_owner"
+        reasons: list[str] = []
+    elif decision.eligibility is Eligibility.NON_NUMERICAL:
+        kind = "non_numerical"
+        reasons = [diagnostic.reason for diagnostic in decision.diagnostics]
+    else:
+        kind = "unassessed_form"
+        reasons = []
+    return ConstraintExclusion(kind=kind, reasons=reasons, location=_render_location(decision))
+
+
 def _resolve_formal(
     *,
     formal_name: str,
@@ -489,6 +524,39 @@ def _resolve_formal(
     )
 
 
+def _inline_reference_leaves(predicate: ExpressionIR) -> list[FeatureReferenceNode]:
+    """Return unique inline feature leaves in predicate order.
+
+    Inline constraints have no definition formals or usage actuals. Their feature leaves are the
+    input contract, so lowering must resolve them before graph construction. Profile preflight has
+    already blocked chains and invocations; walking both here keeps this boundary total for any
+    future admitted shape without silently losing nested leaves.
+    """
+    leaves: list[FeatureReferenceNode] = []
+    seen_names: set[str] = set()
+
+    def visit(node: ExpressionIR) -> None:
+        if isinstance(node, FeatureReferenceNode):
+            name = node.reference.source_name
+            if name is None:
+                raise _generation_error("inline predicate contains a nameless feature reference")
+            if name not in seen_names:
+                seen_names.add(name)
+                leaves.append(node)
+            return
+        if isinstance(node, OperatorNode):
+            for operand in node.operands:
+                visit(operand)
+        elif isinstance(node, UnitAnnotationNode):
+            visit(node.value)
+        elif isinstance(node, InvocationNode):
+            for argument in node.arguments:
+                visit(argument)
+
+    visit(predicate)
+    return leaves
+
+
 def _formal_default_index(facts: ConstraintFacts) -> dict[str, str | None]:
     """QN -> serialized default IR, across every ``ConstraintDefinitionFact``'s formals."""
     index: dict[str, str | None] = {}
@@ -499,6 +567,154 @@ def _formal_default_index(facts: ConstraintFacts) -> dict[str, str | None]:
                     serialize_expression(formal.default) if formal.default is not None else None
                 )
     return index
+
+
+def _referenced_definition(
+    facts: ConstraintFacts, usage: ConstraintUsageFact
+) -> ConstraintDefinitionFact:
+    source_definition = usage.source.constraint_definition
+    definition_qn = source_definition.qualified_name if source_definition is not None else None
+    if definition_qn is None:
+        raise _generation_error(
+            f"{usage.identity.qualified_name}: definition-typed constraint has no referenced "
+            "constraint definition"
+        )
+    matches = [
+        definition
+        for definition in facts.definitions
+        if definition.identity.qualified_name == definition_qn
+    ]
+    if len(matches) != 1:
+        raise _generation_error(
+            f"{usage.identity.qualified_name}: referenced constraint definition "
+            f"{definition_qn!r} resolved to {len(matches)} fact records; expected exactly one"
+        )
+    return matches[0]
+
+
+def _formal_name(formal: FormalFact) -> str:
+    if formal.name is not None:
+        return sanitize_name(formal.name)
+    if formal.qualified_name is not None:
+        return sanitize_name(formal.qualified_name.rsplit("::", 1)[-1])
+    raise _generation_error("constraint definition contains a formal with no identity")
+
+
+def _definition_formal_index(
+    definition: ConstraintDefinitionFact,
+) -> dict[str, FormalFact]:
+    formal_by_qn: dict[str, FormalFact] = {}
+    for formal in definition.formals:
+        formal_qn = formal.qualified_name
+        if formal_qn is None:
+            raise _generation_error(
+                f"{definition.identity.qualified_name}: formal {_formal_name(formal)!r} has no "
+                "qualified identity"
+            )
+        if formal_qn in formal_by_qn:
+            raise _generation_error(
+                f"{definition.identity.qualified_name}: duplicate formal identity {formal_qn!r}"
+            )
+        formal_by_qn[formal_qn] = formal
+    return formal_by_qn
+
+
+def _actuals_by_formal_target(
+    usage: ConstraintUsageFact,
+    definition: ConstraintDefinitionFact,
+    formal_by_qn: dict[str, FormalFact],
+) -> dict[str, ActualFact]:
+    actual_by_target: dict[str, ActualFact] = {}
+    usage_qn = usage.identity.qualified_name or "<anonymous>"
+    for actual in usage.actuals:
+        label = actual.name or "<unnamed>"
+        if len(actual.formal_targets) != 1:
+            raise _generation_error(
+                f"{usage_qn}: actual {label!r} must name exactly one formal target; "
+                f"got {len(actual.formal_targets)}"
+            )
+        target_qn = actual.formal_targets[0]
+        if target_qn not in formal_by_qn:
+            raise _generation_error(
+                f"{usage_qn}: actual {label!r} targets {target_qn!r}, which is not a formal of "
+                f"{definition.identity.qualified_name!r}"
+            )
+        if target_qn in actual_by_target:
+            raise _generation_error(
+                f"{usage_qn}: multiple actuals target formal "
+                f"{_formal_name(formal_by_qn[target_qn])!r}"
+            )
+        actual_by_target[target_qn] = actual
+    return actual_by_target
+
+
+def _omitted_default_targets(
+    usage: ConstraintUsageFact,
+    definition: ConstraintDefinitionFact,
+    formal_by_qn: dict[str, FormalFact],
+) -> set[str]:
+    usage_qn = usage.identity.qualified_name or "<anonymous>"
+    omitted = usage.omitted_default_formals
+    if len(set(omitted)) != len(omitted):
+        raise _generation_error(f"{usage_qn}: omitted_default_formals contains duplicates")
+    omitted_set = set(omitted)
+    foreign_omissions = omitted_set - formal_by_qn.keys()
+    if foreign_omissions:
+        raise _generation_error(
+            f"{usage_qn}: omitted default targets are not formals of "
+            f"{definition.identity.qualified_name!r}: {sorted(foreign_omissions)!r}"
+        )
+    return omitted_set
+
+
+def _decide_definition_formals(
+    usage: ConstraintUsageFact,
+    definition: ConstraintDefinitionFact,
+    actual_by_target: dict[str, ActualFact],
+    omitted_set: set[str],
+) -> list[tuple[FormalFact, ActualFact | None]]:
+    decisions: list[tuple[FormalFact, ActualFact | None]] = []
+    usage_qn = usage.identity.qualified_name or "<anonymous>"
+    for formal in definition.formals:
+        formal_qn = formal.qualified_name
+        if formal_qn is None:  # guarded by _definition_formal_index
+            raise AssertionError("formal qualified identity was validated")
+        bound_actual = actual_by_target.get(formal_qn)
+        if bound_actual is not None:
+            if formal_qn in omitted_set:
+                raise _generation_error(
+                    f"{usage_qn}: formal {_formal_name(formal)!r} has both an actual and an "
+                    "omitted-default marker"
+                )
+            decisions.append((formal, bound_actual))
+        elif formal_qn in omitted_set and formal.has_default:
+            decisions.append((formal, None))
+        else:
+            raise _generation_error(
+                f"{usage_qn}: formal {_formal_name(formal)!r} has no actual and no explicit "
+                "modeled default"
+            )
+    return decisions
+
+
+def _definition_formal_bindings(
+    facts: ConstraintFacts, usage: ConstraintUsageFact
+) -> list[tuple[FormalFact, ActualFact | None]] | None:
+    """Resolve one definition-typed usage to exactly one decision per formal.
+
+    ``ActualFact.formal_targets`` is the binding identity. The actual's local ``name`` is
+    diagnostic-only and cannot rename a definition formal. A missing actual is legal only when
+    extraction explicitly listed that formal in ``omitted_default_formals`` and the definition
+    fact says it has a modeled default. ``default=None`` remains a valid modeled-default payload.
+    """
+    if usage.source.form != "definition_typed":
+        return None
+
+    definition = _referenced_definition(facts, usage)
+    formal_by_qn = _definition_formal_index(definition)
+    actual_by_target = _actuals_by_formal_target(usage, definition, formal_by_qn)
+    omitted_set = _omitted_default_targets(usage, definition, formal_by_qn)
+    return _decide_definition_formals(usage, definition, actual_by_target, omitted_set)
 
 
 def lower_constraints(
@@ -528,7 +744,7 @@ def lower_constraints(
     Catalog ordering is by ``constraint_id`` (INV-4); duplicate IDs raise via
     :func:`assert_unique_constraint_ids` before returning.
     """
-    if PROFILE_SEMANTIC_VERSION != "executable-profile/v1":
+    if PROFILE_SEMANTIC_VERSION != "executable-profile/v3":
         raise RuntimeError(
             f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
             "review before re-pinning"
@@ -544,7 +760,7 @@ def lower_constraints(
                 if decision.location
                 else "<no location>"
             )
-            return f"  - {name} at {where}: {diag.construct} ({diag.reason})"
+            return f"  - {name} at {where}: {diag.construct} ({diag.reason}): {diag.message}"
 
         lines = [_describe(d, diag) for d in blocking for diag in d.diagnostics]
         raise _generation_error(
@@ -559,6 +775,15 @@ def lower_constraints(
     for usage, decision in zip(facts.usages, profile.decisions, strict=True):
         kind = usage.owner.owning_definition.kind
         usage_qn = usage.identity.qualified_name or "<anonymous>"
+
+        if decision.eligibility is Eligibility.NON_NUMERICAL:
+            reasons = ", ".join(diagnostic.reason for diagnostic in decision.diagnostics)
+            logger.warning(
+                "Constraint %s at %s is not numerical and will not execute: %s",
+                usage_qn,
+                _render_location(decision),
+                reasons,
+            )
 
         if kind not in ("part_def", "calc_def", "package") or (
             decision.eligibility is not Eligibility.ADMIT
@@ -579,11 +804,12 @@ def lower_constraints(
                     owner_instance_path=sanitize_qualified_name(usage_qn),
                     membership_kind=usage.membership_kind,
                     is_negated=usage.is_negated,
-                    expected_value=(not usage.is_negated) if usage.is_negated is not None else None,
+                    expected_value=None,
                     predicate_ir=None,
                     inputs=[],
                     evaluation_channel=None,
                     eligible=False,
+                    exclusion=_exclusion_for(decision, kind),
                 )
             )
             continue
@@ -607,36 +833,86 @@ def lower_constraints(
             )
         predicate_ir = serialize_expression(effective) if effective is not None else None
 
-        actual_by_target: dict[str, object] = {}
-        for actual in usage.actuals:
-            if actual.name is None:
-                continue
-            actual_by_target[actual.name] = actual.value
+        formal_bindings = _definition_formal_bindings(facts, usage)
+        actual_by_name = {
+            actual.name: actual.value for actual in usage.actuals if actual.name is not None
+        }
 
         owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
         owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
         for owner_instance_path, occ_scope in owner_instances:
             inputs: list[ConcreteConstraintInput] = []
-            for formal_name, value in actual_by_target.items():
-                inputs.append(
-                    _resolve_formal(
-                        formal_name=formal_name,
-                        value=value,
-                        occ_scope=occ_scope,
-                        usage_qualified_name=owner_instance_path,
-                        registry=registry,
-                        design_attr_by_qn=design_attr_by_qn,
-                        owner_def_qn=owner_def_qn,
+            if formal_bindings is not None:
+                for formal, actual in formal_bindings:
+                    formal_name = _formal_name(formal)
+                    if actual is None:
+                        inputs.append(
+                            ConcreteConstraintInput(
+                                formal_name=formal_name,
+                                resolution=ConstraintInputResolution.MODELED_DEFAULT,
+                                default_ir=(
+                                    serialize_expression(formal.default)
+                                    if formal.default is not None
+                                    else None
+                                ),
+                            )
+                        )
+                    else:
+                        inputs.append(
+                            _resolve_formal(
+                                formal_name=formal_name,
+                                value=actual.value,
+                                occ_scope=occ_scope,
+                                usage_qualified_name=owner_instance_path,
+                                registry=registry,
+                                design_attr_by_qn=design_attr_by_qn,
+                                owner_def_qn=owner_def_qn,
+                            )
+                        )
+            else:
+                for formal_name, value in actual_by_name.items():
+                    inputs.append(
+                        _resolve_formal(
+                            formal_name=formal_name,
+                            value=value,
+                            occ_scope=occ_scope,
+                            usage_qualified_name=owner_instance_path,
+                            registry=registry,
+                            design_attr_by_qn=design_attr_by_qn,
+                            owner_def_qn=owner_def_qn,
+                        )
                     )
-                )
-            for formal_qn in usage.omitted_default_formals:
-                inputs.append(
-                    ConcreteConstraintInput(
-                        formal_name=sanitize_name(formal_qn.rsplit("::", 1)[-1]),
-                        resolution=ConstraintInputResolution.MODELED_DEFAULT,
-                        default_ir=formal_default_by_qn.get(formal_qn),
+                if usage.source.form == "inline" and effective is not None:
+                    existing_names = {item.formal_name for item in inputs}
+                    for leaf in _inline_reference_leaves(effective):
+                        source_name = leaf.reference.source_name
+                        if source_name is None:  # guarded by _inline_reference_leaves
+                            raise RuntimeError(
+                                "inline reference collection returned a nameless leaf"
+                            )
+                        formal_name = sanitize_name(source_name)
+                        if formal_name in existing_names:
+                            continue
+                        inputs.append(
+                            _resolve_formal(
+                                formal_name=formal_name,
+                                value=leaf,
+                                occ_scope=occ_scope,
+                                usage_qualified_name=owner_instance_path,
+                                registry=registry,
+                                design_attr_by_qn=design_attr_by_qn,
+                                owner_def_qn=owner_def_qn,
+                            )
+                        )
+                        existing_names.add(formal_name)
+                for formal_qn in usage.omitted_default_formals:
+                    inputs.append(
+                        ConcreteConstraintInput(
+                            formal_name=sanitize_name(formal_qn.rsplit("::", 1)[-1]),
+                            resolution=ConstraintInputResolution.MODELED_DEFAULT,
+                            default_ir=formal_default_by_qn.get(formal_qn),
+                        )
                     )
-                )
 
             constraint_id = mint_constraint_id(
                 instance_path=owner_instance_path,
@@ -794,9 +1070,7 @@ def extend_graph_with_constraints(
     order = len(modules)
     for c in eligible:
         if c.evaluation_channel is None:  # enforced by ConcreteConstraint's validator
-            raise RuntimeError(
-                f"eligible constraint {c.constraint_id!r} has no evaluation_channel"
-            )
+            raise RuntimeError(f"eligible constraint {c.constraint_id!r} has no evaluation_channel")
         inputs: list[ModuleInput] = []
         for inp in c.inputs:
             if inp.resolution == ConstraintInputResolution.MODULE_OUTPUT:
@@ -865,9 +1139,7 @@ def extend_graph_with_constraints(
         ModuleInput(
             param_name=sanitize_name(c.constraint_id),
             python_type="ConstraintEvaluation",
-            source=InputSource(
-                source_type="module_output", producer_channel=c.evaluation_channel
-            ),
+            source=InputSource(source_type="module_output", producer_channel=c.evaluation_channel),
         )
         for c in eligible
     ]

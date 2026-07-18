@@ -46,9 +46,7 @@ _ARITHMETIC_OPERATOR_MAP: dict[str, str] = {
 }
 
 
-def render_calc_expression(
-    ir: ExpressionIR, input_names: set[str], member_names: set[str]
-) -> str:
+def render_calc_expression(ir: ExpressionIR, input_names: set[str], member_names: set[str]) -> str:
     """Render a calc output expression's IR to a Python expression string.
 
     ``input_names`` classify a reference as ``inputs.{name}``; ``member_names`` (declared
@@ -61,9 +59,7 @@ def render_calc_expression(
     try:
         python_ast.parse(result, mode="eval")
     except SyntaxError as e:
-        raise CompilationError(
-            f"Compiled expression is not valid Python: {result!r} ({e})"
-        ) from e
+        raise CompilationError(f"Compiled expression is not valid Python: {result!r} ({e})") from e
     return result
 
 
@@ -80,8 +76,7 @@ def _render(node: ExpressionIR, input_names: set[str], member_names: set[str]) -
         raise CompilationError(f"unsupported node: invocation ({node.function_qn})")
     if isinstance(node, UnsupportedNode):
         raise CompilationError(
-            f"Cannot compile unsupported node: {node.source_text} "
-            f"(reason: {node.diagnostic})"
+            f"Cannot compile unsupported node: {node.source_text} (reason: {node.diagnostic})"
         )
     raise CompilationError(f"Unknown IR node type: {type(node).__name__}")
 
@@ -98,18 +93,14 @@ def _render_literal(node: LiteralNode) -> str:
     kind = node.literal.kind
     if "LiteralInteger" in kind or "LiteralRational" in kind:
         return str(node.literal.value)
-    raise CompilationError(
-        f"unsupported literal kind in calc expression: {kind!r}"
-    )
+    raise CompilationError(f"unsupported literal kind in calc expression: {kind!r}")
 
 
 def _render_reference(
     node: FeatureReferenceNode, input_names: set[str], member_names: set[str]
 ) -> str:
     if node.reference.chain_segments:
-        raise CompilationError(
-            "feature chain expression not supported in CalcDef output"
-        )
+        raise CompilationError("feature chain expression not supported in CalcDef output")
     name = _sanitize_name(node.reference.source_name or "")
     if name in input_names:
         return f"inputs.{name}"
@@ -118,19 +109,17 @@ def _render_reference(
     raise CompilationError(f"unresolved reference: {name}")
 
 
-def _render_operator(
-    node: OperatorNode, input_names: set[str], member_names: set[str]
-) -> str:
+def _render_operator(node: OperatorNode, input_names: set[str], member_names: set[str]) -> str:
     op_str = _ARITHMETIC_OPERATOR_MAP.get(node.operator)
     if op_str is None:
         raise CompilationError(f"unsupported operator: {node.operator}")
     if not node.operands:
         raise CompilationError(f"operator with no operands: {node.operator}")
     if len(node.operands) == 1:
-        if node.operator != "-":
+        if node.operator not in ("+", "-"):
             raise CompilationError(f"unsupported unary operator: {node.operator}")
         operand = _render(node.operands[0], input_names, member_names)
-        return f"(-{operand})"
+        return f"({node.operator}{operand})"
     parts = [_render(operand, input_names, member_names) for operand in node.operands]
     result = parts[0]
     for part in parts[1:]:

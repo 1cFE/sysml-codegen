@@ -10,6 +10,7 @@ from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.resolution.models import (
     ConcreteConstraint,
     ConcreteConstraintInput,
+    ConstraintCatalogEntry,
     ConstraintInputResolution,
 )
 
@@ -50,7 +51,7 @@ def _make_cc(
         owner_instance_path=owner_instance_path,
         membership_kind="assert",
         is_negated=False,
-        expected_value=True,
+        expected_value=True if eligible else None,
         predicate_ir='{"kind":"literal"}' if eligible else None,
         inputs=[
             ConcreteConstraintInput(
@@ -63,6 +64,15 @@ def _make_cc(
         else [],
         evaluation_channel=f"{constraint_id}__evaluation" if eligible else None,
         eligible=eligible,
+        exclusion=(
+            None
+            if eligible
+            else {
+                "kind": "unassessed_form",
+                "reasons": [],
+                "location": "<no location>",
+            }
+        ),
     )
 
 
@@ -162,9 +172,48 @@ def test_eligible_requires_predicate_ir_and_channel():
         ConcreteConstraint(**kwargs)
 
 
+def test_eligible_requires_known_polarity():
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["is_negated"] = None
+    kwargs["expected_value"] = None
+    with pytest.raises(ValueError, match="known polarity"):
+        ConcreteConstraint(**kwargs)
+
+
+def test_unassessed_rejects_executable_payload():
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["eligible"] = False
+    with pytest.raises(ValueError, match="unassessed.*executable payload"):
+        ConcreteConstraint(**kwargs)
+
+
+def test_eligible_allows_missing_membership_kind():
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["membership_kind"] = None
+    assert ConcreteConstraint(**kwargs).membership_kind is None
+
+
 def test_unassessed_record_stays_constructible():
     cc = _make_cc("id_0", "Design__c__cell", eligible=False)
     assert cc.eligible is False and cc.predicate_ir is None
+
+
+def test_eligible_record_with_exclusion_rejected():
+    kwargs = _make_cc("id_0", "Design__c__cell").model_dump()
+    kwargs["exclusion"] = {
+        "kind": "non_numerical",
+        "reasons": ["warn_non_numerical_equality"],
+        "location": "model.sysml:10:3",
+    }
+    with pytest.raises(ValueError, match="must not carry exclusion"):
+        ConcreteConstraint(**kwargs)
+
+
+def test_ineligible_record_without_exclusion_rejected():
+    kwargs = _make_cc("id_0", "Design__c__cell", eligible=False).model_dump()
+    kwargs["exclusion"] = None
+    with pytest.raises(ValueError, match="requires exclusion"):
+        ConcreteConstraint(**kwargs)
 
 
 def test_expected_value_must_derive_from_polarity():
@@ -172,3 +221,51 @@ def test_expected_value_must_derive_from_polarity():
     kwargs["is_negated"] = True  # expected_value stays True -> inconsistent
     with pytest.raises(ValueError, match="does not derive from is_negated"):
         ConcreteConstraint(**kwargs)
+
+
+def _catalog_entry(**changes) -> ConstraintCatalogEntry:
+    values = {
+        "constraint_id": "id_0",
+        "usage_qualified_name": "Design__c__cell__nonneg",
+        "owner_instance_path": "Design__c__cell",
+        "membership_kind": None,
+        "is_negated": False,
+        "expected_value": True,
+        "predicate_ir": '{"kind":"literal"}',
+        "evaluation_channel": "id_0__evaluation",
+    }
+    values.update(changes)
+    return ConstraintCatalogEntry(**values)
+
+
+@pytest.mark.parametrize("field", ["is_negated", "expected_value", "predicate_ir"])
+def test_catalog_entry_requires_executable_fields(field):
+    with pytest.raises(ValueError):
+        _catalog_entry(**{field: None})
+
+
+def test_catalog_entry_expected_value_derives_from_polarity():
+    with pytest.raises(ValueError, match="does not derive"):
+        _catalog_entry(is_negated=True, expected_value=True)
+
+
+def test_concrete_constraint_rejects_eligibility_mutation_in_both_directions():
+    eligible = _make_cc("eligible", "Design__c__cell")
+    with pytest.raises(ValueError, match="unassessed.*executable payload"):
+        eligible.eligible = False
+    assert eligible.eligible is True
+    assert eligible.predicate_ir is not None
+
+    unassessed = _make_cc("unassessed", "Design__c__cell", eligible=False)
+    with pytest.raises(ValueError, match="must not carry exclusion"):
+        unassessed.eligible = True
+    assert unassessed.eligible is False
+    assert unassessed.model_dump()["predicate_ir"] is None
+
+
+def test_catalog_entry_rejects_polarity_mutation_and_stays_serializable():
+    entry = _catalog_entry()
+    with pytest.raises(ValueError, match="does not derive"):
+        entry.is_negated = True
+    assert entry.is_negated is False
+    assert entry.model_dump()["expected_value"] is True

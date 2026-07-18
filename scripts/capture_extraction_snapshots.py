@@ -116,6 +116,7 @@ MODELS = {
     # reproducible from committed state, not only from a fresh capture.
     "constraint_inline": FIXTURES_DIR / "constraint_inline",
     "constraint_multi_instance": FIXTURES_DIR / "constraint_multi_instance",
+    "constraint_non_numerical": FIXTURES_DIR / "constraint_non_numerical",
 }
 
 # Constraint-lowering grandfather (Item 8, D3 — RETIRED Item 14 Phase 1, INV-D):
@@ -163,9 +164,7 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         raise RuntimeError(f"Failed to load models from {model_path}")
 
     calc_defs = extractor.extract_calculation_definitions()
-    calc_usages, _report = extract_calculation_usages(
-        extractor.model, calc_defs=calc_defs
-    )
+    calc_usages, _report = extract_calculation_usages(extractor.model, calc_defs=calc_defs)
 
     hierarchy_data, scoped_agg_data, chain_aliases = _extract_hierarchy_and_rewrite_bindings(
         extractor.model, calc_usages

@@ -101,9 +101,7 @@ def _run(pkg_parent: Path, pkg_name: str, out_dir: Path):
 def test_s4_slice_both_truth_values(tmp_path):
     """SC-1: both truth values, identical ordinary outputs, verdicts/margins correct, the
     violated run completes as evidence (INV-3), report persisted (teax-state pin)."""
-    ctx = build_pipeline_context(
-        [FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=True
-    )
+    ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=True)
     catalog = ctx.computation_graph.constraint_catalog
     assert catalog is not None and len(catalog.concrete_entries) == 1
     # constraint_id mints a sha-suffixed channel (Item 5) — read it from the real graph
@@ -197,10 +195,13 @@ def test_zero_assertion_aggregator_not_assessed(tmp_path):
         inputs=[],
         evaluation_channel=None,
         eligible=False,
+        exclusion={
+            "kind": "unassessed_form",
+            "reasons": [],
+            "location": "<no location>",
+        },
     )
-    empty_graph = ComputationGraph(
-        modules=[], entry_point_groups=[dummy_group], execution_order=[]
-    )
+    empty_graph = ComputationGraph(modules=[], entry_point_groups=[dummy_group], execution_order=[])
     deriver = ParameterGroupDeriver({}, calc_usages=[], calc_defs=[])
     extended = extend_graph_with_constraints(empty_graph, [unassessed], deriver)
     assert len(extended.modules) == 1  # aggregator only, D11
@@ -209,9 +210,7 @@ def test_zero_assertion_aggregator_not_assessed(tmp_path):
 
     from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
 
-    empty_facts = ConstraintFacts(
-        schema_version="constraint-facts/v1", definitions=[], usages=[], contexts=[], diagnostics=[]
-    )
+    empty_facts = ConstraintFacts(definitions=[], usages=[], contexts=[], diagnostics=[])
     extended.constraint_catalog = assemble_constraint_catalog([unassessed], empty_facts)
 
     class _EmptyCtx:
@@ -246,6 +245,28 @@ def test_multi_instance_expansion_n_modules_one_predicate(tmp_path):
     rep = outs["constraint_report"]
     assert rep.assessed_count == 3
     assert rep.headline == "all_satisfied"  # cell_rating=10.0 -> p=20.0 >= 0.0 for all three
+
+
+@pytest.mark.execution
+def test_committed_inline_snapshot_renders_and_executes(tmp_path):
+    """Audit cure: the offline inline fixture reaches generated execution with value=5 > 0."""
+    from sysml_codegen.orchestration.snapshot_context import (
+        build_pipeline_context_from_snapshot,
+    )
+
+    snapshot = FIXTURES_DIR / "constraint_inline" / "extraction_snapshot.json"
+    ctx = build_pipeline_context_from_snapshot(snapshot)
+    pkg_name = "constraint_inline_exec"
+    staged = tmp_path / pkg_name
+    _generate_full_package(ctx, staged, pkg_name)
+
+    result = _run(tmp_path, pkg_name, tmp_path / "run_inline")
+    outputs = dict(result.outputs)
+    catalog = ctx.computation_graph.constraint_catalog
+    assert catalog is not None
+    evaluation = outputs[catalog.concrete_entries[0].evaluation_channel]
+    assert evaluation.actual_value is True
+    assert evaluation.status == "satisfied"
 
 
 # ---------------------------------------------------------------------------
@@ -342,9 +363,7 @@ def _single_constraint_graph(
         {_Path("demo.sysml"): design_attr_data}, calc_usages=[], calc_defs=[]
     )
     extended = extend_graph_with_constraints(empty_graph, [concrete], deriver)
-    empty_facts = ConstraintFacts(
-        schema_version="constraint-facts/v1", definitions=[], usages=[], contexts=[], diagnostics=[]
-    )
+    empty_facts = ConstraintFacts(definitions=[], usages=[], contexts=[], diagnostics=[])
     extended.constraint_catalog = assemble_constraint_catalog([concrete], empty_facts)
 
     class _SyntheticCtx:

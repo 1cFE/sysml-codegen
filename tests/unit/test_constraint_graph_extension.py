@@ -38,9 +38,7 @@ def _graph_with_producer(channel: str) -> ComputationGraph:
         execution_order=0,
         module_kind=ModuleKind.CALCULATION,
     )
-    return ComputationGraph(
-        modules=[module], entry_point_groups=[], execution_order=["producer"]
-    )
+    return ComputationGraph(modules=[module], entry_point_groups=[], execution_order=["producer"])
 
 
 def _deriver(attrs: list[DesignAttributeData] | None = None) -> ParameterGroupDeriver:
@@ -63,11 +61,20 @@ def _cc(
         owner_instance_path="Design__c",
         membership_kind=None,
         is_negated=False,
-        expected_value=True,
+        expected_value=True if eligible else None,
         predicate_ir='{"kind":"literal"}' if eligible else None,
         inputs=inputs if eligible else [],
         evaluation_channel=f"{constraint_id}__evaluation" if eligible else None,
         eligible=eligible,
+        exclusion=(
+            None
+            if eligible
+            else {
+                "kind": "unassessed_form",
+                "reasons": [],
+                "location": "<no location>",
+            }
+        ),
     )
 
 

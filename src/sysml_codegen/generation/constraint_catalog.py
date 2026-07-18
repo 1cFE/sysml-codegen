@@ -20,6 +20,7 @@ from agentic_mbse.sysml.expression_ir import parse_expression, serialize_express
 from sysml_codegen.resolution.models import (
     ConstraintCatalog,
     ConstraintCatalogEntry,
+    ConstraintCatalogExcludedRecord,
     ConstraintCatalogSourceRecord,
 )
 
@@ -73,7 +74,10 @@ def assemble_constraint_catalog(
     INV-4), so the fingerprint is deterministic across repeated live loads with identical
     input (INV-8).
     """
-    eligible = [c for c in concrete if c.eligible]
+    validated_concrete = [
+        type(item).model_validate(item.model_dump(mode="python")) for item in concrete
+    ]
+    eligible = [c for c in validated_concrete if c.eligible]
     source_records = [
         ConstraintCatalogSourceRecord(
             definition_qualified_name=d.identity.qualified_name or "<anonymous>",
@@ -83,10 +87,25 @@ def assemble_constraint_catalog(
     ]
     concrete_entries = []
     for c in eligible:
-        if c.evaluation_channel is None:  # enforced by ConcreteConstraint's validator
-            raise RuntimeError(
-                f"eligible constraint {c.constraint_id!r} has no evaluation_channel"
+        missing_fields = [
+            field_name
+            for field_name in (
+                "is_negated",
+                "expected_value",
+                "predicate_ir",
+                "evaluation_channel",
             )
+            if getattr(c, field_name) is None
+        ]
+        if missing_fields:  # enforced by ConcreteConstraint; guards mutated models
+            raise RuntimeError(
+                f"eligible constraint {c.constraint_id!r} has missing executable fields: "
+                + ", ".join(missing_fields)
+            )
+        assert c.is_negated is not None
+        assert c.expected_value is not None
+        assert c.predicate_ir is not None
+        assert c.evaluation_channel is not None
         concrete_entries.append(
             ConstraintCatalogEntry(
                 constraint_id=c.constraint_id,
@@ -99,14 +118,27 @@ def assemble_constraint_catalog(
                 evaluation_channel=c.evaluation_channel,
             )
         )
+    excluded_records = [
+        ConstraintCatalogExcludedRecord(
+            constraint_id=c.constraint_id,
+            usage_qualified_name=c.usage_qualified_name,
+            source_form=c.source_form,
+            membership_kind=c.membership_kind,
+            exclusion=c.exclusion,
+        )
+        for c in sorted(validated_concrete, key=lambda item: item.constraint_id)
+        if not c.eligible and c.exclusion is not None
+    ]
     payload = {
         "source_records": [r.model_dump(mode="json") for r in source_records],
         "concrete_entries": [e.model_dump(mode="json") for e in concrete_entries],
+        "excluded_records": [r.model_dump(mode="json") for r in excluded_records],
     }
     fingerprint = hashlib.sha256(_canonical_json(payload).encode()).hexdigest()
     return ConstraintCatalog(
         source_records=source_records,
         concrete_entries=concrete_entries,
+        excluded_records=excluded_records,
         fingerprint=fingerprint,
     )
 

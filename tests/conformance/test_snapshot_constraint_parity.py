@@ -22,11 +22,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 @requires_license
-@pytest.mark.parametrize("fixture", ["wi014_toy", "constraint_multi_instance", "constraint_inline"])
+@pytest.mark.parametrize(
+    "fixture",
+    ["wi014_toy", "constraint_multi_instance", "constraint_inline", "catf_mfe_model"],
+)
 def test_live_snapshot_constraint_parity(fixture, tmp_path):
-    live = build_pipeline_context(
-        [FIXTURES_DIR / fixture], lower_constraints_enabled=True
-    )
+    live = build_pipeline_context([FIXTURES_DIR / fixture], lower_constraints_enabled=True)
     snap_path = capture_snapshot(
         [FIXTURES_DIR / fixture],
         tmp_path / "extraction_snapshot.json",
@@ -39,9 +40,7 @@ def test_live_snapshot_constraint_parity(fixture, tmp_path):
     # committed baselines), so this dump already covers everything else: module
     # list, entry points, execution order — including the CONSTRAINT/
     # REPORT_AGGREGATOR nodes P3 EXTEND appended and the entry points it minted.
-    assert json.loads(offline_graph.model_dump_json()) == json.loads(
-        live_graph.model_dump_json()
-    )
+    assert json.loads(offline_graph.model_dump_json()) == json.loads(live_graph.model_dump_json())
 
     live_catalog = live_graph.constraint_catalog
     offline_catalog = offline_graph.constraint_catalog
@@ -51,15 +50,14 @@ def test_live_snapshot_constraint_parity(fixture, tmp_path):
         e.constraint_id for e in live_catalog.concrete_entries
     ]  # INV-3: identical constraint_ids, identical catalog order
     assert offline_catalog.fingerprint == live_catalog.fingerprint
+    assert offline_catalog.model_dump(mode="json") == live_catalog.model_dump(mode="json")
 
 
 @requires_license
 def test_constraint_free_fixture_loads_empty_catalog_graph_unchanged(tmp_path):
     """A constraint-free fixture: no catalog on either path, graph untouched."""
     fixture = "sample_model"
-    live = build_pipeline_context(
-        [FIXTURES_DIR / fixture], lower_constraints_enabled=True
-    )
+    live = build_pipeline_context([FIXTURES_DIR / fixture], lower_constraints_enabled=True)
     assert live.constraint_facts is not None and live.constraint_facts.usages == []
 
     snap_path = capture_snapshot(
@@ -85,6 +83,5 @@ def test_offline_path_never_builds_part_instance_index():
         text=True,
     )
     assert out.stdout.strip() == "", (
-        "graph_rebuild.py must never call build_part_instance_index (INV-4) — "
-        f"found:\n{out.stdout}"
+        f"graph_rebuild.py must never call build_part_instance_index (INV-4) — found:\n{out.stdout}"
     )

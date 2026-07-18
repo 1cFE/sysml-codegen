@@ -14,11 +14,29 @@ from enum import Enum
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Import shared types from core for re-export (backward compatibility)
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.extraction.expression_compiler import Compilability
+
+
+class _TransactionalAssignmentModel(BaseModel):
+    """Validate a field change before mutating the live Pydantic instance.
+
+    Pydantic's assignment validation runs model validators after setting the field. A rejected
+    cross-field change therefore leaves the object invalid. These decision-carrying records need a
+    stronger lifetime invariant: a failed assignment must leave the prior valid value intact.
+    """
+
+    model_config = ConfigDict(validate_assignment=True)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if name in type(self).model_fields and name in self.__pydantic_fields_set__:
+            candidate = BaseModel.model_dump(self, mode="python")
+            candidate[name] = value
+            type(self).model_validate(candidate)
+        super().__setattr__(name, value)
 
 
 class EntryPointType(str, Enum):
@@ -286,13 +304,21 @@ class ConcreteConstraintInput(BaseModel):
                     f"resolution={self.resolution.value!r} must not populate {field!r}"
                 )
         if tag_field is not None and getattr(self, tag_field) is None:
-            raise ValueError(
-                f"resolution={self.resolution.value!r} requires {tag_field!r}"
-            )
+            raise ValueError(f"resolution={self.resolution.value!r} requires {tag_field!r}")
         return self
 
 
-class ConcreteConstraint(BaseModel):
+class ConstraintExclusion(BaseModel):
+    """Why one concrete source usage is intentionally not executable."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["non_numerical", "unassessed_form", "unsupported_owner"]
+    reasons: list[str] = Field(default_factory=list)
+    location: str
+
+
+class ConcreteConstraint(_TransactionalAssignmentModel):
     """One concrete, expanded assertion (Item 5 / D4, D5-IR, D7).
 
     Attributes:
@@ -328,6 +354,8 @@ class ConcreteConstraint(BaseModel):
             part of ``constraint_id``.
     """
 
+    model_config = ConfigDict(validate_assignment=True)
+
     constraint_id: str
     usage_qualified_name: str
     source_local_identity: str
@@ -342,11 +370,20 @@ class ConcreteConstraint(BaseModel):
     inputs: list[ConcreteConstraintInput] = Field(default_factory=list)
     evaluation_channel: str | None = None
     eligible: bool = True
+    exclusion: ConstraintExclusion | None = None
     tracking_key: str | None = None
 
     @model_validator(mode="after")
-    def _eligible_requires_executable_fields(self) -> "ConcreteConstraint":
+    def _eligibility_matches_executable_payload(self) -> "ConcreteConstraint":
         if self.eligible:
+            if self.exclusion is not None:
+                raise ValueError(
+                    f"eligible constraint {self.constraint_id!r} must not carry exclusion"
+                )
+            if self.is_negated is None:
+                raise ValueError(
+                    f"eligible constraint {self.constraint_id!r} has no known polarity"
+                )
             if self.predicate_ir is None:
                 raise ValueError(
                     f"eligible constraint {self.constraint_id!r} has no predicate_ir "
@@ -356,11 +393,32 @@ class ConcreteConstraint(BaseModel):
                 raise ValueError(
                     f"eligible constraint {self.constraint_id!r} has no evaluation_channel"
                 )
+        else:
+            payload_fields = []
+            if self.predicate_ir is not None:
+                payload_fields.append("predicate_ir")
+            if self.inputs:
+                payload_fields.append("inputs")
+            if self.evaluation_channel is not None:
+                payload_fields.append("evaluation_channel")
+            if self.expected_value is not None:
+                payload_fields.append("expected_value")
+            if payload_fields:
+                raise ValueError(
+                    f"unassessed constraint {self.constraint_id!r} has executable payload: "
+                    + ", ".join(payload_fields)
+                )
+            if self.exclusion is None:
+                raise ValueError(f"ineligible constraint {self.constraint_id!r} requires exclusion")
         return self
 
     @model_validator(mode="after")
     def _expected_value_derives_from_polarity(self) -> "ConcreteConstraint":
-        derived = (not self.is_negated) if self.is_negated is not None else None
+        if not self.eligible:
+            return self
+        if self.is_negated is None:  # guarded by the eligibility validator
+            raise ValueError(f"eligible constraint {self.constraint_id!r} has no known polarity")
+        derived = not self.is_negated
         if self.expected_value != derived:
             raise ValueError(
                 f"constraint {self.constraint_id!r}: expected_value={self.expected_value!r} "
@@ -382,7 +440,7 @@ class ConstraintCatalogSourceRecord(BaseModel):
     formal_names: list[str] = Field(default_factory=list)
 
 
-class ConstraintCatalogEntry(BaseModel):
+class ConstraintCatalogEntry(_TransactionalAssignmentModel):
     """One concrete, eligible assertion's catalog record (Item 7 / D6).
 
     A thin, catalog-shaped projection of :class:`ConcreteConstraint` — every field a
@@ -391,14 +449,36 @@ class ConstraintCatalogEntry(BaseModel):
     across entries sharing one definition) can run at the catalog level (INV-2).
     """
 
+    model_config = ConfigDict(validate_assignment=True)
+
     constraint_id: str
     usage_qualified_name: str
     owner_instance_path: str
     membership_kind: str | None
-    is_negated: bool | None
-    expected_value: bool | None
-    predicate_ir: str | None
+    is_negated: bool
+    expected_value: bool
+    predicate_ir: str
     evaluation_channel: str
+
+    @model_validator(mode="after")
+    def _expected_value_derives_from_polarity(self) -> "ConstraintCatalogEntry":
+        if self.expected_value != (not self.is_negated):
+            raise ValueError(
+                f"catalog constraint {self.constraint_id!r}: "
+                f"expected_value={self.expected_value!r} does not derive from "
+                f"is_negated={self.is_negated!r}"
+            )
+        return self
+
+
+class ConstraintCatalogExcludedRecord(BaseModel):
+    """Catalog projection of one validated non-executed concrete record."""
+
+    constraint_id: str
+    usage_qualified_name: str
+    source_form: str
+    membership_kind: str | None
+    exclusion: ConstraintExclusion
 
 
 class ConstraintCatalog(BaseModel):
@@ -413,6 +493,7 @@ class ConstraintCatalog(BaseModel):
 
     source_records: list[ConstraintCatalogSourceRecord] = Field(default_factory=list)
     concrete_entries: list[ConstraintCatalogEntry] = Field(default_factory=list)
+    excluded_records: list[ConstraintCatalogExcludedRecord] = Field(default_factory=list)
     fingerprint: str
 
 

@@ -117,13 +117,17 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
     assert_same_ir(catalog.concrete_entries)
     compiled: dict[str, tuple[str, str, list[str]]] = {}
     for entry in catalog.concrete_entries:
+        if entry.is_negated is None:
+            raise RuntimeError(
+                f"eligible catalog constraint {entry.constraint_id!r} has no known polarity"
+            )
         key = predicate_definition_key(entry)
         if key in compiled:
             continue
         assert entry.predicate_ir is not None  # guarded by assert_same_ir above
         fn_name = f"constraint_pred_{sanitize_qualified_name(key).lower()}"
         ir = parse_expression(entry.predicate_ir)
-        src, args = compile_predicate(ir, fn_name, negated=bool(entry.is_negated))
+        src, args = compile_predicate(ir, fn_name, negated=entry.is_negated)
         compiled[key] = (fn_name, src, args)
     return compiled
 
@@ -302,10 +306,12 @@ def generate_teax_module(
     output_attributes = []
     for out in module.outputs:
         out_name = _output_attr_name(out)
-        output_attributes.append({
-            "name": out_name,
-            "description": out.description or f"{out_name} output",
-        })
+        output_attributes.append(
+            {
+                "name": out_name,
+                "description": out.description or f"{out_name} output",
+            }
+        )
 
     primitive_types = set()
     for attr in input_attributes:
@@ -345,8 +351,8 @@ def generate_teax_module(
     template = template_env.get_template("teax_module.py.jinja2")
     code = template.render(**context)
 
-    if not code.endswith('\n'):
-        code += '\n'
+    if not code.endswith("\n"):
+        code += "\n"
 
     return code
 

@@ -47,9 +47,7 @@ def _template_env() -> jinja2.Environment:
 def _empty_facts():
     from agentic_mbse.sysml.constraint_facts import ConstraintFacts
 
-    return ConstraintFacts(
-        schema_version="constraint-facts/v1", definitions=[], usages=[], contexts=[], diagnostics=[]
-    )
+    return ConstraintFacts(definitions=[], usages=[], contexts=[], diagnostics=[])
 
 
 def _bracket_ref_ir() -> str:
