@@ -113,10 +113,33 @@ def test_inline_end_to_end_through_wired_path():
     cc = ctx.concrete_constraints[0]
     assert cc.source_form == "inline"
     assert cc.eligible is True
-    constraint_modules = [
-        m for m in ctx.computation_graph.modules if m.module_kind == "constraint"
-    ]
+    constraint_modules = [m for m in ctx.computation_graph.modules if m.module_kind == "constraint"]
     assert len(constraint_modules) == 1
+
+
+def test_inline_offline_fixture_reaches_module_rendering():
+    """The committed snapshot must cross the leaf/input reconciliation guard offline."""
+    from sysml_codegen.cli import _get_template_env
+    from sysml_codegen.generation.modules import (
+        compile_shared_predicates,
+        render_constraint_module,
+    )
+    from sysml_codegen.orchestration.snapshot_context import (
+        build_pipeline_context_from_snapshot,
+    )
+
+    snapshot = FIXTURES_DIR / "constraint_inline" / "extraction_snapshot.json"
+    ctx = build_pipeline_context_from_snapshot(snapshot)
+    catalog = ctx.computation_graph.constraint_catalog
+    assert catalog is not None
+    [module] = [item for item in ctx.computation_graph.modules if item.module_kind == "constraint"]
+    assert [item.param_name for item in module.inputs] == ["value"]
+
+    compiled = compile_shared_predicates(catalog)
+    source = render_constraint_module(
+        module, catalog, compiled, _get_template_env(), package_name="constraint_inline_exec"
+    )
+    assert "def run(self, value: float)" in source
 
 
 @requires_license
@@ -134,6 +157,7 @@ def test_inheritance_cross_check_instance_index_probe_oracle_unchanged():
     from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 
     from sysml_codegen.analysis.constraint_lowering import lower_constraints
+    from sysml_codegen.analysis.parameter_groups import extract_design_attributes
     from sysml_codegen.analysis.part_instance_index import build_part_instance_index
     from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.extractor import SysMLDataExtractor
@@ -149,14 +173,36 @@ def test_inheritance_cross_check_instance_index_probe_oracle_unchanged():
         facts,
         occ_index=index,
         registry=OutputRegistry(),
-        design_attrs={},
+        # Inline leaves use the same strict production ladder as definition actuals. Supply the
+        # extracted modeled defaults that pipeline_builder passes in production; an empty mapping
+        # would correctly make strict resolution fail rather than prove inherited scoping.
+        design_attrs=extract_design_attributes(extractor.model),
         calc_usages=[],
     )
     # The inherited `nonnegative` assert expands once per ConstrainedLeaf
     # occurrence it's inherited into -- distinct eligible/unassessed entries,
     # never silently dropped (INV-1); the 9-instance oracle above is untouched
     # by lowering having also run.
-    assert len(concrete) > 0
+    assert len(concrete) == 9
+    assert {item.owner_instance_path for item in concrete} == {
+        "InstanceIndexProbe__root__bank__member[0]",
+        "InstanceIndexProbe__root__bank__member[1]",
+        "InstanceIndexProbe__root__bank__member[2]",
+        "InstanceIndexProbe__root__container_a__leaf",
+        "InstanceIndexProbe__root__container_b__leaf",
+        "InstanceIndexProbe__root__direct_a",
+        "InstanceIndexProbe__root__direct_b",
+        "InstanceIndexProbe__root__plain_subtype",
+        "InstanceIndexProbe__root__specialized__leaf",
+    }
+    assert all(
+        [
+            (input_.formal_name, input_.design_attribute_qn)
+            for input_ in constraint.inputs
+        ]
+        == [("reading", "InstanceIndexProbe__ConstrainedLeaf__reading")]
+        for constraint in concrete
+    )
     assert len(index.occurrences_of("InstanceIndexProbe__ConstrainedLeaf")) == 9
 
 
