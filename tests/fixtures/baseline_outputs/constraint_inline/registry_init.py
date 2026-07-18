@@ -5,6 +5,7 @@ from constraint_inline.modules.constraint_inline.thehostpositiveconstraintmodule
 from constraint_inline.modules.constraints.constraintreportaggregatormodule import ConstraintReportAggregatorModule
 
 from constraint_inline.schemas.constraint_types import ConstraintEvaluation as ConstraintEvaluation, ConstraintReport as ConstraintReport
+from constraint_inline.schemas.model_params import ModelParams as ModelParams
 
 
 
@@ -27,4 +28,4 @@ def create_constraint_inline_registry() -> PipelineModuleRegistry:
 
 # Custom schema types for TEAx pipeline registration
 # Use with: execute_pipeline(..., custom_schema_types=CUSTOM_SCHEMA_TYPES)
-CUSTOM_SCHEMA_TYPES = [    ConstraintEvaluation,    ConstraintReport,]
+CUSTOM_SCHEMA_TYPES = [    ModelParams,    ConstraintEvaluation,    ConstraintReport,]

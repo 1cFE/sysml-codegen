@@ -3,7 +3,20 @@
     {
       "name": "constraint_inline__the_host__positive__f09be415bd21dd95",
       "module_type": "constraint_inline.TheHostPositiveConstraintModule",
-      "inputs": [],
+      "inputs": [
+        {
+          "param_name": "value",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "model_params",
+            "qualified_name": "constraint_inline__InlineHost__value",
+            "producer_channel": null
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
       "outputs": [
         {
           "field_name": "evaluation",
@@ -68,7 +81,24 @@
       "source_line": null
     }
   ],
-  "entry_point_groups": [],
+  "entry_point_groups": [
+    {
+      "name": "model_params",
+      "class_name": "ModelParams",
+      "source_file": "model.sysml",
+      "parameters": [
+        {
+          "qualified_name": "constraint_inline__InlineHost__value",
+          "simple_name": "value",
+          "entry_type": "design_attribute",
+          "default_value": 5.0,
+          "source_calc_usage": null,
+          "param_group": "model_params",
+          "python_type": "float"
+        }
+      ]
+    }
+  ],
   "execution_order": [
     "constraint_inline__the_host__positive__f09be415bd21dd95",
     "constraint_report_aggregator"
