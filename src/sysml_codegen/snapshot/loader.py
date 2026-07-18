@@ -96,8 +96,7 @@ def _require_binding_type(d: dict, context: str) -> BindingType:
     if raw:
         return BindingType(raw)
     logger.warning(
-        "%s: snapshot has no binding_type (missing or empty) — the binding "
-        "is dropped to UNBOUND.",
+        "%s: snapshot has no binding_type (missing or empty) — the binding is dropped to UNBOUND.",
         context,
     )
     return BindingType.UNBOUND
@@ -231,9 +230,7 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
         "computed_attributes": [
             _deserialize_computed_attribute(d) for d in raw["computed_attributes"]
         ],
-        "channel_aliases": [
-            ChannelAlias.model_validate(d) for d in raw["channel_aliases"]
-        ],
+        "channel_aliases": [ChannelAlias.model_validate(d) for d in raw["channel_aliases"]],
         "compilation_results": _load_compilation_results(raw, snapshot_path),
     }
 
@@ -288,10 +285,7 @@ def _load_compilation_results(
                 snapshot_path,
             )
         return {}
-    return {
-        name: _deserialize_calc_def_compilation_result(cr)
-        for name, cr in block.items()
-    }
+    return {name: _deserialize_calc_def_compilation_result(cr) for name, cr in block.items()}
 
 
 def _deserialize_compilation_result(d: dict) -> CompilationResult:

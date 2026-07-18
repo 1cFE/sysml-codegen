@@ -132,9 +132,7 @@ def test_ladder_falls_to_occurrence_scoped_design_attribute():
         parent_part="Design",
         qualified_name="Design__c__cell__driver__efficiency",
     )
-    ref = _reference(
-        chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency"
-    )
+    ref = _reference(chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency")
     result = resolve_actual(
         reference=ref,
         occ_scope="c.cell",
@@ -340,9 +338,7 @@ def test_precedence_scoped_lookup_beats_alias_lookup():
 
 def test_precedence_flat_scoped_beats_structured_scoped_alias():
     registry = OutputRegistry()
-    registry.register_scoped(
-        ScopedKey("c.cell.driver.efficiency"), CanonicalChannel("FlatChan")
-    )
+    registry.register_scoped(ScopedKey("c.cell.driver.efficiency"), CanonicalChannel("FlatChan"))
     registry.register_scoped_alias(
         ScopedAliasKey(("c.cell.driver", "efficiency")), CanonicalChannel("StructChan")
     )
@@ -380,9 +376,7 @@ def test_precedence_occurrence_qn_beats_target_qn_design_attribute():
     registry = OutputRegistry()
     occ_qn = "Design__c__cell__driver__efficiency"
     target_qn_eqn = "Lib__Driver__efficiency"
-    ref = _reference(
-        chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency"
-    )
+    ref = _reference(chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency")
     result = resolve_actual(
         reference=ref,
         occ_scope="c.cell",
