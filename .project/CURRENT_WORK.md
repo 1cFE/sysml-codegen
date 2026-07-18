@@ -6,16 +6,22 @@
 
 ## Active Work
 
-### Numerical constraint executable profile — CERTIFIED (2026-07-18)
+### Numerical constraint executable profile — ✅ COMPLETE: CERTIFIED, COMMITTED, PR WAVE UPDATED (2026-07-18)
 
 **Audit verdict: Certify** (`.project/active/numerical-constraint-profile/audit.md`). All 8 spec
 success criteria verified against code/tests, not just records: totality/execution, split-equality
 outcomes, both-tools warnings, catalog `excluded_records` with the eligible⇔exclusion validator
 (construction-probed unrepresentable), live/snapshot value parity, frozen golden untouched, v3 pin
 in both repos (companion `05cde35`). Parent-remediation booking (`096c29f`) for the mid-run licensed
-failure confirmed genuine. Not independently rerun: full licensed corpora, mypy/ruff/`-O`, the R4
-reversal experiment. Item changes are still uncommitted in the working tree.
+failure confirmed genuine.
 
+**Committed and pushed 2026-07-18** as `da3b495` (separable remediation cures + ledger),
+`9c0291c` (the v3 item + artifacts), `3f215ac` (touched-file formatting; the `constraint_inline`
+baseline deliberately left as generator-emitted bytes). Pre-PR gates green: licensed suite
+**2450 passed / 26 skipped / 8 deselected**; companion **1511 passed / 1 skipped**; ruff src
+clean; mypy at the 76 baseline; no debug artifacts/secrets. PR #9 and PR #11 updated with
+appended-commit comments. Only merge remains (see Up Next — the #11-first order is now
+load-bearing). After merge: `/_my_close` archives this item and the remediation.
 
 Dedicated CONSTRAINT-EXEC Item 3 contract correction:
 `.project/active/numerical-constraint-profile/{spec,spec-review,design,design-review,plan}.md`.
@@ -40,9 +46,20 @@ parent remediation's invalid empty-design-attributes regression harness, and `aa
 its stale inline baseline. Final licensed codegen evidence is **2450 passed, 26 skipped, 8
 deselected**; optimized focused evidence is **125 passed**. The exact `05cde35` companion archive
 passed **1491 tests, 1 skipped, 5 deselected**. Targeted mypy and touched-file Ruff/format passed.
-The next stage is an independent `$my-audit`; do not self-certify this implementation.
+The independent audit (Certify) closed this item; see the header block above for the commit and
+PR-wave state.
 
-### CONSTRAINT-EXEC code-quality remediation — AUDIT CURES IN PROGRESS; NUMERICAL PROFILE SPECIFIED (2026-07-18)
+### CONSTRAINT-EXEC code-quality remediation — ✅ CURES COMMITTED; D5 DISCHARGED BY THE V3 ITEM (2026-07-18)
+
+All audit cures are now committed on `constraint-exec-epic`: the separable
+package-verification/occurrence-ordering cures in `da3b495`, the entangled cures (profile/compiler
+quantity parity, inline-leaf strict wiring, assignment validation) inside `9c0291c` with the v3
+work that shares those files, and the R4 test-defect correction in `096c29f`/`8cc20d4`/`aaa579e`
+(the inherited-inline "failure" was an invalid empty-`design_attrs` test harness, not a resolver
+bug). The addendum's D5 contract choice is discharged by the numerical-profile item. The full
+licensed suite (2450/26/8) is the first licensed whole-suite evidence over these cures. Ledgers
+closed in `.project/active/constraint-exec-code-quality-remediation/{audit,plan}.md`. Archive via
+`/_my_close` after the PR wave merges. The original in-progress record follows below.
 
 The four decision-independent audit cures are implemented in the dirty worktree. Profile-v2
 quantity references and the complete admitted arithmetic/ordering operator matrix now compile;
@@ -586,9 +603,14 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
 
 ## Up Next
 
-1. **Merge the CONSTRAINT-EXEC PR wave** (human): agentic-mbse #11 FIRST, then sysml-codegen #9
-   (imports #11's symbols); teax rwestwood89/teax#3 independent; after #11+#9 merge, push
-   fusion-tea: `git -C ~/1cfe/fusion-tea push origin main` (4 acceptance commits waiting).
+1. **Merge the CONSTRAINT-EXEC PR wave** (human): agentic-mbse #11 FIRST — **now load-bearing,
+   not just convention**: #9's codegen pins `executable-profile/v3` at runtime and refuses the
+   pre-v3 profile, so merging #9 before #11 (at `05cde35`) breaks main. Then sysml-codegen #9;
+   teax rwestwood89/teax#3 independent; after #11+#9 merge, push fusion-tea:
+   `git -C ~/1cfe/fusion-tea push origin main` (4 acceptance commits waiting). Note: agentic-mbse
+   local branch tip `4ed2a07` ("modeling workflow orchestrator", separate workstream) was
+   deliberately NOT pushed — PR #11 was updated by ref to `05cde35`; that commit awaits its own
+   owner. After the wave merges: `/_my_close` for numerical-constraint-profile + the remediation.
 2. **pipeline_explainer_v2.html build** (`[V2-HTML-BUILD]`, P2): the refreshed
    `EXPLAINER_PROMPT.md` is landed and buildable — another agent picks this up.
 3. **CE-F1/F2 follow-ons** (BACKLOG): standalone catalog emission (sysml-codegen/teax shape
