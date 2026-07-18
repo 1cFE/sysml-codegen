@@ -770,45 +770,41 @@ constraint architecture.
 
 ## CONSTRAINT-EXEC remediation audit follow-on (registered 2026-07-17)
 
-Source: independent audit
-`.project/active/constraint-exec-code-quality-remediation/audit.md` at sysml-codegen
-commit `c2967f0`, using clean companion executable-profile commit `9e24c93`. These are
-`[AGENT]` findings. They are not owner-originated settled requirements.
+Source: independent audits in
+`.project/active/constraint-exec-code-quality-remediation/audit.md`: the initial audit at
+sysml-codegen `c2967f0`, and the 2026-07-17 re-audit of the uncommitted remediation on `036ec39`
+against `agentic-mbse@82fef09`. These are `[AGENT]` findings. They are not owner-originated settled
+requirements. The re-audit verified formal-target coverage and occurrence ordering, so those
+completed rows were removed from this unresolved backlog.
 
-- **[CONSTRAINT-FORMAL-COVERAGE] Bind actuals by formal target and prove total formal coverage —
-  P1 `[AGENT]`.** `lower_constraints` keys bindings by `ActualFact.name`, ignores
-  `ActualFact.formal_targets`, and never subtracts actual/default bindings from the referenced
-  definition's formal set (`constraint_lowering.py:610-639`). A required formal with no actual or
-  default therefore lowers with no input, and an actual whose local name differs from its target is
-  assigned the wrong formal name. Implement target-QN-to-definition-formal matching; reject zero,
-  multiple, and duplicate targets; require every formal to resolve through exactly one actual or an
-  explicitly omitted modeled default; and add probes for renamed actuals and missing required
-  formals. This restores `.project/completed/20260713_constraint-lowering/spec.md:150-164`.
 - **[PROFILE-COMPILER-PARITY] Make executable-profile admission total for predicate compilation —
-  P1 `[AGENT]`.** Clean companion profile v1 admits proven Boolean/string/integer/same-enum
-  equality and currently admits arithmetic nodes without arity checks; the predicate compiler
-  rejects all equality, unary `+`, and zero-operand arithmetic. Reconcile the versioned profile and
-  compiler deliberately: implement every admitted equality category, block unsupported shapes in
-  the profile or support them downstream, and add a differential gate proving every `ADMIT` IR
-  compiles. Centralize ExpressionIR arity/unary/identifier validation for both renderers, add the
-  missing calc zero-operand test, and reduce the new C901 13 `_compile_numeric` branch density while
-  doing the shared visitor/validation work.
+  P1 `[AGENT]`.** The partial cure handles unary plus and literal Boolean/string/integer/synthetic-
+  enum equality, but exact companion profile v2 still admits quantity-reference ordering and
+  arithmetic that `predicate_compiler.py` rejects. The generated path also remains float-only, so
+  non-real feature inputs, defaults, observations, and production enum constants cannot preserve
+  their admitted semantics. Resolve the contract conflict between expanded profile admission and
+  the completed float-shaped generation design, reconcile every admitted operator/category pair,
+  and add a matrix-driven profile-`ADMIT` → compile → generated-execution gate. Include blocked
+  parity so the compiler cannot accept profile-blocked derivations such as integer exponentiation
+  equality.
+- **[INLINE-CONSTRAINT-WIRING] Wire inline owner references through generated modules — P1
+  `[AGENT]`.** The committed `constraint_inline` snapshot lowers an inline predicate with leaf
+  `value` but no module inputs. Graph construction passes; module rendering fails because the
+  compiled leaf has no matching input. Define how inline owner feature references resolve to graph
+  inputs and entry points, then prove the offline fixture renders and executes. The existing test
+  named “end to end” stops at graph construction.
 - **[CONSTRAINT-MODEL-INVARIANTS] Close the remaining eligible/unassessed model states — P2
-  `[AGENT]`.** `ConcreteConstraint` still accepts an eligible constraint with null polarity and an
-  ineligible constraint with executable payload; `ConstraintCatalogEntry` independently permits
-  null executable fields; generation coerces null polarity with `bool(None)`. Enforce the full
-  relationship in both model shapes: eligible implies non-null predicate, evaluation channel,
-  polarity, and derived expectation; unassessed implies no executable payload. Remove the coercion
-  and add negative construction tests for both directions.
-- **[PART-INDEX-TIEBREAK] Complete the occurrence ordering key — P2 `[AGENT]`.**
-  `_occurrence_sort_key` uses only feature names and occurrence indices. Different owning
-  definitions or leaf PartDefs can tie, after which set iteration makes output order depend on
-  `PYTHONHASHSEED`. Include owning-definition identity and `part_def_qn` in a total structural key;
-  pin equal-segment, different-root ordering across multiple hash seeds.
+  `[AGENT]`.** Construction-time validators now reject the original impossible states and
+  generation no longer coerces null polarity. The mutable models still allow those invariants to
+  be broken after construction and serialized. An eligible record changed to `eligible=False`
+  keeps its executable payload and is silently dropped by catalog/graph filtering; catalog
+  polarity and expectation can also diverge. Make these shapes immutable or assignment-validating,
+  or comprehensively revalidate at serialization and consumption boundaries. Cover nested
+  mutation, silent filtering, and fingerprint effects.
 - **[CONTRACT-VERIFY-BOUNDARY] Normalize missing and malformed package seals — P2 `[AGENT]`.**
-  `verify_package` advertises `VerificationResult` but missing seals, invalid JSON, and absent keys
-  escape as filesystem/JSON/key exceptions; its strict runtime mismatch check also uses string
-  identity. Define diagnostics for unreadable/malformed seals, validate the schema before indexing,
-  use value equality, and test missing file, malformed JSON, missing keys, and the emitted-verifier
-  byte-identity gate. This finding was already present in the 2026-07-13 research but was not in the
-  earlier follow-on backlog.
+  Missing, unreadable, non-JSON, and broadly malformed seal files now return diagnostics, and the
+  runtime comparison uses value equality. The verifier still accepts arbitrary self-inconsistent
+  executable fingerprints and artifact keys that are absolute or escape the package root; recorded
+  artifact read errors can still raise raw `OSError`. Validate digest syntax, path containment and
+  normalization, and the fingerprint derivation rule before integrity checks. Normalize artifact
+  walk/read errors into path-specific fatal diagnostics and retain stdlib-only coverage.

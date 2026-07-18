@@ -6,9 +6,18 @@ et al.). One test per B1-confirmed shape (`b1-probe-evidence.md`); see
 ``design.md`` D3 for the dispatch this pins.
 """
 
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+
 from sysml_codegen.analysis.part_instance_index import (
     Fixed,
+    InstanceOccurrence,
     NonFinite,
+    PathStep,
+    _occurrence_sort_key,
     classify_cardinality,
 )
 
@@ -118,3 +127,39 @@ def test_unrecognized_upper_bound_node_blocks() -> None:
     usage = _usage(_MockUnknownBoundNode())
     result = classify_cardinality(usage, OWNER_QN, FEATURE)
     assert isinstance(result, NonFinite)
+
+
+def test_occurrence_sort_key_distinguishes_root_and_leaf_identity() -> None:
+    root_a = InstanceOccurrence("LeafB", (PathStep("RootA", "member", 0),))
+    root_b = InstanceOccurrence("LeafA", (PathStep("RootB", "member", 0),))
+    same_root_other_leaf = InstanceOccurrence("LeafA", (PathStep("RootA", "member", 0),))
+
+    assert _occurrence_sort_key(root_a) != _occurrence_sort_key(root_b)
+    assert _occurrence_sort_key(root_a) != _occurrence_sort_key(same_root_other_leaf)
+
+
+def test_occurrence_order_is_stable_across_python_hash_seeds() -> None:
+    probe = """
+from sysml_codegen.analysis.part_instance_index import (
+    InstanceOccurrence,
+    PathStep,
+    _occurrence_sort_key,
+)
+occurrences = {
+    InstanceOccurrence("LeafA", (PathStep("RootB", "member", 0),)),
+    InstanceOccurrence("LeafB", (PathStep("RootA", "member", 0),)),
+}
+print(",".join(item.part_def_qn for item in sorted(occurrences, key=_occurrence_sort_key)))
+"""
+    outputs = []
+    for seed in (1, 2, 3, 5, 10, 42):
+        env = {**os.environ, "PYTHONHASHSEED": str(seed)}
+        completed = subprocess.run(
+            [sys.executable, "-c", probe],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        outputs.append(completed.stdout.strip())
+    assert outputs == ["LeafB,LeafA"] * len(outputs)

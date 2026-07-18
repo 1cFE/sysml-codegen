@@ -352,10 +352,18 @@ requirements contract `.project/active/numerical-constraint-profile/spec.md`.
 ### Changes Required
 
 - [x] Record the selected numerical-profile direction in `design.md` and a dedicated spec.
-- [ ] Approve and design `.project/active/numerical-constraint-profile/spec.md`.
-- [ ] Replace this placeholder with the approved cross-repository implementation plan.
-- [ ] Implement and validate the approved contract, including warning-and-continue behavior for
+- [x] Approve and design `.project/active/numerical-constraint-profile/spec.md`.
+- [x] Replace this placeholder with the approved cross-repository implementation plan.
+- [x] Implement and validate the approved contract, including warning-and-continue behavior for
       valid non-numerical assertions.
+
+### Phase 10 Completion — 2026-07-18
+
+The dedicated item is complete at `.project/active/numerical-constraint-profile/plan.md`.
+Companion commits are `b251e95` and exact compatible state `05cde35`. Final licensed codegen
+evidence is **2450 passed, 26 skipped, 8 deselected**; the exact `05cde35` companion archive
+passed **1491 tests, 1 skipped, 5 deselected**. This completes the implementation dependency but
+does not replace the parent remediation's independent audit.
 
 ### Independent Audit Result — 2026-07-17
 
@@ -529,3 +537,9 @@ production resolver change was made because the family probe proved its behavior
 first licensed full-suite run over the remediation worktree passed **2433 tests, 23 skipped, 8
 deselected**. The execution-only inline pin is not part of that default suite and still requires
 the documented TEAx-capable environment; the plain codegen venv lacks `pandas`.
+
+**Baseline follow-through:** Phase 4's later selective regeneration exposed that the committed
+`constraint_inline` pipeline baseline still described D2's pre-cure zero-input graph. Commit
+`aaa579e` refreshes only that fixture's computation graph and registry: input `value`, its modeled
+design-attribute entry point, and `ModelParams` registry schema. A second selective regeneration
+was required to be byte-clean before numerical-profile Phase 4 continued.

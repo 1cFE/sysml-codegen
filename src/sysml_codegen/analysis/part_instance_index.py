@@ -220,19 +220,21 @@ class InstanceOccurrence:
 
 def _occurrence_sort_key(
     occurrence: InstanceOccurrence,
-) -> tuple[tuple[str, ...], tuple[int, ...]]:
+) -> tuple[tuple[str, ...], tuple[int, ...], tuple[str, ...], str]:
     """Deterministic order (D6): integer indices, never rendered-string order.
 
-    Singleton steps normalize to ``-1`` so a future key change cannot reintroduce
-    a ``None < int`` comparison hazard; comparing ``indices`` only matters when
-    ``segment_names`` already match, so aligned positions are guaranteed.
+    Singleton steps normalize to ``-1`` so a future key change cannot reintroduce a
+    ``None < int`` comparison hazard. Owning-definition identities and the leaf PartDef are
+    total tie-breakers after the established segment/index order; distinct occurrences can no
+    longer inherit set/hash iteration order when their rendered structure matches.
     """
     segment_names = tuple(step.feature_name for step in occurrence.steps)
     indices = tuple(
         step.occurrence_index if step.occurrence_index is not None else -1
         for step in occurrence.steps
     )
-    return segment_names, indices
+    owning_definitions = tuple(step.owning_def_qn for step in occurrence.steps)
+    return segment_names, indices, owning_definitions, occurrence.part_def_qn
 
 
 @dataclass(frozen=True)
