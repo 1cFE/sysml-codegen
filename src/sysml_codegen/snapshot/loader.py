@@ -195,9 +195,9 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
             f"of {sorted(VALID_CONSTRAINT_LOWERING_MODES)!r}) — an unrecognized "
             "mode must never be silently skipped. Recapture the snapshot."
         )
-    # Coordinated-pair skew guard (mirrors PROFILE_SEMANTIC_VERSION at
-    # constraint_lowering.py:463): the code-level pins must still match what this
-    # loader was written against, independent of the data-level checks above.
+    # Coordinated-pair skew guard (paired with the PROFILE_SEMANTIC_VERSION guard in
+    # analysis.constraint_lowering.lower_constraints): the code-level pins must still match
+    # what this loader was written against, independent of the data-level checks above.
     # Explicit raises, not asserts — these must survive `python -O`.
     if CONSTRAINT_FACTS_SCHEMA_VERSION != "constraint-facts/v1":
         raise RuntimeError(

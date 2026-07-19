@@ -2,6 +2,7 @@
 
 import pytest
 
+import sysml_codegen.resolution.models as resolution_models
 from sysml_codegen.analysis.constraint_lowering import (
     assert_unique_constraint_ids,
     mint_constraint_id,
@@ -13,6 +14,16 @@ from sysml_codegen.resolution.models import (
     ConstraintCatalogEntry,
     ConstraintInputResolution,
 )
+
+
+def test_catalog_exclusion_models_are_public_and_fingerprint_contract_is_complete():
+    assert "ConstraintExclusion" in resolution_models.__all__
+    assert "ConstraintCatalogExcludedRecord" in resolution_models.__all__
+
+    docstring = resolution_models.ConstraintCatalog.__doc__
+    assert docstring is not None
+    for collection in ("source_records", "concrete_entries", "excluded_records"):
+        assert collection in docstring
 
 
 def test_constraint_id_deterministic_and_collision_distinct():
@@ -93,6 +104,29 @@ def test_assert_unique_constraint_ids_raises_on_duplicate():
     b = _make_cc("dup_id", "Design__c__cell[1]")
     with pytest.raises(CodeGenerationError, match="dup_id"):
         assert_unique_constraint_ids([a, b])
+
+
+def test_genuine_duplicate_id_rejection_describes_both_records_truthfully():
+    first = _make_cc("forced_duplicate", "Design__first")
+    second = _make_cc("forced_duplicate", "Design__second").model_copy(
+        update={
+            "usage_qualified_name": "Design__other__check",
+            "source_local_identity": "other_check",
+            "owner_qualified_name": "Design__OtherOwner",
+        }
+    )
+    with pytest.raises(CodeGenerationError) as error:
+        assert_unique_constraint_ids([first, second])
+    message = str(error.value)
+    assert "forced_duplicate" in message
+    assert "Design__c__cell__nonneg" in message
+    assert "Design__other__check" in message
+    assert "Design__Cell" in message
+    assert "Design__OtherOwner" in message
+    assert "Design__first" in message
+    assert "Design__second" in message
+    assert "hash collision" not in message.lower()
+    assert "broken model" not in message.lower()
 
 
 def test_assert_unique_constraint_ids_passes_on_distinct():
@@ -238,6 +272,28 @@ def _catalog_entry(**changes) -> ConstraintCatalogEntry:
     return ConstraintCatalogEntry(**values)
 
 
+def _default_eligible_constraint() -> ConcreteConstraint:
+    values = _make_cc("default_eligible", "Design__c__cell").model_dump(
+        exclude={"eligible", "exclusion"}
+    )
+    return ConcreteConstraint(**values)
+
+
+def _assert_rejected_assignment_is_transactional(
+    model: ConcreteConstraint | ConstraintCatalogEntry,
+    field: str,
+    value: object,
+    match: str,
+) -> None:
+    before = model.model_copy(deep=True)
+    before_json = model.model_dump_json()
+    with pytest.raises(ValueError, match=match):
+        setattr(model, field, value)
+    assert model == before
+    assert model.model_dump_json() == before_json
+    assert type(model).model_validate_json(model.model_dump_json()) == before
+
+
 @pytest.mark.parametrize("field", ["is_negated", "expected_value", "predicate_ir"])
 def test_catalog_entry_requires_executable_fields(field):
     with pytest.raises(ValueError):
@@ -251,21 +307,49 @@ def test_catalog_entry_expected_value_derives_from_polarity():
 
 def test_concrete_constraint_rejects_eligibility_mutation_in_both_directions():
     eligible = _make_cc("eligible", "Design__c__cell")
-    with pytest.raises(ValueError, match="unassessed.*executable payload"):
-        eligible.eligible = False
-    assert eligible.eligible is True
-    assert eligible.predicate_ir is not None
+    _assert_rejected_assignment_is_transactional(
+        eligible, "eligible", False, "unassessed.*executable payload"
+    )
 
     unassessed = _make_cc("unassessed", "Design__c__cell", eligible=False)
-    with pytest.raises(ValueError, match="must not carry exclusion"):
-        unassessed.eligible = True
-    assert unassessed.eligible is False
-    assert unassessed.model_dump()["predicate_ir"] is None
+    _assert_rejected_assignment_is_transactional(
+        unassessed, "eligible", True, "must not carry exclusion"
+    )
+
+
+def test_default_eligible_rejects_eligibility_mutation_transactionally():
+    constraint = _default_eligible_constraint()
+    assert "eligible" not in constraint.model_fields_set
+    assert "exclusion" not in constraint.model_fields_set
+    _assert_rejected_assignment_is_transactional(
+        constraint, "eligible", False, "unassessed.*executable payload"
+    )
+
+
+def test_default_eligible_rejects_exclusion_mutation_transactionally():
+    constraint = _default_eligible_constraint()
+    _assert_rejected_assignment_is_transactional(
+        constraint,
+        "exclusion",
+        {
+            "kind": "non_numerical",
+            "reasons": ["warn_non_numerical_equality"],
+            "location": "model.sysml:10:3",
+        },
+        "must not carry exclusion",
+    )
+
+
+def test_concrete_constraint_accepts_valid_deliberate_assignment():
+    constraint = _default_eligible_constraint()
+    constraint.tracking_key = "owner-correlation-key"
+    assert constraint.tracking_key == "owner-correlation-key"
+    assert (
+        ConcreteConstraint.model_validate_json(constraint.model_dump_json()).tracking_key
+        == "owner-correlation-key"
+    )
 
 
 def test_catalog_entry_rejects_polarity_mutation_and_stays_serializable():
     entry = _catalog_entry()
-    with pytest.raises(ValueError, match="does not derive"):
-        entry.is_negated = True
-    assert entry.is_negated is False
-    assert entry.model_dump()["expected_value"] is True
+    _assert_rejected_assignment_is_transactional(entry, "is_negated", True, "does not derive")

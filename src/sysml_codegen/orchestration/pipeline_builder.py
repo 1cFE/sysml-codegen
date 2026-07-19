@@ -892,6 +892,8 @@ def build_pipeline_context(
             registry=output_registry,
             design_attrs=graph_design_attrs,
             calc_usages=calc_usages,
+            source_location_mode="live",
+            source_roots=model_paths,
         )
         part_occurrences = recorder.recorded
 

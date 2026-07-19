@@ -97,6 +97,37 @@ def _build_module_docstring_from_graph(module) -> str:
 PREDICATES_MODULE_IMPORT_PATH = "modules.constraints.predicates"
 
 
+def constraint_predicate_function_name(raw_definition_key: str) -> str:
+    """Return the emitted Python function name for one raw predicate definition key."""
+    return f"constraint_pred_{sanitize_qualified_name(raw_definition_key).lower()}"
+
+
+def assert_unique_predicate_function_names(catalog: ConstraintCatalog) -> None:
+    """Reject distinct raw definition keys that map to one emitted function name."""
+    from sysml_codegen.generation.constraint_catalog import predicate_definition_key
+
+    raw_keys = {predicate_definition_key(entry) for entry in catalog.concrete_entries}
+    keys_by_function_name: dict[str, list[str]] = {}
+    for raw_key in raw_keys:
+        function_name = constraint_predicate_function_name(raw_key)
+        keys_by_function_name.setdefault(function_name, []).append(raw_key)
+
+    collisions = [
+        (function_name, sorted(keys))
+        for function_name, keys in keys_by_function_name.items()
+        if len(keys) > 1
+    ]
+    if not collisions:
+        return
+
+    function_name, keys = min(collisions, key=lambda collision: collision[0])
+    raise _generation_error(
+        "Predicate function-name collision: raw definition keys "
+        f"{keys!r} all normalize to {function_name!r}. "
+        "Rename one; generation cannot emit them safely."
+    )
+
+
 def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str, str, list[str]]]:
     """One compiled function per distinct source definition (D3, INV-1).
 
@@ -114,6 +145,7 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
     )
     from sysml_codegen.generation.predicate_compiler import compile_predicate
 
+    assert_unique_predicate_function_names(catalog)
     assert_same_ir(catalog.concrete_entries)
     compiled: dict[str, tuple[str, str, list[str]]] = {}
     for entry in catalog.concrete_entries:
@@ -125,7 +157,7 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
         if key in compiled:
             continue
         assert entry.predicate_ir is not None  # guarded by assert_same_ir above
-        fn_name = f"constraint_pred_{sanitize_qualified_name(key).lower()}"
+        fn_name = constraint_predicate_function_name(key)
         ir = parse_expression(entry.predicate_ir)
         src, args = compile_predicate(ir, fn_name, negated=entry.is_negated)
         compiled[key] = (fn_name, src, args)

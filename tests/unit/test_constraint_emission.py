@@ -24,7 +24,11 @@ from agentic_mbse.sysml.expression_ir import (
 
 from sysml_codegen.generation import CodeGenerationError
 from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog, assert_same_ir
-from sysml_codegen.generation.modules import compile_shared_predicates, render_constraint_module
+from sysml_codegen.generation.modules import (
+    compile_shared_predicates,
+    constraint_predicate_function_name,
+    render_constraint_module,
+)
 from sysml_codegen.resolution.models import (
     ConcreteConstraint,
     InputSource,
@@ -146,6 +150,84 @@ def test_three_instances_still_compile_once(monkeypatch=None):
     catalog = assemble_constraint_catalog(concrete, _empty_facts())
     compiled = compile_shared_predicates(catalog)
     assert len(compiled) == 1
+
+
+COLLISION_CASES = [
+    (("Pkg::Foo", "Pkg::foo"), "constraint_pred_pkg__foo"),
+    (("Pkg::foo__bar", "Pkg::foo_bar"), "constraint_pred_pkg__foo_bar"),
+    (("Pkg::'Foo-Bar'", "Pkg::Foo_Bar"), "constraint_pred_pkg__foo_bar"),
+]
+
+
+@pytest.mark.parametrize(("raw_keys", "expected_name"), COLLISION_CASES)
+def test_constraint_predicate_function_name_matches_emission(raw_keys, expected_name):
+    assert [constraint_predicate_function_name(key) for key in raw_keys] == [
+        expected_name,
+        expected_name,
+    ]
+
+
+@pytest.mark.parametrize(("raw_keys", "expected_name"), COLLISION_CASES)
+@pytest.mark.parametrize("reverse", [False, True])
+def test_distinct_definition_keys_with_same_function_name_are_rejected_deterministically(
+    raw_keys, expected_name, reverse
+):
+    ordered_keys = tuple(reversed(raw_keys)) if reverse else raw_keys
+    concrete = [
+        _concrete("C1", "Pkg__Cell_1", usage_qualified_name=ordered_keys[0]),
+        _concrete(
+            "C2",
+            "Pkg__Cell_2",
+            usage_qualified_name=ordered_keys[1],
+            predicate_ir=_predicate_ir("<"),
+        ),
+    ]
+    catalog = assemble_constraint_catalog(concrete, _empty_facts())
+    sorted_keys = sorted(raw_keys)
+    expected = (
+        "Predicate function-name collision: raw definition keys "
+        f"{sorted_keys!r} all normalize to {expected_name!r}. "
+        "Rename one; generation cannot emit them safely."
+    )
+    with pytest.raises(CodeGenerationError) as error:
+        compile_shared_predicates(catalog)
+    assert str(error.value) == expected
+
+
+def test_collision_rejected_before_predicate_compilation(monkeypatch):
+    import sysml_codegen.generation.predicate_compiler as predicate_compiler
+
+    calls = []
+    monkeypatch.setattr(
+        predicate_compiler,
+        "compile_predicate",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+    catalog = assemble_constraint_catalog(
+        [
+            _concrete("C1", "Pkg__Cell_1", usage_qualified_name="Pkg::Foo"),
+            _concrete("C2", "Pkg__Cell_2", usage_qualified_name="Pkg::foo"),
+        ],
+        _empty_facts(),
+    )
+    with pytest.raises(CodeGenerationError, match="constraint_pred_pkg__foo"):
+        compile_shared_predicates(catalog)
+    assert calls == []
+
+
+def test_collision_free_definition_keys_retain_existing_names():
+    catalog = assemble_constraint_catalog(
+        [
+            _concrete("C1", "Pkg__Cell_1", usage_qualified_name="Pkg::Foo"),
+            _concrete("C2", "Pkg__Cell_2", usage_qualified_name="Pkg::Bar"),
+        ],
+        _empty_facts(),
+    )
+    compiled = compile_shared_predicates(catalog)
+    assert {key: value[0] for key, value in compiled.items()} == {
+        "Pkg::Foo": "constraint_pred_pkg__foo",
+        "Pkg::Bar": "constraint_pred_pkg__bar",
+    }
 
 
 # ---------------------------------------------------------------------------

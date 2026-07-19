@@ -20,13 +20,17 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import json
+from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from agentic_mbse.sysml.constraint_facts import serialize as serialize_constraint_facts
+from agentic_mbse.sysml.executable_profile import evaluate_profile
 from pydantic import BaseModel
 
+from sysml_codegen.analysis.constraint_lowering import excluded_usage_indices
+from sysml_codegen.analysis.source_referent import map_live_source_referent
 from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
 
 if TYPE_CHECKING:
@@ -58,6 +62,7 @@ def serialize_extraction_snapshot(
     constraint_facts: ConstraintFacts,
     part_occurrences: dict[str, list[InstanceOccurrence]],
     constraint_lowering_mode: str,
+    model_paths: list[Path],
     compilation_results: dict[str, Any] | None = None,
     output_dir: Path | None = None,
 ) -> dict[str, Any]:
@@ -95,7 +100,15 @@ def serialize_extraction_snapshot(
         "model_name": model_name,
         "captured_at": datetime.datetime.now(datetime.UTC).isoformat(),
         "constraint_lowering_mode": constraint_lowering_mode,
-        "constraint_facts": json.loads(serialize_constraint_facts(constraint_facts)),
+        "constraint_facts": json.loads(
+            serialize_constraint_facts(
+                _constraint_facts_for_snapshot(
+                    constraint_facts,
+                    constraint_lowering_mode=constraint_lowering_mode,
+                    model_paths=model_paths,
+                )
+            )
+        ),
         # Owner keys emitted sorted (INV-7/MF4) — snapshot_to_json does not
         # sort_keys, so an unsorted dict would churn this section every capture.
         "part_occurrences": {
@@ -121,6 +134,30 @@ def serialize_extraction_snapshot(
         ],
         "channel_aliases": [_serialize_value(ca, output_dir) for ca in channel_aliases],
     }
+
+
+def _constraint_facts_for_snapshot(
+    facts: ConstraintFacts,
+    *,
+    constraint_lowering_mode: str,
+    model_paths: list[Path],
+) -> ConstraintFacts:
+    """Copy and canonicalize only anonymous usages selected for exclusion."""
+    copied = deepcopy(facts)
+    if constraint_lowering_mode != "applied" or not copied.usages:
+        return copied
+    profile = evaluate_profile(facts)
+    for index in excluded_usage_indices(facts, profile.decisions):
+        original = facts.usages[index]
+        if original.identity.name is not None:
+            continue
+        if original.location is None:
+            raise ValueError("anonymous excluded constraint has no LocationFact")
+        copied_location = copied.usages[index].location
+        if copied_location is None:
+            raise RuntimeError("copied anonymous exclusion lost its LocationFact")
+        copied_location.file = map_live_source_referent(original.location.file, model_paths)
+    return copied
 
 
 def _serialize_value(obj: Any, output_dir: Path | None) -> Any:

@@ -35,6 +35,10 @@ from agentic_mbse.sysml.expression_ir import (
 
 from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
 from sysml_codegen.analysis.part_instance_index import NonFiniteCardinalityError
+from sysml_codegen.analysis.source_referent import (
+    map_live_source_referent,
+    validate_snapshot_source_referent,
+)
 from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.qualified_names import sanitize_name, sanitize_qualified_name
 from sysml_codegen.resolution.models import (
@@ -289,7 +293,13 @@ def resolve_actual(
     raise AssertionError("unreachable: terminal_disposition(strict=True) always raises")
 
 
-def mint_constraint_id(*, instance_path: str, source_local: str, tuple_: tuple) -> str:
+def mint_constraint_id(
+    *,
+    instance_path: str,
+    source_local: str,
+    tuple_: tuple,
+    digest_hex_length: int = 16,
+) -> str:
     """Mint a deterministic, collision-checkable ``constraint_id`` (D3/N1).
 
     ``{instance_path}__{source_local}__{sha256[:16] of the canonical tuple}``.
@@ -299,24 +309,31 @@ def mint_constraint_id(*, instance_path: str, source_local: str, tuple_: tuple) 
     checked post-expansion by :func:`assert_unique_constraint_ids`).
     """
     canonical = json.dumps(list(tuple_), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:16]
+    if digest_hex_length < 1 or digest_hex_length > 64:
+        raise ValueError("digest_hex_length must be between 1 and 64")
+    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:digest_hex_length]
     return f"{instance_path}__{source_local}__{suffix}"
 
 
 def assert_unique_constraint_ids(concrete: list[ConcreteConstraint]) -> None:
-    """Raise if any two concrete constraints share a ``constraint_id`` (D3, INV-4).
+    """Raise if any two concrete constraints share a ``constraint_id`` (D3, INV-4)."""
 
-    A collision under a 64-bit hash on a valid model means something upstream is
-    broken (e.g. two owner instances sharing an identity) — never silently kept.
-    """
+    def describe(record: ConcreteConstraint) -> str:
+        location = record.exclusion.location if record.exclusion is not None else "<executable>"
+        return (
+            f"usage={record.usage_qualified_name!r}, "
+            f"source_local={record.source_local_identity!r}, source={location!r}, "
+            f"owner_definition={record.owner_qualified_name!r}, "
+            f"owner_instance={record.owner_instance_path!r}"
+        )
+
     seen: dict[str, ConcreteConstraint] = {}
     for c in concrete:
         prior = seen.get(c.constraint_id)
         if prior is not None:
             raise _generation_error(
-                f"constraint_id collision: '{c.constraint_id}' minted for both "
-                f"'{prior.owner_instance_path}' and '{c.owner_instance_path}' "
-                "(generation error, never silently kept — D3/INV-4)"
+                f"duplicate constraint_id {c.constraint_id!r}; first record: "
+                f"{describe(prior)}; second record: {describe(c)}"
             )
         seen[c.constraint_id] = c
 
@@ -489,6 +506,96 @@ def _exclusion_for(decision: UsageDecision, owner_kind: str) -> ConstraintExclus
         kind = "unassessed_form"
         reasons = []
     return ConstraintExclusion(kind=kind, reasons=reasons, location=_render_location(decision))
+
+
+def excluded_usage_indices(
+    facts: ConstraintFacts, decisions: list[UsageDecision]
+) -> tuple[int, ...]:
+    """Return the ordered indices lowering sends to the excluded-record branch."""
+    if len(facts.usages) != len(decisions):
+        raise _generation_error(
+            "constraint facts/profile decision cardinality mismatch: "
+            f"{len(facts.usages)} usages versus {len(decisions)} decisions"
+        )
+    supported_owners = {"part_def", "calc_def", "package"}
+    return tuple(
+        index
+        for index, (usage, decision) in enumerate(zip(facts.usages, decisions, strict=True))
+        if usage.owner.owning_definition.kind not in supported_owners
+        or decision.eligibility is not Eligibility.ADMIT
+    )
+
+
+def _canonical_anonymous_location(
+    usage: ConstraintUsageFact,
+    *,
+    source_location_mode: Literal["live", "snapshot"] | None,
+    source_roots: list[Path],
+) -> tuple[str, str]:
+    if usage.location is None:
+        raise _generation_error(
+            "<anonymous>: anonymous assertion has no LocationFact — cannot form a portable "
+            "source identity"
+        )
+    if source_location_mode is None:
+        raise _generation_error(
+            "<anonymous>: anonymous excluded assertion requires an explicit source-location route"
+        )
+    try:
+        if source_location_mode == "live":
+            referent = map_live_source_referent(usage.location.file, source_roots)
+        else:
+            referent = validate_snapshot_source_referent(usage.location.file)
+    except ValueError as error:
+        raise _generation_error(str(error)) from error
+    location = f"{referent}:{usage.location.line}:{usage.location.column}"
+    return referent, location
+
+
+def _warning_location(
+    usage: ConstraintUsageFact,
+    decision: UsageDecision,
+    *,
+    source_location_mode: Literal["live", "snapshot"] | None,
+    source_roots: list[Path],
+) -> str:
+    """Render the route-stable warning location for one profile decision."""
+    if usage.identity.name is not None:
+        return _render_location(decision)
+    _, location = _canonical_anonymous_location(
+        usage,
+        source_location_mode=source_location_mode,
+        source_roots=source_roots,
+    )
+    return location
+
+
+def _report_non_numerical_warnings(
+    facts: ConstraintFacts,
+    decisions: list[UsageDecision],
+    *,
+    source_location_mode: Literal["live", "snapshot"] | None,
+    source_roots: list[Path],
+) -> None:
+    """Report every non-numerical decision once in source/profile order."""
+    for usage, decision in zip(facts.usages, decisions, strict=True):
+        if decision.eligibility is not Eligibility.NON_NUMERICAL:
+            continue
+        usage_qn = usage.identity.qualified_name or "<anonymous>"
+        diagnostics = "; ".join(
+            f"{diagnostic.reason}: {diagnostic.message}" for diagnostic in decision.diagnostics
+        )
+        logger.warning(
+            "Constraint %s at %s is not numerical and will not execute: %s",
+            usage_qn,
+            _warning_location(
+                usage,
+                decision,
+                source_location_mode=source_location_mode,
+                source_roots=source_roots,
+            ),
+            diagnostics,
+        )
 
 
 def _resolve_formal(
@@ -724,6 +831,8 @@ def lower_constraints(
     registry: OutputRegistry,
     design_attrs: dict[Path, list[DesignAttributeData]],
     calc_usages: list[CalcUsageData],
+    source_location_mode: Literal["live", "snapshot"] | None = None,
+    source_roots: list[Path] | None = None,
 ) -> list[ConcreteConstraint]:
     """Expand every fact into concrete graph structure (P1 RESOLVE).
 
@@ -750,6 +859,12 @@ def lower_constraints(
             "review before re-pinning"
         )
     profile = evaluate_profile(facts)
+    _report_non_numerical_warnings(
+        facts,
+        profile.decisions,
+        source_location_mode=source_location_mode,
+        source_roots=source_roots or [],
+    )
     blocking = [d for d in profile.decisions if d.eligibility is Eligibility.BLOCK]
     if blocking:
 
@@ -771,31 +886,51 @@ def lower_constraints(
     design_attr_by_qn = _design_attr_index(design_attrs)
     formal_default_by_qn = _formal_default_index(facts)
     concrete: list[ConcreteConstraint] = []
+    excluded_indices = set(excluded_usage_indices(facts, profile.decisions))
 
-    for usage, decision in zip(facts.usages, profile.decisions, strict=True):
+    for index, (usage, decision) in enumerate(zip(facts.usages, profile.decisions, strict=True)):
         kind = usage.owner.owning_definition.kind
         usage_qn = usage.identity.qualified_name or "<anonymous>"
 
-        if decision.eligibility is Eligibility.NON_NUMERICAL:
-            reasons = ", ".join(diagnostic.reason for diagnostic in decision.diagnostics)
-            logger.warning(
-                "Constraint %s at %s is not numerical and will not execute: %s",
-                usage_qn,
-                _render_location(decision),
-                reasons,
-            )
-
-        if kind not in ("part_def", "calc_def", "package") or (
-            decision.eligibility is not Eligibility.ADMIT
-        ):
+        if index in excluded_indices:
             local, _id_component = _source_local_identity(usage)
+            exclusion = _exclusion_for(decision, kind)
+            if usage.identity.name is None:
+                referent, canonical_location = _canonical_anonymous_location(
+                    usage,
+                    source_location_mode=source_location_mode,
+                    source_roots=source_roots or [],
+                )
+                location = usage.location
+                if location is None:
+                    raise RuntimeError("anonymous source identity returned without a LocationFact")
+                constraint_id = mint_constraint_id(
+                    instance_path=sanitize_qualified_name(usage_qn),
+                    source_local=local,
+                    tuple_=(
+                        referent,
+                        location.line,
+                        location.column,
+                        usage_qn,
+                        kind,
+                        usage.source.form,
+                    ),
+                    digest_hex_length=32,
+                )
+                exclusion = ConstraintExclusion(
+                    kind=exclusion.kind,
+                    reasons=exclusion.reasons,
+                    location=canonical_location,
+                )
+            else:
+                constraint_id = mint_constraint_id(
+                    instance_path=sanitize_qualified_name(usage_qn),
+                    source_local=local,
+                    tuple_=(usage_qn, kind, usage.source.form),
+                )
             concrete.append(
                 ConcreteConstraint(
-                    constraint_id=mint_constraint_id(
-                        instance_path=sanitize_qualified_name(usage_qn),
-                        source_local=local,
-                        tuple_=(usage_qn, kind, usage.source.form),
-                    ),
+                    constraint_id=constraint_id,
                     usage_qualified_name=usage_qn,
                     source_local_identity=local,
                     source_form=usage.source.form,
@@ -809,7 +944,7 @@ def lower_constraints(
                     inputs=[],
                     evaluation_channel=None,
                     eligible=False,
-                    exclusion=_exclusion_for(decision, kind),
+                    exclusion=exclusion,
                 )
             )
             continue

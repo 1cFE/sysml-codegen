@@ -1,7 +1,7 @@
 """Constraint module for {{ constraint_id }} (Item 7 / D2/D3/D9).
 
 Effective predicate: {{ usage_qualified_name }} in owner instance {{ owner_instance_path }}.
-Three-valued (Kleene) semantics; a verdict against the assertion NEVER raises (INV-3).
+Three-valued (Kleene) semantics. A verdict against the assertion does not itself raise (INV-3).
 """
 
 from pydantic import BaseModel

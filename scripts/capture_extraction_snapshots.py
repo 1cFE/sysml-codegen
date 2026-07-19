@@ -193,6 +193,7 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         constraint_facts=extract_constraint_facts(extractor.model),
         part_occurrences={},
         constraint_lowering_mode=CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
+        model_paths=[model_path],
         compilation_results={},  # extraction-only: no graph, no compilation
         output_dir=model_path,
     )

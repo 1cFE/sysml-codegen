@@ -275,20 +275,30 @@ def _extra_artifact_diagnostics(
             )
         ]
     for path in paths:
+        rel_path = path.relative_to(package_dir).as_posix()
         try:
+            is_directory_symlink = path.is_symlink() and path.is_dir()
             is_file = path.is_file()
         except OSError as error:
             diagnostics.append(
                 Diagnostic(
                     kind=ARTIFACT_UNREADABLE,
-                    path=path.relative_to(package_dir).as_posix(),
+                    path=rel_path,
                     message=str(error),
+                )
+            )
+            continue
+        if is_directory_symlink:
+            diagnostics.append(
+                Diagnostic(
+                    kind=INVALID_PATH,
+                    path=rel_path,
+                    message="directory symlinks are not permitted beneath the package root",
                 )
             )
             continue
         if not is_file:
             continue
-        rel_path = path.relative_to(package_dir).as_posix()
         if rel_path == "contracts/package_contract.json" or not _is_covered(rel_path, policy):
             continue
         if rel_path not in recorded_hashes:

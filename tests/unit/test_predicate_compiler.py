@@ -113,6 +113,60 @@ def _compile_and_load(ir, fn_name: str, negated: bool = False):
     return load_predicate(src, fn_name), args
 
 
+def _raising_arithmetic_cases():
+    division = OperatorNode(operator="/", operands=[_ref("a"), _ref("b")], operand_type=None)
+    power = OperatorNode(operator="**", operands=[_ref("a"), _ref("b")], operand_type=None)
+    direct = (
+        (
+            "division-by-zero",
+            _cmp_node(">", division, _lit_real(0.0)),
+            {"a": 1.0, "b": 0.0},
+            ZeroDivisionError,
+            "float division by zero",
+        ),
+        (
+            "zero-negative-power",
+            _cmp_node(">", power, _lit_real(0.0)),
+            {"a": 0.0, "b": -1.0},
+            ZeroDivisionError,
+            "0.0 cannot be raised to a negative power",
+        ),
+        (
+            "exponent-overflow",
+            _cmp_node(">", power, _lit_real(0.0)),
+            {"a": 10.0, "b": 400.0},
+            OverflowError,
+            "(34, 'Numerical result out of range')",
+        ),
+    )
+    nested = _bool_op("and", direct[0][1], _cmp_node(">", _ref("a"), _lit_real(-1.0)))
+    return (
+        *direct,
+        (
+            "nested-connective",
+            nested,
+            {"a": 1.0, "b": 0.0},
+            ZeroDivisionError,
+            "float division by zero",
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("case_name", "expression", "values", "error_type", "message"),
+    _raising_arithmetic_cases(),
+    ids=lambda value: value if isinstance(value, str) else None,
+)
+def test_arithmetic_exception_propagates_unchanged(
+    case_name, expression, values, error_type, message
+):
+    del case_name
+    predicate, _ = _compile_and_load(expression, "raising_predicate")
+    with pytest.raises(error_type) as error:
+        predicate(**values)
+    assert str(error.value) == message
+
+
 def test_nonfinite_leaf_is_indeterminate():
     ir = _cmp_node(">", _ref("a"), _ref("b"))
     fn, _ = _compile_and_load(ir, "p", negated=False)

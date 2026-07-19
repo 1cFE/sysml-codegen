@@ -32,7 +32,7 @@ class _TransactionalAssignmentModel(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     def __setattr__(self, name: str, value: object) -> None:
-        if name in type(self).model_fields and name in self.__pydantic_fields_set__:
+        if name in type(self).model_fields and hasattr(self, "__pydantic_fields_set__"):
             candidate = BaseModel.model_dump(self, mode="python")
             candidate[name] = value
             type(self).model_validate(candidate)
@@ -486,7 +486,8 @@ class ConstraintCatalog(BaseModel):
 
     Assembled once from ``ctx.concrete_constraints`` (eligible entries) and
     ``ctx.constraint_facts`` (source records), fingerprinted once (sha256 of canonical JSON
-    over ``source_records`` + ``concrete_entries``), and set on the graph before generation —
+    over ``source_records`` + ``concrete_entries`` + ``excluded_records``), and set on the graph
+    before generation —
     every seam that needs catalog data reads it from here, never from ``ctx`` (Appendix A/D6:
     "generation reads only the graph").
     """
@@ -543,7 +544,9 @@ __all__ = [
     "ConcreteConstraintInput",
     "ConstraintCatalog",
     "ConstraintCatalogEntry",
+    "ConstraintCatalogExcludedRecord",
     "ConstraintCatalogSourceRecord",
+    "ConstraintExclusion",
     "ConstraintInputResolution",
     "EntryPoint",
     "EntryPointType",

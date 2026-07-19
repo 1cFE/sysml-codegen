@@ -209,6 +209,33 @@ def test_recorded_symlink_cannot_escape_package(tmp_path):
     )
 
 
+@pytest.mark.parametrize("target_kind", ["internal", "escaping"])
+def test_directory_symlink_is_fatal_at_link_path(tmp_path, target_kind):
+    d = _sealed(tmp_path / "pkg")
+    if target_kind == "internal":
+        target = d / "modules"
+    else:
+        target = tmp_path / "outside"
+        target.mkdir()
+        (target / "injected.py").write_text("value = 1\n")
+    link = d / f"{target_kind}_modules"
+    link.symlink_to(target, target_is_directory=True)
+
+    result = verify_package(d, "pkg")
+
+    assert result.ok is False
+    assert any(
+        diagnostic.kind == INVALID_PATH and diagnostic.path == link.name
+        for diagnostic in result.diagnostics
+    )
+
+
+def test_unrecorded_real_directory_keeps_existing_behavior(tmp_path):
+    d = _sealed(tmp_path / "pkg")
+    (d / "unrecorded_empty_directory").mkdir()
+    assert verify_package(d, "pkg").ok is True
+
+
 def test_recorded_artifact_read_failure_returns_diagnostic(tmp_path, monkeypatch):
     d = _sealed(tmp_path / "pkg")
     original_read_bytes = Path.read_bytes

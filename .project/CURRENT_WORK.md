@@ -6,6 +6,74 @@
 
 ## Active Work
 
+### GAP-CLOSE epic — LOCAL SCOPE CERTIFIED; PARTIAL PRE-PR MAY PROCEED (2026-07-18)
+
+The final focused re-audit certifies all local and in-scope GAP-CLOSE work. F2 through F9 remain
+certifiable, including exact warning bytes across repeated live, relocated live, and snapshot
+replay. The hash-identified rebuilt companion wheel contains the corrected BLOCK/L6 severity and
+asserted-outcome statements, and its guide is byte-identical to source.
+
+TEAx explicit-path expansion, resolution, and validation now share the route-aware normalization
+boundary; kept tests cover an injected `expanduser()` `RuntimeError` and a symlink loop. Fresh
+focused audit selections passed 132 codegen tests normally, 110 under optimized Python, and 143
+companion guide/profile tests. The rebuilt wheel hash is `160e7eb5…a8d4f`. External
+`[GAP-CLOSE-F1-TEAX-NORMALIZATION]` remains open, so the epic is not complete. `my-pre-pr` may now
+run only as an explicitly partial wave. No commit, push, PR comment, or close action occurred.
+Merge order remains agentic-mbse PR #11 before sysml-codegen PR #9.
+
+### GAP-CLOSE Item 3 — Model and seal boundary guards — CERTIFIED IN EPIC AUDIT (2026-07-18)
+
+All four phases in `.project/active/gap-boundary-guards/plan.md` are implemented. Every
+post-initialization declared-field assignment on the transactional Pydantic base now validates a
+complete candidate before changing the live model, including constructor-defaulted fields. The
+canonical and emitted package verifiers now reject internal and escaping directory symlinks with a
+fatal `INVALID_PATH` diagnostic at the link path.
+
+Pinned source-isolated evidence at exact HEAD `6db3212` is four independently defect-specific RED
+nodes, followed by 4/4 GREEN over a candidate containing only the two production files. Focused
+normal and optimized gates are 57 passed; broader is 53 passed. The unlicensed default full suite
+is 2,213 passed with 23 failures and 96 errors confined to the known license-dependent families.
+Ruff/format/diff checks pass, mypy remains at the 76-error baseline, and all 179 fixture hashes are
+unchanged. Item 1–2 and unrelated dirty files were preserved. The final GAP-CLOSE re-audit retains
+this certification; do not push or close outside the explicitly partial pre-PR wave.
+
+### GAP-CLOSE Item 2 — Lowering outcome integrity — CERTIFIED IN RE-AUDIT (2026-07-18)
+
+Epic: `.project/backlog/epic_gap_close.md`, Item 2. The stricter warning-byte route parity is now
+pinned at the real lowering logger: repeated live, relocated live, and snapshot replay produce the
+same two exact `root-0/model.sysml` warning strings. Lowering reports every
+NON_NUMERICAL sibling exactly once before a BLOCK halt, while the halt still precedes concrete
+records, catalog assembly, and package mutation. Anonymous excluded statements alone receive a
+portable root-slot/file/line/column identity and 128-bit suffix across live, relocated, and snapshot
+routes. Named IDs and eligible-anonymous bytes remain pinned to the coordinated baseline.
+
+Isolated evidence uses codegen `6db3212`, companion `4ed2a07`, profile v3, and a frozen overlay;
+four historical nodes are independently RED and the exact six-path candidate is 5/5 GREEN. Fixture
+bytes and the migration guard are unchanged. Focused gates are 102 passed/8 license skips; broader
+45/37; the default full suite is 2,206 passed with 23 failures and 96 errors confined to the known
+license-dependent families. Ruff is clean and mypy remains at the 76-error baseline. Licensed live
+shape/CLI atomicity legs are accurately unclaimed. `[ANON-ELIGIBLE-KEY]` remains open. The GAP-CLOSE
+re-audit independently certified the exact warning-byte route criterion; do not push or close from
+this item.
+
+### GAP-CLOSE Item 1 — Runtime evaluation contract — CODEGEN LEG COMPLETE (2026-07-18)
+
+Epic: `.project/backlog/epic_gap_close.md`, Item 1. All five phases in
+`.project/active/gap-runtime-contract/plan.md` are implemented. Codegen now rejects all verified
+case-fold, underscore-run, and quoted-hyphen predicate-name collisions deterministically before
+any output mutation, while direct compilation rechecks the same invariant. Saved isolated evidence
+at baseline `6db3212` reproduces each old `DID NOT RAISE` failure and the later-body overwrite.
+
+F1 remains deliberately split: codegen tests characterize unchanged native propagation for div-zero,
+zero-to-negative power, exponent overflow, nested connective, and the production-generated wrapper.
+The narrowed docstring promises only that an adverse verdict does not itself raise. Licensed
+`plant_values` live/snapshot trees were byte-identical; before/after changes were only that sentence
+and its derived package contract. Focused gates are green; the default full suite recorded 2,169
+passes with all failures/errors license-dependent, while licensed live/focused execution passed in
+the companion environment. The final GAP-CLOSE re-audit certifies the local codegen/F2 scope.
+`[GAP-CLOSE-F1-TEAX-NORMALIZATION]` remains an external open P0; do not claim evaluator
+normalization or end-to-end F1 closure.
+
 ### Numerical constraint executable profile — ✅ COMPLETE: CERTIFIED, COMMITTED, PR WAVE UPDATED (2026-07-18)
 
 **Audit verdict: Certify** (`.project/active/numerical-constraint-profile/audit.md`). All 8 spec

@@ -1,10 +1,10 @@
 # Spec: Numerical Constraint Executable Profile
 
-**Status:** Complete  
-**Owner:** Reid W  
-**Created:** 2026-07-18 08:11 PDT  
-**Complexity:** HIGH  
-**Branch:** constraint-exec-epic  
+**Status:** Complete
+**Owner:** Reid W
+**Created:** 2026-07-18 08:11 PDT
+**Complexity:** HIGH
+**Branch:** constraint-exec-epic
 **Epic:** CONSTRAINT-EXEC — Item 3 contract correction and remediation follow-on
 
 ---

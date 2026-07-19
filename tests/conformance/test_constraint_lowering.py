@@ -22,6 +22,7 @@ from agentic_mbse.sysml.constraint_facts import (
     ConstraintUsageFact,
     FormalFact,
     IdentityFact,
+    LocationFact,
     OwnerFact,
     OwningDefinitionFact,
 )
@@ -731,6 +732,76 @@ def test_preflight_halts_on_blocked_assert_before_any_lowering():
     assert "two-inequality" in message
 
 
+def test_two_non_numerical_warnings_precede_complete_block(caplog):
+    warning_predicate = OperatorNode(
+        operator="==",
+        operands=[_typed_literal(True, "boolean"), _typed_literal(False, "boolean")],
+        operand_type=None,
+    )
+    first = _package_assert("Design__warning_first", warning_predicate)
+    first.location = LocationFact(file="design.sysml", line=10, column=2)
+    second = _package_assert("Design__warning_second", warning_predicate)
+    second.location = LocationFact(file="design.sysml", line=20, column=2)
+    blocked = _package_assert("Design__blocked_assert", _blocked_predicate())
+    blocked.location = LocationFact(file="design.sysml", line=30, column=2)
+
+    with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
+        with pytest.raises(CodeGenerationError) as error:
+            lower_constraints(
+                _facts([first, second, blocked]),
+                occ_index=None,
+                registry=None,
+                design_attrs={},
+                calc_usages=[],
+            )
+
+    warnings = [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "sysml_codegen.analysis.constraint_lowering"
+    ]
+    assert warnings == [
+        "Constraint Design__warning_first at design.sysml:10:2 is not numerical and will not "
+        "execute: warn_non_numerical_equality: equality is a valid non-numerical statement and "
+        "is not executed",
+        "Constraint Design__warning_second at design.sysml:20:2 is not numerical and will not "
+        "execute: warn_non_numerical_equality: equality is a valid non-numerical statement and "
+        "is not executed",
+    ]
+    message = str(error.value)
+    assert "Design__blocked_assert" in message
+    assert "block_real_equality_requires_tolerance" in message
+    assert "two-inequality" in message
+
+
+def test_two_non_blocking_warnings_are_emitted_exactly_once(caplog):
+    warning_predicate = OperatorNode(
+        operator="==",
+        operands=[_typed_literal(True, "boolean"), _typed_literal(False, "boolean")],
+        operand_type=None,
+    )
+    first = _package_assert("Design__warning_first", warning_predicate)
+    second = _package_assert("Design__warning_second", warning_predicate)
+
+    with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
+        lower_constraints(
+            _facts([first, second]),
+            occ_index=None,
+            registry=None,
+            design_attrs={},
+            calc_usages=[],
+        )
+
+    warnings = [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "sysml_codegen.analysis.constraint_lowering"
+    ]
+    assert len(warnings) == 2
+    assert "Design__warning_first" in warnings[0]
+    assert "Design__warning_second" in warnings[1]
+
+
 def test_non_numerical_outcome_does_not_halt_compatibility_phase():
     predicate = OperatorNode(
         operator="==",
@@ -768,8 +839,10 @@ def test_non_numerical_warning_preserves_walk_order_and_location_fallback(caplog
     ]
     assert warnings == [
         "Constraint Design__annotation at <no location> is not numerical and will not execute: "
-        "warn_non_numerical_xor, warn_non_numerical_predicate, "
-        "warn_non_numerical_predicate"
+        "warn_non_numerical_xor: xor is outside the numerical executable profile; "
+        "warn_non_numerical_predicate: bare Boolean assertion is not a numerical statement and "
+        "is not executed; warn_non_numerical_predicate: bare Boolean assertion is not a "
+        "numerical statement and is not executed"
     ]
 
 

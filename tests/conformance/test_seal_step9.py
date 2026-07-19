@@ -9,6 +9,7 @@ byte-identical to the in-repo source (INV-8), and re-seal recomputes only the
 from __future__ import annotations
 
 import argparse
+import runpy
 from pathlib import Path
 
 from sysml_codegen.cli import GenerationConfig, cmd_seal, run_codegen
@@ -51,6 +52,21 @@ def test_emitted_verifier_is_verbatim(tmp_path):
     emitted = (output / "contracts" / "verify.py").read_bytes()
     canonical = SRC_VERIFY.read_bytes()
     assert emitted == canonical
+
+
+def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
+    output = tmp_path / "out"
+    assert run_codegen(_snapshot_config(output))
+    (output / "alias_modules").symlink_to(output / "modules", target_is_directory=True)
+
+    emitted_namespace = runpy.run_path(str(output / "contracts" / "verify.py"))
+    result = emitted_namespace["verify_package"](output, "chain_spike")
+
+    assert result.ok is False
+    assert any(
+        diagnostic.kind == "INVALID_PATH" and diagnostic.path == "alias_modules"
+        for diagnostic in result.diagnostics
+    )
 
 
 def test_seal_ordering_excludes_itself_from_coverage(tmp_path):

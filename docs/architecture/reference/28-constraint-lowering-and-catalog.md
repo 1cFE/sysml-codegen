@@ -8,8 +8,8 @@ that blocked the two grandfathered fixtures and retires the drop-manifest era).
 Section 8 of [modeling-assumptions.md](../modeling-assumptions.md) used to teach
 "constraints are dropped, not executable." That was true through Item 4. Items 5-9
 built a real execution path — the **executable profile** (in `agentic-mbse`)
-classifies each constraint usage ADMIT / BLOCK / unassessed, and an ADMIT usage
-**lowers**: every formal is strictly resolved to a real value and the constraint
+classifies each constraint usage as `ADMIT`, `BLOCK`, `NON_NUMERICAL`, or `UNASSESSED`, and an
+`ADMIT` usage **lowers**: every formal is strictly resolved to a real value and the constraint
 becomes a pipeline module. This doc covers the sysml-codegen side of that path —
 the profile itself, and the study layer that drives it in production, live in
 `agentic-mbse` and `teax` respectively (see those repos' own docs).
@@ -24,6 +24,9 @@ final. For each `ConstraintUsageFact`:
 1. **Profile preflight** (`evaluate_profile`): a BLOCK-eligibility usage halts
    generation immediately, loudly, naming every diagnostic — this is the one
    kept halt from the pre-Item-5 era, never retired.
+   A `NON_NUMERICAL` usage warns with its identity, location, and actionable profile diagnostics,
+   then becomes a validated exclusion. An `UNASSESSED` usage becomes a validated exclusion
+   without predicate execution.
 2. **Owner-kind dispatch** (D5): `part_def` owners expand to one concrete
    instance per `OccurrenceIndex.occurrences_of()` result; `calc_def` owners
    expand to one per matching concrete calc usage; `package` owners are already
@@ -62,15 +65,18 @@ embedded on the graph (Item 7):
   catalog-shaped projection carrying `predicate_ir` so the same-IR guard
   (`assert_same_ir`) can compare byte-for-byte across every entry sharing one
   definition before the single per-definition compile.
-- **`fingerprint`** — sha256 over canonical JSON of both lists, set once the
+- **`excluded_records`** — one per non-executed concrete record. Each carries a validated
+  `ConstraintExclusion` payload with its exclusion kind, profile reasons, and rendered source
+  location. It has no executable predicate, inputs, evaluation channel, or expected value.
+- **`fingerprint`** — sha256 over canonical JSON of `source_records`, `concrete_entries`, and
+  `excluded_records`, set once the
   catalog is embedded on the graph; every generation seam reads catalog data
   from `graph.constraint_catalog`, never from `ctx` directly.
 
-An eligible-but-unassessed usage (BLOCK never reaches here; unassessed does)
-never appears in `concrete_entries` — it stays visible only in
-`ctx.concrete_constraints` (`eligible=False`). This is exactly the two-surface
-split the manifest->catalog mapping test (`test_constraint_migration_mapping.py`,
-D1/INV-A) proves total: every usage the manifest sweeps lands in one of the two.
+A `BLOCK` decision never reaches catalog assembly. `NON_NUMERICAL` and `UNASSESSED` records do:
+they are ineligible concrete records projected into `excluded_records`, never
+`concrete_entries`. The migration mapping test (`test_constraint_migration_mapping.py`, D1/INV-A)
+proves every swept usage lands in exactly one catalog outcome.
 
 ## Contracts
 
@@ -82,8 +88,8 @@ a `GENERATOR_MISMATCH` diagnostic reserved for a generator-version mismatch.)
 
 ## What lives elsewhere
 
-- The executable profile (ADMIT/BLOCK/unassessed classification, the block list:
-  invocation, conditional, temporal, unit conversion, real-valued equality) is
+- The executable profile (the four-outcome classification and its block list, including
+  invocation, conditional, temporal, unit conversion, and numerical equality) is
   `agentic-mbse`'s `executable_profile.py` — documented there.
 - The study layer that drives a lowered assertion over a design-space grid
   (Items 10-12) is `teax`'s evaluator/study-layer surface — documented there.

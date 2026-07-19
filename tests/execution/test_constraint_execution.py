@@ -14,6 +14,7 @@ assumed.
 
 from __future__ import annotations
 
+import importlib
 import json
 from pathlib import Path
 
@@ -308,6 +309,20 @@ def _cmp_ir(op: str, left: str, right: str) -> str:
     )
 
 
+def _division_comparison_ir() -> str:
+    from agentic_mbse.sysml.expression_facts import LiteralFact, OperandTypeFact
+    from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode, serialize_expression
+
+    division = OperatorNode(operator="/", operands=[_ref("a"), _ref("b")], operand_type=None)
+    zero = LiteralNode(
+        literal=LiteralFact(kind="LiteralRational", value=0.0, result_type="real"),
+        operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+    )
+    return serialize_expression(
+        OperatorNode(operator=">", operands=[division, zero], operand_type=None)
+    )
+
+
 def _single_constraint_graph(
     *,
     constraint_id: str,
@@ -424,6 +439,63 @@ def test_indeterminate_point_at_execution(tmp_path):
     assert ev_indet.status == "indeterminate"
     assert ev_indet.actual_value is None
     assert ev_indet.margin is None
+
+
+@pytest.mark.execution
+def test_generated_constraint_wrapper_propagates_arithmetic_exception(tmp_path, monkeypatch):
+    """The generated wrapper preserves the native raise before constructing evidence."""
+    from sysml_codegen.resolution.models import (
+        ConcreteConstraintInput,
+        ConstraintInputResolution,
+        ModuleKind,
+    )
+
+    inputs = [
+        ConcreteConstraintInput(
+            formal_name="a",
+            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+            design_attribute_qn="pkg__Demo__a",
+        ),
+        ConcreteConstraintInput(
+            formal_name="b",
+            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+            design_attribute_qn="pkg__Demo__b",
+        ),
+    ]
+    ctx = _single_constraint_graph(
+        constraint_id="raising_check",
+        predicate_ir=_division_comparison_ir(),
+        negated=False,
+        inputs=inputs,
+        design_attrs={"pkg__Demo__a": "1.0", "pkg__Demo__b": "0.0"},
+    )
+    pkg_name = "raising_constraint_exec"
+    staged = tmp_path / pkg_name
+    _generate_full_package(ctx, staged, pkg_name)
+
+    constraint_module = next(
+        module
+        for module in ctx.computation_graph.modules
+        if module.module_kind == ModuleKind.CONSTRAINT
+    )
+    class_name = constraint_module.module_type.split(".")[-1]
+    wrapper_file = next(
+        path
+        for path in (staged / "modules").rglob("*.py")
+        if path.name != "predicates.py" and f"class {class_name}" in path.read_text()
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    dotted_module = ".".join((pkg_name, *wrapper_file.relative_to(staged).with_suffix("").parts))
+    generated_wrapper = importlib.import_module(dotted_module)
+
+    def evidence_must_not_be_constructed(**_kwargs):
+        raise AssertionError("ConstraintEvaluation was constructed after arithmetic failed")
+
+    monkeypatch.setattr(generated_wrapper, "ConstraintEvaluation", evidence_must_not_be_constructed)
+    wrapper = getattr(generated_wrapper, class_name)()
+    with pytest.raises(ZeroDivisionError) as error:
+        wrapper.run(a=1.0, b=0.0)
+    assert str(error.value) == "float division by zero"
 
 
 @pytest.mark.execution

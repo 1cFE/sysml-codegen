@@ -120,9 +120,15 @@ item adds REQ-SNAP-08+.
 
 ## agentic-mbse impact
 
-**None** beyond this docs pointer. The item adds a generation input path; the
-executable SysML subset and the auditor are unchanged. This doc is the pointer
-noted for agentic-mbse consumers running generation from snapshots in CI (R2).
-The Item-6 load-bearing-field diagnostics (V7 / REQ-SNAP-20) live entirely in the
-in-repo snapshot loader — they do not touch the SysIDE adapter boundary, so there
-is no agentic-mbse lockstep surface.
+Snapshot generation has a coordinated agentic-mbse boundary. Snapshot re-lowering consumes the
+companion's serialized constraint-fact and expression-IR schemas and applies executable-profile
+v3 behavior to those facts. A snapshot can therefore remain format-current while an incompatible
+companion changes the meaning or shape of the data codegen consumes.
+
+The package floor and the runtime/schema guards protect different failure modes. The
+`agentic-mbse>=0.1.1` distribution requirement prevents a resolver from selecting the known
+pre-v3 companion release. Runtime guards still pin `PROFILE_SEMANTIC_VERSION`,
+`CONSTRAINT_FACTS_SCHEMA_VERSION`, and `EXPRESSION_IR_SCHEMA_VERSION` so an installed companion
+whose code drifts behind unchanged package metadata fails loudly at the boundary. Snapshot-format
+validation remains separate: it protects the captured envelope and required fields, not companion
+package selection or executable-profile meaning.

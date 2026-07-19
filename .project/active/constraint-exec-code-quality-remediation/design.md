@@ -1,9 +1,9 @@
 # Design Addendum: CONSTRAINT-EXEC Audit Closure
 
-**Status:** Draft — numerical-profile correction specified separately  
-**Owner:** Reid W  
-**Created:** 2026-07-17  
-**Branch:** constraint-exec-epic  
+**Status:** Draft — numerical-profile correction specified separately
+**Owner:** Reid W
+**Created:** 2026-07-17
+**Branch:** constraint-exec-epic
 **Commit:** 036ec39 + uncommitted remediation
 
 ## Overview

@@ -36,6 +36,7 @@ def test_non_numerical_fixture_generates_warns_and_catalogs(caplog):
     assert "status_annotation" in warning
     assert "model.sysml:" in warning
     assert "warn_non_numerical_equality" in warning
+    assert "equality is a valid non-numerical statement and is not executed" in warning
 
     catalog = context.computation_graph.constraint_catalog
     assert catalog is not None
@@ -62,6 +63,7 @@ def test_non_numerical_live_snapshot_warning_and_record_parity(caplog):
     offline_warnings = _profile_warnings(caplog)
 
     assert offline_warnings == live_warnings
+    assert "equality is a valid non-numerical statement and is not executed" in live_warnings[0]
     assert offline.computation_graph.model_dump(mode="json") == live.computation_graph.model_dump(
         mode="json"
     )
@@ -84,4 +86,8 @@ def test_malformed_numerical_fixture_halts_naming_fix():
     assert "mixed_claim" in message
     assert "model.sysml:" in message
     assert "feature_ref" in message
-    assert "bare Boolean assertion is not a numerical statement" in message
+    assert "block_non_numerical_containment" in message
+    assert "generation stops" in message
+    assert "separate it into its own assertion" in message
+    assert "rewrite it as a numerical comparison" in message
+    assert "is not executed" not in message

@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-13
+**Last Updated**: 2026-07-18
 
 ---
 
@@ -24,6 +24,36 @@ Prioritized list of epics and features.
 | new-pipeline-explainer | P2 | Draft (active) | 2026-02-22 | Interactive HTML explainer for refactored 7-step pipeline architecture. |
 
 ---
+
+## P0 - Critical
+
+| Epic | Status | Notes |
+|------|--------|-------|
+| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
+
+GAP-CLOSE items:
+- [ ] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+- [x] Item 2 — Lowering outcome integrity: warning order + excluded identity (F4, F5)
+- [x] Item 3 — Model and seal boundary guards (F6, F9)
+- [x] Item 4 — Profile default-deny totalization (F7, F8, promoted diagnostics) — agentic-mbse
+- [ ] Item 5 — Packaging, docs, hygiene closeout + wave gates (F3, F10, hygiene)
+
+- **[GAP-CLOSE-F1-TEAX-NORMALIZATION] Attach failed module identity to normalized evaluator
+  failures — P0 `[AGENT]` (booked 2026-07-18 from GAP-CLOSE Item 1 seam review).** This is a
+  separate TEAx leg, not sysml-codegen Item 1. At the serial-executor seam that still knows the
+  `module_key`, preserve the original exception and make both evaluators expose the failed generated
+  constraint module through `EvaluationFailure.module_or_channel`. The normalized record and causal
+  chain must match `.project/active/gap-runtime-contract/spec.md`. GAP-CLOSE F1 is not closed until
+  Item 1's unmangled-raise boundary and this TEAx leg are both green.
+
+- **[ANON-ELIGIBLE-KEY] Anonymous executable assertions share one catalog compile key — P3
+  `[AGENT]` (filed 2026-07-18, GAP-CLOSE Item 2 non-goal).** Eligible anonymous assertions all
+  get `"<anonymous>"` as their `predicate_definition_key`, so compile-once grouping cannot
+  distinguish them (pre-existing; distinct from the F5 exclusion-path collision GAP-CLOSE
+  fixes). Needs an owner ruling first: are anonymous *executable* assertions a supported
+  authoring form? (Gap review Open Question 2.) Evidence:
+  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (F5) and the
+  verification record's F5 sub-question (c).
 
 ## P1 - High Priority
 
@@ -734,7 +764,16 @@ below is the recorded, owned remainder — merging the PR does not bless it as t
 constraint architecture.
 
 - **[CONSTRAINT-ARCH-UNIFY] Unified path/instance/resolution infrastructure — P1 `[AGENT]`
-  (ratified for filing by owner 2026-07-14; priority is agent-graded).** One refactor design,
+  (ratified for filing by owner 2026-07-14; priority is agent-graded).** *Complexity evidence
+  (added 2026-07-18, GAP-CLOSE decision 1):* the final gap review measured the semantic center
+  over C901 thresholds — `lower_constraints` 18, `resolve_actual` 19,
+  `extend_graph_with_constraints` 12 (codegen) and four profile walkers 11–19 (agentic-mbse) —
+  and judged that "a mechanical file split would not help; typed walk results and separate
+  preflight/report/lower phases would." See
+  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (Code Quality
+  and Hygiene Notes) and `.project/research/20260718_gap-review-verification.md` (hygiene item
+  1: numbers confirmed; C901 is in neither repo's configured gate). GAP-CLOSE deliberately
+  excluded these refactors; this row owns them. One refactor design,
   staged behind the existing byte-identity and parity gates, with these explicitly in scope:
   1. *Canonical typed paths and resolution requests.* `InstancePath`/`ReferencePath`/
      `ConstraintDemand` (named type replacing the `(instance_scope, source_path, source_file)`

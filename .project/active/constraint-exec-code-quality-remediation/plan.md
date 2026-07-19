@@ -1,8 +1,8 @@
 # Implementation Plan: CONSTRAINT-EXEC Code-Quality Remediation Closure
 
-**Status:** Needs Work — independent audit found unresolved boundary and end-to-end gaps  
-**Created:** 2026-07-17  
-**Last Updated:** 2026-07-17  
+**Status:** Needs Work — independent audit found unresolved boundary and end-to-end gaps
+**Created:** 2026-07-17
+**Last Updated:** 2026-07-17
 **Dependency Baseline:** `agentic-mbse@82fef099901e219f1e75d784b80b79693727bdac`
 
 ## Source Documents

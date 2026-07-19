@@ -965,6 +965,16 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
         logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
 
+        # Constraint predicate names share one generated Python namespace. Reject a lossy
+        # normalization collision before overwrite clearing or any output creation.
+        catalog = ctx.computation_graph.constraint_catalog
+        if catalog is not None:
+            from sysml_codegen.generation.modules import (
+                assert_unique_predicate_function_names,
+            )
+
+            assert_unique_predicate_function_names(catalog)
+
         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
         # duplicate path never wipes or silently overwrites existing files.
         _check_duplicate_output_paths(ctx.computation_graph.modules)

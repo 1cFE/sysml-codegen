@@ -1,7 +1,7 @@
 # Constraint Execution and Design-Space Exploration
 
-**Date:** 2026-07-10  
-**Status:** Research complete  
+**Date:** 2026-07-10
+**Status:** Research complete
 **Scope:** How SysML constraints should become executable pipeline artifacts, who should evaluate them, and how their results should support design-space exploration (DSE).
 
 ## Executive Summary
@@ -526,4 +526,3 @@ Start with the SysIDE semantic spike. Then design the executable constraint data
 - DSE hypothesis: `fusion-tea/modeling_project/HYPOTHESIS_DOSSIER.md:74`
 - Inverse solving: `fusion-tea/work/backlog/epic-inverse-solving.md:17`
 - Uncertainty propagation: `fusion-tea/work/backlog/epic-uncertainty-propagation.md:13`
-

@@ -218,6 +218,8 @@ def build_full_graph_from_snapshot(
             registry=inputs["registry"],
             design_attrs=inputs["design_attrs"],
             calc_usages=snap["calc_usages"],
+            source_location_mode="snapshot",
+            source_roots=[],
         )
         if concrete:
             graph = extend_graph_with_constraints(graph, concrete, inputs["group_deriver"])
