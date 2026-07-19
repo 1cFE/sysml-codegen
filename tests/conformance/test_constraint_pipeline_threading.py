@@ -115,13 +115,10 @@ def test_inline_end_to_end_through_wired_path():
     assert len(constraint_modules) == 1
 
 
-def test_inline_offline_fixture_reaches_module_rendering():
-    """The committed snapshot must cross the leaf/input reconciliation guard offline."""
-    from sysml_codegen.cli import _get_template_env
-    from sysml_codegen.generation.modules import (
-        compile_shared_predicates,
-        render_constraint_module,
-    )
+def test_inline_offline_fixture_rejects_reserved_value_before_rendering():
+    """The committed snapshot retains the reproduced R-3 ``value`` collision."""
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.generation.modules import compile_shared_predicates
     from sysml_codegen.orchestration.snapshot_context import (
         build_pipeline_context_from_snapshot,
     )
@@ -133,11 +130,9 @@ def test_inline_offline_fixture_reaches_module_rendering():
     [module] = [item for item in ctx.computation_graph.modules if item.module_kind == "constraint"]
     assert [item.param_name for item in module.inputs] == ["value"]
 
-    compiled = compile_shared_predicates(catalog)
-    source = render_constraint_module(
-        module, catalog, compiled, _get_template_env(), package_name="constraint_inline_exec"
-    )
-    assert "def run(self, value: float)" in source
+    with pytest.raises(CodeGenerationError) as error:
+        compile_shared_predicates(catalog)
+    assert error.value.name_safety_violation.final_binding == "value"
 
 
 @requires_license

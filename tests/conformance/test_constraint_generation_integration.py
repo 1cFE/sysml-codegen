@@ -42,6 +42,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
     ConstraintCatalogEntry,
+    ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
     ModuleKind,
@@ -73,11 +74,13 @@ def _graph() -> ComputationGraph:
                 param_name="cost",
                 python_type="float",
                 source=InputSource(source_type="module_output", producer_channel="plant__cost"),
+                formal_identity=ConstraintFormalIdentity(raw_name="cost"),
             ),
             ModuleInput(
                 param_name="budget",
                 python_type="float",
                 source=InputSource(source_type="module_output", producer_channel="plant__budget"),
+                formal_identity=ConstraintFormalIdentity(raw_name="budget"),
             ),
         ],
         outputs=[
@@ -117,6 +120,7 @@ def _graph() -> ComputationGraph:
                 usage_qualified_name="ToyPlant::DemoPlant::affordable",
                 owner_instance_path="ToyPlant__DemoPlant",
                 membership_kind="assert",
+                predicate_source_key="inline:ToyPlant::DemoPlant::affordable",
                 is_negated=False,
                 expected_value=True,
                 predicate_ir=_predicate_ir(),
@@ -145,7 +149,10 @@ def test_full_constraint_surface_generates_and_parses(tmp_path):
     ctx = _Ctx(_graph())
 
     _generate_schemas(ctx, config, template_env)
-    _generate_modules(ctx, config, template_env)
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+
+    plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
+    _generate_modules(ctx, config, template_env, plan)
     _generate_stencils(ctx, config, template_env)
     _generate_pipeline(ctx, config, template_env)
     _generate_registry(ctx, config, template_env)

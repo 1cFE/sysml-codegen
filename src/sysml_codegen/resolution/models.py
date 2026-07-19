@@ -138,6 +138,15 @@ class InputSource(BaseModel):
     producer_channel: str | None = None
 
 
+class ConstraintFormalIdentity(BaseModel):
+    """Source identity retained only for generated-constraint name validation."""
+
+    model_config = ConfigDict(frozen=True)
+
+    raw_name: str
+    qualified_name: str | None = None
+
+
 class ModuleInput(BaseModel):
     """An input to a pipeline module.
 
@@ -154,6 +163,7 @@ class ModuleInput(BaseModel):
     source: InputSource
     description: str | None = None
     default_value: float | int | str | bool | None = None
+    formal_identity: ConstraintFormalIdentity | None = Field(default=None, exclude=True)
 
 
 class ModuleOutput(BaseModel):
@@ -288,6 +298,7 @@ class ConcreteConstraintInput(BaseModel):
     bound_channel: str | None = None
     design_attribute_qn: str | None = None
     default_ir: str | None = None
+    formal_identity: ConstraintFormalIdentity | None = Field(default=None, exclude=True)
 
     @model_validator(mode="after")
     def _resolution_field_matches_tag(self) -> "ConcreteConstraintInput":
@@ -364,6 +375,7 @@ class ConcreteConstraint(_TransactionalAssignmentModel):
     owner_qualified_name: str
     owner_instance_path: str
     membership_kind: str | None
+    predicate_source_key: str
     is_negated: bool | None
     expected_value: bool | None
     predicate_ir: str | None = None
@@ -383,6 +395,10 @@ class ConcreteConstraint(_TransactionalAssignmentModel):
             if self.is_negated is None:
                 raise ValueError(
                     f"eligible constraint {self.constraint_id!r} has no known polarity"
+                )
+            if self.predicate_source_key is None:
+                raise ValueError(
+                    f"eligible constraint {self.constraint_id!r} has no predicate_source_key"
                 )
             if self.predicate_ir is None:
                 raise ValueError(
@@ -455,6 +471,7 @@ class ConstraintCatalogEntry(_TransactionalAssignmentModel):
     usage_qualified_name: str
     owner_instance_path: str
     membership_kind: str | None
+    predicate_source_key: str
     is_negated: bool
     expected_value: bool
     predicate_ir: str

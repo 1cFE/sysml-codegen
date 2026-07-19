@@ -21,6 +21,7 @@ import jinja2
 
 if TYPE_CHECKING:
     from sysml_codegen.generation import PipelineContext
+    from sysml_codegen.generation.constraint_plan import ConstraintGenerationPlan
     from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
 
 # Note: Heavy imports moved inside run_codegen to avoid loading generation
@@ -40,6 +41,7 @@ def _ensure_package_init_files(
         init_file = current / "__init__.py"
         if not init_file.exists():
             init_file.write_text(docstring)
+
 
 # Commands available for installation
 CODEGEN_COMMANDS = [
@@ -269,7 +271,8 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
         logger.warning(
             "Unresolved after assembly: %d entry point(s) fell through and still "
             "lack a value (unwired): %s",
-            len(unwired), unwired,
+            len(unwired),
+            unwired,
         )
 
     uncovered = collect_uncovered_params(graph)
@@ -287,12 +290,25 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
         )
 
 
+def _preflight_constraint_names(ctx: PipelineContext) -> None:
+    """Validate both generated constraint scopes before a graph-aware boundary acts."""
+    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+
+    validate_constraint_graph_or_raise(ctx.computation_graph)
+    catalog = ctx.computation_graph.constraint_catalog
+    if catalog is not None:
+        from sysml_codegen.generation.modules import assert_unique_predicate_function_names
+
+        assert_unique_predicate_function_names(catalog)
+
+
 def _generate_schemas(
     ctx: PipelineContext,
     config: GenerationConfig,
     template_env: jinja2.Environment,
 ) -> None:
     """Generate Pydantic schemas for multi-output modules."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import generate_multioutput_model
     from sysml_codegen.resolution.models import ModuleKind
 
@@ -334,56 +350,27 @@ def _generate_modules(
     ctx: PipelineContext,
     config: GenerationConfig,
     template_env: jinja2.Environment,
+    constraint_plan: ConstraintGenerationPlan,
 ) -> None:
     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import generate_teax_module
-    from sysml_codegen.generation.modules import (
-        compile_shared_predicates,
-        render_constraint_predicates_module,
-    )
     from sysml_codegen.resolution.models import ModuleKind
 
     modules_dir = config.output_path / "modules"
-    module_count = 0
-
     catalog = ctx.computation_graph.constraint_catalog
-    compiled_predicates = None
+    staged: list[tuple[Path, str]] = []
 
-    if catalog is not None:
-        # Item 7 / D3: the shared predicates module, written once, before the per-module
-        # loop so every constraint module's import path already exists on disk.
-        compiled_predicates = compile_shared_predicates(catalog)
-        namespace_dir = modules_dir / "constraints"
-        namespace_dir.mkdir(parents=True, exist_ok=True)
-        _ensure_package_init_files(
-            modules_dir, "constraints", '"""Namespace package for generated modules."""\n',
+    if constraint_plan.predicates_code is not None:
+        staged.append(
+            (modules_dir / "constraints" / "predicates.py", constraint_plan.predicates_code)
         )
-        predicates_code = render_constraint_predicates_module(compiled_predicates, template_env)
-        (namespace_dir / "predicates.py").write_text(predicates_code)
-        logger.debug("Generated shared constraint predicates: modules/constraints/predicates.py")
 
     for module in ctx.computation_graph.modules:
         python_path = _get_python_path(module)
-
-        # Create namespace subdirectory with __init__.py in all intermediates
-        if python_path.directory:
-            namespace_dir = modules_dir / python_path.directory
-            namespace_dir.mkdir(parents=True, exist_ok=True)
-            _ensure_package_init_files(
-                modules_dir, python_path.directory,
-                '"""Namespace package for generated modules."""\n',
-            )
-
         output_path = modules_dir / python_path.full_path
         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
-            code = generate_teax_module(
-                module,
-                template_env,
-                output_path,
-                config.package_name,
-                catalog=catalog,
-                compiled_predicates=compiled_predicates,
-            )
+            code = constraint_plan.rendered_modules[module.name]
         else:
             code = generate_teax_module(
                 module,
@@ -392,10 +379,25 @@ def _generate_modules(
                 config.package_name,
             )
         if code:
-            output_path.write_text(code)
-            module_count += 1
-            logger.debug(f"Generated module: {output_path}")
+            staged.append((output_path, code))
 
+    # Rendering and semantic scope checks are complete. Only now may this writer mutate.
+    initialized_namespaces: set[str] = set()
+    for output_path, code in staged:
+        relative_parent = output_path.parent.relative_to(modules_dir)
+        namespace = relative_parent.as_posix()
+        if namespace != "." and namespace not in initialized_namespaces:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            _ensure_package_init_files(
+                modules_dir,
+                namespace,
+                '"""Namespace package for generated modules."""\n',
+            )
+            initialized_namespaces.add(namespace)
+        output_path.write_text(code)
+        logger.debug(f"Generated module: {output_path}")
+
+    module_count = len(staged) - (1 if catalog is not None else 0)
     logger.info(f"Generated {module_count} TEAx module wrappers")
 
 
@@ -405,6 +407,7 @@ def _generate_stencils(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate implementation stencils for all module types (ADR-003 namespacing)."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import (
         backup_implementation,
         generate_implementation,
@@ -428,7 +431,8 @@ def _generate_stencils(
             namespace_dir = handwritten_dir / python_path.directory
             namespace_dir.mkdir(parents=True, exist_ok=True)
             _ensure_package_init_files(
-                handwritten_dir, python_path.directory,
+                handwritten_dir,
+                python_path.directory,
                 '"""Handwritten implementations."""\n',
             )
             output_path = namespace_dir / f"{python_path.filename}_impl.py"
@@ -441,7 +445,10 @@ def _generate_stencils(
             if should_regen:
                 backup_implementation(output_path, backup_dir)
                 code = generate_implementation(
-                    module, template_env, output_path, config.package_name,
+                    module,
+                    template_env,
+                    output_path,
+                    config.package_name,
                 )
                 if code:
                     output_path.write_text(code)
@@ -455,7 +462,10 @@ def _generate_stencils(
                 if is_stub and has_auto_impl:
                     backup_implementation(output_path, backup_dir)
                     code = generate_implementation(
-                        module, template_env, output_path, config.package_name,
+                        module,
+                        template_env,
+                        output_path,
+                        config.package_name,
                     )
                     if code:
                         output_path.write_text(code)
@@ -469,7 +479,10 @@ def _generate_stencils(
             logger.debug(f"Preserved existing stencil: {output_path.name}")
         else:
             code = generate_implementation(
-                module, template_env, output_path, config.package_name,
+                module,
+                template_env,
+                output_path,
+                config.package_name,
             )
             if code:
                 output_path.write_text(code)
@@ -491,6 +504,7 @@ def _generate_pipeline(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate pipeline YAML from computation graph."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import generate_pipeline_yaml
 
     pipelines_dir = config.output_path / "pipelines"
@@ -514,6 +528,7 @@ def _generate_registry(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate registry function in __init__.py."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import generate_registry
     from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
 
@@ -541,6 +556,7 @@ def _generate_entry_points(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate entry point parameter group schemas and JSON templates."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import (
         generate_all_derived_jsons_from_graph,
         generate_all_derived_schemas_from_graph,
@@ -570,6 +586,7 @@ def _generate_backlog(
     config: GenerationConfig,
 ) -> None:
     """Generate implementation backlog report."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import generate_backlog_report
 
     output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
@@ -590,6 +607,7 @@ def _generate_tests(
     template_env: jinja2.Environment,
 ) -> None:
     """Generate runnable test file for implementations."""
+    _preflight_constraint_names(ctx)
     from sysml_codegen.generation import generate_test_implementations
 
     tests_dir = config.output_path / "tests"
@@ -617,9 +635,16 @@ def _seal_package(
     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
     last, never in its own coverage.
     """
-    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, build_model_contract, seal_package
+    _preflight_constraint_names(ctx)
+    from sysml_codegen.contracts import (
+        DEFAULT_COVERAGE_POLICY,
+        build_model_contract,
+        ensure_package_tree_is_link_free,
+        seal_package,
+    )
     from sysml_codegen.contracts.serialize import write_contract_json
 
+    ensure_package_tree_is_link_free(config.output_path)
     contracts_dir = config.output_path / "contracts"
     contracts_dir.mkdir(parents=True, exist_ok=True)
 
@@ -648,6 +673,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
     # Validate agentic-mbse is installed
     try:
         import agentic_mbse
+
         logger.debug(f"agentic-mbse version: {agentic_mbse.__version__}")
     except ImportError:
         logger.error("agentic-mbse is not installed. Please install it first.")
@@ -694,9 +720,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
 
     models_path: Path = args.models
     output_path: Path = args.output or (models_path / "extraction_snapshot.json")
-    out = capture_snapshot(
-        [models_path], output_path, design_path_filter=args.design_path_filter
-    )
+    out = capture_snapshot([models_path], output_path, design_path_filter=args.design_path_filter)
     logger.info(f"Wrote snapshot to {out}")
     return 0
 
@@ -711,10 +735,21 @@ def cmd_seal(args: argparse.Namespace) -> int:
     level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
-    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, seal_package
+    from sysml_codegen.contracts import (
+        DEFAULT_COVERAGE_POLICY,
+        PackageSealError,
+        ensure_package_tree_is_link_free,
+        seal_package,
+    )
     from sysml_codegen.contracts.serialize import write_contract_json
 
     package_dir: Path = args.package_dir
+    try:
+        ensure_package_tree_is_link_free(package_dir)
+    except (PackageSealError, OSError) as error:
+        logger.error(f"Package sealing failed: {error}")
+        return 1
+
     model_contract_path = package_dir / "contracts" / "model_contract.json"
     if not model_contract_path.is_file():
         logger.error(
@@ -723,7 +758,11 @@ def cmd_seal(args: argparse.Namespace) -> int:
         )
         return 1
 
-    package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
+    try:
+        package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
+    except (PackageSealError, OSError) as error:
+        logger.error(f"Package sealing failed: {error}")
+        return 1
     write_contract_json(package_dir / "contracts" / "package_contract.json", package_contract)
     logger.info(f"Re-sealed {package_dir} as {args.package_name!r}")
     return 0
@@ -766,155 +805,108 @@ def cmd_install_commands(args: argparse.Namespace) -> int:
 
 def main() -> None:
     """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="SysML v2 code generation tools"
-    )
+    parser = argparse.ArgumentParser(description="SysML v2 code generation tools")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Generate subcommand
-    gen_parser = subparsers.add_parser(
-        "generate",
-        help="Generate Python code from SysML v2 models"
-    )
+    gen_parser = subparsers.add_parser("generate", help="Generate Python code from SysML v2 models")
     # Exactly one extraction input: live --models or a captured --from-snapshot
     # (both-forbidden / neither-forbidden come free from a required group — INV-7).
     gen_input = gen_parser.add_mutually_exclusive_group(required=True)
     gen_input.add_argument(
-        "--models", "-m",
-        type=Path,
-        help="Path to SysML model directory or file (live extraction)"
+        "--models", "-m", type=Path, help="Path to SysML model directory or file (live extraction)"
     )
     gen_input.add_argument(
         "--from-snapshot",
         type=Path,
-        help="Path to a captured extraction snapshot (license-free generation)"
+        help="Path to a captured extraction snapshot (license-free generation)",
     )
     gen_parser.add_argument(
-        "--output", "-o",
-        type=Path,
-        required=True,
-        help="Output directory for generated code"
+        "--output", "-o", type=Path, required=True, help="Output directory for generated code"
     )
     gen_parser.add_argument(
         "--package-name",
         type=str,
         default="generated_code",
-        help="Python package name for generated code (default: generated_code)"
+        help="Python package name for generated code (default: generated_code)",
     )
     gen_parser.add_argument(
         "--schema-class",
         type=str,
         default="Params",
-        help="Name for the main schema class (default: Params)"
+        help="Name for the main schema class (default: Params)",
     )
     gen_parser.add_argument(
         "--pipeline-name",
         type=str,
         default="pipeline",
-        help="Name for the pipeline configuration (default: pipeline)"
+        help="Name for the pipeline configuration (default: pipeline)",
     )
-    gen_parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Overwrite existing files"
-    )
+    gen_parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files")
     gen_parser.add_argument(
         "--preserve-handwritten",
         action="store_true",
-        help="Preserve handwritten implementations during regeneration"
+        help="Preserve handwritten implementations during regeneration",
     )
     gen_parser.add_argument(
-        "--smart-regen",
-        action="store_true",
-        help="Smart regeneration with signature comparison"
+        "--smart-regen", action="store_true", help="Smart regeneration with signature comparison"
     )
-    gen_parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose logging"
-    )
+    gen_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     gen_parser.add_argument(
         "--design-path-filter",
         type=str,
         default="",
-        help="Substring filter for design file paths (default: accept all files)"
+        help="Substring filter for design file paths (default: accept all files)",
     )
     gen_parser.set_defaults(func=cmd_generate)
 
     # Snapshot subcommand — capture a versioned snapshot from live models (D5)
     snap_parser = subparsers.add_parser(
-        "snapshot",
-        help="Capture a versioned extraction snapshot from live models"
+        "snapshot", help="Capture a versioned extraction snapshot from live models"
     )
     snap_parser.add_argument(
-        "--models", "-m",
-        type=Path,
-        required=True,
-        help="Path to SysML model directory or file"
+        "--models", "-m", type=Path, required=True, help="Path to SysML model directory or file"
     )
     snap_parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         type=Path,
         default=None,
-        help="Snapshot output path (default: <models>/extraction_snapshot.json)"
+        help="Snapshot output path (default: <models>/extraction_snapshot.json)",
     )
     snap_parser.add_argument(
         "--design-path-filter",
         type=str,
         default="",
-        help="Substring filter for design file paths (baked into the snapshot)"
+        help="Substring filter for design file paths (baked into the snapshot)",
     )
-    snap_parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose logging"
-    )
+    snap_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     snap_parser.set_defaults(func=cmd_snapshot)
 
     # Seal subcommand — re-seal a generated package in place (D1/D2)
     seal_parser = subparsers.add_parser(
-        "seal",
-        help="Re-seal a generated package (recomputes the PackageContract only)"
+        "seal", help="Re-seal a generated package (recomputes the PackageContract only)"
     )
     seal_parser.add_argument(
-        "package_dir",
-        type=Path,
-        help="Path to the generated package directory"
+        "package_dir", type=Path, help="Path to the generated package directory"
     )
     seal_parser.add_argument(
-        "--package-name",
-        type=str,
-        required=True,
-        help="Package name to record in the seal"
+        "--package-name", type=str, required=True, help="Package name to record in the seal"
     )
-    seal_parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose logging"
-    )
+    seal_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     seal_parser.set_defaults(func=cmd_seal)
 
     # Install-commands subcommand
     install_parser = subparsers.add_parser(
-        "install-commands",
-        help="Install teax-completion helper command"
+        "install-commands", help="Install teax-completion helper command"
     )
     install_parser.add_argument(
-        "directory",
-        nargs="?",
-        default=".",
-        help="Target directory (default: current directory)"
+        "directory", nargs="?", default=".", help="Target directory (default: current directory)"
     )
     install_parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List available commands without installing"
+        "--list", action="store_true", help="List available commands without installing"
     )
-    install_parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Overwrite existing files"
-    )
+    install_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
     install_parser.set_defaults(func=cmd_install_commands)
 
     args = parser.parse_args()
@@ -935,10 +927,12 @@ def run_codegen(config: GenerationConfig) -> bool:
     Returns:
         True if generation succeeded, False otherwise.
     """
+    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
     from sysml_codegen.generation import (
         CodeGenerationError,
         SysMLParsingError,
     )
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
     source = config.from_snapshot if config.from_snapshot is not None else config.models_path
@@ -965,15 +959,8 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
         logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
 
-        # Constraint predicate names share one generated Python namespace. Reject a lossy
-        # normalization collision before overwrite clearing or any output creation.
-        catalog = ctx.computation_graph.constraint_catalog
-        if catalog is not None:
-            from sysml_codegen.generation.modules import (
-                assert_unique_predicate_function_names,
-            )
-
-            assert_unique_predicate_function_names(catalog)
+        # Validate both generated constraint scopes before overwrite clearing or output creation.
+        _preflight_constraint_names(ctx)
 
         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
         # duplicate path never wipes or silently overwrites existing files.
@@ -983,6 +970,16 @@ def run_codegen(config: GenerationConfig) -> bool:
         # strict — logs the unwired-remainder summary, then raises V11 on any
         # wired fell-through-valueless input. Before output clear, like 1.5.
         _reconcile_params_coverage(ctx.computation_graph)
+
+        try:
+            ensure_package_tree_is_link_free(config.output_path)
+        except (PackageSealError, OSError) as error:
+            logger.error(f"Package sealing failed: {error}")
+            return False
+
+        # Build every constraint body and wrapper while the target tree is still untouched.
+        template_env = _get_template_env()
+        constraint_plan = build_constraint_generation_plan(ctx, template_env, config.package_name)
 
         # Step 2: Clear and setup output directories
         if config.overwrite:
@@ -995,16 +992,13 @@ def run_codegen(config: GenerationConfig) -> bool:
         # Step 3: Generate primitives.py (required for module imports)
         _generate_primitives(config)
 
-        # Step 4: Setup Jinja2 template environment
-        template_env = _get_template_env()
-
         # Step 5: Generate schemas
         logger.info("Generating schemas...")
         _generate_schemas(ctx, config, template_env)
 
         # Step 6: Generate modules and stencils (all types unified via graph)
         logger.info("Generating TEAx module wrappers...")
-        _generate_modules(ctx, config, template_env)
+        _generate_modules(ctx, config, template_env, constraint_plan)
 
         logger.info("Generating implementation stencils...")
         _generate_stencils(ctx, config, template_env)
@@ -1029,7 +1023,11 @@ def run_codegen(config: GenerationConfig) -> bool:
         # Step 9: Seal the package (D1) — over final on-disk state, both live and
         # from-snapshot paths alike (D8).
         logger.info("Sealing package...")
-        _seal_package(ctx, config)
+        try:
+            _seal_package(ctx, config)
+        except (PackageSealError, OSError) as error:
+            logger.error(f"Package sealing failed: {error}")
+            return False
 
         logger.info("Code generation complete")
         return True
@@ -1038,10 +1036,14 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.error(f"SysML parsing failed: {e}")
         return False
     except CodeGenerationError as e:
-        logger.error(f"Code generation failed: {e}")
+        logger.error(
+            f"Code generation failed: {e}",
+            extra={"constraint_name_safety": e.name_safety_violation},
+        )
         return False
     except Exception as e:
         import traceback
+
         logger.error(f"Unexpected error: {e}")
         logger.debug(traceback.format_exc())
         return False

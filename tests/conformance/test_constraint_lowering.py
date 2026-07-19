@@ -41,6 +41,7 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
+import sysml_codegen.analysis.constraint_lowering as constraint_lowering
 from sysml_codegen.analysis.constraint_lowering import lower_constraints
 from sysml_codegen.analysis.part_instance_index import (
     NonFiniteCardinalityError,
@@ -268,15 +269,16 @@ def _blocked_predicate():
 
 
 def _package_assert(qn: str, predicate) -> ConstraintUsageFact:
+    identity = _identity(qn, qn.rsplit("__", 1)[-1])
     return ConstraintUsageFact(
-        identity=_identity(qn, qn.rsplit("__", 1)[-1]),
+        identity=identity,
         location=None,
         source=ConstraintSource(
             form="inline",
-            effective_predicate_source=_identity(qn, None),
+            effective_predicate_source=identity,
             constraint_definition=None,
             referenced_feature_target=None,
-            asserted_constraint=_identity(qn, None),
+            asserted_constraint=identity,
         ),
         owner=OwnerFact(
             owner=None,
@@ -630,6 +632,42 @@ def _lower_offline(facts: ConstraintFacts):
     )
 
 
+@pytest.mark.parametrize("source_form", ["inline", "definition_typed"])
+def test_forged_effective_predicate_source_rejected_before_expansion_or_identity_minting(
+    monkeypatch: pytest.MonkeyPatch, source_form: str
+) -> None:
+    if source_form == "inline":
+        facts = _facts([_package_assert("Design__inline_assert", _admitted_predicate())])
+        facts.usages[0].source.effective_predicate_source = _identity(
+            "Design__forged_source", "forged_source"
+        )
+    else:
+        facts = _definition_typed_facts(formals=[], actuals=[])
+        facts.usages[0].source.effective_predicate_source = _identity(
+            "Design::OtherConstraint", "OtherConstraint", kind="ConstraintDefinition"
+        )
+
+    calls = {"expand": 0, "mint": 0}
+
+    def forbidden_expand(*_args, **_kwargs):
+        calls["expand"] += 1
+        raise AssertionError("owner expansion must not run after a forged source identity")
+
+    def forbidden_mint(*_args, **_kwargs):
+        calls["mint"] += 1
+        raise AssertionError(
+            "constraint identity minting must not run after a forged source identity"
+        )
+
+    monkeypatch.setattr(constraint_lowering, "_expand_owner_instances", forbidden_expand)
+    monkeypatch.setattr(constraint_lowering, "mint_constraint_id", forbidden_mint)
+
+    with pytest.raises(CodeGenerationError, match="effective predicate source identity"):
+        _lower_offline(facts)
+
+    assert calls == {"expand": 0, "mint": 0}
+
+
 def test_actual_local_name_does_not_override_formal_target_identity():
     formal = _formal("required")
     facts = _definition_typed_facts(
@@ -739,11 +777,11 @@ def test_two_non_numerical_warnings_precede_complete_block(caplog):
         operand_type=None,
     )
     first = _package_assert("Design__warning_first", warning_predicate)
-    first.location = LocationFact(file="design.sysml", line=10, column=2)
+    first.location = LocationFact(file="root-0/design.sysml", line=10, column=2)
     second = _package_assert("Design__warning_second", warning_predicate)
-    second.location = LocationFact(file="design.sysml", line=20, column=2)
+    second.location = LocationFact(file="root-0/design.sysml", line=20, column=2)
     blocked = _package_assert("Design__blocked_assert", _blocked_predicate())
-    blocked.location = LocationFact(file="design.sysml", line=30, column=2)
+    blocked.location = LocationFact(file="root-0/design.sysml", line=30, column=2)
 
     with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
         with pytest.raises(CodeGenerationError) as error:
@@ -753,6 +791,7 @@ def test_two_non_numerical_warnings_precede_complete_block(caplog):
                 registry=None,
                 design_attrs={},
                 calc_usages=[],
+                source_location_mode="snapshot",
             )
 
     warnings = [
@@ -761,10 +800,12 @@ def test_two_non_numerical_warnings_precede_complete_block(caplog):
         if record.name == "sysml_codegen.analysis.constraint_lowering"
     ]
     assert warnings == [
-        "Constraint Design__warning_first at design.sysml:10:2 is not numerical and will not "
+        "Constraint Design__warning_first at root-0/design.sysml:10:2 is not numerical and will "
+        "not "
         "execute: warn_non_numerical_equality: equality is a valid non-numerical statement and "
         "is not executed",
-        "Constraint Design__warning_second at design.sysml:20:2 is not numerical and will not "
+        "Constraint Design__warning_second at root-0/design.sysml:20:2 is not numerical and will "
+        "not "
         "execute: warn_non_numerical_equality: equality is a valid non-numerical statement and "
         "is not executed",
     ]

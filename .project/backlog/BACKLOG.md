@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-18
+**Last Updated**: 2026-07-19
 
 ---
 
@@ -30,6 +30,36 @@ Prioritized list of epics and features.
 | Epic | Status | Notes |
 |------|--------|-------|
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
+| [CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation | Ready (14 items, 19–23 days) | Owner-ratified architecture; implements register rows 0–17 and ends with one 41-case public artifact thread. Simplification and net production-code reduction are mandatory. See `epic_constraint_execution_lifecycle_remediation.md`. |
+| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19) | Items 1/2 complete and Items 4/6 certified; all unfinished work is mapped into CONSTRAINT-LIFECYCLE-REMEDIATION. Retained as history; no new work executes here. See `epic_constraint_pr_wave_remediation.md`. |
+
+CONSTRAINT-LIFECYCLE-REMEDIATION items:
+- [ ] Item 0 — Compatible candidate landing and pin (register row 0)
+- [ ] Item 1 — Occurrence and demand integrity (row 1)
+- [ ] Item 2 — Shared producer resolution and Gate A (row 2)
+- [ ] Item 3 — Gate B coverage-scope proof and correction (row 3)
+- [ ] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
+- [ ] Item 5 — Whole-tree snapshot portability (row 5)
+- [ ] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
+- [ ] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
+- [ ] Item 8 — Canonical embedded catalog and store transition (row 10)
+- [ ] Item 9 — Multi-entry candidate bridge (row 11)
+- [ ] Item 10 — Producer completeness and stellarator rollup (row 12)
+- [ ] Item 11 — TEAx constraint evidence durability (rows 13–15)
+- [ ] Item 12 — Legacy snapshot and tracking identity closure (row 16)
+- [ ] Item 13 — Composed public lifecycle proof and release readiness (row 17)
+
+Superseded CONSTRAINT-WAVE-REMEDIATION items:
+- [x] Item 1 — Profile semantics and wrong-verdict closure (R-1, R-2) — complete
+- [x] Item 2 — Generated constraint name-safety boundary (R-3) — complete
+- [ ] Item 3 — Occurrence and demand identity integrity (R-4, R-5, R-7) — sysml-codegen
+- [ ] Item 3B — Constraint-extension V11 coverage ownership (Gate B)
+- [x] Item 4 — Snapshot portability and shape gates (R-6, R-11) — certified; licensed live A/live
+      B/replay A and moved replay pass the exact relocation manifest — sysml-codegen
+- [ ] Item 5 — Lowering diagnostic and modeled-default fidelity (R-8, R-9) — sysml-codegen
+- [x] Item 6 — Seal and verify symlink symmetry (R-10) — certified
+- [ ] Item 7 — Dependency discovery and review-tail disposition (R-12 + Low/latent tail)
+- [ ] Item 8 — Cross-repo compatibility and release-readiness evidence (no PR interaction)
 
 GAP-CLOSE items:
 - [ ] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
@@ -712,11 +742,13 @@ whole-plant package through the full sealed-package → study-layer path; it sur
 integration gaps, each bridged consumer-side in fusion-tea (`exploration/ife_e2e/study/findings.md`)
 and each a claim-narrowing on a certified item that should become real work, not a permanent adapter:
 
-- **[CE-F1] Standalone catalog emission (sysml-codegen, Item 9 surface).** teax's study layer
-  reads a standalone `contracts/constraint_catalog.json`; generation embeds the catalog in
-  `model_contract.json` under different field names. Decide one canonical shape and align both sides.
-- **[CE-F2] Multi-channel CandidateBridge (teax, Item 12 surface).** The bridge builds only one
-  entry channel's typed model; real packages have several. Extend to the full EntryPoint set.
+- **[CE-F1] Canonical catalog join — ABSORBED by CONSTRAINT-LIFECYCLE-REMEDIATION Item 8.** The
+  owner selected codegen's embedded model-contract catalog as the sole schema authority. Item 8
+  adds the required entry fields/store transition and deletes the standalone TEAx schema,
+  materializer, fixture, stand-in fingerprint, and reconstruction paths.
+- **[CE-F2] Multi-channel CandidateBridge — ABSORBED by CONSTRAINT-LIFECYCLE-REMEDIATION Item 9.**
+  Item 9 extends the stock bridge to complete zero/one/multiple typed entry-channel mappings and
+  deletes the consumer wrapper.
 - **[CE-F3] PreparedEvaluator hardcoded fixture class (teax, Item 10 surface).** ✅ FIXED
   (2026-07-13, teax `0d606a4`, owner-approved): `entry_models` property derives channel → typed
   model from the pipeline spec; consumers migrated; a source-scan guard test now blocks any

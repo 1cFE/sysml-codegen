@@ -17,7 +17,11 @@ from __future__ import annotations
 
 import keyword
 import math
-from typing import Any
+from dataclasses import replace
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
 
 from agentic_mbse.sysml.expression_facts import OperandTypeFact
 from agentic_mbse.sysml.expression_ir import (
@@ -32,7 +36,9 @@ from agentic_mbse.sysml.expression_ir import (
 __all__ = [
     "KLEENE_RUNTIME_SOURCE",
     "PredicateCompileError",
+    "compile_predicate_body",
     "compile_predicate",
+    "finalize_assertion",
     "function_source_only",
     "load_predicate",
     "margin_expression",
@@ -54,6 +60,27 @@ class _PredicateResult(NamedTuple):
     actual_value: object  # True/False/None (None = indeterminate)
     status: str           # satisfied | violated | indeterminate
     margin: object         # signed float or None (simple-inequality roots only)
+
+
+class _PredicateBodyResult(NamedTuple):
+    actual_value: object
+    source_margin: object
+
+
+def _finalize_assertion(body, *, is_negated, expected_value):
+    if type(is_negated) is not bool or type(expected_value) is not bool:
+        raise ValueError("assertion finalization requires Boolean polarity fields")
+    if expected_value is not (not is_negated):
+        raise ValueError("assertion polarity fields must be complementary")
+    if body.actual_value is None:
+        return _PredicateResult(None, "indeterminate", None)
+    status = "satisfied" if body.actual_value == expected_value else "violated"
+    margin = body.source_margin
+    if margin is not None:
+        margin = -margin if is_negated else margin
+        if margin == 0:
+            margin = 0.0
+    return _PredicateResult(body.actual_value, status, margin)
 
 
 def _fin(x):
@@ -98,6 +125,15 @@ KLEENE_RUNTIME_SOURCE = _KLEENE_RUNTIME
 
 class PredicateCompileError(Exception):
     """The IR contains a construct the compiler does not (yet) render."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        name_safety_violation: ConstraintNameViolation | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.name_safety_violation = name_safety_violation
 
 
 def _required_operand_type(n: ExpressionIR) -> OperandTypeFact:
@@ -237,6 +273,68 @@ def margin_expression(n: ExpressionIR, negated: bool) -> str | None:
     return f"(_norm0({body}) if (_fin({a}) and _fin({b})) else None)"
 
 
+def finalize_assertion(
+    raw_value: object,
+    source_margin: float | None,
+    *,
+    is_negated: bool,
+    expected_value: bool,
+) -> tuple[object, str, float | None]:
+    """Apply one usage's classified polarity to a neutral predicate result."""
+    if type(is_negated) is not bool or type(expected_value) is not bool:
+        raise ValueError("assertion finalization requires Boolean polarity fields")
+    if expected_value is not (not is_negated):
+        raise ValueError("assertion polarity fields must be complementary")
+    if raw_value is None:
+        return None, "indeterminate", None
+    status = "satisfied" if raw_value == expected_value else "violated"
+    margin = source_margin
+    if margin is not None:
+        margin = -margin if is_negated else margin
+        if margin == 0:
+            margin = 0.0
+    return raw_value, status, margin
+
+
+def compile_predicate_body(ir: ExpressionIR, fn_name: str) -> tuple[str, list[str]]:
+    """Generate one polarity-neutral positive predicate body."""
+    if not fn_name.isidentifier() or keyword.iskeyword(fn_name):
+        raise PredicateCompileError(f"function name {fn_name!r} is not a Python identifier")
+    from sysml_codegen.generation.constraint_name_safety import (
+        PREDICATE_SCOPE_POLICY,
+        format_name_safety_violation,
+        predicate_bindings,
+        select_name_safety_violation,
+        validate_scope_bindings,
+        verify_emitted_scope,
+    )
+
+    bindings = predicate_bindings(ir)
+    violation = select_name_safety_violation(
+        validate_scope_bindings(bindings, PREDICATE_SCOPE_POLICY)
+    )
+    if violation is not None:
+        violation = replace(violation, predicate_function_name=fn_name)
+        raise PredicateCompileError(
+            format_name_safety_violation(violation), name_safety_violation=violation
+        )
+    args: list[str] = []
+    _leaf_ref_names(ir, args)
+    for arg in args:
+        if not arg.isidentifier() or keyword.iskeyword(arg):
+            raise PredicateCompileError(f"leaf reference {arg!r} is not a safe Python identifier")
+    body = _compile_boolean(ir)
+    margin = margin_expression(ir, False) or "None"
+    src = f"""{_KLEENE_RUNTIME}
+
+def {fn_name}({", ".join(args)}):
+    value = {body}
+    return _PredicateBodyResult(actual_value=value, source_margin={margin})
+"""
+    verify_emitted_scope(src, PREDICATE_SCOPE_POLICY, set(args), function_name=fn_name)
+    return src, args
+
+
 def compile_predicate(
     ir: ExpressionIR, fn_name: str, negated: bool = False
 ) -> tuple[str, list[str]]:
@@ -249,6 +347,27 @@ def compile_predicate(
     """
     if not fn_name.isidentifier() or keyword.iskeyword(fn_name):
         raise PredicateCompileError(f"function name {fn_name!r} is not a Python identifier")
+    from sysml_codegen.generation.constraint_name_safety import (
+        ConstraintScopePolicy,
+        format_name_safety_violation,
+        predicate_bindings,
+        select_name_safety_violation,
+        validate_scope_bindings,
+        verify_emitted_scope,
+    )
+
+    legacy_policy = ConstraintScopePolicy(
+        scope="predicate",
+        generated_parameters=frozenset(),
+        generated_locals=frozenset({"value", "status"}),
+    )
+    bindings = predicate_bindings(ir)
+    violation = select_name_safety_violation(validate_scope_bindings(bindings, legacy_policy))
+    if violation is not None:
+        violation = replace(violation, predicate_function_name=fn_name)
+        raise PredicateCompileError(
+            format_name_safety_violation(violation), name_safety_violation=violation
+        )
     args: list[str] = []
     _leaf_ref_names(ir, args)
     for arg in args:
@@ -269,6 +388,12 @@ def {fn_name}({", ".join(args)}):
         status = "violated"
     return _PredicateResult(actual_value=value, status=status, margin={margin})
 """
+    verify_emitted_scope(
+        src,
+        legacy_policy,
+        set(args),
+        function_name=fn_name,
+    )
     return src, args
 
 

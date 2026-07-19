@@ -1,0 +1,387 @@
+diff --git a/src/sysml_codegen/cli/__init__.py b/src/sysml_codegen/cli/__init__.py
+index b70db9e..7706b05 100644
+--- a/src/sysml_codegen/cli/__init__.py
++++ b/src/sysml_codegen/cli/__init__.py
+@@ -41,6 +41,7 @@ def _ensure_package_init_files(
+         if not init_file.exists():
+             init_file.write_text(docstring)
+ 
++
+ # Commands available for installation
+ CODEGEN_COMMANDS = [
+     "teax-completion.md",
+@@ -269,7 +270,8 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
+         logger.warning(
+             "Unresolved after assembly: %d entry point(s) fell through and still "
+             "lack a value (unwired): %s",
+-            len(unwired), unwired,
++            len(unwired),
++            unwired,
+         )
+ 
+     uncovered = collect_uncovered_params(graph)
+@@ -356,7 +358,9 @@ def _generate_modules(
+         namespace_dir = modules_dir / "constraints"
+         namespace_dir.mkdir(parents=True, exist_ok=True)
+         _ensure_package_init_files(
+-            modules_dir, "constraints", '"""Namespace package for generated modules."""\n',
++            modules_dir,
++            "constraints",
++            '"""Namespace package for generated modules."""\n',
+         )
+         predicates_code = render_constraint_predicates_module(compiled_predicates, template_env)
+         (namespace_dir / "predicates.py").write_text(predicates_code)
+@@ -370,7 +374,8 @@ def _generate_modules(
+             namespace_dir = modules_dir / python_path.directory
+             namespace_dir.mkdir(parents=True, exist_ok=True)
+             _ensure_package_init_files(
+-                modules_dir, python_path.directory,
++                modules_dir,
++                python_path.directory,
+                 '"""Namespace package for generated modules."""\n',
+             )
+ 
+@@ -428,7 +433,8 @@ def _generate_stencils(
+             namespace_dir = handwritten_dir / python_path.directory
+             namespace_dir.mkdir(parents=True, exist_ok=True)
+             _ensure_package_init_files(
+-                handwritten_dir, python_path.directory,
++                handwritten_dir,
++                python_path.directory,
+                 '"""Handwritten implementations."""\n',
+             )
+             output_path = namespace_dir / f"{python_path.filename}_impl.py"
+@@ -441,7 +447,10 @@ def _generate_stencils(
+             if should_regen:
+                 backup_implementation(output_path, backup_dir)
+                 code = generate_implementation(
+-                    module, template_env, output_path, config.package_name,
++                    module,
++                    template_env,
++                    output_path,
++                    config.package_name,
+                 )
+                 if code:
+                     output_path.write_text(code)
+@@ -455,7 +464,10 @@ def _generate_stencils(
+                 if is_stub and has_auto_impl:
+                     backup_implementation(output_path, backup_dir)
+                     code = generate_implementation(
+-                        module, template_env, output_path, config.package_name,
++                        module,
++                        template_env,
++                        output_path,
++                        config.package_name,
+                     )
+                     if code:
+                         output_path.write_text(code)
+@@ -469,7 +481,10 @@ def _generate_stencils(
+             logger.debug(f"Preserved existing stencil: {output_path.name}")
+         else:
+             code = generate_implementation(
+-                module, template_env, output_path, config.package_name,
++                module,
++                template_env,
++                output_path,
++                config.package_name,
+             )
+             if code:
+                 output_path.write_text(code)
+@@ -617,9 +632,15 @@ def _seal_package(
+     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
+     last, never in its own coverage.
+     """
+-    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, build_model_contract, seal_package
++    from sysml_codegen.contracts import (
++        DEFAULT_COVERAGE_POLICY,
++        build_model_contract,
++        ensure_package_tree_is_link_free,
++        seal_package,
++    )
+     from sysml_codegen.contracts.serialize import write_contract_json
+ 
++    ensure_package_tree_is_link_free(config.output_path)
+     contracts_dir = config.output_path / "contracts"
+     contracts_dir.mkdir(parents=True, exist_ok=True)
+ 
+@@ -648,6 +669,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
+     # Validate agentic-mbse is installed
+     try:
+         import agentic_mbse
++
+         logger.debug(f"agentic-mbse version: {agentic_mbse.__version__}")
+     except ImportError:
+         logger.error("agentic-mbse is not installed. Please install it first.")
+@@ -694,9 +716,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
+ 
+     models_path: Path = args.models
+     output_path: Path = args.output or (models_path / "extraction_snapshot.json")
+-    out = capture_snapshot(
+-        [models_path], output_path, design_path_filter=args.design_path_filter
+-    )
++    out = capture_snapshot([models_path], output_path, design_path_filter=args.design_path_filter)
+     logger.info(f"Wrote snapshot to {out}")
+     return 0
+ 
+@@ -711,10 +731,21 @@ def cmd_seal(args: argparse.Namespace) -> int:
+     level = logging.DEBUG if args.verbose else logging.INFO
+     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+ 
+-    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, seal_package
++    from sysml_codegen.contracts import (
++        DEFAULT_COVERAGE_POLICY,
++        PackageSealError,
++        ensure_package_tree_is_link_free,
++        seal_package,
++    )
+     from sysml_codegen.contracts.serialize import write_contract_json
+ 
+     package_dir: Path = args.package_dir
++    try:
++        ensure_package_tree_is_link_free(package_dir)
++    except (PackageSealError, OSError) as error:
++        logger.error(f"Package sealing failed: {error}")
++        return 1
++
+     model_contract_path = package_dir / "contracts" / "model_contract.json"
+     if not model_contract_path.is_file():
+         logger.error(
+@@ -723,7 +754,11 @@ def cmd_seal(args: argparse.Namespace) -> int:
+         )
+         return 1
+ 
+-    package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
++    try:
++        package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
++    except (PackageSealError, OSError) as error:
++        logger.error(f"Package sealing failed: {error}")
++        return 1
+     write_contract_json(package_dir / "contracts" / "package_contract.json", package_contract)
+     logger.info(f"Re-sealed {package_dir} as {args.package_name!r}")
+     return 0
+@@ -766,155 +801,108 @@ def cmd_install_commands(args: argparse.Namespace) -> int:
+ 
+ def main() -> None:
+     """Main CLI entry point."""
+-    parser = argparse.ArgumentParser(
+-        description="SysML v2 code generation tools"
+-    )
++    parser = argparse.ArgumentParser(description="SysML v2 code generation tools")
+     subparsers = parser.add_subparsers(dest="command", help="Available commands")
+ 
+     # Generate subcommand
+-    gen_parser = subparsers.add_parser(
+-        "generate",
+-        help="Generate Python code from SysML v2 models"
+-    )
++    gen_parser = subparsers.add_parser("generate", help="Generate Python code from SysML v2 models")
+     # Exactly one extraction input: live --models or a captured --from-snapshot
+     # (both-forbidden / neither-forbidden come free from a required group — INV-7).
+     gen_input = gen_parser.add_mutually_exclusive_group(required=True)
+     gen_input.add_argument(
+-        "--models", "-m",
+-        type=Path,
+-        help="Path to SysML model directory or file (live extraction)"
++        "--models", "-m", type=Path, help="Path to SysML model directory or file (live extraction)"
+     )
+     gen_input.add_argument(
+         "--from-snapshot",
+         type=Path,
+-        help="Path to a captured extraction snapshot (license-free generation)"
++        help="Path to a captured extraction snapshot (license-free generation)",
+     )
+     gen_parser.add_argument(
+-        "--output", "-o",
+-        type=Path,
+-        required=True,
+-        help="Output directory for generated code"
++        "--output", "-o", type=Path, required=True, help="Output directory for generated code"
+     )
+     gen_parser.add_argument(
+         "--package-name",
+         type=str,
+         default="generated_code",
+-        help="Python package name for generated code (default: generated_code)"
++        help="Python package name for generated code (default: generated_code)",
+     )
+     gen_parser.add_argument(
+         "--schema-class",
+         type=str,
+         default="Params",
+-        help="Name for the main schema class (default: Params)"
++        help="Name for the main schema class (default: Params)",
+     )
+     gen_parser.add_argument(
+         "--pipeline-name",
+         type=str,
+         default="pipeline",
+-        help="Name for the pipeline configuration (default: pipeline)"
+-    )
+-    gen_parser.add_argument(
+-        "--overwrite",
+-        action="store_true",
+-        help="Overwrite existing files"
++        help="Name for the pipeline configuration (default: pipeline)",
+     )
++    gen_parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files")
+     gen_parser.add_argument(
+         "--preserve-handwritten",
+         action="store_true",
+-        help="Preserve handwritten implementations during regeneration"
++        help="Preserve handwritten implementations during regeneration",
+     )
+     gen_parser.add_argument(
+-        "--smart-regen",
+-        action="store_true",
+-        help="Smart regeneration with signature comparison"
+-    )
+-    gen_parser.add_argument(
+-        "--verbose", "-v",
+-        action="store_true",
+-        help="Enable verbose logging"
++        "--smart-regen", action="store_true", help="Smart regeneration with signature comparison"
+     )
++    gen_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+     gen_parser.add_argument(
+         "--design-path-filter",
+         type=str,
+         default="",
+-        help="Substring filter for design file paths (default: accept all files)"
++        help="Substring filter for design file paths (default: accept all files)",
+     )
+     gen_parser.set_defaults(func=cmd_generate)
+ 
+     # Snapshot subcommand — capture a versioned snapshot from live models (D5)
+     snap_parser = subparsers.add_parser(
+-        "snapshot",
+-        help="Capture a versioned extraction snapshot from live models"
++        "snapshot", help="Capture a versioned extraction snapshot from live models"
+     )
+     snap_parser.add_argument(
+-        "--models", "-m",
+-        type=Path,
+-        required=True,
+-        help="Path to SysML model directory or file"
++        "--models", "-m", type=Path, required=True, help="Path to SysML model directory or file"
+     )
+     snap_parser.add_argument(
+-        "--output", "-o",
++        "--output",
++        "-o",
+         type=Path,
+         default=None,
+-        help="Snapshot output path (default: <models>/extraction_snapshot.json)"
++        help="Snapshot output path (default: <models>/extraction_snapshot.json)",
+     )
+     snap_parser.add_argument(
+         "--design-path-filter",
+         type=str,
+         default="",
+-        help="Substring filter for design file paths (baked into the snapshot)"
+-    )
+-    snap_parser.add_argument(
+-        "--verbose", "-v",
+-        action="store_true",
+-        help="Enable verbose logging"
++        help="Substring filter for design file paths (baked into the snapshot)",
+     )
++    snap_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+     snap_parser.set_defaults(func=cmd_snapshot)
+ 
+     # Seal subcommand — re-seal a generated package in place (D1/D2)
+     seal_parser = subparsers.add_parser(
+-        "seal",
+-        help="Re-seal a generated package (recomputes the PackageContract only)"
+-    )
+-    seal_parser.add_argument(
+-        "package_dir",
+-        type=Path,
+-        help="Path to the generated package directory"
++        "seal", help="Re-seal a generated package (recomputes the PackageContract only)"
+     )
+     seal_parser.add_argument(
+-        "--package-name",
+-        type=str,
+-        required=True,
+-        help="Package name to record in the seal"
++        "package_dir", type=Path, help="Path to the generated package directory"
+     )
+     seal_parser.add_argument(
+-        "--verbose", "-v",
+-        action="store_true",
+-        help="Enable verbose logging"
++        "--package-name", type=str, required=True, help="Package name to record in the seal"
+     )
++    seal_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+     seal_parser.set_defaults(func=cmd_seal)
+ 
+     # Install-commands subcommand
+     install_parser = subparsers.add_parser(
+-        "install-commands",
+-        help="Install teax-completion helper command"
+-    )
+-    install_parser.add_argument(
+-        "directory",
+-        nargs="?",
+-        default=".",
+-        help="Target directory (default: current directory)"
++        "install-commands", help="Install teax-completion helper command"
+     )
+     install_parser.add_argument(
+-        "--list",
+-        action="store_true",
+-        help="List available commands without installing"
++        "directory", nargs="?", default=".", help="Target directory (default: current directory)"
+     )
+     install_parser.add_argument(
+-        "--force",
+-        action="store_true",
+-        help="Overwrite existing files"
++        "--list", action="store_true", help="List available commands without installing"
+     )
++    install_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
+     install_parser.set_defaults(func=cmd_install_commands)
+ 
+     args = parser.parse_args()
+@@ -935,6 +923,7 @@ def run_codegen(config: GenerationConfig) -> bool:
+     Returns:
+         True if generation succeeded, False otherwise.
+     """
++    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
+     from sysml_codegen.generation import (
+         CodeGenerationError,
+         SysMLParsingError,
+@@ -984,6 +973,12 @@ def run_codegen(config: GenerationConfig) -> bool:
+         # wired fell-through-valueless input. Before output clear, like 1.5.
+         _reconcile_params_coverage(ctx.computation_graph)
+ 
++        try:
++            ensure_package_tree_is_link_free(config.output_path)
++        except (PackageSealError, OSError) as error:
++            logger.error(f"Package sealing failed: {error}")
++            return False
++
+         # Step 2: Clear and setup output directories
+         if config.overwrite:
+             logger.info("Clearing existing output directory...")
+@@ -1029,7 +1024,11 @@ def run_codegen(config: GenerationConfig) -> bool:
+         # Step 9: Seal the package (D1) — over final on-disk state, both live and
+         # from-snapshot paths alike (D8).
+         logger.info("Sealing package...")
+-        _seal_package(ctx, config)
++        try:
++            _seal_package(ctx, config)
++        except (PackageSealError, OSError) as error:
++            logger.error(f"Package sealing failed: {error}")
++            return False
+ 
+         logger.info("Code generation complete")
+         return True
+@@ -1042,6 +1041,7 @@ def run_codegen(config: GenerationConfig) -> bool:
+         return False
+     except Exception as e:
+         import traceback
++
+         logger.error(f"Unexpected error: {e}")
+         logger.debug(traceback.format_exc())
+         return False

@@ -16,7 +16,12 @@ from sysml_codegen.contracts.models import (
     ModelContract,
     PackageContract,
 )
-from sysml_codegen.contracts.seal import DEFAULT_COVERAGE_POLICY, seal_package
+from sysml_codegen.contracts.seal import (
+    DEFAULT_COVERAGE_POLICY,
+    PackageSealError,
+    ensure_package_tree_is_link_free,
+    seal_package,
+)
 from sysml_codegen.contracts.verify import (
     Diagnostic,
     VerificationResult,
@@ -35,9 +40,11 @@ __all__ = [
     "Diagnostic",
     "ModelContract",
     "PackageContract",
+    "PackageSealError",
     "VerificationResult",
     "build_model_contract",
     "generator_version",
+    "ensure_package_tree_is_link_free",
     "seal_package",
     "verify_package",
     "verify_package_or_raise",

@@ -596,10 +596,17 @@ def test_req_dm_03_fields_pipeline_module():
 def test_req_dm_03_fields_module_input():
     from sysml_codegen.resolution.models import ModuleInput
 
-    expected = {"param_name", "python_type", "source", "description", "default_value"}
+    expected = {
+        "param_name",
+        "python_type",
+        "source",
+        "description",
+        "default_value",
+        "formal_identity",
+    }
     actual = _pydantic_field_names(ModuleInput)
     assert actual == expected
-    assert len(actual) == 5
+    assert len(actual) == 6
 
 
 @pytest.mark.req("REQ-DM-03")

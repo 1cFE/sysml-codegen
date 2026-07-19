@@ -26,9 +26,52 @@ from agentic_mbse.sysml.expression_ir import (
 from sysml_codegen.generation.predicate_compiler import (
     PredicateCompileError,
     compile_predicate,
+    compile_predicate_body,
+    finalize_assertion,
     load_predicate,
     margin_expression,
 )
+
+
+@pytest.mark.parametrize(
+    ("raw", "margin", "is_negated", "expected", "status", "final_margin"),
+    [
+        (True, 2.0, False, True, "satisfied", 2.0),
+        (True, 2.0, True, False, "violated", -2.0),
+        (False, -2.0, False, True, "violated", -2.0),
+        (False, -2.0, True, False, "satisfied", 2.0),
+        (False, -0.0, True, False, "satisfied", 0.0),
+        (None, None, False, True, "indeterminate", None),
+        (None, None, True, False, "indeterminate", None),
+    ],
+)
+def test_finalizer_applies_polarity_exactly_once(
+    raw: object,
+    margin: float | None,
+    is_negated: bool,
+    expected: bool,
+    status: str,
+    final_margin: float | None,
+) -> None:
+    actual, got_status, got_margin = finalize_assertion(
+        raw, margin, is_negated=is_negated, expected_value=expected
+    )
+    assert actual is raw
+    assert got_status == status
+    assert got_margin == final_margin
+    if got_margin == 0.0:
+        assert str(got_margin) == "0.0"
+
+
+def test_neutral_body_compiler_has_no_usage_polarity() -> None:
+    ir = OperatorNode(operator="<", operands=[_ref("a"), _ref("b")], operand_type=None)
+    source, args = compile_predicate_body(ir, "neutral")
+    body = load_predicate(source, "neutral")
+    result = body(a=1.0, b=3.0)
+    assert args == ["a", "b"]
+    assert result.actual_value is True
+    assert result.source_margin == 2.0
+    assert "expected_value" not in source.split("def neutral", maxsplit=1)[1]
 
 
 def _ref(name: str, category: str = "real", enumeration: str | None = None) -> FeatureReferenceNode:
@@ -241,6 +284,20 @@ def test_leaf_ref_names_dedup_first_occurrence_order():
     )
     _, args = compile_predicate(ir, "p", negated=False)
     assert args == ["a", "b", "c"]
+
+
+@pytest.mark.parametrize("name", ["value", "status"])
+def test_generated_predicate_binding_collision_is_structured(name):
+    ir = _cmp_node(">", _ref(name), _lit_real(0.0))
+    with pytest.raises(PredicateCompileError) as error:
+        compile_predicate(ir, "p")
+    violation = error.value.name_safety_violation
+    assert violation is not None
+    assert (violation.scope, violation.kind, violation.final_binding) == (
+        "predicate",
+        "generated_binding_overlap",
+        name,
+    )
 
 
 @pytest.mark.parametrize(

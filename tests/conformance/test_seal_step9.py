@@ -9,6 +9,8 @@ byte-identical to the in-repo source (INV-8), and re-seal recomputes only the
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import runpy
 from pathlib import Path
 
@@ -52,6 +54,8 @@ def test_emitted_verifier_is_verbatim(tmp_path):
     emitted = (output / "contracts" / "verify.py").read_bytes()
     canonical = SRC_VERIFY.read_bytes()
     assert emitted == canonical
+    seal = json.loads((output / "contracts/package_contract.json").read_text())
+    assert seal["artifact_hashes"]["contracts/verify.py"] == hashlib.sha256(canonical).hexdigest()
 
 
 def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
@@ -67,6 +71,23 @@ def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
         diagnostic.kind == "INVALID_PATH" and diagnostic.path == "alias_modules"
         for diagnostic in result.diagnostics
     )
+
+
+def test_emitted_verifier_rejects_dangling_file_symlink(tmp_path):
+    output = tmp_path / "out"
+    assert run_codegen(_snapshot_config(output))
+    (output / "dangling.py").symlink_to(tmp_path / "missing.py")
+
+    emitted_namespace = runpy.run_path(str(output / "contracts" / "verify.py"))
+    result = emitted_namespace["verify_package"](output, "chain_spike")
+
+    assert [(item.kind, item.path, item.message) for item in result.diagnostics] == [
+        (
+            "INVALID_PATH",
+            "dangling.py",
+            "symlinks are forbidden beneath the package root",
+        )
+    ]
 
 
 def test_seal_ordering_excludes_itself_from_coverage(tmp_path):
@@ -109,3 +130,50 @@ def test_seal_subcommand_requires_existing_model_contract(tmp_path):
     empty_dir = tmp_path / "not_a_package"
     empty_dir.mkdir()
     assert cmd_seal(_seal_args(empty_dir, "chain_spike")) == 1
+
+
+def test_reseal_rejects_linked_contracts_before_model_contract_check(tmp_path):
+    package = tmp_path / "pkg"
+    package.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "model_contract.json").write_text("{}\n")
+    prior_seal = outside / "package_contract.json"
+    prior_seal.write_bytes(b"prior seal bytes\n")
+    (package / "contracts").symlink_to(outside, target_is_directory=True)
+
+    assert cmd_seal(_seal_args(package, "chain_spike")) == 1
+    assert prior_seal.read_bytes() == b"prior seal bytes\n"
+
+
+def test_step9_rejects_linked_contracts_without_writing_contract(tmp_path):
+    from sysml_codegen.cli import _seal_package
+    from sysml_codegen.contracts.seal import PackageSealError
+    from sysml_codegen.resolution.models import ComputationGraph
+
+    output = tmp_path / "out"
+    output.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    marker = outside / "marker.txt"
+    marker.write_text("unchanged\n")
+    (output / "contracts").symlink_to(outside, target_is_directory=True)
+    config = _snapshot_config(output, package_name="chain_spike")
+    context = type(
+        "Context",
+        (),
+        {
+            "computation_graph": ComputationGraph(
+                modules=[], entry_point_groups=[], execution_order=[]
+            )
+        },
+    )()
+
+    try:
+        _seal_package(context, config)
+    except PackageSealError as error:
+        assert error.path == "contracts"
+    else:
+        raise AssertionError("Step 9 accepted linked contracts directory")
+    assert marker.read_text() == "unchanged\n"
+    assert not (outside / "package_contract.json").exists()

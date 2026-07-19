@@ -8,8 +8,20 @@ pipeline wiring exists.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
+from agentic_mbse.sysml.expression_facts import (
+    FeatureReferenceFact,
+    LiteralFact,
+    OperandTypeFact,
+)
+from agentic_mbse.sysml.expression_ir import (
+    FeatureReferenceNode,
+    LiteralNode,
+    OperatorNode,
+    serialize_expression,
+)
 
 from sysml_codegen.contracts.model_contract import build_model_contract
 from sysml_codegen.contracts.seal import DEFAULT_COVERAGE_POLICY, seal_package
@@ -18,8 +30,11 @@ from sysml_codegen.resolution.models import (
     ConstraintCatalog,
     ConstraintCatalogEntry,
     ConstraintCatalogSourceRecord,
+    ConstraintFormalIdentity,
     EntryPoint,
     EntryPointType,
+    InputSource,
+    ModuleInput,
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
@@ -55,6 +70,45 @@ def _graph_with_constraints() -> ComputationGraph:
         execution_order=0,
         module_kind="calculation",
     )
+    constraint_module = PipelineModule(
+        name="c1",
+        module_type="constraints.C1ConstraintModule",
+        inputs=[
+            ModuleInput(
+                param_name="x",
+                python_type="float",
+                source=InputSource(source_type="module_output", producer_channel="calc_p_fusion"),
+                formal_identity=ConstraintFormalIdentity(raw_name="x"),
+            )
+        ],
+        outputs=[
+            ModuleOutput(
+                field_name="evaluation",
+                python_type="ConstraintEvaluation",
+                channel_name="calc_assert1",
+            )
+        ],
+        execution_order=1,
+        module_kind="constraint",
+    )
+    predicate_ir = serialize_expression(
+        OperatorNode(
+            operator=">",
+            operands=[
+                FeatureReferenceNode(
+                    reference=FeatureReferenceFact(
+                        source_name="x", target=None, target_types=[], chain_segments=[]
+                    ),
+                    operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+                ),
+                LiteralNode(
+                    literal=LiteralFact(kind="LiteralRational", value=0.0, result_type="real"),
+                    operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+                ),
+            ],
+            operand_type=None,
+        )
+    )
     catalog = ConstraintCatalog(
         source_records=[
             ConstraintCatalogSourceRecord(
@@ -68,18 +122,19 @@ def _graph_with_constraints() -> ComputationGraph:
                 usage_qualified_name="Pkg__part__assert1",
                 owner_instance_path="Pkg__part",
                 membership_kind="assert",
+                predicate_source_key="inline:Pkg__part__assert1",
                 is_negated=False,
                 expected_value=True,
-                predicate_ir="x > 0",
+                predicate_ir=predicate_ir,
                 evaluation_channel="calc_assert1",
             )
         ],
         fingerprint="deadbeef",
     )
     return ComputationGraph(
-        modules=[module],
+        modules=[module, constraint_module],
         entry_point_groups=[group],
-        execution_order=["calc"],
+        execution_order=["calc", "c1"],
         constraint_catalog=catalog,
     )
 
@@ -117,7 +172,80 @@ def test_fingerprints_are_deterministic(tmp_path):
     _write_fixture(tmp_path / "b")
     seal1 = seal_package(tmp_path / "a", "pkg", DEFAULT_COVERAGE_POLICY)
     seal2 = seal_package(tmp_path / "b", "pkg", DEFAULT_COVERAGE_POLICY)
+    assert list(seal1.artifact_hashes) == list(seal2.artifact_hashes)
+    assert seal1.artifact_hashes == seal2.artifact_hashes
     assert seal1.executable_fingerprint == seal2.executable_fingerprint
+
+
+FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
+
+
+def _link_target(tmp_path: Path, package: Path, target_kind: str, entry_kind: str) -> Path:
+    if target_kind == "internal":
+        return package / ("modules/calc.py" if entry_kind == "file" else "modules")
+    target = tmp_path / f"{target_kind}-{entry_kind}"
+    if target_kind == "escaping":
+        if entry_kind == "file":
+            target.write_text("outside\n")
+        else:
+            target.mkdir()
+    return target
+
+
+@pytest.mark.parametrize("entry_kind", ["file", "directory"])
+@pytest.mark.parametrize("target_kind", ["internal", "escaping", "dangling"])
+def test_direct_seal_rejects_every_symlink(tmp_path, entry_kind, target_kind):
+    from sysml_codegen.contracts import seal as seal_module
+
+    package = tmp_path / "pkg"
+    _write_fixture(package)
+    link = package / "alias"
+    link.symlink_to(
+        _link_target(tmp_path, package, target_kind, entry_kind),
+        target_is_directory=entry_kind == "directory",
+    )
+
+    with pytest.raises(seal_module.PackageSealError) as caught:
+        seal_package(package, "pkg")
+
+    assert caught.value.kind == "INVALID_PATH"
+    assert caught.value.path == "alias"
+    assert caught.value.message == FORBIDDEN_SYMLINK_MESSAGE
+    assert str(caught.value) == f"INVALID_PATH(alias): {FORBIDDEN_SYMLINK_MESSAGE}"
+
+
+def test_direct_seal_rejects_symlink_root_and_excluded_link(tmp_path):
+    from sysml_codegen.contracts import seal as seal_module
+
+    target = tmp_path / "target"
+    _write_fixture(target)
+    root_link = tmp_path / "root"
+    root_link.symlink_to(target, target_is_directory=True)
+    with pytest.raises(seal_module.PackageSealError) as root_error:
+        seal_package(root_link, "pkg")
+    assert root_error.value.path == "."
+
+    excluded = target / "contracts/package_contract.json"
+    excluded.parent.mkdir()
+    excluded.symlink_to(tmp_path / "missing-seal")
+    with pytest.raises(seal_module.PackageSealError) as excluded_error:
+        seal_package(target, "pkg")
+    assert excluded_error.value.path == "contracts/package_contract.json"
+
+
+def test_direct_seal_propagates_preflight_walk_failure(tmp_path, monkeypatch):
+    package = tmp_path / "pkg"
+    _write_fixture(package)
+    original_rglob = Path.rglob
+
+    def deny_walk(path, pattern):
+        if path == package:
+            raise PermissionError("walk denied")
+        return original_rglob(path, pattern)
+
+    monkeypatch.setattr(Path, "rglob", deny_walk)
+    with pytest.raises(PermissionError, match="walk denied"):
+        seal_package(package, "pkg")
 
 
 def test_zero_constraint_graph_seals():
@@ -175,10 +303,26 @@ def test_glob_matcher_bodies_identical_across_seal_and_verify():
         fdef = tree.body[0]
         # drop a leading docstring expression if present
         body = fdef.body
-        if body and isinstance(body[0], ast.Expr) and isinstance(
-            getattr(body[0], "value", None), ast.Constant
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(getattr(body[0], "value", None), ast.Constant)
         ):
             body = body[1:]
         return [ast.dump(node) for node in body]
 
     assert code_body(seal._glob_to_regex) == code_body(verify._glob_to_regex)
+
+
+def test_package_tree_inspector_bodies_identical_across_seal_and_verify():
+    import ast
+    import inspect
+    import textwrap
+
+    from sysml_codegen.contracts import seal, verify
+
+    def code_body(function):
+        tree = ast.parse(textwrap.dedent(inspect.getsource(function)))
+        return [ast.dump(node) for node in tree.body[0].body]
+
+    assert code_body(seal._inspect_package_tree) == code_body(verify._inspect_package_tree)

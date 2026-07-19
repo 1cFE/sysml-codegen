@@ -9,7 +9,7 @@ from simkit.config.schema import MultiOutput
 from simkit.core.base import ModuleBase, ModuleResult
 
 from {{ package_name }}.schemas.constraint_types import ConstraintEvaluation
-from {{ predicates_import_path }} import {{ predicate_fn_name }}
+from {{ predicates_import_path }} import _finalize_assertion, {{ predicate_fn_name }}
 
 
 class {{ input_class_name }}(BaseModel):
@@ -31,7 +31,12 @@ class {{ class_name }}(ModuleBase[{{ input_class_name }}, {{ output_class_name }
 
     def run(self, {{ run_signature }}) -> ModuleResult[{{ output_class_name }}]:
         {{ input_class_name }}({{ run_call }})  # validate every resolved formal
-        verdict = {{ predicate_fn_name }}({{ predicate_call }})
+        body = {{ predicate_fn_name }}({{ predicate_call }})
+        verdict = _finalize_assertion(
+            body,
+            is_negated={{ is_negated }},
+            expected_value={{ expected_value }},
+        )
         return ModuleResult(
             data={{ output_class_name }}(
                 evaluation=ConstraintEvaluation(

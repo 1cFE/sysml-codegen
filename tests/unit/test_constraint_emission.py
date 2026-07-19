@@ -31,6 +31,7 @@ from sysml_codegen.generation.modules import (
 )
 from sysml_codegen.resolution.models import (
     ConcreteConstraint,
+    ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
     ModuleKind,
@@ -72,7 +73,9 @@ def _concrete(
     owner_instance_path: str,
     *,
     usage_qualified_name: str = "Pkg::Cell::nonneg",
+    predicate_source_key: str | None = None,
     predicate_ir: str | None = None,
+    is_negated: bool = False,
 ) -> ConcreteConstraint:
     return ConcreteConstraint(
         constraint_id=constraint_id,
@@ -83,8 +86,9 @@ def _concrete(
         owner_qualified_name="Pkg::Cell",
         owner_instance_path=owner_instance_path,
         membership_kind="assert",
-        is_negated=False,
-        expected_value=True,
+        predicate_source_key=predicate_source_key or usage_qualified_name,
+        is_negated=is_negated,
+        expected_value=not is_negated,
         predicate_ir=predicate_ir if predicate_ir is not None else _predicate_ir(),
         inputs=[],
         evaluation_channel=f"{constraint_id}__evaluation",
@@ -101,6 +105,7 @@ def _module_for(constraint_id: str, module_type: str, param_names: list[str]) ->
                 param_name=name,
                 python_type="float",
                 source=InputSource(source_type="module_output", producer_channel=f"up__{name}"),
+                formal_identity=ConstraintFormalIdentity(raw_name=name),
             )
             for name in param_names
         ],
@@ -140,8 +145,8 @@ def test_two_instances_of_one_definition_share_one_compiled_predicate():
     code_2 = render_constraint_module(module_2, catalog, compiled, _template_env(), "pkg")
 
     # Both classes import the SAME shared function; neither inlines/duplicates it.
-    assert f"import {fn_name_1}" in code_1
-    assert f"import {fn_name_1}" in code_2
+    assert f"_finalize_assertion, {fn_name_1}" in code_1
+    assert f"_finalize_assertion, {fn_name_1}" in code_2
     assert "def _cmp" not in code_1  # the Kleene runtime is not duplicated per class
 
 
@@ -150,6 +155,37 @@ def test_three_instances_still_compile_once(monkeypatch=None):
     catalog = assemble_constraint_catalog(concrete, _empty_facts())
     compiled = compile_shared_predicates(catalog)
     assert len(compiled) == 1
+
+
+def test_opposite_polarity_usages_share_one_neutral_source_body() -> None:
+    source_key = "definition:Pkg::ReusableConstraint"
+    concrete = [
+        _concrete(
+            "positive",
+            "Pkg__positive",
+            usage_qualified_name="Pkg::positive",
+            predicate_source_key=source_key,
+        ),
+        _concrete(
+            "negative",
+            "Pkg__negative",
+            usage_qualified_name="Pkg::negative",
+            predicate_source_key=source_key,
+            is_negated=True,
+        ),
+    ]
+    catalog = assemble_constraint_catalog(concrete, _empty_facts())
+    assert {entry.predicate_source_key for entry in catalog.concrete_entries} == {source_key}
+    assert {(entry.is_negated, entry.expected_value) for entry in catalog.concrete_entries} == {
+        (False, True),
+        (True, False),
+    }
+    compiled = compile_shared_predicates(catalog)
+    assert list(compiled) == [source_key]
+    _name, source, _args = compiled[source_key]
+    assert "_PredicateBodyResult" in source
+    body_source = source.split("def constraint_pred_", maxsplit=1)[1]
+    assert 'status = "satisfied"' not in body_source
 
 
 COLLISION_CASES = [
@@ -314,6 +350,7 @@ def test_catalog_assembled_with_zero_eligible_entries():
         owner_qualified_name="Pkg::Req",
         owner_instance_path="Pkg__Req__r1",
         membership_kind=None,
+        predicate_source_key="excluded:satisfy:Pkg::Req::r1",
         is_negated=None,
         expected_value=None,
         predicate_ir=None,
@@ -344,6 +381,7 @@ def test_catalog_projects_excluded_records_in_id_order():
             owner_qualified_name="Pkg::Cell",
             owner_instance_path="Pkg__cell",
             membership_kind="assert",
+            predicate_source_key=f"inline:Pkg::{constraint_id}",
             is_negated=False,
             expected_value=None,
             predicate_ir=None,

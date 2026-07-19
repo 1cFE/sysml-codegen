@@ -143,23 +143,37 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
         assert_same_ir,
         predicate_definition_key,
     )
-    from sysml_codegen.generation.predicate_compiler import compile_predicate
+    from sysml_codegen.generation.predicate_compiler import (
+        PredicateCompileError,
+        compile_predicate_body,
+    )
 
-    assert_unique_predicate_function_names(catalog)
-    assert_same_ir(catalog.concrete_entries)
+    validated_entries = [
+        type(entry).model_validate(entry.model_dump(mode="python"))
+        for entry in catalog.concrete_entries
+    ]
+    validated_catalog = catalog.model_copy(update={"concrete_entries": validated_entries})
+    assert_unique_predicate_function_names(validated_catalog)
+    assert_same_ir(validated_entries)
     compiled: dict[str, tuple[str, str, list[str]]] = {}
-    for entry in catalog.concrete_entries:
-        if entry.is_negated is None:
-            raise RuntimeError(
-                f"eligible catalog constraint {entry.constraint_id!r} has no known polarity"
-            )
+    for entry in validated_entries:
         key = predicate_definition_key(entry)
         if key in compiled:
             continue
-        assert entry.predicate_ir is not None  # guarded by assert_same_ir above
+        if entry.predicate_ir is None:  # guarded by assert_same_ir; keep invariant under -O
+            raise RuntimeError(
+                f"eligible catalog constraint {entry.constraint_id!r} has no predicate_ir"
+            )
         fn_name = constraint_predicate_function_name(key)
         ir = parse_expression(entry.predicate_ir)
-        src, args = compile_predicate(ir, fn_name, negated=entry.is_negated)
+        try:
+            src, args = compile_predicate_body(ir, fn_name)
+        except PredicateCompileError as error:
+            from sysml_codegen.generation import CodeGenerationError
+
+            raise CodeGenerationError(
+                str(error), name_safety_violation=error.name_safety_violation
+            ) from error
         compiled[key] = (fn_name, src, args)
     return compiled
 
@@ -169,10 +183,26 @@ def render_constraint_predicates_module(
     template_env: jinja2.Environment,
 ) -> str:
     """Render the shared predicates module: one Kleene runtime block + N function bodies."""
+    from sysml_codegen.generation.constraint_name_safety import (
+        PREDICATE_SCOPE_POLICY,
+        ScopePolicyMismatchError,
+        verify_emitted_scope,
+    )
     from sysml_codegen.generation.predicate_compiler import (
         KLEENE_RUNTIME_SOURCE,
         function_source_only,
     )
+
+    for _key, (fn_name, src, args) in compiled.items():
+        try:
+            verify_emitted_scope(
+                src,
+                PREDICATE_SCOPE_POLICY,
+                set(args),
+                function_name=fn_name,
+            )
+        except ScopePolicyMismatchError as error:
+            raise _generation_error(str(error)) from error
 
     functions = [
         {"usage_qualified_name": key, "source": function_source_only(src).strip("\n")}
@@ -205,6 +235,73 @@ def render_constraint_module(
         )
     fn_name, _src, args = compiled[predicate_definition_key(entry)]
 
+    from agentic_mbse.sysml.expression_ir import parse_expression
+
+    from sysml_codegen.generation.constraint_name_safety import (
+        PREDICATE_SCOPE_POLICY,
+        WRAPPER_SCOPE_POLICY,
+        ConstraintBinding,
+        ScopePolicyMismatchError,
+        predicate_bindings,
+        select_name_safety_violation,
+        validate_binding_correspondence,
+        validate_scope_bindings,
+        verify_emitted_scope,
+    )
+    from sysml_codegen.generation.errors import constraint_name_safety_error
+
+    predicate_scope_bindings = predicate_bindings(parse_expression(entry.predicate_ir))
+    wrapper_scope_bindings = []
+    missing_provenance = []
+    for module_input in module.inputs:
+        if module_input.formal_identity is None:
+            missing_provenance.append(module_input.param_name)
+        else:
+            wrapper_scope_bindings.append(
+                ConstraintBinding("wrapper", module_input.param_name, module_input.formal_identity)
+            )
+    violations = validate_scope_bindings(predicate_scope_bindings, PREDICATE_SCOPE_POLICY)
+    violations.extend(validate_scope_bindings(wrapper_scope_bindings, WRAPPER_SCOPE_POLICY))
+    if missing_provenance:
+        from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
+
+        violations.extend(
+            ConstraintNameViolation(
+                scope="wrapper",
+                kind="missing_provenance",
+                final_binding=name,
+                identities=(),
+                constraint_id=entry.constraint_id,
+                usage_qualified_name=entry.usage_qualified_name,
+            )
+            for name in missing_provenance
+        )
+    from dataclasses import replace
+
+    violations = [
+        replace(
+            violation,
+            constraint_id=entry.constraint_id,
+            usage_qualified_name=entry.usage_qualified_name,
+        )
+        for violation in violations
+    ]
+    violation = select_name_safety_violation(violations)
+    if not missing_provenance:
+        violations.extend(
+            replace(
+                candidate,
+                constraint_id=entry.constraint_id,
+                usage_qualified_name=entry.usage_qualified_name,
+            )
+            for candidate in validate_binding_correspondence(
+                predicate_scope_bindings, wrapper_scope_bindings
+            )
+        )
+        violation = select_name_safety_violation(violations)
+    if violation is not None:
+        raise constraint_name_safety_error(violation)
+
     input_names = [inp.param_name for inp in module.inputs]
     missing = [a for a in args if a not in input_names]
     if missing:
@@ -224,6 +321,8 @@ def render_constraint_module(
         "package_name": package_name,
         "predicates_import_path": f"{package_name}.{PREDICATES_MODULE_IMPORT_PATH}",
         "predicate_fn_name": fn_name,
+        "is_negated": entry.is_negated,
+        "expected_value": entry.expected_value,
         "input_class_name": f"{base_name}ConstraintInput",
         "output_class_name": f"{base_name}ConstraintOutput",
         "class_name": class_name,
@@ -238,6 +337,16 @@ def render_constraint_module(
     code = template.render(**context)
     if not code.endswith("\n"):
         code += "\n"
+    try:
+        verify_emitted_scope(
+            code,
+            WRAPPER_SCOPE_POLICY,
+            set(input_names),
+            function_name="run",
+            class_name=class_name,
+        )
+    except ScopePolicyMismatchError as error:
+        raise _generation_error(str(error)) from error
     return code
 
 

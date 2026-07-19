@@ -39,14 +39,16 @@ if TYPE_CHECKING:
     from sysml_codegen.analysis.part_instance_index import InstanceOccurrence
 
 # Fields that hold live SysIDE Java objects — always nullify.
-_AST_FIELDS = frozenset({
-    "output_expression_asts",
-    "member_expressions",
-    "expression_ast",
-    "source_instance_elem",
-    "source_attribute_elem",
-    "raw_element",
-})
+_AST_FIELDS = frozenset(
+    {
+        "output_expression_asts",
+        "member_expressions",
+        "expression_ast",
+        "source_instance_elem",
+        "source_attribute_elem",
+        "raw_element",
+    }
+)
 
 
 def serialize_extraction_snapshot(
@@ -129,9 +131,7 @@ def serialize_extraction_snapshot(
         "aggregation_expressions": [
             _serialize_value(sa, output_dir) for sa in aggregation_expressions
         ],
-        "computed_attributes": [
-            _serialize_value(ca, output_dir) for ca in computed_attributes
-        ],
+        "computed_attributes": [_serialize_value(ca, output_dir) for ca in computed_attributes],
         "channel_aliases": [_serialize_value(ca, output_dir) for ca in channel_aliases],
     }
 
@@ -142,20 +142,20 @@ def _constraint_facts_for_snapshot(
     constraint_lowering_mode: str,
     model_paths: list[Path],
 ) -> ConstraintFacts:
-    """Copy and canonicalize only anonymous usages selected for exclusion."""
+    """Copy and canonicalize every located usage selected for exclusion."""
     copied = deepcopy(facts)
     if constraint_lowering_mode != "applied" or not copied.usages:
         return copied
     profile = evaluate_profile(facts)
     for index in excluded_usage_indices(facts, profile.decisions):
         original = facts.usages[index]
-        if original.identity.name is not None:
-            continue
         if original.location is None:
-            raise ValueError("anonymous excluded constraint has no LocationFact")
+            if original.identity.name is None:
+                raise ValueError("anonymous excluded constraint has no LocationFact")
+            continue
         copied_location = copied.usages[index].location
         if copied_location is None:
-            raise RuntimeError("copied anonymous exclusion lost its LocationFact")
+            raise RuntimeError("copied exclusion lost its LocationFact")
         copied_location.file = map_live_source_referent(original.location.file, model_paths)
     return copied
 

@@ -31,6 +31,10 @@ def build_model_contract(graph: ComputationGraph) -> ModelContract:
     ``constraint_catalog`` only, then computes the semantic fingerprint over the
     resulting payload with the fingerprint field itself absent (INV-2).
     """
+    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+
+    validate_constraint_graph_or_raise(graph)
+
     parameters = [
         ContractParameter(
             qualified_name=param.qualified_name,

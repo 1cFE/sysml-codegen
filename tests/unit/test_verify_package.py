@@ -32,6 +32,7 @@ from sysml_codegen.contracts.verify import (
 )
 
 CONTRACTS_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen" / "contracts"
+FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
 
 
 def _sealed(package_dir: Path, package_name: str = "pkg") -> Path:
@@ -224,10 +225,67 @@ def test_directory_symlink_is_fatal_at_link_path(tmp_path, target_kind):
     result = verify_package(d, "pkg")
 
     assert result.ok is False
-    assert any(
-        diagnostic.kind == INVALID_PATH and diagnostic.path == link.name
-        for diagnostic in result.diagnostics
-    )
+    assert [(item.kind, item.path, item.message) for item in result.diagnostics] == [
+        (INVALID_PATH, link.name, FORBIDDEN_SYMLINK_MESSAGE)
+    ]
+
+
+@pytest.mark.parametrize("entry_kind", ["file", "directory"])
+@pytest.mark.parametrize("target_kind", ["internal", "escaping", "dangling"])
+def test_verifier_rejects_every_symlink_before_integrity_work(tmp_path, entry_kind, target_kind):
+    package = _sealed(tmp_path / "pkg")
+    if target_kind == "internal":
+        target = package / ("modules/calc.py" if entry_kind == "file" else "modules")
+    else:
+        target = tmp_path / f"{target_kind}-{entry_kind}"
+        if target_kind == "escaping":
+            if entry_kind == "file":
+                target.write_text("outside\n")
+            else:
+                target.mkdir()
+    link = package / "alias"
+    link.symlink_to(target, target_is_directory=entry_kind == "directory")
+
+    result = verify_package(package, "pkg")
+
+    assert [(item.kind, item.path, item.message) for item in result.diagnostics] == [
+        (INVALID_PATH, "alias", FORBIDDEN_SYMLINK_MESSAGE)
+    ]
+
+
+def test_verifier_rejects_root_contracts_and_seal_links_before_seal_load(tmp_path):
+    target = _sealed(tmp_path / "target")
+    root_link = tmp_path / "root"
+    root_link.symlink_to(target, target_is_directory=True)
+    root_result = verify_package(root_link, "pkg")
+    assert [(item.kind, item.path) for item in root_result.diagnostics] == [(INVALID_PATH, ".")]
+
+    seal_path = target / "contracts/package_contract.json"
+    outside_seal = tmp_path / "outside-seal.json"
+    outside_seal.write_bytes(seal_path.read_bytes())
+    seal_path.unlink()
+    seal_path.symlink_to(outside_seal)
+    seal_result = verify_package(target, "pkg")
+    assert [(item.kind, item.path) for item in seal_result.diagnostics] == [
+        (INVALID_PATH, "contracts/package_contract.json")
+    ]
+
+
+def test_verifier_reports_only_lexical_first_link(tmp_path):
+    package = _sealed(tmp_path / "pkg")
+    for name in ("z-link", "a-link"):
+        (package / name).symlink_to(tmp_path / f"missing-{name}")
+    result = verify_package(package, "pkg")
+    assert [(item.kind, item.path) for item in result.diagnostics] == [(INVALID_PATH, "a-link")]
+
+
+def test_link_preflight_precedes_missing_extra_and_tamper(tmp_path):
+    package = _sealed(tmp_path / "pkg")
+    (package / "modules/calc.py").write_text("tampered\n")
+    (package / "extra.py").write_text("extra\n")
+    (package / "a-link").symlink_to(tmp_path / "missing")
+    result = verify_package(package, "pkg")
+    assert [(item.kind, item.path) for item in result.diagnostics] == [(INVALID_PATH, "a-link")]
 
 
 def test_unrecorded_real_directory_keeps_existing_behavior(tmp_path):
@@ -268,12 +326,8 @@ def test_package_walk_failure_returns_diagnostic(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "rglob", _deny_walk)
     result = verify_package(d, "pkg")
     assert result.ok is False
-    assert any(
-        diagnostic.kind == ARTIFACT_UNREADABLE
-        and diagnostic.path is None
-        and "walk denied" in diagnostic.message
-        for diagnostic in result.diagnostics
-    )
+    assert [(item.kind, item.path) for item in result.diagnostics] == [(ARTIFACT_UNREADABLE, None)]
+    assert result.diagnostics[0].message == "package artifact preflight failed: walk denied"
 
 
 def test_env_compat_advisory_then_strict(tmp_path):

@@ -51,6 +51,19 @@ _INTEGRITY_KINDS = frozenset(
 )
 
 _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
+_FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
+
+
+def _inspect_package_tree(root: Path) -> tuple[str | None, list[tuple[str, Path]]]:
+    """Return the first forbidden symlink and a sorted clean descendant list."""
+    if root.is_symlink():
+        return ".", []
+    paths = list(root.rglob("*"))
+    entries = sorted((path.relative_to(root).as_posix(), path) for path in paths)
+    for rel_path, path in entries:
+        if path.is_symlink():
+            return rel_path, []
+    return None, entries
 
 
 def _artifact_path_error(path: str) -> str | None:
@@ -215,7 +228,7 @@ def _recorded_artifact_diagnostics(
                 message=f"package root cannot be resolved: {error}",
             )
         ]
-    for rel_path, expected_hash in recorded_hashes.items():
+    for rel_path, expected_hash in sorted(recorded_hashes.items()):
         file_path = package_dir / rel_path
         try:
             resolved_path = file_path.resolve()
@@ -261,23 +274,11 @@ def _recorded_artifact_diagnostics(
 
 
 def _extra_artifact_diagnostics(
-    package_dir: Path, recorded_hashes: dict[str, str], policy: dict
+    entries: list[tuple[str, Path]], recorded_hashes: dict[str, str], policy: dict
 ) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    try:
-        paths = sorted(package_dir.rglob("*"))
-    except OSError as error:
-        return [
-            Diagnostic(
-                kind=ARTIFACT_UNREADABLE,
-                path=None,
-                message=f"package artifact walk failed: {error}",
-            )
-        ]
-    for path in paths:
-        rel_path = path.relative_to(package_dir).as_posix()
+    for rel_path, path in entries:
         try:
-            is_directory_symlink = path.is_symlink() and path.is_dir()
             is_file = path.is_file()
         except OSError as error:
             diagnostics.append(
@@ -285,15 +286,6 @@ def _extra_artifact_diagnostics(
                     kind=ARTIFACT_UNREADABLE,
                     path=rel_path,
                     message=str(error),
-                )
-            )
-            continue
-        if is_directory_symlink:
-            diagnostics.append(
-                Diagnostic(
-                    kind=INVALID_PATH,
-                    path=rel_path,
-                    message="directory symlinks are not permitted beneath the package root",
                 )
             )
             continue
@@ -358,6 +350,31 @@ def verify_package(
         mismatch) are always fatal; env-compat mismatches are advisory unless
         ``strict``.
     """
+    try:
+        forbidden_path, entries = _inspect_package_tree(package_dir)
+    except OSError as error:
+        return VerificationResult(
+            ok=False,
+            diagnostics=[
+                Diagnostic(
+                    kind=ARTIFACT_UNREADABLE,
+                    path=None,
+                    message=f"package artifact preflight failed: {error}",
+                )
+            ],
+        )
+    if forbidden_path is not None:
+        return VerificationResult(
+            ok=False,
+            diagnostics=[
+                Diagnostic(
+                    kind=INVALID_PATH,
+                    path=forbidden_path,
+                    message=_FORBIDDEN_SYMLINK_MESSAGE,
+                )
+            ],
+        )
+
     seal_path = package_dir / "contracts" / "package_contract.json"
     seal, failure = _load_seal(seal_path)
     if failure is not None:
@@ -385,7 +402,7 @@ def verify_package(
         diagnostics.append(fingerprint_diagnostic)
     diagnostics.extend(_recorded_artifact_diagnostics(package_dir, recorded_hashes))
     diagnostics.extend(
-        _extra_artifact_diagnostics(package_dir, recorded_hashes, seal["coverage_policy"])
+        _extra_artifact_diagnostics(entries, recorded_hashes, seal["coverage_policy"])
     )
     runtime_diagnostic = _runtime_diagnostic(seal, runtime_version)
     if runtime_diagnostic is not None:

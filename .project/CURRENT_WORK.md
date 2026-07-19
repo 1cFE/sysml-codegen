@@ -1,10 +1,138 @@
 # Current Work
 
-**Last Updated**: 2026-07-18
+**Last Updated**: 2026-07-19
 
 ---
 
 ## Active Work
+
+### Constraint Execution Lifecycle — RATIFIED; NEW REMEDIATION EPIC READY (2026-07-19)
+
+The owner ratified the corrected lifecycle contract as the normative target architecture. The
+focused correction re-review found it ratifiable after bounded edits; all 24 edits were applied and
+mechanically verified. Ratification certifies no implementation. Candidate certification remains
+blocked until register row 0 pins a compatible committed revision set and row 17 passes every
+mandatory acceptance case on one artifact thread.
+
+The old PR-wave remediation epic is superseded and frozen as partially completed. Items 1/2 remain
+complete and Items 4/6 remain certified within their recorded scopes. Their evidence is inherited,
+not automatically re-audited. Unfinished and newly discovered work is mapped into the new 14-item,
+19–23 day P0 epic covering ratified register rows 0–17.
+
+The epic makes simplification an execution gate: every item records production LOC before/after and
+names deleted duplicate/workaround paths. The overall touched production surface must shrink unless
+the owner explicitly approves a surfaced exception. The known additive catalog-schema work is
+reported separately and paired with deletion of the alternate TEAx schema/materializer/stand-in
+system.
+
+Active artifacts:
+
+- `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
+- `.project/active/constraint-execution-lifecycle-contract/spec.md`
+- `.project/research/20260719-134700_constraint-execution-lifecycle-contract-correction-rereview.md`
+- `.project/backlog/epic_constraint_execution_lifecycle_remediation.md`
+- `.project/backlog/epic_constraint_pr_wave_remediation.md` (superseded history)
+
+The owner confirmed that delivery means updating the existing open agentic-mbse PR #11 first and
+sysml-codegen PR #9 second, not opening a replacement upstream wave. The new epic now states that
+objective in its executive summary, success criteria, Item 0, Item 13, and dependencies.
+
+Pre-Item 0 preservation checkpoints requested by the owner:
+
+- agentic-mbse `205debd` preserves the profile-v4 implementation and evidence. It sits above the
+  unrelated local modeling-orchestrator commit `4ed2a07`, so Item 0 must reconcile only the
+  constraint changes onto the PR #11 line at remote `54a95d2`.
+- stellarator `bceaf40a` preserves the WI-027 Gate-B capture blocker record.
+- sysml-codegen's constraint remediation, evidence, ratified contract, and new epic are preserved
+  by the pending local checkpoint commit containing this note.
+
+No commit was pushed and no PR was updated. Next: begin new epic Item 0, reconcile and pin the
+committed compatible candidate, and record the cross-repository production LOC baseline before
+certifying any acceptance cell.
+
+### CONSTRAINT-WAVE Item 1 — Profile Semantics — COMPLETE; INHERITED BY NEW EPIC
+
+Implementation and fresh audit evidence verify the approved ordering and polarity semantics,
+source-identity rejection before mutation, four-route positive-IR continuity, compound diagnostic
+sentinels, one neutral body with per-usage polarity, TEAx execution, package/skew controls, and the
+shared Items 2/4/6 regression union in normal and optimized Python. After audit, the owner removed
+agent-authored clean-overlay and pre-edit-hash gates and requested no re-audit. The replacement
+lifecycle epic inherits this evidence and lands/pins it in Item 0. The absent provenance is recorded
+without retroactive claims. Artifacts:
+`../agentic-mbse/.project/active/constraint-wave-profile-semantics/`.
+
+### CONSTRAINT-WAVE Item 4 — Snapshot Portability and Shape Gates — CERTIFIED (2026-07-19)
+
+The fresh independent re-audit certifies Item 4. Every prior **Needs Work** finding remains closed:
+live and replay collectors use distinct routes; the licensed node is ordered
+live A, live B, replay A; the explicit loader matrix has 336 cases; the fixture transaction stages
+and verifies full fixture and baseline manifests with 11 reproducible recovery/failure tests; and
+BLOCK zero-call behavior plus exact canonical warning/excluded-record bytes are pinned. The
+production fixture delta remains exactly 65+1 location lines across two snapshots.
+
+Fresh licensed evidence: the complete relocation file passed 3/3, including live A/live B/replay A
+and moved replay; Item 4 plus transaction tests passed 407/407 in normal and optimized modes; and
+the independently run full suite passed 2,950 with 26 skips and 10 deselections. Fresh Ruff, format,
+and diff checks pass. Prior frozen-overlay, fixture, baseline, 30-snapshot inventory, Item 2/6
+overlap, and Item 3 isolation evidence remains preserved. The spec, Phase 5, epic criterion, and
+backlog item are closed. Audit and evidence:
+`.project/active/constraint-wave-snapshot-portability/{audit,evidence.md}`.
+
+### CONSTRAINT-WAVE Item 6 — Seal and Verify Symlink Symmetry — CERTIFIED (2026-07-18)
+
+Epic Item 6 (R-10) is independently certified in
+`.project/active/constraint-wave-seal-symmetry/audit.md`. Seal, canonical/emitted verification,
+generation, Step 9, and re-seal reject every symlink before target use. Fresh audit evidence
+reproduced 23 historical RED nodes and six controls, then passed the 29-node candidate overlay,
+76 focused tests and 22 audit probes in normal and optimized modes, and the 84-test package gate.
+Verifier/fingerprint, static, fixture, and scope checks passed; licensed live nodes remain
+unclaimed.
+
+### CONSTRAINT-WAVE Item 2 — Generated Constraint Name Safety — COMPLETE (execution gate closed 2026-07-19)
+
+The re-audit certified the license-free implementation. The missing-catalog fail-open is closed
+with a structured `catalog_module_join` before renderer, writer, or orchestration mutation. Fresh
+evidence passed the original validator/renderer/`run_codegen()` probe, 20 missing-catalog writer and
+orchestration cases, 16 ordering permutations with a safe-order control, and all four independent
+historical-impact nodes at `512786c`. Augmented focused normal and optimized gates passed 174/174;
+Item 6 overlap passed 122 with 2 licensed skips; patch, static, diff, fixture, and isolation checks
+passed.
+
+**Execution gate closed 2026-07-19.** The one criterion the audit left open (real TEAx execution,
+then blocked by missing `pandas`) was run green in the agentic-mbse venv (pandas 2.3.3, teax-simkit
+on `sys.path`), fresh subprocesses, not mocked: pinned node `1 passed, 14 deselected`; satisfied
+`(True, 'satisfied', 1.0, {'x': 2.0, 'limit': 3.0})`, violated `(False, 'violated', -1.0, {'x': 4.0,
+'limit': 3.0})` (`evidence/collision-free-execution-tuples.txt`). Spec SC-9 and all three epic Item 2
+success criteria are now met; the item is complete. Licensed Syside live/snapshot parity (design
+I11) stays out of scope, tracked under Item 8. Audit + post-audit addendum:
+`.project/active/constraint-wave-name-safety/audit.md`.
+
+### Independent GAP-CLOSE completion audit + PR-wave code review (2026-07-18, evening)
+
+Two deliverables, both agent-fan-out verified:
+
+1. **Independent audit of GAP-CLOSE completion** (`.project/backlog/epic_gap_close_audit_independent.md`):
+   the certified-partial status HOLDS. Items 1–4 re-confirmed against code with fresh test runs;
+   pushed companion `54a95d2` byte-identical to the local gap-close worktree, no orchestrator
+   contamination. Corrections: Item 5's "diff --check clean on both branch ranges" box was false of
+   the pushed companion range (one archived-plan EOF blank line; cure uncommitted) — annotated in the
+   epic; the partial pre-PR has in fact been EXECUTED (`512786c` pushed + both PRs commented
+   2026-07-19T00:59/01:10Z), so the epic's old Next Action was stale — corrected. Still genuinely
+   open: F1 external leg, and licensed full suites at the final commits (2,516-pass evidence is from
+   the pre-cure candidate; the companion "1,506 passed" run exists only in the PR comment).
+
+2. **PR-wave code review** (`.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md`):
+   four NEW High findings, all reproduced, all outside prior review coverage — PR #11 profile:
+   ordering comparisons ADMIT string/boolean/enum operands (live-reproduced); `is_negated` never
+   consulted → negated asserts admit inverted semantics (live-reproduced). PR #9: model formals named
+   `value`/`status`/`verdict`/`self` shadow generated locals → silent margin corruption incl. sign
+   inversion / runtime TypeError / SyntaxError; nullable-QN ADMIT filter in
+   `collect_bare_actual_demand` crashes from-snapshot rebuild on a valid snapshot. Plus 8 Medium
+   (named-excluded path leak into fingerprints, recursive-part silent truncation, demand overwrite,
+   warning-pre-pass masking, seal/dangling-symlink gaps, loader raw KeyError, lost signed/unit
+   defaults, TEAX_SIMKIT_PATH silent fallback) and a Low/latent tail. Recommendation: fix the four
+   Highs before the wave merges (it is already held on F1); R-1/R-2 need an owner call on BLOCK vs
+   IR-fold semantics. Nothing committed or pushed this session.
 
 ### GAP-CLOSE epic — LOCAL SCOPE CERTIFIED; PARTIAL PRE-PR MAY PROCEED (2026-07-18)
 
@@ -681,7 +809,8 @@ backlog, and the fusion-tea coordination notes in the three release-notes files.
    owner. After the wave merges: `/_my_close` for numerical-constraint-profile + the remediation.
 2. **pipeline_explainer_v2.html build** (`[V2-HTML-BUILD]`, P2): the refreshed
    `EXPLAINER_PROMPT.md` is landed and buildable — another agent picks this up.
-3. **CE-F1/F2 follow-ons** (BACKLOG): standalone catalog emission (sysml-codegen/teax shape
-   decision) and multi-channel CandidateBridge (teax). CE-F3 is fixed.
+3. **CE-F1/F2 follow-ons** (BACKLOG): direct TEAx consumption of codegen's embedded catalog with the
+   alternate catalog schema/materializer removed, plus multi-channel CandidateBridge (teax). CE-F3
+   is fixed.
 
 ---

@@ -5,8 +5,32 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
     from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
-    from sysml_codegen.resolution.models import PipelineModule
+    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
+
+
+def constraint_name_safety_error(
+    violation: ConstraintNameViolation,
+) -> CodeGenerationError:
+    """Adapt one pure name-safety record to the package's public error."""
+    from sysml_codegen.generation import CodeGenerationError
+    from sysml_codegen.generation.constraint_name_safety import format_name_safety_violation
+
+    return CodeGenerationError(
+        format_name_safety_violation(violation), name_safety_violation=violation
+    )
+
+
+def validate_constraint_graph_or_raise(graph: ComputationGraph) -> None:
+    """Raise the public package error for the selected graph violation."""
+    from sysml_codegen.generation.constraint_name_safety import (
+        select_graph_name_safety_violation,
+    )
+
+    violation = select_graph_name_safety_violation(graph)
+    if violation is not None:
+        raise constraint_name_safety_error(violation)
 
 
 def unrenderable_module_kind_error(module: PipelineModule, seam_name: str) -> CodeGenerationError:

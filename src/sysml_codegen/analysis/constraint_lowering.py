@@ -12,6 +12,8 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -46,6 +48,7 @@ from sysml_codegen.resolution.models import (
     ConcreteConstraint,
     ConcreteConstraintInput,
     ConstraintExclusion,
+    ConstraintFormalIdentity,
     ConstraintInputResolution,
     EntryPoint,
     EntryPointType,
@@ -65,7 +68,7 @@ if TYPE_CHECKING:
         ConstraintUsageFact,
         FormalFact,
     )
-    from agentic_mbse.sysml.expression_facts import FeatureReferenceFact
+    from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, IdentityFact
 
     from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
     from sysml_codegen.analysis.part_instance_index import OccurrenceIndex
@@ -486,14 +489,19 @@ def _source_local_identity(usage: ConstraintUsageFact) -> tuple[str, tuple]:
     )
 
 
-def _render_location(decision: UsageDecision) -> str:
-    location = decision.location
-    if location is None:
-        return "<no location>"
-    return f"{location.file}:{location.line}:{location.column}"
+@dataclass(frozen=True)
+class _ProjectedExcludedLocation:
+    """One route-validated excluded location shared by all lowering consumers."""
+
+    referent: str | None
+    rendered: str
 
 
-def _exclusion_for(decision: UsageDecision, owner_kind: str) -> ConstraintExclusion:
+def _exclusion_for(
+    decision: UsageDecision,
+    owner_kind: str,
+    rendered_location: str,
+) -> ConstraintExclusion:
     """Project profile/owner policy into one total non-execution payload."""
     kind: Literal["non_numerical", "unassessed_form", "unsupported_owner"]
     if owner_kind not in ("part_def", "calc_def", "package"):
@@ -505,7 +513,7 @@ def _exclusion_for(decision: UsageDecision, owner_kind: str) -> ConstraintExclus
     else:
         kind = "unassessed_form"
         reasons = []
-    return ConstraintExclusion(kind=kind, reasons=reasons, location=_render_location(decision))
+    return ConstraintExclusion(kind=kind, reasons=reasons, location=rendered_location)
 
 
 def excluded_usage_indices(
@@ -526,20 +534,23 @@ def excluded_usage_indices(
     )
 
 
-def _canonical_anonymous_location(
+def _project_excluded_location(
     usage: ConstraintUsageFact,
     *,
     source_location_mode: Literal["live", "snapshot"] | None,
     source_roots: list[Path],
-) -> tuple[str, str]:
+) -> _ProjectedExcludedLocation:
     if usage.location is None:
-        raise _generation_error(
-            "<anonymous>: anonymous assertion has no LocationFact — cannot form a portable "
-            "source identity"
-        )
+        if usage.identity.name is None:
+            raise _generation_error(
+                "<anonymous>: anonymous assertion has no LocationFact — cannot form a portable "
+                "source identity"
+            )
+        return _ProjectedExcludedLocation(referent=None, rendered="<no location>")
     if source_location_mode is None:
         raise _generation_error(
-            "<anonymous>: anonymous excluded assertion requires an explicit source-location route"
+            f"{usage.identity.qualified_name or '<anonymous>'}: excluded assertion requires an "
+            "explicit source-location route"
         )
     try:
         if source_location_mode == "live":
@@ -548,37 +559,20 @@ def _canonical_anonymous_location(
             referent = validate_snapshot_source_referent(usage.location.file)
     except ValueError as error:
         raise _generation_error(str(error)) from error
-    location = f"{referent}:{usage.location.line}:{usage.location.column}"
-    return referent, location
-
-
-def _warning_location(
-    usage: ConstraintUsageFact,
-    decision: UsageDecision,
-    *,
-    source_location_mode: Literal["live", "snapshot"] | None,
-    source_roots: list[Path],
-) -> str:
-    """Render the route-stable warning location for one profile decision."""
-    if usage.identity.name is not None:
-        return _render_location(decision)
-    _, location = _canonical_anonymous_location(
-        usage,
-        source_location_mode=source_location_mode,
-        source_roots=source_roots,
+    return _ProjectedExcludedLocation(
+        referent=referent,
+        rendered=f"{referent}:{usage.location.line}:{usage.location.column}",
     )
-    return location
 
 
 def _report_non_numerical_warnings(
     facts: ConstraintFacts,
     decisions: list[UsageDecision],
     *,
-    source_location_mode: Literal["live", "snapshot"] | None,
-    source_roots: list[Path],
+    projected_location: Callable[[int], _ProjectedExcludedLocation],
 ) -> None:
     """Report every non-numerical decision once in source/profile order."""
-    for usage, decision in zip(facts.usages, decisions, strict=True):
+    for index, (usage, decision) in enumerate(zip(facts.usages, decisions, strict=True)):
         if decision.eligibility is not Eligibility.NON_NUMERICAL:
             continue
         usage_qn = usage.identity.qualified_name or "<anonymous>"
@@ -588,12 +582,7 @@ def _report_non_numerical_warnings(
         logger.warning(
             "Constraint %s at %s is not numerical and will not execute: %s",
             usage_qn,
-            _warning_location(
-                usage,
-                decision,
-                source_location_mode=source_location_mode,
-                source_roots=source_roots,
-            ),
+            projected_location(index).rendered,
             diagnostics,
         )
 
@@ -601,6 +590,7 @@ def _report_non_numerical_warnings(
 def _resolve_formal(
     *,
     formal_name: str,
+    formal_identity: ConstraintFormalIdentity,
     value: object,
     occ_scope: str,
     usage_qualified_name: str,
@@ -620,7 +610,7 @@ def _resolve_formal(
             f"{usage_qualified_name}.{formal_name}: actual value is not a feature "
             f"reference (got {kind}) — the executable profile expects a reference actual"
         )
-    return resolve_actual(
+    resolved = resolve_actual(
         reference=value.reference,
         occ_scope=occ_scope,
         formal_name=formal_name,
@@ -628,6 +618,27 @@ def _resolve_formal(
         registry=registry,
         design_attr_by_qn=design_attr_by_qn,
         owner_def_qn=owner_def_qn,
+    )
+    return resolved.model_copy(update={"formal_identity": formal_identity})
+
+
+def _definition_formal_identity(formal: FormalFact) -> ConstraintFormalIdentity:
+    raw_name = formal.name
+    if raw_name is None and formal.qualified_name is not None:
+        raw_name = formal.qualified_name.rsplit("::", 1)[-1]
+    if raw_name is None:
+        raise _generation_error("constraint definition formal has no raw or qualified identity")
+    return ConstraintFormalIdentity(raw_name=raw_name, qualified_name=formal.qualified_name)
+
+
+def _leaf_formal_identity(leaf: FeatureReferenceNode) -> ConstraintFormalIdentity:
+    source_name = leaf.reference.source_name
+    if source_name is None:
+        raise _generation_error("constraint predicate contains a nameless feature reference")
+    target = leaf.reference.target
+    return ConstraintFormalIdentity(
+        raw_name=source_name,
+        qualified_name=target.qualified_name if target is not None else None,
     )
 
 
@@ -697,6 +708,37 @@ def _referenced_definition(
             f"{definition_qn!r} resolved to {len(matches)} fact records; expected exactly one"
         )
     return matches[0]
+
+
+def _verified_effective_predicate_source(
+    facts: ConstraintFacts, usage: ConstraintUsageFact
+) -> IdentityFact:
+    """Return the effective source only after reconciling its modeled owner identity."""
+    usage_qn = usage.identity.qualified_name or "<anonymous>"
+    if usage.source.form == "inline":
+        expected = usage.identity
+    elif usage.source.form == "definition_typed":
+        definition = _referenced_definition(facts, usage)
+        if usage.source.constraint_definition != definition.identity:
+            raise _generation_error(
+                f"effective predicate source identity violation for {usage_qn}: "
+                "the referenced definition identity contradicts its definition fact"
+            )
+        expected = definition.identity
+    else:
+        raise _generation_error(
+            f"effective predicate source identity violation for {usage_qn}: "
+            f"source form {usage.source.form!r} has no executable predicate owner"
+        )
+
+    effective_source = usage.source.effective_predicate_source
+    if effective_source != expected:
+        owner = "inline usage" if usage.source.form == "inline" else "referenced definition"
+        raise _generation_error(
+            f"effective predicate source identity violation for {usage_qn}: "
+            f"the effective source must exactly match the {owner} identity"
+        )
+    return effective_source
 
 
 def _formal_name(formal: FormalFact) -> str:
@@ -853,17 +895,31 @@ def lower_constraints(
     Catalog ordering is by ``constraint_id`` (INV-4); duplicate IDs raise via
     :func:`assert_unique_constraint_ids` before returning.
     """
-    if PROFILE_SEMANTIC_VERSION != "executable-profile/v3":
+    if PROFILE_SEMANTIC_VERSION != "executable-profile/v4":
         raise RuntimeError(
             f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
             "review before re-pinning"
         )
     profile = evaluate_profile(facts)
+    excluded_indices = set(excluded_usage_indices(facts, profile.decisions))
+    location_cache: dict[int, _ProjectedExcludedLocation] = {}
+
+    def projected_location(index: int) -> _ProjectedExcludedLocation:
+        cached = location_cache.get(index)
+        if cached is not None:
+            return cached
+        projected = _project_excluded_location(
+            facts.usages[index],
+            source_location_mode=source_location_mode,
+            source_roots=source_roots or [],
+        )
+        location_cache[index] = projected
+        return projected
+
     _report_non_numerical_warnings(
         facts,
         profile.decisions,
-        source_location_mode=source_location_mode,
-        source_roots=source_roots or [],
+        projected_location=projected_location,
     )
     blocking = [d for d in profile.decisions if d.eligibility is Eligibility.BLOCK]
     if blocking:
@@ -886,29 +942,76 @@ def lower_constraints(
     design_attr_by_qn = _design_attr_index(design_attrs)
     formal_default_by_qn = _formal_default_index(facts)
     concrete: list[ConcreteConstraint] = []
-    excluded_indices = set(excluded_usage_indices(facts, profile.decisions))
-
     for index, (usage, decision) in enumerate(zip(facts.usages, profile.decisions, strict=True)):
         kind = usage.owner.owning_definition.kind
         usage_qn = usage.identity.qualified_name or "<anonymous>"
 
+        executable_form = usage.source.form in ("inline", "definition_typed")
+        effective_source: IdentityFact | None
+        if executable_form:
+            if type(decision.is_negated) is not bool or type(decision.expected_value) is not bool:
+                raise _generation_error(
+                    f"decision-authority violation for {usage_qn}: executable decision has no "
+                    "Boolean polarity pair"
+                )
+            if decision.expected_value is not (not decision.is_negated):
+                raise _generation_error(
+                    f"decision-authority violation for {usage_qn}: "
+                    "expected truth contradicts polarity"
+                )
+            if type(usage.is_negated) is not bool or usage.is_negated is not decision.is_negated:
+                raise _generation_error(
+                    f"decision-authority violation for {usage_qn}: "
+                    "source polarity disagrees with profile"
+                )
+            effective_source = _verified_effective_predicate_source(facts, usage)
+        else:
+            effective_source = usage.source.effective_predicate_source
+
+        if effective_source is not None and effective_source.qualified_name is not None:
+            prefix = "definition" if usage.source.form == "definition_typed" else "inline"
+            predicate_source_key = f"{prefix}:{effective_source.qualified_name}"
+        elif usage.source.form == "inline" and usage.location is not None:
+            raw_file = usage.location.file
+            if source_location_mode == "live":
+                try:
+                    referent = map_live_source_referent(raw_file, source_roots or [])
+                except ValueError as error:
+                    raise _generation_error(str(error)) from error
+                portable_file = Path(referent).name
+            elif source_location_mode == "snapshot":
+                try:
+                    referent = validate_snapshot_source_referent(raw_file)
+                    portable_file = Path(referent).name
+                except ValueError:
+                    # Legacy snapshot-v3 eligible facts retained raw paths. Re-profile them
+                    # without rewriting stored bytes; the basename is route-stable for this
+                    # compatibility seam and source-key collisions still fail on body divergence.
+                    portable_file = Path(raw_file).name
+            else:
+                portable_file = Path(raw_file).name
+            predicate_source_key = (
+                f"inline:{usage.identity.kind}:{portable_file}:"
+                f"{usage.location.line}:{usage.location.column}"
+            )
+        else:
+            predicate_source_key = f"excluded:{usage.source.form}:{usage_qn}"
+
         if index in excluded_indices:
             local, _id_component = _source_local_identity(usage)
-            exclusion = _exclusion_for(decision, kind)
+            projected = projected_location(index)
+            exclusion = _exclusion_for(decision, kind, projected.rendered)
             if usage.identity.name is None:
-                referent, canonical_location = _canonical_anonymous_location(
-                    usage,
-                    source_location_mode=source_location_mode,
-                    source_roots=source_roots or [],
-                )
                 location = usage.location
                 if location is None:
                     raise RuntimeError("anonymous source identity returned without a LocationFact")
+                if projected.referent is None:
+                    raise RuntimeError("anonymous source identity returned without a referent")
                 constraint_id = mint_constraint_id(
                     instance_path=sanitize_qualified_name(usage_qn),
                     source_local=local,
                     tuple_=(
-                        referent,
+                        projected.referent,
                         location.line,
                         location.column,
                         usage_qn,
@@ -916,11 +1019,6 @@ def lower_constraints(
                         usage.source.form,
                     ),
                     digest_hex_length=32,
-                )
-                exclusion = ConstraintExclusion(
-                    kind=exclusion.kind,
-                    reasons=exclusion.reasons,
-                    location=canonical_location,
                 )
             else:
                 constraint_id = mint_constraint_id(
@@ -938,6 +1036,7 @@ def lower_constraints(
                     owner_qualified_name=usage.owner.owning_definition.qualified_name,
                     owner_instance_path=sanitize_qualified_name(usage_qn),
                     membership_kind=usage.membership_kind,
+                    predicate_source_key=predicate_source_key,
                     is_negated=usage.is_negated,
                     expected_value=None,
                     predicate_ir=None,
@@ -949,7 +1048,13 @@ def lower_constraints(
             )
             continue
 
-        is_negated = guard_polarity(is_negated=usage.is_negated, usage_qualified_name=usage_qn)
+        is_negated = decision.is_negated
+        expected_value = decision.expected_value
+        if type(is_negated) is not bool or type(expected_value) is not bool:
+            raise _generation_error(
+                f"decision-authority violation for {usage_qn}: "
+                "admitted decision has no Boolean pair"
+            )
         local, id_component = _source_local_identity(usage)
         # Same-IR guarantee (Item 3 D7/I5), two arms: object identity for inline usages
         # (single-parse in-process path); serialization equality for definition-typed
@@ -969,10 +1074,6 @@ def lower_constraints(
         predicate_ir = serialize_expression(effective) if effective is not None else None
 
         formal_bindings = _definition_formal_bindings(facts, usage)
-        actual_by_name = {
-            actual.name: actual.value for actual in usage.actuals if actual.name is not None
-        }
-
         owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
         owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
         for owner_instance_path, occ_scope in owner_instances:
@@ -980,6 +1081,7 @@ def lower_constraints(
             if formal_bindings is not None:
                 for formal, actual in formal_bindings:
                     formal_name = _formal_name(formal)
+                    formal_identity = _definition_formal_identity(formal)
                     if actual is None:
                         inputs.append(
                             ConcreteConstraintInput(
@@ -990,12 +1092,14 @@ def lower_constraints(
                                     if formal.default is not None
                                     else None
                                 ),
+                                formal_identity=formal_identity,
                             )
                         )
                     else:
                         inputs.append(
                             _resolve_formal(
                                 formal_name=formal_name,
+                                formal_identity=formal_identity,
                                 value=actual.value,
                                 occ_scope=occ_scope,
                                 usage_qualified_name=owner_instance_path,
@@ -1005,11 +1109,20 @@ def lower_constraints(
                             )
                         )
             else:
-                for formal_name, value in actual_by_name.items():
+                for actual in usage.actuals:
+                    if actual.name is None:
+                        continue
+                    formal_name = actual.name
+                    qualified_name = (
+                        actual.formal_targets[0] if len(actual.formal_targets) == 1 else None
+                    )
                     inputs.append(
                         _resolve_formal(
                             formal_name=formal_name,
-                            value=value,
+                            formal_identity=ConstraintFormalIdentity(
+                                raw_name=formal_name, qualified_name=qualified_name
+                            ),
+                            value=actual.value,
                             occ_scope=occ_scope,
                             usage_qualified_name=owner_instance_path,
                             registry=registry,
@@ -1031,6 +1144,7 @@ def lower_constraints(
                         inputs.append(
                             _resolve_formal(
                                 formal_name=formal_name,
+                                formal_identity=_leaf_formal_identity(leaf),
                                 value=leaf,
                                 occ_scope=occ_scope,
                                 usage_qualified_name=owner_instance_path,
@@ -1046,6 +1160,10 @@ def lower_constraints(
                             formal_name=sanitize_name(formal_qn.rsplit("::", 1)[-1]),
                             resolution=ConstraintInputResolution.MODELED_DEFAULT,
                             default_ir=formal_default_by_qn.get(formal_qn),
+                            formal_identity=ConstraintFormalIdentity(
+                                raw_name=formal_qn.rsplit("::", 1)[-1],
+                                qualified_name=formal_qn,
+                            ),
                         )
                     )
 
@@ -1064,8 +1182,9 @@ def lower_constraints(
                     owner_qualified_name=usage.owner.owning_definition.qualified_name,
                     owner_instance_path=owner_instance_path,
                     membership_kind=usage.membership_kind,
+                    predicate_source_key=predicate_source_key,
                     is_negated=is_negated,
-                    expected_value=not is_negated,
+                    expected_value=expected_value,
                     predicate_ir=predicate_ir,
                     inputs=inputs,
                     evaluation_channel=f"{constraint_id}__evaluation",
@@ -1234,7 +1353,12 @@ def extend_graph_with_constraints(
                     source_type="entry_point", param_group=gname, qualified_name=qn
                 )
             inputs.append(
-                ModuleInput(param_name=inp.formal_name, python_type="float", source=source)
+                ModuleInput(
+                    param_name=inp.formal_name,
+                    python_type="float",
+                    source=source,
+                    formal_identity=inp.formal_identity,
+                )
             )
 
         modules.append(

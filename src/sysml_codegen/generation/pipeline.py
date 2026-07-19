@@ -50,11 +50,13 @@ def generate_pipeline_yaml(
     Returns:
         Generated YAML as string
     """
+    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+
+    validate_constraint_graph_or_raise(graph)
+
     # Build channel -> field_name map from module outputs (single source of truth)
     channel_field_map = {
-        out.channel_name: out.field_name
-        for module in graph.modules
-        for out in module.outputs
+        out.channel_name: out.field_name for module in graph.modules for out in module.outputs
     }
 
     # Item 11 (REQ-PY-08): an aliased channel's exit line renders the modeler's

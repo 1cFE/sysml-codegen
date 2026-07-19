@@ -20,6 +20,42 @@ DEFAULT_COVERAGE_POLICY = CoveragePolicy(
     runtime_output_globs=[],
 )
 
+FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
+
+
+class PackageSealError(ValueError):
+    """A package tree violates a sealing policy before hashing can begin."""
+
+    def __init__(self, *, kind: str, path: str, message: str) -> None:
+        self.kind = kind
+        self.path = path
+        self.message = message
+        super().__init__(f"{kind}({path}): {message}")
+
+
+def _inspect_package_tree(root: Path) -> tuple[str | None, list[tuple[str, Path]]]:
+    """Return the first forbidden symlink and a sorted clean descendant list."""
+    if root.is_symlink():
+        return ".", []
+    paths = list(root.rglob("*"))
+    entries = sorted((path.relative_to(root).as_posix(), path) for path in paths)
+    for rel_path, path in entries:
+        if path.is_symlink():
+            return rel_path, []
+    return None, entries
+
+
+def ensure_package_tree_is_link_free(package_dir: Path) -> list[tuple[str, Path]]:
+    """Reject any package-root or descendant symlink and return clean entries."""
+    forbidden_path, entries = _inspect_package_tree(package_dir)
+    if forbidden_path is not None:
+        raise PackageSealError(
+            kind="INVALID_PATH",
+            path=forbidden_path,
+            message=FORBIDDEN_SYMLINK_MESSAGE,
+        )
+    return entries
+
 
 def _glob_to_regex(pattern: str) -> re.Pattern[str]:
     """Translate a ``/``-separated glob (``*``, ``?``, ``**``) to an anchored regex.
@@ -64,11 +100,11 @@ def seal_package(
     Pure over the directory: walks and hashes whatever is on disk *now* (stubs or
     preserved handwritten code alike), so the identical call re-seals after an edit.
     """
+    entries = ensure_package_tree_is_link_free(package_dir)
     artifact_hashes: dict[str, str] = {}
-    for path in sorted(package_dir.rglob("*")):
+    for rel_path, path in entries:
         if not path.is_file():
             continue
-        rel_path = path.relative_to(package_dir).as_posix()
         if _is_covered(rel_path, policy):
             artifact_hashes[rel_path] = hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -86,4 +122,9 @@ def seal_package(
     )
 
 
-__all__ = ["DEFAULT_COVERAGE_POLICY", "seal_package"]
+__all__ = [
+    "DEFAULT_COVERAGE_POLICY",
+    "PackageSealError",
+    "ensure_package_tree_is_link_free",
+    "seal_package",
+]

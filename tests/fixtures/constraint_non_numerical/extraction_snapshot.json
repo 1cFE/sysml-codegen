@@ -46,7 +46,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_non_numerical/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 13
         },
         "membership_kind": null,

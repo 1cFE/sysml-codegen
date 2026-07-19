@@ -20,6 +20,7 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
+from sysml_codegen.contracts.model_contract import build_model_contract
 from sysml_codegen.generation import CodeGenerationError
 from sysml_codegen.generation.modules import compile_shared_predicates, generate_teax_module
 from sysml_codegen.generation.pipeline import generate_pipeline_yaml
@@ -30,6 +31,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConstraintCatalog,
     ConstraintCatalogEntry,
+    ConstraintFormalIdentity,
     InputSource,
     ModuleInput,
     ModuleKind,
@@ -70,6 +72,7 @@ def _catalog() -> ConstraintCatalog:
         usage_qualified_name="Pkg::Def::assert1",
         owner_instance_path="Pkg__Def",
         membership_kind="assert",
+        predicate_source_key="definition:Pkg::Def",
         is_negated=False,
         expected_value=True,
         predicate_ir=_predicate_ir(),
@@ -87,11 +90,13 @@ def _constraint_module() -> PipelineModule:
                 param_name="a",
                 python_type="float",
                 source=InputSource(source_type="module_output", producer_channel="upstream__a"),
+                formal_identity=ConstraintFormalIdentity(raw_name="a"),
             ),
             ModuleInput(
                 param_name="b",
                 python_type="float",
                 source=InputSource(source_type="module_output", producer_channel="upstream__b"),
+                formal_identity=ConstraintFormalIdentity(raw_name="b"),
             ),
         ],
         outputs=[
@@ -198,6 +203,26 @@ def test_registry_seam_renders_constraint(template_env):
     assert "C1ConstraintModule" in code
     assert "ConstraintReportAggregatorModule" in code
     assert "ConstraintEvaluation" in code and "ConstraintReport" in code
+
+
+@pytest.mark.parametrize("renderer", ["pipeline", "registry", "model_contract"])
+def test_graph_renderers_reject_constraint_module_without_catalog(renderer, template_env):
+    graph = _graph_with_constraint().model_copy(update={"constraint_catalog": None})
+    with pytest.raises(CodeGenerationError) as error:
+        if renderer == "pipeline":
+            generate_pipeline_yaml(graph, package_name="pkg", template_env=template_env)
+        elif renderer == "registry":
+            generate_registry(
+                graph=graph,
+                package_name="pkg",
+                template_env=template_env,
+                output_path=Path("/tmp/missing_catalog_registry.py"),
+            )
+        else:
+            build_model_contract(graph)
+    assert error.value.name_safety_violation is not None
+    assert error.value.name_safety_violation.kind == "catalog_module_join"
+    assert error.value.name_safety_violation.final_binding == "c1"
 
 
 def test_check_duplicate_output_paths_tolerates_constraint():

@@ -61,7 +61,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/radial_build.sysml",
+          "file": "root-0/library/components/radial_build.sysml",
           "line": 55
         },
         "membership_kind": null,
@@ -106,7 +106,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "file": "root-0/library/physics/geometry.sysml",
           "line": 59
         },
         "membership_kind": null,
@@ -151,7 +151,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 69
         },
         "membership_kind": null,
@@ -196,7 +196,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 69
         },
         "membership_kind": null,
@@ -241,7 +241,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 75
         },
         "membership_kind": null,
@@ -286,7 +286,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 76
         },
         "membership_kind": null,
@@ -331,7 +331,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 80
         },
         "membership_kind": null,
@@ -376,7 +376,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 81
         },
         "membership_kind": null,
@@ -421,7 +421,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 85
         },
         "membership_kind": null,
@@ -468,7 +468,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/vacuum.sysml",
+          "file": "root-0/designs/catf_mfe/vacuum.sysml",
           "line": 87
         },
         "membership_kind": null,
@@ -513,7 +513,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "file": "root-0/library/physics/geometry.sysml",
           "line": 101
         },
         "membership_kind": null,
@@ -558,7 +558,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "file": "root-0/library/physics/geometry.sysml",
           "line": 106
         },
         "membership_kind": null,
@@ -603,7 +603,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 122
         },
         "membership_kind": null,
@@ -650,7 +650,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/physics.sysml",
+          "file": "root-0/designs/catf_mfe/physics.sysml",
           "line": 125
         },
         "membership_kind": null,
@@ -695,7 +695,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "file": "root-0/library/physics/thermal.sysml",
           "line": 125
         },
         "membership_kind": null,
@@ -740,7 +740,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 127
         },
         "membership_kind": null,
@@ -785,7 +785,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/confinement.sysml",
+          "file": "root-0/library/physics/confinement.sysml",
           "line": 127
         },
         "membership_kind": null,
@@ -830,7 +830,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 130
         },
         "membership_kind": null,
@@ -875,7 +875,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "file": "root-0/library/physics/thermal.sysml",
           "line": 130
         },
         "membership_kind": null,
@@ -920,7 +920,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 132
         },
         "membership_kind": null,
@@ -965,7 +965,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/neutronics.sysml",
+          "file": "root-0/library/physics/neutronics.sysml",
           "line": 132
         },
         "membership_kind": null,
@@ -1010,7 +1010,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/confinement.sysml",
+          "file": "root-0/library/physics/confinement.sysml",
           "line": 133
         },
         "membership_kind": null,
@@ -1057,7 +1057,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/physics.sysml",
+          "file": "root-0/designs/catf_mfe/physics.sysml",
           "line": 134
         },
         "membership_kind": null,
@@ -1102,7 +1102,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 135
         },
         "membership_kind": null,
@@ -1147,7 +1147,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "file": "root-0/library/physics/thermal.sysml",
           "line": 136
         },
         "membership_kind": null,
@@ -1192,7 +1192,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/neutronics.sysml",
+          "file": "root-0/library/physics/neutronics.sysml",
           "line": 138
         },
         "membership_kind": null,
@@ -1237,7 +1237,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 140
         },
         "membership_kind": null,
@@ -1282,7 +1282,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/thermal.sysml",
+          "file": "root-0/library/physics/thermal.sysml",
           "line": 141
         },
         "membership_kind": null,
@@ -1329,7 +1329,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/physics.sysml",
+          "file": "root-0/designs/catf_mfe/physics.sysml",
           "line": 142
         },
         "membership_kind": null,
@@ -1374,7 +1374,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "file": "root-0/library/physics/geometry.sysml",
           "line": 146
         },
         "membership_kind": null,
@@ -1419,7 +1419,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 150
         },
         "membership_kind": null,
@@ -1464,7 +1464,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/vacuum.sysml",
+          "file": "root-0/library/components/vacuum.sysml",
           "line": 155
         },
         "membership_kind": null,
@@ -1509,7 +1509,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 155
         },
         "membership_kind": null,
@@ -1554,7 +1554,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/shield.sysml",
+          "file": "root-0/library/components/shield.sysml",
           "line": 160
         },
         "membership_kind": null,
@@ -1599,7 +1599,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 160
         },
         "membership_kind": null,
@@ -1644,7 +1644,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/vacuum.sysml",
+          "file": "root-0/designs/catf_mfe/vacuum.sysml",
           "line": 169
         },
         "membership_kind": null,
@@ -1689,7 +1689,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/shield.sysml",
+          "file": "root-0/designs/catf_mfe/shield.sysml",
           "line": 171
         },
         "membership_kind": null,
@@ -1734,7 +1734,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 171
         },
         "membership_kind": null,
@@ -1779,7 +1779,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 176
         },
         "membership_kind": null,
@@ -1824,7 +1824,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 181
         },
         "membership_kind": null,
@@ -1869,7 +1869,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/geometry.sysml",
+          "file": "root-0/library/physics/geometry.sysml",
           "line": 185
         },
         "membership_kind": null,
@@ -1914,7 +1914,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 193
         },
         "membership_kind": null,
@@ -1959,7 +1959,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 198
         },
         "membership_kind": null,
@@ -2004,7 +2004,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 203
         },
         "membership_kind": null,
@@ -2049,7 +2049,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 212
         },
         "membership_kind": null,
@@ -2094,7 +2094,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/divertor.sysml",
+          "file": "root-0/library/components/divertor.sysml",
           "line": 216
         },
         "membership_kind": null,
@@ -2139,7 +2139,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 217
         },
         "membership_kind": null,
@@ -2184,7 +2184,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/components/first_wall.sysml",
+          "file": "root-0/library/components/first_wall.sysml",
           "line": 220
         },
         "membership_kind": null,
@@ -2229,7 +2229,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/performance_metrics.sysml",
+          "file": "root-0/library/physics/performance_metrics.sysml",
           "line": 222
         },
         "membership_kind": null,
@@ -2274,7 +2274,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 224
         },
         "membership_kind": null,
@@ -2319,7 +2319,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 229
         },
         "membership_kind": null,
@@ -2364,7 +2364,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 234
         },
         "membership_kind": null,
@@ -2409,7 +2409,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 260
         },
         "membership_kind": null,
@@ -2454,7 +2454,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 265
         },
         "membership_kind": null,
@@ -2499,7 +2499,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/physics/power_balance.sysml",
+          "file": "root-0/library/physics/power_balance.sysml",
           "line": 272
         },
         "membership_kind": null,
@@ -2544,7 +2544,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 282
         },
         "membership_kind": null,
@@ -2589,7 +2589,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 287
         },
         "membership_kind": null,
@@ -2634,7 +2634,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 292
         },
         "membership_kind": null,
@@ -2679,7 +2679,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 332
         },
         "membership_kind": null,
@@ -2724,7 +2724,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 337
         },
         "membership_kind": null,
@@ -2769,7 +2769,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 376
         },
         "membership_kind": null,
@@ -2814,7 +2814,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/library/analyses/thermal_loads.sysml",
+          "file": "root-0/library/analyses/thermal_loads.sysml",
           "line": 381
         },
         "membership_kind": null,
@@ -2859,7 +2859,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml",
+          "file": "root-0/designs/catf_mfe/radial_build.sysml",
           "line": 605
         },
         "membership_kind": null,
@@ -2904,7 +2904,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml",
+          "file": "root-0/designs/catf_mfe/radial_build.sysml",
           "line": 612
         },
         "membership_kind": null,
@@ -2949,7 +2949,7 @@
         "is_negated": null,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/catf_mfe_model/designs/catf_mfe/radial_build.sysml",
+          "file": "root-0/designs/catf_mfe/radial_build.sysml",
           "line": 630
         },
         "membership_kind": null,

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 3,
   "model_name": "sample_model",
-  "captured_at": "2026-07-18T17:51:57.686631+00:00",
+  "captured_at": "2026-07-19T16:04:32.921438+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [],

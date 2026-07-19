@@ -7,6 +7,8 @@ Moved from generation/initialization.py (Step 7.6) to enforce the boundary
 that generation/ consumes only ComputationGraph.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -35,6 +37,8 @@ from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
 if TYPE_CHECKING:
     from agentic_mbse.sysml.constraint_facts import ConstraintFacts
 
+    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
+
 
 class SysMLParsingError(Exception):
     """Error during SysML model parsing.
@@ -57,7 +61,14 @@ class CodeGenerationError(Exception):
     - Generation process fails
     """
 
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        name_safety_violation: ConstraintNameViolation | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.name_safety_violation = name_safety_violation
 
 
 @dataclass
@@ -117,7 +128,7 @@ class PipelineContext:
     # `generation/constraint_catalog.py` reads for the catalog's `source_records` (D6).
     # Always populated (may carry empty `usages`) so snapshot v3 (Item 8) can
     # serialize an honest facts section on every model, constraint-bearing or not.
-    constraint_facts: "ConstraintFacts | None" = None
+    constraint_facts: ConstraintFacts | None = None
 
     # Resolved per-owner occurrence table, captured as the exact transcript of the
     # real `lower_constraints` call's `occurrences_of` queries (Item 8, MF3) via

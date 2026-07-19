@@ -60,6 +60,7 @@ def _cc(
         owner_qualified_name="Design__Cell",
         owner_instance_path="Design__c",
         membership_kind=None,
+        predicate_source_key="definition:Design::Nonnegative",
         is_negated=False,
         expected_value=True if eligible else None,
         predicate_ir='{"kind":"literal"}' if eligible else None,

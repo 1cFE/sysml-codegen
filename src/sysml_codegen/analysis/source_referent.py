@@ -1,4 +1,4 @@
-"""Portable source referents for anonymous excluded constraints."""
+"""Portable source referents for excluded constraints."""
 
 from __future__ import annotations
 

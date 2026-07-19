@@ -44,14 +44,10 @@ def _generation_error(message: str) -> CodeGenerationError:
 
 
 def predicate_definition_key(entry: ConcreteConstraint | ConstraintCatalogEntry) -> str:
-    """The compile-once grouping key (D3): the source assertion's identity.
-
-    Every concrete entry expanded from one ``ConstraintUsageFact`` shares this — one
-    ``part_def`` owner with N occurrences mints N distinct ``constraint_id``s but keeps one
-    ``usage_qualified_name``, which is exactly the "one definition" D3's compile-once emission
-    keys on.
-    """
-    return entry.usage_qualified_name
+    """Return the true positive-predicate source identity used for compile-once grouping."""
+    if entry.predicate_source_key is None:
+        raise _generation_error(f"constraint {entry.constraint_id!r} has no predicate_source_key")
+    return entry.predicate_source_key
 
 
 def _canonical_json(obj: Any) -> str:
@@ -112,6 +108,7 @@ def assemble_constraint_catalog(
                 usage_qualified_name=c.usage_qualified_name,
                 owner_instance_path=c.owner_instance_path,
                 membership_kind=c.membership_kind,
+                predicate_source_key=c.predicate_source_key,
                 is_negated=c.is_negated,
                 expected_value=c.expected_value,
                 predicate_ir=c.predicate_ir,

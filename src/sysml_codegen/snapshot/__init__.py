@@ -31,8 +31,10 @@ VALID_CONSTRAINT_LOWERING_MODES = frozenset(
 
 
 class SnapshotFormatError(Exception):
-    """Raised when a snapshot's ``snapshot_format_version`` is missing or does
-    not match ``SNAPSHOT_FORMAT_VERSION`` — the snapshot must be recaptured."""
+    """Raised when a snapshot version or load-bearing v3 shape is invalid.
+
+    The snapshot must be recaptured before generation can continue.
+    """
 
 
 from sysml_codegen.snapshot.capture import capture_snapshot  # noqa: E402

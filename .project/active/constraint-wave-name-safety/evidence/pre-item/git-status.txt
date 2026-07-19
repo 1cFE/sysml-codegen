@@ -1,0 +1,19 @@
+ M .project/CURRENT_WORK.md
+ M .project/backlog/BACKLOG.md
+ M .project/backlog/epic_gap_close.md
+ M src/sysml_codegen/cli/__init__.py
+ M src/sysml_codegen/contracts/__init__.py
+ M src/sysml_codegen/contracts/seal.py
+ M src/sysml_codegen/contracts/verify.py
+ M tests/conformance/test_fingerprint_stability.py
+ M tests/conformance/test_seal_step9.py
+ M tests/unit/test_cli_generation.py
+ M tests/unit/test_contract_models.py
+ M tests/unit/test_verify_package.py
+?? .claude/projects/
+?? .project/active/constraint-wave-name-safety/
+?? .project/active/constraint-wave-seal-symmetry/
+?? .project/active/constraint-wave-snapshot-portability/
+?? .project/backlog/epic_constraint_pr_wave_remediation.md
+?? .project/backlog/epic_gap_close_audit_independent.md
+?? .project/research/20260718-192048_constraint-exec-pr-wave-code-review.md

@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 
+import pytest
 from agentic_mbse.sysml.constraint_facts import (
     ConstraintFacts,
     ConstraintSource,
@@ -16,8 +17,10 @@ from agentic_mbse.sysml.constraint_facts import (
 from agentic_mbse.sysml.expression_facts import IdentityFact, LiteralFact, OperandTypeFact
 from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode
 
+from sysml_codegen.analysis import constraint_lowering
 from sysml_codegen.analysis.constraint_lowering import lower_constraints
 from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.snapshot.serializer import serialize_extraction_snapshot
 
 LOWERING_LOGGER = "sysml_codegen.analysis.constraint_lowering"
@@ -61,6 +64,30 @@ def _anonymous_non_numerical(file: Path, line: int) -> ConstraintUsageFact:
         predicate=predicate,
         inherited_into=[],
     )
+
+
+def _eligible_usage(file: Path, line: int, name: str | None) -> ConstraintUsageFact:
+    usage = _anonymous_non_numerical(file, line)
+    usage.identity.name = name
+    usage.identity.qualified_name = f"Pkg__{name}" if name is not None else None
+    usage.source.effective_predicate_source = usage.identity
+    usage.source.asserted_constraint = usage.identity
+    usage.scope = usage.identity
+    usage.predicate = OperatorNode(
+        operator=">",
+        operands=[
+            LiteralNode(
+                literal=LiteralFact(kind="LiteralRational", value=1.0, result_type="Real"),
+                operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+            ),
+            LiteralNode(
+                literal=LiteralFact(kind="LiteralRational", value=0.0, result_type="Real"),
+                operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+            ),
+        ],
+        operand_type=None,
+    )
+    return usage
 
 
 def _facts_for(root: Path) -> ConstraintFacts:
@@ -185,16 +212,119 @@ def test_two_ordered_roots_keep_same_relative_file_distinct(tmp_path: Path):
     }
 
 
-def test_capture_canonicalizes_only_anonymous_excluded_copy(tmp_path: Path):
+def test_capture_canonicalizes_named_and_anonymous_excluded_copy(tmp_path: Path):
     facts = _facts_for(tmp_path)
     named = _anonymous_non_numerical(tmp_path / "model.sysml", 30)
     named.identity.name = "named"
     named.identity.qualified_name = "Pkg__named"
     facts.usages.append(named)
-    raw_named = named.location.file
+    eligible_named = _eligible_usage(tmp_path / "model.sysml", 40, "eligible_named")
+    eligible_anonymous = _eligible_usage(tmp_path / "model.sysml", 50, None)
+    facts.usages.extend([eligible_named, eligible_anonymous])
+    original = json.dumps(facts, default=lambda value: value.__dict__, sort_keys=True)
 
     snapshot_facts = _serialize_facts(facts, [tmp_path])
 
     assert facts.usages[0].location.file == str(tmp_path / "model.sysml")
     assert snapshot_facts.usages[0].location.file == "root-0/model.sysml"
-    assert snapshot_facts.usages[2].location.file == raw_named
+    assert snapshot_facts.usages[2].location.file == "root-0/model.sysml"
+    assert snapshot_facts.usages[3].location.file == str(tmp_path / "model.sysml")
+    assert snapshot_facts.usages[4].location.file == str(tmp_path / "model.sysml")
+    assert json.dumps(facts, default=lambda value: value.__dict__, sort_keys=True) == original
+
+    live_records = _lower(facts, "live", [tmp_path])
+    replay_records = _lower(snapshot_facts, "snapshot", [])
+    live_ids = {record.usage_qualified_name: record.constraint_id for record in live_records}
+    replay_ids = {record.usage_qualified_name: record.constraint_id for record in replay_records}
+    assert live_ids == replay_ids
+    assert live_ids["Pkg__named"] == "Pkg_named__named__3ddab1c78f390ce1"
+    assert live_ids["Pkg__eligible_named"] == replay_ids["Pkg__eligible_named"]
+    anonymous_eligible = next(
+        record
+        for record in live_records
+        if record.eligible and record.usage_qualified_name == "<anonymous>"
+    )
+    assert len(anonymous_eligible.constraint_id.rsplit("__", 1)[-1]) == 16
+
+
+def test_each_named_and_anonymous_excluded_location_projects_once(
+    tmp_path: Path, monkeypatch, caplog
+):
+    facts = _facts_for(tmp_path)
+    named = _anonymous_non_numerical(tmp_path / "model.sysml", 30)
+    named.identity.name = "named"
+    named.identity.qualified_name = "Pkg__named"
+    facts.usages.append(named)
+    live_calls: list[str] = []
+    replay_calls: list[str] = []
+    real_live = constraint_lowering.map_live_source_referent
+    real_replay = constraint_lowering.validate_snapshot_source_referent
+
+    def count_live(raw_file, roots):
+        live_calls.append(raw_file)
+        return real_live(raw_file, roots)
+
+    def count_replay(stored_file):
+        replay_calls.append(stored_file)
+        return real_replay(stored_file)
+
+    monkeypatch.setattr(constraint_lowering, "map_live_source_referent", count_live)
+    monkeypatch.setattr(constraint_lowering, "validate_snapshot_source_referent", count_replay)
+
+    live, _ = _lower_with_warnings(caplog, facts, "live", [tmp_path])
+    snapshot_facts = _serialize_facts(facts, [tmp_path])
+    replay, _ = _lower_with_warnings(caplog, snapshot_facts, "snapshot", [])
+
+    assert live_calls == [str(tmp_path / "model.sysml")] * 5
+    assert replay_calls == ["root-0/model.sysml"] * 5
+    assert [record.constraint_id for record in live] == [record.constraint_id for record in replay]
+    assert next(
+        record for record in live if record.usage_qualified_name == "Pkg__named"
+    ).constraint_id == ("Pkg_named__named__3ddab1c78f390ce1")
+
+
+def test_block_location_has_zero_live_mapper_and_replay_validator_calls(
+    tmp_path: Path, monkeypatch, caplog
+):
+    facts = _facts_for(tmp_path)
+    blocked = _eligible_usage(tmp_path / "model.sysml", 30, "blocked")
+    blocked.predicate = OperatorNode(
+        operator="==",
+        operands=[
+            LiteralNode(
+                literal=LiteralFact(kind="LiteralRational", value=1.0, result_type="Real"),
+                operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+            ),
+            LiteralNode(
+                literal=LiteralFact(kind="LiteralRational", value=2.0, result_type="Real"),
+                operand_type=OperandTypeFact(category="real", enumeration=None, unit=None),
+            ),
+        ],
+        operand_type=None,
+    )
+    facts.usages.append(blocked)
+    snapshot_facts = _serialize_facts(facts, [tmp_path])
+    live_calls: list[str] = []
+    replay_calls: list[str] = []
+    real_live = constraint_lowering.map_live_source_referent
+    real_replay = constraint_lowering.validate_snapshot_source_referent
+
+    def count_live(raw_file, roots):
+        live_calls.append(raw_file)
+        return real_live(raw_file, roots)
+
+    def count_replay(stored_file):
+        replay_calls.append(stored_file)
+        return real_replay(stored_file)
+
+    monkeypatch.setattr(constraint_lowering, "map_live_source_referent", count_live)
+    monkeypatch.setattr(constraint_lowering, "validate_snapshot_source_referent", count_replay)
+
+    with pytest.raises(CodeGenerationError, match="block_real_equality_requires_tolerance"):
+        _lower_with_warnings(caplog, facts, "live", [tmp_path])
+    with pytest.raises(CodeGenerationError, match="block_real_equality_requires_tolerance"):
+        _lower_with_warnings(caplog, snapshot_facts, "snapshot", [])
+
+    raw_file = str(tmp_path / "model.sysml")
+    assert live_calls == [raw_file, raw_file]
+    assert replay_calls == ["root-0/model.sysml", "root-0/model.sysml"]

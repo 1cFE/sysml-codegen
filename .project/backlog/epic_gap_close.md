@@ -311,7 +311,9 @@ is clean, and the wave gates re-run green with both PRs updated.
       recorded.
 - [x] All cited doc lines teach v3 (spot-grep assertions in the item record).
 - [x] Codegen non-numerical warnings include the actionable message text (D5 satisfied).
-- [x] `git diff --check` clean on both repos' branch ranges.
+- [x] `git diff --check` clean on both repos' branch ranges. *(Correction, independent audit
+      2026-07-18: false of the pushed companion range — `main...54a95d2` fails on one archived-plan
+      EOF blank line; the cure is uncommitted-local-only. See `epic_gap_close_audit_independent.md`.)*
 - [ ] Both full suites green; both PRs re-pushed and commented; merge-order note intact.
 
 **Required Reading**: both research docs (F3 correction — runtime-incompatibility not
@@ -370,4 +372,9 @@ Item 4 (companion: profile)    ─┘
 ---
 
 **Last Updated**: 2026-07-18
-**Next Action**: Run `my-pre-pr` as an explicitly partial wave. Keep F1 and epic completion open.
+**Next Action**: ~~Run `my-pre-pr` as an explicitly partial wave~~ — DONE (executed as `512786c` /
+companion `54a95d2`; both pushed and PR-commented with the F1-open caveat). Remaining: external
+`[GAP-CLOSE-F1-TEAX-NORMALIZATION]`; licensed full suites at the final commits; and the new PR-wave
+review findings (`.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md` — two
+High profile defects + reserved-name generation family recommended fixed before merge). Independent
+completion audit: `epic_gap_close_audit_independent.md`.

@@ -62,7 +62,10 @@ def _generate_full_package(ctx, output_path: Path, package_name: str) -> None:
     template_env = _get_template_env()
     fake_ctx = _Ctx(ctx)
     _generate_schemas(fake_ctx, config, template_env)
-    _generate_modules(fake_ctx, config, template_env)
+    from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
+
+    plan = build_constraint_generation_plan(fake_ctx, template_env, config.package_name)
+    _generate_modules(fake_ctx, config, template_env, plan)
     _generate_stencils(fake_ctx, config, template_env)
     _generate_pipeline(fake_ctx, config, template_env)
     _generate_registry(fake_ctx, config, template_env)
@@ -190,6 +193,7 @@ def test_zero_assertion_aggregator_not_assessed(tmp_path):
         owner_qualified_name="Pkg::Req",
         owner_instance_path="Pkg__Req__r1",
         membership_kind=None,
+        predicate_source_key="excluded:satisfy:Pkg::Req::r1",
         is_negated=None,
         expected_value=None,
         predicate_ir=None,
@@ -249,8 +253,9 @@ def test_multi_instance_expansion_n_modules_one_predicate(tmp_path):
 
 
 @pytest.mark.execution
-def test_committed_inline_snapshot_renders_and_executes(tmp_path):
-    """Audit cure: the offline inline fixture reaches generated execution with value=5 > 0."""
+def test_committed_inline_snapshot_rejects_reserved_value(tmp_path):
+    """The historical inline fixture now closes R-3 at generation, before execution."""
+    from sysml_codegen.generation import CodeGenerationError
     from sysml_codegen.orchestration.snapshot_context import (
         build_pipeline_context_from_snapshot,
     )
@@ -259,15 +264,9 @@ def test_committed_inline_snapshot_renders_and_executes(tmp_path):
     ctx = build_pipeline_context_from_snapshot(snapshot)
     pkg_name = "constraint_inline_exec"
     staged = tmp_path / pkg_name
-    _generate_full_package(ctx, staged, pkg_name)
-
-    result = _run(tmp_path, pkg_name, tmp_path / "run_inline")
-    outputs = dict(result.outputs)
-    catalog = ctx.computation_graph.constraint_catalog
-    assert catalog is not None
-    evaluation = outputs[catalog.concrete_entries[0].evaluation_channel]
-    assert evaluation.actual_value is True
-    assert evaluation.status == "satisfied"
+    with pytest.raises(CodeGenerationError) as error:
+        _generate_full_package(ctx, staged, pkg_name)
+    assert error.value.name_safety_violation.final_binding == "value"
 
 
 # ---------------------------------------------------------------------------
@@ -342,7 +341,20 @@ def _single_constraint_graph(
     from sysml_codegen.analysis.constraint_lowering import extend_graph_with_constraints
     from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
     from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
-    from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
+    from sysml_codegen.resolution.models import (
+        ComputationGraph,
+        ConcreteConstraint,
+        ConstraintFormalIdentity,
+    )
+
+    provenance_inputs = [
+        item
+        if item.formal_identity is not None
+        else item.model_copy(
+            update={"formal_identity": ConstraintFormalIdentity(raw_name=item.formal_name)}
+        )
+        for item in inputs
+    ]
 
     concrete = ConcreteConstraint(
         constraint_id=constraint_id,
@@ -353,10 +365,11 @@ def _single_constraint_graph(
         owner_qualified_name="pkg::Demo",
         owner_instance_path="pkg__demo",
         membership_kind="assert",
+        predicate_source_key=f"inline:pkg::Demo::{constraint_id}",
         is_negated=negated,
         expected_value=not negated,
         predicate_ir=predicate_ir,
-        inputs=inputs,
+        inputs=provenance_inputs,
         evaluation_channel=f"{constraint_id}__evaluation",
         eligible=True,
     )
@@ -383,6 +396,80 @@ def _single_constraint_graph(
 
     class _SyntheticCtx:
         computation_graph = extended
+
+    return _SyntheticCtx()
+
+
+def _opposite_polarity_constraint_graph(*, predicate_ir: str, left: float, right: float):
+    """Build two reversed-order wrappers sharing one definition-owned predicate body."""
+    from pathlib import Path as _Path
+
+    from agentic_mbse.sysml.constraint_facts import ConstraintFacts
+
+    from sysml_codegen.analysis.constraint_lowering import extend_graph_with_constraints
+    from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
+    from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+    from sysml_codegen.resolution.models import (
+        ComputationGraph,
+        ConcreteConstraint,
+        ConcreteConstraintInput,
+        ConstraintFormalIdentity,
+        ConstraintInputResolution,
+    )
+
+    inputs = [
+        ConcreteConstraintInput(
+            formal_name=name,
+            formal_identity=ConstraintFormalIdentity(raw_name=name),
+            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+            design_attribute_qn=f"pkg__Demo__{name}",
+        )
+        for name in ("a", "b")
+    ]
+    concrete = [
+        ConcreteConstraint(
+            constraint_id=constraint_id,
+            usage_qualified_name=f"pkg::Demo::{constraint_id}",
+            source_local_identity=constraint_id,
+            source_form="definition_typed",
+            owner_kind="part_def",
+            owner_qualified_name="pkg::Demo",
+            owner_instance_path="pkg__demo",
+            membership_kind="assert",
+            predicate_source_key="definition:pkg::SharedConstraint",
+            is_negated=negated,
+            expected_value=not negated,
+            predicate_ir=predicate_ir,
+            inputs=inputs,
+            evaluation_channel=f"{constraint_id}__evaluation",
+            eligible=True,
+        )
+        for constraint_id, negated in (("negative", True), ("positive", False))
+    ]
+    design_attrs = [
+        DesignAttributeData(
+            name=name,
+            sysml_type="Real",
+            default_value=str(value),
+            unit=None,
+            source_file=_Path("demo.sysml"),
+            source_line=1,
+            parent_part="pkg::Demo",
+            qualified_name=f"pkg__Demo__{name}",
+        )
+        for name, value in (("a", left), ("b", right))
+    ]
+    deriver = ParameterGroupDeriver(
+        {_Path("demo.sysml"): design_attrs}, calc_usages=[], calc_defs=[]
+    )
+    graph = extend_graph_with_constraints(
+        ComputationGraph(modules=[], entry_point_groups=[], execution_order=[]), concrete, deriver
+    )
+    empty_facts = ConstraintFacts(definitions=[], usages=[], contexts=[], diagnostics=[])
+    graph.constraint_catalog = assemble_constraint_catalog(concrete, empty_facts)
+
+    class _SyntheticCtx:
+        computation_graph = graph
 
     return _SyntheticCtx()
 
@@ -537,6 +624,109 @@ def test_negated_inline_assertion_at_execution(tmp_path):
 
 
 @pytest.mark.execution
+@pytest.mark.parametrize(
+    (
+        "operator",
+        "left",
+        "right",
+        "raw_value",
+        "positive_status",
+        "positive_margin",
+        "negative_status",
+        "negative_margin",
+    ),
+    [
+        (">", 3.0, 1.0, True, "satisfied", 2.0, "violated", -2.0),
+        (">", 1.0, 3.0, False, "violated", -2.0, "satisfied", 2.0),
+        (">", 2.0, 2.0, False, "violated", 0.0, "satisfied", 0.0),
+        (">=", 2.0, 2.0, True, "satisfied", 0.0, "violated", 0.0),
+        (">", float("inf"), 3.0, None, "indeterminate", None, "indeterminate", None),
+    ],
+    ids=["true", "false", "strict-boundary", "inclusive-boundary", "non-finite"],
+)
+def test_shared_definition_opposite_polarity_exact_once_execution(
+    tmp_path,
+    operator,
+    left,
+    right,
+    raw_value,
+    positive_status,
+    positive_margin,
+    negative_status,
+    negative_margin,
+):
+    generated_left = 5.0 if raw_value is None else left
+    ctx = _opposite_polarity_constraint_graph(
+        predicate_ir=_cmp_ir(operator, "a", "b"), left=generated_left, right=right
+    )
+    operator_name = {">": "gt", ">=": "ge"}[operator]
+    pkg_name = f"paired_{operator_name}_{str(raw_value).lower()}"
+    staged = tmp_path / pkg_name
+    _generate_full_package(ctx, staged, pkg_name)
+    if raw_value is None:
+        _set_json_value(staged, "pkg__Demo__a", left)
+
+    predicates_source = (staged / "modules" / "constraints" / "predicates.py").read_text()
+    assert predicates_source.count("def constraint_pred_") == 1
+    result = dict(_run(tmp_path, pkg_name, tmp_path / "run").outputs)
+    positive = result["positive__evaluation"]
+    negative = result["negative__evaluation"]
+    assert positive.actual_value is raw_value
+    assert negative.actual_value is raw_value
+    assert (positive.status, positive.margin) == (positive_status, positive_margin)
+    assert (negative.status, negative.margin) == (negative_status, negative_margin)
+
+
+@pytest.mark.execution
+def test_name_safety_collision_free_exact_evidence(tmp_path):
+    from sysml_codegen.resolution.models import ConcreteConstraintInput, ConstraintInputResolution
+
+    inputs = [
+        ConcreteConstraintInput(
+            formal_name="x",
+            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+            design_attribute_qn="pkg__Demo__x",
+        ),
+        ConcreteConstraintInput(
+            formal_name="limit",
+            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+            design_attribute_qn="pkg__Demo__limit",
+        ),
+    ]
+    ctx = _single_constraint_graph(
+        constraint_id="name_safety_control",
+        predicate_ir=_cmp_ir("<=", "x", "limit"),
+        negated=False,
+        inputs=inputs,
+        design_attrs={"pkg__Demo__x": "2.0", "pkg__Demo__limit": "3.0"},
+    )
+    pkg_name = "name_safety_exec"
+    staged = tmp_path / pkg_name
+    _generate_full_package(ctx, staged, pkg_name)
+
+    satisfied = dict(_run(tmp_path, pkg_name, tmp_path / "run_satisfied").outputs)[
+        "name_safety_control__evaluation"
+    ]
+    assert (
+        satisfied.actual_value,
+        satisfied.status,
+        satisfied.margin,
+        satisfied.observed,
+    ) == (True, "satisfied", 1.0, {"x": 2.0, "limit": 3.0})
+
+    _set_json_value(staged, "pkg__Demo__x", 4.0)
+    violated = dict(_run(tmp_path, pkg_name, tmp_path / "run_violated").outputs)[
+        "name_safety_control__evaluation"
+    ]
+    assert (
+        violated.actual_value,
+        violated.status,
+        violated.margin,
+        violated.observed,
+    ) == (False, "violated", -1.0, {"x": 4.0, "limit": 3.0})
+
+
+@pytest.mark.execution
 def test_modeled_default_override_flips_verdict(tmp_path):
     """SC-3: the defaulted formal is an overridable entry parameter. Not overriding uses the
     modeled default (satisfied); overriding flips the verdict (violated) — proving the
@@ -546,9 +736,9 @@ def test_modeled_default_override_flips_verdict(tmp_path):
     constraint_id = "default_override_check"
     inputs = [
         ConcreteConstraintInput(
-            formal_name="value",
+            formal_name="measurement",
             resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
-            design_attribute_qn="pkg__Demo__value",
+            design_attribute_qn="pkg__Demo__measurement",
         ),
         ConcreteConstraintInput(
             formal_name="threshold",
@@ -558,10 +748,10 @@ def test_modeled_default_override_flips_verdict(tmp_path):
     ]
     ctx = _single_constraint_graph(
         constraint_id=constraint_id,
-        predicate_ir=_cmp_ir(">", "value", "threshold"),
+        predicate_ir=_cmp_ir(">", "measurement", "threshold"),
         negated=False,
         inputs=inputs,
-        design_attrs={"pkg__Demo__value": "5.0"},
+        design_attrs={"pkg__Demo__measurement": "5.0"},
     )
     pkg_name = "default_override_exec"
     staged = tmp_path / pkg_name

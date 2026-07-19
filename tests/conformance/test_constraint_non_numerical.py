@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 
 import pytest
@@ -12,6 +13,18 @@ from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_
 from tests.conftest import FIXTURES_DIR, requires_license
 
 LOWERING_LOGGER = "sysml_codegen.analysis.constraint_lowering"
+EXPECTED_WARNING = (
+    "Constraint constraint_non_numerical::MixedPurposeHost::status_annotation at "
+    "root-0/model.sysml:13:9 is not numerical and will not execute: "
+    "warn_non_numerical_equality: equality is a valid non-numerical statement and is not executed"
+)
+EXPECTED_EXCLUDED_BYTES = (
+    b'{"constraint_id":"constraint_non_numerical__MixedPurposeHost__status_annotation__'
+    b'status_annotation__cefe17cf7fc6a392","exclusion":{"kind":"non_numerical",'
+    b'"location":"root-0/model.sysml:13:9","reasons":["warn_non_numerical_equality"]},'
+    b'"membership_kind":null,"source_form":"inline","usage_qualified_name":'
+    b'"constraint_non_numerical::MixedPurposeHost::status_annotation"}'
+)
 
 
 def _profile_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
@@ -20,6 +33,15 @@ def _profile_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
         for record in caplog.records
         if record.levelno == logging.WARNING and record.name == LOWERING_LOGGER
     ]
+
+
+def _excluded_bytes(context) -> bytes:
+    catalog = context.computation_graph.constraint_catalog
+    assert catalog is not None
+    [excluded] = catalog.excluded_records
+    return json.dumps(
+        excluded.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
+    ).encode("ascii")
 
 
 @requires_license
@@ -31,12 +53,7 @@ def test_non_numerical_fixture_generates_warns_and_catalogs(caplog):
         )
 
     warnings = _profile_warnings(caplog)
-    assert len(warnings) == 1
-    [warning] = warnings
-    assert "status_annotation" in warning
-    assert "model.sysml:" in warning
-    assert "warn_non_numerical_equality" in warning
-    assert "equality is a valid non-numerical statement and is not executed" in warning
+    assert warnings == [EXPECTED_WARNING]
 
     catalog = context.computation_graph.constraint_catalog
     assert catalog is not None
@@ -45,7 +62,8 @@ def test_non_numerical_fixture_generates_warns_and_catalogs(caplog):
     assert excluded.usage_qualified_name.endswith("status_annotation")
     assert excluded.exclusion.kind == "non_numerical"
     assert excluded.exclusion.reasons == ["warn_non_numerical_equality"]
-    assert "model.sysml:" in excluded.exclusion.location
+    assert excluded.exclusion.location == "root-0/model.sysml:13:9"
+    assert _excluded_bytes(context) == EXPECTED_EXCLUDED_BYTES
 
 
 @requires_license
@@ -62,8 +80,8 @@ def test_non_numerical_live_snapshot_warning_and_record_parity(caplog):
         offline = build_pipeline_context_from_snapshot(snapshot)
     offline_warnings = _profile_warnings(caplog)
 
-    assert offline_warnings == live_warnings
-    assert "equality is a valid non-numerical statement and is not executed" in live_warnings[0]
+    assert live_warnings == [EXPECTED_WARNING]
+    assert offline_warnings == [EXPECTED_WARNING]
     assert offline.computation_graph.model_dump(mode="json") == live.computation_graph.model_dump(
         mode="json"
     )
@@ -72,6 +90,16 @@ def test_non_numerical_live_snapshot_warning_and_record_parity(caplog):
     assert live_catalog is not None
     assert offline_catalog is not None
     assert offline_catalog.model_dump(mode="json") == live_catalog.model_dump(mode="json")
+    assert _excluded_bytes(live) == EXPECTED_EXCLUDED_BYTES
+    assert _excluded_bytes(offline) == EXPECTED_EXCLUDED_BYTES
+
+
+def test_non_numerical_snapshot_warning_and_record_are_exact(caplog):
+    snapshot = FIXTURES_DIR / "constraint_non_numerical/extraction_snapshot.json"
+    with caplog.at_level(logging.WARNING, logger=LOWERING_LOGGER):
+        context = build_pipeline_context_from_snapshot(snapshot)
+    assert _profile_warnings(caplog) == [EXPECTED_WARNING]
+    assert _excluded_bytes(context) == EXPECTED_EXCLUDED_BYTES
 
 
 @requires_license
