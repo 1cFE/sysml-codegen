@@ -97,8 +97,9 @@ stellarator, while the touched production surface ends with fewer lines of code 
 
 ## Success Criteria
 
-- [ ] Register row 0 records exact compatible agentic-mbse, sysml-codegen, and TEAx commits,
-      versions, dependency locks, and both fail-closed skew directions.
+- [x] Register row 0 records exact compatible agentic-mbse, sysml-codegen, and TEAx commits,
+      versions, dependency locks, current-profile smoke evidence, and the production LOC baseline.
+      Later register rows retain their own two-direction schema/runtime skew obligations.
 - [ ] All 41 mandatory acceptance cases record their full LC-I09 evidence coordinate, both public
       routes, open predecessor rows, and one sealed artifact identity thread.
 - [ ] Occurrence, demand, actual resolution, Gate A, Gate B, diagnostics, defaults, and whole-tree
@@ -171,7 +172,7 @@ its relocated leg closes with Item 5, exactly as the contract states.
 Items are audit and dependency boundaries inside that landing unit, not a requirement for isolated
 commits, branches, or PRs. Shared edits should converge directly toward the final architecture.
 The upstream delivery order is agentic-mbse PR #11, then sysml-codegen PR #9. Item 0 must keep the
-unrelated local agentic-mbse modeling-orchestrator commit out of PR #11.
+current committed agentic-mbse work intact; the modeling-orchestrator commit may remain in PR #11.
 
 **Decomposition rationale:** Fourteen items are an intentional program-sized exception to the usual
 epic size guideline. Splitting them into independent epics would weaken the one-register ordering
@@ -210,6 +211,7 @@ hand-authored contract fixture for a required public-path coordinate.
 **Type**: Code/Integration
 **Effort**: 0.5–1 day (reconciliation 2h, lock/version repair 2–4h, evidence 1h)
 **Dependencies**: None; activates all later certification
+**Status**: Complete — local compatible pin recorded 2026-07-19
 
 **Objective**: Create one committed, mutually installable agentic-mbse/sysml-codegen/TEAx revision
 set on which every later evidence coordinate is based.
@@ -217,17 +219,19 @@ set on which every later evidence coordinate is based.
 **Current State**:
 - ✅ sysml-codegen's completed name/portability/symlink work and lifecycle artifacts are preserved
   in local checkpoint `e217119`.
-- ⚠️ agentic-mbse profile v4 is preserved in local checkpoint `205debd`, but that commit sits above
-  the unrelated modeling-orchestrator commit `4ed2a07`; it is not yet the PR #11 candidate.
+- ✅ agentic-mbse profile v4 is preserved in local checkpoint `205debd` above the committed
+  modeling-orchestrator work at `4ed2a07`. The owner does not require those commits to be separated.
 - ✅ The stellarator WI-027 Gate-B blocker record is preserved in local checkpoint `bceaf40a`.
-- ❌ Committed companion/codegen package requirements are mutually unsatisfiable.
+- ✅ agentic-mbse `515e08b`, sysml-codegen `ecdc728`, and TEAx `d545701` form the local compatible
+  starting set; exact locks and smoke evidence are recorded in Item 0 evidence.
 
 **Scope**:
 1. Reconcile intended dirty-tree changes without dropping unrelated user work.
 2. Align package versions, dependency floors, runtime/profile/schema guards, and lockfiles.
-3. Prove both older/newer skew directions fail closed before semantic use.
-4. Reconcile the agentic-mbse constraint changes onto PR #11 without carrying the unrelated local
-   modeling-orchestrator commit; then establish the compatible sysml-codegen PR #9 candidate.
+3. Confirm the current package/profile guards select the intended candidate. Later items retain
+   their own two-direction schema/runtime skew matrices.
+4. Reconcile the current agentic-mbse branch with the PR #11 remote tip without dropping either
+   committed line; then establish the compatible sysml-codegen PR #9 candidate.
 5. Record exact commits, locks, dirty-state policy, and PR-wave merge order.
 6. Establish the production LOC baseline used by every later item.
 
@@ -237,16 +241,14 @@ set on which every later evidence coordinate is based.
 - Push, PR mutation, or merge before the owning item has passed its required gates.
 
 **Success Criteria**:
-- [ ] Exact hashes and locks install together and all version guards select the intended profile.
-- [ ] Both skew directions fail closed in kept tests.
-- [ ] The evidence coordinate template names the same revision set for all later items.
-- [ ] The agentic-mbse candidate is based on PR #11 without the unrelated modeling-orchestrator
-      commit; the sysml-codegen candidate is based on PR #9.
-- [ ] Production LOC baseline is recorded by repository and subsystem.
+- [x] Exact hashes and locks install/build together and current guards select the intended profile.
+- [x] The evidence record names the revision set inherited by later items until superseded.
+- [x] The agentic-mbse candidate contains the current local commits and the PR #11 remote tip; the
+      sysml-codegen candidate is based on PR #9.
+- [x] Production LOC baseline is recorded by repository and subsystem.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-candidate-pin/spec.md`
-- `.project/active/constraint-lifecycle-candidate-pin/plan.md`
 - `.project/active/constraint-lifecycle-candidate-pin/evidence.md`
 
 ---

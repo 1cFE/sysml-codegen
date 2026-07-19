@@ -34,7 +34,7 @@ Prioritized list of epics and features.
 | ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19) | Items 1/2 complete and Items 4/6 certified; all unfinished work is mapped into CONSTRAINT-LIFECYCLE-REMEDIATION. Retained as history; no new work executes here. See `epic_constraint_pr_wave_remediation.md`. |
 
 CONSTRAINT-LIFECYCLE-REMEDIATION items:
-- [ ] Item 0 — Compatible candidate landing and pin (register row 0)
+- [x] Item 0 — Compatible candidate landing and pin (register row 0)
 - [ ] Item 1 — Occurrence and demand integrity (row 1)
 - [ ] Item 2 — Shared producer resolution and Gate A (row 2)
 - [ ] Item 3 — Gate B coverage-scope proof and correction (row 3)

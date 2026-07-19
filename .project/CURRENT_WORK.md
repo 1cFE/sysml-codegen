@@ -6,6 +6,22 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 0 — COMPLETE; LOCAL COMPATIBLE PIN (2026-07-19)
+
+The owner rejected the branch-purity work around agentic-mbse `4ed2a07`. The committed
+modeling-orchestrator work may remain in the PR #11 candidate. Item 0 now does only four things:
+combine the current local and remote PR lines without dropping work, make the pinned package set
+install together, record exact revisions/locks, and capture the production LOC baseline. It does
+not require patch replay, branch surgery, wheel-payload attestation, a negative-control matrix, a
+canonical `pin_id`, or another review cycle.
+
+The direct implementation is complete. Agentic-mbse `515e08b` merges local `205debd` and remote
+PR #11 tip `54a95d2` while retaining the modeling-orchestrator commit. The focused merge suite
+passed 323/323. The pinned sysml-codegen environment imports agentic-mbse `0.1.2`, executable
+profile v4, and codegen `0.1.0`; the actual teax-simkit `0.1.0` distribution builds and imports.
+Exact revisions, lock digests, commands, and the five-repository production LOC baseline are in
+`.project/active/constraint-lifecycle-candidate-pin/evidence.md`.
+
 ### Constraint Execution Lifecycle — RATIFIED; NEW REMEDIATION EPIC READY (2026-07-19)
 
 The owner ratified the corrected lifecycle contract as the normative target architecture. The
@@ -39,16 +55,15 @@ objective in its executive summary, success criteria, Item 0, Item 13, and depen
 
 Pre-Item 0 preservation checkpoints requested by the owner:
 
-- agentic-mbse `205debd` preserves the profile-v4 implementation and evidence. It sits above the
-  unrelated local modeling-orchestrator commit `4ed2a07`, so Item 0 must reconcile only the
-  constraint changes onto the PR #11 line at remote `54a95d2`.
+- agentic-mbse `205debd` preserves the profile-v4 implementation and evidence above the committed
+  modeling-orchestrator work at `4ed2a07`. Item 0 may merge that line directly with the PR #11
+  remote tip `54a95d2`.
 - stellarator `bceaf40a` preserves the WI-027 Gate-B capture blocker record.
 - sysml-codegen `e217119` preserves the constraint remediation, evidence, ratified contract, and
   new epic.
 
-No commit was pushed and no PR was updated. Next: begin new epic Item 0, reconcile and pin the
-committed compatible candidate, and record the cross-repository production LOC baseline before
-certifying any acceptance cell.
+No commit was pushed and no PR was updated. Next: begin Item 1, Occurrence and Demand Integrity,
+using the Item 0 revision set as the starting pin.
 
 ### CONSTRAINT-WAVE Item 1 — Profile Semantics — COMPLETE; INHERITED BY NEW EPIC
 
