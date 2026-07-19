@@ -43,8 +43,8 @@ Pre-Item 0 preservation checkpoints requested by the owner:
   unrelated local modeling-orchestrator commit `4ed2a07`, so Item 0 must reconcile only the
   constraint changes onto the PR #11 line at remote `54a95d2`.
 - stellarator `bceaf40a` preserves the WI-027 Gate-B capture blocker record.
-- sysml-codegen's constraint remediation, evidence, ratified contract, and new epic are preserved
-  by the pending local checkpoint commit containing this note.
+- sysml-codegen `e217119` preserves the constraint remediation, evidence, ratified contract, and
+  new epic.
 
 No commit was pushed and no PR was updated. Next: begin new epic Item 0, reconcile and pin the
 committed compatible candidate, and record the cross-repository production LOC baseline before

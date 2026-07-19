@@ -215,9 +215,11 @@ hand-authored contract fixture for a required public-path coordinate.
 set on which every later evidence coordinate is based.
 
 **Current State**:
-- ✅ Completed profile/name/portability/symlink work exists in working trees.
+- ✅ sysml-codegen's completed name/portability/symlink work and lifecycle artifacts are preserved
+  in local checkpoint `e217119`.
 - ⚠️ agentic-mbse profile v4 is preserved in local checkpoint `205debd`, but that commit sits above
   the unrelated modeling-orchestrator commit `4ed2a07`; it is not yet the PR #11 candidate.
+- ✅ The stellarator WI-027 Gate-B blocker record is preserved in local checkpoint `bceaf40a`.
 - ❌ Committed companion/codegen package requirements are mutually unsatisfiable.
 
 **Scope**:
