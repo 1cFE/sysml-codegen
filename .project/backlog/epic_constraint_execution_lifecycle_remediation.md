@@ -445,17 +445,19 @@ without letting warning rendering hide a later halt.
 - General constant folding, unit conversion, or a new diagnostics framework beyond the required
   versioned contract.
 
-**Status**: **Needs work (narrowly)** — round-2 audit 2026-07-20 against remediated candidate
-`765e8b8` (codegen) / `4c18d61` (agentic-mbse, unchanged). Round-1 findings F1 (sink ordering) and
-F3 (sink coverage, now 100%) are **closed**; F4 is closed as Met-with-exception with the
-disagreement pinned by test and the root cause recorded with its blast radius. **F2 is not closed:**
-the fix reverts catf_mfe correctly but is scoped by whether the resolved QN happens to be indexed
-rather than by the written form, and it silently reverted `fusion_tea`'s bare-leaf
-`driver_efficiency` from an instance-scoped to a definition-scoped key — the SR-A02 collapse this
-item exists to close, masked again by a 0.35/0.35 value coincidence. Also: the `shadowed_reference`
-fixture has no test attached, and FD-1's corrected table mis-sums (24, stated 23), miscounts
-fixtures (seven, stated six), and still claims a fusion_tea convergence the fix removed. See
-`.project/active/constraint-lifecycle-diagnostics-defaults/audit.md` ("Round 2").
+**Status**: **Pass with notes** — round-3 audit 2026-07-20 against candidate `caa149c` (codegen) /
+`4c18d61` (agentic-mbse, unchanged). All four audit findings closed: F1 (sink ordering) and F3
+(sink coverage 100%) at `765e8b8`; F4 as Met-with-exception (disagreement pinned by test, root
+cause an unowned open item); **F2 at `caa149c`** — the discriminator moved to the written scope
+qualifier captured from the CST at extraction, both prior resolution-based guards deleted, verified
+across all three sentinel shapes (fusion_tea instance-scoped, catf_mfe + shadowed_reference at the
+outer key) and pinned on both routes by `test_written_qualifier_anchoring.py`. Gates: 3056 passed /
+0 license skips, mypy 72 (zero added), ruff clean, `-O` clean but for the two pre-existing tests.
+**Two non-blocking notes** for the owner before merge: (N1) v4 was amended in place — a field-less
+v4 snapshot loads silently and reintroduces F2 (reproduced); premises verified but no test guards
+field presence, and the merge is when "v4 never shipped" stops being free; (N2) the written-form
+recovery degrades toward the bug on every error path. See
+`.project/active/constraint-lifecycle-diagnostics-defaults/audit.md` ("Round 3").
 **Moves the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`; merge order load-bearing (PR #11
 before PR #9).
 

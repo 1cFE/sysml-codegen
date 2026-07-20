@@ -1,6 +1,6 @@
 # Evidence: Lifecycle Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Status:** Remediation round 2 — F2 closed by capturing the written qualifier (F1/F3/F4 closed round 1). Awaiting re-audit.
+**Status:** Round 3 — N1/N2 closed (Pass-with-notes → certify). Final candidate.
 **Owner:** Reid W
 **Created:** 2026-07-20
 **Epic:** CONSTRAINT-LIFECYCLE-REMEDIATION — register row 4
@@ -599,7 +599,7 @@ Added by this remediation:
 
 | item | status |
 |---|---|
-| **`::`-qualified references are not row-16 consumable** | deliberate, same safe-miss pattern as brackets. 84 bindings across two fixtures. Anchoring at the written scope needs the same missing derivation bracketed owners need — **one new item could close both** |
+| **`::`-qualified references are not row-16 consumable** | deliberate safe-miss on the *written* qualifier (round 2). They resolve correctly by exact identity through row 17 — this is not a coverage gap, it is the right resolution path for a scope-qualified reference. Recorded as a design fact, not an open item |
 | **Constraint-def formals captured as design attributes** | 8 across 4 fixtures; the root cause of F4's lane disagreement. Correct fix has a four-fixture blast radius and **needs its own item with a forced-difference table**. Unowned |
 | **The advisory severity leg is unreachable** | one-entry writer table. Not a defect — there is genuinely one diagnostic kind today — but DD-R09's advisory half stays unfalsifiable end-to-end until a second kind exists |
 
@@ -693,3 +693,54 @@ baseline capture (F2c) and pinned by an actual loading test.
   routes and asserts the 2.0 outcome. A fixture that pins nothing is closed.
 - **F2d** — FD-1 arithmetic corrected above; the false fusion_tea convergence row removed; the
   bare-leaf/`.`-chain mislabel fixed.
+
+---
+
+# Remediation round 3 — N1/N2 closed (Pass with notes → certify)
+
+Round-3 re-audit: **Pass with notes**; PC-3 and the F2 fix both verified sound. Two notes, both
+failing *toward* the F2 defect, now closed.
+
+**N1 — structural presence check.** `test_written_qualifier_anchoring.py::
+test_every_committed_snapshot_carries_the_written_qualifier_field` asserts every committed v4
+reference binding carries `source_written_qualifier` (presence, null allowed for a bare leaf). This
+holds the amend-v4 premise after merge: a snapshot lacking the key would load without a version
+error and silently fall back to bare-leaf behaviour — the F2 defect — and this test catches exactly
+that.
+
+**N2 — error-path polarity flipped to fail away from the defect.** `_written_reference_text`
+previously returned `None` on any recovery failure, and `_written_qualifier` read `None` as "bare
+leaf" (row-16 consumable) — failing *toward* the re-anchor. Now:
+
+- A recovery failure returns a `_WRITTEN_UNKNOWN` sentinel, distinct from a genuine bare leaf.
+  `_written_qualifier` maps unknown → a non-empty marker, so `written_reference` returns `None`,
+  so **row 16 misses** and the reference falls through to exact-identity resolution (today's
+  behaviour, never a wrong number). Only a written form actually read, with no `::`, is reported
+  as bare.
+- The `except Exception` is gone. `get_source_file` is called directly, so a real adapter change
+  raises rather than being absorbed as "unknown"; only the specific `OSError`/`UnicodeDecodeError`
+  the recovery genuinely handles are caught. `start`/`end` are `isinstance(int)`-checked.
+- The source-bytes cache is keyed on `(path, mtime_ns)`, removing the single-run assumption rather
+  than only documenting it: a file edited between two extractions in one process cannot serve stale
+  bytes.
+
+**Corpus unmoved by the flip.** The per-binding entry-point probe is byte-identical before and
+after N2 (0 movements) — recovery succeeds on every committed fixture, so the new failure path is
+never taken today; it exists for robustness after merge. The three sentinels are unchanged.
+
+**`::` caveat trimmed** (round-3 note): a `::`-qualified reference resolving by exact identity
+through row 17 is the *correct* path, not a coverage gap. Recorded as a design fact above, not an
+open item.
+
+## Gates (round 3)
+
+| gate | result |
+|---|---|
+| codegen suite | **3057 passed, 0 failed**, 44 skipped |
+| codegen `-O` | identical except the 2 pre-existing assert-stripped tests |
+| licence | **0** skips |
+| mypy | 72, zero added | 
+| ruff | clean |
+
+No re-capture: N2 changes only an error path never taken on the committed corpus, and N1 adds a
+test. No production data moved.

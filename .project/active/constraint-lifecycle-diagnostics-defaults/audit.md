@@ -1,9 +1,12 @@
 # Audit: Lifecycle Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Verdict:** Needs Work
+**Verdict:** Pass with notes (round 3, `caa149c`) — supersedes round 1 "Needs Work" (`16dbaa7`)
+and round 2 (`765e8b8`). All four findings F1–F4 closed; two non-blocking notes (N1 schema
+amend-in-place hole, N2 error-path degradation) recorded in the round-3 section below.
 **Audited:** 2026-07-20
 **Branch:** `constraint-exec-epic` (both repos)
-**Commit:** sysml-codegen `16dbaa7` (evidence `6d3d3c5`, brief `b104659`), agentic-mbse `4c18d61`
+**Latest commit:** sysml-codegen `caa149c`, agentic-mbse `4c18d61`. Round-1 header below records the
+original `16dbaa7` pass; read the "Round 2" and "Round 3" sections for current state.
 
 Independent audit; no artifact from the implementing session was taken on trust. Every headline
 number was re-measured. `git diff 16dbaa7 b104659 -- src/ tests/` is empty, so the code candidate
@@ -542,3 +545,103 @@ count, and the now-false fusion_tea row), and amend DD-A06 in place.
 - Execution lane, TEAx, and the 363 `tests/` ruff findings — untouched, as in round 1.
 - Round-1's `design_attribute_float_default` silent-`None` note (DD-R22 observability) was out of
   this round's scope and remains open at `parameter_groups.py:248`.
+
+---
+
+# Round 3 — F2 remediation re-verification
+
+**Verdict:** Pass with notes
+**Audited:** 2026-07-20
+**Commit:** sysml-codegen `caa149c`; agentic-mbse `4c18d61` unchanged
+
+Scope: F2 closure only, plus the schema-amend argument and the gates. F1/F3/F4 were closed at
+round 2 (`765e8b8`) and their code is untouched in this window.
+
+## Summary
+
+**F2 is closed.** The fix moved the discrimination to where the information actually lives: a new
+`BindingInfo.stored_source_written_qualifier` captures the scope qualifier from the FeatureReference
+CST byte span at extraction (`usage_extractor.py:913-970`), `written_reference` returns `None` when
+a qualifier is present, and row 16's two earlier resolution-based guards are both deleted
+(`producer_resolution.py`). This is the correct source of truth — resolution destroys the written
+form, and reading it from the CST is the one place it survives.
+
+All three sentinel shapes resolve correctly, verified by my own probes and pinned by a new test:
+
+| shape | resolves to | correct? |
+|---|---|---|
+| `fusion_tea` `meier_cost.driver_efficiency` (bare leaf) | `hif_plant_pkg__hif_plant__driver__efficiency` (instance-scoped) | ✓ — F2b closed |
+| `catf_mfe` `kappa = catf_radial_build::elongation` (qualified) | `..._catf_radial_build__elongation` (outer key) | ✓ |
+| `shadowed_reference` `factor = the_outer::scale` (qualified, 2.0 vs shadow 7.0) | `..._the_outer__scale` (2.0) | ✓ |
+
+**F2c closed.** `test_written_qualifier_anchoring.py` (6 tests, none skipped) pins all three on both
+routes, asserts the 7.0 shadow is absent, asserts the qualifier survives the snapshot, and
+`test_three_sentinel_bindings` pins the three shapes together with the note that they are
+byte-identical except the written qualifier. Independently confirmed discriminating: nulling the
+stored qualifier flips `factor` from 2.0 to the 7.0 shadow. A committed
+`baseline_outputs/shadowed_reference/` now exists.
+
+**F2d closed in substance, stale in place.** The authoritative table (`evidence.md:659-672`) sums
+correctly (18 + 5 = 23 across seven fixtures), removes the false fusion_tea "convergence onto
+correct scope" row, and retracts the `.`-chain mislabel. Note: the earlier round-1-remediation table
+at `evidence.md:504-513` still literally carries `convergence onto correct scope | 1 | fusion_tea
+only — a genuine .` chain` and "23 across six fixtures," cured only by the later supersede note — the
+same correction-by-appendix pattern round 2 flagged for DD-A06.
+
+Gates all reproduce: **3056 passed / 0 license skips**, mypy 72 (zero added), ruff clean, `-O`
+identical except the two pre-existing assert-stripped tests. Scope is disciplined — the five source
+changes all trace to F2, the Item-2 precedence seam test is byte-unchanged, no Items-1-3 acceptance
+file moved. The `test_snapshot_v3_gate.py` the brief asked about is a stale docstring comment in
+`test_grandfather_carveout.py:13` naming a file that was renamed to `test_snapshot_envelope_gate.py`
+— one occurrence, harmless, no live resurrection.
+
+## Notes (not blocking; the owner should weigh the first)
+
+**N1 — amending v4 in place has a reproduced silent-degradation hole.** The fix added
+`source_written_qualifier` to the snapshot payload without bumping `SNAPSHOT_FORMAT_VERSION` (still
+4). The ratified argument — v4 is on no remote, every committed snapshot was re-captured, so no
+field-less v4 exists anywhere a gate must catch — has verified premises: v3 rejection and both skew
+directions are RED-tested, and my staleness scan found every committed v4 snapshot with reference
+bindings carries the field. **But the failure is real and I reproduced it:** strip the field from a
+committed v4 snapshot, leave the version at 4, and it loads with no error and resolves
+`shadowed_reference.factor` to the 7.0 shadow — F2 silently back. This is exactly the "one version,
+two payloads" case DD-R12 bumped 3→4 to prevent, and `test_every_committed_snapshot_loads_at_v4`
+checks the version but not the field's presence. Field-less v4 snapshots exist today only at this
+branch's own prior commits (`765e8b8`, `16dbaa7`), so real-world risk is low while the branch stays
+unmerged — but nothing structural holds the premise after merge. A one-line test asserting every
+committed v4 snapshot with reference bindings carries the field would close the residual cheaply.
+
+**N2 — the written-form recovery degrades toward the bug on every error path.**
+`_written_reference_text` (`usage_extractor.py:913-957`) returns `None` on a missing `cst_node`,
+an invalid byte span, `get_source_file` raising, an unreadable file, an out-of-range span, or a
+`UnicodeDecodeError`. A `None` qualifier is treated as a bare leaf, which for a `::`-qualified
+reference re-anchors it — F2. So the fix's correctness silently depends on the CST byte span always
+being recoverable; any failure fails toward the defect rather than surfacing. The `except Exception`
+at `:938` (noqa "a missing location is an absence") is wider than its justification — a real adapter
+bug also lands there and becomes "bare leaf." Unobservable on the current corpus, but the direction
+is unsafe. `_SOURCE_BYTES_CACHE` keys on path only, not path+mtime — benign for the single-run CLI,
+a stale-content risk only for a long-lived process that rewrites a fixture in place.
+
+## Certification
+
+**Marked this round:**
+- Spec criterion 5 and epic criterion 5 (SR-A02) already checked; the scope note is now broadened —
+  the qualified-reference case is handled correctly by written form, not deliberately missed. Left
+  checked; the "not claimed for `::`" caveat is superseded and should be trimmed to the
+  bracketed-owner case only (minor doc cleanup, not a gate).
+
+**Item verdict: certifiable at the code level.** All four original findings (F1, F2, F3, F4) are
+closed and independently reproduced across rounds. I am recording Pass-with-notes rather than a
+clean Certify solely because of N1: an item whose own thesis is fail-closed schema skew left a v4
+payload that validates two shapes, with no test guarding the difference. That is a design call the
+owner ratified with verified premises, so it does not block — but it is the one thing worth an
+explicit decision before merge, and the merge-order discipline (PR #11 before PR #9) is the moment
+the "v4 never shipped" premise stops being free.
+
+**Not checked this round:**
+- The whole-corpus resolution probe behind FD-1's 23-across-seven — only the 3 fixtures with
+  committed baselines corroborate the diff; the other 4 have no committed graph (standing exclusion).
+- No re-audit of F1/F3/F4 code (untouched since `765e8b8`), nor of PC-1/PC-3/PC-6 (round 1).
+- Live re-capture of the 36 snapshots; FD-4 line classification by the implementer's method.
+- Execution lane, TEAx, the 363 `tests/` ruff findings, and round-1's
+  `design_attribute_float_default` silent-`None` note (DD-R22) — all still open, out of scope here.

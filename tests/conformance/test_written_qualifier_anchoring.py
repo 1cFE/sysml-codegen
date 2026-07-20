@@ -120,3 +120,32 @@ def test_three_sentinel_bindings(fixture, module_suffix, param, expected) -> Non
         if module_input.param_name == param
     ]
     assert resolved == [expected]
+
+
+def test_every_committed_snapshot_carries_the_written_qualifier_field() -> None:
+    """N1: the amend-v4 premise, held structurally after merge.
+
+    `source_written_qualifier` is what tells row 16 an owner-relative bare leaf from a
+    scope-qualified reference. Amending v4 in place means a snapshot that lacks the key
+    would load without a version error and silently fall back to bare-leaf behaviour —
+    the F2 defect. Every committed v4 reference binding must therefore carry the key
+    (its value may be null for a bare leaf; presence is what matters).
+    """
+    import json
+
+    from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
+
+    checked = 0
+    for path in sorted(FIXTURES_DIR.glob("*/extraction_snapshot.json")):
+        payload = json.loads(path.read_text())
+        assert payload["snapshot_format_version"] == SNAPSHOT_FORMAT_VERSION, path.parent.name
+        for usage in payload.get("calc_usages", []):
+            for binding in usage.get("bindings", []):
+                if binding.get("binding_type") != "reference":
+                    continue
+                assert "source_written_qualifier" in binding, (
+                    f"{path.parent.name}: reference binding {binding.get('param_name')!r} "
+                    f"is missing source_written_qualifier — recapture required"
+                )
+                checked += 1
+    assert checked > 0, "no reference bindings found — the test is not exercising anything"

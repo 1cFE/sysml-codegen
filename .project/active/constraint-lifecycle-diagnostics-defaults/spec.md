@@ -132,15 +132,19 @@ item.
 - [x] **[INHERITED: epic Item 4]** Signed/unit defaults survive; unsupported default IR fails or
       remains explicitly unresolved.
 - [ ] **[INHERITED: epic Item 4]** Diagnostic/default parsing is consolidated without a second
-      representation or compatibility shim. *(Audit 2026-07-20: the retained string lane and the IR
-      lane hold disagreeing answers for the same modeled default. See audit.md F4.)*
+      representation or compatibility shim. *(Audit: Met-with-exception. The string lane and the IR
+      lane disagree on one modeled default; the disagreement is pinned by
+      `test_default_lane_disagreement.py` and the root cause (constraint-def formals captured as
+      design attributes, four-fixture blast radius) is an unowned open item. Box stays open until
+      that item lands. See audit.md F4 / "Round 2".)*
 
 Two more, from sources outside the epic row:
 
 - [x] **[INHERITED: referral decision 2026-07-20, recorded in epic Item 2 out-of-scope]** *(Scope:
       closes for the unbracketed `PartUsage`-owned shape, which is the shape SR-A02 names and
-      `shared_producer` carries. **Not claimed** for an occurrence-indexed `part_def` owner, nor
-      for a `::`-qualified reference — row 16 deliberately misses both. Evidence PC-6 and F2.)*
+      `shared_producer` carries. A `::`-qualified reference is now anchored at its written scope at
+      `caa149c` (F2 fix) — no longer a deliberate miss. **Still not claimed** for an
+      occurrence-indexed `part_def` owner: row 16 misses there. Evidence PC-6; audit "Round 3".)*
       SR-A02
       convergence completes on real data with no name inference: the shared attribute yields one
       QN-keyed typed entry point, one modeled default, one group assignment. **Scope-limited — see

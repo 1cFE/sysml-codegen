@@ -6,9 +6,37 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — NEEDS WORK, narrowly (round-2 audit 2026-07-20, candidate `765e8b8`)
+### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — PASS WITH NOTES (round-3 audit 2026-07-20, candidate `caa149c`)
 
-**Round-2 verdict: three of four findings closed; F2 is not.** Gates at `765e8b8`: 3050 passed / 0
+**Round-3 verdict: all four findings closed; two non-blocking notes.** F2 was closed at `caa149c`
+by moving the discriminator to the written scope qualifier captured from the CST byte span at
+extraction (`usage_extractor.py`), deleting both prior resolution-based guards
+(`producer_resolution.py` row 16). Verified across all three sentinel shapes — fusion_tea
+`driver_efficiency` instance-scoped, catf_mfe `kappa` and shadowed_reference `factor` at the outer
+key (2.0, not the 7.0 shadow) — and pinned on both routes by `test_written_qualifier_anchoring.py`
+(6 tests, none skipped) with a committed baseline. Gates at `caa149c`: **3056 passed / 0 license
+skips**, mypy 72 (zero added), ruff clean, `-O` clean but for the two pre-existing assert-stripped
+tests. Scope disciplined (5 source files, all F2; Item-2 seam byte-unchanged).
+
+**Two notes for the owner before merge (not blocking):**
+- **N1 — v4 amended in place.** `source_written_qualifier` was added to the snapshot without a
+  version bump. A field-less v4 snapshot loads with no error and reintroduces F2 (I reproduced it:
+  `shadowed_reference.factor` → 7.0 shadow). The ratified premise (no field-less v4 anywhere a gate
+  must catch) is verified today — the committed corpus is fully re-captured and the branch is
+  unmerged — but no test guards field presence, and this contravenes DD-R12's own "one version, one
+  payload" rationale. Merge (PR #11 before PR #9) is when the premise stops being free. Cheap close:
+  a test asserting every committed v4 snapshot with reference bindings carries the field.
+- **N2 — error-path degradation.** `_written_reference_text` returns `None` on any CST/file/decode
+  failure, and `None` is treated as a bare leaf → re-anchor → F2. The fix's correctness silently
+  depends on the byte span always being recoverable; failures fail toward the defect.
+
+Also: the superseded round-1 FD-1 table (`evidence.md:504-513`) still carries the false fusion_tea
+`.`-chain convergence row and "six fixtures," cured only by a later supersede note (`:659`) —
+correction-by-appendix, same pattern flagged for DD-A06.
+
+<details><summary>Round-2 record (candidate <code>765e8b8</code>) — F2 was open here</summary>
+
+**Round-2 verdict: three of four findings closed; F2 was not.** Gates at `765e8b8`: 3050 passed / 0
 failed, zero license skips, mypy 72 (zero added), ruff clean, agentic-mbse 1811 unchanged at
 `4c18d61`.
 
@@ -36,6 +64,8 @@ failed, zero license skips, mypy 72 (zero added), ruff clean, agentic-mbse 1811 
 To clear: re-scope the guard by written form and re-check the corpus for guard-induced movement;
 attach a test to `shadowed_reference`; correct FD-1; amend DD-A06 in place rather than by appendix.
 Spec/epic criterion 1 re-checked by round 2; criterion 4 stays open; no ✅ on the epic heading.
+
+</details>
 
 <details><summary>Round-1 record (candidate <code>16dbaa7</code>)</summary>
 
