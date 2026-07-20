@@ -18,6 +18,7 @@ from typing import Any
 from agentic_mbse.sysml.helpers import (
     get_calc_def_name,
     get_document_url,
+    get_source_file,
     get_source_location,
 )
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
@@ -90,6 +91,21 @@ class BindingInfo:
     stored_source_instance_name: str | None = field(
         default=None, metadata={"snapshot_exclude": True}
     )
+    # The scope qualifier the model actually wrote, captured at extraction from the
+    # CST byte span (audit F2). `None` for a bare leaf. This is the one thing
+    # resolution destroys and no other field preserves.
+    stored_source_written_qualifier: str | None = field(
+        default=None, metadata={"snapshot_exclude": True}
+    )
+
+    @property
+    def source_written_qualifier(self) -> str | None:
+        """The scope qualifier as written, or ``None`` for a bare leaf.
+
+        Live it comes from the CST at extraction; offline the loader restores it
+        from the snapshot, exactly as `source_attribute_name` works.
+        """
+        return self.stored_source_written_qualifier
 
     @property
     def source_instance_name(self) -> str | None:
@@ -117,16 +133,25 @@ class BindingInfo:
           alone would re-anchor at the owner and select a same-named attribute
           elsewhere; that regression was measured (48.0 where the model means 32.0)
           and is why this property exists.
-        A ``::``-qualified reference (``in kappa = catf_radial_build::elongation``)
-        is **not** owner-relative and must not be re-anchored — but it cannot be
-        detected here. ``source_path`` holds the *resolved* qualified name, which
-        contains ``::`` for a bare self-named leaf too (``shared_producer``'s
-        ``gain`` resolves to ``SharedProducer::the_rig::scaler::gain``). The
-        discrimination lives in row 16 instead, where the resolved target is
-        available; see ``_occurrence_materialized_qn`` (audit F2).
+        * **``::``-qualified as written** (``in kappa = catf_radial_build::elongation``)
+          — **not** owner-relative. It names its own scope, so re-anchoring it under
+          the consumer's owner is wrong by construction: measured, it selected an
+          owner-local shadow of the same name. Answer ``None``; row 17 keys it on
+          exact identity, which is where it resolved before Item 4.
+
+        The discriminator is `source_written_qualifier`, captured from the CST at
+        extraction — **the written form, never the resolved one**. An earlier fix
+        tested whether `source_path` contained ``::``, and a later one tested whether
+        the resolved QN was indexed; both were wrong for the same reason, because
+        resolution makes a bare leaf and a qualified reference identical
+        (``shared_producer``'s ``gain`` resolves to
+        ``SharedProducer::the_rig::scaler::gain``). Only the written form separates
+        them (audit F2/F2b).
         """
         attribute_name = self.source_attribute_name
         if attribute_name is None:
+            return None
+        if self.source_written_qualifier is not None:
             return None
         instance_name = self.source_instance_name
         if instance_name:
@@ -813,6 +838,7 @@ def _extract_single_binding(
             is_cross_file=is_cross_file,
             raw_expression=f"FeatureReferenceExpression -> {source_path}",
             source_attribute_elem=referenced_elem,
+            stored_source_written_qualifier=_written_qualifier(expr),
         )
 
     elif _is_literal_expression(expr):
@@ -882,6 +908,66 @@ def _parse_chain_expression(
 
     source_path = ".".join(path_parts) if path_parts else None
     return source_path, instance_elem, target_elem
+
+
+_SOURCE_BYTES_CACHE: dict[str, bytes] = {}
+
+
+def _written_reference_text(expr: Any) -> str | None:
+    """The reference exactly as the model wrote it, from the concrete syntax tree.
+
+    Resolution discards how a reference was written: `source_path` and the referent
+    both hold the *resolved* qualified name, so `in kappa = catf_radial_build::elongation`
+    and a bare `in eta = efficiency` are indistinguishable downstream — which is the
+    ambiguity that let a scope-qualified reference be re-anchored onto an owner-local
+    shadow (audit F2/F2b).
+
+    The written form survives on the CST node as a byte span into the source document,
+    which is the same adapter surface extraction already uses for source locations. This
+    reads that span. Returns ``None`` when the span is unavailable rather than guessing.
+    """
+    cst = getattr(expr, "cst_node", None)
+    if cst is None:
+        return None
+    start = getattr(cst, "start_byte", None)
+    end = getattr(cst, "end_byte", None)
+    if start is None or end is None or end <= start:
+        return None
+    try:
+        source_file = get_source_file(expr)
+    except Exception:  # noqa: BLE001 - a missing location is an absence, not a failure
+        return None
+    if not source_file:
+        return None
+    key = str(source_file)
+    data = _SOURCE_BYTES_CACHE.get(key)
+    if data is None:
+        try:
+            data = Path(source_file).read_bytes()
+        except OSError:
+            return None
+        _SOURCE_BYTES_CACHE[key] = data
+    if end > len(data):
+        return None
+    try:
+        text: str = data[start:end].decode("utf-8").strip()
+    except UnicodeDecodeError:
+        return None
+    return text
+
+
+def _written_qualifier(expr: Any) -> str | None:
+    """The scope qualifier the model wrote, or ``None`` for a bare leaf.
+
+    ``catf_radial_build::elongation`` -> ``catf_radial_build``; ``gain`` -> ``None``.
+    A qualifier means the reference names its own scope and is therefore **not**
+    owner-relative, which is what row 16 needs to know (audit F2).
+    """
+    written = _written_reference_text(expr)
+    if written is None or "::" not in written:
+        return None
+    qualifier = written.rsplit("::", 1)[0].strip()
+    return qualifier or None
 
 
 def _parse_reference_expression(

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "catf_mfe_model",
-  "captured_at": "2026-07-20T13:03:38.760938+00:00",
+  "captured_at": "2026-07-20T14:37:22.794720+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -5676,7 +5676,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "delivered_power"
+          "source_attribute_name": "delivered_power",
+          "source_written_qualifier": "catf_heating"
         }
       ],
       "unbound_params": [
@@ -5707,7 +5708,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "pumping_speed_total"
+          "source_attribute_name": "pumping_speed_total",
+          "source_written_qualifier": null
         },
         {
           "param_name": "base_pressure",
@@ -5720,7 +5722,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "base_pressure_achievable"
+          "source_attribute_name": "base_pressure_achievable",
+          "source_written_qualifier": null
         },
         {
           "param_name": "pump_count",
@@ -5733,7 +5736,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "n_pumps"
+          "source_attribute_name": "n_pumps",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -5764,7 +5768,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "cryo_pumps",
-          "source_attribute_name": "n_pumps"
+          "source_attribute_name": "n_pumps",
+          "source_written_qualifier": null
         },
         {
           "param_name": "pump_capacity",
@@ -5777,7 +5782,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "cryo_pumps",
-          "source_attribute_name": "pumping_speed"
+          "source_attribute_name": "pumping_speed",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -5810,7 +5816,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "fusion_power"
+          "source_attribute_name": "fusion_power",
+          "source_written_qualifier": "catf_tritium"
         }
       ],
       "unbound_params": [
@@ -5841,7 +5848,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_radial_build",
-          "source_attribute_name": "magnet_volume_total"
+          "source_attribute_name": "magnet_volume_total",
+          "source_written_qualifier": null
         },
         {
           "param_name": "magnet_surface_area",
@@ -5854,7 +5862,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_radial_build",
-          "source_attribute_name": "magnet_surface_area"
+          "source_attribute_name": "magnet_surface_area",
+          "source_written_qualifier": null
         },
         {
           "param_name": "first_wall_area",
@@ -5867,7 +5876,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_radial_build",
-          "source_attribute_name": "first_wall_area"
+          "source_attribute_name": "first_wall_area",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_neutron",
@@ -5880,7 +5890,8 @@
           "literal_value": 2079.41,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         },
         {
           "param_name": "b_field",
@@ -5893,7 +5904,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "field_at_coil"
+          "source_attribute_name": "field_at_coil",
+          "source_written_qualifier": null
         },
         {
           "param_name": "operating_temp",
@@ -5906,7 +5918,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "temperature_operating"
+          "source_attribute_name": "temperature_operating",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -5937,7 +5950,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -5950,7 +5964,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "plasma_region",
-          "source_attribute_name": "minor_radius"
+          "source_attribute_name": "minor_radius",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -5963,7 +5978,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -5992,7 +6008,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "tf_coil",
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": null
         },
         {
           "param_name": "thickness",
@@ -6005,7 +6022,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "tf_coil",
-          "source_attribute_name": "thickness"
+          "source_attribute_name": "thickness",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6018,7 +6036,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [
@@ -6049,7 +6068,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "plasma_region"
         },
         {
           "param_name": "r_outer",
@@ -6062,7 +6082,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "plasma_region"
         },
         {
           "param_name": "r_major",
@@ -6075,7 +6096,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6104,7 +6126,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6117,7 +6140,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6130,7 +6154,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6159,7 +6184,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "vacuum_gap"
         },
         {
           "param_name": "r_outer",
@@ -6172,7 +6198,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "vacuum_gap"
         },
         {
           "param_name": "r_major",
@@ -6185,7 +6212,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6214,7 +6242,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6227,7 +6256,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6240,7 +6270,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6269,7 +6300,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "first_wall"
         },
         {
           "param_name": "r_outer",
@@ -6282,7 +6314,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "first_wall"
         },
         {
           "param_name": "r_major",
@@ -6295,7 +6328,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6324,7 +6358,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6337,7 +6372,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6350,7 +6386,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6379,7 +6416,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "blanket"
         },
         {
           "param_name": "r_outer",
@@ -6392,7 +6430,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "blanket"
         },
         {
           "param_name": "r_major",
@@ -6405,7 +6444,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6434,7 +6474,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6447,7 +6488,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6460,7 +6502,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6489,7 +6532,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "reflector"
         },
         {
           "param_name": "r_outer",
@@ -6502,7 +6546,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "reflector"
         },
         {
           "param_name": "r_major",
@@ -6515,7 +6560,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6544,7 +6590,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6557,7 +6604,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6570,7 +6618,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6599,7 +6648,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "ht_shield"
         },
         {
           "param_name": "r_outer",
@@ -6612,7 +6662,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "ht_shield"
         },
         {
           "param_name": "r_major",
@@ -6625,7 +6676,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6654,7 +6706,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6667,7 +6720,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6680,7 +6734,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6709,7 +6764,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "structure"
         },
         {
           "param_name": "r_outer",
@@ -6722,7 +6778,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "structure"
         },
         {
           "param_name": "r_major",
@@ -6735,7 +6792,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6764,7 +6822,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6777,7 +6836,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6790,7 +6850,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6819,7 +6880,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "gap1"
         },
         {
           "param_name": "r_outer",
@@ -6832,7 +6894,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "gap1"
         },
         {
           "param_name": "r_major",
@@ -6845,7 +6908,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6874,7 +6938,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6887,7 +6952,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -6900,7 +6966,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6929,7 +6996,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "vessel"
         },
         {
           "param_name": "r_outer",
@@ -6942,7 +7010,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "vessel"
         },
         {
           "param_name": "r_major",
@@ -6955,7 +7024,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -6984,7 +7054,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -6997,7 +7068,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -7010,7 +7082,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7039,7 +7112,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "tf_coil"
         },
         {
           "param_name": "r_outer",
@@ -7052,7 +7126,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "tf_coil"
         },
         {
           "param_name": "r_major",
@@ -7065,7 +7140,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7094,7 +7170,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -7107,7 +7184,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -7120,7 +7198,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7149,7 +7228,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "gap2"
         },
         {
           "param_name": "r_outer",
@@ -7162,7 +7242,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "gap2"
         },
         {
           "param_name": "r_major",
@@ -7175,7 +7256,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7204,7 +7286,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -7217,7 +7300,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -7230,7 +7314,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7259,7 +7344,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "lt_shield"
         },
         {
           "param_name": "r_outer",
@@ -7272,7 +7358,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "lt_shield"
         },
         {
           "param_name": "r_major",
@@ -7285,7 +7372,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7314,7 +7402,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -7327,7 +7416,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -7340,7 +7430,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7369,7 +7460,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "inner_radius"
+          "source_attribute_name": "inner_radius",
+          "source_written_qualifier": "bioshield"
         },
         {
           "param_name": "r_outer",
@@ -7382,7 +7474,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "outer_radius"
+          "source_attribute_name": "outer_radius",
+          "source_written_qualifier": "bioshield"
         },
         {
           "param_name": "r_major",
@@ -7395,7 +7488,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7424,7 +7518,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "major_radius"
+          "source_attribute_name": "major_radius",
+          "source_written_qualifier": "catf_radial_build"
         },
         {
           "param_name": "a",
@@ -7437,7 +7532,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "minor_calc",
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         },
         {
           "param_name": "kappa",
@@ -7450,7 +7546,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "elongation"
+          "source_attribute_name": "elongation",
+          "source_written_qualifier": "catf_radial_build"
         }
       ],
       "unbound_params": [],
@@ -7479,7 +7576,8 @@
           "literal_value": 1104.22,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -7511,7 +7609,8 @@
           "literal_value": 1546.72,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -7542,7 +7641,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_fusion"
+          "source_attribute_name": "p_fusion",
+          "source_written_qualifier": "catf_physics"
         }
       ],
       "unbound_params": [],
@@ -7571,7 +7671,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "alpha_neutron_split",
-          "source_attribute_name": "p_neutron"
+          "source_attribute_name": "p_neutron",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_input",
@@ -7584,7 +7685,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_input"
+          "source_attribute_name": "p_input",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "m_neutron",
@@ -7597,7 +7699,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "m_neutron"
+          "source_attribute_name": "m_neutron",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "eta_thermal",
@@ -7610,7 +7713,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "eta_thermal"
+          "source_attribute_name": "eta_thermal",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "f_pump",
@@ -7623,7 +7727,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "f_pump"
+          "source_attribute_name": "f_pump",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "eta_pump",
@@ -7636,7 +7741,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "eta_pump"
+          "source_attribute_name": "eta_pump",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "f_subsystem",
@@ -7649,7 +7755,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "f_subsystem"
+          "source_attribute_name": "f_subsystem",
+          "source_written_qualifier": "catf_physics"
         }
       ],
       "unbound_params": [],
@@ -7678,7 +7785,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "blanket_thermal",
-          "source_attribute_name": "p_thermal"
+          "source_attribute_name": "p_thermal",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_alpha",
@@ -7691,7 +7799,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "alpha_neutron_split",
-          "source_attribute_name": "p_alpha"
+          "source_attribute_name": "p_alpha",
+          "source_written_qualifier": null
         },
         {
           "param_name": "eta_thermal",
@@ -7704,7 +7813,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "eta_thermal"
+          "source_attribute_name": "eta_thermal",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "eta_direct",
@@ -7717,7 +7827,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "eta_direct"
+          "source_attribute_name": "eta_direct",
+          "source_written_qualifier": "catf_physics"
         }
       ],
       "unbound_params": [],
@@ -7746,7 +7857,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "gross_electric",
-          "source_attribute_name": "p_electric_gross"
+          "source_attribute_name": "p_electric_gross",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_coils",
@@ -7759,7 +7871,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_tf_system",
-          "source_attribute_name": "cooling_power"
+          "source_attribute_name": "cooling_power",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_heating",
@@ -7772,7 +7885,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_heating",
-          "source_attribute_name": "wall_plug_power"
+          "source_attribute_name": "wall_plug_power",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_pumps",
@@ -7785,7 +7899,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_blanket",
-          "source_attribute_name": "pump_power"
+          "source_attribute_name": "pump_power",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_cryo",
@@ -7798,7 +7913,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_vacuum_pumping",
-          "source_attribute_name": "cryo_power"
+          "source_attribute_name": "cryo_power",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_vacuum",
@@ -7811,7 +7927,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_vacuum_pumping",
-          "source_attribute_name": "pump_power"
+          "source_attribute_name": "pump_power",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_tritium",
@@ -7824,7 +7941,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_tritium",
-          "source_attribute_name": "processing_power"
+          "source_attribute_name": "processing_power",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_auxiliary",
@@ -7837,7 +7955,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "catf_mfe_plant",
-          "source_attribute_name": "auxiliary_power"
+          "source_attribute_name": "auxiliary_power",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -7866,7 +7985,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_fusion"
+          "source_attribute_name": "p_fusion",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "p_input",
@@ -7879,7 +7999,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_input"
+          "source_attribute_name": "p_input",
+          "source_written_qualifier": "catf_physics"
         }
       ],
       "unbound_params": [],
@@ -7908,7 +8029,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "gross_electric",
-          "source_attribute_name": "p_electric_gross"
+          "source_attribute_name": "p_electric_gross",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_auxiliary_total",
@@ -7921,7 +8043,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "net_electric",
-          "source_attribute_name": "p_parasitic_total"
+          "source_attribute_name": "p_parasitic_total",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -7950,7 +8073,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_fusion"
+          "source_attribute_name": "p_fusion",
+          "source_written_qualifier": "catf_physics"
         },
         {
           "param_name": "p_net",
@@ -7963,7 +8087,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "net_electric",
-          "source_attribute_name": "p_net"
+          "source_attribute_name": "p_net",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

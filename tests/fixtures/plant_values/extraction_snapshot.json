@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "plant_values",
-  "captured_at": "2026-07-20T13:03:39.056068+00:00",
+  "captured_at": "2026-07-20T14:37:23.115149+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -616,7 +616,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "target_cost",
@@ -629,7 +630,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "target_factory",
-          "source_attribute_name": "cost_per_target"
+          "source_attribute_name": "cost_per_target",
+          "source_written_qualifier": null
         },
         {
           "param_name": "chamber_cost",
@@ -642,7 +644,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "chamber",
-          "source_attribute_name": "cost_per_unit"
+          "source_attribute_name": "cost_per_unit",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

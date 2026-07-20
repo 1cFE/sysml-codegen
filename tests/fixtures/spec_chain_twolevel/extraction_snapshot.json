@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "spec_chain_twolevel",
-  "captured_at": "2026-07-20T13:03:39.030796+00:00",
+  "captured_at": "2026-07-20T14:37:23.090861+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -380,7 +380,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "drive_power"
+          "source_attribute_name": "drive_power",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -409,7 +410,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "cost_per_joule"
+          "source_attribute_name": "cost_per_joule",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -438,7 +440,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "maintenance_rate"
+          "source_attribute_name": "maintenance_rate",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -467,7 +470,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "scale"
+          "source_attribute_name": "scale",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -496,7 +500,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "scale"
+          "source_attribute_name": "scale",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "modeled_default_fidelity",
-  "captured_at": "2026-07-20T13:07:47.480472+00:00",
+  "captured_at": "2026-07-20T14:37:18.098453+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -886,7 +886,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "sensor_reading"
+          "source_attribute_name": "sensor_reading",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

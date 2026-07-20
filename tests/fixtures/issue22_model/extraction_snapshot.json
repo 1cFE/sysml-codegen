@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "issue22_model",
-  "captured_at": "2026-07-20T13:03:38.872307+00:00",
+  "captured_at": "2026-07-20T14:37:22.934285+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -267,7 +267,8 @@
           "literal_value": 100.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "base_cost"
+          "source_attribute_name": "base_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -298,7 +299,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "total_cost"
+          "source_attribute_name": "total_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "margin_rate",
@@ -311,7 +313,8 @@
           "literal_value": 0.15,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

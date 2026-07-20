@@ -392,14 +392,13 @@ def _occurrence_materialized_qn(req: ProducerRequest, ctx: ProducerContext) -> F
     # This cannot be decided from the binding alone: `source_path` holds the resolved
     # QN, which is `::`-qualified for a bare self-named leaf too, so the written form
     # is not recoverable there. It is decidable here, against the real attribute index.
-    # Scoped only to the consumer that carries its resolved QN in `reference` and no
-    # `target_qn` -- the calculation consumer, the one Item 4 newly pointed at this row.
-    # The constraint consumer sets `target_qn` and keeps Item 2's ratified precedence,
-    # that row 16 beats row 17 when both resolve (test_constraint_resolver.py
-    # ::test_precedence_occurrence_qn_beats_target_qn_design_attribute). Extending the
-    # seam, not reworking it.
-    if req.target_qn is None and sanitize_qualified_name(req.reference) in ctx.design_attr_by_qn:
-        return _MISS
+    # NOTE: this row deliberately has no resolution-based guard. Two earlier attempts
+    # put one here -- "does `source_path` contain `::`" and "is the resolved QN indexed"
+    # -- and both were wrong the same way: resolution makes an owner-relative bare leaf
+    # and a scope-qualified reference indistinguishable. The discrimination now happens
+    # where the information actually exists, on the written form captured at extraction
+    # (`BindingInfo.written_reference` returns None for a qualified reference), so this
+    # row simply keys what it is given (audit F2/F2b).
     qn = f"{owner_path}__{'__'.join(written.split('.'))}"
     return _hit(qn if qn in ctx.design_attr_by_qn else None)
 

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "deep_cross_scope_probe",
-  "captured_at": "2026-07-20T13:03:39.102154+00:00",
+  "captured_at": "2026-07-20T14:37:23.161783+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -393,7 +393,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         },
         {
           "param_name": "baseline",
@@ -406,7 +407,8 @@
           "literal_value": 2.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "baseline_value"
+          "source_attribute_name": "baseline_value",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -435,7 +437,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "metric_value"
+          "source_attribute_name": "metric_value",
+          "source_written_qualifier": "measurement_system::station::array::sensor::core"
         },
         {
           "param_name": "baseline",
@@ -448,7 +451,8 @@
           "literal_value": 2.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "baseline_value"
+          "source_attribute_name": "baseline_value",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -477,7 +481,8 @@
           "literal_value": 2.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "baseline_value"
+          "source_attribute_name": "baseline_value",
+          "source_written_qualifier": "analyzer"
         }
       ],
       "unbound_params": [
@@ -508,7 +513,8 @@
           "literal_value": 10.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "reading"
+          "source_attribute_name": "reading",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -537,7 +543,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [

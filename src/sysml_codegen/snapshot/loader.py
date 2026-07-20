@@ -1041,6 +1041,10 @@ def _deserialize_binding_info(d: dict) -> BindingInfo:
         # the calculation consumer offline (DD-R27).
         stored_source_attribute_name=d.get("source_attribute_name"),
         stored_source_instance_name=d.get("source_instance_name"),
+        # The scope qualifier as written (audit F2). Resolution destroys it and no
+        # other field preserves it, so row 16 cannot tell an owner-relative bare leaf
+        # from a scope-qualified reference without it.
+        stored_source_written_qualifier=d.get("source_written_qualifier"),
     )
 
 

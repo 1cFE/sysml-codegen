@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "unresolvable_attr_probe",
-  "captured_at": "2026-07-20T13:03:39.325189+00:00",
+  "captured_at": "2026-07-20T14:37:23.387093+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -180,7 +180,8 @@
           "literal_value": 5.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "local_val"
+          "source_attribute_name": "local_val",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

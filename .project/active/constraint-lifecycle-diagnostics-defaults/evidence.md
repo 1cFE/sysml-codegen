@@ -1,6 +1,6 @@
 # Evidence: Lifecycle Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Status:** Remediated candidate (audit round 1 Needs Work → all four findings closed), awaiting narrow re-audit
+**Status:** Remediation round 2 — F2 closed by capturing the written qualifier (F1/F3/F4 closed round 1). Awaiting re-audit.
 **Owner:** Reid W
 **Created:** 2026-07-20
 **Epic:** CONSTRAINT-LIFECYCLE-REMEDIATION — register row 4
@@ -602,3 +602,94 @@ Added by this remediation:
 | **`::`-qualified references are not row-16 consumable** | deliberate, same safe-miss pattern as brackets. 84 bindings across two fixtures. Anchoring at the written scope needs the same missing derivation bracketed owners need — **one new item could close both** |
 | **Constraint-def formals captured as design attributes** | 8 across 4 fixtures; the root cause of F4's lane disagreement. Correct fix has a four-fixture blast radius and **needs its own item with a forced-difference table**. Unowned |
 | **The advisory severity leg is unreachable** | one-entry writer table. Not a defect — there is genuinely one diagnostic kind today — but DD-R09's advisory half stays unfalsifiable end-to-end until a second kind exists |
+
+---
+
+# Remediation round 2 — F2 closed by capturing the written qualifier
+
+Round-1's F2 fix scoped row 16 by resolution ("is the resolved QN indexed"), which the
+re-audit (F2b) showed re-imports the resolved-vs-written ambiguity: it silently reverted
+fusion_tea's bare-leaf `driver_efficiency` to a definition-scoped key, so two instances
+shared one parameter — the SR-A02 defect this item exists to close, masked by both keys
+holding 0.35 in a fixture with no baseline. **Ruling: execute the correct fix — capture the
+written qualifier at extraction.**
+
+**STOP condition checked and cleared.** Requirement 1 said to stop if the reference expression
+node is not reachable through codegen's existing adapter surface. It is: the FeatureReference
+expression carries a `cst_node` with `start_byte`/`end_byte`, and slicing the source document
+(the same surface used for source locations) yields the written text exactly —
+`catf_radial_build::elongation` (29 bytes) vs a bare `gain` (4 bytes). No agentic-mbse change.
+`_written_qualifier` (`usage_extractor.py`) captures the qualifier, `None` for a bare leaf.
+
+**Schema decision: amend v4, not v5.** v4 has never shipped — no remote contains the v4 commit
+(`git branch -r --contains` empty), and every other worktree is pre-v4 (`512786c`/`6db3212`,
+both < v4). So no pre-amendment v4 snapshot can exist anywhere a gate must catch, in a CI cache
+or another worktree. A new field on an unshipped version is not a skew surface. v3 rejection and
+both skew directions stay fail-closed and RED-tested (`test_snapshot_v4_gate.py` unchanged).
+
+**Discriminator now on the written form.** `BindingInfo.written_reference` returns `None` when
+`source_written_qualifier` is set, so row 16 misses for a scope-qualified reference and serves the
+bare leaf it exists for. The index-based guard in `_occurrence_materialized_qn` is **deleted** —
+row 16 keys what it is given.
+
+## The three sentinel bindings — final resolved keys (snapshot route)
+
+| binding | shape | resolves to |
+|---|---|---|
+| `shared_producer` `scaler.gain` | bare leaf | `SharedProducer__the_rig__gain` (converges — SR-A02) |
+| `fusion_tea` `driver.meier_cost.driver_efficiency` | bare leaf | `hif_plant_pkg__hif_plant__driver__efficiency` (**instance-scoped, restored**) |
+| `catf_mfe` `plasma_region.volume_calc.kappa` | `::`-qualified | `CATFMFERadialBuild__catf_radial_build__elongation` (outer, correct) |
+
+Pinned by `test_written_qualifier_anchoring.py::test_three_sentinel_bindings`.
+
+## Whole-corpus probe (per requirement 2)
+
+Per-binding entry-point probe at the new candidate vs the parent **coordinated pair**
+(`3fbec63` codegen + `515e08bb` agentic-mbse — the parent codegen cannot load facts-v2 alone, so
+the pair is the correct baseline) and vs `16dbaa7`.
+
+**vs parent pair:** 273 → 275 entry points. **0 same-key value changes.** 23 key movements across
+**seven** fixtures. This is the authoritative FD-1.
+
+**vs `16dbaa7`** (the F2/F2b correction alone): 3 movements — catf_mfe's `plasma_region__elongation`
+key removed (the F2 regression), and shadowed_reference's shadow key (7.0) replaced by the outer key
+(2.0). No other binding moved, so the written-form discriminator changed nothing that was already
+correct.
+
+### FD-1, corrected (supersedes every earlier count)
+
+| class | count | fixtures |
+|---|---|---|
+| pure rename (key moves, value preserved) | **18** | catf_mfe 1, chain_spike 3, expression_binding_probe 1, fusion_tea 2, return_styles 3, solar_battery 8 |
+| convergence (two keys collapse onto one that already existed) | **5** | expression_binding_probe 2 (0.08), shared_producer 1 (40.0), solar_battery 2 (0.008, 25.0) |
+| **total** | **23** | **seven fixtures** |
+
+Round-1's table was wrong three ways, all now fixed: it summed 18+5+1 to 23 (arithmetic error — the
+"+1" was the false catf_mfe convergence, which F2b showed was a regression and is now gone, so the
+real total is 18+5=23 with no third row); it labelled the moved fusion_tea binding a `.` chain (it
+is a bare leaf — the `.` chain in that fixture is a different, unaffected consumer); and it counted
+six fixtures where the probe measures seven. **0 same-key value changes** across the whole corpus —
+every rename and convergence preserved its value.
+
+## Gates
+
+| gate | result |
+|---|---|
+| codegen suite | **3056 passed, 0 failed**, 44 skipped |
+| codegen `-O` | identical except the 2 pre-existing assert-stripped tests |
+| licence | **0** skips |
+| agentic-mbse suite | **1811 passed** (no upstream change) |
+| mypy | 72, zero added (the two new property lines match the pre-existing `source_attribute_name` pattern) |
+| ruff | clean |
+
+Re-capture: 36 snapshots, amend-v4. Only non-timestamp delta is the new `source_written_qualifier`
+key on 294 reference bindings (plus trailing-comma churn). `shadowed_reference` now registered for
+baseline capture (F2c) and pinned by an actual loading test.
+
+## F2c / F2d closed
+
+- **F2c** — `shadowed_reference` is registered (`capture_pipeline_baselines.py`) so the parametrized
+  conformance tests stop skipping it, and `test_written_qualifier_anchoring.py` loads it on both
+  routes and asserts the 2.0 outcome. A fixture that pins nothing is closed.
+- **F2d** — FD-1 arithmetic corrected above; the false fusion_tea convergence row removed; the
+  bare-leaf/`.`-chain mislabel fixed.

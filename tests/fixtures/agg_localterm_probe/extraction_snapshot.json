@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "agg_localterm_probe",
-  "captured_at": "2026-07-20T13:03:39.282772+00:00",
+  "captured_at": "2026-07-20T14:37:23.344336+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -168,7 +168,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "area"
+          "source_attribute_name": "area",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

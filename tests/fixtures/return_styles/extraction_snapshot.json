@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "return_styles",
-  "captured_at": "2026-07-20T13:03:38.897811+00:00",
+  "captured_at": "2026-07-20T14:37:22.958786+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -301,7 +301,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -330,7 +331,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "b"
+          "source_attribute_name": "b",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -359,7 +361,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "c"
+          "source_attribute_name": "c",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -388,7 +391,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "d"
+          "source_attribute_name": "d",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

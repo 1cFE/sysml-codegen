@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "chain_override_probe",
-  "captured_at": "2026-07-20T13:03:39.311528+00:00",
+  "captured_at": "2026-07-20T14:37:23.373201+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -203,7 +203,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "sensitivity"
+          "source_attribute_name": "sensitivity",
+          "source_written_qualifier": null
         },
         {
           "param_name": "base_cost",
@@ -216,7 +217,8 @@
           "literal_value": 100.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "base_cost"
+          "source_attribute_name": "base_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -245,7 +247,8 @@
           "literal_value": 1.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

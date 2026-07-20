@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "plant_value_shapes",
-  "captured_at": "2026-07-20T13:03:39.081646+00:00",
+  "captured_at": "2026-07-20T14:37:23.141204+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -608,7 +608,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "availability",
-          "source_attribute_name": "value"
+          "source_attribute_name": "value",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -637,7 +638,8 @@
           "literal_value": 200.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -666,7 +668,8 @@
           "literal_value": 4.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -695,7 +698,8 @@
           "literal_value": 6.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -724,7 +728,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "throughput"
+          "source_attribute_name": "throughput",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -753,7 +758,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "wall"
+          "source_attribute_name": "wall",
+          "source_written_qualifier": null
         },
         {
           "param_name": "footprint",
@@ -766,7 +772,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "footprint"
+          "source_attribute_name": "footprint",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

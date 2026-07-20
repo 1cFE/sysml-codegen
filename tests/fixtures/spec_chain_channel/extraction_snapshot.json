@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "spec_chain_channel",
-  "captured_at": "2026-07-20T13:03:38.994740+00:00",
+  "captured_at": "2026-07-20T14:37:23.055470+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -258,7 +258,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "drive_power"
+          "source_attribute_name": "drive_power",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -287,7 +288,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "cost_per_joule"
+          "source_attribute_name": "cost_per_joule",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

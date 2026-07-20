@@ -253,6 +253,8 @@ def _serialize_dataclass(obj: Any, output_dir: Path | None) -> dict[str, Any]:
         result["source_instance_name"] = obj.source_instance_name
     if hasattr(obj, "source_attribute_name") and hasattr(obj, "source_attribute_elem"):
         result["source_attribute_name"] = obj.source_attribute_name
+    if hasattr(obj, "source_written_qualifier"):
+        result["source_written_qualifier"] = obj.source_written_qualifier
 
     return result
 

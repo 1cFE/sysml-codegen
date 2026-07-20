@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "gate_a_package_owner",
-  "captured_at": "2026-07-20T13:03:39.272688+00:00",
+  "captured_at": "2026-07-20T14:37:23.334089+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -361,7 +361,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "seed"
+          "source_attribute_name": "seed",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

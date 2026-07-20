@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "sibling_channel_ambiguity",
-  "captured_at": "2026-07-20T13:03:39.006123+00:00",
+  "captured_at": "2026-07-20T14:37:23.066852+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -231,7 +231,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "fuel"
+          "source_attribute_name": "fuel",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -260,7 +261,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "fuel"
+          "source_attribute_name": "fuel",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -289,7 +291,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "chamber_b",
-          "source_attribute_name": "power"
+          "source_attribute_name": "power",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

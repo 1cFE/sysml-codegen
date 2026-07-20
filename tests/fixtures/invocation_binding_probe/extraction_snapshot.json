@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "invocation_binding_probe",
-  "captured_at": "2026-07-20T13:03:39.344617+00:00",
+  "captured_at": "2026-07-20T14:37:23.406365+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [],

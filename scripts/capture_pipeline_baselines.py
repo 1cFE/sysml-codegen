@@ -66,6 +66,10 @@ MODELS = {
     # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS). Both build the
     # graph; the known-incomplete cross-part inputs land on Step-4 fallback EPs.
     "wi014_toy": "wi014_toy",
+    # Written-qualifier anchoring (Item 4, audit F2c). Registered so the parametrized
+    # conformance tests that glob baseline_outputs stop skipping it -- an unregistered
+    # fixture pins nothing, which is what F2c found.
+    "shadowed_reference": "shadowed_reference",
     "ife_plant": "ife_plant",
     # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1). Each builds a full
     # graph (V11 fires only at the generation boundary, not at graph build), so each

@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "shadowed_reference",
-  "captured_at": "2026-07-20T13:52:11.379729+00:00",
+  "captured_at": "2026-07-20T14:37:23.413357+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -121,7 +121,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "scale"
+          "source_attribute_name": "scale",
+          "source_written_qualifier": "ShadowedReference::the_outer"
         }
       ],
       "unbound_params": [],

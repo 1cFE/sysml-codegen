@@ -1,7 +1,7 @@
 {
   "snapshot_format_version": 4,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-20T13:03:39.213263+00:00",
+  "captured_at": "2026-07-20T14:37:23.273817+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -1886,7 +1886,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "thermal_power_gw"
+          "source_attribute_name": "thermal_power_gw",
+          "source_written_qualifier": null
         },
         {
           "param_name": "num_units",
@@ -1899,7 +1900,8 @@
           "literal_value": 1.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -1928,7 +1930,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "meier_reactor_cost_calc",
-          "source_attribute_name": "reactor_cost_billions"
+          "source_attribute_name": "reactor_cost_billions",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_cost",
@@ -1941,7 +1944,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "driver_cost_billions"
+          "source_attribute_name": "driver_cost_billions",
+          "source_written_qualifier": null
         },
         {
           "param_name": "target_factory_cost",
@@ -1954,7 +1958,8 @@
           "literal_value": 0.1,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -1983,7 +1988,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "meier_capital_calc",
-          "source_attribute_name": "total_capital_billions"
+          "source_attribute_name": "total_capital_billions",
+          "source_written_qualifier": null
         },
         {
           "param_name": "availability",
@@ -1996,7 +2002,8 @@
           "literal_value": 0.9,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "availability"
+          "source_attribute_name": "availability",
+          "source_written_qualifier": null
         },
         {
           "param_name": "net_electric_power_gw",
@@ -2009,7 +2016,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "net_electric_power_gw"
+          "source_attribute_name": "net_electric_power_gw",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -2038,7 +2046,8 @@
           "literal_value": 5.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "beam_energy_mj"
+          "source_attribute_name": "beam_energy_mj",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_efficiency",
@@ -2051,7 +2060,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "num_chambers",
@@ -2064,7 +2074,8 @@
           "literal_value": 1.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "num_chambers"
+          "source_attribute_name": "num_chambers",
+          "source_written_qualifier": null
         },
         {
           "param_name": "rep_rate",
@@ -2077,7 +2088,8 @@
           "literal_value": 3.5,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "pulse_rate_ref"
+          "source_attribute_name": "pulse_rate_ref",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -2106,7 +2118,8 @@
           "literal_value": 5.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "beam_energy_mj"
+          "source_attribute_name": "beam_energy_mj",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_efficiency",
@@ -2119,7 +2132,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "num_chambers",
@@ -2132,7 +2146,8 @@
           "literal_value": 1.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "num_chambers"
+          "source_attribute_name": "num_chambers",
+          "source_written_qualifier": null
         },
         {
           "param_name": "rep_rate",
@@ -2145,7 +2160,8 @@
           "literal_value": 3.5,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "pulse_rate_ref"
+          "source_attribute_name": "pulse_rate_ref",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
@@ -2174,7 +2190,8 @@
           "literal_value": 0.9,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "availability"
+          "source_attribute_name": "availability",
+          "source_written_qualifier": null
         },
         {
           "param_name": "blanket_energy_multiple",
@@ -2187,7 +2204,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "chamber",
-          "source_attribute_name": "blanket_energy_multiple"
+          "source_attribute_name": "blanket_energy_multiple",
+          "source_written_qualifier": null
         },
         {
           "param_name": "discount_rate",
@@ -2200,7 +2218,8 @@
           "literal_value": 0.08,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "discount_rate"
+          "source_attribute_name": "discount_rate",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_cost_constant",
@@ -2213,7 +2232,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "cost_per_joule"
+          "source_attribute_name": "cost_per_joule",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_efficiency",
@@ -2226,7 +2246,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_energy",
@@ -2239,7 +2260,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "energy"
+          "source_attribute_name": "energy",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_lifetime_shots",
@@ -2252,7 +2274,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "lifetime_shots"
+          "source_attribute_name": "lifetime_shots",
+          "source_written_qualifier": null
         },
         {
           "param_name": "frequency",
@@ -2265,7 +2288,8 @@
           "literal_value": 3.5,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "frequency"
+          "source_attribute_name": "frequency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "gain",
@@ -2278,7 +2302,8 @@
           "literal_value": 80.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "gain"
+          "source_attribute_name": "gain",
+          "source_written_qualifier": null
         },
         {
           "param_name": "om_cost_constant",
@@ -2291,7 +2316,8 @@
           "literal_value": 65.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "om_cost_constant"
+          "source_attribute_name": "om_cost_constant",
+          "source_written_qualifier": null
         },
         {
           "param_name": "plant_cost_constant",
@@ -2304,7 +2330,8 @@
           "literal_value": 2000.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "plant_cost_constant"
+          "source_attribute_name": "plant_cost_constant",
+          "source_written_qualifier": null
         },
         {
           "param_name": "target_cost_constant",
@@ -2317,7 +2344,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "target_factory",
-          "source_attribute_name": "cost_per_target"
+          "source_attribute_name": "cost_per_target",
+          "source_written_qualifier": null
         },
         {
           "param_name": "thermal_efficiency",
@@ -2330,7 +2358,8 @@
           "literal_value": 0.43,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "thermal_efficiency"
+          "source_attribute_name": "thermal_efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "yield_cost_constant",
@@ -2343,7 +2372,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "chamber",
-          "source_attribute_name": "yield_cost_constant"
+          "source_attribute_name": "yield_cost_constant",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -2375,7 +2405,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "gain",
@@ -2388,7 +2419,8 @@
           "literal_value": 80.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "gain"
+          "source_attribute_name": "gain",
+          "source_written_qualifier": null
         },
         {
           "param_name": "blanket_multiplier",
@@ -2401,7 +2433,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "chamber",
-          "source_attribute_name": "blanket_energy_multiple"
+          "source_attribute_name": "blanket_energy_multiple",
+          "source_written_qualifier": null
         },
         {
           "param_name": "thermal_efficiency",
@@ -2414,7 +2447,8 @@
           "literal_value": 0.43,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "thermal_efficiency"
+          "source_attribute_name": "thermal_efficiency",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],

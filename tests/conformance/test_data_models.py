@@ -331,6 +331,12 @@ def test_req_dm_03_fields_binding_info():
         "expression_ast",
         "stored_source_attribute_name",
         "stored_source_instance_name",
+        # The scope qualifier as WRITTEN, captured at extraction from the CST
+        # (audit F2). Resolution destroys it -- `source_path` holds the resolved QN,
+        # which is `::`-qualified for a bare self-named leaf too -- so this is the
+        # only field that can tell an owner-relative reference from a scope-qualified
+        # one. Row 16 keys on that distinction.
+        "stored_source_written_qualifier",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
