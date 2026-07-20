@@ -6,6 +6,15 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — spec in progress 2026-07-20
+Epic rows 13–15 + invariant 46a. TEAx `07eb0ac`. Spec at
+`.project/active/constraint-lifecycle-evidence-durability/spec.md` (artifacts here for register
+continuity). Absence of a constraint report = empty evidence through both evaluator routes;
+deep-freeze/isolate evidence; persist/harvest exact report JSON per completed status; pin failure
+phase per arithmetic shape (settle OUTPUT_WRITE); excluded-only → `not_assessed`. Surfaced: Item 9
+firewalled the constraint-free KeyError repro to Item 11 (`evidence.md:138`), so the brief's
+"already reproduced" premise is corrected in the spec.
+
 ### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — ✅ CERTIFIED + Major 1 CLOSED 2026-07-20
 **Audit Major 1 closed:** the completeness check's MODULE_OUTPUT exemption left channel-tier name-based
 rows (leaf_parent_scoped/leaf_consumer_scoped) uncaught for qualified terms — now flagged (check keys on
