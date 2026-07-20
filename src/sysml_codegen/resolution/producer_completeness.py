@@ -15,10 +15,12 @@ What it flags, from ``ProducerResolution.{outcome, key_form, ambiguous_candidate
   and fell through to a synthesized entry point carrying the tied QNs; producing a verdict
   from either candidate would be a guess. This is the ambiguous/defaulted acceptance
   coordinate (contract acceptance row "Ambiguous/defaulted producer resolution").
-- **Leaf-name guess** — a model-derived value resolved through a name-based lenient row
-  (``leaf_unique`` / ``bare_name_unique`` / ``dotted_pair``) rather than exact identity.
-  These resolve a design attribute by matching its bare name, not its qualified name;
-  invariant 26 names "leaf-name guess" as non-conformant.
+- **Leaf-name guess** — a QUALIFIED reference (``part.attr``) resolved through a name-based
+  lenient row that dropped its scope qualifier. This spans BOTH the tier-2 design-attribute
+  rows (``leaf_unique`` / ``dotted_pair`` / ``bare_name_unique``) AND the tier-1 CHANNEL rows
+  (``leaf_parent_scoped`` / ``leaf_consumer_scoped``) — the latter yield a ``MODULE_OUTPUT``
+  and were uncaught before audit Major 1 closed the MODULE_OUTPUT exemption. Same defect
+  regardless of outcome; invariant 26 names "leaf-name guess" as non-conformant.
 
 What it does NOT flag — the exemptions:
 
@@ -26,8 +28,10 @@ What it does NOT flag — the exemptions:
   external typed design input** (a formal the model declares as an input with no producer).
   It is exempt by declaration, not by leniency — external inputs stay ordinary typed entry
   channels (invariant 26; owner decision D-1).
-- ``MODULE_OUTPUT`` and exact-QN ``DESIGN_ATTRIBUTE`` (rows ``occurrence_materialized_qn``
-  / ``target_qn`` / ``owner_def_qn``) are exact-identity resolutions — the conformant path.
+- A ``MODULE_OUTPUT`` or exact-QN ``DESIGN_ATTRIBUTE`` resolved through an EXACT or STRUCTURAL
+  row (scoped channels, ``occurrence_materialized_qn`` / ``target_qn`` / ``owner_def_qn``,
+  ``chain_redefinition_follow``) consults the reference's own owner — the conformant path.
+  Only the name-based rows above, on a qualified reference, are non-conformant.
 """
 
 from __future__ import annotations
@@ -37,7 +41,6 @@ from enum import Enum
 
 from sysml_codegen.resolution.producer_resolution import (
     CapturedResolution,
-    Outcome,
 )
 
 __all__ = [
@@ -47,10 +50,25 @@ __all__ = [
     "check_producer_completeness",
 ]
 
-# The tier-2 name-based lenient rows (KEY_FORMS rows 19-21). Resolving a model-derived
-# value through one of these is a leaf-name match, not exact-QN identity.
+# The name-based lenient rows that identify a producer by leaf/bare name rather than by
+# exact-QN or structural identity. Two tiers:
+#   - tier-2 DESIGN_ATTRIBUTE rows 19-21: dotted_pair / leaf_unique / bare_name_unique
+#   - tier-1 CHANNEL rows 14-15: leaf_parent_scoped / leaf_consumer_scoped — these recombine
+#     the leaf with the CONSUMER's parent/scope and NEVER consult the reference's own owner,
+#     so `PartA::x` and `PartB::x` construct the same channel key (their own docstrings say so).
+# Resolving a QUALIFIED term through any of these drops its scope qualifier — the same
+# producer-completeness defect whether it lands on a design attribute or a module_output
+# channel (audit Major 1: the MODULE_OUTPUT exemption left rows 14-15 uncaught).
+# `chain_redefinition_follow` (row 13) is EXCLUDED — it follows `:>>` redefinitions to a
+# constructed channel structurally, keyed on the reference's own owner, and refuses ties.
 NAME_BASED_KEY_FORMS: frozenset[str] = frozenset(
-    {"dotted_pair", "leaf_unique", "bare_name_unique"}
+    {
+        "dotted_pair",
+        "leaf_unique",
+        "bare_name_unique",
+        "leaf_parent_scoped",
+        "leaf_consumer_scoped",
+    }
 )
 
 
@@ -111,24 +129,25 @@ def check_producer_completeness(
         # Leaf-name guess: a QUALIFIED reference (``part_usage.attr``) that resolved via a
         # name-based lenient row by DROPPING its qualifier and matching the bare leaf. This
         # is the scope-collapse defect — e.g. every ``X.capital_cost`` term collapsing to a
-        # single ``capital_cost`` design attribute regardless of ``X``. A BARE reference
-        # (no ``.``) matched by ``bare_name_unique`` is NOT flagged: with no qualifier to
-        # drop and a unique surviving candidate, that is the intended producer, resolved by
-        # its only available handle — not a guess (verified: ``agg_localterm_probe``'s bare
-        # ``markup`` is a legitimate unique match, not a scope collapse).
-        if (
-            res.outcome is Outcome.DESIGN_ATTRIBUTE
-            and res.key_form in NAME_BASED_KEY_FORMS
-            and "." in req.reference
-        ):
+        # single producer regardless of ``X``. It is the SAME violation whether the row
+        # landed on a design attribute (rows 19-21, ``DESIGN_ATTRIBUTE``) OR a module_output
+        # channel (rows 14-15, ``MODULE_OUTPUT`` — audit Major 1: these were uncaught because
+        # all module outputs were exempt). Keyed on ``key_form`` membership, not outcome. A
+        # BARE reference (no ``.``) matched by ``bare_name_unique`` is NOT flagged: with no
+        # qualifier to drop and a unique surviving candidate, that is the intended producer
+        # resolved by its only handle (``agg_localterm_probe``'s bare ``markup``). Exact and
+        # structural rows (scoped channels, exact-QN attrs, ``chain_redefinition_follow``)
+        # remain exempt — they consult the reference's own owner.
+        if res.key_form in NAME_BASED_KEY_FORMS and "." in req.reference:
             violations.append(
                 CompletenessViolation(
                     kind=CompletenessViolationKind.LEAF_NAME_GUESS,
                     consumer_eqn=req.consumer_eqn,
                     reference=req.reference,
                     detail=(
-                        f"qualified reference resolved by leaf match ({res.key_form}) to "
-                        f"{res.identity}, dropping its scope qualifier — not exact identity"
+                        f"qualified reference resolved by name match ({res.key_form}, "
+                        f"{res.outcome.value}) to {res.identity}, dropping its scope "
+                        "qualifier — not exact or structural identity"
                     ),
                 )
             )

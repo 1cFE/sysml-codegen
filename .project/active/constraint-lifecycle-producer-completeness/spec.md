@@ -59,27 +59,37 @@ The ambiguous/defaulted producer counterexample is the **de-risk-first (RED-firs
 build and prove it BEFORE the stellarator rollup (epic De-risking note; Risks row "Drive exact-QN
 and ambiguous/defaulted counterexamples first").
 
-- [ ] **Ambiguous/defaulted producer acceptance exists and is RED-first.** A model with two
+- [x] **Ambiguous/defaulted producer acceptance exists and is RED-first.** A model with two
       same-leaf candidate design attributes and a defaulted-fallback shape either fails generation
       with a named ambiguity/producer error, or resolves only under exact QN — and produces **no
       verdict from a guessed or defaulted binding while V11 is clean**. (Invariant 26; acceptance
-      matrix row "Ambiguous/defaulted producer resolution".)
-- [ ] **Producer completeness is explicit, deterministic, and independent of V11.** Every
+      matrix row "Ambiguous/defaulted producer resolution".) _Audit 2026-07-20: verified._
+- [x] **Producer completeness is explicit, deterministic, and independent of V11.** Every
       model-derived consumed value resolves to one intended producer under exact identity;
       legitimate external typed design inputs remain ordinary typed entry channels, not flagged as
-      missing producers.
-- [ ] **Codegen compiles the modeled cross-part capital aggregation as a real graph producer**,
+      missing producers. _Audit 2026-07-20: met as mechanism (check exists, reads the capture sink,
+      no re-resolution, independent of V11). **Audit Major 1 CLOSED 2026-07-20:** the check now flags
+      a qualified reference resolved through ANY name-based row regardless of outcome — the
+      channel-tier rows 14–15 (`leaf_parent_scoped`/`leaf_consumer_scoped`, `MODULE_OUTPUT`) join the
+      design-attribute rows 19–21; exact/structural rows (incl. `chain_redefinition_follow`) stay
+      exempt. Proven by `test_qualified_channel_tier_leaf_guess_is_flagged`; corpus byte-clean (the
+      check is diagnostic). The revert rationale is now airtight — the loud guard has no hole._
+- [x] **Codegen compiles the modeled cross-part capital aggregation as a real graph producer**,
       through the same graph machinery as calculations/aggregations — `direct_capital` and
       `total_capital` are wired producers, with no private bridge, no placeholder default, no D7
-      passthrough calculation, and no consumer (harness) mutation of the rollup.
-- [ ] **The stellarator generates publicly and its ordinary numerics are unchanged.** A fully
+      passthrough calculation, and no consumer (harness) mutation of the rollup. _Audit 2026-07-20:
+      verified; rollup numerics reproduced from the graph, single-pass._
+- [x] **The stellarator generates publicly and its ordinary numerics are unchanged.** A fully
       representable graph builds through the supported public path; the five verdicts appear as
       data; the ordinary numerical anchors below are bit-identical to the WI-025/WI-027 baseline.
-- [ ] **WI-027 is amended** with a supersession pointer to D-2; its D7 passthroughs are removed
+      _Audit 2026-07-20: independently reproduced — six anchors bit-exact, five verdicts satisfied,
+      oracle reldev 0.00e+00 (generation step itself taken from evidence, not re-run)._
+- [x] **WI-027 is amended** with a supersession pointer to D-2; its D7 passthroughs are removed
       (artifact-level; none are in the model); the private bridge, placeholder fill, and two-pass
-      rollup glue are retired from the demo package.
-- [ ] **Named aggregation/resolver workarounds are deleted; no parallel producer mechanism or
+      rollup glue are retired from the demo package. _Audit 2026-07-20: verified._
+- [x] **Named aggregation/resolver workarounds are deleted; no parallel producer mechanism or
       compatibility wrapper remains** (qualitative simplification mandate; no LOC accounting).
+      _Audit 2026-07-20: verified; the fix is in the general resolver, no rollup-specific arm._
 
 **Ordinary numerical anchors (from WI-027 / WI-025 executed record — the "unchanged numerics"
 bar).** Public single-pass generation must reproduce these bit-exactly, now that the rollup comes

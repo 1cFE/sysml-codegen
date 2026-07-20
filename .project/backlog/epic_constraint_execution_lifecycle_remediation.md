@@ -681,6 +681,12 @@ generated entry channels without a consumer wrapper.
 
 ### Item 10: Producer Completeness and Stellarator Rollup
 
+> **Audit 2026-07-20 — Certify (one surfaced Major).** SC1/3/4/5/6 verified-met; anchors + verdicts +
+> 2956-test corpus reproduced independently. SC2 met-as-mechanism with a documented guarantee gap
+> (the completeness check exempts all `MODULE_OUTPUT`, so channel-tier name-based rows 14–15 escape) —
+> owner ruling requested. Heading ✅ withheld pending that ruling and the Item-9 predecessor ordering.
+> See `.project/active/constraint-lifecycle-producer-completeness/audit.md`.
+
 **Register row**: 12
 **Type**: Code/Integration + Modeling (sysml-codegen + stellarator)
 **Effort**: 2 days (spec 1.5h, design 2.5h, plan 1h, execute/evidence 10–12h)
@@ -705,13 +711,22 @@ of V11, then represent the stellarator capital rollup in the ordinary graph.
 - Public late fill or a permanent model placeholder.
 - Weakening exact-QN resolution, final V11, or declared external-input semantics.
 
+**Status**: ✅ **COMPLETE** — certified 2026-07-20 (audit Major 1 closed same day). WI-015 finding
+#4 root closed: the cross-part capital rollup compiles as ordinary instance-scoped aggregation
+producers. Stellarator generates/runs bridge-free, six anchors bit-exact (oracle reldev 0.00e+00),
+five verdicts satisfied. Codegen `cfd8295`+ (Major-1 fix follow-on), stellarator `c4dcdf27`.
+
 **Success Criteria**:
-- [ ] Ambiguous/defaulted resolution cannot produce a verdict while V11 is clean.
-- [ ] Intended producer completeness is explicit, deterministic, and independent of V11.
-- [ ] WI-027 contains the supersession pointer; D7 passthroughs and private bridge/mutation are gone.
-- [ ] Public generation builds a fully representable stellarator graph with unchanged ordinary
-      numerical anchors.
-- [ ] Named aggregation/resolver workarounds are deleted and no parallel producer mechanism remains.
+- [x] Ambiguous/defaulted resolution cannot produce a verdict while V11 is clean. *(RED coordinate;
+      completeness check flags ambiguous ties.)*
+- [x] Intended producer completeness is explicit, deterministic, and independent of V11. *(Capture
+      sink + `producer_completeness.py`; audit Major 1 closed — channel-tier name-based rows now caught.)*
+- [x] WI-027 contains the supersession pointer; D7 passthroughs and private bridge/mutation are gone.
+- [x] Public generation builds a fully representable stellarator graph with unchanged ordinary
+      numerical anchors. *(Bridge-free, single-pass, six anchors bit-exact, five verdicts satisfied.)*
+- [x] Named aggregation/resolver workarounds are deleted and no parallel producer mechanism remains.
+      *(Fix is general — per-child redefinition capture + dual-scope follow + transitive routing; no
+      rollup-specific arm; bridge + glue-2 deleted.)*
 
 **Required Reading**:
 - Ratified D-1/D-2 and invariants 19–26.

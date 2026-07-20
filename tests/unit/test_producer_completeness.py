@@ -75,6 +75,51 @@ def test_qualified_leaf_name_guess_is_flagged() -> None:
     assert violations[0].kind is CompletenessViolationKind.LEAF_NAME_GUESS
 
 
+def test_qualified_channel_tier_leaf_guess_is_flagged() -> None:
+    """Audit Major 1: a QUALIFIED reference resolved to a MODULE_OUTPUT via a name-based
+    CHANNEL row (leaf_parent_scoped / leaf_consumer_scoped) drops its scope qualifier just
+    like the design-attribute rows — the MODULE_OUTPUT exemption must NOT hide it."""
+    for row in ("leaf_parent_scoped", "leaf_consumer_scoped"):
+        cap = _cap(
+            "sibling.power",
+            ProducerResolution(
+                outcome=Outcome.MODULE_OUTPUT,
+                identity="pkg__plant__consumer__power",  # the consumer's own, not sibling's
+                key_form=row,
+            ),
+        )
+        v = check_producer_completeness([cap])
+        assert len(v) == 1, row
+        assert v[0].kind is CompletenessViolationKind.LEAF_NAME_GUESS, row
+
+
+def test_structural_channel_row_is_exempt() -> None:
+    """chain_redefinition_follow (row 13) consults the reference's own owner and follows
+    :>> redefinitions structurally — a MODULE_OUTPUT via it is NOT a guess."""
+    cap = _cap(
+        "magnet.capital_cost",
+        ProducerResolution(
+            outcome=Outcome.MODULE_OUTPUT,
+            identity="inst__magnet_cost__capital_cost",
+            key_form="chain_redefinition_follow",
+        ),
+    )
+    assert check_producer_completeness([cap]) == []
+
+
+def test_scoped_channel_row_is_exempt() -> None:
+    """An exact scoped channel row (scoped_prefixed) is structural — exempt."""
+    cap = _cap(
+        "chamber.power",
+        ProducerResolution(
+            outcome=Outcome.MODULE_OUTPUT,
+            identity="pkg__plant__chamber__power",
+            key_form="scoped_prefixed",
+        ),
+    )
+    assert check_producer_completeness([cap]) == []
+
+
 def test_bare_name_unique_is_exempt() -> None:
     """A BARE reference matched by bare_name_unique (a unique surviving candidate, no
     qualifier to drop) is the intended producer resolved by its only handle — not a guess."""

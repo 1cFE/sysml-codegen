@@ -6,7 +6,30 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — WI-015 #4 CLOSED; public gen proven 2026-07-20
+### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — ✅ CERTIFIED + Major 1 CLOSED 2026-07-20
+**Audit Major 1 closed:** the completeness check's MODULE_OUTPUT exemption left channel-tier name-based
+rows (leaf_parent_scoped/leaf_consumer_scoped) uncaught for qualified terms — now flagged (check keys on
+name-based key_form + qualified ref, regardless of outcome; chain_redefinition_follow + exact rows exempt).
+2959 pass, corpus byte-clean. The revert-rationale loud guard is now airtight. WI-015 #4 root closed;
+stellarator bridge-free, six anchors bit-exact, five verdicts satisfied.
+**Audit verdict: Certify** (`audit.md`). Reproduced independently: 2956-test corpus green (licensed);
+`run_stellaris_single.py` reran in the exec env → six anchors bit-exact, five verdicts satisfied,
+single-pass, oracle reldev 0.00e+00; bridge/glue-2/handshake-rollup absence-checked; WI-027 D7
+supersession present; five `resolve_producer` sites covered by the centralized sink; resolver fix
+(per-child `:>>` capture + dual-scope row-13 follow + transitive instance-scoping) sound and byte-clean.
+**Surfaced Major (owner ruling requested):** the producer-completeness check's guarantee is NOT airtight
+— it exempts all `MODULE_OUTPUT`, so a qualifier-drop collapse via the channel-tier name-based rows
+14–15 (`leaf_parent_scoped`/`leaf_consumer_scoped`) is uncaught (the design-attribute `leaf_unique`
+path IS caught). Latent (no fixture trips it; the stellarator resolves at row 13), diagnostic not a hard
+gate — does not affect the delivered acceptance, but the "completeness check is the loud guard" rationale
+for the reverted global refusal holds only for the design-attribute tier. Spec SC2 marked met-as-mechanism
+with the documented gap; SC1/3/4/5/6 verified-met. Evidence stale note: `handshake_comparison.json` WAS
+refreshed (stellarator `342cc799`, the anticipated diagnostic-snapshot commit); evidence text not updated.
+Next: `/_my_pre_pr` then `/_my_close` (certification stays ordered behind Item 9 per the register).
+
+---
+
+### (prior) CONSTRAINT-LIFECYCLE Item 10 — WI-015 #4 CLOSED; public gen proven 2026-07-20
 Phases 0/1/2 done. The blocking finding (cross-part child.attr collapse) was ratified in-scope and
 FIXED (general resolver mechanism, no rollup arm): (a1) capture per-child :>> redefinitions, (a2)
 dual-scope channel follow, (a3) transitive instance-scoping for aggregation-composing sums. Global
