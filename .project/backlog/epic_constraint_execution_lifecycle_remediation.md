@@ -445,15 +445,22 @@ without letting warning rendering hide a later halt.
 - General constant folding, unit conversion, or a new diagnostics framework beyond the required
   versioned contract.
 
-**Status**: Complete — candidate `16dbaa7` (codegen) / `4c18d61` (agentic-mbse), 2026-07-20.
-Awaiting independent audit. **Moves the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`; merge
-order load-bearing (PR #11 before PR #9).
+**Status**: **Needs work** — independent audit 2026-07-20 against candidate `16dbaa7` (codegen) /
+`4c18d61` (agentic-mbse). Gates all reproduce green; three claims outrun their evidence: the
+snapshot-route diagnostic sink runs after lowering (F1), the carry re-anchored a `::`-qualified
+reference onto an owner-local shadow and FD-1 records it as a fix (F2), and DD-A03's "unit surface"
+does not exist — the sink has zero test coverage (F3). See
+`.project/active/constraint-lifecycle-diagnostics-defaults/audit.md`.
+**Moves the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`; merge order load-bearing (PR #11
+before PR #9).
 
 **Success Criteria**:
-- [x] Severity/code round-trip and both consumer sinks pass with fail-closed skew.
+- [ ] Severity/code round-trip and both consumer sinks pass with fail-closed skew. *(Audit: sinks
+      untested; snapshot sink runs after lowering — audit.md F1, F3.)*
 - [x] Warning preparation cannot replace the actionable `BLOCK` diagnostic.
 - [x] Signed/unit defaults survive; unsupported default IR fails or remains explicitly unresolved.
-- [x] Diagnostic/default parsing is consolidated without a second representation or compatibility shim.
+- [ ] Diagnostic/default parsing is consolidated without a second representation or compatibility
+      shim. *(Audit: two lanes disagree on the same modeled default — audit.md F4.)*
 - [x] SR-A02 convergence completes on real data with no name inference — for the unbracketed
       (`PartUsage`-owned) shape, which is the shape SR-A02 names. **Not claimed** for an
       occurrence-indexed `part_def` owner: row 16 deliberately misses there (evidence PC-6).

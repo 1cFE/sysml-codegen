@@ -123,20 +123,26 @@ These four outcomes are the epic's row-4 criteria, absorbed unchanged. They are 
 their authority is the epic register and the ratified contract, not an owner statement about this
 item.
 
-- [x] **[INHERITED: epic Item 4]** Severity/code round-trip and both consumer sinks pass with
-      fail-closed skew.
+- [ ] **[INHERITED: epic Item 4]** Severity/code round-trip and both consumer sinks pass with
+      fail-closed skew. *(Audit 2026-07-20: round-trip and fail-closed skew verified; the sinks are
+      not. `screen_extraction_diagnostics` has zero test coverage on either route, and the snapshot
+      sink runs after lowering. See audit.md F1, F3.)*
 - [x] **[INHERITED: epic Item 4]** Warning preparation cannot replace the actionable `BLOCK`
       diagnostic.
 - [x] **[INHERITED: epic Item 4]** Signed/unit defaults survive; unsupported default IR fails or
       remains explicitly unresolved.
-- [x] **[INHERITED: epic Item 4]** Diagnostic/default parsing is consolidated without a second
-      representation or compatibility shim.
+- [ ] **[INHERITED: epic Item 4]** Diagnostic/default parsing is consolidated without a second
+      representation or compatibility shim. *(Audit 2026-07-20: the retained string lane and the IR
+      lane hold disagreeing answers for the same modeled default. See audit.md F4.)*
 
 Two more, from sources outside the epic row:
 
 - [x] **[INHERITED: referral decision 2026-07-20, recorded in epic Item 2 out-of-scope]** SR-A02
       convergence completes on real data with no name inference: the shared attribute yields one
-      QN-keyed typed entry point, one modeled default, one group assignment.
+      QN-keyed typed entry point, one modeled default, one group assignment. **Scope-limited — see
+      the note at the end of this file:** convergence is claimed for the unbracketed
+      (`PartUsage`-owned) shape only. *(Audit 2026-07-20: verified for `shared_producer`. The carry
+      also re-anchored one `::`-qualified reference onto an owner-local shadow — audit.md F2.)*
 - [x] **[OWNER]** Simplicity is judged qualitatively — duplicated diagnostic/default parsing is
       consolidated and what the typed path obsoletes is deleted, not shimmed. No LOC gate, baseline,
       cap, or counting obligation exists for this item. Source: owner amendment 2026-07-19,

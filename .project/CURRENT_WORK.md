@@ -6,11 +6,35 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — CANDIDATE COMPLETE, awaiting audit
+### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — NEEDS WORK (audited 2026-07-20)
 
 Epic register row 4. Artifacts at `.project/active/constraint-lifecycle-diagnostics-defaults/`
 (`spec.md`, `design.md` — which holds the phased plan, no separate `plan.md` — `design-review.md`,
-`evidence.md`, `briefs/`).
+`evidence.md`, `audit.md`, `briefs/`).
+
+**Audit verdict: Needs Work.** Every gate reproduces exactly (3040 passed / 0 license skips, 72
+mypy, 1811 upstream, the pinned FD-1 set with no extras) and PC-3 — the certified-seam fingerprint
+rewrite the brief flagged as highest-risk — is sound in all three respects, guard verified to fire.
+Three findings block certification:
+
+1. **F1** — on the snapshot route the blocking-diagnostic sink runs **after** lowering
+   (`snapshot_context.py:34` lowers via `graph_rebuild.py:213`, sink at `:42`). Proven by a call-order
+   probe. PC-4, DD-R09, design D2, and the module docstring all claim before-lowering on both routes.
+2. **F2** — the carry re-anchored `catf_mfe`'s `plasma_region` kappa binding from the outer
+   `catf_radial_build::elongation` the model explicitly names onto an owner-local shadow, diverging
+   from its thirteen identical siblings. Masked because both hold 3.0. FD-1 records it as
+   "convergence onto correct scope." `::` qualifiers lose their qualifier the way `.` chains did
+   before PC-1.
+3. **F3** — DD-A03's "proven by unit surface" is false: `screen_extraction_diagnostics` has **zero**
+   test coverage on either route (raise, advisory log, and `_render` all uncovered), the advisory
+   branch is unreachable given the one-entry severity table, and the e2e fixture is ~20 lines, not
+   costly. Should read Fail, not Partial.
+
+Also: F4 (the retained string lane and the IR lane disagree on the same modeled default — 5.0 vs
+explicitly unresolved), plus notes on FD-4's unnamed seventh delta class (582 vs 594), the
+non-existent "retained v3" fixture, and the merge-order failure presenting as an ImportError at
+collection rather than the guard's message. Spec/epic criteria 1 and 4 unmarked; no ✅ on the epic
+heading.
 
 **CANDIDATE_REVs:** `16dbaa720c20b9c6f4e9da76e324d6c075ef8378` (sysml-codegen) and
 `4c18d616f77e26932a8e158cefc2637db47f9b07` (agentic-mbse), both on `constraint-exec-epic`.
