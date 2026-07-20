@@ -9,10 +9,10 @@ package SharedProducer {
     // the SAME QN-keyed typed entry point — one modeled default, one group
     // assignment — not two per-consumer mints.
     //
-    // Convergence is a tier-2 property (I9): both consumers resolve *positively*
-    // through the shared design-attribute tier to `SharedProducer__the_rig__gain`,
-    // and entry-point classification mints one entry point per QN. Neither reaches
-    // a terminal miss, so neither mints a per-consumer fallback.
+    // ⚠ HEADER CORRECTED (Gate B / Item 3, 2026-07-19). The paragraph here used to
+    // claim both consumers converge positively on `SharedProducer__the_rig__gain`.
+    // Live behavior: only the CONSTRAINT does. The calc reaches a terminal miss and
+    // mints `SharedProducer__the_rig__scaler__gain`. See decision.md "Surfaced".
     //
     // `gate_a` deliberately has no calculation consumer, so it cannot carry this
     // row; this fixture is the shape SR-A02 needs.

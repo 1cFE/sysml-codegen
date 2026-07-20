@@ -389,21 +389,31 @@ only the coverage check the constructed evidence proves necessary.
 - Adding deferred-input annotations, capture hooks, public late fill, or placeholder defaults.
 - Solving stellarator producer representation, owned by Item 10.
 
+**Status**: Complete — vacuity proven, delete branch executed 2026-07-19. Awaiting independent audit.
+
 **Success Criteria**:
-- [ ] The constructed case settles the vacuity question with kept evidence.
-- [ ] Unrelated pre-existing V11 never blocks extension; final generation remains whole-graph strict.
-- [ ] Strict actual resolution and dangling-channel rejection remain unchanged.
-- [ ] Any vacuous call/helper is deleted; no replacement wrapper preserves the dead path.
+- [x] The constructed case settles the vacuity question with kept evidence.
+      **Vacuous** — closed enumeration in `findings.md`, decision in `decision.md`.
+- [x] Unrelated pre-existing V11 never blocks extension; final generation remains whole-graph strict.
+      `tests/unit/test_constraint_graph_extension.py`, `tests/conformance/test_gate_b_generation_gate.py`.
+- [x] Strict actual resolution and dangling-channel rejection remain unchanged.
+- [x] Any vacuous call/helper is deleted; no replacement wrapper preserves the dead path.
+      `collect_uncovered_params` retained for its generation-gate caller only.
 
 **Required Reading**:
+- `.project/active/constraint-lifecycle-gate-b/decision.md` — the settled outcome and its re-open
+  trigger. Read this before either Gate B report; both reports recommend a differential repair that
+  the proof superseded.
 - Both Gate B reports listed in Source Documents.
 - Ratified invariants 24–26 and LC-E02–LC-E04B.
 
-**Deliverables**:
-- `.project/active/constraint-lifecycle-gate-b/spec.md`
-- `.project/active/constraint-lifecycle-gate-b/design.md`
-- `.project/active/constraint-lifecycle-gate-b/plan.md`
-- `.project/active/constraint-lifecycle-gate-b/evidence.md`
+**Deliverables** (`[OWNER]` pace directive 2026-07-19: decision record in place of spec/design/plan):
+- `.project/active/constraint-lifecycle-gate-b/decision.md`
+- `.project/active/constraint-lifecycle-gate-b/findings.md`
+- `.project/active/constraint-lifecycle-gate-b/upstream-filing.md`
+
+**Carried out of scope**: `shared_producer` contradicts Item 2's SR-A02 / I9 convergence claim
+(decision.md, "Surfaced"). Parked for Item 2's evidence owner; does not affect Gate B.
 
 ---
 

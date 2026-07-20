@@ -1350,14 +1350,18 @@ def extend_graph_with_constraints(
     (``{constraint_id}__{formal}``) — a per-instance formal, not a shared
     design attribute, so it is never QN-deduped against another constraint's.
 
-    Re-runs ``_validate_channel_references`` and ``collect_uncovered_params``
-    on the extended graph (INV-6) — raises naming the uncovered params on
-    violation.
+    Re-runs ``_validate_channel_references`` on the extended graph (LC-E03) —
+    raises on a dangling module-output channel.
+
+    Runs **no** V11 coverage check. Extension is vacuous with respect to V11:
+    it copies ``fallback_entry_points`` verbatim and the only two entry-point
+    mints it can make (DESIGN_ATTRIBUTE, MODELED_DEFAULT) cannot produce a QN
+    that is in that set, so every offender it could report is already present
+    in the input graph. Final generation owns coverage whole-graph and strictly
+    (LC-E02/LC-E04, ``cli/__init__.py`` ``_reconcile_params_coverage``). Proof:
+    ``.project/active/constraint-lifecycle-gate-b/decision.md``.
     """
-    from sysml_codegen.resolution.graph_builder import (
-        _validate_channel_references,
-        collect_uncovered_params,
-    )
+    from sysml_codegen.resolution.graph_builder import _validate_channel_references
 
     modules = [m.model_copy(deep=True) for m in graph.modules]
     groups = [g.model_copy(deep=True) for g in graph.entry_point_groups]
@@ -1500,9 +1504,6 @@ def extend_graph_with_constraints(
         output_aliases=graph.output_aliases,
     )
     _validate_channel_references(extended.modules)
-    uncovered = collect_uncovered_params(extended)
-    if uncovered:
-        raise _generation_error(f"V11 coverage violations in extended graph: {uncovered}")
     return extended
 
 

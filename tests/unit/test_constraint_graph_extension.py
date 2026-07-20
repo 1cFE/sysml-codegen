@@ -13,13 +13,19 @@ from sysml_codegen.analysis.constraint_lowering import (
     extend_graph_with_constraints,
 )
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
+from sysml_codegen.resolution.graph_builder import collect_uncovered_params
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ConcreteConstraint,
     ConcreteConstraintInput,
     ConstraintInputResolution,
+    EntryPoint,
+    EntryPointType,
+    InputSource,
+    ModuleInput,
     ModuleKind,
     ModuleOutput,
+    ParameterGroup,
     PipelineModule,
 )
 
@@ -264,3 +270,171 @@ def test_evaluation_channels_distinct_and_multiple_constraint_modules_present():
     assert len(constraint_modules) == 3
     channels = {m.outputs[0].channel_name for m in constraint_modules}
     assert len(channels) == 3
+
+
+# ---------------------------------------------------------------------------
+# Gate B (LC-E02): extension owns no V11 coverage check.
+#
+# `extend_graph_with_constraints` used to re-run `collect_uncovered_params` on
+# the whole extended graph, so any pre-existing coverage gap made an unrelated,
+# perfectly safe constraint fail at capture. The Gate B spike proved extension
+# cannot introduce a V11 offender of its own (closed enumeration in
+# `.project/active/constraint-lifecycle-gate-b/decision.md`), so the check was
+# deleted and final generation owns coverage whole-graph and strict (LC-E04,
+# covered by `tests/conformance/test_gate_b_generation_gate.py`).
+#
+# The shape below is the fusion-tea capital-rollup shape reduced to its
+# essentials: a fell-through, valueless entry point that a PRE-EXISTING calc
+# module reads, which a downstream consumer legitimately covers before
+# generation.
+# ---------------------------------------------------------------------------
+
+_DEFERRED_QN = "plant__lcoe_calc__total_capital"
+_PRODUCER_CHANNEL = "plant__cost_calc__direct"
+
+
+def _graph_with_preexisting_v11_offender() -> ComputationGraph:
+    """A base graph carrying one pre-existing V11 offender, unrelated to constraints.
+
+    `_DEFERRED_QN` is fell-through (in `fallback_entry_points`), valueless
+    (`default_value is None`) and wired by a surviving calc module input — all
+    three legs of V11's predicate.
+    """
+    producer = PipelineModule(
+        name="cost_calc",
+        module_type="plant.CostCalcModule",
+        inputs=[],
+        outputs=[
+            ModuleOutput(field_name="direct", python_type="float", channel_name=_PRODUCER_CHANNEL)
+        ],
+        execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
+    )
+    consumer = PipelineModule(
+        name="lcoe_calc",
+        module_type="plant.LcoeCalcModule",
+        inputs=[
+            ModuleInput(
+                param_name="total_capital",
+                python_type="float",
+                source=InputSource(
+                    source_type="entry_point",
+                    param_group="plant_params",
+                    qualified_name=_DEFERRED_QN,
+                ),
+            )
+        ],
+        outputs=[
+            ModuleOutput(
+                field_name="lcoe", python_type="float", channel_name="plant__lcoe_calc__lcoe"
+            )
+        ],
+        execution_order=1,
+        module_kind=ModuleKind.CALCULATION,
+    )
+    group = ParameterGroup(
+        name="plant_params",
+        class_name="PlantParams",
+        source_file=Path("design.sysml"),
+        parameters=[
+            EntryPoint(
+                qualified_name=_DEFERRED_QN,
+                simple_name="total_capital",
+                entry_type=EntryPointType.LIBRARY_DEFAULT,
+                default_value=None,
+                param_group="plant_params",
+            )
+        ],
+    )
+    return ComputationGraph(
+        modules=[producer, consumer],
+        entry_point_groups=[group],
+        execution_order=["cost_calc", "lcoe_calc"],
+        fallback_entry_points={_DEFERRED_QN},
+    )
+
+
+@pytest.mark.req("LC-E02")
+def test_preexisting_v11_offender_does_not_block_unrelated_constraint():
+    """Gate B: an unrelated safe constraint extends a graph that already has a V11 gap."""
+    graph = _graph_with_preexisting_v11_offender()
+    assert [u.missing_key for u in collect_uncovered_params(graph)] == [
+        f"plant_params.{_DEFERRED_QN}"
+    ], "precondition: the base graph carries exactly one pre-existing V11 offender"
+
+    cc = _cc(
+        "safe",
+        [
+            ConcreteConstraintInput(
+                formal_name="direct",
+                resolution=ConstraintInputResolution.MODULE_OUTPUT,
+                bound_channel=_PRODUCER_CHANNEL,
+            )
+        ],
+    )
+    extended = extend_graph_with_constraints(graph, [cc], _deriver())
+
+    constraint_modules = [m for m in extended.modules if m.module_kind == ModuleKind.CONSTRAINT]
+    assert len(constraint_modules) == 1
+    assert constraint_modules[0].inputs[0].source.producer_channel == _PRODUCER_CHANNEL
+
+
+@pytest.mark.req("LC-E02")
+def test_extension_preserves_the_offender_set_exactly():
+    """Extension neither hides nor adds a V11 offender — it is coverage-neutral.
+
+    The pre-existing offender is still there for the generation gate to catch,
+    and extension contributed none of its own.
+    """
+    graph = _graph_with_preexisting_v11_offender()
+    before = {(u.module, u.input, u.missing_key) for u in collect_uncovered_params(graph)}
+
+    cc = _cc(
+        "safe",
+        [
+            ConcreteConstraintInput(
+                formal_name="direct",
+                resolution=ConstraintInputResolution.MODULE_OUTPUT,
+                bound_channel=_PRODUCER_CHANNEL,
+            )
+        ],
+    )
+    extended = extend_graph_with_constraints(graph, [cc], _deriver())
+    after = {(u.module, u.input, u.missing_key) for u in collect_uncovered_params(extended)}
+
+    assert after == before
+    # The appended modules contribute nothing to the offender set.
+    appended = {m.name for m in extended.modules} - {m.name for m in graph.modules}
+    assert appended and not (appended & {module for module, _, _ in after})
+
+
+@pytest.mark.req("LC-E02")
+def test_extension_does_not_widen_the_fallback_set():
+    """The fallback set is copied verbatim — the premise of the vacuity proof.
+
+    If extension ever adds a fallback key, the Gate B enumeration no longer
+    holds and `decision.md`'s re-open trigger fires.
+    """
+    graph = _graph_with_preexisting_v11_offender()
+    attr = DesignAttributeData(
+        name="threshold",
+        sysml_type="Real",
+        default_value="10.0",
+        unit=None,
+        source_file=Path("design.sysml"),
+        source_line=1,
+        parent_part="Design",
+        qualified_name="Design__c__threshold",
+    )
+    cc = _cc(
+        "attr_backed",
+        [
+            ConcreteConstraintInput(
+                formal_name="threshold",
+                resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+                design_attribute_qn="Design__c__threshold",
+            )
+        ],
+    )
+    extended = extend_graph_with_constraints(graph, [cc], _deriver([attr]))
+    assert extended.fallback_entry_points == graph.fallback_entry_points

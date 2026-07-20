@@ -235,10 +235,13 @@ wait on them.
   aggregator; unchanged values may be safely shared. Catalog assembly is the following, separate
   stage and embeds one catalog on the returned graph.
 - **LC-E02 [INFERRED]** Pre-existing uncovered inputs do not make an unrelated safe constraint fail.
-  Item 3B first constructs a case to prove or refute whether extension can introduce a V11 offender.
-  If it can, extension rejects only introduced offenders; if it cannot, extension performs no V11
-  coverage check and final generation owns coverage. This preserves the surviving rationale of
-  failure attribution and incomplete-graph capture while superseding old lowering INV-6.
+  Constraint extension performs no V11 coverage check; final generation owns coverage. Supersedes
+  old lowering INV-6. Settled by constructed proof (Item 3, 2026-07-19): extension is vacuous with
+  respect to V11 — it cannot introduce an offender, so a differential would be dead code. Decision
+  and enumeration: `.project/active/constraint-lifecycle-gate-b/decision.md`. **Re-open trigger:**
+  the result holds only while fallback membership stays restricted to consumer-minted
+  `{consumer_eqn}__{key}` strings. Any change letting a design-attribute QN enter
+  `fallback_entry_points` makes extension-time V11 non-vacuous again and must re-open this row.
 - **LC-E03 [INHERITED]** Whole-graph channel-reference validation still runs on the extended graph.
   Strict actual resolution remains unchanged.
 - **LC-E04 [INHERITED]** Final generation requires zero whole-graph V11 uncovered inputs.
