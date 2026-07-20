@@ -6,14 +6,18 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — spec in progress
+### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — design drafted, awaiting review
 
 Epic `epic_constraint_execution_lifecycle_remediation.md` register row 10; operationalizes owner
-decision D-3 (settled: codegen's embedded catalog is the sole schema authority). Spec at
-`.project/active/constraint-lifecycle-catalog-store/spec.md`. Deletion inventory grounded across
-codegen + teax + fusion-tea (surfaced conflict: brief pins the fusion consumer at
-`-stellarator-mbse-demo`, but the materializer/reconstruction code lives in `fusion-tea` — see spec
-Open Questions).
+decision D-3 (settled: codegen's embedded catalog is the sole schema authority). Spec + design at
+`.project/active/constraint-lifecycle-catalog-store/`. Deletion inventory grounded across codegen +
+teax + fusion-tea. Orchestrator rulings recorded: fusion-tea (not `-stellarator-mbse-demo`) is the
+deletion target; no active store migration (pre-release stores; archival invariant + existing
+eight-field no-silent-rebind gate suffice). Design settles the parked questions with code evidence:
+three-tier catalog (add per-usage tier + 4 projected entry fields + `definition_qualified_name` FK
+recorded at lowering), skew guard via `contracts/versions.py` central pin + TEAx vendored accepted
+set (composes with Items 4/7, no new version machinery), phasing codegen→TEAx→fusion with the IFE
+study proven green on the real catalog before the materializer dies. Next: `/_my_design_review`.
 
 ### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — CERTIFIED (independent audit 2026-07-20, candidate codegen `280a2bd` / teax `98a6d07`)
 
