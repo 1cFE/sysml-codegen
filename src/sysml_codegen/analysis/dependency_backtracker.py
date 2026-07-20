@@ -567,7 +567,7 @@ class DependencyBacktracker:
 
         Note what this consumer can and cannot ask. Binding extraction resolves a
         reference to its referent's qualified name and discards the name as written, so
-        the occurrence-materialized key form is unreachable from here — see design PC-4
+        the occurrence-materialized key form (row 16) is unreachable from here — see design PC-4
         and ``tests/fixtures/shared_producer/PROVENANCE.md``.
         """
         assert self._output_registry is not None

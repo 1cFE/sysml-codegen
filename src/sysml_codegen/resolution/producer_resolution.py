@@ -19,13 +19,20 @@ exactly one candidate survives, and records the tie otherwise. They are unreacha
 the strict constraint consumer, which is exactly where they are unreachable today — all
 eleven of that consumer's lookups are exact.
 
-**A residual, recorded rather than hidden.** No single total order reproduces all three
-ladders' current precedence: the calculation ladder tries the structured alias forms
-(rows 6, 8) before the bare alias form (row 5), and the constraint ladder tries them in
-the opposite order. The table takes the constraint order. Measured across the corpus, no
-reference reaches more than one of those rows — 44 of 249 calculation bindings hit
-exactly one, none hits two — so the conflict is latent, not exercised. Byte identity is
-the standing control if that ever changes.
+**A residual, corrected by audit.** The implementing session recorded this table as
+sacrificing one ladder's order for another's. That was wrong, and the truth is better: both
+deleted ladders are order-consistent *subsequences* of this table. Calculation ran
+1→3→6→8→10; constraint ran 1→2→4→5→6→7→8→9→16→17→18. Neither reorders relative to the other.
+Splitting what each old ladder treated as a single "alias rung" — prefixed and de-indexed at
+rows 4-5, before the structured forms; bare at row 10, after them — reproduces both exactly.
+Rows 4, 5, 7 and 9 take zero corpus hits from any consumer.
+
+The one genuine inversion is in the third ladder: before the cutover the aggregation path
+tried the alias namespace before the scoped one, the opposite of this table's
+scoped-before-alias precedence. It is unexercised — of 54 aggregation requests, 14 hit row 1
+and 36 hit row 4, none hits both. No binding anywhere in the corpus reaches two conflicting
+rows, so no resolution outcome can turn on the chosen order. Byte identity and the
+entry-point manifest are the standing controls.
 """
 
 from __future__ import annotations
@@ -94,11 +101,11 @@ class ProducerRequest:
     ``reference`` is the reference the consumer holds, never pre-split. Note that the
     calculation consumer holds the *resolved referent qualified name* rather than the
     reference as written — binding extraction discards the written name — which is why
-    the occurrence-materialized form (row 15) is unreachable from it. See design PC-4
+    the occurrence-materialized form (row 16) is unreachable from it. See design PC-4
     and ``tests/fixtures/shared_producer/PROVENANCE.md``.
 
     ``target_qn`` is the resolved referent where the consumer carries it separately from
-    the reference; row 16 keys on it.
+    the reference; row 17 keys on it.
     """
 
     consumer_eqn: str

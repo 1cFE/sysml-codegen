@@ -786,6 +786,49 @@ deliberately has no calculation consumer of `gain`, so that acceptance row needs
 
 ---
 
+### Phase groups 2 and 3 (Phases 3, 4, 5, 5b, 6) — 2026-07-19
+
+**Phase 3 — constraint consumer.** `resolve_actual` became a request builder with
+`policy=STRICT`; its eleven-lookup sequence is gone. `constraint_id` is now minted at the top of
+the owner-instance loop so the shared guard has the consuming module's EQN. All six SR-R33
+precedence pins pass **unchanged** — no precedence flip, so the stop condition never fired.
+
+**Phase 4 — calculation consumer.** `_resolve_binding_via_registry` became a request builder with
+`policy=LENIENT`; `_resolve_chain_dispatch`, `_resolve_reference_dispatch`,
+`_resolve_reference_via_registry` and `_resolve_to_design_attribute` deleted, and
+`_is_self_reference` / `_is_calc_def_owned` moved into the resolver. V11 membership preserved via
+a single `_fallback_entry_points.add`, verified by a one-writer grep. Three key forms the design
+had not enumerated were required to reproduce the calculation reach and were added:
+`chain_redefinition_follow`, `leaf_parent_scoped`, `leaf_consumer_scoped`.
+
+**Phase 5a — aggregation deletions.** The warn-and-return-first collision arm, the register/backfill
+pair, and the silent defaultless LocalTerm mint. `_mint_entry_point_once` implements I5's
+same-QN rule: agreeing defaults are idempotent, disagreeing ones refuse and warn. The LocalTerm
+mint now resolves its modeled default through the shared table (`markup = 1.15`).
+
+**Phase 5b — aggregation cutover.** `_build_agg_input_source` and the EXPOSE-alias probe became
+request builders; `input_resolver.py` deleted outright with `resolve_input`, `AGG_STRATEGIES`,
+`ResolutionContext`, `ResolutionStrategy` and all four strategy functions. `ResolutionContext`'s
+consumer-identity half became the local `_AggConsumer`; its registry half is the shared
+`ProducerContext`. **Control for the F4-cutover trap:** an entry-point/wiring manifest captured
+before the cutover and re-run after — 0 diffs across 34 fixtures, 273 entry points, 484 module
+inputs.
+
+**Phase 6 — sweep.** Absence checks over the full inventory, six docstrings amended off the
+removed mechanisms, and `evidence.md`.
+
+**Deviation — the key-form table shipped 21 rows, not the design's 20.**
+
+| Change | Reason |
+|---|---|
+| The design's row 5 ("alias, de-indexed / bare") **split** into rows 5 `alias_deindexed` and 10 `alias_bare` | These are two different keys that the design merged into one row. The split is what lets both old ladders be order-consistent subsequences of one table — the constraint ladder needs the de-indexed alias *before* the structured forms, the calculation ladder needs the bare alias *after* them. Without it the table could only reproduce one of the two. |
+| `chain_redefinition_follow` ships at row **13**, before the leaf-recombined forms; the design placed it at row 14, after them | Implementation ordering, not a reasoned change. All three are lenient-only tier-1 forms, so a reference reachable by both a chain redefinition and a leaf recombination would resolve differently than the design declares. No corpus reference is reachable by both, and byte identity plus the EP manifest are green, but this is drift against SR-R11's declare-it-once rule and should be reconciled deliberately rather than left as an artifact. |
+| Tier-2 rows renumber 15-20 → 16-21 | Consequence of the split above. |
+
+`KEY_FORMS` in `resolution/producer_resolution.py` is the authority; the design's table above is
+the ratified proposal it was built from. `test_table_order_and_admissibility_are_declared` reads
+the shipped order as data.
+
 ## Next-Stage Handoff
 
 **Fixed.** The tier / key-form framing; `resolution/` as the home; the request and result field sets;

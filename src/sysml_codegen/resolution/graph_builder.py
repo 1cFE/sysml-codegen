@@ -1223,7 +1223,6 @@ def _find_literal_redefinition(
         attr: Attribute name (e.g., "raw_material_cost")
         redefinitions: PartDef-level :>> redefinitions
         usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
-        producer_ctx: Context for the shared producer-resolution table
         owning_part_qn: QN of the PartDef that owns the aggregation expression
 
     Returns:
@@ -1466,7 +1465,6 @@ def _build_aggregation_module(
         group_deriver: For classifying new entry points (None in tests)
         expose_aliases: EXPOSE_PURE alias map for LocalTerm resolution
         usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
-        producer_ctx: Context for the shared producer-resolution table
 
     Returns:
         (PipelineModule, dict of new entry points created by this factory)

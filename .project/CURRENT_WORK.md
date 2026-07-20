@@ -41,10 +41,14 @@ referent is the calc's own formal (design PC-4). I9 is falsified for that shape.
 known-incomplete by `tests/fixtures/shared_producer/` + its `PROVENANCE.md`; the written-reference
 carry is folded into **Item 4**'s coordinated agentic-mbse + codegen change set.
 
-**For the auditor's eye first.** D2 is falsified as stated: no single total order reproduces all
-three ladders' precedence (calc puts rows 6/8 before row 5, constraint the reverse). The table takes
-the constraint order; measured 44/249 calculation bindings hit exactly one conflicting row and none
-hits two, so the conflict is latent, with byte identity as the standing control.
+**Audit: Pass with notes** — every gate reproduced independently; all eight findings were record
+corrections, now applied. The headline correction: D2 was **not** falsified. Both deleted ladders
+are order-consistent subsequences of the unified table, and the alias-rung split (rows 4-5 before
+the structured forms, row 10 after) reproduces both exactly. The original residual named the wrong
+row (bare alias is row 10, not 5), mixed 235 calculation with 14 constraint requests into one
+denominator of 249, and measured 44 hits where the rows it named yield 3. Rows 4/5/7/9 take zero
+corpus hits. The one genuine inversion is in the aggregation ladder (alias before scoped) and is
+also unexercised.
 
 **Still open.** V11 widening to aggregation entry points stays Item 3's (PC-3, I10 preserved and
 verified by a one-writer check). `param_group` on LocalTerm mints stays `None` — a classification
