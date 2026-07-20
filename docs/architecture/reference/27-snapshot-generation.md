@@ -34,7 +34,7 @@ path).
 
 Top-level keys of `extraction_snapshot.json`:
 
-- `snapshot_format_version` (int) — gates loading. Current: **3** (`sysml_codegen.snapshot.SNAPSHOT_FORMAT_VERSION`).
+- `snapshot_format_version` (int) — gates loading. Current: **5** (`sysml_codegen.snapshot.SNAPSHOT_FORMAT_VERSION`, `snapshot/__init__.py:28`).
 - `model_name`, `captured_at` (provenance).
 - `constraint_facts` — the neutral `ConstraintFacts` (agentic-mbse Item 1),
   serialized via `agentic_mbse.sysml.constraint_facts.serialize`. Always present
@@ -54,14 +54,19 @@ Top-level keys of `extraction_snapshot.json`:
   `aggregation_expressions`, `computed_attributes`, `channel_aliases` — the typed
   extraction output (live syside AST fields nullified).
 
-**`source_file` normalization (byte-identity).** Modules/schemas/stencils emit a
-`SysML Source: {source_file}:{line}` header. Capture relativizes each `source_file`
-against the snapshot's own directory (`output_path.parent`); the loader
-re-absolutizes by a **lexical** join `Path(os.path.abspath(snapshot_dir / stored))`
-— **no `.resolve()`**, so a symlinked path is reproduced exactly as the parser
-reports it. Same anchor at capture and load → the round-trip reproduces the exact
-absolute string live generation emits, on any machine, with nothing machine-specific
-committed. Sentinels (`unknown`, `hierarchy`) pass through untouched.
+**`source_file` portable referent (v5, byte-identity).** Modules/schemas/stencils
+emit a `SysML Source: {source_file}:{line}` header. Capture maps each real
+`source_file` to a portable `root-N/<relpath>` referent — the model root it lives
+under, indexed by capture order, plus its path within that root
+(`serializer.py:277-282` via `map_live_source_referent`, `analysis/source_referent.py`).
+The loader validates the referent shape at load and reconstructs **no** absolute
+path; the referent string is what generation emits verbatim
+(`loader.py` `_validate_source_referents` via `validate_snapshot_source_referent`).
+Generated output therefore carries no checkout-absolute bytes and is byte-identical
+across checkout roots, without any same-machine cancellation. A field-less,
+absolute, or snapshot-relative `source_file` is rejected loudly at load rather than
+silently loaded (`SnapshotFormatError`). Sentinels (`unknown`, `hierarchy`) are not
+real paths and pass through untouched (`serializer.py:55-56`).
 
 ## Version / provenance / freshness policy (V1–V6)
 
@@ -75,13 +80,18 @@ committed. Sentinels (`unknown`, `hierarchy`) pass through untouched.
 | **V6** `generate` extraction input | exactly one of `--models` / `--from-snapshot`; `--from-snapshot` + `--design-path-filter` is a hard error |
 | **V7** missing load-bearing field on a deserialized dict | not silently defaulted. A type/wiring/scoping field (`python_type`, `binding_type`, `parent_part_path`, `owning_part_def_qn`) warns and degrades to its default; a **keying** field (`qualified_name` on a calc usage or design attribute) raises `SnapshotFormatError` — a silent default would mis-key the output registry. The benign majority (`is_input`, `unit`, `source_line`, list fields, …) keeps its `.get(default)` untouched. TRUTH-DEBT Item 6, Site 1. |
 
-**v2 → v3 migration (CONSTRAINT-EXEC Item 8).** v3 added the three top-level
-constraint sections above (`constraint_facts`, `part_occurrences`,
-`constraint_lowering_mode`) so the offline path can re-lower modeled assertions
-without a license. The version gate is a hard cutover, not a compatibility shim:
-there is **no v2/v3 coexistence** (V1/V2 above), so a v1 or v2 snapshot is a hard
-error and every committed snapshot was re-captured at v3 in the same change. The
-loader never up-migrates an old snapshot in place.
+**Format migrations (v2 → v5).** v3 added the three top-level constraint sections
+above (`constraint_facts`, `part_occurrences`, `constraint_lowering_mode`) so the
+offline path can re-lower modeled assertions without a license (CONSTRAINT-EXEC
+Item 8). The format has since advanced twice: v4 carried the diagnostic-severity
+field through the wire shape (constraint-lifecycle Item 4), and v5 replaced the
+snapshot-relative `source_file` with the portable `root-N/<relpath>` referent
+behind a load-time shape gate (constraint-lifecycle Item 5). The authoritative
+history is `snapshot/__init__.py:12-28`. The version gate is a hard cutover, not a
+compatibility shim: there is **no cross-version coexistence** (V1/V2 above), so any
+snapshot whose version is not the current 5 is a hard error and every committed
+snapshot is re-captured at the current version in the same change. The loader never
+up-migrates an old snapshot in place.
 
 ## CLI
 
@@ -124,12 +134,14 @@ item adds REQ-SNAP-08+.
 
 Snapshot generation has a coordinated agentic-mbse boundary. Snapshot re-lowering consumes the
 companion's serialized constraint-fact and expression-IR schemas and applies executable-profile
-v3 behavior to those facts. A snapshot can therefore remain format-current while an incompatible
+v4 behavior to those facts (`PROFILE_SEMANTIC_VERSION = "executable-profile/v4"`,
+`_upstream_pins.py:33`). A snapshot can therefore remain format-current while an incompatible
 companion changes the meaning or shape of the data codegen consumes.
 
 The package floor and the runtime/schema guards protect different failure modes. The
-`agentic-mbse>=0.1.1` distribution requirement prevents a resolver from selecting the known
-pre-v3 companion release. Runtime guards still pin `PROFILE_SEMANTIC_VERSION`,
+`agentic-mbse>=0.1.2` distribution requirement (`pyproject.toml:24`) prevents a resolver from
+selecting a companion release predating the pinned profile. Runtime guards still pin
+`PROFILE_SEMANTIC_VERSION`,
 `CONSTRAINT_FACTS_SCHEMA_VERSION`, and `EXPRESSION_IR_SCHEMA_VERSION` so an installed companion
 whose code drifts behind unchanged package metadata fails loudly at the boundary. Snapshot-format
 validation remains separate: it protects the captured envelope and required fields, not companion

@@ -381,7 +381,7 @@ def test_integer_power_is_real_for_equality_admission():
 
 def test_not_equal_remains_profile_blocked():
     ir = _cmp_node("!=", _ref("a", "integer"), _ref("b", "integer"))
-    with pytest.raises(PredicateCompileError, match="not admitted by executable-profile/v3"):
+    with pytest.raises(PredicateCompileError, match=r"not admitted by executable-profile/v\d"):
         compile_predicate(ir, "p", negated=False)
 
 

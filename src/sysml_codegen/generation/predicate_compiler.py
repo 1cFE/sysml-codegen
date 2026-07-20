@@ -33,6 +33,8 @@ from agentic_mbse.sysml.expression_ir import (
     UnitAnnotationNode,
 )
 
+from sysml_codegen._upstream_pins import PROFILE_SEMANTIC_VERSION
+
 __all__ = [
     "KLEENE_RUNTIME_SOURCE",
     "PredicateCompileError",
@@ -147,7 +149,7 @@ def _required_operand_type(n: ExpressionIR) -> OperandTypeFact:
 
 def _compile_reference(n: FeatureReferenceNode) -> str:
     if n.reference.chain_segments:
-        raise PredicateCompileError("feature chain not supported in executable-profile/v3")
+        raise PredicateCompileError(f"feature chain not supported in {PROFILE_SEMANTIC_VERSION}")
     if not n.reference.source_name:
         raise PredicateCompileError("nameless feature reference")
     return n.reference.source_name
@@ -198,7 +200,7 @@ def _compile_numeric(n: ExpressionIR) -> str:
 
 def _compile_equality(n: OperatorNode) -> str:
     raise PredicateCompileError(
-        f"{n.operator!r} is not admitted by executable-profile/v3; profile preflight must "
+        f"{n.operator!r} is not admitted by {PROFILE_SEMANTIC_VERSION}; profile preflight must "
         "exclude every equality expression"
     )
 

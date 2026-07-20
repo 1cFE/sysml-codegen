@@ -528,7 +528,7 @@ indirectly via the emitted verifier.
 | REQ-SNAP-06 | Path fields are Path instances, not strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-07 | Enum fields are typed enum instances, not raw strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-08 | Promoted snapshot helpers live only in `src`; no second copy (INV-3) | `test_snapshot_contract.py` | PASS |
-| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` (current: 3) is a hard error before deserialization — no v1/v2/v3 coexistence (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` (current: 5) is a hard error before deserialization — no cross-version coexistence (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-10 | Re-captured expression-bearing snapshot carries `compilation_results` (INV-5) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-11 | Version-current snapshot missing `compilation_results` degrades with a warning (V4) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-12 | Stale source hash warns; run continues (V3) | `test_snapshot_contract.py` | PASS |

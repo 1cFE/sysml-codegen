@@ -39,6 +39,19 @@ def test_invalid_teax_candidates_fail_with_actionable_routes(tmp_path: Path) -> 
         )
 
 
+def test_explicit_invalid_path_fails_instead_of_discovering_the_sibling(tmp_path: Path) -> None:
+    # An explicitly-set TEAX_SIMKIT_PATH is authoritative: a valid checkout-relative
+    # sibling must not rescue a bad explicit path, because silently discovering the
+    # sibling would hide the operator's misconfiguration.
+    repository = tmp_path / "checkout" / "sysml-codegen"
+    _simkit_root(repository.parent / "teax" / "packages" / "teax-simkit")
+
+    with pytest.raises(RuntimeError, match="TEAX_SIMKIT_PATH"):
+        discover_teax_simkit(
+            {"TEAX_SIMKIT_PATH": str(tmp_path / "invalid")}, repository_root=repository
+        )
+
+
 def test_symlink_loop_is_reported_as_an_invalid_candidate(tmp_path: Path) -> None:
     repository = tmp_path / "checkout" / "sysml-codegen"
     loop = tmp_path / "loop"
