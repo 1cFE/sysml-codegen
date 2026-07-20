@@ -42,7 +42,10 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 import sysml_codegen.analysis.constraint_lowering as constraint_lowering
-from sysml_codegen.analysis.constraint_lowering import lower_constraints
+from sysml_codegen.analysis.constraint_lowering import (
+    lower_constraints,
+    prepare_constraint_usages,
+)
 from sysml_codegen.analysis.part_instance_index import (
     NonFiniteCardinalityError,
     build_part_instance_index,
@@ -74,10 +77,11 @@ def test_multi_instance_three_ids_three_channels_shared_binding():
     ctx, occ_index, facts = _load("constraint_multi_instance")
     concrete = lower_constraints(
         facts,
-        occ_index=occ_index,
+        prepared=prepare_constraint_usages(
+            facts, occ_index=occ_index, calc_usages=ctx.calc_usages
+        ),
         registry=ctx.output_registry,
         design_attrs=ctx.design_attributes,
-        calc_usages=ctx.calc_usages,
     )
     assert len(concrete) == 3
     assert len({c.constraint_id for c in concrete}) == 3
@@ -99,10 +103,11 @@ def test_blocked_owner_named_generation_error():
     with pytest.raises(CodeGenerationError) as exc_info:
         lower_constraints(
             facts,
-            occ_index=occ_index,
+            prepared=prepare_constraint_usages(
+                facts, occ_index=occ_index, calc_usages=ctx.calc_usages
+            ),
             registry=ctx.output_registry,
             design_attrs=ctx.design_attributes,
-            calc_usages=ctx.calc_usages,
         )
     message = str(exc_info.value)
     assert "BlockedLeaf" in message
@@ -123,10 +128,11 @@ def test_inline_source_form_selects_usage_predicate():
     ctx, occ_index, facts = _load("constraint_inline")
     concrete = lower_constraints(
         facts,
-        occ_index=occ_index,
+        prepared=prepare_constraint_usages(
+            facts, occ_index=occ_index, calc_usages=ctx.calc_usages
+        ),
         registry=ctx.output_registry,
         design_attrs=ctx.design_attributes,
-        calc_usages=ctx.calc_usages,
     )
     assert len(concrete) == 1
     cc = concrete[0]
@@ -175,7 +181,10 @@ def test_requirement_def_owner_cataloged_unassessed():
         diagnostics=[],
     )
     concrete = lower_constraints(
-        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+        facts,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
     )
     assert len(concrete) == 1
     cc = concrete[0]
@@ -221,7 +230,10 @@ def test_package_owned_expands_once():
         diagnostics=[],
     )
     concrete = lower_constraints(
-        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+        facts,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
     )
     assert len(concrete) == 1
     cc = concrete[0]
@@ -549,7 +561,12 @@ def test_malformed_operand_fact_blocks_before_predicate_compilation():
         "block_malformed_operand_fact"
     }
     with pytest.raises(CodeGenerationError, match="block_malformed_operand_fact"):
-        lower_constraints(facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[])
+        lower_constraints(
+            facts,
+            prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+            registry=None,
+            design_attrs={},
+        )
 
 
 class _AlwaysResolvedRegistry:
@@ -625,10 +642,9 @@ def _formal(name: str, *, has_default: bool = False, default=None) -> FormalFact
 def _lower_offline(facts: ConstraintFacts):
     return lower_constraints(
         facts,
-        occ_index=None,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
         registry=_AlwaysResolvedRegistry(),
         design_attrs={},
-        calc_usages=[],
     )
 
 
@@ -659,7 +675,8 @@ def test_forged_effective_predicate_source_rejected_before_expansion_or_identity
             "constraint identity minting must not run after a forged source identity"
         )
 
-    monkeypatch.setattr(constraint_lowering, "_expand_owner_instances", forbidden_expand)
+    for branch in ("_expand_part_owner", "_expand_calc_owner", "_expand_package_owner"):
+        monkeypatch.setattr(constraint_lowering, branch, forbidden_expand)
     monkeypatch.setattr(constraint_lowering, "mint_constraint_id", forbidden_mint)
 
     with pytest.raises(CodeGenerationError, match="effective predicate source identity"):
@@ -762,7 +779,12 @@ def test_preflight_halts_on_blocked_assert_before_any_lowering():
         ]
     )
     with pytest.raises(CodeGenerationError) as exc_info:
-        lower_constraints(facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[])
+        lower_constraints(
+            facts,
+            prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+            registry=None,
+            design_attrs={},
+        )
     message = str(exc_info.value)
     assert "not executable" in message
     assert "Design__blocked_assert" in message
@@ -785,11 +807,9 @@ def test_two_non_numerical_warnings_precede_complete_block(caplog):
 
     with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
         with pytest.raises(CodeGenerationError) as error:
-            lower_constraints(
+            prepare_constraint_usages(
                 _facts([first, second, blocked]),
                 occ_index=None,
-                registry=None,
-                design_attrs={},
                 calc_usages=[],
                 source_location_mode="snapshot",
             )
@@ -825,12 +845,12 @@ def test_two_non_blocking_warnings_are_emitted_exactly_once(caplog):
     second = _package_assert("Design__warning_second", warning_predicate)
 
     with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
+        facts = _facts([first, second])
         lower_constraints(
-            _facts([first, second]),
-            occ_index=None,
+            facts,
+            prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
             registry=None,
             design_attrs={},
-            calc_usages=[],
         )
 
     warnings = [
@@ -852,7 +872,10 @@ def test_non_numerical_outcome_does_not_halt_compatibility_phase():
     facts = _facts([_package_assert("Design__annotation", predicate)])
 
     [record] = lower_constraints(
-        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+        facts,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
     )
 
     assert record.eligible is False
@@ -871,7 +894,12 @@ def test_non_numerical_warning_preserves_walk_order_and_location_fallback(caplog
     facts = _facts([_package_assert("Design__annotation", predicate)])
 
     with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
-        lower_constraints(facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[])
+        lower_constraints(
+            facts,
+            prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+            registry=None,
+            design_attrs={},
+        )
 
     warnings = [
         record.getMessage()
@@ -915,7 +943,10 @@ def test_admitted_assert_predicate_ir_unchanged_by_wiring():
     predicate = _admitted_predicate()
     facts = _facts([_package_assert("Design__ok_assert", predicate)])
     concrete = lower_constraints(
-        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+        facts,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
     )
     assert len(concrete) == 1
     assert concrete[0].eligible is True
@@ -947,7 +978,10 @@ def test_unassessed_usage_in_batch_neither_halts_nor_lowers():
     )
     facts = _facts([satisfy, _package_assert("Design__ok_assert", _admitted_predicate())])
     concrete = lower_constraints(
-        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+        facts,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
     )
     by_qn = {c.usage_qualified_name: c for c in concrete}
     assert by_qn["Design__sat"].eligible is False

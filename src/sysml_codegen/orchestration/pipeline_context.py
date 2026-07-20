@@ -131,8 +131,9 @@ class PipelineContext:
     constraint_facts: ConstraintFacts | None = None
 
     # Resolved per-owner occurrence table, captured as the exact transcript of the
-    # real `lower_constraints` call's `occurrences_of` queries (Item 8, MF3) via
-    # `RecordingOccurrenceIndex`. Empty when lowering did not run. Serialized into
+    # real capture-time preparation's `occurrences_of` queries (Item 8, MF3) — the
+    # successful prepared batch's `occurrence_transcript`, published here only after
+    # the whole context construction succeeded. Empty when lowering did not run. Serialized into
     # the snapshot as `part_occurrences` so offline re-lowering replays it through
     # a `FrozenOccurrenceIndex` with no live model.
     part_occurrences: dict[str, list[InstanceOccurrence]] = field(default_factory=dict)

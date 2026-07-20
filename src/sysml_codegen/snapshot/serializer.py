@@ -26,10 +26,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from agentic_mbse.sysml.constraint_facts import serialize as serialize_constraint_facts
-from agentic_mbse.sysml.executable_profile import evaluate_profile
 from pydantic import BaseModel
 
-from sysml_codegen.analysis.constraint_lowering import excluded_usage_indices
+from sysml_codegen.analysis.constraint_lowering import (
+    associate_usage_decisions,
+    is_excluded_usage,
+)
 from sysml_codegen.analysis.source_referent import map_live_source_referent
 from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
 
@@ -146,8 +148,12 @@ def _constraint_facts_for_snapshot(
     copied = deepcopy(facts)
     if constraint_lowering_mode != "applied" or not copied.usages:
         return copied
-    profile = evaluate_profile(facts)
-    for index in excluded_usage_indices(facts, profile.decisions):
+    # A second, purely associative evaluation (D10): it selects excluded usages and
+    # canonicalizes their copied locations. It emits no warning, aggregates no BLOCK,
+    # expands no owner, and mutates only the deep copy.
+    for index, (usage, decision) in enumerate(associate_usage_decisions(facts)):
+        if not is_excluded_usage(usage, decision):
+            continue
         original = facts.usages[index]
         if original.location is None:
             if original.identity.name is None:

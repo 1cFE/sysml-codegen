@@ -18,7 +18,10 @@ from agentic_mbse.sysml.expression_facts import IdentityFact, LiteralFact, Opera
 from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode
 
 from sysml_codegen.analysis import constraint_lowering
-from sysml_codegen.analysis.constraint_lowering import lower_constraints
+from sysml_codegen.analysis.constraint_lowering import (
+    lower_constraints,
+    prepare_constraint_usages,
+)
 from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
 from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 from sysml_codegen.snapshot.serializer import serialize_extraction_snapshot
@@ -122,12 +125,15 @@ def _serialize_facts(facts: ConstraintFacts, roots: list[Path]) -> ConstraintFac
 def _lower(facts: ConstraintFacts, mode: str, roots: list[Path]):
     return lower_constraints(
         facts,
-        occ_index=None,
+        prepared=prepare_constraint_usages(
+            facts,
+            occ_index=None,
+            calc_usages=[],
+            source_location_mode=mode,
+            source_roots=roots,
+        ),
         registry=None,
         design_attrs={},
-        calc_usages=[],
-        source_location_mode=mode,
-        source_roots=roots,
     )
 
 
@@ -328,3 +334,22 @@ def test_block_location_has_zero_live_mapper_and_replay_validator_calls(
     raw_file = str(tmp_path / "model.sysml")
     assert live_calls == [raw_file, raw_file]
     assert replay_calls == ["root-0/model.sysml", "root-0/model.sysml"]
+
+
+def test_serializer_association_is_pure_and_guarded(tmp_path: Path, caplog):
+    """D10: the serializer's second association selects and canonicalizes excluded
+    locations only. It emits no warning for the NON_NUMERICAL decisions it walks,
+    aggregates no BLOCK, mutates no input fact, and stays byte-stable on repeat."""
+    root = tmp_path / "checkout"
+    root.mkdir()
+    facts = _facts_for(root)
+    original = json.dumps(facts, default=lambda value: value.__dict__, sort_keys=True)
+
+    with caplog.at_level(logging.WARNING, logger=LOWERING_LOGGER):
+        first = _serialize_facts(facts, [root])
+        second = _serialize_facts(facts, [root])
+
+    assert [record.getMessage() for record in caplog.records] == []
+    assert json.dumps(facts, default=lambda value: value.__dict__, sort_keys=True) == original
+    assert [usage.location.file for usage in first.usages] == ["root-0/model.sysml"] * 2
+    assert [usage.location.file for usage in second.usages] == ["root-0/model.sysml"] * 2

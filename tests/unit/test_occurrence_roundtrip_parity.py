@@ -15,7 +15,10 @@ import json
 
 import pytest
 
-from sysml_codegen.analysis.constraint_lowering import lower_constraints
+from sysml_codegen.analysis.constraint_lowering import (
+    lower_constraints,
+    prepare_constraint_usages,
+)
 from sysml_codegen.analysis.part_instance_index import (
     FrozenOccurrenceIndex,
     FrozenOccurrenceIndexCorruptionError,
@@ -48,10 +51,11 @@ def test_multi_instance_occurrence_roundtrip_and_constraint_id_parity():
     frozen = FrozenOccurrenceIndex(reloaded_table)
     concrete = lower_constraints(
         reloaded_facts,
-        occ_index=frozen,
+        prepared=prepare_constraint_usages(
+            reloaded_facts, occ_index=frozen, calc_usages=ctx.calc_usages
+        ),
         registry=ctx.output_registry,
         design_attrs=ctx.design_attributes,
-        calc_usages=ctx.calc_usages,
     )
     assert sorted(c.constraint_id for c in concrete) == live_ids  # B2 parity
 

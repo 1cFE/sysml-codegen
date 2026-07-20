@@ -16,9 +16,12 @@ from agentic_mbse.sysml.executable_profile import evaluate_profile
 from agentic_mbse.sysml.expression_facts import IdentityFact, LiteralFact, OperandTypeFact
 from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode
 
+import sysml_codegen.analysis.constraint_lowering as constraint_lowering
 from sysml_codegen.analysis.constraint_lowering import (
-    excluded_usage_indices,
+    associate_usage_decisions,
+    is_excluded_usage,
     lower_constraints,
+    prepare_constraint_usages,
 )
 from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
 
@@ -127,26 +130,34 @@ def test_anonymous_excluded_identity_matrix(
     assert all(usage.location is not None for usage in usages)
 
     facts = _facts(usages)
-    profile = evaluate_profile(facts)
-    assert excluded_usage_indices(facts, profile.decisions) == (0, 1)
+    assert [
+        is_excluded_usage(usage, decision)
+        for usage, decision in associate_usage_decisions(facts)
+    ] == [True, True]
     with caplog.at_level(logging.WARNING, logger="sysml_codegen.analysis.constraint_lowering"):
         records = lower_constraints(
             facts,
-            occ_index=None,
+            prepared=prepare_constraint_usages(
+                facts,
+                occ_index=None,
+                calc_usages=[],
+                source_location_mode="live",
+                source_roots=[tmp_path],
+            ),
             registry=None,
             design_attrs={},
-            calc_usages=[],
-            source_location_mode="live",
-            source_roots=[tmp_path],
         )
     repeated = lower_constraints(
         facts,
-        occ_index=None,
+        prepared=prepare_constraint_usages(
+            facts,
+            occ_index=None,
+            calc_usages=[],
+            source_location_mode="live",
+            source_roots=[tmp_path],
+        ),
         registry=None,
         design_attrs={},
-        calc_usages=[],
-        source_location_mode="live",
-        source_roots=[tmp_path],
     )
 
     assert [record.model_dump(mode="json") for record in records] == [
@@ -177,34 +188,40 @@ def test_anonymous_route_and_identity_failures_are_loud(tmp_path: Path):
         predicate=None,
     )
     facts = _facts([usage])
-    common = dict(occ_index=None, registry=None, design_attrs={}, calc_usages=[])
+    # Source-location routing is preparation's job now; every route failure is
+    # raised before a batch exists, so lowering is never reached.
     with pytest.raises(CodeGenerationError, match="explicit source-location route"):
-        lower_constraints(facts, **common)
+        prepare_constraint_usages(facts, occ_index=None, calc_usages=[])
     with pytest.raises(CodeGenerationError, match="does not match"):
-        lower_constraints(
+        prepare_constraint_usages(
             facts,
-            **common,
+            occ_index=None,
+            calc_usages=[],
             source_location_mode="live",
             source_roots=[tmp_path / "other"],
         )
     with pytest.raises(CodeGenerationError, match="canonical source referent"):
-        lower_constraints(
+        prepare_constraint_usages(
             facts,
-            **common,
+            occ_index=None,
+            calc_usages=[],
             source_location_mode="snapshot",
             source_roots=[],
         )
     usage.location = None
     with pytest.raises(CodeGenerationError, match="anonymous assertion has no LocationFact"):
-        lower_constraints(
+        prepare_constraint_usages(
             facts,
-            **common,
+            occ_index=None,
+            calc_usages=[],
             source_location_mode="live",
             source_roots=[tmp_path],
         )
 
 
-def test_selector_rejects_profile_cardinality_mismatch():
+def test_association_rejects_profile_cardinality_mismatch(monkeypatch: pytest.MonkeyPatch):
+    """Cardinality is verified where the profile is evaluated, so no downstream
+    consumer can be handed a short or long decision list."""
     facts = _facts([])
     usage = _usage(
         location=None,
@@ -212,9 +229,10 @@ def test_selector_rejects_profile_cardinality_mismatch():
         owner_kind="package",
         predicate=None,
     )
-    decision = evaluate_profile(_facts([usage])).decisions[0]
+    stray = evaluate_profile(_facts([usage]))
+    monkeypatch.setattr(constraint_lowering, "evaluate_profile", lambda _facts: stray)
     with pytest.raises(CodeGenerationError, match="cardinality"):
-        excluded_usage_indices(facts, [decision])
+        associate_usage_decisions(facts)
 
 
 def test_named_ids_and_eligible_anonymous_id_remain_byte_identical():
@@ -253,9 +271,14 @@ def test_named_ids_and_eligible_anonymous_id_remain_byte_identical():
             "Evidence_named_unsupported__named_unsupported__e7202a6c6ee2d32a",
         ),
     ]
-    common = dict(occ_index=None, registry=None, design_attrs={}, calc_usages=[])
     for usage, expected_id in named_cases:
-        [record] = lower_constraints(_facts([usage]), **common)
+        case_facts = _facts([usage])
+        [record] = lower_constraints(
+            case_facts,
+            prepared=prepare_constraint_usages(case_facts, occ_index=None, calc_usages=[]),
+            registry=None,
+            design_attrs={},
+        )
         assert record.constraint_id == expected_id
 
     eligible = _usage(
@@ -264,7 +287,13 @@ def test_named_ids_and_eligible_anonymous_id_remain_byte_identical():
         owner_kind="package",
         predicate=_comparison("<=", "real"),
     )
-    [record] = lower_constraints(_facts([eligible]), **common)
+    eligible_facts = _facts([eligible])
+    [record] = lower_constraints(
+        eligible_facts,
+        prepared=prepare_constraint_usages(eligible_facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
+    )
     assert record.constraint_id == "Pkg__Owner__anon__016538f43a48a34e"
     assert record.source_local_identity == "anon"
     assert len(record.constraint_id.rsplit("__", 1)[1]) == 16

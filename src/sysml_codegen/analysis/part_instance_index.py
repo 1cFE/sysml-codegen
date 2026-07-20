@@ -7,7 +7,7 @@ instantiation-path finder in ``usage_extractor.py`` and never through it: this m
 is additive, imported by nothing else in this item (Item 5 wires it in).
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
@@ -66,6 +66,36 @@ class NonFiniteCardinalityError(Exception):
         super().__init__(
             f"Non-finite multiplicity on '{part_usage_name}' owned by "
             f"'{owning_part_def_qn}' ({reason}); cannot expand to concrete instances."
+        )
+
+
+class RecursiveContainmentError(Exception):
+    """Raised when containment re-enters a definition already on the active path.
+
+    A recursive containment has no finite occurrence set, so there is no prefix
+    worth returning: reporting the occurrences found before the cycle closed
+    would publish a partial truth as a complete answer. The walk fails atomically
+    and names the closing edge instead.
+    """
+
+    def __init__(
+        self,
+        *,
+        requested_owner_qn: str,
+        edge_owner_qn: str,
+        edge_feature_name: str,
+        edge_type_qn: str,
+        cycle_path: tuple[str, ...],
+    ) -> None:
+        self.requested_owner_qn = requested_owner_qn
+        self.edge_owner_qn = edge_owner_qn
+        self.edge_feature_name = edge_feature_name
+        self.edge_type_qn = edge_type_qn
+        self.cycle_path = cycle_path
+        super().__init__(
+            f"Recursive containment reached from '{requested_owner_qn}': feature "
+            f"'{edge_feature_name}' on '{edge_owner_qn}' re-enters '{edge_type_qn}' along "
+            f"{' -> '.join(cycle_path)}; a recursive containment has no finite occurrence set."
         )
 
 
@@ -136,10 +166,32 @@ def _cardinality_indices(usage: Any, owning_def_qn: str, feature_name: str) -> l
     return list(range(verdict.count))
 
 
+def _canonical_walk_entries(usages: list[Any]) -> list[tuple[str, str, bool, Any]]:
+    """Resolve each usage's owner once, in a canonical order.
+
+    Returns ``(feature_name, owner_qn, owner_is_definition, usage)`` sorted by
+    feature name then owner QN, so sibling declaration order cannot decide which
+    edge a recursive model reports. Final occurrence order is set downstream by
+    ``_occurrence_sort_key``, so reordering the walk is free.
+    """
+    entries: list[tuple[str, str, bool, Any]] = []
+    for usage in usages:
+        feature_name = sanitize_name(getattr(usage, "name", ""))
+        owning_type = getattr(usage, "owning_type", None)
+        if owning_type is not None and SysideAdapter.is_instance(owning_type, "PartDefinition"):
+            entries.append((feature_name, build_element_qualified_name(owning_type), True, usage))
+        else:
+            base = build_element_qualified_name(getattr(usage, "owner", None))
+            entries.append((feature_name, base, False, usage))
+    entries.sort(key=lambda entry: (entry[0], entry[1]))
+    return entries
+
+
 def _structured_paths(
     target_part_def_qn: str,
     part_usage_index: dict[str, list[Any]],
-    _visited: set[str] | None = None,
+    requested_owner_qn: str,
+    active: tuple[str, ...] = (),
 ) -> list[tuple[tuple[PathStep, ...], Any]]:
     """Structured sibling of ``_find_instantiation_paths`` (usage_extractor.py:313-369).
 
@@ -154,11 +206,7 @@ def _structured_paths(
     the path at *this* invocation (i.e. typed as ``target_part_def_qn``) — callers
     use it to compute the leaf's entry-independent ``part_def_qn`` (D5/C3).
     """
-    if _visited is None:
-        _visited = set()
-    if target_part_def_qn in _visited:
-        return []
-    _visited = _visited | {target_part_def_qn}
+    active = active + (target_part_def_qn,)
 
     usages = part_usage_index.get(target_part_def_qn, [])
     if not usages:
@@ -167,26 +215,32 @@ def _structured_paths(
     seen: set[tuple[PathStep, ...]] = set()
     result: list[tuple[tuple[PathStep, ...], Any]] = []
 
-    for usage in usages:
-        usage_name = sanitize_name(getattr(usage, "name", ""))
-        owning_type = getattr(usage, "owning_type", None)
-        if owning_type is not None and SysideAdapter.is_instance(owning_type, "PartDefinition"):
+    for feature_name, owner_qn, owner_is_definition, usage in _canonical_walk_entries(usages):
+        if owner_is_definition:
             # Recursive step: usage is a feature of a PartDefinition. Recurse to
             # find every live instance of that owning def, then fan this usage's
             # own multiplicity onto each — the Cartesian product down the path.
-            parent_def_qn = build_element_qualified_name(owning_type)
-            parent_paths = _structured_paths(parent_def_qn, part_usage_index, _visited)
+            if owner_qn in active:
+                raise RecursiveContainmentError(
+                    requested_owner_qn=requested_owner_qn,
+                    edge_owner_qn=owner_qn,
+                    edge_feature_name=feature_name,
+                    edge_type_qn=target_part_def_qn,
+                    cycle_path=active[active.index(owner_qn) :] + (owner_qn,),
+                )
+            parent_paths = _structured_paths(
+                owner_qn, part_usage_index, requested_owner_qn, active
+            )
             for parent_path, _parent_usage in parent_paths:
-                for index in _cardinality_indices(usage, parent_def_qn, usage_name):
-                    path = parent_path + (PathStep(parent_def_qn, usage_name, index),)
+                for index in _cardinality_indices(usage, owner_qn, feature_name):
+                    path = parent_path + (PathStep(owner_qn, feature_name, index),)
                     if path not in seen:
                         seen.add(path)
                         result.append((path, usage))
         else:
             # Terminal step: owned by a Package or a PartUsage, not a PartDefinition.
-            base = build_element_qualified_name(getattr(usage, "owner", None))
-            for index in _cardinality_indices(usage, base, usage_name):
-                path = (PathStep(base, usage_name, index),)
+            for index in _cardinality_indices(usage, owner_qn, feature_name):
+                path = (PathStep(owner_qn, feature_name, index),)
                 if path not in seen:
                     seen.add(path)
                     result.append((path, usage))
@@ -298,7 +352,9 @@ class PartInstanceIndex:
 
         Multiplicity-expanded, deduped, and deterministically ordered (D6/D7).
         Raises :class:`NonFiniteCardinalityError` if a non-finite multiplicity lies
-        on the path to any occurrence (INV-2: no silent drop).
+        on the path to any occurrence, and :class:`RecursiveContainmentError` if
+        containment re-enters a definition already on the active path (INV-2: no
+        silent drop, and no finite prefix standing in for an infinite set).
         """
         applicable = sorted(
             {part_def_qn}
@@ -310,7 +366,9 @@ class PartInstanceIndex:
         )
         occurrences: set[InstanceOccurrence] = set()
         for applicable_type in applicable:
-            for path, usage in _structured_paths(applicable_type, self._part_usage_index):
+            for path, usage in _structured_paths(
+                applicable_type, self._part_usage_index, part_def_qn
+            ):
                 occurrences.add(InstanceOccurrence(self._leaf_part_def_qn(usage), path))
         return sorted(occurrences, key=_occurrence_sort_key)
 
@@ -323,16 +381,17 @@ class PartInstanceIndex:
         silent about it either (cured post-audit): a PartDef whose own occurrences
         hit a non-finite multiplicity is omitted from ``occurrences`` and instead
         recorded in ``blocked`` (QN -> the diagnostic message), so a caller can
-        never mistake a partial dump for a complete one. :meth:`occurrences_of`
-        itself is unaffected — a direct call on the affected owner still raises
-        loud (INV-2).
+        never mistake a partial dump for a complete one. A recursively contained
+        definition is recorded the same way, for the same reason.
+        :meth:`occurrences_of` itself is unaffected — a direct call on the
+        affected owner still raises loud (INV-2).
         """
         combined: set[InstanceOccurrence] = set()
         blocked: dict[str, str] = {}
         for part_def_qn in sorted(self._qn_to_partdef):
             try:
                 combined.update(self.occurrences_of(part_def_qn))
-            except NonFiniteCardinalityError as error:
+            except (NonFiniteCardinalityError, RecursiveContainmentError) as error:
                 blocked[part_def_qn] = str(error)
         return AllOccurrencesResult(
             occurrences=sorted(combined, key=_occurrence_sort_key),
@@ -366,48 +425,29 @@ def build_part_instance_index(model: Any) -> PartInstanceIndex:
 
 
 class OccurrenceIndex(Protocol):
-    """Structural surface :func:`~sysml_codegen.analysis.constraint_lowering.lower_constraints`
-    needs from an occurrence source — the only method it calls (design.md#key-bets B1).
-    :class:`PartInstanceIndex`, :class:`RecordingOccurrenceIndex`, and
-    :class:`FrozenOccurrenceIndex` all satisfy this by duck typing; the Protocol exists
-    for mypy clarity, not runtime dispatch."""
+    """Structural surface
+    :func:`~sysml_codegen.analysis.constraint_lowering.prepare_constraint_usages` needs
+    from an occurrence source — the only method it calls (design.md#key-bets B1).
+    :class:`PartInstanceIndex` and :class:`FrozenOccurrenceIndex` both satisfy this by
+    duck typing; the Protocol exists for mypy clarity, not runtime dispatch."""
 
     def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]: ...
 
 
-@dataclass
-class RecordingOccurrenceIndex:
-    """Capture-time wrapper: delegates ``occurrences_of`` to a live index and
-    records every ``(owner_eqn -> result)`` it answered.
-
-    Snapshot v3 (Item 8) serializes ``.recorded`` as the ``part_occurrences``
-    section — the exact transcript of the queries the real ``lower_constraints``
-    call made (MF3), so the offline replay never needs a second owner-selection
-    path.
-    """
-
-    _inner: PartInstanceIndex
-    recorded: dict[str, list[InstanceOccurrence]] = field(default_factory=dict)
-
-    def occurrences_of(self, part_def_qn: str) -> list[InstanceOccurrence]:
-        result = self._inner.occurrences_of(part_def_qn)
-        self.recorded[part_def_qn] = result
-        return result
-
-
 class FrozenOccurrenceIndexCorruptionError(Exception):
-    """Raised when offline lowering queries an owner absent from the frozen
-    occurrence table — the table is the recorded transcript of every query the
-    real capture-time lowering made (D2), so a missing key means the snapshot is
-    corrupt or was captured against a different model, never that the owner has
-    zero occurrences."""
+    """Raised when replay queries an owner absent from the frozen occurrence table.
+
+    The table is the successful prepared transcript of every owner query the real
+    capture-time preparation made, so a missing key means the snapshot is corrupt or
+    was captured against a different model — never that the owner has zero
+    occurrences. Excluded and unsupported owners are never queried, so their absence
+    from the table is correct and cannot reach here."""
 
 
 class FrozenOccurrenceIndex:
-    """Offline replay dual of :class:`RecordingOccurrenceIndex`: answers
-    ``occurrences_of`` by dict lookup into a table deserialized from a v3
-    snapshot. A missing key raises (D2) — never ``[]`` — because the table is a
-    closed transcript, not a live query surface."""
+    """Replay dual of the live index: answers ``occurrences_of`` by dict lookup into a
+    table deserialized from a v3 snapshot. A missing key raises — never ``[]`` —
+    because the table is a closed transcript, not a live query surface."""
 
     def __init__(self, table: dict[str, list[InstanceOccurrence]]):
         self._table = table
@@ -425,9 +465,9 @@ class FrozenOccurrenceIndex:
 def deserialize_part_occurrences(
     data: dict[str, list[dict[str, Any]]],
 ) -> dict[str, list[InstanceOccurrence]]:
-    """Rebuild the ``part_occurrences`` snapshot section into
-    ``InstanceOccurrence`` objects, the inverse of ``_serialize_value`` over a
-    ``RecordingOccurrenceIndex.recorded`` table."""
+    """Rebuild the ``part_occurrences`` snapshot section into ``InstanceOccurrence``
+    objects, the inverse of ``_serialize_value`` over a prepared batch's
+    ``occurrence_transcript``."""
     return {
         owner_eqn: [
             InstanceOccurrence(

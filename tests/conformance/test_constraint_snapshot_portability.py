@@ -17,11 +17,13 @@ from agentic_mbse.sysml.constraint_facts import (
     OwnerFact,
     OwningDefinitionFact,
 )
-from agentic_mbse.sysml.executable_profile import evaluate_profile
 from agentic_mbse.sysml.expression_facts import IdentityFact, LiteralFact, OperandTypeFact
 from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode
 
-from sysml_codegen.analysis.constraint_lowering import excluded_usage_indices
+from sysml_codegen.analysis.constraint_lowering import (
+    associate_usage_decisions,
+    is_excluded_usage,
+)
 from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_from_snapshot
@@ -146,8 +148,11 @@ def _manifest_from_context_and_output(
 ) -> dict[str, Any]:
     raw = json.loads(snapshot.read_text())
     facts = constraint_facts_module.parse(json.dumps(raw["constraint_facts"]))
-    decisions = evaluate_profile(facts).decisions
-    selected = excluded_usage_indices(facts, decisions)
+    selected = tuple(
+        index
+        for index, (usage, decision) in enumerate(associate_usage_decisions(facts))
+        if is_excluded_usage(usage, decision)
+    )
     assert any(facts.usages[index].identity.name for index in selected)
     assert any(facts.usages[index].identity.name is None for index in selected)
     assert any(index not in selected for index in range(len(facts.usages)))
@@ -263,8 +268,11 @@ def _write_replay_pair(tmp_path: Path) -> tuple[Path, Path, list[Path]]:
 def _assert_live_controls(snapshot: Path) -> None:
     raw = json.loads(snapshot.read_text())
     facts = constraint_facts_module.parse(json.dumps(raw["constraint_facts"]))
-    decisions = evaluate_profile(facts).decisions
-    selected = excluded_usage_indices(facts, decisions)
+    selected = tuple(
+        index
+        for index, (usage, decision) in enumerate(associate_usage_decisions(facts))
+        if is_excluded_usage(usage, decision)
+    )
     assert len(facts.usages) == 3
     assert {facts.usages[index].identity.name for index in selected} == {
         "status_annotation",

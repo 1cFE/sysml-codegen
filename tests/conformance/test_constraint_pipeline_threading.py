@@ -8,6 +8,8 @@ needs a genuine "lowering did not run" control passes `False` explicitly
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
@@ -149,7 +151,10 @@ def test_inheritance_cross_check_instance_index_probe_oracle_unchanged():
     """
     from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 
-    from sysml_codegen.analysis.constraint_lowering import lower_constraints
+    from sysml_codegen.analysis.constraint_lowering import (
+        lower_constraints,
+        prepare_constraint_usages,
+    )
     from sysml_codegen.analysis.parameter_groups import extract_design_attributes
     from sysml_codegen.analysis.part_instance_index import build_part_instance_index
     from sysml_codegen.core.output_registry import OutputRegistry
@@ -164,13 +169,12 @@ def test_inheritance_cross_check_instance_index_probe_oracle_unchanged():
     facts = extract_constraint_facts(extractor.model)
     concrete = lower_constraints(
         facts,
-        occ_index=index,
+        prepared=prepare_constraint_usages(facts, occ_index=index, calc_usages=[]),
         registry=OutputRegistry(),
         # Inline leaves use the same strict production ladder as definition actuals. Supply the
         # extracted modeled defaults that pipeline_builder passes in production; an empty mapping
         # would correctly make strict resolution fail rather than prove inherited scoping.
         design_attrs=extract_design_attributes(extractor.model),
-        calc_usages=[],
     )
     # The inherited `nonnegative` assert expands once per ConstrainedLeaf
     # occurrence it's inherited into -- distinct eligible/unassessed entries,
@@ -221,3 +225,59 @@ def test_blocked_profile_fixture_generates_when_lowering_explicitly_disabled():
         [FIXTURES_DIR / "constraint_blocked_profile"], lower_constraints_enabled=False
     )
     assert ctx.concrete_constraints == []
+
+
+@requires_license
+def test_live_and_replay_call_one_prepare_and_one_copy_on_write_enrichment(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+):
+    """Item 1 cutover: both routes run prepare -> enrich -> lower exactly once, over
+    one prepared batch, and neither mutates the attribute mapping it was handed."""
+    import sysml_codegen.orchestration.pipeline_builder as pipeline_builder
+    import sysml_codegen.snapshot.graph_rebuild as graph_rebuild
+    from sysml_codegen.snapshot import build_full_graph_from_snapshot, capture_snapshot
+
+    fixture = FIXTURES_DIR / "constraint_occurrence_demand" / "shared"
+
+    def instrument(module, calls: list[str], seen: dict):
+        real_prepare = module.prepare_constraint_usages
+        real_enrich = module.enrich_graph_design_attributes
+        real_lower = module.lower_constraints
+
+        def prepare(*args, **kwargs):
+            calls.append("prepare")
+            return real_prepare(*args, **kwargs)
+
+        def enrich(real_design_attrs, **kwargs):
+            calls.append("enrich")
+            seen["incoming"] = {str(k): len(v) for k, v in real_design_attrs.items()}
+            seen["mapping"] = real_design_attrs
+            result = real_enrich(real_design_attrs, **kwargs)
+            seen["enriched_keys"] = list(result)
+            return result
+
+        def lower(*args, **kwargs):
+            calls.append("lower")
+            return real_lower(*args, **kwargs)
+
+        monkeypatch.setattr(module, "prepare_constraint_usages", prepare)
+        monkeypatch.setattr(module, "enrich_graph_design_attributes", enrich)
+        monkeypatch.setattr(module, "lower_constraints", lower)
+
+    live_calls: list[str] = []
+    live_seen: dict = {}
+    instrument(pipeline_builder, live_calls, live_seen)
+    build_pipeline_context([fixture])
+    assert live_calls == ["prepare", "enrich", "lower"]
+    assert {str(k): len(v) for k, v in live_seen["mapping"].items()} == live_seen["incoming"]
+    assert all(isinstance(key, Path) for key in live_seen["enriched_keys"])
+
+    snapshot_path = capture_snapshot([fixture], tmp_path / "snapshot.json")
+
+    replay_calls: list[str] = []
+    replay_seen: dict = {}
+    instrument(graph_rebuild, replay_calls, replay_seen)
+    build_full_graph_from_snapshot(snapshot_path)
+    assert replay_calls == ["prepare", "enrich", "lower"]
+    assert {str(k): len(v) for k, v in replay_seen["mapping"].items()} == replay_seen["incoming"]
+    assert all(isinstance(key, Path) for key in replay_seen["enriched_keys"])

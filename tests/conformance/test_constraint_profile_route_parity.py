@@ -13,7 +13,10 @@ from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode, serializ
 from agentic_mbse.sysml.syside_adapter import get_syside
 from agentic_mbse.validation import level6_architecture
 
-from sysml_codegen.analysis.constraint_lowering import lower_constraints
+from sysml_codegen.analysis.constraint_lowering import (
+    lower_constraints,
+    prepare_constraint_usages,
+)
 from sysml_codegen.cli import GenerationConfig, _get_template_env, run_codegen
 from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
 from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
@@ -38,7 +41,10 @@ package RouteContinuity {
 def _route_record(facts):
     profile = evaluate_profile(facts)
     concrete = lower_constraints(
-        facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+        facts,
+        prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+        registry=None,
+        design_attrs={},
     )
     catalog = assemble_constraint_catalog(concrete, facts)
     context = SimpleNamespace(
@@ -153,7 +159,10 @@ def test_forged_source_identity_preserves_output_tree(
 
     def reject_during_context_build(*_args, **_kwargs):
         return lower_constraints(
-            facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+            facts,
+            prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+            registry=None,
+            design_attrs={},
         )
 
     mutation_calls = {"clear": 0, "setup": 0}
@@ -232,7 +241,10 @@ def test_compound_profile_diagnostics_reach_level6_and_preserve_output_tree(
 
     def reject_during_context_build(*_args, **_kwargs):
         return lower_constraints(
-            facts, occ_index=None, registry=None, design_attrs={}, calc_usages=[]
+            facts,
+            prepared=prepare_constraint_usages(facts, occ_index=None, calc_usages=[]),
+            registry=None,
+            design_attrs={},
         )
 
     mutation_calls = {"clear": 0, "setup": 0}

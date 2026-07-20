@@ -15,9 +15,10 @@ from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
 from sysml_codegen.analysis.constraint_lowering import (
-    collect_bare_actual_demand,
+    PreparedConstraintBatch,
     extend_graph_with_constraints,
     lower_constraints,
+    prepare_constraint_usages,
 )
 from sysml_codegen.analysis.dependency_backtracker import (
     DependencyBacktracker,
@@ -29,7 +30,6 @@ from sysml_codegen.analysis.parameter_groups import (
 )
 from sysml_codegen.analysis.part_instance_index import (
     InstanceOccurrence,
-    RecordingOccurrenceIndex,
     build_part_instance_index,
 )
 from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
@@ -61,7 +61,7 @@ from sysml_codegen.orchestration.pipeline_context import (
 )
 from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import ConcreteConstraint, ConstraintInputResolution
-from sysml_codegen.resolution.supplied_values import materialize_supplied_values
+from sysml_codegen.resolution.supplied_values import enrich_graph_design_attributes
 from sysml_codegen.snapshot import (
     CONSTRAINT_LOWERING_MODE_APPLIED,
     CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
@@ -825,51 +825,48 @@ def build_pipeline_context(
     # Step-4.5 removal stays for genuine (never-tentative) FORMULAs.
     _remove_formula_from_design_attrs(computed_attrs, design_attrs)
 
-    # Step 5.65 (Item 2, REQ-SVM-01..04): materialize supplied subsystem-attr values
-    # so Step-3 design-attribute resolution carries them to the plant-calc inputs and
-    # collapses renamed-consumer fan-out by source QN. The synthetic attrs enrich a
-    # GRAPH-ONLY copy (deriver + backtracker + graph builder); `design_attrs` stays the
-    # pure extraction boundary, so a snapshot captured from this run serializes only
-    # real attributes and the materializer reconstructs the synth ones at from-snapshot
-    # generate time from the raw redefinitions/overrides.
-    graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
-    if hierarchy_data is not None:
-        # D2: widen the demand set to a constraint actual with no calc-usage binding
-        # of its own (a self-named `in gain = gain`) — otherwise invisible to the
-        # calc-usage-only sweep above. Read-only probe (collect_bare_actual_demand
-        # docstring); gated the same as the real `lower_constraints` call below so it
-        # never runs when lowering itself won't.
-        constraint_actual_demand = (
-            collect_bare_actual_demand(
-                constraint_facts, build_part_instance_index(extractor.model), calc_usages
-            )
-            if lower_constraints_enabled and constraint_facts.usages
-            else []
+    # Step 5.64 (Item 1): verify the usage/decision association, run the
+    # warning/BLOCK preflight, and expand every admitted owner exactly once. This is
+    # the only occurrence-query site on the live route; both the enrichment below and
+    # lowering further down read the returned batch instead of re-discovering
+    # lifecycle state. Its transcript stays private until PipelineContext is built.
+    prepared_constraints: PreparedConstraintBatch | None = None
+    if lower_constraints_enabled and constraint_facts.usages:
+        prepared_constraints = prepare_constraint_usages(
+            constraint_facts,
+            occ_index=build_part_instance_index(extractor.model),
+            calc_usages=calc_usages,
+            source_location_mode="live",
+            source_roots=model_paths,
         )
-        synth_attrs = materialize_supplied_values(
-            calc_usages,
-            hierarchy_data.redefinitions,
-            hierarchy_data.design_overrides,
-            hierarchy_data.usage_type_map,
+
+    # Step 5.65 (Item 2, REQ-SVM-01..04): enrich a GRAPH-ONLY copy with supplied
+    # subsystem-attr values so Step-3 design-attribute resolution carries them to the
+    # plant-calc inputs and collapses renamed-consumer fan-out by source QN.
+    # `design_attrs` stays the pure extraction boundary — the enrichment is
+    # copy-on-write — so a snapshot captured from this run serializes only real
+    # attributes and replay re-derives the synthetic ones through the same seam.
+    if hierarchy_data is None:
+        graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
+    else:
+        graph_design_attrs = enrich_graph_design_attributes(
             design_attrs,
-            constraint_actual_demand=constraint_actual_demand,
+            calc_usages=calc_usages,
+            prepared=prepared_constraints,
+            redefinitions=hierarchy_data.redefinitions,
+            design_overrides=hierarchy_data.design_overrides,
+            usage_type_map=hierarchy_data.usage_type_map,
         )
-        for attr in synth_attrs:
-            # Bucket by the attribute's own source file (the consuming usage's file) so
-            # it groups into a valid, existing parameter group.
-            graph_design_attrs.setdefault(Path(attr.source_file), []).append(attr)
 
     # Step 5.7: Create parameter group deriver, now that design_attrs reflects the
     # FINAL classifications (moved after confirm per INV-G).
     group_deriver = ParameterGroupDeriver(graph_design_attrs, calc_usages, calc_defs)
 
     # [P1 RESOLVE] (Item 5): expand + strictly resolve every constraint fact into
-    # concrete graph structure. Guarded on non-empty usages (INV-7) — the output
-    # registry and graph_design_attrs are final here, and occ_index is built once
-    # for this call. lower_constraints runs the Item 3 executable-profile preflight
-    # first (evaluate_profile) — a blocked assert halts here with a named
-    # diagnostic; a non-admitted usage catalogs unassessed, never reaching the
-    # strict resolver.
+    # concrete graph structure from the Step-5.64 batch — the output registry and
+    # graph_design_attrs are final here. The preflight already ran during
+    # preparation: a blocked assert halted there with a named diagnostic, and a
+    # non-admitted usage arrives marked excluded, never reaching the strict resolver.
     # Default True (Item 8 Phase 4): snapshot v3 carries constraint facts +
     # the resolved occurrence table, and Phase 3 proved from-snapshot
     # regeneration re-lowers to a byte-identical graph/catalog on the clean
@@ -881,21 +878,19 @@ def build_pipeline_context(
     # `capture_snapshot`'s `lower_constraints_enabled` param, never the CLI.
     concrete_constraints: list[ConcreteConstraint] = []
     part_occurrences: dict[str, list[InstanceOccurrence]] = {}
-    if lower_constraints_enabled and constraint_facts.usages:
-        # Recording wrapper (Item 8, MF3): the table serialized into snapshot v3
-        # is exactly the transcript of the `occurrences_of` queries this real
-        # `lower_constraints` call makes — never a re-derived owner set.
-        recorder = RecordingOccurrenceIndex(build_part_instance_index(extractor.model))
+    if prepared_constraints is not None:
         concrete_constraints = lower_constraints(
             constraint_facts,
-            occ_index=recorder,
+            prepared=prepared_constraints,
             registry=output_registry,
             design_attrs=graph_design_attrs,
-            calc_usages=calc_usages,
-            source_location_mode="live",
-            source_roots=model_paths,
         )
-        part_occurrences = recorder.recorded
+        # The table serialized into snapshot v3 is exactly the batch's transcript of
+        # successful owner queries (Item 8, MF3) — never a re-derived owner set.
+        part_occurrences = {
+            owner_eqn: list(occurrences)
+            for owner_eqn, occurrences in prepared_constraints.occurrence_transcript
+        }
 
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(

@@ -36,7 +36,11 @@ from agentic_mbse.sysml.expression_ir import (
 )
 
 from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
-from sysml_codegen.analysis.part_instance_index import NonFiniteCardinalityError
+from sysml_codegen.analysis.part_instance_index import (
+    FrozenOccurrenceIndexCorruptionError,
+    NonFiniteCardinalityError,
+    RecursiveContainmentError,
+)
 from sysml_codegen.analysis.source_referent import (
     map_live_source_referent,
     validate_snapshot_source_referent,
@@ -71,7 +75,7 @@ if TYPE_CHECKING:
     from agentic_mbse.sysml.expression_facts import FeatureReferenceFact, IdentityFact
 
     from sysml_codegen.analysis.parameter_groups import DesignAttributeData, ParameterGroupDeriver
-    from sysml_codegen.analysis.part_instance_index import OccurrenceIndex
+    from sysml_codegen.analysis.part_instance_index import InstanceOccurrence, OccurrenceIndex
     from sysml_codegen.core.output_registry import OutputRegistry
     from sysml_codegen.extraction.usage_extractor import CalcUsageData
     from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
@@ -383,94 +387,89 @@ def _design_attr_index(
     return index
 
 
-def _expand_owner_instances(
-    usage: ConstraintUsageFact, occ_index: OccurrenceIndex, calc_usages: list[CalcUsageData]
-) -> list[tuple[str, str]]:
-    """The owner-kind axis (D5): ``(owner_instance_path, occurrence_scope)`` pairs.
+SUPPORTED_OWNER_KINDS = ("part_def", "calc_def", "package")
 
-    ``part_def`` → one pair per :meth:`OccurrenceIndex.occurrences_of` occurrence
-    (INV-3). ``calc_def`` → one pair per matching concrete calc usage (existing
-    calc-usage discovery, not the part index). ``package`` → already concrete:
-    exactly one pair, at top-level scope. Any other kind is the caller's
-    unassessed branch — never reached here.
+
+def is_excluded_usage(usage: ConstraintUsageFact, decision: UsageDecision) -> bool:
+    """Whether a verified pair takes the non-executable (excluded record) branch."""
+    return (
+        usage.owner.owning_definition.kind not in SUPPORTED_OWNER_KINDS
+        or decision.eligibility is not Eligibility.ADMIT
+    )
+
+
+def _expand_part_owner(
+    usage: ConstraintUsageFact,
+    occ_index: OccurrenceIndex,
+    staged: dict[str, tuple[InstanceOccurrence, ...]],
+) -> tuple[tuple[str, str], ...]:
+    """``part_def`` owner instances: one pair per occurrence (INV-3).
+
+    The query result is staged in ``staged`` — preparation's private transcript —
+    and reused for a repeated owner QN, so the batch owns every occurrence query
+    and publishes none of them until the whole batch succeeds (D2/I4).
     """
-    kind = usage.owner.owning_definition.kind
-    owner_qn = usage.owner.owning_definition.qualified_name
-
-    if kind == "part_def":
-        owner_eqn = sanitize_qualified_name(owner_qn)
+    owner_eqn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
+    occurrences = staged.get(owner_eqn)
+    if occurrences is None:
         try:
-            occurrences = occ_index.occurrences_of(owner_eqn)
+            occurrences = tuple(occ_index.occurrences_of(owner_eqn))
         except NonFiniteCardinalityError as error:
             raise _generation_error(
                 f"{usage.identity.qualified_name}: owner '{owner_eqn}' is reached only "
                 f"through a non-finite multiplicity ({error}) — cannot expand to "
                 "concrete instances (generation error, never a silent skip)"
             ) from error
-        if not occurrences:
+        except RecursiveContainmentError as error:
             raise _generation_error(
-                f"{usage.identity.qualified_name}: owner '{owner_eqn}' has no concrete "
-                "instances — an expected instance cannot be formed (validation error)"
-            )
-        return [(occ.instance_path, occurrence_scope(occ.instance_path)) for occ in occurrences]
-
-    if kind == "calc_def":
-        matches = [cu for cu in calc_usages if cu.calc_def_qualified_name == owner_qn]
-        if not matches:
+                f"{usage.identity.qualified_name or '<anonymous>'}: owner '{owner_eqn}' is "
+                f"recursively contained ({error}) — no concrete instance set exists, so no "
+                "part of this batch is expanded"
+            ) from error
+        except FrozenOccurrenceIndexCorruptionError as error:
             raise _generation_error(
-                f"{usage.identity.qualified_name}: owner '{owner_qn}' (calc_def) has no "
-                "concrete calc usages — an expected instance cannot be formed"
-            )
-        return [(cu.qualified_name, occurrence_scope(cu.qualified_name)) for cu in matches]
+                f"{usage.identity.qualified_name or '<anonymous>'}: admitted owner "
+                f"'{owner_eqn}' is absent from the frozen occurrence transcript "
+                f"({error}) — recapture the snapshot against this model"
+            ) from error
+        staged[owner_eqn] = occurrences
+    if not occurrences:
+        raise _generation_error(
+            f"{usage.identity.qualified_name}: owner '{owner_eqn}' has no concrete "
+            "instances — an expected instance cannot be formed (validation error)"
+        )
+    return tuple((occ.instance_path, occurrence_scope(occ.instance_path)) for occ in occurrences)
 
-    # kind == "package": already concrete — exactly one instance, top-level scope.
-    return [(sanitize_qualified_name(usage.identity.qualified_name or owner_qn), "")]
+
+def _expand_calc_owner(
+    usage: ConstraintUsageFact, calc_usages: list[CalcUsageData]
+) -> tuple[tuple[str, str], ...]:
+    """``calc_def`` owner instances: one pair per matching concrete calc usage."""
+    owner_qn = usage.owner.owning_definition.qualified_name
+    matches = [cu for cu in calc_usages if cu.calc_def_qualified_name == owner_qn]
+    if not matches:
+        raise _generation_error(
+            f"{usage.identity.qualified_name}: owner '{owner_qn}' (calc_def) has no "
+            "concrete calc usages — an expected instance cannot be formed"
+        )
+    return tuple((cu.qualified_name, occurrence_scope(cu.qualified_name)) for cu in matches)
 
 
-def collect_bare_actual_demand(
-    facts: ConstraintFacts,
-    occ_index: OccurrenceIndex,
-    calc_usages: list[CalcUsageData],
-) -> list[tuple[str, str, str | None]]:
-    """The demand set (D2) the supplied-value materializer needs beyond calc-usage
-    bindings: ``(instance_scope, source_path, source_file)`` for every ADMIT
-    constraint usage's feature-reference actual.
+def _expand_package_owner(usage: ConstraintUsageFact) -> tuple[tuple[str, str], ...]:
+    """``package`` owner instances: already concrete — one pair at top-level scope."""
+    owner_qn = usage.owner.owning_definition.qualified_name
+    return ((sanitize_qualified_name(usage.identity.qualified_name or owner_qn), ""),)
 
-    A constraint actual referenced by nothing else (e.g. a self-named ``in gain =
-    gain`` with no calc-usage binding of its own) is otherwise invisible to
-    ``materialize_supplied_values``, which only scans ``calc_usages`` bindings — so
-    an instance self-redefinition (D2) it alone could resolve never gets synthesized.
-    This is a read-only probe, not authoritative: it reuses the same profile
-    evaluation and owner-instance expansion ``lower_constraints`` performs later, and
-    any usage that would fail expansion there is simply skipped here — the real,
-    authoritative failure (if any) happens in ``lower_constraints`` itself.
+
+def reference_dotted(actual: ActualFact) -> str | None:
+    """The dotted source path a named feature-reference actual points at.
+
+    ``None`` for anything the supplied-value materializer does not own: an unnamed
+    actual, a non-reference value, or a reference with no resolvable dotted path.
     """
-    from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
-
-    profile = evaluate_profile(facts)
-    admit_qns = {
-        decision.identity.qualified_name
-        for decision in profile.decisions
-        if decision.eligibility is Eligibility.ADMIT
-    }
-    demand: list[tuple[str, str, str | None]] = []
-    for usage in facts.usages:
-        if usage.identity.qualified_name not in admit_qns:
-            continue
-        try:
-            owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
-        except (NonFiniteCardinalityError, CodeGenerationError):
-            continue
-        source_file = usage.location.file if usage.location is not None else None
-        for actual in usage.actuals:
-            if actual.name is None or not isinstance(actual.value, FeatureReferenceNode):
-                continue
-            dotted = _reference_dotted(actual.value.reference)
-            if not dotted:
-                continue
-            for owner_instance_path, _occ_scope in owner_instances:
-                demand.append((owner_instance_path, dotted, source_file))
-    return demand
+    if actual.name is None or not isinstance(actual.value, FeatureReferenceNode):
+        return None
+    return _reference_dotted(actual.value.reference) or None
 
 
 def _source_local_identity(usage: ConstraintUsageFact) -> tuple[str, tuple]:
@@ -516,22 +515,40 @@ def _exclusion_for(
     return ConstraintExclusion(kind=kind, reasons=reasons, location=rendered_location)
 
 
-def excluded_usage_indices(
-    facts: ConstraintFacts, decisions: list[UsageDecision]
-) -> tuple[int, ...]:
-    """Return the ordered indices lowering sends to the excluded-record branch."""
+def associate_usage_decisions(
+    facts: ConstraintFacts,
+) -> tuple[tuple[ConstraintUsageFact, UsageDecision], ...]:
+    """Pair every usage with its verified profile decision (D1).
+
+    Owns the profile-version guard, the profile evaluation, and the complete
+    count/identity/location verification — the only membership test in the
+    lifecycle, so a nullable qualified name can never stand in for identity.
+    Emits no warning and queries no occurrence source, so a mismatch is caught
+    before any observable effect.
+    """
+    if PROFILE_SEMANTIC_VERSION != "executable-profile/v4":
+        raise RuntimeError(
+            f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
+            "review before re-pinning"
+        )
+    decisions = evaluate_profile(facts).decisions
     if len(facts.usages) != len(decisions):
         raise _generation_error(
-            "constraint facts/profile decision cardinality mismatch: "
+            "constraint facts/profile association mismatch: cardinality "
             f"{len(facts.usages)} usages versus {len(decisions)} decisions"
         )
-    supported_owners = {"part_def", "calc_def", "package"}
-    return tuple(
-        index
-        for index, (usage, decision) in enumerate(zip(facts.usages, decisions, strict=True))
-        if usage.owner.owning_definition.kind not in supported_owners
-        or decision.eligibility is not Eligibility.ADMIT
-    )
+    for index, (usage, decision) in enumerate(zip(facts.usages, decisions, strict=True)):
+        if usage.identity != decision.identity:
+            raise _generation_error(
+                f"constraint facts/profile association mismatch at source index {index}: "
+                f"usage identity {usage.identity!r} versus decision identity {decision.identity!r}"
+            )
+        if usage.location != decision.location:
+            raise _generation_error(
+                f"constraint facts/profile association mismatch at source index {index}: "
+                f"usage location {usage.location!r} versus decision location {decision.location!r}"
+            )
+    return tuple(zip(facts.usages, decisions, strict=True))
 
 
 def _project_excluded_location(
@@ -566,13 +583,12 @@ def _project_excluded_location(
 
 
 def _report_non_numerical_warnings(
-    facts: ConstraintFacts,
-    decisions: list[UsageDecision],
+    pairs: tuple[tuple[ConstraintUsageFact, UsageDecision], ...],
     *,
     projected_location: Callable[[int], _ProjectedExcludedLocation],
 ) -> None:
     """Report every non-numerical decision once in source/profile order."""
-    for index, (usage, decision) in enumerate(zip(facts.usages, decisions, strict=True)):
+    for index, (usage, decision) in enumerate(pairs):
         if decision.eligibility is not Eligibility.NON_NUMERICAL:
             continue
         usage_qn = usage.identity.qualified_name or "<anonymous>"
@@ -585,6 +601,192 @@ def _report_non_numerical_warnings(
             projected_location(index).rendered,
             diagnostics,
         )
+
+
+def _raise_on_blocking(pairs: tuple[tuple[ConstraintUsageFact, UsageDecision], ...]) -> None:
+    """Halt the batch on the complete set of BLOCK decisions, in source order."""
+    blocking = [decision for _usage, decision in pairs if decision.eligibility is Eligibility.BLOCK]
+    if not blocking:
+        return
+
+    def describe(decision: UsageDecision, diagnostic: EligibilityDiagnostic) -> str:
+        name = decision.identity.qualified_name or decision.identity.name or "<anonymous>"
+        where = (
+            f"{decision.location.file}:{decision.location.line}"
+            if decision.location
+            else "<no location>"
+        )
+        return (
+            f"  - {name} at {where}: {diagnostic.construct} "
+            f"({diagnostic.reason}): {diagnostic.message}"
+        )
+
+    lines = [describe(d, diag) for d in blocking for diag in d.diagnostics]
+    raise _generation_error(
+        "Constraint generation halted — the following asserted constraints are not "
+        "executable:\n" + "\n".join(lines)
+    )
+
+
+def _verified_predicate_source_key(
+    facts: ConstraintFacts,
+    usage: ConstraintUsageFact,
+    decision: UsageDecision,
+    *,
+    source_location_mode: Literal["live", "snapshot"] | None,
+    source_roots: list[Path],
+) -> str:
+    """The usage's stable predicate-source key, after decision-authority checks.
+
+    Owns every source-location policy the key needs, so lowering never re-derives
+    a referent (I10). Runs for every usage — executable or not — in source order.
+    """
+    usage_qn = usage.identity.qualified_name or "<anonymous>"
+    effective_source: IdentityFact | None
+    if usage.source.form in ("inline", "definition_typed"):
+        if type(decision.is_negated) is not bool or type(decision.expected_value) is not bool:
+            raise _generation_error(
+                f"decision-authority violation for {usage_qn}: executable decision has no "
+                "Boolean polarity pair"
+            )
+        if decision.expected_value is not (not decision.is_negated):
+            raise _generation_error(
+                f"decision-authority violation for {usage_qn}: "
+                "expected truth contradicts polarity"
+            )
+        if type(usage.is_negated) is not bool or usage.is_negated is not decision.is_negated:
+            raise _generation_error(
+                f"decision-authority violation for {usage_qn}: "
+                "source polarity disagrees with profile"
+            )
+        effective_source = _verified_effective_predicate_source(facts, usage)
+    else:
+        effective_source = usage.source.effective_predicate_source
+
+    if effective_source is not None and effective_source.qualified_name is not None:
+        prefix = "definition" if usage.source.form == "definition_typed" else "inline"
+        return f"{prefix}:{effective_source.qualified_name}"
+    if usage.source.form == "inline" and usage.location is not None:
+        raw_file = usage.location.file
+        if source_location_mode == "live":
+            try:
+                referent = map_live_source_referent(raw_file, source_roots)
+            except ValueError as error:
+                raise _generation_error(str(error)) from error
+            portable_file = Path(referent).name
+        elif source_location_mode == "snapshot":
+            try:
+                portable_file = Path(validate_snapshot_source_referent(raw_file)).name
+            except ValueError:
+                # Legacy snapshot-v3 eligible facts retained raw paths. Re-profile them
+                # without rewriting stored bytes; the basename is route-stable for this
+                # compatibility seam and source-key collisions still fail on body divergence.
+                portable_file = Path(raw_file).name
+        else:
+            portable_file = Path(raw_file).name
+        return (
+            f"inline:{usage.identity.kind}:{portable_file}:"
+            f"{usage.location.line}:{usage.location.column}"
+        )
+    return f"excluded:{usage.source.form}:{usage_qn}"
+
+
+@dataclass(frozen=True)
+class PreparedConstraintUsage:
+    """One verified usage, ready to lower: no further lifecycle discovery needed."""
+
+    source_index: int
+    usage: ConstraintUsageFact
+    decision: UsageDecision
+    owner_kind: str
+    owner_instances: tuple[tuple[str, str], ...]
+    projected_exclusion: _ProjectedExcludedLocation | None
+    predicate_source_key: str
+
+
+@dataclass(frozen=True)
+class PreparedConstraintBatch:
+    """The complete, all-or-nothing result of one preparation pass (D2/I4)."""
+
+    items: tuple[PreparedConstraintUsage, ...]
+    occurrence_transcript: tuple[tuple[str, tuple[InstanceOccurrence, ...]], ...]
+
+
+def prepare_constraint_usages(
+    facts: ConstraintFacts,
+    *,
+    occ_index: OccurrenceIndex,
+    calc_usages: list[CalcUsageData],
+    source_location_mode: Literal["live", "snapshot"] | None = None,
+    source_roots: list[Path] | None = None,
+) -> PreparedConstraintBatch:
+    """Verify, preflight, and expand every constraint usage exactly once (D2).
+
+    Runs association, then the existing NON_NUMERICAL-warning-then-BLOCK
+    preflight, then exclusion projection and explicit owner dispatch. Owner
+    results are staged privately and frozen into the returned transcript only
+    after every item succeeds, so a later-owner failure publishes nothing (I4).
+    """
+    pairs = associate_usage_decisions(facts)
+    roots = source_roots or []
+    location_cache: dict[int, _ProjectedExcludedLocation] = {}
+
+    def projected_location(index: int) -> _ProjectedExcludedLocation:
+        cached = location_cache.get(index)
+        if cached is not None:
+            return cached
+        projected = _project_excluded_location(
+            facts.usages[index],
+            source_location_mode=source_location_mode,
+            source_roots=roots,
+        )
+        location_cache[index] = projected
+        return projected
+
+    _report_non_numerical_warnings(pairs, projected_location=projected_location)
+    _raise_on_blocking(pairs)
+
+    staged: dict[str, tuple[InstanceOccurrence, ...]] = {}
+    items: list[PreparedConstraintUsage] = []
+    for index, (usage, decision) in enumerate(pairs):
+        kind = usage.owner.owning_definition.kind
+        predicate_source_key = _verified_predicate_source_key(
+            facts,
+            usage,
+            decision,
+            source_location_mode=source_location_mode,
+            source_roots=roots,
+        )
+        exclusion: _ProjectedExcludedLocation | None = None
+        owner_instances: tuple[tuple[str, str], ...] = ()
+        if is_excluded_usage(usage, decision):
+            exclusion = projected_location(index)
+        elif kind == "part_def":
+            owner_instances = _expand_part_owner(usage, occ_index, staged)
+        elif kind == "calc_def":
+            owner_instances = _expand_calc_owner(usage, calc_usages)
+        elif kind == "package":
+            owner_instances = _expand_package_owner(usage)
+        else:
+            raise RuntimeError(
+                f"admitted usage {usage.identity.qualified_name!r} has unsupported owner kind "
+                f"{kind!r} — exclusion filtering is not total"
+            )
+        items.append(
+            PreparedConstraintUsage(
+                source_index=index,
+                usage=usage,
+                decision=decision,
+                owner_kind=kind,
+                owner_instances=owner_instances,
+                projected_exclusion=exclusion,
+                predicate_source_key=predicate_source_key,
+            )
+        )
+    return PreparedConstraintBatch(
+        items=tuple(items),
+        occurrence_transcript=tuple(sorted(staged.items())),
+    )
 
 
 def _resolve_formal(
@@ -869,137 +1071,43 @@ def _definition_formal_bindings(
 def lower_constraints(
     facts: ConstraintFacts,
     *,
-    occ_index: OccurrenceIndex,
+    prepared: PreparedConstraintBatch,
     registry: OutputRegistry,
     design_attrs: dict[Path, list[DesignAttributeData]],
-    calc_usages: list[CalcUsageData],
-    source_location_mode: Literal["live", "snapshot"] | None = None,
-    source_roots: list[Path] | None = None,
 ) -> list[ConcreteConstraint]:
-    """Expand every fact into concrete graph structure (P1 RESOLVE).
+    """Expand every prepared item into concrete graph structure (P1 RESOLVE).
 
-    Dispatches on the owner-kind axis (D5) to find each source assertion's
-    concrete owner instances; for each, strictly resolves every bound actual
+    Consumes the batch :func:`prepare_constraint_usages` returned: disposition,
+    owner instances, exclusion locations, and predicate-source keys are already
+    decided. Lowering strictly resolves every bound actual
     (:func:`resolve_actual`) and every defaulted-omitted formal, mints a
-    deterministic ``constraint_id`` (:func:`mint_constraint_id`), and selects
+    deterministic ``constraint_id`` (:func:`mint_constraint_id`), and serializes
     the effective predicate. ``ConstraintUsageFact.predicate`` already carries
     the source-form-selected effective predicate (extraction resolves
     ``effective_predicate_source.result_expression`` at fact-construction
     time, `agentic_mbse.sysml.constraint_extraction._usage_fact`) — Item 5
     does not re-select it, only serializes it (D5-IR).
 
-    A ``requirement_def`` / any other out-of-profile owner kind is
-    defensively cataloged **unassessed** (D7): one record per usage,
-    ``eligible=False``, no expansion, no formal resolution, no node.
+    It cannot evaluate the profile, query an occurrence source, or re-derive a
+    source referent (I10); ``facts`` is read only for constraint definitions and
+    formal defaults.
 
     Catalog ordering is by ``constraint_id`` (INV-4); duplicate IDs raise via
     :func:`assert_unique_constraint_ids` before returning.
     """
-    if PROFILE_SEMANTIC_VERSION != "executable-profile/v4":
-        raise RuntimeError(
-            f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
-            "review before re-pinning"
-        )
-    profile = evaluate_profile(facts)
-    excluded_indices = set(excluded_usage_indices(facts, profile.decisions))
-    location_cache: dict[int, _ProjectedExcludedLocation] = {}
-
-    def projected_location(index: int) -> _ProjectedExcludedLocation:
-        cached = location_cache.get(index)
-        if cached is not None:
-            return cached
-        projected = _project_excluded_location(
-            facts.usages[index],
-            source_location_mode=source_location_mode,
-            source_roots=source_roots or [],
-        )
-        location_cache[index] = projected
-        return projected
-
-    _report_non_numerical_warnings(
-        facts,
-        profile.decisions,
-        projected_location=projected_location,
-    )
-    blocking = [d for d in profile.decisions if d.eligibility is Eligibility.BLOCK]
-    if blocking:
-
-        def _describe(decision: UsageDecision, diag: EligibilityDiagnostic) -> str:
-            name = decision.identity.qualified_name or decision.identity.name or "<anonymous>"
-            where = (
-                f"{decision.location.file}:{decision.location.line}"
-                if decision.location
-                else "<no location>"
-            )
-            return f"  - {name} at {where}: {diag.construct} ({diag.reason}): {diag.message}"
-
-        lines = [_describe(d, diag) for d in blocking for diag in d.diagnostics]
-        raise _generation_error(
-            "Constraint generation halted — the following asserted constraints are not "
-            "executable:\n" + "\n".join(lines)
-        )
-
     design_attr_by_qn = _design_attr_index(design_attrs)
     formal_default_by_qn = _formal_default_index(facts)
     concrete: list[ConcreteConstraint] = []
-    for index, (usage, decision) in enumerate(zip(facts.usages, profile.decisions, strict=True)):
-        kind = usage.owner.owning_definition.kind
+    for item in prepared.items:
+        usage = item.usage
+        decision = item.decision
+        kind = item.owner_kind
         usage_qn = usage.identity.qualified_name or "<anonymous>"
+        predicate_source_key = item.predicate_source_key
 
-        executable_form = usage.source.form in ("inline", "definition_typed")
-        effective_source: IdentityFact | None
-        if executable_form:
-            if type(decision.is_negated) is not bool or type(decision.expected_value) is not bool:
-                raise _generation_error(
-                    f"decision-authority violation for {usage_qn}: executable decision has no "
-                    "Boolean polarity pair"
-                )
-            if decision.expected_value is not (not decision.is_negated):
-                raise _generation_error(
-                    f"decision-authority violation for {usage_qn}: "
-                    "expected truth contradicts polarity"
-                )
-            if type(usage.is_negated) is not bool or usage.is_negated is not decision.is_negated:
-                raise _generation_error(
-                    f"decision-authority violation for {usage_qn}: "
-                    "source polarity disagrees with profile"
-                )
-            effective_source = _verified_effective_predicate_source(facts, usage)
-        else:
-            effective_source = usage.source.effective_predicate_source
-
-        if effective_source is not None and effective_source.qualified_name is not None:
-            prefix = "definition" if usage.source.form == "definition_typed" else "inline"
-            predicate_source_key = f"{prefix}:{effective_source.qualified_name}"
-        elif usage.source.form == "inline" and usage.location is not None:
-            raw_file = usage.location.file
-            if source_location_mode == "live":
-                try:
-                    referent = map_live_source_referent(raw_file, source_roots or [])
-                except ValueError as error:
-                    raise _generation_error(str(error)) from error
-                portable_file = Path(referent).name
-            elif source_location_mode == "snapshot":
-                try:
-                    referent = validate_snapshot_source_referent(raw_file)
-                    portable_file = Path(referent).name
-                except ValueError:
-                    # Legacy snapshot-v3 eligible facts retained raw paths. Re-profile them
-                    # without rewriting stored bytes; the basename is route-stable for this
-                    # compatibility seam and source-key collisions still fail on body divergence.
-                    portable_file = Path(raw_file).name
-            else:
-                portable_file = Path(raw_file).name
-            predicate_source_key = (
-                f"inline:{usage.identity.kind}:{portable_file}:"
-                f"{usage.location.line}:{usage.location.column}"
-            )
-        else:
-            predicate_source_key = f"excluded:{usage.source.form}:{usage_qn}"
-
-        if index in excluded_indices:
+        if item.projected_exclusion is not None:
             local, _id_component = _source_local_identity(usage)
-            projected = projected_location(index)
+            projected = item.projected_exclusion
             exclusion = _exclusion_for(decision, kind, projected.rendered)
             if usage.identity.name is None:
                 location = usage.location
@@ -1075,8 +1183,7 @@ def lower_constraints(
 
         formal_bindings = _definition_formal_bindings(facts, usage)
         owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
-        owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
-        for owner_instance_path, occ_scope in owner_instances:
+        for owner_instance_path, occ_scope in item.owner_instances:
             inputs: list[ConcreteConstraintInput] = []
             if formal_bindings is not None:
                 for formal, actual in formal_bindings:
