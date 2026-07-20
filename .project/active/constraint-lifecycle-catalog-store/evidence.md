@@ -134,6 +134,17 @@ required a full fixture **regeneration**, not a re-seal — done cleanly via the
 path. The same staleness affects the fusion IFE package (Phase 3), which is why its regen is the
 remaining gated step.
 
+## Audit close (Certify — pass with notes)
+
+- **F-A closed** (codegen `82ad686`): `constraint_inline` added to the FK test + a dedicated
+  named-inline test — the `definition_qn=None` branch now executes non-vacuously. 6 passed.
+- **F-B closed** (teax `8286893`): `tests/study/test_no_reconstruction.py` — INV-6 source-scan
+  guard (reconstruction idioms absent from product source, scoped per F5); `CatalogView`/`_Catalog`
+  repurposing recorded explicitly in the spec deletion table. 14 study tests green.
+- **Minors** (fusion `d7f7492d`): Item-9 breadcrumb on the stale `MultiChannelEvaluator`; the
+  seam-proof `_work`/cache output is untracked (not committed).
+- Spec SC-2 and RED-first checkboxes now `[x]`.
+
 ## Candidate revisions
 
 - sysml-codegen: `CANDIDATE_REV_CODEGEN = 19b74ac` (Phase 1) — unchanged since
