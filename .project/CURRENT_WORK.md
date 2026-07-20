@@ -6,6 +6,15 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — spec drafted 2026-07-20
+
+Epic row 11 / CE-F2. Stock TEAx bridge builds complete typed mappings for zero/one/many entry
+channels; delete fusion's stale `MultiChannelEvaluator`. Spec:
+`.project/active/constraint-lifecycle-multi-entry/spec.md` — grounded in the real 3-channel IFE
+package and the file:line single-entry inventory. **Open: the "zero" acceptance coordinate**
+(no zero-entry package exists; brief's "constraint-free = zero" collides with Item 11 firewall —
+surfaced in spec Open Questions, owner decision needed). Awaiting spec review.
+
 ### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — CERTIFIED (independent audit 2026-07-20, pass with notes; all notes now closed)
 
 **Audit verdict: Certify — pass with notes.** `.project/active/constraint-lifecycle-catalog-store/audit.md`.
