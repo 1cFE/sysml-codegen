@@ -40,8 +40,10 @@ Top-level keys of `extraction_snapshot.json`:
   serialized via `agentic_mbse.sysml.constraint_facts.serialize`. Always present
   (v3). The extraction-boundary predicate facts the offline path re-lowers from.
 - `part_occurrences` — `{owner_eqn: [occurrences]}`, the resolved per-owner
-  occurrence table (the transcript of the capture-time `lower_constraints` call);
-  `{}` when lowering did not run. Owner keys emitted sorted (INV-7/MF4).
+  occurrence table: the successful capture-time prepared batch's
+  `occurrence_transcript`. Only admitted `part_def` owners appear — an excluded or
+  unsupported owner is never queried, so its absence is correct rather than
+  corruption. `{}` when lowering did not run. Owner keys emitted sorted (INV-7/MF4).
 - `constraint_lowering_mode` — `"applied"` or `"grandfathered_off"` (Item 8, D3),
   always present. `"grandfathered_off"` means the snapshot was captured with
   lowering disabled and the offline path must skip re-lowering loudly, never infer

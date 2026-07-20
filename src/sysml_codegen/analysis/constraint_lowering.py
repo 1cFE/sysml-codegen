@@ -651,8 +651,7 @@ def _verified_predicate_source_key(
             )
         if decision.expected_value is not (not decision.is_negated):
             raise _generation_error(
-                f"decision-authority violation for {usage_qn}: "
-                "expected truth contradicts polarity"
+                f"decision-authority violation for {usage_qn}: expected truth contradicts polarity"
             )
         if type(usage.is_negated) is not bool or usage.is_negated is not decision.is_negated:
             raise _generation_error(

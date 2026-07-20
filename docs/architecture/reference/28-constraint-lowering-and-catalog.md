@@ -16,10 +16,22 @@ the profile itself, and the study layer that drives it in production, live in
 
 ## Lowering phase (`analysis/constraint_lowering.py`)
 
-`lower_constraints(facts, occ_index, registry, design_attrs, calc_usages)` is the
-[P1 RESOLVE] step (Item 5), called from `pipeline_builder.py` right after the
-output registry and the supplied-value materializer's synthetic attributes are
-final. For each `ConstraintUsageFact`:
+`lower_constraints(facts, prepared, registry, design_attrs)` is the [P1 RESOLVE]
+step (Item 5), called from `pipeline_builder.py` right after the output registry and
+the enriched graph-only design attributes are final.
+
+`prepare_constraint_usages(facts, occ_index, calc_usages, source_location_mode,
+source_roots)` runs first and owns the whole lifecycle boundary: it verifies the
+usage/decision association (count plus exact identity and location per ordered pair,
+so a nullable qualified name never stands in for identity), runs the existing
+NON_NUMERICAL-warning-then-BLOCK preflight, projects every exclusion, and expands
+every admitted owner through an explicit `part_def` / `calc_def` / `package` branch.
+Owner query results are staged privately and frozen into the returned batch's
+`occurrence_transcript` only after every item succeeds, so a later-owner failure
+publishes nothing. Lowering then reads only that batch — it cannot evaluate the
+profile, query an occurrence source, or re-derive a source referent.
+
+For each prepared item:
 
 1. **Profile preflight** (`evaluate_profile`): a BLOCK-eligibility usage halts
    generation immediately, loudly, naming every diagnostic — this is the one
@@ -44,12 +56,20 @@ final. For each `ConstraintUsageFact`:
    terminal-disposition switch, called `strict=True` so it always raises rather
    than ever synthesizing a fallback (INV-2).
 
-Item 14's `collect_bare_actual_demand()` widens the supplied-value materializer's
-demand set (which by itself only scans calc-usage bindings) to also cover a
-constraint actual with no calc-usage binding of its own — a self-named
-`in gain = gain` referencing an instance-level `:>>` redefinition nothing else
-reads. Without it, the materializer never synthesizes the design attribute the
+Supplied-value demand covers both routes. `enrich_graph_design_attributes()`
+builds a `DemandOrigin` from every calc-usage binding **and** every admitted
+constraint actual in the prepared batch, so a constraint actual with no calc-usage
+binding of its own — a self-named `in gain = gain` referencing an instance-level
+`:>>` redefinition nothing else reads — still reaches the value ladder. Without the
+constraint route, the seam would never synthesize the design attribute the
 occurrence-scoped rung above needs.
+
+Origins that normalize to the same target QN merge into one `LogicalDemand`, so a
+target reached by both routes is scanned once, counted once, warns at most once, and
+synthesizes at most one attribute. Grouping provenance is chosen after resolution:
+calc-route source first, then the exact captured design-attribute source, then the
+real source behind the winning redefinition record, then the portable
+constraint-usage source. Ambiguity or absence at the selected tier raises.
 
 ## Catalog (`generation/constraint_catalog.py`)
 

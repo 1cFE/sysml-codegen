@@ -22,6 +22,7 @@ from sysml_codegen.resolution.supplied_values import (
     _origin_sort_key,
     enrich_graph_design_attributes,
     resolve_logical_demand,
+    select_group_source,
 )
 
 MATERIALIZER_LOGGER = "sysml_codegen.resolution.supplied_values"
@@ -85,6 +86,15 @@ def _resolve(demand: LogicalDemand, **kwargs):
     )
 
 
+def _resolve_and_group(demand: LogicalDemand, **kwargs):
+    """Resolve, then select provenance — what the enrichment seam does for a target
+    it is really going to synthesize."""
+    resolved = _resolve(demand, **kwargs)
+    return resolved, select_group_source(
+        resolved, exact_real_sources=kwargs.get("exact_real_sources", {})
+    )
+
+
 # --------------------------------------------------------------------------
 # Semantic outcome comparison across distinct lookup contexts
 # --------------------------------------------------------------------------
@@ -99,7 +109,7 @@ def test_absolute_target_accepts_distinct_scopes_with_equal_outcomes():
     )
     assert demand.target.qn == ABSOLUTE_TARGET
 
-    resolved = _resolve(
+    resolved, group_source = _resolve_and_group(
         demand,
         redefinitions=[_override("Lib__Plant", "value", "17.0")],
         usage_type_map={
@@ -109,7 +119,7 @@ def test_absolute_target_accepts_distinct_scopes_with_equal_outcomes():
     )
     assert resolved.value == 17.0
     assert resolved.nonliteral is False
-    assert resolved.group_source == CALC_ROUTE
+    assert group_source == CALC_ROUTE
     assert len(resolved.outcomes) == 2
 
 
@@ -183,12 +193,12 @@ def test_calc_origin_group_precedes_constraint_origin_after_resolution():
             group=CONSTRAINT_ROUTE,
         ),
     )
-    resolved = _resolve(
+    resolved, group_source = _resolve_and_group(
         demand,
         design_overrides=[_override("DemandShared__plant__source", "value", "17.0")],
     )
     assert resolved.value == 17.0
-    assert resolved.group_source == CALC_ROUTE
+    assert group_source == CALC_ROUTE
 
 
 def test_constraint_only_provenance_ladder_and_missing_failure():
@@ -202,24 +212,26 @@ def test_constraint_only_provenance_ladder_and_missing_failure():
 
     # Tier: exact captured design-attribute source for this target wins over the
     # portable constraint-usage source.
-    exact = _resolve(
+    _exact, exact_source = _resolve_and_group(
         _demand(constraint_only),
         design_overrides=overrides,
         exact_real_sources={"DemandOnly__plant__source__value": Path("captured.sysml")},
     )
-    assert exact.group_source == Path("captured.sysml")
+    assert exact_source == Path("captured.sysml")
 
     # Tier: real source behind the winning record.
-    by_record = _resolve(
+    _by_record, record_source = _resolve_and_group(
         _demand(constraint_only),
         design_overrides=overrides,
         exact_real_sources={"DemandOnly__plant__source__other": Path("owner.sysml")},
     )
-    assert by_record.group_source == Path("owner.sysml")
+    assert record_source == Path("owner.sysml")
 
     # Tier: portable constraint-usage source.
-    portable = _resolve(_demand(constraint_only), design_overrides=overrides)
-    assert portable.group_source == CONSTRAINT_ROUTE
+    _portable, portable_source = _resolve_and_group(
+        _demand(constraint_only), design_overrides=overrides
+    )
+    assert portable_source == CONSTRAINT_ROUTE
 
     # Absence fails rather than inventing a sentinel.
     unusable = _origin(
@@ -229,7 +241,7 @@ def test_constraint_only_provenance_ladder_and_missing_failure():
         group=Path("unknown"),
     )
     with pytest.raises(CodeGenerationError, match="provenance is missing"):
-        _resolve(_demand(unusable), design_overrides=overrides)
+        _resolve_and_group(_demand(unusable), design_overrides=overrides)
 
 
 def test_conflicting_sources_at_the_selected_tier_fail():
@@ -249,7 +261,9 @@ def test_conflicting_sources_at_the_selected_tier_fail():
         ),
     )
     with pytest.raises(CodeGenerationError, match="provenance is ambiguous"):
-        _resolve(demand, design_overrides=[_override("Design__a__source", "value", "1.0")])
+        _resolve_and_group(
+            demand, design_overrides=[_override("Design__a__source", "value", "1.0")]
+        )
 
 
 # --------------------------------------------------------------------------
@@ -421,3 +435,64 @@ def test_logical_demands_merge_by_exact_target_qn_and_sort_ascending():
     ]
     assert len(demands[0].origins) == 2
     assert len(demands[1].origins) == 1
+
+
+def test_collision_covered_target_with_split_calc_sources_does_not_raise(caplog):
+    """Regression: a target already covered by a real captured design attribute must
+    never have its grouping provenance validated.
+
+    Its calc origins sit in two different .sysml files, so provenance selection would
+    fail "calc-origin provenance is ambiguous" — but the value is discarded by the
+    REQ-SVM-03 collision guard, so there is no grouping decision to make. The real
+    value wins, the target still counts as applied, and exactly one warning is emitted.
+    """
+    from sysml_codegen.analysis.parameter_groups import DesignAttributeData
+
+    other_route = Path("other_route.sysml")
+    real = DesignAttributeData(
+        name="value",
+        sysml_type="Real",
+        default_value="99.0",
+        unit=None,
+        source_file=CALC_ROUTE,
+        source_line=3,
+        parent_part="source",
+        qualified_name="D__plant__source__value",
+    )
+    usages = [
+        _CalcUsage("D__plant__one", CALC_ROUTE, "source.value"),
+        _CalcUsage("D__plant__two", other_route, "source.value"),
+    ]
+
+    # The two calc origins genuinely disagree on provenance ...
+    demands = _logical_demands(usages, None)
+    assert len(demands) == 1
+    assert {origin.group_provenance for origin in demands[0].origins} == {
+        CALC_ROUTE,
+        other_route,
+    }
+    with pytest.raises(CodeGenerationError, match="calc-origin provenance is ambiguous"):
+        _resolve_and_group(
+            demands[0],
+            design_overrides=[_override("D__plant__source", "value", "17.0")],
+        )
+
+    # ... but under the collision guard that disagreement is never consulted.
+    with caplog.at_level(logging.INFO, logger=MATERIALIZER_LOGGER):
+        enriched = enrich_graph_design_attributes(
+            {CALC_ROUTE: [real]},
+            calc_usages=usages,
+            prepared=None,
+            redefinitions=[],
+            design_overrides=[_override("D__plant__source", "value", "17.0")],
+            usage_type_map={},
+        )
+
+    assert [attr.default_value for attr in enriched[CALC_ROUTE]] == ["99.0"]
+    assert other_route not in enriched
+    messages = [record.getMessage() for record in caplog.records]
+    assert sum("already covers" in message for message in messages) == 1
+    assert messages[-1] == (
+        "supplied-value materializer scanned 1 referenced bindings: "
+        "1 literal applied, 0 non-literal skipped."
+    )

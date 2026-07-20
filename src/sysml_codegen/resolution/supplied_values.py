@@ -157,13 +157,18 @@ class ValueResolution:
 
 @dataclass(frozen=True)
 class ResolvedDemand:
-    """One agreed outcome for one target, with provenance chosen after resolution."""
+    """One agreed outcome for one target.
+
+    Carries no grouping provenance: whether a target needs one is the caller's
+    decision, because a target already covered by a real captured design attribute
+    keeps the real value and synthesizes nothing. Call :func:`select_group_source`
+    only for a target that will actually be synthesized (D7).
+    """
 
     demand: LogicalDemand
     outcomes: tuple[ValueResolution, ...]
     value: float | None
     nonliteral: bool
-    group_source: Path | None
 
 
 _ROUTE_RANK = {"calc": 0, "constraint": 1}
@@ -314,18 +319,23 @@ def _owner_source(
     return sources.pop() if len(sources) == 1 else None
 
 
-def _group_source(
-    demand: LogicalDemand,
-    outcomes: tuple[ValueResolution, ...],
-    exact_real_sources: Mapping[str, Path],
+def select_group_source(
+    resolved: ResolvedDemand, *, exact_real_sources: Mapping[str, Path]
 ) -> Path:
-    """Select grouping provenance after a numeric resolution (D7).
+    """Select grouping provenance for a target that will be synthesized (D7).
 
     Calc-route source wins whenever any calc origin exists (B3). Otherwise: the exact
     captured design-attribute source for this target, then the real source behind the
     winning record, then the portable constraint-usage source. Ambiguity or absence at
     the selected tier fails rather than inventing a sentinel.
+
+    Call this only once the caller has decided the target really is being synthesized.
+    A target whose value is discarded — no numeric result, or a real captured attribute
+    already covers it — has no grouping decision to make, so validating provenance for
+    it would raise over a value nobody uses.
     """
+    demand = resolved.demand
+    outcomes = resolved.outcomes
     calc_sources = {origin.group_provenance for origin in demand.origins if origin.route == "calc"}
     if calc_sources:
         return _unique_source(demand, "calc-origin", calc_sources)
@@ -398,13 +408,8 @@ def resolve_logical_demand(
             f"({rendered}) — one normalized target must resolve to one semantic outcome"
         )
     value, nonliteral = next(iter(semantic))
-    frozen = tuple(outcomes)
     return ResolvedDemand(
-        demand=demand,
-        outcomes=frozen,
-        value=value,
-        nonliteral=nonliteral,
-        group_source=None if value is None else _group_source(demand, frozen, exact_real_sources),
+        demand=demand, outcomes=tuple(outcomes), value=value, nonliteral=nonliteral
     )
 
 
@@ -534,16 +539,17 @@ def enrich_graph_design_attributes(
         if target.qn in exact_real_sources or (target.name, target.parent_part) in real_name_parent:
             collisions.append(target)
             continue
-        assert resolved.group_source is not None  # numeric result: _group_source raised otherwise
+        # Only now is a grouping decision real, so only now is provenance validated.
+        group_source = select_group_source(resolved, exact_real_sources=exact_real_sources)
         synthesized.append(
             (
-                resolved.group_source,
+                group_source,
                 DesignAttributeData(
                     name=target.name,
                     sysml_type="Real",
                     default_value=str(resolved.value),
                     unit=None,
-                    source_file=resolved.group_source,
+                    source_file=group_source,
                     source_line=0,
                     parent_part=target.parent_part,
                     qualified_name=target.qn,

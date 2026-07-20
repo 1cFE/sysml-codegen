@@ -228,9 +228,7 @@ def _structured_paths(
                     edge_type_qn=target_part_def_qn,
                     cycle_path=active[active.index(owner_qn) :] + (owner_qn,),
                 )
-            parent_paths = _structured_paths(
-                owner_qn, part_usage_index, requested_owner_qn, active
-            )
+            parent_paths = _structured_paths(owner_qn, part_usage_index, requested_owner_qn, active)
             for parent_path, _parent_usage in parent_paths:
                 for index in _cardinality_indices(usage, owner_qn, feature_name):
                     path = parent_path + (PathStep(owner_qn, feature_name, index),)
