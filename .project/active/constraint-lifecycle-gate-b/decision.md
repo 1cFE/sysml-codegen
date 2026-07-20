@@ -48,12 +48,17 @@ V11 flags a module input when all three hold: it is `entry_point`-sourced, its Q
    minted by the single writer at `dependency_backtracker.py:603`. Colliding needs a SHA-256
    preimage.
 4. **DESIGN_ATTRIBUTE cannot reach a fallback key.** Its identity is always a key of
-   `design_attr_by_qn` (`producer_resolution.py:561`). Across 35 live fixture models — 60 fallback
-   QNs, 846 design-attribute QNs — the intersection is empty. Both constructible collision vectors
-   are blocked at extraction: two same-named members in one namespace are rejected outright (a
-   renamed control isolates the duplicate name as the cause), and a design attribute whose *name*
-   embeds `__` has it sanitized to `_`, so it lands in a different string than the `__`-joined
-   fallback key.
+   `design_attr_by_qn` (`producer_resolution.py:561`). The operative mechanism is in
+   `parameter_groups.py:407,436,460`: those sites compute exactly the `{calc_eqn}__{formal}`
+   fallback shape and skip on collision with the design-attribute index — structural
+   disjointness, not merely empirical (audit F2). The empirical sweep corroborates: across 35
+   live fixture models — 60 fallback QNs, 846 design-attribute QNs — the intersection is empty.
+   Both constructible collision vectors are also blocked before extraction output: two
+   same-named members in one namespace are rejected — observed in the probes with a renamed
+   control isolating the duplicate name as the cause; the rejection is a SysML language-level
+   rule enforced by the parser, not a check in this repo or agentic-mbse (audit F1) — and a
+   design attribute whose *name* embeds `__` has it sanitized to `_`, so it lands in a
+   different string than the `__`-joined fallback key.
 
 A second, independent block covers the fresh-mint case: a valueless usage-owned design attribute is
 not extracted into the design-attribute index at all, so a constraint actual cannot resolve to one —

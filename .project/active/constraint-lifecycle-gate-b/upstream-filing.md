@@ -3,7 +3,10 @@ date: 2026-07-19 22:20 PDT
 author: Claude
 topic: "Upstream filing of fusion-tea finding #8 / Gate B — resolution notice"
 tags: [filing, gate-b, fusion-tea, wi-027, cross-repo]
-status: filed
+status: written-uncommitted upstream (human action queued)
+upstream_files:
+  - "../fusion-tea-stellarator-mbse-demo/.project/research/20260719-222000_gate-b-upstream-filing-response-from-sysml-codegen.md (new, untracked)"
+  - "../fusion-tea-stellarator-mbse-demo/.project/research/20260719-082509_gate-b-root-cause-constraint-lowering-vs-v11-bridge.md (12-line edit at recommendation 1)"
 sysml_codegen_branch: constraint-exec-epic
 last_updated: 2026-07-19
 ---

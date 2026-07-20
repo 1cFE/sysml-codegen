@@ -6,6 +6,40 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 3 — Gate B vacuity proof and deletion — CERTIFIED, pass with notes (independent audit 2026-07-19 at `3df2c34`)
+
+Epic register row 3. No spec/design pair by owner pace directive — the provenance-marked
+`decision.md` replaces them. Artifacts at `.project/active/constraint-lifecycle-gate-b/`
+(`decision.md`, `findings.md`, `upstream-filing.md`, `audit.md`, `briefs/`, `probes/`).
+
+**Delivered.** Extension-time whole-graph V11 coverage check deleted from
+`extend_graph_with_constraints` — the collector call, its raise, and its import name. Production
+diff is one file, 11+/10−. Justified by a closed enumeration showing extension cannot introduce a
+V11 offender. `collect_uncovered_params` retained for the generation gate (`cli/__init__.py:263`,
+`:278`); `_validate_channel_references`, strict actual resolution, and both call sites unchanged.
+No replacement wrapper. LC-E02 settled to its no-check branch, superseding lowering INV-6.
+
+**Audit.** Pass with notes — `.project/active/constraint-lifecycle-gate-b/audit.md`. The
+conclusion survives adversarial attack: no model-producible offender found, and the one in-memory
+offender reproduced is the hand-forged object-layer shape decision.md already excludes. All gates
+re-run and reproduced (suite 3009 passed / 38 skipped with license load verified by skip-reason
+grep, `PYTHONOPTIMIZE=1` 14 passed, mypy/ruff zero delta vs `27425c0`, byte-identity with every
+recorded snapshot source location unmoved). Kept evidence confirmed RED-able — restoring the 3
+deleted lines flips 5 tests. Seven notes, all documentation/hygiene, none a correctness defect:
+decision.md's claimed "duplicate names rejected at extraction" block is not in `src/` in that
+form (F1); the guards actually doing structural work for QN disjointness
+(`parameter_groups.py:407`, `:436`, `:460`) are uncited (F2); `upstream-filing.md` says
+`status: filed` but both fusion-repo files are written-but-uncommitted (F3); corpus counts are
+34/847 not 35/846 (F4); `shared_producer`'s snapshot `source_hash` is now stale, warning-only
+(F5); the MODELED_DEFAULT branch mints `LIBRARY_DEFAULT` against docstring and record (F6); the
+epic's Scope step 3 still reads as an open conditional (F7).
+
+**Premise correction, carried.** A deliberately license-less full-suite run produced byte-identical
+results on this machine, so "collected count looks full" is not a valid syside-license detector
+here — the valid check is grepping for zero `no live syside license` skips. This contradicts the
+recorded method in auto-memory `syside-license-key-explicit-env-needed`; that memory needs a
+look before the next gate run relies on it.
+
 ### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A — CERTIFIED, pass with notes (independent audit 2026-07-19 at `039d66e`)
 
 Epic register row 2. Spec, design (rev 2 + implementation notes), and `evidence.md` at
