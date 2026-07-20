@@ -477,6 +477,148 @@ Stated explicitly so the design agent does not re-litigate these:
 
 ---
 
+## Round 2 — verification of the revised design
+
+Narrow re-verification against the revised `design.md` (664 lines). Everything below was re-checked
+in code; nothing was taken from the round-1 pass or from the author's account of the revision.
+
+### 1. The C1(a)/C1(b)/C2 repair — structurally sound, with one gap the repair itself opens
+
+**The two-field repair works, and it is better than what I recommended.** I recommended one field
+plus an empirical proof for C1(b); two fields turn C1(b) from something the probe must disprove into
+something that cannot happen. Verified:
+
+- `req.instance_path` is read at **exactly three rows** — 12 (`:280,:283`), 13 (`:329,:354`), 16
+  (`:364,:366`). No other row and no other tier touches it.
+- Row 12 is **not** `lenient_only`; row 13 **is** (`:450`). So the design's stated reason for the
+  constraint side continuing to supply `instance_path` — "row 12 is admissible under STRICT and
+  reads it" — is exactly right.
+- Once row 16 stops reading `instance_path`, and the calc consumer continues never to set it, rows
+  12 and 13 are **provably dead from that consumer**. Confirmed: `dependency_backtracker.py:578` is
+  the calc consumer's only `ProducerRequest` and it passes no `instance_path=` kwarg.
+- **Constraint-side byte-identity is stronger than the design claims.** There is exactly **one**
+  constraint-side `ProducerRequest` builder (`constraint_lowering.py:174`, `instance_path=
+  usage_qualified_name` at `:181`). All of `:1174/:1197/:1221` funnel through it. So
+  `occurrence_owner_path` and `instance_path` come from the same parameter in the same expression —
+  identity holds by construction, not by matching two call sites. The design can state this more
+  cheaply than it does.
+- New fields read at one site (I9): sound as a design commitment; nothing in current code contradicts
+  it.
+
+**C3 (blocking, mechanical) — the repair silently disables row 16 for the three `graph_builder`
+consumers.**
+
+The parity argument covers the constraint consumer only. There are **five** `ProducerRequest`
+builders, not two. The other three are in `graph_builder.py` — `:1369` (LocalTerm), `:1606` (EXPOSE
+alias), `:1629` (aggregation LocalTerm pre-mint lookup) — and **all three supply `instance_path`
+(`:1374`, `:1611`, `:1634`) and run `TerminalPolicy.LENIENT`**, so every row including 16 is
+admissible for them. Row 16 is live for these consumers today.
+
+Moving row 16's inputs to two fields that only the constraint and calc consumers set makes row 16
+**unreachable** for all three. The site at `:1629` is the sharp case — its own comment reads:
+
+> *"Ask the shared table before minting: a plain literal-valued attribute on the aggregating part def
+> is a real design attribute, and this path used to ignore that and mint a defaultless entry point
+> with no diagnostic at all."*
+
+It passes `reference=l_term.attribute_name` (a bare name) and `instance_path=agg.instance_path` —
+precisely row 16's `{instance_path}__{bare_name}` shape. Disabling row 16 there plausibly reverts the
+exact defect that comment records, and a binding that stops resolving falls to a lenient terminal
+miss and **newly enters `fallback_entry_points`** — the C2 failure mode running in reverse.
+
+**Fix, one line:** have row 16 read `req.occurrence_owner_path or req.instance_path`. This preserves
+every current reader byte-identically, adds the calc consumer, and keeps rows 12/13 dead for the calc
+consumer (which still never sets `instance_path`). It does not reintroduce C1(a) (`reference` is
+untouched) or C1(b) (the calc consumer still supplies no `instance_path`). I9 survives unchanged —
+the new fields are still read at exactly one row. The alternative — having the three `graph_builder`
+sites pass `occurrence_owner_path=<their current instance_path>` — also works but touches three call
+sites to achieve the same thing.
+
+**Gate 3's probe scope needs one sentence.** The probe is specified over "every bound binding in
+every committed fixture — 249 bound bindings." Aggregation and LocalTerm resolutions are not
+bindings, so as scoped the probe would **not** catch C3. Either widen it to every `resolve_producer`
+call across all five builders, or state that the three `graph_builder` consumers' inputs are
+unchanged and why. With the one-line fix, the latter becomes true and cheap.
+
+**Gates 2 and 3 otherwise verified.** Gate 2's second clause (`outcome` or `key_form` moved to
+anything other than row 16) is the right widening and closes B3. Gate 3 correctly replaces set
+membership, states the surviving Item-3 claim at the strength it actually holds ("no self-named
+binding newly enters"), and cites the in-repo precedent — I confirmed
+`tests/conformance/test_snapshot_generation.py:215-222` carries the CHANNEL-IDENTITY warning quoted.
+Gate 3b closes m3.
+
+### 2. M1 — resolved
+
+DD-A11's snapshot route moved to Phase 5 (`:562-564`, `:581-582`, `:598`) with the licence dependency
+declared and its cause named (zero `unit` IR nodes in any committed snapshot). The false insulation
+claim is replaced by an accurate one at `:620-622`: "Licence risk is real for Phases 3 and 5, not
+just Phase 5." Phase 3's exit correctly claims only DD-A11's live route.
+
+### 3. M2 — resolved
+
+Second forced-difference pin named separately at `:568-574`, with the mechanism correct
+(`exclude_none=False`, two null keys × every entry point × 12 baselines) and the `inputs/*.json`
+churn carried as a distinct cause. Gate 1's one-cause-per-diff discipline now extends past Phase 1.
+
+### 4. Bracket disposition — honestly labeled
+
+This is the item I checked hardest, since partial coverage is where a design is most tempted to
+overclaim. It is clean:
+
+- The disposition is stated as a decision, not discovered by a probe (`:404-409`), with the
+  safe-miss mechanism correctly grounded in `_hit(None) → _MISS` (`:196-197`) and the driver's
+  `continue` on `identity is None` (`:541-553`).
+- "Deliberate partial coverage, not silent partial coverage" is the right framing, and the scope
+  limit is stated in the same breath as the claim: convergence "closes for the unbracketed shape and
+  is **explicitly not claimed** for the bracketed one."
+- The stop condition is genuinely falsifiable — any bracketed binding whose resolution tuple moves
+  *at all* is a stop, not just a wrong hit (`:411-415`).
+- Phase 0's exit is two checks (`:417-420`), and the second is the bracketed-owner fixture proving a
+  miss, which is what the single-fixture exit could not have caught.
+- The design credits the measurement to the review and flags that it could not independently
+  disconfirm the bracket claim (`:401-402`) — appropriate, and the disposition is safe either way.
+
+Checked for overclaim elsewhere: B4 (`:140`), the Gate 1 table (`:334`), I5 (`:440`), and the risk
+entry (`:617-619`) all restate the scope limit rather than reverting to an unqualified convergence
+claim. Success-criterion SR-A02 is carried as closing on `shared_producer`, which is the unbracketed
+shape — consistent. **No unlabeled convergence claim found.**
+
+### 5. m1–m5 and verified-clean sections
+
+- **m1 — resolved, well.** DD-A04's structured result is pinned to a named object: "`QualityCheckResult.issues`
+  — the list of `ValidationIssue` the L6 check returns" (`:172-176`), with `ValidationIssue.location`
+  explicitly left a preformatted string and terminal rendering explicitly out.
+- **m2 — resolved as a stated open item.** The `_parse_default_value` asymmetry is acknowledged at
+  `:485-488` (DD-R23's "no second representation" is "only" conditionally true) and the cutover
+  question is carried into the handoff under DD-A13 (`:651`). Acceptable — it is now visible rather
+  than assumed safe.
+- **m3 — resolved.** Gate 3b (`:369-370`).
+- **m4 — resolved.** D9's case now rests on the two real `RuntimeError` guards at `loader.py:777,:782`
+  (`:206`), with the cosmetic message drift demoted.
+- **m5 — all five corrected.** `serializer.py:246-250` (`:128`, `:181`), `usage_extractor.py:87-92`
+  (`:129`), `level6_architecture.py:610-611` (`:166`, `:462`), `cli/__init__.py:278` raising at
+  `:280-284` (`:367`, `:628`). The `constraint_lowering.py:1095/:1245` mis-citation is gone; the
+  owner-path section now cites `:1174,:1197,:1221` and the four expansion paths at `:709-722`.
+- **Verified-clean sections: untouched and still accurate.** Re-spot-checked DD-B1's argument and
+  consequences (`:71-76`), the I2 both-directions claim, the Item 12 non-interaction, and Gate 4's
+  RED-first construction. No drift, no quiet weakening, nothing added that would need re-verifying.
+
+### Round-2 verdict
+
+**Approve-with-notes.**
+
+The repair is correct in its structure and in every claim I could check, and it improved on the
+recommendation rather than merely complying with it. M1, M2, m1–m5 and the bracket disposition are
+resolved. C2's replacement gate is the right instrument and is honestly scoped.
+
+**C3 is the one must-fix**, and it is mechanical: add the `or req.instance_path` fallback in row 16
+and widen Gate 3's probe scope by one sentence. I am not calling this Needs-rework because the fix
+is fully specified, touches one expression, and does not disturb any argument the revised design
+makes. It must land in implement, not be deferred to a gate — Gate 3 as currently scoped would not
+catch it.
+
+---
+
 ## Resolutions
 
 *Empty — to be filled when the owner engages with this review. The reviewer does not edit the
@@ -484,7 +626,11 @@ design.*
 
 ---
 
-**Overall:** Approve-with-revisions
+**Overall (round 2, final):** Approve-with-notes — one must-fix (C3), specified exactly. The
+round-1 verdict and findings below are retained as the record of what was raised; see the Round 2
+section above for their dispositions.
+
+**Overall (round 1, superseded):** Approve-with-revisions
 
 The foundation is sound and DD-B1 — the thing the brief said to settle first — is settled correctly,
 with evidence that survives independent re-derivation. Recommendations 1, 2, 2b, 3 and 4 are
