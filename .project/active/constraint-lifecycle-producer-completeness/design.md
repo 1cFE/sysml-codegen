@@ -113,6 +113,43 @@ producer like any other aggregation. **No special-case arm for "capital" anywher
 "the expression contains a cross-part feature chain," a structural property, not on the attribute's name
 or role.
 
+### ⚠ Decision-1 premise CORRECTED (2026-07-20, empirical) — the aggregation path did NOT resolve cross-part terms
+
+The original premise — "each term resolves via `resolve_producer` to a real channel; the aggregation path
+already resolves cross-part references" — was **false** and is corrected here. The routing (Step 4.7,
+`_route_crosspart_formula_aggregations`) landed byte-clean and A7 (chained `LocalTerm` → `module_output`)
+holds. But the cross-part **`SingletonTerm`s collapse**: building the canonical stellarator graph, all 13
+`X.capital_cost` terms (`magnet`/`heating`/…) resolved to ONE def-level attribute
+`mfe_magnet_cost__Magnet_Coil_Cost__capital_cost` via `key_form=leaf_unique` — the resolver **dropped the
+`magnet.`/`heating.` part-usage qualifier and leaf-matched** `capital_cost`. Two root causes, both here:
+
+1. **The per-child redefinitions are not captured.** Each child is `part magnet : 'Magnet System' { :>>
+   capital_cost = magnet_cost.capital_cost; }`. These member `:>>` CHAIN redefinitions on part-def-level
+   child usages are absent from `hierarchy_data.redefinitions` (0 of 22 are `capital_cost`), so
+   `_chain_redefinition_follow` (row 13) has nothing to follow.
+2. **A qualified reference silently drops its qualifier.** With row 13 missing, `X.capital_cost` falls to
+   the name-based tier-2 rows (`_leaf_unique`/`_dotted_pair`), which strip `X.` and leaf-match — collapsing
+   every child to one producer. This is the Item-4 written-qualifier lesson at the aggregation seam: a
+   written scope qualifier must anchor exact identity, never be dropped to widen the candidate set.
+
+**Fix mechanism (general, in `producer_resolution` / the aggregation term builder — no rollup-specific arm):**
+
+- **(a) Follow the per-child redefinition per instance.** Capture the child part usages' member `:>>` CHAIN
+  redefinitions so `_chain_redefinition_follow` resolves `magnet.capital_cost` to the magnet instance's own
+  channel (its `magnet_cost` output), structurally — the written/structural derivation, per instance, with
+  DIFFERENT per-child values (never a value coincidence — the F2 lesson).
+- **(b) A qualified term REFUSES rather than leaf-matches.** A `part_usage.attr` reference must not resolve
+  by dropping `part_usage.` and matching the bare leaf: the name-based rows (`_leaf_unique`/`_dotted_pair`)
+  must not fire for a qualified reference. Where no per-child derivation exists, the term misses cleanly
+  (terminal → distinct per-term entry point), never a qualifier-drop collapse. This is the same
+  no-qualifier-drop rule the producer-completeness check enforces at generation.
+
+This closes the epic's **WI-015 finding #4 root** (cross-part rollup "cannot be wired") — the wiring was
+blocked by the dropped per-child redefinition plus the silent qualifier-drop, not by a fundamental limit.
+
+**If any of the 13 terms' per-child `:>>` is structurally unavailable from extraction** (the AST does not
+carry it), that term is a coordinated-pair (agentic-mbse) question — STOP and name it, do not shim.
+
 **Why this is composition, not invention.** Every piece already exists:
 
 - **Decompose:** `decompose_aggregation_expression` (`aggregation.py:207-219`) already classifies a

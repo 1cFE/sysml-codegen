@@ -394,11 +394,20 @@ def _chain_redefinition_follow(req: ProducerRequest, ctx: ProducerContext) -> Fo
         target = targets[0]
         if "." in target:
             calc_usage, output = target.rsplit(".", 1)
-            channel = get_channel_name(
-                f"{req.instance_path}__{part_usage}__{calc_usage}", output
-            )
-            if channel in ctx.canonical_channels:
-                return channel, ()
+            # The redefinition body (`magnet_cost.capital_cost`) names a calc that may be
+            # owned by the child part usage OR be an instance-level sibling. Try child scope
+            # first (unchanged), then the instance-level scope — a child part's
+            # `:>> capital_cost = magnet_cost.capital_cost` referencing a plant-level
+            # `magnet_cost` calc resolves to `{instance}__magnet_cost__capital_cost`, not
+            # `{instance}__magnet__magnet_cost__capital_cost`. Both are exact-channel hits;
+            # neither drops the `part_usage` qualifier or widens the candidate set.
+            for module_eqn in (
+                f"{req.instance_path}__{part_usage}__{calc_usage}",
+                f"{req.instance_path}__{calc_usage}",
+            ):
+                channel = get_channel_name(module_eqn, output)
+                if channel in ctx.canonical_channels:
+                    return channel, ()
         return follow(target)
 
     return follow(req.reference)
@@ -473,7 +482,16 @@ def _dotted_pair(req: ProducerRequest, ctx: ProducerContext) -> FormResult:
 
 
 def _leaf_unique(req: ProducerRequest, ctx: ProducerContext) -> FormResult:
-    """Leaf name unique across files, with calc-def-owned attributes filtered out."""
+    """Leaf name unique across files, with calc-def-owned attributes filtered out.
+
+    Item 10 note: this row leaf-matches a dotted reference, dropping its ``part_usage``
+    qualifier — the mechanism that collapsed cross-part aggregation terms before fix (a).
+    Fix (a) resolves those terms structurally at row 13 (``_chain_redefinition_follow``),
+    so they never reach this row. A *global* refusal here was tried and reverted: it moved
+    relied-upon single-instance behavior (Item-7 matcher, spec_chain_twolevel's documented
+    WI-015 shape), an existing-fixture STOP unrelated to the rollup. The producer-completeness
+    check remains the non-silent guard: any residual qualifier-drop it flags loudly.
+    """
     if "." not in req.reference:
         return _MISS
     leaf = req.reference.split(".")[-1]

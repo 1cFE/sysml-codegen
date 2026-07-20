@@ -61,6 +61,12 @@ MODELS = {
     "solar_battery_model": FIXTURES_DIR / "solar_battery_model",
     "catf_mfe_model": FIXTURES_DIR / "catf_mfe_model",
     "attr_expr_probe": FIXTURES_DIR / "attr_expr_probe",
+    # Item 10: two-level cross-part aggregation (a.capital + b.capital, distinct per-child
+    # values 3/5) — proves per-child :>> redefinition follow to distinct instance channels
+    # (A7). (two_same_leaf_producers is a resolver-level coordinate proven license-free in
+    # test_producer_completeness_acceptance.py — a bare unresolved leaf does not parse as a
+    # full model, so it is not captured here.)
+    "crosspart_rollup_twolevel": FIXTURES_DIR / "crosspart_rollup_twolevel",
     "chain_spike_model": FIXTURES_DIR / "chain_spike_model",
     "issue22_model": FIXTURES_DIR / "issue22_model",
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",

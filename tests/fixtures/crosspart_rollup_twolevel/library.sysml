@@ -1,47 +1,45 @@
 package CrossPartRollupLib {
     private import ScalarValues::*;
 
-    // Two-level cross-part aggregation — the stellarator capital-rollup shape in
-    // miniature (Item 10, A7). `group_one` is an inner cross-part sum (an aggregation);
-    // `grand_total` references that inner aggregation (a LocalTerm) PLUS another
-    // cross-part chain (a SingletonTerm) — an aggregation whose operand is itself an
-    // aggregation output. This proves the A7 registration precondition: the inner
-    // aggregation's canonical channel must be registered before the outer LocalTerm
-    // resolves, or the outer silently mints an entry point (the F4-cutover collapse).
-
-    part def SubsystemA {
-        attribute cost : Real = 3.0;
+    // Per-child cost calc — each child instance owns one, producing a DISTINCT value so a
+    // value coincidence can never mask a qualifier-drop collapse (the F2 lesson).
+    calc def CostCalc {
+        in attribute base : Real;
+        out attribute cost : Real = base * 1.0;
     }
 
-    part def SubsystemB {
-        attribute cost : Real = 5.0;
+    // Subsystem: owns a cost calc and redefines its `capital` to that calc's output — the
+    // stellarator's `part magnet : 'Magnet System' { :>> capital_cost = magnet_cost.capital_cost; }`
+    // shape in miniature.
+    part def Subsystem {
+        attribute base : Real;
+        calc cost_calc : CostCalc { in base = base; }
+        attribute capital : Real;
     }
 
-    part def SubsystemC {
-        attribute cost : Real = 7.0;
-    }
-
-    // Downstream consumer of the outer rollup — gives the pipeline a calc def and makes
-    // grand_total a consumed value (so the LocalTerm chain is exercised end to end).
+    // Downstream consumer — gives the pipeline a calc def and makes grand_total consumed.
     calc def FinalConsumer {
         in attribute t : Real;
         out attribute result : Real = t * 2.0;
     }
 
     part def 'Rollup Plant' {
-        part a : SubsystemA;
-        part b : SubsystemB;
-        part c : SubsystemC;
+        // Two same-type children with DIFFERENT bases → distinct per-instance capital.
+        part a : Subsystem {
+            :>> base = 3.0;
+            :>> capital = cost_calc.cost;
+        }
+        part b : Subsystem {
+            :>> base = 5.0;
+            :>> capital = cost_calc.cost;
+        }
 
-        // Inner aggregation: cross-part sum of two sibling parts' cost channels.
-        // = 3.0 + 5.0 = 8.0
-        attribute group_one : Real = a.cost + b.cost;
+        // Cross-part FORMULA sum of the two children's per-instance capital channels.
+        // Correct = a.capital (3.0) + b.capital (5.0) = 8.0. A qualifier-drop collapse
+        // (both terms → one child) would give 6.0 or 10.0 — detectable because 3 != 5.
+        attribute grand_total : Real = a.capital + b.capital;
 
-        // Outer aggregation: inner-aggregation output (group_one, a LocalTerm) plus a
-        // third cross-part chain (c.cost, a SingletonTerm). = 8.0 + 7.0 = 15.0
-        attribute grand_total : Real = group_one + c.cost;
-
-        // Consumer: reads the outer rollup. result = 15.0 * 2.0 = 30.0
+        // Consumer: result = 8.0 * 2.0 = 16.0
         calc final : FinalConsumer {
             in t = grand_total;
         }
