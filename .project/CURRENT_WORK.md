@@ -6,7 +6,23 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — IMPLEMENTED, AWAITING AUDIT (2026-07-20)
+### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — CERTIFIED (independent audit 2026-07-20, candidate codegen `280a2bd` / teax `98a6d07`)
+
+**Audit verdict: Certify.** `.project/active/constraint-lifecycle-package-trust/audit.md`. Both
+attacks reproduced RED against pre-fix (loader reverted to `98a6d07^`; codegen src to `280a2bd^`),
+GREEN at HEAD; working trees restored clean. All four design-review Majors verified landed in
+code and design prose (no second review round needed): TOCTOU closed (compile+exec of read
+bytes, no `exec_module`); single-version policy, both skew directions named, bare literal zero
+survivors; manifest = tree-minus-globs with foreign-file-in-non-glob → hard fail, and the
+consumer-anchor-vs-producer-gate honesty prose + seal-signing Non-Goal present; churn claim holds
+(no `baseline_outputs`; teax diff = loader + test + enumerated re-seals). D3 fixtures at canonical
+`ad0a855`, version unchanged, nothing else moved. Battery reproduced: codegen **3068 passed / 44
+skipped / 0 license skips**, teax **281 passed**, certified Item-6 surface **59 passed**, mypy
+**72** (base 73, +0), ruff clean. Items 1–6 acceptance surfaces untouched (scope = contracts/CLI
++ teax loader only). Epic Item 7 heading ✅; all 5 epic + 6 spec success criteria marked.
+**Not checked:** full `-O` suite tally (flagged file confirmed assert-strip artifact, Item-7
+code untouched); agentic-mbse not diffed (design claims no diff; scope consistent); the PR push
+(Item 13's). Evidence hygiene note: `evidence.md:165-166` still carries CANDIDATE_REV placeholders.
 
 Epic rows 8–9. Cross-repo (sysml-codegen + TEAx). Design + design-review (Approve-with-revisions,
 4 Majors applied) + evidence at `.project/active/constraint-lifecycle-package-trust/`.

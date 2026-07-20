@@ -162,5 +162,5 @@ Scope: a repo-wide search found only these two sealed fixtures, so the re-seal s
 
 ## Candidate commits
 
-- sysml-codegen: `<CANDIDATE_REV_CODEGEN>` on `constraint-exec-epic`.
-- teax: `<CANDIDATE_REV_TEAX>` on its working branch.
+- sysml-codegen: `280a2bd` on `constraint-exec-epic`.
+- teax: `98a6d07` on `constraint-exec-epic`.

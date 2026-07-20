@@ -563,7 +563,7 @@ reimplementing already-landed normalization.
 
 ---
 
-### Item 7: Trusted Package Bootstrap and Seal Provenance
+### Item 7: Trusted Package Bootstrap and Seal Provenance ✅
 
 **Register rows**: 8–9
 **Type**: Code/Integration (sysml-codegen + TEAx)
@@ -588,11 +588,11 @@ launder foreign files into generated provenance.
 - Re-auditing the certified Item 6 symlink matrix.
 
 **Success Criteria**:
-- [ ] An unconditional-success package verifier is rejected before any package code executes.
-- [ ] Verifier/runtime-contract skew fails closed in both directions.
-- [ ] Re-sealing cannot classify an arbitrary foreign file as codegen-produced.
-- [ ] Existing seal→verify regular-file and symlink guarantees remain green.
-- [ ] Verification and provenance have one authoritative implementation with no duplicate bypass.
+- [x] An unconditional-success package verifier is rejected before any package code executes.
+- [x] Verifier/runtime-contract skew fails closed in both directions.
+- [x] Re-sealing cannot classify an arbitrary foreign file as codegen-produced.
+- [x] Existing seal→verify regular-file and symlink guarantees remain green.
+- [x] Verification and provenance have one authoritative implementation with no duplicate bypass.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-package-trust/spec.md`

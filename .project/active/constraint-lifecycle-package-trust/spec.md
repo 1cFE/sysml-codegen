@@ -54,30 +54,30 @@ faithful fix requires a TEAx-side change; sysml-codegen alone cannot close it.
 Each criterion below is a testable outcome. The two named attacks are RED-first: an acceptance
 test must reproduce the exploit against current code before the fix, then go GREEN after.
 
-- [ ] **Attack (a) — unconditional-success verifier.** A package whose `contracts/verify.py` is
+- [x] **Attack (a) — unconditional-success verifier.** A package whose `contracts/verify.py` is
       replaced with a stub that returns `ok=True` unconditionally is **rejected before any
       package code executes** on the load path. Concretely: the loader must not derive its
       verdict from package-local verifier code, and must not execute package-local code
       (including that verifier's module body) ahead of authenticating it. RED today: the
       tampered package loads via `teax` `package_load.py:70-84`.
-- [ ] **Attack (b) — foreign-file laundering.** Take a validly generated+sealed package, drop a
+- [x] **Attack (b) — foreign-file laundering.** Take a validly generated+sealed package, drop a
       foreign file anywhere outside the excluded globs, run the re-seal path. The re-seal
       **refuses to classify that file as codegen-produced** — it fails, or the file is recorded
       as non-codegen, but it is never admitted as generated provenance. RED today: the file is
       hashed into `artifact_hashes` as a covered artifact via `cli/__init__.py:762`.
-- [ ] **Version skew fails closed in both directions.** A seal recorded against a
+- [x] **Version skew fails closed in both directions.** A seal recorded against a
       verifier/runtime-contract version the loader does not accept is rejected — both when the
       package is newer than the runtime and when the runtime is newer than the package — with a
       diagnostic that names the mismatch. No skew silently passes.
-- [ ] **Item 6 guarantees stay green.** Every certified seal→verify regular-file and symlink
+- [x] **Item 6 guarantees stay green.** Every certified seal→verify regular-file and symlink
       regression test passes unchanged (`tests/unit/test_verify_package.py`,
       `tests/conformance/test_seal_step9.py`, `test_fingerprint_stability.py`,
       `test_contract_models.py`).
-- [ ] **One authority, no bypass.** Verification and generation-provenance each have one
+- [x] **One authority, no bypass.** Verification and generation-provenance each have one
       authoritative implementation with no duplicate path that skips it. Duplicated
       verifier/version machinery is consolidated. The seal walker and the verify walker remain
       distinct (see Known Requirements).
-- [ ] A generation manifest records, per artifact, whether it is codegen-produced,
+- [x] A generation manifest records, per artifact, whether it is codegen-produced,
       preserved-handwritten, or runtime-written, and the re-seal path consults it.
 
 ## Known Requirements
