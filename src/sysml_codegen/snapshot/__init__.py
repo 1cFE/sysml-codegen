@@ -16,7 +16,7 @@ from __future__ import annotations
 # The loader hard-gates on this version (INV-6) — there is no v2/v3
 # coexistence, so every committed snapshot is re-captured at v3 in the same
 # change.
-SNAPSHOT_FORMAT_VERSION = 3
+SNAPSHOT_FORMAT_VERSION = 4
 
 # constraint_lowering_mode values (D3): "applied" means offline re-lowering
 # should run; "grandfathered_off" means the snapshot was captured with lowering

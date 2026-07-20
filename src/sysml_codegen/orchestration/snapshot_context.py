@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from sysml_codegen.analysis.diagnostic_screen import screen_extraction_diagnostics
 from sysml_codegen.orchestration.pipeline_context import PipelineContext
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
 
@@ -32,6 +33,13 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
     """
     graph, inputs = build_full_graph_from_snapshot(snapshot_path)
     snap = inputs["snap"]
+
+    # Snapshot route's diagnostic sink (DD-R08/R09) — the same function the live route
+    # calls, at the matching boundary. It sits at the generation entry point rather
+    # than inside the loader on purpose: loading is deserialization, and a snapshot
+    # carrying a blocking diagnostic must stay inspectable by tooling that is not
+    # generating from it. Generation is what a blocking diagnostic stops.
+    screen_extraction_diagnostics(snap["constraint_facts"])
 
     # Provenance banner (V5) — goes to the log only, never into an artifact (INV-6).
     logger.info(

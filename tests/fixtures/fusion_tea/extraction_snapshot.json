@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-13T10:57:50.912143+00:00",
+  "captured_at": "2026-07-20T13:03:39.213263+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -570,7 +570,7 @@
       }
     ],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": [
       {
         "actuals": [

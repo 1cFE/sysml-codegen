@@ -5,8 +5,9 @@
 `LiteralNode`, so both became `None`, the MODELED_DEFAULT formal minted an entry point
 with no default, and the generated JSON omitted the key (DD-R20, DD-R21).
 
-Live route only. DD-A11's snapshot route completes in Phase 5 under the declared
-licence dependency — no committed snapshot carries a `unit` IR node.
+Both public routes. The snapshot leg was the declared Phase 5 licence dependency:
+before this fixture was captured, there were zero `unit` IR nodes across every
+committed snapshot, so the unit-annotation path could not be exercised offline.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ import pytest
 
 from sysml_codegen.generation.entry_point import generate_all_derived_jsons
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
-from tests.conftest import FIXTURES_DIR, requires_license
+from tests.conftest import FIXTURES_DIR, requires_license, snapshot_fixture
 
 ROOT = FIXTURES_DIR / "modeled_default_fidelity"
 LOWERING_LOGGER = "sysml_codegen.analysis.constraint_lowering"
@@ -92,3 +93,47 @@ def test_generated_json_carries_every_key_including_unresolved(fidelity_context,
     # Present and null — never silently omitted (DD-R21).
     assert limit.qualified_name in merged
     assert merged[limit.qualified_name] is None
+
+
+# --- DD-A11 snapshot route (Phase 5, the declared licence dependency) --------
+
+
+@pytest.fixture(scope="module")
+def fidelity_snapshot_context():
+    from sysml_codegen.orchestration.snapshot_context import (
+        build_pipeline_context_from_snapshot,
+    )
+
+    return build_pipeline_context_from_snapshot(snapshot_fixture("modeled_default_fidelity"))
+
+
+def test_signed_modeled_default_survives_from_snapshot(fidelity_snapshot_context) -> None:
+    drift = _entry_point(fidelity_snapshot_context.computation_graph, "__drift")
+    assert drift.default_value == -0.1
+    assert drift.unresolved_default_kind is None
+
+
+def test_unit_annotated_modeled_default_survives_from_snapshot(fidelity_snapshot_context) -> None:
+    """The `unit` IR node reaches the offline lane, which no prior snapshot exercised."""
+    rated = _entry_point(fidelity_snapshot_context.computation_graph, "__rated_power")
+    assert rated.default_value == 40.0
+    assert rated.unit_text == "W"
+
+
+def test_unsupported_default_ir_is_unresolved_from_snapshot(fidelity_snapshot_context) -> None:
+    limit = _entry_point(fidelity_snapshot_context.computation_graph, "__limit")
+    assert limit.default_value is None
+    assert limit.unresolved_default_kind == "operator"
+
+
+def test_live_and_snapshot_routes_agree(fidelity_context, fidelity_snapshot_context) -> None:
+    """Both routes reach the same values, units, and unresolved dispositions."""
+
+    def summary(context):
+        return sorted(
+            (p.qualified_name, p.default_value, p.unit_text, p.unresolved_default_kind)
+            for group in context.computation_graph.entry_point_groups
+            for p in group.parameters
+        )
+
+    assert summary(fidelity_context) == summary(fidelity_snapshot_context)

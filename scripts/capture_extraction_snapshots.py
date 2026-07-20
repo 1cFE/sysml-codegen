@@ -49,6 +49,14 @@ FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 
 # Models that support the full pipeline (build_pipeline_context)
 MODELS = {
+    # Signed / unit-annotated modeled defaults (Item 4, DD-A11 snapshot route). The
+    # licence dependency was declared for this one: there are zero `unit` IR nodes
+    # across every previously committed snapshot, so the unit-annotation path could
+    # not be exercised offline until this was captured. It is a FULL capture with
+    # lowering enabled -- an extraction-only capture would mark it
+    # `grandfathered_off`, and its constraint entry points (the whole point) would
+    # not reach the offline graph.
+    "modeled_default_fidelity": FIXTURES_DIR / "modeled_default_fidelity",
     "sample_model": FIXTURES_DIR / "sample_model",
     "solar_battery_model": FIXTURES_DIR / "solar_battery_model",
     "catf_mfe_model": FIXTURES_DIR / "catf_mfe_model",

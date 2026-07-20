@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
+
+from sysml_codegen.analysis.diagnostic_screen import screen_extraction_diagnostics
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
@@ -762,6 +764,8 @@ def build_pipeline_context(
     # runs the Item 3 executable-profile preflight before touching the
     # registry, so an out-of-profile/blocked assert is caught there, not here.
     constraint_facts = extract_constraint_facts(extractor.model)
+    # Live route's diagnostic sink, before lowering (DD-R08/R09).
+    screen_extraction_diagnostics(constraint_facts)
 
     # Step 3: Extract calculation usages with enhanced algorithm param detection
     calc_usages, extraction_report = extract_calculation_usages(

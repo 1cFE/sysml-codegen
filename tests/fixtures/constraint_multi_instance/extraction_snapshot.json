@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "constraint_multi_instance",
-  "captured_at": "2026-07-13T08:24:20.853024+00:00",
+  "captured_at": "2026-07-20T13:03:39.241745+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -136,7 +136,7 @@
       }
     ],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": [
       {
         "actuals": [
@@ -493,15 +493,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": [
-    {
-      "owner_kind": "part_def",
-      "owner_name": "Cell",
-      "owner_qualified_name": "constraint_multi_instance::Cell",
-      "constraint_name": "nonneg",
-      "constraint_kind": "assert",
-      "source_line": 24
-    }
-  ]
+  "channel_aliases": []
 }

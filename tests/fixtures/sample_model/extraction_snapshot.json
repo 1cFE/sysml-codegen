@@ -1,13 +1,13 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "sample_model",
-  "captured_at": "2026-07-19T16:04:32.921438+00:00",
+  "captured_at": "2026-07-20T13:15:15.986837+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [],
     "definitions": [],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": []
   },
   "part_occurrences": {},

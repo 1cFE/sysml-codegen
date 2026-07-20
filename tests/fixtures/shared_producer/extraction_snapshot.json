@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "shared_producer",
-  "captured_at": "2026-07-20T03:32:06.727746+00:00",
+  "captured_at": "2026-07-20T13:03:39.291476+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -127,7 +127,7 @@
       }
     ],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": [
       {
         "actuals": [
@@ -172,7 +172,7 @@
         "location": {
           "column": 9,
           "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/shared_producer/model.sysml",
-          "line": 47
+          "line": 49
         },
         "membership_kind": null,
         "omitted_default_formals": [
@@ -333,8 +333,8 @@
       ],
       "references": [],
       "source_file": "model.sysml",
-      "source_line": 31,
-      "source_hash": "8a978c976068d7f1c3feffffbe473056f5b0ac824aaa68bcb0aab3d6150737c1",
+      "source_line": 33,
+      "source_hash": "51c2041b1b657cfa294791a2f3906b740301a208b9d6eae98d3fb215e5738daf",
       "output_expression_asts": null,
       "all_member_names": [
         "gain",
@@ -366,7 +366,7 @@
       ],
       "unbound_params": [],
       "source_file": "model.sysml",
-      "source_line": 42,
+      "source_line": 44,
       "parent_part_path": "",
       "qualified_name": "SharedProducer__the_rig__scaler",
       "is_template": false,
@@ -382,7 +382,7 @@
         "default_value": "10.0",
         "unit": null,
         "source_file": "model.sysml",
-        "source_line": 26,
+        "source_line": 28,
         "parent_part": "",
         "qualified_name": "SharedProducer__Gain_Floor__floor"
       },
@@ -392,7 +392,7 @@
         "default_value": null,
         "unit": null,
         "source_file": "model.sysml",
-        "source_line": 33,
+        "source_line": 35,
         "parent_part": "",
         "qualified_name": "SharedProducer__Scaler__scaled"
       },
@@ -402,7 +402,7 @@
         "default_value": "40.0",
         "unit": null,
         "source_file": "model.sysml",
-        "source_line": 39,
+        "source_line": 41,
         "parent_part": "the_rig",
         "qualified_name": "SharedProducer__the_rig__gain"
       }

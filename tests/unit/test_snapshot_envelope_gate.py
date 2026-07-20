@@ -36,7 +36,8 @@ from agentic_mbse.sysml.constraint_facts import (
 from agentic_mbse.sysml.expression_facts import LiteralFact, OperandTypeFact
 from agentic_mbse.sysml.expression_ir import LiteralNode, OperatorNode
 
-from sysml_codegen.snapshot import SnapshotFormatError
+from sysml_codegen import _upstream_pins
+from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION, SnapshotFormatError
 from sysml_codegen.snapshot import loader as snapshot_loader
 from sysml_codegen.snapshot.loader import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
@@ -89,11 +90,11 @@ def _facts_with_predicate() -> ConstraintFacts:
 
 
 def _v3_snapshot_dict() -> dict[str, Any]:
-    """A committed v3 snapshot with its constraint section replaced by a
+    """A committed current-version snapshot with its constraint section replaced by a
     locally-built, predicate-bearing facts object (so cell (g)'s embedded
     expression-ir scan has a real node to corrupt)."""
     raw = json.loads(snapshot_fixture("chain_spike_model").read_text())
-    raw["snapshot_format_version"] = 3
+    raw["snapshot_format_version"] = SNAPSHOT_FORMAT_VERSION
     raw["constraint_facts"] = json.loads(constraint_facts_module.serialize(_facts_with_predicate()))
     raw["part_occurrences"] = {}
     raw["constraint_lowering_mode"] = "applied"
@@ -184,11 +185,12 @@ def test_v3_corruption_raises_with_recapture_message(tmp_path, mutate, match):
 
 
 def test_v2_snapshot_rejected_by_version_gate(tmp_path):
-    # Phase 5 re-captured the corpus at v3 (INV-6: no v2/v3 coexistence), so a
-    # v2 fixture is hand-built here rather than read off a committed snapshot.
+    # Each envelope bump re-captures the whole corpus (INV-6: no coexistence), so a
+    # stale-version fixture is hand-built here rather than read off a committed
+    # snapshot. Keyed off the constant so the next bump needs no edit in this file.
     v2 = json.loads(snapshot_fixture("chain_spike_model").read_text())
-    assert v2["snapshot_format_version"] == 3
-    v2["snapshot_format_version"] = 2
+    assert v2["snapshot_format_version"] == SNAPSHOT_FORMAT_VERSION
+    v2["snapshot_format_version"] = SNAPSHOT_FORMAT_VERSION - 2
     with pytest.raises(SnapshotFormatError, match="format version"):
         load_extraction_snapshot(_write_tmp(v2, tmp_path))
 
@@ -260,7 +262,7 @@ def _rich_v3_snapshot_dict() -> dict[str, Any]:
         "source_text": None,
     }
     raw["constraint_facts"] = {
-        "schema_version": "constraint-facts/v1",
+        "schema_version": _upstream_pins.CONSTRAINT_FACTS_SCHEMA_VERSION,
         "definitions": [
             {
                 "identity": _identity("definition"),
@@ -318,8 +320,9 @@ def _rich_v3_snapshot_dict() -> dict[str, Any]:
         ],
         "diagnostics": [
             {
-                "kind": "warning",
+                "kind": "non_finite_literal",
                 "message": "message",
+                "severity": "blocking",
                 "operand_source": None,
                 "location": None,
             }

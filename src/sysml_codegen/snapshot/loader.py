@@ -45,6 +45,7 @@ from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationResult,
 )
+from sysml_codegen import _upstream_pins
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
 from sysml_codegen.snapshot import (
     SNAPSHOT_FORMAT_VERSION,
@@ -584,7 +585,10 @@ def _validate_context(value: Any, snapshot_path: Path, pointer: str) -> None:
 
 def _validate_diagnostic(value: Any, snapshot_path: Path, pointer: str) -> None:
     diagnostic = _expect_mapping(value, snapshot_path, pointer)
-    for field in ("kind", "message"):
+    # `severity` joined the shape at constraint-facts/v2: validating it here means a
+    # missing one is a clean shape error naming its pointer, not a raw KeyError from
+    # the reconstructor further down.
+    for field in ("kind", "message", "severity"):
         _expect_string(
             _required(diagnostic, field, snapshot_path, pointer),
             snapshot_path,
@@ -774,12 +778,12 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     # analysis.constraint_lowering.lower_constraints): the code-level pins must still match
     # what this loader was written against, independent of the data-level checks above.
     # Explicit raises, not asserts — these must survive `python -O`.
-    if CONSTRAINT_FACTS_SCHEMA_VERSION != "constraint-facts/v1":
+    if CONSTRAINT_FACTS_SCHEMA_VERSION != _upstream_pins.CONSTRAINT_FACTS_SCHEMA_VERSION:
         raise RuntimeError(
             f"agentic-mbse constraint-facts schema changed ({CONSTRAINT_FACTS_SCHEMA_VERSION}); "
             "review before re-pinning"
         )
-    if EXPRESSION_IR_SCHEMA_VERSION != "expression-ir/v1":
+    if EXPRESSION_IR_SCHEMA_VERSION != _upstream_pins.EXPRESSION_IR_SCHEMA_VERSION:
         raise RuntimeError(
             f"agentic-mbse expression-ir schema changed ({EXPRESSION_IR_SCHEMA_VERSION}); "
             "review before re-pinning"
@@ -794,7 +798,8 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     except (AttributeError, KeyError, TypeError, ValueError) as error:
         raise SnapshotFormatError(
             f"Snapshot {snapshot_path}: /constraint_facts: reconstruction failed: {error}. "
-            "Expected valid constraint-facts/v1 data. Recapture the snapshot."
+            f"Expected valid {_upstream_pins.CONSTRAINT_FACTS_SCHEMA_VERSION} data. "
+            "Recapture the snapshot."
         ) from error
     try:
         part_occurrences = deserialize_part_occurrences(part_occurrences_raw)

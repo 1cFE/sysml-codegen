@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "agg_literal_probe",
-  "captured_at": "2026-07-13T08:24:20.900507+00:00",
+  "captured_at": "2026-07-20T13:03:39.338948+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -61,7 +61,7 @@
     ],
     "definitions": [],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": []
   },
   "part_occurrences": {},
@@ -152,6 +152,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

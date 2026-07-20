@@ -479,7 +479,9 @@ def associate_usage_decisions(
     Emits no warning and queries no occurrence source, so a mismatch is caught
     before any observable effect.
     """
-    if PROFILE_SEMANTIC_VERSION != "executable-profile/v4":
+    from sysml_codegen import _upstream_pins
+
+    if PROFILE_SEMANTIC_VERSION != _upstream_pins.PROFILE_SEMANTIC_VERSION:
         raise RuntimeError(
             f"agentic-mbse executable-profile semantics changed ({PROFILE_SEMANTIC_VERSION}); "
             "review before re-pinning"

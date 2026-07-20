@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "gate_a_package_owner",
-  "captured_at": "2026-07-20T03:14:58.604277+00:00",
+  "captured_at": "2026-07-20T13:03:39.272688+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -127,7 +127,7 @@
       }
     ],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": [
       {
         "actuals": [

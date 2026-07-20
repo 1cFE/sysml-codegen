@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 3,
+  "snapshot_format_version": 4,
   "model_name": "agg_localterm_probe",
-  "captured_at": "2026-07-20T03:32:06.700173+00:00",
+  "captured_at": "2026-07-20T13:03:39.282772+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -74,7 +74,7 @@
     ],
     "definitions": [],
     "diagnostics": [],
-    "schema_version": "constraint-facts/v1",
+    "schema_version": "constraint-facts/v2",
     "usages": []
   },
   "part_occurrences": {},
