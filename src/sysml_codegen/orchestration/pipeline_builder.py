@@ -8,6 +8,7 @@ computed attribute extraction, and full graph assembly.
 
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
@@ -47,6 +48,7 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
+    Compilability,
     compile_calc_def,
 )
 from sysml_codegen.extraction.usage_extractor import (
@@ -641,6 +643,26 @@ def _scope_aggregation_expressions(
     """
     if not hierarchy_data or not hierarchy_data.aggregation_expressions:
         return []
+    return _scope_aggregation_list(
+        hierarchy_data.aggregation_expressions,
+        calc_usages,
+        hierarchy_data.part_usage_names,
+    )
+
+
+def _scope_aggregation_list(
+    aggregation_expressions: list[Any],
+    calc_usages: list[CalcUsageData],
+    part_usage_names: Any,
+) -> list[ScopedAggregationData]:
+    """Fan one list of AggregationExpressionData out to design instances.
+
+    Extracted from ``_scope_aggregation_expressions`` so the Item-10 FORMULA reroute
+    (``_route_crosspart_formula_aggregations``) scopes its derived aggregations through
+    the exact same instance-path fan-out the ``:>>`` EXPRESSION path uses.
+    """
+    if not aggregation_expressions:
+        return []
 
     result: list[ScopedAggregationData] = []
 
@@ -668,11 +690,11 @@ def _scope_aggregation_expressions(
             design_prefix,
         )
 
-    for agg_expr in hierarchy_data.aggregation_expressions:
+    for agg_expr in aggregation_expressions:
         dotted_paths = find_instance_paths_for_partdef(
             agg_expr.owning_part_qn,
             calc_usages,
-            part_usage_names=hierarchy_data.part_usage_names,
+            part_usage_names=part_usage_names,
         )
 
         if not dotted_paths:
@@ -697,6 +719,82 @@ def _scope_aggregation_expressions(
 
     logger.info("Scoped %d aggregation module(s)", len(result))
     return result
+
+
+def _computed_attr_to_aggregation(ca: ComputedAttributeData) -> Any:
+    """Decompose a chain-bearing FORMULA computed attribute via the aggregation machinery.
+
+    Item 10: a FORMULA whose ``=`` expression mixes local refs with cross-part feature
+    chains (e.g. ``direct_capital = powercore_capital + bop_capital + buildings.capital_cost``)
+    cannot be rendered by the calc renderer (feature chains are refused, ``calc_compat_renderer``)
+    and was dropped with a warning at ``graph_builder``. Here it is handed to the SAME
+    ``build_aggregation_expression`` construction a ``:>>`` EXPRESSION sum uses — decompose
+    plus the neutral-node render and the ``has_unsupported`` guard — so an odd-operator shape
+    degrades to MANUAL_REQUIRED rather than miscompiling (Minor 5). Returns the
+    ``AggregationExpressionData`` or ``None`` if it did not decompose.
+    """
+    from sysml_codegen.extraction.hierarchy_resolver import build_aggregation_expression
+
+    synthetic_redef = RedefinitionData(
+        # __-form owning QN — everything downstream (registration, instance scoping) is
+        # __-form; ComputedAttributeData carries the ::-form (the trap the map flagged).
+        owning_part_qn=sanitize_qualified_name(ca.owning_part_qualified_name),
+        attribute_name=ca.name,
+        redefinition_type=RedefinitionType.EXPRESSION,
+        expression_ast=ca.expression_ast,
+        expression_text=ca.expression_text,
+    )
+    part_stand_in = SimpleNamespace(name=ca.owning_part_name)
+    return build_aggregation_expression(synthetic_redef, [], part_stand_in)
+
+
+def _route_crosspart_formula_aggregations(
+    computed_attrs: list[ComputedAttributeData],
+    hierarchy_data: HierarchyExtractionResult,
+    calc_usages: list[CalcUsageData],
+) -> tuple[list[ComputedAttributeData], list[ScopedAggregationData]]:
+    """Step 4.7 (Item 10): route chain-bearing FORMULA computed attributes into the
+    aggregation path so cross-part sums become real graph producers.
+
+    The routing key fires strictly on a FORMULA-classified computed attribute that did NOT
+    compile AND decomposes to at least one cross-part term (a ``SingletonTerm``). This is
+    provably disjoint from EXPOSE_PURE / EXPOSE_CHAIN_TENTATIVE (which never reach the FORMULA
+    arm) and from existing ``:>>`` aggregations (which are ``RedefinitionData``, not computed
+    attributes). A FORMULA that failed to compile for a non-cross-part reason (e.g. an
+    inherited-attr ref outside the calc's inputs) has no ``SingletonTerm`` and is left exactly
+    as before — dropped at ``graph_builder`` with the same warning (no over-catch).
+
+    Returns ``(kept_computed_attrs, scoped_aggregations)``. The kept list has the rerouted
+    attributes removed so they are not double-processed as computed-attribute modules; the
+    scoped aggregations are appended to ``scoped_agg_data`` before Phase-1b registration so a
+    chained aggregation's inner channel is registered before the outer LocalTerm resolves (A7).
+    """
+    kept: list[ComputedAttributeData] = []
+    rerouted_exprs: list[Any] = []
+    for ca in computed_attrs:
+        is_uncompiled_formula = (
+            ca.classification == ComputedAttributeClassification.FORMULA
+            and ca.compilability != Compilability.FULLY_COMPILABLE
+            and ca.expression_ast is not None
+        )
+        if is_uncompiled_formula:
+            agg_expr = _computed_attr_to_aggregation(ca)
+            if agg_expr is not None and agg_expr.singleton_terms:
+                rerouted_exprs.append(agg_expr)
+                logger.info(
+                    "Step 4.7: routed FORMULA '%s.%s' into the aggregation path "
+                    "(%d cross-part term(s)) — cross-part sum becomes a graph producer",
+                    ca.owning_part_name,
+                    ca.name,
+                    len(agg_expr.singleton_terms),
+                )
+                continue
+        kept.append(ca)
+
+    scoped = _scope_aggregation_list(
+        rerouted_exprs, calc_usages, hierarchy_data.part_usage_names
+    )
+    return kept, scoped
 
 
 def build_pipeline_context(
@@ -792,6 +890,15 @@ def build_pipeline_context(
     computed_attrs, expose_aliases = _extract_and_filter_computed_attributes(
         extractor.model, calc_usages, design_attrs
     )
+
+    # Step 4.7 (Item 10): route chain-bearing FORMULA computed attributes into the
+    # aggregation path so cross-part sums become real graph producers. Runs after 4.5
+    # (FORMULA classification is final) and before Phase-1b registration (5.5), so a
+    # chained aggregation's inner channel is registered before the outer resolves (A7).
+    computed_attrs, rerouted_aggs = _route_crosspart_formula_aggregations(
+        computed_attrs, hierarchy_data, calc_usages
+    )
+    scoped_agg_data = scoped_agg_data + rerouted_aggs
 
     # Merge all channel aliases (CHAIN from Step 3.5 + EXPOSE_PURE from Step 4.5)
     all_channel_aliases = chain_aliases + expose_aliases

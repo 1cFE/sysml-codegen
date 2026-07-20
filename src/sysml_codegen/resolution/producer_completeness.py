@@ -108,16 +108,27 @@ def check_producer_completeness(
             )
             continue
 
-        # Leaf-name guess: resolved via a name-based lenient row rather than exact identity.
-        if res.outcome is Outcome.DESIGN_ATTRIBUTE and res.key_form in NAME_BASED_KEY_FORMS:
+        # Leaf-name guess: a QUALIFIED reference (``part_usage.attr``) that resolved via a
+        # name-based lenient row by DROPPING its qualifier and matching the bare leaf. This
+        # is the scope-collapse defect — e.g. every ``X.capital_cost`` term collapsing to a
+        # single ``capital_cost`` design attribute regardless of ``X``. A BARE reference
+        # (no ``.``) matched by ``bare_name_unique`` is NOT flagged: with no qualifier to
+        # drop and a unique surviving candidate, that is the intended producer, resolved by
+        # its only available handle — not a guess (verified: ``agg_localterm_probe``'s bare
+        # ``markup`` is a legitimate unique match, not a scope collapse).
+        if (
+            res.outcome is Outcome.DESIGN_ATTRIBUTE
+            and res.key_form in NAME_BASED_KEY_FORMS
+            and "." in req.reference
+        ):
             violations.append(
                 CompletenessViolation(
                     kind=CompletenessViolationKind.LEAF_NAME_GUESS,
                     consumer_eqn=req.consumer_eqn,
                     reference=req.reference,
                     detail=(
-                        f"resolved by name match ({res.key_form}) to {res.identity}, "
-                        "not under exact qualified identity"
+                        f"qualified reference resolved by leaf match ({res.key_form}) to "
+                        f"{res.identity}, dropping its scope qualifier — not exact identity"
                     ),
                 )
             )

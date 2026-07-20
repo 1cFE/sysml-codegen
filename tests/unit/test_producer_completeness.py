@@ -59,11 +59,11 @@ def test_ambiguous_producer_is_flagged() -> None:
     assert "pkg__a__cost" in violations[0].detail
 
 
-def test_leaf_name_guess_is_flagged() -> None:
-    """A model-derived value resolved via a name-based lenient row (leaf_unique) is a
-    leaf-name-guess violation."""
+def test_qualified_leaf_name_guess_is_flagged() -> None:
+    """A QUALIFIED reference (``part.attr``) resolved via a name-based lenient row by
+    dropping its qualifier is a leaf-name-guess violation (the scope-collapse defect)."""
     cap = _cap(
-        "cost",
+        "magnet.cost",
         ProducerResolution(
             outcome=Outcome.DESIGN_ATTRIBUTE,
             identity="pkg__a__cost",
@@ -73,6 +73,20 @@ def test_leaf_name_guess_is_flagged() -> None:
     violations = check_producer_completeness([cap])
     assert len(violations) == 1
     assert violations[0].kind is CompletenessViolationKind.LEAF_NAME_GUESS
+
+
+def test_bare_name_unique_is_exempt() -> None:
+    """A BARE reference matched by bare_name_unique (a unique surviving candidate, no
+    qualifier to drop) is the intended producer resolved by its only handle — not a guess."""
+    cap = _cap(
+        "markup",
+        ProducerResolution(
+            outcome=Outcome.DESIGN_ATTRIBUTE,
+            identity="pkg__bank__markup",
+            key_form="bare_name_unique",
+        ),
+    )
+    assert check_producer_completeness([cap]) == []
 
 
 def test_clean_entry_point_is_exempt() -> None:
@@ -125,9 +139,9 @@ def test_multiple_violations_all_reported() -> None:
             ),
         ),
         _cap(
-            "gain",
+            "driver.gain",
             ProducerResolution(
-                outcome=Outcome.DESIGN_ATTRIBUTE, identity="y", key_form="bare_name_unique"
+                outcome=Outcome.DESIGN_ATTRIBUTE, identity="y", key_form="leaf_unique"
             ),
         ),
         _cap(

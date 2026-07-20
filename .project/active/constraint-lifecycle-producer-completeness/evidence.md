@@ -59,28 +59,80 @@
 
 ---
 
-## What remains (honest status for audit / the licensed session)
+## Phase 1 — cross-part aggregation routing (LANDED, byte-clean) + a blocking finding (STOP)
 
-The check is a tested mechanism but is **not yet wired as a hard generation gate**, and the
-cross-part aggregation capability is not yet built. Wiring the gate is deliberately paired
-with the Phase-1 fixture enumeration, because turning the completeness check on globally is
-exactly what could move a frozen anchor or reclassify an existing fixture — the design makes
-that enumeration "load-bearing for the frozen anchors." Sequencing:
+**The FORMULA→aggregation routing mechanism is built and byte-identity clean.** New Step 4.7
+in `pipeline_builder.build_pipeline_context` (`_route_crosspart_formula_aggregations`) routes a
+chain-bearing, non-compilable FORMULA computed attribute into the SAME `build_aggregation_expression`
+full construction (decompose + neutral render + `has_unsupported` guard) a `:>>` EXPRESSION sum
+uses, appending the scoped aggregation to `scoped_agg_data` before Phase-1b registration. The
+routing key fires strictly on FORMULA + not-FULLY_COMPILABLE + `singleton_terms` present — provably
+disjoint from EXPOSE_PURE/tentative/existing aggregations.
 
-- **Phase 1 — cross-part aggregation compilation + gate wiring.** Route chain-bearing FORMULA
-  computed attributes into `build_aggregation_expression`'s full construction (incl.
-  `has_unsupported`); enumerate the ~15+ chain-bearing-computed-attribute fixtures for
-  per-fixture byte-identity (over-catch of EXPOSE_PURE/tentative/existing-aggregation is a
-  STOP); the two-level chained fixture with a **structural** `module_output` assertion (A7);
-  then wire `capturing_resolutions()` around graph build in `pipeline_builder` + snapshot
-  rebuild and run the completeness check at finalization (raise on ambiguity). Needs the
-  license for the live-route fixtures.
-- **Phase 3 — stellarator cutover.** Restore canonical formulas in the twins → recapture
-  (snapshot format is now v5, `test_snapshot_v5_gate.py`) → public generation (zero
-  offenders) → runner cutover → six anchors + five verdicts EXACT → deletions incl. **both**
-  harnesses (`bridge_v11_generate.py`, `run_stellaris.py` glue-2, `handshake_1costingfe.py`
-  glue) → WI-027 amendment. Anchor movement is a STOP. Needs the license + teax exec env.
-- **Phase 0 snapshot capture** — capture `two_same_leaf_producers` in the same licensed pass.
+- **Byte-identity sweep clean:** full licensed `tests/unit`+`tests/conformance` = **2953 passed /
+  0 failed / 44 (non-license) skipped**. Zero baseline moved; no fixture reclassified (the target
+  shape exists in no current fixture, confirmed by the routing map). No over-catch.
+- **A7 (chained aggregation) PROVEN on the real stellarator.** Building the canonical stellarator
+  graph, `direct_capital`'s aggregation wires `powercore_capital` and `bop_capital` inputs to
+  `source_type=module_output` with the exact channel identities
+  (`hif_plant_pkg__stellaris__powercore_capital__powercore_capital`, `…__bop_capital__bop_capital`).
+  The producer-registration precondition holds by construction (Phase-1b registers all aggregation
+  channels before any module build). This is the structural (channel-identity) proof A7 required.
+
+### 🛑 BLOCKING FINDING — cross-part `child.attr` resolution collapses (Phase 3 blocked)
+
+Building the canonical stellarator graph with the routing on, **every cross-part `SingletonTerm`
+collapses**: `magnet.capital_cost`, `heating.capital_cost`, … (13 terms across
+`powercore_capital`/`bop_capital`/`direct_capital`) all resolve to the SAME def-level design
+attribute `mfe_magnet_cost__Magnet_Coil_Cost__capital_cost` via `key_form=leaf_unique` — the
+resolver **drops the `magnet.`/`heating.` qualifier and leaf-matches `capital_cost`** to one
+producer. The per-child channels exist (e.g. `stellarator_09__stellaris__magnet_cost__capital_cost`),
+but the resolver does not follow each child part usage's `:>> capital_cost = X_cost.capital_cost`
+redefinition per instance.
+
+- **The design's Decision-1 premise is empirically false.** The routing map and design assumed
+  "the aggregation path already resolves cross-part references through resolve_producer to a real
+  MODULE_OUTPUT." It does not for the stellarator's child-part-redefinition shape — it resolves them
+  by a qualifier-dropping leaf guess. This is WI-015 finding #4 at its root, deeper than scoped.
+- **Item 10's producer-completeness property is genuinely VIOLATED by the stellarator at today's
+  chain.** The Phase-2 completeness check catches it exactly: **13 `leaf_name_guess` violations**,
+  one per collapsed term. Producing the six anchors from this graph would give WRONG numerics (every
+  term = the magnet cost) — an anchor-movement STOP if pushed.
+- **Per the design STOP protocol** ("if it does not resolve through the ordinary `resolve_producer`
+  ladder, surface it; do not add a rollup-specific resolution arm") **and the owner instruction**
+  ("any anchor movement or over-catch: STOP and report"), this is surfaced, not worked around.
+- **The fix is a resolver enhancement, not a rollup hack:** teach cross-part `child.attr` resolution
+  to follow each child part usage's redefinition to its per-instance channel (or reject the
+  qualifier-drop), so `X.capital_cost` reaches `X`'s own cost channel. This is a substantial,
+  separately-scoped change to `producer_resolution` / the aggregation term builder
+  (`_build_agg_input_source`, `graph_builder.py:1403`) that the design under-scoped. It must land —
+  and the byte-identity corpus must stay green — before Phase 3 can produce correct anchors.
+
+### Phase-2 completeness check — refined and validated as a precise diagnostic
+
+The check now flags `LEAF_NAME_GUESS` only for a **qualified** reference (a dropped scope qualifier);
+a bare unique name match (`agg_localterm_probe`'s `markup`) is exempt — it is the intended producer
+resolved by its only handle. Corpus scan: of 36 snapshot fixtures, exactly **one** trips —
+`spec_chain_twolevel`'s `driver.maintenance_rate`, its own documented WI-015 gap — plus the
+stellarator's 13. Zero false positives. **Not wired as a hard generation gate:** `spec_chain_twolevel`'s
+trip is a corpus-accepted incompleteness, so fail-closing would need that genuine gap (and the
+stellarator's) resolved first — which is exactly the blocking finding's resolver work. The check
+stands as the precise diagnostic that proves the property and localizes the defect.
+
+## Phase 3 — stellarator cutover: BLOCKED
+
+Cannot proceed. The stellarator cannot generate producer-complete, correct-numeric public output
+until the cross-part `child.attr` resolution above is fixed. Restoring the canonical formulas and
+recapturing would yield collapsed aggregations (wrong anchors) — a STOP. Deferred pending the
+resolver enhancement. When unblocked: restore formulas → recapture (v5) → public gen (zero offenders,
+completeness-clean) → runner single-pass cutover → six anchors EXACT + five verdicts → delete bridge
++ `run_stellaris` glue-2 + `handshake_1costingfe.py` glue + DEMO NOTE conversions → WI-027 amendment.
+
+- **Phase 0 snapshot capture** — `two_same_leaf_producers` capture also deferred to that pass.
+- **Two-level fixture** `crosspart_rollup_twolevel/` — authored; classifies EXPOSE_COMPUTED (its
+  plain child attrs don't locally redefine like the stellarator), so A7 was proven on the real
+  stellarator instead. Retained as documentation of the shape; a licensed capture + child-redef
+  variant is follow-on.
 
 ---
 

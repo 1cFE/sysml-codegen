@@ -6,7 +6,17 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup (codegen + stellarator) — Phases 0/2 landed; 1/3 remain 2026-07-20
+### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup — Phase 1 landed + STOP finding; Phase 3 BLOCKED 2026-07-20
+Phases 0/2 landed earlier (capture sink, completeness check, RED coordinate). Phase 1 (this
+session, licensed): FORMULA→aggregation routing built (Step 4.7 `_route_crosspart_formula_aggregations`),
+byte-identity sweep CLEAN (2953 pass), A7 chained-aggregation PROVEN on the real stellarator
+(LocalTerms→module_output). Completeness check refined to qualified-ref-only leaf-guess (zero false
+positives). **BLOCKING FINDING (STOP):** cross-part `child.attr` SingletonTerms collapse — the resolver
+drops the part-usage qualifier and leaf-matches (`magnet.capital_cost`→one magnet EP; 13-way collapse).
+The design's Decision-1 premise ("aggregation path already resolves cross-part refs") is empirically
+false; the check catches it (13 leaf_name_guess violations). Phase 3 BLOCKED — needs a resolver
+enhancement to follow child-part redefinitions per instance. Surfaced, not worked around. Evidence:
+`evidence.md`.
 Design approved-with-revisions (four Majors applied, `design-review.md` + `design.md`).
 Implemented and verified: capture sink centralized in `resolve_producer` (covers all 5 call
 sites by construction — closes R2), `producer_completeness.py` check, and the RED-first
