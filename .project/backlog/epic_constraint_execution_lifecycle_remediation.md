@@ -463,7 +463,8 @@ before PR #9).
       shim. *(Audit: two lanes disagree on the same modeled default — audit.md F4.)*
 - [x] SR-A02 convergence completes on real data with no name inference — for the unbracketed
       (`PartUsage`-owned) shape, which is the shape SR-A02 names. **Not claimed** for an
-      occurrence-indexed `part_def` owner: row 16 deliberately misses there (evidence PC-6).
+      occurrence-indexed `part_def` owner, nor for a `::`-qualified reference: row 16 deliberately
+      misses both (evidence PC-6 and audit F2).
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-diagnostics-defaults/spec.md`
@@ -473,8 +474,11 @@ before PR #9).
 - `.project/active/constraint-lifecycle-diagnostics-defaults/evidence.md`
 
 **Carried forward, unowned** (evidence "Open items"): bracketed-owner convergence; the
-stale-baseline class (`plant_values`, `constraint_inline`, `dropped_constraints` capture drift,
-joining the recorded `deep_cross_scope` case); the tier-1 mirror of DD-R32.
+stale-baseline class (`plant_values` — both files — `constraint_inline`, `dropped_constraints`
+capture drift, joining the recorded `deep_cross_scope` case); the tier-1 mirror of DD-R32;
+`::`-qualified row-16 coverage (one item could close it with bracketed owners); and
+constraint-def formals captured as design attributes (8 across 4 fixtures, the root cause of the
+default-lane disagreement, four-fixture blast radius).
 
 ---
 

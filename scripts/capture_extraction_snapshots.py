@@ -180,6 +180,14 @@ EXTRACTION_ONLY_MODELS = {
     #     binding RHS: an unhandled dispatch type. Extraction-only (the pipeline
     #     cannot resolve the invocation). Warns + drops (D3-1).
     "invocation_binding_probe": FIXTURES_DIR / "invocation_binding_probe",
+    # NOTE: tests/fixtures/non_finite_literal/ is deliberately NOT captured. Its
+    # whole point is a non-finite literal, and the facts serializer refuses those
+    # outright (allow_nan=False, D2a serialize-time backstop) — so a blocking
+    # non_finite_literal diagnostic cannot reach a snapshot by construction. The
+    # snapshot route's sink is pinned against a synthesized payload instead; see
+    # tests/conformance/test_diagnostic_screen.py.
+    # Same-named attributes at two scopes with DIFFERENT values (audit F2).
+    "shadowed_reference": FIXTURES_DIR / "shadowed_reference",
 }
 
 

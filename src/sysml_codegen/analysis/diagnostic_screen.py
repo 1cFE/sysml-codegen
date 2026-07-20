@@ -1,7 +1,9 @@
 """The codegen sink for extraction diagnostics (DD-R08, DD-R09).
 
-One function, two call sites: the live route (`orchestration/pipeline_builder`) and
-the snapshot route (`snapshot/loader`), both **before lowering**. A blocking
+One function, two call sites, both **before lowering**: the live route
+(`orchestration/pipeline_builder`, before `prepare_constraint_usages`) and the
+snapshot route (`orchestration/snapshot_context`, before
+`build_full_graph_from_snapshot`, which lowers). A blocking
 diagnostic stops generation with its code, severity, message, and location in the
 failure text; an advisory one is rendered at a level a build log shows and does not
 stop generation.

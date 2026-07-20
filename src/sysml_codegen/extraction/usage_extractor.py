@@ -100,12 +100,30 @@ class BindingInfo:
 
     @property
     def written_reference(self) -> str | None:
-        """The reference exactly as written in the model (DD-R26).
+        """The **owner-relative** reference as written, or ``None`` when there isn't one.
 
-        For a CHAIN binding that is the qualifier and the leaf —
-        ``cryo_pumps.n_pumps`` — not the leaf alone. Dropping the qualifier
-        would re-anchor the leaf at the owning part and silently select a
-        different attribute that happens to share the name.
+        This feeds row 16 (``_occurrence_materialized_qn``), whose key form is
+        ``{owner_path}__{name}``. That form only means anything for a reference
+        written relative to its consumer's owner, so this property answers only
+        for those and returns ``None`` otherwise. A ``None`` makes row 16 miss,
+        which is safe: the binding falls through to the key forms that already
+        resolve it (audit F2, and the same safe-miss pattern as a bracketed owner).
+
+        Three shapes, three answers:
+
+        * **Bare leaf** (``in gain = gain``) — owner-relative. Answer the leaf.
+        * **Dotted chain** (``in cryo_pump_count = cryo_pumps.n_pumps``) —
+          owner-relative through a sub-part. Answer qualifier *and* leaf. The leaf
+          alone would re-anchor at the owner and select a same-named attribute
+          elsewhere; that regression was measured (48.0 where the model means 32.0)
+          and is why this property exists.
+        A ``::``-qualified reference (``in kappa = catf_radial_build::elongation``)
+        is **not** owner-relative and must not be re-anchored — but it cannot be
+        detected here. ``source_path`` holds the *resolved* qualified name, which
+        contains ``::`` for a bare self-named leaf too (``shared_producer``'s
+        ``gain`` resolves to ``SharedProducer::the_rig::scaler::gain``). The
+        discrimination lives in row 16 instead, where the resolved target is
+        available; see ``_occurrence_materialized_qn`` (audit F2).
         """
         attribute_name = self.source_attribute_name
         if attribute_name is None:

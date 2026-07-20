@@ -33,16 +33,25 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 LOWERING_LOGGER = "sysml_codegen.analysis.constraint_lowering"
 PACKAGE_NAME = "snapshot_portability"
-# Repinned for Item 4's written-reference carry (DD-R27). The replay pair is built
-# from catf_mfe_model, one of the fixtures whose entry-point identities moved. The
-# manifest delta was verified to be exactly two key movements and nothing else:
-#   + CATFMFERadialBuild__catf_radial_build__plasma_region__elongation  (newly
-#     resolved at its correct scope; same 3.0 value as the outer attribute)
+# Repinned twice for Item 4, both times with the delta verified rather than absorbed.
+#
+# Second repin (audit F2 remediation): the carry had re-anchored catf_mfe's
+# `in kappa = catf_radial_build::elongation` onto an owner-local shadow, minting
+# `CATFMFERadialBuild__catf_radial_build__plasma_region__elongation`. That key is a
+# regression, not a convergence, and is now gone -- the binding resolves to the outer
+# key like its thirteen siblings and like it did at the predecessor. The manifest delta
+# is exactly that key's removal plus the rename below.
+#
+# First repin (the carry itself): manifest delta was exactly two key movements --
+#   + CATFMFERadialBuild__catf_radial_build__plasma_region__elongation  (NOW REVERTED)
 #   - CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total
-#   + CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total           (rename)
-# Only model_contract_bytes and its two derived hashes changed; no value moved.
-# Previous pin: bf2b3d49ad6710fa2032fa940932ec7e1a0b6ea846a6d9b7dbcd7e6f370a8266
-SNAPSHOT_MANIFEST_SHA256 = "a7e07446abc1e0fc7252db38e76c674b77ccd29e41fc69590a7ba71233ce212a"
+#   + CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total           (rename, stands)
+#
+# Only model_contract_bytes and its two derived hashes changed. No value moved at
+# either step; the F2 key held 3.0, the same as the outer attribute it shadowed, which
+# is exactly why a value-only gate could not catch it.
+# Pins: bf2b3d49... (pre-Item-4) -> a7e07446... (carry) -> current.
+SNAPSHOT_MANIFEST_SHA256 = "bf6b36b1d6afc40e3cc670fc85825c48ee4d220f986ee08338225d24511f2fe8"
 
 
 def _anonymous_non_numerical() -> ConstraintUsageFact:

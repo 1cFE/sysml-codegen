@@ -381,6 +381,25 @@ def _occurrence_materialized_qn(req: ProducerRequest, ctx: ProducerContext) -> F
     written = req.written_reference or req.reference
     if not owner_path or not written:
         return _MISS
+    # Exact identity beats re-anchoring (audit F2). This row keys an owner-*relative*
+    # name under the consumer's owner. When the consumer's reference already resolves
+    # to a real design attribute by exact identity, that reference was scope-qualified
+    # as written (`in kappa = catf_radial_build::elongation`) and re-anchoring it here
+    # would silently select an owner-local shadow of the same name — measured, it did.
+    # Defer to row 17, which keys on `target_qn` by exact identity and is where these
+    # resolved before Item 4.
+    #
+    # This cannot be decided from the binding alone: `source_path` holds the resolved
+    # QN, which is `::`-qualified for a bare self-named leaf too, so the written form
+    # is not recoverable there. It is decidable here, against the real attribute index.
+    # Scoped only to the consumer that carries its resolved QN in `reference` and no
+    # `target_qn` -- the calculation consumer, the one Item 4 newly pointed at this row.
+    # The constraint consumer sets `target_qn` and keeps Item 2's ratified precedence,
+    # that row 16 beats row 17 when both resolve (test_constraint_resolver.py
+    # ::test_precedence_occurrence_qn_beats_target_qn_design_attribute). Extending the
+    # seam, not reworking it.
+    if req.target_qn is None and sanitize_qualified_name(req.reference) in ctx.design_attr_by_qn:
+        return _MISS
     qn = f"{owner_path}__{'__'.join(written.split('.'))}"
     return _hit(qn if qn in ctx.design_attr_by_qn else None)
 

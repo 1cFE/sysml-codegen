@@ -1,6 +1,6 @@
 # Spec: Lifecycle Remediation Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Status:** Implemented — candidate `16dbaa7` (codegen) / `4c18d61` (agentic-mbse), awaiting `/_my_audit`
+**Status:** Remediated after audit round 1 (Needs Work → four findings closed); awaiting narrow re-audit
 **Owner:** Reid W
 **Created:** 2026-07-19
 **Complexity:** HIGH
@@ -137,7 +137,11 @@ item.
 
 Two more, from sources outside the epic row:
 
-- [x] **[INHERITED: referral decision 2026-07-20, recorded in epic Item 2 out-of-scope]** SR-A02
+- [x] **[INHERITED: referral decision 2026-07-20, recorded in epic Item 2 out-of-scope]** *(Scope:
+      closes for the unbracketed `PartUsage`-owned shape, which is the shape SR-A02 names and
+      `shared_producer` carries. **Not claimed** for an occurrence-indexed `part_def` owner, nor
+      for a `::`-qualified reference — row 16 deliberately misses both. Evidence PC-6 and F2.)*
+      SR-A02
       convergence completes on real data with no name inference: the shared attribute yields one
       QN-keyed typed entry point, one modeled default, one group assignment. **Scope-limited — see
       the note at the end of this file:** convergence is claimed for the unbracketed
@@ -468,8 +472,3 @@ challengeable even if design proceeds with them.
 
 **Next Steps:** independent `/_my_audit` against the candidate. Evidence at
 `.project/active/constraint-lifecycle-diagnostics-defaults/evidence.md`.
-
-**Scope note on the SR-A02 criterion:** convergence closes for the unbracketed (`PartUsage`-owned)
-shape, which is the shape SR-A02 names and `shared_producer` carries. It is **explicitly not
-claimed** for an occurrence-indexed `part_def` owner, where row 16 deliberately misses (evidence
-PC-6).

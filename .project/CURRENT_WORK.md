@@ -36,7 +36,16 @@ non-existent "retained v3" fixture, and the merge-order failure presenting as an
 collection rather than the guard's message. Spec/epic criteria 1 and 4 unmarked; no ✅ on the epic
 heading.
 
-**CANDIDATE_REVs:** `16dbaa720c20b9c6f4e9da76e324d6c075ef8378` (sysml-codegen) and
+**Audit round 1: Needs Work — all four findings closed.** F1 snapshot sink ran after lowering
+(fixed, ordering now pinned). F2 the carry re-anchored a `::`-qualified reference onto an
+owner-local shadow, masked because both attributes held 3.0 (fixed by "exact identity beats
+re-anchoring", scoped to the calc consumer so Item 2's certified precedence is untouched; a
+discriminating fixture with *different* values now exists). F3 DD-A03 was Fail not Partial — the
+sink had zero coverage (fixed, 8 tests + fixture). F4 the string lane's retention justification was
+falsified (corrected and pinned; root cause surfaced with its four-fixture blast radius, not fixed
+here). Detail in `evidence.md` under "Remediation".
+
+**CANDIDATE_REVs:** see `evidence.md` — `16dbaa7` was audit round 1; the remediated codegen rev is
 `4c18d616f77e26932a8e158cefc2637db47f9b07` (agentic-mbse), both on `constraint-exec-epic`.
 
 **This item MOVES the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`. Merge order is

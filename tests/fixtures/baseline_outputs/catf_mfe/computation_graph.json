@@ -1893,7 +1893,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__elongation",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
             "producer_channel": null
           },
           "description": "",
@@ -3900,17 +3900,6 @@
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
           "simple_name": "major_radius",
-          "entry_type": "design_attribute",
-          "default_value": 3.0,
-          "source_calc_usage": null,
-          "param_group": "radial_build_params",
-          "python_type": "float",
-          "unit_text": null,
-          "unresolved_default_kind": null
-        },
-        {
-          "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__elongation",
-          "simple_name": "elongation",
           "entry_type": "design_attribute",
           "default_value": 3.0,
           "source_calc_usage": null,

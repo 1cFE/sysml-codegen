@@ -1,6 +1,6 @@
 # Evidence: Lifecycle Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Status:** Candidate complete, awaiting independent `/_my_audit`
+**Status:** Remediated candidate (audit round 1 Needs Work → all four findings closed), awaiting narrow re-audit
 **Owner:** Reid W
 **Created:** 2026-07-20
 **Epic:** CONSTRAINT-LIFECYCLE-REMEDIATION — register row 4
@@ -13,7 +13,7 @@
 
 | | value |
 |---|---|
-| **CANDIDATE_REV (sysml-codegen)** | `16dbaa720c20b9c6f4e9da76e324d6c075ef8378` |
+| **CANDIDATE_REV (sysml-codegen)** | see the remediation section — `16dbaa7` was audit round 1 |
 | **CANDIDATE_REV (agentic-mbse)** | `4c18d616f77e26932a8e158cefc2637db47f9b07` |
 | RED predecessor (codegen) | `3fbec63a9fc5f81e74b9794885b05219d5812e58` |
 | Stage-entry commit (codegen) | `05c567c` |
@@ -119,7 +119,7 @@ and baseline gates. Flagged for the audit as a deliberate scope call, not an ove
 | DD-R20 | **Met** | `-0.1` → `-0.1`; `40.0 [W]` → `40.0` with unit carried; both routes |
 | DD-R21 | **Met** | unsupported IR → explicitly unresolved + diagnosed; JSON emits `null`, never omits |
 | DD-R22 | **Met** | diagnostic names the entry-point QN and the IR node kind |
-| DD-R23 | **Met** | two identical `float()` lanes collapsed to `design_attribute_float_default`; kept lanes justified by measurement (below) |
+| DD-R23 | **Met with exception** (audit F4) | two identical `float()` lanes collapsed to `design_attribute_float_default`; kept lanes justified by measurement (below) |
 | DD-R24 | **Met** | modeled default stays an overridable typed contract parameter; not baked into predicate code |
 | DD-R25 | **Met** | unit carried verbatim, never converted; no general constant folding (binary operator → unresolved) |
 
@@ -169,7 +169,7 @@ no table.
 |---|---|---|
 | DD-A01 | Pass | `test_constraint_facts_severity.py` (reason vocabulary) |
 | DD-A02 | Pass | round-trip byte-identical; unrecognized severity/kind fail closed |
-| DD-A03 | **Partial — see gap** | codegen halt + advisory logging proven by unit surface; no single fixture carries a real blocking diagnostic end-to-end (see Open items) |
+| DD-A03 | **Pass** (was wrongly Partial; audit F3) | `test_diagnostic_screen.py`, both routes + `non_finite_literal` fixture. Advisory leg pinned but honestly unreachable |
 | DD-A04 | Pass | `reason_code` on the returned `ValidationIssue` list |
 | DD-A05 | Pass | four cells: fact schema × 2 directions, envelope × 2 directions |
 | DD-A06 | Pass | all 35 load at v4; retained v3 fails with the existing recapture message; delta enumeration below |
@@ -445,3 +445,160 @@ The design left one lane boundary open. Settled by measurement, both halves reco
 Independent `/_my_audit` against `16dbaa7` (codegen) and `4c18d61` (agentic-mbse). The three items
 most worth adversarial attention: **PC-3** (certified-seam mechanism rewrite), **PC-1** (the design
 bet amended mid-implementation), and **DD-A03** (the one cell claimed partial).
+
+
+---
+
+# Remediation — audit round 1 (Needs Work → all four findings closed)
+
+Audit report: `audit.md`. PC-3 was verified sound in all three respects and every engineering
+gate reproduced; the four findings were places where a claim outran its evidence. All four are
+closed. **No finding was closed by weakening a test or an assertion.**
+
+## F1 — snapshot-route sink ran after lowering. **Fixed.**
+
+The auditor's call-order probe reproduced exactly: `['lower_constraints',
+'screen_extraction_diagnostics']`. `build_full_graph_from_snapshot` lowers, and the sink sat eight
+lines below it. So the routes were not symmetric, contrary to PC-4's own rationale, and D2's
+"both before lowering" was unmet on the licence-free production path.
+
+The sink moved above `build_full_graph_from_snapshot`. Order is now
+`['screen_extraction_diagnostics', 'lower_constraints']`, pinned by
+`test_snapshot_route_screens_before_lowering`, which records the call order directly rather than
+inferring it from where the code sits. The cost is one extra snapshot load, stated in the comment
+rather than hidden — the graph build that follows dominates it. `diagnostic_screen.py`'s docstring
+no longer names `snapshot/loader` as the second site.
+
+## F2 — the carry re-anchored a `::`-qualified reference. **Fixed, and the first fix was wrong.**
+
+The auditor was right and the finding was the most serious of the four.
+`in kappa = catf_radial_build::elongation` resolved to an owner-local shadow
+(`...__plasma_region__elongation`) instead of the outer key its thirteen siblings reach. Masked
+entirely because both attributes hold 3.0 — a value coincidence was the only thing between this
+and a wrong number, and FD-1 filed it as a success.
+
+**First attempt, discarded — recorded because the discard is the point.** Returning `None` from
+`written_reference` when `source_path` contains `::` looked right and was wrong: `source_path`
+holds the *resolved* QN, which is `::`-qualified for a bare self-named leaf too
+(`shared_producer`'s `gain` resolves to `SharedProducer::the_rig::scaler::gain`). That guard
+silently killed the SR-A02 convergence and reverted 14 entry points across three fixtures. Caught
+by regenerating baselines and reading the diff before believing the fix.
+
+**The rule that is actually correct: exact identity beats re-anchoring.** Row 16 keys an
+owner-*relative* name under the consumer's owner. When the consumer's reference already resolves
+to a real design attribute by exact identity, the reference was scope-qualified as written, and
+re-anchoring would select a same-named local shadow. Row 16 defers; row 17 keys it by exact
+identity, which is where it resolved before Item 4.
+
+**Scoped to the calculation consumer only.** The first cut of *this* rule broke
+`test_precedence_occurrence_qn_beats_target_qn_design_attribute` — a **certified Item-2 seam**
+where row 16 deliberately beats row 17 for the constraint consumer. The rule now fires only when
+`target_qn is None`, which is the calculation consumer, the one Item 4 newly pointed at this row.
+Item 2's ratified precedence is untouched. Extending the seam, not reworking it.
+
+**Discriminating regression test, as required.** `tests/fixtures/shadowed_reference/` holds two
+same-named attributes with **different** values — outer `scale = 2.0`, inner shadow `scale = 7.0`.
+Verified genuinely discriminating by reverting the fix: **7.0 without it, 2.0 with it.** A value
+coincidence can never mask this class again.
+
+**FD-1 correction.** The third row's catf_mfe entry was *not* a convergence. Corrected:
+
+| class | count | note |
+|---|---|---|
+| pure rename | 18 | unchanged |
+| convergence (two keys → one that already existed) | 5 | unchanged |
+| convergence onto correct scope | **1** (was 2) | `fusion_tea` only — a genuine `.` chain, correctly labelled |
+| ~~catf_mfe elongation~~ | **0** | **was a regression, not a convergence. Now reverted; the key no longer exists** |
+
+Total entry-point movement is **23 across six fixtures**, not 24 across seven.
+
+**Known partial coverage, now stated alongside PC-6's brackets.** A `::`-qualified reference is
+not consumed by row 16 at all. Anchoring it at its *written* scope would need an occurrence path
+derived from a scope qualifier — the same missing derivation that leaves bracketed owners
+uncovered — and would duplicate what row 17 already does correctly. Scope: 84 `::`-qualified
+bindings across two fixtures.
+
+## F3 — DD-A03 was Fail, not Partial. **Fixed; the label was wrong and I accept that.**
+
+The "unit surface" I cited did not exist. Coverage confirmed the auditor's reading: the raise, the
+advisory branch, and the whole `_render` formatter never executed under any test.
+
+`tests/fixtures/non_finite_literal/` (a `1.0e400` overflow) plus
+`tests/conformance/test_diagnostic_screen.py` — 8 tests covering the raise, the location renderer,
+the absent-location marker, silence on no diagnostics, the advisory branch, the live route
+end-to-end, the snapshot route, and F1's ordering.
+
+**Two structural limits, stated rather than papered over.** A `non_finite_literal` diagnostic
+**cannot reach a snapshot by construction** — the facts serializer refuses non-finite floats
+(`allow_nan=False`, the D2a backstop), so the snapshot leg uses a synthesized payload, the same
+technique the envelope-gate test uses. And the **advisory branch has no reachable input**: the
+writer table has one entry, BLOCKING, and `parse` refuses a document disagreeing with it. The
+advisory test constructs the fact directly and says so in the test body. DD-A03 is now **Pass**
+for the blocking path on both routes; the advisory path is pinned but honestly labelled unreachable.
+
+## F4 — the retained string lane disagrees with the IR lane. **Justification corrected; root cause surfaced, not fixed.**
+
+The disagreement reproduces: `ModeledDefaultFidelity__Derived_Bound__limit` captures `'5.0'` (the
+AST lane folded `2.0 + 3.0`) while the IR lane returns explicitly unresolved. The 531/0/0
+measurement stands, but the auditor is right that the retention justification — "a captured string
+for which no expression IR exists" — is false. The "zero carry a sign" clause also went stale in
+the same commit: `drift` is `-0.1`. The claim that survives is that no captured string carries a
+**unit**.
+
+**Root cause, measured: 8 constraint-definition formals across 4 fixtures are captured as design
+attributes**, which is what hands two lanes the same input. Removing that double-ownership is the
+correct fix and moves entry-point identity across `shared_producer`, `plant_values`, `fusion_tea`
+and `gate_a` — a four-fixture blast radius needing its own forced-difference table. **That is not
+remediation scope, and I did not smuggle it into a remediation commit.**
+
+What was done: the docstring now states the boundary honestly (same input, two policies, one
+unconsumed), names the root cause with its blast radius, and
+`tests/conformance/test_default_lane_disagreement.py` pins the disagreement *and* pins why it is
+unobservable — so the justification cannot go stale again unnoticed. Recorded below as an open
+item. **DD-R23 is downgraded from Met to Met-with-exception.**
+
+## Evidence corrections the auditor asked for
+
+- **FD-4's seventh delta class, accounted for.** `dropped_constraints` is **582** lines, not 594.
+  The missing 12 are `source_line`/`line` shifts of exactly +2 in `shared_producer`, caused by the
+  Phase-1 header correction being net +2 lines. Folded into another row before, named now.
+  "Comment-only, no semantic change" understated it: the edit moved location metadata.
+- **The "retained v3 snapshot" is not an artifact.** No committed fixture carries
+  `"snapshot_format_version": 3`; `test_snapshot_v4_gate.py` synthesizes v3 in `tmp_path` from the
+  v4 payload. The rejection is genuinely proven, by a different mechanism than the wording implied.
+- **The merge-order failure presents as an ImportError, not the guard message.** With agentic-mbse
+  at the old pin, collection dies at `analysis/diagnostic_screen.py` with `ImportError: cannot
+  import name 'DiagnosticSeverity'` — the guard test never runs. It still fails closed and loudly,
+  so DD-R03's conclusion stands and PR #11 must precede PR #9, but the evidence should not claim
+  the operator sees the guard's message. They see an ImportError.
+- **SR-A02's bracket scope note moved inline**, next to the criterion it qualifies, following the
+  epic's model rather than sitting after the closing block.
+- **`plant_values` drifts `registry_init.py` too**, not only `computation_graph.json`.
+
+## Gates at the remediated candidate
+
+| gate | result |
+|---|---|
+| codegen suite | **3050 passed, 0 failed**, 44 skipped |
+| codegen `-O` | identical except the 2 pre-existing assert-stripped tests |
+| licence | **0** skips |
+| agentic-mbse suite | **1811 passed** (unchanged — no agentic-mbse change in remediation) |
+| mypy | 72, zero added |
+| ruff | clean |
+
+Baselines regenerated once for the F2 revert (`catf_mfe`); the portability manifest SHA repinned
+with both movements enumerated in-line.
+
+## Open items after remediation
+
+Carried from before: **bracketed-owner convergence**; the **stale-baseline class** (`plant_values`
+— both files — `constraint_inline`, `dropped_constraints` drift, plus `deep_cross_scope`); the
+**tier-1 mirror of DD-R32**.
+
+Added by this remediation:
+
+| item | status |
+|---|---|
+| **`::`-qualified references are not row-16 consumable** | deliberate, same safe-miss pattern as brackets. 84 bindings across two fixtures. Anchoring at the written scope needs the same missing derivation bracketed owners need — **one new item could close both** |
+| **Constraint-def formals captured as design attributes** | 8 across 4 fixtures; the root cause of F4's lane disagreement. Correct fix has a four-fixture blast radius and **needs its own item with a forced-difference table**. Unowned |
+| **The advisory severity leg is unreachable** | one-entry writer table. Not a defect — there is genuinely one diagnostic kind today — but DD-R09's advisory half stays unfalsifiable end-to-end until a second kind exists |
