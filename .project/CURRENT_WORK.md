@@ -6,6 +6,39 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 6 — Public Documentation and F1 Evidence Reconciliation — CERTIFIED (independent audit 2026-07-20, candidate `f917787` / TEAx `db23719`)
+
+**Audit verdict: Certify (no findings).** `.project/active/constraint-lifecycle-docs-f1/audit.md`.
+Light reconciliation item; every one of the seven requested areas reproduced first-hand.
+
+- **S1–S8** — all eight STALE corrections now make a claim that is TRUE against landed code:
+  snapshot v5 (`snapshot/__init__.py:28`), profile v4 (`_upstream_pins.py:33`), mbse floor
+  0.1.2 (`pyproject.toml:24`), root-N portable referent (doc 27 §source_file), matrix
+  REQ-SNAP-09 "current: 5". S7/S8 single-sourced from `PROFILE_SEMANTIC_VERSION`; pinning test
+  regex-hardened (`r"executable-profile/v\d"`); `grep executable-profile/v3 src docs tests` empty.
+  ("package 0.1.2" = the mbse *dependency floor*; codegen's own package is 0.1.0, correctly
+  stated unchanged.)
+- **TEAX_SIMKIT_PATH** — genuinely RED-first. Reproduced RED against the parent helper
+  (`f917787^`: "DID NOT RAISE RuntimeError"), tree restored clean; GREEN at HEAD (6 passed);
+  explicit path authoritative with no sibling fallback; unset/default unchanged; tests-only scope.
+- **F1 at d545701** — `927a9e1` is docs-only (provably lacks the F1 change); `d545701` carries
+  `pipeline_executor.py`/`evaluator.py`/tests. TEAx `db23719` corrects `audit.md:6` (1 line);
+  `design.md:9` correctly left at 927a9e1. 15-test cluster GREEN. `OUTPUT_WRITE` honest —
+  defined at `failure.py:23`, never emitted (evaluator sets only MODULE_EXECUTION/PREPARATION);
+  Item 11's obligation, recorded not reimplemented.
+- **PR drafts** — accurate against the local chain, zero release-readiness claims, correct
+  merge order (agentic-mbse #11 first — the `_upstream_pins` guard). Item 13 owns the push.
+- **"Already accurate" spot-checks** — V11 settled branch (only invoking caller of
+  `collect_uncovered_params` is the final gate `cli/__init__.py:278`) and embedded catalog
+  (no `constraint_catalog.json` in `src/`) both hold.
+- **Surfaced gaps G1/G2** — recorded as decisions with ownership (Item 4 / Item 13), not
+  instructions to future agents. Correction law honored; no "used to say X" prose.
+- **Gates** — full suite **3064 passed / 44 skipped / 0 failed** (license sourced, no bare
+  license skips); mypy **72** (baseline); no fixture/`baseline_outputs` bytes touched.
+
+Epic Item 6 heading ✅; all 4 epic success criteria and spec §6 marked. **Not checked:** ruff
+not re-run (evidence claims clean; small touched surface); the actual PR push (Item 13's).
+
 ### CONSTRAINT-LIFECYCLE Item 5 — Whole-Tree Snapshot Portability — CERTIFIED (independent audit 2026-07-20, candidate `4c6223c`)
 
 **Audit verdict: Certify (three non-blocking notes).** `.project/active/constraint-lifecycle-portability/audit.md`.

@@ -526,7 +526,7 @@ byte, including admitted anonymous identity and calculation docstrings.
 
 ---
 
-### Item 6: Public Documentation and F1 Evidence Reconciliation
+### Item 6: Public Documentation and F1 Evidence Reconciliation ✅
 
 **Register rows**: 6–7
 **Type**: Testing/Validation + Documentation
@@ -551,10 +551,10 @@ reimplementing already-landed normalization.
 - Final PR update/push, owned by the authorized release workflow after Item 13.
 
 **Success Criteria**:
-- [ ] Every correction-register claim agrees with landed code and versions.
-- [ ] F1 evidence names the correct commit and compares exact report content.
-- [ ] Invalid explicit simkit path never falls through.
-- [ ] Stale documentation helpers and duplicate version literals are removed where superseded.
+- [x] Every correction-register claim agrees with landed code and versions.
+- [x] F1 evidence names the correct commit and compares exact report content.
+- [x] Invalid explicit simkit path never falls through.
+- [x] Stale documentation helpers and duplicate version literals are removed where superseded.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-docs-f1/spec.md`
