@@ -24,7 +24,7 @@ the delivery path authorized for each repository.
 **Critical Success Factor**: [INHERITED: ratified lifecycle contract] One commit-pinned compatible
 revision set passes all 41 mandatory acceptance cases through public live and relocated-snapshot
 routes, using the same sealed artifact thread through load, evaluation, persistence, IFE, and
-stellarator, while the touched production surface ends with fewer lines of code overall.
+stellarator, while superseded authorities, routes, bridges, and workarounds are removed.
 
 ## Current Execution Status — 2026-07-19
 
@@ -152,8 +152,7 @@ of creating an artifact pipeline per item.
       final compatible commits, accurate descriptions, and evidence. PR #11 remains first in the
       merge order, and no replacement upstream PR is opened for this remediation.
 - [ ] [OWNER] The remediation strives for simpler code, judged qualitatively: superseded paths
-      are deleted rather than shimmed, and no numeric LOC gate applies (owner amendment,
-      2026-07-19 — see Simplification and Deletion Mandate).
+      are deleted rather than shimmed and no parallel authority or route replaces them.
 - [ ] Public docs, package/profile/runtime versions, PR descriptions, and evidence reports describe
       the landed candidate without stale or present-tense overclaims.
 
@@ -161,13 +160,12 @@ of creating an artifact pipeline per item.
 
 ## Simplification and Deletion Mandate
 
-**[OWNER-VERBATIM], 2026-07-19 (amendment, ruling on Item 1's OD-R43 overrun):** “honestly I do
-not give a fuck about LOC any more. what a mistake that was. I just want you agents to strive
-for simpler code.”
+**[OWNER-VERBATIM], 2026-07-19:** “do not mess with item 1. it is already in flight. no saving it
+now. but please for the love of god get rid of all the fucking LOC bullshit on ALL OTHER ITEMS.”
 
-This amendment retires every numeric LOC gate, baseline, per-file cap, counting obligation, and
-LOC-deviation review in this epic and its item artifacts. Simplicity remains an execution rule,
-judged qualitatively by review:
+For Items 2–13, this amendment retires every numeric LOC gate, baseline, per-file cap, counting
+obligation, and code-growth deviation review. Item 1 is already in flight and its artifacts are
+untouched. Simplicity for Items 2–13 remains an execution rule, judged qualitatively by review:
 
 1. Prefer one shared mechanism and deletion of superseded paths over another guard, adapter, or
    compatibility shim. Name expected deletions before design and delete what a change obsoletes.
@@ -261,7 +259,6 @@ set on which every later evidence coordinate is based.
 4. Reconcile the current agentic-mbse branch with the PR #11 remote tip without dropping either
    committed line; then establish the compatible sysml-codegen PR #9 candidate.
 5. Record exact commits, locks, dirty-state policy, and PR-wave merge order.
-6. Establish the production LOC baseline used by every later item.
 
 **Out of Scope**:
 - Certifying any acceptance cell or claiming release readiness.
@@ -306,10 +303,10 @@ one deterministic demand identity.
 - Whole-tree location portability, owned by Item 5.
 
 **Success Criteria**:
-- [ ] Anonymous actual, shared demand, recursive, finite, and distinct-override live cases pass.
-- [ ] Unsupported owners never reach package fallback; no valid replay is mislabeled corrupt.
-- [ ] Counts, ordering, warnings, grouping, and retained producer are deterministic with no overwrite.
-- [ ] Production LOC accounting names removed duplicate/nullable paths and any increase.
+- [x] Anonymous actual, shared demand, recursive, finite, and distinct-override live cases pass. (Item 1 evidence.md §2-§3, candidate 28bc8b0.)
+- [x] Unsupported owners never reach package fallback; no valid replay is mislabeled corrupt. (Explicit part_def/calc_def/package dispatch with no default arm; R-4 replay GREEN. Item 1 evidence.md §2.)
+- [x] Counts, ordering, warnings, grouping, and retained producer are deterministic with no overwrite. (One logical operation per target; last-write-wins synthesis deleted. Item 1 evidence.md §2, §4.)
+- [~] Production LOC accounting names removed duplicate/nullable paths and any increase. **Retired by owner ruling 2026-07-19 (commit a1435e1)**; deletions and the +266 net are recorded informationally in Item 1 evidence.md §1, not as a gate.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-occurrence-demand/spec.md`
@@ -351,7 +348,7 @@ passthrough calculations.
 - [ ] Unresolved or ambiguous constraint actuals fail contextually; lenient calc behavior never
       becomes an ambiguous first-pick or leaf-name guess.
 - [ ] Resolver precedence, source form, live/snapshot parity, and typed entry-point identity pass.
-- [ ] Old ladders and their duplicate tests/helpers are deleted; production LOC is materially lower.
+- [ ] Old ladders and their duplicate tests/helpers are deleted; no parallel resolver remains.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-shared-resolution/spec.md`
@@ -388,7 +385,7 @@ only the coverage check the constructed evidence proves necessary.
 - [ ] The constructed case settles the vacuity question with kept evidence.
 - [ ] Unrelated pre-existing V11 never blocks extension; final generation remains whole-graph strict.
 - [ ] Strict actual resolution and dangling-channel rejection remain unchanged.
-- [ ] Any vacuous call/helper is deleted, and production LOC accounting records the simplification.
+- [ ] Any vacuous call/helper is deleted; no replacement wrapper preserves the dead path.
 
 **Required Reading**:
 - Both Gate B reports listed in Source Documents.
@@ -429,7 +426,7 @@ without letting warning rendering hide a later halt.
 - [ ] Severity/code round-trip and both consumer sinks pass with fail-closed skew.
 - [ ] Warning preparation cannot replace the actionable `BLOCK` diagnostic.
 - [ ] Signed/unit defaults survive; unsupported default IR fails or remains explicitly unresolved.
-- [ ] Production LOC accounting identifies consolidation and any schema-driven additive exception.
+- [ ] Diagnostic/default parsing is consolidated without a second representation or compatibility shim.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-diagnostics-defaults/spec.md`
@@ -466,7 +463,7 @@ byte, including admitted anonymous identity and calculation docstrings.
 - [ ] No checkout-absolute bytes occur anywhere in the generated tree or semantic artifacts.
 - [ ] Same semantic input at two checkout roots produces byte-identical output and identity.
 - [ ] Anonymous admitted/excluded and calculation-bearing fixtures pass both public routes.
-- [ ] Obsolete path-normalization branches are consolidated/deleted and LOC is recorded.
+- [ ] Obsolete path-normalization branches are consolidated/deleted; no same-machine workaround remains.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-portability/spec.md`
@@ -504,7 +501,7 @@ reimplementing already-landed normalization.
 - [ ] Every correction-register claim agrees with landed code and versions.
 - [ ] F1 evidence names the correct commit and compares exact report content.
 - [ ] Invalid explicit simkit path never falls through.
-- [ ] Documentation/helper cleanup and production LOC impact are recorded separately.
+- [ ] Stale documentation helpers and duplicate version literals are removed where superseded.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-docs-f1/spec.md`
@@ -542,7 +539,7 @@ launder foreign files into generated provenance.
 - [ ] Verifier/runtime-contract skew fails closed in both directions.
 - [ ] Re-sealing cannot classify an arbitrary foreign file as codegen-produced.
 - [ ] Existing seal→verify regular-file and symlink guarantees remain green.
-- [ ] Production LOC accounting shows the single-source/consolidation result.
+- [ ] Verification and provenance have one authoritative implementation with no duplicate bypass.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-package-trust/spec.md`
@@ -583,8 +580,8 @@ TEAx/store identity to real semantic/catalog/executable fingerprints.
 - [ ] TEAx uses no alternate schema or reconstruction path and consumes codegen's real identity.
 - [ ] Store migration proves equivalence or old stores remain explicitly archived; no silent rebind.
 - [ ] Catalog/schema skew fails closed before semantic use.
-- [ ] Additive codegen schema LOC and larger cross-repo deletions are reported separately; the item
-      removes the named alternate system.
+- [ ] The named alternate catalog/materializer/fixture/stand-in system is removed; the embedded
+      model-contract catalog is the sole authority.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-catalog-store/spec.md`
@@ -619,7 +616,7 @@ generated entry channels without a consumer wrapper.
 - [ ] Zero/one/multiple mappings validate completely and no unrelated channel is omitted.
 - [ ] Candidate overrides change only selected typed fields.
 - [ ] Stock TEAx replaces the fusion wrapper through public APIs.
-- [ ] Single-entry duplicate paths are consolidated/deleted and LOC is recorded.
+- [ ] Single-entry duplicate paths are consolidated/deleted; stock TEAx owns the public route.
 
 **Deliverables**:
 - `../teax/.project/active/constraint-lifecycle-multi-entry/spec.md`
@@ -649,7 +646,7 @@ of V11, then represent the stellarator capital rollup in the ordinary graph.
 4. Amend WI-027 D7 to point at the later owner decision and remove all passthrough calculations.
 5. Remove the stellarator private bridge/placeholders and generate publicly with unchanged ordinary
    numerics.
-6. Delete now-obsolete aggregation/resolver workarounds and record their LOC effect.
+6. Delete now-obsolete aggregation/resolver workarounds; do not retain a compatibility wrapper.
 
 **Out of Scope**:
 - Public late fill or a permanent model placeholder.
@@ -661,7 +658,7 @@ of V11, then represent the stellarator capital rollup in the ordinary graph.
 - [ ] WI-027 contains the supersession pointer; D7 passthroughs and private bridge/mutation are gone.
 - [ ] Public generation builds a fully representable stellarator graph with unchanged ordinary
       numerical anchors.
-- [ ] Production LOC accounting names deleted workarounds and any required representation growth.
+- [ ] Named aggregation/resolver workarounds are deleted and no parallel producer mechanism remains.
 
 **Required Reading**:
 - Ratified D-1/D-2 and invariants 19–26.
@@ -710,7 +707,7 @@ prepared and file-backed evaluators, remain immutable, and persist/query without
 - [ ] Nested mutation attempts cannot change authoritative or persisted evidence.
 - [ ] Exact reports persist/harvest for every completed status and remain compatibility-bound.
 - [ ] Phase/module/cause/report parity uses fixture-pinned expected phases.
-- [ ] Production LOC accounting records deleted adapters/duplicate reads and any persistence growth.
+- [ ] Duplicate report adapters and unconditional reads are deleted; one durability mechanism remains.
 
 **Deliverables**:
 - `../teax/.project/active/constraint-lifecycle-evidence-durability/spec.md`
@@ -748,7 +745,7 @@ cross-version correlation story real or delete it.
 - [ ] Legacy inspection cannot execute or produce a certifying package.
 - [ ] `tracking_key` is fully implemented/cataloged or absent with documentation corrected.
 - [ ] Resume/query mismatch behavior remains fail-closed or starts explicit new lineage.
-- [ ] The rejected legacy/identity path is deleted and production LOC is recorded.
+- [ ] The rejected legacy/identity path is deleted rather than hidden behind another default route.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-legacy-identity/spec.md`
@@ -778,8 +775,8 @@ public, sealed artifact thread.
    placeholder, mutation, alternate catalog, or consumer wrapper.
 5. Run focused/optimized, compatible full suites, lint/format/type baselines, fixture diff review,
    and licensed live routes at the final revisions.
-6. Confirm superseded paths named by Items 1–12 are deleted, not shimmed (qualitative
-   simplicity review; no LOC accounting — owner amendment, 2026-07-19).
+6. Confirm superseded paths named by Items 1–12 are deleted, not shimmed, and no parallel authority
+   or route replaces them.
 7. Produce the release-readiness report and only then update existing agentic-mbse PR #11 first and
    sysml-codegen PR #9 second with the final commits, accurate descriptions, and evidence. Do not
    open replacement upstream PRs for this remediation.
@@ -798,8 +795,8 @@ public, sealed artifact thread.
       external state.
 - [ ] Existing PR #11 and PR #9 point at the certified commits and accurately state the final
       lifecycle scope, evidence, remaining external state, and required merge order.
-- [ ] Superseded paths named by Items 1–12 are verified deleted; simplicity is judged by review,
-      with no numeric LOC criterion (owner amendment, 2026-07-19).
+- [ ] Superseded paths named by Items 1–12 are verified deleted with no replacement shim or
+      duplicate authority.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-composed-proof/spec.md`
@@ -856,7 +853,7 @@ ordered, and all implementation lands in the same constraint PR unit.
 | Risk | Impact | Mitigation |
 |---|---|---|
 | A later item certifies on a different revision or around an open predecessor | High | LC-I09 coordinate records commits, artifact identity, and open predecessor rows; Item 13 rejects mixed-revision evidence. |
-| Simplification becomes another layer of guards/adapters | High | Per-item deletion plan and production LOC baseline/closeout are mandatory; net growth requires owner review. |
+| Simplification becomes another layer of guards/adapters | High | Review named superseded paths for absence and reject any new parallel authority, route, or compatibility shim. |
 | Catalog schema growth hides an overall expansion | High | Book Item 8 schema additions separately and require deletion of alternate schema/materializer/fixture/stand-in machinery. |
 | Resolver consolidation changes precedence or invents values | High | Drive exact-QN and ambiguous/defaulted counterexamples first; strictness changes only terminal miss. |
 | Gate B implements a differential check that can never fire | High | Item 3 proves/refutes extension-created V11 before implementation; delete the call if vacuous. |
@@ -909,5 +906,4 @@ certification critical path remains ordered.
 ---
 
 **Last Updated**: 2026-07-19
-**Next Action**: Begin Item 0. Establish the committed compatible candidate and production LOC
-baseline before certifying any lifecycle acceptance cell.
+**Next Action**: Complete Item 1, then begin Item 2 from the compatible candidate pin.

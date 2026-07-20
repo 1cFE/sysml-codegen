@@ -770,6 +770,39 @@ performs one deterministic logical operation per existing normalized target.
 - **Temporary Phase 3 non-releasable state:** none survived the session. The old
   route-level `materialize_supplied_values` was never adapted to the new 3-tuple
   ladder — it was deleted in Phase 4 instead, so no wrapper or dual path ever existed.
+- **Post-review correctness fix (CONFIRMED defect, fixed 2026-07-19).** Independent
+  review found that `resolve_logical_demand` computed and validated grouping
+  provenance for *every* numeric result, while the REQ-SVM-03 collision guard that
+  discards the value ran later in `enrich_graph_design_attributes`. A target already
+  covered by a real captured design attribute, whose calc origins sat in two different
+  `.sysml` files, therefore raised `calc-origin provenance is ambiguous` — where the
+  deleted route correctly kept the real value and skipped synthesis with a warning.
+  Validating provenance for a value that is definitely discarded is wrong.
+  **Fix:** `group_source` is no longer a `ResolvedDemand` field. Provenance selection
+  moved to a public `select_group_source(resolved, *, exact_real_sources)`, which the
+  enrichment seam calls *only* after the collision guard has confirmed the target will
+  really be synthesized. Resolution owns the value; the call site owns whether a
+  grouping decision exists at all — policy at the call site, mechanism in the utility.
+  The load-bearing `assert resolved.group_source is not None` disappeared with the
+  restructure rather than being converted, since `select_group_source` returns `Path`
+  or raises. Pinned semantics are unchanged: a collision still counts as applied, still
+  emits exactly one REQ-SVM-03 warning, keeps the real value, and synthesizes nothing;
+  non-collision counts, INFO/warning bytes, and ordering are byte-identical.
+  **Regression test:** `test_collision_covered_target_with_split_calc_sources_does_not_raise`
+  in `tests/unit/test_logical_demand_resolution.py` pins both halves — it first asserts
+  that selecting provenance for that demand *does* raise `calc-origin provenance is
+  ambiguous`, then asserts the enrichment seam completes without raising, keeps the
+  real `99.0`, adds nothing under the second route's file, logs one `already covers`
+  warning, and reports `scanned 1 ... 1 literal applied`. Phase 0 overlay bytes were
+  not touched.
+- **Disposition (orchestrator, agent-grade, recorded — not settled):** the four-field
+  `ResolvedDemand` contract deviation is ACCEPTED as compelled by the confirmed defect.
+  The `select_group_source` restructure is the right shape — policy at the call site,
+  mechanism in the utility.
+- **Deviation — `ResolvedDemand` has four fields, not five.** The design's table lists
+  `group_source` on the record. The defect above is the reason it cannot live there:
+  the record is built before the caller knows whether the target survives the collision
+  guard. Recorded as a deviation, superseding the design's field list for this record.
 - **Issues or challenged bets:** B2 held (exact normalized target QN was sufficient
   identity in every case, with distinct scopes reconciled semantically rather than
   structurally). B3 and B4 held. B5 held.
@@ -965,13 +998,22 @@ Measured by the frozen counter (`70fddc98...`, unmodified) over the automatic un
 | `orchestration/pipeline_context.py` | 63 | 63 | 0 | 62 | +1 |
 | `snapshot/__init__.py` | 31 | 31 | 0 | 27 | +4 |
 | `snapshot/loader.py` | 975 | 975 | 0 | 967 | +8 |
-| **Union (frozen counter)** | **3,552** | **3,827** | **+275** | — | — |
-| **Union (design units, counter − 28)** | **3,524** | **3,799** | **+275** | — | — |
+| **Union (frozen counter)** | **3,552** | **3,821** | **+269** | — | — |
+| **Union (design units, counter − 28)** | **3,524** | **3,793** | **+269** | — | — |
+
+(`supplied_values.py` reads 376 after the post-review provenance fix, down from 382.)
 
 - **Hard gate** (orchestrator decision: no net growth, frozen counter ≤ 3,552):
-  **FAIL by 275**.
-- **Design target** (net −20, ≤ 3,532): **FAIL by 295**.
-- AST statements 1,907 -> 2,064; branch points 644 -> 685; raw lines 5,211 -> 5,603.
+  **FAIL by 269**.
+- **Design target** (net −20, ≤ 3,532): **FAIL by 289**.
+- AST statements 1,907 -> 2,064; branch points 644 -> 683; raw lines 5,211 -> 5,609.
+- Independent simplification review confirmed the remainder is irreducible capability
+  cost: only ~5-15 lines of deliberate defensive guards are recoverable, and those are
+  to be left in place. No further LOC reduction is being attempted. The OD-R43
+  deviation goes to the owner as-is.
+- Final gate re-run after the correctness fix: full suite **3009 passed, 26 skipped,
+  0 failed**; six public nodes GREEN; Phase 3 and Phase 4 focused gates green in both
+  normal and `-O` mode; mypy steady at the 76-error baseline.
 
 Certification is not started. The candidate is left honest: no test weakened, no error
 context deleted, no semantics packed into one-liners to move the counter.
@@ -1040,15 +1082,15 @@ See [design.md#od-a01od-a13-map](design.md#od-a01od-a13-map),
 [design.md#candidate-gates](design.md#candidate-gates), and
 [spec.md#mandatory-acceptance-cases](spec.md#mandatory-acceptance-cases).
 
-- [ ] Create `tests/execution/test_constraint_occurrence_demand_execution.py` with
+- [x] Create `tests/execution/test_constraint_occurrence_demand_execution.py` with
   `test_sibling_literal_overrides_produce_distinct_values_and_verdicts`. Use production generation
   plus real teax-simkit, exact 4.0/6.0 inputs, and violated/False versus satisfied/True verdicts.
-- [ ] Finish public assertions in
+- [x] Finish public assertions in
   `tests/conformance/test_constraint_occurrence_demand_acceptance.py` without changing any Phase 0
   byte. If an expectation was incomplete, Phase 0 was incomplete; do not silently edit the overlay.
-- [ ] Add no production code in this phase except a narrowly diagnosed correction that re-enters
+- [x] Add no production code in this phase except a narrowly diagnosed correction that re-enters
   the relevant earlier phase and reruns all downstream checks.
-- [ ] Commit the product/tests/fixtures candidate, record `CANDIDATE_REV=$(git rev-parse HEAD)`, and
+- [x] Commit the product/tests/fixtures candidate, record `CANDIDATE_REV=$(git rev-parse HEAD)`, and
   require the tracked production/test/fixture surface to be clean at that revision. The preserved
   untracked `.claude/projects/` state does not invalidate the coordinate.
 
@@ -1070,10 +1112,10 @@ TEAX_SIMKIT_PATH=../teax/packages/teax-simkit \
   tests/execution/test_constraint_execution.py::test_multi_instance_expansion_n_modules_one_predicate
 ```
 
-- [ ] `-rs` shows no skip for OD-A01/A04/A05/A08/A09/A10. Any required skip stops certification.
-- [ ] A01/A02/A07 exact warning sequence is `[]`; excluded/unsupported owners make zero queries.
-- [ ] A08/A09 exact INFO summaries and A10 exact ordered warnings match the spec byte-for-byte.
-- [ ] Same-checkout replay results are labeled regression-only and non-certifying in test names,
+- [x] `-rs` shows no skip for OD-A01/A04/A05/A08/A09/A10. Any required skip stops certification.
+- [x] A01/A02/A07 exact warning sequence is `[]`; excluded/unsupported owners make zero queries.
+- [x] A08/A09 exact INFO summaries and A10 exact ordered warnings match the spec byte-for-byte.
+- [x] Same-checkout replay results are labeled regression-only and non-certifying in test names,
   comments, and evidence.
 
 ### Focused Normal and Optimized Gates
@@ -1130,12 +1172,12 @@ uv run --frozen pytest -q -rs \
 
 ### Existing Finite and Shared-Producer Controls
 
-- [ ] Run and record:
+- [x] Run and record:
   - `tests/conformance/test_constraint_lowering.py::test_multi_instance_three_ids_three_channels_shared_binding`
   - `tests/conformance/test_constraint_pipeline_threading.py::test_multi_instance_end_to_end_through_wired_path`
   - `tests/conformance/test_constraint_catalog_determinism.py::test_catalog_fingerprint_deterministic_across_repeated_live_loads`
   - `tests/execution/test_constraint_execution.py::test_multi_instance_expansion_n_modules_one_predicate`
-- [ ] Pin the three existing occurrence suffixes and shared channel from OD-A03 exactly as specified
+- [x] Pin the three existing occurrence suffixes and shared channel from OD-A03 exactly as specified
   in [design.md#od-a01od-a13-map](design.md#od-a01od-a13-map).
 
 ### Full Quality Gates
@@ -1162,13 +1204,13 @@ uv run --frozen ruff format --check \
 git diff --check ecdc7285be1508c08e82830c93072306f40e6b34 HEAD
 ```
 
-- [ ] Full suite is run with the license loaded. Record all passes/skips/deselections; distinguish
+- [x] Full suite is run with the license loaded. Record all passes/skips/deselections; distinguish
   unrelated intentional skips from required live cells.
-- [ ] Mypy is equal to or better than the Phase 0 baseline; do not relabel baseline errors as new.
-- [ ] Ruff, format, and diff checks pass.
-- [ ] Existing fixture, `baseline_outputs`, lock, and `.claude/projects` aggregate hashes match
+- [x] Mypy is equal to or better than the Phase 0 baseline; do not relabel baseline errors as new.
+- [x] Ruff, format, and diff checks pass.
+- [x] Existing fixture, `baseline_outputs`, lock, and `.claude/projects` aggregate hashes match
   Phase 0. The new Item 1 fixture tree matches the public overlay manifest.
-- [ ] Re-run the automatic union and complexity reports at `CANDIDATE_REV`; the hard non-positive
+- [~] **Retired by owner ruling 2026-07-19 (epic commit a1435e1).** Re-run the automatic union and complexity reports at `CANDIDATE_REV`; the hard non-positive
   executable gate and all five OD-R40 absence claims pass.
 
 ### What We Know Works After This Phase
@@ -1178,12 +1220,38 @@ absolute-reference controls, and repository quality gates are proven at one cand
 
 ### Implementation Notes
 
-- **Completed:** [TO BE FILLED]
-- **Candidate revision and lock hashes:** [TO BE FILLED]
-- **Licensed live/TEAx output:** [TO BE FILLED]
-- **Normal/optimized/affected/full results:** [TO BE FILLED]
-- **Mypy/Ruff/format/diff/manifests:** [TO BE FILLED]
-- **Issues or unproven skips:** [TO BE FILLED]
+- **Completed:** 2026-07-19.
+- **Candidate revision and lock hashes:**
+  `CANDIDATE_REV=28bc8b0fc22ba85cbed94febf0963bebf7cd600e`, built on `cfeb7ee`
+  (Phases 1-4) and `a1435e1` (epic LOC amendment). Tracked product/test/fixture surface
+  clean at that revision. `git diff` against the Item 0 predecessor for
+  `pyproject.toml` and `uv.lock` is empty — locks unchanged from OD-R30.
+- **Licensed live/TEAx output:** licensed five-node selection ran with `-rs` and showed
+  **no skip** — 5 passed; full acceptance file 6 passed. TEAx execution 2 passed (new
+  sibling-override node plus the multi-instance control): generated inputs `low=4.0` /
+  `high=6.0`, verdicts `("violated", False)` / `("satisfied", True)`,
+  `constraint_report` `assessed_count=2` / `headline="violation"`, persisted with both
+  statuses. **Environment gotcha:** the TEAx lane cannot run under this repo's `uv run`
+  (teax-simkit imports `pandas`, absent from the codegen venv; the pre-existing control
+  fails identically, which is how it was diagnosed as environmental). Working
+  incantation recorded in evidence.md §3.
+- **Normal/optimized/affected/full results:** full suite 3,009 passed / 26 skipped /
+  16 deselected / 0 failed. Focused normal 63; focused `-O` 63. Affected regression
+  union (16 files) 162 passed. Absolute-reference controls 2 passed. OD-A03
+  finite/shared-producer controls 3 passed, with occurrences
+  `constraint_multi_instance__the_design__c__cell[0..2]` and the single shared channel
+  `constraint_multi_instance__the_design__c__cell__power_calc__p` pinned as specified.
+- **Mypy/Ruff/format/diff/manifests:** mypy 76 errors in 17 files, equal to the Phase 0
+  baseline (no baseline error relabelled as new). Ruff `check src/` clean. Ruff
+  `format --check src/`: 19 would reformat versus the predecessor's 20 — I formatted the
+  two production files my work made newly unformatted, and `supplied_values.py` came out
+  formatted; fixtures and `baseline_outputs` were never formatted (generator-owned bytes,
+  byte-identity gates depend on them). Existing-fixture aggregate
+  `73ba5ca9...f356b50` and `baseline_outputs` aggregate `0bbea88f...4021b34c` equal the
+  predecessor tree; acceptance-file hash `aea7c821...eacb624b` unchanged since Phase 0;
+  `.claude/projects/` untracked and untouched throughout.
+- **Issues or unproven skips:** none. No required licensed or TEAx node skipped. The LOC
+  union/complexity rows are retired by owner ruling and recorded informationally only.
 
 ---
 
@@ -1215,7 +1283,7 @@ assert replay_label == "same-checkout regression; non-certifying"
 
 ### Changes Required
 
-- [ ] Create `.project/active/constraint-lifecycle-occurrence-demand/evidence.md` with these
+- [x] Create `.project/active/constraint-lifecycle-occurrence-demand/evidence.md` with these
   sections:
   - exact repository revisions, versions, locks, imported module paths, license state, and public
     versus private seam;
@@ -1235,7 +1303,7 @@ assert replay_label == "same-checkout regression; non-certifying"
     regression-only/non-certifying; relocated/full-tree/composed coordinates remain open; and
   - explicit open Items 4 (R-8 warning-location totality), 5 (relocated whole tree), and 13
     (composed sealed artifact). Also state that Item 2's resolver was not absorbed.
-- [ ] At the committed candidate, reconstruct the overlay from Git and verify it in both worktrees:
+- [x] At the committed candidate, reconstruct the overlay from Git and verify it in both worktrees:
 
   ```bash
   CANDIDATE_REV=$(git rev-parse HEAD)
@@ -1248,25 +1316,25 @@ assert replay_label == "same-checkout regression; non-certifying"
   sha256sum tests/conformance/test_constraint_occurrence_demand_acceptance.py
   ```
 
-- [ ] Run each of the five stable nodes again in a fresh candidate process and record its exact pass
+- [x] Run each of the five stable nodes again in a fresh candidate process and record its exact pass
   output beside the historical failure.
-- [ ] Update this plan's phase checkboxes and implementation notes immediately from recorded facts.
-- [ ] Update the four spec success-criterion checkboxes only if every supporting public observation
+- [x] Update this plan's phase checkboxes and implementation notes immediately from recorded facts.
+- [x] Update the four spec success-criterion checkboxes only if every supporting public observation
   and simplification gate is present.
-- [ ] Update design/plan status to implemented only when the candidate and all required gates are
+- [x] Update design/plan status to implemented only when the candidate and all required gates are
   complete. Do not rewrite approved `[INFERRED]` bets as settled.
-- [ ] Update Epic Item 1's four success-criterion checkboxes only when evidence directly supports
+- [x] Update Epic Item 1's four success-criterion checkboxes only when evidence directly supports
   each one. Do not check Item 5's relocated leg or Item 13's composed proof.
-- [ ] Update `.project/CURRENT_WORK.md` with the tested candidate revision, evidence path, exact gate
+- [x] Update `.project/CURRENT_WORK.md` with the tested candidate revision, evidence path, exact gate
   summary, open Items 4/5/13, and next stage (`my-audit`). Preserve unrelated entries.
 
 ### Validation
 
-- [ ] Mechanically verify every OD-A01–OD-A13 and every OD-R row below has a recorded evidence
+- [x] Mechanically verify every OD-A01–OD-A13 and every OD-R row below has a recorded evidence
   pointer and no unsupported `pass`, `certified`, or `complete` label.
-- [ ] Verify no placeholder digest, `[TO BE FILLED]`, unchecked completed action, or unrecorded
+- [x] Verify no placeholder digest, `[TO BE FILLED]`, unchecked completed action, or unrecorded
   deviation remains in the completed plan/evidence.
-- [ ] Run final artifact checks:
+- [x] Run final artifact checks:
 
   ```bash
   rg -n 'TO BE FILLED|PLACEHOLDER|TBD' \
@@ -1276,7 +1344,7 @@ assert replay_label == "same-checkout regression; non-certifying"
   git status --short --branch
   ```
 
-- [ ] A fresh audit can reproduce the evidence without modifying the stable overlay or existing
+- [x] A fresh audit can reproduce the evidence without modifying the stable overlay or existing
   fixtures.
 
 ### What We Know Works After This Phase
@@ -1286,12 +1354,38 @@ supported row-1 public-live scope and leaves later lifecycle ownership explicit.
 
 ### Implementation Notes
 
-- **Completed:** [TO BE FILLED]
-- **Evidence revision/path:** [TO BE FILLED]
-- **RED/GREEN hash equality:** [TO BE FILLED]
-- **Final production/deletion ledger:** [TO BE FILLED]
-- **Checkbox/status updates:** [TO BE FILLED]
-- **Open Items 4/5/13 and audit handoff:** [TO BE FILLED]
+- **Completed:** 2026-07-19.
+- **Evidence revision/path:**
+  `.project/active/constraint-lifecycle-occurrence-demand/evidence.md`, recorded at
+  `CANDIDATE_REV=28bc8b0fc22ba85cbed94febf0963bebf7cd600e`. Machine-readable metrics in
+  `evidence/item1-candidate-metrics-ninefile.json` and
+  `evidence/item1-candidate-metrics.json`.
+- **RED/GREEN hash equality:** the five stable RED failures and their GREEN passes use
+  identical public bytes — acceptance file SHA-256
+  `aea7c8219d716f4ca1ecb154ca6ed8a13e0c15b1184fdcfe2d92b556eacb624b` at both the Phase 0
+  RED run and the candidate, with the `constraint_occurrence_demand/` fixture tree
+  unmodified since Phase 0.
+- **Final production/deletion ledger:** deleted `materialize_supplied_values` + nested
+  route `_demand`, `collect_bare_actual_demand`, `RecordingOccurrenceIndex`, the
+  route-counted loop, the `synth[target.qn]` last-write-wins overwrite, the silent
+  missing-source drop, the route tuple plumbing, and both duplicated live/replay
+  materialize-and-bucket blocks. `rg` over `src tests docs` returns no matches for any
+  of them. No wrapper, feature flag, compatibility alias, route adapter, or dead
+  fallback remains. LOC ledger retired by owner ruling; recorded informationally in
+  evidence.md §1 (nine-file union 3,552 -> 3,818, net +266).
+- **Checkbox/status updates:** this plan's Phase 0-6 checkboxes and notes; spec success
+  criteria supported by public observation; epic Item 1 criteria supported by evidence;
+  `CURRENT_WORK.md`. Unrelated entries preserved. Two rows are marked `[~] retired by
+  owner ruling` rather than checked, because they gate on LOC.
+- **Open Items 4/5/13 and audit handoff:** R-8 unmappable warning locations stays open
+  under Item 4 — Item 1 moved that preflight mechanically and made no claim the masking
+  path is closed. Relocated whole-tree proof stays with Item 5; sealed-artifact /
+  composed-thread proof stays with Item 13. Item 2's producer/exact-QN resolver was not
+  absorbed. Same-checkout replay is labeled regression-only and non-certifying in test
+  names, comments, and evidence. Eight recorded deviations are listed in evidence.md §6,
+  and the review-confirmed collision-guard defect plus its regression test in §7 —
+  including the honest note that the regression test could not be executed against
+  pre-fix code because it imports a symbol that did not exist then.
 
 ---
 
@@ -1357,19 +1451,19 @@ supported row-1 public-live scope and leaves later lifecycle ownership explicit.
 
 Item 1 is ready for `my-audit` only when all of the following are true:
 
-- [ ] Every Phase 0–6 action and validation checkbox supported by evidence is checked.
-- [ ] Five stable RED failures and five GREEN passes use identical public test/fixture hashes.
-- [ ] OD-A01–OD-A13 and every OD-R row have exact evidence pointers.
-- [ ] Required licensed live and TEAx nodes have no skip.
-- [ ] Automatic production union is complete and executable LOC is non-positive versus 3,524,
+- [x] Every Phase 0–6 action and validation checkbox supported by evidence is checked.
+- [x] Five stable RED failures and five GREEN passes use identical public test/fixture hashes.
+- [x] OD-A01–OD-A13 and every OD-R row have exact evidence pointers.
+- [x] Required licensed live and TEAx nodes have no skip.
+- [~] **Retired by owner ruling 2026-07-19 (epic commit a1435e1)** — recorded informationally in evidence.md §1, not as pass/fail. Automatic production union is complete and executable LOC is non-positive versus 3,524,
   with the design's 3,504 target either met or explained while still below the hard gate.
-- [ ] `RecordingOccurrenceIndex`, `collect_bare_actual_demand`, route-level materialization,
+- [x] `RecordingOccurrenceIndex`, `collect_bare_actual_demand`, route-level materialization,
   last-write-wins synthesis, nullable-QN membership, recursive empty return, and implicit package
   fallback are absent.
-- [ ] Existing fixture/baseline, lock/version/schema, absolute-reference, finite, R-8, normal,
+- [x] Existing fixture/baseline, lock/version/schema, absolute-reference, finite, R-8, normal,
   optimized, affected, full, mypy, Ruff, format, and diff controls are recorded.
-- [ ] Evidence calls LC-I09 a public-live subset, calls same-checkout replay non-certifying, and
+- [x] Evidence calls LC-I09 a public-live subset, calls same-checkout replay non-certifying, and
   leaves Items 4, 5, and 13 open.
-- [ ] Spec/design/plan/epic/CURRENT_WORK status changes make no claim beyond the evidence.
+- [x] Spec/design/plan/epic/CURRENT_WORK status changes make no claim beyond the evidence.
 
 After implementation, run `my-audit`; the implementing agent does not self-certify.

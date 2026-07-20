@@ -6,6 +6,39 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 1 — IMPLEMENTED AND CERTIFIED FOR ITS SCOPE (2026-07-19)
+
+**Candidate revision `28bc8b0fc22ba85cbed94febf0963bebf7cd600e`.** Evidence:
+`.project/active/constraint-lifecycle-occurrence-demand/evidence.md`.
+
+All six public acceptance nodes are GREEN on the unchanged Phase 0 overlay (acceptance-file
+SHA-256 `aea7c821...eacb624b`), closing R-4, R-5, and R-7. Full suite **3,009 passed, 26
+skipped, 0 failed**; focused normal and `-O` gates 63 each; affected regression union 162;
+TEAx execution 2 passed with sibling overrides producing 4.0/6.0 and violated/satisfied
+verdicts. Mypy holds at the 76-error baseline; Ruff clean; locks, snapshot v3, profile v4,
+and every existing fixture/baseline byte unchanged.
+
+What landed: verified usage/decision association replacing nullable-QN membership; one
+all-or-nothing prepared batch owning every occurrence query and its transcript; explicit
+part_def/calc_def/package dispatch with no default arm; structured `RecursiveContainmentError`
+with per-path cycle detection; and one logical demand per normalized target with
+post-resolution provenance. Deleted with no wrapper, flag, alias, or dead fallback:
+`materialize_supplied_values` + nested route `_demand`, `collect_bare_actual_demand`,
+`RecordingOccurrenceIndex`, the route-counted loop, and the `synth[target.qn]`
+last-write-wins overwrite.
+
+**Owner LOC ruling (2026-07-19, epic commit `a1435e1`)** retired every numeric LOC gate
+epic-wide; simplicity is judged qualitatively. The Stop #4 condition raised at the end of
+Phase 4 is dissolved. Final metrics are recorded informationally only (nine-file union
+3,552 -> 3,818, net +266) in evidence.md §1.
+
+**Deliberately still open, not claimed here:** R-8 unmappable warning locations (Item 4);
+relocated whole-tree proof (Item 5); sealed-artifact/composed-thread proof (Item 13); Item
+2's producer/exact-QN resolver, not absorbed. Same-checkout replay is regression-only and
+non-certifying throughout. Eight recorded deviations, a review-confirmed collision-guard
+defect and its fix, and a Phase 0 fixture-digest mis-recording correction are in evidence.md
+§5-§7. Items 2-13 implementation has not started.
+
 ### CONSTRAINT-LIFECYCLE Item 0 — COMPLETE; LOCAL COMPATIBLE PIN (2026-07-19)
 
 The owner rejected the branch-purity work around agentic-mbse `4ed2a07`. The committed
@@ -35,11 +68,10 @@ complete and Items 4/6 remain certified within their recorded scopes. Their evid
 not automatically re-audited. Unfinished and newly discovered work is mapped into the new 14-item,
 19–23 day P0 epic covering ratified register rows 0–17.
 
-The epic makes simplification an execution gate: every item records production LOC before/after and
-names deleted duplicate/workaround paths. The overall touched production surface must shrink unless
-the owner explicitly approves a surfaced exception. The known additive catalog-schema work is
-reported separately and paired with deletion of the alternate TEAx schema/materializer/stand-in
-system.
+For Items 2–13, simplification is structural: delete the named duplicate/workaround paths, keep one
+authority and one route, and do not replace removed machinery with a shim. Numeric line-count
+baselines, budgets, caps, close gates, and code-growth deviations are not requirements. Item 1 was
+already in flight when the owner made this correction; its artifacts remain untouched.
 
 Active artifacts:
 
@@ -62,8 +94,9 @@ Pre-Item 0 preservation checkpoints requested by the owner:
 - sysml-codegen `e217119` preserves the constraint remediation, evidence, ratified contract, and
   new epic.
 
-No commit was pushed and no PR was updated. Next: begin Item 1, Occurrence and Demand Integrity,
-using the Item 0 revision set as the starting pin.
+No commit was pushed and no PR was updated. Item 1 now has an approved implementation contract,
+approved technical design, and persistent implementation plan using the Item 0 revision set as its
+starting pin. Next: execute Item 1 with `my-implement`.
 
 ### CONSTRAINT-WAVE Item 1 — Profile Semantics — COMPLETE; INHERITED BY NEW EPIC
 

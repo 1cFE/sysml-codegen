@@ -30,7 +30,7 @@ Prioritized list of epics and features.
 | Epic | Status | Notes |
 |------|--------|-------|
 | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
-| [CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation | Ready (14 items, 19–23 days) | Owner-ratified architecture; implements register rows 0–17 and ends with one 41-case public artifact thread. Simplification and net production-code reduction are mandatory. See `epic_constraint_execution_lifecycle_remediation.md`. |
+| [CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation | In progress (Item 1) | Owner-ratified architecture; implements register rows 0–17 and ends with one 41-case public artifact thread. Items 2–13 require structural simplification and deletion of superseded paths; LOC metrics are not gates. See `epic_constraint_execution_lifecycle_remediation.md`. |
 | ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19) | Items 1/2 complete and Items 4/6 certified; all unfinished work is mapped into CONSTRAINT-LIFECYCLE-REMEDIATION. Retained as history; no new work executes here. See `epic_constraint_pr_wave_remediation.md`. |
 
 CONSTRAINT-LIFECYCLE-REMEDIATION items:

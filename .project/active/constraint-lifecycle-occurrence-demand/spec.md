@@ -37,15 +37,26 @@ These four outcomes are owner-originated. They are the only `[NEED]` items in th
 detailed requirements and proof choices below remain inherited or agent-authored under the
 capture-fidelity absorb mapping.
 
-- [ ] **[NEED]** The original occurrence and demand lifecycle invariants are met, rather than only
+- [x] **[NEED]** The original occurrence and demand lifecycle invariants are met, rather than only
       the three reproduced lines being patched. Source: owner stage input, 2026-07-19.
-- [ ] **[NEED]** Public functionality works for Item 1's live occurrence, anonymous-actual,
+      Evidence: the lifecycle boundary itself was rebuilt — verified association, an
+      all-or-nothing prepared batch, explicit owner dispatch, structural cycle failure, and
+      one logical demand per normalized target. evidence.md §2, §4.
+- [x] **[NEED]** Public functionality works for Item 1's live occurrence, anonymous-actual,
       owner-filter, shared-demand, and per-occurrence-override outcomes. Source: owner stage input,
-      2026-07-19.
-- [ ] **[NEED]** Code quality improves and the superseded nullable/duplicate paths are deleted.
-      Source: owner stage input and simplification direction, 2026-07-19.
-- [ ] **[NEED]** Delivery is judged by those working outcomes and truthful evidence, not by making
+      2026-07-19. Evidence: six public licensed nodes pass with no skip, and the
+      per-occurrence-override outcome is proved through real TEAx execution
+      (4.0/6.0 -> violated/satisfied). evidence.md §2, §3.
+- [x] **[NEED]** Code quality improves and the superseded nullable/duplicate paths are deleted.
+      Source: owner stage input and simplification direction, 2026-07-19. Evidence: every
+      named superseded path is deleted with no wrapper, flag, alias, or dead fallback
+      remaining (`rg` returns no matches); `lower_constraints` complexity fell 34 -> 19.
+      Judged qualitatively per the owner's 2026-07-19 LOC ruling. evidence.md §1, §4.
+- [x] **[NEED]** Delivery is judged by those working outcomes and truthful evidence, not by making
       every supporting artifact perfect. Source: owner revision direction, 2026-07-19.
+      Evidence: evidence.md records eight deviations, a review-confirmed defect and its
+      fix, a Phase 0 digest mis-recording correction, an unexecutable-RED caveat, and the
+      open Items 4/5/13 — rather than a clean-looking record. evidence.md §5-§8.
 
 ## Known Requirements
 

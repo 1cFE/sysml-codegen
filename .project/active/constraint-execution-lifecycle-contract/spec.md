@@ -383,11 +383,11 @@ wait on them.
 - **LC-H04 [INFERRED]** Graph completeness does not eliminate declared external design inputs. It
   requires every modeled/computed dependency to have a producer; consumers supply only the ordinary
   typed entry channels declared by the generated package.
-- **LC-H05 [NEED]** The remediation is expected to reduce total production lines of code across the
-  touched repositories by consolidating shared machinery and deleting superseded hacks, bridges,
-  adapters, and duplicated validation/resolution paths. Source: owner, 2026-07-19: “I would REALLY
-  LIKE for us to REDUCE the total number of lines of code when we fix all this shit. I have to
-  believe there are opportunities for simplification and removing hacky code.”
+- **LC-H05 [NEED]** The remediation simplifies the architecture by consolidating shared machinery
+  and deleting superseded hacks, bridges, adapters, and duplicated validation/resolution paths.
+  For Items 2–13, line counts are not requirements or gates; necessary code growth does not require
+  a deviation when the result is structurally simpler and satisfies the lifecycle invariants.
+  Item 1's in-flight artifacts are unchanged. Source: owner correction, 2026-07-19.
 
 ### I. Proof obligations
 
@@ -409,10 +409,11 @@ wait on them.
   mandatory multi-constraint interaction acceptance. Neither substitutes for the other.
 - **LC-I07 [INFERRED]** Release readiness remains false while a mandatory proof cell is blocked,
   skipped, served only by a private workaround, or run against a different candidate revision.
-- **LC-I08 [INFERRED]** Each implementation and audit records before/after production-code line
-  counts for its touched scope, names the deleted duplicate or workaround paths, and reports test,
-  fixture, and documentation growth separately. Any net production-code increase is surfaced for
-  owner review with its reason; it is never hidden inside aggregate test or generated-file counts.
+- **LC-I08 [NEED]** Items 2–13 name and remove the superseded duplicate/workaround paths they own.
+  Review verifies the structural result: one authority, no parallel implementation, and no shim
+  preserving an obsolete route. Do not create or require LOC baselines, budgets, per-file caps,
+  net-negative targets, counting tools, or code-growth deviation reviews. Source: owner correction,
+  2026-07-19. Item 1's in-flight artifacts are unchanged.
 - **LC-I09 [INFERRED]** Every acceptance cell records one evidence coordinate: committed revision/
   lock set, fixture ID, owner kind, source form, source-originated polarity, anonymity, actual
   presence/source, occurrence/override shape, open predecessor register rows, both public
@@ -469,7 +470,7 @@ coordinates and exempts nothing.
 | Resume/query across incompatible fingerprints | Reject mismatch or start an explicit new lineage; never rebind silently. |
 | Zero-entry and excluded-only entry-channel shapes | Prove complete zero/one/multiple mappings with no invented inputs. |
 | Fact-consumer mutation | A behavioral test fails when a load-bearing consumer is removed; static map edits do not satisfy it. |
-| Remediation simplification | Production-code accounting shows consolidation and deletion; any net increase is an explicit owner-reviewed deviation. |
+| Remediation simplification | Verify named superseded paths are absent and no parallel authority or route replaced them; line counts are not proof. |
 | Invalid explicit `TEAX_SIMKIT_PATH` (test helper) | Fail on the explicit invalid path; never fall through to sibling discovery. |
 | IFE 2,301-point acceptance | Rerun exact final candidates through canonical stock seams; preserve semantics and anchors. |
 | Stellarator five-constraint acceptance (D-1/D-2) | Remove WI-027 D7 passthroughs; prove a fully representable graph, no bridge/mutation, five verdicts, and sealed handwritten code. |
@@ -491,7 +492,7 @@ The owner ratified this dependency order on 2026-07-19. Execution ownership is d
 | 7 | F1/environment evidence | Lifecycle Item 6 | Record `d545701`, repair `927a9e1`, compare reports, and scope invalid-path test infrastructure. |
 | 8 | Trusted verifier/bootstrap skew | Lifecycle Item 7 | Runtime-trusted verifier rejects bypass; verifier/runtime-contract skew fails closed. |
 | 9 | Seal provenance | Lifecycle Item 7 | Generation manifest distinguishes artifact origins; re-seal cannot launder foreign content. |
-| 10 | Catalog/CE-F1 + store transition | Lifecycle Item 8 | Five fields + admitted usage record land; alternate schema/materializer/fixture/stand-in deleted; stores migrate by proof or archive; additive schema LOC is booked under LC-I08. |
+| 10 | Catalog/CE-F1 + store transition | Lifecycle Item 8 | Five fields + admitted usage record land; alternate schema/materializer/fixture/stand-in deleted; stores migrate by proof or archive. |
 | 11 | Multi-entry CE-F2 | Lifecycle Item 9 | Stock bridge supplies complete zero/one/multiple typed channel mappings. |
 | 12 | Producer completeness + stellarator rollup | Lifecycle Item 10 | Exact producers are proven independently of V11 through the ambiguous/defaulted acceptance cell; WI-027 D7 is amended/removed; public generation succeeds without bridge/mutation. |
 | 13 | Constraint-free TEAx | Lifecycle Item 11 | Constraint-free package loads/evaluates with empty constraint evidence. |

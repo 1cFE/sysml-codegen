@@ -309,10 +309,12 @@ load/evaluation, and study APIs. Private mutation, conversion, and wrappers do n
 
 **[OWNER-VERBATIM]** “I would REALLY LIKE for us to REDUCE the total number of lines of code when
 we fix all this shit. I have to believe there are opportunities for simplification and removing
-hacky code.” The remediation target is a net reduction in production code across the touched
-cross-repository surfaces. Shared resolution, one catalog schema, and removal of superseded bridges,
-adapters, and duplicated validation paths are expected deletion opportunities. A net production-code
-increase is a surfaced design deviation, not an unremarked implementation outcome.
+hacky code.” The intended outcome is simpler architecture: shared resolution, one catalog schema,
+and removal of superseded bridges, adapters, and duplicated validation paths. **[OWNER], 2026-07-19
+correction:** For lifecycle Items 2–13, line counts are not requirements, evidence obligations,
+budgets, caps, gates, or deviation triggers. Correct code may grow when explicit types, diagnostics,
+or invariants require it. Review simplicity structurally: one authority, no duplicate route, and no
+new shim around a superseded mechanism. Item 1 is already in flight and its artifacts are untouched.
 
 ## Proof standard
 
@@ -454,7 +456,7 @@ coordinates and exempts nothing.
 | Resume/query across incompatible fingerprints | Executable or semantic/catalog mismatch rejects resume/query or starts an explicit new lineage; no silent reassignment. |
 | Zero-entry and excluded-only entry-channel shapes | Zero/one/multiple typed channel mappings validate completely; excluded-only constraints do not invent inputs. |
 | Fact-consumer mutation | Removing or changing each load-bearing fact consumer fails a behavioral test; a static map edit cannot satisfy it. |
-| Remediation simplification | Production-code accounting shows consolidation and deletion; any net increase is an explicit owner-reviewed deviation. |
+| Remediation simplification | Named superseded mechanisms are removed rather than shimmed; no duplicate authority or parallel route remains. Line counts are not proof. |
 | Invalid explicit simkit path (test infrastructure) | The codegen test helper fails rather than falling through to sibling discovery. |
 | IFE grid | Exact final candidates, stock seams, 2,301 points, modeled `>=`, unchanged anchors. |
 | Stellarator design point (D-1/D-2) | Fully representable graph with WI-027 D7 passthroughs removed, no post-build mutation/private bridge, five verdicts, unchanged numerics, handwritten code sealed. |
@@ -513,7 +515,7 @@ The owner ratified this order on 2026-07-19. The execution owners below are defi
 | 7 | F1/environment evidence | Lifecycle Item 6 | Record `d545701`, repair `927a9e1`, compare report contents, and scope the invalid-path helper correctly. |
 | 8 | Trusted verifier/bootstrap skew | Lifecycle Item 7 | Runtime-trusted verifier rejects the bypass; verifier/runtime-contract skew fails closed. |
 | 9 | Seal provenance | Lifecycle Item 7 | Generation manifest distinguishes codegen/preserved/runtime files; re-seal cannot launder foreign content. |
-| 10 | Catalog/CE-F1 + store transition | Lifecycle Item 8 | Five missing fields + admitted usage record land; alternate schema/materializer/fixture/stand-in are deleted; old stores migrate by proof or remain archived; additive schema LOC is booked under the simplification exception. |
+| 10 | Catalog/CE-F1 + store transition | Lifecycle Item 8 | Five missing fields + admitted usage record land; alternate schema/materializer/fixture/stand-in are deleted; old stores migrate by proof or remain archived. |
 | 11 | Multi-entry CE-F2 | Lifecycle Item 9 | Stock bridge supplies zero/one/multiple complete typed channel mappings. |
 | 12 | Producer completeness + stellarator rollup | Lifecycle Item 10 | Exact intended producers are proven independently of V11 through the ambiguous/defaulted acceptance cell; WI-027 D7 is amended/removed; public generation succeeds with no bridge/mutation. |
 | 13 | Constraint-free TEAx | Lifecycle Item 11 | Constraint-free package loads/evaluates with empty constraint evidence. |
