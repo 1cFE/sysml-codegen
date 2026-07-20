@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -23,6 +24,10 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 CHAIN_SNAPSHOT = FIXTURES_DIR / "chain_spike_model" / "extraction_snapshot.json"
 REPO_ROOT = Path(__file__).resolve().parents[2]
+# The revision supplying the *previous verifier policy*. Since Item 4 this revision
+# contributes exactly one file — src/sysml_codegen/contracts/verify.py — and nothing
+# else, so it no longer has to generate artifacts matching the working tree. The
+# policy last changed at e217119; this revision precedes it.
 REVIEWED_REVISION = "512786c7dfab44fba7a0185d09e845b7494c702d"
 REVIEWED_VERIFY_SHA256 = "24eb3565b0a7a682cf8a2510c871d7af9baa938fdaac6b5e826f88045a400276"
 
@@ -98,15 +103,47 @@ if not run_codegen(config):
 
 
 def test_policy_update_changes_only_verifier_hash_and_derived_fingerprint(tmp_path):
-    archive = tmp_path / "reviewed.tar"
-    reviewed_source = tmp_path / "reviewed"
-    reviewed_source.mkdir()
-    subprocess.run(
-        ["git", "archive", "--format=tar", f"--output={archive}", REVIEWED_REVISION],
+    """A verifier-policy update moves the verifier hash and the derived fingerprint, nothing else.
+
+    MECHANISM CHANGED (Item 4). This previously generated the reviewed side from a
+    whole archived revision, which silently assumed generated output was otherwise
+    stable across that revision boundary. Item 4's written-reference carry moved
+    chain_spike's entry-point keys, so every pre-carry revision now differs in
+    pipeline.yaml, model_contract.json and inputs/design_params.json as well — more
+    than the verifier-only delta this test exists to assert — and no revision can
+    satisfy both halves (the policy changed once, at e217119, strictly before the
+    carry).
+
+    The property is now tested by isolating the one variable it is about: both sides
+    are generated from the working tree, and the reviewed side's `contracts/verify.py`
+    is overwritten with the reviewed revision's policy bytes, read from git. That is a
+    stricter test of the same claim — no confounding source difference remains — and it
+    no longer couples verifier policy to generated-artifact stability.
+    """
+    reviewed_verify = subprocess.run(
+        ["git", "show", f"{REVIEWED_REVISION}:src/sysml_codegen/contracts/verify.py"],
         check=True,
         cwd=REPO_ROOT,
+        capture_output=True,
+    ).stdout
+    assert reviewed_verify != (REPO_ROOT / "src/sysml_codegen/contracts/verify.py").read_bytes(), (
+        "REVIEWED_REVISION must carry a different verifier policy than the working "
+        "tree, or this test asserts nothing"
     )
-    subprocess.run(["tar", "-xf", archive, "-C", reviewed_source], check=True)
+
+    # The reviewed source is the working tree with exactly one file replaced: the
+    # verifier policy. Symlink the rest so the copy stays cheap and cannot drift.
+    reviewed_source = tmp_path / "reviewed"
+    (reviewed_source / "src").mkdir(parents=True)
+    for entry in (REPO_ROOT / "src").iterdir():
+        if entry.name != "sysml_codegen":
+            (reviewed_source / "src" / entry.name).symlink_to(entry)
+    shutil.copytree(
+        REPO_ROOT / "src/sysml_codegen",
+        reviewed_source / "src/sysml_codegen",
+        symlinks=True,
+    )
+    (reviewed_source / "src/sysml_codegen/contracts/verify.py").write_bytes(reviewed_verify)
 
     reviewed_output = tmp_path / "reviewed-output"
     candidate_output = tmp_path / "candidate-output"

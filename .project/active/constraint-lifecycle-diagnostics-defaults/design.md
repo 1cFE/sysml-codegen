@@ -623,7 +623,7 @@ with a missing vs `null` field, before Phase 3 commits to `null`. **Exit: B2 pro
 both parity checks answered; the `null` question answered.** The unit/sign fixture-inventory
 question is already answered — see Phase 3.
 
-**Phase 1 — [~] MECHANISM LANDED, GATED ON RATIFICATION — the carry (codegen only, works on unmodified v3 snapshots).** Loader plumbing,
+**Phase 1 — [x] COMPLETE — the carry (codegen only, works on unmodified v3 snapshots).** Loader plumbing,
 `BindingInfo` stored fallback, the two `ProducerRequest` fields plus the one-line row-16 change, and
 both consumers' call sites. Author the `shared_producer` RED surface against the *current* two-key
 state first, confirm green at `3fbec63`, then flip it. Run Gate 3's per-binding probe over all 249
@@ -863,8 +863,46 @@ corrected); `constraint_lowering` (supplies both fields with the values it alrea
   entry-point-identity tests. **Deliberately not fixed** — each needs a disposition that follows
   from ratifying the surfaced amendment.
 
-**Blocked on owner ratification:** baseline regeneration (once, under the Gate 1 table), the
-DD-R31 artifact corrections, and DD-R33's SR-R16 amendment. Phase 2 not started.
+### Phase 1 — complete (post-ratification)
+
+All five orchestrator rulings applied (2026-07-19). Baselines regenerated **once** under the
+accepted Gate 1 table; artifact corrections landed; suite at **zero failures**.
+
+**Regenerated file set — exactly the pinned prediction, no extras:** three
+`baseline_outputs/*/computation_graph.json` (catf_mfe, chain_spike, solar_battery) and two
+`baseline_yaml/*.yaml` (chain_spike, solar_battery). `plant_values` deliberately untouched as
+pre-existing stale drift (verified: it regenerates differently with Item 4 reverted).
+
+**One test mechanism changed, and it is the item most worth reviewing.**
+`test_fingerprint_stability.py::test_policy_update_changes_only_verifier_hash_and_derived_fingerprint`
+generated its "reviewed" side from a whole archived git revision, which silently assumed generated
+output was otherwise stable across that revision boundary. The carry moved chain_spike's entry-point
+keys, so **no revision can satisfy the test as written**: the verifier policy last changed at
+`e217119`, strictly before the carry, so any revision with the old policy also has the old keys.
+Advancing the revision pin removes the policy delta the test needs; leaving it fails on artifact
+drift. The mechanism now takes **only** `contracts/verify.py` from the reviewed revision and
+generates both sides from the working tree, isolating the single variable the test is about. The
+asserted property is unchanged and strictly better isolated, and a new guard fails loudly if the
+pinned revision ever stops carrying a different policy. **Flagged for review as a mechanism change,
+not a repin.**
+
+**Other pins repinned with reasons recorded in-line:** the snapshot-portability manifest SHA-256
+(delta verified to be exactly two key movements and nothing else) and the `REQ-DM-03` `BindingInfo`
+field set (+2, wire form unchanged).
+
+**Two conformance tests re-pointed at the post-carry truth**, both of which had asserted the
+*existence* of the defect the carry closes: `test_factory_formula`'s "the factory mints new entry
+points" (now model-keyed — `solar_battery_model` converges onto pre-existing keys, `attr_expr_probe`
+still mints) and `test_parallel_validation`'s "solar_battery emits unresolved-producer warnings" (now
+asserts zero, with I7's visibility guard confirmed still covered directly in
+`test_output_registry_construction.py`).
+
+**Validation:** suite **3011 passed / 0 failed**, zero `no live syside license` skips.
+`PYTHONOPTIMIZE=1`: same, except two `assert`-under-`-O` tests that fail identically at the
+predecessor. mypy **72 errors before and after — zero added**. ruff **11 pre-existing errors before
+and after — zero added**; `src/` and all new files clean.
+
+**Phase 2 not started**, per instruction.
 
 ---
 **Next Step:** owner ratification of the surfaced B2/D4 amendment and the revised Gate 1 pin, then
