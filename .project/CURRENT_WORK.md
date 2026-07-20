@@ -6,29 +6,38 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A (implement in progress)
+### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A — CANDIDATE (awaiting independent audit)
 
-Epic register row 2. Spec and design (rev 2, approved) at
-`.project/active/constraint-lifecycle-shared-resolution/`. The design carries the phased plan and
-the implementation notes — there is no separate `plan.md`. RED coordinate is the Item 1 certified
-candidate `287afc4`. The spec surfaces one premise conflict: epic Item 2 scope point 5 still
-carries a 300–500 line reduction target that the owner's 2026-07-19 LOC ruling (`a1435e1`,
-LC-I08) retired; the spec follows the owner correction and uses no LOC gate.
+Epic register row 2. Spec, design (rev 2 + implementation notes), and `evidence.md` at
+`.project/active/constraint-lifecycle-shared-resolution/`. RED coordinate `287afc4`. The design
+carries the phased plan — there is no separate `plan.md`.
 
-**Phase group 1 complete (Phases 0, 2, and Phase 1's de-risk pins).** Gate A is live GREEN: a
-literal attribute owned by a concrete `PartUsage` resolves under its real QN
-(`GateA__the_host__gain`) and drives a real simkit verdict that flips with the literal (SR-A01,
-SR-R22). PC-1's diagnosis was confirmed first-hand before any production edit. D9's QN rule is
-de-risked — it reproduces both formulas that have a live population, including all 23 minted
-entry points in `fusion_tea`. Full suite 3025 passed / 0 failed, byte identity held with zero
-baseline movement, mypy at its 76-error baseline, ruff clean.
+**Delivered.** One producer-resolution authority (`resolution/producer_resolution.py`): 21 declared
+key forms in two tiers, one self-reference guard applied at every tier-1 hit, one terminal fork.
+All three consumers — calculation, constraint, aggregation — build a request and read a result.
+`input_resolver.py` deleted outright. Gate A live GREEN: a literal owned by a concrete `PartUsage`
+resolves under its real QN and drives a real simkit verdict that flips with the literal.
 
-**Carry into the cutover phases.** The aggregation LocalTerm mint
-(`graph_builder.py:1524-1525`) has **zero fixture coverage** — no committed model reaches it — so
-Phase 5 must add live coverage before cutting that path over; a byte-identity gate protects
-nothing over an empty population. SR-A02's two-consumer convergence is still uncovered: `gate_a`
-deliberately has no calculation consumer of `gain`. The ladder cutover (Phases 3–5) has not
-started.
+**Validation.** Full suite 3003 passed / 0 failed; execution lane 17 passed; byte-identity gate
+green with every pre-existing fixture byte-identical; **EP-key manifest zero-diff** across 34
+fixtures / 273 entry points / 484 module inputs (the F4-trap control); `ruff src/` clean; `mypy`
+72 errors, below the 76 baseline.
+
+**Not delivered, referred.** SR-A02 / SR-R23 two-consumer convergence. The calculation consumer
+cannot express the reference as written — extraction discards it, and for a self-named binding the
+referent is the calc's own formal (design PC-4). I9 is falsified for that shape. Pinned
+known-incomplete by `tests/fixtures/shared_producer/` + its `PROVENANCE.md`; the written-reference
+carry is folded into **Item 4**'s coordinated agentic-mbse + codegen change set.
+
+**For the auditor's eye first.** D2 is falsified as stated: no single total order reproduces all
+three ladders' precedence (calc puts rows 6/8 before row 5, constraint the reverse). The table takes
+the constraint order; measured 44/249 calculation bindings hit exactly one conflicting row and none
+hits two, so the conflict is latent, with byte identity as the standing control.
+
+**Still open.** V11 widening to aggregation entry points stays Item 3's (PC-3, I10 preserved and
+verified by a one-writer check). `param_group` on LocalTerm mints stays `None` — a classification
+question ruled out of scope, recorded as a design residual for Item 4/10. SR-R16's stated basis
+should be amended to order-dependence (PC-2) when the spec is next touched.
 
 ### CONSTRAINT-LIFECYCLE Item 1 — CERTIFIED after independent audit + remediation (2026-07-19)
 

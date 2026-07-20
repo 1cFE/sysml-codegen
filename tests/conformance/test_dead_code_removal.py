@@ -15,10 +15,6 @@ import pytest
 from sysml_codegen.core.identifier_types import ScopedKey, SysMLQN
 from sysml_codegen.extraction.data_models import RedefinitionType
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
-from sysml_codegen.resolution.input_resolver import (
-    ResolutionContext,
-    SysMLQNLookup,
-)
 from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
 
@@ -89,14 +85,6 @@ class TestDeadFileRemoval:
 class TestDeadCodePaths:
     """Verify dead code branches have been removed from source."""
 
-    def test_strategy_b_no_normalized_fallback(self):
-        """SysMLQNLookup source does NOT contain the normalized fallback
-        (parts = ref.split('::') for scoped key construction)."""
-        source = inspect.getsource(SysMLQNLookup)
-        assert 'parts = ref.split("::")' not in source, (
-            "Strategy B normalized fallback still present in SysMLQNLookup"
-        )
-
     def test_backtracker_reference_dispatch_is_gone(self):
         """The Step 1b normalization guard is retired by deletion (Item 2).
 
@@ -158,26 +146,3 @@ class TestDeferredIssueFixes:
 class TestLivePathPreserved:
     """Verify the live part of Strategy B (direct SysML QN lookup) still works."""
 
-    def test_strategy_b_direct_lookup_still_works(self):
-        """SysMLQNLookup with a :: ref against attr_expr_probe registry returns
-        a result (regression guard for the live path we're keeping)."""
-        registry, snap = _build_registry_from_snapshot("attr_expr_probe")
-        redefs = snap["hierarchy_data"].redefinitions
-        design_attrs = _flatten_design_attrs(snap.get("design_attributes", {}))
-
-        ctx = ResolutionContext(
-            output_registry=registry,
-            redefinitions=redefs,
-            design_attrs=design_attrs,
-            module_eqn="test__probe_design__test_calc",
-            consumer_scope="probe_design",
-            instance_path="test__probe_design",
-        )
-
-        # Use a :: ref — SysMLQNLookup should still handle it via the
-        # direct sysml_qn_lookup path (returns Channel or None, no crash)
-        sysml_qn_ref = "AttrExprProbeDesign::probe_design::area"
-        channel = SysMLQNLookup(sysml_qn_ref, ctx)
-        assert channel is None or isinstance(channel, str), (
-            f"Unexpected return type from SysMLQNLookup: {type(channel)}"
-        )

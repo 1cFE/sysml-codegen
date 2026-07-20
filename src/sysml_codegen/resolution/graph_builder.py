@@ -52,11 +52,6 @@ from sysml_codegen.extraction.expression_compiler import (
     Compilability,
 )
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
-from sysml_codegen.resolution.input_resolver import (
-    AGG_STRATEGIES,
-    ResolutionContext,
-    resolve_input,
-)
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     EntryPoint,
@@ -339,7 +334,10 @@ def build_computation_graph(
             agg, hierarchy_redefinitions or [], output_registry,
             entry_points, group_deriver, expose_aliases,
             usage_type_map or {},
-            producer_ctx=_producer_context(output_registry, design_attrs),
+            producer_ctx=_producer_context(
+                output_registry, design_attrs,
+                hierarchy_redefinitions or [], usage_type_map or {},
+            ),
         )
         entry_points.update(new_eps)
         modules.append(agg_module)
@@ -1211,7 +1209,7 @@ def _find_literal_redefinition(
 ) -> float | None:
     """Find a LITERAL :>> redefinition value for a part usage attribute.
 
-    Mirrors the CHAIN matching pattern used by ChainRedefinitionFollow (input_resolver.py)
+    Mirrors the CHAIN matching pattern used by the shared table's chain-redefinition form
     but for RedefinitionType.LITERAL. Used to propagate default values for
     entry points when a PartDef sets e.g. `:>> raw_material_cost = 0.0`.
 
@@ -1319,9 +1317,25 @@ def _mint_entry_point_once(
     new_entry_points[ep_qn] = existing.model_copy(update={"default_value": None})
 
 
+@dataclass(frozen=True)
+class _AggConsumer:
+    """One aggregation expression's consumer identity, shared by all its terms.
+
+    Replaces the old `ResolutionContext`, which bundled consumer identity together with
+    the registries the lookups read. Those are now separate concerns: the registries
+    belong to the shared `ProducerContext`, built once per run, and what varies per
+    aggregation is only who is asking.
+    """
+
+    module_eqn: str
+    consumer_scope: str
+    instance_path: str
+
+
 def _build_agg_input_source(
     ref: str,
-    ctx: ResolutionContext,
+    ctx: _AggConsumer,
+    producer_ctx: ProducerContext,
     literal_lookup_key: tuple[str, str] | None,
     redefinitions: list[RedefinitionData],
     usage_type_map: dict[tuple[str, str], str],
@@ -1332,19 +1346,19 @@ def _build_agg_input_source(
 ) -> tuple[InputSource, bool]:
     """Resolve one aggregation term to an InputSource, owning the EP side effects.
 
-    The reconciliation choke point for SumTerm/SingletonTerm inputs. Wraps the pure
-    ``resolve_input(ref, ctx, AGG_STRATEGIES)``:
+    The reconciliation choke point for SumTerm/SingletonTerm inputs. Builds a lenient
+    request for the shared producer-resolution table and reads the result:
 
-    - A ``module_output`` result is returned as-is (not manual-required).
-    - An ``entry_point`` result triggers the side effects the old inline ``else:``
-      blocks owned: look up a ``LITERAL :>>`` default, register/dedup/backfill the
-      ``DESIGN_ATTRIBUTE`` EntryPoint into ``new_entry_points``, classify its
-      param-group, and report ``manual_required`` (True when the term is unresolved
-      and has no literal default — the caller sets ``MANUAL_REQUIRED`` compilability).
+    - A module output is returned as-is (not manual-required).
+    - A terminal miss looks up a ``LITERAL :>>`` default, mints the ``DESIGN_ATTRIBUTE``
+      entry point once with that default resolved at creation, classifies its param
+      group, and reports ``manual_required`` (True when the term is unresolved and has
+      no modeled default — the caller sets ``MANUAL_REQUIRED`` compilability).
 
-    The EP QN is ``resolve_input``'s reconciled fallback key
-    ``{ctx.module_eqn}__{ref.replace('.','_')}`` (INV-1). ``ctx.module_eqn`` MUST be
-    ``agg.module_eqn`` (INV-7), else every fallback key shifts.
+    The entry-point QN is the shared rule with no declared formal, which is
+    ``{module_eqn}__{ref.replace('.','_')}`` — the same key the aggregation call sites
+    minted before the cutover. ``ctx.module_eqn`` MUST be ``agg.module_eqn``, else every
+    fallback key shifts.
 
     ``literal_lookup_key`` is the ``(part_usage, attr)`` to look up a LITERAL default
     for, or ``None`` to skip the lookup (the dotless-SingletonTerm case, which has no
@@ -1352,13 +1366,29 @@ def _build_agg_input_source(
 
     Returns ``(InputSource, manual_required)``. Mutates ``new_entry_points`` only.
     """
-    resolved = resolve_input(ref, ctx, AGG_STRATEGIES)
-    if resolved.source_type == "module_output":
-        return resolved, False
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=ctx.module_eqn,
+            reference=ref,
+            param_name=None,
+            consumer_scope=ctx.consumer_scope,
+            instance_path=ctx.instance_path,
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context=f"{ctx.module_eqn}|{ref}",
+        ),
+        producer_ctx,
+    )
+    if resolution.outcome is Outcome.MODULE_OUTPUT:
+        return InputSource(
+            source_type="module_output",
+            producer_channel=resolution.identity,
+        ), False
 
-    # Entry-point fallback: reproduce the inline else-block's side effects.
-    ep_qn = resolved.qualified_name
-    assert ep_qn is not None  # resolve_input always sets qualified_name on entry_point
+    # The entry-point key is D9's rule with no declared formal, which reproduces the
+    # aggregation call sites' `{module_eqn}__{ref-with-dots-as-underscores}` exactly. A
+    # leaf-only rsplit would collide sibling part-usage inputs and clash with the
+    # module's own output channel.
+    ep_qn = resolution.identity
     param_name = ref.replace(".", "_")
 
     literal_default: float | None = None
@@ -1367,8 +1397,14 @@ def _build_agg_input_source(
         literal_default = _find_literal_redefinition(
             lu_part_usage, lu_attr, redefinitions, usage_type_map, owning_part_qn,
         )
+    if literal_default is None:
+        literal_default = resolution.default_value
 
     manual_required = literal_default is None
+    logger.warning(
+        "Unresolved aggregation term '%s' in '%s' — surfacing as entry point '%s' (I7).",
+        ref, ctx.module_eqn, ep_qn,
+    )
 
     _mint_entry_point_once(
         ep_qn,
@@ -1391,6 +1427,8 @@ def _build_agg_input_source(
 def _producer_context(
     output_registry: OutputRegistry,
     design_attrs: dict[Path, list[DesignAttributeData]],
+    redefinitions: list[RedefinitionData] | None = None,
+    usage_type_map: dict[tuple[str, str], str] | None = None,
 ) -> ProducerContext:
     """The shared table's context for the aggregation consumer."""
     attrs = tuple(a for group in design_attrs.values() for a in group)
@@ -1398,6 +1436,8 @@ def _producer_context(
         output_registry=output_registry,
         design_attr_by_qn={a.qualified_name: a for a in attrs},
         design_attrs=attrs,
+        redefinitions=tuple(redefinitions or ()),
+        usage_type_map=usage_type_map or {},
     )
 
 
@@ -1446,12 +1486,8 @@ def _build_aggregation_module(
     # Build the resolution context once for this aggregation. consumer_scope is
     # derived from module_eqn (drop the design prefix [0] and self [-1]); module_eqn
     # MUST be agg.module_eqn (INV-7) so the reconciled fallback key matches the live
-    # part-usage-prefixed EP QN. design_attrs is unused by AGG_STRATEGIES.
     agg_parts = agg.module_eqn.split("__")
-    ctx = ResolutionContext(
-        output_registry=output_registry,
-        redefinitions=redefinitions,
-        design_attrs={},
+    ctx = _AggConsumer(
         module_eqn=agg.module_eqn,
         consumer_scope=".".join(agg_parts[1:-1]) if len(agg_parts) >= 3 else "",
         instance_path=agg.instance_path,
@@ -1464,7 +1500,7 @@ def _build_aggregation_module(
         param_name = f"{term.part_usage_name}_{term.attribute_name}"
 
         source, manual_required = _build_agg_input_source(
-            symbolic_ref, ctx, (term.part_usage_name, term.attribute_name),
+            symbolic_ref, ctx, producer_ctx, (term.part_usage_name, term.attribute_name),
             redefinitions, usage_type_map or {}, owning_part_qn,
             group_deriver, entry_points, new_entry_points,
         )
@@ -1523,7 +1559,7 @@ def _build_aggregation_module(
             literal_key = (s_part_usage, s_attr)
 
         s_source, manual_required = _build_agg_input_source(
-            s_term.source_path, ctx, literal_key,
+            s_term.source_path, ctx, producer_ctx, literal_key,
             redefinitions, usage_type_map or {}, owning_part_qn,
             group_deriver, entry_points, new_entry_points,
         )
@@ -1559,20 +1595,31 @@ def _build_aggregation_module(
         if l_source is None and expose_aliases:
             # Try: EXPOSE_PURE alias resolution.
             # e.g., misc_hardware_cost = allocation_model.total_allocation
-            # The alias target is a dotted path resolve_input handles via its
-            # scoped/chain/direct strategies. D5 guard: take the channel ONLY when
-            # resolve_input returns a module_output — resolve_input keys its never-None
-            # entry_point fallback on the alias target, not l_term.attribute_name, so an
-            # entry_point result must fall through to LocalTerm's own fallback below
-            # (which keeps the {module_eqn}__{attribute_name} key).
+            # The alias target is a dotted path reached by
+            # the shared table's tier-1 forms. D5 guard: take the channel ONLY on a
+            # positive tier-1 hit — the table's terminal miss would key an entry point on
+            # the alias target rather than on l_term.attribute_name, so anything but a
+            # module output must fall through to LocalTerm's own mint below (which keeps
+            # the {module_eqn}__{attribute_name} key).
             alias_key = (agg.expression.owning_part_qn, l_term.attribute_name)
             alias_source = expose_aliases.get(alias_key)
             if alias_source:
-                alias_resolved = resolve_input(alias_source, ctx, AGG_STRATEGIES)
-                if alias_resolved.source_type == "module_output":
+                alias_resolved = resolve_producer(
+                    ProducerRequest(
+                        consumer_eqn=ctx.module_eqn,
+                        reference=alias_source,
+                        param_name=None,
+                        consumer_scope=ctx.consumer_scope,
+                        instance_path=ctx.instance_path,
+                        policy=TerminalPolicy.LENIENT,
+                        diagnostic_context=f"{ctx.module_eqn}|expose:{l_term.attribute_name}",
+                    ),
+                    producer_ctx,
+                )
+                if alias_resolved.outcome is Outcome.MODULE_OUTPUT:
                     l_source = InputSource(
                         source_type="module_output",
-                        producer_channel=alias_resolved.producer_channel,
+                        producer_channel=alias_resolved.identity,
                     )
 
         if l_source is None:

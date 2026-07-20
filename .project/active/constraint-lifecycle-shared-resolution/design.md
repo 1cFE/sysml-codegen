@@ -1,6 +1,6 @@
 # Design: Lifecycle Item 2 — Shared Producer Resolution and Gate A
 
-**Status:** Approved rev 2 — Phase group 1 implemented (Phases 0, 2, and Phase 1 de-risk pins)
+**Status:** Implemented — all phases complete; candidate ready for independent audit (`evidence.md`)
 **Owner:** Reid W
 **Created:** 2026-07-19
 **Revised:** 2026-07-19
@@ -147,6 +147,16 @@ default — while renaming entry-point identity across six generated surfaces an
 correct fix is carrying the written reference through extraction and the snapshot format, which is
 a coordinated `agentic-mbse` + codegen change **folded into Item 4**, whose versioned-schema and
 skew machinery is what it needs. SR-A02 completes there, on real data.
+
+### Residual — `param_group` on LocalTerm mints
+
+An entry point minted by the aggregation LocalTerm path carries `param_group=None`, before and
+after Item 2: `group_deriver.classify` does not claim that QN shape. The parameter still emits,
+via the group rebuild that follows aggregation module construction, so nothing is dropped. Item 2
+fixed the missing *default*, not the field — populating it is a classification question in
+`group_deriver`'s domain, ruled out of scope (orchestrator, 2026-07-19). Recorded here so Item 4
+or Item 10 picks it up consciously if it matters there. Pinned by
+`test_localterm_entry_point_is_rendered_in_a_parameter_group`.
 
 ### Residual tension worth a reviewer's eye
 
@@ -646,8 +656,7 @@ SR-A01, SR-A04, SR-A05, SR-A06. Run at `287afc4`.
 *Stop condition:* Gate A fails anywhere other than the predicted terminal raise → PC-1's diagnosis
 is wrong; stop and re-diagnose before writing resolver code.
 
-**Phase 1 — the resolver, unconsumed.** ◐ **De-risk pins complete; table and types still open**
-(see Implementation Notes). Add `resolution/producer_resolution.py` with the request,
+**Phase 1 — the resolver, unconsumed.** ✅ **Complete.** Add `resolution/producer_resolution.py` with the request,
 result, `ProducerContext`, the `KEY_FORMS` table, the climb, and `terminal_disposition` moved in. No
 consumer wired. Unit tests pin the table order and policy admissibility as data (I2), refusal
 behavior (I3), the guard (I6), both terminal policies (I4), and — critically — **D9's QN rule
@@ -663,27 +672,27 @@ unrecognized owner kind raises rather than falling through. Full suite and byte 
 *Stop condition:* any baseline byte moves — an existing constraint was silently reclassified, which
 B1's extension argument does not cover. Stop and surface.
 
-**Phase 3 — constraint consumer.** Cut `resolve_actual` over; delete its ordering. No name-based
+**Phase 3 — constraint consumer.** ✅ **Complete** — six precedence pins unchanged. Cut `resolve_actual` over; delete its ordering. No name-based
 form is admissible to it, so its behavior should be unchanged. Address the six precedence pins per
 SR-R33.
 *Validation:* full suite; SR-A03, SR-A04, SR-A06 GREEN; byte identity.
 *Stop condition:* a precedence pin changes with no requirement to point at.
 
-**Phase 4 — calculation consumer.** Cut `_resolve_binding_via_registry` over; delete inventory rows
+**Phase 4 — calculation consumer.** ✅ **Complete** — V11 membership unchanged. Cut `_resolve_binding_via_registry` over; delete inventory rows
 1-3 and move the helpers. Preserve V11 population via `records_v11` (I10).
 *Validation:* full suite; SR-A09 GREEN on the calculation route; byte identity; the migrated
 `test_matcher_fixes_item7` coverage passes against rows 19 and 20.
 *Stop condition:* a byte-identity diff not explained by an enumerated forced difference, or any
 change in `fallback_entry_points` membership.
 
-**Phase 5 — aggregation consumer.** Cut `_build_agg_input_source` and the LocalTerm path over;
+**Phase 5 — aggregation consumer.** ✅ **Complete** — EP-key manifest zero-diff. Cut `_build_agg_input_source` and the LocalTerm path over;
 delete inventory rows 4-7. Carries R3 and R8.
 *Validation:* full suite; SR-A05, SR-A07, SR-A09 GREEN across all three routes; byte identity —
 with particular attention to `plant_value_shapes` (empty `usage_type_map`) and `catf_mfe`; generated
 execution.
 *Stop condition:* a default or an entry-point QN moves without an enumerated cause.
 
-**Phase 6 — sweep and evidence.** Deletion proof by source search (SR-A12); docstrings amended to
+**Phase 6 — sweep and evidence.** ✅ **Complete** — see `evidence.md`. Deletion proof by source search (SR-A12); docstrings amended to
 describe the one procedure, not to prohibit removed behavior (SR-R44); every retained path recorded
 as an SR-R41 deviation with its reason. Live and same-checkout replay parity on the Gate A fixture,
 replay labeled non-certifying (SR-A10, SR-R08). LC-I09 coordinates per acceptance row (SR-R52).

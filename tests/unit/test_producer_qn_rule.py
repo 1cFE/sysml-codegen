@@ -21,8 +21,14 @@ import pytest
 
 from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.resolution.input_resolver import ResolutionContext, resolve_input
-from sysml_codegen.resolution.producer_resolution import entry_point_qualified_name
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerContext,
+    ProducerRequest,
+    TerminalPolicy,
+    entry_point_qualified_name,
+    resolve_producer,
+)
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
 from tests.conftest import snapshot_fixture
 
@@ -56,21 +62,25 @@ def test_d9_reproduces_the_calculation_formula(consumer_eqn, reference, param_na
 def test_d9_reproduces_the_aggregation_term_formula(reference):
     """Aggregation terms have no formal, so D9 flattens the reference (R3/B4).
 
-    Driven through the real `resolve_input` with an empty strategy list, which is
-    the only way to reach its fallback deterministically.
+    Driven through the real `resolve_producer` against an empty registry, so the whole
+    table misses and the lenient terminal fork is reached deterministically.
     """
-    ctx = ResolutionContext(
-        output_registry=OutputRegistry(),
-        redefinitions=[],
-        design_attrs={},
-        module_eqn="solarbatterydesign__solar_battery_plant__idiot_index",
-        consumer_scope="solar_battery_plant",
-        instance_path="SolarBatteryDesign__solar_battery_plant",
+    module_eqn = "solarbatterydesign__solar_battery_plant__idiot_index"
+    resolved = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=module_eqn,
+            reference=reference,
+            param_name=None,
+            consumer_scope="solar_battery_plant",
+            instance_path="SolarBatteryDesign__solar_battery_plant",
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context="qn rule pin",
+        ),
+        ProducerContext(output_registry=OutputRegistry()),
     )
-    resolved = resolve_input(reference, ctx, [])
-    assert resolved.source_type == "entry_point"
-    assert resolved.qualified_name == entry_point_qualified_name(
-        consumer_eqn=ctx.module_eqn, reference=reference, param_name=None
+    assert resolved.outcome is Outcome.ENTRY_POINT
+    assert resolved.identity == entry_point_qualified_name(
+        consumer_eqn=module_eqn, reference=reference, param_name=None
     )
 
 

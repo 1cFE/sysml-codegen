@@ -45,7 +45,7 @@ def _resolve_reference_chain(
     """Walk a multi-hop reference_chain to a canonical channel (Item 10, #2).
 
     The transitive N-segment walk the confirm pass runs (the recursive analog of the
-    aggregation CHAIN follow in ``ChainRedefinitionFollow``, with a ``visited`` cycle
+    aggregation CHAIN follow (the shared table's chain-redefinition form), with a ``visited`` cycle
     guard, M5).
 
     Two terminal shapes, both handled here:

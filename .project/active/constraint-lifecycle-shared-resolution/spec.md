@@ -1,6 +1,6 @@
 # Spec: Lifecycle Remediation Item 2 — Shared Producer Resolution and Gate A
 
-**Status:** Implementation In Progress — phase group 1 complete (Phases 0, 2, D9 de-risk pins)
+**Status:** Implemented — candidate ready for independent audit. SR-A02/SR-R23 not delivered (referred to Item 4, design PC-4); every other requirement met. See `evidence.md`.
 **Owner:** Reid W
 **Created:** 2026-07-19
 **Complexity:** HIGH

@@ -117,6 +117,30 @@ MODELS = {
     "constraint_inline": FIXTURES_DIR / "constraint_inline",
     "constraint_multi_instance": FIXTURES_DIR / "constraint_multi_instance",
     "constraint_non_numerical": FIXTURES_DIR / "constraint_non_numerical",
+    # Gate A fixtures (CONSTRAINT-LIFECYCLE-REMEDIATION Item 2). A matched pair over
+    # the two shapes a `package` owning-definition covers:
+    #   gate_a               — a literal attribute owned by a concrete PartUsage, read
+    #                          by a self-named actual (owner decision D-2, SR-A01).
+    #                          Uncapturable before Item 2: its live build raised at
+    #                          `terminal_disposition(strict=True)`.
+    #   gate_a_package_owner — a constraint declared directly in a package body, the
+    #                          genuinely package-owned control. No fixture covered this
+    #                          shape before Item 2, so the surviving package branch had
+    #                          zero live coverage.
+    "gate_a": FIXTURES_DIR / "gate_a",
+    "gate_a_package_owner": FIXTURES_DIR / "gate_a_package_owner",
+    # Cutover fixtures (Item 2 phase group 2).
+    #   agg_localterm_probe — the only model that reaches the aggregation LocalTerm
+    #                         mint (`graph_builder.py`): a plain literal attribute
+    #                         multiplied into an aggregation, so it is neither a
+    #                         sibling aggregation output nor an EXPOSE alias. Every
+    #                         other fixture's local terms are one or the other, so
+    #                         that mint had a population of zero.
+    #   shared_producer     — recorded KNOWN-INCOMPLETE: two consumers of one
+    #                         usage-owned attribute yield two entry points. See its
+    #                         PROVENANCE.md; SR-A02 is referred to Item 4 (PC-4).
+    "agg_localterm_probe": FIXTURES_DIR / "agg_localterm_probe",
+    "shared_producer": FIXTURES_DIR / "shared_producer",
 }
 
 # Constraint-lowering grandfather (Item 8, D3 — RETIRED Item 14 Phase 1, INV-D):

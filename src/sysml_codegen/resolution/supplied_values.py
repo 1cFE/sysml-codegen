@@ -3,7 +3,7 @@
 The subsystem attribute a plant calc reads already has a value in the model — a
 subtype-def literal, a bare `part :>>` override block, a dotted usage override, or an
 in-part inherited-attr redefinition. The design-attribute resolution path
-(`DependencyBacktracker._resolve_to_design_attribute`, Step 3) is a working
+(the shared table's design-attribute tier) is a working
 value-carrier, but it fails for these because the source attribute is *valueless on its
 base def* — its value lives in a redefinition/override no resolution step reads.
 
@@ -59,7 +59,7 @@ def _generation_error(message: str) -> CodeGenerationError:
 class _BindingTarget:
     """The source attribute a binding references, resolved to what Step 3 will match.
 
-    ``qn`` is the qualified name ``_resolve_to_design_attribute`` returns (dotted/bare
+    ``qn`` is the qualified name the design-attribute tier returns (dotted/bare
     match) or matches against (reference match), so the synthetic attribute must carry
     exactly this QN to become the binding's entry point.
     """

@@ -517,7 +517,7 @@ def _register_partdef_expose_scoped_aliases(
     expands CHAIN redefs — ``find_instance_paths_for_partdef`` gives the instance
     scope, ``scoped_lookup`` gives the calc-output channel — and writes
     ``(instance_path, leaf) -> channel``. The consumer-side reader is
-    ``dependency_backtracker._resolve_chain_dispatch`` (#1). Part *usage* exposes
+    the shared table's tier-1 channel forms (#1). Part *usage* exposes
     (the two V11 pins) are ``is_on_part_definition=False`` and untouched here.
 
     Returns the count of registered scoped aliases.

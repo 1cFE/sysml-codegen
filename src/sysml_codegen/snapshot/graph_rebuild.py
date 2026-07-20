@@ -82,7 +82,7 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
     # Item 2 (REQ-SVM-01..04): enrich design attributes BEFORE the backtracker, so its
     # Step-3 design-attribute resolution carries them to the consumer and collapses
     # fan-out by source QN. The backtracker (below) is the real seam — it, not
-    # build_computation_graph, runs `_resolve_to_design_attribute`.
+    # build_computation_graph, runs the shared table's design-attribute tier.
     hierarchy_data = snap["hierarchy_data"]
     # Item 1: prepare once, from one frozen index, before any demand or lowering —
     # the replay dual of pipeline_builder.py's live Step 5.64. The batch is carried
