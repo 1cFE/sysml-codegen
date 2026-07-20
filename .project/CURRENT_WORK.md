@@ -8,18 +8,28 @@
 
 ### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — spec drafted 2026-07-20
 
-Epic row 11 / CE-F2. Stock TEAx bridge builds complete typed mappings for zero/one/many entry
-channels; delete fusion's stale `MultiChannelEvaluator`. Spec + design drafted at
-`.project/active/constraint-lifecycle-multi-entry/` — grounded in the real 3-channel IFE package
-and the file:line single-entry inventory. **Zero-coordinate resolved** (orchestrator 2026-07-20):
-"zero" = zero *entry channels* (a minimal codegen-generated fixture), NOT constraint-free evidence
-— the brief conflated the two; Item 11's constraint-free-report firewall stands. Design settles the
-parked questions with code evidence: baseline = the typed model's own Pydantic field defaults (every
-entry field carries `Field(default=...)`); channel partition by `model_fields` ownership off
-`PreparedEvaluator.entry_models` (no catalog `param_group` reader, no new `ModelContractData`
-field); flat config kept, scalar `entry_channel`/`entry_model` deleted; malformed-field gap
-(`runner.py:94` outside the try) closed by the bridge raising `EvaluationFailed(ENTRY_VALIDATION)`.
-Evaluate seam unchanged (already multi-channel). Awaiting independent design review.
+### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — IMPLEMENTED, stop for audit (2026-07-20)
+
+Epic row 11 / CE-F2. Stock TEAx bridge now builds complete typed mappings for zero/one/many entry
+channels; fusion's `MultiChannelEvaluator` (+ `ThreeChannelEvaluator`, `bench` usage) deleted.
+Spec/design/design-review/evidence + codegen-gap finding at
+`.project/active/constraint-lifecycle-multi-entry/`. Design-review R1–R5 applied before implementing.
+
+**Landed:** teax `CandidateBridge(entry_models)` (partition by `model_fields`, fail-closed
+unknown/malformed → `EvaluationFailed(ENTRY_VALIDATION)`, A2 ambiguity guard); **R1** `bridge.build`
+relocated inside the runner failure switch (RED captured: uncaught `EvaluationFailed` before the
+move); `StudyDefinition`/`StudyConfig` scalar `entry_channel`/`entry_model` deleted, fingerprint
+basis moved (R5 store no-silent-rebind gate green). fusion study green through the stock bridge:
+**2301/2301 IFE cases, 100% agreement, no wrapper**; Item-8 seam proof still green.
+
+**Codegen gap found + ROUTED, not shimmed (Phase-0 A3 falsified):** codegen omits the EntryPoint
+module at zero entry channels (`pipeline_yaml.jinja2:11`), so a zero-entry package is rejected by
+stock TEAx (`Pipeline must declare exactly one EntryPoint module`). Zero *bridge shape* proven at
+the unit level; zero *end-to-end package* parked on a codegen fix (owner TBD — Item 13 / codegen).
+See `codegen-gap-zero-entry.md`.
+
+**Gates:** teax full simkit `298 passed`; ruff clean; mypy zero-added; codegen source untouched.
+Candidate revs: teax `96578a4`, fusion-tea `2422e715`, codegen artifacts `0f20e09` (source untouched at `589c8c4`). Nothing pushed (Item 13 owns push).
 
 ### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — CERTIFIED (independent audit 2026-07-20, pass with notes; all notes now closed)
 

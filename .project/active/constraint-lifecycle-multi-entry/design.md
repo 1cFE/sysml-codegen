@@ -1,6 +1,6 @@
 # Design: Multi-Entry Candidate Bridge (Lifecycle Item 9)
 
-**Status:** Draft
+**Status:** Draft — design-review revisions R1–R5 incorporated (2026-07-20; see `design-review.md`)
 **Owner:** Reid W
 **Created:** 2026-07-20
 **Spec:** `.project/active/constraint-lifecycle-multi-entry/spec.md`
@@ -67,7 +67,11 @@ is exactly the "no unrelated channel omitted" guarantee (contract invariant 47).
 
 **Decision:** A channel's complete baseline is `ModelClass()`. The bridge builds every channel's
 model with the candidate's owned fields applied over that default baseline; unselected fields, and
-whole unselected channels, keep the model's own defaults.
+whole unselected channels, keep the model's own defaults. **Scope (design-review R2):** this
+"baseline is `ModelClass()`" guarantee holds for packages whose every entry field resolved to a
+default (IFE: 27/27). For a package with a defaultless *required* field (an intended codegen output,
+A1), constructing the baseline of an unselected such field raises — the bridge routes that as a
+fail-closed `EvaluationFailed(ENTRY_VALIDATION)`, never an invented value.
 
 **Evidence:** Every field on every generated entry model carries a Pydantic default —
 `hif_plant_pkg__hif_plant__gain: float = Field(default=80.0, …)` and so on across all 27 IFE fields
@@ -124,7 +128,7 @@ richer. This changes the fingerprint, i.e. a new store lineage — safe because 
 pre-release (consistent with Item 8's store-transition ruling: no migration, archival invariant
 covers old lineage). Assumption A4.
 
-### D4 — Validation split: field-level in the bridge, channel-level unchanged in the entry-source
+### D4 — Validation split: field-level in the bridge, channel-level unchanged in the entry-source, **routed by relocating `bridge.build` into the runner's failure switch**
 
 **Decision:** Two validation sites, both before evaluation:
 
@@ -135,13 +139,18 @@ covers old lineage). Assumption A4.
   `Model(**subset)` raising `pydantic.ValidationError`, and the "field owned by no channel" case,
   are caught in the bridge and re-raised as `EvaluationFailed(EvaluationPhase.ENTRY_VALIDATION, …)`.
 
-**Evidence — the gap being closed:** today `bridge.build` does a bare `entry_model(**selected_fields)`
-(`bridge.py:26`) and is called at `runner.py:94` *outside* the runner's failure switch
-(`runner.py:95-102` catches only `EvaluationFailed`). A malformed field therefore propagates as an
-uncaught `pydantic.ValidationError` instead of a classified case. Raising `EvaluationFailed` from the
-bridge routes it through the existing switch to `StudyBridgeDefect` (`runner.py:111-112`) with no new
-failure type — reusing the taxonomy already exercised by
-`tests/evaluation/test_failure_taxonomy.py`.
+**The routing is a runner change, not just an exception-type change (design-review R1).** Raising
+`EvaluationFailed` from the bridge is necessary but **not sufficient**: `bridge.build` is called at
+`runner.py:94`, and the failure switch `try/except EvaluationFailed` opens at `runner.py:95` — the
+call is *outside* it, and `_evaluate_candidate` (`runner.py:74-83`) catches only
+`RetryableStoreError`. So a bridge-raised `EvaluationFailed` (or a `Model()` `ValidationError` on a
+defaultless baseline, R2) still propagates uncaught because the **call site**, not the exception
+type, is outside the catch. The fix relocates the `bridge.build` call inside the failure switch —
+move `runner.py:94` into the `try` at `:95` so a bridge failure reaches `_commit_execution_failure`
+and is recorded as a `StudyBridgeDefect` (`runner.py:111-112`), reusing the taxonomy already
+exercised by `tests/evaluation/test_failure_taxonomy.py`. No new failure type. This runner change is
+in the deletion/change inventory (§6) and pinned RED-first by a malformed-mapping test (Phase 1)
+that asserts a *recorded classified* failure, not an uncaught crash.
 
 ### D5 — Ordinary declared design inputs are structurally never "missing producers"
 
@@ -149,8 +158,11 @@ failure type — reusing the taxonomy already exercised by
 fields and unselected channels, D1), a declared design-attribute input the candidate doesn't override
 is still supplied through its channel. The spec's risk locus — `missing = expected − supplied` at
 `entry_source.py:44-52` — is eliminated because the stock bridge makes `supplied ⊇ expected` by
-construction. This falls out of D1+D2; the design records it as a guarantee, and Phase 5 pins it with
-a test (a design-attribute-only candidate over the IFE package still validates).
+construction, **for a fully-defaulted package** (D1 scope, R2). A defaultless required input the
+candidate omits does not silently drop to "missing producer"; it fails closed at baseline
+construction with a recorded `ENTRY_VALIDATION` (naming the field), which is the honest outcome, not
+an invented value. This falls out of D1+D2; Phase 5 pins it with a test (a design-attribute-only
+candidate over IFE still validates).
 
 ### D6 — Delete the fusion wrapper; the study builds the stock bridge
 
@@ -203,11 +215,22 @@ against), so partition and validation never disagree.
 
 ## 5. Load-bearing assumptions (stated, verified where cheap, else pinned to a phase)
 
-- **A1 — every entry-channel field has a default.** Verified for IFE (all 27 fields). Rests on
-  ADR-001: every entry-point kind (`LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL`) carries a
-  value, so codegen always emits a Pydantic default. If a field ever lacks one, `Model()` raises and
-  the bridge surfaces it as a fail-closed baseline error (a `PREPARATION`/`ENTRY_VALIDATION` failure),
-  never a silent zero. Phase 2 asserts the IFE baseline is buildable from defaults.
+- **A1 — codegen may emit defaultless *required* entry fields; the bridge fails closed on an
+  unselected one** (corrected per design-review R2 — the earlier "codegen always emits a default"
+  claim was false). Codegen's schema template has an explicit defaultless branch:
+  `templates/parameter_group_schema.py.jinja2:9-14` emits `name: type = Field(description=…)` (a
+  **required** field, no default) whenever `field.default is None`, and `default_value` can be `None`
+  in all three ADR-001 classifications (`resolution/graph_builder.py:534-591`: DESIGN_ATTRIBUTE on a
+  `None`/parse-fail, LIBRARY_DEFAULT on an absent/non-numeric default, USAGE_LITERAL on no-source).
+  The codebase treats a defaultless required field as intended — "the schema still declares them
+  required, so add them before pipeline execution" (`generation/entry_point.py:117-120`). So `Model()`
+  raises for a package with a defaultless field when the candidate does not select it. That is the
+  **correct** behavior here: the bridge catches it and surfaces a fail-closed
+  `EvaluationFailed(ENTRY_VALIDATION)` — an honest, *recorded* failure (once R1's relocation lands),
+  never an invented value. IFE happens to be fully-defaulted (27/27 numeric defaults verified in
+  `generated/schemas/`), so its baseline builds; that is a property of IFE, not a codegen guarantee.
+  Phase 2 tests **both arms**: a fully-defaulted baseline builds, and a defaultless-field package
+  with an unselected field yields a recorded classified failure.
 - **A2 — entry-model field names are globally unique across channels.** Verified for IFE. The bridge
   guards the general case: two channels declaring one field name is a construction-time fail-closed
   error (`_index_fields`). Phase 2 covers this branch with a synthetic two-channel collision.
@@ -235,8 +258,11 @@ The bridge feeds the `PreparedEvaluator` route only.
 | `StudyDefinition.entry_channel` / `entry_model` | `study/definition.py:34-35` | `entry_models` map |
 | `StudyConfig.entry_channel` / `entry_model` + single `getattr` | `study/config.py:51-52,115` | `prepared.entry_models` in `build_definition` |
 | `entry_channel`/`entry_model` in the fingerprint payload | `study/config.py:63-64` | `entry_models` identity |
+| **`bridge.build` call outside the failure switch** (R1) | `study/runner.py:94` (before `:95` `try`) | call relocated **inside** the `try/except EvaluationFailed` so a bridge failure is recorded, not uncaught |
 | fusion `MultiChannelEvaluator` | `run_viability_study.py:68-97` | stock bridge from `prepared.entry_models` |
 | second consumer + stale `ife_hif.yaml` refs | `bench_prepare_once.py:17,36,60` | stock bridge / `pipeline.yaml` |
+| **`prove_catalog_seam.py` config-scalar consumer** (R3) — Item 8's seam proof, must stay green | `prove_catalog_seam.py:47,100-101` (`ENTRY_CHANNEL`, `entry_channel=`/`entry_model=`) | rewired to the flat namespace / `prepared.entry_models`, migrated in the **same change set** as the D3 deletion |
+| **stale doc references** (R4, minor) | `prove_catalog_seam.py:11`, `run_viability_study.py:10`, `.project/.../gate-b/findings.md:79,82` | swept in Phase 4/5 (the `generated_bridged/` `ife_hif.yaml` copy is a different path, out of scope) |
 
 No parallel authority or compatibility route may replace them (epic simplification mandate; no LOC
 metrics — see [[loc-gates-retired-simplicity-qualitative]]).
@@ -245,7 +271,16 @@ metrics — see [[loc-gates-retired-simplicity-qualitative]]).
 
 ## 7. Phased plan (RED-first)
 
-**Phase 0 — Author the zero-entry-channel fixture (codegen-generated, committed).**
+**Phase 0 — RESULT (2026-07-20): codegen gap found and routed; zero proven at the bridge unit level.**
+The A3 probe ran against the real CLI and **falsified A3**: codegen omits the `entry_fusion` module
+at zero entry channels (`pipeline_yaml.jinja2:11` `{% if entry_points %}`), and stock TEAx rejects
+the result (*"Pipeline must declare exactly one EntryPoint module"*). Per A3 discipline this routes
+to codegen — no TEAx shim. Full finding: `codegen-gap-zero-entry.md`. Item 9 therefore proves the
+**zero bridge shape** at the unit level (`CandidateBridge({}).build({}) == {}`; `MappingEntrySource`
+with empty `expected_types` validates `{}`); the end-to-end zero *package* coordinate is parked on
+the codegen fix. Original Phase-0 intent, retained for the record:
+
+**Phase 0 (original intent) — Author the zero-entry-channel fixture (codegen-generated, committed).**
 - Author a minimal SysML model whose package has **no entry channels** — a computation/constraint
   with no unbound entry-point parameters (all operands internally produced or literal). Commit the
   `.sysml` source.
@@ -262,23 +297,38 @@ metrics — see [[loc-gates-retired-simplicity-qualitative]]).
 
 **Phase 1 — RED.** Tests that drive zero / one / many through the *stock* bridge and fail at the
 pinned chain: the current single-channel bridge omits IFE's other two channels (→ `ENTRY_VALIDATION`
-missing), and the fusion wrapper raises `AttributeError` on the regenerated package. Capture the
-failures. Extend `tests/study/test_bridge.py` (today single-channel only) with zero/one/many cases.
+missing), and the fusion wrapper raises `AttributeError` on the regenerated package. **Plus the R1
+RED case:** a malformed-mapping test asserting a *recorded classified* failure — which today does
+**not** surface (the bridge's `ValidationError` escapes at `runner.py:94`, outside the switch, and
+crashes the runner instead of committing a `StudyBridgeDefect`). Capture all failures. Extend
+`tests/study/test_bridge.py` (today single-channel only) with zero/one/many, and
+`tests/study/test_runner_failures.py` with the malformed-mapping classified-failure case.
 
-**Phase 2 — Multi-channel bridge.** Implement §4: construct from `entry_models`; partition by
-`model_fields` ownership; defaults baseline; field-level validation raising `EvaluationFailed`.
-Unit-cover: many (3 IFE models built, only selected fields changed), one, zero (`{}`), unknown
-field, malformed field, and the A2 two-channel collision guard.
+**Phase 2 — Multi-channel bridge + R1 runner relocation.** Implement §4: construct from
+`entry_models`; partition by `model_fields` ownership; defaults baseline; field-level validation
+raising `EvaluationFailed(ENTRY_VALIDATION)`. **Relocate the `bridge.build` call inside the runner's
+failure switch (R1)** so bridge failures are recorded, not uncaught. Unit-cover: many (3 IFE models
+built, only selected fields changed), one, zero (`{}`), unknown field, malformed field, the A2
+two-channel collision guard, and **both A1 arms** — a fully-defaulted baseline builds; a
+defaultless-field package with an unselected field yields a recorded classified failure (exercises
+the R1 relocation end to end).
 
-**Phase 3 — Definition/config consolidation.** Replace the scalar `entry_channel`/`entry_model` with
-`entry_models` on `StudyDefinition`; `build_definition` carries `prepared.entry_models`
-(`config.py:110-135`); update the fingerprint basis (D3). Delete the dead scalar fields and the
-single `getattr`. Adjust `tests/study/conftest.py` scaffolding and fingerprint-sensitivity tests.
+**Phase 3 — Definition/config consolidation + missed consumers.** Replace the scalar
+`entry_channel`/`entry_model` with `entry_models` on `StudyDefinition`; `build_definition` carries
+`prepared.entry_models` (`config.py:110-135`); move the fingerprint basis to the `entry_models`
+identity (D3). Delete the dead scalar fields and the single `getattr`. **Migrate
+`prove_catalog_seam.py` off the config scalars in this same change set (R3)** — it is Item 8's seam
+proof and must stay green. **Confirm no store-*read* path keys off the old `entry_channel`/
+`entry_model` fingerprint (R5)** — a changed fingerprint starts a new lineage (the opposite of a
+silent rebind); the store no-silent-rebind gate must still pass. Adjust `tests/study/conftest.py`
+scaffolding and the fingerprint-sensitivity tests.
 
-**Phase 4 — Delete the fusion wrapper, wire the study to stock TEAx.** Remove `MultiChannelEvaluator`
-and the `bench_prepare_once.py` usage (D6); the IFE study builds the runner's bridge from
-`prepared.entry_models`. Run the IFE viability study end to end through public APIs — GREEN, no
-wrapper.
+**Phase 4 — Wire the study to stock TEAx, prove green, then delete the wrapper.** Rewire the IFE
+study to build the runner's bridge from `prepared.entry_models` and **run the viability study end to
+end green through the stock bridge first** — the green run is the gate. Only then delete
+`MultiChannelEvaluator` and the `bench_prepare_once.py` usage (D6), which are now dead, and sweep the
+R4 stale doc references (`run_viability_study.py:10` docstring, `prove_catalog_seam.py:11`,
+`findings.md:79,82`). Re-run the study + fusion seam proof — still green, no wrapper.
 
 **Phase 5 — Validation + guarantee coverage, regression.** Pin the four validation shapes
 (missing/extra channel via entry-source; malformed/unknown field via bridge) and the D5 guarantee
@@ -293,7 +343,8 @@ inventory (§6) is gone, not shimmed.
 | risk | mitigation |
 |---|---|
 | The real CLI won't emit a one-`EntryPoint`/zero-channel package (A3) | Phase 0 generates and inspects before any code change; a codegen gap is routed to its owner, not shimmed in TEAx. |
-| A non-IFE package has a field with no default (A1) | Bridge fails closed on `Model()` construction rather than inventing a value; pinned by a Phase-2 assertion. |
+| A non-IFE package has a defaultless required field (A1 — an intended codegen output) | Bridge fails closed on `Model()` construction and, with the R1 relocation, *records* a classified `ENTRY_VALIDATION` failure rather than crashing or inventing a value; both A1 arms pinned by Phase-2 tests. |
+| An implementer changes only the bridge exception type and not the call site (R1) | §6 and Phase 2 make the `runner.py:94`→inside-`try` relocation explicit; the Phase-1 malformed RED case fails until the call is actually relocated. |
 | Field-name collision across channels in some future package (A2) | `_index_fields` fail-closed guard + a synthetic collision test; not silently resolved by first-pick. |
 | Fingerprint change strands a store (D3) | Pre-release stores; new lineage is the intended behavior (Item 8 store ruling), documented in evidence. |
 | Deletion leaves a hidden single-entry assumption | §6 inventory is checked for absence in Phase 5; the epic's no-parallel-route mandate applies. |

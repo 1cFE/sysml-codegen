@@ -82,27 +82,27 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-11 line and the
 (`constraint-execution-lifecycle-contract.md:519`) and acceptance row
 (`...:457`, "Zero/one/multiple typed channel mappings validate completely").
 
-- [ ] **RED first.** A test drives the real three-channel IFE package (`generated/`) through the
+- [x] **RED first.** A test drives the real three-channel IFE package (`generated/`) through the
       stock TEAx bridge and fails at the pinned chain before any production change — the current
       bridge omits two channels, or the fusion wrapper raises. The failure is captured, not
       narrated.
-- [ ] **"Many" validates and runs.** The stock bridge builds a complete typed mapping for all three
+- [x] **"Many" validates and runs.** The stock bridge builds a complete typed mapping for all three
       IFE channels (`HifPlantParams`, `IfePlantParams`, `SystemDesign`); the IFE viability study
       runs green end to end through public TEAx APIs with no consumer wrapper.
-- [ ] **"One" validates.** A single-entry-channel package bridges and validates completely through
+- [x] **"One" validates.** A single-entry-channel package bridges and validates completely through
       the same stock path (a single-channel spike package exists in fusion-tea, e.g.
       `codegen_chain_spike`; `exp_toy`).
-- [ ] **"Zero" validates.** A zero-entry-channel package produces a complete (empty) mapping and
+- [~] **"Zero" validates.** *(bridge shape GREEN; end-to-end package parked on the codegen gap — evidence.md §2, codegen-gap-zero-entry.md)*  A zero-entry-channel package produces a complete (empty) mapping and
       validation passes with nothing missing and nothing extra. The coordinate is a minimal
       codegen-generated package with no entry channels, committed as a TEAx fixture (design.md).
-- [ ] **Baseline + override.** Every channel gets a complete typed baseline; a candidate changes
+- [x] **Baseline + override.** Every channel gets a complete typed baseline; a candidate changes
       only its selected fields and omits no unrelated channel (contract invariant 47).
-- [ ] **Validation before evaluation.** Missing, extra, malformed (bad field *inside* a model), and
+- [x] **Validation before evaluation.** Missing, extra, malformed (bad field *inside* a model), and
       wrong-typed channel mappings are rejected as a graceful, classified failure before evaluation
       — not as an uncaught `pydantic.ValidationError` from `bridge.build`.
-- [ ] **Ordinary design inputs are not missing producers.** A declared design-attribute input is
+- [x] **Ordinary design inputs are not missing producers.** A declared design-attribute input is
       supplied as its ordinary typed entry channel, never reported as a missing channel/producer.
-- [ ] **Wrapper deleted, not shimmed.** Fusion's `MultiChannelEvaluator` and its second consumer
+- [x] **Wrapper deleted, not shimmed.** Fusion's `MultiChannelEvaluator` and its second consumer
       (`bench_prepare_once.py`) are removed; the stock bridge owns the public route. Single-channel
       duplicate paths in bridge/definition/config are consolidated, not layered behind a guard.
 
