@@ -6,6 +6,13 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — SPEC IN PROGRESS (2026-07-20)
+
+Epic rows 8–9. Spec at `.project/active/constraint-lifecycle-package-trust/spec.md`. Grounded finding:
+the "package trusts its own verifier" vulnerability is **live on the TEAx load path** (`teax`
+`package_load.py:70` execs and trusts the package-local `contracts/verify.py`) — TEAx-side work is
+required, the epic listing is not stale. Re-seal laundering also reproduces (`cli/__init__.py:728`).
+
 ### CONSTRAINT-LIFECYCLE Item 6 — Public Documentation and F1 Evidence Reconciliation — CERTIFIED (independent audit 2026-07-20, candidate `f917787` / TEAx `db23719`)
 
 **Audit verdict: Certify (no findings).** `.project/active/constraint-lifecycle-docs-f1/audit.md`.
