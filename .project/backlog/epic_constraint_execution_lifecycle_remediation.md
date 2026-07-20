@@ -741,7 +741,7 @@ five verdicts satisfied. Codegen `cfd8295`+ (Major-1 fix follow-on), stellarator
 
 ---
 
-### Item 11: TEAx Constraint Evidence Durability
+### Item 11: TEAx Constraint Evidence Durability ✅
 
 **Register rows**: 13–15
 **Type**: Code/Integration (TEAx, with generated-package fixtures from codegen)
@@ -770,12 +770,12 @@ prepared and file-backed evaluators, remain immutable, and persist/query without
 - Recreating a consumer-specific catalog/report schema.
 
 **Success Criteria**:
-- [ ] Constraint-free packages pass prepared and file-backed evaluation with empty evidence.
-- [ ] Excluded-only packages produce the exact `not_assessed` surface.
-- [ ] Nested mutation attempts cannot change authoritative or persisted evidence.
-- [ ] Exact reports persist/harvest for every completed status and remain compatibility-bound.
-- [ ] Phase/module/cause/report parity uses fixture-pinned expected phases.
-- [ ] Duplicate report adapters and unconditional reads are deleted; one durability mechanism remains.
+- [x] Constraint-free packages pass prepared and file-backed evaluation with empty evidence.
+- [x] Excluded-only packages produce the exact `not_assessed` surface.
+- [x] Nested mutation attempts cannot change authoritative or persisted evidence.
+- [x] Exact reports persist/harvest for every completed status and remain compatibility-bound.
+- [x] Phase/module/cause/report parity uses fixture-pinned expected phases.
+- [x] Duplicate report adapters and unconditional reads are deleted; one durability mechanism remains.
 
 **Deliverables**:
 - `../teax/.project/active/constraint-lifecycle-evidence-durability/spec.md`

@@ -6,19 +6,22 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — IMPLEMENTED, stop for audit 2026-07-20
-Epic rows 13–15 + invariant 46a. **Candidate teax `c342b10`** on `constraint-exec-epic` (not pushed;
-Item 13 owns push). Codegen source untouched (fixtures CLI-generated at `b987869`). Spec + design +
-design-review + evidence at `.project/active/constraint-lifecycle-evidence-durability/`.
-Design-review Approve-with-revisions (C1 + M1/M2/M3 + 3 minors) applied, then full phased plan:
-(0) 46a RED reproduced first-hand — `KeyError('constraint_report')` on a real constraint-free package
-(the owed repro Item 9 firewalled); (1) one absence seam in `project()`, both routes converge, empty
-evidence, catalog-authority corruption guard (`CorruptConstraintEvidence`) via `concrete_entries`;
-(2) deep-frozen evidence tree (MappingProxyType/tuple) + widened walkers, nested mutation blocked,
-byte-identity + MF-3 hold, 6 test sites migrated; (3) OUTPUT_WRITE positive signal at executor seam
-(C1) + non-over-emission coordinate; (4) excluded_only → not_assessed (A3 confirmed real), four-status
-covered. **Full teax suite 310 passed; ruff clean.** File-backed entry path generalized (was hardcoded
-`toy_plant_params.json`) for the "both routes" mandate. Next: `/_my_audit`.
+### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — ✅ CERTIFIED 2026-07-20
+**Audit verdict: Certify** (`audit.md`). Reproduced independently (not trusted): C1 positive
+write-phase signal (set-before/clear-on-success, no `finally`; entry-load→MODULE_EXECUTION,
+unwritable output_dir→OUTPUT_WRITE, router-setup test flipped honestly); M1 six migrated sites
+faithful; M2 frozen tree reproduced defeating nested status/margin/results mutation AND emitting
+non-finite tags at depth (byte-identity crux) AND MF-3 firing inside the seal; M3 corruption raise
++ catalog authority ground-truth (constraint_free/excluded_only→False, sealed_package→True).
+Teax **310 passed**; codegen source untouched vs `b987869` (docs-only diff); Items 8/9 surfaces
+green; ruff clean; mypy errors pre-existing/unrelated. Four **Minor** non-blocking findings: (F1)
+M3 catalog→corruption effect asserted only via forced flag, not end-to-end through cli.py; (F2)
+design's "two-fingerprint control" delivered as fingerprint-scoping + store-incompat rejection
+instead; (F3) INV-G "golden" is a round-trip proof, no captured pre-D2 byte golden; (F4) residual
+legacy `toy_plant_params.json` fallback in `_entry_artifact_path` (safe, fails loud, no fixture).
+All 7 spec SC marked met. **Candidate teax `c342b10`** on `constraint-exec-epic` (not pushed; Item 13
+owns push); artifacts at `.project/active/constraint-lifecycle-evidence-durability/`. Next:
+`/_my_pre_pr` / Item 13 push.
 
 ### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — ✅ CERTIFIED + Major 1 CLOSED 2026-07-20
 **Audit Major 1 closed:** the completeness check's MODULE_OUTPUT exemption left channel-tier name-based

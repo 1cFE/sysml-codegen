@@ -57,29 +57,29 @@ persistence/harvest path (`study/evidence_io.py`, `study/store.py`, `study/query
 
 ## Success Criteria
 
-- [ ] A **constraint-free** generated package (no `constraint_report` channel, valid EntryPoint
+- [x] A **constraint-free** generated package (no `constraint_report` channel, valid EntryPoint
       pipeline) evaluates to **empty constraint evidence** — no `KeyError` — through **both** the
       prepared and the file-backed route. This is coordinate one (RED today).
-- [ ] An **excluded-only** package (constraints present but all excluded → zero eligible) produces
+- [x] An **excluded-only** package (constraints present but all excluded → zero eligible) produces
       the exact `not_assessed` headline surface, distinct from the constraint-free empty-evidence
       surface. Zero-usage (constraint-free) and zero-eligible (excluded-only) are different axes and
       each has its own coordinate.
-- [ ] A nested mutation attempt on evidence — `evidence.report.results[i].status = ...`,
+- [x] A nested mutation attempt on evidence — `evidence.report.results[i].status = ...`,
       `evidence.report.results[i].margin = ...`, `evidence.responses[...] = ...` — **cannot** change
       the authoritative in-memory evidence or the persisted artifact. Enforced by deep-freeze or
       defensive isolation of the envelope, generated report, nested results, observations, status,
       and margin *before* policy can access them.
-- [ ] The exact completed report JSON persists and harvests for **satisfied**, **violated**,
+- [x] The exact completed report JSON persists and harvests for **satisfied**, **violated**,
       **indeterminate**, and **assessment_failed**, each carrying package identity
       (`executable_fingerprint`), and remains compatibility-bound (fingerprint-scoped, never merged
       across fingerprints).
-- [ ] Phase / module / cause / report parity between the prepared and file-backed routes uses
+- [x] Phase / module / cause / report parity between the prepared and file-backed routes uses
       **fixture-pinned expected phases** per arithmetic shape — not phases established by the two
       evaluators merely agreeing.
-- [ ] `OUTPUT_WRITE` is either **emitted honestly** by the file-backed persisting route on a real
+- [x] `OUTPUT_WRITE` is either **emitted honestly** by the file-backed persisting route on a real
       output-write failure, or the phase is **collapsed** (removed) so no defined-never-emitted phase
       survives. One or the other, decided against a fixture, not left dangling.
-- [ ] The duplicate/generic report adapters and the incidental encode-before-policy protection
+- [x] The duplicate/generic report adapters and the incidental encode-before-policy protection
       (`runner.py:134` ordering) are removed once the explicit durability mechanism owns immutability;
       exactly one durability mechanism remains and one unconditional-read path is gone.
 
