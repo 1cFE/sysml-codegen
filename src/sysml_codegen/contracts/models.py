@@ -62,6 +62,9 @@ class ModelContract(BaseModel):
             on a constraint-free corpus serializes as an explicit ``null`` (D6/INV-7).
         evaluation_semantics: Fixed tag naming the evaluation model generated predicate
             code follows.
+        catalog_schema_version: The embedded-catalog schema shape token (Item 8). A consumer
+            fails closed on an unaccepted value before reading any catalog field (INV-4). It is
+            inside the fingerprinted payload, so a schema bump moves ``semantic_fingerprint``.
         semantic_fingerprint: sha256 of the canonical payload with this field absent
             (INV-2 no-circularity) — set after the rest of the contract is built.
     """
@@ -70,6 +73,7 @@ class ModelContract(BaseModel):
     outputs: list[ContractOutput]
     constraint_catalog: ConstraintCatalog | None
     evaluation_semantics: str
+    catalog_schema_version: str
     semantic_fingerprint: str
 
 

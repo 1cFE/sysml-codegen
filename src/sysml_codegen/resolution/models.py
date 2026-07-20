@@ -392,6 +392,12 @@ class ConcreteConstraint(_TransactionalAssignmentModel):
     eligible: bool = True
     exclusion: ConstraintExclusion | None = None
     tracking_key: str | None = None
+    #: The referenced ``constraint def``'s qualified name — non-None **iff**
+    #: ``source_form == "definition_typed"`` (Item 8 / F1). ``None`` for every other
+    #: form, including *named inline*, whose effective predicate source is the usage's
+    #: own QN, not a ``facts.definitions`` entry. Recorded at lowering so the catalog
+    #: entry→definition join is a real FK, never a predicate-text reconstruction.
+    definition_qualified_name: str | None = None
 
     @model_validator(mode="after")
     def _eligibility_matches_executable_payload(self) -> "ConcreteConstraint":
@@ -464,19 +470,56 @@ class ConstraintCatalogSourceRecord(BaseModel):
     formal_names: list[str] = Field(default_factory=list)
 
 
+class ConstraintCatalogUsageRecord(BaseModel):
+    """One admitted (eligible) constraint usage's identity + definition join (Item 8).
+
+    The middle tier between per-definition :class:`ConstraintCatalogSourceRecord` and
+    per-occurrence :class:`ConstraintCatalogEntry`: one row per distinct admitted usage,
+    deduplicated across the usage's concrete occurrences. It is a direct enumeration surface
+    for a consumer (TEAx) — carrying source form, usage identity, owner QN, and the
+    definition→usage join — so the consumer never reconstructs those by QN-splitting or
+    predicate-text search. It carries **no** ``predicate_ir``: that authority stays on the
+    occurrence tier (D2a), guarded by ``assert_same_ir``.
+
+    Dedup identity is ``(usage_qualified_name, source_local_identity)``, not
+    ``usage_qualified_name`` alone — anonymous usages all share ``"<anonymous>"`` and are
+    distinguished by ``source_local_identity`` (F2).
+    """
+
+    usage_qualified_name: str
+    source_local_identity: str
+    source_form: str
+    owner_kind: str
+    owner_qualified_name: str
+    #: Non-None iff ``source_form == "definition_typed"``; FK into
+    #: :attr:`ConstraintCatalog.source_records` by ``definition_qualified_name`` (F1).
+    definition_qualified_name: str | None
+    membership_kind: str | None
+    is_negated: bool
+    expected_value: bool
+
+
 class ConstraintCatalogEntry(_TransactionalAssignmentModel):
-    """One concrete, eligible assertion's catalog record (Item 7 / D6).
+    """One concrete, eligible assertion's catalog record (Item 7 / D6, Item 8 fields).
 
     A thin, catalog-shaped projection of :class:`ConcreteConstraint` — every field a
-    generation seam or a same-IR guard reads, nothing else. ``predicate_ir`` is carried on
-    every entry (not just the source record) so the same-IR guard's arm (b) (byte-agreement
-    across entries sharing one definition) can run at the catalog level (INV-2).
+    generation seam or a same-IR guard reads, plus the five TEAx-consumed identity fields
+    (Item 8): ``source_form``, ``source_local_identity`` (usage short name),
+    ``owner_qualified_name``, and ``definition_qualified_name`` (with the existing
+    ``usage_qualified_name``, the entry-level definition→usage join). ``predicate_ir`` is
+    carried on every entry (not just the source record) so the same-IR guard's arm (b)
+    (byte-agreement across entries sharing one definition) can run at the catalog level (INV-2).
     """
 
     model_config = ConfigDict(validate_assignment=True)
 
     constraint_id: str
     usage_qualified_name: str
+    source_local_identity: str
+    source_form: str
+    owner_qualified_name: str
+    #: Non-None iff ``source_form == "definition_typed"`` — FK into ``source_records`` (F1).
+    definition_qualified_name: str | None
     owner_instance_path: str
     membership_kind: str | None
     predicate_source_key: str
@@ -518,6 +561,7 @@ class ConstraintCatalog(BaseModel):
     """
 
     source_records: list[ConstraintCatalogSourceRecord] = Field(default_factory=list)
+    usage_records: list[ConstraintCatalogUsageRecord] = Field(default_factory=list)
     concrete_entries: list[ConstraintCatalogEntry] = Field(default_factory=list)
     excluded_records: list[ConstraintCatalogExcludedRecord] = Field(default_factory=list)
     fingerprint: str
@@ -571,6 +615,7 @@ __all__ = [
     "ConstraintCatalogEntry",
     "ConstraintCatalogExcludedRecord",
     "ConstraintCatalogSourceRecord",
+    "ConstraintCatalogUsageRecord",
     "ConstraintExclusion",
     "ConstraintInputResolution",
     "EntryPoint",

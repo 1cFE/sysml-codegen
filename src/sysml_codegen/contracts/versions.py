@@ -15,6 +15,18 @@ Bump the major version on any breaking change to that surface; minor/patch for
 compatible additions. Owner-overridable; this is the initial token (P4).
 """
 
+CATALOG_SCHEMA_VERSION = "2.0.0"
+"""The embedded constraint-catalog schema shape a ``model_contract.json`` carries (Item 8).
+
+Bumped from the implicit ``1.x`` (pre-Item-8, no version token) to ``2.0.0`` when the
+admitted-usage tier and the five projected entry fields landed — a breaking schema addition.
+A consumer (TEAx) vendors an accepted set by copy (B3 forbids importing this repo) and fails
+closed on a version it does not accept, before reading any catalog field (INV-4). It sits
+*inside* the fingerprinted model-contract payload, so a schema bump is also an identity change
+(``semantic_fingerprint`` moves). Bumping it is a deliberate act; a new drift test
+(``tests/conformance/test_catalog_schema_version.py``) pins it against the vendored TEAx set.
+"""
+
 TRUSTED_VERIFIER_SHA256 = "ad0a855af17d18af5f3e8c36b1a6c500f492d88ec777b40f307c646306c67284"
 """The sha256 of the canonical stdlib-only verifier (``contracts/verify.py``), published as
 the trust anchor a runtime (TEAx) vendors to authenticate a package-local verifier's bytes
@@ -36,4 +48,9 @@ def generator_version() -> str:
     return __version__
 
 
-__all__ = ["RUNTIME_CONTRACT_VERSION", "TRUSTED_VERIFIER_SHA256", "generator_version"]
+__all__ = [
+    "CATALOG_SCHEMA_VERSION",
+    "RUNTIME_CONTRACT_VERSION",
+    "TRUSTED_VERIFIER_SHA256",
+    "generator_version",
+]

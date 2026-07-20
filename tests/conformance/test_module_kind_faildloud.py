@@ -70,6 +70,10 @@ def _catalog() -> ConstraintCatalog:
     entry = ConstraintCatalogEntry(
         constraint_id="C1",
         usage_qualified_name="Pkg::Def::assert1",
+        source_local_identity="assert1",
+        source_form="definition_typed",
+        owner_qualified_name="Pkg::Def",
+        definition_qualified_name="Pkg::Def",
         owner_instance_path="Pkg__Def",
         membership_kind="assert",
         predicate_source_key="definition:Pkg::Def",

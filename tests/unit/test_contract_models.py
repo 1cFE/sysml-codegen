@@ -120,6 +120,10 @@ def _graph_with_constraints() -> ComputationGraph:
             ConstraintCatalogEntry(
                 constraint_id="c1",
                 usage_qualified_name="Pkg__part__assert1",
+                source_local_identity="assert1",
+                source_form="inline",
+                owner_qualified_name="Pkg__part",
+                definition_qualified_name=None,
                 owner_instance_path="Pkg__part",
                 membership_kind="assert",
                 predicate_source_key="inline:Pkg__part__assert1",

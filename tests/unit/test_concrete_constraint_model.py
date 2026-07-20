@@ -262,6 +262,10 @@ def _catalog_entry(**changes) -> ConstraintCatalogEntry:
     values = {
         "constraint_id": "id_0",
         "usage_qualified_name": "Design__c__cell__nonneg",
+        "source_local_identity": "nonneg",
+        "source_form": "definition_typed",
+        "owner_qualified_name": "Design__c__cell",
+        "definition_qualified_name": "Design::ReusableConstraint",
         "owner_instance_path": "Design__c__cell",
         "membership_kind": None,
         "predicate_source_key": "definition:Design::ReusableConstraint",

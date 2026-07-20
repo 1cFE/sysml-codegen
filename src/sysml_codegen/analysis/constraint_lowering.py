@@ -1206,6 +1206,15 @@ def lower_constraints(
 
         formal_bindings = _definition_formal_bindings(facts, usage)
         owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
+        # The catalog entry→definition join (Item 8 / F1): a real FK, non-None *iff*
+        # definition_typed. Named inline usages have a non-None effective source (their own
+        # QN), which is not a facts.definitions entry — so gate strictly on the form, never on
+        # effective_source, to avoid a dangling FK.
+        definition_qn = (
+            _referenced_definition(facts, usage).identity.qualified_name
+            if usage.source.form == "definition_typed"
+            else None
+        )
         for owner_instance_path, occ_scope in item.owner_instances:
             # Minted before the actuals are resolved: it is this instance's producing
             # module EQN, and the shared resolver's self-reference guard needs it.
@@ -1324,6 +1333,7 @@ def lower_constraints(
                     inputs=inputs,
                     evaluation_channel=f"{constraint_id}__evaluation",
                     eligible=True,
+                    definition_qualified_name=definition_qn,
                 )
             )
 

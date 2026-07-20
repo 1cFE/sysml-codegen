@@ -118,6 +118,10 @@ def _graph() -> ComputationGraph:
             ConstraintCatalogEntry(
                 constraint_id="C1",
                 usage_qualified_name="ToyPlant::DemoPlant::affordable",
+                source_local_identity="affordable",
+                source_form="inline",
+                owner_qualified_name="ToyPlant::DemoPlant",
+                definition_qualified_name=None,
                 owner_instance_path="ToyPlant__DemoPlant",
                 membership_kind="assert",
                 predicate_source_key="inline:ToyPlant::DemoPlant::affordable",

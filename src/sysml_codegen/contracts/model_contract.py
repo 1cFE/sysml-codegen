@@ -16,6 +16,7 @@ from sysml_codegen.contracts.models import (
     ContractParameter,
     ModelContract,
 )
+from sysml_codegen.contracts.versions import CATALOG_SCHEMA_VERSION
 from sysml_codegen.generation.constraint_catalog import _canonical_json
 
 if TYPE_CHECKING:
@@ -63,6 +64,7 @@ def build_model_contract(graph: ComputationGraph) -> ModelContract:
             graph.constraint_catalog.model_dump() if graph.constraint_catalog else None
         ),
         "evaluation_semantics": EVALUATION_SEMANTICS,
+        "catalog_schema_version": CATALOG_SCHEMA_VERSION,
     }
     semantic_fingerprint = hashlib.sha256(
         _canonical_json(unfingerprinted).encode("utf-8")
@@ -73,5 +75,6 @@ def build_model_contract(graph: ComputationGraph) -> ModelContract:
         outputs=outputs,
         constraint_catalog=graph.constraint_catalog,
         evaluation_semantics=EVALUATION_SEMANTICS,
+        catalog_schema_version=CATALOG_SCHEMA_VERSION,
         semantic_fingerprint=semantic_fingerprint,
     )

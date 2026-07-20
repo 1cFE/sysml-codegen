@@ -22,6 +22,7 @@ from sysml_codegen.resolution.models import (
     ConstraintCatalogEntry,
     ConstraintCatalogExcludedRecord,
     ConstraintCatalogSourceRecord,
+    ConstraintCatalogUsageRecord,
 )
 
 if TYPE_CHECKING:
@@ -106,6 +107,10 @@ def assemble_constraint_catalog(
             ConstraintCatalogEntry(
                 constraint_id=c.constraint_id,
                 usage_qualified_name=c.usage_qualified_name,
+                source_local_identity=c.source_local_identity,
+                source_form=c.source_form,
+                owner_qualified_name=c.owner_qualified_name,
+                definition_qualified_name=c.definition_qualified_name,
                 owner_instance_path=c.owner_instance_path,
                 membership_kind=c.membership_kind,
                 predicate_source_key=c.predicate_source_key,
@@ -115,6 +120,7 @@ def assemble_constraint_catalog(
                 evaluation_channel=c.evaluation_channel,
             )
         )
+    usage_records = _assemble_usage_records(eligible)
     excluded_records = [
         ConstraintCatalogExcludedRecord(
             constraint_id=c.constraint_id,
@@ -128,16 +134,50 @@ def assemble_constraint_catalog(
     ]
     payload = {
         "source_records": [r.model_dump(mode="json") for r in source_records],
+        "usage_records": [r.model_dump(mode="json") for r in usage_records],
         "concrete_entries": [e.model_dump(mode="json") for e in concrete_entries],
         "excluded_records": [r.model_dump(mode="json") for r in excluded_records],
     }
     fingerprint = hashlib.sha256(_canonical_json(payload).encode()).hexdigest()
     return ConstraintCatalog(
         source_records=source_records,
+        usage_records=usage_records,
         concrete_entries=concrete_entries,
         excluded_records=excluded_records,
         fingerprint=fingerprint,
     )
+
+
+def _assemble_usage_records(
+    eligible: list[ConcreteConstraint],
+) -> list[ConstraintCatalogUsageRecord]:
+    """One admitted-usage row per distinct ``(usage_qualified_name, source_local_identity)``.
+
+    Deduplicated across the usage's concrete occurrences (Item 8, INV-2). The identity key
+    folds in ``source_local_identity`` so two distinct *anonymous* eligible usages (both
+    ``usage_qualified_name == "<anonymous>"``) yield two rows, never one (F2). Ordering follows
+    first appearance in ``eligible`` (already ``constraint_id``-sorted upstream), so the tier is
+    deterministic. Usage-tier identity fields are invariant across occurrences (B2), so the
+    first occurrence's values are authoritative.
+    """
+    records: dict[tuple[str, str], ConstraintCatalogUsageRecord] = {}
+    for c in eligible:
+        key = (c.usage_qualified_name, c.source_local_identity)
+        if key in records:
+            continue
+        assert c.is_negated is not None and c.expected_value is not None  # eligible-guarded
+        records[key] = ConstraintCatalogUsageRecord(
+            usage_qualified_name=c.usage_qualified_name,
+            source_local_identity=c.source_local_identity,
+            source_form=c.source_form,
+            owner_kind=c.owner_kind,
+            owner_qualified_name=c.owner_qualified_name,
+            definition_qualified_name=c.definition_qualified_name,
+            membership_kind=c.membership_kind,
+            is_negated=c.is_negated,
+            expected_value=c.expected_value,
+        )
+    return list(records.values())
 
 
 def assert_same_ir(entries: list[ConstraintCatalogEntry]) -> None:

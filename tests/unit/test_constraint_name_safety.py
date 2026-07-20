@@ -195,6 +195,10 @@ def _permuted_collision_graph(
         ConstraintCatalogEntry(
             constraint_id="C1",
             usage_qualified_name="Pkg::C1",
+            source_local_identity="C1",
+            source_form="inline",
+            owner_qualified_name="Pkg",
+            definition_qualified_name=None,
             owner_instance_path="Pkg",
             membership_kind="assert",
             predicate_source_key="inline:Pkg::C1",
@@ -206,6 +210,10 @@ def _permuted_collision_graph(
         ConstraintCatalogEntry(
             constraint_id="C2",
             usage_qualified_name="Pkg::C2",
+            source_local_identity="C2",
+            source_form="inline",
+            owner_qualified_name="Pkg",
+            definition_qualified_name=None,
             owner_instance_path="Pkg",
             membership_kind="assert",
             predicate_source_key="inline:Pkg::C2",

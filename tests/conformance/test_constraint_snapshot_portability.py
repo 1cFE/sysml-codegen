@@ -50,8 +50,13 @@ PACKAGE_NAME = "snapshot_portability"
 # Only model_contract_bytes and its two derived hashes changed. No value moved at
 # either step; the F2 key held 3.0, the same as the outer attribute it shadowed, which
 # is exactly why a value-only gate could not catch it.
-# Pins: bf2b3d49... (pre-Item-4) -> a7e07446... (carry) -> current.
-SNAPSHOT_MANIFEST_SHA256 = "bf6b36b1d6afc40e3cc670fc85825c48ee4d220f986ee08338225d24511f2fe8"
+# Item 8 re-pin: the embedded catalog gained the admitted-usage tier and five projected entry
+# fields, and the model contract gained catalog_schema_version (all inside the fingerprinted
+# payload). So catalog_fingerprint, semantic_fingerprint, and model_contract_bytes all move --
+# this is the single codegen pin Item 8 touches (graph baselines are catalog-excluded; F6). No
+# key/value moved in the graph itself; only the contract/catalog identity bytes changed.
+# Pins: bf2b3d49... (pre-Item-4) -> a7e07446... (carry) -> bf6b36b1... (Item-7) -> current.
+SNAPSHOT_MANIFEST_SHA256 = "4325ce51d180a5e28af1679896113a754644bad47263796ec1b0b054f1e2c5a3"
 
 
 def _anonymous_non_numerical() -> ConstraintUsageFact:
