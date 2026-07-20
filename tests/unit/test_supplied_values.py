@@ -316,3 +316,25 @@ def test_clean_run_is_silent_no_warning(caplog):
             real_design_attrs={},
         )
     assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []
+
+
+def test_malformed_type_def_literal_does_not_suppress_part_def_literal():
+    """Regression (audit F1): a malformed literal at one tier must not consume the tiers
+    below it.
+
+    Merging tiers 2a and 2b into a single owner loop made a bad literal on the
+    specialized/type def exit the whole loop, so a perfectly good literal on the
+    consuming part def was lost — silently, with the seam reporting `0 literal applied,
+    0 non-literal skipped`. The predecessor fell through and resolved 42.0.
+    """
+    out = _enrich(
+        [_usage("driver.efficiency", owning_part_def_qn="Design__Plant")],
+        redefinitions=[
+            _override("Lib__Hif_Driver", "efficiency", "true"),  # malformed, type def
+            _override("Design__Plant", "efficiency", 42.0),  # valid, consuming part def
+        ],
+        design_overrides=[],
+        usage_type_map={(_SCOPE, "driver"): "Lib__Hif_Driver"},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)["Scope__plant__driver__efficiency"].default_value == "42.0"

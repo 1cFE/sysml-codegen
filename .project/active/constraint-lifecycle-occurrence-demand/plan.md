@@ -723,8 +723,15 @@ uv run --frozen python -O -m pytest -q -rs \
   literal/nonliteral/unresolved disagreements fail with target plus ordered origin contexts.
 - [x] Calc provenance wins only after successful resolution. Constraint-only provenance covers
   exact captured source, real winning record, portable usage fallback, tier conflict, and absence.
-- [x] Unique targets produce the exact OD-A08/OD-A09 info summaries and OD-A10 warning order/counts;
-  context evaluations do not increment logical counts.
+- [~] Unique targets produce the exact OD-A08/OD-A09 info summaries **and** OD-A10 warning
+  order/counts; context evaluations do not increment logical counts. **Split, per audit F2.**
+  OD-A08/OD-A09 exact INFO summaries and the no-double-count property are proven publicly and
+  live. OD-A10 is delivered in two pieces: the stable node
+  `test_r7_multi_target_order_permutations` proves target order, defaults, dedup, and
+  live/replay parity (observed 3/3/0, warnings `[]`); the warning-order half is proven by
+  `tests/unit/test_logical_demand_resolution.py::test_two_warnings_occur_in_order_within_one_batch`,
+  which pins both warning bytes in order within one batch. The design's live 3/2/1 shape is
+  **not** delivered — see the recorded deviation in evidence.md §6.
 - [x] A real attribute collision counts as applied, emits one warning, preserves the real value,
   and creates no synthetic attribute.
 - [x] No Item 2 resolver symbol/import or new target-equivalence rule appears in the diff.
@@ -770,6 +777,47 @@ performs one deterministic logical operation per existing normalized target.
 - **Temporary Phase 3 non-releasable state:** none survived the session. The old
   route-level `materialize_supplied_values` was never adapted to the new 3-tuple
   ladder — it was deleted in Phase 4 instead, so no wrapper or dual path ever existed.
+- **Audit remediation (2026-07-19, candidate 2).** Independent audit returned *Needs work*
+  (`audit.md`). Fixed: audit F1, a silent value-loss regression introduced by the tier-2a/2b
+  merge — a malformed literal on the type def did `return None, False, None`, exiting the
+  whole tier loop and suppressing a valid literal on the consuming part def. The predecessor
+  fell through and resolved 42.0; the candidate lost the value with no warning at all
+  (`0 applied, 0 skipped`). The malformed branch now `continue`s, restoring predecessor
+  fall-through exactly. Regression test
+  `tests/unit/test_supplied_values.py::test_malformed_type_def_literal_does_not_suppress_part_def_literal`
+  was verified RED against the pre-fix code and GREEN after. The pre-existing final-tier
+  swallow (all tiers malformed -> silent `None`) is deliberately unchanged: it predates
+  Item 1 and belongs to Item 4's diagnostics scope.
+  Added additively, without touching the Phase 0 overlay (its SHA-256 is still
+  `aea7c821...eacb624b`): fixture `tests/fixtures/constraint_occurrence_demand/cycle_indirect/`
+  plus new file `tests/conformance/test_constraint_occurrence_demand_supplementary.py` with
+  `test_r5_indirect_cycle_is_atomic_on_the_public_route`, closing OD-A05's `A -> B -> A`
+  variant on the public route; and
+  `test_two_warnings_occur_in_order_within_one_batch` for OD-A10's warning-order half.
+- **Audit notes F4-F7 dispositions.**
+  - **F7 applied.** `_usable_source` no longer compares against `Path.cwd()`; a pure
+    resolution helper must not classify identical inputs differently depending on the
+    directory the generator ran from.
+  - **F6 declined with reason, recorded at the call site.** The count noun *is* wrong —
+    the log says "referenced bindings" but reports `len(demands)`, the number of normalized
+    targets. Correcting it changes bytes pinned in the Phase 0 acceptance overlay, whose
+    SHA-256 is the RED/GREEN anchor. A comment at `supplied_values.py` records the defect and
+    says to fix noun and anchor together once the anchor is retired.
+  - **F4 declined with reason.** `_owner_source` reports "no source" and "two conflicting
+    sources" identically, downgrading a tier silently where `_unique_source` would raise.
+    Fixing it properly means widening `ValueResolution.winning_source` to carry a set — a
+    third deviation from the design's record shape — and it must not raise during resolution,
+    since eager provenance validation is exactly the defect fixed in candidate 1. The current
+    downgrade is conservative: control falls to a lower tier that itself raises on ambiguity
+    or absence, so no wrong value is grouped silently; only the tier attribution is coarser.
+    Worth doing as a scoped design-contract change, not folded into audit remediation.
+  - **F5 declined with reason.** `source_location_mode=None` genuinely has two disagreeing
+    consumers (`_project_excluded_location` raises; `_verified_predicate_source_key` falls back
+    to an unvalidated basename). Both production callers pass explicit values, so the
+    disagreement is reachable only from unit tests. Making the source-key path raise too would
+    require updating the migrated unit call sites that pass no mode; that is the right fix and
+    is deferred rather than done here. Deviation 3 in evidence.md is corrected to say the
+    "same place, same message" claim holds for the excluded-location path only.
 - **Post-review correctness fix (CONFIRMED defect, fixed 2026-07-19).** Independent
   review found that `resolve_logical_demand` computed and validated grouping
   provenance for *every* numeric result, while the REQ-SVM-03 collision guard that

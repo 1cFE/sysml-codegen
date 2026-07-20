@@ -278,7 +278,11 @@ def _resolve_value(
                 try:
                     return float(redef.literal_value), False, redef
                 except (ValueError, TypeError):
-                    return None, False, None
+                    # A malformed literal is not an answer, so it must not consume the
+                    # tiers below it: keep looking. Merging tiers 2a and 2b into one
+                    # loop previously let a bad literal on the type def suppress a good
+                    # one on the consuming part def, losing a resolvable value silently.
+                    continue
 
     return None, False, None
 
@@ -286,10 +290,14 @@ def _resolve_value(
 def _usable_source(path: Path | None) -> bool:
     """Whether a path can name an existing parameter group.
 
-    ``None``, the ``unknown`` sentinel, and the working directory are absences, not
-    groups: routing a numeric value into one of them invents a group (D7/I8).
+    ``None`` and the ``unknown`` sentinel are absences, not groups: routing a numeric
+    value into one of them invents a group (D7/I8).
+
+    Deliberately reads no process state. An earlier form also excluded ``Path.cwd()``,
+    which made an otherwise pure helper classify identical inputs differently depending
+    on the directory the generator ran from.
     """
-    return path is not None and path != Path("unknown") and path != Path.cwd() and path.name != ""
+    return path is not None and path != Path("unknown") and path.name != ""
 
 
 def _unique_source(demand: LogicalDemand, tier: str, candidates: set[Path | None]) -> Path:
@@ -565,6 +573,12 @@ def enrich_graph_design_attributes(
             target.parent_part,
             target.name,
         )
+    # NOTE (audit F6): "referenced bindings" now under-counts by design — the value is
+    # `len(demands)`, the number of normalized targets, and collapsing many bindings into
+    # one target is the whole point of this seam. The noun is wrong and should read
+    # "demand targets", but these exact bytes are pinned in the Phase 0 acceptance
+    # overlay, whose SHA-256 is the RED/GREEN anchor. Correct both together once the
+    # anchor is retired.
     if non_literal_skips:
         logger.warning(
             "supplied-value materializer scanned %d referenced bindings: %d literal "

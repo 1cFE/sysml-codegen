@@ -6,10 +6,30 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 1 — IMPLEMENTED AND CERTIFIED FOR ITS SCOPE (2026-07-19)
+### CONSTRAINT-LIFECYCLE Item 1 — NEEDS WORK after independent audit (2026-07-19)
 
-**Candidate revision `28bc8b0fc22ba85cbed94febf0963bebf7cd600e`.** Evidence:
-`.project/active/constraint-lifecycle-occurrence-demand/evidence.md`.
+**Candidate revision `56837bc3312292f75830fdde730ba33fb1d88bc4`** (supersedes 28bc8b0 after audit remediation). Evidence:
+`.project/active/constraint-lifecycle-occurrence-demand/evidence.md`. Audit:
+`.project/active/constraint-lifecycle-occurrence-demand/audit.md`.
+
+**Independent audit verdict: Needs work** — narrow, two required fixes. Every gate below was
+reproduced first-hand and all seven invariants verified, but two blockers stand:
+
+1. **Silent value-loss regression** introduced by Item 1 in `_resolve_value`
+   (`resolution/supplied_values.py:268-281`). Merging tiers 2a/2b made a malformed literal on the
+   type def return early and suppress a valid literal on the consuming part def. Reproduced on
+   both trees: predecessor `ecdc7285` returns `42.0`, candidate returns `None`, and the seam logs
+   `0 literal applied, 0 non-literal skipped` — the demand vanishes with no diagnostic. No test
+   covers the shape, which is why the suite is green.
+2. **OD-A10 not delivered as approved, and undisclosed.** The `order` fixture was built with three
+   plain literal overrides (3/3/0, zero warnings) instead of the design's collision + CHAIN shape
+   (`design.md:602`, `:622` specify 3/2/1 with two ordered warnings). `plan.md:726` carries a
+   checked box asserting OD-A10 warning order/counts that no test makes. Not among evidence §6's
+   eight deviations.
+
+Also: deviation 6 mis-attributes the cycle-fixture gap to the plan when the approved design
+specifies the same content, and OD-A05's output-bytes-on-failure half is unproven. Four smaller
+notes (F4–F7) are in the audit.
 
 All six public acceptance nodes are GREEN on the unchanged Phase 0 overlay (acceptance-file
 SHA-256 `aea7c821...eacb624b`), closing R-4, R-5, and R-7. Full suite **3,009 passed, 26

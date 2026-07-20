@@ -496,3 +496,76 @@ def test_collision_covered_target_with_split_calc_sources_does_not_raise(caplog)
         "supplied-value materializer scanned 1 referenced bindings: "
         "1 literal applied, 0 non-literal skipped."
     )
+
+
+def test_two_warnings_occur_in_order_within_one_batch(caplog):
+    """OD-A10's warning-order observation: exactly two warnings, X then Y, one batch.
+
+    This is the observation OD-A10 exists to make. It is pinned here at the enrichment
+    seam rather than through a public SysML fixture — see the deviation recorded in
+    evidence.md §6 for why the design's live 3/2/1 shape is not modelable as specified.
+
+    Ordering is a real property of the seam, not an artifact of this test: every
+    resolution is staged, then per-target collision warnings are emitted in ascending
+    target order, and only then the single deferred summary. A future change that
+    emitted the summary first, or interleaved it, fails here.
+    """
+    from sysml_codegen.analysis.parameter_groups import DesignAttributeData
+
+    real = DesignAttributeData(
+        name="a_collision",
+        sysml_type="Real",
+        default_value="101.0",
+        unit=None,
+        source_file=CALC_ROUTE,
+        source_line=4,
+        parent_part="source",
+        qualified_name="D__plant__source__a_collision",
+    )
+    usages = [
+        _CalcUsage(
+            "D__plant__consume",
+            CALC_ROUTE,
+            "source.a_collision",
+            "source.b_nonliteral",
+            "source.c_clean",
+        )
+    ]
+    overrides = [
+        _override("D__plant__source", "a_collision", "11.0"),
+        _override("D__plant__source", "b_nonliteral", None, chain=True),
+        _override("D__plant__source", "c_clean", "33.0"),
+    ]
+
+    with caplog.at_level(logging.INFO, logger=MATERIALIZER_LOGGER):
+        enriched = enrich_graph_design_attributes(
+            {CALC_ROUTE: [real]},
+            calc_usages=usages,
+            prepared=None,
+            redefinitions=[],
+            design_overrides=overrides,
+            usage_type_map={},
+        )
+
+    warnings = [
+        record.getMessage()
+        for record in caplog.records
+        if record.levelno >= logging.WARNING and record.name == MATERIALIZER_LOGGER
+    ]
+    assert warnings == [
+        "supplied-value materializer: a real design attribute already covers "
+        "D__plant__source__a_collision (source.a_collision); keeping the real value, "
+        "skipping synthesis (REQ-SVM-03).",
+        "supplied-value materializer scanned 3 referenced bindings: 2 literal applied, "
+        "1 non-literal skipped (deferred: ['source.b_nonliteral']).",
+    ]
+
+    # The collision keeps the real value; only the clean target synthesizes.
+    synthesized = [
+        attr.qualified_name
+        for attrs in enriched.values()
+        for attr in attrs
+        if attr is not real
+    ]
+    assert synthesized == ["D__plant__source__c_clean"]
+    assert [attr.default_value for attr in enriched[CALC_ROUTE] if attr is real] == ["101.0"]

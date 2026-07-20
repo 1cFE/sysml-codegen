@@ -1,7 +1,7 @@
 # Evidence: Lifecycle Remediation Item 1 — Occurrence and Demand Integrity
 
 **Status:** Phases 0–6 complete. Candidate certified for the scope Item 1 owns.
-**Candidate revision:** `28bc8b0fc22ba85cbed94febf0963bebf7cd600e`
+**Candidate revision:** `56837bc3312292f75830fdde730ba33fb1d88bc4` (supersedes `28bc8b0` after audit remediation)
 **Item 0 RED predecessor:** `ecdc7285be1508c08e82830c93072306f40e6b34`
 **Coordinated pins:** agentic-mbse `515e08bbcd70aa9d23212765161bd02b3e3d8f23`,
 TEAx `d545701f575133350474108c96202a2ac5244462`
@@ -78,8 +78,16 @@ Licensed environment loaded from `/home/reid/1cfe/agentic-mbse/.env` before ever
 | `test_r7_multi_target_order_permutations` | PASS |
 | `test_r7_constraint_only_provenance_after_resolution` | PASS |
 
-Focused licensed selection (the five historical RED nodes): **5 passed, 0 skipped**.
-Full acceptance file: **6 passed**.
+| `test_r5_indirect_cycle_is_atomic_on_the_public_route` (supplementary) | PASS |
+
+Focused licensed selection (five historical RED nodes plus the supplementary indirect
+cycle): **6 passed, 0 skipped**. Full acceptance file: **6 passed**; supplementary
+file: **1 passed**.
+
+The Phase 0 acceptance file's SHA-256 is still
+`aea7c8219d716f4ca1ecb154ca6ed8a13e0c15b1184fdcfe2d92b556eacb624b`. Candidate-2 nodes
+were added in a separate file, `test_constraint_occurrence_demand_supplementary.py`, so
+the RED/GREEN anchor is untouched.
 
 ### Observed behaviour against the recorded RED
 
@@ -135,9 +143,9 @@ TEAX_SIMKIT_PATH=../teax/packages/teax-simkit \
 
 | Gate | Result |
 |---|---|
-| Full suite | **3,009 passed, 26 skipped, 16 deselected, 0 failed** |
-| Focused normal | 63 passed |
-| Focused optimized (`python -O`) | 63 passed |
+| Full suite | **3,012 passed, 26 skipped, 16 deselected, 0 failed** |
+| Focused normal | 66 passed |
+| Focused optimized (`python -O`) | 66 passed |
 | Affected regression union (16 files) | 162 passed |
 | Unchanged absolute-reference controls | 2 passed |
 | Mypy | 76 errors in 17 files — **equal to the Phase 0 baseline** |
@@ -215,9 +223,15 @@ owner-settled; each is challengeable by re-deriving against the reasoning below.
    a call-site decision — policy at the call site, mechanism in the utility.
 
 3. **Nullable `source_location_mode` / `source_roots` on `prepare_constraint_usages`**
-   (recorded 2026-07-19). Kept exactly as `lower_constraints` had them, so route-absence
-   still fails at the same place with the same message. Requiring them would change
-   behaviour for facts that legitimately have no route.
+   (recorded 2026-07-19; **corrected after audit F5**). Kept exactly as
+   `lower_constraints` had them. The original claim that route-absence "still fails at the
+   same place with the same message" holds **only for the excluded-location path**:
+   `_project_excluded_location` raises on `None`, but `_verified_predicate_source_key`'s
+   `else` branch silently falls back to an unvalidated non-portable basename that feeds the
+   minted predicate-source key. Both production callers pass explicit values
+   (`"live"` / `"snapshot"`), so the disagreement is reachable only from unit tests — which
+   therefore exercise a key-derivation path production never takes. Making the source-key
+   path raise too is the right fix and is deferred, not done.
 
 4. **`RedefinitionData` carries no source path** (recorded 2026-07-19). The design's
    provenance tier 3 ("one unique real source from the winning override/redefinition
@@ -231,15 +245,62 @@ owner-settled; each is challengeable by re-deriving against the reasoning below.
    `Any` with the constraint stated in a comment; both key kinds normalize to `Path`
    immediately.
 
-6. **Indirect-cycle fixture gap** (accepted as-is 2026-07-19; Phase 0 overlay bytes
-   deliberately not modified). The plan's Phase 2 validation asks for an indirect cycle
-   asserted with `OccurrenceDemandCycle__A` / `__B` QNs. **Those QNs exist nowhere in the
-   fixture tree** — `cycle/model.sysml` models only the self-cycle
-   (`part recursive : Node`). This is a plan-drafting discrepancy, not an implementation
-   gap. Indirect detection is proven instead at unit level by
-   `test_indirect_cycle_raises_structured_context`, asserting `cycle_path == ("A","B","A")`
-   and the closing edge `(A, "b", B)`. Closing the line verbatim would require a new
-   fixture and therefore new Phase 0 overlay bytes.
+6. **Cycle fixture deviates from the approved design** (**relabelled after audit F3** —
+   the earlier "plan-drafting discrepancy" attribution was wrong). `design.md:598` — not
+   merely the plan — specifies an `A -> B -> A` variant, declaration-reversed variants, and
+   a pre-existing output target holding `b"sentinel\n"` that must stay byte-identical on
+   failure. The Phase 0 `cycle/` fixture models only the self-cycle
+   (`part recursive : Node`). This is a **design deviation**.
+   **Partly closed in candidate 2:** the new fixture
+   `tests/fixtures/constraint_occurrence_demand/cycle_indirect/` and the new public node
+   `test_r5_indirect_cycle_is_atomic_on_the_public_route` deliver the `A -> B -> A` variant
+   on the real construction route, observing
+   `cycle_path == (OccurrenceDemandCycleIndirect__A, __B, __A)` and closing edge
+   `(A, "b", B)`. Added as new files; the Phase 0 overlay was not touched.
+   **Still open and unproven:** the declaration-reversed variants (covered at unit level
+   only, `tests/unit/test_part_instance_index.py`) and the `b"sentinel\n"` output-target
+   byte-preservation observation, which no test makes.
+
+9. **OD-A10's live 3/2/1 shape is not delivered** (**recorded after audit F2**).
+   `design.md:602/:622` specifies the `order` fixture as `a_collision` real `101.0` plus
+   supplied `11.0`, `b_nonliteral` carrying a highest-precedence CHAIN, `c_clean` supplying
+   `33.0` — counts `3/2/1` with both warning bytes once and in order. The fixture as built
+   gives all three plain literal overrides, so the observed behaviour is `3/3/0` with no
+   warnings, and the stable node asserts exactly that.
+   **Attempted and blocked.** Building the design's shape as a supplementary live fixture
+   hit two independent structural obstacles, both reproduced this session:
+   (a) a non-literal supplied value by definition synthesizes nothing, so its consumer
+   fails V11 coverage (`UncoveredInput(module=..., input='b')`) — and giving the consumer a
+   modeled default to satisfy V11 makes SysIDE reject the explicit binding that creates the
+   demand in the first place (`error (feature-value-overriding): Cannot override a binding
+   feature value`); and (b) an attribute default declared on a part def is captured
+   def-scoped (`..__Source__a_collision`), so it does not collide with the instance-scoped
+   supplied target (`..__plant__source__a_collision`). The design's shape may not be
+   modelable as written. This is surfaced, not silently resolved.
+   **What is delivered instead:** the stable node
+   `test_r7_multi_target_order_permutations` proves the demand-ordering half publicly and
+   live (target order, defaults, dedup, live/replay parity under permutation). The
+   warning-order half — the observation OD-A10 exists to make — is pinned by
+   `tests/unit/test_logical_demand_resolution.py::test_two_warnings_occur_in_order_within_one_batch`,
+   which asserts both exact warning bytes, in order, within a single batch, with the
+   collision keeping its real value and only the clean target synthesizing.
+
+10. **Audit note F6 declined, recorded at the call site.** The seam logs
+    `"scanned %d referenced bindings"` while passing `len(demands)` — the count of
+    normalized targets. Collapsing many bindings into one target is the point of this
+    change, so the number an operator reads is systematically smaller than the noun says.
+    Correcting the noun changes bytes pinned in the Phase 0 acceptance overlay, whose
+    SHA-256 is the RED/GREEN anchor, so a comment in `supplied_values.py` records the
+    defect and directs that noun and anchor be fixed together once the anchor is retired.
+
+11. **Audit note F4 declined with reason.** `_owner_source` reports "no source" and "two
+    or more conflicting sources" identically, silently downgrading a provenance tier where
+    the sibling `_unique_source` raises. Fixing it properly requires widening
+    `ValueResolution.winning_source` to carry a set — a further deviation from the design's
+    record shape — and it must not raise during resolution, since eager provenance
+    validation is precisely the defect fixed in candidate 1 (§7). The downgrade is
+    conservative: control falls to a lower tier that itself raises on ambiguity or absence,
+    so no wrong value is grouped silently; only the tier attribution is coarser.
 
 7. **Cycle edge-field orientation** (accepted 2026-07-19: the approved design wins over
    plan prose). The design fixes the fields as
@@ -255,7 +316,41 @@ owner-settled; each is challengeable by re-deriving against the reasoning below.
 
 ---
 
-## 7. Confirmed correctness defect found in review, and its fix
+## 7. Confirmed correctness defects found in review and audit, and their fixes
+
+### 7a. Silent value-loss regression (audit F1, blocking — fixed in candidate 2)
+
+Item 1 merged the predecessor's separate tier 2a and tier 2b blocks into one loop over
+`(type_qn, owning_part_def_qn)`. Inside it, a `literal_value` that would not parse as a
+float did `return None, False, None` — exiting the **whole loop**, not just the current
+tier. A malformed literal on the type def therefore suppressed a perfectly good literal
+on the consuming part def.
+
+| Tree | `_resolve_value(...)` |
+|---|---|
+| Predecessor `ecdc7285` | `(42.0, False)` — falls through to tier 2b, recovers the value |
+| Candidate 1 `28bc8b0` | `(None, False, None)` — value lost |
+
+The loss was **silent**: the seam logged `0 literal applied, 0 non-literal skipped`,
+so the demand simply vanished with no warning. No test covered the shape, which is why
+3,009 tests were green over it.
+
+**Fix.** The malformed branch now `continue`s instead of returning, restoring predecessor
+fall-through exactly: a malformed candidate at one tier no longer consumes the tiers
+below it.
+
+**Regression test.**
+`tests/unit/test_supplied_values.py::test_malformed_type_def_literal_does_not_suppress_part_def_literal`
+— malformed `"true"` on the type def plus valid `"42.0"` on the consuming part def now
+resolves `42.0`. Verified **RED against the pre-fix code and GREEN after** (unlike the
+§7b test, this one could be executed both ways).
+
+**Deliberately unchanged:** the final-tier swallow — all tiers malformed still yields a
+silent `None` — predates Item 1 and belongs to Item 4's diagnostics scope. The audit
+notes the same disposition asymmetry against tier 1, which sets `saw_non_literal`; that
+asymmetry is real and remains open.
+
+### 7b. Eager provenance validation (found in review of candidate 1)
 
 **Found by independent review after Phase 4; CONFIRMED and orchestrator-verified at the
 source.**
