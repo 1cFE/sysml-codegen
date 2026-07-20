@@ -188,9 +188,31 @@ exactly; no anchor moved.
   a declared CAS27 pass-through input, is harness-supplied from the oracle).
 - Constraint exit-point write handlers registered (the IFE `run_anchors.py` adapter pattern).
 
-**Remaining (small, budget-bounded):** `handshake_1costingfe.py`'s rollup glue removal (its
-1costingFE comparison role stays) and re-running the stellarator's own regression suite + the
-Item-8/9 fusion-seam proof. Codegen/teax candidates unchanged (`50b78df` / `07eb0ac`).
+### Closeout — DONE (stellarator `c2f10960`)
+
+- **`handshake_1costingfe.py` rollup glue retired.** HARNESS GLUE #2 (the Python two-pass
+  capital rollup + `set_params` overwrite of the three former bridge consumer keys) is deleted;
+  the handshake now runs a single teax-simkit pass and sources powercore/bop/direct/total from
+  the graph's native aggregation channels. The 1costingFE comparison role stays and its core
+  machinery check is bit-exact (per-account rel ~0, formula-isolation ~1e-8, power balance exact).
+  Constraint ExitPoint write handlers registered so the constraint-bearing package runs; CAS27
+  special fed as a design input via the injection map.
+- **Bridge absence re-verified.** `bridge_v11_generate.py` absent; MR-WI027-2 greps zero
+  (no viability comparison, no operand-vs-bound); no bridge-key `set_params` in any runner.
+- **Regression green.** `run_stellaris_single.py`: six anchors GREEN, five verdicts satisfied,
+  bit-exact vs oracle reldev 0.00e+00. Fusion-tea `prove_catalog_seam.py`: PASS (embedded
+  catalog consumed, def→usage join present). Codegen/teax candidates unchanged (`50b78df` / `07eb0ac`).
+
+🛑 **SURFACED (owner review) — handshake rollup rows now expose the SysML precon simplification.**
+The retired glue force-fed 1costingFE's CAS10 preconstruction (and CAS21 buildings) as
+pass-throughs into the Python rollup, masking the model's own values. WI-025 made buildings/precon
+SysML forward-computed modules that the graph cannot be fed 1cfe values for, so the single-pass
+handshake now computes them at 1cfe's powers: CAS21 buildings reproduces 1cfe (~0%), but CAS10
+precon diverges (+46%: SysML $34.5M vs 1cfe $18.5M), propagating to the direct/total/lcoe rollup
+rows (total −41.7%, lcoe −30.6% vs 1cfe). This is the model's documented simplification, now
+honestly shown rather than hidden — the six anchors (proven by `run_stellaris_single`) are
+unaffected. `handshake_comparison.json` was NOT refreshed with these numbers pending an owner
+call on whether that diagnostic snapshot should be regenerated.
 
 ## (superseded) Earlier Phase 3 — BLOCKED
 
