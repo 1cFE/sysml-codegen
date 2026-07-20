@@ -6,7 +6,16 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup — Phase 1 landed + STOP finding; Phase 3 BLOCKED 2026-07-20
+### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — WI-015 #4 CLOSED; public gen proven 2026-07-20
+Phases 0/1/2 done. The blocking finding (cross-part child.attr collapse) was ratified in-scope and
+FIXED (general resolver mechanism, no rollup arm): (a1) capture per-child :>> redefinitions, (a2)
+dual-scope channel follow, (a3) transitive instance-scoping for aggregation-composing sums. Global
+_leaf_unique refusal tried+reverted (moved relied-upon behavior). Stellarator: 13-term collapse → 0
+completeness violations, 0 V11 offenders; public generation (no bridge) EXIT 0 with constraint modules.
+Byte-clean: 2956 pass. Stellarator staged formulas restored + snapshot recaptured (v5) + WI-027 amended
+(D7 superseded by D-2). CANDIDATE_REVs: codegen ce09bb2, stellarator 0a8add96. **Remaining last-mile
+(teax exec env):** numeric run (6 anchors + 5 verdicts), physical bridge/glue deletion, single-pass
+runner cutover. Anchor movement = STOP. Evidence: evidence.md.
 Phases 0/2 landed earlier (capture sink, completeness check, RED coordinate). Phase 1 (this
 session, licensed): FORMULA→aggregation routing built (Step 4.7 `_route_crosspart_formula_aggregations`),
 byte-identity sweep CLEAN (2953 pass), A7 chained-aggregation PROVEN on the real stellarator

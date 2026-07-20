@@ -119,7 +119,51 @@ trip is a corpus-accepted incompleteness, so fail-closing would need that genuin
 stellarator's) resolved first — which is exactly the blocking finding's resolver work. The check
 stands as the precise diagnostic that proves the property and localizes the defect.
 
-## Phase 3 — stellarator cutover: BLOCKED
+## WI-015 finding #4 ROOT CLOSURE (the blocking finding, fixed) — 2026-07-20
+
+The orchestrator ratified the finding as in-scope. The fix is general (no rollup-specific arm),
+in three parts, all byte-identity clean:
+
+- **(a1) Capture per-child redefinitions** — `extract_child_usage_redefinitions`
+  (`hierarchy_resolver.py`): a PartDef's CHILD part-usage `:>>` CHAIN redefinitions
+  (`part magnet { :>> capital_cost = magnet_cost.capital_cost }`) were never captured (0 of 22).
+  Now captured, keyed on the child usage QN so `_chain_redefinition_follow` (row 13) matches.
+- **(a2) Dual-scope channel follow** — `_chain_redefinition_follow` (`producer_resolution.py`)
+  now tries both the child-owned scope and the instance-level sibling scope, so a child's redef
+  referencing a plant-level cost calc resolves to `{instance}__magnet_cost__capital_cost`.
+- **(a3) Transitive instance-scoping** — Step 4.7 seeds on cross-part FORMULAs then fixpoints any
+  FORMULA whose local terms reference a routed attribute, so `total_capital` (a pure-local sum
+  composing the `direct_capital` aggregation) also goes instance-scoped and the chain wires.
+- **(b) reverted** — a global `_leaf_unique` qualifier-drop refusal moved relied-upon
+  single-instance behavior (Item-7 matcher, spec_chain_twolevel WI-015 shape); fix (a) resolves at
+  row 13 before `_leaf_unique`, so it is unneeded. The completeness check stays the loud guard.
+
+**Result:** the stellarator's 13-term collapse → **0 completeness violations**; every cross-part
+term wires to a distinct per-instance `module_output`. New fixture `crosspart_rollup_twolevel`
+(children a/b with DIFFERENT bases 3/5) pins it with a **structural** channel-identity assertion.
+Byte-identity CLEAN: `tests/unit`+`tests/conformance` **2956 passed / 0 failed / 47 skipped**.
+
+## Phase 3 — stellarator cutover: public generation PROVEN
+
+- **Staged twins: canonical formulas restored** — `direct_capital` / `total_capital` DEMO-NOTE
+  plain-input conversions replaced with the canonical cross-part formulas (byte-identical to
+  `models/`). The rollup region is no longer a staged divergence.
+- **Snapshot recaptured** (licensed) — format v5, 5 constraint facts, lowering applied. No Gate B
+  abort (corroborating the b36d05f probe).
+- **Build is producer-complete** — staged model build: **V11 uncovered 0, completeness violations
+  0**. `direct_capital`/`total_capital` are real instance-scoped aggregation producers; the three
+  former bridge keys are gone.
+- **Public generation succeeds with NO bridge** — `sysml-codegen generate --from-snapshot`
+  (standard CLI, not `bridge_v11_generate.py`): EXIT 0, 34 modules, constraint modules +
+  `ConstraintReportAggregatorModule` + `predicates.py` emitted. The private bridge is unnecessary.
+
+**Remaining last-mile (teax exec env):** the numeric run for the six anchors + five verdicts, the
+physical deletion of `bridge_v11_generate.py` / `run_stellaris.py` glue-2 / `handshake_1costingfe.py`
+glue, the single-pass runner cutover, and the WI-027 supersession amendment. The codegen capability
+(the epic's WI-015 #4 root) is proven; the anchors verify the numerics are unchanged — anchor
+movement is a STOP.
+
+## (superseded) Earlier Phase 3 — BLOCKED
 
 Cannot proceed. The stellarator cannot generate producer-complete, correct-numeric public output
 until the cross-part `child.attr` resolution above is fixed. Restoring the canonical formulas and
