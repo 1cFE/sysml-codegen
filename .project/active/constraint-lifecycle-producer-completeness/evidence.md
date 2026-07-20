@@ -157,11 +157,40 @@ Byte-identity CLEAN: `tests/unit`+`tests/conformance` **2956 passed / 0 failed /
   (standard CLI, not `bridge_v11_generate.py`): EXIT 0, 34 modules, constraint modules +
   `ConstraintReportAggregatorModule` + `predicates.py` emitted. The private bridge is unnecessary.
 
-**Remaining last-mile (teax exec env):** the numeric run for the six anchors + five verdicts, the
-physical deletion of `bridge_v11_generate.py` / `run_stellaris.py` glue-2 / `handshake_1costingfe.py`
-glue, the single-pass runner cutover, and the WI-027 supersession amendment. The codegen capability
-(the epic's WI-015 #4 root) is proven; the anchors verify the numerics are unchanged — anchor
-movement is a STOP.
+### Numeric acceptance — SIX ANCHORS BIT-EXACT, FIVE VERDICTS SATISFIED (single-pass, no bridge)
+
+Executed the regenerated package through real teax-simkit in the standard exec env (agentic-mbse
+`.venv` + `teax/packages/teax-simkit` on `sys.path`, license sourced), **single pass, no two-pass
+rollup glue** (`run_stellaris_single.py`). Every channel matches the pure-Python oracle at
+**reldev 0.00e+00** (WI-027 bar: rel < 1e-9):
+
+| Anchor | Executed (graph rollup) | Expected | reldev vs oracle |
+|---|---|---|---|
+| Total overnight capital | $12,638,857,665.744282 | $12,638,857,665.74 | 0.00e+00 |
+| LCOE | 203.647151712 /MWh | 203.647152 | 0.00e+00 |
+| p_net | 915.081087860 MW | 915.081088 | 0.00e+00 |
+| q_eng | 6.606661729 | 6.606662 | 0.00e+00 |
+| rec_frac | 0.151362373 | 0.151362 | 0.00e+00 |
+| magnet capital | $6,323,469,946.33 (50.03%) | 50.03% | 0.00e+00 |
+| direct_capital | $9,247,944,633.471426 | (oracle) | 0.00e+00 |
+
+**Five verdicts** (`ConstraintReport` exit points): `beta_ok`, `net_positive`, `recirc_ok`,
+`tbr_ok`, `wall_load_ok` — all **satisfied**. The graph rollup reproduces the harness numerics
+exactly; no anchor moved.
+
+### Cutover + deletions (absence-checked, no shims)
+
+- **`bridge_v11_generate.py` DELETED** (`git rm`); no lingering `BRIDGE_KEYS`/bridge refs.
+- **`run_stellaris.py` glue-2 DELETED** — the two-pass `main()` + the Python rollup + `set_params`
+  overwrite removed; only shared helpers (`CH`, `check`, glue-1 `patch_bop_wiring`, `run_pipeline`)
+  remain, imported by the single-pass runner.
+- **`run_stellaris_single.py`** is the canonical bridge-free runner (glue-1 kept; `special_materials_capital`,
+  a declared CAS27 pass-through input, is harness-supplied from the oracle).
+- Constraint exit-point write handlers registered (the IFE `run_anchors.py` adapter pattern).
+
+**Remaining (small, budget-bounded):** `handshake_1costingfe.py`'s rollup glue removal (its
+1costingFE comparison role stays) and re-running the stellarator's own regression suite + the
+Item-8/9 fusion-seam proof. Codegen/teax candidates unchanged (`50b78df` / `07eb0ac`).
 
 ## (superseded) Earlier Phase 3 — BLOCKED
 
