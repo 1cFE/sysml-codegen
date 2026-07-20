@@ -92,7 +92,7 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-11 line and the
 - [x] **"One" validates.** A single-entry-channel package bridges and validates completely through
       the same stock path (a single-channel spike package exists in fusion-tea, e.g.
       `codegen_chain_spike`; `exp_toy`).
-- [~] **"Zero" validates.** *(bridge shape GREEN; end-to-end package parked on the codegen gap — evidence.md §2, codegen-gap-zero-entry.md)*  A zero-entry-channel package produces a complete (empty) mapping and
+- [x] **"Zero" validates.** *(GREEN end-to-end: committed `zero_channel` fixture — codegen zero-entry-EntryPoint fix landed same unit; test_zero_channel_package.py)*  A zero-entry-channel package produces a complete (empty) mapping and
       validation passes with nothing missing and nothing extra. The coordinate is a minimal
       codegen-generated package with no entry channels, committed as a TEAx fixture (design.md).
 - [x] **Baseline + override.** Every channel gets a complete typed baseline; a candidate changes

@@ -234,12 +234,12 @@ against), so partition and validation never disagree.
 - **A2 — entry-model field names are globally unique across channels.** Verified for IFE. The bridge
   guards the general case: two channels declaring one field name is a construction-time fail-closed
   error (`_index_fields`). Phase 2 covers this branch with a synthetic two-channel collision.
-- **A3 — codegen emits exactly one `EntryPoint` module even at zero channels.** Required by
-  `pipeline_validator.py:83-87` and by `MappingEntrySource.from_spec`'s `next(m … is_entry)`
-  (`entry_source.py:30`), which raises `StopIteration` if none exists. **Verified in Phase 0 by
-  generating the fixture through the real CLI and inspecting the pipeline.** If the real tool instead
-  emits *no* `EntryPoint` for a zero-channel model, that is a codegen finding routed to its owner
-  (not worked around in TEAx) — discovered against the tool, not assumed away.
+- **A3 — RESOLVED (was false, now fixed).** Codegen originally emitted *no* EntryPoint at zero
+  channels (`pipeline_yaml.jinja2` `{% if entry_points %}`), so a zero-entry package was rejected by
+  `pipeline_validator.py:83-87`. Rather than park it, codegen was fixed in the same landing unit: the
+  template now emits `entry_fusion` unconditionally (empty `inputs:` at zero), byte-identical for all
+  packages with channels (only the `sample_model` zero-entry baseline changed). Stock TEAx accepts a
+  zero-output EntryPoint natively. See `codegen-gap-zero-entry.md`.
 - **A4 — the Item-8 seam and `entry_models` remain the identity/model authorities.** No new
   `ModelContractData` field is added; the store fingerprint change (D3) starts a new pre-release
   lineage rather than migrating.

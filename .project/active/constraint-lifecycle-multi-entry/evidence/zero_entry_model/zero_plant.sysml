@@ -3,10 +3,17 @@ package zero_plant {
     private import zero_library::*;
 
     part def 'Zero Plant' {
-        doc /* A no-input calc usage: constant output, zero entry channels. */
-        calc value_calc : 'Constant Calc' {}
+        doc /* A constraint-bearing package with zero entry channels: every
+        constraint operand is produced by an internal calc, so nothing becomes
+        an entry-point parameter. */
+        calc value_calc : 'Value Calc' {}
+        calc limit_calc : 'Limit Calc' {}
+
+        assert constraint within : 'Within Limit' {
+            in measured = value_calc.value;
+            in ceiling = limit_calc.limit;
+        }
     }
 
-    // Instantiate the part so the calc usage is retained (not a dropped template).
     part zeroPlant : 'Zero Plant';
 }

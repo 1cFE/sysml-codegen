@@ -8,5 +8,9 @@ metadata:
   output_folder: "sample_model_results"
 
 modules:
+  # Entry point - zero entry channels
+  entry_fusion:
+    module_type: EntryPoint
+
 
 

@@ -29,7 +29,7 @@ the unit level; zero *end-to-end package* parked on a codegen fix (owner TBD —
 See `codegen-gap-zero-entry.md`.
 
 **Gates:** teax full simkit `298 passed`; ruff clean; mypy zero-added; codegen source untouched.
-Candidate revs: teax `96578a4`, fusion-tea `2422e715`, codegen artifacts `0f20e09` (source untouched at `589c8c4`). Nothing pushed (Item 13 owns push).
+Candidate revs: **codegen `5a72366`** (supersedes source-pin `589c8c4` — zero-entry template fix), **teax `07eb0ac`** (fixture+test) / `96578a4` (bridge), fusion-tea `2422e715`. Zero-entry gap FIXED in codegen same landing unit; zero end-to-end coordinate now a committed real package (301 teax passed; codegen 3083 licensed). Nothing pushed (Item 13 owns push).
 
 ### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — CERTIFIED (independent audit 2026-07-20, pass with notes; all notes now closed)
 
