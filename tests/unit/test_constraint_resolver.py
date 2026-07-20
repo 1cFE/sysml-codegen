@@ -44,6 +44,7 @@ def test_ladder_scoped_hit_wins():
     registry.register_scoped(ScopedKey("c.cell.power_calc.p"), CanonicalChannel("Chan__p"))
     ref = _reference(chain_segments=["power_calc", "p"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="p",
@@ -66,6 +67,7 @@ def test_occurrence_key_first_then_deindexed_shared_binding():
     )
     ref = _reference(chain_segments=["power_calc", "p"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="the_design.c.cell[0]",
         formal_name="p",
@@ -83,6 +85,7 @@ def test_ladder_falls_to_alias_lookup():
     registry.register_alias(ScopedKey("c.cell.aliased"), CanonicalChannel("Real__chan"))
     ref = _reference(chain_segments=["aliased"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="a",
@@ -105,6 +108,7 @@ def test_ladder_falls_to_scoped_alias_lookup():
     )
     ref = _reference(chain_segments=["driver", "efficiency"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="eta",
@@ -134,6 +138,7 @@ def test_ladder_falls_to_occurrence_scoped_design_attribute():
     )
     ref = _reference(chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency")
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="eta",
@@ -163,6 +168,7 @@ def test_ladder_falls_to_design_attribute():
     # the EQN `__`-form before matching design_attr_by_qn.
     ref = _reference(source_name="threshold", target_qn="Design::threshold")
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="threshold",
@@ -195,6 +201,7 @@ def test_ladder_falls_to_def_scoped_base_default():
     )
     ref = _reference(source_name="gain", target_qn="Lib::'Power Plant'::viability::gain")
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="plant",
         formal_name="gain",
@@ -225,6 +232,7 @@ def test_ladder_def_scoped_base_default_not_reached_without_owner_def_qn():
     ref = _reference(source_name="gain", target_qn="Lib::'Power Plant'::viability::gain")
     with pytest.raises(CodeGenerationError):
         resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
             reference=ref,
             occ_scope="plant",
             formal_name="gain",
@@ -239,6 +247,7 @@ def test_strict_terminal_raises_never_synthesizes():
     ref = _reference(source_name="unresolvable_actual_name")
     with pytest.raises(CodeGenerationError) as exc_info:
         resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
             reference=ref,
             occ_scope="c.cell",
             formal_name="unresolvable_actual_name",
@@ -310,6 +319,7 @@ def test_precedence_occurrence_key_beats_deindexed_key():
     )
     ref = _reference(chain_segments=["power_calc", "p"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="the_design.c.cell[0]",
         formal_name="p",
@@ -326,6 +336,7 @@ def test_precedence_scoped_lookup_beats_alias_lookup():
     registry.register_alias(ScopedKey("c.cell.aliased"), CanonicalChannel("AliasChan"))
     ref = _reference(chain_segments=["aliased"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="a",
@@ -344,6 +355,7 @@ def test_precedence_flat_scoped_beats_structured_scoped_alias():
     )
     ref = _reference(chain_segments=["driver", "efficiency"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="eta",
@@ -359,6 +371,7 @@ def test_precedence_channel_beats_design_attribute():
     registry.register_scoped(ScopedKey("c.cell.power_calc.p"), CanonicalChannel("Chan__p"))
     ref = _reference(chain_segments=["power_calc", "p"])
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="p",
@@ -378,6 +391,7 @@ def test_precedence_occurrence_qn_beats_target_qn_design_attribute():
     target_qn_eqn = "Lib__Driver__efficiency"
     ref = _reference(chain_segments=["driver", "efficiency"], target_qn="Lib::'Driver'::efficiency")
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="c.cell",
         formal_name="eta",
@@ -398,6 +412,7 @@ def test_precedence_target_qn_beats_def_scoped_base_default():
     def_eqn = "Lib__Power_Plant__gain"
     ref = _reference(source_name="gain", target_qn="Lib::'Power Plant'::viability::gain")
     result = resolve_actual(
+        consumer_eqn="Pkg__owner__probe_constraint__deadbeef",
         reference=ref,
         occ_scope="plant",
         formal_name="gain",

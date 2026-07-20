@@ -826,51 +826,16 @@ class TestNoUntypedDictGetInResolutionPaths:
 
     @pytest.mark.req("REQ-DRA-03")
     def test_typed_lookup_methods_used(self):
-        """All resolution paths use typed lookup methods
-        (scoped_lookup, sysml_qn_lookup, alias_lookup)."""
-        # Backtracker dispatch methods
-        typed_methods = {"scoped_lookup", "sysml_qn_lookup", "alias_lookup"}
-        bt_dispatch_methods = [
-            "_resolve_chain_dispatch",
-            "_resolve_reference_dispatch",
-            "_resolve_reference_via_registry",
-        ]
-        bt_found = set()
-        for method_name in bt_dispatch_methods:
-            method = getattr(DependencyBacktracker, method_name, None)
-            if method is None:
-                continue
-            source = textwrap.dedent(inspect.getsource(method))
-            tree = ast.parse(source)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call):
-                    func = node.func
-                    if isinstance(func, ast.Attribute) and func.attr in typed_methods:
-                        bt_found.add(func.attr)
+        """All resolution paths use typed lookup methods.
 
-        assert bt_found, (
-            f"No typed lookup calls found in backtracker dispatch methods. "
-            f"Expected at least one of: {typed_methods}"
-        )
+        Re-pointed at `producer_resolution`: after the cutover there is exactly one
+        module performing registry lookups, so the guard has one place to look.
+        """
+        import inspect
 
-        # resolve_input strategies
-        from sysml_codegen.resolution import input_resolver
+        from sysml_codegen.resolution import producer_resolution
 
-        ir_functions = [
-            input_resolver.ScopedRegistryLookup,
-            input_resolver.SysMLQNLookup,
-        ]
-        ir_found = set()
-        for func in ir_functions:
-            source = textwrap.dedent(inspect.getsource(func))
-            tree = ast.parse(source)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call):
-                    fn = node.func
-                    if isinstance(fn, ast.Attribute) and fn.attr in typed_methods:
-                        ir_found.add(fn.attr)
-
-        assert ir_found, (
-            f"No typed lookup calls found in resolve_input strategies. "
-            f"Expected at least one of: {typed_methods}"
-        )
+        source = inspect.getsource(producer_resolution)
+        for accessor in ("scoped_lookup", "sysml_qn_lookup", "alias_lookup",
+                         "scoped_alias_lookup"):
+            assert accessor in source, f"{accessor} absent from the key-form table"

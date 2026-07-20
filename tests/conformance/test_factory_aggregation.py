@@ -51,6 +51,14 @@ from sysml_codegen.resolution.models import (
 from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
 
+def _probe_ctx(registry):
+    """These probes carry no design attributes; the shared table sees an empty tier 2."""
+    from sysml_codegen.resolution.producer_resolution import ProducerContext
+
+    return ProducerContext(output_registry=registry)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Helper: build aggregation factory inputs from snapshot
@@ -151,6 +159,7 @@ def _build_all_agg_modules(
             group_deriver=inputs["group_deriver"],
             expose_aliases=inputs["expose_aliases"],
             usage_type_map=inputs["usage_type_map"],
+            producer_ctx=_probe_ctx(inputs["registry"]),
         )
         inputs["entry_points"].update(new_eps)
         results.append((module, agg, inputs["entry_points"]))
@@ -186,6 +195,7 @@ def _build_one(inputs: dict, agg: ScopedAggregationData) -> PipelineModule:
         group_deriver=inputs["group_deriver"],
         expose_aliases=inputs["expose_aliases"],
         usage_type_map=inputs["usage_type_map"],
+        producer_ctx=_probe_ctx(inputs["registry"]),
     )
     return module
 
@@ -231,6 +241,7 @@ class TestReturnsPipelineModule:
                 group_deriver=agg_inputs["group_deriver"],
                 expose_aliases=agg_inputs["expose_aliases"],
                 usage_type_map=agg_inputs["usage_type_map"],
+                producer_ctx=_probe_ctx(agg_inputs["registry"]),
             )
             assert isinstance(module, PipelineModule)
             assert module.name, f"Module name must be non-empty for {agg.module_eqn}"
@@ -271,6 +282,7 @@ class TestReturnsPipelineModule:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
             ep_working.update(_new_eps)
 
@@ -314,6 +326,7 @@ class TestTermTypeHandling:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
 
             input_names = {inp.param_name for inp in module.inputs}
@@ -355,6 +368,7 @@ class TestTermTypeHandling:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
 
             canonical = solar_battery_agg["registry"].canonical_channels
@@ -385,6 +399,7 @@ class TestTermTypeHandling:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
             ep_working.update(_new_eps)
 
@@ -428,6 +443,7 @@ class TestTermTypeHandling:
                 group_deriver=issue22_agg["group_deriver"],
                 expose_aliases=issue22_agg["expose_aliases"],
                 usage_type_map=issue22_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(issue22_agg["registry"]),
             )
 
             for term in agg.expression.sum_terms:
@@ -455,6 +471,7 @@ class TestTermTypeHandling:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
 
             for s_term in agg.expression.singleton_terms:
@@ -478,6 +495,7 @@ class TestTermTypeHandling:
                 group_deriver=agg_inputs["group_deriver"],
                 expose_aliases=agg_inputs["expose_aliases"],
                 usage_type_map=agg_inputs["usage_type_map"],
+                producer_ctx=_probe_ctx(agg_inputs["registry"]),
             )
             assert module.module_kind == ModuleKind.AGGREGATION, (
                 f"Module {module.name} should have module_kind=ModuleKind.AGGREGATION"
@@ -499,6 +517,7 @@ class TestTermTypeHandling:
             group_deriver=solar_battery_agg["group_deriver"],
             expose_aliases=solar_battery_agg["expose_aliases"],
             usage_type_map=solar_battery_agg["usage_type_map"],
+            producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
         )
         assert module.compilability == Compilability.MANUAL_REQUIRED, (
             f"Module with unsupported nodes should be MANUAL_REQUIRED, "
@@ -519,6 +538,7 @@ class TestTermTypeHandling:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
 
             if (module.compilability == Compilability.FULLY_COMPILABLE
@@ -566,6 +586,7 @@ class TestInputSourceWiring:
                 group_deriver=agg_inputs["group_deriver"],
                 expose_aliases=agg_inputs["expose_aliases"],
                 usage_type_map=agg_inputs["usage_type_map"],
+                producer_ctx=_probe_ctx(agg_inputs["registry"]),
             )
 
             for inp in module.inputs:
@@ -586,6 +607,7 @@ class TestInputSourceWiring:
                 group_deriver=agg_inputs["group_deriver"],
                 expose_aliases=agg_inputs["expose_aliases"],
                 usage_type_map=agg_inputs["usage_type_map"],
+                producer_ctx=_probe_ctx(agg_inputs["registry"]),
             )
             assert len(module.outputs) == 1, (
                 f"Aggregation module {module.name} should have exactly 1 output, "
@@ -679,6 +701,7 @@ class TestLiteralFallback:
             group_deriver=solar_battery_agg["group_deriver"],
             expose_aliases=solar_battery_agg["expose_aliases"],
             usage_type_map=solar_battery_agg["usage_type_map"],
+            producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
         )
         ep_working.update(_new_eps)
 
@@ -718,6 +741,7 @@ class TestLiteralFallback:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
             ep_working.update(_new_eps)
 
@@ -859,6 +883,7 @@ class TestLocalTermResolution:
             group_deriver=solar_battery_agg["group_deriver"],
             expose_aliases=solar_battery_agg["expose_aliases"],
             usage_type_map=solar_battery_agg["usage_type_map"],
+            producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
         )
 
         # Find the synthetic LocalTerm's input
@@ -960,6 +985,7 @@ class TestLocalTermNoLiteralRedef:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
             ep_working.update(_new_eps)
 
@@ -1039,6 +1065,7 @@ class TestDefaultBackfill:
             group_deriver=solar_battery_agg["group_deriver"],
             expose_aliases=solar_battery_agg["expose_aliases"],
             usage_type_map=solar_battery_agg["usage_type_map"],
+            producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
         )
         ep_working.update(_new_eps)
 
@@ -1125,6 +1152,7 @@ class TestCompilability:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
             if module.compilability == Compilability.FULLY_COMPILABLE:
                 found_fully = True
@@ -1156,6 +1184,7 @@ class TestCompilability:
                 group_deriver=solar_battery_agg["group_deriver"],
                 expose_aliases=solar_battery_agg["expose_aliases"],
                 usage_type_map=solar_battery_agg["usage_type_map"],
+                producer_ctx=_probe_ctx(solar_battery_agg["registry"]),
             )
 
             # Check if any non-LocalTerm input is EP without default

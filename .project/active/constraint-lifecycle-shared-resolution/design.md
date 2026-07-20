@@ -120,6 +120,34 @@ for the calculation-binding consumer, preserving today's exact scope (invariant 
 to aggregation is a real question, but it is a *coverage-scope* decision, which SR-R07 assigns to
 Item 3 (Gate B). Item 2 must not decide it silently by refactor. Flagged for Item 3.
 
+### PC-4 — the calculation consumer cannot express the reference as written (new, implementation)
+
+Discovered building SR-A02's fixture. `ProducerRequest.reference` is specified as the reference as
+written, never pre-split. The constraint consumer has that — `FeatureReferenceFact.source_name`.
+The calculation consumer does not: binding extraction resolves the reference to its referent's
+qualified name and discards the written name. For a self-named binding `in gain = gain` the
+referent is the calc usage's *own formal*, so the reference arrives as
+`SharedProducer::the_rig::scaler::gain`. `raw_expression` does not carry it either — live it holds
+the debug rendering `'FeatureReferenceExpression -> …'`, and it is empty in all 247 bound bindings
+across every committed snapshot, on both routes.
+
+**Consequence.** Key form 15 (occurrence-materialized QN) is structurally unreachable from the
+calculation consumer, and rows 16-20 all key on the target QN or a leaf name. So one usage-owned
+attribute read by both a calc input and a constraint actual yields **two** entry points, not one.
+That is I9 falsified and SR-A02 undeliverable by table unification. Pinned as a recorded
+known-incomplete state by `tests/fixtures/shared_producer/` (see its `PROVENANCE.md`).
+
+**Resolution (orchestrator ruling, agent-grade, 2026-07-19).** Preserve byte identity and I10; do
+not infer the written reference from the formal name. The exact structural recovery
+(`referent_qn == {usage_qn}::{param_name}` → the written reference was `param_name`) was measured:
+it newly resolves **22 self-named bindings across six existing fixtures**, all single-consumer, so
+it fixes no wrong value — each per-consumer entry point already carries the correct modeled
+default — while renaming entry-point identity across six generated surfaces and shrinking
+`fallback_entry_points` membership ahead of Item 3's vacuity proof. *Rejected on that basis.* The
+correct fix is carrying the written reference through extraction and the snapshot format, which is
+a coordinated `agentic-mbse` + codegen change **folded into Item 4**, whose versioned-schema and
+skew machinery is what it needs. SR-A02 completes there, on real data.
+
 ### Residual tension worth a reviewer's eye
 
 D11 restricts name-based key forms to the lenient consumers. SR-R14 says strictness differs *only*
@@ -249,7 +277,10 @@ All `[INFERRED]`, agent-grade, challengeable.
   see all six required types; `EntryPoint` and `InputSource` already live there, and
   `supplied_values.py:39-42` is precedent for importing the rest at module level.
   `analysis/constraint_lowering.py` consumes it via a deferred import, the pattern already in use at
-  `constraint_lowering.py:1396`. *Rejected: `core/` (rev 1's choice — C3 showed three of six types
+  `constraint_lowering.py:1396`. This is not a clean layering: `resolution/` already reaches up into
+  `analysis/` for `DesignAttributeData`, and now two `analysis/` modules reach back down into
+  `resolution/` for the resolver — a second deferred edge, on top of the one Item 1 left. The
+  placement is the least-bad of the three considered, not a tidy one. *Rejected: `core/` (rev 1's choice — C3 showed three of six types
   live above it, so the strict-leaf property that was the entire justification would be destroyed);
   a new leaf package (same defect, plus it would require relocating types across three layers).*
 - **D2. One ordered key-form table, declared as data, with a `policies` attribute per form.** Each
@@ -472,16 +503,35 @@ inline fixture would silently fail to certify Gate A, the exact substitution ris
 - **I8 — Item 1 seams unchanged.** `resolve_logical_demand`, `select_group_source`, and
   `enrich_graph_design_attributes` are not modified. `prepare_constraint_usages` gains one branch;
   its three existing branches are unchanged.
-- **I9 — convergence is a tier-2 property.** Two consumers of one design attribute converge because
-  both resolve *positively* to the same QN through tier 2, and `_classify_entry_points` mints one
-  entry point per QN. Lenient-miss entry points are per-consumer by construction and do not
-  converge. SR-A02 is satisfied because Gate A's attribute resolves positively for both consumers
-  and never reaches a terminal miss. (Restates rev 1's I9, which contradicted D8 — M3.)
+- **I9 — convergence is a tier-2 property. FALSIFIED for the self-named shape at implementation
+  time; see PC-4.** The claim was that two consumers of one design attribute converge because both
+  resolve *positively* to the same QN through tier 2. That holds only when both consumers can
+  express the same reference, and they cannot: the calculation consumer has no access to the
+  reference as written. The constraint consumer still converges on the source QN; the calculation
+  consumer still mints per-consumer. SR-A02 is **not delivered by Item 2** and is referred to Item 4
+  (PC-4). Lenient-miss entry points remain per-consumer by construction.
 - **I10 — V11 scope is preserved, not widened.** Only the calculation-binding consumer's lenient
   miss sets `records_v11`. Aggregation entry points stay outside `fallback_entry_points`, exactly as
   today. Widening is Item 3's (PC-3).
 
 ---
+
+## Forced differences
+
+Every difference from today's generated bytes, with the requirement that forces it. Anything not
+listed here is a byte-identity failure, not an accepted change.
+
+| # | Difference | Forced by |
+|---|---|---|
+| 1 | A colliding leaf-name literal redefinition refuses instead of returning the first value, so `literal_default` is `None` and the term's compilability flips to `MANUAL_REQUIRED`. **This changes a compilability verdict, not just a diagnostic.** | SR-R12, SR-R17, inventory row 4 |
+| 2 | Every lenient terminal miss emits one WARNING; previously only the multi-hop-chain shape did, and every other miss was DEBUG or silent. | SR-R15 / I7 |
+| 3 | The strict terminal error names the key forms attempted and any tied candidates. | SR-R14 |
+| 4 | The aggregation LocalTerm mint carries its modeled default; it was unconditionally defaultless. Reachable only on `agg_localterm_probe`, a new fixture, so no pre-existing baseline moves. | SR-R16, orchestrator ruling 4 |
+| 5 | Two minters of one entry-point QN carrying different defaults leave it defaultless and warn, rather than the later writer backfilling over the earlier. | SR-R16 / I5, review note 4 |
+
+No committed fixture's generated bytes moved under any of these: differences 1 and 5 have no corpus
+population, 2 and 3 are diagnostics, and 4 is confined to the new fixture. The byte-identity gate is
+green across every pre-existing fixture.
 
 ## Deletion Inventory
 

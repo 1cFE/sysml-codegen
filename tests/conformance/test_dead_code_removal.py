@@ -97,15 +97,22 @@ class TestDeadCodePaths:
             "Strategy B normalized fallback still present in SysMLQNLookup"
         )
 
-    def test_backtracker_no_step_1b_normalization(self):
-        """_resolve_reference_dispatch source does NOT contain Step 1b
-        normalization (sanitized_part = sanitize_name(...))."""
+    def test_backtracker_reference_dispatch_is_gone(self):
+        """The Step 1b normalization guard is retired by deletion (Item 2).
+
+        `_resolve_reference_dispatch` used to be checked for a leftover normalization
+        line. The whole method is gone now — the calculation consumer builds a request
+        and reads a result — so the property holds by absence rather than by inspection.
+        """
         from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 
-        source = inspect.getsource(DependencyBacktracker._resolve_reference_dispatch)
-        assert "sanitized_part = sanitize_name(parts[-2])" not in source, (
-            "Backtracker Step 1b normalization still present"
-        )
+        for gone in (
+            "_resolve_reference_dispatch",
+            "_resolve_chain_dispatch",
+            "_resolve_reference_via_registry",
+            "_resolve_to_design_attribute",
+        ):
+            assert not hasattr(DependencyBacktracker, gone), f"{gone} survived the cutover"
 
     def test_vbr_no_bare_name_fallback(self):
         """_rewrite_virtual_bindings source does NOT contain the bare-name

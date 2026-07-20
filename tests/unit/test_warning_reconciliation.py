@@ -40,14 +40,17 @@ def _warning_messages(caplog) -> list[str]:
 def test_clean_fixture_zero_warnings(fixture, tmp_path, caplog):
     """A clean fixture generates with zero WARNING lines (INV-5).
 
-    Its fell-through EPs (if any) carry values (not valueless), so no V11, no
-    reconciliation summary; the per-binding Step-4 lines are DEBUG.
+    Its fell-through EPs (if any) carry values (not valueless), so no V11 and no
+    reconciliation summary.
+
+    Recorded behavior change (Item 2 / I7): a lenient terminal miss is now visible, so
+    the declared unresolved-producer line is expected and filtered here. The sweep still
+    does its real job — catching any *other* WARNING a clean fixture starts emitting.
     """
     with caplog.at_level(logging.WARNING):
         assert _run(tmp_path, fixture) is True, f"{fixture} should generate cleanly"
-    assert _warning_messages(caplog) == [], (
-        f"{fixture} emitted WARNING lines: {_warning_messages(caplog)}"
-    )
+    unexpected = [m for m in _warning_messages(caplog) if "Unresolved producer" not in m]
+    assert unexpected == [], f"{fixture} emitted unexpected WARNING lines: {unexpected}"
 
 
 def test_solar_battery_zero_warnings_in_item7_categories(tmp_path, caplog):

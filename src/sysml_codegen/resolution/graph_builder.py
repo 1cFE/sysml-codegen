@@ -69,6 +69,13 @@ from sysml_codegen.resolution.models import (
     ParameterGroup,
     PipelineModule,
 )
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerContext,
+    ProducerRequest,
+    TerminalPolicy,
+    resolve_producer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -332,6 +339,7 @@ def build_computation_graph(
             agg, hierarchy_redefinitions or [], output_registry,
             entry_points, group_deriver, expose_aliases,
             usage_type_map or {},
+            producer_ctx=_producer_context(output_registry, design_attrs),
         )
         entry_points.update(new_eps)
         modules.append(agg_module)
@@ -1217,6 +1225,7 @@ def _find_literal_redefinition(
         attr: Attribute name (e.g., "raw_material_cost")
         redefinitions: PartDef-level :>> redefinitions
         usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
+        producer_ctx: Context for the shared producer-resolution table
         owning_part_qn: QN of the PartDef that owns the aggregation expression
 
     Returns:
@@ -1227,12 +1236,11 @@ def _find_literal_redefinition(
     if usage_type_map and owning_part_qn:
         target_partdef_qn = usage_type_map.get((owning_part_qn, part_usage))
 
-    first_value: float | None = None
-    # D3-10: Strategy 2 (name-based leaf match) is first-wins across ALL partdefs
-    # sharing a leaf name. A leaf-name match is structurally required in this
-    # fallback (there is no PartDef QN to key on), so instead of a silent
-    # first-wins we collect the colliding literals and warn (INV-3
-    # require-unique-or-warn). Strategy 1 (exact QN) stays unambiguous.
+    # D3-10 retired (Item 2, I3): the name-based leaf tier survives because no exact
+    # form covers its population, but it no longer resolves a collision by taking the
+    # first value. Colliding literals refuse — there is no PartDef QN to disambiguate
+    # them, and a guessed default is exactly the "plausible verdict from a guessed
+    # binding" contract invariant 26 forbids. Strategy 1 (exact QN) stays unambiguous.
     strategy2_hits: list[float] = []
     for redef in redefinitions:
         if redef.redefinition_type == RedefinitionType.LITERAL and redef.attribute_name == attr:
@@ -1252,20 +1260,63 @@ def _find_literal_redefinition(
                 if not via_strategy2:
                     return value  # Strategy 1: exact QN match, unambiguous.
                 strategy2_hits.append(value)
-                if first_value is None:
-                    first_value = value
 
-    if len(set(strategy2_hits)) > 1:
+    distinct = sorted(set(strategy2_hits))
+    if len(distinct) > 1:
         logger.warning(
             "Redefinition leaf collision for '%s.%s': name-matched partdefs carry "
-            "differing literals %s; resolved first-wins to %s (ambiguous — no "
-            "PartDef QN to disambiguate).",
-            part_usage,
-            attr,
-            sorted(set(strategy2_hits)),
-            first_value,
+            "differing literals %s — refusing to pick one; the parameter stays "
+            "defaultless and manual-required.",
+            part_usage, attr, distinct,
         )
-    return first_value
+        return None
+    return distinct[0] if distinct else None
+
+
+def _mint_entry_point_once(
+    ep_qn: str,
+    *,
+    simple_name: str,
+    default_value: float | None,
+    group_deriver: ParameterGroupDeriver | None,
+    entry_points: dict[str, EntryPoint],
+    new_entry_points: dict[str, EntryPoint],
+) -> None:
+    """Create an entry point once, with its modeled default resolved at creation (I5).
+
+    Replaces the register-then-backfill pair, whose second writer could shadow an entry
+    point created by the *calculation* path, not just by an earlier aggregation — so the
+    default a parameter ended up with depended on consumer iteration order.
+
+    When two minters name the same QN, the default is a function of that identity, not
+    of who got there first: agreeing defaults are idempotent, and disagreeing ones
+    refuse and warn rather than letting arbitrary order pick a winner.
+    """
+    existing = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
+    if existing is None:
+        new_entry_points[ep_qn] = EntryPoint(
+            qualified_name=ep_qn,
+            simple_name=simple_name,
+            entry_type=EntryPointType.DESIGN_ATTRIBUTE,
+            default_value=default_value,
+            param_group=group_deriver.classify(ep_qn) if group_deriver else None,
+        )
+        return
+
+    if default_value is None or existing.default_value == default_value:
+        return
+
+    if existing.default_value is None:
+        new_entry_points[ep_qn] = existing.model_copy(update={"default_value": default_value})
+        return
+
+    logger.warning(
+        "Entry point '%s' is minted by two consumers carrying different modeled "
+        "defaults (%s and %s) — refusing to let iteration order choose; keeping "
+        "neither.",
+        ep_qn, existing.default_value, default_value,
+    )
+    new_entry_points[ep_qn] = existing.model_copy(update={"default_value": None})
 
 
 def _build_agg_input_source(
@@ -1319,27 +1370,14 @@ def _build_agg_input_source(
 
     manual_required = literal_default is None
 
-    if ep_qn not in entry_points and ep_qn not in new_entry_points:
-        param_group = group_deriver.classify(ep_qn) if group_deriver else None
-        new_entry_points[ep_qn] = EntryPoint(
-            qualified_name=ep_qn,
-            simple_name=param_name,
-            entry_type=EntryPointType.DESIGN_ATTRIBUTE,
-            default_value=literal_default,
-            param_group=param_group,
-        )
-    elif literal_default is not None:
-        # Backfill the default onto an EP created earlier without one.
-        existing_ep = new_entry_points.get(ep_qn) or entry_points.get(ep_qn)
-        if existing_ep and existing_ep.default_value is None:
-            new_entry_points[ep_qn] = EntryPoint(
-                qualified_name=existing_ep.qualified_name,
-                simple_name=existing_ep.simple_name,
-                entry_type=existing_ep.entry_type,
-                default_value=literal_default,
-                source_calc_usage=existing_ep.source_calc_usage,
-                param_group=existing_ep.param_group,
-            )
+    _mint_entry_point_once(
+        ep_qn,
+        simple_name=param_name,
+        default_value=literal_default,
+        group_deriver=group_deriver,
+        entry_points=entry_points,
+        new_entry_points=new_entry_points,
+    )
 
     ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
     source = InputSource(
@@ -1350,6 +1388,19 @@ def _build_agg_input_source(
     return source, manual_required
 
 
+def _producer_context(
+    output_registry: OutputRegistry,
+    design_attrs: dict[Path, list[DesignAttributeData]],
+) -> ProducerContext:
+    """The shared table's context for the aggregation consumer."""
+    attrs = tuple(a for group in design_attrs.values() for a in group)
+    return ProducerContext(
+        output_registry=output_registry,
+        design_attr_by_qn={a.qualified_name: a for a in attrs},
+        design_attrs=attrs,
+    )
+
+
 def _build_aggregation_module(
     agg: ScopedAggregationData,
     redefinitions: list[RedefinitionData],
@@ -1358,6 +1409,8 @@ def _build_aggregation_module(
     group_deriver: ParameterGroupDeriver | None,
     expose_aliases: dict[tuple[str, str], str] | None = None,
     usage_type_map: dict[tuple[str, str], str] | None = None,
+    *,
+    producer_ctx: ProducerContext,
 ) -> tuple[PipelineModule, dict[str, EntryPoint]]:
     """Build a PipelineModule from a ScopedAggregationData.
 
@@ -1373,6 +1426,7 @@ def _build_aggregation_module(
         group_deriver: For classifying new entry points (None in tests)
         expose_aliases: EXPOSE_PURE alias map for LocalTerm resolution
         usage_type_map: Maps (owning_partdef_qn, usage_name) → type_partdef_qn
+        producer_ctx: Context for the shared producer-resolution table
 
     Returns:
         (PipelineModule, dict of new entry points created by this factory)
@@ -1522,22 +1576,49 @@ def _build_aggregation_module(
                     )
 
         if l_source is None:
-            # Genuinely unresolvable → entry point
-            ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
-            if ep_qn not in entry_points and ep_qn not in new_entry_points:
-                param_group = group_deriver.classify(ep_qn) if group_deriver else None
-                new_entry_points[ep_qn] = EntryPoint(
-                    qualified_name=ep_qn,
-                    simple_name=l_term.attribute_name,
-                    entry_type=EntryPointType.DESIGN_ATTRIBUTE,
-                    param_group=param_group,
-                )
-            ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
-            l_source = InputSource(
-                source_type="entry_point",
-                qualified_name=ep_qn,
-                param_group=ep.param_group,
+            # Neither a sibling aggregation output nor an EXPOSE alias. Ask the shared
+            # table before minting: a plain literal-valued attribute on the aggregating
+            # part def is a real design attribute, and this path used to ignore that and
+            # mint a defaultless entry point with no diagnostic at all.
+            resolution = resolve_producer(
+                ProducerRequest(
+                    consumer_eqn=agg.module_eqn,
+                    reference=l_term.attribute_name,
+                    param_name=None,
+                    consumer_scope=ctx.consumer_scope,
+                    instance_path=agg.instance_path,
+                    policy=TerminalPolicy.LENIENT,
+                    diagnostic_context=f"{agg.module_eqn}|{l_term.attribute_name}",
+                ),
+                producer_ctx,
             )
+            if resolution.outcome is Outcome.MODULE_OUTPUT:
+                l_source = InputSource(
+                    source_type="module_output",
+                    producer_channel=resolution.identity,
+                )
+            else:
+                ep_qn = f"{agg.module_eqn}__{l_term.attribute_name}"
+                if resolution.outcome is Outcome.ENTRY_POINT:
+                    logger.warning(
+                        "Aggregation LocalTerm '%s' in '%s' resolved to nothing — "
+                        "surfacing as entry point '%s' (I7).",
+                        l_term.attribute_name, agg.instance_path, ep_qn,
+                    )
+                _mint_entry_point_once(
+                    ep_qn,
+                    simple_name=l_term.attribute_name,
+                    default_value=resolution.default_value,
+                    group_deriver=group_deriver,
+                    entry_points=entry_points,
+                    new_entry_points=new_entry_points,
+                )
+                ep = new_entry_points.get(ep_qn) or entry_points[ep_qn]
+                l_source = InputSource(
+                    source_type="entry_point",
+                    qualified_name=ep_qn,
+                    param_group=ep.param_group,
+                )
 
         inputs.append(ModuleInput(
             param_name=l_term.attribute_name,

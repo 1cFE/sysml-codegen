@@ -129,22 +129,22 @@ class TestParallelValidationSolarBattery:
             "Phase 1b Key_E_stripped scoped registration"
         )
 
-    def test_unresolved_bindings_logged_at_debug(self, log_records):
-        """Unresolved bindings emit a per-binding line at DEBUG (Item 7 / D5).
+    def test_unresolved_bindings_are_visible(self, log_records):
+        """Unresolved bindings emit one visible per-binding line (Item 2 / I7).
 
-        solar_battery has self-referential SysML QN bindings (e.g.,
-        FeatureReferenceExpression pointing to the usage's own part) that
-        legitimately resolve to ENTRY_POINT via the self-reference guard. These
-        emit the "Registry unresolved" per-binding line — now DEBUG, not WARNING
-        (the post-assembly reconciliation summary + V11 are the operator digest).
+        solar_battery has self-referential SysML QN bindings — a reference pointing at
+        the usage's own part — that the self-reference guard correctly refuses, so they
+        land on entry points. Recorded behavior change: that line was DEBUG and is now
+        WARNING, because a binding that quietly becomes an entry point is exactly the
+        thing a build log needs to show.
         """
-        unresolved = [r for r in log_records if "Registry unresolved" in r.getMessage()]
+        unresolved = [r for r in log_records if "Unresolved producer" in r.getMessage()]
         assert len(unresolved) > 0, (
-            "Expected per-binding 'Registry unresolved' lines for self-referential "
+            "expected a visible unresolved-producer line for the self-referential "
             "entry point bindings"
         )
-        assert all(r.levelno == logging.DEBUG for r in unresolved), (
-            "per-binding 'Registry unresolved' line must be DEBUG (D5), not WARNING"
+        assert all(r.levelno == logging.WARNING for r in unresolved), (
+            "a lenient terminal miss must be visible in a build log (I7)"
         )
 
 

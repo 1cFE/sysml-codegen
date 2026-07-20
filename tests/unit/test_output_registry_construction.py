@@ -840,6 +840,31 @@ class TestGetParentPartForUsage:
         assert bt._get_parent_part_for_usage(usage) == "D"
 
 
+def _leaf_channel(bt, source_path, usage):
+    """Rows 14 and 15 — leaf recombined with the consumer's parent scope, then its full
+    scope — are where `_resolve_reference_via_registry`'s behavior now lives (SR-R43)."""
+    from sysml_codegen.resolution.producer_resolution import (
+        Outcome,
+        ProducerRequest,
+        TerminalPolicy,
+        resolve_producer,
+    )
+
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=usage.qualified_name,
+            reference=source_path,
+            param_name="probe",
+            consumer_scope=bt._consumer_scope_dotted(usage),
+            parent_scope=bt._get_parent_part_for_usage(usage),
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context="leaf probe",
+        ),
+        bt._producer_context(),
+    )
+    return resolution.identity if resolution.outcome is Outcome.MODULE_OUTPUT else None
+
+
 class TestResolveReferenceViaRegistry:
     """Tests for _resolve_reference_via_registry()."""
 
@@ -861,8 +886,7 @@ class TestResolveReferenceViaRegistry:
         )
         # p_net_kw is registered as Key_F: "solar_battery_plant.p_net_kw"
         # parent_part = "solar_battery_plant", leaf = "p_net_kw"
-        result = bt._resolve_reference_via_registry(
-            "SolarBatteryDesign::solar_battery_plant::p_net_kw", usage
+        result = _leaf_channel(bt, "SolarBatteryDesign::solar_battery_plant::p_net_kw", usage
         )
         assert result is not None
         assert "p_net_kw" in result
@@ -879,8 +903,7 @@ class TestResolveReferenceViaRegistry:
         usage = _make_usage(
             "lcoe", "Design__solar_battery_plant__lcoe", "LCOECalc"
         )
-        result = bt._resolve_reference_via_registry(
-            "some_other_part.p_net_kw", usage
+        result = _leaf_channel(bt, "some_other_part.p_net_kw", usage
         )
         assert result is not None
 
@@ -894,7 +917,7 @@ class TestResolveReferenceViaRegistry:
         )
         bt = self._make_bt_with_registry(registry)
         usage = _make_usage("lcoe", "lcoe", "LCOECalc")  # single segment
-        result = bt._resolve_reference_via_registry("p_net_kw", usage)
+        result = _leaf_channel(bt, "p_net_kw", usage)
         assert result is None
 
     def test_self_reference_returns_none(self):
@@ -917,8 +940,7 @@ class TestResolveReferenceViaRegistry:
         usage = _make_usage(
             "output", "Design__my_part__output", "OutputCalc"
         )
-        result = bt._resolve_reference_via_registry(
-            "Design::my_part::output", usage
+        result = _leaf_channel(bt, "Design::my_part::output", usage
         )
         assert result is None
 
@@ -1006,8 +1028,14 @@ class TestResolveBindingViaRegistry:
         assert result.resolution_type == BindingResolutionType.ENTRY_POINT
         assert "missing_param" in result.qualified_name
 
-    def test_unresolved_binding_logs_debug(self, caplog):
-        """Unresolved binding emits the per-binding line at DEBUG (Item 7 / D5)."""
+    def test_unresolved_binding_is_visible_at_warning(self, caplog):
+        """Every lenient terminal miss is visible (Item 2 / I7).
+
+        Recorded behavior change: this line was DEBUG, and every other lenient miss
+        except the multi-hop-chain shape was too, so a binding that quietly became an
+        entry point left no trace a build log would show. Item 2 owes uniform
+        visibility; the severity vocabulary is Item 4's.
+        """
         import logging
 
         registry = build_output_registry(
@@ -1022,10 +1050,10 @@ class TestResolveBindingViaRegistry:
         )
         with caplog.at_level(logging.DEBUG):
             bt._resolve_binding_via_registry(binding, usage)
-        unresolved = [r for r in caplog.records if "Registry unresolved" in r.message]
-        assert unresolved, "expected a 'Registry unresolved' per-binding line"
-        assert all(r.levelno == logging.DEBUG for r in unresolved), (
-            "per-binding line must be DEBUG (D5), not WARNING"
+        unresolved = [r for r in caplog.records if "Unresolved producer" in r.message]
+        assert unresolved, "expected a visible unresolved-producer line"
+        assert all(r.levelno == logging.WARNING for r in unresolved), (
+            "a lenient terminal miss must be visible in a build log (I7)"
         )
 
     def test_expose_pure_resolves_via_reference_secondary(self):

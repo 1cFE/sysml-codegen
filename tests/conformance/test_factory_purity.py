@@ -47,6 +47,14 @@ from sysml_codegen.resolution.models import (
 from sysml_codegen.snapshot import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
 
+def _probe_ctx(registry):
+    """These probes carry no design attributes; the shared table sees an empty tier 2."""
+    from sysml_codegen.resolution.producer_resolution import ProducerContext
+
+    return ProducerContext(output_registry=registry)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Shared helper: build full pipeline inputs from snapshot
@@ -272,6 +280,7 @@ class TestReturnType:
             group_deriver=inp["group_deriver"],
             expose_aliases=expose_aliases,
             usage_type_map=inp["usage_type_map"],
+            producer_ctx=_probe_ctx(inp["registry"]),
         )
 
         assert isinstance(ret, tuple), (
@@ -355,6 +364,7 @@ class TestNoMutation:
                 group_deriver=inp["group_deriver"],
                 expose_aliases=expose_aliases,
                 usage_type_map=inp["usage_type_map"],
+                producer_ctx=_probe_ctx(inp["registry"]),
             )
 
         # entry_points dict must be unmodified
@@ -440,6 +450,7 @@ class TestBehavioralEquivalence:
                 group_deriver=inp["group_deriver"],
                 expose_aliases=expose_aliases,
                 usage_type_map=inp["usage_type_map"],
+                producer_ctx=_probe_ctx(inp["registry"]),
             )
             if isinstance(ret, tuple):
                 _, new_eps = ret

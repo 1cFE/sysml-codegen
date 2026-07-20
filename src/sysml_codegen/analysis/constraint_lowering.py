@@ -35,7 +35,6 @@ from agentic_mbse.sysml.expression_ir import (
     serialize_expression,
 )
 
-from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
 from sysml_codegen.analysis.part_instance_index import (
     FrozenOccurrenceIndexCorruptionError,
     NonFiniteCardinalityError,
@@ -45,7 +44,6 @@ from sysml_codegen.analysis.source_referent import (
     map_live_source_referent,
     validate_snapshot_source_referent,
 )
-from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.qualified_names import sanitize_name, sanitize_qualified_name
 from sysml_codegen.resolution.models import (
     ComputationGraph,
@@ -62,6 +60,13 @@ from sysml_codegen.resolution.models import (
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
+)
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerContext,
+    ProducerRequest,
+    TerminalPolicy,
+    resolve_producer,
 )
 
 if TYPE_CHECKING:
@@ -146,158 +151,54 @@ def resolve_actual(
     occ_scope: str,
     formal_name: str,
     usage_qualified_name: str,
+    consumer_eqn: str,
     registry: OutputRegistry,
     design_attr_by_qn: dict[str, DesignAttributeData],
     owner_def_qn: str | None = None,
 ) -> ConcreteConstraintInput:
-    """Resolve one constraint actual through the ordered strict ladder (D1 amended,
-    R5-widened — see the ``scoped_alias_lookup`` rung below).
+    """Resolve one constraint actual through the shared producer-resolution table.
 
-    ``scoped_lookup`` (occurrence-scoped key first, then the shared de-indexed
-    key — B1) → ``alias_lookup`` (same two keys) → ``scoped_alias_lookup``
-    (same two keys, structured ``(scope, leaf)`` — R5 amendment) →
-    design-attribute match on the reference's target QN → a base-def literal
-    default (the constraint-actual twin of ADR-001's LIBRARY_DEFAULT: a modeled
-    value, not synthesis — INV-2 forbids inventing a value the model doesn't
-    carry, not recognizing one via a third key shape) → the shared
-    terminal-disposition switch
-    (:func:`~sysml_codegen.analysis.dependency_backtracker.terminal_disposition`,
-    always called ``strict=True`` — constraint actuals never take the lenient
-    calc-path fallback, INV-2. The switch itself supports both dispositions;
-    this caller only ever exercises the strict one).
+    This consumer builds a request and reads a result; it owns no ordering, no key
+    construction, and no terminal behavior of its own. Its policy is
+    :attr:`TerminalPolicy.STRICT`, which is the only thing distinguishing it from the
+    calculation and aggregation consumers: a constraint actual never invents a value,
+    parses display text, or takes the lenient fallback.
+
+    Name-based key forms are inadmissible under STRICT, so the forms this consumer can
+    reach are exactly the exact-identity ones it reaches today.
     """
     dotted = _reference_dotted(reference)
-    deindexed_scope = _deindexed_scope(occ_scope)
-
-    if dotted:
-        occ_key = ScopedKey(f"{occ_scope}.{dotted}" if occ_scope else dotted)
-        deindexed_key = ScopedKey(f"{deindexed_scope}.{dotted}" if deindexed_scope else dotted)
-
-        channel = registry.scoped_lookup(occ_key)
-        if channel is not None:
-            return ConcreteConstraintInput(
-                formal_name=formal_name,
-                resolution=ConstraintInputResolution.MODULE_OUTPUT,
-                bound_channel=str(channel),
-            )
-        if deindexed_key != occ_key:
-            channel = registry.scoped_lookup(deindexed_key)
-            if channel is not None:
-                return ConcreteConstraintInput(
-                    formal_name=formal_name,
-                    resolution=ConstraintInputResolution.MODULE_OUTPUT,
-                    bound_channel=str(channel),
-                )
-
-        channel = registry.alias_lookup(occ_key)
-        if channel is not None:
-            return ConcreteConstraintInput(
-                formal_name=formal_name,
-                resolution=ConstraintInputResolution.MODULE_OUTPUT,
-                bound_channel=str(channel),
-            )
-        if deindexed_key != occ_key:
-            channel = registry.alias_lookup(deindexed_key)
-            if channel is not None:
-                return ConcreteConstraintInput(
-                    formal_name=formal_name,
-                    resolution=ConstraintInputResolution.MODULE_OUTPUT,
-                    bound_channel=str(channel),
-                )
-
-        # scoped_alias_lookup (R5 amendment, evidence-driven): a structured
-        # part-def EXPOSE alias (backtracker Step 1c) that plain scoped_lookup/
-        # alias_lookup — both flat ScopedKey namespaces — cannot reach. Proven
-        # in-profile and needed live: `fusion_tea`'s `hif_plant.eta` actual
-        # (`driver.efficiency`) is profile-ADMIT (Item 3 does not block it) yet
-        # unresolvable without this rung — verified against the live fixture,
-        # not a hypothetical. Split at the LAST dot into (prefix, leaf), same
-        # occ-key-then-deindexed order as every other rung above.
-        if "." in dotted:
-            prefix, leaf = dotted.rsplit(".", 1)
-            deindexed_prefix = _deindexed_scope(prefix)
-            for scope_candidate in (occ_scope, deindexed_scope):
-                if not scope_candidate:
-                    continue
-                key_prefix = deindexed_prefix if scope_candidate == deindexed_scope else prefix
-                channel = registry.scoped_alias_lookup(
-                    ScopedAliasKey((f"{scope_candidate}.{key_prefix}", leaf))
-                )
-                if channel is not None:
-                    return ConcreteConstraintInput(
-                        formal_name=formal_name,
-                        resolution=ConstraintInputResolution.MODULE_OUTPUT,
-                        bound_channel=str(channel),
-                    )
-            channel = registry.scoped_alias_lookup(ScopedAliasKey((prefix, leaf)))
-            if channel is None and deindexed_prefix != prefix:
-                channel = registry.scoped_alias_lookup(ScopedAliasKey((deindexed_prefix, leaf)))
-            if channel is not None:
-                return ConcreteConstraintInput(
-                    formal_name=formal_name,
-                    resolution=ConstraintInputResolution.MODULE_OUTPUT,
-                    bound_channel=str(channel),
-                )
-
-    # Design-attribute match, two forms tried in occurrence-then-definition order
-    # (R5 amendment #2, evidence-driven — see below):
-    #
-    # (i) Occurrence-scoped materialized QN: `{owner_instance_path}__{dotted
-    #     chain, "." -> "__"}`. The supplied-value materializer
-    #     (`resolution/supplied_values.py`, threaded into `graph_design_attrs`
-    #     the caller passes as `design_attrs`) synthesizes exactly this QN shape
-    #     for a `:>>` redefinition/override reached through a chain — proven
-    #     live against `fusion_tea`'s `hif_plant.eta` actual (`driver.efficiency`
-    #     resolves via the synthesized `hif_plant_pkg__hif_plant__driver__
-    #     efficiency`, not any registry channel or alias: `efficiency` is a
-    #     `:>>` literal redefinition on the driver instance, not a calc output).
-    # (ii) Definition-scoped target QN: `reference.target.qualified_name` is
-    #     SysML `::`-form (e.g. "toy_plant::'Toy Plant'::plant_budget");
-    #     sanitized to the EQN `__`-form every design attribute is keyed by
-    #     (verified against `wi014_toy` live).
-    if dotted:
-        occ_attr_qn = f"{usage_qualified_name}__{'__'.join(dotted.split('.'))}"
-        if occ_attr_qn in design_attr_by_qn:
-            return ConcreteConstraintInput(
-                formal_name=formal_name,
-                resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
-                design_attribute_qn=occ_attr_qn,
-            )
-
     target_qn_sysml = reference.target.qualified_name if reference.target else None
-    target_qn = sanitize_qualified_name(target_qn_sysml) if target_qn_sysml else None
-    if target_qn is not None and target_qn in design_attr_by_qn:
+
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=consumer_eqn,
+            reference=dotted or "",
+            param_name=formal_name,
+            consumer_scope=occ_scope,
+            policy=TerminalPolicy.STRICT,
+            diagnostic_context=f"{usage_qualified_name}.{formal_name}",
+            instance_path=usage_qualified_name,
+            owner_def_qn=owner_def_qn,
+            target_qn=target_qn_sysml,
+        ),
+        ProducerContext(
+            output_registry=registry,
+            design_attr_by_qn=design_attr_by_qn,
+        ),
+    )
+
+    if resolution.outcome is Outcome.MODULE_OUTPUT:
         return ConcreteConstraintInput(
             formal_name=formal_name,
-            resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
-            design_attribute_qn=target_qn,
+            resolution=ConstraintInputResolution.MODULE_OUTPUT,
+            bound_channel=resolution.identity,
         )
-
-    # (iii) Definition-scoped base-def literal default: `{owner_def_qn}__{dotted
-    # chain}`. Covers an attribute that carries only a plain base-def default
-    # (no `:>>` override, no channel) — e.g. `plant_values`' `attribute gain :
-    # Real = 40.0`, read bare in the same part's own assert (`in gain = gain`).
-    # The calc backtracker's Step 3 has an equivalent def-level fallback; constraint
-    # actuals had none until this rung. Real, already-captured attribute — same
-    # dedup-by-QN discipline as (i)/(ii) above, no new EP-key shape (F4).
-    if dotted and owner_def_qn:
-        def_attr_qn = f"{owner_def_qn}__{'__'.join(dotted.split('.'))}"
-        if def_attr_qn in design_attr_by_qn:
-            return ConcreteConstraintInput(
-                formal_name=formal_name,
-                resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
-                design_attribute_qn=def_attr_qn,
-            )
-
-    # Terminal disposition (D1): strict=True makes fallback synthesis
-    # physically unreachable — this call always raises (INV-2).
-    terminal_disposition(
-        usage_qualified_name=usage_qualified_name,
-        param_name=formal_name,
-        source_path=dotted or (target_qn or "<unresolved>"),
-        strict=True,
+    return ConcreteConstraintInput(
+        formal_name=formal_name,
+        resolution=ConstraintInputResolution.DESIGN_ATTRIBUTE,
+        design_attribute_qn=resolution.identity,
     )
-    raise AssertionError("unreachable: terminal_disposition(strict=True) always raises")
 
 
 def mint_constraint_id(
@@ -848,6 +749,7 @@ def _resolve_formal(
     value: object,
     occ_scope: str,
     usage_qualified_name: str,
+    consumer_eqn: str,
     registry: OutputRegistry,
     design_attr_by_qn: dict[str, DesignAttributeData],
     owner_def_qn: str | None = None,
@@ -869,6 +771,7 @@ def _resolve_formal(
         occ_scope=occ_scope,
         formal_name=formal_name,
         usage_qualified_name=usage_qualified_name,
+        consumer_eqn=consumer_eqn,
         registry=registry,
         design_attr_by_qn=design_attr_by_qn,
         owner_def_qn=owner_def_qn,
@@ -1236,6 +1139,13 @@ def lower_constraints(
         formal_bindings = _definition_formal_bindings(facts, usage)
         owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
         for owner_instance_path, occ_scope in item.owner_instances:
+            # Minted before the actuals are resolved: it is this instance's producing
+            # module EQN, and the shared resolver's self-reference guard needs it.
+            constraint_id = mint_constraint_id(
+                instance_path=owner_instance_path,
+                source_local=local,
+                tuple_=(*id_component, owner_instance_path, usage.membership_kind, is_negated),
+            )
             inputs: list[ConcreteConstraintInput] = []
             if formal_bindings is not None:
                 for formal, actual in formal_bindings:
@@ -1262,6 +1172,7 @@ def lower_constraints(
                                 value=actual.value,
                                 occ_scope=occ_scope,
                                 usage_qualified_name=owner_instance_path,
+                                consumer_eqn=constraint_id,
                                 registry=registry,
                                 design_attr_by_qn=design_attr_by_qn,
                                 owner_def_qn=owner_def_qn,
@@ -1284,6 +1195,7 @@ def lower_constraints(
                             value=actual.value,
                             occ_scope=occ_scope,
                             usage_qualified_name=owner_instance_path,
+                            consumer_eqn=constraint_id,
                             registry=registry,
                             design_attr_by_qn=design_attr_by_qn,
                             owner_def_qn=owner_def_qn,
@@ -1307,6 +1219,7 @@ def lower_constraints(
                                 value=leaf,
                                 occ_scope=occ_scope,
                                 usage_qualified_name=owner_instance_path,
+                                consumer_eqn=constraint_id,
                                 registry=registry,
                                 design_attr_by_qn=design_attr_by_qn,
                                 owner_def_qn=owner_def_qn,
@@ -1326,11 +1239,6 @@ def lower_constraints(
                         )
                     )
 
-            constraint_id = mint_constraint_id(
-                instance_path=owner_instance_path,
-                source_local=local,
-                tuple_=(*id_component, owner_instance_path, usage.membership_kind, is_negated),
-            )
             concrete.append(
                 ConcreteConstraint(
                     constraint_id=constraint_id,

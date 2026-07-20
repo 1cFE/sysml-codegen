@@ -70,10 +70,16 @@ def _literal_redef(part_qn: str, attr: str, value: float) -> RedefinitionData:
     )
 
 
-def test_d310_leaf_redef_collision_warns_not_silent_first_wins(caplog):
-    """Two `Motor` partdefs redefine `:>> power` to different literals. The
-    name-based fallback is first-wins; it must WARN on the ambiguity (naming the
-    leaf and the differing literals) and still return the first value."""
+def test_d310_leaf_redef_collision_refuses_rather_than_guessing(caplog):
+    """Two `Motor` partdefs redefine `:>> power` to different literals.
+
+    Declared migration (Item 2, inventory row 4): this used to warn and return the
+    first value anyway, which is the "plausible verdict from a guessed binding" that
+    contract invariant 26 forbids — the parameter silently acquired 100.0 when 999.0 was
+    equally supported. The name-based tier survives, because no exact form covers its
+    population, but a collision now refuses: the parameter stays defaultless and
+    manual-required, which is loud.
+    """
     from sysml_codegen.resolution.graph_builder import _find_literal_redefinition
 
     redefs = [
@@ -82,7 +88,7 @@ def test_d310_leaf_redef_collision_warns_not_silent_first_wins(caplog):
     ]
     with caplog.at_level(logging.WARNING):
         value = _find_literal_redefinition("motor", "power", redefs, usage_type_map=None)
-    assert value == 100.0  # first-wins preserved
+    assert value is None, "a colliding leaf must not resolve to a guessed default"
     warns = _warns(caplog)
     assert any("power" in w and "leaf collision" in w for w in warns), warns
 

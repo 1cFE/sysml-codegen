@@ -19,6 +19,12 @@ DesignAttributeData / CalcUsageData, calling the real backtracker method.
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerRequest,
+    TerminalPolicy,
+    resolve_producer,
+)
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
@@ -76,13 +82,34 @@ def _backtracker(attrs: list[DesignAttributeData], calc_defs=None) -> Dependency
     )
 
 
+def _design_attr(bt, source_path):
+    """The observable outcome the deleted `_resolve_to_design_attribute` produced, read
+    through the shared table instead (SR-R43: coverage of observable behavior migrates).
+
+    Rows 20 and 21 — leaf-unique-with-calc-def-filter and bare-name-unique — are where
+    these behaviors now live, and both refuse rather than guess.
+    """
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=_usage().qualified_name,
+            reference=source_path,
+            param_name="probe",
+            consumer_scope="",
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context="matcher probe",
+        ),
+        bt._producer_context(),
+    )
+    return resolution.identity if resolution.outcome is Outcome.DESIGN_ATTRIBUTE else None
+
+
 def test_def_owned_leaf_unique_resolves():
     """Bug B: a dotted ref to a def-owned (parent_part='') design attr resolves by
     unique leaf even though the exact parent_part match fails."""
     attr = _attr("magnet_vol", "Lib__MagnetPartDef__magnet_vol", parent_part="")
     bt = _backtracker([attr])
     # dotted source_path: parent is the usage name, leaf is the def-owned attr
-    qn = bt._resolve_to_design_attribute("magnet_holder.magnet_vol", _usage())
+    qn = _design_attr(bt, "magnet_holder.magnet_vol")
     assert qn == "Lib__MagnetPartDef__magnet_vol"
 
 
@@ -91,7 +118,7 @@ def test_def_owned_leaf_ambiguous_refuses():
     a1 = _attr("shared", "Lib__PartA__shared", parent_part="")
     a2 = _attr("shared", "Design__part_b__shared", parent_part="part_b")
     bt = _backtracker([a1, a2])
-    assert bt._resolve_to_design_attribute("some_part.shared", _usage()) is None
+    assert _design_attr(bt, "some_part.shared") is None
 
 
 def test_leaf_unique_excludes_calc_def_io():
@@ -100,7 +127,7 @@ def test_leaf_unique_excludes_calc_def_io():
     reference falls through (kept loud) rather than cross-wiring."""
     calc_out = _attr("calc_out", "Lib__SomeCalc__calc_out", parent_part="")
     bt = _backtracker([calc_out], calc_defs=[_SimpleCalcDef("SomeCalc", "Lib::SomeCalc")])
-    assert bt._resolve_to_design_attribute("some_calc.calc_out", _usage()) is None
+    assert _design_attr(bt, "some_calc.calc_out") is None
 
 
 def test_leaf_unique_ignores_calc_io_collision():
@@ -113,7 +140,7 @@ def test_leaf_unique_ignores_calc_io_collision():
         [design_attr, calc_io],
         calc_defs=[_SimpleCalcDef("PowerCalc", "Lib::PowerCalc")],
     )
-    assert bt._resolve_to_design_attribute("driver.power", _usage()) == "Lib__DriverDef__power"
+    assert _design_attr(bt, "driver.power") == "Lib__DriverDef__power"
 
 
 def test_quoted_owner_reference_matches_after_flip():
@@ -121,7 +148,7 @@ def test_quoted_owner_reference_matches_after_flip():
     design-attribute QN. A bare ::->__ swap would keep the quote/space and miss."""
     attr = _attr("power", "RetypeLibrary__IFE_Driver__power", parent_part="")
     bt = _backtracker([attr])
-    qn = bt._resolve_to_design_attribute("RetypeLibrary::'IFE Driver'::power", _usage())
+    qn = _design_attr(bt, "RetypeLibrary::'IFE Driver'::power")
     assert qn == "RetypeLibrary__IFE_Driver__power"
 
 
@@ -130,4 +157,4 @@ def test_quoted_owner_reference_no_false_match():
     design attribute returns None."""
     attr = _attr("power", "RetypeLibrary__IFE_Driver__power", parent_part="")
     bt = _backtracker([attr])
-    assert bt._resolve_to_design_attribute("RetypeLibrary::'HIF Driver'::torque", _usage()) is None
+    assert _design_attr(bt, "RetypeLibrary::'HIF Driver'::torque") is None

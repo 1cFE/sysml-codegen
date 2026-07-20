@@ -1,0 +1,343 @@
+{
+  "snapshot_format_version": 3,
+  "model_name": "agg_localterm_probe",
+  "captured_at": "2026-07-20T03:32:06.700173+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "AggLocalTermProbe::'Costed Thing'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Bank",
+          "qualified_name": "AggLocalTermProbe::Bank"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "AggLocalTermProbe::Cell"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "cell",
+          "qualified_name": "AggLocalTermProbe::Bank::cell"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AggLocalTermProbe::Cell",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "AggLocalTermProbe::'Costed Thing'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Cell",
+          "qualified_name": "AggLocalTermProbe::Cell"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "AggLocalTermProbe::Bank"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "the_bank",
+          "qualified_name": "AggLocalTermProbe::the_bank"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AggLocalTermProbe::Bank",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": []
+  },
+  "part_occurrences": {},
+  "compilation_results": {
+    "CellCostCalc": {
+      "calc_def_name": "CellCostCalc",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "cost",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.area * 100.0)",
+          "input_refs": [
+            "area"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "cost"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "CellCostCalc",
+      "qualified_name": "AggLocalTermProbe::CellCostCalc",
+      "doc_comment": "",
+      "calc_expressions": [
+        "cost = area * 100.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "area",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "cost",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "model.sysml",
+      "source_line": 25,
+      "source_hash": "a59feea698e8e6a19a6182dfc9e47351983bd736a835838fbaba7fa03d8a7def",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "area",
+        "cost"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "AggLocalTermProbe__the_bank__cell__cost_model",
+      "calc_def_name": "CellCostCalc",
+      "calc_def_qualified_name": "AggLocalTermProbe::CellCostCalc",
+      "module_type": "agglocaltermprobe.CellCostCalcModule",
+      "bindings": [
+        {
+          "param_name": "area",
+          "source_path": "AggLocalTermProbe::Cell::cost_model::area",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> AggLocalTermProbe::Cell::cost_model::area",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "area"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "model.sysml",
+      "source_line": 37,
+      "parent_part_path": "the_bank.cell",
+      "qualified_name": "AggLocalTermProbe__the_bank__cell__cost_model",
+      "is_template": false,
+      "owning_part_def_qn": "AggLocalTermProbe__Cell",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/agg_localterm_probe/model.sysml": [
+      {
+        "name": "cost",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 27,
+        "parent_part": "",
+        "qualified_name": "AggLocalTermProbe__CellCostCalc__cost"
+      },
+      {
+        "name": "area",
+        "sysml_type": "Real",
+        "default_value": "2.0",
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 35,
+        "parent_part": "",
+        "qualified_name": "AggLocalTermProbe__Cell__area"
+      },
+      {
+        "name": "markup",
+        "sysml_type": "Real",
+        "default_value": "1.15",
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 49,
+        "parent_part": "",
+        "qualified_name": "AggLocalTermProbe__Bank__markup"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [
+      {
+        "owning_part_qn": "AggLocalTermProbe__Cell",
+        "attribute_name": "capital_cost",
+        "redefinition_type": "chain",
+        "literal_value": null,
+        "source_path": "cost_model.cost",
+        "expression_ast": null,
+        "expression_text": "",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      {
+        "owning_part_qn": "AggLocalTermProbe__Bank",
+        "attribute_name": "capital_cost",
+        "redefinition_type": "expression",
+        "literal_value": null,
+        "source_path": null,
+        "expression_ast": null,
+        "expression_text": "sum(cell.capital_cost) * markup",
+        "target_path": [],
+        "is_deep_path": false,
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "design_overrides": [],
+    "multiplicities": [
+      {
+        "part_usage_name": "cell",
+        "owning_part_def_qn": "AggLocalTermProbe__Bank",
+        "count": 3,
+        "count_attribute_name": null,
+        "default_value": null
+      }
+    ],
+    "aggregation_expressions": [
+      {
+        "owning_part_qn": "AggLocalTermProbe__Bank",
+        "owning_part_name": "Bank",
+        "attribute_name": "capital_cost",
+        "raw_expression_text": "sum(cell.capital_cost) * markup",
+        "transformed_expression": "(cell.capital_cost * markup)",
+        "sum_terms": [
+          {
+            "part_usage_name": "cell",
+            "attribute_name": "capital_cost",
+            "multiplicity_attr": null,
+            "multiplicity_count": null
+          }
+        ],
+        "singleton_terms": [],
+        "local_terms": [
+          {
+            "attribute_name": "markup"
+          }
+        ],
+        "input_channels": [
+          "cell.capital_cost"
+        ],
+        "entry_points": [],
+        "compilability": "unknown",
+        "has_unsupported_nodes": false,
+        "aliases": [],
+        "source_file": "unknown",
+        "source_line": 0
+      }
+    ],
+    "warnings": [],
+    "part_usage_names": {
+      "AggLocalTermProbe__Bank": [
+        "cell"
+      ]
+    },
+    "usage_type_map": {
+      "[\"AggLocalTermProbe__Bank\", \"cell\"]": "AggLocalTermProbe__Cell"
+    }
+  },
+  "aggregation_expressions": [
+    {
+      "expression": {
+        "owning_part_qn": "AggLocalTermProbe__Bank",
+        "owning_part_name": "Bank",
+        "attribute_name": "capital_cost",
+        "raw_expression_text": "sum(cell.capital_cost) * markup",
+        "transformed_expression": "(cell.capital_cost * markup)",
+        "sum_terms": [
+          {
+            "part_usage_name": "cell",
+            "attribute_name": "capital_cost",
+            "multiplicity_attr": null,
+            "multiplicity_count": null
+          }
+        ],
+        "singleton_terms": [],
+        "local_terms": [
+          {
+            "attribute_name": "markup"
+          }
+        ],
+        "input_channels": [
+          "cell.capital_cost"
+        ],
+        "entry_points": [],
+        "compilability": "unknown",
+        "has_unsupported_nodes": false,
+        "aliases": [],
+        "source_file": "unknown",
+        "source_line": 0
+      },
+      "instance_path": "AggLocalTermProbe__the_bank"
+    }
+  ],
+  "computed_attributes": [],
+  "channel_aliases": [
+    {
+      "alias_name": "the_bank.cell.capital_cost",
+      "canonical_name": "the_bank.cell.cost_model.cost",
+      "owning_part_qn": "AggLocalTermProbe__Cell",
+      "source": "redefinition"
+    }
+  ]
+}
