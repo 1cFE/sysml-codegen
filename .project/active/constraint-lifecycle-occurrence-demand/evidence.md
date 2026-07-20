@@ -1,7 +1,7 @@
 # Evidence: Lifecycle Remediation Item 1 — Occurrence and Demand Integrity
 
 **Status:** Phases 0–6 complete. Candidate certified for the scope Item 1 owns.
-**Candidate revision:** `56837bc3312292f75830fdde730ba33fb1d88bc4` (supersedes `28bc8b0` after audit remediation)
+**Candidate revision:** `287afc47ab06826de27c38e203ffffb45398f972` (supersedes `28bc8b0` after audit remediation)
 **Item 0 RED predecessor:** `ecdc7285be1508c08e82830c93072306f40e6b34`
 **Coordinated pins:** agentic-mbse `515e08bbcd70aa9d23212765161bd02b3e3d8f23`,
 TEAx `d545701f575133350474108c96202a2ac5244462`

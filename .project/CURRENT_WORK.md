@@ -8,7 +8,7 @@
 
 ### CONSTRAINT-LIFECYCLE Item 1 — NEEDS WORK after independent audit (2026-07-19)
 
-**Candidate revision `56837bc3312292f75830fdde730ba33fb1d88bc4`** (supersedes 28bc8b0 after audit remediation). Evidence:
+**Candidate revision `287afc47ab06826de27c38e203ffffb45398f972`** (supersedes 28bc8b0 after audit remediation). Evidence:
 `.project/active/constraint-lifecycle-occurrence-demand/evidence.md`. Audit:
 `.project/active/constraint-lifecycle-occurrence-demand/audit.md`.
 
