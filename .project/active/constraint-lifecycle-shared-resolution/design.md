@@ -1,6 +1,6 @@
 # Design: Lifecycle Item 2 — Shared Producer Resolution and Gate A
 
-**Status:** Draft rev 2 — revised against independent design review (Needs-rework, ladder half)
+**Status:** Approved rev 2 — Phase group 1 implemented (Phases 0, 2, and Phase 1 de-risk pins)
 **Owner:** Reid W
 **Created:** 2026-07-19
 **Revised:** 2026-07-19
@@ -586,7 +586,7 @@ acceptance file and `constraint_occurrence_demand/` fixtures are frozen controls
 Test-first, RED before GREEN on public fixtures. Each phase has a stop condition that halts the item
 rather than working around it.
 
-**Phase 0 — Gate A fixtures and the RED surface.** Author `tests/fixtures/gate_a/` (usage-owned
+**Phase 0 — Gate A fixtures and the RED surface.** ✅ **Complete** (see Implementation Notes). Author `tests/fixtures/gate_a/` (usage-owned
 literal attribute on a concrete `PartUsage`, def-typed constraint with a self-named actual, no
 passthrough) **and** a genuinely package-owned constraint fixture — one declared directly in a
 package body, which no fixture in the repo exercises today (M6). Author unchanged RED nodes for
@@ -596,7 +596,8 @@ SR-A01, SR-A04, SR-A05, SR-A06. Run at `287afc4`.
 *Stop condition:* Gate A fails anywhere other than the predicted terminal raise → PC-1's diagnosis
 is wrong; stop and re-diagnose before writing resolver code.
 
-**Phase 1 — the resolver, unconsumed.** Add `resolution/producer_resolution.py` with the request,
+**Phase 1 — the resolver, unconsumed.** ◐ **De-risk pins complete; table and types still open**
+(see Implementation Notes). Add `resolution/producer_resolution.py` with the request,
 result, `ProducerContext`, the `KEY_FORMS` table, the climb, and `terminal_disposition` moved in. No
 consumer wired. Unit tests pin the table order and policy admissibility as data (I2), refusal
 behavior (I3), the guard (I6), both terminal policies (I4), and — critically — **D9's QN rule
@@ -605,7 +606,7 @@ against all three current formulas** (R3).
 *Stop condition:* D9's rule cannot reproduce one of the three formulas → B4 is false; stop and
 re-derive before any cutover.
 
-**Phase 2 — Gate A.** Add the hardened `part_usage` owner branch (D10). Wire nothing else.
+**Phase 2 — Gate A.** ✅ **Complete** (see Implementation Notes). Add the hardened `part_usage` owner branch (D10). Wire nothing else.
 *Validation:* SR-A01 GREEN with generated TEAx execution returning the pinned verdict, and changing
 the literal changing it (SR-R22); the package-owner fixture still routes to the package branch; an
 unrecognized owner kind raises rather than falling through. Full suite and byte identity green.
@@ -637,6 +638,92 @@ describe the one procedure, not to prohibit removed behavior (SR-R44); every ret
 as an SR-R41 deviation with its reason. Live and same-checkout replay parity on the Gate A fixture,
 replay labeled non-certifying (SR-A10, SR-R08). LC-I09 coordinates per acceptance row (SR-R52).
 *Validation:* SR-A11, SR-A13.
+
+---
+
+## Implementation Notes
+
+### Phase group 1 (Phases 0, 2, and Phase 1's de-risk pins) — 2026-07-19
+
+Scope executed: Gate A's owner-classification fix with live coverage of both branches, plus
+D9's QN-rule de-risk pins. The ladder cutover phases (3–5) were not started.
+
+**Files changed**
+
+| File | Change |
+|---|---|
+| `src/sysml_codegen/analysis/constraint_lowering.py` | `_concrete_usage_owner` (D10 allowlist classifier) and `_expand_part_usage_owner`; the `package` dispatch arm now discriminates between them |
+| `src/sysml_codegen/resolution/producer_resolution.py` | New. Holds D9's `entry_point_qualified_name` only — no consumer wired |
+| `tests/fixtures/gate_a/` | New. Usage-owned literal on a concrete `PartUsage`, def-typed constraint, self-named actual |
+| `tests/fixtures/gate_a_package_owner/` | New. The genuinely package-owned control (M6) |
+| `tests/conformance/test_gate_a_owner_classification.py` | New. Three live nodes plus the D10 refusal |
+| `tests/unit/test_producer_qn_rule.py` | New. Nine D9 pins |
+| `tests/execution/test_gate_a_execution.py` | New. SR-A01/SR-R22 under real simkit |
+| `scripts/capture_extraction_snapshots.py`, `tests/conformance/conftest.py` | Both fixtures registered |
+
+**Phase 0 — stop condition cleared, PC-1 confirmed first-hand.** Live extraction of `gate_a`
+reports `owner.owner = IdentityFact(kind='PartUsage', qualified_name='GateA::the_host')` with
+`owning_definition = package GateA`, and extraction emits the attribute as
+`GateA__the_host__gain` — exactly PC-1's prediction. The live build fails at
+`dependency_backtracker.py:62`, `terminal_disposition(strict=True)`, on
+`GateA__the_host__viability.gain` — the predicted terminal raise, not parse or setup. Re-verified
+by stashing the production fix and re-running: both Gate A nodes fail there, the D10 node fails
+`DID NOT RAISE`, and the package-owner control passes on both sides as a preservation pin should.
+
+**Phase 2 — Gate A live GREEN.** `owner_instance_path` is `GateA__the_host`; the self-named
+actual resolves to `DESIGN_ATTRIBUTE GateA__the_host__gain`; generated simkit execution returns
+`satisfied` with the literal at 40.0 and flips to `violated` at 5.0 (SR-R22). No passthrough
+calculation in the model. Byte identity held with zero baseline movement, so no existing
+constraint was silently reclassified — Phase 2's stop condition never fired and B1 survives.
+
+**Phase 1 de-risk — B4 holds, with one leg unfalsifiable today.** D9's rule reproduces the
+calculation formula (pinned by calling the real `terminal_disposition`) and the aggregation-term
+formula (by calling the real `resolve_input`), and reproduces all 23 entry points the corpus
+actually mints, all in `fusion_tea`. **The third leg has no corpus coverage:** the aggregation
+LocalTerm mint (`graph_builder.py:1524-1525`) is never reached by any committed fixture. The five
+aggregations carrying local terms (all in `solar_battery_model`) resolve every one positively. So
+that leg is pinned structurally, and **Phase 5 owes it live coverage before cutting the LocalTerm
+path over** — a byte-identity gate cannot protect a population of zero.
+
+**Deviations from the design**
+
+1. *Fixtures carry an unrelated calc.* `pipeline_builder.py:753` refuses a model with no calc
+   definition at all, which the design's fixture sketch did not anticipate. Each fixture carries
+   a `Doubler` calc on a separate part that neither produces nor consumes the constrained
+   attribute. It is not the passthrough SR-A01 forbids, and being unrelated it cannot mask the
+   defect by minting the attribute's entry point itself — confirmed by the RED re-run.
+2. *The new branch sits inside the `package` arm, not ahead of it.* The design said "ahead of the
+   package branch". Discriminating only within that arm is what makes the extension argument
+   hold: a `PartUsage` nested inside a part def also reports `owner.owner` as a `PartUsage`, and
+   an unconditional check ahead of the dispatch would have pulled those out of `_expand_part_owner`
+   — reworking an existing branch, which B1 does not cover and I8 forbids. Same routing outcome,
+   narrower blast radius.
+3. *`owner_kind` still records the owning-definition kind.* `PreparedConstraintUsage.owner_kind`
+   and `ConcreteConstraint.owner_kind` document `OwningDefinitionFact.kind`, so a usage-owned
+   constraint keeps `"package"` there and only `owner_instances` changes. Minting a new
+   `"part_usage"` value would have moved a vocabulary that reaches `resolution/models.py:374`, the
+   constraint report, and `_exclusion_for`, for no requirement in scope.
+4. *`LibraryPackage` is in the package-owner allowlist.* `library package` is a real syside type
+   and `is_instance("Package")` accepts it, so a library-package-owned constraint reports
+   `owner.owner.kind == "LibraryPackage"`. Omitting it would have made D10's raise fire on a shape
+   that works today.
+
+**Validation**
+
+- Full suite `3025 passed, 32 skipped` (Item 1 baseline 3009/26; +13 new nodes, the rest from
+  the two fixtures joining parametrized corpus sweeps). Zero failures.
+- Byte identity: `tests/conformance/test_baselines.py` 17 passed; `git status` clean over
+  `tests/fixtures/baseline_outputs/` and over every pre-existing fixture snapshot.
+- `mypy src/` 76 errors — the baseline exactly, not grown. `ruff check src/` clean.
+- `-O`: all 13 new nodes pass. Two failures elsewhere
+  (`test_expression_compiler.py` ×2) are pre-existing — they pin a bare `assert` that `-O`
+  strips, and they reproduce with production stashed. Out of scope; the new refusals raise
+  `CodeGenerationError`, so they survive `-O`.
+- Real simkit execution lane: 17 passed, including the new Gate A node.
+
+**Open for later phases.** The Gate A fixture pair is snapshot-captured, so SR-A10's live/replay
+parity leg is available to Phase 6. SR-A02's two-consumer convergence is not covered — `gate_a`
+deliberately has no calculation consumer of `gain`, so that acceptance row needs its own shape.
 
 ---
 

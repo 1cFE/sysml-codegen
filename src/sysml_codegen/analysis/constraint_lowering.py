@@ -461,6 +461,52 @@ def _expand_package_owner(usage: ConstraintUsageFact) -> tuple[tuple[str, str], 
     return ((sanitize_qualified_name(usage.identity.qualified_name or owner_qn), ""),)
 
 
+# The owning-definition walk stops at the first enclosing definition or package, so a
+# constraint declared inside a concrete ``PartUsage`` that sits directly in a package
+# body reports its owning definition as that *package* while the usage itself is on
+# ``owner.owner``. Both spellings below are the vocabulary of ``IdentityFact.kind``,
+# which is ``type(element).__name__`` — an open set fixed by the syside runtime rather
+# than by agentic-mbse (``constraint_extraction.py:193-200``) — and the snapshot route
+# reads it back from JSON with no live object to test structurally. So each shape is
+# matched by explicit allowlist (D10).
+_CONCRETE_USAGE_OWNER_KINDS = frozenset({"PartUsage"})
+_PACKAGE_OWNER_KINDS = frozenset({"Package", "LibraryPackage"})
+
+
+def _concrete_usage_owner(usage: ConstraintUsageFact) -> IdentityFact | None:
+    """The concrete ``PartUsage`` a package-scoped constraint is declared inside, or
+    ``None`` when the package body itself owns it.
+
+    Raises on any other owner kind rather than falling through to the package branch:
+    falling through keys the constraint's actuals off the constraint's own qualified
+    name, which is the Gate A defect (design PC-1), and a silent mis-key is exactly
+    what a syside rename or a new usage subclass would produce.
+    """
+    owner = usage.owner.owner
+    if owner is None or owner.kind in _PACKAGE_OWNER_KINDS:
+        return None
+    if owner.kind in _CONCRETE_USAGE_OWNER_KINDS:
+        return owner
+    raise _generation_error(
+        f"{usage.identity.qualified_name}: package-scoped constraint has an "
+        f"unrecognized immediate owner kind {owner.kind!r} — cannot tell whether it is "
+        "usage-owned or package-owned, and guessing would mis-key its actuals"
+    )
+
+
+def _expand_part_usage_owner(owner: IdentityFact) -> tuple[tuple[str, str], ...]:
+    """``part_usage`` owner instances: the owning usage *is* the concrete instance —
+    one pair at its own path and scope (Gate A, owner decision D-2)."""
+    owner_qn = owner.qualified_name
+    if not owner_qn:
+        raise _generation_error(
+            f"usage-owned constraint's owner {owner.name!r} has no qualified name — "
+            "an expected instance cannot be formed"
+        )
+    instance_path = sanitize_qualified_name(owner_qn)
+    return ((instance_path, occurrence_scope(instance_path)),)
+
+
 def reference_dotted(actual: ActualFact) -> str | None:
     """The dotted source path a named feature-reference actual points at.
 
@@ -765,7 +811,14 @@ def prepare_constraint_usages(
         elif kind == "calc_def":
             owner_instances = _expand_calc_owner(usage, calc_usages)
         elif kind == "package":
-            owner_instances = _expand_package_owner(usage)
+            # A package owning-definition covers two distinct shapes; only the second
+            # one is genuinely package-owned (D10). The discrimination lives here, at
+            # the dispatch, because it is a routing decision.
+            usage_owner = _concrete_usage_owner(usage)
+            if usage_owner is not None:
+                owner_instances = _expand_part_usage_owner(usage_owner)
+            else:
+                owner_instances = _expand_package_owner(usage)
         else:
             raise RuntimeError(
                 f"admitted usage {usage.identity.qualified_name!r} has unsupported owner kind "

@@ -6,6 +6,30 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A (implement in progress)
+
+Epic register row 2. Spec and design (rev 2, approved) at
+`.project/active/constraint-lifecycle-shared-resolution/`. The design carries the phased plan and
+the implementation notes — there is no separate `plan.md`. RED coordinate is the Item 1 certified
+candidate `287afc4`. The spec surfaces one premise conflict: epic Item 2 scope point 5 still
+carries a 300–500 line reduction target that the owner's 2026-07-19 LOC ruling (`a1435e1`,
+LC-I08) retired; the spec follows the owner correction and uses no LOC gate.
+
+**Phase group 1 complete (Phases 0, 2, and Phase 1's de-risk pins).** Gate A is live GREEN: a
+literal attribute owned by a concrete `PartUsage` resolves under its real QN
+(`GateA__the_host__gain`) and drives a real simkit verdict that flips with the literal (SR-A01,
+SR-R22). PC-1's diagnosis was confirmed first-hand before any production edit. D9's QN rule is
+de-risked — it reproduces both formulas that have a live population, including all 23 minted
+entry points in `fusion_tea`. Full suite 3025 passed / 0 failed, byte identity held with zero
+baseline movement, mypy at its 76-error baseline, ruff clean.
+
+**Carry into the cutover phases.** The aggregation LocalTerm mint
+(`graph_builder.py:1524-1525`) has **zero fixture coverage** — no committed model reaches it — so
+Phase 5 must add live coverage before cutting that path over; a byte-identity gate protects
+nothing over an empty population. SR-A02's two-consumer convergence is still uncovered: `gate_a`
+deliberately has no calculation consumer of `gain`. The ladder cutover (Phases 3–5) has not
+started.
+
 ### CONSTRAINT-LIFECYCLE Item 1 — CERTIFIED after independent audit + remediation (2026-07-19)
 
 **Candidate revision `287afc47ab06826de27c38e203ffffb45398f972`** (supersedes 28bc8b0 after audit remediation). Evidence:

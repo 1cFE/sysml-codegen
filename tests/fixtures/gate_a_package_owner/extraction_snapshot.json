@@ -1,0 +1,433 @@
+{
+  "snapshot_format_version": 3,
+  "model_name": "gate_a_package_owner",
+  "captured_at": "2026-07-20T03:14:58.604277+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "GateAPackageOwner::Unrelated"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "the_other",
+          "qualified_name": "GateAPackageOwner::the_other"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "GateAPackageOwner::Unrelated",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [
+      {
+        "formals": [
+          {
+            "default": {
+              "kind": "literal",
+              "literal": {
+                "kind": "LiteralRational",
+                "result_type": "ScalarValues::Rational",
+                "value": 1.0
+              },
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            "has_default": true,
+            "name": "floor",
+            "qualified_name": "GateAPackageOwner::'Package Threshold'::floor",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          },
+          {
+            "default": null,
+            "has_default": false,
+            "name": "limit",
+            "qualified_name": "GateAPackageOwner::'Package Threshold'::limit",
+            "types": [
+              "ScalarValues::Real",
+              "Base::DataValue",
+              "Base::Anything"
+            ]
+          }
+        ],
+        "identity": {
+          "kind": "ConstraintDefinition",
+          "name": "Package Threshold",
+          "qualified_name": "GateAPackageOwner::'Package Threshold'"
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "limit",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "limit",
+                  "qualified_name": "GateAPackageOwner::'Package Threshold'::limit"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "floor",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "floor",
+                  "qualified_name": "GateAPackageOwner::'Package Threshold'::floor"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        }
+      }
+    ],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v1",
+    "usages": [
+      {
+        "actuals": [
+          {
+            "direction": "in",
+            "formal_targets": [
+              "GateAPackageOwner::'Package Threshold'::limit"
+            ],
+            "name": "limit",
+            "value": {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "limit",
+                "target": {
+                  "kind": "ReferenceUsage",
+                  "name": "limit",
+                  "qualified_name": "GateAPackageOwner::pkg_check::limit"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          }
+        ],
+        "identity": {
+          "kind": "AssertConstraintUsage",
+          "name": "pkg_check",
+          "qualified_name": "GateAPackageOwner::pkg_check"
+        },
+        "inherited_into": [],
+        "is_negated": false,
+        "location": {
+          "column": 5,
+          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/gate_a_package_owner/model.sysml",
+          "line": 44
+        },
+        "membership_kind": null,
+        "omitted_default_formals": [
+          "GateAPackageOwner::'Package Threshold'::floor"
+        ],
+        "owner": {
+          "owner": {
+            "kind": "Package",
+            "name": "GateAPackageOwner",
+            "qualified_name": "GateAPackageOwner"
+          },
+          "owning_definition": {
+            "kind": "package",
+            "qualified_name": "GateAPackageOwner"
+          }
+        },
+        "predicate": {
+          "kind": "operator",
+          "operand_type": null,
+          "operands": [
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "limit",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "limit",
+                  "qualified_name": "GateAPackageOwner::'Package Threshold'::limit"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            },
+            {
+              "kind": "feature_ref",
+              "operand_type": {
+                "category": "real",
+                "enumeration": null,
+                "unit": null
+              },
+              "reference": {
+                "chain_segments": [],
+                "source_name": "floor",
+                "target": {
+                  "kind": "AttributeUsage",
+                  "name": "floor",
+                  "qualified_name": "GateAPackageOwner::'Package Threshold'::floor"
+                },
+                "target_types": [
+                  "ScalarValues::Real",
+                  "Base::DataValue",
+                  "Base::Anything"
+                ]
+              },
+              "schema_version": "expression-ir/v1"
+            }
+          ],
+          "operator": ">=",
+          "schema_version": "expression-ir/v1"
+        },
+        "scope": {
+          "kind": "AssertConstraintUsage",
+          "name": "pkg_check",
+          "qualified_name": "GateAPackageOwner::pkg_check"
+        },
+        "source": {
+          "asserted_constraint": {
+            "kind": "AssertConstraintUsage",
+            "name": "pkg_check",
+            "qualified_name": "GateAPackageOwner::pkg_check"
+          },
+          "constraint_definition": {
+            "kind": "ConstraintDefinition",
+            "name": "Package Threshold",
+            "qualified_name": "GateAPackageOwner::'Package Threshold'"
+          },
+          "effective_predicate_source": {
+            "kind": "ConstraintDefinition",
+            "name": "Package Threshold",
+            "qualified_name": "GateAPackageOwner::'Package Threshold'"
+          },
+          "form": "definition_typed",
+          "referenced_feature_target": null
+        }
+      }
+    ]
+  },
+  "part_occurrences": {},
+  "compilation_results": {
+    "Doubler": {
+      "calc_def_name": "Doubler",
+      "overall_compilability": "fully_compilable",
+      "output_results": [
+        {
+          "output_name": "doubled",
+          "compilability": "fully_compilable",
+          "python_expression": "(inputs.seed * 2.0)",
+          "input_refs": [
+            "seed"
+          ],
+          "intermediate_refs": [],
+          "unsupported_reason": null,
+          "is_undeclared_intermediate": false
+        }
+      ],
+      "execution_order": [
+        "doubled"
+      ]
+    }
+  },
+  "calc_defs": [
+    {
+      "name": "Doubler",
+      "qualified_name": "GateAPackageOwner::Doubler",
+      "doc_comment": "",
+      "calc_expressions": [
+        "doubled = seed * 2.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "seed",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "doubled",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "model.sysml",
+      "source_line": 27,
+      "source_hash": "e60127d5577f5aa1d5b4767702682d80f33e5517e40c1b673e5d8d526556fe97",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "doubled",
+        "seed"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "GateAPackageOwner__the_other__doubler",
+      "calc_def_name": "Doubler",
+      "calc_def_qualified_name": "GateAPackageOwner::Doubler",
+      "module_type": "gateapackageowner.DoublerModule",
+      "bindings": [
+        {
+          "param_name": "seed",
+          "source_path": "GateAPackageOwner::Unrelated::doubler::seed",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> GateAPackageOwner::Unrelated::doubler::seed",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "seed"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "model.sysml",
+      "source_line": 35,
+      "parent_part_path": "the_other",
+      "qualified_name": "GateAPackageOwner__the_other__doubler",
+      "is_template": false,
+      "owning_part_def_qn": "GateAPackageOwner__Unrelated",
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/gate_a_package_owner/model.sysml": [
+      {
+        "name": "limit",
+        "sysml_type": "Real",
+        "default_value": "5.0",
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 42,
+        "parent_part": "",
+        "qualified_name": "GateAPackageOwner__limit"
+      },
+      {
+        "name": "floor",
+        "sysml_type": "Real",
+        "default_value": "1.0",
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 20,
+        "parent_part": "",
+        "qualified_name": "GateAPackageOwner__Package_Threshold__floor"
+      },
+      {
+        "name": "doubled",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 29,
+        "parent_part": "",
+        "qualified_name": "GateAPackageOwner__Doubler__doubled"
+      },
+      {
+        "name": "seed",
+        "sysml_type": "Real",
+        "default_value": "3.0",
+        "unit": null,
+        "source_file": "model.sysml",
+        "source_line": 33,
+        "parent_part": "",
+        "qualified_name": "GateAPackageOwner__Unrelated__seed"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {},
+    "usage_type_map": {}
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": []
+}
