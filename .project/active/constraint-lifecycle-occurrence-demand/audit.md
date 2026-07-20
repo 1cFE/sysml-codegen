@@ -1,10 +1,16 @@
 # Audit: Lifecycle Item 1 — Occurrence and Demand Integrity
 
-**Verdict:** Needs work
-**Audited:** 2026-07-19
+**Verdict:** **Certify** (with recorded deviations) — as of re-verification at `287afc4`
+**Original verdict:** Needs work at `28bc8b0f` — both blockers now closed, see
+[Re-verification](#re-verification-at-287afc4-2026-07-19)
+**Audited:** 2026-07-19 (pass 1 at `28bc8b0f`; pass 2 at `287afc4`)
 **Branch:** `constraint-exec-epic`
-**Candidate:** `28bc8b0f` (HEAD `8aac0a4` is code-identical — the follow-on commits touch only `.project/`)
+**Candidate:** `287afc47ab06826de27c38e203ffffb45398f972` (supersedes `28bc8b0f`; evidence
+follow-up `ebc0ca8`)
 **Coordinated pins:** agentic-mbse `515e08bb`, TEAx `d545701f`
+
+> The body below is the original pass-1 record, left unamended. Dispositions are in the
+> re-verification section at the end.
 
 ---
 
@@ -308,3 +314,138 @@ silently rewritten — correcting the record belongs to the implementing session
 
 F4–F7 are notes. They can be folded into this item or tracked forward; none blocks certification on
 its own.
+
+---
+
+# Re-verification at `287afc4` (2026-07-19)
+
+**Scope:** the pass-1 findings only, not a fresh audit. All three required items are closed and the
+verdict moves to **Certify**.
+
+## Blocker 1 (F1) — closed, reproduced both ways
+
+The fix is a one-line `continue` replacing the early `return` at
+`resolution/supplied_values.py:281`, restoring the predecessor's tier fall-through.
+
+Rerun at my original reproduction, same inputs (malformed `"true"` on the type def, valid `"42.0"`
+on the consuming part def):
+
+| Tree | Result |
+|---|---|
+| Predecessor `ecdc7285` | `42.0` |
+| Candidate 1 `28bc8b0` | `None` — the regression |
+| **Candidate 2 `287afc4`** | **`42.0`** — parity with predecessor restored |
+
+**The RED claim is confirmed independently, not taken on trust.** I extracted the pre-fix tree with
+`git archive 28bc8b0` and ran the new test against it:
+`test_malformed_type_def_literal_does_not_suppress_part_def_literal` fails with
+`KeyError: 'Scope__plant__driver__efficiency'` — the value-vanished symptom — and passes at the
+candidate. The test drives the full enrichment seam rather than `_resolve_value` alone, so it pins
+the observable behaviour, not just the helper.
+
+The residual disposition asymmetry I flagged as pre-existing still stands (tier 2 returns
+`saw_non_literal=False` on a malformed literal where tier 1 returns `True`, so a wholly-malformed
+target still vanishes without a diagnostic). It is disclosed at `evidence.md:350-351` as "real and
+remains open," which is the honest disposition for inherited debt outside this item's scope.
+
+## Blocker 2 (F2) — deviation accepted
+
+**Disclosure is now complete**, which was the substance of the finding:
+
+- `plan.md:726` is relabelled `[~]` with an accurate split note naming what is and is not delivered.
+  It is no longer an unsupported checkbox.
+- Evidence deviation 9 records the shortfall, both reproduced obstacles, and the substitute.
+- `test_two_warnings_occur_in_order_within_one_batch`
+  (`tests/unit/test_logical_demand_resolution.py:501`) pins both exact warning bytes in order within
+  a single batch, with the collision keeping its real value and only the clean target synthesizing.
+
+**On the unmodelability claim, weighed on its merits.** I find obstacle (b) structurally persuasive
+on independent reasoning, and it is the one that blocks the collision half. The collision guard
+(`supplied_values.py:539`) requires one target to be simultaneously a real captured design attribute
+and a supplied-value demand. At instance scope the `:>>` syntax that would create the real
+instance-scoped attribute is the same syntax that feeds the supplied path, so one declaration cannot
+play both roles. Declaring def-scoped avoids that but lands in a different QN namespace
+(`__Source__a_collision` vs `__plant__source__a_collision`), and the `(name, parent_part)` fallback
+then needs `parent_part` to match the usage name rather than the def name. That is a genuine bind,
+not hand-waving.
+
+**Stated limit on this judgement.** I did not exhaustively disprove modelability. My one untested
+counter-hypothesis is against obstacle (a): a CHAIN redefinition resolving to an upstream calc
+output might cover the consumer through `ChainRedefinitionFollow` without needing a modeled default,
+sidestepping the `Cannot override a binding feature value` error. That would not rescue obstacle
+(b), so it does not deliver 3/2/1 on its own — which is why it does not change the disposition. It
+is recorded here so the possibility is on the record rather than lost.
+
+## F3 cycle — closed on the public route
+
+`test_r5_indirect_cycle_is_atomic_on_the_public_route` passes live against the new
+`cycle_indirect/` fixture, observing `cycle_path == (…__A, …__B, …__A)` and closing edge
+`(A, "b", B)` exactly. Deviation 6 is relabelled a **design deviation** citing `design.md:598`,
+correcting the mis-attribution. It also states plainly what remains open: the declaration-reversed
+variants (unit-level only) and the `b"sentinel\n"` output-bytes observation, which no test makes.
+Accurate.
+
+## F4 / F5 / F6 declines — reasons check out
+
+All three characterize the code correctly:
+
+- **F5** (deviation 3, corrected): accurate — `constraint_lowering.py:567` raises on `None` while
+  `:684` silently basenames. Fix deferred, stated as such.
+- **F6** (deviation 10, declined): accurate and load-bearing. Correcting "bindings" → "targets"
+  would change bytes asserted four times in the Phase 0 acceptance file, which is the RED/GREEN
+  anchor. Deferring until the anchor retires is the right call; a call-site comment records it.
+- **F4** (deviation 11, declined): accurate. I confirmed the fall-through lands on
+  `_unique_source(demand, "constraint-usage", …)`, which raises on ambiguity or absence — so no
+  wrong value is grouped silently and only the tier attribution is coarser, as claimed.
+
+**F7 applied:** `Path.cwd()` removed from `_usable_source` (`supplied_values.py:292`).
+
+## Anchor integrity — verified from git bytes
+
+`git show 287afc4:tests/conformance/test_constraint_occurrence_demand_acceptance.py | sha256sum`
+= `aea7c8219d716f4ca1ecb154ca6ed8a13e0c15b1184fdcfe2d92b556eacb624b`. Unchanged.
+
+Stronger: `git log` on that path still shows **one** commit (`cfeb7ee`), so the admitted
+touch-and-revert left no committed trace — the bytes were never committed in a different state. The
+new nodes live in a separate file, `test_constraint_occurrence_demand_supplementary.py`, which is
+the correct way to add public proof without disturbing the anchor. `28bc8b0` is intact and
+unamended (same object, same author date).
+
+**Audit record integrity:** `287afc4` added `audit.md` as a pure 310-line insertion and `ebc0ca8`
+did not touch it. My pass-1 findings were committed unaltered.
+
+## Gates rerun at `287afc4`
+
+| Gate | Claimed | Reproduced |
+|---|---|---|
+| Full suite | 3,012 / 26 / 16, 0 failed | **3,012 / 26 / 16, 0 failed** ✓ |
+| Licensed acceptance + supplementary | 6 + 1 | **7 passed, no skips** ✓ |
+| TEAx execution | 2 passed | **2 passed** ✓ |
+| Focused optimized (`python -O`) | 66 passed | **66 passed, no skips** ✓ |
+| Mypy | 76 in 17 (= Phase 0 baseline) | **76 in 17** ✓ |
+| Ruff `check src/` | clean | **All checks passed** ✓ |
+| Lock / schema drift vs `28bc8b0` | none | **empty** ✓ |
+| Existing fixture / baseline drift | none | **empty** (only `cycle_indirect/` added) ✓ |
+
+Evidence `CANDIDATE_REV` reads `287afc4` at HEAD. Note for the record: at `287afc4` itself the field
+read `56837bc3`, a stale value corrected in `ebc0ca8` — caught and fixed, not left standing.
+
+## Residual open items, carried forward
+
+None blocks certification; all are disclosed in the evidence record:
+
+- Tier-2 malformed-literal disposition asymmetry (pre-existing, `evidence.md:350-351`).
+- `source_location_mode=None` source-key path silently degrades (deviation 3, fix deferred).
+- "referenced bindings" noun under-counts (deviation 10, blocked on the anchor).
+- `_owner_source` ambiguity downgrade (deviation 11, conservative).
+- OD-A05 output-bytes-on-failure and declaration-reversed variants (deviation 6, unproven).
+- OD-A10's live 3/2/1 shape (deviation 9, believed unmodelable — with the limit stated above).
+
+Deviations are numbered 1–6, 9, 10, 11, 7, 8 in evidence §6 — out of sequence, cosmetic only.
+
+**Not checked in this pass:** anything outside the pass-1 findings. The seven invariants, the
+affected-regression union, the absolute-reference controls, and `ruff format --check` were verified
+at `28bc8b0` and not rerun at `287afc4`. The production delta between the two candidates is 22 lines
+in one file (`supplied_values.py`), all of it read line-by-line above, and it touches no seam the
+invariant set covers. Pass-1's "Not checked" limits — relocated/full-tree generation, R-8, the
+mypy error contents, F1's real-model reachability, and performance — all still stand.

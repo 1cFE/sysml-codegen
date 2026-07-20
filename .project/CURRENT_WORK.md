@@ -6,34 +6,45 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 1 — NEEDS WORK after independent audit (2026-07-19)
+### CONSTRAINT-LIFECYCLE Item 1 — CERTIFIED after independent audit + remediation (2026-07-19)
 
 **Candidate revision `287afc47ab06826de27c38e203ffffb45398f972`** (supersedes 28bc8b0 after audit remediation). Evidence:
 `.project/active/constraint-lifecycle-occurrence-demand/evidence.md`. Audit:
 `.project/active/constraint-lifecycle-occurrence-demand/audit.md`.
 
-**Independent audit verdict: Needs work** — narrow, two required fixes. Every gate below was
-reproduced first-hand and all seven invariants verified, but two blockers stand:
+**Independent audit verdict: Certify (with recorded deviations).** Pass 1 at `28bc8b0` returned
+Needs work on two blockers; both are closed at `287afc4` and re-verified first-hand.
 
-1. **Silent value-loss regression** introduced by Item 1 in `_resolve_value`
-   (`resolution/supplied_values.py:268-281`). Merging tiers 2a/2b made a malformed literal on the
-   type def return early and suppress a valid literal on the consuming part def. Reproduced on
-   both trees: predecessor `ecdc7285` returns `42.0`, candidate returns `None`, and the seam logs
-   `0 literal applied, 0 non-literal skipped` — the demand vanishes with no diagnostic. No test
-   covers the shape, which is why the suite is green.
-2. **OD-A10 not delivered as approved, and undisclosed.** The `order` fixture was built with three
-   plain literal overrides (3/3/0, zero warnings) instead of the design's collision + CHAIN shape
-   (`design.md:602`, `:622` specify 3/2/1 with two ordered warnings). `plan.md:726` carries a
-   checked box asserting OD-A10 warning order/counts that no test makes. Not among evidence §6's
-   eight deviations.
+1. **Silent value-loss regression — fixed.** A malformed literal at one resolution tier exited the
+   whole tier loop, suppressing a valid literal on the tier below
+   (`resolution/supplied_values.py:281`). The one-line `continue` restores predecessor
+   fall-through: the auditor's reproduction now returns `42.0` at the candidate, matching
+   `ecdc7285`. The RED claim was verified independently against a `git archive` of the pre-fix
+   tree — the new regression test fails there and passes at the candidate.
+2. **OD-A10 deviation — accepted as recorded.** The design's live 3/2/1 shape is not delivered;
+   two structural obstacles were reproduced and are recorded in evidence deviation 9. The
+   warning-order observation is delivered at the enrichment seam by
+   `test_two_warnings_occur_in_order_within_one_batch`, and `plan.md:726` is relabelled `[~]` with
+   an accurate split note. The auditor weighed the unmodelability claim independently and found the
+   def-scoped/instance-scoped collision bind persuasive, with the limit on that judgement stated in
+   the audit.
 
-Also: deviation 6 mis-attributes the cycle-fixture gap to the plan when the approved design
-specifies the same content, and OD-A05's output-bytes-on-failure half is unproven. Four smaller
-notes (F4–F7) are in the audit.
+Deviation 6 is relabelled a design deviation; the `A -> B -> A` variant now has a public live node
+(`cycle_indirect/`). F7 applied. F4/F5/F6 declined with reasons the auditor confirmed accurate.
 
-All six public acceptance nodes are GREEN on the unchanged Phase 0 overlay (acceptance-file
-SHA-256 `aea7c821...eacb624b`), closing R-4, R-5, and R-7. Full suite **3,009 passed, 26
-skipped, 0 failed**; focused normal and `-O` gates 63 each; affected regression union 162;
+**Anchor intact:** acceptance-file SHA-256 `aea7c821...eacb624b` verified from git bytes at
+`287afc4`, and the file still has exactly one commit in its history — the admitted touch-and-revert
+left no committed trace. New public nodes were added in a separate supplementary file.
+
+**Carried forward, all disclosed:** tier-2 malformed-literal disposition asymmetry (pre-existing);
+`source_location_mode=None` source-key path; the "referenced bindings" noun (blocked on the anchor);
+`_owner_source` ambiguity downgrade; OD-A05 output-bytes and declaration-reversed variants; OD-A10's
+live 3/2/1 shape.
+
+All six public acceptance nodes plus the supplementary indirect-cycle node are GREEN on the
+unchanged Phase 0 overlay (acceptance-file SHA-256 `aea7c821...eacb624b`), closing R-4, R-5, and
+R-7. Full suite **3,012 passed, 26 skipped, 0 failed**; focused normal and `-O` gates 66 each
+(all reproduced by the auditor at `287afc4`); affected regression union 162;
 TEAx execution 2 passed with sibling overrides producing 4.0/6.0 and violated/satisfied
 verdicts. Mypy holds at the 76-error baseline; Ruff clean; locks, snapshot v3, profile v4,
 and every existing fixture/baseline byte unchanged.
