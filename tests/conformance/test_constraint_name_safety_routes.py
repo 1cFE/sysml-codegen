@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
 from sysml_codegen.orchestration.snapshot_context import build_pipeline_context_from_snapshot
 from sysml_codegen.resolution.models import ModuleKind
 
@@ -30,5 +31,5 @@ def test_snapshot_rebuild_retains_identity_carriers_without_snapshot_change():
     ]
     assert copied_carriers == carriers
     assert "formal_identity" not in json.dumps(graph.model_dump(mode="json"))
-    assert snapshot_payload["snapshot_format_version"] == 3
+    assert snapshot_payload["snapshot_format_version"] == SNAPSHOT_FORMAT_VERSION
     assert "formal_identity" not in FIXTURE.read_text()

@@ -11,8 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
-
-from sysml_codegen.analysis.diagnostic_screen import screen_extraction_diagnostics
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
@@ -25,6 +23,7 @@ from sysml_codegen.analysis.constraint_lowering import (
 from sysml_codegen.analysis.dependency_backtracker import (
     DependencyBacktracker,
 )
+from sysml_codegen.analysis.diagnostic_screen import screen_extraction_diagnostics
 from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,

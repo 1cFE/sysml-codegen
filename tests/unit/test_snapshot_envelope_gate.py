@@ -171,7 +171,7 @@ def set_mode(mode: str):
         (drop_key("part_occurrences"), "part_occurrences"),  # (c) MF1
         (drop_key("constraint_lowering_mode"), "constraint_lowering_mode"),  # (d) MF1
         (strip_facts_schema_version, "schema_version"),  # (e) torn facts dict
-        (set_facts_version("constraint-facts/v2"), "constraint-facts"),  # (f) data pin
+        (set_facts_version("constraint-facts/v99"), "constraint-facts"),  # (f) data pin
         (set_embedded_ir_version("expression-ir/v2"), "expression-ir"),  # (g) NH5 data pin
         (set_mode("off"), "constraint_lowering_mode"),  # (h) MF2 unknown enum
         (set_mode(""), "constraint_lowering_mode"),  # (h) empty

@@ -22,6 +22,7 @@ from agentic_mbse.sysml.constraint_facts import CONSTRAINT_FACTS_SCHEMA_VERSION
 from agentic_mbse.sysml.expression_ir import EXPRESSION_IR_SCHEMA_VERSION
 from agentic_mbse.sysml.types import BindingType, ExpressionRef
 
+from sysml_codegen import _upstream_pins
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.part_instance_index import deserialize_part_occurrences
 from sysml_codegen.core.models import ChannelAlias
@@ -45,7 +46,6 @@ from sysml_codegen.extraction.expression_compiler import (
     Compilability,
     CompilationResult,
 )
-from sysml_codegen import _upstream_pins
 from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
 from sysml_codegen.snapshot import (
     SNAPSHOT_FORMAT_VERSION,
