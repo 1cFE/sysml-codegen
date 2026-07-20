@@ -341,6 +341,10 @@ passthrough calculations.
 **Out of Scope**:
 - Public late fill, placeholder completion, or post-build graph/default mutation.
 - General typed-path/part-index refactors not required to unify this resolver.
+- Two-consumer convergence for self-named calc bindings (SR-A02): extraction discards the
+  written reference, so the calc consumer structurally cannot feed the exact key form. Referred
+  to Item 4's written-reference carry (decision 2026-07-20); `tests/fixtures/shared_producer/`
+  pins the current two-entry-point state until then.
 
 **Success Criteria**:
 - [ ] One production resolver serves calculation, aggregation, and constraint consumers.
@@ -352,8 +356,7 @@ passthrough calculations.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-shared-resolution/spec.md`
-- `.project/active/constraint-lifecycle-shared-resolution/design.md`
-- `.project/active/constraint-lifecycle-shared-resolution/plan.md`
+- `.project/active/constraint-lifecycle-shared-resolution/design.md` (phased plan folded in)
 - `.project/active/constraint-lifecycle-shared-resolution/evidence.md`
 
 ---
@@ -417,6 +420,10 @@ without letting warning rendering hide a later halt.
 4. Preserve explicit `-0.1` and `[MW]` modeled defaults through typed entry points and generated JSON;
    unsupported wrappers never invent values.
 5. Consolidate duplicated diagnostic/default parsing paths where one typed representation suffices.
+6. Carry the written reference for self-named calc bindings through extraction facts and the
+   snapshot format (coordinated agentic-mbse + codegen change under this item's versioned
+   schema/skew machinery), completing Item 2's referred SR-A02 convergence on real data with no
+   name inference (referral decision 2026-07-20).
 
 **Out of Scope**:
 - General constant folding, unit conversion, or a new diagnostics framework beyond the required
