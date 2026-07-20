@@ -644,7 +644,7 @@ TEAx/store identity to real semantic/catalog/executable fingerprints.
 
 ---
 
-### Item 9: Multi-Entry Candidate Bridge
+### Item 9: Multi-Entry Candidate Bridge ✅
 
 **Register row**: 11
 **Type**: Code/Integration (TEAx)
@@ -666,10 +666,10 @@ generated entry channels without a consumer wrapper.
 - Constraint-free report semantics, owned by Item 11.
 
 **Success Criteria**:
-- [ ] Zero/one/multiple mappings validate completely and no unrelated channel is omitted.
-- [ ] Candidate overrides change only selected typed fields.
-- [ ] Stock TEAx replaces the fusion wrapper through public APIs.
-- [ ] Single-entry duplicate paths are consolidated/deleted; stock TEAx owns the public route.
+- [x] Zero/one/multiple mappings validate completely and no unrelated channel is omitted.
+- [x] Candidate overrides change only selected typed fields.
+- [x] Stock TEAx replaces the fusion wrapper through public APIs.
+- [x] Single-entry duplicate paths are consolidated/deleted; stock TEAx owns the public route.
 
 **Deliverables**:
 - `../teax/.project/active/constraint-lifecycle-multi-entry/spec.md`

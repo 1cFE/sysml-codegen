@@ -138,4 +138,4 @@ Field-level fail-closed (both A1 arms + guards), all GREEN:
 - Item 9 does not touch the `FileBackedEvaluator` route (Item 11) or constraint-free report
   semantics (Item 11 firewall).
 
-Commit hashes (Item 9): codegen `5a72366` (SUPERSEDES source-pin `589c8c4` — template changed), teax `07eb0ac` (fixture+test) over `96578a4` (bridge), fusion-tea `2422e715` (branch item8-fusion-embedded-catalog).
+Commit hashes (Item 9): codegen `240d170` (SUPERSEDES source-pin `589c8c4` — template changed), teax `07eb0ac` (fixture+test) over `96578a4` (bridge), fusion-tea `2422e715` (branch item8-fusion-embedded-catalog).

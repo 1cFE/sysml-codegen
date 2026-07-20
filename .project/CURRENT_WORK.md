@@ -8,6 +8,25 @@
 
 ### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — spec drafted 2026-07-20
 
+### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — CERTIFIED (independent audit 2026-07-20)
+
+**Audit verdict: Certify.** `.project/active/constraint-lifecycle-multi-entry/audit.md`. Every
+executable gate reproduced first-hand across all three repos at the audited commits (codegen
+`240d170`, teax `07eb0ac`, fusion-tea `2422e715`). The three design-review Majors verified: **R1**
+RED (uncaught `EvaluationFailed` with `bridge.build` outside the switch) → GREEN (`StudyBridgeDefect`),
+reproduced by relocating the call and reverting; **R2** both baseline arms (fully-defaulted builds;
+defaultless-unselected fails closed, never invented); **R3** `prove_catalog_seam.py` migrated off the
+config scalars and green. Coordinates: zero end-to-end (`zero_channel` fixture, constraint-BEARING per
+Item-11 firewall labeling), one, and the IFE 2301/2301 100%-agreement run all green through the stock
+bridge, no wrapper. Codegen production delta = template + `sample_model.yaml` ONLY (byte-identity
+airtight: `{% else %}` reachable only at zero channels); full licensed codegen suite **3084 passed /
+44 skipped**, license loaded; teax full suite **301 passed**. Deletion inventory verified: zero code
+survivors (`MultiChannelEvaluator`/`ThreeChannelEvaluator`/config scalars/bench usage all gone).
+
+Minor honesty note (non-blocking): evidence §7 and the line below cite codegen `5a72366`, but the
+actual audited HEAD is `240d170` — stale hash in the record, not a code defect. Full discrepancy list
+(counts, fingerprint wording, docstring residual) in audit.md.
+
 ### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — IMPLEMENTED, stop for audit (2026-07-20)
 
 Epic row 11 / CE-F2. Stock TEAx bridge now builds complete typed mappings for zero/one/many entry
