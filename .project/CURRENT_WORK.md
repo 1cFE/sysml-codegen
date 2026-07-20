@@ -6,6 +6,28 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — SPEC DRAFTED
+
+Epic register row 4. Spec at `.project/active/constraint-lifecycle-diagnostics-defaults/spec.md`,
+awaiting independent `/_my_spec_review`. Covers extraction diagnostic severity/stable codes across
+both repos, two-direction schema skew, R-8 warning totality before BLOCK, R-9 signed/unit modeled
+defaults, default-parsing consolidation, and the written-reference carry absorbed from Item 2.
+
+**Surfaced premise conflict — read before designing.** Item 2's PC-4 premise is false. The written
+reference is already serialized in all 168 reference bindings across all 34 committed v3 snapshots
+(`source_attribute_name`, written by `snapshot/serializer.py:250-251`, discarded by
+`snapshot/loader.py:1022-1035`). The carry needs no snapshot format bump of its own and no
+agentic-mbse change. Separately, `tests/fixtures/shared_producer/PROVENANCE.md` claims "a test
+asserts" the two-entry-point state; no such test exists at HEAD. Both artifacts are corrected under
+spec DD-R31.
+
+Three inherited residuals verified at HEAD: the tier-2 malformed-literal silence reproduces
+(`resolution/supplied_values.py:278-287`, `:540-543`) and is owned here; PC-2's SR-R16 basis
+amendment is still unapplied and is owned here; `param_group=None` on LocalTerm mints does **not**
+reproduce in production and is closed, not deferred to Item 10.
+
+This item moves the Item 0 agentic-mbse pin from `515e08bb`.
+
 ### CONSTRAINT-LIFECYCLE Item 3 — Gate B vacuity proof and deletion — CERTIFIED, pass with notes (independent audit 2026-07-19 at `3df2c34`)
 
 Epic register row 3. No spec/design pair by owner pace directive — the provenance-marked
