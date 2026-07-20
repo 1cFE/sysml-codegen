@@ -6,22 +6,30 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — Phases 1–3 landed, ready for audit
+### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — CERTIFIED (independent audit 2026-07-20, pass with notes; all notes now closed)
 
-Design review Approve-with-revisions (F1–F6) applied to design.md. **Phase 1 (codegen `19b74ac`)**:
-five projected entry fields + admitted-usage tier + `definition_qualified_name` FK (gated on
-definition_typed) + `CATALOG_SCHEMA_VERSION=2.0.0` in the fingerprinted contract payload; RED-first;
-`SNAPSHOT_MANIFEST_SHA256` re-pinned (the one moved pin, F6); **3080 passed**. **Phase 2 (teax
-`a5594e1`)**: `load_model_contract` seam + vendored `ACCEPTED_CATALOG_SCHEMA_VERSIONS` + both-direction
-skew RED; real `semantic_fingerprint` replaces the byte-hash stand-in; `CatalogView`/`_Catalog`
-reconstruction and the hand-authored `constraint_catalog.json` gone (sealed_package regenerated from
-wi014_toy snapshot); **286 passed**. **Phase 3 (fusion-tea `667136fa`, branch
-`item8-fusion-embedded-catalog`)**: IFE package regenerated live (schema 2.0.0); catalog seam proven
-green via `study/prove_catalog_seam.py` (1 eligible entry, def→usage join `fusion_cycle::'Viability
-Threshold'`, verdict satisfied); THEN `materialize_constraint_catalog.py` deleted. The full-sweep
-`MultiChannelEvaluator` is stale vs the regen's evolved 3-channel decomposition — an Item-9 concern,
-surfaced not forced. See `.project/active/constraint-lifecycle-catalog-store/evidence.md`. Stellarator
-demo repo untouched. Next: audit.
+**Audit verdict: Certify — pass with notes.** `.project/active/constraint-lifecycle-catalog-store/audit.md`.
+The item delivers its substance and every executable gate reproduced first-hand. Candidate revs:
+codegen `19b74ac` (Phase 1) / teax `a5594e1` (Phase 2) / fusion-tea `667136fa` (Phase 3, branch
+`item8-fusion-embedded-catalog`). Gates reproduced: codegen full suite **3080 passed / 44 skipped /
+17 deselected** (catalog conformance non-vacuous); catalog surface 12 passed; teax **286 passed** +
+skew 5 passed (both directions fail closed); fusion seam proof GREEN (schema 2.0.0, 1 eligible entry,
+def→usage join `fusion_cycle::'Viability Threshold'`, verdict satisfied) + 6 package tests. The
+alternate system (byte-hash stand-in, standalone `constraint_catalog.json`, fusion materializer) is
+genuinely gone across all three repos, no shim; the six design-review Majors (F1–F6) landed in code.
+
+The two moderate findings were missing regression guards (behaviour verified correct), now closed:
+**F-A** — the F1 named-inline FK branch was vacuous; `constraint_inline` added to the parametrization
+plus a dedicated named-inline test (codegen `82ad686`), branch now armed. **F-B** — the INV-6
+source-scan the spec/design name was missing; now landed both sides: teax consumer scan
+`tests/study/test_no_reconstruction.py` (`8286893`) and codegen producer scan
+`tests/conformance/test_catalog_no_reconstruction.py` (follow-up), and the surviving alternate-schema
+names `CatalogView`/`_Catalog` are renamed to `EmbeddedCatalogView`/`_EmbeddedCatalog` (no name
+survives the deletion table). Minor notes closed: **N1** — `prove_catalog_seam.py` now sweeps stale
+`.pytest_cache` before load so a reproducer starts clean; **N2** — Item-9 breadcrumb on the stale
+`MultiChannelEvaluator` inline in `run_viability_study.py` (fusion `d7f7492d`). Evidence:
+`.project/active/constraint-lifecycle-catalog-store/evidence.md` (audit-close section). Stellarator
+demo repo untouched. Nothing pushed (Item 13 owns the push).
 
 Epic `epic_constraint_execution_lifecycle_remediation.md` register row 10; operationalizes owner
 decision D-3 (settled: codegen's embedded catalog is the sole schema authority). Spec + design at

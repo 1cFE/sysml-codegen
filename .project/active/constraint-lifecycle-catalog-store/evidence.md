@@ -138,12 +138,25 @@ remaining gated step.
 
 - **F-A closed** (codegen `82ad686`): `constraint_inline` added to the FK test + a dedicated
   named-inline test — the `definition_qn=None` branch now executes non-vacuously. 6 passed.
-- **F-B closed** (teax `8286893`): `tests/study/test_no_reconstruction.py` — INV-6 source-scan
-  guard (reconstruction idioms absent from product source, scoped per F5); `CatalogView`/`_Catalog`
-  repurposing recorded explicitly in the spec deletion table. 14 study tests green.
-- **Minors** (fusion `d7f7492d`): Item-9 breadcrumb on the stale `MultiChannelEvaluator`; the
-  seam-proof `_work`/cache output is untracked (not committed).
-- Spec SC-2 and RED-first checkboxes now `[x]`.
+- **F-B closed**, both sides:
+  - **Consumer scan** (teax `8286893`): `tests/study/test_no_reconstruction.py` — INV-6 source-scan
+    guard over teax `study`/`evaluation` product source (QN-split, predicate-text search, hardcoded
+    `source_form` absent; scoped per F5). 4 study-scan tests.
+  - **Producer scan** (codegen, this pass): `tests/conformance/test_catalog_no_reconstruction.py`
+    added alongside the other conformance scans — guards the codegen catalog producer
+    (`generation/constraint_catalog.py`, `analysis/constraint_lowering.py`, `resolution/models.py`)
+    against re-deriving semantics from strings (splitting `predicate_source_key`, searching
+    `predicate_ir`, hardcoding `source_form`). Covers the codegen half of spec SC-2, which the
+    teax-only scan did not reach.
+  - **Symbols deleted, not surviving** (teax, this pass): the alternate-schema names `CatalogView`/
+    `_Catalog` are renamed to `EmbeddedCatalogView`/`_EmbeddedCatalog` (6 code sites, all in
+    `study/query.py`), with an explicit rename record in the module docstring citing the spec
+    deletion table. No name survives from the deletion table; the spec deletion rows now read
+    "deleted (renamed → …)".
+- **Minors** (fusion): Item-9 breadcrumb on the stale `MultiChannelEvaluator` (`d7f7492d`); the
+  seam proof now sweeps stale `.pytest_cache` from the package tree before load (audit N1, this
+  pass) so a reproducer starts clean; its `_work`/cache output stays untracked.
+- Spec SC-2 and RED-first checkboxes `[x]`.
 
 ## Candidate revisions
 

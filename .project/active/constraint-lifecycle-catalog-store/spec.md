@@ -52,11 +52,13 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-10 line and the
       TEAx reads owner QN, definition QN, source form, usage identity, and the definition→usage join
       straight from `model_contract.json`; no code splits a QN, searches predicate text, or hardcodes
       a source form.
-- [x] **The named alternate system is gone, not shimmed.** (F-B closed: the INV-6 source-scan test
-      `tests/study/test_no_reconstruction.py` now asserts no reconstruction idiom — QN-split on `::`/`__`,
-      predicate-text search, hardcoded `source_form` — in TEAx product source; `CatalogView`/`_Catalog`
-      are explicitly recorded as *repurposed* embedded-view symbols, not silent survivals of deleted
-      names.) The deletion inventory (below) is fully removed. A source-scan test asserts no standalone
+- [x] **The named alternate system is gone, not shimmed.** (F-B closed: two INV-6 source-scan tests
+      assert no reconstruction idiom — QN-split on `::`/`__`, predicate-text search, hardcoded
+      `source_form` — in product source: `teax .../tests/study/test_no_reconstruction.py` (consumer)
+      and codegen `tests/conformance/test_catalog_no_reconstruction.py` (producer). The alternate-schema
+      names `CatalogView`/`_Catalog` are deleted, renamed to `EmbeddedCatalogView`/`_EmbeddedCatalog`
+      which read the embedded catalog — no name survives from the deletion table.) The deletion
+      inventory (below) is fully removed. A source-scan test asserts no standalone
       `constraint_catalog.json` reader/writer in product paths, and no reconstruction workaround
       (`rsplit("::")` on a QN, predicate-text search, hardcoded `source_form`) in codegen, TEAx, or the
       fusion consumer.
@@ -172,8 +174,8 @@ Completeness is the requirement; a missed consumer becomes a broken deletion.
 
 | File | Lines | Role | Action |
 |---|---|---|---|
-| `study/query.py` | 20-28 | `CatalogView` — the alternate-schema dataclass | **repurposed** (see note) |
-| `study/query.py` | 46-65 | `_Catalog` standalone-file reader + definition→usage join | **repurposed** (see note) |
+| `study/query.py` | 20-28 | `CatalogView` — the alternate-schema dataclass | **deleted (renamed → `EmbeddedCatalogView`)** (see note) |
+| `study/query.py` | 46-65 | `_Catalog` standalone-file reader + definition→usage join | **deleted (renamed → `_EmbeddedCatalog`)** (see note) |
 | `study/query.py` | 43, 68-116 | `CaseView.catalog` field + `StudyQuery` consumer | rewire to read the embedded catalog from `model_contract.json` |
 | `study/cli.py` | 24, 98, 101 | `cmd_inspect` builds/reads the standalone `constraint_catalog.json` | rewire to the embedded catalog |
 | `study/config.py` | 79-84 (used at 135) | `_model_contract_fingerprint` byte-hash stand-in | replace with `model_contract.json["semantic_fingerprint"]` |
@@ -181,13 +183,15 @@ Completeness is the requirement; a missed consumer becomes a broken deletion.
 | `tests/evaluation/fixtures/sealed_package/package_live/contracts/constraint_catalog.json` | whole file | hand-authored alternate fixture | delete; fixtures use real `model_contract.json` |
 | `tests/evaluation/fixtures/f1_arithmetic/generate_fixture.py` | 222 (`source_form="inline"`), 242 (`.split("__")[-1]`) | fixture-generator hardcode + QN split | fix to carry real fields |
 
-**Repurposing note (audit F-B).** `CatalogView`/`_Catalog` are *repurposed*, not deleted: the names
-survive but their bodies are rewritten to read codegen's embedded catalog directly (entry carries
+**Rename note (audit F-B).** The two alternate-schema names are *deleted*, not left surviving:
+`CatalogView`/`_Catalog` are renamed to `EmbeddedCatalogView`/`_EmbeddedCatalog`, whose bodies read
+codegen's embedded catalog directly (entry carries
 `source_form`/`owner_qualified_name`/`definition_qualified_name`/`predicate_ir`), with the
 standalone-file read and the `source_usage → source_record` reconstruction removed. What the
-deletion criterion actually protects — no standalone reader, no reconstruction anti-pattern — is
-enforced by the INV-6 source-scan test (`tests/study/test_no_reconstruction.py`), which asserts the
-*idioms* are absent from product source rather than banning the (now-clean) symbol names.
+deletion criterion protects — no standalone reader, no reconstruction anti-pattern — is enforced by
+two INV-6 source-scan tests: `teax .../tests/study/test_no_reconstruction.py` (consumer side) and
+codegen `tests/conformance/test_catalog_no_reconstruction.py` (producer side), which assert the
+*idioms* are absent from product source.
 
 Notes: predicate-text search — **none in TEAx** (`predicate_ir` is only ever an opaque string;
 `evaluation/projection.py:28-30` classifies by `constraint_id`/`status`). `constraint_catalog.json`
