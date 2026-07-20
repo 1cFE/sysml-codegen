@@ -6,7 +6,7 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup (codegen + stellarator) — spec in progress 2026-07-20
+### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup (codegen + stellarator) — design drafted 2026-07-20
 Spec: `.project/active/constraint-lifecycle-producer-completeness/spec.md`. Two faces of one rule
 (producer completeness independent of V11): (1) ambiguous/defaulted producer acceptance, RED-first;
 (2) codegen compiles the stellarator cross-part capital aggregation as a real graph producer,
