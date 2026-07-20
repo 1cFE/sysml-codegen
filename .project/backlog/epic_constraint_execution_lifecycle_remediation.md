@@ -335,8 +335,8 @@ passthrough calculations.
 3. Drive the real Gate A shape: usage-owned attribute on a concrete `PartUsage`, self-named actual,
    public live and relocated routes.
 4. Preserve modeled defaults only when declared by the model.
-5. Delete the three consumer-specific ladders and obsolete string surgery; target the adversarial
-   review's estimated 300–500 line reduction.
+5. Delete the three consumer-specific ladders and obsolete string surgery (qualitative deletion
+   mandate; numeric targets retired by the 2026-07-19 owner amendment).
 
 **Out of Scope**:
 - Public late fill, placeholder completion, or post-build graph/default mutation.
