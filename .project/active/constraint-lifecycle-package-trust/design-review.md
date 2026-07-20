@@ -353,8 +353,29 @@ plan unchanged.
 
 ## Resolutions
 
-_To be filled in during Stage 4 as the owner resolves each issue. This section is what the
-design agent reads to incorporate the review._
+Round 1 applied to `design.md` (2026-07-20):
+
+- **Major 1 (TOCTOU) — applied.** Load data-flow and TEAx architecture bullet now state: read
+  verifier bytes once, hash, and on match `exec(compile(bytes, str(verify_path), "exec"), ...)`
+  — never `exec_module` (which re-reads). INV-A reads against the executed bytes.
+- **Major 2 (producer-anchor honesty) — applied.** Core Concept rewritten to distinguish the
+  unforgeable consumer anchor from the defense-in-depth producer gate ("defeats non-collusive
+  injection, not a same-privilege adversary"); the hidden "forgery-proof on each side" bet
+  removed. New Non-Goal: seal authenticity via signing / trusted key out of scope; Item 13
+  inherits the honest scope.
+- **Major 3 (version/hash coupling) — applied.** Accepted-versions policy closed to
+  single-version; the single-vs-range open question removed from the handoff; TEAx bullet and
+  INV-B state one vendored hash = one image = one version.
+- **Major 4 (manifest completeness) — applied.** D5, B3, Component Overview, and manifest
+  schema now specify `codegen_produced` = tree-minus-`handwritten/**`-minus-runtime-globs at
+  first seal, with the completeness obligation stated; B3 reworded off the fragile per-file
+  claim.
+- **Minors — applied.** D3 wording ("`ad0a855` *is* the single 1.0.0 image; correction, not a
+  bump"); INV-B enforcement split (codegen drift test + manual discipline; TEAx test = internal
+  consistency only); churn corrected (`test_fingerprint_stability` stays green unchanged, only
+  `baseline_outputs` churn); `handwritten/**` admit-and-execute residual recorded as a Non-Goal;
+  `runtime_contract_version` home fixed to the seal only (dropped from the manifest). New bet
+  B3a (manifest content is verifier-byte-independent) added.
 
 ---
 

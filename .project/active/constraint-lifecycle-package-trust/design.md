@@ -72,26 +72,34 @@ must stay stdlib-only (B3/D7). This design adds no walker and edits neither.
 **Trust flows from anchors the package cannot forge — never from bytes the package supplies.**
 
 Today the package supplies both the verifier and the evidence, and each side of the chain
-trusts the disk it is handed. The fix plants forgery-proof anchors on each side:
+trusts the disk it is handed. The fix plants an anchor on each side — but the two anchors are
+**not equally strong**, and the design says so plainly:
 
-- **Consumer side (TEAx).** The loader carries two runtime-owned anchors: a *trusted hash* of
-  the canonical verifier, and a *fail-closed accepted-versions policy*. Before executing the
-  package-local `verify.py`, the loader hashes its bytes and compares to the trusted hash — an
-  unconditional-success stub has different bytes and is rejected *before any package code
-  runs*. We anchor with a **hash, not a second verifier**: verification *semantics* stay in the
-  one canonical `verify.py` (still emitted verbatim, INV-8), and the runtime carries only its
-  64-character fingerprint, so there is nothing to drift.
+- **Consumer side (TEAx) — a genuinely unforgeable anchor.** The loader carries two
+  runtime-owned anchors: a *trusted hash* of the canonical verifier, and a *fail-closed
+  accepted-versions policy*. Before executing the package-local `verify.py`, the loader reads
+  its bytes, hashes them, compares to the trusted hash, and — on match — executes *those exact
+  bytes*. An unconditional-success stub has different bytes and is rejected *before any package
+  code runs*. This anchor lives in TEAx source; a package cannot influence it. We anchor with a
+  **hash, not a second verifier**: verification *semantics* stay in the one canonical
+  `verify.py` (still emitted verbatim, INV-8), and the runtime carries only its 64-character
+  fingerprint, so there is nothing to drift.
 
-- **Producer side (codegen).** Codegen — the only actor that knows what it produced — writes a
-  **generation manifest** classifying every artifact as codegen-produced, preserved-handwritten,
-  or runtime. Re-seal authenticates that manifest against the prior seal, then refuses to admit
-  any covered file the manifest does not account for. A dropped foreign file has no manifest
-  entry and cannot be laundered as codegen-produced.
+- **Producer side (codegen) — defense-in-depth, not an authenticity boundary.** Codegen writes
+  a **generation manifest** classifying every artifact as codegen-produced,
+  preserved-handwritten, or runtime. Re-seal cross-checks the on-disk manifest against the
+  prior seal, then refuses to admit any covered file the manifest does not account for. This
+  defeats the spec's attack (b) — a **non-collusive** injection that drops a file and re-seals
+  without also rewriting the manifest and the prior seal. It is **not** forgery-proof against a
+  same-privilege adversary: the manifest's anchor is the prior `package_contract.json` on disk,
+  which that adversary can rewrite to be self-consistent, because nothing on the producer side
+  is bound to a runtime-owned secret. This is an honest, inherent limit of a producer that has
+  no trusted key (see Non-Goals: seal signing), not a gap to close inside Item 7.
 
-The single idea under both halves: **the authority for "what is trusted" moves to whoever
-legitimately knows it and cannot be impersonated by the package** — the runtime for
-verification and version, the generator for provenance — each anchored by a value the adversary
-cannot forge without tripping a check. No new verifier, no second walker, no merged boundary.
+The single idea, stated honestly: **trust moves to whoever legitimately knows it — the runtime
+for verification and version, the generator for provenance.** On the consumer side that yields
+an anchor the package cannot forge; on the producer side it yields a strong barrier against
+accidental or naive laundering. No new verifier, no second walker, no merged boundary.
 
 ## Key Bets
 
@@ -103,9 +111,17 @@ cannot forge without tripping a check. No new verifier, no second walker, no mer
   deliberate policy edits. *If false → every incidental edit forces a version bump plus
   fixture re-seal, making per-version pinning impractical.* Grounded: verify.py changed rarely;
   `test_fingerprint_stability.py` already pins a prior hash.
-- **B3.** At generation, codegen knows the exact provenance class of every file it writes.
-  *If false → the manifest cannot be authoritative and re-seal has nothing trustworthy to
-  consult.* Grounded: `_generate_stencils` already tracks per-file new/preserved/regenerated.
+- **B3.** At the first seal, the codegen-produced set is *derivable* as the covered tree minus
+  `handwritten/**` minus the runtime globs — the region partition, not a per-file provenance
+  ledger, is what the manifest needs. *If false → the enumerated set is incomplete and a
+  legitimate re-seal hard-fails on an unaccounted generated file.* Grounded: `_generate_stencils`
+  tracks only counts (`stats`, `cli/__init__.py:421+`), so per-file tracking is *not* retained;
+  the tree-minus-globs construction (Major 4) sidesteps that and guarantees completeness.
+- **B3a.** Manifest content is independent of the verifier's bytes (it lists
+  `contracts/verify.py` as a *path*, never a hash). *If false → a verify.py edit would change
+  the manifest hash and break `test_policy_update`'s "only the verifier hash changed" claim,
+  and destabilize the manifest across policy edits.* Grounded: illustrative schema carries
+  paths and globs only.
 - **B4.** Re-seal's only legitimate job is to pick up handwritten-stencil edits; it never
   legitimately edits a generated file or introduces a new codegen-produced file. *If false →
   freezing codegen-class bytes at re-seal breaks a real workflow.* Grounded: `cmd_seal`
@@ -124,10 +140,14 @@ cannot forge without tripping a check. No new verifier, no second walker, no mer
   `verify_package` for the hash/symlink integrity check only. *Rejected: putting the table in
   `verify.py`* — those bytes are package-controlled and cannot be the acceptance authority.
   *Rejected: keeping symmetric `==`* — no explicit both-direction policy; drift stays silent.
-- **D3. One verifier image per `runtime_contract_version`; any `verify.py` byte change requires
-  a version bump and a fixture re-seal.** *Rejected: accepting a set of historical verifier
-  hashes* — it institutionalizes the multi-image-per-version drift (the stale fixtures above)
-  the spec exists to kill. Enforced by extending the existing hash-pin test.
+- **D3. One verifier image per `runtime_contract_version`.** The current canonical bytes
+  `ad0a855…` *are* the single 1.0.0 image; re-sealing the stale fixtures to `ad0a855…` while
+  keeping `runtime_contract_version = "1.0.0"` is a **correction to the one true 1.0.0 image**,
+  not a bump — the old fixture bytes were never a legitimate separate version. Going forward,
+  any deliberate `verify.py` byte change requires a version bump and re-seal. *Rejected:
+  accepting a set of historical verifier hashes* — it institutionalizes the
+  multi-image-per-version drift (the stale fixtures) the spec exists to kill. Enforced by
+  extending the existing hash-pin test.
 - **D4. The manifest is a separate artifact `contracts/generation_manifest.json`, covered by
   the seal; the re-seal provenance gate lives in `cmd_seal`, not in `seal_package`.** *Rejected:
   extending `PackageContract`/`seal_package` with provenance* — it entangles the pure seal
@@ -139,7 +159,12 @@ cannot forge without tripping a check. No new verifier, no second walker, no mer
   in the enumerated set and not under a glob class → **hard-fail** (fail-closed, names the
   path). A new or edited file under `handwritten/**` stays admissible (human-owned region).
   *Rejected: admitting foreign files under a non-codegen class* — more surface; hard-fail is
-  simpler and the owner-preferred posture.
+  simpler and the owner-preferred posture. **Completeness obligation (Major 4):** the
+  enumerated set must contain *every* generated covered file or a legitimate re-seal
+  hard-fails, so it is built by the robust construction **`codegen_produced` = all covered
+  files at first seal, minus `handwritten/**`, minus runtime globs** — captured when the tree
+  is known-clean at generation. This guarantees completeness by construction and does not
+  depend on collecting paths per-emitter (fragile: miss one emitter → false-fail).
 
 ## Architecture
 
@@ -158,16 +183,23 @@ Two independent change sets, one per repo, meeting at two published constants.
 
 **TEAx (consumer).**
 - `package_load.py` gains an authenticate-before-exec step keyed on `TRUSTED_VERIFIER_SHA256`
-  (vendored `ad0a855…`) and replaces the bare `"1.0.0"` literal (`:22`) with the accepted-
-  versions compat policy.
+  (vendored `ad0a855…`): read the verifier bytes once, hash, and on match `exec` those same
+  bytes (never `exec_module`, which re-reads — Major 1). It replaces the bare `"1.0.0"` literal
+  (`:22`) with the accepted-versions compat policy. The accepted set is **single-version**: one
+  vendored hash authenticates one verifier image, and D3 pins one image per version, so a
+  multi-version set or range is incoherent without a version→hash map (out of scope for Item 7).
 - The committed fixtures (`sealed_package`, `f1_arithmetic`) are re-sealed to the current
   canonical verifier so they authenticate under the new anchor (see Potential Risks).
 
-**Data flow at load (post-change):**
-`read package verify.py bytes → sha256 → compare to TRUSTED_VERIFIER_SHA256` → mismatch ⇒
-reject before exec. Then `read seal.runtime_contract_version → accepted-versions policy` →
-not accepted ⇒ reject (both directions). Then `exec verify.py → verify_package(integrity)` →
-`ok` ⇒ import package.
+**Data flow at load (post-change), TOCTOU-closed:**
+`read package verify.py bytes ONCE → sha256 → compare to TRUSTED_VERIFIER_SHA256` → mismatch ⇒
+reject before exec. On match, execute *the exact bytes just hashed*
+(`exec(compile(bytes, str(verify_path), "exec"), module.__dict__)`) — **not**
+`spec.loader.exec_module`, which would re-read the file and open a
+time-of-check/time-of-use window on an attacker-controlled path. Then
+`read seal.runtime_contract_version → accepted-versions policy` → not accepted ⇒ reject (both
+directions). Then `verify_package(integrity)` on the now-authenticated verifier → `ok` ⇒
+import package.
 
 **Data flow at re-seal (post-change):** `load prior package_contract.json + manifest →
 manifest bytes must equal prior seal's recorded manifest hash` → then per covered file:
@@ -179,7 +211,11 @@ change; unaccounted ⇒ hard-fail. Then call the unchanged `seal_package`.
 - **INV-A.** No package-local code executes on the load path before the loader authenticates
   the package-local verifier bytes against the runtime-carried trusted hash.
 - **INV-B.** The runtime-carried trusted hash equals `sha256(canonical verify.py)` for the
-  accepted `runtime_contract_version`; enforced by a codegen drift test and a TEAx skew test.
+  single accepted `runtime_contract_version`. Its enforcement is *split*: the cross-repo half
+  (vendored hash agrees with the current codegen canonical) rests on the **codegen-side drift
+  test plus manual re-vendoring discipline** — B3 forbids TEAx importing codegen, so no
+  automated cross-repo check exists. The TEAx skew test only proves **internal consistency**
+  (the vendored hash authenticates TEAx's own re-sealed fixtures), not agreement with codegen.
 - **INV-C.** Verification *semantics* have exactly one implementation (canonical `verify.py`,
   emitted verbatim); the runtime carries only its hash, never a second verifier.
 - **INV-D.** The seal walker (`seal.py`) and verify walker (`verify.py`) stay byte-distinct;
@@ -195,9 +231,9 @@ change; unaccounted ⇒ hard-fail. Then call the unchanged `seal_package`.
 
 - **`versions.py`** (sysml-codegen) — adds `TRUSTED_VERIFIER_SHA256`. The single published
   source of the verifier anchor. Runtime-contract-version single-source stays here.
-- **`generation_manifest.json`** (new emitted artifact) — per-artifact provenance:
-  `codegen_produced` (enumerated paths), `handwritten_globs`, `runtime_globs`,
-  `runtime_contract_version`. Covered by the seal.
+- **`generation_manifest.json`** (new emitted artifact) — provenance classes:
+  `codegen_produced` (the tree-minus-globs enumerated path set), `handwritten_globs`,
+  `runtime_globs`. No `runtime_contract_version` (the seal owns that). Covered by the seal.
 - **`_seal_package`** (`cli/__init__.py`) — extended to write the manifest before sealing. No
   change to `seal_package`.
 - **Re-seal provenance gate** (`cmd_seal`, `cli/__init__.py`) — new CLI-level gate; reuses the
@@ -215,21 +251,33 @@ change; unaccounted ⇒ hard-fail. Then call the unchanged `seal_package`.
 - Reviving the dead `GENERATOR_MISMATCH` seam (`verify.py:24-30`).
 - Editing `verify.py`'s algorithm. Its bytes stay stable so the first vendored hash equals the
   current canonical and existing (freshly re-sealed) packages carry no skew.
+- **Seal authenticity via signing / a trusted key.** The re-seal gate closes the drop-a-file
+  laundering attack (attack b, a non-collusive injection), *not* a coordinated re-seal by a
+  same-privilege adversary who also rewrites the manifest and the prior seal. Binding the seal
+  to a runtime-owned secret is a separate, larger change and out of scope for Item 7. Item 13's
+  composed proof inherits this honest scope.
+- **Hardening the `handwritten/**` region.** It is an admit-and-execute region: stencils there
+  are imported and run, so a foreign file dropped under `handwritten/` is admitted (as
+  handwritten) and executes if imported. This is the existing human-owned trust model, and the
+  spec explicitly permits admitting foreign files under a non-codegen class — not a regression
+  Item 7 introduces or closes.
 
 ## Implementation Notes
 
 - **Manifest schema (illustrative, not final):**
   ```json
   {
-    "runtime_contract_version": "1.0.0",
     "codegen_produced": ["__init__.py", "modules/...", "contracts/model_contract.json",
                          "contracts/verify.py", "contracts/generation_manifest.json"],
     "handwritten_globs": ["handwritten/**"],
     "runtime_globs": []
   }
   ```
-  The manifest lists itself in `codegen_produced` (frozen). No circularity: its authenticity
-  anchor is the *prior* `package_contract.json`'s recorded hash, not the manifest.
+  `runtime_contract_version` is **not** duplicated here — the seal (`package_contract.json`) is
+  its one home (Minor: pick one). `codegen_produced` is the tree-minus-globs set (D5,
+  Major 4), so it enumerates every generated covered file. The manifest lists itself in
+  `codegen_produced` (frozen). No circularity: its authenticity anchor is the *prior*
+  `package_contract.json`'s recorded hash, not the manifest.
 - **Emission order (INV-3 extension):** write `model_contract.json` → `verify.py` →
   `generation_manifest.json` → `seal_package` (hashes all three) → `package_contract.json`
   last. The manifest must be final on disk before sealing.
@@ -248,10 +296,15 @@ change; unaccounted ⇒ hard-fail. Then call the unchanged `seal_package`.
   design review rather than resolving silently. If the reviewer prefers accepting historical
   hashes, D3 flips and INV-B/INV-F loosen; dependent conclusions (single-image-per-version)
   are parked on that call.
-- **Baseline churn.** Adding `generation_manifest.json` changes every package's
-  `artifact_hashes` and `executable_fingerprint`. Committed `baseline_outputs` /
-  fingerprint-stability fixtures must be regenerated (generator-owned bytes, format-exempt).
-  Expected; called out in the plan, not a regression.
+- **Baseline churn (corrected — Minor).** Adding `generation_manifest.json` changes every
+  package's `artifact_hashes` and `executable_fingerprint`. Only the committed
+  `baseline_outputs` byte-identity fixtures churn (generator-owned bytes, format-exempt) and
+  must be regenerated. `test_fingerprint_stability.py` **stays green unchanged** — every one of
+  its assertions is relative/self-consistent (two generations equal each other;
+  `executable_fingerprint == sha256(sorted artifact_hashes)` recomputed inline), and the
+  manifest is verifier-byte-independent (B3a), so `test_policy_update` still finds the two
+  sides equal after popping `verify.py`. The earlier "fingerprint-stability fixtures must be
+  regenerated" claim was an overstatement and is withdrawn.
 - **Cross-repo hash sync is manual.** B3 forecloses an import-time single source, so
   `TRUSTED_VERIFIER_SHA256` is published in codegen and vendored in TEAx. The codegen drift
   test plus the TEAx skew test catch a stale vendor; the process risk (someone bumps verify.py
@@ -300,10 +353,13 @@ named Item 6 regression tests are untouched-green.
 
 - **Fixed:** the five decisions (D1–D5); the invariants (INV-A…G); sysml-codegen-first phasing;
   `verify.py` bytes stay stable; the walker boundary is not touched.
-- **Open (for the plan / review):** exact manifest field names and whether
-  `runtime_contract_version` belongs in the manifest or is read only from the seal; the precise
-  form of the TEAx accepted-versions policy (single-version set vs range); whether the codegen
-  drift test lives in `test_seal_step9.py` (extending INV-8) or `versions.py`'s own test.
+- **Closed by review round 1:** the load path execs the exact hashed bytes (no `exec_module`
+  re-read, Major 1); the accepted-versions policy is single-version, not a range (Major 3);
+  `runtime_contract_version` lives only in the seal, not the manifest (Minor);
+  `codegen_produced` = tree-minus-globs (Major 4); the producer gate is defense-in-depth, with
+  seal signing a Non-Goal (Major 2).
+- **Open (for the plan):** exact manifest field names; whether the codegen drift test lives in
+  `test_seal_step9.py` (extending INV-8) or a `versions.py`-adjacent test.
 - **De-risk first:** the stale-fixture position (D3). Confirm at review before Phase 2 writes
   the re-seal work, because flipping it changes INV-B/INV-F and the fixture change set.
 

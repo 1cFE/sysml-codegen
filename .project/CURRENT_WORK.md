@@ -6,12 +6,25 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — SPEC IN PROGRESS (2026-07-20)
+### CONSTRAINT-LIFECYCLE Item 7 — Trusted Package Bootstrap and Seal Provenance — IMPLEMENTED, AWAITING AUDIT (2026-07-20)
 
-Epic rows 8–9. Spec at `.project/active/constraint-lifecycle-package-trust/spec.md`. Grounded finding:
-the "package trusts its own verifier" vulnerability is **live on the TEAx load path** (`teax`
-`package_load.py:70` execs and trusts the package-local `contracts/verify.py`) — TEAx-side work is
-required, the epic listing is not stale. Re-seal laundering also reproduces (`cli/__init__.py:728`).
+Epic rows 8–9. Cross-repo (sysml-codegen + TEAx). Design + design-review (Approve-with-revisions,
+4 Majors applied) + evidence at `.project/active/constraint-lifecycle-package-trust/`.
+
+Both named attacks driven RED-first then GREEN:
+- **Attack (a)** unconditional-success verifier — TEAx loader now authenticates the package-local
+  `verify.py` bytes against a vendored `TRUSTED_VERIFIER_SHA256` and execs *the hashed bytes* (no
+  `exec_module` re-read; TOCTOU closed). Rejected before any package code runs.
+- **Attack (b)** foreign-file laundering — codegen emits `contracts/generation_manifest.json`
+  (tree-minus-globs codegen set); a CLI-level `cmd_seal` provenance gate hard-fails a foreign or
+  edited-generated file. Pure `seal_package` + both walkers untouched.
+- **Version skew** — bare `package_load.py:22` literal deleted; single-version
+  `ACCEPTED_RUNTIME_CONTRACT_VERSIONS` fails closed both directions with a named diagnostic.
+- **D3 drift** — the two stale TEAx fixtures re-sealed to the canonical verifier (enumerated).
+
+Battery green: codegen 3068 passed (0 license skips) + execution 17; teax 281; mypy/ruff no-new;
+`-O` 2 failures pre-existing (confirmed on base). Candidate commits: codegen
+`<CANDIDATE_REV_CODEGEN>`, teax `<CANDIDATE_REV_TEAX>` — **not pushed** (Item 13 owns the push).
 
 ### CONSTRAINT-LIFECYCLE Item 6 — Public Documentation and F1 Evidence Reconciliation — CERTIFIED (independent audit 2026-07-20, candidate `f917787` / TEAx `db23719`)
 

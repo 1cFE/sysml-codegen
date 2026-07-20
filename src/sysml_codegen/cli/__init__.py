@@ -10,6 +10,7 @@ CRITICAL CHANGES:
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import shutil
 import sys
@@ -638,6 +639,7 @@ def _seal_package(
     _preflight_constraint_names(ctx)
     from sysml_codegen.contracts import (
         DEFAULT_COVERAGE_POLICY,
+        build_generation_manifest,
         build_model_contract,
         ensure_package_tree_is_link_free,
         seal_package,
@@ -656,7 +658,16 @@ def _seal_package(
     verify_source = Path(__file__).resolve().parent.parent / "contracts" / "verify.py"
     shutil.copy(verify_source, contracts_dir / "verify.py")
 
-    # (3)+(4) Seal everything now on disk (including the two files above) and write the
+    # (3) The generation manifest (Item 7): provenance the re-seal gate consults so a foreign
+    # file cannot be laundered as codegen-produced. Built from the tree as it stands now —
+    # ModelContract and verify.py present, manifest and seal not yet — so `codegen_produced`
+    # is the covered tree minus handwritten/runtime plus the manifest's own path. Written
+    # before the seal so it is itself a covered (hashed, frozen) artifact.
+    manifest_entries = ensure_package_tree_is_link_free(config.output_path)
+    manifest = build_generation_manifest(manifest_entries, DEFAULT_COVERAGE_POLICY)
+    write_contract_json(contracts_dir / "generation_manifest.json", manifest)
+
+    # (4)+(5) Seal everything now on disk (including the three files above) and write the
     # seal last — it is the only thing excluded from its own coverage.
     package_contract = seal_package(
         config.output_path, config.package_name, DEFAULT_COVERAGE_POLICY
@@ -738,6 +749,8 @@ def cmd_seal(args: argparse.Namespace) -> int:
     from sysml_codegen.contracts import (
         DEFAULT_COVERAGE_POLICY,
         PackageSealError,
+        ProvenanceError,
+        check_reseal_provenance,
         ensure_package_tree_is_link_free,
         seal_package,
     )
@@ -745,7 +758,7 @@ def cmd_seal(args: argparse.Namespace) -> int:
 
     package_dir: Path = args.package_dir
     try:
-        ensure_package_tree_is_link_free(package_dir)
+        entries = ensure_package_tree_is_link_free(package_dir)
     except (PackageSealError, OSError) as error:
         logger.error(f"Package sealing failed: {error}")
         return 1
@@ -756,6 +769,27 @@ def cmd_seal(args: argparse.Namespace) -> int:
             f"{model_contract_path} not found. `seal` re-seals a package `generate` has "
             "already sealed once (D2) — it does not build a ModelContract from scratch."
         )
+        return 1
+
+    # Provenance gate (Item 7): consult the generation manifest against the prior seal so a
+    # re-seal cannot launder a foreign file as codegen-produced, nor record an edited
+    # generated file. Runs before `seal_package`, which stays a pure directory→seal function.
+    prior_seal_path = package_dir / "contracts" / "package_contract.json"
+    if not prior_seal_path.is_file():
+        logger.error(
+            f"{prior_seal_path} not found. `seal` re-seals a package `generate` has already "
+            "sealed once (D2); there is no prior seal to re-seal against."
+        )
+        return 1
+    try:
+        prior_seal = json.loads(prior_seal_path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        logger.error(f"Package sealing failed: prior seal is unreadable: {error}")
+        return 1
+    try:
+        check_reseal_provenance(package_dir, entries, prior_seal, DEFAULT_COVERAGE_POLICY)
+    except ProvenanceError as error:
+        logger.error(f"Re-seal refused (provenance): {error}")
         return 1
 
     try:

@@ -89,6 +89,30 @@ class CoveragePolicy(BaseModel):
     runtime_output_globs: list[str]
 
 
+class GenerationManifest(BaseModel):
+    """Per-artifact generation provenance the re-seal gate consults (Item 7, D4/D5).
+
+    A codegen-side record — written by ``generate``, consulted by ``seal`` — that lets re-seal
+    refuse to launder a foreign file as codegen-produced. It is a covered (hashed) artifact, so
+    its bytes are frozen across re-seals; nothing in it depends on the verifier's bytes (it
+    lists ``contracts/verify.py`` as a path, never a hash), so a verifier edit does not perturb
+    it. It carries no ``runtime_contract_version`` — the seal (`PackageContract`) owns that.
+
+    Attributes:
+        codegen_produced: The enumerated relative paths codegen produced — the covered tree at
+            first seal minus ``handwritten_globs`` minus ``runtime_globs`` (Major 4
+            completeness construction). Hash-frozen at re-seal (INV-F).
+        handwritten_globs: Glob patterns for the human-owned region (``handwritten/**``);
+            files here may be added or edited across re-seals.
+        runtime_globs: Glob patterns reserved for runtime writes; mirrors the seal's
+            ``coverage_policy.runtime_output_globs`` (empty until Item 10).
+    """
+
+    codegen_produced: list[str]
+    handwritten_globs: list[str]
+    runtime_globs: list[str]
+
+
 class PackageContract(BaseModel):
     """The package's physical seal — content hashes over final artifact bytes (D3).
 
@@ -119,5 +143,6 @@ __all__ = [
     "ContractOutput",
     "ModelContract",
     "CoveragePolicy",
+    "GenerationManifest",
     "PackageContract",
 ]

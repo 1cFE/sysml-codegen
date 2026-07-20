@@ -58,6 +58,17 @@ def test_emitted_verifier_is_verbatim(tmp_path):
     assert seal["artifact_hashes"]["contracts/verify.py"] == hashlib.sha256(canonical).hexdigest()
 
 
+def test_trusted_verifier_hash_matches_canonical(tmp_path):
+    """INV-B (codegen half): the published ``TRUSTED_VERIFIER_SHA256`` equals the sha256 of
+    the canonical verifier. Combined with the verbatim-emit guard, this is what lets a runtime
+    authenticate a package-local verifier against the vendored constant. A verify.py edit that
+    forgets to re-publish (and re-vendor in TEAx) trips this test."""
+    from sysml_codegen.contracts.versions import TRUSTED_VERIFIER_SHA256
+
+    canonical = SRC_VERIFY.read_bytes()
+    assert TRUSTED_VERIFIER_SHA256 == hashlib.sha256(canonical).hexdigest()
+
+
 def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
     output = tmp_path / "out"
     assert run_codegen(_snapshot_config(output))
@@ -177,3 +188,61 @@ def test_step9_rejects_linked_contracts_without_writing_contract(tmp_path):
         raise AssertionError("Step 9 accepted linked contracts directory")
     assert marker.read_text() == "unchanged\n"
     assert not (outside / "package_contract.json").exists()
+
+
+def test_reseal_rejects_foreign_file_as_codegen_provenance(tmp_path):
+    """Attack (b), RED-first: a foreign file dropped under a codegen region must not be
+    laundered into the seal as covered provenance.
+
+    The generation manifest (Item 7) records the codegen-produced set as
+    tree-minus-``handwritten/**``-minus-runtime-globs at first seal. ``modules/evil.py`` is not
+    in that enumerated set and not under a non-codegen glob, so re-seal hard-fails and never
+    admits it. RED against pre-fix ``cmd_seal``, which hashed it into ``artifact_hashes``
+    (``cli/__init__.py:762``) and returned 0.
+    """
+    output = tmp_path / "out"
+    assert run_codegen(_snapshot_config(output))
+
+    foreign = output / "modules" / "evil.py"
+    foreign.write_text("# injected\nPWNED = True\n")
+
+    assert cmd_seal(_seal_args(output, "chain_spike")) == 1
+
+    seal = json.loads((output / "contracts" / "package_contract.json").read_text())
+    assert "modules/evil.py" not in seal["artifact_hashes"]
+
+
+def test_reseal_rejects_edit_to_codegen_produced_file(tmp_path):
+    """Attack (b) sibling: a codegen-produced file is byte-frozen across re-seal (INV-F). An
+    edit to a generated module is laundering just as a foreign file is, so re-seal hard-fails
+    rather than recording the edited bytes. Only ``handwritten/**`` files may change.
+    """
+    output = tmp_path / "out"
+    assert run_codegen(_snapshot_config(output))
+
+    modules = sorted((output / "modules").glob("*.py"))
+    assert modules, "expected at least one generated module"
+    modules[0].write_text(modules[0].read_text() + "\n# tampered generated file\n")
+
+    assert cmd_seal(_seal_args(output, "chain_spike")) == 1
+
+
+def test_generate_emits_generation_manifest(tmp_path):
+    """The manifest is a covered artifact enumerating the codegen-produced set (tree minus
+    ``handwritten/**`` minus runtime globs); it carries no ``runtime_contract_version`` (the
+    seal owns that)."""
+    output = tmp_path / "out"
+    assert run_codegen(_snapshot_config(output))
+
+    manifest_path = output / "contracts" / "generation_manifest.json"
+    assert manifest_path.exists()
+    manifest = json.loads(manifest_path.read_text())
+    assert "contracts/verify.py" in manifest["codegen_produced"]
+    assert "contracts/generation_manifest.json" in manifest["codegen_produced"]
+    assert "handwritten/**" in manifest["handwritten_globs"]
+    assert "runtime_contract_version" not in manifest
+    # No handwritten file leaks into the codegen-produced set.
+    assert not any(p.startswith("handwritten/") for p in manifest["codegen_produced"])
+
+    seal = json.loads((output / "contracts" / "package_contract.json").read_text())
+    assert "contracts/generation_manifest.json" in seal["artifact_hashes"]
