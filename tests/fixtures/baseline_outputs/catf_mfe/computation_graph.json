@@ -76,7 +76,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "vacuum_params",
-            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total",
+            "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total",
             "producer_channel": null
           },
           "description": "",
@@ -1893,7 +1893,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "radial_build_params",
-            "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
+            "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__elongation",
             "producer_channel": null
           },
           "description": "",
@@ -3841,6 +3841,15 @@
           "python_type": "float"
         },
         {
+          "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__elongation",
+          "simple_name": "elongation",
+          "entry_type": "design_attribute",
+          "default_value": 3.0,
+          "source_calc_usage": null,
+          "param_group": "radial_build_params",
+          "python_type": "float"
+        },
+        {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__inner_radius",
           "simple_name": "inner_radius",
           "entry_type": "design_attribute",
@@ -4087,9 +4096,9 @@
           "python_type": "float"
         },
         {
-          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total",
+          "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total",
           "simple_name": "pumping_speed_total",
-          "entry_type": "usage_literal",
+          "entry_type": "design_attribute",
           "default_value": 200.0,
           "source_calc_usage": null,
           "param_group": "vacuum_params",

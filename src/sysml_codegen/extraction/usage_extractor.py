@@ -64,6 +64,8 @@ class BindingInfo:
         source_instance_elem: AST element for instance (CHAIN bindings)
         source_attribute_elem: AST element for attribute
         literal_value: Parsed literal value (LITERAL bindings)
+        stored_source_attribute_name: Snapshot-supplied fallback for
+            ``source_attribute_name``; see that property and DD-R27
     """
 
     param_name: str
@@ -78,19 +80,54 @@ class BindingInfo:
     # Raw AST node for EXPRESSION bindings (Phase 2 will use this)
     expression_ast: Any = None
 
+    # The written reference, when it comes from a snapshot rather than the AST
+    # (DD-R27). Excluded from serialization so the wire form is unchanged: the
+    # serializer already writes `source_attribute_name` from the property, and a
+    # second key would appear in all 34 committed snapshots.
+    stored_source_attribute_name: str | None = field(
+        default=None, metadata={"snapshot_exclude": True}
+    )
+    stored_source_instance_name: str | None = field(
+        default=None, metadata={"snapshot_exclude": True}
+    )
+
     @property
     def source_instance_name(self) -> str | None:
         """Get name of source instance element if available."""
         if self.source_instance_elem and hasattr(self.source_instance_elem, "name"):
             return self.source_instance_elem.name
-        return None
+        return self.stored_source_instance_name
+
+    @property
+    def written_reference(self) -> str | None:
+        """The reference exactly as written in the model (DD-R26).
+
+        For a CHAIN binding that is the qualifier and the leaf —
+        ``cryo_pumps.n_pumps`` — not the leaf alone. Dropping the qualifier
+        would re-anchor the leaf at the owning part and silently select a
+        different attribute that happens to share the name.
+        """
+        attribute_name = self.source_attribute_name
+        if attribute_name is None:
+            return None
+        instance_name = self.source_instance_name
+        if instance_name:
+            return f"{instance_name}.{attribute_name}"
+        return attribute_name
 
     @property
     def source_attribute_name(self) -> str | None:
-        """Get name of source attribute element if available."""
+        """The referent's simple name — the binding's reference as written.
+
+        Live, this reads the AST element. From a snapshot the AST is gone, so it
+        falls back to the value the serializer already wrote into every
+        committed snapshot (DD-R27). This is what makes the occurrence-
+        materialized key form (row 16) reachable from the calculation consumer
+        on unmodified v3 data.
+        """
         if self.source_attribute_elem and hasattr(self.source_attribute_elem, "name"):
             return self.source_attribute_elem.name
-        return None
+        return self.stored_source_attribute_name
 
 
 @dataclass

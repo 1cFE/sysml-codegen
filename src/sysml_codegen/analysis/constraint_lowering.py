@@ -181,6 +181,11 @@ def resolve_actual(
             instance_path=usage_qualified_name,
             owner_def_qn=owner_def_qn,
             target_qn=target_qn_sysml,
+            # Row 16's dedicated inputs, supplied with the same values this
+            # consumer already passes, so its resolutions are unchanged and the
+            # row is explicit for it rather than incidental (design D5).
+            written_reference=dotted or "",
+            occurrence_owner_path=usage_qualified_name,
         ),
         ProducerContext(
             output_registry=registry,

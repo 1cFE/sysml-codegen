@@ -288,6 +288,20 @@ Two more, from sources outside the epic row:
   value is being fixed; the movement is entry-point identity across those six generated surfaces.
   Evidence records, per fixture, that every moved entry point kept its correct modeled default and
   that no numeric result changed.
+
+  > **SUPERSEDED BY MEASUREMENT (implement, ratified 2026-07-19).** The "22 across six fixtures"
+  > above was Item 2's *estimate*, carried forward. Gate 3's probe over all 34 fixtures and all five
+  > `ProducerRequest` builders measured **24 entry-point movements across seven fixtures** (the six
+  > named plus `shared_producer`), from **89** moved resolutions. The accepted table is in
+  > `design.md` under "The gates → Gate 1". This is estimate → probe truth, **not a scope change**:
+  > the requirement's substance is unchanged and it was met — every moved entry point kept its
+  > correct modeled default and no numeric result changed, verified by whole-corpus before/after
+  > diff of every fixture's entry points (0 same-key value changes).
+  >
+  > One clause did not survive contact: *"no wrong value is being fixed."* Two movements are
+  > convergences onto a **correctly scoped** attribute carrying the identical value, and the
+  > chain-aware carry (see DD-R26 and design B2) exists because the leaf-only form would have
+  > selected a **wrong** same-named attribute. The premise held for values, not for anchors.
 - **DD-R30 [INFERRED]** Item 2's objection that this "shrinks `fallback_entry_points` membership
   ahead of Item 3's vacuity proof" is **retired**: Item 3 completed, proved vacuity by closed
   enumeration, and deleted extension-time V11 coverage validation (`c5cc1b4`, epic Item 3). V11

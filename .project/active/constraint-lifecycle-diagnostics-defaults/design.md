@@ -124,13 +124,28 @@ extended by two optional fields rather than replaced.
   must never disagree about whether the same bytes block. *If false → the fact-schema bump, the
   envelope bump, and the 34-snapshot re-capture are all cost with no benefit, and DD-B1's cheaper
   alternative should have won.* Settled above with the snapshot-route argument.
-- **B2 — `source_attribute_name` on disk equals the written reference the constraint side already
-  uses.** The serializer writes the referent's simple name (`serializer.py:246-250`, via the AST
-  property `usage_extractor.py:87-92`); the constraint side's `FeatureReferenceFact.source_name`
-  is the same notion from the same node class (`expression.py:549-569` returns `referent.name`).
+- **B2 — the written reference is on disk in every snapshot, and both consumers mean the same thing
+  by it.** *(AMENDED at implement, ratified 2026-07-19. The original form said
+  `source_attribute_name` alone equals the written reference; that is true only for `reference`
+  bindings and **false for `chain` bindings**, where the field holds only the leaf and the qualifier
+  lives in `source_instance_name`.)*
+
+  **Recorded counterexample.** `catf_mfe_model` binds `in cryo_pump_count = cryo_pumps.n_pumps`
+  (`designs/catf_mfe/vacuum.sysml:184`). Carrying the leaf alone re-anchored `n_pumps` at the owning
+  part and selected a **different attribute of the same name** — `catf_vacuum_pumping__n_pumps`
+  (48.0) instead of `catf_vacuum_pumping__cryo_pumps__n_pumps` (32.0). That is the silent
+  same-named-wrong-anchor family this epic exists to close, so the chain-aware form is the faithful
+  DD-R26 reading, not a concession. Gate 2 clause 1 caught it, which is what the gate is for.
+
+  **The bet as it now stands:** `written_reference` is
+  `{source_instance_name}.{source_attribute_name}` for a chain and the leaf otherwise
+  (`usage_extractor.BindingInfo.written_reference`). Both component fields are already serialized in
+  every committed snapshot, so **DD-R27 survives** — no extraction field, no agentic-mbse change, no
+  schema bump. The constraint side's `FeatureReferenceFact.source_name` is the same notion from the
+  same node class (`expression.py:549-569` returns `referent.name`).
   *If false → the two consumers key differently, SR-A02 does not converge, and the carry needs a
-  new extraction field with an agentic-mbse change and a second schema bump.* Phase 1 proves it by
-  equality on `shared_producer` before any call site changes.
+  new extraction field with an agentic-mbse change and a second schema bump.* Proven at implement by
+  equality on `shared_producer` plus the whole-corpus Gate 3 probe.
 - **B3 — The 22 newly-resolving self-named bindings are identity movement only, never value
   movement.** All 22 are single-consumer (Item 2 `design.md:141-149`), so no second consumer's
   value is being displaced. *If false → we are silently changing computed results across six
@@ -175,20 +190,46 @@ extended by two optional fields rather than replaced.
   (`types.py:146-177`); this design does not structure it. The five-issue print truncation
   (`validation/common.py:124-152`) is presentation and stays out of scope, so DD-A04 is satisfied by
   the code surviving in the returned list regardless of what the terminal shows.
-- **D4 — The written-reference carry rides a stored fallback behind the existing property, excluded
+- **D4 — The written-reference carry rides stored fallbacks behind the existing properties, excluded
   from serialization.** *Rejected: converting `source_attribute_name` from a property to a plain
   dataclass field.* The serializer iterates `dataclasses.fields()` (`serializer.py:239`) and
   then appends the computed property (`:246-250`), so a new field would add a second key to every
   snapshot. Keeping the wire form identical means the carry works on **unmodified v3 snapshots**,
   which is what lets it land before the schema work (D8).
-- **D5 — Row 16 gets two dedicated request fields; no shared field's value changes for any
-  consumer.** `ProducerRequest` gains `written_reference: str | None` and
-  `occurrence_owner_path: str | None`, both defaulting to `None`, both read **only** inside
-  `_occurrence_materialized_qn` (`producer_resolution.py:363-367`), which misses unless both are
-  supplied. `reference`, `target_qn`, and `instance_path` are untouched from every call site.
+
+  **Amended with B2 (ratified 2026-07-19): two stored fallbacks, not one.** The chain qualifier is a
+  separate field, so `source_instance_name` needs the same treatment as `source_attribute_name`.
+  `BindingInfo` gains `stored_source_attribute_name` and `stored_source_instance_name`, both marked
+  `metadata={"snapshot_exclude": True}`; `_serialize_dataclass` honours that metadata by skipping the
+  key **entirely** — unlike `_AST_FIELDS`, which writes `None` and would therefore have added keys to
+  all 34 committed snapshots. `BindingInfo.written_reference` composes the two. Wire form unchanged;
+  the `REQ-DM-03` field-set pin is updated deliberately with its reason recorded.
+- **D5 — Row 16 gets two dedicated request fields, with an owner-path fallback to `instance_path`;
+  no shared field's value changes for any consumer.** `ProducerRequest` gains
+  `written_reference: str | None` and `occurrence_owner_path: str | None`, both defaulting to
+  `None`, both read **only** inside `_occurrence_materialized_qn`
+  (`producer_resolution.py:363-367`). Row 16 keys on
+  `req.occurrence_owner_path or req.instance_path` for the owner path and on
+  `req.written_reference or req.reference` for the name, missing when either resolves empty.
+  `reference`, `target_qn`, and `instance_path` are untouched from every call site.
   *Rejected: passing the written name as `reference`* and *rejected: `reference` + `target_qn`
   together* — design review C1 falsified both, and re-verification confirms it. See "Why the
   dedicated fields" below; this replaces the mechanism the first draft proposed.
+
+  **The `or` fallback is design review C3's must-fix, applied.** There are **five**
+  `ProducerRequest` builders, not two: the constraint consumer (`constraint_lowering.py:174`), the
+  calc consumer (`dependency_backtracker.py:578`), and three in `graph_builder.py` — `:1369`
+  (LocalTerm), `:1606` (EXPOSE alias), `:1629` (aggregation LocalTerm pre-mint lookup). All three
+  `graph_builder` sites supply `instance_path` (`:1374`, `:1611`, `:1634`) and run
+  `TerminalPolicy.LENIENT`, so **row 16 is live for them today**. Making row 16 read only the two
+  new fields would silently disable it for all three; `:1629` is the sharp case, since its own
+  comment records the defect that reverting row 16 there would reintroduce (a defaultless entry
+  point minted with no diagnostic), and a binding that stops resolving falls to a lenient terminal
+  miss and **newly enters** `fallback_entry_points` — C2's failure mode in reverse. The fallback
+  preserves all three byte-identically without touching their call sites. It reintroduces neither
+  C1(a) (`reference` is untouched) nor C1(b) (the calc consumer still supplies no `instance_path`,
+  so rows 12 and 13 stay dead for it). I9 survives: the new fields are still read at exactly one
+  row.
 - **D6 — Phase 1's gate is a per-binding resolution probe over the whole corpus, not a set-membership
   check.** *Rejected: verifying safety by a subset check over `fallback_entry_points`* — review C2,
   confirmed: a binding migrating tier 2 → tier 1 re-wires the graph while leaving that set identical
@@ -307,7 +348,11 @@ Design review C1 falsified it and re-verification confirms every count.
 
 The repair closes both **structurally**, which is why row 16 gets *two* fields rather than the
 review's one. `written_reference` closes C1(a); `occurrence_owner_path` closes C1(b) by letting row
-16 have an owner path without `instance_path` ever becoming non-`None` from the calc consumer. The
+16 have an owner path without `instance_path` ever becoming non-`None` from the calc consumer. Row
+16's `or req.instance_path` fallback (C3, D5) does not weaken that: the fallback is *read* inside
+row 16 only, and the calc consumer sets no `instance_path`, so for that consumer the fallback is
+`None` and only the dedicated field can supply the owner path. Rows 12 and 13, which guard on
+`req.instance_path` at CHANNEL tier, remain dead from the calc consumer. The
 review judged C1(b) to have "no equally clean structural fix" and asked for empirical proof instead;
 a second dedicated field is that fix, and it turns C1(b) from a thing the probe must *disprove* into
 a thing that cannot happen. The probe still runs — C2 needs it regardless — but now as confirmation.
@@ -327,8 +372,35 @@ Before any generated baseline is regenerated, evidence carries one row per moved
 the six fixtures (`fusion_tea`, `solar_battery_model`, `catf_mfe_model`, `chain_spike_model`,
 `return_styles`, `expression_binding_probe`), Item 2's measurement being 22:
 
-| fixture | old key | new key | old (outcome, key_form) | new (outcome, key_form) | default carried | param group | numeric result |
-|---|---|---|---|---|---|---|---|
+**FILLED AND ACCEPTED (orchestrator ruling, 2026-07-19).** Measured by Gate 3's probe over all 34
+fixtures and all five builders; supersedes DD-R29's *estimate* of 22-across-six. This is
+estimate → probe truth, not a scope change. Baselines regenerated **once** under this table.
+
+Resolution-level movement: **89** of 303 `resolve_producer` calls moved, **every one to row 16**
+(51 `target_qn`→row 16 identity-preserved, 15 `dotted_pair`→row 16 identity-preserved, 23
+`entry_point`→row 16 positive resolutions). Zero MODULE_OUTPUT transitions in either direction.
+
+Entry-point-level movement, **24 across seven fixtures**:
+
+| class | count | fixtures | default carried | numeric result |
+|---|---|---|---|---|
+| pure rename (key moves, value preserved) | 18 | catf_mfe_model 1, chain_spike_model 3, expression_binding_probe 1, fusion_tea 2, return_styles 3, solar_battery_model 8 | unchanged | unchanged |
+| **convergence** (two keys collapse to one that already existed) | 5 | shared_producer 1 (`__scaler__gain`→`__gain`, 40.0), expression_binding_probe 2 (`tax_rate`, 0.08), solar_battery_model 2 (`p_net_mw` 0.008, `plant_lifetime` 25.0) | unchanged | unchanged |
+| **convergence onto correct scope** (identity moves to a correctly-scoped attribute of identical value) | 2 | catf_mfe_model 1 (`catf_radial_build__elongation`→`__plasma_region__elongation`, 3.0), fusion_tea 1 (`hif_driver__HIF_Driver__efficiency`→`hif_plant_pkg__hif_plant__driver__efficiency`, 0.35) | unchanged | unchanged |
+
+Entry-point classification consequence, uniform and value-free: `entry_type` flips
+`usage_literal` → `design_attribute` for 13 entry points, because a binding that resolves positively
+to a design attribute is one, where a fall-through was previously recorded as a usage literal.
+
+**Regenerated file set — exactly the pinned prediction, no extras:**
+`baseline_outputs/{catf_mfe,chain_spike,solar_battery}/computation_graph.json` and
+`baseline_yaml/{chain_spike,solar_battery}.yaml`.
+
+**Recorded non-participant:** `baseline_outputs/plant_values/` is **stale at the predecessor** — it
+regenerates differently with Item 4 reverted, so it is pre-existing drift of the same class as the
+recorded `deep_cross_scope` stale baseline, not carry churn. Deliberately left untouched to keep
+one cause per diff. No test compares it byte-exactly, so it fails nothing. It needs an owner
+elsewhere.
 
 Old key form is `entry_point_qualified_name` = `{consumer_eqn}__{param_name}`
 (`producer_resolution.py:462-475`). New key form is `{occurrence_owner_path}__{written_name}` — and
@@ -349,6 +421,20 @@ graph. D5 is the structural reason neither should happen; the gate is what prove
 bound binding in every committed fixture — 249 bound bindings, 167 carrying a `::`-qualified
 `source_path` — resolve under both request shapes and diff the tuple `(outcome, identity, key_form)`
 per binding. This is the gate; set membership is not.
+
+**Probe scope covers all five `ProducerRequest` builders, not only bindings** (design review C3).
+Aggregation and LocalTerm resolutions are not bindings, so a binding-only probe cannot see the
+regression class C3 names. Two of the five builders are covered by construction rather than by
+sampling, and the design states which is which:
+
+- **Bindings (calc + constraint consumers)** — covered empirically by the per-binding probe above.
+- **The three `graph_builder` consumers (`:1369`, `:1606`, `:1629`)** — covered *structurally*: with
+  D5's `or req.instance_path` fallback, every input row 16 reads for these three resolves to exactly
+  the value it reads today (`instance_path` unchanged, `written_reference` unset so the name falls
+  back to `reference`), and no other row function changed. Their resolutions are byte-identical by
+  construction. Implement proves the premise, not the consequence: an `rg` confirming none of the
+  three call sites sets either new field, plus the whole-suite and byte-identity gates that would
+  fail if any aggregation or LocalTerm resolution moved.
 
 The first draft's subset argument over `fallback_entry_points` was true only for the 22 self-named
 bindings, which are already fallback members by construction and can therefore only leave. It said
@@ -442,6 +528,9 @@ derivations coincide by accident.
 - **I9** — `written_reference` and `occurrence_owner_path` are read at exactly one site,
   `_occurrence_materialized_qn`. Provable by `rg`, and it is what makes B6 structural. No other row
   function and no shared request field changes value for any consumer.
+- **I10** — Row 16 stays reachable from all three `graph_builder` consumers (`:1369`, `:1606`,
+  `:1629`) via D5's `or req.instance_path` fallback, and none of the three sets either new field.
+  Provable by `rg`. Without this, C3's regression reverts the defect `:1629`'s comment records.
 - **I6** — A modeled default's unit is carried or the default is refused; it is never converted and
   never silently discarded (DD-R25).
 - **I7** — The generated JSON contains a key for every entry point in the group. Absence of a value
@@ -526,7 +615,7 @@ owner elsewhere.
 
 No `plan.md` — this is the plan. Phases are ordered by what each one de-risks.
 
-**Phase 0 — probes, no production change.** Confirm B2 by equality on `shared_producer`: the
+**Phase 0 — [x] COMPLETE — probes, no production change.** Confirm B2 by equality on `shared_producer`: the
 loader-visible `source_attribute_name` equals the constraint side's `FeatureReferenceFact.source_name`
 for the shared `gain`. Settle owner-path parity on **both** shapes — equality on `shared_producer`
 and a bracketed-owner fixture confirming row 16 misses. Establish what the generated schema does
@@ -534,7 +623,7 @@ with a missing vs `null` field, before Phase 3 commits to `null`. **Exit: B2 pro
 both parity checks answered; the `null` question answered.** The unit/sign fixture-inventory
 question is already answered — see Phase 3.
 
-**Phase 1 — the carry (codegen only, works on unmodified v3 snapshots).** Loader plumbing,
+**Phase 1 — [~] MECHANISM LANDED, GATED ON RATIFICATION — the carry (codegen only, works on unmodified v3 snapshots).** Loader plumbing,
 `BindingInfo` stored fallback, the two `ProducerRequest` fields plus the one-line row-16 change, and
 both consumers' call sites. Author the `shared_producer` RED surface against the *current* two-key
 state first, confirm green at `3fbec63`, then flip it. Run Gate 3's per-binding probe over all 249
@@ -604,6 +693,54 @@ Merge order is load-bearing: agentic-mbse PR #11 before sysml-codegen PR #9 (pro
 
 ---
 
+## SURFACED — B2 is falsified for CHAIN bindings (implement, Phase 1)
+
+**Trigger:** genuine surprise producing evidence against a premise the plan rests on
+(capture-fidelity rule 4). Recorded rather than resolved silently. **Dependent conclusions are
+parked pending owner ratification; no baseline has been regenerated.**
+
+**B2 as written says** `source_attribute_name` on disk equals the written reference the constraint
+side uses. Measured over all 34 fixtures, that holds for `reference` bindings and **fails for
+`chain` bindings**, where `source_attribute_name` is only the *leaf*. The qualifier lives in a
+separate field, `source_instance_name`.
+
+**The failure it caused, measured.** `catf_mfe_model` binds
+`in cryo_pump_count = cryo_pumps.n_pumps` (`designs/catf_mfe/vacuum.sysml:184`). Carrying the leaf
+alone re-anchored `n_pumps` at the owning part and selected a **different attribute of the same
+name**:
+
+| | key | value |
+|---|---|---|
+| model means | `CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__n_pumps` | **32.0** |
+| leaf-only carry selected | `CATFMFEVacuum__catf_vacuum_pumping__n_pumps` | **48.0** |
+
+That is a wrong-value regression, and Gate 2 clause 1 caught it — the gate worked as designed.
+
+**The repair, applied and measured, still inside DD-R26.** `written_reference` is now the reference
+*as written*: `{source_instance_name}.{source_attribute_name}` for a chain, the leaf otherwise
+(`usage_extractor.BindingInfo.written_reference`). Row 16 already flattens dots, so the chain key
+lands on the correct attribute. This is arguably the faithful reading of DD-R26 ("the reference as
+written") and the leaf-only version was the incomplete one — but it amends B2 and D4, so it is
+**surfaced, not assumed**. `source_instance_name` needed the same stored-fallback treatment as
+`source_attribute_name`; it is likewise already in every committed snapshot, so DD-R27's "no new
+extraction field" survives.
+
+**Blast radius after the repair, superseding DD-R29's 22-across-six.** Gate 3 probe over all 34
+fixtures, all five builders, 303 `resolve_producer` calls: **89 resolutions moved**, every one to
+row 16. At the entry-point level: **18 pure renames** (value preserved), **5 convergences** onto a
+key that already existed (SR-A02's class, `shared_producer` among them), **1 new entry point**
+(`CATFMFERadialBuild__catf_radial_build__plasma_region__elongation`, 3.0 — same value as the outer
+attribute it now correctly shadows). Seven fixtures, not six: DD-R29's six plus `shared_producer`.
+
+**Gate results at this state:** shape stops **0** (no resolution moved to any key form other than
+row 16; zero MODULE_OUTPUT transitions in either direction, so no graph re-wire); value stops **0**;
+same-key value changes across every fixture's entry points **0**. The two identity changes that are
+not pure renames both resolve to a *correctly scoped* attribute carrying the **identical** value.
+
+**Parked for the owner:** whether to ratify the chain-aware `written_reference` (amending B2/D4),
+and whether to accept the revised blast radius as the Gate 1 pin. Baseline regeneration and the
+DD-R31/DD-R33 artifact corrections are blocked on that ratification.
+
 ## Potential Risks
 
 - **The re-capture hides the identity movement.** Mitigated by D8's ordering: the carry's baseline
@@ -661,4 +798,74 @@ have proven the general claim from the one shape where the derivations coincide 
 strengthened parity exit, and the two Phase 3 corrections. Not a re-review of the whole design.
 
 ---
-**Next Step:** independent `/_my_design_review` in a fresh session, then `/_my_implement`.
+
+## Implementation Notes
+
+### Item 0 — C3 amendment (complete)
+
+Applied before any production code, per the brief. D5 now specifies row 16 reading
+`req.occurrence_owner_path or req.instance_path` (and `req.written_reference or req.reference`),
+with the three `graph_builder` builders named and the reason the fallback preserves them. Gate 3's
+probe scope widened to all five `ProducerRequest` builders, stating which two are covered
+empirically and which three structurally. Added **I10** (row 16 stays reachable from the three
+`graph_builder` consumers; neither new field is set there). Both proved by `rg`.
+
+### Phase 0 — complete
+
+`scripts/probes/probe_item4_phase0.py`, snapshot-only, no production change.
+
+- **B2, unbracketed:** calc `source_attribute_name` = `'gain'`, constraint
+  `FeatureReferenceFact.source_name` = `'gain'`. **Equal.** (Falsified later for chains — see the
+  surfaced conflict above.)
+- **Owner-path parity, unbracketed:** `shared_producer`'s calc owner path derives to
+  `SharedProducer__the_rig`, row-16 key `SharedProducer__the_rig__gain` **hits**. Parity holds.
+- **Bracketed miss proof:** `constraint_multi_instance` is the bracketed-owner fixture and already
+  existed, so none was authored. Constraint side carries
+  `constraint_multi_instance__the_design__c__cell[0]`; the calc usage QN has no brackets, and the
+  design attribute is def-scoped (`constraint_multi_instance__Cell__cell_rating`). Row 16 **misses**
+  rather than hitting a wrong key — the disposition holds, by a slightly different mechanism than
+  predicted (def-scoping, not just bracket mismatch). The two-check exit earned its keep.
+- **`null` vs missing (Phase 3 dependency):** the generated group schema
+  (`templates/parameter_group_schema.py.jinja2`) renders a defaultless field as required with a
+  non-optional type, under `extra: "forbid"`. Measured: omitted key → `ValidationError` `missing`;
+  `null` → `ValidationError` `float_type`. **Both fail; only the error type changes.** D7's `null`
+  does not turn a passing load into a failing one. Phase 3 may proceed; pin the message change.
+
+### Phase 1 — mechanism landed, gates green, regeneration deliberately not run
+
+Changed: `usage_extractor.BindingInfo` (two `snapshot_exclude` stored fallbacks, the
+`written_reference` property, `source_instance_name` falling back); `serializer._serialize_dataclass`
+(honours `snapshot_exclude` metadata — skips the key entirely, unlike `_AST_FIELDS` which writes
+`None`, so committed wire forms are untouched); `loader._deserialize_binding_info` (stops discarding
+both names); `ProducerRequest` (+`written_reference`, +`occurrence_owner_path`);
+`_occurrence_materialized_qn` (both inputs with C3 fallbacks);
+`dependency_backtracker` (+`_owner_instance_path_for_usage`, supplies both fields, docstring
+corrected); `constraint_lowering` (supplies both fields with the values it already passed).
+
+- **shared_producer RED→GREEN.** Surface newly authored
+  (`tests/conformance/test_shared_producer_convergence.py`), both routes. Verified the two-key state
+  first so the RED was not a plumbing failure, then RED for the right reason (extra
+  `SharedProducer__the_rig__scaler__gain`), then GREEN on one key, default 40.0, one group.
+- **I9/I10 by `rg`:** the two fields are read at exactly one site; `graph_builder` sets neither.
+- **Gates:** Gate 2 **PASS** (0 shape stops, 0 value stops, 0 same-key value changes). Gate 3b: hits
+  are generated baselines (regenerate under Gate 1), the DD-R31 artifacts, and one stale provenance
+  *comment* in `tests/conformance/test_parameter_group_deriver.py:384-386` — that test still passes
+  because `classify()` traces the binding index, not the entry-point set. **B4 holds.**
+- **Suite:** 2989 passed / 22 failed, normal and `-O` (the two extra `-O` failures are
+  `assert`-under-`PYTHONOPTIMIZE` tests that fail identically at the predecessor). mypy 72 errors
+  before and after — **zero added**. ruff clean on `src/` and all new files.
+- **The 22 failures, all expected and none masked:** 10 generated-baseline comparisons
+  (solar_battery, chain_spike, catf_mfe) awaiting the Gate 1 regeneration; 7
+  `TestResolveBindingViaRegistry` unit tests that construct `agentic_mbse.sysml.types.BindingInfo`
+  — a **different type** that production never uses on this path and that lacks
+  `source_attribute_name` entirely (a latent test-fidelity defect this change exposed);
+  `test_req_dm_03_fields_binding_info` pinning `BindingInfo`'s field set, now +2; and 4
+  entry-point-identity tests. **Deliberately not fixed** — each needs a disposition that follows
+  from ratifying the surfaced amendment.
+
+**Blocked on owner ratification:** baseline regeneration (once, under the Gate 1 table), the
+DD-R31 artifact corrections, and DD-R33's SR-R16 amendment. Phase 2 not started.
+
+---
+**Next Step:** owner ratification of the surfaced B2/D4 amendment and the revised Gate 1 pin, then
+the Phase 1 regeneration and artifact corrections, then Phase 2.

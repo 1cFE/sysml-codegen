@@ -10,7 +10,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw",
             "producer_channel": null
           },
           "description": "",
@@ -22,7 +22,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__n_mod",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__n_mod",
             "producer_channel": null
           },
           "description": "",
@@ -34,7 +34,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_availability",
             "producer_channel": null
           },
           "description": "",
@@ -87,7 +87,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost",
             "producer_channel": null
           },
           "description": "",
@@ -99,7 +99,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_consumption",
             "producer_channel": null
           },
           "description": "",
@@ -2973,7 +2973,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year",
             "producer_channel": null
           },
           "description": "",
@@ -3546,7 +3546,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__discount_rate",
             "producer_channel": null
           },
           "description": "",
@@ -3558,7 +3558,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_lifetime",
             "producer_channel": null
           },
           "description": "",
@@ -3733,7 +3733,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__yearly_inflation",
             "producer_channel": null
           },
           "description": "",
@@ -3745,7 +3745,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime",
+            "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_lifetime",
             "producer_channel": null
           },
           "description": "",
@@ -3808,91 +3808,46 @@
       "source_file": "design.sysml",
       "parameters": [
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__discount_rate",
           "simple_name": "discount_rate",
-          "entry_type": "usage_literal",
+          "entry_type": "design_attribute",
           "default_value": 0.05,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime",
-          "simple_name": "plant_lifetime",
-          "entry_type": "usage_literal",
-          "default_value": 25.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_consumption",
           "simple_name": "fuel_consumption",
-          "entry_type": "usage_literal",
+          "entry_type": "design_attribute",
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost",
           "simple_name": "fuel_unit_cost",
-          "entry_type": "usage_literal",
+          "entry_type": "design_attribute",
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year",
-          "simple_name": "om_rate_per_kw_year",
-          "entry_type": "usage_literal",
-          "default_value": 20.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__n_mod",
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__n_mod",
           "simple_name": "n_mod",
-          "entry_type": "usage_literal",
+          "entry_type": "design_attribute",
           "default_value": 1.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw",
-          "simple_name": "p_net_mw",
-          "entry_type": "usage_literal",
-          "default_value": 0.008,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability",
-          "simple_name": "plant_availability",
-          "entry_type": "usage_literal",
-          "default_value": 0.159,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime",
-          "simple_name": "plant_lifetime",
-          "entry_type": "usage_literal",
-          "default_value": 25.0,
-          "source_calc_usage": null,
-          "param_group": "design_params",
-          "python_type": "float"
-        },
-        {
-          "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation",
-          "simple_name": "yearly_inflation",
-          "entry_type": "usage_literal",
-          "default_value": 0.0245,
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year",
+          "simple_name": "om_rate_per_kw_year",
+          "entry_type": "design_attribute",
+          "default_value": 20.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
@@ -3902,6 +3857,33 @@
           "simple_name": "p_net_mw",
           "entry_type": "design_attribute",
           "default_value": 0.008,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_availability",
+          "simple_name": "plant_availability",
+          "entry_type": "design_attribute",
+          "default_value": 0.159,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_lifetime",
+          "simple_name": "plant_lifetime",
+          "entry_type": "design_attribute",
+          "default_value": 25.0,
+          "source_calc_usage": null,
+          "param_group": "design_params",
+          "python_type": "float"
+        },
+        {
+          "qualified_name": "SolarBatteryDesign__solar_battery_plant__yearly_inflation",
+          "simple_name": "yearly_inflation",
+          "entry_type": "design_attribute",
+          "default_value": 0.0245,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"

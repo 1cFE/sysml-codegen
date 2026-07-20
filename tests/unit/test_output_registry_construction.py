@@ -789,10 +789,18 @@ class TestContractRealAttrExprProbe:
 # ===========================================================================
 
 
-from agentic_mbse.sysml.types import BindingInfo, BindingType
+from agentic_mbse.sysml.types import BindingType
 
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
+
+# The calculation consumer's binding type is the codegen dataclass, NOT
+# `agentic_mbse.sysml.types.BindingInfo`. These are different types: the
+# agentic-mbse one has no `source_attribute_name`/`source_instance_name` at all,
+# so tests built on it could not exercise the written-reference carry (DD-R27)
+# and silently diverged from what `_resolve_binding_via_registry` actually
+# receives (`dependency_backtracker.py:32`, `snapshot/loader.py:48`).
+from sysml_codegen.extraction.usage_extractor import BindingInfo
 
 
 def _make_binding(

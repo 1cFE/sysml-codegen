@@ -98,14 +98,19 @@ class Outcome(Enum):
 class ProducerRequest:
     """One consumer's question, as declared data.
 
-    ``reference`` is the reference the consumer holds, never pre-split. Note that the
-    calculation consumer holds the *resolved referent qualified name* rather than the
-    reference as written — binding extraction discards the written name — which is why
-    the occurrence-materialized form (row 16) is unreachable from it. See design PC-4
-    and ``tests/fixtures/shared_producer/PROVENANCE.md``.
+    ``reference`` is the reference the consumer holds, never pre-split. The calculation
+    consumer holds the *resolved referent qualified name* here rather than the reference
+    as written, which is why it supplies ``written_reference`` separately (DD-R27).
 
     ``target_qn`` is the resolved referent where the consumer carries it separately from
     the reference; row 17 keys on it.
+
+    ``written_reference`` and ``occurrence_owner_path`` are row 16's dedicated inputs and
+    are read at exactly one site, ``_occurrence_materialized_qn`` (design I9). They exist
+    so a second consumer can reach that row without changing what any other row sees:
+    putting the written name in ``reference`` would perturb the eighteen rows that read
+    it, and supplying ``instance_path`` from the calculation consumer would wake rows 12
+    and 13 at CHANNEL tier (design review C1).
     """
 
     consumer_eqn: str
@@ -118,6 +123,8 @@ class ProducerRequest:
     owner_def_qn: str | None = None
     target_qn: str | None = None
     parent_scope: str | None = None
+    written_reference: str | None = None
+    occurrence_owner_path: str | None = None
 
 
 @dataclass(frozen=True)
@@ -361,9 +368,20 @@ def _chain_redefinition_follow(req: ProducerRequest, ctx: ProducerContext) -> Fo
 
 
 def _occurrence_materialized_qn(req: ProducerRequest, ctx: ProducerContext) -> FormResult:
-    if not req.instance_path:
+    """Row 16: the design attribute materialized under its owning occurrence.
+
+    Both inputs fall back to the shared fields this row read before Item 4, which
+    keeps the three ``graph_builder`` consumers (LocalTerm, EXPOSE alias, and the
+    aggregation pre-mint lookup) resolving byte-identically — they supply
+    ``instance_path`` and neither dedicated field (design review C3). The
+    calculation consumer supplies only the dedicated fields, so rows 12 and 13,
+    which guard on ``instance_path``, stay dead for it.
+    """
+    owner_path = req.occurrence_owner_path or req.instance_path
+    written = req.written_reference or req.reference
+    if not owner_path or not written:
         return _MISS
-    qn = f"{req.instance_path}__{'__'.join(req.reference.split('.'))}"
+    qn = f"{owner_path}__{'__'.join(written.split('.'))}"
     return _hit(qn if qn in ctx.design_attr_by_qn else None)
 
 

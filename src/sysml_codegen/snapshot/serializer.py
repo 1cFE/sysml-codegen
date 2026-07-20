@@ -237,6 +237,11 @@ def _serialize_dataclass(obj: Any, output_dir: Path | None) -> dict[str, Any]:
     result: dict[str, Any] = {}
 
     for f in dataclasses.fields(obj):
+        # Fields whose value is reconstructed on load, never written. Unlike
+        # _AST_FIELDS these emit no key at all, so adding one cannot change the
+        # wire form of an already-committed snapshot.
+        if f.metadata.get("snapshot_exclude"):
+            continue
         if f.name in _AST_FIELDS:
             result[f.name] = None
             continue

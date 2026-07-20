@@ -314,6 +314,11 @@ def test_req_dm_03_fields_calc_usage_data():
 def test_req_dm_03_fields_binding_info():
     from sysml_codegen.extraction.usage_extractor import BindingInfo
 
+    # The two `stored_*` fields carry the reference as written when it comes
+    # from a snapshot rather than the AST, which is what makes the occurrence-
+    # materialized key form reachable from the calculation consumer (DD-R27).
+    # They are marked `snapshot_exclude`, so the serialized wire form is
+    # unchanged and all 34 committed snapshots stay byte-identical.
     expected = {
         "param_name",
         "source_path",
@@ -324,6 +329,8 @@ def test_req_dm_03_fields_binding_info():
         "source_attribute_elem",
         "literal_value",
         "expression_ast",
+        "stored_source_attribute_name",
+        "stored_source_instance_name",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected

@@ -33,7 +33,16 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 LOWERING_LOGGER = "sysml_codegen.analysis.constraint_lowering"
 PACKAGE_NAME = "snapshot_portability"
-SNAPSHOT_MANIFEST_SHA256 = "bf2b3d49ad6710fa2032fa940932ec7e1a0b6ea846a6d9b7dbcd7e6f370a8266"
+# Repinned for Item 4's written-reference carry (DD-R27). The replay pair is built
+# from catf_mfe_model, one of the fixtures whose entry-point identities moved. The
+# manifest delta was verified to be exactly two key movements and nothing else:
+#   + CATFMFERadialBuild__catf_radial_build__plasma_region__elongation  (newly
+#     resolved at its correct scope; same 3.0 value as the outer attribute)
+#   - CATFMFEVacuum__catf_vacuum_pumping__pump_load__pumping_speed_total
+#   + CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total           (rename)
+# Only model_contract_bytes and its two derived hashes changed; no value moved.
+# Previous pin: bf2b3d49ad6710fa2032fa940932ec7e1a0b6ea846a6d9b7dbcd7e6f370a8266
+SNAPSHOT_MANIFEST_SHA256 = "a7e07446abc1e0fc7252db38e76c674b77ccd29e41fc69590a7ba71233ce212a"
 
 
 def _anonymous_non_numerical() -> ConstraintUsageFact:

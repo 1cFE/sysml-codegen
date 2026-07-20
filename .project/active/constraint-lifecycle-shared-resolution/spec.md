@@ -158,8 +158,11 @@ clean.
 - **SR-R16 [INFERRED]** An entry point minted by a terminal miss is created once, with its modeled
   default resolved at creation. No second writer registers a duplicate or backfills a default onto
   an entry point created earlier. The register/backfill pair at `graph_builder.py:1326-1345` and the
-  silent LocalTerm mint at `:1517-1533` are the seams this retires. Basis: owner D-1 (no post-build
-  graph/default mutation) and contract invariant 26.
+  silent LocalTerm mint at `:1517-1533` are the seams this retires. Basis: cross-source
+  order-dependence (design invariant I5) and contract invariant 26. **Amended by Item 4 (DD-R33):**
+  the original basis cited owner D-1 (no post-build graph/default mutation), but Item 2's design
+  proved the backfill runs strictly before the graph exists (`design.md:96-101`), so D-1 is not
+  implicated. The requirement stands on order-dependence alone.
 - **SR-R17 [INFERRED]** Modeled-default discovery uses exact owning-definition identity. The exact
   tier already exists (`graph_builder.py:1226-1244`, keyed on `usage_type_map`); the leaf-name
   Strategy 2 and its warn-and-return-anyway collision arm (`:1246-1266`) do not survive SR-R12. A
@@ -292,7 +295,7 @@ Non-normative reviewer index. These remain challengeable.
 |---|---|---|
 | Two positive rungs only | SR-R11 | Contract invariant 19 names exactly two tiers. Any further rung the current ladders have (scope climb, structured alias, occurrence-scoped materialized QN) must justify itself as a *form of exact identity*, not as an additional guess tier. Design decides which survive and states each as a declared rung. |
 | Uniform self-reference guard | SR-R13 | The constraint ladder's missing guard is drift, not a deliberate allowance. If design finds a constraint shape that legitimately reads its own channel, this bet loses. |
-| Entry points written once | SR-R16 | The backfill seam is read as post-build default mutation under D-1. If design shows the backfill happens strictly before the graph is complete and no other writer can observe the intermediate state, the requirement weakens to "one writer", not "no backfill". |
+| Entry points written once | SR-R16 | ~~The backfill seam is read as post-build default mutation under D-1.~~ **Resolved (Item 4, DD-R33):** design showed the backfill runs strictly before the graph exists, so D-1 is not implicated. SR-R16 survives on cross-source order-dependence (invariant I5); its basis line is amended to match. |
 | Aggregation joins the shared procedure | SR-R10 | The contract names calculation and constraint explicitly; the epic names aggregation as the third ladder. Treating aggregation as a consumer of the same request is the agent reading, ratified by the epic row, not owner-originated. |
 | Lenient visibility without a schema | SR-R15 | Uniform visibility is Item 2's; severity codes and sinks are Item 4's. If the two cannot be separated, SR-R15 defers to Item 4 and Item 2 records the asymmetry rather than inventing a schema. |
 

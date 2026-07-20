@@ -137,6 +137,13 @@ attribute read by both a calc input and a constraint actual yields **two** entry
 That is I9 falsified and SR-A02 undeliverable by table unification. Pinned as a recorded
 known-incomplete state by `tests/fixtures/shared_producer/` (see its `PROVENANCE.md`).
 
+> **CORRECTED by Item 4 (DD-R31).** "Structurally unreachable" was false. The reference as written
+> was already serialized in every committed snapshot (`BindingInfo.source_attribute_name`); the
+> codegen loader dropped it on the way in. Item 4 restored it and routed it to row 16 through a
+> dedicated request field, so the calculation consumer reaches the same key the constraint consumer
+> reaches. The paragraph above records what Item 2 measured and believed; it is not the current
+> behavior. `shared_producer` is now a convergence acceptance surface, not a known-incomplete pin.
+
 **Resolution (orchestrator ruling, agent-grade, 2026-07-19).** Preserve byte identity and I10; do
 not infer the written reference from the formal name. The exact structural recovery
 (`referent_qn == {usage_qn}::{param_name}` → the written reference was `param_name`) was measured:
@@ -513,13 +520,21 @@ inline fixture would silently fail to certify Gate A, the exact substitution ris
 - **I8 — Item 1 seams unchanged.** `resolve_logical_demand`, `select_group_source`, and
   `enrich_graph_design_attributes` are not modified. `prepare_constraint_usages` gains one branch;
   its three existing branches are unchanged.
-- **I9 — convergence is a tier-2 property. FALSIFIED for the self-named shape at implementation
-  time; see PC-4.** The claim was that two consumers of one design attribute converge because both
-  resolve *positively* to the same QN through tier 2. That holds only when both consumers can
-  express the same reference, and they cannot: the calculation consumer has no access to the
-  reference as written. The constraint consumer still converges on the source QN; the calculation
-  consumer still mints per-consumer. SR-A02 is **not delivered by Item 2** and is referred to Item 4
-  (PC-4). Lenient-miss entry points remain per-consumer by construction.
+- **I9 — convergence is a tier-2 property. Falsified for Item 2; RESTORED and delivered by Item 4.**
+  The claim was that two consumers of one design attribute converge because both resolve
+  *positively* to the same QN through tier 2. Item 2 judged that this holds only when both consumers
+  can express the same reference, and concluded the calculation consumer "has no access to the
+  reference as written."
+
+  **That conclusion was wrong, and Item 4 measured it.** The written name was already serialized in
+  every committed snapshot as `BindingInfo.source_attribute_name`; the codegen *loader* discarded it.
+  Item 4's carry (DD-R26/DD-R27) restored it and supplied it to row 16 through a dedicated
+  `written_reference` request field, with no name inferred from a formal and no structural-equality
+  recovery. SR-A02 is **delivered by Item 4**, and `tests/fixtures/shared_producer/` is now its
+  acceptance surface rather than a known-incomplete pin. I9 holds as originally stated.
+
+  Item 2's own scope is unchanged: it did not deliver this, and the referral was correct given what
+  it had measured.
 - **I10 — V11 scope is preserved, not widened.** Only the calculation-binding consumer's lenient
   miss sets `records_v11`. Aggregation entry points stay outside `fallback_entry_points`, exactly as
   today. Widening is Item 3's (PC-3).

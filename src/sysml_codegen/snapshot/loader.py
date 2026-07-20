@@ -1031,6 +1031,11 @@ def _deserialize_binding_info(d: dict) -> BindingInfo:
         source_attribute_elem=None,  # AST not available from snapshot
         literal_value=d.get("literal_value"),
         expression_ast=None,  # AST not available from snapshot
+        # The written reference. Already present in every committed snapshot;
+        # previously discarded here, which is what made row 16 unreachable from
+        # the calculation consumer offline (DD-R27).
+        stored_source_attribute_name=d.get("source_attribute_name"),
+        stored_source_instance_name=d.get("source_instance_name"),
     )
 
 

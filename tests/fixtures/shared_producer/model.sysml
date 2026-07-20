@@ -9,10 +9,12 @@ package SharedProducer {
     // the SAME QN-keyed typed entry point — one modeled default, one group
     // assignment — not two per-consumer mints.
     //
-    // ⚠ HEADER CORRECTED (Gate B / Item 3, 2026-07-19). The paragraph here used to
-    // claim both consumers converge positively on `SharedProducer__the_rig__gain`.
-    // Live behavior: only the CONSTRAINT does. The calc reaches a terminal miss and
-    // mints `SharedProducer__the_rig__scaler__gain`. See decision.md "Surfaced".
+    // CLOSED by Item 4 (DD-R28, DD-A14). Both consumers now converge positively on
+    // `SharedProducer__the_rig__gain` via row 16, the calc side reaching it through
+    // the written-reference carry. The earlier note here — that only the CONSTRAINT
+    // converged and the calc minted `SharedProducer__the_rig__scaler__gain` — was
+    // correct for the Item 2/3 state and no longer describes this model.
+    // See PROVENANCE.md and tests/conformance/test_shared_producer_convergence.py.
     //
     // `gate_a` deliberately has no calculation consumer, so it cannot carry this
     // row; this fixture is the shape SR-A02 needs.

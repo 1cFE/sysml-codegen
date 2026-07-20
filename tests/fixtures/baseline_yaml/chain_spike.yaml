@@ -19,8 +19,8 @@ modules:
   chainspikedesign__spike_design__area_calc:
     module_type: chainspikelibrary.AreaCalcModule
     inputs:
-      length: float design_params.ChainSpikeDesign__spike_design__area_calc__length
-      width: float design_params.ChainSpikeDesign__spike_design__area_calc__width
+      length: float design_params.ChainSpikeDesign__spike_design__length
+      width: float design_params.ChainSpikeDesign__spike_design__width
     outputs:
       root: RootModel[float] ChainSpikeDesign__spike_design__area_calc__area
 
@@ -29,7 +29,7 @@ modules:
     module_type: chainspikelibrary.CostCalcModule
     inputs:
       area: float ChainSpikeDesign__spike_design__area_calc__area.root
-      rate: float design_params.ChainSpikeDesign__spike_design__cost_calc__rate
+      rate: float design_params.ChainSpikeDesign__spike_design__rate
     outputs:
       root: RootModel[float] ChainSpikeDesign__spike_design__cost_calc__total_cost
 

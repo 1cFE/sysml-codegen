@@ -10,7 +10,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "ChainSpikeDesign__spike_design__area_calc__length",
+            "qualified_name": "ChainSpikeDesign__spike_design__length",
             "producer_channel": null
           },
           "description": "",
@@ -22,7 +22,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "ChainSpikeDesign__spike_design__area_calc__width",
+            "qualified_name": "ChainSpikeDesign__spike_design__width",
             "producer_channel": null
           },
           "description": "",
@@ -86,7 +86,7 @@
           "source": {
             "source_type": "entry_point",
             "param_group": "design_params",
-            "qualified_name": "ChainSpikeDesign__spike_design__cost_calc__rate",
+            "qualified_name": "ChainSpikeDesign__spike_design__rate",
             "producer_channel": null
           },
           "description": "",
@@ -200,28 +200,28 @@
       "source_file": "design.sysml",
       "parameters": [
         {
-          "qualified_name": "ChainSpikeDesign__spike_design__area_calc__length",
+          "qualified_name": "ChainSpikeDesign__spike_design__length",
           "simple_name": "length",
-          "entry_type": "usage_literal",
+          "entry_type": "design_attribute",
           "default_value": 10.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "ChainSpikeDesign__spike_design__area_calc__width",
-          "simple_name": "width",
-          "entry_type": "usage_literal",
-          "default_value": 5.0,
+          "qualified_name": "ChainSpikeDesign__spike_design__rate",
+          "simple_name": "rate",
+          "entry_type": "design_attribute",
+          "default_value": 12.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"
         },
         {
-          "qualified_name": "ChainSpikeDesign__spike_design__cost_calc__rate",
-          "simple_name": "rate",
-          "entry_type": "usage_literal",
-          "default_value": 12.0,
+          "qualified_name": "ChainSpikeDesign__spike_design__width",
+          "simple_name": "width",
+          "entry_type": "design_attribute",
+          "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "design_params",
           "python_type": "float"

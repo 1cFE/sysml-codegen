@@ -530,6 +530,21 @@ class DependencyBacktracker:
             return segments[-2]
         return None
 
+    def _owner_instance_path_for_usage(self, usage: CalcUsageData) -> str | None:
+        """The owning occurrence path, as row 16 keys on it (DD-R27).
+
+        The constraint consumer passes the same notion from
+        ``owner_instance_path``. For a ``PartUsage`` owner the two coincide:
+        "SharedProducer__the_rig__scaler" -> "SharedProducer__the_rig".
+
+        An occurrence-indexed ``part_def`` owner carries ``[i]`` brackets on the
+        constraint side, and a calc usage QN never has them, so row 16 misses for
+        that shape rather than hitting a wrong key. That is deliberate partial
+        coverage: convergence is claimed for the unbracketed shape only.
+        """
+        owner_path, separator, _ = usage.qualified_name.rpartition("__")
+        return owner_path if separator else None
+
     def _consumer_scope_dotted(self, usage: CalcUsageData) -> str:
         """Extract consumer scope from usage QN for ScopedKey construction.
 
@@ -565,10 +580,14 @@ class DependencyBacktracker:
         :attr:`TerminalPolicy.LENIENT`, so a terminal miss yields one declared typed
         entry point under the shared QN rule rather than raising.
 
-        Note what this consumer can and cannot ask. Binding extraction resolves a
-        reference to its referent's qualified name and discards the name as written, so
-        the occurrence-materialized key form (row 16) is unreachable from here — see design PC-4
-        and ``tests/fixtures/shared_producer/PROVENANCE.md``.
+        ``reference`` is the referent's *resolved* qualified name, so this consumer
+        supplies the reference as written through row 16's dedicated
+        ``written_reference`` field instead (DD-R27). The written name is on the
+        binding — live from the AST, offline from every committed snapshot. This is
+        what closes SR-A02: the shared attribute reaches the same occurrence-
+        materialized key the constraint consumer reaches, with no name inferred from a
+        formal. It deliberately supplies no ``instance_path``, which keeps rows 12 and
+        13 dead from here.
         """
         assert self._output_registry is not None
         source_path = binding.source_path
@@ -583,6 +602,8 @@ class DependencyBacktracker:
                 parent_scope=self._get_parent_part_for_usage(usage),
                 policy=TerminalPolicy.LENIENT,
                 diagnostic_context=f"{usage.qualified_name}|{param_name}",
+                written_reference=binding.written_reference,
+                occurrence_owner_path=self._owner_instance_path_for_usage(usage),
             ),
             self._producer_context(),
         )

@@ -129,22 +129,30 @@ class TestParallelValidationSolarBattery:
             "Phase 1b Key_E_stripped scoped registration"
         )
 
-    def test_unresolved_bindings_are_visible(self, log_records):
-        """Unresolved bindings emit one visible per-binding line (Item 2 / I7).
+    def test_self_referential_bindings_converge_without_lenient_miss(self, log_records):
+        """solar_battery's self-referential bindings no longer take a lenient miss.
 
-        solar_battery has self-referential SysML QN bindings — a reference pointing at
-        the usage's own part — that the self-reference guard correctly refuses, so they
-        land on entry points. Recorded behavior change: that line was DEBUG and is now
-        WARNING, because a binding that quietly becomes an entry point is exactly the
-        thing a build log needs to show.
+        Recorded behavior change (Item 4, DD-R28). This test previously used
+        solar_battery as the *witness* that a lenient terminal miss emits one
+        visible per-binding WARNING (Item 2 / I7): its self-referential SysML QN
+        bindings — a reference pointing at the usage's own part — fell through the
+        self-reference guard onto per-consumer entry points.
+
+        The written-reference carry closes exactly that: each of those bindings now
+        supplies the reference as written and resolves through row 16 onto the
+        shared design attribute, so solar_battery has no lenient misses left to
+        report. Asserting zero here is what pins the convergence.
+
+        I7's visibility guard is unaffected and still directly covered by
+        `tests/unit/test_output_registry_construction.py::TestResolveBindingViaRegistry
+        ::test_unresolved_binding_is_visible_at_warning`, which drives a genuine
+        terminal miss and asserts the WARNING level.
         """
         unresolved = [r for r in log_records if "Unresolved producer" in r.getMessage()]
-        assert len(unresolved) > 0, (
-            "expected a visible unresolved-producer line for the self-referential "
-            "entry point bindings"
-        )
-        assert all(r.levelno == logging.WARNING for r in unresolved), (
-            "a lenient terminal miss must be visible in a build log (I7)"
+        assert unresolved == [], (
+            "solar_battery's bindings should all resolve after the written-reference "
+            f"carry, but these still took a lenient miss: "
+            f"{[r.getMessage() for r in unresolved]}"
         )
 
 

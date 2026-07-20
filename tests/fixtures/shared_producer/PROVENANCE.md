@@ -1,8 +1,9 @@
 # Provenance
 
-New fixture for CONSTRAINT-LIFECYCLE-REMEDIATION Item 2 (spec SR-A02, SR-R23;
-design I9). It is a **recorded known-incomplete fixture**: it pins a state Item 2
-does not fix, so that the state is visible rather than assumed.
+Fixture for CONSTRAINT-LIFECYCLE-REMEDIATION Item 2 (spec SR-A02, SR-R23; design I9),
+**closed by Item 4** (DD-R26, DD-R27, DD-R28, DD-A14). It was a recorded
+known-incomplete fixture; it is now the acceptance surface for two-consumer
+convergence.
 
 ## What it pins
 
@@ -11,52 +12,64 @@ read by two consumers — a calculation input (`calc scaler : Scaler { in gain =
 and a constraint actual (`assert constraint floor_check : 'Gain Floor' { in gain = gain; }`).
 
 Contract invariant 21 and SR-A02 require them to converge on one QN-keyed typed
-entry point. They do not. The committed state is **two** entry points:
+entry point. **They now do.** The committed state is **one** entry point:
 
 | Consumer | Entry point | How |
 |---|---|---|
-| constraint actual | `SharedProducer__the_rig__gain` | positive, occurrence-materialized design-attribute key form |
-| calculation input | `SharedProducer__the_rig__scaler__gain` | per-consumer lenient terminal-miss mint |
+| constraint actual | `SharedProducer__the_rig__gain` | positive, occurrence-materialized design-attribute key form (row 16) |
+| calculation input | `SharedProducer__the_rig__gain` | the same row 16, reached via the written-reference carry |
 
-## Why Item 2 does not fix it
+One modeled default (40.0), one group assignment.
 
-The two consumers cannot supply the same reference. The shared resolution request
-carries the reference *as written*; the constraint side has it
-(`FeatureReferenceFact.source_name` = `gain`), the calculation side does not.
-Calculation binding extraction resolves the reference to its referent's qualified
-name and discards the written name, and for a self-named binding the referent is the
-calc usage's *own formal* — `SharedProducer::the_rig::scaler::gain`. `raw_expression`
-does not carry it either: live it holds the debug rendering
-`'FeatureReferenceExpression -> SharedProducer::the_rig::scaler::gain'`, and it is
-empty in all 247 bound bindings across every committed snapshot.
+## How Item 4 closed it
 
-So the occurrence-materialized key form is structurally unreachable from the
-calculation consumer, and every other design-attribute key form keys on the target QN
-or a leaf name. **Design invariant I9 — that convergence is a free property of tier-2
-resolution — is falsified for the self-named shape.** SR-A02 is not deliverable by
-Item 2's means.
+Item 2 recorded that the two consumers could not supply the same reference: the
+constraint side had it (`FeatureReferenceFact.source_name` = `gain`) and the
+calculation side was believed to have discarded the written name, making the
+occurrence-materialized key form "structurally unreachable" from it.
 
-A name-inference workaround was measured and rejected (orchestrator ruling, agent-grade,
-2026-07-19). Recovering the written reference from the structural equality
-`referent_qn == {usage_qn}::{param_name}` is exact, but it newly resolves 22 self-named
-bindings across six existing fixtures (`fusion_tea`, `solar_battery_model`,
-`catf_mfe_model`, `chain_spike_model`, `return_styles`, `expression_binding_probe`).
-Those 22 are all **single-consumer**, so the convergence property SR-A02 names never
-arises in them — the change would be an identity rename across six fixtures' generated
-surfaces that fixes no wrong value (each per-consumer entry point already carries the
-correct modeled default), and it would shrink `fallback_entry_points` membership ahead
-of Item 3's vacuity proof, whose experiments build on today's V11 shapes.
+**That premise was false, and Item 4's spec surfaced it.** The written name was
+already on disk: `snapshot/serializer.py` writes `source_attribute_name` into every
+serialized `BindingInfo`, and this fixture's snapshot has carried
+`"source_attribute_name": "gain"` all along. The *loader* discarded it. The carry is
+therefore loader plumbing plus call-site plumbing — no new extraction field, no
+schema bump — and it works on unmodified v3 snapshots.
 
-## What completes it
+The calculation consumer now supplies `written_reference` and
+`occurrence_owner_path` as row 16's two dedicated request inputs
+(`resolution/producer_resolution.py`), so it reaches the same key the constraint
+consumer reaches. No name is inferred from a formal.
 
-The written-reference carry: extraction preserves the reference as written and the
-snapshot format carries it. That is a coordinated `agentic-mbse` + codegen change,
-folded into **Item 4**, which already owns a versioned schema change with two-direction
-skew handling — the machinery this needs. SR-A02 then completes on real data with no
-name inference.
+**The written reference is the reference as written, including a chain qualifier.**
+Carrying only the leaf name was measured to re-anchor a chained reference at the
+wrong owner and select a same-named attribute elsewhere — `catf_mfe_model`'s
+`in cryo_pump_count = cryo_pumps.n_pumps` selected the outer `n_pumps` (48.0) instead
+of `cryo_pumps.n_pumps` (32.0). `BindingInfo.written_reference` composes
+`{source_instance_name}.{source_attribute_name}` for chains.
 
-## Do not
+## Corrections to this file
 
-Do not "fix" this fixture by adding a passthrough, by renaming the calc entry point, or
-by inferring the written reference from the formal name. The two-entry-point state is
-the point; a test asserts it.
+Two claims in the previous version were false and are recorded here rather than
+silently dropped:
+
+1. *"the occurrence-materialized key form is structurally unreachable from the
+   calculation consumer."* False — the written name was in every committed snapshot;
+   only the loader dropped it.
+2. *"The two-entry-point state is the point; a test asserts it."* **No such test
+   existed.** At the Item 4 predecessor this fixture appeared in `tests/` only as a
+   registered session snapshot (`tests/conformance/conftest.py`). Item 4 therefore
+   built the acceptance surface rather than flipping an existing one: it authored the
+   test against the two-key state first, confirmed it green, then flipped it to the
+   convergence assertion (design Gate 4).
+
+The name-inference workaround Item 2 measured and rejected — recovering the written
+reference from the structural equality `referent_qn == {usage_qn}::{param_name}` —
+**stays rejected**. Item 4 did not use it; it used the reference the model actually
+carries.
+
+## The acceptance surface
+
+`tests/conformance/test_shared_producer_convergence.py`, both public routes (live
+extraction and the committed snapshot). It asserts one entry point,
+`SharedProducer__the_rig__gain`, one modeled default of 40.0, and one group
+assignment.
