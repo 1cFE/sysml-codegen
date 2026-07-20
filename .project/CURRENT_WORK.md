@@ -6,20 +6,22 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — Phases 1–2 landed, Phase 3 gated, stop for audit
+### CONSTRAINT-LIFECYCLE Item 8 — Canonical Embedded Catalog and Store Transition — Phases 1–3 landed, ready for audit
 
-Design review Approve-with-revisions (F1–F6) applied to design.md. **Phase 1 (codegen)**: five
-projected entry fields + admitted-usage tier + `definition_qualified_name` FK (gated on
+Design review Approve-with-revisions (F1–F6) applied to design.md. **Phase 1 (codegen `19b74ac`)**:
+five projected entry fields + admitted-usage tier + `definition_qualified_name` FK (gated on
 definition_typed) + `CATALOG_SCHEMA_VERSION=2.0.0` in the fingerprinted contract payload; RED-first;
-`SNAPSHOT_MANIFEST_SHA256` re-pinned (the one moved pin, F6); **3080 passed**. **Phase 2 (teax)**:
-`load_model_contract` seam + vendored `ACCEPTED_CATALOG_SCHEMA_VERSIONS` + both-direction skew RED;
-real `semantic_fingerprint` replaces the byte-hash stand-in; `CatalogView`/`_Catalog` reconstruction
-and the hand-authored `constraint_catalog.json` gone (sealed_package regenerated from wi014_toy
-snapshot); **286 passed**. **Phase 3 (fusion-tea)**: study rewired to the embedded catalog +
-zero-entries guard, but the materializer is RETAINED — the IFE package must be regenerated to the
-new schema (live-license, no snapshot) and the study proven green FIRST per the phase-3 gate. See
-`.project/active/constraint-lifecycle-catalog-store/evidence.md`. Stellarator demo repo untouched.
-Next: audit, then the gated Phase-3 regen follow-up.
+`SNAPSHOT_MANIFEST_SHA256` re-pinned (the one moved pin, F6); **3080 passed**. **Phase 2 (teax
+`a5594e1`)**: `load_model_contract` seam + vendored `ACCEPTED_CATALOG_SCHEMA_VERSIONS` + both-direction
+skew RED; real `semantic_fingerprint` replaces the byte-hash stand-in; `CatalogView`/`_Catalog`
+reconstruction and the hand-authored `constraint_catalog.json` gone (sealed_package regenerated from
+wi014_toy snapshot); **286 passed**. **Phase 3 (fusion-tea `667136fa`, branch
+`item8-fusion-embedded-catalog`)**: IFE package regenerated live (schema 2.0.0); catalog seam proven
+green via `study/prove_catalog_seam.py` (1 eligible entry, def→usage join `fusion_cycle::'Viability
+Threshold'`, verdict satisfied); THEN `materialize_constraint_catalog.py` deleted. The full-sweep
+`MultiChannelEvaluator` is stale vs the regen's evolved 3-channel decomposition — an Item-9 concern,
+surfaced not forced. See `.project/active/constraint-lifecycle-catalog-store/evidence.md`. Stellarator
+demo repo untouched. Next: audit.
 
 Epic `epic_constraint_execution_lifecycle_remediation.md` register row 10; operationalizes owner
 decision D-3 (settled: codegen's embedded catalog is the sole schema authority). Spec + design at

@@ -1,6 +1,6 @@
 # Evidence: Canonical Embedded Catalog and Store Transition (Lifecycle Item 8)
 
-**Status:** Phases 1–2 complete and verified; Phase 3 code-rewired, green-gate + deletion pending IFE package regen (see below).
+**Status:** Phases 1–3 complete and verified. Catalog seam proven green on the regenerated IFE package; materializer deleted. Full multi-channel sweep deferred to Item 9 (out-of-scope divergence, surfaced).
 **Date:** 2026-07-20
 **Owner:** Reid W
 **Branch:** constraint-exec-epic
@@ -21,9 +21,9 @@ Design revisions F1–F6 + Minors applied to `design.md` before implementation (
 - [x] Alternate schema (`CatalogView`/`_Catalog` reconstruction), standalone `constraint_catalog.json`,
       and byte-hash stand-in removed from TEAx.
 - [x] Store no-silent-rebind preserved (eight-field `_check_compatibility`, unchanged).
-- [ ] **Fusion-tea materializer deleted** — code rewired + green-gate guard added; deletion
-      withheld until the IFE package is regenerated to the new schema and the study proves green
-      (design phase-3 gate: prove green FIRST). See Phase 3.
+- [x] **Fusion-tea materializer deleted** — IFE package regenerated to the new schema (live
+      license), catalog seam proven green (≥1 eligible entry), then `materialize_constraint_catalog.py`
+      and the standalone artifact removed. See Phase 3.
 
 ## Phase 1 — codegen additive (COMPLETE, verified)
 
@@ -79,26 +79,51 @@ RED-first surface:
 Battery: `python -m pytest simkit/tests` (agentic-mbse venv, `PYTHONPATH` = teax-simkit) →
 **286 passed** (281 baseline + 5 new). `test_f1_arithmetic_fixture.py` embedded-shape guard preserved.
 
-## Phase 3 — fusion-tea (CODE REWIRED; green-gate + deletion PENDING)
+## Phase 3 — fusion-tea (COMPLETE, gate sequence honored)
 
-Repo: `/home/reid/1cfe/fusion-tea/exploration/ife_e2e/study/`. Stellarator demo repo untouched.
+Repo: `/home/reid/1cfe/fusion-tea/exploration/ife_e2e/`. Stellarator demo repo untouched.
 
-Done:
-- `run_viability_study.py`: `StudyQuery(store, PACKAGE_DIR)` (embedded catalog, not the standalone
-  file); zero-entries-is-regression guard added (B4 thin margin — one eligible entry).
+Gate sequence (design phase-3: regenerate → prove green → THEN delete):
 
-**Blocked / withheld (surfaced honestly):**
-- The committed IFE package (`exploration/ife_e2e/generated/contracts/model_contract.json`) is
-  pre-Item-8 (embedded catalog but no `usage_records`, no `catalog_schema_version`). `load_model_contract`
-  correctly **fails closed** on it. Making the study run green requires regenerating the IFE package
-  with the new codegen — a **live-license** extraction over `exploration/ife_e2e/models/` (no snapshot
-  present) plus a full study run to prove the green gate.
-- Per the design's phase-3 discipline (prove green FIRST, then delete), `materialize_constraint_catalog.py`
-  and the materialized artifact are **retained** — deleting them before the green gate is proven would
-  violate the ordering and leave no fallback if regen surfaces an issue.
-- **Recommendation:** a follow-up pass (with license + budget for the study run) regenerates the IFE
-  package, proves the study green on the embedded catalog with the zero-entries guard, then deletes the
-  materializer + artifact. This is scoped, mechanical, and gated.
+1. **IFE package regenerated (live license).** `sysml-codegen generate --models
+   exploration/ife_e2e/models --output exploration/ife_e2e/generated --package-name ife_tea` (the
+   grounded incantation; 8 modules, sealed). The new `contracts/model_contract.json` carries
+   `catalog_schema_version: 2.0.0`, one `usage_records` row, one `concrete_entries` row. The viability
+   `constraint_id` is `hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b` — identical to the study's
+   `CONSTRAINT_ID` (no test change needed). Handwritten impls are auto-implemented (filled); the
+   package's 6 runnable tests pass. `SPEC_PATH` updated to `pipelines/pipeline.yaml` (the generated
+   spec name).
+
+2. **Catalog seam proven green.** `study/prove_catalog_seam.py` — a representative run (one real
+   evaluation through `StudyRunner`/store, then `StudyQuery(store, PACKAGE_DIR)` reading the embedded
+   catalog). Result:
+   ```
+   schema_version : 2.0.0
+   eligible entries carrying a verdict: 1   (zero-entries guard: satisfied, B4)
+   constraint_id  : hif_plant_pkg__hif_plant__viability__81ddf10fb1d1749b
+   source_form    : definition_typed
+   definition_qn  : fusion_cycle::'Viability Threshold'   (Item-8 def->usage join, from the entry)
+   verdict        : satisfied
+   ```
+   **Scope, labelled honestly:** this proves exactly Item 8's deliverable — the embedded-catalog seam
+   (`load_model_contract` + embedded `StudyQuery`) and the def→usage FK join, on the real regenerated
+   package. The full 2,301-point (eta, gain) acceptance sweep is **Item 13's** bar, not this phase's.
+
+3. **Materializer deleted.** `git rm study/materialize_constraint_catalog.py`. No code imported it;
+   the standalone `constraint_catalog.json` is absent by construction after regen (codegen emits only
+   `model_contract.json`). `run_viability_study.py` rewired to `StudyQuery(store, PACKAGE_DIR)` +
+   zero-entries guard.
+
+**Out-of-scope divergence, surfaced (not forced):** the regen's entry-channel decomposition evolved
+(4 groups → 3; the old single-param `hif_driver_params` group is gone). `run_viability_study.py`'s
+full-sweep `MultiChannelEvaluator` hardcodes the older four channels, so the full sweep does not run
+as-is. That bridge is **Item 9's** target (multi-channel `CandidateBridge` for zero/one/many channels;
+the study's own docstring flags it as the Item-0/Item-12 single-channel gap), independent of Item 8's
+catalog seam. `prove_catalog_seam.py` fills the regen's actual three channels directly to prove the
+Item-8 gate without that stale wiring. Not an Item-8 defect; recorded for Item 9.
+
+**Candidates unchanged (verified):** codegen `19b74ac`, teax `a5594e1` — the IFE regen required no
+codegen fix.
 
 ## Scope surprise (capture-fidelity law 4)
 
@@ -111,6 +136,7 @@ remaining gated step.
 
 ## Candidate revisions
 
-- sysml-codegen: `CANDIDATE_REV_CODEGEN` (Phase 1)
-- teax: `CANDIDATE_REV_TEAX` (Phase 2)
-- fusion-tea: `CANDIDATE_REV_FUSION` (Phase 3 code rewire; materializer retained pending regen)
+- sysml-codegen: `CANDIDATE_REV_CODEGEN = 19b74ac` (Phase 1) — unchanged since
+- teax: `CANDIDATE_REV_TEAX = a5594e1` (Phase 2) — unchanged since
+- fusion-tea: `CANDIDATE_REV_FUSION = 667136fa` (Phase 3: IFE regen + catalog-seam proof + materializer
+  deletion; branch `item8-fusion-embedded-catalog`)
