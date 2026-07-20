@@ -415,18 +415,263 @@ in itself, but this is the function the new branch sits in front of, so the quot
 
 ---
 
+## Round-1 verdict (superseded)
+
+**Needs-rework**, scoped to the ladder-unification half; Gate A approved in mechanism. C1, C2, C3,
+C5 were the must-fix set; M1–M7 were specification gaps in decisions already made. See the Round-2
+record below for dispositions.
+
+---
+
+# Round 2 — Verification of the Revision
+
+**Design under review:** `design.md` rev 2 (Draft rev 2, revised 2026-07-19)
+**Scope:** narrow. The seven items named by the author, verified against code. I did not re-review
+anything already settled in round 1.
+**Method:** every disposition below was checked at the cited code, first-hand. Where I could not get
+a type-level guarantee I say so and name what the evidence actually is.
+
+## Item-by-item
+
+### 1. Deletion narrowing — **Accepted except deletion row 5, which is blocking**
+
+> **Correction to this review.** I first recorded item 1 as fully accepted and issued an
+> Approve-with-notes verdict. A verification pass that completed after that write-up surfaced the
+> finding below; I confirmed it first-hand and am amending. The verdict is now
+> Approve-with-revisions. The premature verdict was my error, not a change in the design.
+
+**B1 — D7's case-sensitivity change is a coverage removal, not a leniency removal.** This is the one
+genuinely blocking item.
+
+Deletion row 5 kills `ChainRedefinitionFollow`'s case-insensitivity along with its first-`break`,
+on the reasoning that "only the case-insensitivity and the first-`break` are indefensible"
+(`design.md:275-276`). The first-`break` is indefensible. The `.lower()` is not — it is the
+**PartDef→PartUsage naming bridge**.
+
+`input_resolver.py:176-177` compares `sanitize_name(redef_part_name).lower()` against
+`part_usage.lower()`. Part defs are PascalCase and part usages are snake_case (ADR-002), so the two
+sides are *systematically* different in case and the fold is what makes them meet. `sanitize_name`
+does not lowercase — if it did, the explicit `.lower()` on both sides would be dead code.
+
+A currently-passing test pins exactly this, `tests/unit/test_graph_builder_aggregation.py:125-143`:
+
+```python
+redefs = [_make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")]
+result = _resolve_channel("pv_module.capital_cost", "Design__plant__solar_array", redefs, registry)
+assert result == expected_channel
+```
+
+Last segment `PV_Module` versus reference part `pv_module`. Case-sensitive, Strategy C never fires
+and the assertion fails. The same break lands on
+`test_graph_builder_aggregation.py:192-210` and `tests/conformance/test_input_resolver.py:391-411`,
+and `test_input_resolver.py:717-747`'s cycle-detection test degrades to passing vacuously because no
+match is ever found. The live `solar_battery_model` fixture carries the same shape
+(`owning_part_qn: "SolarBatteryLibrary__PV_Module"` against usage `pv_module`).
+
+This is the same class of error round 1 caught twice: a name-based mechanism read as sloppiness when
+it is in fact carrying real coverage. It is also *undeclared* — the design explicitly declares the
+`test_silent_failure_family3` break and migrates it, but says nothing about these, which is what
+makes this blocking rather than a note.
+
+**Fix.** Keep the case fold; delete only the first-`break`, re-typed to collect and refuse on
+multiple. That is the same treatment rows 18/19/20 already get and it is consistent with
+Recommendation 1(b): the fold is name-based *identification*, which SR-R12 permits; the `break` is
+the guess, which it forbids. If the fold is instead judged unsafe, that is a separate coverage
+decision needing its own enumeration — not something to carry inside a deletion row.
+
+---
+
+**The rest of item 1 — Accepted**
+
+The narrowed set is the right cut. SR-R12 forbids *guessing among candidates*, not name-based
+candidate identification, and the four surviving deletions are exactly the guess set:
+`dependency_backtracker.py:846-856` (same-file tiebreak + `candidates[0]`), `:790-793` first-hit,
+`graph_builder.py:1257-1267` warn-and-return-first, `input_resolver.py:171-179` case-insensitive
+first-`break`. Rows 18/19/20 give the C1 tests somewhere real to land. The retained-with-reason list
+is properly recorded as SR-R41 deviations rather than silently kept.
+
+**The declared test break is handled honestly.** `test_silent_failure_family3.py:73-86` asserts
+`value == 100.0  # first-wins preserved` and will return `None` under deletion row 4. The design says
+so and migrates the assertion to refusal rather than quietly dropping the test. That is the correct
+treatment.
+
+Two notes, neither blocking:
+
+- **n1 — row 4's refusal flips compilability, which the design does not spell out.**
+  `graph_builder.py:1320` is `manual_required = literal_default is None`, and `:1390`/`:1422` turn
+  that into `Compilability.MANUAL_REQUIRED`. So a leaf collision that today yields `100.0` will
+  yield `None` and re-label the module. It is enumerable and Phase 5's byte-identity gate catches it,
+  but it should appear in the forced-difference list up front, not be discovered at the gate.
+- **n2 — row 18's re-typing has no test pin.** No test exercises the dotted exact `(name,
+  parent_part)` arm with multiple matches; the item7 tests all use `parent_part=""` (routing to row
+  19) or `::` paths. Since `parent_part` is a bare part name, not a QN, two attributes named `gain`
+  under a part named `the_host` in different packages collide, and today's first-hit silently picks
+  one. The change is real and its only detector is byte identity. Add a unit pin for row 18's
+  refusal in Phase 1.
+
+### 2. D1 — **Accepted, with one correction to the stated argument**
+
+`core/__init__.py:10` does declare `resolution → extraction, analysis, core`, and
+`resolution/` is genuinely the lowest layer that may legally see all six types. The deferred-import
+precedent is real: `constraint_lowering.py:1396` already does
+`from sysml_codegen.resolution.graph_builder import _validate_channel_references,
+collect_uncovered_params`. So the placement is legal and the precedent is accurate.
+
+**But the cycle argument is not yet fully honest.** `core/__init__.py:15` names "analysis importing
+from resolution" as precisely the layer violation the `core/` package exists to prevent. The
+constraint consumer's use of the new module *is* that violation, deferred. More pointedly, rev 1
+rejected `resolution/` on the grounds that "analysis↔resolution is already a managed cycle; a third
+participant makes it worse" — and rev 2 reverses that judgement without addressing its own prior
+reasoning. The reversal is correct (rev 1's `core/` choice was strictly worse), but D1 should say
+plainly that it adds a second deferred edge to a pre-existing cycle, rather than presenting
+`resolution/` as clean. One sentence.
+
+### 3. Table recount — **Spot-checks confirm**
+
+I checked the load-bearing pieces rather than recounting all ~24:
+
+- **"All eleven constraint lookups are exact" — CONFIRMED**, and this is the linchpin for item 7.
+  `resolve_actual` (`constraint_lowering.py:143-300`) uses only `registry.scoped_lookup`,
+  `alias_lookup`, and `scoped_alias_lookup` — all bare dict lookups — plus three
+  `in design_attr_by_qn` membership tests. No name-based scan anywhere in the function.
+- **The scoped-alias double-fire is real.** At `:219-224`, `key_prefix = deindexed_prefix if
+  scope_candidate == deindexed_scope else prefix`. When `occ_scope == deindexed_scope` the
+  discriminator is true on both iterations and the identical lookup fires twice. Appendix A's m2 note
+  is accurate and D2 correctly carries it as positional discrimination.
+- **Appendix A is now derived from code rather than asserted.** The rev-1 defect was a claim
+  ("subsumed by key forms 1 and 3") standing in for a derivation. Rev 2 gives the calls with line
+  numbers and records the consequence it found along the way — that `Pkg::PartA::x` and
+  `Pkg::PartB::x` construct identical keys because the reference's own owner is never consulted.
+  That is the kind of fact a faithful inventory produces and an asserted one does not.
+
+### 4. D9's QN rule — **Verified against all three sites; one residual**
+
+The rule is `f"{consumer_eqn}__{param_name}"`, `param_name` = the consumer's formal where it has
+one, else `ref.replace(".", "_")`.
+
+- **Site 1 exact.** `dependency_backtracker.py:626-631` calls
+  `terminal_disposition(usage_qualified_name=usage.qualified_name, param_name=param_name, ...)`,
+  which returns `f"{usage_qualified_name}__{param_name}"` (`:76`). Calc bindings have formals.
+  Reproduced.
+- **Site 2 exact.** `input_resolver.py:281-283` is `param_name = ref.replace(".", "_")`;
+  `ep_qn = f"{ctx.module_eqn}__{param_name}"`. Aggregation terms have no formal, so the rule's
+  else-branch is literally today's code. Reproduced.
+- **Site 3 rests on `LocalTerm.attribute_name` being dotless — true, but by construction and
+  observation, not by type.** `graph_builder.py:1525` is
+  `f"{agg.module_eqn}__{l_term.attribute_name}"`, which matches the rule only if
+  `attribute_name.replace(".", "_") == attribute_name`. The structural argument is good:
+  `hierarchy_resolver.py:274-281` splits `FeatureChainNode` (dotted, carries `source_path`,
+  becomes a `SingletonTerm`) from `FeatureReferenceNode` (carries `attribute_name`, becomes a
+  `LocalTerm`) — chain versus plain is exactly the distinction. Empirically every `attribute_name`
+  across all fixtures is dotless (`d38_caret`, `solar_battery_model` are the only non-empty
+  `local_terms`). But the field is a bare `str` with no invariant enforcing it.
+
+  **This is fine as designed** — B4 names it the largest byte-identity risk and Phase 1 pins the rule
+  against all three formulas *before* any cutover, which is exactly the right control and the right
+  place. Worth adding the dotless assumption to the pin explicitly so a future chain-shaped
+  `attribute_name` fails the unit test rather than the baseline gate.
+
+### 5. D8 — **Sound**
+
+The downgrade is honest and correct. `group_deriver` genuinely is absent at two of three mint sites,
+and pulling `ParameterGroupDeriver` into the context would drag `analysis` into a type `analysis`
+must import — the same defect that killed rev 1's `core/` placement. Splitting QN-and-default
+(resolver) from `EntryPoint` construction (consumer) puts each where its data already is. Calling
+"one mint point" what it actually is — one QN and default authority — is the right correction.
+
+The order-dependence deletion still holds under the weaker claim: D9 makes lenient QNs
+consumer-prefixed, so within a consumer the same identity always yields the same default, and I5 is
+satisfied without the backfill.
+
+- **n3 — cross-consumer QN collision is unspecified.** PC-2 observed that today's backfill can shadow
+  an entry point created by the *calculation* path, which means calc and aggregation QNs do collide
+  in practice. Under D8 each consumer computes its own default for a colliding QN, and the design
+  does not say who wins. I5's "a function of its identity and the reference that mints it" is
+  ambiguous when two references mint one identity. Phase 5's stop condition catches it empirically;
+  a sentence in I5 would catch it by construction.
+
+### 6. PC-3 / I10 — **Confirmed exactly as claimed**
+
+The one-writer claim is true. `_fallback_entry_points.add` appears exactly once in the tree, at
+`dependency_backtracker.py:635`, on the calculation Step-4 fall-through. Every other reference is
+init (`:226`), reset (`:261`), read-out (`:354`), a copy into the graph (`graph_builder.py:440`), a
+copy onto the extended graph (`constraint_lowering.py:1538`), or a read by the two collectors
+(`:829`, `:869`). Nothing in `graph_builder.py` or `input_resolver.py` ever writes it. Aggregation
+entry points are invisible to V11 today.
+
+The `records_v11` mechanism reproduces that scope exactly: today's add is unconditional on the calc
+lenient path, so `records_v11 = True` for every calculation lenient miss and False elsewhere is
+byte-equivalent. Phase 4's stop condition ("any change in `fallback_entry_points` membership") is the
+right guard, and routing the widening question to Item 3 under SR-R07 is the correct disposition —
+this is a coverage-scope decision, and Item 2 deciding it silently by refactor is exactly what the
+epic's item boundaries exist to prevent.
+
+**This was a good catch.** It is the kind of finding that only surfaces from rebuilding an inventory
+rather than trusting one, and it would have turned green fixtures red at Phase 5 with no obvious
+cause.
+
+### 7. D11 as a second policy axis — **Acceptable as a recorded design refinement; no spec amendment
+required before implementation, but one should be queued**
+
+The byte-preserving claim is verified: all eleven `resolve_actual` lookups are exact (item 3), so
+declaring name-based forms lenient-only forbids nothing the constraint consumer does today. The
+restriction is declared as data on one table, not as three code paths, so it does not reintroduce the
+consumer-specific ladders contract invariant 20 bans.
+
+It does refine SR-R14's "terminal miss is the only place strict and lenient differ." My read: this is
+a **refinement of an `[INHERITED]` requirement's text, with zero behavioral effect today**, and the
+design surfaced it rather than letting it pass as an implementation detail — which is the correct
+handling under the surfacing duty. That is enough to proceed.
+
+Queue the amendment alongside the SR-R16 basis correction the design already flags, so SR-R14 ends up
+reading "strict and lenient differ at terminal miss and in declared key-form admissibility." Two
+requirement-text corrections in one spec pass, both discovered by design, both recorded — that is the
+pipeline working as intended, not debt.
+
+## What changed my verdict
+
+Round 1's blocking findings were all empirical claims that failed against code. Every one is now
+either withdrawn (the exact-twin argument), re-derived (D1, the table, D9), or downgraded honestly
+(D8). The revision does not argue with the findings; it re-verified them independently and acted.
+The one place it pushed back — C1's last point about `_is_calc_def_owned` at map construction — it
+pushed back correctly, and D12 is better than what I suggested.
+
+Nothing remaining is blocking. n1–n3 and the item-1/2/4 notes are all "state this explicitly" or
+"add a pin," addressable during implementation without another review round.
+
+---
+
 ## Resolutions
 
 *(To be filled during Stage 4, when the owner engages with this review.)*
 
 ---
 
-**Overall:** **Needs-rework** — scoped to the ladder-unification half. The Gate A half (PC-1, D9,
-Phases 0 and 2) is approved in mechanism, with M5–M7 as must-fixes to its plan.
+**Overall:** **Approve-with-revisions.** One blocking item.
 
-C1, C2, C3, C5 are the must-fix set returning to the author under max-two-round discipline. M1–M7
-should be addressed in the same pass: they are specification gaps in decisions already made, not new
-decisions, so they cost a revision round rather than a rethink.
+**Blocking — B1 (deletion row 5).** D7's case-sensitivity change removes the PartDef→PartUsage
+naming bridge, not a leniency. Three currently-passing tests fail and a fourth degrades to vacuous;
+the live `solar_battery_model` shape is affected; and unlike the other declared break, this one is
+undeclared. Keep the case fold, delete only the first-`break` (collect and refuse on multiple). This
+is a one-line correction to D7 plus a deletion-inventory row, not a re-derivation — it does not
+reopen the round-2 approval of items 2–7.
 
-**Next Steps:** Record resolutions above, then re-run `/_my_design` (or return to the design-agent
-session) and point it at this review to incorporate. The reviewer does not edit the design.
+Two smaller corrections to fold in with it: Appendix A cites `graph_builder.py:1257-1267` where the
+arm is `:1258-1268`, and D6 (`:272`) says the climb skips the iterations duplicating "rows 1 and 2"
+where the table note and Appendix A correctly say rows 1 and 3.
+
+**Non-blocking — fold into implementation without a further review round:**
+
+1. **n1** — add row 4's compilability flip to the forced-difference enumeration up front (Phase 5).
+2. **n2** — add a Phase 1 unit pin for row 18's refusal-on-multiple; it has no coverage today.
+3. **Item 4** — make the dotless-`attribute_name` assumption explicit in Phase 1's D9 pin, so a
+   chain-shaped `LocalTerm` fails a unit test rather than the baseline gate.
+4. **n3** — one sentence in I5 on which consumer's default wins if two mint the same QN.
+5. **Item 2** — one sentence in D1 acknowledging that it adds a second deferred edge to the
+   pre-existing analysis↔resolution cycle, reversing rev 1's own stated reason for rejecting
+   `resolution/`.
+6. **Item 7** — queue the SR-R14 amendment with the SR-R16 one for the next spec pass.
+
+**Next Steps:** Record any owner resolutions above, then proceed to `/_my_implement` against the
+phased plan in `design.md`. The de-risk order in the handoff is right: PC-1 via Phase 0's stop
+condition, then D9's QN rule via Phase 1's pins, before any consumer is cut over.
