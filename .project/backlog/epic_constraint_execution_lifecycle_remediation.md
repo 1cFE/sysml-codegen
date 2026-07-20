@@ -222,7 +222,7 @@ hand-authored contract fixture for a required public-path coordinate.
 | 3 — Occurrence/demand | Not started | Items 1 and 2. |
 | 3B — Gate B | Not started; old differential framing under question | Item 3, with vacuity proof first. |
 | 4 — Snapshot portability/shape | Certified for its bounded manifest | Item 5 owns only the newly discovered full-tree delta. |
-| 5 — Diagnostics/defaults | Not started | Item 4. |
+| 5 — Diagnostics/defaults | Complete (Item 4, `16dbaa7`/`4c18d61`) | Item 4. |
 | 6 — Seal/verify symlink symmetry | Certified | Item 7 owns new trusted-bootstrap/provenance work. |
 | 7 — Dependency/tail | Not started | Item 6 owns docs/F1; existing unrelated backlog rows remain separate. |
 | 8 — Release readiness | Not started and too narrow | Item 13 replaces it with the composed 41-case proof. |
@@ -445,17 +445,29 @@ without letting warning rendering hide a later halt.
 - General constant folding, unit conversion, or a new diagnostics framework beyond the required
   versioned contract.
 
+**Status**: Complete — candidate `16dbaa7` (codegen) / `4c18d61` (agentic-mbse), 2026-07-20.
+Awaiting independent audit. **Moves the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`; merge
+order load-bearing (PR #11 before PR #9).
+
 **Success Criteria**:
-- [ ] Severity/code round-trip and both consumer sinks pass with fail-closed skew.
-- [ ] Warning preparation cannot replace the actionable `BLOCK` diagnostic.
-- [ ] Signed/unit defaults survive; unsupported default IR fails or remains explicitly unresolved.
-- [ ] Diagnostic/default parsing is consolidated without a second representation or compatibility shim.
+- [x] Severity/code round-trip and both consumer sinks pass with fail-closed skew.
+- [x] Warning preparation cannot replace the actionable `BLOCK` diagnostic.
+- [x] Signed/unit defaults survive; unsupported default IR fails or remains explicitly unresolved.
+- [x] Diagnostic/default parsing is consolidated without a second representation or compatibility shim.
+- [x] SR-A02 convergence completes on real data with no name inference — for the unbracketed
+      (`PartUsage`-owned) shape, which is the shape SR-A02 names. **Not claimed** for an
+      occurrence-indexed `part_def` owner: row 16 deliberately misses there (evidence PC-6).
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-diagnostics-defaults/spec.md`
-- `.project/active/constraint-lifecycle-diagnostics-defaults/design.md`
-- `.project/active/constraint-lifecycle-diagnostics-defaults/plan.md`
+- `.project/active/constraint-lifecycle-diagnostics-defaults/design.md` (holds the phased plan; no
+  separate `plan.md`)
+- `.project/active/constraint-lifecycle-diagnostics-defaults/design-review.md`
 - `.project/active/constraint-lifecycle-diagnostics-defaults/evidence.md`
+
+**Carried forward, unowned** (evidence "Open items"): bracketed-owner convergence; the
+stale-baseline class (`plant_values`, `constraint_inline`, `dropped_constraints` capture drift,
+joining the recorded `deep_cross_scope` case); the tier-1 mirror of DD-R32.
 
 ---
 

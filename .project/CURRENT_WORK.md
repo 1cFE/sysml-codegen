@@ -1,32 +1,52 @@
 # Current Work
 
-**Last Updated**: 2026-07-19
+**Last Updated**: 2026-07-20
 
 ---
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — SPEC DRAFTED
+### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — CANDIDATE COMPLETE, awaiting audit
 
-Epic register row 4. Spec at `.project/active/constraint-lifecycle-diagnostics-defaults/spec.md`,
-awaiting independent `/_my_spec_review`. Covers extraction diagnostic severity/stable codes across
-both repos, two-direction schema skew, R-8 warning totality before BLOCK, R-9 signed/unit modeled
-defaults, default-parsing consolidation, and the written-reference carry absorbed from Item 2.
+Epic register row 4. Artifacts at `.project/active/constraint-lifecycle-diagnostics-defaults/`
+(`spec.md`, `design.md` — which holds the phased plan, no separate `plan.md` — `design-review.md`,
+`evidence.md`, `briefs/`).
 
-**Surfaced premise conflict — read before designing.** Item 2's PC-4 premise is false. The written
-reference is already serialized in all 168 reference bindings across all 34 committed v3 snapshots
-(`source_attribute_name`, written by `snapshot/serializer.py:250-251`, discarded by
-`snapshot/loader.py:1022-1035`). The carry needs no snapshot format bump of its own and no
-agentic-mbse change. Separately, `tests/fixtures/shared_producer/PROVENANCE.md` claims "a test
-asserts" the two-entry-point state; no such test exists at HEAD. Both artifacts are corrected under
-spec DD-R31.
+**CANDIDATE_REVs:** `16dbaa720c20b9c6f4e9da76e324d6c075ef8378` (sysml-codegen) and
+`4c18d616f77e26932a8e158cefc2637db47f9b07` (agentic-mbse), both on `constraint-exec-epic`.
 
-Three inherited residuals verified at HEAD: the tier-2 malformed-literal silence reproduces
-(`resolution/supplied_values.py:278-287`, `:540-543`) and is owned here; PC-2's SR-R16 basis
-amendment is still unapplied and is owned here; `param_group=None` on LocalTerm mints does **not**
-reproduce in production and is closed, not deferred to Item 10.
+**This item MOVES the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`. Merge order is
+load-bearing: **agentic-mbse PR #11 before sysml-codegen PR #9**. Merging #9 first leaves main
+pinning `constraint-facts/v2` against a v1 upstream and the `_upstream_pins` guard test fails on
+main.
 
-This item moves the Item 0 agentic-mbse pin from `515e08bb`.
+**Delivered.** Diagnostic severity as a versioned field (`constraint-facts/v2`, snapshot envelope
+v4, 35-snapshot licensed re-capture) with both skew directions failing closed on both routes and two
+load-bearing sinks. R-8 warning totality with zero Item-1 pinned bytes moved. The tier-2
+malformed-literal silence closed as a new log record. Signed and unit-annotated modeled defaults
+surviving to the generated JSON, with unsupported IR explicitly unresolved and diagnosed rather than
+silently omitted. The written-reference carry closing SR-A02 on real data.
+
+**Gates:** codegen 3040 passed / 0 failed, zero licence skips; agentic-mbse 1811 passed; `-O`
+identical except two pre-existing assert-stripped tests; mypy zero added in both repos; ruff clean.
+
+**Three things the audit should look at hardest** (evidence PC-1/PC-3, DD-A03):
+
+1. **PC-1 — a design bet was amended mid-implementation.** B2 said the written reference equals
+   `source_attribute_name`; that is false for CHAIN bindings, where the leaf alone re-anchors at the
+   wrong owner. `catf_mfe`'s `cryo_pumps.n_pumps` selected the outer `n_pumps` (48.0) instead of
+   32.0. Gate 2 caught it; the chain-aware form was ratified.
+2. **PC-3 — a certified-seam test mechanism was rewritten.** `test_fingerprint_stability`'s policy
+   test could not be repinned: no revision carries both the old verifier policy and the new
+   entry-point keys. It now takes only `verify.py` from the reviewed revision, with a new guard that
+   fails loudly if that revision ever stops differing.
+3. **DD-A03 is claimed partial.** Both sinks are load-bearing and proven at the unit surface, but no
+   fixture carries a real blocking extraction diagnostic end-to-end.
+
+**Carried forward, unowned:** bracketed-owner convergence (deliberately not claimed — row 16 safely
+misses for an occurrence-indexed `part_def` owner); the stale-baseline class (`plant_values`,
+`constraint_inline`, the `dropped_constraints` capture drift, joining the recorded
+`deep_cross_scope` case — all three reproduce at the parent commit); the tier-1 mirror of DD-R32.
 
 ### CONSTRAINT-LIFECYCLE Item 3 — Gate B vacuity proof and deletion — CERTIFIED, pass with notes (independent audit 2026-07-19 at `3df2c34`)
 

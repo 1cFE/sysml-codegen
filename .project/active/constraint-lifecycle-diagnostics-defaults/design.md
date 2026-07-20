@@ -1,6 +1,6 @@
 # Design: Lifecycle Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Status:** Draft — ready for independent `/_my_design_review`
+**Status:** Implemented — all six phases complete; candidate `16dbaa7` / `4c18d61`. Evidence at `evidence.md`
 **Owner:** Reid W
 **Created:** 2026-07-19
 **Branch:** `constraint-exec-epic`
@@ -669,14 +669,14 @@ once for Phase 3, under that pin.
 **Exit: DD-A12, DD-A13, DD-A17, and DD-A11's live route. DD-A11's snapshot route completes in
 Phase 5.**
 
-**Phase 4 — the coordinated pair (agentic-mbse first).** This is the only phase that touches
+**Phase 4 — [x] COMPLETE — the coordinated pair (agentic-mbse first).** This is the only phase that touches
 agentic-mbse, and it exists because DD-B1 landed on a facts-side change. Severity enum and
 writer-side table, closed `kind` vocabulary, `REASON_CODES` enforced at construction,
 `ValidationIssue.reason_code`, the L6 sink, `constraint-facts/v2`. Then codegen: envelope v4, the
 screening function at both call sites, `_upstream_pins` and its guard test.
 **Exit: DD-A01–DD-A05, DD-A07, DD-A20.**
 
-**Phase 5 — licensed capture.** Two jobs, not one: capture the new Phase 3 signed/unit fixtures (the
+**Phase 5 — [x] COMPLETE — licensed capture.** Two jobs, not one: capture the new Phase 3 signed/unit fixtures (the
 M1 dependency), and re-capture all 34 snapshots at v4. Byte-identity gate as a timestamp-only diff
 check with `captured_at` churn reverted; only the payload movement Phases 1 and 4 predict is
 reviewed, each entry named. A full re-capture rewrites every `captured_at`, so the new fixtures must
@@ -685,7 +685,7 @@ be visibly separable from the churn (project memory `byte-identity-captured_at-c
 false baseline (project memory `syside-license-key-explicit-env-needed`).
 **Exit: DD-A06, and DD-A11's snapshot route.**
 
-**Phase 6 — evidence and delivery.** DD-A19: the exact new agentic-mbse commit, the codegen commit,
+**Phase 6 — [x] COMPLETE — evidence and delivery.** DD-A19: the exact new agentic-mbse commit, the codegen commit,
 the resolved lock, and the additive-certified status of the Items 1–3 chain since `515e08bb`.
 Merge order is load-bearing: agentic-mbse PR #11 before sysml-codegen PR #9 (project memory
 `constraint-exec-v3-pr-wave`).
@@ -1037,7 +1037,28 @@ except the two `assert`-under-`-O` tests that fail identically at the predecesso
 stash). mypy **72 errors before and after — zero added**. ruff clean on `src/` and every file
 touched.
 
-**Phase 4 not started**, per instruction.
+### Phases 4-6 — complete
+
+Recorded in full in `evidence.md`. Three implementation deviations from this design's letter, each
+ratified and each recorded there with its rationale:
+
+- **PC-4, sink placement.** D2 named `snapshot/loader.py` for the snapshot route's sink. Implemented
+  there it made a snapshot carrying a blocking diagnostic impossible to *inspect* -- the loader would
+  raise, so no tooling could read the snapshot to see why. Loading is deserialization; generation is
+  what a blocking diagnostic stops. Moved to `snapshot_context`'s generation entry point: still after
+  parse, before lowering, symmetric with the live route, and reading the already-parsed facts so
+  there is no second load. D2's requirement (one function, two call sites, both before lowering)
+  holds; only the site moved.
+- **PC-5, the new fixture's capture mode.** `modeled_default_fidelity` was first added to
+  `EXTRACTION_ONLY_MODELS`, which marks a snapshot `grandfathered_off` and drops its constraint
+  entry points from the offline graph. The existing grandfathered guard caught it by name. Recorded
+  as the guard working as intended, and as a datapoint for Item 12 which owns that fail-open path.
+- **Envelope-gate generalisation.** `test_snapshot_v3_gate.py` renamed to
+  `test_snapshot_envelope_gate.py` and keyed off `SNAPSHOT_FORMAT_VERSION` rather than a literal 3.
+
+**Final gates:** codegen 3040 passed / 0 failed, zero licence skips; agentic-mbse 1811 passed;
+`-O` identical except two pre-existing assert-stripped tests; mypy zero added in both repos; ruff
+clean in both.
 
 ---
 **Next Step:** owner ratification of the surfaced B2/D4 amendment and the revised Gate 1 pin, then

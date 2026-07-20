@@ -1,6 +1,6 @@
 # Spec: Lifecycle Remediation Item 4 — Diagnostic Severity and Modeled-Default Fidelity
 
-**Status:** Draft — ready for independent review
+**Status:** Implemented — candidate `16dbaa7` (codegen) / `4c18d61` (agentic-mbse), awaiting `/_my_audit`
 **Owner:** Reid W
 **Created:** 2026-07-19
 **Complexity:** HIGH
@@ -123,21 +123,21 @@ These four outcomes are the epic's row-4 criteria, absorbed unchanged. They are 
 their authority is the epic register and the ratified contract, not an owner statement about this
 item.
 
-- [ ] **[INHERITED: epic Item 4]** Severity/code round-trip and both consumer sinks pass with
+- [x] **[INHERITED: epic Item 4]** Severity/code round-trip and both consumer sinks pass with
       fail-closed skew.
-- [ ] **[INHERITED: epic Item 4]** Warning preparation cannot replace the actionable `BLOCK`
+- [x] **[INHERITED: epic Item 4]** Warning preparation cannot replace the actionable `BLOCK`
       diagnostic.
-- [ ] **[INHERITED: epic Item 4]** Signed/unit defaults survive; unsupported default IR fails or
+- [x] **[INHERITED: epic Item 4]** Signed/unit defaults survive; unsupported default IR fails or
       remains explicitly unresolved.
-- [ ] **[INHERITED: epic Item 4]** Diagnostic/default parsing is consolidated without a second
+- [x] **[INHERITED: epic Item 4]** Diagnostic/default parsing is consolidated without a second
       representation or compatibility shim.
 
 Two more, from sources outside the epic row:
 
-- [ ] **[INHERITED: referral decision 2026-07-20, recorded in epic Item 2 out-of-scope]** SR-A02
+- [x] **[INHERITED: referral decision 2026-07-20, recorded in epic Item 2 out-of-scope]** SR-A02
       convergence completes on real data with no name inference: the shared attribute yields one
       QN-keyed typed entry point, one modeled default, one group assignment.
-- [ ] **[OWNER]** Simplicity is judged qualitatively — duplicated diagnostic/default parsing is
+- [x] **[OWNER]** Simplicity is judged qualitatively — duplicated diagnostic/default parsing is
       consolidated and what the typed path obsoletes is deleted, not shimmed. No LOC gate, baseline,
       cap, or counting obligation exists for this item. Source: owner amendment 2026-07-19,
       epic "Simplification and Deletion Mandate".
@@ -460,5 +460,10 @@ challengeable even if design proceeds with them.
 
 ---
 
-**Next Steps:** independent `/_my_spec_review`, then `/_my_design`. Design must open by settling
-DD-B1, since DD-R12, DD-R13, and acceptance cells DD-A05–DD-A07 all fall away if it loses.
+**Next Steps:** independent `/_my_audit` against the candidate. Evidence at
+`.project/active/constraint-lifecycle-diagnostics-defaults/evidence.md`.
+
+**Scope note on the SR-A02 criterion:** convergence closes for the unbracketed (`PartUsage`-owned)
+shape, which is the shape SR-A02 names and `shared_producer` carries. It is **explicitly not
+claimed** for an occurrence-indexed `part_def` owner, where row 16 deliberately misses (evidence
+PC-6).
