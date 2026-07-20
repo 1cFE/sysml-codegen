@@ -6,6 +6,14 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup (codegen + stellarator) — spec in progress 2026-07-20
+Spec: `.project/active/constraint-lifecycle-producer-completeness/spec.md`. Two faces of one rule
+(producer completeness independent of V11): (1) ambiguous/defaulted producer acceptance, RED-first;
+(2) codegen compiles the stellarator cross-part capital aggregation as a real graph producer,
+retiring the private bridge/placeholder/two-pass glue and amending WI-027 (D7 superseded by D-2).
+Measured distance at today's chain: Gate A/B resolved (Items 2/3); the bridge's sole remaining job
+is the cross-part capital sum codegen still can't compile (`calc_compat_renderer.py:103`).
+
 ### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — spec drafted 2026-07-20
 
 ### CONSTRAINT-LIFECYCLE Item 9 — Multi-Entry Candidate Bridge (TEAx-owned) — CERTIFIED (independent audit 2026-07-20)
