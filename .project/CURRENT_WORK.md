@@ -6,7 +6,38 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — NEEDS WORK (audited 2026-07-20)
+### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — NEEDS WORK, narrowly (round-2 audit 2026-07-20, candidate `765e8b8`)
+
+**Round-2 verdict: three of four findings closed; F2 is not.** Gates at `765e8b8`: 3050 passed / 0
+failed, zero license skips, mypy 72 (zero added), ruff clean, agentic-mbse 1811 unchanged at
+`4c18d61`.
+
+- **F1 closed.** Sink moved above `build_full_graph_from_snapshot`; my call-order probe now returns
+  `['screen_extraction_diagnostics', 'lower_constraints']`, pinned by a test that records real call
+  order and cannot pass vacuously.
+- **F3 closed.** `diagnostic_screen.py` coverage 63% → **100%**; 8 tests, both routes, plus the
+  `non_finite_literal` end-to-end fixture. Both structural limits verified as facts — the serializer
+  really does refuse non-finite floats (reproduced: `ValueError ... inf`), and the advisory branch
+  really is unreachable with the one-entry table.
+- **F4 closed as Met-with-exception.** False claim deleted, honest boundary stated, disagreement
+  pinned by `test_default_lane_disagreement.py`, root cause recorded with a four-fixture blast
+  radius as an unowned open item. Criterion 4 correctly stays unchecked.
+- **F2 NOT closed → F2b.** The guard fires on `sanitize_qualified_name(req.reference) in
+  ctx.design_attr_by_qn` — resolution, not written form — so it also captures the bare-leaf shape
+  row 16 exists to serve. Verified across revisions: `fusion_tea`'s
+  `hif_plant__driver__meier_cost.driver_efficiency` moved from instance-scoped
+  `hif_plant_pkg__hif_plant__driver__efficiency` (`16dbaa7`) to definition-scoped
+  `hif_driver__HIF_Driver__efficiency` (`765e8b8`), collapsing two instances onto one parameter.
+  Masked by 0.35/0.35 and by fusion_tea having no committed baseline — the same pattern F2 was
+  raised about. Plus F2c (`shadowed_reference` fixture has no test) and F2d (FD-1's corrected table
+  mis-sums 24-as-23, says six fixtures where it is seven, and still claims the fusion_tea
+  convergence the fix removed).
+
+To clear: re-scope the guard by written form and re-check the corpus for guard-induced movement;
+attach a test to `shadowed_reference`; correct FD-1; amend DD-A06 in place rather than by appendix.
+Spec/epic criterion 1 re-checked by round 2; criterion 4 stays open; no ✅ on the epic heading.
+
+<details><summary>Round-1 record (candidate <code>16dbaa7</code>)</summary>
 
 Epic register row 4. Artifacts at `.project/active/constraint-lifecycle-diagnostics-defaults/`
 (`spec.md`, `design.md` — which holds the phased plan, no separate `plan.md` — `design-review.md`,
@@ -35,6 +66,8 @@ explicitly unresolved), plus notes on FD-4's unnamed seventh delta class (582 vs
 non-existent "retained v3" fixture, and the merge-order failure presenting as an ImportError at
 collection rather than the guard's message. Spec/epic criteria 1 and 4 unmarked; no ✅ on the epic
 heading.
+
+</details>
 
 **Audit round 1: Needs Work — all four findings closed.** F1 snapshot sink ran after lowering
 (fixed, ordering now pinned). F2 the carry re-anchored a `::`-qualified reference onto an

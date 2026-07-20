@@ -445,18 +445,23 @@ without letting warning rendering hide a later halt.
 - General constant folding, unit conversion, or a new diagnostics framework beyond the required
   versioned contract.
 
-**Status**: **Needs work** — independent audit 2026-07-20 against candidate `16dbaa7` (codegen) /
-`4c18d61` (agentic-mbse). Gates all reproduce green; three claims outrun their evidence: the
-snapshot-route diagnostic sink runs after lowering (F1), the carry re-anchored a `::`-qualified
-reference onto an owner-local shadow and FD-1 records it as a fix (F2), and DD-A03's "unit surface"
-does not exist — the sink has zero test coverage (F3). See
-`.project/active/constraint-lifecycle-diagnostics-defaults/audit.md`.
+**Status**: **Needs work (narrowly)** — round-2 audit 2026-07-20 against remediated candidate
+`765e8b8` (codegen) / `4c18d61` (agentic-mbse, unchanged). Round-1 findings F1 (sink ordering) and
+F3 (sink coverage, now 100%) are **closed**; F4 is closed as Met-with-exception with the
+disagreement pinned by test and the root cause recorded with its blast radius. **F2 is not closed:**
+the fix reverts catf_mfe correctly but is scoped by whether the resolved QN happens to be indexed
+rather than by the written form, and it silently reverted `fusion_tea`'s bare-leaf
+`driver_efficiency` from an instance-scoped to a definition-scoped key — the SR-A02 collapse this
+item exists to close, masked again by a 0.35/0.35 value coincidence. Also: the `shadowed_reference`
+fixture has no test attached, and FD-1's corrected table mis-sums (24, stated 23), miscounts
+fixtures (seven, stated six), and still claims a fusion_tea convergence the fix removed. See
+`.project/active/constraint-lifecycle-diagnostics-defaults/audit.md` ("Round 2").
 **Moves the Item 0 agentic-mbse pin** `515e08bb` -> `4c18d61`; merge order load-bearing (PR #11
 before PR #9).
 
 **Success Criteria**:
-- [ ] Severity/code round-trip and both consumer sinks pass with fail-closed skew. *(Audit: sinks
-      untested; snapshot sink runs after lowering — audit.md F1, F3.)*
+- [x] Severity/code round-trip and both consumer sinks pass with fail-closed skew. *(Round-1 audit
+      unmarked this; round 2 re-marks it at `765e8b8` — F1 and F3 both closed.)*
 - [x] Warning preparation cannot replace the actionable `BLOCK` diagnostic.
 - [x] Signed/unit defaults survive; unsupported default IR fails or remains explicitly unresolved.
 - [ ] Diagnostic/default parsing is consolidated without a second representation or compatibility

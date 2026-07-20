@@ -352,3 +352,193 @@ fixture or restate DD-A03 as Fail. F4 needs a re-stated boundary; the remaining 
   identical siblings and from its own parent-commit resolution.
 - The 363 `tests/` ruff findings were not triaged.
 - Performance, security, and the generated packages' runtime behaviour were out of scope.
+
+---
+
+# Round 2 — remediation re-verification
+
+**Verdict:** Needs Work (narrowly — one finding)
+**Audited:** 2026-07-20
+**Commit:** sysml-codegen `765e8b8`; agentic-mbse `4c18d61` unchanged
+
+Scope: my four round-1 findings only, plus the gates and evidence corrections. Nothing else
+re-audited.
+
+## Summary
+
+Three of four findings are closed, and the remediation's evidence discipline is notably good — it
+discloses a discarded first fix and a second cut that broke a certified seam before it was scoped,
+rather than presenting only the final answer.
+
+**F2 is not closed.** The catf_mfe symptom is fixed, but the guard is scoped by *"does the resolved
+QN happen to be indexed"* rather than *"was the reference scope-qualified as written"*, and that
+mis-scoping silently reverted a second, unrelated binding. It reproduces the exact pattern F2 was
+raised about: a real regression, masked by a value coincidence, in a fixture with no committed
+baseline.
+
+## F1 — sink ordering: **CLOSED**
+
+Re-ran my own call-order probe at `765e8b8`:
+
+```
+SNAPSHOT ROUTE CALL ORDER: ['screen_extraction_diagnostics', 'lower_constraints']
+```
+
+The sink moved above `build_full_graph_from_snapshot` (`snapshot_context.py:35-49`). The pinning
+test `test_snapshot_route_screens_before_lowering` (`test_diagnostic_screen.py:158`) records actual
+call order with monkeypatched spies — the same technique I used — rather than inferring it from
+source position, and its second assertion (`"lower_constraints" in order`) stops it passing
+vacuously on a snapshot that never lowers. `diagnostic_screen.py:3` now names `snapshot_context`.
+
+*Note, not a finding:* the fix costs a second `load_extraction_snapshot` of the same file, which
+reverses PC-4's original "there is no second load". The code comment discloses this and argues the
+graph build dominates it. Honest and proportionate.
+
+## F3 — sink coverage: **CLOSED**
+
+Coverage over the full suite moved from `19 7 63% Missing: 38-44, 66, 71-74` to **`19 0 100%`**.
+The raise, the advisory branch, and the whole `_render` formatter now execute. 8 tests in
+`test_diagnostic_screen.py`, both routes, plus the end-to-end `non_finite_literal` fixture I said
+was cheap — it is, and it exists.
+
+Both stated structural limits are accurate, and both were verified as facts rather than accepted as
+excuses:
+
+- **The serializer genuinely refuses non-finite floats.** Reproduced by attempting a real capture:
+  `ValueError: Out of range float values are not JSON compliant: inf` at `expression_ir.py:180`
+  (`allow_nan=False`). A blocking `non_finite_literal` cannot reach a snapshot by construction, so
+  the snapshot leg's synthesized payload is a necessity, not a shortcut.
+- **The advisory branch is unreachable** — `EXTRACTION_DIAGNOSTIC_SEVERITY` still has one entry.
+
+The synthesized-snapshot injection is honest: it splices a well-formed diagnostic into a real v4
+payload and passes through the production parse, where `_diagnostic_from_dict` re-derives severity
+and would raise on disagreement. It bypasses no guard. The advisory test's `object.__setattr__` is a
+genuine bypass, confined to the one branch with provably no reachable input and labelled as such.
+
+## F4 — lane disagreement: **CLOSED as Met-with-exception**
+
+The false "no expression IR exists" claim is deleted, not softened; the docstring now leads with
+"**the kept-lane boundary is NOT 'different input', and saying so was wrong**" and states the honest
+boundary (same input, two policies, one unconsumed). The disagreement is pinned by
+`test_default_lane_disagreement.py` — both the contradiction (`"5.0"` vs `unresolved_node_kind ==
+"operator"`) and *why* it is unobservable. The root cause is named with its blast radius
+(constraint-definition formals captured as design attributes, four-fixture reach) and recorded as an
+unowned open item rather than smuggled into a remediation commit; the diff confirms nothing extra
+landed. The stale "zero carry a sign" measurement is corrected.
+
+Criterion 4 correctly stays unchecked — the disagreement persists by design until the
+double-ownership item lands.
+
+*Minor, same class as the defect being corrected:* the docstring and evidence say "the 35-snapshot
+corpus"; `shadowed_reference` made it 36, and the figures moved 669/531 → 677/539.
+
+## F2 — the `::` re-anchor: **NOT CLOSED**
+
+What did land, verified:
+
+- **plasma_region is fixed.** All fourteen `volume_calc` kappa bindings now share one key,
+  `CATFMFERadialBuild__catf_radial_build__elongation`; `plasma_region__elongation` occurs zero times
+  in the baseline, matching the parent.
+- **The certified Item-2 seam is intact.** `test_precedence_occurrence_qn_beats_target_qn_design_attribute`
+  is byte-unchanged since `3fbec63` and passes, and its scenario is still discriminating: it sets
+  `target_qn`, so the guard is inert, and both candidate keys are indexed.
+- **The 7.0 → 2.0 flip is real.** Independently reproduced by deleting the guard in a `/tmp` copy
+  and generating: `..._inner__scale` (7.0) without it, `..._the_outer__scale` (2.0) with it.
+- **SR-A02 convergence survives** — `test_shared_producer_convergence` passes, so the fix did not
+  repeat the discarded first attempt's failure.
+
+**F2b — the guard silently reverted fusion_tea to a definition-scoped key.** The guard fires on
+`sanitize_qualified_name(req.reference) in ctx.design_attr_by_qn` — resolution, not written form. It
+therefore also captures the bare-leaf shape row 16 exists to serve. Reproduced directly at all three
+revisions:
+
+| revision | `hif_plant_pkg__hif_plant__driver__meier_cost.driver_efficiency` |
+|---|---|
+| `16dbaa7` | `hif_plant_pkg__hif_plant__driver__efficiency` (instance-scoped) |
+| `765e8b8` | `hif_driver__HIF_Driver__efficiency` (**definition-scoped**) |
+
+That binding is a bare leaf (`source_attribute_name: "efficiency"`, `source_instance_name: null`) —
+neither `::`-qualified nor a `.` chain. The `::` in its `source_path` is only the resolved QN, which
+is precisely the ambiguity the *discarded* first fix was rejected for; it re-enters through the
+guard's index test. The consequence is the SR-A02 defect Item 4 exists to close: this consumer now
+collapses onto the same definition-scoped key as `hif_driver__hif_driver_instance__meier_cost`, so
+two instances share one parameter.
+
+Both keys hold 0.35 and fusion_tea has no committed baseline, so no gate sees it. This is the same
+masking that hid the original F2 for a full audit cycle.
+
+*Should change:* scope the guard by the written form rather than by whether the resolved QN happens
+to be indexed, and re-check the whole corpus for guard-induced movement rather than only the fixture
+that motivated it.
+
+**F2c — the discriminating fixture asserts nothing.** `tests/fixtures/shadowed_reference/` was
+authored so a re-anchor moves a value visibly (2.0 / 7.0), answering my round-1 point that the
+3.0/3.0 coincidence was the only thing hiding the bug. No test references it. The three parametrized
+conformance tests that glob it all SKIP; there is no `baseline_outputs/shadowed_reference/`. The
+behaviour is correct — I probed it — but unpinned. This is structurally the same criticism round 1
+made of `shared_producer` under DD-R31, reproduced in the fixture written to close it. Evidence
+calls it a "Discriminating regression test, as required"; it is a fixture, not a test.
+
+**F2d — FD-1's corrected table is still wrong.** Its rows sum to 24 (18 + 5 + 1), not the stated 23;
+the fixture set is seven, not six (removing the catf_mfe *elongation* entry does not remove catf_mfe
+from the pure-rename row); and the surviving "convergence onto correct scope: 1 — `fusion_tea` only"
+is false at `765e8b8`, because F2b reverted it. It is also mislabelled "a genuine `.` chain" — the
+moved binding is a bare leaf; the `.` chain in that fixture is a different, unaffected consumer.
+
+## Gates at `765e8b8`
+
+| gate | claimed | measured |
+|---|---|---|
+| codegen suite | 3050 passed, 0 failed | **3050 passed, 44 skipped, 17 deselected** |
+| license skips | 0 | **0** — verified in `-rs` output |
+| mypy `src/` | 72, zero added | **72 in 17 files** |
+| ruff `src/` | clean | **All checks passed!** |
+| agentic-mbse | 1811 passed | **1811 passed, 1 skipped, 33 deselected** |
+| Items 1–3 acceptance | untouched | **confirmed** — the test diff touches three files, all Item-4's |
+
+## Evidence corrections
+
+All five I raised are made, and stated accurately rather than gestured at — including the two I only
+mentioned in passing (`plant_values` also drifting `registry_init.py`, and the SR-A02 scope note
+moving inline). Two residuals:
+
+- **DD-A06's correction is by appendix, not amendment.** `evidence.md:175` still reads "retained v3
+  fails with the existing recapture message"; the correction sits 390 lines later. A reader hitting
+  the ledger row first still gets the false impression. Amend in place.
+- **The commit table (`evidence.md:38-44`) and the "Final gate results" block still end at
+  `16dbaa7`/3040.** A separate remediated-gates table carries 3050, so this reads as before/after
+  rather than a false claim, but `765e8b8` is not identified as the candidate anywhere in the table.
+
+## Certification
+
+**Marked this round:**
+- Spec criterion 1 and epic criterion 1 → **checked**. F1 and F3 are both closed and independently
+  verified. My round-1 annotation on that criterion had gone false at `765e8b8` and is replaced.
+
+**Left unchecked:**
+- Spec criterion 4 and epic criterion 4 — correct as they stand. DD-R23 is Met-with-exception and
+  the box should stay open until the double-ownership item lands.
+
+**Left checked, with a pointer added:**
+- Criterion 5 (SR-A02). The criterion names `shared_producer`, which still converges. F2b regresses
+  instance-scoping for a different binding in a different fixture, so it is noted at the criterion
+  rather than treated as falsifying it.
+
+No ✅ on the epic item heading.
+
+**To clear:** F2b (re-scope the guard by written form, re-check the corpus for guard-induced
+movement), F2c (attach a test to `shadowed_reference`), F2d (correct FD-1's arithmetic, fixture
+count, and the now-false fusion_tea row), and amend DD-A06 in place.
+
+**Not checked this round:**
+- Anything outside my four findings and the gates — no re-audit of PC-1, PC-3, PC-6, the skew
+  machinery, or the re-capture, all of which round 1 covered at `16dbaa7` and which the diff does
+  not touch.
+- The whole-corpus resolution probe behind FD-1, still not re-run at either candidate.
+- The `-O` gate was not re-run at `765e8b8`.
+- FD-4's line classification was not re-derived by the implementer's own method.
+- The "8 constraint-def formals across 4 fixtures" figure could not be reproduced exactly; a looser
+  probe suggests it may understate, which is the safe direction for an open item.
+- Execution lane, TEAx, and the 363 `tests/` ruff findings — untouched, as in round 1.
+- Round-1's `design_attribute_float_default` silent-`None` note (DD-R22 observability) was out of
+  this round's scope and remains open at `parameter_groups.py:248`.

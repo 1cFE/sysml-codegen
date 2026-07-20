@@ -123,10 +123,10 @@ These four outcomes are the epic's row-4 criteria, absorbed unchanged. They are 
 their authority is the epic register and the ratified contract, not an owner statement about this
 item.
 
-- [ ] **[INHERITED: epic Item 4]** Severity/code round-trip and both consumer sinks pass with
-      fail-closed skew. *(Audit 2026-07-20: round-trip and fail-closed skew verified; the sinks are
-      not. `screen_extraction_diagnostics` has zero test coverage on either route, and the snapshot
-      sink runs after lowering. See audit.md F1, F3.)*
+- [x] **[INHERITED: epic Item 4]** Severity/code round-trip and both consumer sinks pass with
+      fail-closed skew. *(Audit round 1 unmarked this for F1 + F3; audit round 2 at `765e8b8`
+      re-marks it: sink coverage 63% → 100%, both routes, and the ordering pinned by a call-order
+      test. See audit.md "Round 2".)*
 - [x] **[INHERITED: epic Item 4]** Warning preparation cannot replace the actionable `BLOCK`
       diagnostic.
 - [x] **[INHERITED: epic Item 4]** Signed/unit defaults survive; unsupported default IR fails or
