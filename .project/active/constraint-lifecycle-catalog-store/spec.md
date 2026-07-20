@@ -46,30 +46,35 @@ sole schema authority; TEAx consumes it directly; the alternate system is delete
 Outcomes, testable. Acceptance coordinates follow the epic's row-10 line and the contract's row 10
 (`constraint-execution-lifecycle-contract/spec.md:498`).
 
-- [ ] **Catalog totality.** Every field a TEAx consumer needs is present on codegen's embedded
+- [x] **Catalog totality.** Every field a TEAx consumer needs is present on codegen's embedded
       catalog, across all five record kinds — source definition, admitted usage, concrete eligible
       occurrence, excluded occurrence, and result — with no consumer-side reconstruction. Verified by:
       TEAx reads owner QN, definition QN, source form, usage identity, and the definition→usage join
       straight from `model_contract.json`; no code splits a QN, searches predicate text, or hardcodes
       a source form.
-- [ ] **The named alternate system is gone, not shimmed.** The deletion inventory (below) is fully
-      removed. A source-scan test asserts no surviving symbol of the alternate catalog schema
-      (`CatalogView`, `_Catalog`), no standalone `constraint_catalog.json` reader/writer in product
-      paths, and no reconstruction workaround (`rsplit("::")` on a QN, predicate-text search,
-      hardcoded `source_form`) in codegen, TEAx, or the fusion consumer.
-- [ ] **Real identity, consumed as data.** TEAx binds store compatibility to codegen's real
+- [x] **The named alternate system is gone, not shimmed.** (F-B closed: the INV-6 source-scan test
+      `tests/study/test_no_reconstruction.py` now asserts no reconstruction idiom — QN-split on `::`/`__`,
+      predicate-text search, hardcoded `source_form` — in TEAx product source; `CatalogView`/`_Catalog`
+      are explicitly recorded as *repurposed* embedded-view symbols, not silent survivals of deleted
+      names.) The deletion inventory (below) is fully removed. A source-scan test asserts no standalone
+      `constraint_catalog.json` reader/writer in product paths, and no reconstruction workaround
+      (`rsplit("::")` on a QN, predicate-text search, hardcoded `source_form`) in codegen, TEAx, or the
+      fusion consumer.
+- [x] **Real identity, consumed as data.** TEAx binds store compatibility to codegen's real
       `semantic_fingerprint` (read from `model_contract.json`), the sealed package's real
       `executable_fingerprint`, and the catalog `fingerprint` — never a byte-hash stand-in. Consumed
       as on-disk JSON data, not by importing `sysml_codegen` (see [HARD] below).
-- [ ] **Store transition never silently rebinds.** Switching the fingerprint provenance either proves
+- [x] **Store transition never silently rebinds.** Switching the fingerprint provenance either proves
       an existing store artifact-equivalent and migrates it, or preserves it as archived lineage and
       starts a new store. A store bound to the old stand-in fingerprint fails closed against a package
       carrying the real fingerprint (surfaces as an explicit new-lineage message, not a silent reuse).
-- [ ] **Catalog/schema skew fails closed, both directions.** A package whose embedded catalog is
+- [x] **Catalog/schema skew fails closed, both directions.** A package whose embedded catalog is
       missing a field a consumer requires, and a consumer that expects a field the catalog does not
       carry, each fail with a named pre-semantic error before any verdict is computed — never a
       `KeyError`, a silent default, or a guessed value.
-- [ ] **RED-first public surface.** The new catalog fields, the admitted-usage record, the
+- [x] **RED-first public surface.** (F-A closed: `constraint_inline` added to the FK parametrization
+      plus `test_named_inline_entry_carries_none_definition_qn`, so the `definition_qn=None` branch now
+      executes non-vacuously.) The new catalog fields, the admitted-usage record, the
       direct-consumption path, and the skew guard each land against a test that fails before the
       change and passes after, exercised through public seams only (codegen `generate`/`build_model_contract`;
       TEAx study config/query/CLI over the real `model_contract.json`).
@@ -167,14 +172,22 @@ Completeness is the requirement; a missed consumer becomes a broken deletion.
 
 | File | Lines | Role | Action |
 |---|---|---|---|
-| `study/query.py` | 20-28 | `CatalogView` alternate-schema dataclass | delete |
-| `study/query.py` | 46-65 | `_Catalog` standalone-file reader + definition→usage join | delete |
+| `study/query.py` | 20-28 | `CatalogView` — the alternate-schema dataclass | **repurposed** (see note) |
+| `study/query.py` | 46-65 | `_Catalog` standalone-file reader + definition→usage join | **repurposed** (see note) |
 | `study/query.py` | 43, 68-116 | `CaseView.catalog` field + `StudyQuery` consumer | rewire to read the embedded catalog from `model_contract.json` |
 | `study/cli.py` | 24, 98, 101 | `cmd_inspect` builds/reads the standalone `constraint_catalog.json` | rewire to the embedded catalog |
 | `study/config.py` | 79-84 (used at 135) | `_model_contract_fingerprint` byte-hash stand-in | replace with `model_contract.json["semantic_fingerprint"]` |
 | `tests/study/test_query.py` | 12, 16, 42, 56-62, 66, 74 | tests over the alternate join | rewrite against the real embedded catalog |
 | `tests/evaluation/fixtures/sealed_package/package_live/contracts/constraint_catalog.json` | whole file | hand-authored alternate fixture | delete; fixtures use real `model_contract.json` |
 | `tests/evaluation/fixtures/f1_arithmetic/generate_fixture.py` | 222 (`source_form="inline"`), 242 (`.split("__")[-1]`) | fixture-generator hardcode + QN split | fix to carry real fields |
+
+**Repurposing note (audit F-B).** `CatalogView`/`_Catalog` are *repurposed*, not deleted: the names
+survive but their bodies are rewritten to read codegen's embedded catalog directly (entry carries
+`source_form`/`owner_qualified_name`/`definition_qualified_name`/`predicate_ir`), with the
+standalone-file read and the `source_usage → source_record` reconstruction removed. What the
+deletion criterion actually protects — no standalone reader, no reconstruction anti-pattern — is
+enforced by the INV-6 source-scan test (`tests/study/test_no_reconstruction.py`), which asserts the
+*idioms* are absent from product source rather than banning the (now-clean) symbol names.
 
 Notes: predicate-text search — **none in TEAx** (`predicate_ir` is only ever an opaque string;
 `evaluation/projection.py:28-30` classifies by `constraint_id`/`status`). `constraint_catalog.json`

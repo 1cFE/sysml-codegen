@@ -18,7 +18,9 @@ from tests.conftest import FIXTURES_DIR, requires_license
 
 
 @requires_license
-@pytest.mark.parametrize("fixture", ["constraint_multi_instance", "wi014_toy"])
+@pytest.mark.parametrize(
+    "fixture", ["constraint_multi_instance", "wi014_toy", "constraint_inline"]
+)
 def test_definition_fk_gated_on_form_and_never_dangles(fixture):
     ctx = build_pipeline_context([FIXTURES_DIR / fixture], lower_constraints_enabled=True)
     catalog = ctx.computation_graph.constraint_catalog
@@ -39,6 +41,25 @@ def test_definition_fk_gated_on_form_and_never_dangles(fixture):
                 f"{entry.constraint_id}: non-definition_typed entry "
                 f"({entry.source_form}) carries a definition FK — the F1 dangling case"
             )
+
+
+@requires_license
+def test_named_inline_entry_carries_none_definition_qn():
+    """Arm the F1 else-branch non-vacuously: the named-inline case must actually execute.
+
+    `constraint_inline` yields ≥1 eligible entry whose effective predicate source is the usage's
+    own QN (not a `facts.definitions` entry). Its `definition_qualified_name` must be `None` — a
+    dangling self-QN FK is exactly the F1 defect. This asserts the branch is reached, so the guard
+    in the parametrized test above is not vacuously green.
+    """
+    ctx = build_pipeline_context(
+        [FIXTURES_DIR / "constraint_inline"], lower_constraints_enabled=True
+    )
+    catalog = ctx.computation_graph.constraint_catalog
+    assert catalog is not None
+    inline = [e for e in catalog.concrete_entries if e.source_form == "inline"]
+    assert inline, "constraint_inline yielded no inline eligible entry — cannot arm the F1 branch"
+    assert all(e.definition_qualified_name is None for e in inline)
 
 
 @requires_license
