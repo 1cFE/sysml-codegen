@@ -48,7 +48,6 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import (
     CalcDefCompilationResult,
-    Compilability,
     compile_calc_def,
 )
 from sysml_codegen.extraction.usage_extractor import (
@@ -769,27 +768,61 @@ def _route_crosspart_formula_aggregations(
     scoped aggregations are appended to ``scoped_agg_data`` before Phase-1b registration so a
     chained aggregation's inner channel is registered before the outer LocalTerm resolves (A7).
     """
-    kept: list[ComputedAttributeData] = []
-    rerouted_exprs: list[Any] = []
-    for ca in computed_attrs:
-        is_uncompiled_formula = (
-            ca.classification == ComputedAttributeClassification.FORMULA
-            and ca.compilability != Compilability.FULLY_COMPILABLE
-            and ca.expression_ast is not None
-        )
-        if is_uncompiled_formula:
-            agg_expr = _computed_attr_to_aggregation(ca)
-            if agg_expr is not None and agg_expr.singleton_terms:
-                rerouted_exprs.append(agg_expr)
-                logger.info(
-                    "Step 4.7: routed FORMULA '%s.%s' into the aggregation path "
-                    "(%d cross-part term(s)) — cross-part sum becomes a graph producer",
-                    ca.owning_part_name,
-                    ca.name,
-                    len(agg_expr.singleton_terms),
-                )
+    # Decompose every FORMULA computed attribute once via the aggregation machinery.
+    formula_cas = [
+        ca
+        for ca in computed_attrs
+        if ca.classification == ComputedAttributeClassification.FORMULA
+        and ca.expression_ast is not None
+    ]
+    agg_by_id: dict[int, Any] = {}
+    for ca in formula_cas:
+        agg = _computed_attr_to_aggregation(ca)
+        if agg is not None:
+            agg_by_id[id(ca)] = agg
+
+    # Seed: a FORMULA carrying a cross-part term (a SingletonTerm) must be an instance-scoped
+    # aggregation producer — the direct cross-part rollup (e.g. direct_capital).
+    routed_ids: set[int] = set()
+    routed_attrs: set[tuple[str, str]] = set()
+    for ca in formula_cas:
+        agg = agg_by_id.get(id(ca))
+        if agg is not None and agg.singleton_terms:
+            routed_ids.add(id(ca))
+            routed_attrs.add((agg.owning_part_qn, agg.attribute_name))
+
+    # Fixpoint: a FORMULA whose LOCAL terms reference an already-routed attribute in the same
+    # part must ALSO be instance-scoped, or it stays a part-def-scoped module that cannot read
+    # the instance-scoped aggregation it composes (e.g. total_capital = direct_capital + …).
+    # A pure-local FORMULA that references nothing routed is untouched — so a corpus with no
+    # cross-part seed sees zero reroutes (byte-identity preserved).
+    changed = True
+    while changed:
+        changed = False
+        for ca in formula_cas:
+            if id(ca) in routed_ids:
                 continue
-        kept.append(ca)
+            agg = agg_by_id.get(id(ca))
+            if agg is None:
+                continue
+            if any(
+                (agg.owning_part_qn, lt.attribute_name) in routed_attrs
+                for lt in agg.local_terms
+            ):
+                routed_ids.add(id(ca))
+                routed_attrs.add((agg.owning_part_qn, agg.attribute_name))
+                changed = True
+
+    rerouted_exprs = [agg_by_id[id(ca)] for ca in formula_cas if id(ca) in routed_ids]
+    kept = [ca for ca in computed_attrs if id(ca) not in routed_ids]
+    for ca in formula_cas:
+        if id(ca) in routed_ids:
+            logger.info(
+                "Step 4.7: routed FORMULA '%s.%s' into the aggregation path — cross-part "
+                "or aggregation-composing sum becomes an instance-scoped graph producer",
+                ca.owning_part_name,
+                ca.name,
+            )
 
     scoped = _scope_aggregation_list(
         rerouted_exprs, calc_usages, hierarchy_data.part_usage_names
