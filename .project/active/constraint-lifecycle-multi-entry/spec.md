@@ -92,9 +92,9 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-11 line and the
 - [ ] **"One" validates.** A single-entry-channel package bridges and validates completely through
       the same stock path (a single-channel spike package exists in fusion-tea, e.g.
       `codegen_chain_spike`; `exp_toy`).
-- [ ] **"Zero" validates.** A zero-entry-channel shape produces a complete (empty) mapping and
-      validation passes with nothing missing and nothing extra. **The concrete coordinate for this
-      case is unresolved — see Open Questions.**
+- [ ] **"Zero" validates.** A zero-entry-channel package produces a complete (empty) mapping and
+      validation passes with nothing missing and nothing extra. The coordinate is a minimal
+      codegen-generated package with no entry channels, committed as a TEAx fixture (design.md).
 - [ ] **Baseline + override.** Every channel gets a complete typed baseline; a candidate changes
       only its selected fields and omits no unrelated channel (contract invariant 47).
 - [ ] **Validation before evaluation.** Missing, extra, malformed (bad field *inside* a model), and
@@ -178,7 +178,9 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-11 line and the
 - Model-derived late fill or graph mutation of any kind (epic firewall).
 - Constraint-free report / empty-constraint-evidence semantics — owned by Item 11. A package with no
   constraint report is a different axis from a package with zero entry channels; do not solve the
-  evidence side here.
+  evidence side here. (Decision, orchestrator 2026-07-20: the stage brief conflated the two —
+  "zero" means zero *entry channels*, and Item 11's constraint-free-report firewall stands
+  untouched.)
 - Stellarator producer representation — owned by Item 10.
 - Changing the evaluate seam or `MappingEntrySource`'s core missing/extra/wrong-typed logic; it is
   already zero/one/many-shaped and only needs to be *driven* by a multi-channel bridge.
@@ -188,24 +190,6 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-11 line and the
 
 ## Open Questions / Deferred to design
 
-- **[SURFACED — premise conflict, owner decision needed] The "zero" acceptance coordinate.**
-  The brief says use "a constraint-free package as 'zero'". Two problems:
-  (a) constraint-free report semantics is explicitly firewalled to Item 11, and a constraint-free
-  package can still declare entry channels — so it does not necessarily exercise the zero-*channel*
-  bridge path; and (b) **no zero-entry-channel package exists anywhere in fusion-tea** — every
-  generated package declares at least one `EntryPoint` channel (surveyed: IFE=3, solar spikes=3/1,
-  toy spikes=1). Options for what "zero" tests at Item 9's layer:
-  - *A. Real end-to-end zero-channel package.* Requires a codegen-generated zero-channel fixture —
-    a cross-repo dependency into codegen, even though Item 9 is TEAx-owned. Do not absorb this into
-    the TEAx item silently.
-  - *B. Unit-level empty-mapping proof.* Drive the bridge/entry-source on an empty expected-channel
-    set with a synthetic spec in TEAx tests — proves the zero code path (bridge builds `{}`,
-    `validate` passes with nothing missing/extra) without a real package.
-  - *C. Reinterpret "zero" as the constraint-free package* and accept overlap with Item 11.
-  Recommendation: **B** for the bridge-shape proof (cheap, in-repo, exercises the real path); if
-  Item 13's composed matrix needs a real end-to-end zero coordinate, file that as an explicit
-  codegen-fixture dependency (A), owned where the fixture is generated. This sets a success
-  criterion and possibly a cross-repo dependency, so it is an owner call, not a design default.
 - **Baseline default source.** Catalog `parameters[*].default_value` (covers every IFE field) vs the
   committed `inputs/*.json` templates (what the wrapper used) vs the entry-model's own Pydantic
   field defaults. The catalog route removes the wrapper's template read entirely; confirm it is
@@ -238,5 +222,5 @@ Outcomes, testable. Acceptance coordinates follow the epic's row-11 line and the
 
 ---
 
-**Next Steps:** After the "zero"-coordinate decision, proceed to `/_my_spec_review` (fresh session),
-then `/_my_design`.
+**Next Steps:** Zero-coordinate decision recorded (orchestrator 2026-07-20). Design drafted at
+`design.md`; independent `/_my_spec_review` / `/_my_design_review` follow in a fresh session.
