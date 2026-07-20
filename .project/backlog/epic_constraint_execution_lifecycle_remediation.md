@@ -1,7 +1,7 @@
 # Epic: Constraint Execution Lifecycle Remediation
 
 **Epic ID**: CONSTRAINT-LIFECYCLE-REMEDIATION
-**Status**: Ready — owner-ratified architecture; implementation not certified
+**Status**: In progress — Item 0 complete; Item 1 defects reproduced; production remediation not started
 **Priority**: P0 (gates the open constraint PR wave)
 **Created**: 2026-07-19
 **Estimated Effort**: 19–23 working days
@@ -25,6 +25,34 @@ the delivery path authorized for each repository.
 revision set passes all 41 mandatory acceptance cases through public live and relocated-snapshot
 routes, using the same sealed artifact thread through load, evaluation, persistence, IFE, and
 stellarator, while the touched production surface ends with fewer lines of code overall.
+
+## Current Execution Status — 2026-07-19
+
+The program is at the start of implementation. Item 0 is complete. Item 1 has an approved contract
+and design plus a public failing acceptance surface, but no production code has been changed for
+Item 1. Items 2–13 have not started.
+
+| Item | Actual status | Evidence that matters |
+|---|---|---|
+| 0 — Compatible candidate | **Complete** | Compatible commits, locks, imports, package build, focused 323-test gate, and repository LOC baseline are recorded in `.project/active/constraint-lifecycle-candidate-pin/evidence.md`. |
+| 1 — Occurrence/demand | **In progress: RED reproduced, implementation not started** | Six public acceptance nodes and six SysML fixture families now exist. Five nodes reproduce R-4/R-5/R-7 on the pinned predecessor and current production code; the constraint-only provenance control already passes. `src/` is unchanged. |
+| 2–12 — Product remediation | **Not started** | No item-owned production implementation or certifying evidence exists yet. Prior inherited work remains valid only within its recorded scope. |
+| 13 — Composed proof/release | **Blocked by Items 1–12** | No 41-case composed artifact thread, final release candidate, push, or PR update exists. |
+
+Useful Item 1 work now present:
+
+- `.project/active/constraint-lifecycle-occurrence-demand/spec.md` — independently re-reviewed,
+  **Approve**.
+- `.project/active/constraint-lifecycle-occurrence-demand/design.md` — independently re-reviewed,
+  **Approve**.
+- `tests/conformance/test_constraint_occurrence_demand_acceptance.py` and
+  `tests/fixtures/constraint_occurrence_demand/` — stable public behavioral surface.
+
+The detailed Item 1 plan and provisional LOC accounting are not completion evidence and do not
+gate implementation. The next meaningful action is to change the shared occurrence/demand code
+until the five reproduced failures pass without weakening the fixtures, then run the relevant
+regression suite. Later work should combine shared root-cause edits across item boundaries instead
+of creating an artifact pipeline per item.
 
 ---
 
@@ -64,8 +92,8 @@ stellarator, while the touched production surface ends with fewer lines of code 
 ## Why This Epic?
 
 **Current State**:
-- [INHERITED: correction re-review] The target architecture is coherent and ratified, but no
-  commit-pinned, mutually installable implementation candidate exists.
+- [INHERITED: Item 0 evidence] A commit-pinned, mutually installable starting set exists. It is a
+  baseline for remediation, not a final certifying candidate.
 - [INHERITED: adversarial review] Component tests can pass while supported combinations fail at
   actual resolution, occurrence expansion, producer completeness, package trust, catalog joins,
   evaluator routes, or evidence persistence.
@@ -123,9 +151,9 @@ stellarator, while the touched production surface ends with fewer lines of code 
 - [ ] [OWNER] The existing open agentic-mbse PR #11 and sysml-codegen PR #9 are updated with the
       final compatible commits, accurate descriptions, and evidence. PR #11 remains first in the
       merge order, and no replacement upstream PR is opened for this remediation.
-- [ ] [OWNER] The remediation produces a net reduction in touched production lines of code. Every
-      item records production LOC before/after, deletions/consolidations, and any justified additive
-      exception separately from tests, fixtures, generated files, and docs.
+- [ ] [OWNER] The remediation strives for simpler code, judged qualitatively: superseded paths
+      are deleted rather than shimmed, and no numeric LOC gate applies (owner amendment,
+      2026-07-19 — see Simplification and Deletion Mandate).
 - [ ] Public docs, package/profile/runtime versions, PR descriptions, and evidence reports describe
       the landed candidate without stale or present-tense overclaims.
 
@@ -133,21 +161,21 @@ stellarator, while the touched production surface ends with fewer lines of code 
 
 ## Simplification and Deletion Mandate
 
-**[OWNER-VERBATIM], 2026-07-19:** “Remember to mention in the epic document the importance of
-SIMPLIFICATION and REDUCING code wherever possible.”
+**[OWNER-VERBATIM], 2026-07-19 (amendment, ruling on Item 1's OD-R43 overrun):** “honestly I do
+not give a fuck about LOC any more. what a mistake that was. I just want you agents to strive
+for simpler code.”
 
-This is an execution rule, not an aspiration at the end:
+This amendment retires every numeric LOC gate, baseline, per-file cap, counting obligation, and
+LOC-deviation review in this epic and its item artifacts. Simplicity remains an execution rule,
+judged qualitatively by review:
 
 1. Prefer one shared mechanism and deletion of superseded paths over another guard, adapter, or
-   compatibility shim.
-2. Each item begins with a production-code baseline and names expected deletions before design.
-3. Each item ends with production LOC accounting. Tests, fixtures, generated output, and docs are
-   reported separately and cannot hide production growth.
-4. Catalog schema additions required by D-3 are the known additive exception. They must be booked
-   explicitly and offset by deleting the alternate TEAx schema/materializer/stand-in system.
-5. A net production-code increase is an owner-reviewed deviation. It is never accepted silently.
-6. Do not collapse intentional boundaries: the two independent profile consumers, halt-before-
+   compatibility shim. Name expected deletions before design and delete what a change obsoletes.
+2. Do not collapse intentional boundaries: the two independent profile consumers, halt-before-
    mutation, plan-before-clear, and stdlib-only seal/verify behavior remain distinct invariants.
+
+**[OWNER-VERBATIM], 2026-07-19 (original):** “Remember to mention in the epic document the
+importance of SIMPLIFICATION and REDUCING code wherever possible.”
 
 Expected deletion opportunities include the three drifted resolver ladders, legacy polarity-baked
 compiler paths, extension-time V11 if proved vacuous, duplicate catalog authorities, fusion
@@ -259,6 +287,7 @@ set on which every later evidence coordinate is based.
 **Type**: Code/Integration (sysml-codegen)
 **Effort**: 1.5–2 days (spec 1h, design 2h, plan 1h, execute/evidence 8–12h)
 **Dependencies**: Item 0
+**Status**: In progress — public RED reproduced; no production implementation yet
 
 **Objective**: Close R-4/R-5/R-7 with occurrence-stable identity, loud finite-expansion rules, and
 one deterministic demand identity.
@@ -749,8 +778,8 @@ public, sealed artifact thread.
    placeholder, mutation, alternate catalog, or consumer wrapper.
 5. Run focused/optimized, compatible full suites, lint/format/type baselines, fixture diff review,
    and licensed live routes at the final revisions.
-6. Aggregate production LOC accounting across repositories and prove the overall remediation is
-   net-negative or obtain an explicit owner-reviewed deviation.
+6. Confirm superseded paths named by Items 1–12 are deleted, not shimmed (qualitative
+   simplicity review; no LOC accounting — owner amendment, 2026-07-19).
 7. Produce the release-readiness report and only then update existing agentic-mbse PR #11 first and
    sysml-codegen PR #9 second with the final commits, accurate descriptions, and evidence. Do not
    open replacement upstream PRs for this remediation.
@@ -769,8 +798,8 @@ public, sealed artifact thread.
       external state.
 - [ ] Existing PR #11 and PR #9 point at the certified commits and accurately state the final
       lifecycle scope, evidence, remaining external state, and required merge order.
-- [ ] Aggregate production code is net-reduced, or the owner explicitly approves the surfaced
-      additive deviation; tests/docs/generated growth is reported separately.
+- [ ] Superseded paths named by Items 1–12 are verified deleted; simplicity is judged by review,
+      with no numeric LOC criterion (owner amendment, 2026-07-19).
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-composed-proof/spec.md`
