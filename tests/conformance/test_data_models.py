@@ -648,10 +648,16 @@ def test_req_dm_03_fields_entry_point():
         "source_calc_usage",
         "param_group",
         "python_type",
+        # Item 4 Phase 3: a modeled default's unit, carried never converted
+        # (DD-R25), and the IR node kind that stopped resolution, which is what
+        # makes "explicitly unresolved" observable rather than indistinguishable
+        # from "no default at all" (DD-R22).
+        "unit_text",
+        "unresolved_default_kind",
     }
     actual = _pydantic_field_names(EntryPoint)
     assert actual == expected
-    assert len(actual) == 7
+    assert len(actual) == 9
 
 
 @pytest.mark.req("REQ-DM-03")

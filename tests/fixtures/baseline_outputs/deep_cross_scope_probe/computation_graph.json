@@ -331,7 +331,9 @@
           "default_value": 0.0,
           "source_calc_usage": "Analysis_Calc",
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -347,7 +349,9 @@
           "default_value": 2.0,
           "source_calc_usage": "Derived_Metric",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -363,7 +367,9 @@
           "default_value": 2.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis__baseline",
@@ -372,7 +378,9 @@
           "default_value": 2.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis__data_point",
@@ -381,7 +389,9 @@
           "default_value": 2.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core__input_val",
@@ -390,7 +400,9 @@
           "default_value": 10.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "DeepCrossScopeProducer__Core_Metric__metric_value",
@@ -399,7 +411,9 @@
           "default_value": null,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

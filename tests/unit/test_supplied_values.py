@@ -338,3 +338,67 @@ def test_malformed_type_def_literal_does_not_suppress_part_def_literal():
         real_design_attrs={},
     )
     assert _synth_by_qn(out)["Scope__plant__driver__efficiency"].default_value == "42.0"
+
+
+def test_wholly_malformed_tier2_target_is_visible(caplog):
+    """DD-A17 (Item 1 residual, DD-R32): a wholly-malformed tier-2 target is diagnosed.
+
+    Tier 1 sets `saw_non_literal` on an unparseable literal and the caller reports it
+    as a loud deferred skip. Tier 2 `continue`s past the same input and returns
+    `saw_non_literal=False`, so the caller's `resolved.value is None` branch drops the
+    target with **no diagnostic at all**. The value is correctly not applied either
+    way; only the silence is the defect.
+
+    Item 1's tier fall-through is preserved — see
+    `test_malformed_type_def_literal_does_not_suppress_part_def_literal`, which stays
+    green: a malformed literal must still not suppress a valid one below it.
+    """
+    with caplog.at_level(logging.WARNING):
+        out = _enrich(
+            [_usage("driver.efficiency", owning_part_def_qn="Design__Plant")],
+            redefinitions=[
+                # Malformed at BOTH tier-2 owners, so nothing resolves and there is
+                # no valid literal below to fall through to.
+                _override("Lib__Hif_Driver", "efficiency", "true"),
+                _override("Design__Plant", "efficiency", "not-a-number"),
+            ],
+            design_overrides=[],
+            usage_type_map={(_SCOPE, "driver"): "Lib__Hif_Driver"},
+            real_design_attrs={},
+        )
+
+    # No value invented.
+    assert out == []
+
+    warnings = [r for r in caplog.records if r.levelno >= logging.WARNING]
+    assert warnings, "a wholly-malformed tier-2 target must not be dropped silently"
+    text = " ".join(r.getMessage() for r in warnings)
+    assert "driver.efficiency" in text
+    assert "malformed" in text.lower()
+
+
+def test_tier1_malformed_literal_message_bytes_are_unchanged(caplog):
+    """DD-R32 lands as a NEW record: the tier-1 aggregate string must not move.
+
+    `supplied_values.py`'s tier-1 aggregate is byte-frozen by the Phase-0 acceptance
+    overlay SHA-256 (design Phase 3). The tier-2 diagnostic is therefore a separate
+    log record, not an edit to this one.
+    """
+    with caplog.at_level(logging.WARNING):
+        _enrich(
+            [_usage("driver.efficiency")],
+            redefinitions=[],
+            design_overrides=[
+                _override(_SCOPE, "efficiency", "true", target_path=["driver", "efficiency"])
+            ],
+            usage_type_map={},
+            real_design_attrs={},
+        )
+    messages = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
+    assert any(
+        m == (
+            "supplied-value materializer scanned 1 referenced bindings: 0 literal "
+            "applied, 1 non-literal skipped (deferred: ['driver.efficiency'])."
+        )
+        for m in messages
+    ), messages

@@ -250,7 +250,9 @@
           "default_value": 10.0,
           "source_calc_usage": null,
           "param_group": "model_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

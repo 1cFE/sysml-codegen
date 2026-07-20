@@ -236,7 +236,9 @@
           "default_value": 5000.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "toy_plant__Toy_Plant__plant_length",
@@ -245,7 +247,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "toy_plant__Toy_Plant__plant_unit_cost",
@@ -254,7 +258,9 @@
           "default_value": 250.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "toy_plant__Toy_Plant__plant_width",
@@ -263,7 +269,9 @@
           "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

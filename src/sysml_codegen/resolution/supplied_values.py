@@ -153,6 +153,7 @@ class ValueResolution:
     nonliteral: bool
     winning_record: RedefinitionData | None
     winning_source: Path | None
+    malformed_literal: bool = False
 
 
 @dataclass(frozen=True)
@@ -169,6 +170,7 @@ class ResolvedDemand:
     outcomes: tuple[ValueResolution, ...]
     value: float | None
     nonliteral: bool
+    malformed_literal: bool = False
 
 
 _ROUTE_RANK = {"calc": 0, "constraint": 1}
@@ -240,10 +242,17 @@ def _resolve_value(
     redefinitions: list[RedefinitionData],
     design_overrides: list[RedefinitionData],
     usage_type_map: dict[tuple[str, str], str],
-) -> tuple[float | None, bool, RedefinitionData | None]:
+) -> tuple[float | None, bool, RedefinitionData | None, bool]:
     """Resolve the supplied literal by precedence.
 
-    Returns (value, saw_non_literal, winning_record).
+    Returns (value, saw_non_literal, winning_record, saw_malformed_tier2_literal).
+
+    The fourth element exists because tier 2 must keep looking past a malformed
+    literal (Item 1's fall-through, preserved below) while still reporting that it
+    saw one. Without it a wholly-malformed tier-2 target is dropped with no
+    diagnostic at all, where the same input at tier 1 is a loud deferred skip
+    (DD-R32). It is a diagnostic signal, not a semantic outcome: the outcome is
+    "unresolved" either way.
 
     Tier 1: usage override (`design_overrides`).
     Tier 2a: specialized-def `:>>` matched by exact type QN from `usage_type_map`. The
@@ -260,10 +269,11 @@ def _resolve_value(
         instance_scope, target.part_usage, target.attr, design_overrides
     )
     if value is not None:
-        return value, False, record
+        return value, False, record, False
     if saw_non_literal:
-        return None, True, None
+        return None, True, None, False
 
+    saw_malformed = False
     type_qn = usage_type_map.get((instance_scope, target.part_usage))
     for owner_qn in (type_qn, owning_part_def_qn):
         if not owner_qn:
@@ -276,15 +286,19 @@ def _resolve_value(
                 and redef.literal_value is not None
             ):
                 try:
-                    return float(redef.literal_value), False, redef
+                    return float(redef.literal_value), False, redef, False
                 except (ValueError, TypeError):
                     # A malformed literal is not an answer, so it must not consume the
                     # tiers below it: keep looking. Merging tiers 2a and 2b into one
                     # loop previously let a bad literal on the type def suppress a good
                     # one on the consuming part def, losing a resolvable value silently.
+                    # Record that we saw one so a target that resolves to *nothing* is
+                    # still diagnosed (DD-R32); a later tier returning a value discards
+                    # this, because then nothing was lost.
+                    saw_malformed = True
                     continue
 
-    return None, False, None
+    return None, False, None, saw_malformed
 
 
 def _usable_source(path: Path | None) -> bool:
@@ -381,7 +395,7 @@ def resolve_logical_demand(
 
     outcomes: list[ValueResolution] = []
     for instance_scope, owning_part_def_qn in contexts:
-        value, nonliteral, record = _resolve_value(
+        value, nonliteral, record, malformed = _resolve_value(
             demand.target,
             instance_scope,
             owning_part_def_qn,
@@ -396,6 +410,7 @@ def resolve_logical_demand(
                 nonliteral=nonliteral,
                 winning_record=record,
                 winning_source=_owner_source(record, exact_real_sources),
+                malformed_literal=malformed,
             )
         )
 
@@ -417,7 +432,14 @@ def resolve_logical_demand(
         )
     value, nonliteral = next(iter(semantic))
     return ResolvedDemand(
-        demand=demand, outcomes=tuple(outcomes), value=value, nonliteral=nonliteral
+        demand=demand,
+        outcomes=tuple(outcomes),
+        value=value,
+        nonliteral=nonliteral,
+        # A diagnostic signal, deliberately outside the `semantic` agreement check
+        # above: contexts that agree on "unresolved" still agree, whether or not one
+        # of them tripped over a malformed literal on the way.
+        malformed_literal=any(outcome.malformed_literal for outcome in outcomes),
     )
 
 
@@ -526,6 +548,7 @@ def enrich_graph_design_attributes(
     synthesized: list[tuple[Path, DesignAttributeData]] = []
     collisions: list[_BindingTarget] = []
     non_literal_skips: list[str] = []
+    malformed_targets: list[str] = []
     demands = _logical_demands(calc_usages, prepared)
     applied = 0
     for demand in demands:
@@ -540,6 +563,13 @@ def enrich_graph_design_attributes(
         if resolved.value is None:
             if resolved.nonliteral:
                 non_literal_skips.append(f"{target.part_usage}.{target.attr}")
+            elif resolved.malformed_literal:
+                # DD-R32: tier 2 correctly refuses a malformed literal and keeps
+                # looking, but when nothing below it resolves either, the target used
+                # to be dropped with no diagnostic at all — where the same input at
+                # tier 1 is a loud deferred skip. Collected separately and drained as
+                # its own record below.
+                malformed_targets.append(f"{target.part_usage}.{target.attr}")
             continue
         applied += 1
         # REQ-SVM-03 collision guard: a real captured design attribute wins. It still
@@ -572,6 +602,14 @@ def enrich_graph_design_attributes(
             target.qn,
             target.parent_part,
             target.name,
+        )
+    if malformed_targets:
+        logger.warning(
+            "supplied-value materializer: %d target(s) resolved to a malformed literal "
+            "at every tier and were left unresolved; no value was applied and none was "
+            "invented (%s).",
+            len(malformed_targets),
+            sorted(set(malformed_targets)),
         )
     # NOTE (audit F6): "referenced bindings" now under-counts by design — the value is
     # `len(demands)`, the number of normalized targets, and collapsing many bindings into

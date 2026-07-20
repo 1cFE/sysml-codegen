@@ -3814,7 +3814,9 @@
           "default_value": 0.05,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_consumption",
@@ -3823,7 +3825,9 @@
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost",
@@ -3832,7 +3836,9 @@
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__n_mod",
@@ -3841,7 +3847,9 @@
           "default_value": 1.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year",
@@ -3850,7 +3858,9 @@
           "default_value": 20.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw",
@@ -3859,7 +3869,9 @@
           "default_value": 0.008,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_availability",
@@ -3868,7 +3880,9 @@
           "default_value": 0.159,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_lifetime",
@@ -3877,7 +3891,9 @@
           "default_value": 25.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__yearly_inflation",
@@ -3886,7 +3902,9 @@
           "default_value": 0.0245,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -3902,7 +3920,9 @@
           "default_value": 71.5,
           "source_calc_usage": "BatteryBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__fab_factor",
@@ -3911,7 +3931,9 @@
           "default_value": 0.45,
           "source_calc_usage": "BatteryBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model__install_factor",
@@ -3920,7 +3942,9 @@
           "default_value": 0.3,
           "source_calc_usage": "BatteryBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__cost_per_kwh",
@@ -3929,7 +3953,9 @@
           "default_value": 171.5,
           "source_calc_usage": "BatteryPackCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__fab_factor",
@@ -3938,7 +3964,9 @@
           "default_value": 0.45,
           "source_calc_usage": "BatteryPackCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__install_factor",
@@ -3947,7 +3975,9 @@
           "default_value": 0.3,
           "source_calc_usage": "BatteryPackCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__cost_per_watt",
@@ -3956,7 +3986,9 @@
           "default_value": 0.1714,
           "source_calc_usage": "HybridInverterCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__fab_factor",
@@ -3965,7 +3997,9 @@
           "default_value": 0.45,
           "source_calc_usage": "HybridInverterCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__install_factor",
@@ -3974,7 +4008,9 @@
           "default_value": 0.3,
           "source_calc_usage": "HybridInverterCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__base_cost",
@@ -3983,7 +4019,9 @@
           "default_value": 150.0,
           "source_calc_usage": "ElectricalPanelCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__cost_per_circuit",
@@ -3992,7 +4030,9 @@
           "default_value": 34.0,
           "source_calc_usage": "ElectricalPanelCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__fab_factor",
@@ -4001,7 +4041,9 @@
           "default_value": 0.45,
           "source_calc_usage": "ElectricalPanelCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__install_factor",
@@ -4010,7 +4052,9 @@
           "default_value": 0.3,
           "source_calc_usage": "ElectricalPanelCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__cost_per_kw",
@@ -4019,7 +4063,9 @@
           "default_value": 187.5,
           "source_calc_usage": "PermittingCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__cost_per_panel_rack",
@@ -4028,7 +4074,9 @@
           "default_value": 57.0,
           "source_calc_usage": "RackingCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__fab_factor",
@@ -4037,7 +4085,9 @@
           "default_value": 0.45,
           "source_calc_usage": "RackingCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__install_factor",
@@ -4046,7 +4096,9 @@
           "default_value": 0.3,
           "source_calc_usage": "RackingCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__child_count",
@@ -4055,7 +4107,9 @@
           "default_value": 25.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__fastener_cost_per_child",
@@ -4064,7 +4118,9 @@
           "default_value": 0.5,
           "source_calc_usage": "AllocationCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__seal_cost_per_child",
@@ -4073,7 +4129,9 @@
           "default_value": 0.3,
           "source_calc_usage": "AllocationCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__total_child_mass",
@@ -4082,7 +4140,9 @@
           "default_value": 50.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model__wiring_cost_per_kg",
@@ -4091,7 +4151,9 @@
           "default_value": 2.0,
           "source_calc_usage": "AllocationCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_panel_bos",
@@ -4100,7 +4162,9 @@
           "default_value": 30.0,
           "source_calc_usage": "ArrayBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__cost_per_string",
@@ -4109,7 +4173,9 @@
           "default_value": 150.0,
           "source_calc_usage": "ArrayBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__fab_factor",
@@ -4118,7 +4184,9 @@
           "default_value": 0.45,
           "source_calc_usage": "ArrayBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__install_factor",
@@ -4127,7 +4195,9 @@
           "default_value": 0.3,
           "source_calc_usage": "ArrayBOSCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__cost_per_watt",
@@ -4136,7 +4206,9 @@
           "default_value": 0.286,
           "source_calc_usage": "InverterCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__fab_factor",
@@ -4145,7 +4217,9 @@
           "default_value": 0.45,
           "source_calc_usage": "InverterCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__install_factor",
@@ -4154,7 +4228,9 @@
           "default_value": 0.3,
           "source_calc_usage": "InverterCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__cost_per_watt",
@@ -4163,7 +4239,9 @@
           "default_value": 1.07,
           "source_calc_usage": "PVModuleCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__fab_factor",
@@ -4172,7 +4250,9 @@
           "default_value": 0.45,
           "source_calc_usage": "PVModuleCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__install_factor",
@@ -4181,7 +4261,9 @@
           "default_value": 0.3,
           "source_calc_usage": "PVModuleCostCalc",
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -4197,7 +4279,9 @@
           "default_value": 8.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__capacity_kwh",
@@ -4206,7 +4290,9 @@
           "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model__chemistry_factor",
@@ -4215,7 +4301,9 @@
           "default_value": 1.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model__power_rating",
@@ -4224,7 +4312,9 @@
           "default_value": 10000.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__pack_count",
@@ -4233,7 +4323,9 @@
           "default_value": 8.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model__circuit_count",
@@ -4242,7 +4334,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__fabrication_cost__permitting_fabrication_cost",
@@ -4251,7 +4345,9 @@
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__installation_cost__permitting_installation_cost",
@@ -4260,7 +4356,9 @@
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model__system_capacity_kw",
@@ -4269,7 +4367,9 @@
           "default_value": 8.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__panel_count",
@@ -4278,7 +4378,9 @@
           "default_value": 20.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model__tilt_angle",
@@ -4287,7 +4389,9 @@
           "default_value": 30.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__raw_material_cost__permitting_raw_material_cost",
@@ -4296,7 +4400,9 @@
           "default_value": 0.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__panel_count",
@@ -4305,7 +4411,9 @@
           "default_value": 20.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model__string_count",
@@ -4314,7 +4422,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model__power_rating",
@@ -4323,7 +4433,9 @@
           "default_value": 2000.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter_count",
@@ -4332,7 +4444,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__module_count",
@@ -4341,7 +4455,9 @@
           "default_value": 20.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__efficiency",
@@ -4350,7 +4466,9 @@
           "default_value": 0.21,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model__wattage",
@@ -4359,7 +4477,9 @@
           "default_value": 400.0,
           "source_calc_usage": null,
           "param_group": null,
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

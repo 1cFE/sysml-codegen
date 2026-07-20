@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -534,12 +535,30 @@ def _project_excluded_location(
     )
 
 
+def _degraded_location(usage: ConstraintUsageFact) -> str:
+    """An explicitly-marked location for a usage whose file maps to no model root.
+
+    Renders the basename rather than the raw path: the raw path is machine-specific
+    and this string is user-facing. Line and column are the actionable part and are
+    preserved.
+    """
+    if usage.location is None:
+        return "<no location>"
+    basename = os.path.basename(usage.location.file)
+    return f"<unmapped {basename}>:{usage.location.line}:{usage.location.column}"
+
+
 def _report_non_numerical_warnings(
     pairs: tuple[tuple[ConstraintUsageFact, UsageDecision], ...],
     *,
-    projected_location: Callable[[int], _ProjectedExcludedLocation],
+    warning_location: Callable[[int], str],
 ) -> None:
-    """Report every non-numerical decision once in source/profile order."""
+    """Report every non-numerical decision once in source/profile order.
+
+    ``warning_location`` must not raise (DD-R16). Warning preparation can never
+    substitute itself for the BLOCK halt that follows it (DD-R17), so a location
+    that cannot be projected degrades rather than aborting the pre-pass.
+    """
     for index, (usage, decision) in enumerate(pairs):
         if decision.eligibility is not Eligibility.NON_NUMERICAL:
             continue
@@ -550,7 +569,7 @@ def _report_non_numerical_warnings(
         logger.warning(
             "Constraint %s at %s is not numerical and will not execute: %s",
             usage_qn,
-            projected_location(index).rendered,
+            warning_location(index),
             diagnostics,
         )
 
@@ -694,7 +713,24 @@ def prepare_constraint_usages(
         location_cache[index] = projected
         return projected
 
-    _report_non_numerical_warnings(pairs, projected_location=projected_location)
+    def warning_location(index: int) -> str:
+        """Render a warning's location, degrading instead of raising (DD-R16).
+
+        Delegates to the strict projector so a *mappable* location is still
+        projected exactly once per usage (I10) and shares the memo. The
+        degradation cannot leak into the strict path (I3, DD-R18) because
+        ``projected_location`` raises before it caches: only a successful
+        projection is ever written, so the exclusion path at this same index
+        still re-attempts and still fails loudly.
+        """
+        from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+        try:
+            return projected_location(index).rendered
+        except CodeGenerationError:
+            return _degraded_location(facts.usages[index])
+
+    _report_non_numerical_warnings(pairs, warning_location=warning_location)
     _raise_on_blocking(pairs)
 
     staged: dict[str, tuple[InstanceOccurrence, ...]] = {}
@@ -1302,17 +1338,63 @@ def _constraint_module_type(c: ConcreteConstraint) -> str:
     return f"{namespace}.{base}ConstraintModule"
 
 
-def _literal_float(serialized_ir: str | None) -> float | None:
-    """A modeled default's numeric value, if the default IR is a plain literal."""
+@dataclass(frozen=True)
+class ModeledDefault:
+    """What a modeled default's IR resolves to.
+
+    ``value is None`` means unresolved. ``unresolved_node_kind`` names the IR node
+    that stopped resolution when there was one to name, and is ``None`` when there
+    was simply no default IR at all — an absence is not an unsupported node.
+    """
+
+    value: float | None = None
+    unit_text: str | None = None
+    unresolved_node_kind: str | None = None
+
+
+def _resolve_default_node(node: ExpressionIR) -> ModeledDefault:
+    """Unwrap unit annotations and fold a unary sign over a modeled default.
+
+    Scope is exactly what an explicitly modeled default needs (DD-R25): general
+    constant folding and unit *conversion* stay out. A ``UnitAnnotationNode``
+    contributes its numeric value and carries its unit text; it is never converted.
+    This mirrors what ``generation/predicate_compiler.py`` already does structurally
+    for the predicate lane — the drift this closes is that the default lane never
+    got it.
+    """
+    if isinstance(node, LiteralNode):
+        try:
+            return ModeledDefault(value=float(node.literal.value))
+        except (TypeError, ValueError):
+            return ModeledDefault(unresolved_node_kind=node.kind)
+
+    if isinstance(node, UnitAnnotationNode):
+        inner = _resolve_default_node(node.value)
+        if inner.value is None:
+            return inner
+        return ModeledDefault(value=inner.value, unit_text=node.unit_text or inner.unit_text)
+
+    if isinstance(node, OperatorNode) and len(node.operands) == 1 and node.operator in ("+", "-"):
+        inner = _resolve_default_node(node.operands[0])
+        if inner.value is None:
+            return inner
+        signed = -inner.value if node.operator == "-" else inner.value
+        return ModeledDefault(value=signed, unit_text=inner.unit_text)
+
+    return ModeledDefault(unresolved_node_kind=node.kind)
+
+
+def resolve_modeled_default(serialized_ir: str | None) -> ModeledDefault:
+    """A modeled default's value, unit, and — when unresolved — the IR kind that stopped it.
+
+    Replaces the former ``_literal_float``, which returned a value only for a bare
+    ``LiteralNode``: `:= -0.1` parses as an ``OperatorNode`` over a literal and
+    `= 40.0 [MW]` as a ``UnitAnnotationNode``, so both silently became ``None`` and
+    the generated JSON simply omitted the key (DD-R20, DD-R21).
+    """
     if serialized_ir is None:
-        return None
-    ir = parse_expression(serialized_ir)
-    if not isinstance(ir, LiteralNode):
-        return None
-    try:
-        return float(ir.literal.value)
-    except (TypeError, ValueError):
-        return None
+        return ModeledDefault()
+    return _resolve_default_node(parse_expression(serialized_ir))
 
 
 def _group_for_qn(
@@ -1374,8 +1456,8 @@ def extend_graph_with_constraints(
     derived_groups = group_deriver.derive_groups()
     existing_param_qns = {p.qualified_name for g in groups for p in g.parameters}
 
-    def mint(qn: str, entry_type: EntryPointType, default_value: float | None) -> str:
-        """Mint (or reuse) an entry point; returns its param_group name."""
+    def mint(qn: str, entry_type: EntryPointType, resolved: ModeledDefault) -> str:
+        """Mint (or reuse) an entry point carrying ``resolved``; returns its group name."""
         gname, gclass, gsource = _group_for_qn(qn, derived_groups, groups)
         if qn in existing_param_qns:
             return gname
@@ -1390,8 +1472,10 @@ def extend_graph_with_constraints(
                 qualified_name=qn,
                 simple_name=qn.split("__")[-1],
                 entry_type=entry_type,
-                default_value=default_value,
+                default_value=resolved.value,
                 param_group=gname,
+                unit_text=resolved.unit_text,
+                unresolved_default_kind=resolved.unresolved_node_kind,
             )
         )
         existing_param_qns.add(qn)
@@ -1417,14 +1501,27 @@ def extend_graph_with_constraints(
                 gname = mint(
                     qn,
                     EntryPointType.DESIGN_ATTRIBUTE,
-                    group_deriver.design_attribute_default_value(qn),
+                    ModeledDefault(value=group_deriver.design_attribute_default_value(qn)),
                 )
                 source = InputSource(
                     source_type="entry_point", param_group=gname, qualified_name=qn
                 )
             else:  # MODELED_DEFAULT
                 qn = f"{c.constraint_id}__{inp.formal_name}"
-                gname = mint(qn, EntryPointType.LIBRARY_DEFAULT, _literal_float(inp.default_ir))
+                resolved_default = resolve_modeled_default(inp.default_ir)
+                if resolved_default.unresolved_node_kind is not None:
+                    # DD-R22: an entry point the user can see is unfilled, named by QN
+                    # and by the IR kind that stopped resolution. Without this a
+                    # numeric formal with an unresolvable default is invisible —
+                    # `_warn_nonfloat_entry_points` only fires on a non-numeric type.
+                    logger.warning(
+                        "Modeled default for entry point %s could not be resolved: "
+                        "unsupported default IR node %r. No value was invented; the "
+                        "entry point is unfilled and must be supplied in the input file.",
+                        qn,
+                        resolved_default.unresolved_node_kind,
+                    )
+                gname = mint(qn, EntryPointType.LIBRARY_DEFAULT, resolved_default)
                 source = InputSource(
                     source_type="entry_point", param_group=gname, qualified_name=qn
                 )

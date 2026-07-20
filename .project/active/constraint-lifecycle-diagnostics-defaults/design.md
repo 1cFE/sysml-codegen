@@ -633,13 +633,12 @@ Gate 2 stop rule on both clauses; run Gate 3b's `rg`. Regenerate the six fixture
 amendment (DD-R33). **Exit: DD-A14, DD-A15, DD-A16, DD-A18 pass; no binding's `(outcome, identity,
 key_form)` moved except to row 16.**
 
-**Phase 2 — warning totality and BLOCK preservation (codegen only).** The warning-local fallback,
+**Phase 2 — [x] COMPLETE — warning totality and BLOCK preservation (codegen only).** The warning-local fallback,
 with the `location_cache` trap (I3) as the review focus. Name every moved Item-1-pinned byte
 sequence with its reason (DD-A10); DD-R18's other callers proven still strict (DD-A09).
 **Exit: DD-A08, DD-A09, DD-A10.**
 
-**Phase 3 — modeled-default fidelity and lane consolidation. Codegen-side code, but it has a
-licence dependency.** The `ModeledDefault` resolver, `EntryPoint` fields, `null`-not-omitted JSON,
+**Phase 3 — [x] COMPLETE (live route; snapshot route deferred to Phase 5 as declared) — modeled-default fidelity and lane consolidation.** The `ModeledDefault` resolver, `EntryPoint` fields, `null`-not-omitted JSON,
 the unresolved diagnostic, the lane deletions, and the tier-2 malformed collector (DD-R32 — a *new*
 log record; the tier-1 aggregate string at `supplied_values.py:583-590` is byte-frozen by a Phase-0
 acceptance overlay SHA-256 and must not be edited). New fixtures for `:= -0.1` and `= 40.0 [MW]`.
@@ -882,9 +881,43 @@ keys, so **no revision can satisfy the test as written**: the verifier policy la
 Advancing the revision pin removes the policy delta the test needs; leaving it fails on artifact
 drift. The mechanism now takes **only** `contracts/verify.py` from the reviewed revision and
 generates both sides from the working tree, isolating the single variable the test is about. The
-asserted property is unchanged and strictly better isolated, and a new guard fails loudly if the
-pinned revision ever stops carrying a different policy. **Flagged for review as a mechanism change,
-not a repin.**
+asserted property is unchanged and strictly better isolated. **Flagged for audit scrutiny as a
+certified-seam mechanism change, not a repin** (orchestrator ruling, 2026-07-19: noted for audit
+rather than ruled on).
+
+**Why no repin could work, in full.** The test needs a reviewed revision that differs from the
+working tree in `contracts/verify.py` **and nothing else**. `verify.py` changed exactly once since
+the old pin, at `e217119`, which is strictly before the carry. So every revision carrying the old
+policy also carries the old entry-point keys, and every revision carrying the new keys also carries
+the current policy. Advancing the pin to the carry commit makes `reviewed_verifier_hash ==
+candidate_verifier_hash`, which fails the test's own `!=` assertions on the verifier hash and the
+derived fingerprint; leaving the old pin fails on `pipeline.yaml`, `model_contract.json` and
+`inputs/design_params.json` drift. Both directions fail, and no third revision exists. The coupling
+the test carried — "generated output is stable across this revision boundary" — was an unstated
+assumption, not part of its claim.
+
+**What replaces it.** `REVIEWED_REVISION` now contributes exactly one file. The reviewed source
+tree is the working tree with `src/sysml_codegen/contracts/verify.py` overwritten from
+`git show <rev>:...`, everything else symlinked. Both sides then generate from the same code, so
+the only difference that can reach the seal is the verifier policy.
+
+**The new loud guard, and why it is the load-bearing part.** Isolating the variable this way makes
+a silent no-op possible in a way the old form prevented structurally: if `REVIEWED_REVISION` ever
+stops differing from the working tree's `verify.py` — because the policy is reverted, or the pin is
+advanced carelessly — both sides become identical and every assertion would pass while testing
+nothing. So the test now asserts, **before generating anything**:
+
+```
+assert reviewed_verify != (REPO_ROOT / "src/sysml_codegen/contracts/verify.py").read_bytes(), (
+    "REVIEWED_REVISION must carry a different verifier policy than the working "
+    "tree, or this test asserts nothing"
+)
+```
+
+This guard is what makes the rewrite safe to accept: the failure mode the new mechanism introduces
+is the one thing it checks first, with a message that names the cause. It was verified to fire —
+the intermediate state with `REVIEWED_REVISION` pointed at the carry commit tripped it exactly as
+intended, which is how the impossibility above was confirmed empirically rather than argued.
 
 **Other pins repinned with reasons recorded in-line:** the snapshot-portability manifest SHA-256
 (delta verified to be exactly two key movements and nothing else) and the `REQ-DM-03` `BindingInfo`
@@ -902,7 +935,109 @@ asserts zero, with I7's visibility guard confirmed still covered directly in
 predecessor. mypy **72 errors before and after — zero added**. ruff **11 pre-existing errors before
 and after — zero added**; `src/` and all new files clean.
 
-**Phase 2 not started**, per instruction.
+### Phase 2 — complete
+
+**R-8 warning totality (DD-A08), with order preserved before BLOCK (DD-A17).**
+`_report_non_numerical_warnings` took a strict `projected_location` callable and resolved each
+warning's location eagerly, so a mapping failure on the first warned usage aborted the whole
+pre-pass: zero warnings, and the referent error standing in place of the actionable BLOCK halt.
+It now takes a `warning_location` callable that cannot raise.
+
+**The I3 trap, and the better answer.** The first implementation deliberately bypassed the shared
+`location_cache` so a degraded value could never leak into the exclusion path. That broke a pinned
+invariant — `test_each_named_and_anonymous_excluded_location_projects_once` requires each mappable
+location to be projected exactly once (I10). The resolution is strictly better than the bypass:
+`warning_location` delegates to the existing cached `projected_location` inside a `try`, because
+that closure **raises before it caches**. Only a successful projection is ever written, so a
+mappable location is memoized as before and a degraded one is never stored — the exclusion path at
+the same index still re-attempts and still fails loudly. Both invariants hold, and neither is
+traded for the other.
+
+**Fallback rendering** (design open question, settled): `<unmapped {basename}>:{line}:{column}`.
+The raw path is machine-specific and this string is user-facing, so it renders the basename; line
+and column are the actionable part and are preserved.
+
+**Forced differences: none.** A *mappable* location renders exactly the bytes it rendered before —
+only the failure path changed, from raising to degrading. Every Item-1-pinned warning byte sequence
+(`test_constraint_non_numerical.py`, `test_constraint_usage_preparation.py:409-443`,
+`test_constraint_lowering.py`) passes unchanged, so **DD-A10 is satisfied with zero moved bytes**.
+
+**DD-A09** is the sharpest available I3 test rather than a separate scenario: a NON_NUMERICAL usage
+is also an *excluded* usage, so one fact reaches both paths at the same index. It asserts the
+warning renders degraded **and** the exclusion projection still raises. If the fallback ever leaks
+into the cache, that test goes green for the wrong reason — noted in the test itself.
+
+**DD-R32 — the tier-2 malformed-literal silence, closed.** Tier 1 sets `saw_non_literal` and the
+caller reports a loud deferred skip; tier 2 `continue`d past the same input and returned
+`saw_non_literal=False`, so the caller dropped the target with no diagnostic at all. `_resolve_value`
+now returns a fourth element, and `ValueResolution`/`ResolvedDemand` carry `malformed_literal`.
+Item 1's fall-through is preserved exactly — a malformed literal still must not consume the tiers
+below it, and `test_malformed_type_def_literal_does_not_suppress_part_def_literal` stays green;
+only a target that resolves to *nothing* is reported.
+
+Two deliberate scoping calls: the flag is **excluded from the `semantic` agreement check**, because
+it is a diagnostic signal and not a semantic outcome (contexts that agree on "unresolved" still
+agree), and it drains as a **new** log record. The tier-1 aggregate string at
+`supplied_values.py` is byte-frozen by the Phase-0 acceptance overlay SHA-256 and is not edited —
+`test_tier1_malformed_literal_message_bytes_are_unchanged` pins that it did not move.
+
+### Phase 3 — complete (live route)
+
+**`ModeledDefault` resolver replaces `_literal_float`**, which is deleted (`rg` finds only a
+docstring back-reference). Dispositions: `LiteralNode` → value; `UnitAnnotationNode` → recurse and
+carry `unit_text`; unary `+`/`-` `OperatorNode` → fold the sign over the recursive result;
+everything else → unresolved carrying its node `kind`. Sign folding and unit unwrapping compose
+(`-2.5 [W]` resolves). Absent IR is unresolved **without** a node kind — an absence is not an
+unsupported node.
+
+`mint` now takes a `ModeledDefault` rather than a bare float, so there is one contract for the
+call site rather than a float plus two side fields. `EntryPoint` gains `unit_text` and
+`unresolved_default_kind`; `generate_all_derived_jsons` emits a key for **every** entry point, with
+`null` where there is no value (DD-R21, I7). DD-R22's diagnostic fires at the mint site, naming the
+entry-point QN and the IR kind.
+
+**New fixture** `tests/fixtures/modeled_default_fidelity/` covers all three shapes end-to-end:
+`-0.1` → `-0.1`, `40.0 [W]` → `40.0` with `unit_text="W"`, and `2.0 + 3.0` → explicitly unresolved,
+diagnosed, `null` in the JSON. Its PROVENANCE records an authoring trap worth keeping: a constraint
+actual binds **positionally**, so each definition lists its bound formal first and its defaulted
+formal second.
+
+**DD-A13, the lane boundary the design left open — settled by measurement.**
+`ParameterGroupDeriver.design_attribute_default_value` and `producer_resolution._modeled_default`
+were the same bare-`float()` lane over two different QN-keyed indexes. They collapse to one
+`design_attribute_float_default(attr)`; the indexes differ legitimately, the parsing did not, and
+the duplicate is deleted rather than wrapped.
+
+`_parse_default_value` **stays, and its asymmetry is now justified rather than inherited.** The
+design's condition was to confirm the captured string never carries a sign or a unit. Both halves
+of the evidence: measured across all 34 committed fixtures, 531 captured defaults parse as float,
+**zero** signed and **zero** unit-bracketed (the 138 non-parsing values are feature references like
+`split.half`, a different shape that resolves through the computed-attribute path); and
+mechanically, the AST lane that produces the string routes operator expressions through
+`evaluate_true_static_expression` at `parameter_groups.py:239`, folding signs and stripping units
+*before* capture. So it reads a genuinely different input — a captured string for which no IR
+exists — and does not cut over.
+
+**Forced difference, pinned before regeneration and verified after.** The `EntryPoint` field
+addition emits two new `null` keys on every entry point in every baseline
+(`exclude_none=False`). Regenerated once: **9 computation graphs, 184 entry points, and the diff is
+exactly `+unit_text: null`, `+unresolved_default_kind: null` and the trailing comma on
+`python_type` — zero value movement, zero key movement.** No pipeline YAML changed (the YAML does
+not serialize these fields), and no committed `inputs/*.json` exists to churn.
+
+**Two baselines deliberately not regenerated**, both recorded rather than silently skipped:
+`constraint_inline` (the capture script fails on it with a pre-existing constraint name-safety
+violation that reproduces at the predecessor) and `plant_values` (pre-existing stale drift, excluded
+in Phase 1 for the same reason). `sample_model` regenerated to no change — it has no entry points.
+
+### Validation at the Phase 2+3 exit
+
+Suite **3025 passed / 0 failed**, zero `no live syside license` skips. `PYTHONOPTIMIZE=1`: same,
+except the two `assert`-under-`-O` tests that fail identically at the predecessor (re-confirmed by
+stash). mypy **72 errors before and after — zero added**. ruff clean on `src/` and every file
+touched.
+
+**Phase 4 not started**, per instruction.
 
 ---
 **Next Step:** owner ratification of the surfaced B2/D4 amendment and the revised Gate 1 pin, then

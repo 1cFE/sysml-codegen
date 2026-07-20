@@ -67,6 +67,12 @@ class EntryPoint(BaseModel):
         default_value: Default value if available
         source_calc_usage: For LIBRARY_DEFAULT, which calc usage needs this
         param_group: Which JSON file group (e.g., "physics_params")
+        unit_text: The unit a modeled default was annotated with, carried
+            verbatim and never converted (DD-R25)
+        unresolved_default_kind: The IR node kind that stopped default
+            resolution, when a modeled default exists but could not be
+            resolved. Makes "explicitly unresolved" observable (DD-R22)
+            rather than indistinguishable from "no default at all".
     """
 
     qualified_name: str
@@ -76,6 +82,8 @@ class EntryPoint(BaseModel):
     source_calc_usage: str | None = None
     param_group: str | None = None
     python_type: str = "float"
+    unit_text: str | None = None
+    unresolved_default_kind: str | None = None
 
     @property
     def json_field_name(self) -> str:

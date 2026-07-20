@@ -204,6 +204,34 @@ def _extract_single_attribute(elem: Any) -> DesignAttributeData | None:
 # ============== Value Extraction Helpers ==============
 
 
+def design_attribute_float_default(attr: DesignAttributeData | None) -> float | None:
+    """A captured design attribute's numeric literal default, if it has one.
+
+    One home for what were two identical bare-`float()` lanes over two different
+    QN-keyed indexes (DD-R23): `ParameterGroupDeriver.design_attribute_default_value`
+    reads the deriver's own index and `producer_resolution._modeled_default` reads the
+    resolver context's. The indexes differ legitimately; the parsing did not, and the
+    duplicate is deleted rather than wrapped.
+
+    Distinct from the IR lane (`constraint_lowering.resolve_modeled_default`), and the
+    boundary is real: this reads `DesignAttributeData.default_value`, a **string**
+    produced by AST extraction, for which no expression IR exists. It is deliberately
+    a plain `float()` with no sign folding or unit unwrapping, because the AST lane
+    that produces this string already routes operator expressions through
+    `evaluate_true_static_expression` (see `_extract_default_value` below) and so folds
+    signs and strips units *before* capture. Measured across all 34 committed fixtures:
+    531 captured defaults parse as float, zero carry a sign, zero carry a unit bracket.
+    The 138 that do not parse are feature references (`split.half`), a different shape
+    that resolves through the computed-attribute path.
+    """
+    if attr is None or attr.default_value is None:
+        return None
+    try:
+        return float(attr.default_value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _extract_default_value(expr: Any) -> str | None:
     """Extract default value from a feature value expression."""
     if expr is None:
@@ -515,12 +543,7 @@ class ParameterGroupDeriver:
         if entry is None:
             return None
         _file_path, attr = entry
-        if attr.default_value is None:
-            return None
-        try:
-            return float(attr.default_value)
-        except (TypeError, ValueError):
-            return None
+        return design_attribute_float_default(attr)
 
     def derive_groups(self) -> list[DerivedParameterGroup]:
         """Derive all parameter groups from model data."""

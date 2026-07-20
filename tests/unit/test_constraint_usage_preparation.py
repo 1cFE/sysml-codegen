@@ -533,3 +533,175 @@ def test_later_owner_cycle_discards_staged_transcript() -> None:
     assert index.calls == ["Design__Finite", "Design__Cyclic"]
     assert lowered == []
     assert enriched == []
+
+
+# ---------------------------------------------------------------------------
+# Item 4 — R-8: warning totality and BLOCK preservation (DD-A08, DD-A09)
+# ---------------------------------------------------------------------------
+
+_UNMAPPABLE_FILE = "not/a/canonical/referent.sysml"
+
+
+def test_unmappable_warning_location_degrades_and_block_still_halts(
+    spy_index: _SpyIndex, caplog: pytest.LogCaptureFixture
+) -> None:
+    """DD-A08 (R-8): a warning whose file maps to no root still warns, then BLOCK halts.
+
+    At the predecessor this emitted zero warnings and raised the referent error in
+    place of the actionable halt: `_report_non_numerical_warnings` resolved each
+    location eagerly through the strict projector, so a mapping failure on the first
+    warned usage aborted the whole pre-pass (DD-R16, DD-R17).
+    """
+    warned = _usage(
+        owner_kind="part_def",
+        owner_qn="Design::Admitted",
+        location=LocationFact(file=_UNMAPPABLE_FILE, line=10, column=2),
+        predicate=_non_numerical_predicate(),
+        name="warned",
+        qualified_name="Design__warned",
+    )
+    blocked = _usage(
+        owner_kind="package",
+        owner_qn="Design",
+        location=LocationFact(file="root-0/design.sysml", line=20, column=2),
+        predicate=OperatorNode(
+            operator="==", operands=[_real(1.0), _real(2.0)], operand_type=None
+        ),
+        name="blocked",
+        qualified_name="Design__blocked",
+    )
+
+    with caplog.at_level(logging.WARNING, logger=LOWERING_LOGGER):
+        with pytest.raises(CodeGenerationError, match="not executable") as excinfo:
+            prepare_constraint_usages(
+                _facts([warned, blocked]),
+                occ_index=spy_index,
+                calc_usages=[],
+                source_location_mode="snapshot",
+            )
+
+    # The halt is the actionable BLOCK diagnostic, not the referent failure.
+    assert "Design__blocked" in str(excinfo.value)
+    assert "canonical source referent" not in str(excinfo.value)
+
+    messages = [record.getMessage() for record in caplog.records if record.name == LOWERING_LOGGER]
+    assert len(messages) == 1
+    assert "Design__warned" in messages[0]
+    # The location renders as an explicitly-marked fallback rather than raising.
+    assert "<unmapped referent.sysml>:10:2" in messages[0]
+
+
+def test_unmappable_excluded_record_location_still_raises(
+    spy_index: _SpyIndex, caplog: pytest.LogCaptureFixture
+) -> None:
+    """DD-A09: the DD-R16 degradation is confined to warning text.
+
+    A NON_NUMERICAL usage is also an *excluded* usage, so one fact reaches both
+    paths at the same index: the warning renders a degraded location, and the
+    exclusion projection for that same index must still raise (DD-R18, I4). That
+    makes this the sharpest available test of I3 — if the warning-local fallback
+    ever leaks into the shared location cache, the exclusion path reads the
+    degraded value instead of raising and this test goes green for the wrong
+    reason.
+    """
+    warned_and_excluded = _usage(
+        owner_kind="part_def",
+        owner_qn="Design::Admitted",
+        location=LocationFact(file=_UNMAPPABLE_FILE, line=10, column=2),
+        predicate=_non_numerical_predicate(),
+        name="warned",
+        qualified_name="Design__warned",
+    )
+
+    with caplog.at_level(logging.WARNING, logger=LOWERING_LOGGER):
+        with pytest.raises(CodeGenerationError, match="canonical source referent"):
+            prepare_constraint_usages(
+                _facts([warned_and_excluded]),
+                occ_index=spy_index,
+                calc_usages=[],
+                source_location_mode="snapshot",
+            )
+
+    # The warning was still emitted, with its degraded location, before the halt.
+    messages = [record.getMessage() for record in caplog.records if record.name == LOWERING_LOGGER]
+    assert len(messages) == 1
+    assert "<unmapped referent.sysml>:10:2" in messages[0]
+
+
+# ---------------------------------------------------------------------------
+# Item 4 Phase 3 — modeled-default fidelity (DD-A11, DD-A12)
+# ---------------------------------------------------------------------------
+
+
+def _ir(node) -> str:
+    from agentic_mbse.sysml.expression_ir import serialize_expression
+
+    return serialize_expression(node)
+
+
+def _unit(value: float, unit_text: str):
+    from agentic_mbse.sysml.expression_facts import UnitFact
+    from agentic_mbse.sysml.expression_ir import UnitAnnotationNode
+
+    return UnitAnnotationNode(
+        value=_real(value),
+        unit_text=unit_text,
+        operand_type=OperandTypeFact(
+            category="real",
+            enumeration=None,
+            unit=UnitFact(unit=unit_text, dimension=None),
+        ),
+    )
+
+
+def _negated(value: float):
+    return OperatorNode(operator="-", operands=[_real(value)], operand_type=None)
+
+
+def test_modeled_default_signed_literal_survives():
+    """DD-A11: `:= -0.1` is an OperatorNode over a literal, not a bare LiteralNode."""
+    resolved = constraint_lowering.resolve_modeled_default(_ir(_negated(0.1)))
+    assert resolved.value == -0.1
+    assert resolved.unresolved_node_kind is None
+
+
+def test_modeled_default_unit_annotated_literal_survives_with_unit_carried():
+    """DD-A11 / DD-R25: `= 40.0 [W]` contributes its value; the unit is carried,
+    never converted."""
+    resolved = constraint_lowering.resolve_modeled_default(_ir(_unit(40.0, "MW")))
+    assert resolved.value == 40.0
+    assert resolved.unit_text == "MW"
+    assert resolved.unresolved_node_kind is None
+
+
+def test_modeled_default_signed_unit_annotated_literal_survives():
+    """Sign folding composes with unit unwrapping."""
+    signed_unit = OperatorNode(operator="-", operands=[_unit(2.5, "MW")], operand_type=None)
+    resolved = constraint_lowering.resolve_modeled_default(_ir(signed_unit))
+    assert resolved.value == -2.5
+    assert resolved.unit_text == "MW"
+
+
+def test_modeled_default_plain_literal_unchanged():
+    """The pre-existing bare-literal lane keeps working."""
+    resolved = constraint_lowering.resolve_modeled_default(_ir(_real(3.0)))
+    assert resolved.value == 3.0
+    assert resolved.unit_text is None
+    assert resolved.unresolved_node_kind is None
+
+
+def test_modeled_default_unsupported_ir_is_explicitly_unresolved():
+    """DD-A12 / DD-R21: an unsupported default IR names its node kind and invents nothing."""
+    binary = OperatorNode(
+        operator="+", operands=[_real(1.0), _real(2.0)], operand_type=None
+    )
+    resolved = constraint_lowering.resolve_modeled_default(_ir(binary))
+    assert resolved.value is None
+    assert resolved.unresolved_node_kind == "operator"
+
+
+def test_modeled_default_absent_ir_is_unresolved_without_a_node_kind():
+    """No default IR at all is an absence, not an unsupported node."""
+    resolved = constraint_lowering.resolve_modeled_default(None)
+    assert resolved.value is None
+    assert resolved.unresolved_node_kind is None

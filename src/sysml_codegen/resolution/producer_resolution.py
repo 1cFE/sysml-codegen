@@ -535,13 +535,9 @@ def _admissible(form: KeyForm, policy: TerminalPolicy) -> bool:
 
 
 def _modeled_default(qualified_name: str, ctx: ProducerContext) -> float | None:
-    attr = ctx.design_attr_by_qn.get(qualified_name)
-    if attr is None or attr.default_value is None:
-        return None
-    try:
-        return float(attr.default_value)
-    except (TypeError, ValueError):
-        return None
+    from sysml_codegen.analysis.parameter_groups import design_attribute_float_default
+
+    return design_attribute_float_default(ctx.design_attr_by_qn.get(qualified_name))
 
 
 def resolve_producer(

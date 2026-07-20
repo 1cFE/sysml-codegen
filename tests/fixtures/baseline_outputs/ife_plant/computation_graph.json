@@ -654,7 +654,9 @@
           "default_value": 1.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__chamber_a__yield_calc__yield_constant",
@@ -663,7 +665,9 @@
           "default_value": 5000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__chamber_b__yield_calc__blanket_multiple",
@@ -672,7 +676,9 @@
           "default_value": 1.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__chamber_b__yield_calc__yield_constant",
@@ -681,7 +687,9 @@
           "default_value": 5000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__driver__base_power_calc__bank_energy",
@@ -690,7 +698,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__driver__base_power_calc__efficiency",
@@ -699,7 +709,9 @@
           "default_value": 0.1,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__availability",
@@ -708,7 +720,9 @@
           "default_value": 0.7,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__blanket_energy_multiple",
@@ -717,7 +731,9 @@
           "default_value": 1.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__discount_rate",
@@ -726,7 +742,9 @@
           "default_value": 0.08,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_cost_constant",
@@ -735,7 +753,9 @@
           "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_efficiency",
@@ -744,7 +764,9 @@
           "default_value": 0.1,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_energy",
@@ -753,7 +775,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_lifetime_shots",
@@ -762,7 +786,9 @@
           "default_value": 50000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__frequency",
@@ -771,7 +797,9 @@
           "default_value": 0.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__gain",
@@ -780,7 +808,9 @@
           "default_value": 500.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__om_cost_constant",
@@ -789,7 +819,9 @@
           "default_value": 30.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__plant_cost_constant",
@@ -798,7 +830,9 @@
           "default_value": 3000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__target_cost_constant",
@@ -807,7 +841,9 @@
           "default_value": 10.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__thermal_efficiency",
@@ -816,7 +852,9 @@
           "default_value": 0.4,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__yield_cost_constant",
@@ -825,7 +863,9 @@
           "default_value": 5000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy",
@@ -834,7 +874,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__base_power_calc__efficiency",
@@ -843,7 +885,9 @@
           "default_value": 0.1,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy",
@@ -852,7 +896,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__hif_cost_calc__cost_per_joule",
@@ -861,7 +907,9 @@
           "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantSubsystems__radial_build__tf_coil__volume_calc__radius",
@@ -870,7 +918,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

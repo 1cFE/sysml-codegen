@@ -351,7 +351,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__net_cost_calc__revenue",
@@ -360,7 +362,9 @@
           "default_value": 200.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__quoted_return__amount",
@@ -369,7 +373,9 @@
           "default_value": 6.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__rated_cost__rate",
@@ -378,7 +384,9 @@
           "default_value": null,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -394,7 +402,9 @@
           "default_value": 12.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__wall",
@@ -403,7 +413,9 @@
           "default_value": null,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesLib__Flow_Sub__throughput",
@@ -412,7 +424,9 @@
           "default_value": 8.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

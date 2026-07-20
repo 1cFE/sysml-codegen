@@ -3513,7 +3513,9 @@
           "default_value": 0.06,
           "source_calc_usage": "CoolantPumpPower",
           "param_group": "blanket_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__p_thermal_electric",
@@ -3522,7 +3524,9 @@
           "default_value": 1104.22,
           "source_calc_usage": null,
           "param_group": "blanket_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEBlanket__catf_blanket__pump_load__pump_efficiency",
@@ -3531,7 +3535,9 @@
           "default_value": 0.5,
           "source_calc_usage": "CoolantPumpPower",
           "param_group": "blanket_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -3547,7 +3553,9 @@
           "default_value": 50.0,
           "source_calc_usage": null,
           "param_group": "heating_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEHeating__catf_heating__wall_plug__heating_efficiency",
@@ -3556,7 +3564,9 @@
           "default_value": 0.5,
           "source_calc_usage": "HeatingWallPlugPower",
           "param_group": "heating_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -3572,7 +3582,9 @@
           "default_value": 0.3,
           "source_calc_usage": "MagnetCryogenicLoad",
           "param_group": "magnets_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEMagnets__catf_tf_system__cryo_load__p_neutron",
@@ -3581,7 +3593,9 @@
           "default_value": 2079.41,
           "source_calc_usage": null,
           "param_group": "magnets_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEMagnets__catf_tf_system__field_at_coil",
@@ -3590,7 +3604,9 @@
           "default_value": 12.0,
           "source_calc_usage": null,
           "param_group": "magnets_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEMagnets__catf_tf_system__temperature_operating",
@@ -3599,7 +3615,9 @@
           "default_value": 20.0,
           "source_calc_usage": null,
           "param_group": "magnets_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -3615,7 +3633,9 @@
           "default_value": 0.85,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__eta_pump",
@@ -3624,7 +3644,9 @@
           "default_value": 0.5,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__eta_thermal",
@@ -3633,7 +3655,9 @@
           "default_value": 0.46,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__f_pump",
@@ -3642,7 +3666,9 @@
           "default_value": 0.06,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__f_subsystem",
@@ -3651,7 +3677,9 @@
           "default_value": 0.03,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__m_neutron",
@@ -3660,7 +3688,9 @@
           "default_value": 1.1,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__p_fusion",
@@ -3669,7 +3699,9 @@
           "default_value": 2600.0,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEPhysics__catf_physics__p_input",
@@ -3678,7 +3710,9 @@
           "default_value": 50.0,
           "source_calc_usage": null,
           "param_group": "physics_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -3694,7 +3728,9 @@
           "default_value": 7.55,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__bioshield__outer_radius",
@@ -3703,7 +3739,9 @@
           "default_value": 8.55,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket__inner_radius",
@@ -3712,7 +3750,9 @@
           "default_value": 4.4,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__blanket__outer_radius",
@@ -3721,7 +3761,9 @@
           "default_value": 5.2,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__elongation",
@@ -3730,7 +3772,9 @@
           "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__first_wall__inner_radius",
@@ -3739,7 +3783,9 @@
           "default_value": 4.2,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__first_wall__outer_radius",
@@ -3748,7 +3794,9 @@
           "default_value": 4.4,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap1__inner_radius",
@@ -3757,7 +3805,9 @@
           "default_value": 5.8,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap1__outer_radius",
@@ -3766,7 +3816,9 @@
           "default_value": 6.3,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap2__inner_radius",
@@ -3775,7 +3827,9 @@
           "default_value": 6.75,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__gap2__outer_radius",
@@ -3784,7 +3838,9 @@
           "default_value": 7.25,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__inner_radius",
@@ -3793,7 +3849,9 @@
           "default_value": 5.4,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__ht_shield__outer_radius",
@@ -3802,7 +3860,9 @@
           "default_value": 5.6,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__inner_radius",
@@ -3811,7 +3871,9 @@
           "default_value": 7.25,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__lt_shield__outer_radius",
@@ -3820,7 +3882,9 @@
           "default_value": 7.55,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__magnet_surface_calc__f_exposed",
@@ -3829,7 +3893,9 @@
           "default_value": 0.5,
           "source_calc_usage": "MagnetSurfaceArea",
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__major_radius",
@@ -3838,7 +3904,9 @@
           "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__elongation",
@@ -3847,7 +3915,9 @@
           "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__inner_radius",
@@ -3856,7 +3926,9 @@
           "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__plasma_region__outer_radius",
@@ -3865,7 +3937,9 @@
           "default_value": 4.1,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__reflector__inner_radius",
@@ -3874,7 +3948,9 @@
           "default_value": 5.2,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__reflector__outer_radius",
@@ -3883,7 +3959,9 @@
           "default_value": 5.4,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__structure__inner_radius",
@@ -3892,7 +3970,9 @@
           "default_value": 5.6,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__structure__outer_radius",
@@ -3901,7 +3981,9 @@
           "default_value": 5.8,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__inner_radius",
@@ -3910,7 +3992,9 @@
           "default_value": 6.5,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__outer_radius",
@@ -3919,7 +4003,9 @@
           "default_value": 6.75,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__tf_coil__thickness",
@@ -3928,7 +4014,9 @@
           "default_value": 0.25,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__inner_radius",
@@ -3937,7 +4025,9 @@
           "default_value": 4.1,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__vacuum_gap__outer_radius",
@@ -3946,7 +4036,9 @@
           "default_value": 4.2,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__vessel__inner_radius",
@@ -3955,7 +4047,9 @@
           "default_value": 6.3,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFERadialBuild__catf_radial_build__vessel__outer_radius",
@@ -3964,7 +4058,9 @@
           "default_value": 6.5,
           "source_calc_usage": null,
           "param_group": "radial_build_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -3980,7 +4076,9 @@
           "default_value": 0.009,
           "source_calc_usage": "AuxiliarySystemsPower",
           "param_group": "system_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATF_MFE__catf_mfe_plant__auxiliary_load__gross_electric",
@@ -3989,7 +4087,9 @@
           "default_value": 1546.72,
           "source_calc_usage": null,
           "param_group": "system_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -4005,7 +4105,9 @@
           "default_value": 2600.0,
           "source_calc_usage": null,
           "param_group": "tritium_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFETritium__catf_tritium__processing_load__processing_factor",
@@ -4014,7 +4116,9 @@
           "default_value": 0.00385,
           "source_calc_usage": "TritiumProcessingPower",
           "param_group": "tritium_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -4030,7 +4134,9 @@
           "default_value": 0.0001,
           "source_calc_usage": null,
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__carnot_efficiency",
@@ -4039,7 +4145,9 @@
           "default_value": 0.3,
           "source_calc_usage": "CryoPumpRefrigeration",
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__load_factor",
@@ -4048,7 +4156,9 @@
           "default_value": 0.001,
           "source_calc_usage": "CryoPumpRefrigeration",
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_load__operating_temp",
@@ -4057,7 +4167,9 @@
           "default_value": 20.0,
           "source_calc_usage": "CryoPumpRefrigeration",
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__n_pumps",
@@ -4066,7 +4178,9 @@
           "default_value": 32.0,
           "source_calc_usage": null,
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__cryo_pumps__pumping_speed",
@@ -4075,7 +4189,9 @@
           "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__n_pumps",
@@ -4084,7 +4200,9 @@
           "default_value": 48.0,
           "source_calc_usage": null,
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pump_load__pump_efficiency",
@@ -4093,7 +4211,9 @@
           "default_value": 0.4,
           "source_calc_usage": "VacuumPumpPower",
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "CATFMFEVacuum__catf_vacuum_pumping__pumping_speed_total",
@@ -4102,7 +4222,9 @@
           "default_value": 200.0,
           "source_calc_usage": null,
           "param_group": "vacuum_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }
