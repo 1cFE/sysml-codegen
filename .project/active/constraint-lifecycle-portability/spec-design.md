@@ -101,25 +101,30 @@ Item 5 sweep and gated by the whole-tree two-root diff, which catches any that d
 
 ## Success Criteria
 
-- [ ] No checkout-absolute bytes occur anywhere in the generated tree or in the semantic
+- [x] No checkout-absolute bytes occur anywhere in the generated tree or in the semantic
       artifacts it seals (snapshot loader-reconstructed fields, catalog, contracts, reports,
       generated code, calculation docstrings). Proven by the whole-tree absolute-byte scan
-      returning zero hits across the fixture corpus.
-- [ ] The same semantic input generated at two real checkout roots produces a byte-identical
+      returning zero hits across the fixture corpus. *(Audit: reproduced on solar_battery +
+      fusion_tea; grep for checkout root over all baselines empty.)*
+- [x] The same semantic input generated at two real checkout roots produces a byte-identical
       output tree and identity (fingerprints, seal, catalog). Proven by `diff -rq` over two
-      real roots — **not** by same-machine relativization that cancels out.
-- [ ] Item 1's relocated anonymous-admitted-with-actual leg passes: fixture
+      real roots — **not** by same-machine relativization that cancels out. *(Audit: two fresh
+      roots, zero diff on two non-proof fixtures.)*
+- [x] Item 1's relocated anonymous-admitted-with-actual leg passes: fixture
       `constraint_occurrence_demand/anonymous`, identity `OccurrenceDemandAnonymous__Admitted`,
       passes live A / live B / relocated replay with the admitted anonymous identity and its
-      actual value preserved.
-- [ ] Calculation-bearing and anonymous admitted/excluded fixtures pass on both public routes
-      (live extraction and from-snapshot).
-- [ ] The obsolete path-normalization branches (B reverse-mutation, C) are deleted, not shimmed.
+      actual value preserved. *(Audit: licensed test GREEN, not skipped; admitted 3.0 preserved.)*
+- [x] Calculation-bearing and anonymous admitted/excluded fixtures pass on both public routes
+      (live extraction and from-snapshot). *(Audit: met; live docstring-parity pinned only
+      transitively — see audit note N1.)*
+- [x] The obsolete path-normalization branches (B reverse-mutation, C) are deleted, not shimmed.
       No same-machine workaround and no new normalization layer is added; the certified
-      referent scheme is the one authority.
-- [ ] The route-parity invariant (live vs snapshot, same root) is not regressed — no re-audit of
+      referent scheme is the one authority. *(Audit: _reabsolutize / Branch C / .replace() all
+      absent; os import removed.)*
+- [x] The route-parity invariant (live vs snapshot, same root) is not regressed — no re-audit of
       Item 4, but the relocated replay compares semantic wiring, not just the absence of
-      absolute bytes (the multi-hop EXPOSE trap; see Risks).
+      absolute bytes (the multi-hop EXPOSE trap; see Risks). *(Audit: Item 4 pins GREEN, SHA
+      unchanged; A2 compares graph/catalog wiring.)*
 
 ---
 

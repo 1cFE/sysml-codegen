@@ -489,7 +489,7 @@ default-lane disagreement, four-fixture blast radius).
 
 ---
 
-### Item 5: Whole-Tree Snapshot Portability
+### Item 5: Whole-Tree Snapshot Portability ✅
 
 **Register row**: 5
 **Type**: Code/Integration (sysml-codegen)
@@ -513,10 +513,10 @@ byte, including admitted anonymous identity and calculation docstrings.
 - Historical snapshot reproducibility under historical profile semantics.
 
 **Success Criteria**:
-- [ ] No checkout-absolute bytes occur anywhere in the generated tree or semantic artifacts.
-- [ ] Same semantic input at two checkout roots produces byte-identical output and identity.
-- [ ] Anonymous admitted/excluded and calculation-bearing fixtures pass both public routes.
-- [ ] Obsolete path-normalization branches are consolidated/deleted; no same-machine workaround remains.
+- [x] No checkout-absolute bytes occur anywhere in the generated tree or semantic artifacts.
+- [x] Same semantic input at two checkout roots produces byte-identical output and identity.
+- [x] Anonymous admitted/excluded and calculation-bearing fixtures pass both public routes.
+- [x] Obsolete path-normalization branches are consolidated/deleted; no same-machine workaround remains.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-portability/spec.md`

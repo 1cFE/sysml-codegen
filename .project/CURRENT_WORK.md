@@ -6,7 +6,29 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 5 — Whole-Tree Snapshot Portability — SPEC+DESIGN in progress (2026-07-20)
+### CONSTRAINT-LIFECYCLE Item 5 — Whole-Tree Snapshot Portability — CERTIFIED (independent audit 2026-07-20, candidate `4c6223c`)
+
+**Audit verdict: Certify (three non-blocking notes).** `.project/active/constraint-lifecycle-portability/audit.md`.
+Every priority reproduced first-hand. Two-root proof GREEN on two **fresh** fixtures the proof
+never used (solar_battery 0/115, fusion_tea 0/47) at genuinely different roots — zero diff, zero
+absolute-.sysml. Licensed A2 relocated anonymous leg (`OccurrenceDemandAnonymous__Admitted`)
+GREEN, not skipped — closes Item 1's named open leg; admitted 3.0 preserved. v5 shape gate
+rejects absolute + snapshot-relative + version skew loudly (closes Item 4 N1); anonymous
+constraint_id folds the referent with **zero** Item-4 impact (catf_mfe has 0 anonymous-located
+usages; manifest SHA unchanged, GREEN). Deletion real: `_reabsolutize`, Branch C `"models/"`
+strips, baseline `.replace()`, `os` import — all gone, no shim; three schemes → one `root-N/`.
+Re-capture: 36 snapshots all v5, field-classified deltas exactly {source_file, captured_at,
+location.file, version}. Deferred gates run: execution lane 17 passed, `-O` 58 passed on changed
+surface, ruff clean, mypy 72 (zero added). Premise corrections honest — design_attr keys still
+absolute in snapshots (surfaced) but **proven** not to reach output (grep empty across all
+baselines). D3 deferral sound (basename already portable). Epic row 5 ✅; all 4 epic + 6 spec
+criteria marked. **Notes (non-blocking):** N1 live `--models` docstring parity pinned only
+transitively (machinery fail-loud, can't silently leak); N2 graph_builder sentinel set diverges
+under a "kept in sync" comment (benign, graph-layer-only); N3 evidence says design_attr-key
+non-portability is "gated by the two-root diff" — strictly the diff cancels for snapshot-baked
+absolutes; the scan axis is the real gate (implementer understands this per finding #1).
+
+<details><summary>Spec+design record (pre-audit)</summary>
 
 Epic register row 5; deps Item 4 (closed). Combined spec+design at
 `.project/active/constraint-lifecycle-portability/spec-design.md`. Absolute-byte inventory
@@ -18,6 +40,8 @@ Root cause: the loader re-absolutizes the portable snapshot-relative `source_fil
 certified `root-N/` referent to every `source_file`, delete the re-absolutization + the two
 `"models/"` hacks, bump snapshot v4→v5 with a shape gate (closes Item 4 N1). Open for owner:
 the v5 format-bump-vs-no-bump call. Completes Item 1's relocated `OccurrenceDemandAnonymous__Admitted` leg.
+
+</details>
 
 ### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — PASS WITH NOTES (round-3 audit 2026-07-20, candidate `caa149c`)
 
