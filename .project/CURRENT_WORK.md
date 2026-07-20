@@ -6,7 +6,7 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A — CANDIDATE (awaiting independent audit)
+### CONSTRAINT-LIFECYCLE Item 2 — Shared Producer Resolution and Gate A — CERTIFIED, pass with notes (independent audit 2026-07-19 at `039d66e`)
 
 Epic register row 2. Spec, design (rev 2 + implementation notes), and `evidence.md` at
 `.project/active/constraint-lifecycle-shared-resolution/`. RED coordinate `287afc4`. The design
@@ -22,6 +22,18 @@ resolves under its real QN and drives a real simkit verdict that flips with the 
 green with every pre-existing fixture byte-identical; **EP-key manifest zero-diff** across 34
 fixtures / 273 entry points / 484 module inputs (the F4-trap control); `ruff src/` clean; `mypy`
 72 errors, below the 76 baseline.
+
+**Audit.** Pass with notes — `.project/active/constraint-lifecycle-shared-resolution/audit.md`.
+Every gate re-run independently and reproduced (suite, `-O`, execution lane, byte identity, EP
+manifest 34/273/484/0-diff, Gate A RED→GREEN, Item 1 acceptance SHA). All four spec and five epic
+criteria verified. Eight findings, none a code defect: the recorded D2 residual names table rows
+that do not actually conflict and the shipped split satisfies **both** old orders (F1); forced
+difference 2 is claimed to have no corpus population and has 63 warnings across 17 of 34 fixtures
+(F2); the design's key-form table disagrees with shipped `KEY_FORMS` on numbering and on the
+chain-follow row's position (F3); `_resolve_binding_via_registry` survives SR-R41 unrecorded (F4);
+`test_baselines.py` is not the byte-identity gate it is cited as (F5); the parity-class replacement
+pin covers 1 key form of 21 and the "3037 → 3003" count does not reconcile (F6); plus two docstring
+fixes (F7, F8). All correctable in artifacts. None blocks Item 3.
 
 **Not delivered, referred.** SR-A02 / SR-R23 two-consumer convergence. The calculation consumer
 cannot express the reference as written — extraction discards it, and for a self-named binding the

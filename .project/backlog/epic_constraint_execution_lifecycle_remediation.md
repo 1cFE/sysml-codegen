@@ -316,7 +316,7 @@ one deterministic demand identity.
 
 ---
 
-### Item 2: Shared Producer Resolution and Gate A
+### Item 2: Shared Producer Resolution and Gate A ✅
 
 **Register row**: 2
 **Type**: Code/Integration (sysml-codegen)
@@ -347,12 +347,17 @@ passthrough calculations.
   pins the current two-entry-point state until then.
 
 **Success Criteria**:
-- [ ] One production resolver serves calculation, aggregation, and constraint consumers.
-- [ ] Direct literal design-attribute actuals resolve under real QN with no passthrough.
-- [ ] Unresolved or ambiguous constraint actuals fail contextually; lenient calc behavior never
+- [x] One production resolver serves calculation, aggregation, and constraint consumers.
+- [x] Direct literal design-attribute actuals resolve under real QN with no passthrough.
+- [x] Unresolved or ambiguous constraint actuals fail contextually; lenient calc behavior never
       becomes an ambiguous first-pick or leaf-name guess.
-- [ ] Resolver precedence, source form, live/snapshot parity, and typed entry-point identity pass.
-- [ ] Old ladders and their duplicate tests/helpers are deleted; no parallel resolver remains.
+- [x] Resolver precedence, source form, live/snapshot parity, and typed entry-point identity pass.
+- [x] Old ladders and their duplicate tests/helpers are deleted; no parallel resolver remains.
+
+**Audit**: Pass with notes at `039d66e` (2026-07-19, independent) —
+`.project/active/constraint-lifecycle-shared-resolution/audit.md`. Every gate reproduced; all
+five criteria verified. Eight findings, all artifact/docstring corrections with no production
+change; the D2 residual as recorded names rows that do not conflict (F1).
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-shared-resolution/spec.md`

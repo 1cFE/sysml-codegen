@@ -66,17 +66,17 @@ clean.
 
 ## Success Criteria
 
-- [ ] **[NEED]** One production resolver serves calculation, aggregation, and constraint consumers;
+- [x] **[NEED]** One production resolver serves calculation, aggregation, and constraint consumers;
       the three consumer-specific ladders no longer exist. Source: owner-ratified contract invariant
       20 ("Positive resolution may not fork into consumer-specific ladders") and register row 2.
-- [ ] **[NEED]** A direct literal design attribute owned by a concrete `PartUsage`, referenced by a
+- [x] **[NEED]** A direct literal design attribute owned by a concrete `PartUsage`, referenced by a
       self-named actual, resolves under its real qualified name with no passthrough calculation, on
       the public live route. Source: owner D-2, 2026-07-19 (quoted at LC-D08).
-- [ ] **[NEED]** No verdict is ever produced from a guessed or defaulted binding while V11 is clean:
+- [x] **[NEED]** No verdict is ever produced from a guessed or defaulted binding while V11 is clean:
       an ambiguous or unresolved constraint actual fails generation contextually, and lenient
       calculation behavior never resolves by leaf-name guess or ambiguous first-pick. Source:
       contract invariant 26 and the "Ambiguous/defaulted producer resolution" acceptance row.
-- [ ] **[NEED]** The superseded mechanisms are deleted rather than shimmed — no wrapper, flag,
+- [x] **[NEED]** The superseded mechanisms are deleted rather than shimmed — no wrapper, flag,
       compatibility alias, or parallel resolver survives. Source: owner simplification constraint,
       2026-07-19, as corrected (structural judgement, no line counts).
 
