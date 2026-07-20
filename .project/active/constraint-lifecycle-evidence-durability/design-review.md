@@ -231,11 +231,37 @@ The D1 absence table is the right shape. A tired engineer can follow it. No voic
 *(Filled in during Stage 4 as the owner resolves each issue. This section is what the design agent
 reads to incorporate the review.)*
 
-- **C1 —** _pending_
-- **M1 —** _pending_
-- **M2 —** _pending_
-- **M3 —** _pending_
-- **m1 / m2 / m3 —** _pending_
+- **C1 — Accepted.** Positive write-phase signal at the executor seam: a `context.in_output_write`
+  flag set around the `write_outputs(...)` call (`pipeline_executor.py:154-161`). `_normalize_run_failure`
+  stamps `OUTPUT_WRITE` **iff** `context.in_output_write` is true — never from exception type or a null
+  module key. Entry-load and pre-loop write-handler failures keep their honest `MODULE_EXECUTION`
+  phase. The unwritable-`output_dir` fixture (bare `OSError`) stamps `OUTPUT_WRITE` via the flag. A new
+  entry-failure-on-file-backed coordinate (m3) pins the non-over-emission.
+- **M1 — Accepted.** Six sites inventoried and migrated in Phase 2 (design D2 "test migration"):
+  `test_projection.py:99` (identity→value), `test_isolation.py:61` (`object()`→plain dict tree; INV1
+  pin re-expressed), `test_policy.py:37` (`_StubReport`→dict), `test_evidence_io.py:55,83`
+  (`_TypedReport`/`_PoisonedReport`→dict trees; MF-3 preserved), `study/conftest.py:213`
+  (`ConstraintReport`→dict). A broad `report=`/`.report` test grep runs in Phase 2 to catch any not listed.
+- **M2 — Accepted, committed.** Store the frozen tree AND widen the three encode/decode walkers to
+  `Mapping`/`Sequence`. `project` computes `report.model_dump(mode="json")` once, freezes it
+  (dict→`MappingProxyType`, list→`tuple`), stores it as `ModelEvidence.report`. `encode_evidence`
+  drops its own `model_dump` and walks the sealed tree; `_tag_nonfinite`/`_untag_nonfinite` accept
+  `Mapping`/`Sequence`. Proven by both a nested-mutation attack test (INV-C) and a byte-identity
+  golden (INV-G), with the MF-3 poison guard (`test_evidence_io.py` migrated) still firing. The
+  proxy-at-access option is dropped.
+- **M3 — Accepted, catalog authority.** The study-layer caller reads
+  `load_model_contract(package_dir).concrete_entries` (empty ⟺ constraint-free, per the seam's own
+  docstring) and passes `expects_constraint_report=bool(concrete_entries)` into the evaluator, which
+  forwards it to `project`. Report absent + `expects=True` → raise `CorruptConstraintEvidence` (loud,
+  not a recorded case); absent + `expects=False` → empty evidence. Evaluation layer stays
+  isolation-clean (receives a bool, never imports `study`); a spec-derived default (exit declares the
+  `constraint_report` field) keeps standalone evaluation-layer tests self-contained. Corruption
+  coordinate added.
+- **m1 — Accepted.** The `unconstrained` branch sits **before** `ObjectivePolicy`'s objective /
+  response-role loops (`policy.py:106-119`), pinned by a test with a configured `response_role`.
+- **m2 — Accepted.** The load-bearing deletion is the encode-before-assess *protection rationale*, not
+  the call site; crash-safety is unchanged (the atomic seam is `store.commit_case(..., crash=...)`),
+  stated explicitly. **m3 — Accepted** (entry-failure + corruption coordinates added to D5).
 
 ---
 

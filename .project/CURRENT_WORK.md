@@ -6,17 +6,19 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — spec accepted, design drafted 2026-07-20
-Epic rows 13–15 + invariant 46a. TEAx `07eb0ac`. Spec + design at
-`.project/active/constraint-lifecycle-evidence-durability/` (artifacts here for register continuity).
-Design decisions settled with code evidence: (D1) single absence seam in `project()`, both routes
-converge, empty evidence = `responses={}`/`report=None`; (D2) defensive isolation at attach (NOT
-codegen-freeze — list containers stay mutable + firewalled), sealed JSON tree, encode-before-assess
-coupling deleted; (D3) OUTPUT_WRITE **emit** (real condition: `write_outputs` failure,
-`failed_module_key is None`); (D4) four-status exact round-trip + fixture-pinned phases; (D5)
-fixtures: constraint_free (AUTHOR, RED coord one), excluded_only (AUTHOR), f1_arithmetic (EXTEND).
-Surfaced (spec): Item 9 firewalled the constraint-free KeyError repro to Item 11 (`evidence.md:138`);
-brief's "already reproduced" premise corrected — RED is owed, done in Phase 0. Next: design review.
+### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — IMPLEMENTED, stop for audit 2026-07-20
+Epic rows 13–15 + invariant 46a. **Candidate teax `c342b10`** on `constraint-exec-epic` (not pushed;
+Item 13 owns push). Codegen source untouched (fixtures CLI-generated at `b987869`). Spec + design +
+design-review + evidence at `.project/active/constraint-lifecycle-evidence-durability/`.
+Design-review Approve-with-revisions (C1 + M1/M2/M3 + 3 minors) applied, then full phased plan:
+(0) 46a RED reproduced first-hand — `KeyError('constraint_report')` on a real constraint-free package
+(the owed repro Item 9 firewalled); (1) one absence seam in `project()`, both routes converge, empty
+evidence, catalog-authority corruption guard (`CorruptConstraintEvidence`) via `concrete_entries`;
+(2) deep-frozen evidence tree (MappingProxyType/tuple) + widened walkers, nested mutation blocked,
+byte-identity + MF-3 hold, 6 test sites migrated; (3) OUTPUT_WRITE positive signal at executor seam
+(C1) + non-over-emission coordinate; (4) excluded_only → not_assessed (A3 confirmed real), four-status
+covered. **Full teax suite 310 passed; ruff clean.** File-backed entry path generalized (was hardcoded
+`toy_plant_params.json`) for the "both routes" mandate. Next: `/_my_audit`.
 
 ### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness + Stellarator Rollup — ✅ CERTIFIED + Major 1 CLOSED 2026-07-20
 **Audit Major 1 closed:** the completeness check's MODULE_OUTPUT exemption left channel-tier name-based
