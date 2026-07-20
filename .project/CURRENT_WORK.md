@@ -6,7 +6,15 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup (codegen + stellarator) — design drafted 2026-07-20
+### CONSTRAINT-LIFECYCLE Item 10 — Producer Completeness and Stellarator Rollup (codegen + stellarator) — Phases 0/2 landed; 1/3 remain 2026-07-20
+Design approved-with-revisions (four Majors applied, `design-review.md` + `design.md`).
+Implemented and verified: capture sink centralized in `resolve_producer` (covers all 5 call
+sites by construction — closes R2), `producer_completeness.py` check, and the RED-first
+ambiguous/defaulted acceptance (license-free, real resolver+check). 2952 pass / 0 fail / 44
+license-skip; ruff clean; no mypy added. **Remaining:** Phase 1 (cross-part aggregation routing
++ 15-fixture byte-identity + gate wiring) and Phase 3 (stellarator cutover — license + teax env,
+bit-exact anchors, both-harness deletion, WI-027 amend). Evidence: `evidence.md`. Anchor
+movement is a STOP. Stopped for audit after Phases 0/2.
 Spec: `.project/active/constraint-lifecycle-producer-completeness/spec.md`. Two faces of one rule
 (producer completeness independent of V11): (1) ambiguous/defaulted producer acceptance, RED-first;
 (2) codegen compiles the stellarator cross-part capital aggregation as a real graph producer,

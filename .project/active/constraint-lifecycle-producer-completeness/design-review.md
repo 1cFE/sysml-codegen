@@ -232,8 +232,26 @@ None. The foundation is sound; nothing here warrants rework.
 
 ## Resolutions
 
-_To be filled in during Stage 4 as the owner resolves each issue. This section is what the design agent
-reads to incorporate the review._
+All four Majors and minors 5–8 incorporated into `design.md` (2026-07-20):
+
+- **Major 1 (capture sink):** Decision 3 rewritten with a resolution-outcome capture sink threaded through
+  all three enumerated `resolve_producer` call sites (calc consumer, aggregation SumTerm/SingletonTerm,
+  aggregation LocalTerm), read at finalization; A5 amended to "captured as produced," H1 now explicit (A5b).
+- **Major 2 (registration precondition + structural assertion):** new A7 states the
+  `output_registry.canonical_channels` registration precondition; A2 verification now asserts the outer
+  LocalTerm wires to a `module_output` source structurally; R1 references it; STOP added.
+- **Major 3 (byte-identity enumeration):** Phase 1 step 1 is now the per-fixture enumeration across the
+  ~15+ chain-bearing-computed-attribute fixtures; over-catching EXPOSE_PURE/tentative/existing-aggregation
+  is a named STOP.
+- **Major 4 (second harness):** `handshake_1costingfe.py` (patch_bop_wiring/two-pass/glue-2) added to the
+  deletion inventory with the MR-WI027-2 grep re-verify.
+- **Minor 5:** FORMULA route reuses the full `build_aggregation_expression` construction incl.
+  `has_unsupported`. **Minor 6:** ambiguous fixture's consuming reference pinned to the bare-leaf lenient
+  form; named error located in the check, not the resolver; reach-`resolve_actual` confirmation added.
+  **Minor 7:** `:381-395` mis-cite corrected to a "do NOT touch — live D3-16 guard." **Minor 8:** line
+  drifts fixed (powercore :389-392, bop :395-397, R2 flag :619-624, terms :88-109, BRIDGE_KEYS prefix).
+
+Proceeding directly to implementation (audit verifies).
 
 ---
 

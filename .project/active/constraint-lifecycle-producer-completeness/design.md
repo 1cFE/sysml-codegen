@@ -46,14 +46,16 @@ fails, it is a surface-to-orchestrator event, not a silent workaround.
    (rel < 1e-9). *Stop:* an anchor value moving is a STOP (§5), never a re-anchor.
 
 2. **A2 — Chained aggregation resolves.** `direct_capital` references `powercore_capital`, which is
-   *itself* a cross-part sum (`mfe_plant.sysml:389-401`). So `powercore_capital`/`bop_capital` must each
+   *itself* a cross-part sum (`mfe_plant.sysml:389-392`; `bop_capital` `:395-397`). So
+   `powercore_capital`/`bop_capital` must each
    compile to an aggregation producer, and `direct_capital`'s reference to them (a `LocalTerm`) must
    resolve to those aggregation output channels — an aggregation consuming aggregation outputs.
    `total_capital` = `direct_capital + contingency_capital + indirect_capital` chains one level deeper.
-   *Verification:* a Phase-1 fixture with a two-level cross-part sum, both public routes; confirm the
-   `LocalTerm` → aggregation-output wiring at `graph_builder.py:1614-1708`. *This is the highest-risk
-   assumption* — see Risks R1. If nesting does not resolve through the ordinary `resolve_producer`
-   ladder, surface it; do not add a rollup-specific resolution arm.
+   *Verification:* a Phase-1 two-level fixture, both public routes, asserting the outer `LocalTerm` wires to a
+   `module_output` source **structurally** (channel identity — not just value; A7). The producer-registration
+   precondition A7 is the crux. *This is the highest-risk assumption* — see Risks R1. If nesting does not
+   resolve through the ordinary `resolve_producer` ladder, surface it; do not add a rollup-specific
+   resolution arm.
 
 3. **A3 — The computed-attribute (FORMULA) expression is decomposable by the existing aggregation
    decomposition.** `decompose_aggregation_expression` (`aggregation.py:207-219`) classifies each AST
@@ -74,10 +76,30 @@ fails, it is a surface-to-orchestrator event, not a silent workaround.
    `ProducerResolution` already records `outcome`, `key_form`, and `ambiguous_candidates`
    (`producer_resolution.py:130-141`). The check reads these; it does not re-resolve. *Verification:* §3.
 
+5b. **A5-amended (was "no re-resolution") — the completeness check reads a purpose-built capture sink, not
+   a pre-existing record.** `ProducerResolution` objects are **ephemeral**: created and discarded at each
+   `resolve_producer` call, and the final graph carries `InputSource` types + `fallback_entry_points`, not
+   `outcome`/`key_form`/`ambiguous_candidates` (verified: no accumulator exists; `collect_uncovered_params`
+   scans the graph, `graph_builder.py:841-886`). So the check requires **new plumbing** — a capture sink that
+   records each `ProducerResolution` as it is produced, threaded through **every** `resolve_producer` call
+   site (§3 enumerates them, aggregation paths included). The check reads the sink at finalization. It does
+   not re-resolve — but the record it reads is one this item builds, not one that already sits somewhere.
+
 6. **A6 — Legitimate external typed design inputs are exempt by declaration.** `availability`,
    `discount_rate`, `contingency_rate`, etc. are declared inputs with no producer and must stay ordinary
    typed entry channels. The completeness check must exempt them by their declared-input status, not by
    leniency (invariant 26; D-1). *Verification:* §3; the stellarator regen keeps its declared inputs.
+
+7. **A7 — For chained aggregation, the inner producer's canonical channel is registered in
+   `output_registry.canonical_channels` BEFORE the outer LocalTerm resolves** (the producer-registration
+   precondition Major 2 surfaced). For `:>>` aggregations this already holds; for a FORMULA-routed inner
+   aggregation (`powercore_capital`) it holds only if the new route registers the channel up front. *If it
+   does not, the outer LocalTerm misses the sibling lookup (`graph_builder.py:1620-1622`) and silently mints
+   an entry point (`:1681`) — the F4-cutover EP-key-collapse (`[[f4-cutover-fallback-divergence]]`), invisible
+   to V11.* *Verification:* the two-level fixture asserts the outer input's source is `module_output`
+   **structurally** (channel identity), per the multi-hop lesson (`[[multihop-expose-offline-parity]]`) —
+   a value check alone passes on a defaulted minted EP. *Stop:* an outer LocalTerm resolving to an entry
+   point is a STOP.
 
 ---
 
@@ -112,6 +134,14 @@ or role.
    a cross-part aggregation and hand it to the aggregation decomposition instead of the byte-for-byte calc
    renderer. The renderer keeps refusing genuinely uncompilable local expressions; it stops being the place
    a cross-part sum dies.
+   **The FORMULA route must reuse the FULL aggregation construction, not just term decomposition (Minor 5).**
+   Today the only caller of `decompose_aggregation_expression` is `build_aggregation_expression`, hard-gated
+   to `:>>` EXPRESSION (`hierarchy_resolver.py:345`, gate `:376-378`/`:538-539`). The new route must build a
+   **complete** `AggregationExpressionData` — decompose **plus** the neutral-node render and the
+   `has_unsupported` guard (`_render_neutral_aggregation_node` / `_agg_operator_str`,
+   `hierarchy_resolver.py:202-306`, guard at `:218`) — so an odd-operator chain FORMULA falls back to
+   MANUAL_REQUIRED rather than miscompiling. Reuse `build_aggregation_expression`'s path (or an equivalent
+   that keeps `has_unsupported`); do not hand-roll a decompose-only shortcut.
 2. **The plain-usage `:>>` override drop** — `_keep_plain_usage_override` (`hierarchy_resolver.py:102-110`,
    `:152-153`) deliberately drops CHAIN/EXPRESSION plain-usage overrides, commented verbatim "Item 10's
    job." If any stellarator rollup arrives as a plain-usage `:>>` override (catf_mfe / ife_plant shape 4
@@ -134,7 +164,7 @@ The aggregation path is the one machinery; the renderer stays a pure local-expre
 
 **Flag carried from investigation (Risks R2):** aggregation-term lenient misses currently mint entry points
 whose V11 membership is recorded only for the calculation consumer, not aggregation terms
-(`dependency_backtracker.py:620-623`, "widening to aggregation is a coverage-scope decision"). An
+(`dependency_backtracker.py:619-624`, "widening to aggregation is a coverage-scope decision"). An
 unresolved rollup term could therefore mint an entry point that `collect_uncovered_params`'s
 `fallback_entry_points` set does not include — i.e., slip past V11. This is precisely why the
 producer-completeness check (§3) is independent of V11: it must catch an unresolved rollup term directly,
@@ -151,14 +181,28 @@ stellarator dependency, so it de-risks the resolver-precedence property in isola
 contract `:437`):** a model with
 
 - **two same-leaf candidate design attributes** — two attributes sharing a leaf name in different scopes
-  (e.g. `a::cost` and `b::cost`), consumed by a reference that could bind to either; and
+  (e.g. `a::cost` and `b::cost`); and
+- **a consuming reference in the lenient name-based form** — a *bare-leaf* reference (no scope qualifier),
+  so it reaches resolver rows 19–21 / `_dotted_pair` (`producer_resolution.py:419-424`) and actually ties.
+  A scope-qualified (exact-QN) reference resolves cleanly and never ties, so it would not exercise the
+  property; and
 - **a defaulted-fallback shape** — a consumed formal with a fallback/default available.
 
-**Required observation:** generation **fails with a named ambiguity/producer error**, OR the reference
-**resolves only under exact QN** (the written-qualifier path), and **no verdict is ever produced from a
-guessed or defaulted binding while V11 is clean.** The lenient name-based rows already refuse a tie
-(`_unique_or_tie`, `producer_resolution.py:419-424`); this fixture pins that refusal as an *acceptance*, so
-a future regression that reintroduces a first-pick is caught here, not in a downstream demo.
+**Where the named error comes from — the check, not the resolver.** At today's resolver a same-leaf tie in
+LENIENT mode does **not** fail generation: `_unique_or_tie` refuses to *pick*, so the outcome falls through
+to `Outcome.ENTRY_POINT` carrying `ambiguous_candidates` (`producer_resolution.py:640`), and
+`_build_agg_input_source` mints an EP with a warning. So the acceptance's **named ambiguity/producer error is
+Decision 3's completeness check firing on a non-empty `ambiguous_candidates`** — not a new resolver raise.
+The exact-QN escape (a scope-qualified reference resolving cleanly) is the *other* admissible observation.
+
+**Required observation:** either the completeness check **fails generation with a named ambiguity/producer
+error** (the bare-leaf tie), OR the reference **resolves only under exact QN** (the written-qualifier path),
+and **no verdict is ever produced from a guessed or defaulted binding while V11 is clean.**
+
+**Reaching the resolver.** Confirm the consuming reference actually reaches `resolve_actual` — inline-form
+fixtures can miss the resolver entirely (`[[gate-a-owner-classification-bug]]`: Gate A breaks in owner
+classification, not the ladder; inline-form fixtures never reach `resolve_actual`). Author the fixture in a
+form that reaches the resolver, and assert that it does.
 
 **Both public routes** — live extraction and relocated snapshot replay — per the standing coordinate.
 
@@ -170,11 +214,32 @@ subsystem). Proving the refusal first de-risks the rollup wiring in Decision 1.
 
 **Decision:** Add a producer-completeness check that runs at graph-assembly finalization, separate from and
 additive to `collect_uncovered_params` (`graph_builder.py:841-886`). It asserts: **every model-derived
-consumed value resolved to exactly one intended producer under exact identity.** It composes entirely from
-the resolver's recorded result (A5) — no re-resolution.
+consumed value resolved to exactly one intended producer under exact identity.** The check does not
+re-resolve — but the record it reads does not exist today and this item builds it (A5-amended).
 
-**What it reads (per resolved consumed value):** `ProducerResolution.{outcome, key_form,
-ambiguous_candidates}` (`producer_resolution.py:130-141`).
+**The capture sink (new plumbing — stated honestly).** `ProducerResolution` objects are ephemeral (created
+and discarded per `resolve_producer` call); the final graph carries `InputSource` types and
+`fallback_entry_points`, not `outcome`/`key_form`/`ambiguous_candidates`. So Decision 3 adds a
+**resolution-outcome capture sink**: a per-run accumulator (carried on `ProducerContext` or the
+graph-build context) that records each `ProducerResolution` — the `(consumer, request, outcome, key_form,
+ambiguous_candidates)` tuple — **as it is produced.** It is threaded through **every** `resolve_producer`
+call site; missing any aggregation site reproduces the exact R2 blind spot the check exists to close.
+
+**Enumerated hook points (all of them — verified call sites of `resolve_producer`):**
+
+1. **Calc-consumer path** — `dependency_backtracker.py:596-631` (`resolve_actual` / the calc-binding
+   resolution).
+2. **Aggregation SumTerm / SingletonTerm path** — `_build_agg_input_source`, `graph_builder.py:1403`
+   (the cross-part-term resolution — the rollup's own terms).
+3. **Aggregation LocalTerm path** — `graph_builder.py:1663-1701` (the sibling/inner-producer resolution —
+   the chained-aggregation seam A7 guards).
+
+*If a fourth `resolve_producer` call site exists, Phase-2 step 1 grep-enumerates it and adds the hook; the
+sink must cover 100% of resolution sites or the completeness claim is hollow.*
+
+**What it reads (per captured resolution):** `ProducerResolution.{outcome, key_form, ambiguous_candidates}`
+(`producer_resolution.py:130-141`); a same-leaf tie in LENIENT mode reaches the terminal as
+`Outcome.ENTRY_POINT` carrying the tied QNs (`producer_resolution.py:640`), so the check *can* see it.
 
 **What it asserts:**
 
@@ -229,17 +294,28 @@ package emits and executes single-pass (or otherwise bridge-free).
 shimmed):**
 
 - `exploration/stellarator_e2e/bridge_v11_generate.py` — the private bridge (whole file).
-- The three placeholder `BRIDGE_KEYS` and the `PLACEHOLDER = 1.0` fill; the "expected exactly 3 offenders"
-  assert (`bridge_v11_generate.py:42-47,91-92`).
+- The three placeholder `BRIDGE_KEYS` (each `stellarator_09__stellaris__…` prefixed) and the
+  `PLACEHOLDER = 1.0` fill; the "expected exactly 3 offenders" assert (`bridge_v11_generate.py:42-47,91-92`).
 - The two-pass runner's glue-2 Python rollup arithmetic in `run_stellaris.py` (the `direct`/`total`
   computation that overwrites the three keys) and, if the second pass has no other purpose, the two-pass
   structure itself.
+- **`handshake_1costingfe.py` — the second executable harness (Major 4).** It re-implements the identical
+  two-pass glue: its own `patch_bop_wiring` (`:129`), PASS A / PASS B structure (`:373`/`:406`), its own
+  glue-2 rollup (`powercore`/`bop`/`direct`/`total`, `:390-398`), overwriting the same three bridge keys via
+  `set_params` (`:401-403`). MR-WI027-2's grep scope names "the handshake" explicitly. Removing glue-2 from
+  `run_stellaris.py` while leaving this file orphans it or silently keeps a harness rollup — the exact
+  consumer mutation this item retires. Retire its rollup glue (and its `patch_bop_wiring` copy); the
+  handshake keeps only its comparison role against 1costingFE, edited only within the injection map
+  (MR-WI027-5.2). Re-verify the MR-WI027-2 grep bar after removal.
 - The two staged DEMO NOTE plain-input conversions (`mfe_plant.sysml:400-409`, `:430-434`).
 - **Codegen side:** any aggregation/resolver workaround the cross-part capability obsoletes — confirm at
-  Phase 1 whether opening the two front doors lets any string-surgery / skip-and-warn branch
-  (`computed_attribute_extractor.py:381-395` cross-part-skip; the `_keep_plain_usage_override` drop) be
-  deleted rather than left as a now-dead guard. No compatibility wrapper or parallel producer route survives
-  (epic simplification mandate; no LOC accounting).
+  Phase 1 whether opening the two front doors makes the `_keep_plain_usage_override` drop
+  (`hierarchy_resolver.py:102-110`) a now-dead guard that can be deleted. **Do NOT touch
+  `computed_attribute_extractor.py:381-395`** — that is the live D3-16 EXPOSE_PURE alias-disagreement warn
+  branch for a *single-hop* cross-part EXPOSE_PURE, a different shape than the FORMULA cross-part sum this
+  item handles; opening the front doors does not obsolete it (Minor 7 — verify before deleting anything
+  here; a live guard dies if the cite is wrong). No compatibility wrapper or parallel producer route
+  survives (epic simplification mandate; no LOC accounting).
 
 **WI-027 amendment (artifact-level):**
 
@@ -282,19 +358,38 @@ resolver that could guess, then confirm GREEN: contextual failure or exact-QN-on
 verdict while V11 clean. *Gate: the fixture is a RED case of the Phase-2 completeness check.*
 
 **Phase 1 — Cross-part aggregation compilation (Decision 1).**
-1. Confirm the front door each rollup attribute takes (`=` FORMULA vs `:>>` override) and that the FORMULA
-   expression AST feeds `decompose_aggregation_expression` (A3).
-2. Route cross-part-chain-bearing computed attributes / CalcDef outputs into the aggregation decomposition +
+1. **Byte-identity enumeration FIRST (Major 3 — load-bearing for the frozen anchors).** `grep` every fixture
+   carrying a chain-bearing computed attribute (surfaced set: catf_mfe, ife_plant, fusion_tea,
+   deep_cross_scope, plant_values, d316_crosspart_expose, chain_override_probe, … ~15+). For **each**, record
+   its current classification and confirm the routing change does not move it: a FORMULA-classified,
+   chain-bearing attribute where compilation currently *fails* (no module today) is the only shape that may
+   gain a module; an EXPOSE_PURE / EXPOSE_CHAIN_TENTATIVE / existing-aggregation shape **must not
+   reclassify**. **Over-catching any EXPOSE_PURE / tentative / existing-aggregation shape is a named STOP**
+   (§5) — the routing key must fire strictly on FORMULA-classified, chain-bearing attributes, *after* the
+   EXPOSE confirm pass, only where compilation currently fails. Per-fixture generated-byte diff must be empty
+   except the intended new aggregation module(s). (Baselines are format-exempt: `[[generated-baselines-format-exempt]]`.)
+2. Confirm the front door each rollup attribute takes (`=` FORMULA vs `:>>` override) and that the FORMULA
+   expression AST feeds `build_aggregation_expression`'s full construction incl. `has_unsupported` (A3, Minor 5).
+3. Route cross-part-chain-bearing computed attributes / CalcDef outputs into the aggregation construction +
    `_build_aggregation_module`; open the `_keep_plain_usage_override` gate only if a plain-usage override
-   shape is in the live set.
-3. Verify chained aggregation (`powercore_capital` → `direct_capital` → `total_capital`) resolves through
-   the ordinary `LocalTerm` wiring (A2). *Stop if it does not.*
-4. Add unit + conformance fixtures for a two-level cross-part rollup → real producers, both public routes,
-   with a value check that the aggregation output equals the summed inputs.
+   shape is in the live set. Register the FORMULA-routed aggregation's canonical channel in
+   `output_registry.canonical_channels` **before** outer resolution (A7).
+4. Verify chained aggregation (`powercore_capital` → `direct_capital` → `total_capital`) resolves through
+   the ordinary `LocalTerm` wiring (A2/A7). *Stop if the outer LocalTerm resolves to an entry point.*
+5. Add the two-level fixture. **First check whether `spec_chain_twolevel` /
+   `tests/conformance/test_spec_chain_twolevel.py` (already exists) covers or extends to the cross-part
+   two-level rollup** before authoring a fresh fixture, so the suite does not grow a parallel one. The test
+   asserts the outer input's source is `module_output` **structurally** (channel identity, A7) *and* the
+   aggregation output equals the summed inputs (value), on both public routes.
 
-**Phase 2 — Producer-completeness check (Decision 3).** Build the check from `ProducerResolution`; wire it
-at graph finalization; exempt declared external inputs (A6). Make Phase 0's fixture and an unresolved-rollup-
-term case its RED cases. Verify it does not reject the stellarator's legitimate declared inputs.
+**Phase 2 — Capture sink + producer-completeness check (Decision 3).**
+1. Grep-enumerate every `resolve_producer` call site; add the capture-sink hook at each (the three named
+   sites plus any fourth). Assert 100% coverage — a resolution site with no hook is a STOP.
+2. Build the check reading the sink at graph finalization; exempt declared external inputs by declared-input
+   status (A6), not leniency.
+3. Make Phase 0's ambiguous fixture and an unresolved-rollup-term case its RED cases (the named ambiguity
+   error is the check firing on `ambiguous_candidates`, Minor 6). Verify it does not reject the stellarator's
+   legitimate declared inputs (`availability`, `discount_rate`, `contingency_rate`, …).
 
 **Phase 3 — Stellarator cutover (Decision 4, stellarator repo).** Restore canonical formulas in the twins →
 recapture → public generation (no bridge, zero offenders) → runner cutover → verify six anchors + five
@@ -311,7 +406,7 @@ verdicts + WI-022 hash + handshake. Execute the deletion inventory. Amend WI-027
 | Risk | Likelihood / impact | Mitigation |
 |---|---|---|
 | **R1 — Chained aggregation (A2) does not resolve through the ordinary ladder** | med / high | Phase-1 step 3 is a dedicated two-level fixture *before* the stellarator; a miss is a STOP and surfaces, not a rollup-specific arm. |
-| **R2 — Unresolved aggregation term mints an entry point that slips past V11** (`dependency_backtracker.py:620-623`) | med / high | The producer-completeness check (§3) reads the resolver outcome directly, so an aggregation term that resolves to a synthesized `ENTRY_POINT` fails completeness regardless of V11 membership. |
+| **R2 — Unresolved aggregation term mints an entry point that slips past V11** (`dependency_backtracker.py:619-624`) | med / high | The producer-completeness check (§3) reads the resolver outcome directly, so an aggregation term that resolves to a synthesized `ENTRY_POINT` fails completeness regardless of V11 membership. |
 | **R3 — The rollup graph sum diverges from the harness arithmetic** | low / high | A1 anchor bit-exactness; an anchor move is a STOP (§5). |
 | **R4 — A same-leaf term binds to the wrong producer** (`capital_cost` on every subsystem) | med / high | Written-qualifier exact-QN keying (A4); Phase-0 ambiguity acceptance proves the refusal first. |
 | **R5 — Snapshot v3→v4 recapture friction** | low / med | Recapture is in scope; a schema change beyond recapture is out of scope and surfaces (Item 4 owns format). |
@@ -326,7 +421,7 @@ verdicts + WI-022 hash + handshake. Execute the deletion inventory. Amend WI-027
   `expression_compiler.py:306`.
 - **Aggregation path (the reused machinery):** `AggregationExpressionData`
   (`sysml-codegen/src/sysml_codegen/extraction/data_models.py:246`), `ScopedAggregationData` (`:296`);
-  `SumTerm`/`SingletonTerm`/`LocalTerm` (`agentic-mbse/src/agentic_mbse/sysml/data_models.py:89-110`);
+  `SumTerm`/`SingletonTerm`/`LocalTerm` (`agentic-mbse/src/agentic_mbse/sysml/data_models.py:88-109`);
   `decompose_aggregation_expression` (`aggregation.py:207-219`); `build_aggregation_expression`
   (`hierarchy_resolver.py:354-399`); `_build_aggregation_module` (`graph_builder.py:1478-1757`);
   `_build_agg_input_source` (`graph_builder.py:1369-1458`); `SingletonTerm` wiring (`:1584-1611`);
@@ -343,7 +438,12 @@ verdicts + WI-022 hash + handshake. Execute the deletion inventory. Amend WI-027
   cross-part EXPOSE_PURE skip (`computed_attribute_extractor.py:381-395`).
 - **V11 / completeness:** `collect_uncovered_params` (`graph_builder.py:841-886`), `UncoveredInput`
   (`:825-838`), `collect_unwired_fallthrough` (`:889-916`); aggregation-coverage flag
-  (`dependency_backtracker.py:620-623`).
+  (`dependency_backtracker.py:619-624`). Capture-sink hook points: calc consumer
+  `dependency_backtracker.py:596-631`; aggregation SumTerm/SingletonTerm `graph_builder.py:1403`; aggregation
+  LocalTerm `graph_builder.py:1663-1701`. Chained-aggregation seam: sibling lookup
+  `graph_builder.py:1620-1622`, EP mint `:1681`. Full aggregation construction:
+  `build_aggregation_expression` `hierarchy_resolver.py:345`, `has_unsupported` guard `:202-306`/`:218`.
+  Second harness: `handshake_1costingfe.py:129,373,390-403,406`.
 - **Contract:** invariants 19–26 (`constraint-execution-authoritative-lifecycle-contract.md:172-195`),
   D-1/D-2 (`:284-298`), acceptance rows "Ambiguous/defaulted producer resolution" (`:437`) and
   "Stellarator design point (D-1/D-2)" (`:462`).

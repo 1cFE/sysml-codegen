@@ -37,7 +37,9 @@ entry-point manifest are the standing controls.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+import contextvars
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -139,6 +141,41 @@ class ProducerResolution:
     key_form: str | None = None
     attempted: tuple[str, ...] = ()
     ambiguous_candidates: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CapturedResolution:
+    """One (request, resolution) pair recorded by the capture sink (Item 10).
+
+    The producer-completeness check reads these at finalization; it does not re-resolve.
+    The request carries who asked and in what form (``consumer_eqn``, ``reference``,
+    ``param_name``, ``policy``); the resolution carries what was produced (``outcome``,
+    ``key_form``, ``ambiguous_candidates``).
+    """
+
+    request: ProducerRequest
+    resolution: ProducerResolution
+
+
+_resolution_sink: contextvars.ContextVar[list[CapturedResolution] | None] = (
+    contextvars.ContextVar("producer_resolution_sink", default=None)
+)
+
+
+@contextmanager
+def capturing_resolutions() -> Iterator[list[CapturedResolution]]:
+    """Activate resolution capture for the duration of one graph build.
+
+    Every ``resolve_producer`` call inside the ``with`` block appends its
+    ``CapturedResolution`` to the yielded list. Nesting is reset-safe (ContextVar token),
+    so a snapshot rebuild and a live build never cross-contaminate.
+    """
+    sink: list[CapturedResolution] = []
+    token = _resolution_sink.set(sink)
+    try:
+        yield sink
+    finally:
+        _resolution_sink.reset(token)
 
 
 @dataclass(frozen=True)
@@ -566,7 +603,24 @@ def resolve_producer(
     Runs the declared table in order, tier 1 before tier 2, applying the self-reference
     guard at every tier-1 hit and the lenient-only admissibility rule at every row. Then
     the tier-1 terminal search. Then, and only then, reads the terminal policy.
+
+    Every resolution is recorded to the active capture sink (Item 10, producer
+    completeness). Capture is centralized here — at the one public entry — so all five
+    ``resolve_producer`` call sites are covered by construction and no aggregation site can
+    be missed (which is exactly the R2 blind spot the completeness check exists to close).
+    A ``STRICT`` miss raises before returning, so it never reaches the sink; that is the
+    strict constraint consumer, whose contextual error is already the failure signal.
     """
+    resolution = _run_resolution(request, context)
+    sink = _resolution_sink.get()
+    if sink is not None:
+        sink.append(CapturedResolution(request=request, resolution=resolution))
+    return resolution
+
+
+def _run_resolution(
+    request: ProducerRequest, context: ProducerContext
+) -> ProducerResolution:
     attempted: list[str] = []
     ties: tuple[str, ...] = ()
 
