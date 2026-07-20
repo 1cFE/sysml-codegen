@@ -6,6 +6,19 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 5 — Whole-Tree Snapshot Portability — SPEC+DESIGN in progress (2026-07-20)
+
+Epic register row 5; deps Item 4 (closed). Combined spec+design at
+`.project/active/constraint-lifecycle-portability/spec-design.md`. Absolute-byte inventory
+**measured** license-free (two roots, `catf_mfe`): 40/81 generated files differ — the leak is
+`SysML Source: <abs>:<line>` docstrings in modules/stencils/output-schemas plus the seal's
+`package_contract.json`; `model_contract.json` is already portable (certified `root-0/` referent).
+Root cause: the loader re-absolutizes the portable snapshot-relative `source_file`
+(`_reabsolutize_source_files`) and docstrings render it. Recommended design (D1): generalize the
+certified `root-N/` referent to every `source_file`, delete the re-absolutization + the two
+`"models/"` hacks, bump snapshot v4→v5 with a shape gate (closes Item 4 N1). Open for owner:
+the v5 format-bump-vs-no-bump call. Completes Item 1's relocated `OccurrenceDemandAnonymous__Admitted` leg.
+
 ### CONSTRAINT-LIFECYCLE Item 4 — Diagnostic severity and modeled-default fidelity — PASS WITH NOTES (round-3 audit 2026-07-20, candidate `caa149c`)
 
 **Round-3 verdict: all four findings closed; two non-blocking notes.** F2 was closed at `caa149c`
