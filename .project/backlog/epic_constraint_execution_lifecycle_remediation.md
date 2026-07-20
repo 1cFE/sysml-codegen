@@ -412,8 +412,9 @@ only the coverage check the constructed evidence proves necessary.
 - `.project/active/constraint-lifecycle-gate-b/findings.md`
 - `.project/active/constraint-lifecycle-gate-b/upstream-filing.md`
 
-**Carried out of scope**: `shared_producer` contradicts Item 2's SR-A02 / I9 convergence claim
-(decision.md, "Surfaced"). Parked for Item 2's evidence owner; does not affect Gate B.
+**Surfaced and resolved (2026-07-20)**: `shared_producer`'s stale in-model header, not an
+evidence contradiction — Item 2's PROVENANCE/evidence already record the two-entry-point state
+as NOT MET/referred to Item 4 (decision.md, "Surfaced and resolved"). Does not affect Gate B.
 
 ---
 

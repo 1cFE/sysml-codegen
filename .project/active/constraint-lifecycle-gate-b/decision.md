@@ -156,17 +156,19 @@ Committed with this change:
 
 The spike's throwaway probes stay under `probes/` as reproduction, not as tests.
 
-## Surfaced — not resolved here: `shared_producer` contradicts Item 2's convergence claim
+## Surfaced and resolved: `shared_producer`'s stale header, not an evidence contradiction
 
-Found while running the Gate B corpus sweep. **This is out of Item 3's scope and is parked, not
-decided.** It is recorded because resolving it silently, in either direction, would misreport
-Item 2's certified evidence.
+Found while running the Gate B corpus sweep; resolved by the orchestrator (Item 2's evidence
+owner) by re-deriving against Item 2's recorded reasoning, per the rule this section originally
+invoked.
 
-`tests/fixtures/shared_producer/model.sysml` exists to certify SR-A02 / I9 / contract invariant 21:
-one design attribute read by both a calculation input and a constraint actual must converge on the
-**same** QN-keyed entry point — "one modeled default, one group assignment — not two per-consumer
-mints," in the fixture's own words. Its header asserted that neither consumer reaches a terminal
-miss.
+The in-model header of `tests/fixtures/shared_producer/model.sysml` predated Item 2's SR-A02
+ruling and asserted convergence intent ("one modeled default, one group assignment") with
+neither consumer reaching a terminal miss. That header was stale, and only the header: the
+fixture's `PROVENANCE.md` and Item 2's `evidence.md` (SR-R23 row, PC-4) both record the
+committed state as **recorded known-incomplete — two entry points, convergence NOT MET,
+referred to Item 4's written-reference carry**. Item 2 never certified convergence for this
+shape; there is no contradiction with its certified evidence.
 
 Live behavior at this commit disagrees, on the calculation side only:
 
@@ -188,14 +190,16 @@ What is and is not affected:
 - **Nothing in Gate B changes.** Both entry points carry `40.0`, so V11 is clean either way
   (`collect_uncovered_params` and `collect_unwired_fallthrough` both return empty here), and the
   QNs differ, which is consistent with — not a counterexample to — the vacuity enumeration above.
-- **Item 2's SR-A02 evidence is in question.** The fixture may be certifying a weaker property than
-  its header claims, or the self-named calc binding may be hitting the known step-limit rather than
-  the convergence path. Which of those it is has not been determined.
+- **Item 2's evidence is not in question.** The observed two-entry-point behavior is exactly the
+  state `PROVENANCE.md` pins (constraint positive at the source QN; calc per-consumer lenient
+  mint — the self-named binding structurally cannot feed the exact key form because extraction
+  discards the written reference).
 
-Action taken here: the fixture header was corrected to state observed behavior and point at this
-section, with the line count preserved so `extraction_snapshot.json` source lines do not move.
-Nothing else was touched. `[AGENT]` **The convergence question belongs to whoever owns Item 2's I9
-evidence and should be re-derived against that item's recorded reasoning before the wave lands.**
+Action taken: the stale in-model header was corrected to state observed behavior and point at
+this section, line count preserved so `extraction_snapshot.json` source lines do not move.
+`[AGENT, orchestrator-resolved 2026-07-20]` Reconciled against Item 2's recorded reasoning:
+records agree; convergence completes with Item 4's written-reference carry as already booked in
+the epic.
 
 ## Source documents
 
