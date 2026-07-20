@@ -39,7 +39,7 @@
       "calc_expressions": [
         "scaled = factor * 10.0"
       ],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 18
     }
   ],

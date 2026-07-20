@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "agg_literal_probe",
-  "captured_at": "2026-07-20T14:37:23.400903+00:00",
+  "captured_at": "2026-07-20T15:57:44.585553+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [

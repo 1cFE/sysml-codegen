@@ -12,7 +12,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
@@ -25,6 +24,7 @@ from agentic_mbse.sysml.types import BindingType, ExpressionRef
 from sysml_codegen import _upstream_pins
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.part_instance_index import deserialize_part_occurrences
+from sysml_codegen.analysis.source_referent import validate_snapshot_source_referent
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.extraction.data_models import (
     AggregationExpressionData,
@@ -792,7 +792,6 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
     _validate_constraint_facts(constraint_facts_raw, snapshot_path)
     _validate_part_occurrences(part_occurrences_raw, snapshot_path)
 
-    snapshot_dir = snapshot_path.parent
     try:
         constraint_facts = constraint_facts_module.parse(json.dumps(constraint_facts_raw))
     except (AttributeError, KeyError, TypeError, ValueError) as error:
@@ -831,9 +830,11 @@ def load_extraction_snapshot(snapshot_path: Path) -> dict[str, Any]:
         "compilation_results": _load_compilation_results(raw, snapshot_path),
     }
 
-    # source_file re-absolutization (D1/D8): lexical absolute join against the
-    # snapshot's own directory, no symlink resolution. Sentinels pass through.
-    _reabsolutize_source_files(snap, snapshot_dir)
+    # source_file shape gate (Item 5, v5): every real source_file is a portable
+    # root-N/ referent, validated here and carried opaquely to generation. No
+    # absolute path is reconstructed. A field-less or absolute value is rejected
+    # loudly (closes Item 4 note N1); sentinels pass through.
+    _validate_source_referents(snap, snapshot_path)
 
     # Source freshness (V3): warn per stale file, record the set for a one-line
     # end-of-run summary the caller logs.
@@ -908,44 +909,49 @@ def _deserialize_calc_def_compilation_result(d: dict) -> CalcDefCompilationResul
     )
 
 
-def _reabsolutize_source_file(source_file: Path, snapshot_dir: Path) -> Path:
-    """Rebuild an absolute source_file by a lexical join against snapshot_dir (D8).
+def _validate_source_referents(snap: dict[str, Any], snapshot_path: Path) -> None:
+    """v5 shape gate: assert every real source_file is a portable root-N/ referent.
 
-    Uses ``os.path.abspath`` (no ``.resolve()``) so a symlinked source path is
-    reproduced exactly as the parser reports it (B2). Sentinels pass through.
+    The certified referent validator rejects an absolute path, a snapshot-dir-
+    relative path, or a missing/blank value — the exact skew Item 4 note N1
+    warned a silent v4 edit would let through. Sentinels (``unknown``/
+    ``hierarchy``) are carried through untouched.
     """
-    stored = str(source_file)
-    if stored in _SOURCE_SENTINELS:
-        return source_file
-    return Path(os.path.abspath(snapshot_dir / stored))
 
-
-def _reabsolutize_source_files(snap: dict[str, Any], snapshot_dir: Path) -> None:
-    """Re-absolutize every real source_file field in place against snapshot_dir."""
-
-    def fix(obj: Any) -> None:
+    def check(obj: Any) -> None:
         sf = getattr(obj, "source_file", None)
-        if isinstance(sf, Path):
-            obj.source_file = _reabsolutize_source_file(sf, snapshot_dir)
+        if not isinstance(sf, Path):
+            return
+        stored = str(sf)
+        if stored in _SOURCE_SENTINELS:
+            return
+        try:
+            validate_snapshot_source_referent(stored)
+        except ValueError as error:
+            raise SnapshotFormatError(
+                f"Snapshot {snapshot_path}: source_file {stored!r} is not a portable "
+                f"root-N/ referent ({error}). A v5 snapshot stores every source_file as "
+                "the certified referent; recapture the snapshot."
+            ) from error
 
     for cd in snap["calc_defs"]:
-        fix(cd)
+        check(cd)
     for cu in snap["calc_usages"]:
-        fix(cu)
+        check(cu)
     for attrs in snap["design_attributes"].values():
         for da in attrs:
-            fix(da)
+            check(da)
     hierarchy = snap["hierarchy_data"]
     for redef in hierarchy.redefinitions:
-        fix(redef)
+        check(redef)
     for override in hierarchy.design_overrides:
-        fix(override)
+        check(override)
     for agg in hierarchy.aggregation_expressions:
-        fix(agg)
+        check(agg)
     for scoped in snap["aggregation_expressions"]:
-        fix(scoped.expression)
+        check(scoped.expression)
     for ca in snap["computed_attributes"]:
-        fix(ca)
+        check(ca)
 
 
 def _compute_source_hash(file_path: Path) -> str:

@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "fusion_tea",
-  "captured_at": "2026-07-20T14:37:23.273817+00:00",
+  "captured_at": "2026-07-20T15:57:44.449678+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -649,7 +649,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/fusion_tea/designs/generic_ife/ife_plant.sysml",
+          "file": "root-0/designs/generic_ife/ife_plant.sysml",
           "line": 155
         },
         "membership_kind": null,
@@ -1255,7 +1255,7 @@
         }
       ],
       "references": [],
-      "source_file": "library/analyses/hif_economics.sysml",
+      "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 4,
       "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
       "output_expression_asts": null,
@@ -1322,7 +1322,7 @@
         }
       ],
       "references": [],
-      "source_file": "library/analyses/hif_economics.sysml",
+      "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 43,
       "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
       "output_expression_asts": null,
@@ -1398,7 +1398,7 @@
         }
       ],
       "references": [],
-      "source_file": "library/analyses/hif_economics.sysml",
+      "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 65,
       "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
       "output_expression_asts": null,
@@ -1475,7 +1475,7 @@
         }
       ],
       "references": [],
-      "source_file": "library/analyses/hif_economics.sysml",
+      "source_file": "root-0/library/analyses/hif_economics.sysml",
       "source_line": 84,
       "source_hash": "3d583828f4aa53a101f63c7c16e34cefbcac3d43664240e60dbd87498f49690e",
       "output_expression_asts": null,
@@ -1736,7 +1736,7 @@
         }
       ],
       "references": [],
-      "source_file": "library/analyses/ife_lcoe.sysml",
+      "source_file": "root-0/library/analyses/ife_lcoe.sysml",
       "source_line": 4,
       "source_hash": "874463f56c6e87263e2619f6923155debb093fb780e3a05b0577af183aa4b26b",
       "output_expression_asts": null,
@@ -1853,7 +1853,7 @@
         }
       ],
       "references": [],
-      "source_file": "library/analyses/fusion_cycle.sysml",
+      "source_file": "root-0/library/analyses/fusion_cycle.sysml",
       "source_line": 4,
       "source_hash": "9a66d1261f2ba53543cff260ce79a794240e05e80073ebf2ee26df44934490af",
       "output_expression_asts": null,
@@ -1905,7 +1905,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "designs/hif_ife/hif_plant.sysml",
+      "source_file": "root-0/designs/hif_ife/hif_plant.sysml",
       "source_line": 177,
       "parent_part_path": "",
       "qualified_name": "hif_plant_pkg__hif_plant__meier_reactor_cost_calc",
@@ -1963,7 +1963,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "designs/hif_ife/hif_plant.sysml",
+      "source_file": "root-0/designs/hif_ife/hif_plant.sysml",
       "source_line": 190,
       "parent_part_path": "",
       "qualified_name": "hif_plant_pkg__hif_plant__meier_capital_calc",
@@ -2021,7 +2021,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "designs/hif_ife/hif_plant.sysml",
+      "source_file": "root-0/designs/hif_ife/hif_plant.sysml",
       "source_line": 205,
       "parent_part_path": "",
       "qualified_name": "hif_plant_pkg__hif_plant__meier_coe_calc",
@@ -2093,7 +2093,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "designs/hif_ife/hif_driver.sysml",
+      "source_file": "root-0/designs/hif_ife/hif_driver.sysml",
       "source_line": 62,
       "parent_part_path": "hif_driver_instance",
       "qualified_name": "hif_driver__hif_driver_instance__meier_cost",
@@ -2165,7 +2165,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "designs/hif_ife/hif_driver.sysml",
+      "source_file": "root-0/designs/hif_ife/hif_driver.sysml",
       "source_line": 62,
       "parent_part_path": "hif_plant.driver",
       "qualified_name": "hif_plant_pkg__hif_plant__driver__meier_cost",
@@ -2380,7 +2380,7 @@
         "construction_years",
         "operational_years"
       ],
-      "source_file": "designs/generic_ife/ife_plant.sysml",
+      "source_file": "root-0/designs/generic_ife/ife_plant.sysml",
       "source_line": 98,
       "parent_part_path": "hif_plant",
       "qualified_name": "hif_plant_pkg__hif_plant__lcoe_calc",
@@ -2452,7 +2452,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "designs/generic_ife/ife_plant.sysml",
+      "source_file": "root-0/designs/generic_ife/ife_plant.sysml",
       "source_line": 134,
       "parent_part_path": "hif_plant",
       "qualified_name": "hif_plant_pkg__hif_plant__recirc_calc",
@@ -2468,7 +2468,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/hif_economics.sysml",
+        "source_file": "root-0/library/analyses/hif_economics.sysml",
         "source_line": 31,
         "parent_part": "",
         "qualified_name": "hif_economics__Meier_HIF_Driver_Cost__cost_billions"
@@ -2478,7 +2478,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/hif_economics.sysml",
+        "source_file": "root-0/library/analyses/hif_economics.sysml",
         "source_line": 37,
         "parent_part": "",
         "qualified_name": "hif_economics__Meier_HIF_Driver_Cost__bank_energy_joules"
@@ -2488,7 +2488,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/hif_economics.sysml",
+        "source_file": "root-0/library/analyses/hif_economics.sysml",
         "source_line": 40,
         "parent_part": "",
         "qualified_name": "hif_economics__Meier_HIF_Driver_Cost__gamma"
@@ -2498,7 +2498,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/hif_economics.sysml",
+        "source_file": "root-0/library/analyses/hif_economics.sysml",
         "source_line": 60,
         "parent_part": "",
         "qualified_name": "hif_economics__Meier_Reactor_Cost__reactor_cost_billions"
@@ -2508,7 +2508,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/hif_economics.sysml",
+        "source_file": "root-0/library/analyses/hif_economics.sysml",
         "source_line": 80,
         "parent_part": "",
         "qualified_name": "hif_economics__Meier_Total_Capital_Cost__total_capital_billions"
@@ -2518,7 +2518,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/hif_economics.sysml",
+        "source_file": "root-0/library/analyses/hif_economics.sysml",
         "source_line": 103,
         "parent_part": "",
         "qualified_name": "hif_economics__Meier_COE__coe_cents_kwh"
@@ -2530,7 +2530,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 47,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__construction_years"
@@ -2540,7 +2540,7 @@
         "sysml_type": "Real",
         "default_value": "40.0",
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 48,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__operational_years"
@@ -2550,7 +2550,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 53,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__energy_on_target"
@@ -2560,7 +2560,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 57,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__fusion_energy_per_shot"
@@ -2570,7 +2570,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 62,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__net_electric_power"
@@ -2580,7 +2580,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 66,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__net_electric_kw"
@@ -2590,7 +2590,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 73,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__shots_per_year"
@@ -2600,7 +2600,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 77,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__driver_lifetime_years"
@@ -2610,7 +2610,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 84,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__annual_capital_cost"
@@ -2620,7 +2620,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 92,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__annual_operating_cost"
@@ -2630,7 +2630,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 98,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__annual_energy"
@@ -2640,7 +2640,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 105,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__discount_factor_con"
@@ -2650,7 +2650,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 108,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__pvf_construction"
@@ -2660,7 +2660,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 113,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__discount_factor_op"
@@ -2670,7 +2670,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 116,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__pvf_operation"
@@ -2680,7 +2680,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/ife_lcoe.sysml",
+        "source_file": "root-0/library/analyses/ife_lcoe.sysml",
         "source_line": 122,
         "parent_part": "",
         "qualified_name": "ife_lcoe__IFE_LCOE__lcoe"
@@ -2692,7 +2692,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/fusion_cycle.sysml",
+        "source_file": "root-0/library/analyses/fusion_cycle.sysml",
         "source_line": 24,
         "parent_part": "",
         "qualified_name": "fusion_cycle__Recirculating_Power_Fraction__fusion_cycle_gain"
@@ -2702,7 +2702,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library/analyses/fusion_cycle.sysml",
+        "source_file": "root-0/library/analyses/fusion_cycle.sysml",
         "source_line": 26,
         "parent_part": "",
         "qualified_name": "fusion_cycle__Recirculating_Power_Fraction__f_recirc"
@@ -2712,7 +2712,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "library/analyses/fusion_cycle.sysml",
+        "source_file": "root-0/library/analyses/fusion_cycle.sysml",
         "source_line": 48,
         "parent_part": "",
         "qualified_name": "fusion_cycle__Viability_Threshold__threshold"
@@ -2724,7 +2724,7 @@
         "sysml_type": "Real",
         "default_value": "meier_cost.cost_billions",
         "unit": null,
-        "source_file": "designs/hif_ife/hif_driver.sysml",
+        "source_file": "root-0/designs/hif_ife/hif_driver.sysml",
         "source_line": 88,
         "parent_part": "",
         "qualified_name": "hif_driver__HIF_Driver__driver_cost_billions"
@@ -2736,7 +2736,7 @@
         "sysml_type": "Real",
         "default_value": "2.054",
         "unit": null,
-        "source_file": "designs/hif_ife/hif_plant.sysml",
+        "source_file": "root-0/designs/hif_ife/hif_plant.sysml",
         "source_line": 154,
         "parent_part": "hif_plant",
         "qualified_name": "hif_plant_pkg__hif_plant__thermal_power_gw"
@@ -2746,7 +2746,7 @@
         "sysml_type": "Real",
         "default_value": "1.0",
         "unit": null,
-        "source_file": "designs/hif_ife/hif_plant.sysml",
+        "source_file": "root-0/designs/hif_ife/hif_plant.sysml",
         "source_line": 166,
         "parent_part": "hif_plant",
         "qualified_name": "hif_plant_pkg__hif_plant__net_electric_power_gw"
@@ -2756,7 +2756,7 @@
         "sysml_type": "Real",
         "default_value": "meier_coe_calc.coe_cents_kwh",
         "unit": null,
-        "source_file": "designs/hif_ife/hif_plant.sysml",
+        "source_file": "root-0/designs/hif_ife/hif_plant.sysml",
         "source_line": 225,
         "parent_part": "hif_plant",
         "qualified_name": "hif_plant_pkg__hif_plant__meier_coe"
@@ -2768,7 +2768,7 @@
         "sysml_type": "Real",
         "default_value": "lcoe_calc.lcoe",
         "unit": null,
-        "source_file": "designs/generic_ife/ife_plant.sysml",
+        "source_file": "root-0/designs/generic_ife/ife_plant.sysml",
         "source_line": 130,
         "parent_part": "",
         "qualified_name": "ife_plant__IFE_Power_Plant__lcoe"
@@ -2778,7 +2778,7 @@
         "sysml_type": "Real",
         "default_value": "recirc_calc.f_recirc",
         "unit": null,
-        "source_file": "designs/generic_ife/ife_plant.sysml",
+        "source_file": "root-0/designs/generic_ife/ife_plant.sysml",
         "source_line": 151,
         "parent_part": "",
         "qualified_name": "ife_plant__IFE_Power_Plant__recirculating_fraction"

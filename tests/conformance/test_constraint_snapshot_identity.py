@@ -232,10 +232,13 @@ def test_capture_canonicalizes_named_and_anonymous_excluded_copy(tmp_path: Path)
     snapshot_facts = _serialize_facts(facts, [tmp_path])
 
     assert facts.usages[0].location.file == str(tmp_path / "model.sysml")
+    # Item 5: every located usage's copied location is canonicalized to the portable
+    # referent — eligible (usages 3, 4) as well as excluded (0, 2) — so an anonymous
+    # eligible usage's constraint_id, which folds in its location, is checkout-portable.
     assert snapshot_facts.usages[0].location.file == "root-0/model.sysml"
     assert snapshot_facts.usages[2].location.file == "root-0/model.sysml"
-    assert snapshot_facts.usages[3].location.file == str(tmp_path / "model.sysml")
-    assert snapshot_facts.usages[4].location.file == str(tmp_path / "model.sysml")
+    assert snapshot_facts.usages[3].location.file == "root-0/model.sysml"
+    assert snapshot_facts.usages[4].location.file == "root-0/model.sysml"
     assert json.dumps(facts, default=lambda value: value.__dict__, sort_keys=True) == original
 
     live_records = _lower(facts, "live", [tmp_path])

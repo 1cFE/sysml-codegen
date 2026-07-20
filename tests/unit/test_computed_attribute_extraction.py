@@ -942,11 +942,11 @@ class TestReferenceChainCapture:
             references=[],
             classification=ComputedAttributeClassification.FORMULA,
             compilability=Compilability.MANUAL_REQUIRED,
-            source_file=Path("subsystems.sysml"),
+            source_file=Path("unknown"),
             source_line=12,
             reference_chain=["tf_coil", "volume_calc", "volume"],
         )
-        d = _serialize_value(ca, None)
+        d = _serialize_value(ca, None, [])
         assert d["reference_chain"] == ["tf_coil", "volume_calc", "volume"]
 
         ca2 = _deserialize_computed_attribute(d)

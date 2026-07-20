@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "spec_chain_channel",
-  "captured_at": "2026-07-20T14:37:23.055470+00:00",
+  "captured_at": "2026-07-20T15:57:44.226227+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -181,7 +181,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 7,
       "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
       "output_expression_asts": null,
@@ -229,7 +229,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 22,
       "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
       "output_expression_asts": null,
@@ -263,7 +263,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 33,
       "parent_part_path": "spec_chain_plant.driver",
       "qualified_name": "SpecChainDesign__spec_chain_plant__driver__meier_cost",
@@ -293,7 +293,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 58,
       "parent_part_path": "spec_chain_plant",
       "qualified_name": "SpecChainDesign__spec_chain_plant__lcoe_calc",
@@ -309,7 +309,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 17,
         "parent_part": "",
         "qualified_name": "SpecChainLib__MeierCost__gamma"
@@ -319,7 +319,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 24,
         "parent_part": "",
         "qualified_name": "SpecChainLib__LcoeCalc__lcoe"
@@ -329,7 +329,7 @@
         "sysml_type": "Real",
         "default_value": "50.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 30,
         "parent_part": "",
         "qualified_name": "SpecChainLib__IFE_Driver__drive_power"

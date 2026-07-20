@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "constraint_inline",
-  "captured_at": "2026-07-20T14:37:23.288582+00:00",
+  "captured_at": "2026-07-20T15:57:44.464982+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -45,7 +45,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_inline/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 18
         },
         "membership_kind": null,
@@ -208,7 +208,7 @@
         }
       ],
       "references": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 7,
       "source_hash": "1c3cc27a5788f15bc2c96045b46df2c43f5bd53deeceef3975b97398d66c3d1c",
       "output_expression_asts": null,
@@ -227,7 +227,7 @@
         "sysml_type": "Real",
         "default_value": "x",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "constraint_inline__Noop__y"
@@ -237,7 +237,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 17,
         "parent_part": "",
         "qualified_name": "constraint_inline__InlineHost__value"

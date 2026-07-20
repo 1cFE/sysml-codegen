@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "quoted_owner_formula",
-  "captured_at": "2026-07-20T14:37:23.043084+00:00",
+  "captured_at": "2026-07-20T15:57:44.213876+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [],
@@ -72,7 +72,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 7,
       "source_hash": "3d07d15a581671cca34fbdd4940afe8a4b25b40f7814b0aacb7464e645341899",
       "output_expression_asts": null,
@@ -91,7 +91,7 @@
         "sysml_type": "Real",
         "default_value": "100.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 10,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__revenue"
@@ -101,7 +101,7 @@
         "sysml_type": "Real",
         "default_value": "60.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 11,
         "parent_part": "Margin Part",
         "qualified_name": "QuotedOwnerFormulaDesign__Margin_Part__cost"
@@ -113,7 +113,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "QuotedOwnerFormulaLibrary__ScaleCalc__result"

@@ -837,7 +837,7 @@
       "calc_expressions": [
         "result = value * factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 5
     },
     {
@@ -966,7 +966,7 @@
         "half = total / 2.0",
         "quarter = total / 4.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 12
     },
     {

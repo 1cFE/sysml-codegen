@@ -49,7 +49,7 @@
       "calc_expressions": [
         "cost = rate * 100.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 54
     },
     {
@@ -101,7 +101,7 @@
       "calc_expressions": [
         "net_cost = revenue * 0.5"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 35
     },
     {
@@ -166,7 +166,7 @@
         "doubled = base * 2.0",
         "tripled = base * 3.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 41
     },
     {
@@ -218,7 +218,7 @@
       "calc_expressions": [
         "scaled = amount * 1.5"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 48
     },
     {
@@ -270,7 +270,7 @@
       "calc_expressions": [
         "total = flow_rate * 10.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 76
     },
     {
@@ -334,7 +334,7 @@
       "calc_expressions": [
         "rating = footprint * 2.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 91
     }
   ],

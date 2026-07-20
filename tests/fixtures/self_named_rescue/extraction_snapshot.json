@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "self_named_rescue",
-  "captured_at": "2026-07-20T14:37:23.075278+00:00",
+  "captured_at": "2026-07-20T15:57:44.246333+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -114,7 +114,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 6,
       "source_hash": "10a7fc04de2140f9a4d40ed00a8ee7276922fa37af4512129c52f4c5a9b175da",
       "output_expression_asts": null,
@@ -162,7 +162,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 23,
       "source_hash": "10a7fc04de2140f9a4d40ed00a8ee7276922fa37af4512129c52f4c5a9b175da",
       "output_expression_asts": null,
@@ -196,7 +196,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 41,
       "parent_part_path": "rescue_plant",
       "qualified_name": "RescueDesign__rescue_plant__source_calc",
@@ -226,7 +226,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 53,
       "parent_part_path": "rescue_plant",
       "qualified_name": "RescueDesign__rescue_plant__sink_calc",
@@ -242,7 +242,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 18,
         "parent_part": "",
         "qualified_name": "RescueLib__SourceCalc__throughput"
@@ -252,7 +252,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 25,
         "parent_part": "",
         "qualified_name": "RescueLib__SinkCalc__result"
@@ -262,7 +262,7 @@
         "sysml_type": "Real",
         "default_value": "4.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 38,
         "parent_part": "",
         "qualified_name": "RescueLib__Rescue_Plant__raw_flow"
@@ -272,7 +272,7 @@
         "sysml_type": "Real",
         "default_value": "source_calc.throughput",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 47,
         "parent_part": "",
         "qualified_name": "RescueLib__Rescue_Plant__throughput"

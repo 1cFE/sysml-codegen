@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "wi014_toy",
-  "captured_at": "2026-07-20T14:37:22.990976+00:00",
+  "captured_at": "2026-07-20T15:57:44.162298+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -195,7 +195,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/wi014_toy/toy_plant.sysml",
+          "file": "root-0/toy_plant.sysml",
           "line": 51
         },
         "membership_kind": null,
@@ -403,7 +403,7 @@
         }
       ],
       "references": [],
-      "source_file": "toy_library.sysml",
+      "source_file": "root-0/toy_library.sysml",
       "source_line": 4,
       "source_hash": "7701120d5f5ecd665983aade4a0b14ddabcf63814a95869334dc2c9fec613716",
       "output_expression_asts": null,
@@ -466,7 +466,7 @@
         }
       ],
       "references": [],
-      "source_file": "toy_library.sysml",
+      "source_file": "root-0/toy_library.sysml",
       "source_line": 26,
       "source_hash": "7701120d5f5ecd665983aade4a0b14ddabcf63814a95869334dc2c9fec613716",
       "output_expression_asts": null,
@@ -515,7 +515,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "toy_plant.sysml",
+      "source_file": "root-0/toy_plant.sysml",
       "source_line": 36,
       "parent_part_path": "demo_plant",
       "qualified_name": "toy_plant__demo_plant__area_calc",
@@ -559,7 +559,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "toy_plant.sysml",
+      "source_file": "root-0/toy_plant.sysml",
       "source_line": 42,
       "parent_part_path": "demo_plant",
       "qualified_name": "toy_plant__demo_plant__cost_calc",
@@ -575,7 +575,7 @@
         "sysml_type": "Real",
         "default_value": "4.0",
         "unit": null,
-        "source_file": "toy_plant.sysml",
+        "source_file": "root-0/toy_plant.sysml",
         "source_line": 30,
         "parent_part": "",
         "qualified_name": "toy_plant__Toy_Plant__plant_length"
@@ -585,7 +585,7 @@
         "sysml_type": "Real",
         "default_value": "3.0",
         "unit": null,
-        "source_file": "toy_plant.sysml",
+        "source_file": "root-0/toy_plant.sysml",
         "source_line": 31,
         "parent_part": "",
         "qualified_name": "toy_plant__Toy_Plant__plant_width"
@@ -595,7 +595,7 @@
         "sysml_type": "Real",
         "default_value": "250.0",
         "unit": null,
-        "source_file": "toy_plant.sysml",
+        "source_file": "root-0/toy_plant.sysml",
         "source_line": 32,
         "parent_part": "",
         "qualified_name": "toy_plant__Toy_Plant__plant_unit_cost"
@@ -605,7 +605,7 @@
         "sysml_type": "Real",
         "default_value": "5000.0",
         "unit": null,
-        "source_file": "toy_plant.sysml",
+        "source_file": "root-0/toy_plant.sysml",
         "source_line": 33,
         "parent_part": "",
         "qualified_name": "toy_plant__Toy_Plant__plant_budget"
@@ -615,7 +615,7 @@
         "sysml_type": "Real",
         "default_value": "cost_calc.cost",
         "unit": null,
-        "source_file": "toy_plant.sysml",
+        "source_file": "root-0/toy_plant.sysml",
         "source_line": 48,
         "parent_part": "",
         "qualified_name": "toy_plant__Toy_Plant__total_cost"
@@ -627,7 +627,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "toy_library.sysml",
+        "source_file": "root-0/toy_library.sysml",
         "source_line": 23,
         "parent_part": "",
         "qualified_name": "toy_library__Panel_Area__area"
@@ -637,7 +637,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "toy_library.sysml",
+        "source_file": "root-0/toy_library.sysml",
         "source_line": 40,
         "parent_part": "",
         "qualified_name": "toy_library__Panel_Cost__cost"

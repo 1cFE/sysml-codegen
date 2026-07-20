@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "plant_values",
-  "captured_at": "2026-07-20T14:37:23.115149+00:00",
+  "captured_at": "2026-07-20T15:57:44.287076+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -348,7 +348,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/plant_values/library.sysml",
+          "file": "root-0/library.sysml",
           "line": 105
         },
         "membership_kind": null,
@@ -585,7 +585,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 20,
       "source_hash": "4239c91b3c10768efe0c9ca0bbe444cf58d58c36911fa489d1ae629612704492",
       "output_expression_asts": null,
@@ -649,7 +649,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 92,
       "parent_part_path": "plant",
       "qualified_name": "PlantValuesDesign__plant__cost_calc",
@@ -665,7 +665,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 24,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__PlantCostCalc__plant_cost"
@@ -675,7 +675,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 34,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Viability_Threshold__threshold"
@@ -685,7 +685,7 @@
         "sysml_type": "Real",
         "default_value": "40.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 89,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Power_Plant__gain"
@@ -695,7 +695,7 @@
         "sysml_type": "Real",
         "default_value": "cost_calc.plant_cost",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 98,
         "parent_part": "",
         "qualified_name": "PlantValuesLib__Power_Plant__plant_cost"

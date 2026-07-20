@@ -57,13 +57,9 @@ def generate_test_implementations(
 
         calc_count += 1
 
-        # Source path extraction
-        source_file = module.source_file or "unknown"
-        source_path = str(source_file)
-        if "models/" in source_path:
-            source_path = "models/" + source_path.split("models/", 1)[1]
-        else:
-            source_path = Path(source_path).name
+        # source_file is already the portable root-N/ referent (Item 5 D1); render
+        # it directly. Branch C's "models/"-strip / basename fallback is deleted.
+        source_path = str(module.source_file or "unknown")
 
         is_multi = len(module.outputs) >= 2
         output_count = len(module.outputs)

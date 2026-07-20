@@ -425,16 +425,25 @@ def reference_dotted(actual: ActualFact) -> str | None:
     return _reference_dotted(actual.value.reference) or None
 
 
-def _source_local_identity(usage: ConstraintUsageFact) -> tuple[str, tuple]:
+def _source_local_identity(
+    usage: ConstraintUsageFact, source_referent: str | None = None
+) -> tuple[str, tuple]:
     """The usage's source-local identity (D3 `[HARD]`): its simple name when
     named, else its ``LocationFact`` rendering — the anonymous-assertion
-    identity. Returns ``(sanitized_local_name, id_tuple_component)``."""
+    identity. Returns ``(sanitized_local_name, id_tuple_component)``.
+
+    For an anonymous usage the location file folds into the identity tuple, so it
+    must be the portable ``root-N/`` referent (Item 5) — an absolute path there
+    makes the minted ``constraint_id`` checkout-dependent. The referent is derived
+    once in ``prepare_constraint_usages`` (I10) and passed in; ``None`` falls back
+    to the raw location for callers that supply no source route (mode-less)."""
     if usage.identity.name:
         local = sanitize_name(usage.identity.name)
         return local, (usage.identity.qualified_name,)
     if usage.location is not None:
         loc = usage.location
-        return "anon", (f"{loc.file}:{loc.line}:{loc.column}",)
+        file_component = source_referent if source_referent is not None else loc.file
+        return "anon", (f"{file_component}:{loc.line}:{loc.column}",)
     raise _generation_error(
         f"{usage.identity.qualified_name or '<unknown>'}: anonymous assertion has no "
         "LocationFact — cannot form a source-local identity (D3 `[HARD]`)"
@@ -674,6 +683,10 @@ class PreparedConstraintUsage:
     owner_instances: tuple[tuple[str, str], ...]
     projected_exclusion: _ProjectedExcludedLocation | None
     predicate_source_key: str
+    # The portable root-N/ referent for an anonymous usage's location, derived
+    # here (I10) so lowering can fold it into the constraint_id without re-deriving
+    # a referent. None for named usages, mode-less callers, or no-location usages.
+    source_referent: str | None = None
 
 
 @dataclass(frozen=True)
@@ -768,6 +781,17 @@ def prepare_constraint_usages(
                 f"admitted usage {usage.identity.qualified_name!r} has unsupported owner kind "
                 f"{kind!r} — exclusion filtering is not total"
             )
+        # An anonymous usage's constraint_id folds in its source location, so derive
+        # the portable referent here (I10) and carry it on the transcript. Reuses the
+        # cached projection when this usage is also an excluded one. Named usages
+        # identify by name; mode-less callers keep the raw location.
+        source_referent: str | None = None
+        if (
+            usage.identity.name is None
+            and usage.location is not None
+            and source_location_mode is not None
+        ):
+            source_referent = projected_location(index).referent
         items.append(
             PreparedConstraintUsage(
                 source_index=index,
@@ -777,6 +801,7 @@ def prepare_constraint_usages(
                 owner_instances=owner_instances,
                 projected_exclusion=exclusion,
                 predicate_source_key=predicate_source_key,
+                source_referent=source_referent,
             )
         )
     return PreparedConstraintBatch(
@@ -1161,7 +1186,7 @@ def lower_constraints(
                 f"decision-authority violation for {usage_qn}: "
                 "admitted decision has no Boolean pair"
             )
-        local, id_component = _source_local_identity(usage)
+        local, id_component = _source_local_identity(usage, item.source_referent)
         # Same-IR guarantee (Item 3 D7/I5), two arms: object identity for inline usages
         # (single-parse in-process path); serialization equality for definition-typed
         # usages, whose effective predicate is the definition's object — a different

@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "chain_override_probe",
-  "captured_at": "2026-07-20T14:37:23.373201+00:00",
+  "captured_at": "2026-07-20T15:57:44.556563+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -125,7 +125,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 5,
       "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
       "output_expression_asts": null,
@@ -174,7 +174,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 13,
       "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
       "output_expression_asts": null,
@@ -222,7 +222,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 26,
       "parent_part_path": "instrument_design.sensor",
       "qualified_name": "ChainOverrideDesign__instrument_design__sensor__cost_model",
@@ -252,7 +252,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 37,
       "parent_part_path": "instrument_design",
       "qualified_name": "ChainOverrideDesign__instrument_design__calibration",
@@ -268,7 +268,7 @@
         "sysml_type": "Real",
         "default_value": "100.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 8,
         "parent_part": "instrument_design",
         "qualified_name": "ChainOverrideDesign__instrument_design__sensor_base_cost"
@@ -280,7 +280,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "ChainOverrideLibrary__SensorCostCalc__total_cost"
@@ -290,7 +290,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 16,
         "parent_part": "",
         "qualified_name": "ChainOverrideLibrary__CalibrationCalc__calibrated_factor"

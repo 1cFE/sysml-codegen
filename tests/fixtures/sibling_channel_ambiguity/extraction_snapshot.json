@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "sibling_channel_ambiguity",
-  "captured_at": "2026-07-20T14:37:23.066852+00:00",
+  "captured_at": "2026-07-20T15:57:44.237719+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -154,7 +154,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 7,
       "source_hash": "61fb56b2d4ae50a7eb1b49d0298316efa7405d7ef74e19d185e36248707c9cc3",
       "output_expression_asts": null,
@@ -202,7 +202,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 23,
       "source_hash": "61fb56b2d4ae50a7eb1b49d0298316efa7405d7ef74e19d185e36248707c9cc3",
       "output_expression_asts": null,
@@ -236,7 +236,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 31,
       "parent_part_path": "twin_plant.chamber_a",
       "qualified_name": "SiblingDesign__twin_plant__chamber_a__power_calc",
@@ -266,7 +266,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 31,
       "parent_part_path": "twin_plant.chamber_b",
       "qualified_name": "SiblingDesign__twin_plant__chamber_b__power_calc",
@@ -296,7 +296,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 47,
       "parent_part_path": "twin_plant",
       "qualified_name": "SiblingDesign__twin_plant__total_calc",
@@ -312,7 +312,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 18,
         "parent_part": "",
         "qualified_name": "SiblingLib__PowerCalc__power"
@@ -322,7 +322,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 25,
         "parent_part": "",
         "qualified_name": "SiblingLib__TotalCalc__total"
@@ -332,7 +332,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 29,
         "parent_part": "",
         "qualified_name": "SiblingLib__Chamber__fuel"
@@ -342,7 +342,7 @@
         "sysml_type": "Real",
         "default_value": "power_calc.power",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 38,
         "parent_part": "",
         "qualified_name": "SiblingLib__Chamber__power"

@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "modeled_default_fidelity",
-  "captured_at": "2026-07-20T14:37:18.098453+00:00",
+  "captured_at": "2026-07-20T15:57:39.357110+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -418,7 +418,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/modeled_default_fidelity/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 62
         },
         "membership_kind": null,
@@ -557,7 +557,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/modeled_default_fidelity/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 66
         },
         "membership_kind": null,
@@ -696,7 +696,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/modeled_default_fidelity/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 70
         },
         "membership_kind": null,
@@ -857,7 +857,7 @@
         }
       ],
       "references": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 46,
       "source_hash": "cd6cabcd6a746fd7e10dc4097f58adc9ff93e987ee76fc0099c3d6752f12e9c3",
       "output_expression_asts": null,
@@ -891,7 +891,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 58,
       "parent_part_path": "",
       "qualified_name": "ModeledDefaultFidelity__the_rig__scale",
@@ -907,7 +907,7 @@
         "sysml_type": "Real",
         "default_value": "-0.1",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 25,
         "parent_part": "",
         "qualified_name": "ModeledDefaultFidelity__Drift_Bound__drift"
@@ -917,7 +917,7 @@
         "sysml_type": "Real",
         "default_value": "40.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 32,
         "parent_part": "",
         "qualified_name": "ModeledDefaultFidelity__Power_Floor__rated_power"
@@ -927,7 +927,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 41,
         "parent_part": "",
         "qualified_name": "ModeledDefaultFidelity__Derived_Bound__limit"
@@ -937,7 +937,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 48,
         "parent_part": "",
         "qualified_name": "ModeledDefaultFidelity__Scale__scaled"
@@ -947,7 +947,7 @@
         "sysml_type": "Real",
         "default_value": "0.5",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 54,
         "parent_part": "the_rig",
         "qualified_name": "ModeledDefaultFidelity__the_rig__sensor_reading"
@@ -957,7 +957,7 @@
         "sysml_type": "Real",
         "default_value": "55.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 55,
         "parent_part": "the_rig",
         "qualified_name": "ModeledDefaultFidelity__the_rig__delivered_power"
@@ -967,7 +967,7 @@
         "sysml_type": "Real",
         "default_value": "9.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 56,
         "parent_part": "the_rig",
         "qualified_name": "ModeledDefaultFidelity__the_rig__observed_value"

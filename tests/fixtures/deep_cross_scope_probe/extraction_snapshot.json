@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "deep_cross_scope_probe",
-  "captured_at": "2026-07-20T14:37:23.161783+00:00",
+  "captured_at": "2026-07-20T15:57:44.333847+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -236,7 +236,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 23,
       "source_hash": "194e395efa477b1e28301e9c99f592b654f1c55f3ff3377c298576d4bf337f3f",
       "output_expression_asts": null,
@@ -299,7 +299,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 37,
       "source_hash": "194e395efa477b1e28301e9c99f592b654f1c55f3ff3377c298576d4bf337f3f",
       "output_expression_asts": null,
@@ -363,7 +363,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 111,
       "source_hash": "194e395efa477b1e28301e9c99f592b654f1c55f3ff3377c298576d4bf337f3f",
       "output_expression_asts": null,
@@ -412,7 +412,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 69,
       "parent_part_path": "",
       "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__chain_analysis",
@@ -456,7 +456,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 81,
       "parent_part_path": "",
       "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__ref_analysis",
@@ -488,7 +488,7 @@
       "unbound_params": [
         "baseline"
       ],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 91,
       "parent_part_path": "",
       "qualified_name": "DeepCrossScopeDesign__measurement_system__analyzer__self_ref_analysis",
@@ -518,7 +518,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 67,
       "parent_part_path": "measurement_system.station.array.sensor",
       "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__sensor__core",
@@ -550,7 +550,7 @@
       "unbound_params": [
         "factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 85,
       "parent_part_path": "measurement_system.station.array",
       "qualified_name": "DeepCrossScopeDesign__measurement_system__station__array__derived_calc",
@@ -566,7 +566,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 34,
         "parent_part": "",
         "qualified_name": "DeepCrossScopeProducer__Core_Metric__metric_value"
@@ -576,7 +576,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 47,
         "parent_part": "",
         "qualified_name": "DeepCrossScopeProducer__Derived_Metric__factor"
@@ -586,7 +586,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 49,
         "parent_part": "",
         "qualified_name": "DeepCrossScopeProducer__Derived_Metric__derived_value"
@@ -596,7 +596,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 122,
         "parent_part": "",
         "qualified_name": "DeepCrossScopeConsumer__Analysis_Calc__baseline"
@@ -606,7 +606,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 124,
         "parent_part": "",
         "qualified_name": "DeepCrossScopeConsumer__Analysis_Calc__analysis_result"

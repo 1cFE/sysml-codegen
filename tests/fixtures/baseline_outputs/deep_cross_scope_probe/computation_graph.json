@@ -50,7 +50,7 @@
         "metric_value = input_val * 1.5",
         "\nDocumentation:\nLeaf-level calculation: calibrates a raw sensor reading.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 23
     },
     {
@@ -116,7 +116,7 @@
         "analysis_result = data_point - baseline",
         "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 111
     },
     {
@@ -182,7 +182,7 @@
         "analysis_result = data_point - baseline",
         "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 111
     },
     {
@@ -248,7 +248,7 @@
         "derived_value = base_metric * factor",
         "\nDocumentation:\nMid-level calculation: applies a scaling factor to a base metric.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 37
     },
     {
@@ -314,7 +314,7 @@
         "analysis_result = data_point - baseline",
         "\nDocumentation:\nConsumer calculation: subtracts a baseline from a data point.\nUsed by multiple binding patterns in the design.\n\n*Source**: C6 deep cross-scope probe\n*Reference**: PHASE2_AUDIT_ACTIONS.md C6\n*Last Updated**: 2026-02-17"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 111
     }
   ],

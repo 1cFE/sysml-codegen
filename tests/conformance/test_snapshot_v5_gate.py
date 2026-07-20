@@ -1,10 +1,11 @@
-"""The v4 envelope gate: fail closed both directions, before any semantic use.
+"""The v5 envelope gate: fail closed both directions, before any semantic use.
 
-DD-A06, DD-A20. `SNAPSHOT_FORMAT_VERSION` advanced 3 -> 4 alongside
-`constraint-facts/v2`, because leaving the envelope at 3 while its embedded facts
-changed meaning would let one version describe two payloads (DD-R12).
+DD-A06, DD-A20. `SNAPSHOT_FORMAT_VERSION` advanced 4 -> 5 (Item 5) because every
+`source_file` changed meaning — from a snapshot-dir-relative path the loader
+re-absolutized into a portable `root-N/` referent — and leaving the envelope at 4
+would let one version describe two payloads (DD-R12).
 
-No migration and no grandfathering path is added: a retained v3 snapshot fails with
+No migration and no grandfathering path is added: a retained pre-v5 snapshot fails with
 the existing recapture message and produces no partial context (DD-R15 — Item 12 owns
 closing the `grandfathered_off` fail-open path, and this item must not pre-empt it).
 """
@@ -30,24 +31,24 @@ def _write(tmp_path, payload: dict):
     return path
 
 
-def test_envelope_is_v4():
-    assert SNAPSHOT_FORMAT_VERSION == 4
+def test_envelope_is_v5():
+    assert SNAPSHOT_FORMAT_VERSION == 5
 
 
 @pytest.mark.parametrize(
-    "foreign", [3, 5], ids=["reader-newer-than-writer", "reader-older-than-writer"]
+    "foreign", [4, 6], ids=["reader-newer-than-writer", "reader-older-than-writer"]
 )
 def test_both_envelope_skew_directions_fail_closed(tmp_path, foreign):
     payload = _payload()
     payload["snapshot_format_version"] = foreign
-    with pytest.raises(SnapshotFormatError, match=f"format version {foreign}, tool expects 4"):
+    with pytest.raises(SnapshotFormatError, match=f"format version {foreign}, tool expects 5"):
         build_pipeline_context_from_snapshot(_write(tmp_path, payload))
 
 
-def test_retained_v3_snapshot_fails_with_the_existing_recapture_message(tmp_path):
+def test_retained_pre_v5_snapshot_fails_with_the_existing_recapture_message(tmp_path):
     """DD-A06: the pre-existing message, not a new mechanism, and no partial context."""
     payload = _payload()
-    payload["snapshot_format_version"] = 3
+    payload["snapshot_format_version"] = 4
     with pytest.raises(SnapshotFormatError, match="Recapture with"):
         build_pipeline_context_from_snapshot(_write(tmp_path, payload))
 
@@ -61,14 +62,14 @@ def test_envelope_gate_runs_before_the_lowering_mode_is_read(tmp_path):
     no reader accepts proves the ordering: the version error must win.
     """
     payload = _payload()
-    payload["snapshot_format_version"] = 3
+    payload["snapshot_format_version"] = 4
     payload["constraint_lowering_mode"] = "not_a_real_mode"
-    with pytest.raises(SnapshotFormatError, match="format version 3, tool expects 4"):
+    with pytest.raises(SnapshotFormatError, match="format version 4, tool expects 5"):
         build_pipeline_context_from_snapshot(_write(tmp_path, payload))
 
 
-def test_every_committed_snapshot_loads_at_v4():
-    """DD-A06: all 34 (now 35) committed fixtures load at the new version."""
+def test_every_committed_snapshot_loads_at_v5():
+    """DD-A06: every committed fixture loads at the new version."""
     from tests.conftest import FIXTURES_DIR
 
     snapshots = sorted(FIXTURES_DIR.glob("*/extraction_snapshot.json"))

@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "constraint_non_numerical",
-  "captured_at": "2026-07-20T14:37:23.312034+00:00",
+  "captured_at": "2026-07-20T15:57:44.489702+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -145,7 +145,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_non_numerical/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 17
         },
         "membership_kind": null,
@@ -308,7 +308,7 @@
         }
       ],
       "references": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 4,
       "source_hash": "51781455e694be8fcca9a406ffacb5ae46889b30597b9fd90f4bad0a76a577da",
       "output_expression_asts": null,
@@ -327,7 +327,7 @@
         "sysml_type": "Real",
         "default_value": "x",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 6,
         "parent_part": "",
         "qualified_name": "constraint_non_numerical__Noop__y"
@@ -337,7 +337,7 @@
         "sysml_type": "String",
         "default_value": "on",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 10,
         "parent_part": "",
         "qualified_name": "constraint_non_numerical__MixedPurposeHost__status"
@@ -347,7 +347,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 11,
         "parent_part": "",
         "qualified_name": "constraint_non_numerical__MixedPurposeHost__value"

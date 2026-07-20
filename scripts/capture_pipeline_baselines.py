@@ -111,13 +111,10 @@ def main(requested: str | None = None) -> None:
         model_output_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. ComputationGraph JSON
+        # source_file is now the portable root-N/ referent (Item 5 D1), so the
+        # graph carries no absolute path — the old snapshot-dir-prefix strip is
+        # deleted, the real output is portable by construction.
         graph_json = graph.model_dump_json(indent=2) + "\n"
-        # The loader re-absolutizes source_file to a machine-specific absolute
-        # path (Item 2 D1). Strip the snapshot's own-directory prefix so the
-        # committed baseline stays portable — relative basenames matching the
-        # snapshot's stored form (no /home/... paths). source_file is the only
-        # absolute path in the graph.
-        graph_json = graph_json.replace(str(snapshot_path.parent) + "/", "")
         graph_path = model_output_dir / "computation_graph.json"
         graph_path.write_text(graph_json)
 

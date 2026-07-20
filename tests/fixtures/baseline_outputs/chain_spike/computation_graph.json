@@ -61,7 +61,7 @@
       "calc_expressions": [
         "area = length * width"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 4
     },
     {
@@ -125,7 +125,7 @@
       "calc_expressions": [
         "total_cost = area * rate"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11
     },
     {
@@ -189,7 +189,7 @@
       "calc_expressions": [
         "cost_per_area = cost / area"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 18
     }
   ],

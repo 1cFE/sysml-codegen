@@ -42,7 +42,7 @@ def test_multi_instance_occurrence_roundtrip_and_constraint_id_parity():
     from agentic_mbse.sysml import constraint_facts as constraint_facts_module
 
     facts_json = json.loads(constraint_facts_module.serialize(ctx.constraint_facts))
-    occ_json = _serialize_value(table, None)
+    occ_json = _serialize_value(table, None, [])
     reloaded_facts = constraint_facts_module.parse(json.dumps(facts_json))
     reloaded_table = deserialize_part_occurrences(occ_json)
     assert reloaded_table == table  # INV-2 occurrence equality, byte-for-byte

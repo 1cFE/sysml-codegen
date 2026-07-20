@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "agg_localterm_probe",
-  "captured_at": "2026-07-20T14:37:23.344336+00:00",
+  "captured_at": "2026-07-20T15:57:44.524275+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -139,7 +139,7 @@
         }
       ],
       "references": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 25,
       "source_hash": "a59feea698e8e6a19a6182dfc9e47351983bd736a835838fbaba7fa03d8a7def",
       "output_expression_asts": null,
@@ -173,7 +173,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 37,
       "parent_part_path": "the_bank.cell",
       "qualified_name": "AggLocalTermProbe__the_bank__cell__cost_model",
@@ -189,7 +189,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 27,
         "parent_part": "",
         "qualified_name": "AggLocalTermProbe__CellCostCalc__cost"
@@ -199,7 +199,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 35,
         "parent_part": "",
         "qualified_name": "AggLocalTermProbe__Cell__area"
@@ -209,7 +209,7 @@
         "sysml_type": "Real",
         "default_value": "1.15",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 49,
         "parent_part": "",
         "qualified_name": "AggLocalTermProbe__Bank__markup"

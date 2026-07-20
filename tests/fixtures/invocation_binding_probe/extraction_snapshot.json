@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "invocation_binding_probe",
-  "captured_at": "2026-07-20T14:37:23.406365+00:00",
+  "captured_at": "2026-07-20T15:57:44.591217+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [],
@@ -51,7 +51,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 4,
       "source_hash": "b58aafc2e6180721bc528ce899d0ca42d87713c144363433ea9ba62f4da5aa73",
       "output_expression_asts": null,
@@ -99,7 +99,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 10,
       "source_hash": "b58aafc2e6180721bc528ce899d0ca42d87713c144363433ea9ba62f4da5aa73",
       "output_expression_asts": null,
@@ -121,7 +121,7 @@
         "x",
         "x"
       ],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 18,
       "parent_part_path": "",
       "qualified_name": "InvocationBindingDesign__probe__c",
@@ -137,7 +137,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 6,
         "parent_part": "probe",
         "qualified_name": "InvocationBindingDesign__probe__a"
@@ -147,7 +147,7 @@
         "sysml_type": "Real",
         "default_value": "20.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 7,
         "parent_part": "probe",
         "qualified_name": "InvocationBindingDesign__probe__b"
@@ -159,7 +159,7 @@
         "sysml_type": "Real",
         "default_value": "x",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 6,
         "parent_part": "",
         "qualified_name": "InvocationBindingLibrary__PassthroughCalc__result"

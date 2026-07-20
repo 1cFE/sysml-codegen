@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "constraint_multi_instance",
-  "captured_at": "2026-07-20T14:37:23.303119+00:00",
+  "captured_at": "2026-07-20T15:57:44.480351+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [
@@ -185,7 +185,7 @@
         "is_negated": false,
         "location": {
           "column": 9,
-          "file": "///home/reid/1cfe/sysml-codegen/tests/fixtures/constraint_multi_instance/model.sysml",
+          "file": "root-0/model.sysml",
           "line": 24
         },
         "membership_kind": null,
@@ -398,7 +398,7 @@
         }
       ],
       "references": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 4,
       "source_hash": "e4eb22e013dbb07f45044fb37f2f6f889cb9c95525cdeeca70096dfc479b984b",
       "output_expression_asts": null,
@@ -432,7 +432,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 21,
       "parent_part_path": "the_design.c.cell",
       "qualified_name": "constraint_multi_instance__the_design__c__cell__power_calc",
@@ -448,7 +448,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 6,
         "parent_part": "",
         "qualified_name": "constraint_multi_instance__Power_Calc__p"
@@ -458,7 +458,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "model.sysml",
+        "source_file": "root-0/model.sysml",
         "source_line": 20,
         "parent_part": "",
         "qualified_name": "constraint_multi_instance__Cell__cell_rating"

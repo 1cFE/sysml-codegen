@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "self_named_binding_trap",
-  "captured_at": "2026-07-20T14:37:23.393114+00:00",
+  "captured_at": "2026-07-20T15:57:44.577328+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -73,7 +73,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 5,
       "source_hash": "25fadb7c0b42b6452c81b22372a0e70a0fdaac95f591439d087b542fa5bb831a",
       "output_expression_asts": null,
@@ -107,7 +107,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 31,
       "parent_part_path": "trap_plant",
       "qualified_name": "TrapDesign__trap_plant__avail_calc",
@@ -123,7 +123,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 16,
         "parent_part": "",
         "qualified_name": "TrapLib__AvailabilityCalc__derated"
@@ -133,7 +133,7 @@
         "sysml_type": "Real",
         "default_value": "0.7",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 29,
         "parent_part": "",
         "qualified_name": "TrapLib__Trap_Plant__availability"

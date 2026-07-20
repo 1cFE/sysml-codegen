@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "unresolvable_attr_probe",
-  "captured_at": "2026-07-20T14:37:23.387093+00:00",
+  "captured_at": "2026-07-20T15:57:44.570788+00:00",
   "constraint_lowering_mode": "grandfathered_off",
   "constraint_facts": {
     "contexts": [
@@ -151,7 +151,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 5,
       "source_hash": "1910eda7ad7606f8404c2bd35e6c120b8500bac5a7f7c85f2e5a5c01b08427d8",
       "output_expression_asts": null,
@@ -185,7 +185,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 20,
       "parent_part_path": "design_derived_instance",
       "qualified_name": "UnresolvableAttrProbeDesign__design_derived_instance__my_calc",
@@ -201,7 +201,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 33,
         "parent_part": "",
         "qualified_name": "UnresolvableAttrProbeDesign__Design_Derived__mixed_expose"
@@ -213,7 +213,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 7,
         "parent_part": "",
         "qualified_name": "UnresolvableAttrProbeLibrary__SimpleCalc__result"

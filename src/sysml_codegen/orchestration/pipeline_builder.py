@@ -989,6 +989,11 @@ def build_pipeline_context(
         # run mode into the dangling-alias filter (D4).
         channel_aliases=all_channel_aliases,
         include_all=include_all,
+        # Item 5: the live route maps each module's absolute source_file to its
+        # portable root-N/ referent, so generated docstrings match the snapshot
+        # route byte-for-byte. The snapshot route already carries the referent.
+        source_roots=model_paths,
+        source_location_mode="live",
     )
 
     # [P3 EXTEND] (Item 5): append constraint + report-aggregator nodes and

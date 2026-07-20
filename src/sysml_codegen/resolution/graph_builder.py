@@ -26,6 +26,7 @@ from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
 )
+from sysml_codegen.analysis.source_referent import map_live_source_referent
 from sysml_codegen.core.identifier_types import ScopedKey, derive_module_type
 from sysml_codegen.core.models import (
     BindingResolution,
@@ -161,6 +162,29 @@ def _build_simple_auto_impl_context(compiled_expression: str, output_name: str) 
     }
 
 
+# ``source_file`` values that are not real paths — carried through untouched, never
+# mapped to a ``root-N/`` referent. Kept in sync with ``loader._SOURCE_SENTINELS``
+# plus the ``.sysml`` sentinels the derived-group and hierarchy paths mint.
+_SOURCE_SENTINELS = frozenset({"unknown", "hierarchy", "unknown.sysml"})
+
+
+def _apply_module_source_referents(
+    modules: list[PipelineModule], source_roots: list[Path]
+) -> None:
+    """Rewrite each live module's absolute source_file to its portable referent.
+
+    Maps only the freshly-built graph field, so a concurrent capture that
+    serializes the underlying extraction dataclasses is unaffected. A source path
+    that resolves against no supplied root is surfaced as a raise, never silently
+    left absolute (Item 5, Phase 1 stop condition).
+    """
+    for module in modules:
+        raw = module.source_file
+        if raw is None or raw in _SOURCE_SENTINELS:
+            continue
+        module.source_file = map_live_source_referent(raw, source_roots)
+
+
 def build_computation_graph(
     result: BacktrackingResult,
     calc_defs: list,
@@ -174,6 +198,8 @@ def build_computation_graph(
     usage_type_map: dict[tuple[str, str], str] | None = None,
     channel_aliases: list[ChannelAlias] | None = None,
     include_all: bool = True,
+    source_roots: list[Path] | None = None,
+    source_location_mode: str = "snapshot",
 ) -> ComputationGraph:
     """Build the complete computation graph from backtracking result.
 
@@ -411,6 +437,15 @@ def build_computation_graph(
 
     # Step 7: Unified topological sort across ALL modules
     modules = _unified_topological_sort(modules)
+
+    # Step 7.5 (Item 5): make every module's source_file a portable root-N/
+    # referent so generated docstrings are checkout-root-independent on the live
+    # route, exactly as the snapshot route already carries them. This maps the
+    # freshly-built PipelineModule field only — never the extraction calc_def a
+    # concurrent capture serializes. Live maps the raw parser path; snapshot
+    # already holds the referent and is left untouched.
+    if source_location_mode == "live":
+        _apply_module_source_referents(modules, source_roots or [])
 
     # Step 8: Early validation - verify all channel references resolve
     # This catches transitive binding resolution bugs before TEAx validation

@@ -74,7 +74,7 @@
         "annual_energy_mwh = 8760.0 * p_net_mw * n_mod * plant_availability",
         "\nDocumentation:\nAnnual energy production calculation.\nMatches PyFECONS lcoe.py denominator: 8760 * p_net * n_mod * plant_availability.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:24\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 267
     },
     {
@@ -139,7 +139,7 @@
         "annual_fuel_cost = fuel_unit_cost * fuel_consumption",
         "\nDocumentation:\nAnnualized fuel cost.\nFor solar: fuel_unit_cost = 0, fuel_consumption = 0 → annual_fuel_cost = 0.\nIncluded for pipeline completeness (fusion plants have non-zero fuel costs).\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas80_annualized_fuel.py:14\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 298
     },
     {
@@ -316,7 +316,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for photovoltaic modules.\nMaterial cost driven by wattage and cost per watt.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 27
     },
     {
@@ -481,7 +481,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for string inverters.\nMaterial cost driven by power rating.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 50
     },
     {
@@ -671,7 +671,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for solar array balance-of-system.\nIncludes combiners, disconnects, conduit per string and per panel.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 72
     },
     {
@@ -848,7 +848,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for battery packs.\nMaterial cost driven by capacity and chemistry factor.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 96
     },
     {
@@ -1013,7 +1013,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for hybrid (bidirectional) inverters.\nMaterial cost driven by power rating.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 119
     },
     {
@@ -1178,7 +1178,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for battery balance-of-system.\nIncludes management system, wiring, thermal management per pack.\n\n*Source**: Battery industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 141
     },
     {
@@ -1355,7 +1355,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for racking and mounting hardware.\nMaterial cost driven by panel count. Tilt angle is a design parameter\nbut does not affect cost in this simplified model.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 163
     },
     {
@@ -1533,7 +1533,7 @@
         "idiot_index = total_cost / material_cost",
         "\nDocumentation:\nCost calculation for electrical panel and breakers.\nBase cost plus per-circuit cost.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 187
     },
     {
@@ -1651,7 +1651,7 @@
         "idiot_index = 0.0",
         "\nDocumentation:\nCost calculation for permitting and interconnection.\nSoft cost — no material/fabrication/installation split.\nTotal cost is purely based on system capacity.\n\n*Source**: Solar industry cost modeling\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 210
     },
     {
@@ -1828,7 +1828,7 @@
         "material_portion = total_allocation * 0.8",
         "\nDocumentation:\nBundled allocation costs for assembly-level minor items.\nCovers items not modeled as separate parts: fasteners, seals, wiring.\n\nDuplicated from coffee maker (CoffeeMakerLibrary) — not shared because\nthe coffee maker uses a local 'Costed Component' interface.\n\n*Pattern**: Rule R3 from strategic cost patterns\n*Reference**: models/tests/coffee_maker/library.sysml:195-220\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 235
     },
     {
@@ -3025,7 +3025,7 @@
         "annual_om_cost = om_rate_per_kw_year * p_net_kw",
         "\nDocumentation:\nAnnualized operations and maintenance cost.\nMatches PyFECONS cas70_annualized_om.py: om_rate * p_net_kw.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas70_annualized_om.py:10\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 283
     },
     {
@@ -3620,7 +3620,7 @@
         "annualized_capital_cost = capital_recovery_factor * total_capex",
         "\nDocumentation:\nAnnualized financial cost using Capital Recovery Factor.\nCRF = r * (1+r)^n / ((1+r)^n - 1)\nComputes CRF from discount_rate and plant_lifetime rather than using\nPyFECONS's hardcoded 0.09 default.\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/cas90_annualized_financial.py:14\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 314
     },
     {
@@ -3797,7 +3797,7 @@
         "lcoe_per_mwh = (annualized_capital_cost + (annual_om_cost + annual_fuel_cost) * (1.0 + yearly_inflation) ** plant_lifetime) / annual_energy_mwh",
         "\nDocumentation:\nLevelized Cost of Electricity calculation.\nMatches PyFECONS lcoe.py formula with inflation escalation on O&M and fuel.\nLCOE = (C900000 + (C700000 + C800000) * (1 + inflation)^lifetime) / annual_energy\n\n*Source**: PyFECONS /home/reid/PyFECONS/pyfecons/costing/calculations/lcoe.py:18-25\n*Last Updated**: 2026-02-01"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 335
     }
   ],

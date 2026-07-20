@@ -1,7 +1,7 @@
 {
-  "snapshot_format_version": 4,
+  "snapshot_format_version": 5,
   "model_name": "chain_spike_model",
-  "captured_at": "2026-07-20T14:37:22.921638+00:00",
+  "captured_at": "2026-07-20T15:57:44.092887+00:00",
   "constraint_lowering_mode": "applied",
   "constraint_facts": {
     "contexts": [],
@@ -128,7 +128,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 4,
       "source_hash": "86d86e71dca05f28085954ff79467a06ccc03de66d843091ad241cd30722e8cb",
       "output_expression_asts": null,
@@ -190,7 +190,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11,
       "source_hash": "86d86e71dca05f28085954ff79467a06ccc03de66d843091ad241cd30722e8cb",
       "output_expression_asts": null,
@@ -252,7 +252,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 18,
       "source_hash": "86d86e71dca05f28085954ff79467a06ccc03de66d843091ad241cd30722e8cb",
       "output_expression_asts": null,
@@ -301,7 +301,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 12,
       "parent_part_path": "",
       "qualified_name": "ChainSpikeDesign__spike_design__area_calc",
@@ -345,7 +345,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 18,
       "parent_part_path": "",
       "qualified_name": "ChainSpikeDesign__spike_design__cost_calc",
@@ -389,7 +389,7 @@
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 24,
       "parent_part_path": "",
       "qualified_name": "ChainSpikeDesign__spike_design__summary",
@@ -405,7 +405,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 7,
         "parent_part": "spike_design",
         "qualified_name": "ChainSpikeDesign__spike_design__length"
@@ -415,7 +415,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 8,
         "parent_part": "spike_design",
         "qualified_name": "ChainSpikeDesign__spike_design__width"
@@ -425,7 +425,7 @@
         "sysml_type": "Real",
         "default_value": "12.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 9,
         "parent_part": "spike_design",
         "qualified_name": "ChainSpikeDesign__spike_design__rate"
@@ -437,7 +437,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 8,
         "parent_part": "",
         "qualified_name": "ChainSpikeLibrary__AreaCalc__area"
@@ -447,7 +447,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 15,
         "parent_part": "",
         "qualified_name": "ChainSpikeLibrary__CostCalc__total_cost"
@@ -457,7 +457,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 22,
         "parent_part": "",
         "qualified_name": "ChainSpikeLibrary__SummaryCalc__cost_per_area"

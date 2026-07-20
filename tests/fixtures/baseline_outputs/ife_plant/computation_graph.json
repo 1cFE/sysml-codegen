@@ -50,7 +50,7 @@
         "volume = radius * radius * 3.14159",
         "\nDocumentation:\nCoil volume from radius — the calc output that the shape-4 cross-part\nchain reaches through the nested tf_coil part.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain target)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 81
     },
     {
@@ -115,7 +115,7 @@
         "driver_power = efficiency * bank_energy",
         "\nDocumentation:\nDriver electrical power from wall-plug efficiency and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (supertype-preserved template)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 42
     },
     {
@@ -180,7 +180,7 @@
         "driver_power = efficiency * bank_energy",
         "\nDocumentation:\nDriver electrical power from wall-plug efficiency and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (supertype-preserved template)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 42
     },
     {
@@ -245,7 +245,7 @@
         "driver_cost = cost_per_joule * bank_energy",
         "\nDocumentation:\nHIF driver capital cost from cost-per-joule and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (subtype template instantiates)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 55
     },
     {
@@ -310,7 +310,7 @@
         "chamber_yield = blanket_multiple * yield_constant",
         "\nDocumentation:\nChamber yield cost from blanket multiple and yield constant.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 7 (per-instance sibling calc)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 68
     },
     {
@@ -375,7 +375,7 @@
         "chamber_yield = blanket_multiple * yield_constant",
         "\nDocumentation:\nChamber yield cost from blanket multiple and yield constant.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 7 (per-instance sibling calc)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 68
     },
     {
@@ -584,7 +584,7 @@
         "lcoe = (plant_cost_constant + om_cost_constant + target_cost_constant) / (availability * gain * driver_efficiency * thermal_efficiency)",
         "\nDocumentation:\nRepresentative plant LCOE-style calc consuming the 14 technology-agnostic\nparameters. Simplified formula — the modeling shape (14 def literals wired\nto a calc) is what Item 9 measures, not the economics.\n\n*Source**: authored fixture (Item 8, UPSTREAM-FINDINGS)\n*Reference**: spec.md Fixture 2, shape 1 (richness floor)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11
     },
     {
@@ -637,7 +637,7 @@
         "cooling_power = magnet_volume * 0.05",
         "\nDocumentation:\nCryogenic cooling load from magnet volume. Its input is wired cross-part\n(mechanism B) and deliberately left unresolvable — the known-incomplete\nbaseline Items 9-10 later wire.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain, unwired)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 97
     }
   ],

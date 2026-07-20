@@ -240,13 +240,11 @@ def generate_backlog_report(
         else:
             complexity = "High"
 
-        source_file = module.source_file or "unknown"
+        # source_file is already the portable root-N/ referent (Item 5 D1); render
+        # it directly. The obsolete "models/"-strip / basename fallback (Branch C)
+        # is deleted — the referent carries the directory structure it recovered.
+        source_path = str(module.source_file or "unknown")
         source_line = module.source_line or 0
-        source_path = str(source_file)
-        if "models/" in source_path:
-            source_path = "models/" + source_path.split("models/", 1)[1]
-        else:
-            source_path = Path(source_path).name
 
         items.append({
             "module": module.calc_def_name,

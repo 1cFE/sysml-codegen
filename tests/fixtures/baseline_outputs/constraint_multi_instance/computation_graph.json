@@ -49,7 +49,7 @@
       "calc_expressions": [
         "p = r * 2.0"
       ],
-      "source_file": "model.sysml",
+      "source_file": "root-0/model.sysml",
       "source_line": 4
     },
     {

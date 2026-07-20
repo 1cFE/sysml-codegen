@@ -162,12 +162,19 @@ def test_missing_compilation_results_degrades(tmp_path, caplog):
 # REQ-SNAP-12 (V3): a stale source hash warns and the run continues.
 # ===========================================================================
 @pytest.mark.req("REQ-SNAP-12")
-def test_stale_source_hash_warns(tmp_path, caplog):
-    """A calc_def whose on-disk source hash no longer matches warns (not raises)."""
+def test_referent_source_file_is_not_freshness_checked(tmp_path, caplog):
+    """A v5 referent source_file cannot be freshness-checked, so none is flagged.
+
+    Item 5 removed loader re-absolutization: ``source_file`` is now the portable
+    ``root-N/`` referent, which is not an on-disk path, so ``_check_source_freshness``
+    finds nothing to hash and skips (its existing ``not exists()`` guard). Freshness
+    is now a live/same-machine concern only (spec INFERRED requirement) — a stale
+    on-disk source can no longer be detected from a relocated, license-free snapshot,
+    which is the accepted trade-off for whole-tree portability. Poisoning the hash
+    therefore produces no warning and no recorded stale source.
+    """
     src = snapshot_fixture("chain_spike_model")
     raw = json.loads(src.read_text())
-    # Copy the sources beside the tmp snapshot so re-absolutization resolves to a
-    # real file, then poison one calc_def's stored hash to force a mismatch.
     model_dir = src.parent
     for name in ("library.sysml", "design.sysml"):
         (tmp_path / name).write_text((model_dir / name).read_text())
@@ -178,5 +185,5 @@ def test_stale_source_hash_warns(tmp_path, caplog):
     with caplog.at_level(logging.WARNING):
         loaded = load_extraction_snapshot(snap_path)
 
-    assert loaded["stale_sources"], "expected a stale source to be recorded"
-    assert "no longer matches on-disk source" in caplog.text
+    assert loaded["stale_sources"] == []
+    assert "no longer matches on-disk source" not in caplog.text
