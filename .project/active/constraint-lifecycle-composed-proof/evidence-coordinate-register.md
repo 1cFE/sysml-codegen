@@ -476,3 +476,90 @@ Protocol notes (memory): generated baselines/fixtures are **format-exempt** (`ge
 
 **Next stage:** `/_my_plan` — sequence the 22 reruns + 19 composes + 16 mutations + byte/quality
 gates into the execution order, then execute and produce `release-readiness.md`.
+
+---
+
+## Stage 2 execution — RERUN results (2026-07-20)
+
+**Status:** 22 / 22 reruns executed and recorded · **PASS 22 · findings 0 · unexpected skips 0**.
+Compose group and negative-mutation group **not** started (stage stops before compose, per brief).
+
+### Environment (as-run)
+
+- **Codegen surface = pin `7526665` exactly.** HEAD is `0921e05` (Item 12 audit + Item 13
+  manifest docs). `git diff 7526665 HEAD -- src tests` is **empty** (0 lines) — every change
+  since the pin is under `.project/` only. Every rerun below therefore observes the pinned
+  codegen surface. (Confirmed: full diff touches only `CURRENT_WORK.md`, the two Item-13 briefs,
+  the Item-12 audit, `BACKLOG.md`, and the epic doc.)
+- **agentic-mbse** at `4c18d61` (matches pin; only untracked `.orchestrate-logs/`).
+- **License** loaded from `~/1cfe/agentic-mbse/.env` (`set -a; source`), key length 37.
+- **Frozen version re-assertion** (register's requirement, versions read from Item 0
+  `constraint-lifecycle-candidate-pin/evidence.md`):
+  `uv run --frozen python -c "import importlib.metadata as m; ..."` →
+  **sysml-codegen `0.1.0`**, **agentic-mbse `0.1.2`**, imports OK. Matches Item 0
+  (agentic-mbse `0.1.2` / `executable-profile/v4`; sysml-codegen `0.1.0` requires
+  `agentic-mbse>=0.1.2`).
+- Command shape per case (codegen root unless noted):
+  `set -a; source ~/1cfe/agentic-mbse/.env; set +a && uv run --frozen pytest <selection> -rs -q`.
+  `-rs` surfaced **no** skip lines in any run (all summaries pure "N passed"). Selections chosen
+  as the conformance/unit test(s) that exercise each case's named fixture(s).
+
+### Per-case rerun scoreboard
+
+| # | Case | pytest selection | Result |
+|---:|---|---|---|
+| 3 | ADMIT+NON_NUMERICAL+BLOCK mix | `tests/conformance/test_constraint_non_numerical.py` | **4 passed** |
+| 8 | Anonymous admitted + excluded | `tests/conformance/test_return_style_extraction.py tests/conformance/test_constraint_occurrence_demand_acceptance.py` | **17 passed** |
+| 9 | Anonymous admitted w/ actual × snapshot | `tests/conformance/test_constraint_snapshot_portability.py` | **3 passed** |
+| 10 | Shared calc/constraint demand across files | `tests/conformance/test_shared_producer_convergence.py` | **2 passed** |
+| 11 | Recursive containment | `tests/conformance/test_constraint_occurrence_demand_supplementary.py tests/conformance/test_part_instance_index.py` | **12 passed** |
+| 12 | Non-finite multiplicity | `tests/conformance/test_diagnostic_screen.py` | **8 passed** |
+| 13 | Producer-channel actual | `tests/conformance/test_constraint_occurrence_demand_acceptance.py tests/unit/test_logical_demand_resolution.py` | **21 passed** |
+| 14 | Literal design-attribute actual (D-2) | `tests/conformance/test_gate_a_owner_classification.py` | **4 passed** (exec leg `tests/execution/test_gate_a_execution.py` = 1 deselected by marker — runtime, belongs to compose) |
+| 16 | Ambiguous/defaulted producer resolution | `tests/conformance/test_producer_completeness_acceptance.py tests/conformance/test_sibling_channel_ambiguity.py` | **6 passed** |
+| 17 | Signed/unit default + unsupported wrapper | `tests/conformance/test_modeled_default_fidelity.py tests/conformance/test_default_lane_disagreement.py` | **10 passed** |
+| 19 | Pre-existing V11 + unrelated constraint | `tests/conformance/test_gate_b_generation_gate.py` | **3 passed** |
+| 20 | Extension-introduced V11 vacuity (Item 3B) | `tests/unit/test_constraint_graph_extension.py` + grep | **11 passed**; Gate B extension-time differential check **absent** (grep for `differential\|extension.time.*check\|_check_extension` in `src/` returned empty → still deleted). N15 (restore-3-lines flips 5/14) deferred to the mutation group. |
+| 21 | Relocated snapshot | `tests/conformance/test_whole_tree_portability.py tests/conformance/test_constraint_snapshot_portability.py` | **5 passed** |
+| 22 | Malformed snapshot sections | `tests/unit/test_snapshot_envelope_gate.py tests/conformance/test_snapshot_contract.py` | **344 passed** |
+| 23 | Reserved/model/generated name collisions | `tests/unit/test_constraint_name_safety.py tests/conformance/test_constraint_name_safety_routes.py` | **26 passed** |
+| 24 | Missing catalog with constraint modules | `tests/conformance/test_module_kind_faildloud.py tests/unit/test_silent_failure_family2.py` | **16 passed** |
+| 26 | Generation-plan nested mutation | `tests/conformance/test_constraint_generation_integration.py tests/unit/test_cli_generation.py` | **57 passed** |
+| 27 | Out-of-root warning then BLOCK | `tests/conformance/test_constraint_lowering.py tests/unit/test_constraint_usage_preparation.py` | **70 passed** |
+| 32 | Seal/verify symlink and provenance | `tests/unit/test_verify_package.py tests/conformance/test_seal_step9.py` | **51 passed** |
+| 37 | Fact-consumer mutation | *(agentic-mbse `4c18d61`)* `tests/test_sysml/test_constraint_fact_shapes.py tests/test_sysml/test_constraint_facts_severity.py` | **21 passed** |
+| 38 | Remediation simplification (structural sweep) | `tests/conformance/test_dead_code_removal.py tests/conformance/test_catalog_no_reconstruction.py` + structural greps | **6 + 2 passed**; named superseded paths absent in `src/`: `tracking_key` (empty), resolution ladders (empty), WI-027 D7 passthroughs (`passthrough` empty; remaining `D7` hits are current design-decision labels), predicate-text reconstruction (only the "never a predicate-text reconstruction" FK comment). Fusion catalog materializer: no `materializer` symbol; remaining `material*` hits are unrelated (`_occurrence_materialized_qn`, list materialization). |
+| 39 | Invalid explicit simkit path (test infra) | `tests/unit/test_teax_discovery.py` | **6 passed** |
+
+**Rerun tally: 22 executed · 22 PASS · 0 findings · 0 unexpected skips.**
+
+Negative mutations referenced by rerun-case actions (N1–N7, N10, N13, N14, N15) are **not**
+executed here — the mutation group is a separate manifest deliverable sequenced after the reruns.
+Each rerun above re-observed its case's *non-mutated* behavior on the pinned surface.
+
+### "Author if absent" fixtures (cases 5, 18) — authored this session
+
+The brief/task instructed authoring the two "author if absent" public SysML source fixtures.
+**Classification note (surfaced):** cases 5 and 18 are **compose**-classified in the master
+table, not rerun. This session authored their fixtures only (fixture authoring is compose-prep,
+not compose execution); their sealed-thread evaluation stays with the compose group.
+
+- **Case 5** — `tests/fixtures/constraint_shared_polarity/` (model.sysml + PROVENANCE.md). One
+  shared `constraint def`, two named usages of opposite polarity (`assert constraint pos_bound`
+  + `assert not constraint neg_bound`), actuals from a producer channel. **Validated:**
+  `sysml-codegen generate` exits 0 and emits both `...posboundconstraintmodule.py` and
+  `...negboundconstraintmodule.py` — a valid public-seam input.
+- **Case 18** — `tests/fixtures/constraint_def_owned_redefining/` (model.sysml + PROVENANCE.md).
+  Definition-owned assert (typed by a shared constraint def) with the nested actual redefined at
+  the usage via `:>> source.reading = 80.0` (the `order`/`overrides` idiom). **Validated:**
+  parses; Step 3.5 extracts the redefinition ("1 design overrides"). Full generation **halts**
+  at constraint-actual resolution — `panel.v: unresolved actual 'source.reading' (strict mode,
+  INV-2, no entry-point synthesis)` — the same class as the sibling `order`/`overrides`
+  redefinition probes (both also halt generation; exercised at extraction/acceptance level).
+
+  **SURFACED (capture-fidelity law 4):** case 18's coordinate says the redefining-usage actual
+  should resolve and produce the expected verdict. At pin `7526665` a `:>>`-redefined design
+  attribute feeding a constraint actual is **not minted as an entry point** and does not resolve
+  at generation. Whether that is intended (compose-stage cross-part wiring, Items 9–11) or a
+  **finding for Item 2** (case 18's owning row) is for the **compose stage** to decide. Stage 2
+  surfaced it; it did **not** touch production code (stage discipline).

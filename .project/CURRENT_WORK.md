@@ -6,15 +6,23 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — spec/manifest in progress
-Stage 1 of 3 (manifest → plan → execute/report). Produced the work order
-`.project/active/constraint-lifecycle-composed-proof/evidence-coordinate-register.md`: all 41
-Appendix C acceptance cases with full LC-I09 coordinates, classified inherit 0 / rerun 22 /
-compose 19 (strict rule — every non-Item-12 surface is at a superseded codegen rev vs pin
-`7526665`; zero legitimate inherits). Pinned set: codegen `7526665` · agentic-mbse `4c18d61` ·
-teax `c342b10` · fusion-tea `2422e715` · stellarator `c4dcdf27`+`c2f10960`+`342cc799`. Also
-manifests 16 negative mutations (N1–N16), 6 full-tree byte checks, and the final quality-gate
-matrix. Open predecessors: NONE (rows 0–16 certified). Next: `/_my_plan`.
+### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — Stage 2 reruns done
+**Stage 2 of 3 — 22/22 RERUN cases executed: PASS 22 · findings 0 · unexpected skips 0** (register
+"Stage 2 execution" section, 2026-07-20). Codegen surface = pin `7526665` exactly
+(`git diff 7526665 HEAD -- src tests` empty; only `.project/` docs moved). Frozen version
+re-assertion: sysml-codegen `0.1.0`, agentic-mbse `0.1.2`, `executable-profile/v4` (matches Item 0).
+License-active, `-rs` clean. agentic-mbse at `4c18d61`; case 37 fact-consumer tests run there
+(21 passed). Case 38 structural sweep: named superseded paths absent (`tracking_key`, resolution
+ladders, D7 passthroughs, predicate-text reconstruction, fusion materializer). **Authored the two
+"author if absent" fixtures** (compose cases 5, 18): `constraint_shared_polarity` (generates clean,
+both polarities emit) and `constraint_def_owned_redefining` (parses + extracts the redefinition;
+**SURFACED**: full generation halts at constraint-actual resolution of a `:>>`-redefined attribute
+— intended compose-stage wiring vs. an Item-2 finding is for the compose stage to decide; not fixed
+here). Negative mutations (N1–N16) and the compose group **not** started (stopped before compose
+per brief). Stage 1 (manifest): all 41 cases classified inherit 0 / rerun 22 / compose 19.
+Pinned set: codegen `7526665` · agentic-mbse `4c18d61` · teax `c342b10` · fusion-tea `2422e715` ·
+stellarator `c4dcdf27`+`c2f10960`+`342cc799`. Open predecessors: NONE. Next: compose group +
+negative mutations + byte/quality gates (then `release-readiness.md`).
 
 ### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — ✅ CERTIFIED 2026-07-20 (audit.md, commit 7526665)
 Combined spec+design + `evidence.md` at `.project/active/constraint-lifecycle-legacy-identity/`.
