@@ -6,7 +6,24 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — Stage 2 COMPOSE stopped at 2 findings
+### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — COMPOSE COMPLETE, 1 open cell
+**Compose 18/19 PASS · N1–N16 all fail-at-boundary · 6/6 byte checks · quality-gate matrix recorded ·
+1 OPEN cell (18 → Item 2)** (register "Stage 2 execution — COMPOSE completion" section, 2026-07-20).
+Resumed after owner rulings. **Case 40 RESOLVED to PASS**: migrated the stale IFE breadth harness to
+the per-def predicate API (test-infra, committed fusion-tea `be1ee7c0`); anchors A/B/C byte-exact
+($252.29996307/$68.69020165/$270.12117794, Meier COE 4.735), true 2,301-pt (39×59) grid runs ×5 freqs
+= 11,505 evals, anchor B $68.6902 exact. **Case 18 → PRODUCT FINDING to Item 2** (cell OPEN): fixture
+faithfully implements Appendix C row 18 (def-owned assert + `:>>`-redefining usage; row requires a
+verdict), but the product halts at generation (`:>>`-redefined constraint actual unresolved, strict
+INV-2) — fix dispatched separately. **N15** executed as a real source mutation (restored deleted Gate B
+V11 re-check → 5/14 gate-b tests flip red → reverted, tree clean); N1–N14/N16 via passing boundary
+tests. **Quality gates:** full licensed suite 3115 passed/47 skipped (byte check 4 incl.); optimized
+2 failed (Item-4 baseline)/3113 passed; ruff check clean; agentic-mbse 344; teax 310; stellarator +
+IFE PASS. **Surfaced:** `ruff format`/`mypy` show pre-existing pin baseline (22 format-diffs, 72 mypy
+errors — src byte-identical to pin, so zero-new; register's "src clean" overstates it). Row 17
+certification blocked ONLY by cell 18. No production code touched. Next: Item 2 fix, then rerun cell 18.
+
+### CONSTRAINT-LIFECYCLE Item 13 (prior) — Stage 2 COMPOSE first pass stopped at 2 findings
 **Compose group: 17/19 PASS · 2 findings → STAGE STOPPED** (register "Stage 2 execution — COMPOSE
 group" section, 2026-07-20). Per discipline (two findings stop the stage), N1–N16 mutations, byte
 check 4, and the final quality-gate matrix were **not** run. **Sealed artifact thread** demonstrated
