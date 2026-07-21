@@ -6,7 +6,25 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — Stage 2 reruns done
+### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — Stage 2 COMPOSE stopped at 2 findings
+**Compose group: 17/19 PASS · 2 findings → STAGE STOPPED** (register "Stage 2 execution — COMPOSE
+group" section, 2026-07-20). Per discipline (two findings stop the stage), N1–N16 mutations, byte
+check 4, and the final quality-gate matrix were **not** run. **Sealed artifact thread** demonstrated
+on `constraint_multi_instance`: live A/B two independent roots byte-identical (byte check 1) +
+absolute-path scan clean (byte check 3) + fingerprints identical A==B + seal verify strict PASS both
++ relocated parity (case 21) + trusted-load→prepared+file-backed eval→persist (execution lane 17
+passed) + resume/query (teax 310 passed). **Case 41 stellarator PASS** (six anchors bit-exact, five
+verdicts satisfied, oracle reldev 0.00e+00, at pin 342cc799 — HEAD d115fbdb was 3 ahead, checked out
+detached + restored). **Case 40 IFE:** package regenerates byte-identical at pinned codegen (0 files
+changed, sealed), anchors A/B byte-exact ($252.29996307/$68.69020165) — but **FINDING #2 → fusion-tea/
+Item 10**: the 2,301-grid harness (`sweep_ife.py`, `run_anchors.py` Run C) is stale vs the pinned
+package (per-usage predicate + `.status` API + `ife_hif.yaml`; pin emits per-def predicate +
+`pipeline.yaml`); not a codegen defect. **FINDING #1 → Item 2 (case 18)**: `:>>`-redefined constraint
+actual unresolved at generation (strict INV-2). Exec-lane recipe: agentic-mbse venv python +
+PYTHONPATH=codegen src + `-m execution` (codegen uv lacks pandas). Owner ruling requested on both
+findings before resume. Compose PASS: 1,2,4,5,6,7,15,25,28,29,30,31,33,34,35,36,41.
+
+### CONSTRAINT-LIFECYCLE Item 13 (prior) — Stage 2 reruns done
 **Stage 2 of 3 — 22/22 RERUN cases executed: PASS 22 · findings 0 · unexpected skips 0** (register
 "Stage 2 execution" section, 2026-07-20). Codegen surface = pin `7526665` exactly
 (`git diff 7526665 HEAD -- src tests` empty; only `.project/` docs moved). Frozen version

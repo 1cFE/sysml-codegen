@@ -563,3 +563,130 @@ not compose execution); their sealed-thread evaluation stays with the compose gr
   at generation. Whether that is intended (compose-stage cross-part wiring, Items 9–11) or a
   **finding for Item 2** (case 18's owning row) is for the **compose stage** to decide. Stage 2
   surfaced it; it did **not** touch production code (stage discipline).
+
+---
+
+## Stage 2 execution — COMPOSE group (2026-07-20) — STAGE STOPPED at two findings
+
+**Outcome:** compose cases **17/19 PASS**, **2 findings** (cases 18, 40). Per the stage
+discipline ("a failure is a finding returned to its owning item; two findings stop the stage
+entirely"), execution **stopped** after the second finding surfaced. Negative mutations N1–N16,
+the remaining byte checks, and the final quality-gate matrix were **not** run. Owner adjudication
+requested on both findings before the stage resumes.
+
+### Environment (compose lanes)
+
+- **Default lane** (extraction/generation/lowering): `uv run --frozen pytest … -rs -q`.
+- **Execution/runtime lane** (real simkit): codegen's uv env **lacks pandas** (memory
+  `teax-simkit-execution-env` confirmed — one execution test failed `ModuleNotFoundError:
+  pandas` under `uv run`). Working recipe:
+  `set -a; source ~/1cfe/agentic-mbse/.env; set +a; export PYTHONPATH=/home/reid/1cfe/sysml-codegen/src:$PYTHONPATH; /home/reid/1cfe/agentic-mbse/.venv/bin/python -m pytest <sel> -m execution -rs -q`.
+  The agentic-mbse venv carries pandas 2.3.3 / pydantic 2.12.5 / pytest 9.0.2 / agentic_mbse 0.1.2;
+  codegen src on PYTHONPATH (root conftest imports `sysml_codegen` before the execution conftest's
+  path insert); teax-simkit found via the checkout-relative sibling.
+- **Pins verified at run:** teax `c342b10` ✓, fusion-tea `2422e715` (branch
+  `item8-fusion-embedded-catalog`) ✓. **Stellarator HEAD `d115fbdb` is 3 commits AHEAD of the pin
+  `342cc799`** (WI-028 work landed after the pin); pin is an ancestor + tree clean → checked out
+  detached at `342cc799`, ran, restored to `feat/stellarator-mbse-demo`. Recorded so no stale-rev
+  evidence is counted.
+
+### The sealed artifact thread (epic core) — on `constraint_multi_instance`
+
+One public fixture through **live A / live B / relocated → generate → seal → trusted-load →
+prepared + file-backed evaluate → persist → resume/query**, same identity throughout:
+
+- **Live A / Live B — two independent absolute roots** (`/tmp/seal_A`, `/tmp/seal_B`): both
+  `generate` exit 0. **Byte check 1 PASS** — `diff -r` of the two generated trees is empty
+  (forbids same-machine path cancellation). **Byte check 3 PASS** — absolute-path scan
+  (`/tmp/seal_A|/tmp/seal_B|/home/reid`) over the tree is empty (no checkout-absolute path leaked).
+- **Fingerprint identity A == B:** `fingerprint 2a168a7d…`, `semantic_fingerprint f8bfdb89…`,
+  `executable_fingerprint a9e9848b…` identical across both roots.
+- **Seal verify:** `verify_package_or_raise(pkg, 'sealpkg', strict=True)` → **PASS** on both roots.
+- **Relocated byte parity (byte check 2):** covered by rerun case 21 `test_whole_tree_portability`
+  (PASS, Stage-2 reruns).
+- **Trusted-load → prepared + file-backed evaluate → persist:** the execution lane (below).
+- **Resume/query identity:** the teax suite (below).
+
+### Runtime execution lane (codegen) — `pytest tests/execution -m execution` = **17 passed**
+
+Covers runtime compose cases **1, 2, 4, 5, 6, 7, 15, 28, 29** on the sealed thread. Named proofs:
+`test_zero_assertion_aggregator_not_assessed` (1/2, `not_assessed`), `test_s4_slice_both_truth_values`
++ `test_negated_inline_assertion_at_execution` (4), `test_shared_definition_opposite_polarity_exact_once`
+(5 — margin sign per-usage, sort-order-independent), `test_multi_instance_expansion` (6),
+`test_indeterminate_point_at_execution` (28), `test_generated_constraint_wrapper_propagates_arithmetic_exception`
+(29), `test_modeled_default_override_flips_verdict` (15 — override flips verdict).
+
+### Teax suite (`c342b10`, agentic-mbse venv) — **310 passed, 0 failed**
+
+Matches the Item 11 baseline exactly. Covers compose cases **25** (`test_model_contract_skew`),
+**30** (file-backed durability), **31** (verifier bootstrap / `test_compatibility`), **33**
+(`test_constraint_evidence_durability` immutability), **34** (`test_no_reconstruction`), **35**
+(`test_query`/`test_store_seam` resume/query identity), **36** (`test_bridge` zero/one/many channels).
+
+### Case 41 — Stellarator (pin `342cc799` + pinned codegen/teax) — **PASS**
+
+`exploration/stellarator_e2e/run_stellaris_single.py` in the exec env: **six anchors OK**
+(total capital \$12,638,857,665.74; LCOE \$203.647152; p_net 915.081088 MW; q_eng 6.606662;
+rec_frac 0.151362; magnet 50.03 %), **five verdicts all satisfied** (beta_ok, net_positive,
+recirc_ok, tbr_ok, wall_load_ok), **bit-exact vs oracle reldev 0.00e+00** (total_capital, lcoe,
+p_net, q_eng, rec_frac, direct_capital). Single-pass, no bridge, graph rollup; glue-1 repointed
+0 inputs (inert). Byte check 6 (unchanged numerics) PASS.
+
+### Case 40 — IFE grid — **FINDING (partial)**
+
+Certifying facts PASS:
+- **Package regenerated byte-identical at pinned codegen `7526665`.** `sysml-codegen generate
+  --models exploration/ife_e2e/models --output exploration/ife_e2e/generated --package-name
+  ife_tea` → **0 files changed** vs the committed `generated/` (8 modules incl.
+  `HifPlantViabilityConstraintModule` + `ConstraintReportAggregatorModule`, sealed). The committed
+  IFE package **is** the pinned-codegen output. (Byte check 5 foundation.)
+- **Module-level anchors A & B byte-exact** through the stock generated impls (`run_anchors.py`):
+  LCOE **\$252.29996307** and **\$68.69020165**, f_recirc 0.04166667 / 0.08333333 — unchanged anchors.
+
+**FINDING → fusion-tea IFE consumer (case-40 owning item Item 10):** the **2,301-point acceptance
+harness is stale** against the pinned-codegen package and could not run. `sweep_ife.py` imports the
+pre-epic **per-usage** predicate `constraint_pred_ife_plant__ife_power_plant__viability` and reads
+`verdict.status`; the pin emits the **per-definition** predicate body
+`constraint_pred_definition_fusion_cycle__viability_threshold(eta, gain, threshold)` returning a
+`_PredicateBodyResult` (no `.status`). `run_anchors.py` Run C references `pipelines/ife_hif.yaml`;
+the pin emits `pipelines/pipeline.yaml` (Run C was already broken against the committed package —
+pre-existing). Running the true 2,301-grid needs the consumer harness updated to the current
+predicate-evaluation API — **not** a codegen defect (the package is byte-correct, sealed, verifies).
+Not fixed here (consumer-repo rework, out of stage scope). **This is finding #2.**
+
+### Case 18 — Definition-owned redefining usage — **FINDING → Item 2** (finding #1)
+
+Compose coordinate run as written: `generate` on `constraint_def_owned_redefining` **halts** (exit 1):
+`constraint_def_owned_redefining__the_design__panel.v: unresolved actual 'source.reading' (strict
+mode: no fallback, no entry-point synthesis — INV-2)`. Step 3.5 captured the redefinition ("1 design
+overrides"), but the `:>>`-redefined design attribute feeding a constraint actual is not minted as an
+entry point. Caveat carried forward from Stage-2 authoring: no existing `:>>`-redefinition fixture
+(`order`/`overrides`) reaches full generation either — Item 2 must adjudicate whether case 18's shape
+should resolve (product gap) or its coordinate intends a different redefinition mechanism (spec/fixture
+correction). Not fixed here.
+
+### Byte checks status
+
+| # | Check | Status |
+|---|---|---|
+| 1 | Live A vs Live B (two roots) | **PASS** (sealed thread) |
+| 2 | Live vs relocated snapshot | **PASS** (rerun case 21) |
+| 3 | Absolute-path scan | **PASS** (sealed thread) |
+| 4 | Constraint-free byte stability (case 1) | not run (stage stopped) |
+| 5 | IFE unchanged anchors (case 40) | **PASS** (byte-identical regen + anchors A/B) |
+| 6 | Stellarator unchanged numerics (case 41) | **PASS** |
+
+### Compose scoreboard
+
+- **PASS (17/19):** 1, 2, 4, 5, 6, 7, 15, 25, 28, 29, 30, 31, 33, 34, 35, 36, 41 — via the sealed
+  thread, the execution lane (17), the teax suite (310), and the stellarator acceptance.
+- **FINDING (2/19):** **18** → Item 2 (redefined-actual unresolved at generation); **40** → fusion-tea
+  IFE consumer / Item 10 (2,301-grid harness stale vs pinned-codegen package; anchors + byte-identity
+  themselves PASS).
+- **NOT RUN (stage stopped):** negative mutations N1–N16; byte check 4; final quality-gate matrix
+  (full/optimized suites all repos, lint/format/type, fixture diff review).
+
+**Discipline:** no production code touched; both findings returned to their owning rows with exact
+output. Consumer repos restored to their pinned/branch state (stellarator → `feat/stellarator-mbse-demo`;
+fusion-tea tracked tree clean — pinned regen byte-identical). **Owner ruling requested** on whether
+case 40's harness staleness counts as a certifying failure and on case 18's shape before the stage resumes.
