@@ -6,6 +6,16 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — spec/manifest in progress
+Stage 1 of 3 (manifest → plan → execute/report). Produced the work order
+`.project/active/constraint-lifecycle-composed-proof/evidence-coordinate-register.md`: all 41
+Appendix C acceptance cases with full LC-I09 coordinates, classified inherit 0 / rerun 22 /
+compose 19 (strict rule — every non-Item-12 surface is at a superseded codegen rev vs pin
+`7526665`; zero legitimate inherits). Pinned set: codegen `7526665` · agentic-mbse `4c18d61` ·
+teax `c342b10` · fusion-tea `2422e715` · stellarator `c4dcdf27`+`c2f10960`+`342cc799`. Also
+manifests 16 negative mutations (N1–N16), 6 full-tree byte checks, and the final quality-gate
+matrix. Open predecessors: NONE (rows 0–16 certified). Next: `/_my_plan`.
+
 ### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — ✅ CERTIFIED 2026-07-20 (audit.md, commit 7526665)
 Combined spec+design + `evidence.md` at `.project/active/constraint-lifecycle-legacy-identity/`.
 Implemented RED-first across 6 coordinates: (D1) `generate` command fails closed on
