@@ -785,7 +785,7 @@ prepared and file-backed evaluators, remain immutable, and persist/query without
 
 ---
 
-### Item 12: Legacy Snapshot and Tracking Identity Closure
+### Item 12: Legacy Snapshot and Tracking Identity Closure ✅
 
 **Register row**: 16
 **Type**: Code/Integration (sysml-codegen)
@@ -809,11 +809,11 @@ cross-version correlation story real or delete it.
 - Claiming anonymous identities are stable across versions without an explicit author key.
 
 **Success Criteria**:
-- [ ] Normal product generation cannot silently drop constraints from a grandfathered snapshot.
-- [ ] Legacy inspection cannot execute or produce a certifying package.
-- [ ] `tracking_key` is fully implemented/cataloged or absent with documentation corrected.
-- [ ] Resume/query mismatch behavior remains fail-closed or starts explicit new lineage.
-- [ ] The rejected legacy/identity path is deleted rather than hidden behind another default route.
+- [x] Normal product generation cannot silently drop constraints from a grandfathered snapshot.
+- [x] Legacy inspection cannot execute or produce a certifying package.
+- [x] `tracking_key` is fully implemented/cataloged or absent with documentation corrected.
+- [x] Resume/query mismatch behavior remains fail-closed or starts explicit new lineage.
+- [x] The rejected legacy/identity path is deleted rather than hidden behind another default route.
 
 **Deliverables**:
 - `.project/active/constraint-lifecycle-legacy-identity/spec.md`

@@ -46,7 +46,7 @@ CONSTRAINT-LIFECYCLE-REMEDIATION items:
 - [ ] Item 9 — Multi-entry candidate bridge (row 11)
 - [ ] Item 10 — Producer completeness and stellarator rollup (row 12)
 - [ ] Item 11 — TEAx constraint evidence durability (rows 13–15)
-- [ ] Item 12 — Legacy snapshot and tracking identity closure (row 16)
+- [x] Item 12 — Legacy snapshot and tracking identity closure (row 16)
 - [ ] Item 13 — Composed public lifecycle proof and release readiness (row 17)
 
 Superseded CONSTRAINT-WAVE-REMEDIATION items:

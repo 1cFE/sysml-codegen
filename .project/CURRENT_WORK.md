@@ -6,7 +6,7 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — IMPLEMENTED, awaiting audit 2026-07-20
+### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — ✅ CERTIFIED 2026-07-20 (audit.md, commit 7526665)
 Combined spec+design + `evidence.md` at `.project/active/constraint-lifecycle-legacy-identity/`.
 Implemented RED-first across 6 coordinates: (D1) `generate` command fails closed on
 `grandfathered_off` via `assert_snapshot_certifiable` in `run_codegen` — before preflight,
