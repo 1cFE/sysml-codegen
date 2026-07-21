@@ -6,7 +6,24 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — COMPOSE COMPLETE, 1 open cell
+### CONSTRAINT-LIFECYCLE EPIC — ✅ COMPLETE (all 14 items); composed proof 41/41; PRs pushed; merge pending human (2026-07-20)
+**Register row 17 reads 41/41** at the pinned set (rerun 22 / compose 19; 16 negative mutations at
+their boundaries; 6/6 byte checks; full quality-gate matrix). The sealed artifact thread
+(generate→seal→trusted-load→prepared+file-backed evaluate→persist→resume/query) was demonstrated
+end-to-end; IFE 2,301-point + stellarator five-constraint consumer acceptances pass. Cell 18 CLOSED
+by fixture-shape correction (commit `d7ad714`); underlying general gap `[NESTED-OCCURRENCE-OVERRIDE]`
+filed to the Item-10 occurrence-materialization family. **release-readiness.md** written at
+`.project/active/constraint-lifecycle-composed-proof/release-readiness.md`. **PRs pushed + updated
+2026-07-20** (all fast-forwards): agentic-mbse **#11 `4c18d61`** (merges FIRST; body + comment,
+`4ed2a07` orchestrator ancestry flagged per Item 0 owner direction), sysml-codegen **#9 `d7ad714`**
+(SECOND; body + comment), teax **#3 `c342b10`** (HTTPS; comment). **Merge order load-bearing** —
+codegen `test_upstream_pins` fails on `main` if #9 merges before #11. fusion-tea (`be1ee7c0`) +
+stellarator (`342cc799`) branches **stay local** (human delivery decision). Epic doc: all top-level
+success criteria checked, Lessons Learned filled, status = COMPLETE / merge handoff. **Next: human
+merges #11 → #9; teax #3 independent.** Pins: codegen `7526665` (src) / `d7ad714` (tip) · agentic-mbse
+`4c18d61` · teax `c342b10` · fusion-tea `2422e715` (harness `be1ee7c0`) · stellarator `342cc799`.
+
+### CONSTRAINT-LIFECYCLE Item 13 — Composed Public Lifecycle Proof (register row 17) — COMPOSE COMPLETE (cell 18 later closed)
 **Compose 18/19 PASS · N1–N16 all fail-at-boundary · 6/6 byte checks · quality-gate matrix recorded ·
 1 OPEN cell (18 → Item 2)** (register "Stage 2 execution — COMPOSE completion" section, 2026-07-20).
 Resumed after owner rulings. **Case 40 RESOLVED to PASS**: migrated the stale IFE breadth harness to

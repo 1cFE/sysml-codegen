@@ -1,7 +1,7 @@
 # Epic: Constraint Execution Lifecycle Remediation
 
 **Epic ID**: CONSTRAINT-LIFECYCLE-REMEDIATION
-**Status**: In progress — Item 0 complete; Item 1 defects reproduced; production remediation not started
+**Status**: **COMPLETE — all 14 items done; composed proof 41/41 at the pinned set; PRs pushed/updated; merge pending human** (2026-07-20)
 **Priority**: P0 (gates the open constraint PR wave)
 **Created**: 2026-07-19
 **Estimated Effort**: 19–23 working days
@@ -128,33 +128,43 @@ of creating an artifact pipeline per item.
 - [x] Register row 0 records exact compatible agentic-mbse, sysml-codegen, and TEAx commits,
       versions, dependency locks, current-profile smoke evidence, and the production LOC baseline.
       Later register rows retain their own two-direction schema/runtime skew obligations.
-- [ ] All 41 mandatory acceptance cases record their full LC-I09 evidence coordinate, both public
-      routes, open predecessor rows, and one sealed artifact identity thread.
-- [ ] Occurrence, demand, actual resolution, Gate A, Gate B, diagnostics, defaults, and whole-tree
+- [x] All 41 mandatory acceptance cases record their full LC-I09 evidence coordinate, both public
+      routes, open predecessor rows, and one sealed artifact identity thread. *(Register 41/41;
+      sealed thread demonstrated on `constraint_multi_instance`.)*
+- [x] Occurrence, demand, actual resolution, Gate A, Gate B, diagnostics, defaults, and whole-tree
       portability satisfy contract rows 1–5 without invented values or weaker fixture shapes.
-- [ ] Runtime-owned verification, verifier/runtime skew, generation provenance, and re-seal behavior
-      satisfy rows 8–9 before any package code executes.
-- [ ] The canonical embedded catalog and real semantic/catalog/executable identities pass directly
+      *(Reruns + composes; the case-18 fixture-shape correction reinforced "no weaker shapes".)*
+- [x] Runtime-owned verification, verifier/runtime skew, generation provenance, and re-seal behavior
+      satisfy rows 8–9 before any package code executes. *(Cases 31/32; N9/N10; teax + verify_package.)*
+- [x] The canonical embedded catalog and real semantic/catalog/executable identities pass directly
       into TEAx; alternate schemas, materializers, fixtures, stand-ins, and reconstruction paths are
-      removed under row 10.
-- [ ] Stock TEAx handles complete zero/one/multiple entry mappings, constraint-free packages,
+      removed under row 10. *(Case 34; `test_catalog_no_reconstruction`; case-38 structural sweep.)*
+- [x] Stock TEAx handles complete zero/one/multiple entry mappings, constraint-free packages,
       immutable nested evidence, exact file-backed reports, crash-safe persistence, and compatible
-      resume/query without a consumer adapter.
-- [ ] Producer completeness is proved independently from V11. The stellarator model has no D7
+      resume/query without a consumer adapter. *(Teax 310 passed; cases 1,2,30,33,35,36.)*
+- [x] Producer completeness is proved independently from V11. The stellarator model has no D7
       passthroughs, private bridge, placeholder mutation, ambiguous first-pick, or leaf-name guess.
-- [ ] Grandfathered skip-lowering snapshots fail closed on the product path; `tracking_key` is either
-      implemented/cataloged or removed with every correlation claim corrected.
-- [ ] IFE runs all 2,301 points through canonical stock seams and the stellarator produces five
-      verdicts with unchanged ordinary numerics and sealed handwritten content.
-- [ ] [OWNER] Completed superseded-epic Items 1/2/4/6 are inherited rather than automatically
+      *(Case 16 + N4; case 41. Note: the Item-10 completeness-check MODULE_OUTPUT exemption is a
+      latent diagnostic gap, owner ruling pending — see Lessons.)*
+- [x] Grandfathered skip-lowering snapshots fail closed on the product path; `tracking_key` is either
+      implemented/cataloged or removed with every correlation claim corrected. *(Item 12; N16; case 35.)*
+- [x] IFE runs all 2,301 points through canonical stock seams and the stellarator produces five
+      verdicts with unchanged ordinary numerics and sealed handwritten content. *(Case 40 migrated
+      harness + 2,301 grid, anchors byte-exact; case 41 five verdicts + six bit-exact anchors.)*
+- [x] [OWNER] Completed superseded-epic Items 1/2/4/6 are inherited rather than automatically
       re-audited; final composed proof still exercises their relevant behavior on the pinned set.
-- [ ] [OWNER] The existing open agentic-mbse PR #11 and sysml-codegen PR #9 are updated with the
+      *(Manifest chose the stricter `rerun` over `inherit` — the conservative call, documented in
+      the register; the composed proof exercises their behavior on the pinned set.)*
+- [x] [OWNER] The existing open agentic-mbse PR #11 and sysml-codegen PR #9 are updated with the
       final compatible commits, accurate descriptions, and evidence. PR #11 remains first in the
-      merge order, and no replacement upstream PR is opened for this remediation.
-- [ ] [OWNER] The remediation strives for simpler code, judged qualitatively: superseded paths
-      are deleted rather than shimmed and no parallel authority or route replaces them.
-- [ ] Public docs, package/profile/runtime versions, PR descriptions, and evidence reports describe
-      the landed candidate without stale or present-tense overclaims.
+      merge order, and no replacement upstream PR is opened for this remediation. *(Pushed 2026-07-20:
+      #11 `4c18d61`, #9 `d7ad714`, teax #3 `c342b10`; descriptions refreshed + commented.)*
+- [x] [OWNER] The remediation strives for simpler code, judged qualitatively: superseded paths
+      are deleted rather than shimmed and no parallel authority or route replaces them. *(Case-38
+      structural sweep confirmed the named deletions with no replacement shim.)*
+- [x] Public docs, package/profile/runtime versions, PR descriptions, and evidence reports describe
+      the landed candidate without stale or present-tense overclaims. *(Item 6 docs; refreshed PR
+      drafts; release-readiness carries the honest remaining-state section.)*
 
 ---
 
@@ -960,20 +970,46 @@ certification critical path remains ordered.
 
 ---
 
-## Lessons Learned (Post-Completion)
-
-*Fill in after epic completion.*
+## Lessons Learned (Post-Completion, 2026-07-20)
 
 **What Went Well**:
-- TBD
+- **The composed proof caught what component certification could not.** Every item certified in
+  isolation, yet the composed run still surfaced real issues — the case-40 IFE breadth harness had
+  silently drifted from the package's predicate API, and the case-18 fixture over-built its contract
+  row. The epic's core bet ("a certified component is not evidence the untested composition works")
+  paid off.
+- **Byte-identity discipline held.** The pinned codegen reproduced the IFE package and the two-root
+  sealed thread byte-for-byte; the reruns confirmed the `src` surface was byte-identical to the pin,
+  so "run at HEAD" was provably "run at the pin."
+- **Strict resolution stayed strict.** The case-18 halt was the resolver refusing to invent an entry
+  point (INV-2) — the fail-loud behavior the epic mandated. The fix was a fixture, not a loosening.
 
 **What Could Improve**:
-- TBD
+- **Consumer acceptance harnesses drift silently.** The IFE `sweep_ife.py` / `run_anchors.py` broke
+  against the current package naming/API well before Item 13 and nobody noticed — they are in no
+  repo's CI. Consumer acceptance scripts need a smoke run in the wave, or they rot.
+- **"Author if absent" fixtures can over-build the contract row.** The first case-18 fixture added an
+  instantiated-part-def layer the row never asked for; that layer, not the product, caused the halt.
+  Check the flat/canonical shape against the row verbatim before concluding a product defect.
+- **A latent completeness-check gap remains.** The Item-10 producer-completeness check exempts all
+  `MODULE_OUTPUT`, so a qualifier-drop collapse via channel-tier name-based rows is uncaught
+  (diagnostic, not a hard gate; no fixture trips it today). Owner ruling pending.
 
 **Surprises**:
-- TBD
+- **A general occurrence-materialization gap hid behind a constraint symptom.** Case-18's nested
+  shape exposed `[NESTED-OCCURRENCE-OVERRIDE]`: a `:>>` override on a usage nested in an instantiated
+  part def is captured definition-relative while demand resolves occurrence-relative — losing the
+  literal on **both** the calc and constraint paths. Filed to the Item-10 family; not constraint-specific.
+- **Merge order is enforced by a test, not a note.** `test_upstream_pins` fails on codegen `main` if
+  #9 merges before #11 — mechanical, which is why it survived a long multi-session epic.
+- **The runtime lane needs the companion venv.** Codegen's own `uv` env lacks pandas; every
+  real-simkit compose case runs from the agentic-mbse venv with codegen `src` on `PYTHONPATH` and
+  `-m execution`.
 
 ---
 
-**Last Updated**: 2026-07-19
-**Next Action**: Complete Item 1, then begin Item 2 from the compatible candidate pin.
+**Last Updated**: 2026-07-20
+**Next Action (merge handoff):** human merges **agentic-mbse PR #11 (`4c18d61`) FIRST**, then
+**sysml-codegen PR #9 (`d7ad714`)**; **teax PR #3 (`c342b10`)** independent. fusion-tea (`be1ee7c0`)
++ stellarator (`342cc799`) stay local. Full picture:
+`.project/active/constraint-lifecycle-composed-proof/release-readiness.md`.
