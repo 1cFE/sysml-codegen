@@ -31,7 +31,6 @@ def test_live_snapshot_constraint_parity(fixture, tmp_path):
     snap_path = capture_snapshot(
         [FIXTURES_DIR / fixture],
         tmp_path / "extraction_snapshot.json",
-        lower_constraints_enabled=True,
     )
     offline_graph, _inputs = build_full_graph_from_snapshot(snap_path)
 
@@ -63,7 +62,6 @@ def test_constraint_free_fixture_loads_empty_catalog_graph_unchanged(tmp_path):
     snap_path = capture_snapshot(
         [FIXTURES_DIR / fixture],
         tmp_path / "extraction_snapshot.json",
-        lower_constraints_enabled=True,
     )
     offline_graph, _inputs = build_full_graph_from_snapshot(snap_path)
 

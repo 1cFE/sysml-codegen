@@ -21,9 +21,14 @@ def capture_snapshot(
     model_paths: list[Path],
     output_path: Path,
     design_path_filter: str = "",
-    lower_constraints_enabled: bool = True,
 ) -> Path:
     """Capture a versioned snapshot from live models and write it to output_path.
+
+    Always captures with constraint lowering applied: a captured snapshot must be
+    able to produce a certifying package, so ``constraint_lowering_mode`` is always
+    ``"applied"`` (Item 12 closed the capture-time opt-out — the only honest
+    ``grandfathered_off`` producer left is the extraction-only path, for models
+    that cannot build a pipeline at all).
 
     Args:
         model_paths: SysML model directories/files to extract.
@@ -33,10 +38,6 @@ def capture_snapshot(
         design_path_filter: Substring filter applied at capture time; its effect
             is baked into the snapshot (so re-applying it at generation is a hard
             CLI error, V6).
-        lower_constraints_enabled: whether to run constraint lowering at capture
-            time (Item 8, D3) — stamps ``constraint_lowering_mode`` accordingly.
-            Default True; the named ``GRANDFATHERED`` set in the capture scripts
-            passes False for the two carved-out fixtures.
 
     Returns:
         The output path written.
@@ -47,7 +48,6 @@ def capture_snapshot(
     ctx = build_pipeline_context(
         model_paths,
         design_path_filter=design_path_filter,
-        lower_constraints_enabled=lower_constraints_enabled,
     )
     if ctx.constraint_facts is None:  # build_pipeline_context always populates it
         raise RuntimeError("build_pipeline_context returned no constraint_facts")

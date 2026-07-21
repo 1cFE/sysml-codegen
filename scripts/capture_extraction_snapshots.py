@@ -157,15 +157,12 @@ MODELS = {
     "shared_producer": FIXTURES_DIR / "shared_producer",
 }
 
-# Constraint-lowering grandfather (Item 8, D3 — RETIRED Item 14 Phase 1, INV-D):
-# plant_values/fusion_tea were captured with lowering disabled because the `gain`
-# hierarchy-extraction gap blocked `'Viability Threshold'` from lowering. Item 14
-# closes that gap (the instance-self-redef tier + its constraint-actual demand
-# widening, plus the def-scoped base-default rung for plant_values' distinct
-# shape) — both fixtures now capture and generate lowered under the default like
-# every other fixture. Kept empty (not deleted) so a future real gap has a named
-# place to register, per the original design's intent (design.md#potential-risks).
-GRANDFATHERED: frozenset[str] = frozenset()
+# The constraint-lowering grandfather set (Item 8, D3) was emptied in Item 14
+# Phase 1 (INV-D) once the `gain` gap closed, and the capture-time opt-out it fed
+# was deleted in Item 12: a full-pipeline model always captures with lowering
+# applied so its snapshot can produce a certifying package. The only honest
+# `grandfathered_off` producer left is the extraction-only path below, for models
+# that cannot build a pipeline at all.
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
 # or CHAIN overrides that produce unresolvable source paths)
@@ -279,7 +276,6 @@ def main(requested: str | None = None) -> None:
         out = capture_snapshot(
             [model_path],
             model_path / "extraction_snapshot.json",
-            lower_constraints_enabled=(model_name not in GRANDFATHERED),
         )
         _report(model_path, json.loads(out.read_text()))
 

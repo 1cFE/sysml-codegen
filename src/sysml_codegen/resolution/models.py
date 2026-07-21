@@ -369,8 +369,6 @@ class ConcreteConstraint(_TransactionalAssignmentModel):
         eligible: ``False`` for a defensively cataloged unassessed record
             (``requirement_def`` / out-of-profile source form, D7); ``True``
             for a normally lowered, executable assertion.
-        tracking_key: Optional author-controlled correlation key (D8); never
-            part of ``constraint_id``.
     """
 
     model_config = ConfigDict(validate_assignment=True)
@@ -391,7 +389,6 @@ class ConcreteConstraint(_TransactionalAssignmentModel):
     evaluation_channel: str | None = None
     eligible: bool = True
     exclusion: ConstraintExclusion | None = None
-    tracking_key: str | None = None
     #: The referenced ``constraint def``'s qualified name — non-None **iff**
     #: ``source_form == "definition_typed"`` (Item 8 / F1). ``None`` for every other
     #: form, including *named inline*, whose effective predicate source is the usage's

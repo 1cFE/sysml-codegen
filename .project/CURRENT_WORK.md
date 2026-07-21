@@ -6,14 +6,19 @@
 
 ## Active Work
 
-### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — spec+design drafted 2026-07-20
-Combined spec+design at `.project/active/constraint-lifecycle-legacy-identity/spec-design.md`.
-Measured: `grandfathered_off` lives at v5 only as the extraction-only-probe state (7 committed,
-all 0 usages); `tracking_key` is a dead field (zero writers, absent from catalog, never
-serialized). Decisions: fail closed at the `generate` command on the snapshot's real mode (not
-`seal_package`, which is pure; not the shared inspection helper); retain the mode as
-non-certifying inspection but delete the full-pipeline capture opt-out; delete `tracking_key`;
-fix the from-snapshot context's latent mode misreport. No format bump, no re-capture.
+### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — IMPLEMENTED, awaiting audit 2026-07-20
+Combined spec+design + `evidence.md` at `.project/active/constraint-lifecycle-legacy-identity/`.
+Implemented RED-first across 6 coordinates: (D1) `generate` command fails closed on
+`grandfathered_off` via `assert_snapshot_certifiable` in `run_codegen` — before preflight,
+output, or seal — with a contextual recapture error (unconditional per owner ruling: a
+grandfathered probe must fail at the gate); (D2) deleted the `capture_snapshot`
+`lower_constraints_enabled` opt-out + the empty `GRANDFATHERED` set (mode retained as
+extraction-only inspection); (D3) deleted `tracking_key` (field/docstring/test) + amended the
+contract's cross-version-correlation non-goals; (D4) threaded the snapshot's real mode into the
+from-snapshot context (fixed the latent misreport). Two expected test interactions resolved
+(parity kwarg drop; V11 test uses an applied tmp copy of the 0-usage probe). Full licensed
+suite 3115 passed / 0 failed, ruff clean, mypy zero-new. No format bump, no re-capture.
+CANDIDATE committed — next: `/_my_audit`.
 
 ### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — ✅ CERTIFIED 2026-07-20
 **Audit verdict: Certify** (`audit.md`). Reproduced independently (not trusted): C1 positive

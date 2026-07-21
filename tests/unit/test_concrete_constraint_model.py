@@ -346,16 +346,6 @@ def test_default_eligible_rejects_exclusion_mutation_transactionally():
     )
 
 
-def test_concrete_constraint_accepts_valid_deliberate_assignment():
-    constraint = _default_eligible_constraint()
-    constraint.tracking_key = "owner-correlation-key"
-    assert constraint.tracking_key == "owner-correlation-key"
-    assert (
-        ConcreteConstraint.model_validate_json(constraint.model_dump_json()).tracking_key
-        == "owner-correlation-key"
-    )
-
-
 def test_catalog_entry_rejects_polarity_mutation_and_stays_serializable():
     entry = _catalog_entry()
     _assert_rejected_assignment_is_transactional(entry, "is_negated", True, "does not derive")

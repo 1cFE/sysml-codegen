@@ -968,6 +968,7 @@ def run_codegen(config: GenerationConfig) -> bool:
     )
     from sysml_codegen.generation.constraint_plan import build_constraint_generation_plan
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+    from sysml_codegen.snapshot import GrandfatheredSnapshotError
 
     source = config.from_snapshot if config.from_snapshot is not None else config.models_path
     logger.info(f"Generating code from {source}")
@@ -982,8 +983,15 @@ def run_codegen(config: GenerationConfig) -> bool:
             from sysml_codegen.orchestration.snapshot_context import (
                 build_pipeline_context_from_snapshot,
             )
+            from sysml_codegen.snapshot import assert_snapshot_certifiable
 
             ctx = build_pipeline_context_from_snapshot(config.from_snapshot)
+            # Fail closed on a grandfathered snapshot before any output is written
+            # or sealed (Item 12): a snapshot captured without lowering carries no
+            # lowered constraints, so a package sealed from it would silently omit
+            # them. Inspection loads above are unaffected — only certifying
+            # generation is refused. Reads the context's now-honest mode (D4).
+            assert_snapshot_certifiable(ctx.constraint_lowering_mode, config.from_snapshot)
         else:
             assert config.models_path is not None  # guaranteed by the CLI group
             ctx = build_pipeline_context(
@@ -1066,6 +1074,9 @@ def run_codegen(config: GenerationConfig) -> bool:
         logger.info("Code generation complete")
         return True
 
+    except GrandfatheredSnapshotError as e:
+        logger.error(str(e))
+        return False
     except SysMLParsingError as e:
         logger.error(f"SysML parsing failed: {e}")
         return False

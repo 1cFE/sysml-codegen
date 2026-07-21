@@ -9,6 +9,8 @@ invoke the parser; only ``capture_snapshot`` needs a live license.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 # v3 (CONSTRAINT-EXEC Item 8): adds the top-level ``constraint_facts``,
 # ``part_occurrences``, and ``constraint_lowering_mode`` sections — the neutral
 # constraint facts, the resolved per-owner occurrence table (the transcript of
@@ -46,6 +48,35 @@ class SnapshotFormatError(Exception):
     """
 
 
+class GrandfatheredSnapshotError(Exception):
+    """A ``grandfathered_off`` snapshot was routed to the certifying product path.
+
+    A snapshot captured without constraint lowering carries no lowered
+    constraints; generating a package from it would seal a certifying artifact
+    with its constraint assertions silently absent. Normal product generation
+    fails closed here (Item 12) — the snapshot must be recaptured with lowering
+    enabled (the default) first. Loading such a snapshot for inspection is
+    unaffected; only certifying generation is refused.
+    """
+
+
+def assert_snapshot_certifiable(constraint_lowering_mode: str, snapshot_path: Path) -> None:
+    """Fail closed if a snapshot cannot produce a certifying package (Item 12).
+
+    Called on the product generation path, before any output is written, so a
+    grandfathered snapshot can never seal. ``grandfathered_off`` is non-certifying
+    by construction: it was captured without lowering, so its constraint
+    assertions were never lowered into generatable form.
+    """
+    if constraint_lowering_mode == CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF:
+        raise GrandfatheredSnapshotError(
+            f"Snapshot {snapshot_path} was captured with constraint lowering "
+            f"disabled (grandfathered_off) and cannot produce a certifying "
+            f"package: its constraint assertions were never lowered. Recapture "
+            f"with lowering enabled (the default) before generating from it."
+        )
+
+
 from sysml_codegen.snapshot.capture import capture_snapshot  # noqa: E402
 from sysml_codegen.snapshot.graph_rebuild import (  # noqa: E402
     build_classifier_inputs_from_snapshot,
@@ -63,6 +94,8 @@ __all__ = [
     "SNAPSHOT_FORMAT_VERSION",
     "VALID_CONSTRAINT_LOWERING_MODES",
     "SnapshotFormatError",
+    "GrandfatheredSnapshotError",
+    "assert_snapshot_certifiable",
     "build_classifier_inputs_from_snapshot",
     "build_full_graph_from_snapshot",
     "capture_snapshot",

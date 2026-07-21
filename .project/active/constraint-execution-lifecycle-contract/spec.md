@@ -225,8 +225,8 @@ wait on them.
   occurrence, membership kind, polarity)`. An excluded record instead uses stable source/context
   identity because occurrence or polarity may not exist. The executable fingerprint scopes and
   interprets IDs but is not an ID input; doing so would be circular. Collisions fail before graph/
-  output mutation. If `tracking_key` remains the supported cross-version correlation mechanism, it
-  must be populated and cataloged; otherwise it and the corresponding correlation claim are removed.
+  output mutation. Resolved (Item 12): `tracking_key` was removed (dead field — no writer, no
+  catalog entry, never serialized), so no cross-version correlation mechanism is claimed.
 
 ### E. Graph extension, catalog, and generation
 
@@ -537,8 +537,8 @@ evidence/release/environment behavior; it does not redo the landed normalization
 - Treating study penalties or feasibility policy as modeled constraint semantics.
 - Claiming historical snapshots reproduce historical profile decisions; replay uses the installed
   pinned profile.
-- Making anonymous identity cross-version stable. Explicit author correlation is supported only if
-  `tracking_key` is implemented and cataloged; otherwise no cross-version correlation is claimed.
+- Making anonymous identity cross-version stable. Resolved (Item 12): the `tracking_key` field was
+  removed, so no cross-version correlation is claimed.
 - Treating a private consumer bridge as a supported upstream API merely because it works.
 - Re-auditing completed remediation items before the lifecycle contract is ratified.
 

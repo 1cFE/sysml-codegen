@@ -90,4 +90,9 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
         aggregation_expressions=snap["aggregation_expressions"],
         channel_aliases=snap["channel_aliases"],
         output_registry=inputs["registry"],
+        # Carry the snapshot's real lowering mode (Item 12): without this the
+        # context inherits the dataclass default "grandfathered_off" and every
+        # from-snapshot context mis-reports, even an "applied" one. The product
+        # generate gate reads this field, so it must be honest before the gate exists.
+        constraint_lowering_mode=snap["constraint_lowering_mode"],
     )

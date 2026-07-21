@@ -110,21 +110,21 @@ delete condition ("if none: delete") is met.
 
 ## Success Criteria
 
-- [ ] `generate --from-snapshot` on a `grandfathered_off` snapshot **fails closed
+- [x] `generate --from-snapshot` on a `grandfathered_off` snapshot **fails closed
       with a contextual error** (naming lowering / recapture), before any output
       file is written and therefore before any seal exists.
-- [ ] A `grandfathered_off` snapshot **provably cannot produce a sealed /
+- [x] A `grandfathered_off` snapshot **provably cannot produce a sealed /
       certifying package** — there is no code path from it to `seal_package`.
-- [ ] Grandfathered extraction-only snapshots **remain loadable for inspection**
+- [x] Grandfathered extraction-only snapshots **remain loadable for inspection**
       (the 7 probe fixtures and their tests keep passing); the mode is retained as
       an explicitly non-certifying inspection state, not deleted.
-- [ ] A full-pipeline model **can no longer be captured `grandfathered_off`** — the
+- [x] A full-pipeline model **can no longer be captured `grandfathered_off`** — the
       capture-time opt-out for lowerable models is gone.
-- [ ] `tracking_key` **does not exist** on `ConcreteConstraint`; no cross-version
+- [x] `tracking_key` **does not exist** on `ConcreteConstraint`; no cross-version
       correlation is claimed anywhere (docs and epic non-goals amended).
-- [ ] The from-snapshot context **reports its snapshot's real lowering mode**, not
+- [x] The from-snapshot context **reports its snapshot's real lowering mode**, not
       the defaulted `grandfathered_off`.
-- [ ] The full suite (`uv run pytest tests/`) is green, including the RED tests
+- [x] The full suite (`uv run pytest tests/`) is green, including the RED tests
       below, with **no snapshot re-capture** (no format bump).
 
 ## Known Requirements
