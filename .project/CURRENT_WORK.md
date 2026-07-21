@@ -6,6 +6,15 @@
 
 ## Active Work
 
+### CONSTRAINT-LIFECYCLE Item 12 — Legacy Snapshot and Tracking Identity Closure — spec+design drafted 2026-07-20
+Combined spec+design at `.project/active/constraint-lifecycle-legacy-identity/spec-design.md`.
+Measured: `grandfathered_off` lives at v5 only as the extraction-only-probe state (7 committed,
+all 0 usages); `tracking_key` is a dead field (zero writers, absent from catalog, never
+serialized). Decisions: fail closed at the `generate` command on the snapshot's real mode (not
+`seal_package`, which is pure; not the shared inspection helper); retain the mode as
+non-certifying inspection but delete the full-pipeline capture opt-out; delete `tracking_key`;
+fix the from-snapshot context's latent mode misreport. No format bump, no re-capture.
+
 ### CONSTRAINT-LIFECYCLE Item 11 — TEAx Constraint Evidence Durability (TEAx-owned) — ✅ CERTIFIED 2026-07-20
 **Audit verdict: Certify** (`audit.md`). Reproduced independently (not trusted): C1 positive
 write-phase signal (set-before/clear-on-success, no `finally`; entry-load→MODULE_EXECUTION,
