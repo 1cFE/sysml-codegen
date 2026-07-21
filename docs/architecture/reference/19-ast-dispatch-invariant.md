@@ -39,7 +39,7 @@ breaking aggregation wiring in the
 | REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand (binary or unary) iff it binds looser than its parent, or equal and on the associativity-unfavored side (precedence-aware) | Preserve meaning-changing grouping in displayed math | Real-AST repro + branch fixture; offline hand-trace unit tests |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` (not `LocalTerm`) | Correct aggregation wiring | `SingletonTerm` count matches FCE node count in aggregation AST |
 | REQ-AST-10 | `hierarchy_resolver._walk_aggregation_ast()` SHALL dispatch all literal/null branches **before** the invocation catch-all | Every node carries a derived `.function`, so the catch-all must not precede literals — the executable-path twin of REQ-AST-08 (`transformed_expression` → `compiled_expression` → `auto_impl_context`) | `test_agg_literal_dispatch.py` on the `agg_literal_probe` fixture (`sum(module.cost) + 5.0` → the `5.0` literal survives, `has_unsupported_nodes` False) |
-| REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "unsupported operator: .") | Correct diagnostics | No "unsupported operator: ." in diagnostics |
+| REQ-AST-06 | A feature-chain reference in a CalcDef output expression SHALL be rejected as unsupported by the renderer (`calc_compat_renderer._render_reference`), not misread as an operator | Correct diagnostics | `test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error` (the calc-side FCE/OE dispatch itself moved cross-repo to agentic-mbse `extract_expression_ir` in CONSTRAINT-EXEC Item 13) |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(name)"`) | Correct reconstruction | Reconstructed expressions match `name.attr` format |
 
 ---
@@ -81,13 +81,21 @@ two or more of FCE / OE / FRE via `is_instance()`.
 
 ### Dual-Check Sites (FCE + OE)
 
-These three sites check both FCE and OE and include the invariant comment:
+These sites check both FCE and OE and include the invariant comment:
 
 | File | Function | Invariant comment? |
 |------|----------|--------------------|
 | `expression_utils.py` | `reconstruct_expression` | Yes |
-| `expression_compiler.py` | `build_expression_ast` | Yes |
 | `hierarchy_resolver.py` | `_walk_aggregation_ast` | Yes |
+
+**The calc-side dispatch site (`build_expression_ast`) was dropped in
+CONSTRAINT-EXEC Item 13.** That responsibility moved cross-repo to agentic-mbse's
+`extract_expression_ir` (its own dispatch, its own tests); the calc renderer
+consumes `ExpressionIR` via `isinstance` on IR node classes, so there is no
+raw-syside dispatch site left to audit here. This prose table is illustrative and
+predates the cross-repo moves (`reconstruct_expression` now lives in agentic-mbse
+`sysml/expression.py`); the **authoritative** current dual-check inventory is
+`DUAL_CHECK_SITES` in `tests/conformance/test_ast_dispatch_invariant.py`.
 
 Example from `expression_utils.py` (the pattern all sites must follow):
 ```python

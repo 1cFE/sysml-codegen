@@ -9,86 +9,95 @@ analysis/, resolution/, or generation/. The compiler answers two questions per C
 (1) what Python code computes it, and (2) can the pipeline auto-generate that code or must a
 human write it?
 
+It does this in two delegated steps. It does **not** build its own syntax tree anymore.
+For each output it obtains an [`ExpressionIR`](#expressionir-intermediate-representation)
+tree from agentic-mbse's `extract_expression_ir()`, then renders that tree to a Python string
+via `extraction/calc_compat_renderer.py` (`render_calc_expression()`). `compile_calc_def()`
+orchestrates the two steps across a CalcDef's outputs in dependency order and rolls up the
+compilability verdict. (This replaced the retired in-repo `build_expression_ast()` /
+`compile_expression()` / `ExpressionAST` path in CONSTRAINT-EXEC Item 13, which had its own
+private syntax tree.)
+
 ## Requirements
 
 | ID | Requirement | Verified by |
 |----|-------------|-------------|
-| REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype in SysIDE) | FCE branch precedes the OE branch in `build_expression_ast()`; see also [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) |
-| REQ-EC-02 | N-ary operands SHALL be left-folded into binary `BINARY_OP` nodes | Left-fold loop in the `len(operands) > 2` case of `build_expression_ast()` |
-| REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `operator == "["` handler in `build_expression_ast()` discards unit, recurses on value |
-| REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | Validation at the end of `compile_expression()` raises `CompilationError` on `SyntaxError` |
+| REQ-EC-01 | A feature chain in a CalcDef output SHALL NOT be misread as an operator | The IR represents a feature chain as a `FeatureReferenceNode` carrying `chain_segments` (never an `OperatorNode`), so `_render_reference()` rejects it as unsupported. FCE/OE subtype ordering is enforced upstream during IR extraction (agentic-mbse `extract_expression_ir`); see [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) |
+| REQ-EC-02 | N-ary operands SHALL be left-folded into nested binary operations | Left-fold loop over `node.operands` in `_render_operator()` (`calc_compat_renderer.py`) |
+| REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `UnitAnnotationNode` is rendered by recursing on `node.value` in `_render()` — the unit is dropped structurally |
+| REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | Validation at the end of `render_calc_expression()` raises `CompilationError` on `SyntaxError` |
 | REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `if execution_order is None` block in `compile_calc_def()` |
 | REQ-EC-06 | `classify_compilability()` SHALL use worst-case roll-up semantics | `classify_compilability()`: MANUAL > PARTIALLY > FULLY |
 | REQ-EC-07 | Undeclared intermediates SHALL be discovered iteratively from `member_expressions` | Iterative discovery loop (`while to_process`) in `compile_calc_def()` |
 
 ---
 
-## The 3-Phase Pipeline
+## The 3-Step Pipeline
 
-### Phase 1: `build_expression_ast()` -- SysIDE AST to ExpressionAST IR
+### Step 1: `extract_expression_ir()` -- SysIDE AST to ExpressionIR
 
-Accepts a raw syside AST node (duck-typed, from the SysIDE Java bridge)
-and produces a clean `ExpressionAST` binary tree. Key transformations:
+A raw syside AST node is converted to an [`ExpressionIR`](#expressionir-intermediate-representation)
+tree by agentic-mbse's `extract_expression_ir()` (`agentic_mbse.sysml.constraint_extraction`).
+This is where the SysIDE type dispatch lives, including the FCE-before-OE subtype ordering
+(see [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md)): a feature chain comes back as
+a `FeatureReferenceNode` carrying `chain_segments`, an operator as an `OperatorNode`, a unit
+annotation as a `UnitAnnotationNode`, and so on. The IR is agentic-mbse-owned and carries
+feature references **unclassified** — a reference is just a `source_name`, not yet resolved to
+input vs intermediate.
 
-- **N-ary left-fold**: SysIDE `OperatorExpression` nodes can have 2+
-  operands. The builder left-folds: `a + b + c` becomes
-  `BinaryOp(+, BinaryOp(+, a, b), c)`.
-- **Unit stripping**: The `[` operator (unit annotation like `[kW]`) is
-  discarded; recursion continues on the value operand only.
-- **Reference classification**: `FeatureReferenceExpression` nodes are
-  resolved against three name sets (`input_names`, `output_names`,
-  `all_member_names`) to produce `INPUT_REF`, `INTERMEDIATE_REF`, or
-  `UNSUPPORTED` nodes.
-- **Subtype ordering**: `FeatureChainExpression` is checked *before*
-  `OperatorExpression` because FCE is an OE subtype in SysIDE (see
-  [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md)). FCE always
-  produces UNSUPPORTED (chained paths like `part.attr` are not compilable).
+### Step 2: `render_calc_expression()` -- ExpressionIR to Python string
 
-### Phase 2: `compile_expression()` -- ExpressionAST IR to Python string
+Pure recursive descent in `extraction/calc_compat_renderer.py`. Each IR node kind maps to a
+Python fragment. Because the IR leaves references unclassified, classifying one as an input or
+an intermediate is **calc-specific policy applied here at render time**, from the caller's name
+sets — not baked into the tree:
 
-Pure recursive descent. Each node type maps to a Python fragment:
-
-| Node type | Output pattern |
+| IR node kind | Output pattern |
 |-----------|---------------|
-| `BINARY_OP` | `(left op right)` -- fully parenthesized |
-| `UNARY_OP` | `(-operand)` |
-| `LITERAL` | `str(value)` -- e.g. `3.14` |
-| `INPUT_REF` | `inputs.param_name` |
-| `INTERMEDIATE_REF` | bare name -- e.g. `subtotal` |
-| `UNSUPPORTED` | raises `CompilationError` |
+| `OperatorNode` (n-ary) | left-folded `(left op right)` -- fully parenthesized (`^` → `**`) |
+| `OperatorNode` (unary) | `(-operand)` |
+| `LiteralNode` | `str(value)` -- e.g. `3.14` (keyed on the syside literal kind) |
+| `FeatureReferenceNode`, name in `input_names` | `inputs.param_name` |
+| `FeatureReferenceNode`, name in `member_names` | bare name -- e.g. `subtotal` |
+| `FeatureReferenceNode` with `chain_segments`, or an unresolved name | raises `CompilationError` |
+| `UnitAnnotationNode` | recurses on `node.value` (unit dropped) |
+| `InvocationNode` / `UnsupportedNode` | raises `CompilationError` |
 
-Every fragment is validated via `python_ast.parse(result, mode="eval")`.
+The final string is validated via `python_ast.parse(result, mode="eval")`. `render_calc_expression`
+reproduces the retired compiler's dialect byte-for-byte (frozen in
+`tests/fixtures/golden/calc_compat_parity_golden.json`).
 
-### Phase 3: Compilability verdict assignment
+### Step 3: Compilability verdict assignment
 
 `classify_compilability()` rolls up per-output verdicts into an overall
 CalcDef verdict using worst-case semantics.
 
 ---
 
-## ExpressionAST Intermediate Representation
+## ExpressionIR Intermediate Representation
 
-[`ExpressionAST`](09-data-models.md#extraction-models) is a `@dataclass` with tagged-union
-design. The `node_type: ExpressionNodeType` discriminant selects which fields apply:
+`ExpressionIR` (`agentic_mbse.sysml.expression_ir`) is a `kind`-tagged union of one dataclass
+per algebra kind — the same production predicate tree the constraint machinery uses. The
+renderer dispatches on the node class via `isinstance`, not on a discriminant string:
 
 ```
-ExpressionAST
-  node_type: ExpressionNodeType   # discriminant
-  operator:  str | None           # BINARY_OP, UNARY_OP
-  left:      ExpressionAST | None # BINARY_OP (left), UNARY_OP (operand)
-  right:     ExpressionAST | None # BINARY_OP only
-  value:     float | int | None   # LITERAL
-  input_name: str | None          # INPUT_REF
-  intermediate_name: str | None   # INTERMEDIATE_REF
-  raw_text:  str | None           # UNSUPPORTED
-  reason:    str | None           # UNSUPPORTED
+ExpressionIR = (
+    LiteralNode          # a literal leaf: LiteralFact + OperandTypeFact
+  | FeatureReferenceNode # a reference leaf: FeatureReferenceFact (carries chain_segments)
+  | OperatorNode         # n-ary: operator: str, operands: list[ExpressionIR]
+  | UnitAnnotationNode   # a `[` unit annotation: value + unit_text
+  | InvocationNode       # a resolved function call: function_qn + arguments
+  | UnsupportedNode      # explicit fallback: node_kind, diagnostic, source_text
+)
 ```
 
-Six named constructors: `.binary()`, `.unary()`, `.literal()`,
-`.input_ref()`, `.intermediate_ref()`, `.unsupported()`.
+Every node also carries `kind` (the union tag) and `schema_version`. References are
+**unclassified** in the tree — `FeatureReferenceNode.reference.source_name` is a bare name;
+the renderer decides `inputs.x` vs bare `x` from the caller's name sets (this is the key
+difference from the retired build-time-classified `ExpressionAST`).
 
-`_collect_refs()` walks the tree (pre-order) and returns deduplicated
-`(input_refs, intermediate_refs)` lists.
+`collect_calc_refs(ir, input_names, member_names)` (`calc_compat_renderer.py`) walks the tree
+(pre-order, first-occurrence deduplicated) and returns `(input_refs, intermediate_refs)` lists.
 
 ---
 
@@ -119,8 +128,8 @@ Compiles all outputs of a CalcDef in dependency order:
    intermediate may reference further undeclared intermediates.
 4. **Topological sort** (Kahn's algorithm, deterministic via `sorted()`).
    Cycle detected -> all outputs get `MANUAL_REQUIRED`.
-5. **Compile in order**: `build_expression_ast()` then `compile_expression()`
-   per name. Result stored as `CompilationResult`.
+5. **Compile in order**: `extract_expression_ir()` (agentic-mbse) then
+   `render_calc_expression()` per name. Result stored as `CompilationResult`.
 6. **Roll up** via `classify_compilability()`.
 
 Returns [`CalcDefCompilationResult`](09-data-models.md#extraction-models) with `calc_def_name`,
@@ -141,7 +150,7 @@ calc def CostCalc {
 }
 ```
 
-**Phase 1 input** -- the `expression_asts` dict contains:
+**Step 1 input** -- the `expression_asts` dict contains:
 
 ```
 {"total_cost": <OperatorExpression operator="*" operands=[
@@ -150,25 +159,26 @@ calc def CostCalc {
 ]>}
 ```
 
-**Phase 1 output** -- `build_expression_ast()` produces:
+**Step 1 output** -- `extract_expression_ir()` produces (references still unclassified):
 
 ```
-ExpressionAST(BINARY_OP, operator="*",
-  left  = ExpressionAST(INPUT_REF, input_name="capacity"),
-  right = ExpressionAST(INPUT_REF, input_name="cost_per_kwh"))
+OperatorNode(operator="*", operands=[
+  FeatureReferenceNode(source_name="capacity"),
+  FeatureReferenceNode(source_name="cost_per_kwh"),
+])
 ```
 
-Both operands resolve as `INPUT_REF` because their names are in `input_names`.
-
-**Phase 2 output** -- `compile_expression()` recurses:
+**Step 2 output** -- `render_calc_expression(ir, input_names={"capacity", "cost_per_kwh"}, member_names=set())`
+classifies each reference at render time. Both names are in `input_names`, so both become
+`inputs.<name>`:
 
 ```
-left  -> "inputs.capacity"
-right -> "inputs.cost_per_kwh"
-root  -> "(inputs.capacity * inputs.cost_per_kwh)"
+capacity      -> "inputs.capacity"
+cost_per_kwh  -> "inputs.cost_per_kwh"
+root          -> "(inputs.capacity * inputs.cost_per_kwh)"
 ```
 
-**Phase 3** -- single output, no UNSUPPORTED nodes.
+**Step 3** -- single output, no unsupported nodes.
 Verdict: `FULLY_COMPILABLE`.
 
 ---
@@ -177,18 +187,18 @@ Verdict: `FULLY_COMPILABLE`.
 
 ### Input references -> `inputs.param_name`
 
-A `FeatureReferenceExpression` whose `_sanitize_name()`-d name is in
-`input_names` becomes `INPUT_REF`. `compile_expression()` renders it as
-`inputs.<name>`, mapping to the Pydantic [input schema](22-output-schema-rules.md) at runtime.
-`_sanitize_name()` strips quotes, replaces special chars with underscores,
-and collapses runs to match names in [`CalculationDefinitionData`](09-data-models.md#extraction-models).
+A `FeatureReferenceNode` whose `_sanitize_name()`-d `source_name` is in `input_names` is
+rendered by `_render_reference()` as `inputs.<name>`, mapping to the Pydantic
+[input schema](22-output-schema-rules.md) at runtime. `_sanitize_name()` strips quotes,
+replaces special chars with underscores, and collapses runs to match names in
+[`CalculationDefinitionData`](09-data-models.md#extraction-models).
 
 ### Intermediate references -> bare name or undeclared discovery
 
 Two cases for intermediates:
 
-1. **Output-to-output**: Output `subtotal` referenced by output `total`
-   becomes `INTERMEDIATE_REF("subtotal")`, compiled to bare `subtotal`.
+1. **Output-to-output**: Output `subtotal` referenced by output `total` is in
+   `member_names`, so `_render_reference()` renders it as bare `subtotal`.
    Topological sort ensures correct evaluation order.
 
 2. **Undeclared intermediate**: A member in `all_member_names` not in
@@ -196,8 +206,11 @@ Two cases for intermediates:
    construction, marks `is_undeclared_intermediate=True`, and compiles
    its expression from `member_expressions`.
 
-Unresolved names (not in any name set) become `UNSUPPORTED` with reason
-`"unresolved reference: <name>"`.
+A name in neither `input_names` nor `member_names` raises `CompilationError`
+(`"unresolved reference: <name>"`), which `compile_calc_def()` catches and records as
+`MANUAL_REQUIRED` for that output. A `FeatureReferenceNode` carrying `chain_segments` (a
+feature chain like `part.attr`) is likewise rejected — chains are not compilable in a CalcDef
+output.
 
 ## Two AST Processing Pipelines
 
@@ -207,7 +220,7 @@ This system has TWO separate expression-to-Python paths:
 |--------|------|------|
 | **Scope** | CalcDef outputs, FORMULA attributes | Aggregation expressions (sum/count) |
 | **Input** | SysIDE AST nodes | SysIDE AST nodes |
-| **Output** | `ExpressionAST` IR → Python string | Text string (direct transform) |
+| **Output** | `ExpressionIR` → Python string | Text string (direct transform) |
 | **Operators** | 7 arithmetic (+, -, *, /, **, ^, [) | 12+ (arithmetic + comparison + logical) |
 | **FCE handling** | → UNSUPPORTED (not compilable) | → SingletonTerm (wired to upstream) |
 | **OE handling** | → BinaryOp (recursive) | → text concatenation |
@@ -223,4 +236,4 @@ typed terms (SumTerm, SingletonTerm, LocalTerm) for module wiring.
 - **Invariant**: [19-ast-dispatch-invariant](19-ast-dispatch-invariant.md) — FCE-before-OE subtype ordering rule (REQ-EC-01)
 - **Downstream**: [08-generation](08-generation.md) — uses `CalcDefCompilationResult` to decide auto-fill vs TODO stubs, [23-smart-regen-preservation](23-smart-regen-preservation.md) — preserves handwritten code when compilability is MANUAL_REQUIRED
 - **Cross-cutting**: [16-computed-attributes](16-computed-attributes.md) — FORMULA modules also use compilability verdicts, [05-module-factory](05-module-factory.md) — reads `compilability` from `AggregationExpressionData`
-- **Data models**: [09-data-models](09-data-models.md) — `ExpressionAST`, `CalcDefCompilationResult`, `Compilability`
+- **Data models**: [09-data-models](09-data-models.md) — `CalcDefCompilationResult`, `Compilability`; `ExpressionIR` is agentic-mbse-owned (`agentic_mbse.sysml.expression_ir`)

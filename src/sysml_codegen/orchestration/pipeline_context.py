@@ -7,9 +7,11 @@ Moved from generation/initialization.py (Step 7.6) to enforce the boundary
 that generation/ consumes only ComputationGraph.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sysml_codegen.analysis.dependency_backtracker import (
     BacktrackingResult,
@@ -19,9 +21,9 @@ from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
 )
+from sysml_codegen.analysis.part_instance_index import InstanceOccurrence
 from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
-from sysml_codegen.extraction.constraint_report import ConstraintManifestEntry
 from sysml_codegen.extraction.data_models import (
     CalculationDefinitionData,
     ComputedAttributeData,
@@ -30,7 +32,12 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.extraction.expression_compiler import CalcDefCompilationResult
 from sysml_codegen.extraction.usage_extractor import CalcUsageData
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
+
+if TYPE_CHECKING:
+    from agentic_mbse.sysml.constraint_facts import ConstraintFacts
+
+    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
 
 
 class SysMLParsingError(Exception):
@@ -54,7 +61,14 @@ class CodeGenerationError(Exception):
     - Generation process fails
     """
 
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        name_safety_violation: ConstraintNameViolation | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.name_safety_violation = name_safety_violation
 
 
 @dataclass
@@ -101,12 +115,35 @@ class PipelineContext:
     # Channel aliases from EXPOSE_PURE + CHAIN redefinitions (Steps 3.5 + 4.5).
     channel_aliases: list[ChannelAlias] = field(default_factory=list)
 
-    # Model-wide dropped-constraint manifest (Step 2.5). Serialized into the
-    # snapshot so the from-snapshot path can replay the drop report (Item 4).
-    constraint_manifest: list[ConstraintManifestEntry] = field(default_factory=list)
-
     # OutputRegistry from Step 5.5 (None if not yet constructed).
     output_registry: OutputRegistry | None = None
+
+    # Concrete constraint catalog from [P1 RESOLVE] (Item 5, D7). Empty when no
+    # constraint facts are admitted. Carries eligible (executable) and
+    # unassessed (eligible=False) records alike, until Item 7's catalog
+    # runtime exists.
+    concrete_constraints: list[ConcreteConstraint] = field(default_factory=list)
+
+    # Neutral constraint facts from Step 2.6 (Item 5) — the source-level vocabulary
+    # `generation/constraint_catalog.py` reads for the catalog's `source_records` (D6).
+    # Always populated (may carry empty `usages`) so snapshot v3 (Item 8) can
+    # serialize an honest facts section on every model, constraint-bearing or not.
+    constraint_facts: ConstraintFacts | None = None
+
+    # Resolved per-owner occurrence table, captured as the exact transcript of the
+    # real capture-time preparation's `occurrences_of` queries (Item 8, MF3) — the
+    # successful prepared batch's `occurrence_transcript`, published here only after
+    # the whole context construction succeeded. Empty when lowering did not run. Serialized into
+    # the snapshot as `part_occurrences` so offline re-lowering replays it through
+    # a `FrozenOccurrenceIndex` with no live model.
+    part_occurrences: dict[str, list[InstanceOccurrence]] = field(default_factory=dict)
+
+    # "applied" when this build ran lowering (`lower_constraints_enabled=True`),
+    # "grandfathered_off" when it did not (Item 8, D3). Decouples "facts present"
+    # from "lower offline" so the two flip surfaces (live default, offline
+    # dispatch) can move together without silently dropping the grandfathered
+    # pair's assertions.
+    constraint_lowering_mode: str = "grandfathered_off"
 
 
 __all__ = [

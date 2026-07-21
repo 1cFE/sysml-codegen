@@ -2,7 +2,7 @@
 
 Prioritized list of epics and features.
 
-**Last Updated**: 2026-07-08
+**Last Updated**: 2026-07-19
 
 ---
 
@@ -25,11 +25,89 @@ Prioritized list of epics and features.
 
 ---
 
+## P0 - Critical
+
+| Epic | Status | Notes |
+|------|--------|-------|
+| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
+| [CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation | In progress (Item 1) | Owner-ratified architecture; implements register rows 0–17 and ends with one 41-case public artifact thread. Items 2–13 require structural simplification and deletion of superseded paths; LOC metrics are not gates. See `epic_constraint_execution_lifecycle_remediation.md`. |
+| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19) | Items 1/2 complete and Items 4/6 certified; all unfinished work is mapped into CONSTRAINT-LIFECYCLE-REMEDIATION. Retained as history; no new work executes here. See `epic_constraint_pr_wave_remediation.md`. |
+
+CONSTRAINT-LIFECYCLE-REMEDIATION items:
+- [x] Item 0 — Compatible candidate landing and pin (register row 0)
+- [ ] Item 1 — Occurrence and demand integrity (row 1)
+- [ ] Item 2 — Shared producer resolution and Gate A (row 2)
+- [ ] Item 3 — Gate B coverage-scope proof and correction (row 3)
+- [ ] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
+- [ ] Item 5 — Whole-tree snapshot portability (row 5)
+- [ ] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
+- [ ] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
+- [ ] Item 8 — Canonical embedded catalog and store transition (row 10)
+- [ ] Item 9 — Multi-entry candidate bridge (row 11)
+- [ ] Item 10 — Producer completeness and stellarator rollup (row 12)
+- [ ] Item 11 — TEAx constraint evidence durability (rows 13–15)
+- [x] Item 12 — Legacy snapshot and tracking identity closure (row 16)
+- [ ] Item 13 — Composed public lifecycle proof and release readiness (row 17)
+
+Superseded CONSTRAINT-WAVE-REMEDIATION items:
+- [x] Item 1 — Profile semantics and wrong-verdict closure (R-1, R-2) — complete
+- [x] Item 2 — Generated constraint name-safety boundary (R-3) — complete
+- [ ] Item 3 — Occurrence and demand identity integrity (R-4, R-5, R-7) — sysml-codegen
+- [ ] Item 3B — Constraint-extension V11 coverage ownership (Gate B)
+- [x] Item 4 — Snapshot portability and shape gates (R-6, R-11) — certified; licensed live A/live
+      B/replay A and moved replay pass the exact relocation manifest — sysml-codegen
+- [ ] Item 5 — Lowering diagnostic and modeled-default fidelity (R-8, R-9) — sysml-codegen
+- [x] Item 6 — Seal and verify symlink symmetry (R-10) — certified
+- [ ] Item 7 — Dependency discovery and review-tail disposition (R-12 + Low/latent tail)
+- [ ] Item 8 — Cross-repo compatibility and release-readiness evidence (no PR interaction)
+
+GAP-CLOSE items:
+- [ ] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+- [x] Item 2 — Lowering outcome integrity: warning order + excluded identity (F4, F5)
+- [x] Item 3 — Model and seal boundary guards (F6, F9)
+- [x] Item 4 — Profile default-deny totalization (F7, F8, promoted diagnostics) — agentic-mbse
+- [ ] Item 5 — Packaging, docs, hygiene closeout + wave gates (F3, F10, hygiene)
+
+- **[GAP-CLOSE-F1-TEAX-NORMALIZATION] Attach failed module identity to normalized evaluator
+  failures — P0 `[AGENT]` (booked 2026-07-18 from GAP-CLOSE Item 1 seam review).** This is a
+  separate TEAx leg, not sysml-codegen Item 1. At the serial-executor seam that still knows the
+  `module_key`, preserve the original exception and make both evaluators expose the failed generated
+  constraint module through `EvaluationFailure.module_or_channel`. The normalized record and causal
+  chain must match `.project/active/gap-runtime-contract/spec.md`. GAP-CLOSE F1 is not closed until
+  Item 1's unmangled-raise boundary and this TEAx leg are both green.
+
+- **[ANON-ELIGIBLE-KEY] Anonymous executable assertions share one catalog compile key — P3
+  `[AGENT]` (filed 2026-07-18, GAP-CLOSE Item 2 non-goal).** Eligible anonymous assertions all
+  get `"<anonymous>"` as their `predicate_definition_key`, so compile-once grouping cannot
+  distinguish them (pre-existing; distinct from the F5 exclusion-path collision GAP-CLOSE
+  fixes). Needs an owner ruling first: are anonymous *executable* assertions a supported
+  authoring form? (Gap review Open Question 2.) Evidence:
+  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (F5) and the
+  verification record's F5 sub-question (c).
+
 ## P1 - High Priority
 
 | Epic | Status | Notes |
 |------|--------|-------|
+| ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
 | [PUSH-DOWN] agentic-mbse Push-Down | Ready (4 items, 6–8 days) | Expression reconstruction; qualified-name split; hierarchy primitives/models; aggregation decomposition/gates. Design overrides, usage-type indexing, Python rewriting, aliases, scoping, and module construction stay in sysml-codegen. See `epic_push_down.md`. |
+
+CONSTRAINT-EXEC items:
+- [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)
+- [x] Item 1 — Neutral constraint facts: production schemas + extraction (agentic-mbse)
+- [x] Item 2 — ExpressionIR: production tree, extraction, serialization (agentic-mbse)
+- [x] Item 3 — Executable profile: eligibility gates + named diagnostics (agentic-mbse)
+- [x] Item 4 — Part-instance index: subtype closure + cardinality expansion
+- [x] Item 5 — Concrete lowering: new phase, strict resolution, execution IDs
+- [x] Item 6 — module_kind + generation-seam refactor (byte-identity gated)
+- [x] Item 7 — Constraint module, Kleene compiler, aggregator, catalog generation
+- [x] Item 8 — Snapshot v3: constraint facts load-bearing
+- [x] Item 9 — Contracts + sealing: ModelContract / PackageContract
+- [x] Item 10 — Model evaluator + typed entry production API (teax)
+- [x] Item 11 — Study store, runner, and strategies (teax)
+- [x] Item 12 — Study policy, query, and CLI surface (teax)
+- [x] Item 13 — Calc-seam cutover: retire ExpressionAST (byte-identity gated)
+- [x] Item 14 — Migration, docs, and IFE acceptance
 
 PUSH-DOWN items:
 - [ ] Item 1 — Expression reconstruction push-down
@@ -82,6 +160,40 @@ Compounding factors the fix must address, not just the query:
   `elements_of_type` call site for the same subtype-blindness pattern.
 
 ## P2 - Medium Priority
+
+### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint)
+
+**Owner: the Item-10 occurrence-materialization family** (CONSTRAINT-LIFECYCLE-REMEDIATION
+Item 10 / producer-completeness + occurrence rollup). **Filed 2026-07-20** by Item 13 composed
+proof, case-18 addendum (owner ruling Option A). General gap — affects both the calc binding and
+the constraint actual paths; not constraint-specific.
+
+**Symptom.** A `:>>` design-override on a usage nested inside an *instantiated* part def is
+captured **definition-relative**, while demand resolves **occurrence-relative**, so the
+supplied-value materializer never matches the literal (0 applied). Calc bindings fall to a
+manual-required entry point that silently drops the modeled value; constraint actuals halt
+generation under strict INV-2. The redefined value is lost either way.
+
+**Reproducible coordinate.** `tests/fixtures/nested_occurrence_override_probe/` (expected to
+halt; PROVENANCE.md pins the full coordinate). Its flat sibling
+`tests/fixtures/constraint_def_owned_redefining/` (package-level redefining usage) resolves
+correctly through the same shared machinery, isolating the nesting as the sole trigger.
+
+**Root cause (verbatim, pin `7526665`).** Override:
+`owning_part_qn = 'nested_occurrence_override_probe__Design__panel'`, `attribute_name='reading'`,
+`LITERAL`, `target_path=['source','reading']`, `literal_value=80.0`. Demand:
+`_binding_target('source.reading', '..._the_design__panel')` →
+`qn='..._the_design__panel__source__reading'`, `part_usage='source'`, `attr='reading'`.
+`supplied_values._match_override` tier-1 requires `ov.owning_part_qn == instance_scope`
+(`Design__panel` != `the_design__panel`); tier 2a misses because `usage_type_map` is
+definition-keyed and carries no entry for the occurrence `the_design`. There is no
+occurrence → definition bridge available to the materializer. Fixing it requires threading
+occurrence-type resolution (the occurrence index) into `enrich_graph_design_attributes` — an
+Item-10-scope change with a calc-path blast radius, deliberately NOT forced into the byte-clean
+Item-2 case-18 addendum. Contract row 18 does not mandate this shape (the flat form satisfies it).
+
+Related: [SYNC-F4] (design-override name surfacing) and the "Two-level specialization —
+`attribute :>>` extraction gap" note under Ideas / Future Considerations.
 
 ### ~~[TRUTH-DEBT] Truth-Debt Retirement — the PIPELINE-TRUTH follow-on ledger~~ ✅
 
@@ -656,3 +768,148 @@ read-but-too-big-to-fix residual are both named, separately).
 **Scope for the follow-on:** re-run the Step 5.0 grep, subtract this item's full disposition
 (33 dispositioned + 21 spot-checked here), deep-read the remainder under a fresh D7 budget, land
 cheap dispositions (reframe/cite) inline, re-file only genuine budget-exceeding strengthens.
+
+## CONSTRAINT-EXEC follow-ons (registered at epic close, 2026-07-13)
+
+The fusion-tea IFE acceptance (Item 14 Appendix C) was the first real multi-entry-channel
+whole-plant package through the full sealed-package → study-layer path; it surfaced three
+integration gaps, each bridged consumer-side in fusion-tea (`exploration/ife_e2e/study/findings.md`)
+and each a claim-narrowing on a certified item that should become real work, not a permanent adapter:
+
+- **[CE-F1] Canonical catalog join — ABSORBED by CONSTRAINT-LIFECYCLE-REMEDIATION Item 8.** The
+  owner selected codegen's embedded model-contract catalog as the sole schema authority. Item 8
+  adds the required entry fields/store transition and deletes the standalone TEAx schema,
+  materializer, fixture, stand-in fingerprint, and reconstruction paths.
+- **[CE-F2] Multi-channel CandidateBridge — ABSORBED by CONSTRAINT-LIFECYCLE-REMEDIATION Item 9.**
+  Item 9 extends the stock bridge to complete zero/one/multiple typed entry-channel mappings and
+  deletes the consumer wrapper.
+- **[CE-F3] PreparedEvaluator hardcoded fixture class (teax, Item 10 surface).** ✅ FIXED
+  (2026-07-13, teax `0d606a4`, owner-approved): `entry_models` property derives channel → typed
+  model from the pipeline spec; consumers migrated; a source-scan guard test now blocks any
+  model-specific fixture symbol in simkit source (the leak class the import-scan isolation leg
+  cannot see). fusion-tea's alias bridge in the two driver scripts is now unnecessary (harmless;
+  retire with the docs sweep — **done** 2026-07-13, docs-explainer-refresh Phase 6, fusion-tea `bfff2b4f`).
+
+## docs-explainer-refresh follow-ons (registered at item close, 2026-07-13)
+
+The docs-explainer-refresh sweep re-projected the four repos' teaching surfaces onto
+post-CONSTRAINT-EXEC HEAD and rewrote `EXPLAINER_PROMPT.md` into a buildable v2 brief. It
+registered three follow-ons:
+
+- **[V2-HTML-BUILD] Build `pipeline_explainer_v2.html` from the refreshed brief — P2.** The
+  deliverable of docs-explainer-refresh was the *brief* (`.project/active/EXPLAINER_PROMPT.md`),
+  re-anchored to `constraint-exec-epic` HEAD with the eight constraint-exec areas slotted and its
+  buildability infrastructure refreshed (responsibility-map rows, reading-list data sources,
+  corrected matrix counts 274/32, reuse-guidance delta). This item is the actual v2 HTML build a
+  separate agent picks up: build the self-contained interactive explainer per the brief, save to
+  `.project/diagrams/pipeline_explainer_v2.html` (do not overwrite the deprecated Gen-1
+  `new_pipeline_explainer.html`). Not built by the refresh item ([OWNER] 2026-07-13: "update the
+  EXPLAINER_PROMPT.md. I will have another agent pick this up.").
+- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — P3.** The refresh fixed
+  the surveyed `build_expression_ast` cite but found the wider `19-ast-dispatch-invariant.md`
+  prose table (`reconstruct_expression` now in agentic-mbse `sysml/expression.py`; the audited
+  aggregation dispatch is now agentic `_decompose_node`) and the "8 functions / 6 files" claim
+  drifted vs the test's current `DUAL_CHECK_SITES`. Out of the refresh's surveyed scope; the table
+  now points at the authoritative test inventory. A full doc-19 re-audit reconciles the prose.
+- **[MODULEKIND-DOC-SWEEP] Sweep the retired `is_computed_attribute`/`is_aggregation` → `module_kind`
+  migration through the MF family — P3.** The refresh corrected doc 09 + doc 16, but the retired
+  bool flags survive as live claims in `05-module-factory.md` (pervasive), `22-output-schema-rules.md:179`,
+  and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
+  `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would
+  split the matrix from doc 05); this item sweeps them together.
+
+## CONSTRAINT-EXEC code-quality follow-on (registered 2026-07-14)
+
+Source: the independent code-quality review
+(`.project/research/20260713-213722_constraint-exec-pr-code-quality.md`), findings verified
+against the code 2026-07-14. The review's small correctness/hardening items landed pre-merge on
+`constraint-exec-epic` (model validators + rejection tests; renderer unary/arity/identifier
+guards; load-bearing asserts → explicit errors; resolver precedence-under-conflict and
+path-grammar pins — commits `5785055`, `baca960`, `c756fc7`, `05690f0`). The architectural debt
+below is the recorded, owned remainder — merging the PR does not bless it as the permanent
+constraint architecture.
+
+- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance/resolution infrastructure — P1 `[AGENT]`
+  (ratified for filing by owner 2026-07-14; priority is agent-graded).** *Complexity evidence
+  (added 2026-07-18, GAP-CLOSE decision 1):* the final gap review measured the semantic center
+  over C901 thresholds — `lower_constraints` 18, `resolve_actual` 19,
+  `extend_graph_with_constraints` 12 (codegen) and four profile walkers 11–19 (agentic-mbse) —
+  and judged that "a mechanical file split would not help; typed walk results and separate
+  preflight/report/lower phases would." See
+  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (Code Quality
+  and Hygiene Notes) and `.project/research/20260718_gap-review-verification.md` (hygiene item
+  1: numbers confirmed; C901 is in neither repo's configured gate). GAP-CLOSE deliberately
+  excluded these refactors; this row owns them. One refactor design,
+  staged behind the existing byte-identity and parity gates, with these explicitly in scope:
+  1. *Canonical typed paths and resolution requests.* `InstancePath`/`ReferencePath`/
+     `ConstraintDemand` (named type replacing the `(instance_scope, source_path, source_file)`
+     tuples in `supplied_values.py:206-269`) with validated conversions to EQN / dotted scope /
+     de-indexed scope / SysML QN. The `NewType` identifiers validate nothing today
+     (`identifier_types.py`); every consumer does raw string surgery.
+  2. *One resolver ladder.* `resolve_actual` (`constraint_lowering.py:117-276`) and the calc
+     ladder (`dependency_backtracker.py:480-838`) are independently ordered algorithms sharing
+     only `terminal_disposition`; the design-review-predicted drift already happened (climb,
+     self-reference rejection, and SysML-QN rungs exist on one side only). Normalize both into
+     one registry-owned ordered strategy; `strict`/`lenient` differ only at terminal disposition.
+     Precedence pins now exist (`test_constraint_resolver.py`) to protect the migration.
+  3. *One part-structure index.* Collapse the three concrete-instance walkers
+     (`usage_extractor._find_instantiation_paths`, `part_instance_index._structured_paths`
+     — hand-synced by docstring decree — and `pipeline_builder.find_instance_paths_for_partdef`
+     with its first-wins multi-design heuristic) into one index built once per pipeline; project
+     legacy strings at the edges until byte-identity gates permit deleting the old walkers.
+     Also split the snapshot transport adapters out of `part_instance_index.py:363-442`. Before
+     collapsing the walkers, add differential singleton parity and edge characterizations for
+     cycles, diamonds, zero/multiple blocked definitions, and multi-digit occurrence indices.
+  4. *Shared live/offline phases.* `pipeline_builder.py` and `snapshot/graph_rebuild.py`
+     mirror the demand→materialize→lower→extend→catalog sequence by convention and import each
+     other's private helpers; all live-vs-snapshot parity legs are license-gated, so the default
+     environment cannot see drift. Extract callable phase objects both orchestrators consume.
+  5. *Graph extension folded into assembly.* `extend_graph_with_constraints` re-implements
+     entry-point grouping/minting/module construction after the main build (validation it
+     already shares); move constraint module/EP factories into graph assembly and run one
+     grouping, topological sort, and validation pass across every module kind.
+- **[EXIT-PIN-SEAM] Decide the exit-selection seam — P3.** `generation/pipeline.py:233-288`
+  carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production
+  always no-op; disclosed in design-review and docstring). Either real exit selection owns this
+  API or the test proves capture-everything behavior without dormant production branches.
+
+## CONSTRAINT-EXEC remediation audit follow-on (registered 2026-07-17)
+
+Source: independent audits in
+`.project/active/constraint-exec-code-quality-remediation/audit.md`: the initial audit at
+sysml-codegen `c2967f0`, and the 2026-07-17 re-audit of the uncommitted remediation on `036ec39`
+against `agentic-mbse@82fef09`. These are `[AGENT]` findings. They are not owner-originated settled
+requirements. The re-audit verified formal-target coverage and occurrence ordering, so those
+completed rows were removed from this unresolved backlog.
+
+- **[PROFILE-COMPILER-PARITY] Make executable-profile admission total for predicate compilation —
+  P1 `[AGENT]`.** The partial cure handles unary plus and literal Boolean/string/integer/synthetic-
+  enum equality, but exact companion profile v2 still admits quantity-reference ordering and
+  arithmetic that `predicate_compiler.py` rejects. The generated path also remains float-only, so
+  non-real feature inputs, defaults, observations, and production enum constants cannot preserve
+  their admitted semantics. Resolve the contract conflict between expanded profile admission and
+  the completed float-shaped generation design, reconcile every admitted operator/category pair,
+  and add a matrix-driven profile-`ADMIT` → compile → generated-execution gate. Include blocked
+  parity so the compiler cannot accept profile-blocked derivations such as integer exponentiation
+  equality.
+- **[INLINE-CONSTRAINT-WIRING] Wire inline owner references through generated modules — P1
+  `[AGENT]`.** The committed `constraint_inline` snapshot lowers an inline predicate with leaf
+  `value` but no module inputs. Graph construction passes; module rendering fails because the
+  compiled leaf has no matching input. Define how inline owner feature references resolve to graph
+  inputs and entry points, then prove the offline fixture renders and executes. The existing test
+  named “end to end” stops at graph construction.
+- **[CONSTRAINT-MODEL-INVARIANTS] Close the remaining eligible/unassessed model states — P2
+  `[AGENT]`.** Construction-time validators now reject the original impossible states and
+  generation no longer coerces null polarity. The mutable models still allow those invariants to
+  be broken after construction and serialized. An eligible record changed to `eligible=False`
+  keeps its executable payload and is silently dropped by catalog/graph filtering; catalog
+  polarity and expectation can also diverge. Make these shapes immutable or assignment-validating,
+  or comprehensively revalidate at serialization and consumption boundaries. Cover nested
+  mutation, silent filtering, and fingerprint effects.
+- **[CONTRACT-VERIFY-BOUNDARY] Normalize missing and malformed package seals — P2 `[AGENT]`.**
+  Missing, unreadable, non-JSON, and broadly malformed seal files now return diagnostics, and the
+  runtime comparison uses value equality. The verifier still accepts arbitrary self-inconsistent
+  executable fingerprints and artifact keys that are absolute or escape the package root; recorded
+  artifact read errors can still raise raw `OSError`. Validate digest syntax, path containment and
+  normalization, and the fingerprint derivation rule before integrity checks. Normalize artifact
+  walk/read errors into path-specific fatal diagnostics and retain stdlib-only coverage.

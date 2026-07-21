@@ -13,20 +13,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
 from agentic_mbse.sysml.expression import extract_feature_refs
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import ExpressionRef
 
 from sysml_codegen.core.models import ChannelAlias
 
+from .calc_compat_renderer import render_calc_expression
 from .data_models import ComputedAttributeClassification, ComputedAttributeData
-from .expression_compiler import (
-    Compilability,
-    CompilationError,
-    _sanitize_name,
-    build_expression_ast,
-    compile_expression,
-)
+from .expression_compiler import Compilability, CompilationError, _sanitize_name
 from .expression_utils import (
     extract_feature_chain_segments,
     is_literal_expression,
@@ -291,19 +287,20 @@ def extract_computed_attributes(
 
         if classification == ComputedAttributeClassification.FORMULA:
             # Self-exclusion: exclude the attribute being classified from
-            # input_names so self-references become UNSUPPORTED (not INPUT_REF).
-            # Sanitize names so they match _sanitize_name() in build_expression_ast.
+            # input_names so self-references raise (unresolved reference).
+            # Sanitize names so they match the renderer's own _sanitize_name().
             input_names = {
                 _sanitize_name(n) for n in sibling_attr_names
             } - {_sanitize_name(attr_name)}
             try:
-                ast_ir = build_expression_ast(
-                    syside_node=expr,
-                    input_names=input_names,
-                    output_names=set(),
-                    all_member_names=None,
-                )
-                compiled_expression = compile_expression(ast_ir)
+                # Empty member_names: any non-input reference errors -> MANUAL_REQUIRED,
+                # matching today's output_names=set()/all_member_names=None behavior.
+                ir = extract_expression_ir(expr)
+                if ir is None:
+                    raise CompilationError(
+                        f"extract_expression_ir returned None for {attr_name!r}"
+                    )
+                compiled_expression = render_calc_expression(ir, input_names, set())
                 compilability = Compilability.FULLY_COMPILABLE
             except CompilationError as e:
                 compiled_expression = None

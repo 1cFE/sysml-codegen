@@ -26,6 +26,7 @@ from sysml_codegen.generation.pipeline import (
     generate_pipeline_yaml,
 )
 from sysml_codegen.resolution.models import (
+    ModuleKind,
     ModuleOutput,
     OutputAlias,
     PipelineModule,
@@ -53,6 +54,7 @@ def _module_with_channel(channel: str) -> PipelineModule:
             ModuleOutput(field_name="root", python_type="float", channel_name=channel)
         ],
         execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
     )
 
 

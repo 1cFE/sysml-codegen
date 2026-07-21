@@ -12,7 +12,7 @@ import pytest
 
 from sysml_codegen.cli import _check_duplicate_output_paths
 from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
-from sysml_codegen.resolution.models import ModuleOutput, PipelineModule
+from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
 
 
 def _calc_usage_module(calc_def_qn: str, calc_def_name: str, n_outputs: int = 1) -> PipelineModule:
@@ -26,6 +26,7 @@ def _calc_usage_module(calc_def_qn: str, calc_def_name: str, n_outputs: int = 1)
         inputs=[],
         outputs=outputs,
         execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
         calc_def_name=calc_def_name,
         calc_def_qualified_name=calc_def_qn,
     )

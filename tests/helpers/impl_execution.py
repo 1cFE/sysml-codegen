@@ -1,6 +1,6 @@
 """Shared utilities for executing generated impl code and comparing results.
 
-Adapted from scripts/spike_compile_expressions.py execution logic.
+Adapted from the expression-compilation spike's execution logic.
 Used by integration tests to validate auto-generated implementations
 produce numerically correct results.
 """

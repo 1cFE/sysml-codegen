@@ -27,7 +27,7 @@ from sysml_codegen.generation.schemas import (
     generate_multioutput_model,
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
@@ -106,10 +106,15 @@ class TestSingleOutputUsesRootField:
     ):
         graph, _ = all_graph_data[model_name]
 
+        # CONSTRAINT ("evaluation") and REPORT_AGGREGATOR ("constraint_report")
+        # modules have their own single-output field-naming convention (Item 8)
+        # — distinct from the calc/FORMULA "root" convention this test pins.
+        exempt_kinds = {ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR}
+
         failures = []
         tested = 0
         for module in graph.modules:
-            if len(module.outputs) != 1:
+            if len(module.outputs) != 1 or module.module_kind in exempt_kinds:
                 continue
             tested += 1
             output = module.outputs[0]
@@ -458,7 +463,7 @@ class TestAggregationAndFormulaAlwaysSingleOutput:
     ):
         graph, _ = all_graph_data[model_name]
 
-        agg_modules = [m for m in graph.modules if m.is_aggregation]
+        agg_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
         if not agg_modules:
             pytest.skip(f"No aggregation modules in {model_name}")
 
@@ -487,7 +492,7 @@ class TestAggregationAndFormulaAlwaysSingleOutput:
     ):
         graph, _ = all_graph_data[model_name]
 
-        formula_modules = [m for m in graph.modules if m.is_computed_attribute]
+        formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
         if not formula_modules:
             pytest.skip(f"No FORMULA modules in {model_name}")
 
@@ -524,8 +529,13 @@ class TestOutputChannelsUsePQNFormat:
     ):
         graph, _ = all_graph_data[model_name]
 
+        # REPORT_AGGREGATOR is a graph-wide singleton (at most one per graph),
+        # so its channel_name is deliberately the fixed literal
+        # "constraint_report" (Item 7/8) — not a per-instance PQN.
         failures = []
         for module in graph.modules:
+            if module.module_kind == ModuleKind.REPORT_AGGREGATOR:
+                continue
             for output in module.outputs:
                 if "__" not in output.channel_name:
                     failures.append(

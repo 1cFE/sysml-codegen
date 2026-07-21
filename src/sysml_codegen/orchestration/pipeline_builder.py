@@ -8,18 +8,31 @@ computed attribute extraction, and full graph assembly.
 
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
+from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 from agentic_mbse.sysml.syside_adapter import SysideAdapter
 from agentic_mbse.sysml.types import BindingType
 
+from sysml_codegen.analysis.constraint_lowering import (
+    PreparedConstraintBatch,
+    extend_graph_with_constraints,
+    lower_constraints,
+    prepare_constraint_usages,
+)
 from sysml_codegen.analysis.dependency_backtracker import (
     DependencyBacktracker,
 )
+from sysml_codegen.analysis.diagnostic_screen import screen_extraction_diagnostics
 from sysml_codegen.analysis.parameter_groups import (
     DesignAttributeData,
     ParameterGroupDeriver,
     extract_design_attributes,
+)
+from sysml_codegen.analysis.part_instance_index import (
+    InstanceOccurrence,
+    build_part_instance_index,
 )
 from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
 from sysml_codegen.core.models import ChannelAlias
@@ -49,7 +62,12 @@ from sysml_codegen.orchestration.pipeline_context import (
     SysMLParsingError,
 )
 from sysml_codegen.resolution.graph_builder import build_computation_graph
-from sysml_codegen.resolution.supplied_values import materialize_supplied_values
+from sysml_codegen.resolution.models import ConcreteConstraint, ConstraintInputResolution
+from sysml_codegen.resolution.supplied_values import enrich_graph_design_attributes
+from sysml_codegen.snapshot import (
+    CONSTRAINT_LOWERING_MODE_APPLIED,
+    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -501,7 +519,7 @@ def _register_partdef_expose_scoped_aliases(
     expands CHAIN redefs — ``find_instance_paths_for_partdef`` gives the instance
     scope, ``scoped_lookup`` gives the calc-output channel — and writes
     ``(instance_path, leaf) -> channel``. The consumer-side reader is
-    ``dependency_backtracker._resolve_chain_dispatch`` (#1). Part *usage* exposes
+    the shared table's tier-1 channel forms (#1). Part *usage* exposes
     (the two V11 pins) are ``is_on_part_definition=False`` and untouched here.
 
     Returns the count of registered scoped aliases.
@@ -624,6 +642,26 @@ def _scope_aggregation_expressions(
     """
     if not hierarchy_data or not hierarchy_data.aggregation_expressions:
         return []
+    return _scope_aggregation_list(
+        hierarchy_data.aggregation_expressions,
+        calc_usages,
+        hierarchy_data.part_usage_names,
+    )
+
+
+def _scope_aggregation_list(
+    aggregation_expressions: list[Any],
+    calc_usages: list[CalcUsageData],
+    part_usage_names: Any,
+) -> list[ScopedAggregationData]:
+    """Fan one list of AggregationExpressionData out to design instances.
+
+    Extracted from ``_scope_aggregation_expressions`` so the Item-10 FORMULA reroute
+    (``_route_crosspart_formula_aggregations``) scopes its derived aggregations through
+    the exact same instance-path fan-out the ``:>>`` EXPRESSION path uses.
+    """
+    if not aggregation_expressions:
+        return []
 
     result: list[ScopedAggregationData] = []
 
@@ -651,11 +689,11 @@ def _scope_aggregation_expressions(
             design_prefix,
         )
 
-    for agg_expr in hierarchy_data.aggregation_expressions:
+    for agg_expr in aggregation_expressions:
         dotted_paths = find_instance_paths_for_partdef(
             agg_expr.owning_part_qn,
             calc_usages,
-            part_usage_names=hierarchy_data.part_usage_names,
+            part_usage_names=part_usage_names,
         )
 
         if not dotted_paths:
@@ -682,11 +720,122 @@ def _scope_aggregation_expressions(
     return result
 
 
+def _computed_attr_to_aggregation(ca: ComputedAttributeData) -> Any:
+    """Decompose a chain-bearing FORMULA computed attribute via the aggregation machinery.
+
+    Item 10: a FORMULA whose ``=`` expression mixes local refs with cross-part feature
+    chains (e.g. ``direct_capital = powercore_capital + bop_capital + buildings.capital_cost``)
+    cannot be rendered by the calc renderer (feature chains are refused, ``calc_compat_renderer``)
+    and was dropped with a warning at ``graph_builder``. Here it is handed to the SAME
+    ``build_aggregation_expression`` construction a ``:>>`` EXPRESSION sum uses — decompose
+    plus the neutral-node render and the ``has_unsupported`` guard — so an odd-operator shape
+    degrades to MANUAL_REQUIRED rather than miscompiling (Minor 5). Returns the
+    ``AggregationExpressionData`` or ``None`` if it did not decompose.
+    """
+    from sysml_codegen.extraction.hierarchy_resolver import build_aggregation_expression
+
+    synthetic_redef = RedefinitionData(
+        # __-form owning QN — everything downstream (registration, instance scoping) is
+        # __-form; ComputedAttributeData carries the ::-form (the trap the map flagged).
+        owning_part_qn=sanitize_qualified_name(ca.owning_part_qualified_name),
+        attribute_name=ca.name,
+        redefinition_type=RedefinitionType.EXPRESSION,
+        expression_ast=ca.expression_ast,
+        expression_text=ca.expression_text,
+    )
+    part_stand_in = SimpleNamespace(name=ca.owning_part_name)
+    return build_aggregation_expression(synthetic_redef, [], part_stand_in)
+
+
+def _route_crosspart_formula_aggregations(
+    computed_attrs: list[ComputedAttributeData],
+    hierarchy_data: HierarchyExtractionResult,
+    calc_usages: list[CalcUsageData],
+) -> tuple[list[ComputedAttributeData], list[ScopedAggregationData]]:
+    """Step 4.7 (Item 10): route chain-bearing FORMULA computed attributes into the
+    aggregation path so cross-part sums become real graph producers.
+
+    The routing key fires strictly on a FORMULA-classified computed attribute that did NOT
+    compile AND decomposes to at least one cross-part term (a ``SingletonTerm``). This is
+    provably disjoint from EXPOSE_PURE / EXPOSE_CHAIN_TENTATIVE (which never reach the FORMULA
+    arm) and from existing ``:>>`` aggregations (which are ``RedefinitionData``, not computed
+    attributes). A FORMULA that failed to compile for a non-cross-part reason (e.g. an
+    inherited-attr ref outside the calc's inputs) has no ``SingletonTerm`` and is left exactly
+    as before — dropped at ``graph_builder`` with the same warning (no over-catch).
+
+    Returns ``(kept_computed_attrs, scoped_aggregations)``. The kept list has the rerouted
+    attributes removed so they are not double-processed as computed-attribute modules; the
+    scoped aggregations are appended to ``scoped_agg_data`` before Phase-1b registration so a
+    chained aggregation's inner channel is registered before the outer LocalTerm resolves (A7).
+    """
+    # Decompose every FORMULA computed attribute once via the aggregation machinery.
+    formula_cas = [
+        ca
+        for ca in computed_attrs
+        if ca.classification == ComputedAttributeClassification.FORMULA
+        and ca.expression_ast is not None
+    ]
+    agg_by_id: dict[int, Any] = {}
+    for ca in formula_cas:
+        agg = _computed_attr_to_aggregation(ca)
+        if agg is not None:
+            agg_by_id[id(ca)] = agg
+
+    # Seed: a FORMULA carrying a cross-part term (a SingletonTerm) must be an instance-scoped
+    # aggregation producer — the direct cross-part rollup (e.g. direct_capital).
+    routed_ids: set[int] = set()
+    routed_attrs: set[tuple[str, str]] = set()
+    for ca in formula_cas:
+        agg = agg_by_id.get(id(ca))
+        if agg is not None and agg.singleton_terms:
+            routed_ids.add(id(ca))
+            routed_attrs.add((agg.owning_part_qn, agg.attribute_name))
+
+    # Fixpoint: a FORMULA whose LOCAL terms reference an already-routed attribute in the same
+    # part must ALSO be instance-scoped, or it stays a part-def-scoped module that cannot read
+    # the instance-scoped aggregation it composes (e.g. total_capital = direct_capital + …).
+    # A pure-local FORMULA that references nothing routed is untouched — so a corpus with no
+    # cross-part seed sees zero reroutes (byte-identity preserved).
+    changed = True
+    while changed:
+        changed = False
+        for ca in formula_cas:
+            if id(ca) in routed_ids:
+                continue
+            agg = agg_by_id.get(id(ca))
+            if agg is None:
+                continue
+            if any(
+                (agg.owning_part_qn, lt.attribute_name) in routed_attrs
+                for lt in agg.local_terms
+            ):
+                routed_ids.add(id(ca))
+                routed_attrs.add((agg.owning_part_qn, agg.attribute_name))
+                changed = True
+
+    rerouted_exprs = [agg_by_id[id(ca)] for ca in formula_cas if id(ca) in routed_ids]
+    kept = [ca for ca in computed_attrs if id(ca) not in routed_ids]
+    for ca in formula_cas:
+        if id(ca) in routed_ids:
+            logger.info(
+                "Step 4.7: routed FORMULA '%s.%s' into the aggregation path — cross-part "
+                "or aggregation-composing sum becomes an instance-scoped graph producer",
+                ca.owning_part_name,
+                ca.name,
+            )
+
+    scoped = _scope_aggregation_list(
+        rerouted_exprs, calc_usages, hierarchy_data.part_usage_names
+    )
+    return kept, scoped
+
+
 def build_pipeline_context(
     model_paths: list[Path],
     targets: list[str] | None = None,
     include_all: bool = True,
     design_path_filter: str = "",
+    lower_constraints_enabled: bool = True,
 ) -> PipelineContext:
     """Build complete pipeline context from SysML models.
 
@@ -738,10 +887,15 @@ def build_pipeline_context(
             "Ensure library models contain calc definitions."
         )
 
-    # Step 2.5: Report dropped constraint usages (REQ-EXT-09) and keep the
-    # manifest so the from-snapshot path can replay the same report (Item 4).
-    # Collect is single-path — this ctx is the one capture serializes (MF4).
-    constraint_manifest = extractor.report_dropped_constraints()
+    # Step 2.6 (Item 5): extract neutral constraint facts. P1/P2/P3 below are
+    # guarded on `constraint_facts.usages` being non-empty (INV-7) — when no
+    # assertion exists in the model, lowering never runs and the corpus is
+    # byte-identical to the pre-Item-5 pipeline. `lower_constraints` itself
+    # runs the Item 3 executable-profile preflight before touching the
+    # registry, so an out-of-profile/blocked assert is caught there, not here.
+    constraint_facts = extract_constraint_facts(extractor.model)
+    # Live route's diagnostic sink, before lowering (DD-R08/R09).
+    screen_extraction_diagnostics(constraint_facts)
 
     # Step 3: Extract calculation usages with enhanced algorithm param detection
     calc_usages, extraction_report = extract_calculation_usages(
@@ -769,6 +923,15 @@ def build_pipeline_context(
     computed_attrs, expose_aliases = _extract_and_filter_computed_attributes(
         extractor.model, calc_usages, design_attrs
     )
+
+    # Step 4.7 (Item 10): route chain-bearing FORMULA computed attributes into the
+    # aggregation path so cross-part sums become real graph producers. Runs after 4.5
+    # (FORMULA classification is final) and before Phase-1b registration (5.5), so a
+    # chained aggregation's inner channel is registered before the outer resolves (A7).
+    computed_attrs, rerouted_aggs = _route_crosspart_formula_aggregations(
+        computed_attrs, hierarchy_data, calc_usages
+    )
+    scoped_agg_data = scoped_agg_data + rerouted_aggs
 
     # Merge all channel aliases (CHAIN from Step 3.5 + EXPOSE_PURE from Step 4.5)
     all_channel_aliases = chain_aliases + expose_aliases
@@ -805,30 +968,72 @@ def build_pipeline_context(
     # Step-4.5 removal stays for genuine (never-tentative) FORMULAs.
     _remove_formula_from_design_attrs(computed_attrs, design_attrs)
 
-    # Step 5.65 (Item 2, REQ-SVM-01..04): materialize supplied subsystem-attr values
-    # so Step-3 design-attribute resolution carries them to the plant-calc inputs and
-    # collapses renamed-consumer fan-out by source QN. The synthetic attrs enrich a
-    # GRAPH-ONLY copy (deriver + backtracker + graph builder); `design_attrs` stays the
-    # pure extraction boundary, so a snapshot captured from this run serializes only
-    # real attributes and the materializer reconstructs the synth ones at from-snapshot
-    # generate time from the raw redefinitions/overrides.
-    graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
-    if hierarchy_data is not None:
-        synth_attrs = materialize_supplied_values(
-            calc_usages,
-            hierarchy_data.redefinitions,
-            hierarchy_data.design_overrides,
-            hierarchy_data.usage_type_map,
-            design_attrs,
+    # Step 5.64 (Item 1): verify the usage/decision association, run the
+    # warning/BLOCK preflight, and expand every admitted owner exactly once. This is
+    # the only occurrence-query site on the live route; both the enrichment below and
+    # lowering further down read the returned batch instead of re-discovering
+    # lifecycle state. Its transcript stays private until PipelineContext is built.
+    prepared_constraints: PreparedConstraintBatch | None = None
+    if lower_constraints_enabled and constraint_facts.usages:
+        prepared_constraints = prepare_constraint_usages(
+            constraint_facts,
+            occ_index=build_part_instance_index(extractor.model),
+            calc_usages=calc_usages,
+            source_location_mode="live",
+            source_roots=model_paths,
         )
-        for attr in synth_attrs:
-            # Bucket by the attribute's own source file (the consuming usage's file) so
-            # it groups into a valid, existing parameter group.
-            graph_design_attrs.setdefault(Path(attr.source_file), []).append(attr)
+
+    # Step 5.65 (Item 2, REQ-SVM-01..04): enrich a GRAPH-ONLY copy with supplied
+    # subsystem-attr values so Step-3 design-attribute resolution carries them to the
+    # plant-calc inputs and collapses renamed-consumer fan-out by source QN.
+    # `design_attrs` stays the pure extraction boundary — the enrichment is
+    # copy-on-write — so a snapshot captured from this run serializes only real
+    # attributes and replay re-derives the synthetic ones through the same seam.
+    if hierarchy_data is None:
+        graph_design_attrs = {k: list(v) for k, v in design_attrs.items()}
+    else:
+        graph_design_attrs = enrich_graph_design_attributes(
+            design_attrs,
+            calc_usages=calc_usages,
+            prepared=prepared_constraints,
+            redefinitions=hierarchy_data.redefinitions,
+            design_overrides=hierarchy_data.design_overrides,
+            usage_type_map=hierarchy_data.usage_type_map,
+        )
 
     # Step 5.7: Create parameter group deriver, now that design_attrs reflects the
     # FINAL classifications (moved after confirm per INV-G).
     group_deriver = ParameterGroupDeriver(graph_design_attrs, calc_usages, calc_defs)
+
+    # [P1 RESOLVE] (Item 5): expand + strictly resolve every constraint fact into
+    # concrete graph structure from the Step-5.64 batch — the output registry and
+    # graph_design_attrs are final here. The preflight already ran during
+    # preparation: a blocked assert halted there with a named diagnostic, and a
+    # non-admitted usage arrives marked excluded, never reaching the strict resolver.
+    # Default True (Item 8 Phase 4): snapshot v3 carries constraint facts +
+    # the resolved occurrence table, and Phase 3 proved from-snapshot
+    # regeneration re-lowers to a byte-identical graph/catalog on the clean
+    # fixtures — so live and offline stay in parity by default. The
+    # `plant_values`/`fusion_tea` pair is grandfathered flag-off via the
+    # named `GRANDFATHERED` set in the capture scripts (D3); their live CLI
+    # generation still halts on the `gain` gap (Item 14's prerequisite),
+    # unaffected by this default — the grandfather only ever routes through
+    # `capture_snapshot`'s `lower_constraints_enabled` param, never the CLI.
+    concrete_constraints: list[ConcreteConstraint] = []
+    part_occurrences: dict[str, list[InstanceOccurrence]] = {}
+    if prepared_constraints is not None:
+        concrete_constraints = lower_constraints(
+            constraint_facts,
+            prepared=prepared_constraints,
+            registry=output_registry,
+            design_attrs=graph_design_attrs,
+        )
+        # The table serialized into snapshot v3 is exactly the batch's transcript of
+        # successful owner queries (Item 8, MF3) — never a re-derived owner set.
+        part_occurrences = {
+            owner_eqn: list(occurrences)
+            for owner_eqn, occurrences in prepared_constraints.occurrence_transcript
+        }
 
     # Step 6: Create backtracker and run
     backtracker = DependencyBacktracker(
@@ -837,8 +1042,32 @@ def build_pipeline_context(
         design_attributes=graph_design_attrs,
         output_registry=output_registry,
     )
+
+    # [P2 INJECT] (Item 5): each module_output-resolved constraint input channel
+    # joins the backtracking roots BEFORE pruning (spec Roots-before-pruning,
+    # S4-proven), so a calculation whose only consumer is an assertion survives.
+    # Reuses `_find_usage_for_channel` unchanged.
+    constraint_root_targets: list[str] = []
+    for bound_channel in sorted(
+        {
+            inp.bound_channel
+            for c in concrete_constraints
+            for inp in c.inputs
+            if inp.resolution == ConstraintInputResolution.MODULE_OUTPUT
+            and inp.bound_channel is not None
+        }
+    ):
+        producing_usage = backtracker._find_usage_for_channel(bound_channel)  # noqa: SLF001
+        if producing_usage is None:
+            raise CodeGenerationError(
+                f"no producing usage for constraint root channel '{bound_channel}' "
+                "(a resolved module_output binding must name a real producer)"
+            )
+        output_name = bound_channel.rsplit("__", 1)[1]
+        constraint_root_targets.append(f"{producing_usage.instance_name}.{output_name}")
+
     backtracking_result = backtracker.find_required_modules(
-        targets or [],
+        (targets or []) + constraint_root_targets,
         include_all=include_all,
     )
 
@@ -900,7 +1129,32 @@ def build_pipeline_context(
         # run mode into the dangling-alias filter (D4).
         channel_aliases=all_channel_aliases,
         include_all=include_all,
+        # Item 5: the live route maps each module's absolute source_file to its
+        # portable root-N/ referent, so generated docstrings match the snapshot
+        # route byte-for-byte. The snapshot route already carries the referent.
+        source_roots=model_paths,
+        source_location_mode="live",
     )
+
+    # [P3 EXTEND] (Item 5): append constraint + report-aggregator nodes and
+    # mint their entry points. Guarded on eligible constraints existing —
+    # `extend_graph_with_constraints` itself no-ops the aggregator when none
+    # are eligible, but skipping the call entirely when nothing was resolved
+    # keeps the corpus byte-identical with zero re-validation cost (INV-7).
+    if concrete_constraints:
+        computation_graph = extend_graph_with_constraints(
+            computation_graph, concrete_constraints, group_deriver
+        )
+        # [P4 CATALOG] (Item 7 / D6): assemble the ConstraintCatalog and set it on the graph
+        # before generation — every generation seam reads it from the graph, never from ctx
+        # (Appendix A). `assemble_constraint_catalog` returns None when every concrete record
+        # is unassessed (D7, zero eligible), so a facts-bearing-but-nothing-admitted model
+        # still leaves the graph's `constraint_catalog` at its INV-7-preserving default.
+        from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+
+        computation_graph.constraint_catalog = assemble_constraint_catalog(
+            concrete_constraints, constraint_facts
+        )
 
     return PipelineContext(
         extractor=extractor,
@@ -916,8 +1170,15 @@ def build_pipeline_context(
         hierarchy_data=hierarchy_data,
         aggregation_expressions=scoped_agg_data,
         channel_aliases=all_channel_aliases,
-        constraint_manifest=constraint_manifest,
         output_registry=output_registry,
+        concrete_constraints=concrete_constraints,
+        constraint_facts=constraint_facts,
+        part_occurrences=part_occurrences,
+        constraint_lowering_mode=(
+            CONSTRAINT_LOWERING_MODE_APPLIED
+            if lower_constraints_enabled
+            else CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF
+        ),
     )
 
 

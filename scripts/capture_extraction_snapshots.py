@@ -29,8 +29,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
 
-from scripts.capture_filter import select_fixtures
+from agentic_mbse.sysml.constraint_extraction import extract_constraint_facts
 
+from scripts.capture_filter import select_fixtures
 from sysml_codegen.analysis.parameter_groups import extract_design_attributes
 from sysml_codegen.extraction.usage_extractor import extract_calculation_usages
 from sysml_codegen.orchestration.pipeline_builder import (
@@ -38,6 +39,7 @@ from sysml_codegen.orchestration.pipeline_builder import (
     _extract_hierarchy_and_rewrite_bindings,
 )
 from sysml_codegen.snapshot import (
+    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
     capture_snapshot,
     serialize_extraction_snapshot,
     snapshot_to_json,
@@ -47,10 +49,24 @@ FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "fixtures"
 
 # Models that support the full pipeline (build_pipeline_context)
 MODELS = {
+    # Signed / unit-annotated modeled defaults (Item 4, DD-A11 snapshot route). The
+    # licence dependency was declared for this one: there are zero `unit` IR nodes
+    # across every previously committed snapshot, so the unit-annotation path could
+    # not be exercised offline until this was captured. It is a FULL capture with
+    # lowering enabled -- an extraction-only capture would mark it
+    # `grandfathered_off`, and its constraint entry points (the whole point) would
+    # not reach the offline graph.
+    "modeled_default_fidelity": FIXTURES_DIR / "modeled_default_fidelity",
     "sample_model": FIXTURES_DIR / "sample_model",
     "solar_battery_model": FIXTURES_DIR / "solar_battery_model",
     "catf_mfe_model": FIXTURES_DIR / "catf_mfe_model",
     "attr_expr_probe": FIXTURES_DIR / "attr_expr_probe",
+    # Item 10: two-level cross-part aggregation (a.capital + b.capital, distinct per-child
+    # values 3/5) — proves per-child :>> redefinition follow to distinct instance channels
+    # (A7). (two_same_leaf_producers is a resolver-level coordinate proven license-free in
+    # test_producer_completeness_acceptance.py — a bare unresolved leaf does not parse as a
+    # full model, so it is not captured here.)
+    "crosspart_rollup_twolevel": FIXTURES_DIR / "crosspart_rollup_twolevel",
     "chain_spike_model": FIXTURES_DIR / "chain_spike_model",
     "issue22_model": FIXTURES_DIR / "issue22_model",
     "alias_agg_probe": FIXTURES_DIR / "alias_agg_probe",
@@ -108,7 +124,45 @@ MODELS = {
     # by the supplied-value materializer. The license-free stand-in for Item 3's live
     # acceptance run.
     "fusion_tea": FIXTURES_DIR / "fusion_tea",
+    # Constraint-lowering parity fixtures (Item 8, D6). Both were used to prove
+    # live/snapshot byte-identity in Phase 3 but had no committed snapshot —
+    # registered here so the corpus carries one and the parity gate is
+    # reproducible from committed state, not only from a fresh capture.
+    "constraint_inline": FIXTURES_DIR / "constraint_inline",
+    "constraint_multi_instance": FIXTURES_DIR / "constraint_multi_instance",
+    "constraint_non_numerical": FIXTURES_DIR / "constraint_non_numerical",
+    # Gate A fixtures (CONSTRAINT-LIFECYCLE-REMEDIATION Item 2). A matched pair over
+    # the two shapes a `package` owning-definition covers:
+    #   gate_a               — a literal attribute owned by a concrete PartUsage, read
+    #                          by a self-named actual (owner decision D-2, SR-A01).
+    #                          Uncapturable before Item 2: its live build raised at
+    #                          `terminal_disposition(strict=True)`.
+    #   gate_a_package_owner — a constraint declared directly in a package body, the
+    #                          genuinely package-owned control. No fixture covered this
+    #                          shape before Item 2, so the surviving package branch had
+    #                          zero live coverage.
+    "gate_a": FIXTURES_DIR / "gate_a",
+    "gate_a_package_owner": FIXTURES_DIR / "gate_a_package_owner",
+    # Cutover fixtures (Item 2 phase group 2).
+    #   agg_localterm_probe — the only model that reaches the aggregation LocalTerm
+    #                         mint (`graph_builder.py`): a plain literal attribute
+    #                         multiplied into an aggregation, so it is neither a
+    #                         sibling aggregation output nor an EXPOSE alias. Every
+    #                         other fixture's local terms are one or the other, so
+    #                         that mint had a population of zero.
+    #   shared_producer     — recorded KNOWN-INCOMPLETE: two consumers of one
+    #                         usage-owned attribute yield two entry points. See its
+    #                         PROVENANCE.md; SR-A02 is referred to Item 4 (PC-4).
+    "agg_localterm_probe": FIXTURES_DIR / "agg_localterm_probe",
+    "shared_producer": FIXTURES_DIR / "shared_producer",
 }
+
+# The constraint-lowering grandfather set (Item 8, D3) was emptied in Item 14
+# Phase 1 (INV-D) once the `gain` gap closed, and the capture-time opt-out it fed
+# was deleted in Item 12: a full-pipeline model always captures with lowering
+# applied so its snapshot can produce a certifying package. The only honest
+# `grandfathered_off` producer left is the extraction-only path below, for models
+# that cannot build a pipeline at all.
 
 # Models that need extraction-only capture (pipeline fails on unsupported binding types
 # or CHAIN overrides that produce unresolvable source paths)
@@ -129,6 +183,14 @@ EXTRACTION_ONLY_MODELS = {
     #     binding RHS: an unhandled dispatch type. Extraction-only (the pipeline
     #     cannot resolve the invocation). Warns + drops (D3-1).
     "invocation_binding_probe": FIXTURES_DIR / "invocation_binding_probe",
+    # NOTE: tests/fixtures/non_finite_literal/ is deliberately NOT captured. Its
+    # whole point is a non-finite literal, and the facts serializer refuses those
+    # outright (allow_nan=False, D2a serialize-time backstop) — so a blocking
+    # non_finite_literal diagnostic cannot reach a snapshot by construction. The
+    # snapshot route's sink is pinned against a synthesized payload instead; see
+    # tests/conformance/test_diagnostic_screen.py.
+    # Same-named attributes at two scopes with DIFFERENT values (audit F2).
+    "shadowed_reference": FIXTURES_DIR / "shadowed_reference",
 }
 
 
@@ -145,9 +207,7 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         raise RuntimeError(f"Failed to load models from {model_path}")
 
     calc_defs = extractor.extract_calculation_definitions()
-    calc_usages, _report = extract_calculation_usages(
-        extractor.model, calc_defs=calc_defs
-    )
+    calc_usages, _report = extract_calculation_usages(extractor.model, calc_defs=calc_defs)
 
     hierarchy_data, scoped_agg_data, chain_aliases = _extract_hierarchy_and_rewrite_bindings(
         extractor.model, calc_usages
@@ -170,11 +230,14 @@ def _capture_extraction_only(model_name: str, model_path: Path) -> dict:
         aggregation_expressions=scoped_agg_data,
         computed_attributes=computed_attrs,
         channel_aliases=all_aliases,
+        # Extraction-only never builds a pipeline, so lowering never runs (Item
+        # 8, INV-1): the facts are extracted honestly, the mode is the
+        # grandfather value, and the occurrence table is empty.
+        constraint_facts=extract_constraint_facts(extractor.model),
+        part_occurrences={},
+        constraint_lowering_mode=CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
+        model_paths=[model_path],
         compilation_results={},  # extraction-only: no graph, no compilation
-        # Manifest is model-wide and does not need the graph, so the
-        # extraction-only path must carry it too — otherwise a constraint-bearing
-        # extraction-only fixture would diverge live-vs-snapshot (INV-B, Item 4).
-        constraint_manifest=extractor.collect_constraint_manifest(),
         output_dir=model_path,
     )
 
@@ -210,7 +273,10 @@ def main(requested: str | None = None) -> None:
         if model_name not in selected:
             continue
         print(f"Processing {model_name} from {model_path}...")
-        out = capture_snapshot([model_path], model_path / "extraction_snapshot.json")
+        out = capture_snapshot(
+            [model_path],
+            model_path / "extraction_snapshot.json",
+        )
         _report(model_path, json.loads(out.read_text()))
 
     # Extraction-only fixtures cannot build the full pipeline; capture directly

@@ -267,10 +267,12 @@ def generate_all_derived_jsons(
     generated_files = []
     for group in entry_point_groups:
         # Build dictionary from EntryPoint objects
-        data = {}
-        for ep in group.parameters:
-            if ep.default_value is not None:
-                data[ep.qualified_name] = ep.default_value
+        # Every entry point in the group gets a key. An entry point with no
+        # resolvable modeled default emits `null`, not nothing: omitting the key
+        # made an unfilled parameter indistinguishable from one the user had
+        # already supplied, and hid the omission behind a "field required" error
+        # far from its cause (DD-R21, I7).
+        data = {ep.qualified_name: ep.default_value for ep in group.parameters}
 
         # Render JSON with sorted keys for deterministic output
         json_content = json.dumps(data, indent=2, sort_keys=True)

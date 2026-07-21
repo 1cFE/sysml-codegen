@@ -1,7 +1,70 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "agg_literal_probe",
-  "captured_at": "2026-07-06T22:28:29.013284+00:00",
+  "captured_at": "2026-07-20T15:57:44.585553+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "AggLiteralProbeLibrary::Assembly"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "assembly",
+          "qualified_name": "AggLiteralProbeDesign::plant::assembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AggLiteralProbeLibrary::Assembly",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "AggLiteralProbeLibrary::'Costed Assembly'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Assembly",
+          "qualified_name": "AggLiteralProbeLibrary::Assembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "AggLiteralProbeLibrary::Module"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "module",
+          "qualified_name": "AggLiteralProbeLibrary::Assembly::module"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AggLiteralProbeLibrary::Module",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [],
   "calc_usages": [],
@@ -89,6 +152,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

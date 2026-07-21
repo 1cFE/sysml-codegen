@@ -21,9 +21,9 @@ modules:
   solarbatterydesign__solar_battery_plant__energy_production:
     module_type: solarbatterylibrary.EnergyProductionCalcModule
     inputs:
-      p_net_mw: float design_params.SolarBatteryDesign__solar_battery_plant__energy_production__p_net_mw
-      n_mod: float design_params.SolarBatteryDesign__solar_battery_plant__energy_production__n_mod
-      plant_availability: float design_params.SolarBatteryDesign__solar_battery_plant__energy_production__plant_availability
+      p_net_mw: float design_params.SolarBatteryDesign__solar_battery_plant__p_net_mw
+      n_mod: float design_params.SolarBatteryDesign__solar_battery_plant__n_mod
+      plant_availability: float design_params.SolarBatteryDesign__solar_battery_plant__plant_availability
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh
 
@@ -31,8 +31,8 @@ modules:
   solarbatterydesign__solar_battery_plant__annualized_fuel:
     module_type: solarbatterylibrary.AnnualizedFuelCalcModule
     inputs:
-      fuel_unit_cost: float design_params.SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_unit_cost
-      fuel_consumption: float design_params.SolarBatteryDesign__solar_battery_plant__annualized_fuel__fuel_consumption
+      fuel_unit_cost: float design_params.SolarBatteryDesign__solar_battery_plant__fuel_unit_cost
+      fuel_consumption: float design_params.SolarBatteryDesign__solar_battery_plant__fuel_consumption
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__annualized_fuel__annual_fuel_cost
 
@@ -337,7 +337,7 @@ modules:
   solarbatterydesign__solar_battery_plant__annualized_om:
     module_type: solarbatterylibrary.AnnualizedOMCalcModule
     inputs:
-      om_rate_per_kw_year: float design_params.SolarBatteryDesign__solar_battery_plant__annualized_om__om_rate_per_kw_year
+      om_rate_per_kw_year: float design_params.SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year
       p_net_kw: float SolarBatteryDesign__solar_battery_plant__p_net_kw__p_net_kw.root
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__annualized_om__annual_om_cost
@@ -414,8 +414,8 @@ modules:
     module_type: solarbatterylibrary.AnnualizedFinancialCalcModule
     inputs:
       total_capex: float SolarBatteryDesign__solar_battery_plant__capital_cost__capital_cost.root
-      discount_rate: float design_params.SolarBatteryDesign__solar_battery_plant__annualized_financial__discount_rate
-      plant_lifetime: float design_params.SolarBatteryDesign__solar_battery_plant__annualized_financial__plant_lifetime
+      discount_rate: float design_params.SolarBatteryDesign__solar_battery_plant__discount_rate
+      plant_lifetime: float design_params.SolarBatteryDesign__solar_battery_plant__plant_lifetime
     outputs:
       capital_recovery_factor: float SolarBatteryDesign__solar_battery_plant__annualized_financial__capital_recovery_factor
       annualized_capital_cost: float SolarBatteryDesign__solar_battery_plant__annualized_financial__annualized_capital_cost
@@ -436,8 +436,8 @@ modules:
       annualized_capital_cost: float SolarBatteryDesign__solar_battery_plant__annualized_financial__annualized_capital_cost
       annual_om_cost: float SolarBatteryDesign__solar_battery_plant__annualized_om__annual_om_cost.root
       annual_fuel_cost: float SolarBatteryDesign__solar_battery_plant__annualized_fuel__annual_fuel_cost.root
-      yearly_inflation: float design_params.SolarBatteryDesign__solar_battery_plant__lcoe__yearly_inflation
-      plant_lifetime: float design_params.SolarBatteryDesign__solar_battery_plant__lcoe__plant_lifetime
+      yearly_inflation: float design_params.SolarBatteryDesign__solar_battery_plant__yearly_inflation
+      plant_lifetime: float design_params.SolarBatteryDesign__solar_battery_plant__plant_lifetime
       annual_energy_mwh: float SolarBatteryDesign__solar_battery_plant__energy_production__annual_energy_mwh.root
     outputs:
       root: RootModel[float] SolarBatteryDesign__solar_battery_plant__lcoe__lcoe_per_mwh

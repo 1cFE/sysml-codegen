@@ -1,0 +1,168 @@
+# Spec: Runtime Evaluation Contract — Exceptional Arithmetic and Predicate Naming
+
+**Status:** Implementation Complete — sysml-codegen leg; external TEAx P0 open (2026-07-18)
+**Owner:** Reid W
+**Created:** 2026-07-18 13:27 PDT
+**Complexity:** MEDIUM
+**Branch:** constraint-exec-epic
+**Epic:** GAP-CLOSE — Item 1
+
+---
+
+## Problem
+
+Two runtime-generation gaps can turn an admitted constraint into something other than trustworthy
+evidence. Generated division and exponentiation can raise before the Kleene comparison logic sees a
+value. Sysml-codegen correctly lets that arithmetic exception leave the generated module, but the
+TEAx executor does not attach the module key before its evaluators normalize the exception. The
+result is phase-tagged but does not identify the failed constraint. Separately, distinct legal
+SysML predicate keys can collapse to the same lowercased Python function name. The later definition
+then replaces the earlier one, so a constraint can silently execute the wrong predicate.
+
+Both gaps block the open constraint-execution PR wave. One confuses broken execution with a
+verdict. The other can return a confident verdict for different modeled logic.
+
+## Success Criteria
+
+- [x] In sysml-codegen, generated constraint arithmetic that raises for division by zero,
+      `0 ** negative`, or exponent overflow leaves the generated module as the original Python
+      exception. Its class and message are unchanged; it is not caught, wrapped, converted to a
+      verdict, or converted to `indeterminate` by generated code.
+- [x] The exceptional-arithmetic regression set includes a raising expression beneath a supported
+      Boolean connective. Like the direct comparison, the nested case leaves generated code as the
+      original exception and is normalized by the booked TEAx leg; it cannot become a compound
+      verdict.
+- [ ] The separately booked TEAx normalization leg turns each propagated arithmetic exception into
+      `EvaluationFailed` in both `PreparedEvaluator` and `FileBackedEvaluator`. Its observable
+      `failure` record has: `phase == EvaluationPhase.MODULE_EXECUTION`;
+      `module_or_channel` equal to the generated constraint pipeline module key, which for this
+      generated module is `constraint_id.lower()`;
+      `cause == f"{type(original).__name__}: {original}"`;
+      `retryable is False`; and `partial_artifacts == ()`.
+- [ ] At the TEAx evaluation API boundary, the original arithmetic exception does not escape as the
+      top-level exception. `EvaluationFailed` remains raised `from` the original exception, so
+      `EvaluationFailed.__cause__` retains the original exception class, message, and causal
+      traceback. This contract preserves the existing diagnostic chain; it does not suppress it.
+- [x] A failing constraint module produces no `ConstraintEvaluation`, constraint report, or partial
+      evidence for that candidate. Existing false predicates still complete as `violated` evidence,
+      and already-produced non-finite values still complete as `indeterminate` evidence.
+- [x] Generated arithmetic contains no new operation guards or exception-to-value conversion. The
+      constraint-module documentation promises only that a verdict against the assertion does not
+      raise.
+- [x] Two distinct raw predicate keys can never silently share one emitted Python function. Three
+      separate opposite-predicate regressions cover every verified legal collision class:
+      case-fold, underscore-run collapse, and quoted hyphen. Post-fix generation either rejects
+      each collision deterministically while naming both raw keys, or emits distinct stable names,
+      as design decides.
+- [ ] The booked TEAx leg has saved pre-fix RED evidence for each F1 normalized-failure regression;
+      the missing module identity or other asserted normalized field is the reason for failure.
+      Sysml-codegen's unmangled-raise tests characterize an already-correct boundary and are
+      recorded as such, not mislabeled RED. F2 has separate saved RED evidence for case-fold,
+      underscore-run collapse, and quoted-hyphen collisions. Each record includes the revision and
+      focused test command and demonstrates the specific old failure mode rather than an unrelated
+      setup failure.
+- [x] **Route parity:** after the fix, live and snapshot generation at the same revision produce
+      byte-identical generated packages for the same model. Finite inputs retain their verdicts and
+      margins, and non-finite values retain current Kleene behavior on both routes.
+- [x] **Before/after stability:** compare sysml-codegen-generated artifacts at pre-fix revision
+      `6db321225a5c8568db0287b67ed1d04c03079cc2` with post-fix artifacts for the same input.
+      Permitted diffs are the narrowed constraint-module documentation, the F2 predicate-name and
+      import surface selected by design, and transitive hashes or seals derived from those changed
+      generated bytes. All other generated content is byte-identical. If design rejects
+      collisions, collision-free predicate names and imports remain byte-identical; if design uses
+      suffixes, it records and tests the exact naming churn. TEAx source and tests are outside this
+      generated-artifact byte comparison.
+
+## Known Requirements
+
+- **[NEED]** A raised exception in constraint arithmetic is an execution failure, never a verdict.
+  Constraints check feasibility; failure to complete the arithmetic is broken execution, not
+  evidence that the design is infeasible. Owner ruling recorded 2026-07-18 in
+  `.project/research/20260718_gap-review-verification.md`, “Owner ruling — F1 policy.”
+- **[NEED]** Generated predicates add no arithmetic guards. Python operations keep their existing
+  value-versus-raise boundary: a non-finite value can become `indeterminate`, while a raised
+  exception becomes failure. Owner ruling recorded 2026-07-18 in
+  `.project/research/20260718_gap-review-verification.md`, “Owner ruling — F1 policy.”
+- **[NEED]** The exceptional-arithmetic correction stays small and clean. Owner ruling recorded
+  2026-07-18 in
+  `.project/research/20260718_gap-review-verification.md`, “Owner ruling — F1 policy.”
+- **[NEED]** One failing constraint module produces no partial constraint report for that
+  candidate. Owner-accepted consequence recorded with the F1 ruling in
+  `.project/research/20260718_gap-review-verification.md`.
+- **[INHERITED]** A false supported predicate is successful evidence, while an exception means the
+  evaluation could not complete. Source:
+  `.project/concepts/constraint-execution-and-design-space-studies-claude.md`, Design Principle 4.
+- **[HARD]** The existing TEAx evaluation API exposes normalized failures as `EvaluationFailed`
+  carrying an `EvaluationFailure`. That record defines `phase`, `cause`, `module_or_channel`,
+  `retryable`, and `partial_artifacts`; both evaluators currently normalize caught module
+  exceptions as `module_execution` and retain the original as Python's explicit cause. Existing
+  interface: `../teax/packages/teax-simkit/simkit/evaluation/failure.py:13-46`,
+  `../teax/packages/teax-simkit/simkit/evaluation/evaluator.py:112-123,185-199`, and
+  `../teax/docs/evaluation-and-study.md:67-71`.
+- **[HARD]** The failed generated module's identity is available only at TEAx's serial-executor
+  seam: `_execute_module` receives `module_key` and calls `module.run`, while the evaluator catches
+  only the later top-level exception. Located interface:
+  `../teax/packages/teax-simkit/simkit/core/pipeline_executor.py:181-197`. Therefore this
+  sysml-codegen item cannot populate `EvaluationFailure.module_or_channel` without expanding into
+  TEAx.
+- **[INFERRED]** The smallest correction reuses the existing `EvaluationFailure` fields and causal
+  exception chain. This is an agent-selected mechanism constrained by the located interface, not
+  part of the owner's exception-policy ruling. The exact TEAx attachment design belongs to the
+  separately booked normalization leg.
+- **[INFERRED]** Predicate-name normalization must be injective over the keys emitted together, or
+  generation must reject a collision before Python source is shipped. F2 is a verified defect, but
+  this requirement and its severity are agent-originated. Sources:
+  `.project/research/20260718-123558_constraint-expression-final-gap-review.md`, F2;
+  `.project/research/20260718_gap-review-verification.md`, F2; and
+  `.project/backlog/epic_gap_close.md`, Item 1.
+- **[INFERRED]** Pre-fix RED evidence is part of the implementation record for both findings, and
+  byte changes outside the declared boundary require an explicit justification. These are
+  agent-originated PR-gating controls inherited from `.project/backlog/epic_gap_close.md`.
+
+## Non-Goals
+
+- Adding value-domain reasoning to the executable profile or changing which expressions it admits.
+- Changing `satisfied`, `violated`, or `indeterminate` semantics, including current handling of
+  already-produced `inf` and `nan` values.
+- Adding generated safe-division, safe-power, or other arithmetic wrappers.
+- Producing a partial constraint report after any constraint module fails.
+- Changing TEAx in GAP-CLOSE Item 1. This sysml-codegen item stops at propagating the original
+  arithmetic exception unchanged and proving that boundary. The booked TEAx normalization leg owns
+  `module_or_channel` population and evaluator-level F1 assertions.
+- Refactoring the predicate compiler, evaluator, or constraint generation architecture for code
+  quality, including `[CONSTRAINT-ARCH-UNIFY]` work.
+- Closing GAP-CLOSE Items 2–5 or changing package metadata, lowering, model assignment, profile
+  classification, sealing, or durable documentation outside the narrow template correction.
+
+## Open Questions / Deferred to design
+
+- Choose the F2 collision policy. Deterministic rejection keeps collision-free generated names
+  and baselines stable. A stable suffix permits both predicates but changes naming bytes and their
+  derived package hashes. This is the epic's agent-grade recommendation, not an owner requirement.
+- Define the exact pre-fix evidence storage format and focused test split while preserving the
+  required revision, command, and defect-specific RED result.
+
+---
+
+## Related Artifacts
+
+- **Epic:** `.project/backlog/epic_gap_close.md`, Item 1
+- **Required Reading:**
+  - `.project/research/20260718-123558_constraint-expression-final-gap-review.md`, F1/F2
+  - `.project/research/20260718_gap-review-verification.md`, F1/F2 and owner F1 ruling
+  - `.project/active/numerical-constraint-profile/spec.md`
+  - `.project/active/numerical-constraint-profile/design.md`
+  - `.project/concepts/constraint-execution-and-design-space-studies-claude.md`, Design Principle 4
+  - `docs/architecture/reference/28-constraint-lowering-and-catalog.md`
+- **Runtime contract context:**
+  - `../teax/docs/evaluation-and-study.md`
+  - `../teax/packages/teax-simkit/simkit/evaluation/{evaluator,failure}.py`
+- **External dependency:** `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` in
+  `.project/backlog/BACKLOG.md` (booked TEAx leg; outside Item 1)
+- **Design:** `.project/active/gap-runtime-contract/design.md` (to be created)
+
+---
+
+**Implementation result:** The sysml-codegen leg is complete; see [plan.md](plan.md) and
+[evidence.md](evidence.md). The evaluator-level criteria and TEAx pre-fix RED remain owned by the
+external `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` P0, so end-to-end F1 is not closed here.

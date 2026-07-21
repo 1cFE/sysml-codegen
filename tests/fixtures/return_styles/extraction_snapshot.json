@@ -1,7 +1,34 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "return_styles",
-  "captured_at": "2026-07-06T19:03:24.468744+00:00",
+  "captured_at": "2026-07-20T15:57:44.130053+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [],
+        "identity": {
+          "kind": "CalculationDefinition",
+          "name": "StyleD",
+          "qualified_name": "ReturnStylesLibrary::StyleD"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [
+          {
+            "feature": "ReturnStylesLibrary::StyleD::y",
+            "redefines": "Performances::Evaluation::result",
+            "value": null
+          }
+        ],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "ControlA": {
       "calc_def_name": "ControlA",
@@ -103,7 +130,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 6,
       "source_hash": "e174df533ec2db6f430fe802494277aad45d630128658ab4cb3bbc1d640179d0",
       "output_expression_asts": null,
@@ -151,7 +178,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 13,
       "source_hash": "e174df533ec2db6f430fe802494277aad45d630128658ab4cb3bbc1d640179d0",
       "output_expression_asts": null,
@@ -199,7 +226,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 20,
       "source_hash": "e174df533ec2db6f430fe802494277aad45d630128658ab4cb3bbc1d640179d0",
       "output_expression_asts": null,
@@ -245,7 +272,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 30,
       "source_hash": "e174df533ec2db6f430fe802494277aad45d630128658ab4cb3bbc1d640179d0",
       "output_expression_asts": null,
@@ -274,11 +301,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "a"
+          "source_attribute_name": "a",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 14,
       "parent_part_path": "",
       "qualified_name": "ReturnStylesDesign__rs_design__ca",
@@ -303,11 +331,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "b"
+          "source_attribute_name": "b",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 18,
       "parent_part_path": "",
       "qualified_name": "ReturnStylesDesign__rs_design__cb",
@@ -332,11 +361,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "c"
+          "source_attribute_name": "c",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 22,
       "parent_part_path": "",
       "qualified_name": "ReturnStylesDesign__rs_design__cc",
@@ -361,11 +391,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "d"
+          "source_attribute_name": "d",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 26,
       "parent_part_path": "",
       "qualified_name": "ReturnStylesDesign__rs_design__cd",
@@ -381,7 +412,7 @@
         "sysml_type": "Real",
         "default_value": "1.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 9,
         "parent_part": "rs_design",
         "qualified_name": "ReturnStylesDesign__rs_design__a"
@@ -391,7 +422,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 10,
         "parent_part": "rs_design",
         "qualified_name": "ReturnStylesDesign__rs_design__b"
@@ -401,7 +432,7 @@
         "sysml_type": "Real",
         "default_value": "3.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 11,
         "parent_part": "rs_design",
         "qualified_name": "ReturnStylesDesign__rs_design__c"
@@ -411,7 +442,7 @@
         "sysml_type": "Real",
         "default_value": "4.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 12,
         "parent_part": "rs_design",
         "qualified_name": "ReturnStylesDesign__rs_design__d"
@@ -423,7 +454,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 8,
         "parent_part": "",
         "qualified_name": "ReturnStylesLibrary__ControlA__y"
@@ -433,7 +464,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 22,
         "parent_part": "",
         "qualified_name": "ReturnStylesLibrary__BareInC__y"
@@ -451,6 +482,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

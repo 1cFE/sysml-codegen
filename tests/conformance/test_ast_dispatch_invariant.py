@@ -36,7 +36,6 @@ SRC_ROOT = Path(__file__).parent.parent.parent / "src" / "sysml_codegen"
 EXTRACTION_DIR = SRC_ROOT / "extraction"
 ANALYSIS_DIR = SRC_ROOT / "analysis"
 
-EXPRESSION_COMPILER_PATH = EXTRACTION_DIR / "expression_compiler.py"
 HIERARCHY_RESOLVER_PATH = EXTRACTION_DIR / "hierarchy_resolver.py"
 USAGE_EXTRACTOR_PATH = EXTRACTION_DIR / "usage_extractor.py"
 PARAMETER_GROUPS_PATH = ANALYSIS_DIR / "parameter_groups.py"
@@ -71,16 +70,19 @@ EXPRESSION_TYPE_NAMES = frozenset(
 # Dispatch site inventory (foundation for all audit tests)
 # ---------------------------------------------------------------------------
 
-# Sites where both FCE and OE are checked (the critical invariant sites)
+# Sites where both FCE and OE are checked (the critical invariant sites). The calc-side
+# dispatch site (build_expression_ast) was audited here through CONSTRAINT-EXEC Item 13's
+# Phase 4: that responsibility moved cross-repo to agentic-mbse's extract_expression_ir
+# (its own dispatch, its own tests), so it drops out of this repo's audited set rather than
+# being replaced by a new site here (the renderer consumes ExpressionIR via isinstance on IR
+# node classes, not raw-syside is_instance() -- no dispatch site to audit).
 DUAL_CHECK_SITES = [
-    (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
     (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
     (USAGE_EXTRACTOR_PATH, "_extract_single_binding"),
     (PARAMETER_GROUPS_PATH, "_extract_default_value"),
 ]
 
 DUAL_CHECK_IDS = [
-    "build_expression_ast",
     "agentic_aggregation._decompose_node",
     "_extract_single_binding",
     "_extract_default_value",
@@ -88,12 +90,10 @@ DUAL_CHECK_IDS = [
 
 # Sites that use if/if/if chains (not elif) and must follow full canonical ordering
 CANONICAL_SITES = [
-    (EXPRESSION_COMPILER_PATH, "build_expression_ast"),
     (AGENTIC_AGGREGATION_PATH, "_decompose_node"),
 ]
 
 CANONICAL_IDS = [
-    "build_expression_ast",
     "agentic_aggregation._decompose_node",
 ]
 
@@ -265,7 +265,10 @@ class TestReqAst04DispatchSiteGuardrail:
     """Guard against new unaudited dispatch sites appearing in the codebase."""
 
     def test_total_dual_check_site_count(self):
-        """Exactly 4 audited functions have both FCE and OE is_instance() checks."""
+        """Exactly 3 audited functions have both FCE and OE is_instance() checks.
+
+        Was 4 (Item 13 dropped build_expression_ast: FCE+OE dispatch for calc expressions
+        now lives in agentic-mbse's extract_expression_ir, out of this repo's audited set)."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_aggregation_calls = find_is_instance_calls_in_function(
             AGENTIC_AGGREGATION_PATH,
@@ -286,13 +289,16 @@ class TestReqAst04DispatchSiteGuardrail:
             for key, types in all_dispatch.items()
             if "FeatureChainExpression" in types and "OperatorExpression" in types
         }
-        assert len(dual_check) == 4, (
-            f"Expected 4 dual-check sites (FCE+OE), found {len(dual_check)}: "
+        assert len(dual_check) == 3, (
+            f"Expected 3 dual-check sites (FCE+OE), found {len(dual_check)}: "
             f"{sorted(dual_check.keys())}"
         )
 
     def test_total_dispatch_function_count(self):
-        """Exactly 6 audited functions dispatch on 2+ expression types."""
+        """Exactly 5 audited functions dispatch on 2+ expression types.
+
+        Was 6 (Item 13 dropped build_expression_ast: FCE+OE dispatch for calc expressions
+        now lives in agentic-mbse's extract_expression_ir, out of this repo's audited set)."""
         all_dispatch = find_all_dispatch_functions(SRC_ROOT, EXPRESSION_TYPE_NAMES)
         shared_classifier_calls = find_is_instance_calls_in_function(
             AGENTIC_HIERARCHY_PATH,
@@ -323,8 +329,8 @@ class TestReqAst04DispatchSiteGuardrail:
                 shared_aggregation_types
             )
         multi_type = {key: types for key, types in all_dispatch.items() if len(types) >= 2}
-        assert len(multi_type) == 6, (
-            f"Expected 6 audited multi-type dispatch functions, found {len(multi_type)}: "
+        assert len(multi_type) == 5, (
+            f"Expected 5 audited multi-type dispatch functions, found {len(multi_type)}: "
             f"{sorted(multi_type.keys())}"
         )
 
@@ -390,43 +396,12 @@ class TestReqAst05SingletonTermClassification:
 
 
 # ---------------------------------------------------------------------------
-# REQ-AST-06: Expression compiler FCE diagnostic
+# REQ-AST-06 retired (CONSTRAINT-EXEC Item 13): its two tests exercised
+# build_expression_ast's FCE diagnostic directly. That dispatch responsibility moved
+# cross-repo to agentic-mbse's extract_expression_ir; the calc-compat renderer's own
+# feature-chain rejection is covered by
+# tests/unit/test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error.
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.req("REQ-AST-06")
-class TestReqAst06ExpressionCompilerDiagnostic:
-    """build_expression_ast: FCE produces 'feature chain' diagnostic."""
-
-    def test_build_expression_ast_fce_produces_feature_chain_reason(self):
-        """Dual-match FCE+OE mock -> UNSUPPORTED with 'feature chain' in reason."""
-        from sysml_codegen.extraction.expression_compiler import (
-            ExpressionNodeType,
-            build_expression_ast,
-        )
-
-        node = MockFeatureChainExpressionOperatorExpression(
-            operands=[MockFeatureReferenceExpression("x")],
-        )
-        result = build_expression_ast(node, input_names=set(), output_names=set())
-        assert result.node_type == ExpressionNodeType.UNSUPPORTED, (
-            f"Expected UNSUPPORTED, got {result.node_type}"
-        )
-        assert "feature chain" in result.reason, (
-            f"Expected 'feature chain' in reason, got: {result.reason!r}"
-        )
-
-    def test_build_expression_ast_fce_no_dot_operator_error(self):
-        """Dual-match FCE+OE mock -> reason does NOT contain 'unsupported operator'."""
-        from sysml_codegen.extraction.expression_compiler import build_expression_ast
-
-        node = MockFeatureChainExpressionOperatorExpression(
-            operands=[MockFeatureReferenceExpression("x")],
-        )
-        result = build_expression_ast(node, input_names=set(), output_names=set())
-        assert "unsupported operator" not in result.reason, (
-            f"FCE should not produce 'unsupported operator' diagnostic: {result.reason!r}"
-        )
 
 
 # ---------------------------------------------------------------------------

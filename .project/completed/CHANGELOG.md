@@ -4,6 +4,43 @@ Historical record of completed work.
 
 ---
 
+## [2026-07-13] - [CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies
+
+**Type**: Epic
+**Duration**: ~1 day wall-clock (created 2026-07-12; archived 2026-07-13; one ~14h orchestrated run + owner close session)
+
+### Summary
+Modeled physical limits (`assert constraint`) previously died at a drop-report warning, and every
+design study re-implemented the judgment by hand. This epic makes modeled assertions execute inside
+the generated forward model — Kleene-compiled graph modules feeding an exact-schema report
+aggregator, verdicts as data beside ordinary outputs — and adds sealed package contracts plus a
+crash-safe study layer (evaluator → store/runner → policy/query/CLI) in teax. Snapshots carry
+constraint facts load-bearing (v3); `ExpressionAST` retired onto the shared `ExpressionIR`; the IFE
+sweep's hand-coded viability rule is deleted, replaced by the generated assertion (2294/2301 exact,
+7 model-favoring boundary rows, [OWNER] ratified).
+
+### Deliverables
+- 15 items (0–14) across four repos, each with spec/design/plan/audit + briefs; 8 item folders
+  archived here, 3 in agentic-mbse, 4 in teax; fusion-tea acceptance evidence in
+  `exploration/ife_e2e/study/` there.
+- Independent findings audit: `20260713_epic_constraint_execution_audit_independent.md` (every
+  sampled claim reproduced exactly: both mutation probes verbatim, all final gates, boundary rows
+  at data level, CE-F1..F3 at source).
+- Follow-ons: CE-F1 (standalone catalog emission) and CE-F2 (multi-channel CandidateBridge) in
+  BACKLOG; CE-F3 fixed post-run (teax `0d606a4`).
+- Gates at close: sysml-codegen 2330/23, mypy 76 baseline, ruff clean; agentic-mbse 1401/1; teax
+  fully green 262.
+
+### Lessons Learned
+- Item-level certification covers what the item's fixtures exercise: the first real
+  multi-entry-channel package through the certified path surfaced three integration gaps the
+  single-channel toy fixture could not. An epic-level integration acceptance (real package, all
+  layers) belongs in the plan, not just at the end.
+- Audits that cannot execute should write "requested live probes" for the orchestrator; the
+  probe-addendum + independent re-execution pattern held (both re-run probes reproduced verbatim).
+
+---
+
 ## [2026-07-08] - [TRUTH-DEBT] Truth-Debt Retirement
 
 **Type**: Epic

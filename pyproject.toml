@@ -21,7 +21,7 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
 ]
 dependencies = [
-    "agentic-mbse>=0.1.0",
+    "agentic-mbse>=0.1.2",
     "jinja2>=3.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",
@@ -43,10 +43,11 @@ packages = ["src/sysml_codegen"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short -m \"not execution\""
 markers = [
     "req(id): map test to requirement ID (e.g., REQ-SNAP-01)",
     "baseline: pipeline baseline comparison test",
+    "execution: real-simkit execution lane (Item 7 Phase 4) — needs the agentic-mbse venv with teax-simkit on sys.path; excluded from the default run, invoke with `pytest -m execution` (or override -m entirely) from that environment.",
 ]
 
 [tool.mypy]

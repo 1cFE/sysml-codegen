@@ -30,6 +30,7 @@ plain-usage literal capture and now generate cleanly (their collector lists go e
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -45,6 +46,7 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ParameterGroup,
     PipelineModule,
 )
@@ -159,12 +161,25 @@ def test_seeded_strict_generation_aborts_on_v11_gap(tmp_path, caplog):
     stage (a) wired the two former cross-part anchors (catf_mfe + ife_plant shape-4), so
     neither aborts anymore. ``run_codegen`` catches CodeGenerationError and returns False
     (the fail-fast idiom), so the abort is observed as ``False`` + a logged V11 line.
+
+    chain_override_probe is captured ``grandfathered_off`` (extraction-only, carries zero
+    constraint usages), which Item 12's product gate now rejects *before* V11. To reach the
+    V11 boundary end-to-end we present the same snapshot as ``applied`` in a tmp copy —
+    immaterial for a zero-usage snapshot (no lowering runs either way), and it lets the gate
+    pass so the reconciliation step is exercised. The un-flipped grandfathered form failing
+    at the gate is covered by ``test_legacy_snapshot_closure``.
     """
     from sysml_codegen.cli import GenerationConfig, run_codegen
 
+    payload = json.loads(snapshot_fixture("chain_override_probe").read_text())
+    assert not payload["constraint_facts"]["usages"], "flip is only immaterial with zero usages"
+    payload["constraint_lowering_mode"] = "applied"
+    snap = tmp_path / "extraction_snapshot.json"
+    snap.write_text(json.dumps(payload))
+
     config = GenerationConfig(
-        output_path=tmp_path,
-        from_snapshot=snapshot_fixture("chain_override_probe"),
+        output_path=tmp_path / "out",
+        from_snapshot=snap,
         package_name="cop",
         overwrite=True,
     )
@@ -232,6 +247,7 @@ def test_unwired_fallthrough_partition():
         ],
         outputs=[],
         execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
     )
     group = ParameterGroup(
         name="design_params",

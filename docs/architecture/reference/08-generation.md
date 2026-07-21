@@ -131,6 +131,38 @@ MODULE_REGISTRY = {
 
 ---
 
+## Module-Kind Render Seams
+
+Every generator seam dispatches on [`PipelineModule.module_kind`](09-data-models.md#resolution-models)
+(`CALCULATION` / `FORMULA` / `AGGREGATION` / `CONSTRAINT` / `REPORT_AGGREGATOR`). The first
+three are the classic calculation families; `CONSTRAINT` (a lowered modeled assertion) and
+`REPORT_AGGREGATOR` (the run-report roll-up) are the two constraint-execution families added in
+CONSTRAINT-EXEC (Item 6/7). This section is the seam-level view; the lowering, catalog
+assembly, and Kleene predicate compiler that produce these modules are documented in
+[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md).
+
+| Seam | `CALCULATION` / `FORMULA` / `AGGREGATION` | `CONSTRAINT` | `REPORT_AGGREGATOR` |
+|------|------|------|------|
+| Module wrapper (`modules.py`) | normal wrapper | catalog-driven wrapper that calls a shared predicate function | catalog-driven wrapper that rolls up constraint evaluations |
+| Stencil (`stencils.py`) | handwritten stencil (auto-filled if FULLY_COMPILABLE) | **no** handwritten stencil — fully generated from the catalog | **no** handwritten stencil |
+| Pipeline YAML (`pipeline.py`) | wired by channel | wired by channel | outputs pinned (`pin_report_channels`) so the report roll-up always emits |
+| Schemas (`schemas.py`) | per-output `MultiOutput` / `RootModel` | shared `ConstraintEvaluation` / `ConstraintReport` types (`schemas/constraint_types.py`) | same shared constraint schema types |
+| Registry (`__init__.py`) | imported per family | imported with the constraint family; adds the constraint schema imports when the graph carries a catalog | imported with the constraint family |
+
+Two seam contracts hold across the table:
+
+- **Shared predicates module (`modules/constraints/predicates.py`).** The Kleene predicate
+  bodies are compiled **once** from the graph's `constraint_catalog`
+  (`compile_shared_predicates` → `render_constraint_predicates_module`, `modules.py`); each
+  `CONSTRAINT` wrapper calls into that one module rather than re-emitting the runtime. Catalog
+  data is read from `graph.constraint_catalog` (embedded on the graph, the current reality —
+  standalone `constraint_catalog.json` emission is the open follow-on CE-F1, not landed).
+- **Fail-loud on an unrenderable kind.** A seam that has no rendering for a module's kind
+  raises the uniform `unrenderable_module_kind_error(module, seam_name)`
+  (`generation/errors.py`) — refusing rather than mis-rendering the module as a calculation.
+
+---
+
 ## The Gold Standard: `pipeline.py` (REQ-GEN-01)
 
 `pipeline.py` ONLY consumes the [ComputationGraph](09-data-models.md#resolution-models):

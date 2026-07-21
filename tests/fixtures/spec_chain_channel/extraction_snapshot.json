@@ -1,7 +1,104 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "spec_chain_channel",
-  "captured_at": "2026-07-06T19:03:24.514749+00:00",
+  "captured_at": "2026-07-20T15:57:44.226227+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "SpecChainLib::Variant"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "spec_chain_plant",
+          "qualified_name": "SpecChainDesign::spec_chain_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SpecChainLib::Variant",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SpecChainLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "HIF Driver",
+          "qualified_name": "SpecChainLib::'HIF Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SpecChainLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "SpecChainLib::Facility::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SpecChainLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SpecChainLib::Facility"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Variant",
+          "qualified_name": "SpecChainLib::Variant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SpecChainLib::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "SpecChainLib::Variant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SpecChainLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "SpecChainLib::'HIF Driver'"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MeierCost": {
       "calc_def_name": "MeierCost",
@@ -84,7 +181,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 7,
       "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
       "output_expression_asts": null,
@@ -132,7 +229,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 22,
       "source_hash": "5e8004a46e9819100aa806d45e0b305165c82691fab0d4d02028036e1932a5dc",
       "output_expression_asts": null,
@@ -161,11 +258,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "drive_power"
+          "source_attribute_name": "drive_power",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 33,
       "parent_part_path": "spec_chain_plant.driver",
       "qualified_name": "SpecChainDesign__spec_chain_plant__driver__meier_cost",
@@ -190,11 +288,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "cost_per_joule"
+          "source_attribute_name": "cost_per_joule",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 58,
       "parent_part_path": "spec_chain_plant",
       "qualified_name": "SpecChainDesign__spec_chain_plant__lcoe_calc",
@@ -210,7 +309,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 17,
         "parent_part": "",
         "qualified_name": "SpecChainLib__MeierCost__gamma"
@@ -220,7 +319,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 24,
         "parent_part": "",
         "qualified_name": "SpecChainLib__LcoeCalc__lcoe"
@@ -230,7 +329,7 @@
         "sysml_type": "Real",
         "default_value": "50.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 30,
         "parent_part": "",
         "qualified_name": "SpecChainLib__IFE_Driver__drive_power"
@@ -272,6 +371,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

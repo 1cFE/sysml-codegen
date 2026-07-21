@@ -1,7 +1,142 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "plant_value_shapes",
-  "captured_at": "2026-07-06T19:03:24.551428+00:00",
+  "captured_at": "2026-07-20T15:57:44.313016+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L4'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chain_unit",
+          "qualified_name": "PlantValueShapesDesign::shapes_design::chain_unit"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValueShapesLib::'Chain L4'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chamber Unit'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_unit",
+          "qualified_name": "PlantValueShapesDesign::shapes_design::chamber_unit"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValueShapesLib::'Chamber Unit'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Flow Sub'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "flow_unit",
+          "qualified_name": "PlantValueShapesDesign::shapes_design::flow_unit"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "PlantValueShapesLib::'Flow Sub'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L1'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L2",
+          "qualified_name": "PlantValueShapesLib::'Chain L2'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L2'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L3",
+          "qualified_name": "PlantValueShapesLib::'Chain L3'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L3'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L4",
+          "qualified_name": "PlantValueShapesLib::'Chain L4'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Chain L4'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Chain L5",
+          "qualified_name": "PlantValueShapesLib::'Chain L5'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "PlantValueShapesLib::'Flow Base'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Flow Sub",
+          "qualified_name": "PlantValueShapesLib::'Flow Sub'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "NetCostCalc": {
       "calc_def_name": "NetCostCalc",
@@ -175,7 +310,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 35,
       "source_hash": "3b4b015f4f6bb88e4e905bfba2cb6b24e7b69ab12665eb7e8b6f0dbd9324850c",
       "output_expression_asts": null,
@@ -237,7 +372,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 41,
       "source_hash": "3b4b015f4f6bb88e4e905bfba2cb6b24e7b69ab12665eb7e8b6f0dbd9324850c",
       "output_expression_asts": null,
@@ -286,7 +421,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 48,
       "source_hash": "3b4b015f4f6bb88e4e905bfba2cb6b24e7b69ab12665eb7e8b6f0dbd9324850c",
       "output_expression_asts": null,
@@ -334,7 +469,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 54,
       "source_hash": "3b4b015f4f6bb88e4e905bfba2cb6b24e7b69ab12665eb7e8b6f0dbd9324850c",
       "output_expression_asts": null,
@@ -382,7 +517,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 76,
       "source_hash": "3b4b015f4f6bb88e4e905bfba2cb6b24e7b69ab12665eb7e8b6f0dbd9324850c",
       "output_expression_asts": null,
@@ -443,7 +578,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 91,
       "source_hash": "3b4b015f4f6bb88e4e905bfba2cb6b24e7b69ab12665eb7e8b6f0dbd9324850c",
       "output_expression_asts": null,
@@ -473,11 +608,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "availability",
-          "source_attribute_name": "value"
+          "source_attribute_name": "value",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 19,
       "parent_part_path": "",
       "qualified_name": "PlantValueShapesDesign__shapes_design__rated_cost",
@@ -502,11 +638,12 @@
           "literal_value": 200.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 24,
       "parent_part_path": "",
       "qualified_name": "PlantValueShapesDesign__shapes_design__net_cost_calc",
@@ -531,11 +668,12 @@
           "literal_value": 4.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 28,
       "parent_part_path": "",
       "qualified_name": "PlantValueShapesDesign__shapes_design__mixed_style",
@@ -560,11 +698,12 @@
           "literal_value": 6.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 32,
       "parent_part_path": "",
       "qualified_name": "PlantValueShapesDesign__shapes_design__quoted_return",
@@ -589,11 +728,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "throughput"
+          "source_attribute_name": "throughput",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 82,
       "parent_part_path": "shapes_design.flow_unit",
       "qualified_name": "PlantValueShapesDesign__shapes_design__flow_unit__flow_calc",
@@ -618,7 +758,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "wall"
+          "source_attribute_name": "wall",
+          "source_written_qualifier": null
         },
         {
           "param_name": "footprint",
@@ -631,11 +772,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "footprint"
+          "source_attribute_name": "footprint",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 103,
       "parent_part_path": "shapes_design.chamber_unit",
       "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select",
@@ -651,7 +793,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 16,
         "parent_part": "shapes_design",
         "qualified_name": "PlantValueShapesDesign__shapes_design__rate_default"
@@ -663,7 +805,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 37,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__NetCostCalc__net_cost"
@@ -673,7 +815,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 43,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__Mixed_Output_Style__doubled"
@@ -683,7 +825,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 56,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__RatedCostCalc__cost"
@@ -693,7 +835,7 @@
         "sysml_type": "Real",
         "default_value": "1.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 62,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__Chain_L1__depth_marker"
@@ -703,7 +845,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 78,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__FlowCalc__total"
@@ -713,7 +855,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 94,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__ChamberSelectCalc__rating"
@@ -723,7 +865,7 @@
         "sysml_type": "Real",
         "default_value": "12.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 101,
         "parent_part": "",
         "qualified_name": "PlantValueShapesLib__Chamber_Unit__footprint"
@@ -755,6 +897,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

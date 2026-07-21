@@ -26,12 +26,48 @@ from pathlib import Path
 
 import pytest
 
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerRequest,
+    TerminalPolicy,
+    resolve_producer,
+)
+
+def _channel(bt, source_path, usage):
+    """The observable outcome the deleted `_resolve_chain_dispatch` produced, read
+    through the shared table (SR-R43). The climb is now the tier-1 terminal search,
+    running after every tier-1 row rather than mid-sequence; it keeps its
+    collect-then-require-unique ambiguity guard.
+    """
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=usage.qualified_name,
+            reference=source_path,
+            param_name="probe",
+            consumer_scope=bt._consumer_scope_dotted(usage),
+            parent_scope=bt._get_parent_part_for_usage(usage),
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context="climb probe",
+        ),
+        bt._producer_context(),
+    )
+    return resolution.identity if resolution.outcome is Outcome.MODULE_OUTPUT else None
+
+
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.core.identifier_types import ScopedKey
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import _build_attribute_resolution_map
 from sysml_codegen.snapshot.loader import load_extraction_snapshot
 from tests.conftest import snapshot_fixture
+
+def _probe_ctx(registry):
+    """These probes carry no design attributes; the shared table sees an empty tier 2."""
+    from sysml_codegen.resolution.producer_resolution import ProducerContext
+
+    return ProducerContext(output_registry=registry)
+
+
 
 
 def _backtracker_for(snap) -> DependencyBacktracker:
@@ -105,8 +141,7 @@ class TestRes08ConsumerScopePaths:
         )
         assert bt._output_registry.scoped_lookup(own_scope_key) is None
 
-        resolved = bt._resolve_chain_dispatch(
-            "station.array.derived_calc.derived_value", consumer
+        resolved = _channel(bt, "station.array.derived_calc.derived_value", consumer
         )
         assert resolved == (
             "DeepCrossScopeDesign__measurement_system__station__array"
@@ -162,6 +197,7 @@ class TestRes08ConsumerScopePaths:
             f["group_deriver"],
             expose_aliases=f.get("expose_aliases", {}),
             usage_type_map=f["usage_type_map"],
+            producer_ctx=_probe_ctx(registry),
         )
         wired = {i.param_name: i.source.producer_channel for i in module.inputs}
         assert wired.get("solar_array_capital_cost") == expected_channel

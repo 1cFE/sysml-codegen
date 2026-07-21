@@ -48,6 +48,7 @@ from sysml_codegen.resolution.models import (
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     PipelineModule,
 )
@@ -181,7 +182,7 @@ class TestSimpleFormula:
 
         assert len(graph.modules) == 1
         module = graph.modules[0]
-        assert module.is_computed_attribute is True
+        assert module.module_kind == ModuleKind.FORMULA
         assert module.compilability == Compilability.FULLY_COMPILABLE
 
     def test_formula_module_has_correct_inputs(self):
@@ -289,7 +290,7 @@ class TestFormulaChain:
         """Two FORMULA attrs produce two PipelineModules."""
         graph = self._build_chain_graph()
         assert len(graph.modules) == 2
-        assert all(m.is_computed_attribute for m in graph.modules)
+        assert all(m.module_kind == ModuleKind.FORMULA for m in graph.modules)
 
     def test_cost_area_input_wired_to_area_output(self):
         """cost module's 'area' input wired to area module's output channel."""
@@ -404,7 +405,7 @@ class TestFormulaWithExposePure:
         )
 
         # Find the FORMULA module (only computed_attribute module is useful_power)
-        formula_modules = [m for m in graph.modules if m.is_computed_attribute]
+        formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
         assert len(formula_modules) == 1, (
             f"Expected 1 FORMULA module, got {len(formula_modules)}: "
             f"{[m.name for m in formula_modules]}"
@@ -745,7 +746,7 @@ class TestEmptyComputedAttrs:
 
         assert len(graph_without.modules) == len(graph_with_empty.modules)
         assert len(graph_without.modules) == 1
-        assert graph_without.modules[0].is_computed_attribute is False
+        assert graph_without.modules[0].module_kind == ModuleKind.CALCULATION
 
     def test_none_computed_attrs_no_impact(self):
         """None computed_attributes has zero impact on graph."""
@@ -753,14 +754,14 @@ class TestEmptyComputedAttrs:
 
         assert len(graph.modules) == 1
         assert graph.modules[0].name is not None
-        assert graph.modules[0].is_computed_attribute is False
+        assert graph.modules[0].module_kind == ModuleKind.CALCULATION
 
     def test_calcusage_module_unchanged_with_empty_computed_attrs(self):
         """CalcUsage module structure identical with and without computed_attrs."""
         graph = self._build_graph_with_calcusage(computed_attrs=[])
 
         module = graph.modules[0]
-        assert module.is_computed_attribute is False
+        assert module.module_kind == ModuleKind.CALCULATION
         assert len(module.inputs) == 1
         assert module.inputs[0].param_name == "voltage"
         assert len(module.outputs) == 1

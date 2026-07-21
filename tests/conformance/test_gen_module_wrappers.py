@@ -34,7 +34,7 @@ from sysml_codegen.generation.modules import (
 )
 from sysml_codegen.generation.type_mapping import map_sysml_type_to_python
 from sysml_codegen.core.identifier_types import PythonModulePath, SysMLQualifiedName
-from sysml_codegen.resolution.models import ComputationGraph
+from sysml_codegen.resolution.models import ComputationGraph, ModuleKind
 
 from sysml_codegen.snapshot import (
     build_full_graph_from_snapshot,
@@ -92,7 +92,7 @@ def _get_calcusage_modules(graph: ComputationGraph) -> list:
     """Get CalcUsage PipelineModules from graph (not FORMULA, not aggregation)."""
     return [
         m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
+        if m.module_kind == ModuleKind.CALCULATION
     ]
 
 
@@ -595,9 +595,9 @@ class TestWrapperCoverageByModuleType:
         formula_count = 0
         aggregation_count = 0
         for m in graph.modules:
-            if m.is_aggregation:
+            if m.module_kind == ModuleKind.AGGREGATION:
                 aggregation_count += 1
-            elif m.is_computed_attribute:
+            elif m.module_kind == ModuleKind.FORMULA:
                 formula_count += 1
             else:
                 calcusage_count += 1

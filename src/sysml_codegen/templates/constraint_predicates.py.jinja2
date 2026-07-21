@@ -1,0 +1,12 @@
+"""Compiled Kleene predicates (Item 7 / D2/D3) — one function per constraint definition.
+
+Compile-once, class-per-assertion (INV-1): every constraint module instantiated from the same
+source assertion imports its function from here rather than duplicating the compiled predicate.
+"""
+
+{{ runtime_source }}
+{% for fn in functions %}
+
+# {{ fn.usage_qualified_name }}
+{{ fn.source }}
+{% endfor %}

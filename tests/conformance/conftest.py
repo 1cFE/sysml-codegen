@@ -53,6 +53,13 @@ SNAPSHOT_MODELS = [
     # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1).
     "plant_values",
     "plant_value_shapes",
+    # Gate A fixtures (Item 2) — the usage-owned/package-owned owner-classification pair.
+    "gate_a",
+    "gate_a_package_owner",
+    # Cutover fixtures (Item 2 phase group 2). `shared_producer` is recorded
+    # known-incomplete (SR-A02 referred to Item 4) — see its PROVENANCE.md.
+    "agg_localterm_probe",
+    "shared_producer",
     # deep_cross_scope_probe is deliberately NOT registered here. Historically its
     # Pattern-A deep CHAIN truncated to the first segment; TRUTH-DEBT Item 2 retired
     # that (extraction now emits the full-path CHAIN and the backtracker climbs), but

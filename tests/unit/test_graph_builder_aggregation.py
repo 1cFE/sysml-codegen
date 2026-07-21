@@ -23,20 +23,34 @@ from sysml_codegen.extraction.data_models import (
 from sysml_codegen.extraction.expression_compiler import Compilability
 from sysml_codegen.core.output_registry import OutputRegistry
 from tests.helpers.registry_compat import registry_register
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerContext,
+    ProducerRequest,
+    TerminalPolicy,
+    resolve_producer,
+)
+
+
+def _probe_ctx(registry, redefinitions=()):
+    """The shared table's context for these probes.
+
+    They carry no design attributes, so tier 2 is empty. `redefinitions` must be passed
+    wherever a probe exercises the chain-redefinition-follow form, which reads them.
+    """
+    return ProducerContext(output_registry=registry, redefinitions=tuple(redefinitions))
+
+
 from sysml_codegen.resolution.graph_builder import (
     _build_aggregation_module,
     _unified_topological_sort,
-)
-from sysml_codegen.resolution.input_resolver import (
-    AGG_STRATEGIES,
-    ResolutionContext,
-    resolve_input,
 )
 from sysml_codegen.resolution.models import (
     EntryPoint,
     EntryPointType,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
@@ -96,22 +110,26 @@ def _resolve_channel(
     redefs: list[RedefinitionData],
     registry: OutputRegistry,
 ) -> str | None:
-    """Channel-or-None via the live resolve_input strategy chain — the migration shim
-    for the deleted _resolve_aggregation_input_channel. Builds a ResolutionContext with
-    the same mapping the live aggregation path uses (consumer_scope derived from the
-    instance path, i.e. the design prefix stripped), so these channel-resolution tests
-    now exercise the AGG_STRATEGIES that replaced the old function."""
+    """Channel-or-None through the shared producer-resolution table.
+
+    These channel-resolution tests have now been re-pointed twice: first off the deleted
+    `_resolve_aggregation_input_channel` onto the aggregation strategy chain, and now off
+    that chain onto the one table. The request mapping matches the live aggregation path
+    — consumer scope derived from the instance path with the design prefix stripped."""
     parts = instance_path.split("__")
-    ctx = ResolutionContext(
-        output_registry=registry,
-        redefinitions=redefs,
-        design_attrs={},
-        module_eqn=f"{instance_path}__agg_probe",
-        consumer_scope=".".join(parts[1:]) if len(parts) > 1 else "",
-        instance_path=instance_path,
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=f"{instance_path}__agg_probe",
+            reference=ref,
+            param_name=None,
+            consumer_scope=".".join(parts[1:]) if len(parts) > 1 else "",
+            instance_path=instance_path,
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context="agg channel probe",
+        ),
+        _probe_ctx(registry, redefs),
     )
-    result = resolve_input(ref, ctx, AGG_STRATEGIES)
-    return result.producer_channel if result.source_type == "module_output" else None
+    return resolution.identity if resolution.outcome is Outcome.MODULE_OUTPUT else None
 
 
 
@@ -125,7 +143,7 @@ class TestResolveAggregationInputChannel:
         """'pv_module.capital_cost' -> CHAIN ':>> capital_cost = cost_model.total_cost'
         -> channel 'instance__pv_module__cost_model__total_cost'."""
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         expected_channel = get_channel_name(
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
@@ -191,8 +209,8 @@ class TestResolveAggregationInputChannel:
     def test_chain_source_not_in_registry_recurses(self):
         """If chain source channel not in registry, recurse following the chain."""
         redefs = [
-            _make_chain_redef("cost", "intermediate.value", "Lib__PV_Module"),
-            _make_chain_redef("value", "calc.output", "Lib__Intermediate"),
+            _make_chain_redef("cost", "intermediate.value", "Lib__pv_module"),
+            _make_chain_redef("value", "calc.output", "Lib__intermediate"),
         ]
         expected_channel = get_channel_name(
             "inst__intermediate__calc", "output"
@@ -305,12 +323,12 @@ class TestBuildAggregationModule:
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None, producer_ctx=_probe_ctx(registry, redefs))
 
         cost_inputs = [i for i in module.inputs if i.param_name == "pv_module_capital_cost"]
         assert len(cost_inputs) == 1
@@ -328,12 +346,12 @@ class TestBuildAggregationModule:
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None, producer_ctx=_probe_ctx(registry, redefs))
         entry_points.update(_new_eps)
 
         mult_inputs = [i for i in module.inputs if i.param_name == "module_count"]
@@ -356,12 +374,12 @@ class TestBuildAggregationModule:
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = self._make_registry({expected_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None, producer_ctx=_probe_ctx(registry, redefs))
 
         # Only cost input, no multiplicity
         assert len(module.inputs) == 1
@@ -381,7 +399,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({singleton_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None, producer_ctx=_probe_ctx(registry))
 
         singleton_inputs = [i for i in module.inputs if "allocation" in i.param_name]
         assert len(singleton_inputs) == 1
@@ -401,12 +419,12 @@ class TestBuildAggregationModule:
             sum_terms=[],
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = self._make_registry({resolved_channel: ["cost_model.total_cost"]})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, entry_points, None, producer_ctx=_probe_ctx(registry, redefs))
 
         inputs = [i for i in module.inputs if "capital_cost" in i.param_name]
         assert len(inputs) == 1
@@ -424,7 +442,7 @@ class TestBuildAggregationModule:
         )
         registry = self._make_registry({agg_channel: ["plant.array.cost"]})
         entry_points: dict[str, EntryPoint] = {}
-        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None, producer_ctx=_probe_ctx(registry))
         singleton_inputs = [i for i in module.inputs if "cost" in i.param_name]
         assert len(singleton_inputs) == 1
         assert singleton_inputs[0].source.source_type == "module_output"
@@ -443,7 +461,7 @@ class TestBuildAggregationModule:
         # Register scoped alias (as Phase 2 CHAIN alias registration would)
         registry.register_alias("plant.array.pv_module.capital_cost", expected_channel)
         entry_points: dict[str, EntryPoint] = {}
-        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None, producer_ctx=_probe_ctx(registry))
         cost_inputs = [i for i in module.inputs if i.param_name == "pv_module_capital_cost"]
         assert len(cost_inputs) == 1
         assert cost_inputs[0].source.source_type == "module_output"
@@ -458,7 +476,7 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None, producer_ctx=_probe_ctx(OutputRegistry()))
         entry_points.update(_new_eps)
 
         local_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
@@ -472,15 +490,14 @@ class TestBuildAggregationModule:
     def test_unsupported_nodes_manual_required(self):
         """has_unsupported_nodes=True -> Compilability.MANUAL_REQUIRED."""
         agg = _make_scoped_agg(has_unsupported_nodes=True, sum_terms=[])
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
         assert module.compilability == Compilability.MANUAL_REQUIRED
 
-    def test_module_is_aggregation_true(self):
-        """PipelineModule.is_aggregation == True."""
+    def test_module_kind_equals_aggregation(self):
+        """PipelineModule.module_kind == ModuleKind.AGGREGATION."""
         agg = _make_scoped_agg(sum_terms=[])
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
-        assert module.is_aggregation is True
-        assert module.is_computed_attribute is False
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
+        assert module.module_kind == ModuleKind.AGGREGATION
 
     def test_module_naming(self):
         """Module name and type follow ADR-003."""
@@ -490,7 +507,7 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
 
         expected_eqn = "Design__plant__solar_array__capital_cost"
         assert module.name == get_module_name(expected_eqn)
@@ -503,7 +520,7 @@ class TestBuildAggregationModule:
             instance_path="Design__plant__solar_array",
             sum_terms=[],
         )
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
 
         assert len(module.outputs) == 1
         assert module.outputs[0].field_name == "root"
@@ -519,7 +536,7 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None, producer_ctx=_probe_ctx(OutputRegistry()))
 
         cost_inputs = [i for i in module.inputs if i.param_name == "unknown_part_cost"]
         assert len(cost_inputs) == 1
@@ -542,7 +559,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({sibling_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None, producer_ctx=_probe_ctx(registry))
 
         cost_inputs = [i for i in module.inputs if i.param_name == "capital_cost"]
         assert len(cost_inputs) == 1
@@ -562,7 +579,7 @@ class TestBuildAggregationModule:
         )
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), entry_points, None, producer_ctx=_probe_ctx(OutputRegistry()))
         entry_points.update(_new_eps)
 
         local_inputs = [i for i in module.inputs if i.param_name == "misc_hardware_cost"]
@@ -596,7 +613,7 @@ class TestBuildAggregationModule:
         registry = self._make_registry({cc_channel: [], rmc_channel: []})
         entry_points: dict[str, EntryPoint] = {}
 
-        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None)
+        module, _new_eps = _build_aggregation_module(agg, [], registry, entry_points, None, producer_ctx=_probe_ctx(registry))
 
         # capital_cost → module_output
         cc_inputs = [i for i in module.inputs if i.param_name == "capital_cost"]
@@ -637,6 +654,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
         agg_module = PipelineModule(
             name="agg__capital_cost",
@@ -656,7 +674,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
         system_module = PipelineModule(
             name="system__financial",
@@ -678,6 +696,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=0,
+            module_kind=ModuleKind.CALCULATION,
         )
 
         # Pass in reverse order to verify sort works
@@ -700,6 +719,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=99,
+            module_kind=ModuleKind.CALCULATION,
         )
         m2 = PipelineModule(
             name="m2",
@@ -719,7 +739,7 @@ class TestTopologicalOrderWithAggregation:
                 )
             ],
             execution_order=99,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         sorted_modules = _unified_topological_sort([m2, m1])
@@ -809,7 +829,7 @@ class TestOrphanEntryPointsSurfaced:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         result = self._collect_orphans([module], entry_points, [])
@@ -845,7 +865,7 @@ class TestOrphanEntryPointsSurfaced:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         result = self._collect_orphans([module], entry_points, [])
@@ -913,7 +933,7 @@ class TestOrphanEntryPointsSurfaced:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
 
         result = self._collect_orphans([module], entry_points, [existing_group])
@@ -957,7 +977,7 @@ class TestAggregationExpressionCompilation:
     """BF-2: Aggregation modules have compiled_expression with inputs.X form."""
 
     def test_compiled_expression_has_inputs_prefix(self):
-        """_build_aggregation_module() produces compiled_expression with inputs.X refs."""
+        """_build_aggregation_module(, producer_ctx=_probe_ctx(registry)) produces compiled_expression with inputs.X refs."""
         agg = _make_scoped_agg(
             sum_terms=[SumTerm("pv_module", "capital_cost", "module_count", 20)],
             instance_path="Design__plant__solar_array",
@@ -967,12 +987,12 @@ class TestAggregationExpressionCompilation:
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = OutputRegistry()
         registry_register(registry,expected_channel, ["cost_model.total_cost"])
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None, producer_ctx=_probe_ctx(registry, redefs))
 
         assert module.compiled_expression is not None
         assert "inputs.module_count" in module.compiled_expression
@@ -991,12 +1011,12 @@ class TestAggregationExpressionCompilation:
             "Design__plant__solar_array__pv_module__cost_model", "total_cost"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = OutputRegistry()
         registry_register(registry,expected_channel, ["cost_model.total_cost"])
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None, producer_ctx=_probe_ctx(registry, redefs))
 
         assert module.compiled_expression is not None
         # Should not raise
@@ -1021,13 +1041,13 @@ class TestAggregationExpressionCompilation:
             "Design__plant__solar_array__allocation_model", "total_allocation"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module")
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module")
         ]
         registry = OutputRegistry()
         registry_register(registry,cost_channel, ["cost_model.total_cost"])
         registry_register(registry,alloc_channel, [])
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None, producer_ctx=_probe_ctx(registry, redefs))
 
         assert module.compiled_expression is not None
         assert "inputs.allocation_model_total_allocation" in module.compiled_expression
@@ -1041,7 +1061,7 @@ class TestAggregationExpressionCompilation:
             transformed_expression="misc_cost",
         )
 
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
 
         assert module.compiled_expression is not None
         assert module.compiled_expression == "inputs.misc_cost"
@@ -1054,7 +1074,7 @@ class TestAggregationExpressionCompilation:
             transformed_expression="unknown()",
         )
 
-        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+        module, _new_eps = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
 
         assert module.compiled_expression is None
 
@@ -1077,14 +1097,14 @@ class TestAggregationExpressionCompilation:
             "Design__plant__solar_array__inverter__cost_calc", "cost"
         )
         redefs = [
-            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__PV_Module"),
+            _make_chain_redef("capital_cost", "cost_model.total_cost", "Lib__pv_module"),
             _make_chain_redef("cost", "cost_calc.cost", "Lib__Inverter"),
         ]
         registry = OutputRegistry()
         registry_register(registry,cost_channel, ["cost_model.total_cost"])
         registry_register(registry,inv_channel, ["cost_calc.cost"])
 
-        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None)
+        module, _new_eps = _build_aggregation_module(agg, redefs, registry, {}, None, producer_ctx=_probe_ctx(registry, redefs))
 
         assert module.compiled_expression is not None
         assert "inputs.pv_module_capital_cost" in module.compiled_expression

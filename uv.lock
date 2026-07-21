@@ -4,7 +4,7 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "agentic-mbse"
-version = "0.1.0"
+version = "0.1.2"
 source = { editable = "../agentic-mbse" }
 dependencies = [
     { name = "img2table" },
@@ -781,7 +781,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agentic-mbse", editable = "../agentic-mbse" },
+    { name = "agentic-mbse", editable = "../agentic-mbse", specifier = ">=0.1.2" },
     { name = "jinja2", specifier = ">=3.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0" },
     { name = "pydantic", specifier = ">=2.0" },

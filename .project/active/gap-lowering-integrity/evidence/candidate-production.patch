@@ -1,0 +1,434 @@
+diff --git a/src/sysml_codegen/analysis/constraint_lowering.py b/src/sysml_codegen/analysis/constraint_lowering.py
+index f1eb373..604b0d3 100644
+--- a/src/sysml_codegen/analysis/constraint_lowering.py
++++ b/src/sysml_codegen/analysis/constraint_lowering.py
+@@ -35,6 +35,10 @@ from agentic_mbse.sysml.expression_ir import (
+
+ from sysml_codegen.analysis.dependency_backtracker import terminal_disposition
+ from sysml_codegen.analysis.part_instance_index import NonFiniteCardinalityError
++from sysml_codegen.analysis.source_referent import (
++    map_live_source_referent,
++    validate_snapshot_source_referent,
++)
+ from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey
+ from sysml_codegen.core.qualified_names import sanitize_name, sanitize_qualified_name
+ from sysml_codegen.resolution.models import (
+@@ -289,7 +293,13 @@ def resolve_actual(
+     raise AssertionError("unreachable: terminal_disposition(strict=True) always raises")
+
+
+-def mint_constraint_id(*, instance_path: str, source_local: str, tuple_: tuple) -> str:
++def mint_constraint_id(
++    *,
++    instance_path: str,
++    source_local: str,
++    tuple_: tuple,
++    digest_hex_length: int = 16,
++) -> str:
+     """Mint a deterministic, collision-checkable ``constraint_id`` (D3/N1).
+
+     ``{instance_path}__{source_local}__{sha256[:16] of the canonical tuple}``.
+@@ -299,24 +309,31 @@ def mint_constraint_id(*, instance_path: str, source_local: str, tuple_: tuple)
+     checked post-expansion by :func:`assert_unique_constraint_ids`).
+     """
+     canonical = json.dumps(list(tuple_), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+-    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:16]
++    if digest_hex_length < 1 or digest_hex_length > 64:
++        raise ValueError("digest_hex_length must be between 1 and 64")
++    suffix = hashlib.sha256(canonical.encode()).hexdigest()[:digest_hex_length]
+     return f"{instance_path}__{source_local}__{suffix}"
+
+
+ def assert_unique_constraint_ids(concrete: list[ConcreteConstraint]) -> None:
+-    """Raise if any two concrete constraints share a ``constraint_id`` (D3, INV-4).
++    """Raise if any two concrete constraints share a ``constraint_id`` (D3, INV-4)."""
++
++    def describe(record: ConcreteConstraint) -> str:
++        location = record.exclusion.location if record.exclusion is not None else "<executable>"
++        return (
++            f"usage={record.usage_qualified_name!r}, "
++            f"source_local={record.source_local_identity!r}, source={location!r}, "
++            f"owner_definition={record.owner_qualified_name!r}, "
++            f"owner_instance={record.owner_instance_path!r}"
++        )
+
+-    A collision under a 64-bit hash on a valid model means something upstream is
+-    broken (e.g. two owner instances sharing an identity) — never silently kept.
+-    """
+     seen: dict[str, ConcreteConstraint] = {}
+     for c in concrete:
+         prior = seen.get(c.constraint_id)
+         if prior is not None:
+             raise _generation_error(
+-                f"constraint_id collision: '{c.constraint_id}' minted for both "
+-                f"'{prior.owner_instance_path}' and '{c.owner_instance_path}' "
+-                "(generation error, never silently kept — D3/INV-4)"
++                f"duplicate constraint_id {c.constraint_id!r}; first record: "
++                f"{describe(prior)}; second record: {describe(c)}"
+             )
+         seen[c.constraint_id] = c
+
+@@ -491,6 +508,65 @@ def _exclusion_for(decision: UsageDecision, owner_kind: str) -> ConstraintExclus
+     return ConstraintExclusion(kind=kind, reasons=reasons, location=_render_location(decision))
+
+
++def excluded_usage_indices(
++    facts: ConstraintFacts, decisions: list[UsageDecision]
++) -> tuple[int, ...]:
++    """Return the ordered indices lowering sends to the excluded-record branch."""
++    if len(facts.usages) != len(decisions):
++        raise _generation_error(
++            "constraint facts/profile decision cardinality mismatch: "
++            f"{len(facts.usages)} usages versus {len(decisions)} decisions"
++        )
++    supported_owners = {"part_def", "calc_def", "package"}
++    return tuple(
++        index
++        for index, (usage, decision) in enumerate(zip(facts.usages, decisions, strict=True))
++        if usage.owner.owning_definition.kind not in supported_owners
++        or decision.eligibility is not Eligibility.ADMIT
++    )
++
++
++def _canonical_anonymous_location(
++    usage: ConstraintUsageFact,
++    *,
++    source_location_mode: Literal["live", "snapshot"] | None,
++    source_roots: list[Path],
++) -> tuple[str, str]:
++    if usage.location is None:
++        raise _generation_error(
++            "<anonymous>: anonymous assertion has no LocationFact — cannot form a portable "
++            "source identity"
++        )
++    if source_location_mode is None:
++        raise _generation_error(
++            "<anonymous>: anonymous excluded assertion requires an explicit source-location route"
++        )
++    try:
++        if source_location_mode == "live":
++            referent = map_live_source_referent(usage.location.file, source_roots)
++        else:
++            referent = validate_snapshot_source_referent(usage.location.file)
++    except ValueError as error:
++        raise _generation_error(str(error)) from error
++    location = f"{referent}:{usage.location.line}:{usage.location.column}"
++    return referent, location
++
++
++def _report_non_numerical_warnings(facts: ConstraintFacts, decisions: list[UsageDecision]) -> None:
++    """Report every non-numerical decision once in source/profile order."""
++    for usage, decision in zip(facts.usages, decisions, strict=True):
++        if decision.eligibility is not Eligibility.NON_NUMERICAL:
++            continue
++        usage_qn = usage.identity.qualified_name or "<anonymous>"
++        reasons = ", ".join(diagnostic.reason for diagnostic in decision.diagnostics)
++        logger.warning(
++            "Constraint %s at %s is not numerical and will not execute: %s",
++            usage_qn,
++            _render_location(decision),
++            reasons,
++        )
++
++
+ def _resolve_formal(
+     *,
+     formal_name: str,
+@@ -724,6 +800,8 @@ def lower_constraints(
+     registry: OutputRegistry,
+     design_attrs: dict[Path, list[DesignAttributeData]],
+     calc_usages: list[CalcUsageData],
++    source_location_mode: Literal["live", "snapshot"] | None = None,
++    source_roots: list[Path] | None = None,
+ ) -> list[ConcreteConstraint]:
+     """Expand every fact into concrete graph structure (P1 RESOLVE).
+
+@@ -750,6 +828,7 @@ def lower_constraints(
+             "review before re-pinning"
+         )
+     profile = evaluate_profile(facts)
++    _report_non_numerical_warnings(facts, profile.decisions)
+     blocking = [d for d in profile.decisions if d.eligibility is Eligibility.BLOCK]
+     if blocking:
+
+@@ -771,31 +850,51 @@ def lower_constraints(
+     design_attr_by_qn = _design_attr_index(design_attrs)
+     formal_default_by_qn = _formal_default_index(facts)
+     concrete: list[ConcreteConstraint] = []
++    excluded_indices = set(excluded_usage_indices(facts, profile.decisions))
+
+-    for usage, decision in zip(facts.usages, profile.decisions, strict=True):
++    for index, (usage, decision) in enumerate(zip(facts.usages, profile.decisions, strict=True)):
+         kind = usage.owner.owning_definition.kind
+         usage_qn = usage.identity.qualified_name or "<anonymous>"
+
+-        if decision.eligibility is Eligibility.NON_NUMERICAL:
+-            reasons = ", ".join(diagnostic.reason for diagnostic in decision.diagnostics)
+-            logger.warning(
+-                "Constraint %s at %s is not numerical and will not execute: %s",
+-                usage_qn,
+-                _render_location(decision),
+-                reasons,
+-            )
+-
+-        if kind not in ("part_def", "calc_def", "package") or (
+-            decision.eligibility is not Eligibility.ADMIT
+-        ):
++        if index in excluded_indices:
+             local, _id_component = _source_local_identity(usage)
++            exclusion = _exclusion_for(decision, kind)
++            if usage.identity.name is None:
++                referent, canonical_location = _canonical_anonymous_location(
++                    usage,
++                    source_location_mode=source_location_mode,
++                    source_roots=source_roots or [],
++                )
++                location = usage.location
++                if location is None:
++                    raise RuntimeError("anonymous source identity returned without a LocationFact")
++                constraint_id = mint_constraint_id(
++                    instance_path=sanitize_qualified_name(usage_qn),
++                    source_local=local,
++                    tuple_=(
++                        referent,
++                        location.line,
++                        location.column,
++                        usage_qn,
++                        kind,
++                        usage.source.form,
++                    ),
++                    digest_hex_length=32,
++                )
++                exclusion = ConstraintExclusion(
++                    kind=exclusion.kind,
++                    reasons=exclusion.reasons,
++                    location=canonical_location,
++                )
++            else:
++                constraint_id = mint_constraint_id(
++                    instance_path=sanitize_qualified_name(usage_qn),
++                    source_local=local,
++                    tuple_=(usage_qn, kind, usage.source.form),
++                )
+             concrete.append(
+                 ConcreteConstraint(
+-                    constraint_id=mint_constraint_id(
+-                        instance_path=sanitize_qualified_name(usage_qn),
+-                        source_local=local,
+-                        tuple_=(usage_qn, kind, usage.source.form),
+-                    ),
++                    constraint_id=constraint_id,
+                     usage_qualified_name=usage_qn,
+                     source_local_identity=local,
+                     source_form=usage.source.form,
+@@ -809,7 +908,7 @@ def lower_constraints(
+                     inputs=[],
+                     evaluation_channel=None,
+                     eligible=False,
+-                    exclusion=_exclusion_for(decision, kind),
++                    exclusion=exclusion,
+                 )
+             )
+             continue
+diff --git a/src/sysml_codegen/analysis/source_referent.py b/src/sysml_codegen/analysis/source_referent.py
+new file mode 100644
+index 0000000..bc73dc1
+--- /dev/null
++++ b/src/sysml_codegen/analysis/source_referent.py
+@@ -0,0 +1,80 @@
++"""Portable source referents for anonymous excluded constraints."""
++
++from __future__ import annotations
++
++import os
++import re
++from pathlib import Path
++from urllib.parse import quote, unquote_to_bytes
++
++_CANONICAL_PATTERN = re.compile(r"root-(0|[1-9][0-9]*)/(.+)")
++_SEGMENT_SAFE = "-._~"
++
++
++def _lexical_absolute(path: str | Path) -> str:
++    return os.path.abspath(os.path.normpath(os.fspath(path)))
++
++
++def _is_contained(source: str, boundary: str) -> bool:
++    try:
++        return os.path.commonpath((source, boundary)) == boundary
++    except ValueError:
++        return False
++
++
++def _encode_relative_path(relative_path: str) -> str:
++    segments = Path(relative_path).parts
++    if not segments or any(segment in ("", ".", "..") for segment in segments):
++        raise ValueError(f"source path has no canonical relative segments: {relative_path!r}")
++    return "/".join(quote(segment, safe=_SEGMENT_SAFE, encoding="utf-8") for segment in segments)
++
++
++def map_live_source_referent(raw_file: str, model_paths: list[Path]) -> str:
++    """Map one raw parser file to a portable, ordered-root-relative referent."""
++    source = _lexical_absolute(raw_file)
++    candidates: list[tuple[int, int, str]] = []
++    missing_roots: list[str] = []
++    for slot, model_path in enumerate(model_paths):
++        root = _lexical_absolute(model_path)
++        if os.path.isfile(root):
++            if source == root:
++                candidates.append((2, slot, os.path.basename(root)))
++            continue
++        if not os.path.isdir(root):
++            missing_roots.append(root)
++            continue
++        if _is_contained(source, root):
++            relative = os.path.relpath(source, root)
++            candidates.append((1 + len(Path(root).parts), slot, relative))
++
++    if not candidates:
++        detail = f"; missing roots: {missing_roots!r}" if missing_roots else ""
++        raise ValueError(f"raw source {raw_file!r} does not match any supplied model root{detail}")
++
++    exact_file_candidates = [candidate for candidate in candidates if candidate[0] == 2]
++    if exact_file_candidates:
++        _, slot, relative = min(exact_file_candidates, key=lambda item: item[1])
++    else:
++        _, slot, relative = max(candidates, key=lambda item: (item[0], -item[1]))
++    return f"root-{slot}/{_encode_relative_path(relative)}"
++
++
++def validate_snapshot_source_referent(stored_file: str) -> str:
++    """Validate and return one already-canonical snapshot source referent."""
++    match = _CANONICAL_PATTERN.fullmatch(stored_file)
++    if match is None:
++        raise ValueError(f"invalid canonical source referent: {stored_file!r}")
++    payload = match.group(2)
++    segments = payload.split("/")
++    for encoded in segments:
++        if not encoded:
++            raise ValueError(f"invalid canonical source referent: {stored_file!r}")
++        try:
++            decoded = unquote_to_bytes(encoded).decode("utf-8")
++        except UnicodeDecodeError as error:
++            raise ValueError(f"invalid canonical source referent: {stored_file!r}") from error
++        if decoded in ("", ".", "..") or "/" in decoded or "\\" in decoded:
++            raise ValueError(f"invalid canonical source referent: {stored_file!r}")
++        if quote(decoded, safe=_SEGMENT_SAFE, encoding="utf-8") != encoded:
++            raise ValueError(f"invalid canonical source referent: {stored_file!r}")
++    return stored_file
+diff --git a/src/sysml_codegen/orchestration/pipeline_builder.py b/src/sysml_codegen/orchestration/pipeline_builder.py
+index cc36b43..41d7507 100644
+--- a/src/sysml_codegen/orchestration/pipeline_builder.py
++++ b/src/sysml_codegen/orchestration/pipeline_builder.py
+@@ -892,6 +892,8 @@ def build_pipeline_context(
+             registry=output_registry,
+             design_attrs=graph_design_attrs,
+             calc_usages=calc_usages,
++            source_location_mode="live",
++            source_roots=model_paths,
+         )
+         part_occurrences = recorder.recorded
+
+diff --git a/src/sysml_codegen/snapshot/capture.py b/src/sysml_codegen/snapshot/capture.py
+index 60bfcee..43d53a7 100644
+--- a/src/sysml_codegen/snapshot/capture.py
++++ b/src/sysml_codegen/snapshot/capture.py
+@@ -64,6 +64,7 @@ def capture_snapshot(
+         constraint_facts=ctx.constraint_facts,
+         part_occurrences=ctx.part_occurrences,
+         constraint_lowering_mode=ctx.constraint_lowering_mode,
++        model_paths=model_paths,
+         compilation_results=ctx.compilation_results,
+         output_dir=output_path.parent,
+     )
+diff --git a/src/sysml_codegen/snapshot/graph_rebuild.py b/src/sysml_codegen/snapshot/graph_rebuild.py
+index 9e53ad5..c217776 100644
+--- a/src/sysml_codegen/snapshot/graph_rebuild.py
++++ b/src/sysml_codegen/snapshot/graph_rebuild.py
+@@ -218,6 +218,8 @@ def build_full_graph_from_snapshot(
+             registry=inputs["registry"],
+             design_attrs=inputs["design_attrs"],
+             calc_usages=snap["calc_usages"],
++            source_location_mode="snapshot",
++            source_roots=[],
+         )
+         if concrete:
+             graph = extend_graph_with_constraints(graph, concrete, inputs["group_deriver"])
+diff --git a/src/sysml_codegen/snapshot/serializer.py b/src/sysml_codegen/snapshot/serializer.py
+index e32e8e7..187c806 100644
+--- a/src/sysml_codegen/snapshot/serializer.py
++++ b/src/sysml_codegen/snapshot/serializer.py
+@@ -20,13 +20,17 @@ from __future__ import annotations
+ import dataclasses
+ import datetime
+ import json
++from copy import deepcopy
+ from enum import Enum
+ from pathlib import Path
+ from typing import TYPE_CHECKING, Any
+
+ from agentic_mbse.sysml.constraint_facts import serialize as serialize_constraint_facts
++from agentic_mbse.sysml.executable_profile import evaluate_profile
+ from pydantic import BaseModel
+
++from sysml_codegen.analysis.constraint_lowering import excluded_usage_indices
++from sysml_codegen.analysis.source_referent import map_live_source_referent
+ from sysml_codegen.snapshot import SNAPSHOT_FORMAT_VERSION
+
+ if TYPE_CHECKING:
+@@ -58,6 +62,7 @@ def serialize_extraction_snapshot(
+     constraint_facts: ConstraintFacts,
+     part_occurrences: dict[str, list[InstanceOccurrence]],
+     constraint_lowering_mode: str,
++    model_paths: list[Path],
+     compilation_results: dict[str, Any] | None = None,
+     output_dir: Path | None = None,
+ ) -> dict[str, Any]:
+@@ -95,7 +100,15 @@ def serialize_extraction_snapshot(
+         "model_name": model_name,
+         "captured_at": datetime.datetime.now(datetime.UTC).isoformat(),
+         "constraint_lowering_mode": constraint_lowering_mode,
+-        "constraint_facts": json.loads(serialize_constraint_facts(constraint_facts)),
++        "constraint_facts": json.loads(
++            serialize_constraint_facts(
++                _constraint_facts_for_snapshot(
++                    constraint_facts,
++                    constraint_lowering_mode=constraint_lowering_mode,
++                    model_paths=model_paths,
++                )
++            )
++        ),
+         # Owner keys emitted sorted (INV-7/MF4) — snapshot_to_json does not
+         # sort_keys, so an unsorted dict would churn this section every capture.
+         "part_occurrences": {
+@@ -123,6 +136,30 @@ def serialize_extraction_snapshot(
+     }
+
+
++def _constraint_facts_for_snapshot(
++    facts: ConstraintFacts,
++    *,
++    constraint_lowering_mode: str,
++    model_paths: list[Path],
++) -> ConstraintFacts:
++    """Copy and canonicalize only anonymous usages selected for exclusion."""
++    copied = deepcopy(facts)
++    if constraint_lowering_mode != "applied" or not copied.usages:
++        return copied
++    profile = evaluate_profile(facts)
++    for index in excluded_usage_indices(facts, profile.decisions):
++        original = facts.usages[index]
++        if original.identity.name is not None:
++            continue
++        if original.location is None:
++            raise ValueError("anonymous excluded constraint has no LocationFact")
++        copied_location = copied.usages[index].location
++        if copied_location is None:
++            raise RuntimeError("copied anonymous exclusion lost its LocationFact")
++        copied_location.file = map_live_source_referent(original.location.file, model_paths)
++    return copied
++
++
+ def _serialize_value(obj: Any, output_dir: Path | None) -> Any:
+     """Recursively serialize a value to a JSON-safe type."""
+     if obj is None:

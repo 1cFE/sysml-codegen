@@ -1,8 +1,8 @@
 """Expression compiler for SysML CalcDef output expressions.
 
-Converts raw SysIDE AST nodes into a clean ExpressionAST intermediate
-representation, compiles to Python expression strings, classifies CalcDef
-compilability, and handles undeclared intermediates.
+Orchestrates CalcDef compilation: builds each CalcDef's dependency graph (including
+undeclared intermediates), topologically sorts it, and compiles each output's expression via
+`calc_compat_renderer` (ExpressionIR -> Python), classifying overall compilability.
 
 This module is a leaf in the extraction layer — it does NOT import from
 analysis/, resolution/, or generation/.
@@ -10,16 +10,17 @@ analysis/, resolution/, or generation/.
 
 from __future__ import annotations
 
-import ast as python_ast
 import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from agentic_mbse.sysml.constraint_extraction import extract_expression_ir
 from agentic_mbse.sysml.expression import extract_feature_refs
-from agentic_mbse.sysml.syside_adapter import SysideAdapter
 
-from .expression_utils import extract_feature_reference_name
+# NOTE: calc_compat_renderer imports CompilationError/_sanitize_name from this module, so
+# render_calc_expression/collect_calc_refs are imported inside compile_calc_def (not at
+# module level) to avoid a circular import.
 
 
 class Compilability(str, Enum):
@@ -35,85 +36,11 @@ class Compilability(str, Enum):
     UNKNOWN = "unknown"
 
 
-class ExpressionNodeType(str, Enum):
-    """Node types in the compiler's intermediate representation."""
-
-    BINARY_OP = "binary_op"
-    UNARY_OP = "unary_op"
-    LITERAL = "literal"
-    INPUT_REF = "input_ref"
-    INTERMEDIATE_REF = "intermediate_ref"
-    UNSUPPORTED = "unsupported"
-
-
 class CompilationError(Exception):
-    """Raised when an ExpressionAST contains UNSUPPORTED nodes."""
+    """Raised when the renderer cannot produce a Python expression (unresolved reference,
+    unsupported operator, or unparseable output)."""
 
     pass
-
-
-@dataclass
-class ExpressionAST:
-    """Compiler's intermediate representation of a SysML expression.
-
-    Constructed during compilation from syside AST nodes, used to produce
-    a Python expression string, then discarded. Not stored long-term.
-
-    Binary tree structure: n-ary syside OperatorExpressions are left-folded
-    into nested binary nodes at construction time (build_expression_ast).
-    """
-
-    node_type: ExpressionNodeType
-    operator: str | None = None
-    left: ExpressionAST | None = None
-    right: ExpressionAST | None = None
-    value: float | int | None = None
-    input_name: str | None = None
-    intermediate_name: str | None = None
-    raw_text: str | None = None
-    reason: str | None = None
-
-    @classmethod
-    def binary(
-        cls, operator: str, left: ExpressionAST, right: ExpressionAST
-    ) -> ExpressionAST:
-        return cls(
-            node_type=ExpressionNodeType.BINARY_OP,
-            operator=operator,
-            left=left,
-            right=right,
-        )
-
-    @classmethod
-    def unary(cls, operator: str, operand: ExpressionAST) -> ExpressionAST:
-        return cls(
-            node_type=ExpressionNodeType.UNARY_OP,
-            operator=operator,
-            left=operand,
-        )
-
-    @classmethod
-    def literal(cls, value: float | int) -> ExpressionAST:
-        return cls(node_type=ExpressionNodeType.LITERAL, value=value)
-
-    @classmethod
-    def input_ref(cls, name: str) -> ExpressionAST:
-        return cls(node_type=ExpressionNodeType.INPUT_REF, input_name=name)
-
-    @classmethod
-    def intermediate_ref(cls, name: str) -> ExpressionAST:
-        return cls(
-            node_type=ExpressionNodeType.INTERMEDIATE_REF,
-            intermediate_name=name,
-        )
-
-    @classmethod
-    def unsupported(cls, raw_text: str, reason: str) -> ExpressionAST:
-        return cls(
-            node_type=ExpressionNodeType.UNSUPPORTED,
-            raw_text=raw_text,
-            reason=reason,
-        )
 
 
 @dataclass
@@ -145,21 +72,6 @@ class CalcDefCompilationResult:
 
 
 # ---------------------------------------------------------------------------
-# Python-specific operator mapping (distinct from expression_utils.OPERATOR_MAP
-# which produces SysML text). Used by build_expression_ast (Phase 3).
-# ---------------------------------------------------------------------------
-PYTHON_OPERATOR_MAP: dict[str, str | None] = {
-    "+": " + ",
-    "-": " - ",
-    "*": " * ",
-    "/": " / ",
-    "**": " ** ",
-    "^": " ** ",   # SysML power alias → Python power
-    "[": None,     # unit annotation → strip, use value operand
-}
-
-
-# ---------------------------------------------------------------------------
 # Pure compiler functions (no syside dependency)
 # ---------------------------------------------------------------------------
 
@@ -188,82 +100,6 @@ def _sanitize_name(name: str) -> str:
     return name
 
 
-def compile_expression(ast: ExpressionAST) -> str:
-    """Convert an ExpressionAST to a Python expression string.
-
-    Pure recursive descent on the IR — no syside dependency.
-
-    Raises:
-        CompilationError: If the AST contains UNSUPPORTED nodes.
-    """
-    if ast.node_type == ExpressionNodeType.BINARY_OP:
-        left = compile_expression(ast.left)  # type: ignore[arg-type]
-        right = compile_expression(ast.right)  # type: ignore[arg-type]
-        op_str = PYTHON_OPERATOR_MAP.get(ast.operator, f" {ast.operator} ")  # type: ignore[arg-type]
-        result = f"({left}{op_str}{right})"
-    elif ast.node_type == ExpressionNodeType.UNARY_OP:
-        operand = compile_expression(ast.left)  # type: ignore[arg-type]
-        result = f"(-{operand})"
-    elif ast.node_type == ExpressionNodeType.LITERAL:
-        result = str(ast.value)
-    elif ast.node_type == ExpressionNodeType.INPUT_REF:
-        result = f"inputs.{ast.input_name}"
-    elif ast.node_type == ExpressionNodeType.INTERMEDIATE_REF:
-        result = str(ast.intermediate_name)
-    elif ast.node_type == ExpressionNodeType.UNSUPPORTED:
-        raise CompilationError(
-            f"Cannot compile unsupported node: {ast.raw_text} "
-            f"(reason: {ast.reason})"
-        )
-    else:
-        raise CompilationError(f"Unknown node type: {ast.node_type}")
-
-    # Validate output is parseable Python
-    try:
-        python_ast.parse(result, mode="eval")
-    except SyntaxError as e:
-        raise CompilationError(
-            f"Compiled expression is not valid Python: {result!r} ({e})"
-        ) from e
-
-    return result
-
-
-def _collect_refs(
-    ast: ExpressionAST,
-) -> tuple[list[str], list[str]]:
-    """Walk an ExpressionAST and collect all referenced names.
-
-    Returns:
-        (input_refs, intermediate_refs) — both deduplicated, order-preserving.
-        Order follows left-to-right tree traversal (pre-order).
-    """
-    input_refs: list[str] = []
-    intermediate_refs: list[str] = []
-    seen_inputs: set[str] = set()
-    seen_intermediates: set[str] = set()
-
-    def _walk(node: ExpressionAST) -> None:
-        if node.node_type == ExpressionNodeType.INPUT_REF:
-            if node.input_name and node.input_name not in seen_inputs:
-                seen_inputs.add(node.input_name)
-                input_refs.append(node.input_name)
-        elif node.node_type == ExpressionNodeType.INTERMEDIATE_REF:
-            if (
-                node.intermediate_name
-                and node.intermediate_name not in seen_intermediates
-            ):
-                seen_intermediates.add(node.intermediate_name)
-                intermediate_refs.append(node.intermediate_name)
-        if node.left:
-            _walk(node.left)
-        if node.right:
-            _walk(node.right)
-
-    _walk(ast)
-    return input_refs, intermediate_refs
-
-
 def classify_compilability(
     output_results: list[CompilationResult],
 ) -> Compilability:
@@ -284,131 +120,6 @@ def classify_compilability(
     ):
         return Compilability.MANUAL_REQUIRED
     return Compilability.PARTIALLY_COMPILABLE
-
-
-# ---------------------------------------------------------------------------
-# Syside AST → ExpressionAST IR conversion
-# ---------------------------------------------------------------------------
-
-
-def build_expression_ast(
-    syside_node: Any,
-    input_names: set[str],
-    output_names: set[str],
-    all_member_names: set[str] | None = None,
-) -> ExpressionAST:
-    """Convert a raw syside AST node into the clean ExpressionAST IR.
-
-    Handles n-ary to binary left-fold conversion, reference resolution
-    (input vs intermediate vs undeclared vs unsupported), literal extraction,
-    and unit annotation stripping.
-
-    Args:
-        syside_node: Raw syside AST node (duck-typed).
-        input_names: Declared input attribute names for this CalcDef.
-        output_names: Declared output attribute names for this CalcDef.
-        all_member_names: All owned_member names from raw CalcDef element,
-            for undeclared intermediate resolution.
-
-    Returns:
-        ExpressionAST tree ready for compile_expression().
-    """
-    # --- FeatureChainExpression ---
-    # MUST be before OperatorExpression — FCE is a subtype of OE in SysIDE's
-    # type system. Without this, FCE nodes enter the OE handler and produce
-    # "unsupported operator: ." instead of the correct diagnostic.
-    if SysideAdapter.is_instance(syside_node, "FeatureChainExpression"):
-        return ExpressionAST.unsupported(
-            type(syside_node).__name__,
-            "feature chain expression not supported in CalcDef output",
-        )
-
-    # --- OperatorExpression ---
-    if SysideAdapter.is_instance(syside_node, "OperatorExpression"):
-        operator = ""
-        if hasattr(syside_node, "operator") and syside_node.operator:
-            operator = str(syside_node.operator)
-
-        operands: list[Any] = []
-        if hasattr(syside_node, "operands"):
-            operands = list(syside_node.operands)
-
-        # Unit annotation: strip, recurse on value operand (first)
-        if operator == "[":
-            if operands:
-                return build_expression_ast(
-                    operands[0], input_names, output_names, all_member_names
-                )
-            return ExpressionAST.unsupported(
-                "[]", "unit annotation with no operands"
-            )
-
-        # Check if operator is supported
-        if operator not in PYTHON_OPERATOR_MAP:
-            return ExpressionAST.unsupported(
-                operator, f"unsupported operator: {operator}"
-            )
-
-        if len(operands) == 1:
-            # Unary
-            operand_ast = build_expression_ast(
-                operands[0], input_names, output_names, all_member_names
-            )
-            return ExpressionAST.unary(operator, operand_ast)
-
-        if len(operands) == 2:
-            left = build_expression_ast(
-                operands[0], input_names, output_names, all_member_names
-            )
-            right = build_expression_ast(
-                operands[1], input_names, output_names, all_member_names
-            )
-            return ExpressionAST.binary(operator, left, right)
-
-        if len(operands) > 2:
-            # N-ary: left-fold ((a op b) op c)
-            result = build_expression_ast(
-                operands[0], input_names, output_names, all_member_names
-            )
-            for i in range(1, len(operands)):
-                right = build_expression_ast(
-                    operands[i], input_names, output_names, all_member_names
-                )
-                result = ExpressionAST.binary(operator, result, right)
-            return result
-
-        return ExpressionAST.unsupported(
-            operator, "operator with no operands"
-        )
-
-    # --- FeatureReferenceExpression ---
-    if SysideAdapter.is_instance(syside_node, "FeatureReferenceExpression"):
-        raw_name = extract_feature_reference_name(syside_node)
-        name = _sanitize_name(raw_name)
-        if name in input_names:
-            return ExpressionAST.input_ref(name)
-        if name in output_names:
-            return ExpressionAST.intermediate_ref(name)
-        if all_member_names and name in all_member_names:
-            return ExpressionAST.intermediate_ref(name)
-        return ExpressionAST.unsupported(
-            name, f"unresolved reference: {name}"
-        )
-
-    # --- LiteralRational / LiteralInteger ---
-    if (
-        SysideAdapter.is_instance(syside_node, "LiteralRational")
-        or SysideAdapter.is_instance(syside_node, "LiteralInteger")
-    ):
-        if hasattr(syside_node, "value"):
-            return ExpressionAST.literal(syside_node.value)
-        return ExpressionAST.unsupported("literal", "literal with no value")
-
-    # --- Unknown ---
-    type_name = type(syside_node).__name__
-    return ExpressionAST.unsupported(
-        type_name, f"unknown node type: {type_name}"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -480,6 +191,10 @@ def compile_calc_def(
         CalcDefCompilationResult with per-output results and overall
         compilability.
     """
+    # Local import: calc_compat_renderer imports CompilationError/_sanitize_name from this
+    # module, so importing it at module level here would be circular.
+    from .calc_compat_renderer import collect_calc_refs, render_calc_expression
+
     input_names = {attr.name for attr in calc_def.input_attributes}
     output_names = {attr.name for attr in calc_def.output_attributes}
 
@@ -576,17 +291,19 @@ def compile_calc_def(
             )
             continue
 
-        # Build IR
-        ir = build_expression_ast(
-            ast_node,
-            input_names,
-            output_names,
-            all_member_names=all_member_names,
-        )
+        # M3: member_names is the union declared-outputs + all owned members -- passing
+        # only all_member_names (trusting it to contain declared outputs) would
+        # under-classify a declared-output reference as unresolved.
+        member_names = output_names | (all_member_names or set())
+        ir = extract_expression_ir(ast_node)
+        if ir is None:
+            # extract_expression_ir returns None only for a None input; ast_node was just
+            # checked non-None above, so this would mean the extractor's contract broke.
+            raise CompilationError(f"extract_expression_ir returned None for {name!r}")
 
         # Compile to Python
         try:
-            python_expr = compile_expression(ir)
+            python_expr = render_calc_expression(ir, input_names, member_names)
         except CompilationError as e:
             output_results.append(
                 CompilationResult(
@@ -599,7 +316,7 @@ def compile_calc_def(
             continue
 
         # Collect refs
-        input_refs, intermediate_refs = _collect_refs(ir)
+        input_refs, intermediate_refs = collect_calc_refs(ir, input_names, member_names)
 
         output_results.append(
             CompilationResult(

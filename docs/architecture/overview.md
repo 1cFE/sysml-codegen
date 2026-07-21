@@ -31,6 +31,8 @@ Generated package
 
 Orchestration (`orchestration/pipeline_builder.py`) coordinates these steps, threading intermediate data through a `PipelineContext`. See [02-orchestration](reference/02-orchestration.md) for the step-by-step sequence and ordering constraints.
 
+Within Step 5, after the output registry is final, a **constraint-lowering phase** ([P1 RESOLVE], `analysis/constraint_lowering.py`) turns eligible modeled assertions into two further module kinds — `CONSTRAINT` (a lowered predicate) and `REPORT_AGGREGATOR` (the run-report roll-up) — and assembles the `ConstraintCatalog` embedded on the graph. A constraint-free model produces neither and a byte-identical graph. See [28-constraint-lowering-and-catalog](reference/28-constraint-lowering-and-catalog.md).
+
 There is a second, license-free path into the same pipeline. `sysml-codegen snapshot` captures a versioned extraction snapshot from live models (`capture_snapshot` in `snapshot/capture.py` -- this capture step needs the live syside license). `generate --from-snapshot` (mutually exclusive with `--models`) then rebuilds the same `PipelineContext` from that JSON via `build_pipeline_context_from_snapshot` (`orchestration/snapshot_context.py`) -- Steps 2-7 run unchanged, with no license at runtime. The snapshot format carries a `snapshot_format_version` that hard-errors on mismatch. See [27-snapshot-generation](reference/27-snapshot-generation.md).
 
 ---
@@ -135,7 +137,7 @@ sysml_codegen/
    - [11-analysis-backtracker](reference/11-analysis-backtracker.md) -- dependency tracing via DFS
    - [03-resolution-overview](reference/03-resolution-overview.md) -- why input resolution is hard (270 combinations)
    - [06-entry-point-classifier](reference/06-entry-point-classifier.md) -- three entry point types
-   - [05-module-factory](reference/05-module-factory.md) -- three module types as pure data
+   - [05-module-factory](reference/05-module-factory.md) -- the three calc module kinds as pure data (constraint kinds in [28](reference/28-constraint-lowering-and-catalog.md))
    - [07-graph-assembly](reference/07-graph-assembly.md) -- topological sort and validation
    - [08-generation](reference/08-generation.md) -- Jinja2 rendering to Python, YAML, JSON
 4. **Data models** -- [09-data-models](reference/09-data-models.md) as a reference companion to any of the above
@@ -154,6 +156,7 @@ sysml_codegen/
 | Hierarchy resolution | [25](reference/25-hierarchy-resolver.md) |
 | PipelineModule migration | [26](reference/26-pipeline-module-migration.md) |
 | Snapshot-driven generation | [27](reference/27-snapshot-generation.md) |
+| Constraint execution & contracts | [28](reference/28-constraint-lowering-and-catalog.md), [29](reference/29-contracts-and-sealing.md) |
 
 ---
 
@@ -188,6 +191,8 @@ sysml_codegen/
 | C25 | JSON Template + Schema Generator | [08](reference/08-generation.md) | `generation/entry_point.py` |
 | C26 | PipelineModule Migration | [26](reference/26-pipeline-module-migration.md) | Cross-cutting (resolution + generation) |
 | C27 | Typed Registry Design Intent | [10](reference/10-output-registry.md) | Cross-cutting (core + analysis + resolution) |
+| C28 | Constraint Lowering & Catalog | [28](reference/28-constraint-lowering-and-catalog.md) | `analysis/constraint_lowering.py`, `generation/constraint_catalog.py`, `generation/predicate_compiler.py` |
+| C29 | Contracts & Sealing | [29](reference/29-contracts-and-sealing.md) | `contracts/model_contract.py`, `contracts/seal.py`, `contracts/verify.py` |
 | X01 | Type Mapping Consistency | [08](reference/08-generation.md) | `generation/type_mapping.py` |
 | X02 | Resolution Consistency | [24](reference/24-dual-resolution-architecture.md) | Cross-cutting (C11, C12, C14-C16) |
 
@@ -215,7 +220,7 @@ The following open issues are documented in the codebase. None block current pip
 
 ## Verification
 
-REQ-* tags are tracked across 29 requirement families; the [verification matrix](verification-matrix.md) summary carries the authoritative counts. A small remainder is marked UNTESTED there (design-only constraints or cross-cutting principles verified indirectly).
+REQ-* tags are tracked across 32 requirement families; the [verification matrix](verification-matrix.md) summary carries the authoritative counts. A small remainder is marked UNTESTED there (design-only constraints or cross-cutting principles verified indirectly).
 
 See [verification-matrix.md](verification-matrix.md) for the full REQ-to-test traceability matrix.
 

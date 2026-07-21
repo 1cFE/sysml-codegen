@@ -1,0 +1,70 @@
+{
+  "modules": [
+    {
+      "name": "shadowedreference__the_outer__inner__shadowed_calc",
+      "module_type": "shadowedreference.ScaleModule",
+      "inputs": [
+        {
+          "param_name": "factor",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "model_params",
+            "qualified_name": "ShadowedReference__the_outer__scale",
+            "producer_channel": null
+          },
+          "description": "",
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "root",
+          "python_type": "float",
+          "channel_name": "ShadowedReference__the_outer__inner__shadowed_calc__scaled",
+          "description": "",
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 0,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "calculation",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": "Scale",
+      "calc_def_qualified_name": "ShadowedReference::Scale",
+      "doc_comment": "",
+      "calc_expressions": [
+        "scaled = factor * 10.0"
+      ],
+      "source_file": "root-0/model.sysml",
+      "source_line": 18
+    }
+  ],
+  "entry_point_groups": [
+    {
+      "name": "model_params",
+      "class_name": "ModelParams",
+      "source_file": "model.sysml",
+      "parameters": [
+        {
+          "qualified_name": "ShadowedReference__the_outer__scale",
+          "simple_name": "scale",
+          "entry_type": "design_attribute",
+          "default_value": 2.0,
+          "source_calc_usage": null,
+          "param_group": "model_params",
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
+        }
+      ]
+    }
+  ],
+  "execution_order": [
+    "shadowedreference__the_outer__inner__shadowed_calc"
+  ],
+  "output_aliases": []
+}

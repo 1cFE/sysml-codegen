@@ -41,6 +41,7 @@ from sysml_codegen.resolution.graph_builder import build_computation_graph
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     EntryPointType,
+    ModuleKind,
     PipelineModule,
 )
 from sysml_codegen.snapshot import (
@@ -362,7 +363,13 @@ class TestStepOrdering:
 
         pipeline_builder_module.build_computation_graph = _spy
         try:
-            ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+            # lower_constraints_enabled=False: wi014_toy carries an admitted
+            # assertion, and P3 EXTEND reassigns `computation_graph` to a new
+            # object post-`build_computation_graph` (Item 5) — orthogonal to
+            # what this test pins (identity up to that boundary).
+            ctx = build_pipeline_context(
+                [FIXTURES_DIR / "wi014_toy"], lower_constraints_enabled=False
+            )
         finally:
             pipeline_builder_module.build_computation_graph = original
 
@@ -911,11 +918,15 @@ class TestAllThreeModuleTypes:
     def test_all_three_module_types_solar_battery(self, solar_battery_graph):
         """solar_battery graph has CalcUsage, FORMULA, and Aggregation modules."""
         has_calc_usage = any(
-            not m.is_computed_attribute and not m.is_aggregation
+            m.module_kind == ModuleKind.CALCULATION
             for m in solar_battery_graph.modules
         )
-        has_formula = any(m.is_computed_attribute for m in solar_battery_graph.modules)
-        has_aggregation = any(m.is_aggregation for m in solar_battery_graph.modules)
+        has_formula = any(
+            m.module_kind == ModuleKind.FORMULA for m in solar_battery_graph.modules
+        )
+        has_aggregation = any(
+            m.module_kind == ModuleKind.AGGREGATION for m in solar_battery_graph.modules
+        )
 
         assert has_calc_usage, "No CalcUsage modules in solar_battery graph"
         assert has_formula, "No FORMULA modules in solar_battery graph"

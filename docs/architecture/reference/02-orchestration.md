@@ -37,7 +37,7 @@ context carries all intermediate data for debugging and future generation modes.
 |------|-------------|----------|--------|
 | 1 | Load SysML models via `SysMLDataExtractor` | `extractor` | [01-extraction](01-extraction.md) |
 | 2 | Extract calc definitions from the model | `calc_defs` | [01-extraction](01-extraction.md) |
-| 2.5 | Report dropped constraint usages (detection only -- constraints are not executable) | log WARN/INFO only | [01-extraction](01-extraction.md), REQ-EXT-09 |
+| 2.6 | Extract neutral constraint facts (`ConstraintFacts`) — always populated, may carry empty `usages` | `constraint_facts` | [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md), REQ-EXT-09 |
 | 3 | Extract calc usages with binding info | `calc_usages` | [01-extraction](01-extraction.md) |
 | 3.5 | Hierarchy extraction + [binding rewrite](#virtual-binding-rewriting) + [aggregation scoping](#aggregation-scoping) + CHAIN aliases | `hierarchy_data`, `scoped_agg_data`, `chain_aliases` | [12](12-virtual-binding-rewrite.md), [13](13-aggregation-scoping.md) |
 | 4 | Extract design attributes (literal values from PartDefs) | `design_attrs` | [17](17-parameter-group-deriver.md) |
@@ -46,10 +46,12 @@ context carries all intermediate data for debugging and future generation modes.
 | 5.55 | Expand part-def EXPOSE aliases per design instance into the registry's structured `_scoped_alias` namespace | registry mutation | [10](10-output-registry.md), [16](16-computed-attributes.md) |
 | 5.56 | Rescue self-named bindings (`in x = x`) to their resolvable outer EXPOSE channel; the trap case is left as-is | `calc_usages` mutation | [12](12-virtual-binding-rewrite.md) |
 | 5.6 | Re-run FORMULA removal: a Phase-3b tentative that reverted to FORMULA is removed from `design_attrs` (INV-G) | `design_attrs` mutation | [16](16-computed-attributes.md) |
+| 5.65 | Materialize supplied subsystem-attr values (`graph_design_attrs`), widened to a constraint actual's bare-name demand with no calc-usage binding of its own | `graph_design_attrs` | [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) |
 | 5.7 | Create [ParameterGroupDeriver](17-parameter-group-deriver.md), now that `design_attrs` reflects final classifications | `group_deriver` | [17](17-parameter-group-deriver.md) |
+| [P1 RESOLVE] | Lower every admitted constraint usage to concrete graph structure (profile preflight halts loudly on BLOCK) | `concrete_constraints`, `part_occurrences` | [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) |
 | 6 | Run [DependencyBacktracker](11-analysis-backtracker.md) | `backtracking_result` | [11](11-analysis-backtracker.md) |
 | 6.5 | Compile SysML expressions to Python strings | `compilation_results` | [14](14-expression-compiler.md) |
-| 7 | Build [ComputationGraph](09-data-models.md#resolution-models) | `computation_graph` | [07](07-graph-assembly.md) |
+| 7 | Build [ComputationGraph](09-data-models.md#resolution-models); [P4 CATALOG] assembles `constraint_catalog` from eligible entries | `computation_graph` | [07](07-graph-assembly.md), [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) |
 
 Key ordering constraints (REQ-ORCH-01):
 

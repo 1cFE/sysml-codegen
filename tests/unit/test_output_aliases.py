@@ -31,6 +31,7 @@ from sysml_codegen.core.models import ChannelAlias
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.resolution.graph_builder import _build_output_aliases
 from sysml_codegen.resolution.models import (
+    ModuleKind,
     ModuleOutput,
     OutputAlias,
     PipelineModule,
@@ -178,6 +179,7 @@ def _module_with_channels(channels: list[str]) -> PipelineModule:
             for c in channels
         ],
         execution_order=0,
+        module_kind=ModuleKind.CALCULATION,
     )
 
 

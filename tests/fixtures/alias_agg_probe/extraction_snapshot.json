@@ -1,7 +1,83 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "alias_agg_probe",
-  "captured_at": "2026-07-06T19:03:24.462488+00:00",
+  "captured_at": "2026-07-20T15:57:44.119422+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::'Widget Assembly'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "assembly",
+          "qualified_name": "AliasAggProbeDesign::plant::assembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AliasAggProbeLibrary::'Widget Assembly'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Widget Assembly",
+          "qualified_name": "AliasAggProbeLibrary::'Widget Assembly'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::Widget"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "widget",
+          "qualified_name": "AliasAggProbeLibrary::'Widget Assembly'::widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "AliasAggProbeLibrary::Widget",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "AliasAggProbeLibrary::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Widget",
+          "qualified_name": "AliasAggProbeLibrary::Widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "Unit_Cost_Calc": {
       "calc_def_name": "Unit_Cost_Calc",
@@ -119,7 +195,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 6,
       "source_hash": "d8e8ff99c49405aa63cea4e24769ec7928ea4a17f0fda51b9f746464d03767c4",
       "output_expression_asts": null,
@@ -181,7 +257,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 14,
       "source_hash": "d8e8ff99c49405aa63cea4e24769ec7928ea4a17f0fda51b9f746464d03767c4",
       "output_expression_asts": null,
@@ -230,7 +306,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 22,
       "source_hash": "d8e8ff99c49405aa63cea4e24769ec7928ea4a17f0fda51b9f746464d03767c4",
       "output_expression_asts": null,
@@ -259,13 +335,14 @@
           "literal_value": 50.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "base_cost"
+          "source_attribute_name": "base_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
         "markup"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 40,
       "parent_part_path": "plant.assembly.widget",
       "qualified_name": "AliasAggProbeDesign__plant__assembly__widget__cost_model",
@@ -290,7 +367,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "total_cost"
+          "source_attribute_name": "total_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "margin_rate",
@@ -303,11 +381,12 @@
           "literal_value": 0.15,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 67,
       "parent_part_path": "plant.assembly",
       "qualified_name": "AliasAggProbeDesign__plant__assembly__margin_calc",
@@ -332,11 +411,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "reported_cost"
+          "source_attribute_name": "reported_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 74,
       "parent_part_path": "plant.assembly",
       "qualified_name": "AliasAggProbeDesign__plant__assembly__report_calc",
@@ -352,7 +432,7 @@
         "sysml_type": "Real",
         "default_value": "1.5",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 8,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Unit_Cost_Calc__markup"
@@ -362,7 +442,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 10,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Unit_Cost_Calc__unit_cost"
@@ -372,7 +452,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 18,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Margin_Calc__margin"
@@ -382,7 +462,7 @@
         "sysml_type": "Real",
         "default_value": "cost_input",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 25,
         "parent_part": "",
         "qualified_name": "AliasAggProbeLibrary__Report_Calc__report_value"
@@ -539,6 +619,5 @@
       "owning_part_qn": "AliasAggProbeLibrary__Widget",
       "source": "redefinition"
     }
-  ],
-  "dropped_constraints": []
+  ]
 }

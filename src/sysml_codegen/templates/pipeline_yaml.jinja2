@@ -17,6 +17,11 @@ modules:
       {{ entry.name }}: {{ entry.type }} {{ entry.source }}
 {% endfor %}
 
+{% else %}
+  # Entry point - zero entry channels
+  entry_fusion:
+    module_type: EntryPoint
+
 {% endif %}
 
 {% for module in modules %}

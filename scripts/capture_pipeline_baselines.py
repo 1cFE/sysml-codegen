@@ -66,6 +66,10 @@ MODELS = {
     # Plant-idiom conformance fixtures (Item 8, UPSTREAM-FINDINGS). Both build the
     # graph; the known-incomplete cross-part inputs land on Step-4 fallback EPs.
     "wi014_toy": "wi014_toy",
+    # Written-qualifier anchoring (Item 4, audit F2c). Registered so the parametrized
+    # conformance tests that glob baseline_outputs stop skipping it -- an unregistered
+    # fixture pins nothing, which is what F2c found.
+    "shadowed_reference": "shadowed_reference",
     "ife_plant": "ife_plant",
     # Plant-Value & Blind-Spot fixtures (PIPELINE-TRUTH Item 1). Each builds a full
     # graph (V11 fires only at the generation boundary, not at graph build), so each
@@ -73,6 +77,10 @@ MODELS = {
     "plant_values": "plant_values",
     "plant_value_shapes": "plant_value_shapes",
     "deep_cross_scope_probe": "deep_cross_scope_probe",
+    # Constraint-lowering parity fixtures (Item 8, D6) — see the matching
+    # comment in capture_extraction_snapshots.py.
+    "constraint_inline": "constraint_inline",
+    "constraint_multi_instance": "constraint_multi_instance",
 }
 
 
@@ -103,13 +111,10 @@ def main(requested: str | None = None) -> None:
         model_output_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. ComputationGraph JSON
+        # source_file is now the portable root-N/ referent (Item 5 D1), so the
+        # graph carries no absolute path — the old snapshot-dir-prefix strip is
+        # deleted, the real output is portable by construction.
         graph_json = graph.model_dump_json(indent=2) + "\n"
-        # The loader re-absolutizes source_file to a machine-specific absolute
-        # path (Item 2 D1). Strip the snapshot's own-directory prefix so the
-        # committed baseline stays portable — relative basenames matching the
-        # snapshot's stored form (no /home/... paths). source_file is the only
-        # absolute path in the graph.
-        graph_json = graph_json.replace(str(snapshot_path.parent) + "/", "")
         graph_path = model_output_dir / "computation_graph.json"
         graph_path.write_text(graph_json)
 

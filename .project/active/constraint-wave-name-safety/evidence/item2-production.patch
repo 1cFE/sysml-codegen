@@ -1,0 +1,1296 @@
+diff --git a/src/sysml_codegen/analysis/constraint_lowering.py b/src/sysml_codegen/analysis/constraint_lowering.py
+index 04a9b28..a038f3e 100644
+--- a/src/sysml_codegen/analysis/constraint_lowering.py
++++ b/src/sysml_codegen/analysis/constraint_lowering.py
+@@ -46,6 +46,7 @@ from sysml_codegen.resolution.models import (
+     ConcreteConstraint,
+     ConcreteConstraintInput,
+     ConstraintExclusion,
++    ConstraintFormalIdentity,
+     ConstraintInputResolution,
+     EntryPoint,
+     EntryPointType,
+@@ -601,6 +602,7 @@ def _report_non_numerical_warnings(
+ def _resolve_formal(
+     *,
+     formal_name: str,
++    formal_identity: ConstraintFormalIdentity,
+     value: object,
+     occ_scope: str,
+     usage_qualified_name: str,
+@@ -620,7 +622,7 @@ def _resolve_formal(
+             f"{usage_qualified_name}.{formal_name}: actual value is not a feature "
+             f"reference (got {kind}) — the executable profile expects a reference actual"
+         )
+-    return resolve_actual(
++    resolved = resolve_actual(
+         reference=value.reference,
+         occ_scope=occ_scope,
+         formal_name=formal_name,
+@@ -629,6 +631,27 @@ def _resolve_formal(
+         design_attr_by_qn=design_attr_by_qn,
+         owner_def_qn=owner_def_qn,
+     )
++    return resolved.model_copy(update={"formal_identity": formal_identity})
++
++
++def _definition_formal_identity(formal: FormalFact) -> ConstraintFormalIdentity:
++    raw_name = formal.name
++    if raw_name is None and formal.qualified_name is not None:
++        raw_name = formal.qualified_name.rsplit("::", 1)[-1]
++    if raw_name is None:
++        raise _generation_error("constraint definition formal has no raw or qualified identity")
++    return ConstraintFormalIdentity(raw_name=raw_name, qualified_name=formal.qualified_name)
++
++
++def _leaf_formal_identity(leaf: FeatureReferenceNode) -> ConstraintFormalIdentity:
++    source_name = leaf.reference.source_name
++    if source_name is None:
++        raise _generation_error("constraint predicate contains a nameless feature reference")
++    target = leaf.reference.target
++    return ConstraintFormalIdentity(
++        raw_name=source_name,
++        qualified_name=target.qualified_name if target is not None else None,
++    )
+ 
+ 
+ def _inline_reference_leaves(predicate: ExpressionIR) -> list[FeatureReferenceNode]:
+@@ -969,10 +992,6 @@ def lower_constraints(
+         predicate_ir = serialize_expression(effective) if effective is not None else None
+ 
+         formal_bindings = _definition_formal_bindings(facts, usage)
+-        actual_by_name = {
+-            actual.name: actual.value for actual in usage.actuals if actual.name is not None
+-        }
+-
+         owner_def_qn = sanitize_qualified_name(usage.owner.owning_definition.qualified_name)
+         owner_instances = _expand_owner_instances(usage, occ_index, calc_usages)
+         for owner_instance_path, occ_scope in owner_instances:
+@@ -980,6 +999,7 @@ def lower_constraints(
+             if formal_bindings is not None:
+                 for formal, actual in formal_bindings:
+                     formal_name = _formal_name(formal)
++                    formal_identity = _definition_formal_identity(formal)
+                     if actual is None:
+                         inputs.append(
+                             ConcreteConstraintInput(
+@@ -990,12 +1010,14 @@ def lower_constraints(
+                                     if formal.default is not None
+                                     else None
+                                 ),
++                                formal_identity=formal_identity,
+                             )
+                         )
+                     else:
+                         inputs.append(
+                             _resolve_formal(
+                                 formal_name=formal_name,
++                                formal_identity=formal_identity,
+                                 value=actual.value,
+                                 occ_scope=occ_scope,
+                                 usage_qualified_name=owner_instance_path,
+@@ -1005,11 +1027,20 @@ def lower_constraints(
+                             )
+                         )
+             else:
+-                for formal_name, value in actual_by_name.items():
++                for actual in usage.actuals:
++                    if actual.name is None:
++                        continue
++                    formal_name = actual.name
++                    qualified_name = (
++                        actual.formal_targets[0] if len(actual.formal_targets) == 1 else None
++                    )
+                     inputs.append(
+                         _resolve_formal(
+                             formal_name=formal_name,
+-                            value=value,
++                            formal_identity=ConstraintFormalIdentity(
++                                raw_name=formal_name, qualified_name=qualified_name
++                            ),
++                            value=actual.value,
+                             occ_scope=occ_scope,
+                             usage_qualified_name=owner_instance_path,
+                             registry=registry,
+@@ -1031,6 +1062,7 @@ def lower_constraints(
+                         inputs.append(
+                             _resolve_formal(
+                                 formal_name=formal_name,
++                                formal_identity=_leaf_formal_identity(leaf),
+                                 value=leaf,
+                                 occ_scope=occ_scope,
+                                 usage_qualified_name=owner_instance_path,
+@@ -1046,6 +1078,10 @@ def lower_constraints(
+                             formal_name=sanitize_name(formal_qn.rsplit("::", 1)[-1]),
+                             resolution=ConstraintInputResolution.MODELED_DEFAULT,
+                             default_ir=formal_default_by_qn.get(formal_qn),
++                            formal_identity=ConstraintFormalIdentity(
++                                raw_name=formal_qn.rsplit("::", 1)[-1],
++                                qualified_name=formal_qn,
++                            ),
+                         )
+                     )
+ 
+@@ -1234,7 +1270,12 @@ def extend_graph_with_constraints(
+                     source_type="entry_point", param_group=gname, qualified_name=qn
+                 )
+             inputs.append(
+-                ModuleInput(param_name=inp.formal_name, python_type="float", source=source)
++                ModuleInput(
++                    param_name=inp.formal_name,
++                    python_type="float",
++                    source=source,
++                    formal_identity=inp.formal_identity,
++                )
+             )
+ 
+         modules.append(
+diff --git a/src/sysml_codegen/cli/__init__.py b/src/sysml_codegen/cli/__init__.py
+index b70db9e..ff6eaaf 100644
+--- a/src/sysml_codegen/cli/__init__.py
++++ b/src/sysml_codegen/cli/__init__.py
+@@ -287,12 +287,25 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
+         )
+ 
+ 
++def _preflight_constraint_names(ctx: PipelineContext) -> None:
++    """Validate both generated constraint scopes before a graph-aware boundary acts."""
++    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
++
++    validate_constraint_graph_or_raise(ctx.computation_graph)
++    catalog = ctx.computation_graph.constraint_catalog
++    if catalog is not None:
++        from sysml_codegen.generation.modules import assert_unique_predicate_function_names
++
++        assert_unique_predicate_function_names(catalog)
++
++
+ def _generate_schemas(
+     ctx: PipelineContext,
+     config: GenerationConfig,
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate Pydantic schemas for multi-output modules."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import generate_multioutput_model
+     from sysml_codegen.resolution.models import ModuleKind
+ 
+@@ -336,6 +349,7 @@ def _generate_modules(
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate TEAx module wrappers for all module types (ADR-003 namespacing)."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import generate_teax_module
+     from sysml_codegen.generation.modules import (
+         compile_shared_predicates,
+@@ -344,36 +358,17 @@ def _generate_modules(
+     from sysml_codegen.resolution.models import ModuleKind
+ 
+     modules_dir = config.output_path / "modules"
+-    module_count = 0
+-
+     catalog = ctx.computation_graph.constraint_catalog
+     compiled_predicates = None
++    staged: list[tuple[Path, str]] = []
+ 
+     if catalog is not None:
+-        # Item 7 / D3: the shared predicates module, written once, before the per-module
+-        # loop so every constraint module's import path already exists on disk.
+         compiled_predicates = compile_shared_predicates(catalog)
+-        namespace_dir = modules_dir / "constraints"
+-        namespace_dir.mkdir(parents=True, exist_ok=True)
+-        _ensure_package_init_files(
+-            modules_dir, "constraints", '"""Namespace package for generated modules."""\n',
+-        )
+         predicates_code = render_constraint_predicates_module(compiled_predicates, template_env)
+-        (namespace_dir / "predicates.py").write_text(predicates_code)
+-        logger.debug("Generated shared constraint predicates: modules/constraints/predicates.py")
++        staged.append((modules_dir / "constraints" / "predicates.py", predicates_code))
+ 
+     for module in ctx.computation_graph.modules:
+         python_path = _get_python_path(module)
+-
+-        # Create namespace subdirectory with __init__.py in all intermediates
+-        if python_path.directory:
+-            namespace_dir = modules_dir / python_path.directory
+-            namespace_dir.mkdir(parents=True, exist_ok=True)
+-            _ensure_package_init_files(
+-                modules_dir, python_path.directory,
+-                '"""Namespace package for generated modules."""\n',
+-            )
+-
+         output_path = modules_dir / python_path.full_path
+         if module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+             code = generate_teax_module(
+@@ -392,10 +387,25 @@ def _generate_modules(
+                 config.package_name,
+             )
+         if code:
+-            output_path.write_text(code)
+-            module_count += 1
+-            logger.debug(f"Generated module: {output_path}")
++            staged.append((output_path, code))
++
++    # Rendering and semantic scope checks are complete. Only now may this writer mutate.
++    initialized_namespaces: set[str] = set()
++    for output_path, code in staged:
++        relative_parent = output_path.parent.relative_to(modules_dir)
++        namespace = relative_parent.as_posix()
++        if namespace != "." and namespace not in initialized_namespaces:
++            output_path.parent.mkdir(parents=True, exist_ok=True)
++            _ensure_package_init_files(
++                modules_dir,
++                namespace,
++                '"""Namespace package for generated modules."""\n',
++            )
++            initialized_namespaces.add(namespace)
++        output_path.write_text(code)
++        logger.debug(f"Generated module: {output_path}")
+ 
++    module_count = len(staged) - (1 if catalog is not None else 0)
+     logger.info(f"Generated {module_count} TEAx module wrappers")
+ 
+ 
+@@ -405,6 +415,7 @@ def _generate_stencils(
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate implementation stencils for all module types (ADR-003 namespacing)."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import (
+         backup_implementation,
+         generate_implementation,
+@@ -491,6 +502,7 @@ def _generate_pipeline(
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate pipeline YAML from computation graph."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import generate_pipeline_yaml
+ 
+     pipelines_dir = config.output_path / "pipelines"
+@@ -514,6 +526,7 @@ def _generate_registry(
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate registry function in __init__.py."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import generate_registry
+     from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
+ 
+@@ -541,6 +554,7 @@ def _generate_entry_points(
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate entry point parameter group schemas and JSON templates."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import (
+         generate_all_derived_jsons_from_graph,
+         generate_all_derived_schemas_from_graph,
+@@ -570,6 +584,7 @@ def _generate_backlog(
+     config: GenerationConfig,
+ ) -> None:
+     """Generate implementation backlog report."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import generate_backlog_report
+ 
+     output_path = config.output_path / "IMPLEMENTATION_BACKLOG.md"
+@@ -590,6 +605,7 @@ def _generate_tests(
+     template_env: jinja2.Environment,
+ ) -> None:
+     """Generate runnable test file for implementations."""
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.generation import generate_test_implementations
+ 
+     tests_dir = config.output_path / "tests"
+@@ -617,6 +633,7 @@ def _seal_package(
+     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
+     last, never in its own coverage.
+     """
++    _preflight_constraint_names(ctx)
+     from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, build_model_contract, seal_package
+     from sysml_codegen.contracts.serialize import write_contract_json
+ 
+@@ -965,15 +982,8 @@ def run_codegen(config: GenerationConfig) -> bool:
+         logger.info(f"Extracted {len(ctx.calc_defs)} calculation definitions")
+         logger.info(f"Built computation graph with {len(ctx.computation_graph.modules)} modules")
+ 
+-        # Constraint predicate names share one generated Python namespace. Reject a lossy
+-        # normalization collision before overwrite clearing or any output creation.
+-        catalog = ctx.computation_graph.constraint_catalog
+-        if catalog is not None:
+-            from sysml_codegen.generation.modules import (
+-                assert_unique_predicate_function_names,
+-            )
+-
+-            assert_unique_predicate_function_names(catalog)
++        # Validate both generated constraint scopes before overwrite clearing or output creation.
++        _preflight_constraint_names(ctx)
+ 
+         # Step 1.5: Fail fast on a sanitize-collision BEFORE clearing output, so a
+         # duplicate path never wipes or silently overwrites existing files.
+@@ -1038,7 +1048,10 @@ def run_codegen(config: GenerationConfig) -> bool:
+         logger.error(f"SysML parsing failed: {e}")
+         return False
+     except CodeGenerationError as e:
+-        logger.error(f"Code generation failed: {e}")
++        logger.error(
++            f"Code generation failed: {e}",
++            extra={"constraint_name_safety": e.name_safety_violation},
++        )
+         return False
+     except Exception as e:
+         import traceback
+diff --git a/src/sysml_codegen/contracts/model_contract.py b/src/sysml_codegen/contracts/model_contract.py
+index 54abfc4..1d9b096 100644
+--- a/src/sysml_codegen/contracts/model_contract.py
++++ b/src/sysml_codegen/contracts/model_contract.py
+@@ -31,6 +31,10 @@ def build_model_contract(graph: ComputationGraph) -> ModelContract:
+     ``constraint_catalog`` only, then computes the semantic fingerprint over the
+     resulting payload with the fingerprint field itself absent (INV-2).
+     """
++    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
++
++    validate_constraint_graph_or_raise(graph)
++
+     parameters = [
+         ContractParameter(
+             qualified_name=param.qualified_name,
+diff --git a/src/sysml_codegen/generation/constraint_name_safety.py b/src/sysml_codegen/generation/constraint_name_safety.py
+new file mode 100644
+index 0000000..a989e9b
+--- /dev/null
++++ b/src/sysml_codegen/generation/constraint_name_safety.py
+@@ -0,0 +1,441 @@
++"""Pure name-safety policy for generated constraint Python scopes."""
++
++from __future__ import annotations
++
++import symtable
++from collections.abc import Iterable
++from dataclasses import dataclass, replace
++from typing import Literal
++
++from agentic_mbse.sysml.expression_ir import (
++    ExpressionIR,
++    FeatureReferenceNode,
++    InvocationNode,
++    OperatorNode,
++    UnitAnnotationNode,
++    parse_expression,
++)
++
++from sysml_codegen.resolution.models import (
++    ComputationGraph,
++    ConstraintFormalIdentity,
++    ModuleKind,
++    PipelineModule,
++)
++
++ScopeName = Literal["predicate", "wrapper"]
++
++
++@dataclass(frozen=True)
++class ConstraintScopePolicy:
++    scope: ScopeName
++    generated_parameters: frozenset[str]
++    generated_locals: frozenset[str]
++
++
++PREDICATE_SCOPE_POLICY = ConstraintScopePolicy(
++    scope="predicate",
++    generated_parameters=frozenset(),
++    generated_locals=frozenset({"value", "status"}),
++)
++WRAPPER_SCOPE_POLICY = ConstraintScopePolicy(
++    scope="wrapper",
++    generated_parameters=frozenset({"self"}),
++    generated_locals=frozenset({"verdict"}),
++)
++
++
++@dataclass(frozen=True)
++class ConstraintBinding:
++    scope: ScopeName
++    final_binding: str
++    identity: ConstraintFormalIdentity
++
++
++@dataclass(frozen=True)
++class ConstraintNameViolation:
++    scope: ScopeName
++    kind: str
++    final_binding: str
++    identities: tuple[ConstraintFormalIdentity, ...]
++    generated_binding: str | None = None
++    predicate_function_name: str | None = None
++    constraint_id: str | None = None
++    usage_qualified_name: str | None = None
++
++
++class ScopePolicyMismatchError(RuntimeError):
++    """Emitted function bindings no longer match the reviewed scope policy."""
++
++
++def _identity_sort_key(identity: ConstraintFormalIdentity) -> tuple[str, str]:
++    return (identity.qualified_name or "", identity.raw_name)
++
++
++def _identity_key(identity: ConstraintFormalIdentity) -> tuple[str, str]:
++    if identity.qualified_name is not None:
++        return ("qualified", identity.qualified_name)
++    return ("raw", identity.raw_name)
++
++
++def _violation_sort_key(violation: ConstraintNameViolation) -> tuple[object, ...]:
++    return (
++        0 if violation.scope == "predicate" else 1,
++        violation.final_binding,
++        tuple(_identity_sort_key(identity) for identity in violation.identities),
++        violation.constraint_id or "",
++        violation.usage_qualified_name or "",
++        violation.kind,
++    )
++
++
++def select_name_safety_violation(
++    violations: Iterable[ConstraintNameViolation],
++) -> ConstraintNameViolation | None:
++    ordered = sorted(violations, key=_violation_sort_key)
++    return ordered[0] if ordered else None
++
++
++def format_name_safety_violation(violation: ConstraintNameViolation) -> str:
++    identities = ", ".join(
++        f"raw_name={identity.raw_name!r}, qualified_name={identity.qualified_name!r}"
++        for identity in violation.identities
++    )
++    context = []
++    if violation.constraint_id is not None:
++        context.append(f"constraint_id={violation.constraint_id!r}")
++    if violation.usage_qualified_name is not None:
++        context.append(f"usage_qualified_name={violation.usage_qualified_name!r}")
++    if violation.predicate_function_name is not None:
++        context.append(f"predicate_function={violation.predicate_function_name!r}")
++    prefix = ", ".join(context)
++    prefix = f"{prefix}: " if prefix else ""
++    generated = (
++        f" collides with generated binding {violation.generated_binding!r};"
++        if violation.generated_binding is not None
++        else ";"
++    )
++    return (
++        f"Constraint name-safety violation: {prefix}scope={violation.scope!r}, "
++        f"kind={violation.kind!r}, final_binding={violation.final_binding!r}{generated} "
++        f"identities=[{identities}]"
++    )
++
++
++def predicate_bindings(ir: ExpressionIR) -> list[ConstraintBinding]:
++    bindings: list[ConstraintBinding] = []
++
++    def visit(node: ExpressionIR) -> None:
++        if isinstance(node, FeatureReferenceNode):
++            name = node.reference.source_name
++            if name is None:
++                return
++            target = node.reference.target
++            bindings.append(
++                ConstraintBinding(
++                    scope="predicate",
++                    final_binding=name,
++                    identity=ConstraintFormalIdentity(
++                        raw_name=name,
++                        qualified_name=(target.qualified_name if target is not None else None),
++                    ),
++                )
++            )
++            return
++        if isinstance(node, OperatorNode):
++            for operand in node.operands:
++                visit(operand)
++        elif isinstance(node, UnitAnnotationNode):
++            visit(node.value)
++        elif isinstance(node, InvocationNode):
++            for argument in node.arguments:
++                visit(argument)
++
++    visit(ir)
++    return bindings
++
++
++def validate_scope_bindings(
++    bindings: Iterable[ConstraintBinding], policy: ConstraintScopePolicy
++) -> list[ConstraintNameViolation]:
++    materialized = list(bindings)
++    violations: list[ConstraintNameViolation] = []
++    generated = policy.generated_parameters | policy.generated_locals
++    by_name: dict[str, dict[tuple[str, str], ConstraintFormalIdentity]] = {}
++    by_identity: dict[tuple[str, str], set[str]] = {}
++    identity_values: dict[tuple[str, str], ConstraintFormalIdentity] = {}
++    for binding in materialized:
++        key = _identity_key(binding.identity)
++        by_name.setdefault(binding.final_binding, {})[key] = binding.identity
++        by_identity.setdefault(key, set()).add(binding.final_binding)
++        identity_values[key] = binding.identity
++    for final_binding, identities_by_key in by_name.items():
++        identities = tuple(sorted(identities_by_key.values(), key=_identity_sort_key))
++        if final_binding in generated:
++            violations.append(
++                ConstraintNameViolation(
++                    scope=policy.scope,
++                    kind="generated_binding_overlap",
++                    final_binding=final_binding,
++                    generated_binding=final_binding,
++                    identities=identities,
++                )
++            )
++        if len(identities_by_key) > 1:
++            violations.append(
++                ConstraintNameViolation(
++                    scope=policy.scope,
++                    kind="binding_identity_collision",
++                    final_binding=final_binding,
++                    identities=identities,
++                )
++            )
++    for identity_key, names in by_identity.items():
++        if len(names) > 1:
++            violations.append(
++                ConstraintNameViolation(
++                    scope=policy.scope,
++                    kind="identity_binding_disagreement",
++                    final_binding=min(names),
++                    identities=(identity_values[identity_key],),
++                )
++            )
++    return violations
++
++
++def validate_binding_correspondence(
++    predicate: Iterable[ConstraintBinding], wrapper: Iterable[ConstraintBinding]
++) -> list[ConstraintNameViolation]:
++    """Require the two scope inventories to describe the same identities and names."""
++    predicate_bindings_list = list(predicate)
++    wrapper_bindings_list = list(wrapper)
++    violations: list[ConstraintNameViolation] = []
++    matched_wrapper: set[int] = set()
++    for predicate_binding in predicate_bindings_list:
++        identity = predicate_binding.identity
++        exact = [
++            (index, candidate)
++            for index, candidate in enumerate(wrapper_bindings_list)
++            if (
++                identity.qualified_name is not None
++                and candidate.identity.qualified_name == identity.qualified_name
++            )
++            or (
++                identity.qualified_name is None
++                and candidate.identity.qualified_name is None
++                and candidate.identity.raw_name == identity.raw_name
++            )
++        ]
++        if len(exact) == 1:
++            index, candidate = exact[0]
++            matched_wrapper.add(index)
++            if candidate.final_binding != predicate_binding.final_binding:
++                violations.append(
++                    ConstraintNameViolation(
++                        scope="predicate",
++                        kind="cross_scope_binding_disagreement",
++                        final_binding=predicate_binding.final_binding,
++                        identities=(identity,),
++                    )
++                )
++            continue
++        one_sided = [
++            candidate
++            for candidate in wrapper_bindings_list
++            if candidate.identity.raw_name == identity.raw_name
++            and (candidate.identity.qualified_name is None) != (identity.qualified_name is None)
++        ]
++        violations.append(
++            ConstraintNameViolation(
++                scope="predicate",
++                kind="missing_provenance" if one_sided else "identity_set_disagreement",
++                final_binding=predicate_binding.final_binding,
++                identities=tuple(
++                    sorted(
++                        [identity, *(candidate.identity for candidate in one_sided)],
++                        key=_identity_sort_key,
++                    )
++                ),
++            )
++        )
++    for index, wrapper_binding in enumerate(wrapper_bindings_list):
++        if index not in matched_wrapper:
++            violations.append(
++                ConstraintNameViolation(
++                    scope="wrapper",
++                    kind="identity_set_disagreement",
++                    final_binding=wrapper_binding.final_binding,
++                    identities=(wrapper_binding.identity,),
++                )
++            )
++    return violations
++
++
++def verify_emitted_scope(
++    source: str,
++    policy: ConstraintScopePolicy,
++    model_parameters: set[str],
++    *,
++    function_name: str,
++    class_name: str | None = None,
++) -> None:
++    root = symtable.symtable(source, "<generated-constraint>", "exec")
++    tables = root.get_children()
++    if class_name is not None:
++        classes = [
++            table
++            for table in tables
++            if table.get_name() == class_name and table.get_type() == "class"
++        ]
++        if len(classes) != 1:
++            raise ScopePolicyMismatchError(
++                f"expected one generated class {class_name!r}, found {len(classes)}"
++            )
++        tables = classes[0].get_children()
++    functions = [
++        table
++        for table in tables
++        if table.get_name() == function_name and table.get_type() == "function"
++    ]
++    if len(functions) != 1:
++        raise ScopePolicyMismatchError(
++            f"expected one generated function {function_name!r}, found {len(functions)}"
++        )
++    table = functions[0]
++    if table.get_children():
++        names = sorted(child.get_name() for child in table.get_children())
++        raise ScopePolicyMismatchError(f"unsupported child scopes in generated function: {names}")
++    parameters: set[str] = set()
++    locals_: set[str] = set()
++    for symbol in table.get_symbols():
++        if symbol.is_nonlocal() or symbol.is_declared_global():
++            raise ScopePolicyMismatchError(
++                f"unsupported declaration for binding {symbol.get_name()!r}"
++            )
++        if symbol.is_parameter():
++            parameters.add(symbol.get_name())
++        elif symbol.is_local():
++            locals_.add(symbol.get_name())
++    actual_parameters = parameters - model_parameters
++    if actual_parameters != set(policy.generated_parameters) or locals_ != set(
++        policy.generated_locals
++    ):
++        raise ScopePolicyMismatchError(
++            f"{policy.scope} scope policy mismatch: parameters={sorted(actual_parameters)!r}, "
++            f"locals={sorted(locals_)!r}; expected "
++            f"parameters={sorted(policy.generated_parameters)!r}, "
++            f"locals={sorted(policy.generated_locals)!r}"
++        )
++
++
++def _with_context(
++    violation: ConstraintNameViolation, *, constraint_id: str, usage_qualified_name: str
++) -> ConstraintNameViolation:
++    return replace(
++        violation,
++        constraint_id=constraint_id,
++        usage_qualified_name=usage_qualified_name,
++    )
++
++
++def graph_name_safety_violations(graph: ComputationGraph) -> list[ConstraintNameViolation]:
++    catalog = graph.constraint_catalog
++    constraint_modules = [
++        module for module in graph.modules if module.module_kind == ModuleKind.CONSTRAINT
++    ]
++    if catalog is None:
++        return [
++            ConstraintNameViolation(
++                scope="wrapper",
++                kind="catalog_module_join",
++                final_binding=module.name,
++                identities=(),
++            )
++            for module in constraint_modules
++        ]
++    violations: list[ConstraintNameViolation] = []
++    entries_by_module: dict[str, list[object]] = {}
++    for entry in catalog.concrete_entries:
++        entries_by_module.setdefault(entry.constraint_id.lower(), []).append(entry)
++    modules_by_name: dict[str, list[PipelineModule]] = {}
++    for module in constraint_modules:
++        modules_by_name.setdefault(module.name, []).append(module)
++    for entry in catalog.concrete_entries:
++        modules = modules_by_name.get(entry.constraint_id.lower(), [])
++        entries = entries_by_module[entry.constraint_id.lower()]
++        if len(modules) != 1 or len(entries) != 1:
++            violations.append(
++                ConstraintNameViolation(
++                    scope="wrapper",
++                    kind="catalog_module_join",
++                    final_binding=entry.constraint_id.lower(),
++                    identities=(),
++                    constraint_id=entry.constraint_id,
++                    usage_qualified_name=entry.usage_qualified_name,
++                )
++            )
++            continue
++        if entry.predicate_ir is None:
++            continue
++        module = modules[0]
++        pred = predicate_bindings(parse_expression(entry.predicate_ir))
++        wrapper: list[ConstraintBinding] = []
++        missing = False
++        for module_input in module.inputs:
++            if module_input.formal_identity is None:
++                missing = True
++                violations.append(
++                    ConstraintNameViolation(
++                        scope="wrapper",
++                        kind="missing_provenance",
++                        final_binding=module_input.param_name,
++                        identities=(),
++                        constraint_id=entry.constraint_id,
++                        usage_qualified_name=entry.usage_qualified_name,
++                    )
++                )
++                continue
++            wrapper.append(
++                ConstraintBinding("wrapper", module_input.param_name, module_input.formal_identity)
++            )
++        violations.extend(
++            _with_context(
++                v,
++                constraint_id=entry.constraint_id,
++                usage_qualified_name=entry.usage_qualified_name,
++            )
++            for v in validate_scope_bindings(pred, PREDICATE_SCOPE_POLICY)
++        )
++        violations.extend(
++            _with_context(
++                v,
++                constraint_id=entry.constraint_id,
++                usage_qualified_name=entry.usage_qualified_name,
++            )
++            for v in validate_scope_bindings(wrapper, WRAPPER_SCOPE_POLICY)
++        )
++        if missing:
++            continue
++        violations.extend(
++            _with_context(
++                violation,
++                constraint_id=entry.constraint_id,
++                usage_qualified_name=entry.usage_qualified_name,
++            )
++            for violation in validate_binding_correspondence(pred, wrapper)
++        )
++    for module in constraint_modules:
++        if len(entries_by_module.get(module.name, [])) != 1:
++            violations.append(
++                ConstraintNameViolation(
++                    scope="wrapper",
++                    kind="catalog_module_join",
++                    final_binding=module.name,
++                    identities=(),
++                )
++            )
++    return violations
++
++
++def select_graph_name_safety_violation(graph: ComputationGraph) -> ConstraintNameViolation | None:
++    return select_name_safety_violation(graph_name_safety_violations(graph))
+diff --git a/src/sysml_codegen/generation/errors.py b/src/sysml_codegen/generation/errors.py
+index a8d70bb..5fe2ced 100644
+--- a/src/sysml_codegen/generation/errors.py
++++ b/src/sysml_codegen/generation/errors.py
+@@ -5,8 +5,32 @@ from __future__ import annotations
+ from typing import TYPE_CHECKING
+ 
+ if TYPE_CHECKING:
++    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
+     from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+-    from sysml_codegen.resolution.models import PipelineModule
++    from sysml_codegen.resolution.models import ComputationGraph, PipelineModule
++
++
++def constraint_name_safety_error(
++    violation: ConstraintNameViolation,
++) -> CodeGenerationError:
++    """Adapt one pure name-safety record to the package's public error."""
++    from sysml_codegen.generation import CodeGenerationError
++    from sysml_codegen.generation.constraint_name_safety import format_name_safety_violation
++
++    return CodeGenerationError(
++        format_name_safety_violation(violation), name_safety_violation=violation
++    )
++
++
++def validate_constraint_graph_or_raise(graph: ComputationGraph) -> None:
++    """Raise the public package error for the selected graph violation."""
++    from sysml_codegen.generation.constraint_name_safety import (
++        select_graph_name_safety_violation,
++    )
++
++    violation = select_graph_name_safety_violation(graph)
++    if violation is not None:
++        raise constraint_name_safety_error(violation)
+ 
+ 
+ def unrenderable_module_kind_error(module: PipelineModule, seam_name: str) -> CodeGenerationError:
+diff --git a/src/sysml_codegen/generation/modules.py b/src/sysml_codegen/generation/modules.py
+index 817a753..607d916 100644
+--- a/src/sysml_codegen/generation/modules.py
++++ b/src/sysml_codegen/generation/modules.py
+@@ -143,7 +143,7 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
+         assert_same_ir,
+         predicate_definition_key,
+     )
+-    from sysml_codegen.generation.predicate_compiler import compile_predicate
++    from sysml_codegen.generation.predicate_compiler import PredicateCompileError, compile_predicate
+ 
+     assert_unique_predicate_function_names(catalog)
+     assert_same_ir(catalog.concrete_entries)
+@@ -156,10 +156,20 @@ def compile_shared_predicates(catalog: ConstraintCatalog) -> dict[str, tuple[str
+         key = predicate_definition_key(entry)
+         if key in compiled:
+             continue
+-        assert entry.predicate_ir is not None  # guarded by assert_same_ir above
++        if entry.predicate_ir is None:  # guarded by assert_same_ir; keep invariant under -O
++            raise RuntimeError(
++                f"eligible catalog constraint {entry.constraint_id!r} has no predicate_ir"
++            )
+         fn_name = constraint_predicate_function_name(key)
+         ir = parse_expression(entry.predicate_ir)
+-        src, args = compile_predicate(ir, fn_name, negated=entry.is_negated)
++        try:
++            src, args = compile_predicate(ir, fn_name, negated=entry.is_negated)
++        except PredicateCompileError as error:
++            from sysml_codegen.generation import CodeGenerationError
++
++            raise CodeGenerationError(
++                str(error), name_safety_violation=error.name_safety_violation
++            ) from error
+         compiled[key] = (fn_name, src, args)
+     return compiled
+ 
+@@ -169,11 +179,27 @@ def render_constraint_predicates_module(
+     template_env: jinja2.Environment,
+ ) -> str:
+     """Render the shared predicates module: one Kleene runtime block + N function bodies."""
++    from sysml_codegen.generation.constraint_name_safety import (
++        PREDICATE_SCOPE_POLICY,
++        ScopePolicyMismatchError,
++        verify_emitted_scope,
++    )
+     from sysml_codegen.generation.predicate_compiler import (
+         KLEENE_RUNTIME_SOURCE,
+         function_source_only,
+     )
+ 
++    for _key, (fn_name, src, args) in compiled.items():
++        try:
++            verify_emitted_scope(
++                src,
++                PREDICATE_SCOPE_POLICY,
++                set(args),
++                function_name=fn_name,
++            )
++        except ScopePolicyMismatchError as error:
++            raise _generation_error(str(error)) from error
++
+     functions = [
+         {"usage_qualified_name": key, "source": function_source_only(src).strip("\n")}
+         for key, (_fn_name, src, _args) in compiled.items()
+@@ -205,6 +231,73 @@ def render_constraint_module(
+         )
+     fn_name, _src, args = compiled[predicate_definition_key(entry)]
+ 
++    from agentic_mbse.sysml.expression_ir import parse_expression
++
++    from sysml_codegen.generation.constraint_name_safety import (
++        PREDICATE_SCOPE_POLICY,
++        WRAPPER_SCOPE_POLICY,
++        ConstraintBinding,
++        ScopePolicyMismatchError,
++        predicate_bindings,
++        select_name_safety_violation,
++        validate_binding_correspondence,
++        validate_scope_bindings,
++        verify_emitted_scope,
++    )
++    from sysml_codegen.generation.errors import constraint_name_safety_error
++
++    predicate_scope_bindings = predicate_bindings(parse_expression(entry.predicate_ir))
++    wrapper_scope_bindings = []
++    missing_provenance = []
++    for module_input in module.inputs:
++        if module_input.formal_identity is None:
++            missing_provenance.append(module_input.param_name)
++        else:
++            wrapper_scope_bindings.append(
++                ConstraintBinding("wrapper", module_input.param_name, module_input.formal_identity)
++            )
++    violations = validate_scope_bindings(predicate_scope_bindings, PREDICATE_SCOPE_POLICY)
++    violations.extend(validate_scope_bindings(wrapper_scope_bindings, WRAPPER_SCOPE_POLICY))
++    if missing_provenance:
++        from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
++
++        violations.extend(
++            ConstraintNameViolation(
++                scope="wrapper",
++                kind="missing_provenance",
++                final_binding=name,
++                identities=(),
++                constraint_id=entry.constraint_id,
++                usage_qualified_name=entry.usage_qualified_name,
++            )
++            for name in missing_provenance
++        )
++    from dataclasses import replace
++
++    violations = [
++        replace(
++            violation,
++            constraint_id=entry.constraint_id,
++            usage_qualified_name=entry.usage_qualified_name,
++        )
++        for violation in violations
++    ]
++    violation = select_name_safety_violation(violations)
++    if not missing_provenance:
++        violations.extend(
++            replace(
++                candidate,
++                constraint_id=entry.constraint_id,
++                usage_qualified_name=entry.usage_qualified_name,
++            )
++            for candidate in validate_binding_correspondence(
++                predicate_scope_bindings, wrapper_scope_bindings
++            )
++        )
++        violation = select_name_safety_violation(violations)
++    if violation is not None:
++        raise constraint_name_safety_error(violation)
++
+     input_names = [inp.param_name for inp in module.inputs]
+     missing = [a for a in args if a not in input_names]
+     if missing:
+@@ -238,6 +331,16 @@ def render_constraint_module(
+     code = template.render(**context)
+     if not code.endswith("\n"):
+         code += "\n"
++    try:
++        verify_emitted_scope(
++            code,
++            WRAPPER_SCOPE_POLICY,
++            set(input_names),
++            function_name="run",
++            class_name=class_name,
++        )
++    except ScopePolicyMismatchError as error:
++        raise _generation_error(str(error)) from error
+     return code
+ 
+ 
+diff --git a/src/sysml_codegen/generation/pipeline.py b/src/sysml_codegen/generation/pipeline.py
+index bb3f6ff..39f7bae 100644
+--- a/src/sysml_codegen/generation/pipeline.py
++++ b/src/sysml_codegen/generation/pipeline.py
+@@ -50,11 +50,13 @@ def generate_pipeline_yaml(
+     Returns:
+         Generated YAML as string
+     """
++    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
++
++    validate_constraint_graph_or_raise(graph)
++
+     # Build channel -> field_name map from module outputs (single source of truth)
+     channel_field_map = {
+-        out.channel_name: out.field_name
+-        for module in graph.modules
+-        for out in module.outputs
++        out.channel_name: out.field_name for module in graph.modules for out in module.outputs
+     }
+ 
+     # Item 11 (REQ-PY-08): an aliased channel's exit line renders the modeler's
+diff --git a/src/sysml_codegen/generation/predicate_compiler.py b/src/sysml_codegen/generation/predicate_compiler.py
+index d68e389..5ec5c05 100644
+--- a/src/sysml_codegen/generation/predicate_compiler.py
++++ b/src/sysml_codegen/generation/predicate_compiler.py
+@@ -17,7 +17,10 @@ from __future__ import annotations
+ 
+ import keyword
+ import math
+-from typing import Any
++from typing import TYPE_CHECKING, Any
++
++if TYPE_CHECKING:
++    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
+ 
+ from agentic_mbse.sysml.expression_facts import OperandTypeFact
+ from agentic_mbse.sysml.expression_ir import (
+@@ -99,6 +102,15 @@ KLEENE_RUNTIME_SOURCE = _KLEENE_RUNTIME
+ class PredicateCompileError(Exception):
+     """The IR contains a construct the compiler does not (yet) render."""
+ 
++    def __init__(
++        self,
++        message: str,
++        *,
++        name_safety_violation: ConstraintNameViolation | None = None,
++    ) -> None:
++        super().__init__(message)
++        self.name_safety_violation = name_safety_violation
++
+ 
+ def _required_operand_type(n: ExpressionIR) -> OperandTypeFact:
+     if not isinstance(n, (LiteralNode, FeatureReferenceNode, UnitAnnotationNode)):
+@@ -249,6 +261,26 @@ def compile_predicate(
+     """
+     if not fn_name.isidentifier() or keyword.iskeyword(fn_name):
+         raise PredicateCompileError(f"function name {fn_name!r} is not a Python identifier")
++    from dataclasses import replace
++
++    from sysml_codegen.generation.constraint_name_safety import (
++        PREDICATE_SCOPE_POLICY,
++        format_name_safety_violation,
++        predicate_bindings,
++        select_name_safety_violation,
++        validate_scope_bindings,
++        verify_emitted_scope,
++    )
++
++    bindings = predicate_bindings(ir)
++    violation = select_name_safety_violation(
++        validate_scope_bindings(bindings, PREDICATE_SCOPE_POLICY)
++    )
++    if violation is not None:
++        violation = replace(violation, predicate_function_name=fn_name)
++        raise PredicateCompileError(
++            format_name_safety_violation(violation), name_safety_violation=violation
++        )
+     args: list[str] = []
+     _leaf_ref_names(ir, args)
+     for arg in args:
+@@ -269,6 +301,12 @@ def {fn_name}({", ".join(args)}):
+         status = "violated"
+     return _PredicateResult(actual_value=value, status=status, margin={margin})
+ """
++    verify_emitted_scope(
++        src,
++        PREDICATE_SCOPE_POLICY,
++        set(args),
++        function_name=fn_name,
++    )
+     return src, args
+ 
+ 
+diff --git a/src/sysml_codegen/generation/registry.py b/src/sysml_codegen/generation/registry.py
+index 7e4b191..96dbea0 100644
+--- a/src/sysml_codegen/generation/registry.py
++++ b/src/sysml_codegen/generation/registry.py
+@@ -97,8 +97,7 @@ def _resolve_class_name_collisions(
+     # Report collisions (REQ-REG-07)
+     collision_names = sorted(collisions.keys())
+     logger.warning(
+-        "Module class name collisions detected: %s. "
+-        "Generating aliased imports for %d modules.",
++        "Module class name collisions detected: %s. Generating aliased imports for %d modules.",
+         collision_names,
+         sum(len(indices) for indices in collisions.values()),
+     )
+@@ -117,9 +116,7 @@ def _resolve_class_name_collisions(
+                 parent_segment = segments[0] if segments else "unknown"
+ 
+             # PascalCase the parent segment
+-            pascal_parent = "".join(
+-                word.capitalize() for word in parent_segment.split("_")
+-            )
++            pascal_parent = "".join(word.capitalize() for word in parent_segment.split("_"))
+ 
+             alias = f"{pascal_parent}_{class_name}"
+             module["class_name"] = alias
+@@ -205,6 +202,10 @@ def generate_registry(
+     Returns:
+         Generated Python code
+     """
++    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
++
++    validate_constraint_graph_or_raise(graph)
++
+     schema_imports = _generate_schema_imports_from_entry_points(
+         package_name, graph.entry_point_groups
+     )
+@@ -220,9 +221,7 @@ def generate_registry(
+     from sysml_codegen.resolution.models import ModuleKind
+ 
+     # Split modules by type (same processing order as original)
+-    calcusage_modules = [
+-        m for m in graph.modules if m.module_kind == ModuleKind.CALCULATION
+-    ]
++    calcusage_modules = [m for m in graph.modules if m.module_kind == ModuleKind.CALCULATION]
+     formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
+     aggregation_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
+     constraint_modules = [
+@@ -237,10 +236,12 @@ def generate_registry(
+     for module in calcusage_modules:
+         if module.calc_def_name not in seen_names:
+             class_name = f"{module.calc_def_name}Module"
+-            all_modules.append({
+-                "class_name": class_name,
+-                "module_type": module.module_type,
+-            })
++            all_modules.append(
++                {
++                    "class_name": class_name,
++                    "module_type": module.module_type,
++                }
++            )
+             sqn = SysMLQualifiedName(module.calc_def_qualified_name)
+             python_path = PythonModulePath.from_sysml(sqn)
+             import_module = f"{package_name}.modules.{python_path.import_path}"
+@@ -259,10 +260,12 @@ def generate_registry(
+         module_type_full = module.module_type
+         class_name = module_type_full.split(".")[-1]
+ 
+-        all_modules.append({
+-            "class_name": class_name,
+-            "module_type": module_type_full,
+-        })
++        all_modules.append(
++            {
++                "class_name": class_name,
++                "module_type": module_type_full,
++            }
++        )
+         import_module = f"{package_name}.modules.{python_path.import_path}"
+         formula_imports.append(f"from {import_module} import {class_name}")
+     formula_imports.sort()
+@@ -277,10 +280,12 @@ def generate_registry(
+         module_type_full = module.module_type
+         class_name = module_type_full.split(".")[-1]
+ 
+-        all_modules.append({
+-            "class_name": class_name,
+-            "module_type": module_type_full,
+-        })
++        all_modules.append(
++            {
++                "class_name": class_name,
++                "module_type": module_type_full,
++            }
++        )
+         import_module = f"{package_name}.modules.{python_path.import_path}"
+         aggregation_imports.append(f"from {import_module} import {class_name}")
+     aggregation_imports.sort()
+@@ -298,10 +303,12 @@ def generate_registry(
+         filename = parts[-1].lower()
+         import_path = f"{directory}.{filename}" if directory else filename
+ 
+-        all_modules.append({
+-            "class_name": class_name,
+-            "module_type": module_type_full,
+-        })
++        all_modules.append(
++            {
++                "class_name": class_name,
++                "module_type": module_type_full,
++            }
++        )
+         import_module = f"{package_name}.modules.{import_path}"
+         constraint_imports.append(f"from {import_module} import {class_name}")
+     constraint_imports.sort()
+@@ -335,8 +342,8 @@ def generate_registry(
+     template = template_env.get_template("registry_function.py.jinja2")
+     code = template.render(**context)
+ 
+-    if not code.endswith('\n'):
+-        code += '\n'
++    if not code.endswith("\n"):
++        code += "\n"
+ 
+     return code
+ 
+diff --git a/src/sysml_codegen/orchestration/pipeline_context.py b/src/sysml_codegen/orchestration/pipeline_context.py
+index 8779342..b253295 100644
+--- a/src/sysml_codegen/orchestration/pipeline_context.py
++++ b/src/sysml_codegen/orchestration/pipeline_context.py
+@@ -7,6 +7,8 @@ Moved from generation/initialization.py (Step 7.6) to enforce the boundary
+ that generation/ consumes only ComputationGraph.
+ """
+ 
++from __future__ import annotations
++
+ from dataclasses import dataclass, field
+ from pathlib import Path
+ from typing import TYPE_CHECKING, Any
+@@ -35,6 +37,8 @@ from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
+ if TYPE_CHECKING:
+     from agentic_mbse.sysml.constraint_facts import ConstraintFacts
+ 
++    from sysml_codegen.generation.constraint_name_safety import ConstraintNameViolation
++
+ 
+ class SysMLParsingError(Exception):
+     """Error during SysML model parsing.
+@@ -57,7 +61,14 @@ class CodeGenerationError(Exception):
+     - Generation process fails
+     """
+ 
+-    pass
++    def __init__(
++        self,
++        message: str,
++        *,
++        name_safety_violation: ConstraintNameViolation | None = None,
++    ) -> None:
++        super().__init__(message)
++        self.name_safety_violation = name_safety_violation
+ 
+ 
+ @dataclass
+@@ -117,7 +128,7 @@ class PipelineContext:
+     # `generation/constraint_catalog.py` reads for the catalog's `source_records` (D6).
+     # Always populated (may carry empty `usages`) so snapshot v3 (Item 8) can
+     # serialize an honest facts section on every model, constraint-bearing or not.
+-    constraint_facts: "ConstraintFacts | None" = None
++    constraint_facts: ConstraintFacts | None = None
+ 
+     # Resolved per-owner occurrence table, captured as the exact transcript of the
+     # real `lower_constraints` call's `occurrences_of` queries (Item 8, MF3) via
+diff --git a/src/sysml_codegen/resolution/models.py b/src/sysml_codegen/resolution/models.py
+index dc05445..ae9c774 100644
+--- a/src/sysml_codegen/resolution/models.py
++++ b/src/sysml_codegen/resolution/models.py
+@@ -138,6 +138,15 @@ class InputSource(BaseModel):
+     producer_channel: str | None = None
+ 
+ 
++class ConstraintFormalIdentity(BaseModel):
++    """Source identity retained only for generated-constraint name validation."""
++
++    model_config = ConfigDict(frozen=True)
++
++    raw_name: str
++    qualified_name: str | None = None
++
++
+ class ModuleInput(BaseModel):
+     """An input to a pipeline module.
+ 
+@@ -154,6 +163,7 @@ class ModuleInput(BaseModel):
+     source: InputSource
+     description: str | None = None
+     default_value: float | int | str | bool | None = None
++    formal_identity: ConstraintFormalIdentity | None = Field(default=None, exclude=True)
+ 
+ 
+ class ModuleOutput(BaseModel):
+@@ -288,6 +298,7 @@ class ConcreteConstraintInput(BaseModel):
+     bound_channel: str | None = None
+     design_attribute_qn: str | None = None
+     default_ir: str | None = None
++    formal_identity: ConstraintFormalIdentity | None = Field(default=None, exclude=True)
+ 
+     @model_validator(mode="after")
+     def _resolution_field_matches_tag(self) -> "ConcreteConstraintInput":

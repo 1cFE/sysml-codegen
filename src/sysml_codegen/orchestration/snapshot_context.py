@@ -15,15 +15,12 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from sysml_codegen.extraction.constraint_report import render_constraint_report
+from sysml_codegen.analysis.diagnostic_screen import screen_extraction_diagnostics
 from sysml_codegen.orchestration.pipeline_context import PipelineContext
 from sysml_codegen.snapshot import build_full_graph_from_snapshot
+from sysml_codegen.snapshot.loader import load_extraction_snapshot
 
 logger = logging.getLogger(__name__)
-
-# The from-snapshot report must render through the SAME logger as the live path
-# (Item 4, INV-B) so byte output and caplog filtering match across paths.
-_extractor_logger = logging.getLogger("sysml_codegen.extraction.extractor")
 
 
 def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext:
@@ -35,14 +32,23 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
     (INV-4). Logs the provenance banner once (V5) and, if the loader flagged
     stale sources, one end-of-run freshness summary (V3/M6).
     """
+    # Snapshot route's diagnostic sink (DD-R08/R09) — the same function the live route
+    # calls, at the matching boundary, and it must run **before** lowering to be that.
+    #
+    # It sits here rather than inside the loader on purpose: loading is deserialization,
+    # and a snapshot carrying a blocking diagnostic must stay inspectable by tooling that
+    # is not generating from it. Generation is what a blocking diagnostic stops (PC-4).
+    #
+    # It sits *above* `build_full_graph_from_snapshot` rather than below because that
+    # call lowers constraints (`snapshot/graph_rebuild.py`). Screening after it let
+    # lowering consume a non-finite literal first, so a user got an obscure lowering
+    # failure instead of the actionable diagnostic — exactly the failure DD-R09 exists
+    # to prevent (audit F1). The extra load is the honest price of the ordering; the
+    # graph build that follows dominates it.
+    screen_extraction_diagnostics(load_extraction_snapshot(snapshot_path)["constraint_facts"])
+
     graph, inputs = build_full_graph_from_snapshot(snapshot_path)
     snap = inputs["snap"]
-
-    # Replay the constraint drop report from the serialized manifest (Item 4).
-    # Same renderer, same logger as the live path — the report the live run
-    # emitted is now emitted offline too (INV-B).
-    constraint_manifest = snap["constraint_manifest"]
-    render_constraint_report(constraint_manifest, _extractor_logger)
 
     # Provenance banner (V5) — goes to the log only, never into an artifact (INV-6).
     logger.info(
@@ -83,6 +89,10 @@ def build_pipeline_context_from_snapshot(snapshot_path: Path) -> PipelineContext
         hierarchy_data=snap["hierarchy_data"],
         aggregation_expressions=snap["aggregation_expressions"],
         channel_aliases=snap["channel_aliases"],
-        constraint_manifest=constraint_manifest,
         output_registry=inputs["registry"],
+        # Carry the snapshot's real lowering mode (Item 12): without this the
+        # context inherits the dataclass default "grandfathered_off" and every
+        # from-snapshot context mis-reports, even an "applied" one. The product
+        # generate gate reads this field, so it must be honest before the gate exists.
+        constraint_lowering_mode=snap["constraint_lowering_mode"],
     )

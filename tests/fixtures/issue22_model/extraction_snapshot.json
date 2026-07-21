@@ -1,7 +1,83 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "issue22_model",
-  "captured_at": "2026-07-06T19:03:24.455027+00:00",
+  "captured_at": "2026-07-20T15:57:44.105268+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "Issue22Library::WidgetAssembly"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "assembly",
+          "qualified_name": "Issue22Design::plant::assembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "Issue22Library::WidgetAssembly",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Issue22Library::CostBearer"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Widget",
+          "qualified_name": "Issue22Library::Widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Issue22Library::CostBearer"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "WidgetAssembly",
+          "qualified_name": "Issue22Library::WidgetAssembly"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Issue22Library::Widget"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "widget",
+          "qualified_name": "Issue22Library::WidgetAssembly::widget"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "Issue22Library::Widget",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "WidgetCostCalc": {
       "calc_def_name": "WidgetCostCalc",
@@ -99,7 +175,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11,
       "source_hash": "671bee7095c1fde952da6ac5999bcb714fcb21535440275020a209d8e363e82e",
       "output_expression_asts": null,
@@ -161,7 +237,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 19,
       "source_hash": "671bee7095c1fde952da6ac5999bcb714fcb21535440275020a209d8e363e82e",
       "output_expression_asts": null,
@@ -191,13 +267,14 @@
           "literal_value": 100.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "base_cost"
+          "source_attribute_name": "base_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
         "markup_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 30,
       "parent_part_path": "plant.assembly.widget",
       "qualified_name": "Issue22Design__plant__assembly__widget__cost_model",
@@ -222,7 +299,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "total_cost"
+          "source_attribute_name": "total_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "margin_rate",
@@ -235,11 +313,12 @@
           "literal_value": 0.15,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 46,
       "parent_part_path": "plant.assembly",
       "qualified_name": "Issue22Design__plant__assembly__margin_calc",
@@ -255,7 +334,7 @@
         "sysml_type": "Real",
         "default_value": "1.75",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 13,
         "parent_part": "",
         "qualified_name": "Issue22Library__WidgetCostCalc__markup_factor"
@@ -265,7 +344,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 15,
         "parent_part": "",
         "qualified_name": "Issue22Library__WidgetCostCalc__cost"
@@ -275,7 +354,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 23,
         "parent_part": "",
         "qualified_name": "Issue22Library__MarginCalc__margin"
@@ -415,6 +494,5 @@
       "owning_part_qn": "Issue22Library__Widget",
       "source": "redefinition"
     }
-  ],
-  "dropped_constraints": []
+  ]
 }

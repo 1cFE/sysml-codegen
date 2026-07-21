@@ -181,10 +181,6 @@ def mock_syside_adapter(monkeypatch):
 
     # Patch in both modules that use SysideAdapter.is_instance
     monkeypatch.setattr(
-        "sysml_codegen.extraction.expression_compiler.SysideAdapter.is_instance",
-        staticmethod(mock_is_instance),
-    )
-    monkeypatch.setattr(
         "sysml_codegen.extraction.computed_attribute_extractor.SysideAdapter.is_instance",
         staticmethod(mock_is_instance),
     )
@@ -696,10 +692,10 @@ class TestFormulaCompilation:
         """FR-10: FORMULA with unsupported operator → MANUAL_REQUIRED, not exception.
 
         The expression classifies as FORMULA (all sibling refs), but the
-        'mod' operator is not in PYTHON_OPERATOR_MAP, so build_expression_ast
-        produces an UNSUPPORTED node and compile_expression raises
-        CompilationError. The extractor must catch this and degrade to
-        MANUAL_REQUIRED rather than propagating the exception.
+        'mod' operator is not one the calc-compat renderer supports, so
+        render_calc_expression raises CompilationError. The extractor must
+        catch this and degrade to MANUAL_REQUIRED rather than propagating
+        the exception.
         """
         from sysml_codegen.extraction.computed_attribute_extractor import (
             extract_computed_attributes,
@@ -709,7 +705,7 @@ class TestFormulaCompilation:
         )
         from sysml_codegen.extraction.expression_compiler import Compilability
 
-        # 'mod' is not in PYTHON_OPERATOR_MAP → triggers UNSUPPORTED → CompilationError
+        # 'mod' is not an operator the renderer supports → CompilationError
         expr = MockOperatorExpression("mod", [
             MockFeatureReferenceExpression("a"),
             MockFeatureReferenceExpression("b"),
@@ -801,9 +797,9 @@ class TestFormulaCompilation:
         assert len(results) == 1
         x_attr = results[0]
         assert x_attr.classification == ComputedAttributeClassification.FORMULA
-        # The self-reference was excluded from input_names -> build_expression_ast
-        # cannot resolve "x" -> UNSUPPORTED node -> CompilationError caught ->
-        # graceful degradation, not a silently-wrong compiled expression.
+        # The self-reference was excluded from input_names -> the renderer
+        # cannot resolve "x" -> CompilationError caught -> graceful
+        # degradation, not a silently-wrong compiled expression.
         assert x_attr.compiled_expression is None, (
             "Self-reference must not compile to a (wrong) expression"
         )
@@ -946,11 +942,11 @@ class TestReferenceChainCapture:
             references=[],
             classification=ComputedAttributeClassification.FORMULA,
             compilability=Compilability.MANUAL_REQUIRED,
-            source_file=Path("subsystems.sysml"),
+            source_file=Path("unknown"),
             source_line=12,
             reference_chain=["tf_coil", "volume_calc", "volume"],
         )
-        d = _serialize_value(ca, None)
+        d = _serialize_value(ca, None, [])
         assert d["reference_chain"] == ["tf_coil", "volume_calc", "volume"]
 
         ca2 = _deserialize_computed_attribute(d)

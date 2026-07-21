@@ -22,7 +22,6 @@ from pydantic import BaseModel, Field
 
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.analysis.phantom_detector import PhantomDetectionReport, PhantomDetector
-from sysml_codegen.core.identifier_types import ScopedAliasKey, ScopedKey, SysMLQN
 from sysml_codegen.core.models import BindingResolution, BindingResolutionType
 from sysml_codegen.core.output_registry import OutputRegistry
 from sysml_codegen.core.qualified_names import sanitize_qualified_name
@@ -32,7 +31,87 @@ if TYPE_CHECKING:
     # agentic_mbse.sysml.types.BindingInfo — two distinct same-named types (Q4).
     from sysml_codegen.extraction.usage_extractor import BindingInfo, CalcUsageData
 
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerContext,
+    ProducerRequest,
+    ProducerResolution,
+    TerminalPolicy,
+    resolve_producer,
+)
+
 logger = logging.getLogger(__name__)
+
+
+def _warn_lenient_miss(
+    usage_qualified_name: str,
+    param_name: str,
+    source_path: str,
+    resolution: ProducerResolution,
+) -> None:
+    """Every lenient terminal miss is visible (I7).
+
+    Before this, one shape warned and every other lenient miss logged at DEBUG, so a
+    binding that quietly became an entry point left no trace a build log would show.
+    Severity vocabulary and codes are Item 4's; what Item 2 owes is that the miss is
+    seen at all.
+    """
+    if resolution.ambiguous_candidates:
+        logger.warning(
+            "Ambiguous producer for %s|%s reference '%s': %s — refusing to guess, "
+            "surfacing as an entry point.",
+            usage_qualified_name, param_name, source_path,
+            ", ".join(resolution.ambiguous_candidates),
+        )
+        return
+    logger.warning(
+        "Unresolved producer for %s|%s reference '%s' — surfacing as entry point '%s' "
+        "(attempted: %s).",
+        usage_qualified_name, param_name, source_path, resolution.identity,
+        ", ".join(resolution.attempted),
+    )
+
+
+def terminal_disposition(
+    *, usage_qualified_name: str, param_name: str, source_path: str, strict: bool
+) -> str:
+    """The one place the calc and constraint resolution paths diverge (Item 5 / D1).
+
+    Both the calc backtracker's Step 4 and constraint lowering's strict resolver
+    terminal step call this — a shared switch, not two independently-tuned
+    fallback branches, so they cannot silently diverge (spec `[HARD]`
+    strict-resolution).
+
+    ``strict=False`` (the calc path, unchanged behavior): synthesizes the
+    ``{usage_qn}__{param}`` fallback entry-point QN — byte-identical to the
+    pre-extraction inline code.
+
+    ``strict=True`` (constraint actuals, Item 5 / INV-2): raises, naming the
+    actual. No fallback, no entry-point synthesis — the synthesis branch below
+    is physically unreachable in this mode.
+    """
+    if strict:
+        # Late import: sysml_codegen.orchestration.pipeline_context imports this
+        # module (DependencyBacktracker, BacktrackingResult), so a module-level
+        # import here would be circular.
+        from sysml_codegen.orchestration.pipeline_context import CodeGenerationError
+
+        raise CodeGenerationError(
+            f"{usage_qualified_name}.{param_name}: unresolved actual '{source_path}' "
+            "(strict mode: no fallback, no entry-point synthesis — INV-2)"
+        )
+    if "::" not in source_path and source_path.count(".") >= 2:
+        logger.warning(
+            "Multi-hop chain unresolved: %s|%s source_path='%s' — surfacing as an "
+            "entry point (not truncated to root, not silently wired).",
+            usage_qualified_name, param_name, source_path,
+        )
+    logger.debug(
+        "Registry unresolved: %s|%s source_path='%s'",
+        usage_qualified_name, param_name, source_path,
+    )
+    return f"{usage_qualified_name}__{param_name}"
+
 
 class CircularDependencyError(Exception):
     """Raised when circular dependency detected during backtracking."""
@@ -451,6 +530,21 @@ class DependencyBacktracker:
             return segments[-2]
         return None
 
+    def _owner_instance_path_for_usage(self, usage: CalcUsageData) -> str | None:
+        """The owning occurrence path, as row 16 keys on it (DD-R27).
+
+        The constraint consumer passes the same notion from
+        ``owner_instance_path``. For a ``PartUsage`` owner the two coincide:
+        "SharedProducer__the_rig__scaler" -> "SharedProducer__the_rig".
+
+        An occurrence-indexed ``part_def`` owner carries ``[i]`` brackets on the
+        constraint side, and a calc usage QN never has them, so row 16 misses for
+        that shape rather than hitting a wrong key. That is deliberate partial
+        coverage: convergence is claimed for the unbracketed shape only.
+        """
+        owner_path, separator, _ = usage.qualified_name.rpartition("__")
+        return owner_path if separator else None
+
     def _consumer_scope_dotted(self, usage: CalcUsageData) -> str:
         """Extract consumer scope from usage QN for ScopedKey construction.
 
@@ -474,370 +568,84 @@ class DependencyBacktracker:
         usage_eqn = channel.rsplit("__", 1)[0]
         return self._usage_by_qualified.get(usage_eqn)
 
-    def _resolve_reference_via_registry(
-        self,
-        source_path: str,
-        usage: CalcUsageData,
-    ) -> str | None:
-        """Secondary REFERENCE resolution via leaf + parent scope.
-
-        For REFERENCE bindings (FeatureReferenceExpression), the source_path
-        is often a SysML qualified name (Package::Part::attr) or dotted path.
-        Extract the leaf, combine with parent_part from the consuming CalcUsage,
-        and look up via scoped_lookup then alias_lookup.
-        """
-        assert self._output_registry is not None
-        # Extract leaf name
-        if "::" in source_path:
-            leaf = source_path.rsplit("::", 1)[-1]
-        elif "." in source_path:
-            leaf = source_path.rsplit(".", 1)[-1]
-        else:
-            leaf = source_path
-
-        # Try immediate parent scope first (segments[-2].leaf)
-        parent_part = self._get_parent_part_for_usage(usage)
-        if parent_part:
-            sk = ScopedKey(f"{parent_part}.{leaf}")
-            channel = self._output_registry.scoped_lookup(sk)
-            if channel is None:
-                channel = self._output_registry.alias_lookup(sk)
-            if channel is not None and not self._is_self_reference(channel, usage):
-                return channel
-
-        # Try full consumer scope (design_root.....parent.leaf)
-        consumer_scope = self._consumer_scope_dotted(usage)
-        if consumer_scope and consumer_scope != parent_part:
-            sk = ScopedKey(f"{consumer_scope}.{leaf}")
-            channel = self._output_registry.scoped_lookup(sk)
-            if channel is None:
-                channel = self._output_registry.alias_lookup(sk)
-            if channel is not None and not self._is_self_reference(channel, usage):
-                return channel
-
-        return None
-
     def _resolve_binding_via_registry(
         self,
         binding: BindingInfo,
         usage: CalcUsageData,
     ) -> BindingResolution:
-        """Resolve a binding via the OutputRegistry using type-directed dispatch.
+        """Resolve one calculation binding through the shared producer-resolution table.
 
-        Dispatch by binding format:
+        This consumer builds a request and reads a result; it owns no ordering, no key
+        construction, and no terminal behavior of its own. Its policy is
+        :attr:`TerminalPolicy.LENIENT`, so a terminal miss yields one declared typed
+        entry point under the shared QN rule rather than raising.
 
-        CHAIN (no "::" in source_path) — see `_resolve_chain_dispatch`:
-          Step 1:  scoped_lookup(consumer_scope.source_path)
-          Step 1b: scoped_lookup(source_path) — direct (Key_F FORMULA)
-          Step 1c: scoped_alias_lookup((scope, leaf)) — structured part-def
-                   EXPOSE (Item 10 #1; consumer-scope-prefixed key first, REQ-BT-11)
-          Step 2:  alias_lookup(source_path) — cross-scope
-
-        REFERENCE ("::" in source_path) — see `_resolve_reference_dispatch`:
-          Step 1: sysml_qn_lookup(source_path) — per-segment sanitized
-          Step 2: leaf + parent scope -> scoped_lookup then alias_lookup
-
-        Both formats then share (in this method, after dispatch returns None):
-          Step 3: design_attribute match -> ENTRY_POINT
-          Step 4: fallback -> ENTRY_POINT (DEBUG line; recorded for the V11 collector)
+        ``reference`` is the referent's *resolved* qualified name, so this consumer
+        supplies the reference as written through row 16's dedicated
+        ``written_reference`` field instead (DD-R27). The written name is on the
+        binding — live from the AST, offline from every committed snapshot. This is
+        what closes SR-A02: the shared attribute reaches the same occurrence-
+        materialized key the constraint consumer reaches, with no name inferred from a
+        formal. It deliberately supplies no ``instance_path``, which keeps rows 12 and
+        13 dead from here.
         """
         assert self._output_registry is not None
         source_path = binding.source_path
         param_name = binding.param_name
 
-        if "::" in source_path:
-            # --- REFERENCE dispatch ---
-            channel = self._resolve_reference_dispatch(source_path, usage)
-        else:
-            # --- CHAIN dispatch ---
-            channel = self._resolve_chain_dispatch(source_path, usage)
+        resolution = resolve_producer(
+            ProducerRequest(
+                consumer_eqn=usage.qualified_name,
+                reference=source_path,
+                param_name=param_name,
+                consumer_scope=self._consumer_scope_dotted(usage),
+                parent_scope=self._get_parent_part_for_usage(usage),
+                policy=TerminalPolicy.LENIENT,
+                diagnostic_context=f"{usage.qualified_name}|{param_name}",
+                written_reference=binding.written_reference,
+                occurrence_owner_path=self._owner_instance_path_for_usage(usage),
+            ),
+            self._producer_context(),
+        )
 
-        if channel is not None:
+        if resolution.outcome is Outcome.MODULE_OUTPUT:
             return BindingResolution(
                 resolution_type=BindingResolutionType.MODULE_OUTPUT,
-                qualified_name=channel,
+                qualified_name=resolution.identity,
                 source_path=source_path,
                 is_transitive=False,
             )
 
-        # Step 3: Design attribute resolution (existing method, unchanged)
-        design_attr_qn = self._resolve_to_design_attribute(source_path, usage)
-        if design_attr_qn:
-            return BindingResolution(
-                resolution_type=BindingResolutionType.ENTRY_POINT,
-                qualified_name=design_attr_qn,
-                source_path=source_path,
-                is_transitive=False,
-            )
+        if resolution.outcome is Outcome.ENTRY_POINT:
+            _warn_lenient_miss(usage.qualified_name, param_name, source_path, resolution)
+            # V11 membership: only this consumer's lenient miss is recorded, preserving
+            # today's collector scope exactly (I10). Widening it to aggregation is a
+            # coverage-scope decision that belongs to Item 3, not to this refactor.
+            self._fallback_entry_points.add(resolution.identity)
 
-        # Step 4: Fallback entry point. Item 7 / D5: the per-binding line is
-        # DEBUG, not WARNING — it fired per binding and was the primary benign
-        # noise. The post-assembly reconciliation summary (unwired remainder) and
-        # V11 (wired remainder) are now the operator digest for genuine residue.
-        #
-        # Item 2 / D3 (M-2): a 3+-segment CHAIN that reaches here is genuinely
-        # unresolvable — the extraction reject moved here (extraction has no
-        # registry). Emit a GENUINE logger.warning (WARNING level, distinct from the
-        # benign DEBUG line above), naming the full untruncated chain, so the
-        # Item-5 loud-diagnostic contract holds at its new home. The fallback QN
-        # below is already full + untruncated (usage_qn__param).
-        if "::" not in source_path and source_path.count(".") >= 2:
-            logger.warning(
-                "Multi-hop chain unresolved: %s|%s source_path='%s' — surfacing as an "
-                "entry point (not truncated to root, not silently wired).",
-                usage.qualified_name, param_name, source_path,
-            )
-        logger.debug(
-            "Registry unresolved: %s|%s source_path='%s'",
-            usage.qualified_name, param_name, source_path,
-        )
-        fallback_qn = f"{usage.qualified_name}__{param_name}"
-        # Record the fall-through so the V11 collector can find genuinely
-        # uncovered wired inputs (Item 7 / D4). Only bound bindings that failed
-        # every resolution strategy reach here.
-        self._fallback_entry_points.add(fallback_qn)
         return BindingResolution(
             resolution_type=BindingResolutionType.ENTRY_POINT,
-            qualified_name=fallback_qn,
+            qualified_name=resolution.identity,
             source_path=source_path,
             is_transitive=False,
         )
 
-    def _resolve_chain_dispatch(
-        self, source_path: str, usage: CalcUsageData
-    ) -> str | None:
-        """CHAIN dispatch: scoped_lookup then alias_lookup."""
-        # Step 1: Consumer-scoped lookup
-        consumer_scope = self._consumer_scope_dotted(usage)
-        if consumer_scope:
-            scoped_key = ScopedKey(f"{consumer_scope}.{source_path}")
-            channel = self._output_registry.scoped_lookup(scoped_key)
-            if channel is not None and not self._is_self_reference(channel, usage):
-                return channel
-
-        # Step 1b: Direct scoped lookup (no consumer scope prefix)
-        # Covers Key_F (FORMULA outputs registered as owning_part.attr)
-        channel = self._output_registry.scoped_lookup(ScopedKey(source_path))
-        if channel is not None and not self._is_self_reference(channel, usage):
-            return channel
-
-        # Step 1c: Structured part-def / consumer-scoped alias lookup (Item 10 #1).
-        # Split the source_path at the LAST dot into (scope, leaf) and query the
-        # structured _scoped_alias namespace. This reaches a part-def EXPOSE (D7,
-        # e.g. demo_plant.total_cost) that no flat string key constructs. Ordered
-        # after both scoped steps and before the unscoped alias step (INV-A): it
-        # only ADDS a hit where the old ladder fell through, never overrides one.
-        #
-        # D-D (Item 10 b2, REQ-BT-11): try the consumer-scope-prefixed key FIRST,
-        # mirroring Step 1's `consumer_scope + '.' + source_path` prepend. A binding
-        # like `chamber_b.power` in a two-sibling plant registers as
-        # `('twin_plant.chamber_b','power')`; the bare `('chamber_b','power')` misses
-        # it and the def-level `power` name first-wins-collides. Prepending the
-        # consumer's instance scope disambiguates to the correct sibling channel.
-        if "." in source_path:
-            prefix, leaf = source_path.rsplit(".", 1)
-            channel = None
-            if consumer_scope:
-                channel = self._output_registry.scoped_alias_lookup(
-                    ScopedAliasKey((f"{consumer_scope}.{prefix}", leaf))
-                )
-            if channel is None:
-                channel = self._output_registry.scoped_alias_lookup(
-                    ScopedAliasKey((prefix, leaf))
-                )
-            if channel is not None and not self._is_self_reference(channel, usage):
-                return channel
-
-        # Step 2: Cross-scope alias lookup
-        channel = self._output_registry.alias_lookup(ScopedKey(source_path))
-        if channel is not None and not self._is_self_reference(channel, usage):
-            return channel
-
-        # Step CLIMB (Item 2, D2/D4): ancestor-scope climb for deep chains. When the
-        # ladder above misses, retry scoped_lookup with progressively shorter ancestor
-        # prefixes of the consumer scope. The registry keys every output by its full
-        # design-prefix-stripped instance path (make_scoped_key), so prefixing the whole
-        # source_path with the ancestor scope where the chain root actually lives
-        # reconstructs the registered key (B1). Example: consumer scope
-        # `measurement_system.analyzer` misses `station.array...`, but dropping
-        # `analyzer` yields `measurement_system.station.array.derived_calc.derived_value`
-        # — a hit. Gated to 3+-segment chains (D4): a 2-segment chain never enters here,
-        # so every existing resolution is byte-identical. Ordered last (INV-A): only
-        # adds a hit where the ladder fell through, never overrides one.
-        #
-        # M-1 / INV-2b ambiguity guard: collect EVERY distinct channel the prefixes
-        # reach and refuse (fall through to the loud Step-4 fallback) if two disagree —
-        # never silently pick one. This closes the case of two scopes both carrying the
-        # FULL path to different channels. It does NOT close first-segment shadowing (an
-        # inner scope declares only the chain's first segment while an outer scope
-        # supplies the full path → a single outer-channel hit that strict SysML lexical
-        # resolution would call unresolvable). No corpus model exercises that shape; it
-        # is a filed, documented assumption, not a built guard (design.md Non-Goals, B2).
-        if source_path.count(".") >= 2:
-            scope_segments = consumer_scope.split(".") if consumer_scope else []
-            climbed: set[str] = set()
-            for i in range(len(scope_segments), -1, -1):
-                prefix = ".".join(scope_segments[:i])
-                key = ScopedKey(f"{prefix}.{source_path}" if prefix else source_path)
-                channel = self._output_registry.scoped_lookup(key)
-                if channel is not None and not self._is_self_reference(channel, usage):
-                    climbed.add(channel)
-            if len(climbed) == 1:
-                return next(iter(climbed))
-
-        return None
-
-    def _resolve_reference_dispatch(
-        self, source_path: str, usage: CalcUsageData
-    ) -> str | None:
-        """REFERENCE dispatch: sysml_qn_lookup, then normalization, then leaf+parent."""
-        # Step 1: Direct SysML QN lookup.
-        # Site 2 of the FORMULA sysml-QN lockstep flip (Item 7 / INV-1): the
-        # registry key is registered per-segment sanitized, so the lookup key
-        # must be too, or a quoted-owner REFERENCE never matches.
-        channel = self._output_registry.sysml_qn_lookup(
-            SysMLQN(sanitize_qualified_name(source_path))
-        )
-        if channel is not None and not self._is_self_reference(channel, usage):
-            return channel
-
-        # Step 2: REFERENCE secondary (leaf + parent scope)
-        channel = self._resolve_reference_via_registry(source_path, usage)
-        return channel
-
-    def _is_self_reference(self, channel: str, usage: CalcUsageData) -> bool:
-        """Check if resolved channel points back to the consuming usage."""
-        producing_usage_qn = channel.rsplit("__", 1)[0] if "__" in channel else channel
-        if producing_usage_qn == usage.qualified_name:
-            logger.debug(
-                "Registry self-reference: %s, treating as entry point",
-                channel,
-            )
-            return True
-        return False
-
-    def _resolve_to_design_attribute(
-        self,
-        source_path: str,
-        usage: CalcUsageData,
-    ) -> str | None:
-        """Resolve a binding source path to its root design attribute qualified name.
-
-        When a calc input is bound to a design attribute, the binding source_path may be:
-        - A bare name: "p_fusion" (for simple references)
-        - A dotted path: "catf_heating.delivered_power" (for parent.attribute references)
-
-        This method looks up the corresponding design attribute using file context
-        for disambiguation.
-
-        This enables entry point deduplication: multiple calcs binding to the same
-        design attribute will share a single entry point with the attribute's qualified name.
-
-        Args:
-            source_path: Bare name or dotted path from binding extraction
-            usage: The calc usage for file context
-
-        Returns:
-            Design attribute qualified name if found, None otherwise
-        """
-        # Get file context from usage for disambiguation
-        usage_file = usage.source_file if hasattr(usage, "source_file") else None
-
-        # Handle dotted paths (parent_part.attribute_name)
-        if "." in source_path:
-            parts = source_path.split(".")
-            parent_part = parts[0]
-            attr_name = parts[-1]
-
-            # Look for design attribute matching parent_part and name
-            for file_path, attrs in self._design_attributes.items():
-                for attr in attrs:
-                    if attr.name == attr_name and attr.parent_part == parent_part:
-                        return attr.qualified_name
-
-            # Bug B (REQ-BT-10): a design attribute owned by a part *def* extracts
-            # with parent_part='' (get_parent_part_name is empty for def owners),
-            # so the exact parent_part match above never fires for it. Fall back to
-            # a leaf-unique match: gather design-part attributes carrying this leaf
-            # name; use it only when exactly one exists (unambiguous target), else
-            # refuse (return None -> Step-4, kept loud). Never guesses among
-            # ambiguous candidates (INV-2, no cross-wire).
-            cands = [
-                attr
-                for attrs in self._design_attributes.values()
-                for attr in attrs
-                if attr.name == attr_name
-                and not self._is_calc_def_owned(attr.qualified_name)
-            ]
-            if len(cands) == 1:
-                return cands[0].qualified_name
-
-            # 0 or >1 design-part candidates: fall to Step-4, kept loud.
-            return None
-
-        # Handle SysML qualified names (contain '::' separator)
-        # These come from REFERENCE bindings using expr.referent.qualified_name
-        # Convert to Python format and do exact qualified name match
-        if "::" in source_path:
-            # Bug A (REQ-BT-09) / lockstep site 3: per-segment sanitize so a
-            # quoted-owner QN (Lib::'Magnet Part'::attr) matches the design
-            # attribute's per-segment-sanitized qualified_name. A bare ::->__ swap
-            # keeps the quotes and never matches.
-            python_qname = sanitize_qualified_name(source_path)
-            for file_path, attrs in self._design_attributes.items():
-                for attr in attrs:
-                    if attr.qualified_name == python_qname:
-                        return attr.qualified_name
-            # No exact match found
-            return None
-
-        # Handle bare names (attribute name only)
-        # Build candidates from design attributes with matching name
-        candidates: list[tuple[Path, DesignAttributeData]] = []
-        for file_path, attrs in self._design_attributes.items():
-            for attr in attrs:
-                if attr.name == source_path:
-                    candidates.append((file_path, attr))
-
-        if not candidates:
-            return None
-
-        if len(candidates) == 1:
-            return candidates[0][1].qualified_name
-
-        # Multiple candidates - prefer same file
-        if usage_file:
-            for file_path, attr in candidates:
-                if file_path == usage_file or str(file_path) == str(usage_file):
-                    return attr.qualified_name
-
-        # Fallback: use first candidate with warning
-        logger.warning(
-            f"Ambiguous design attribute '{source_path}': {len(candidates)} matches found. "
-            f"Using {candidates[0][1].qualified_name}"
-        )
-        return candidates[0][1].qualified_name
-
-    def _is_calc_def_owned(self, attr_qualified_name: str) -> bool:
-        """True when a "design attribute" QN is really a calc-def I/O attribute.
-
-        ``_design_attributes`` is extracted from every AttributeUsage carrying a
-        value expression, which includes calc-def ``out attribute y = expr``
-        outputs, not just user design-part attributes. The leaf-unique matcher
-        (Bug B) must exclude these: matching a dotted calc-output reference by leaf
-        name would cross-wire a module-output binding into a DESIGN_ATTRIBUTE entry
-        point with a library default (A1 ruling; INV-2). An attribute is
-        calc-def-owned when its QN, minus the leaf segment, equals a calc def's
-        sanitized qualified name.
-        """
+    def _producer_context(self) -> ProducerContext:
+        """The table's context for this run. Built from what the backtracker holds."""
+        assert self._output_registry is not None
         if self._calc_def_qns is None:
             self._calc_def_qns = {
                 sanitize_qualified_name(cd.qualified_name)
                 for cd in self.calc_defs
                 if getattr(cd, "qualified_name", "")
             }
-        owner = attr_qualified_name.rsplit("__", 1)[0]
-        return owner in self._calc_def_qns
+        attrs = tuple(a for attrs in self._design_attributes.values() for a in attrs)
+        return ProducerContext(
+            output_registry=self._output_registry,
+            design_attr_by_qn={a.qualified_name: a for a in attrs},
+            design_attrs=attrs,
+            calc_def_qns=frozenset(self._calc_def_qns),
+        )
 
     def _build_dependency_graph(
         self,
@@ -935,4 +743,5 @@ __all__ = [
     "CircularDependencyError",
     "DependencyBacktracker",
     "TargetNotFoundError",
+    "terminal_disposition",
 ]

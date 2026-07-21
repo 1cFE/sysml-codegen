@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 # operator correctly *except* `^`, which it maps to Python bitwise-XOR (` ^ `);
 # in an aggregation (as in SysML) `^` is exponentiation and must become ` ** `.
 # The comparison/logical translations (`> < == != and or implies not ...`) are
-# kept as-is — swapping wholesale to PYTHON_OPERATOR_MAP would drop them and
+# kept as-is — swapping wholesale to an arithmetic-only map would drop them and
 # falsely trip has_unsupported on a valid `sum(x) > threshold` aggregation. An
 # operator absent from this map is genuinely untranslatable → has_unsupported.
 AGG_PYTHON_OPS = {**OPERATOR_MAP, "^": " ** "}
@@ -97,6 +97,40 @@ def extract_redefinitions(part_element: Any) -> list[RedefinitionData]:
         List of RedefinitionData for each :>> with a value expression.
     """
     return cast(list[RedefinitionData], shared_hierarchy.extract_redefinitions(part_element))
+
+
+def extract_child_usage_redefinitions(part_def: Any) -> list[RedefinitionData]:
+    """Extract ``:>>`` CHAIN redefinitions on a PartDef's CHILD part usages (Item 10).
+
+    ``extract_redefinitions`` scans a PartDef's DIRECT ``:>>`` members. A child part usage's
+    own member redefinitions — ``part magnet : 'Magnet System' { :>> capital_cost =
+    magnet_cost.capital_cost; }`` — sit one level deeper and were never captured, so a
+    cross-part aggregation term ``magnet.capital_cost`` had no redefinition to follow and
+    collapsed to a qualifier-dropped leaf guess (the producer-completeness defect this item
+    owns; WI-015 #4 root). This captures them keyed on the child usage's own QN — whose last
+    segment is the usage name, exactly what ``_chain_redefinition_follow`` matches
+    (``owning_part_qn.split('__')[-1] == part_usage``). Only CHAIN redefinitions are kept:
+    the follow path resolves those to a per-instance producer channel. Non-CHAIN member
+    redefinitions (literals, expressions) are unaffected.
+    """
+    results: list[RedefinitionData] = []
+    for usage in getattr(part_def, "owned_members", []):
+        if not SysideAdapter.is_instance(usage, "PartUsage"):
+            continue
+        usage_qn = build_element_qualified_name(usage)
+        if not usage_qn:
+            continue
+        for member in getattr(usage, "owned_members", []):
+            redef_data = cast(
+                "RedefinitionData | None",
+                shared_hierarchy.classify_redefinition(member, usage_qn),
+            )
+            if (
+                redef_data is not None
+                and redef_data.redefinition_type == RedefinitionType.CHAIN
+            ):
+                results.append(redef_data)
+    return results
 
 
 def _keep_plain_usage_override(redef_data: RedefinitionData) -> bool:
@@ -487,6 +521,11 @@ def extract_hierarchy_data(model: Any) -> HierarchyExtractionResult:
     for part_def in SysideAdapter.elements_of_type(model, "PartDefinition"):
         redefs = extract_redefinitions(part_def)
         all_redefinitions.extend(redefs)
+        # Item 10: also capture child part-usage :>> CHAIN redefinitions so a cross-part
+        # aggregation term (`child.attr`) follows the child's redefinition to a per-instance
+        # channel instead of collapsing to a qualifier-dropped leaf guess. Kept out of
+        # `redefs` (the aggregation-building set) — resolution-only.
+        all_redefinitions.extend(extract_child_usage_redefinitions(part_def))
 
         mults = extract_multiplicities(part_def)
         all_multiplicities.extend(mults)

@@ -1,7 +1,91 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "spec_chain_twolevel",
-  "captured_at": "2026-07-06T19:03:24.533133+00:00",
+  "captured_at": "2026-07-20T15:57:44.262313+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "TwoLevelLib::'IFE Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hif_plant",
+          "qualified_name": "TwoLevelDesign::hif_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TwoLevelLib::'IFE Power Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "TwoLevelLib::'HIF Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "TwoLevelDesign::hif_plant::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TwoLevelLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "TwoLevelLib::'HIF Driver'"
+        ]
+      },
+      {
+        "general_types": [
+          "TwoLevelLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "HIF Driver",
+          "qualified_name": "TwoLevelLib::'HIF Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "TwoLevelLib::'IFE Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "TwoLevelLib::'IFE Power Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "TwoLevelLib::'IFE Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MeierCost": {
       "calc_def_name": "MeierCost",
@@ -123,7 +207,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 6,
       "source_hash": "c84bcaf19bc05811d29013d1b91c891539221cc09001223d64c21e9c802b4a3e",
       "output_expression_asts": null,
@@ -171,7 +255,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 13,
       "source_hash": "c84bcaf19bc05811d29013d1b91c891539221cc09001223d64c21e9c802b4a3e",
       "output_expression_asts": null,
@@ -219,7 +303,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 23,
       "source_hash": "c84bcaf19bc05811d29013d1b91c891539221cc09001223d64c21e9c802b4a3e",
       "output_expression_asts": null,
@@ -267,7 +351,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 28,
       "source_hash": "c84bcaf19bc05811d29013d1b91c891539221cc09001223d64c21e9c802b4a3e",
       "output_expression_asts": null,
@@ -296,11 +380,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "drive_power"
+          "source_attribute_name": "drive_power",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 40,
       "parent_part_path": "hif_plant.driver",
       "qualified_name": "TwoLevelDesign__hif_plant__driver__meier_cost",
@@ -325,11 +410,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "cost_per_joule"
+          "source_attribute_name": "cost_per_joule",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 64,
       "parent_part_path": "hif_plant",
       "qualified_name": "TwoLevelDesign__hif_plant__lcoe_calc",
@@ -354,11 +440,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "driver",
-          "source_attribute_name": "maintenance_rate"
+          "source_attribute_name": "maintenance_rate",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 70,
       "parent_part_path": "hif_plant",
       "qualified_name": "TwoLevelDesign__hif_plant__maint_calc",
@@ -383,11 +470,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "scale"
+          "source_attribute_name": "scale",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 75,
       "parent_part_path": "hif_plant",
       "qualified_name": "TwoLevelDesign__hif_plant__scale_a",
@@ -412,11 +500,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "scale"
+          "source_attribute_name": "scale",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 78,
       "parent_part_path": "hif_plant",
       "qualified_name": "TwoLevelDesign__hif_plant__scale_b",
@@ -432,7 +521,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 8,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__MeierCost__gamma"
@@ -442,7 +531,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 15,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__LcoeCalc__lcoe"
@@ -452,7 +541,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 25,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__MaintCalc__maint_cost"
@@ -462,7 +551,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 30,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__ScaleCalc__scaled"
@@ -472,7 +561,7 @@
         "sysml_type": "Real",
         "default_value": "50.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 35,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__IFE_Driver__drive_power"
@@ -482,7 +571,7 @@
         "sysml_type": "Real",
         "default_value": "3.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 38,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__IFE_Driver__maintenance_rate"
@@ -492,7 +581,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 62,
         "parent_part": "",
         "qualified_name": "TwoLevelLib__IFE_Power_Plant__scale"
@@ -531,6 +620,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

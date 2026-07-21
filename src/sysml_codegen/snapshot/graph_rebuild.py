@@ -9,18 +9,31 @@ the constraint is behavioral (never invoke), not import-graph.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
+from sysml_codegen.analysis.constraint_lowering import (
+    extend_graph_with_constraints,
+    lower_constraints,
+    prepare_constraint_usages,
+)
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.analysis.parameter_groups import ParameterGroupDeriver
+from sysml_codegen.analysis.part_instance_index import FrozenOccurrenceIndex
 from sysml_codegen.orchestration.output_registry_builder import build_output_registry
 from sysml_codegen.resolution.graph_builder import (
     _classify_entry_points,
     build_computation_graph,
 )
 from sysml_codegen.resolution.models import ComputationGraph
-from sysml_codegen.resolution.supplied_values import materialize_supplied_values
+from sysml_codegen.resolution.supplied_values import enrich_graph_design_attributes
+from sysml_codegen.snapshot import (
+    CONSTRAINT_LOWERING_MODE_APPLIED,
+    CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF,
+)
 from sysml_codegen.snapshot.loader import load_extraction_snapshot
+
+logger = logging.getLogger(__name__)
 
 
 def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
@@ -66,38 +79,51 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
     # same as the live path. Runs after the scoped aliases exist, before the backtracker.
     _rescue_self_named_bindings(registry, snap["calc_usages"])
 
-    # Item 2 (REQ-SVM-01..04): materialize supplied subsystem-attr values into
-    # design_attributes BEFORE the backtracker, so its Step-3 design-attribute
-    # resolution carries them to the consumer and collapses fan-out by source QN.
-    # The backtracker (below) is the real seam — it, not build_computation_graph,
-    # runs `_resolve_to_design_attribute`.
+    # Item 2 (REQ-SVM-01..04): enrich design attributes BEFORE the backtracker, so its
+    # Step-3 design-attribute resolution carries them to the consumer and collapses
+    # fan-out by source QN. The backtracker (below) is the real seam — it, not
+    # build_computation_graph, runs the shared table's design-attribute tier.
     hierarchy_data = snap["hierarchy_data"]
-    synth_attrs = materialize_supplied_values(
-        snap["calc_usages"],
-        hierarchy_data.redefinitions,
-        hierarchy_data.design_overrides,
-        hierarchy_data.usage_type_map,
-        snap["design_attributes"],
+    # Item 1: prepare once, from one frozen index, before any demand or lowering —
+    # the replay dual of pipeline_builder.py's live Step 5.64. The batch is carried
+    # in the returned classifier inputs so the rebuild below never builds a second
+    # index, re-evaluates the profile, or re-queries an owner.
+    prepared = (
+        prepare_constraint_usages(
+            snap["constraint_facts"],
+            occ_index=FrozenOccurrenceIndex(snap["part_occurrences"]),
+            calc_usages=snap["calc_usages"],
+            source_location_mode="snapshot",
+            source_roots=[],
+        )
+        if snap["constraint_lowering_mode"] == CONSTRAINT_LOWERING_MODE_APPLIED
+        and snap["constraint_facts"].usages
+        else None
     )
-    for attr in synth_attrs:
-        # Bucket by the attribute's own source file (the consuming usage's file) so it
-        # groups into a valid, existing parameter group, not a sentinel-named one.
-        snap["design_attributes"].setdefault(str(attr.source_file), []).append(attr)
+    # The same copy-on-write enrichment the live route runs (pipeline_builder Step
+    # 5.65). A snapshot captured `applied` already ran it live; re-deriving it through
+    # the identical seam is what makes from-snapshot regeneration byte-identical, not
+    # merely non-crashing. `snap["design_attributes"]` is never mutated.
+    design_attrs = enrich_graph_design_attributes(
+        snap["design_attributes"],
+        calc_usages=snap["calc_usages"],
+        prepared=prepared,
+        redefinitions=hierarchy_data.redefinitions,
+        design_overrides=hierarchy_data.design_overrides,
+        usage_type_map=hierarchy_data.usage_type_map,
+    )
 
     # Run backtracker
     backtracker = DependencyBacktracker(
         all_usages=snap["calc_usages"],
         calc_defs=snap["calc_defs"],
-        design_attributes=snap.get("design_attributes", {}),
+        design_attributes=design_attrs,
         output_registry=registry,
     )
     result = backtracker.find_required_modules([], include_all=True)
 
     # Build calc_def_map
     calc_def_map = {cd.name: cd for cd in snap["calc_defs"]}
-
-    # Build design_attrs with Path keys
-    design_attrs = {Path(k): v for k, v in snap["design_attributes"].items()}
 
     # Build ParameterGroupDeriver
     group_deriver = ParameterGroupDeriver(
@@ -136,6 +162,7 @@ def build_classifier_inputs_from_snapshot(snapshot_path: Path) -> dict:
         "design_attr_by_qname": design_attr_by_qname,
         "unbound_lookup": unbound_lookup,
         "entry_point_sources": result.entry_point_sources,
+        "prepared_constraints": prepared,
         "group_deriver": group_deriver,
         "registry": registry,
     }
@@ -173,5 +200,39 @@ def build_full_graph_from_snapshot(
         channel_aliases=snap.get("channel_aliases", []),
         include_all=True,
     )
+
+    # [P1 RESOLVE + P3 EXTEND] (Item 8): offline re-lowering, dispatched on the
+    # load-validated mode enum (total — no third branch, the loader already
+    # rejected any other value). P2 (roots-before-pruning) is inert offline:
+    # include_all=True above already put every calc usage's producer channel in
+    # the graph, so a constraint's bound_channel never dangles (design.md#key-bets B3).
+    facts = snap["constraint_facts"]
+    mode = snap["constraint_lowering_mode"]
+    prepared = inputs["prepared_constraints"]
+    if prepared is not None:
+        concrete = lower_constraints(
+            facts,
+            prepared=prepared,
+            registry=inputs["registry"],
+            design_attrs=inputs["design_attrs"],
+        )
+        if concrete:
+            graph = extend_graph_with_constraints(graph, concrete, inputs["group_deriver"])
+            # [P4 CATALOG] (Item 7 / D6): mirrors pipeline_builder.py's live P4 —
+            # every generation seam reads the catalog from the graph, never from
+            # a context, so live and from-snapshot artifacts stay byte-identical
+            # only if both assemble it the same way.
+            from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+
+            graph.constraint_catalog = assemble_constraint_catalog(concrete, facts)
+    elif mode == CONSTRAINT_LOWERING_MODE_GRANDFATHERED_OFF and facts.usages:
+        logger.warning(
+            "Snapshot %s was captured with constraint lowering disabled "
+            "(grandfathered) but carries %d constraint assertion(s) — these "
+            "assertions are NOT generated into this graph. Recapture with "
+            "lowering enabled to include them.",
+            snapshot_path,
+            len(facts.usages),
+        )
 
     return graph, inputs

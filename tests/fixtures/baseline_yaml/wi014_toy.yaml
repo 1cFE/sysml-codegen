@@ -33,6 +33,23 @@ modules:
     outputs:
       root: RootModel[float] toy_plant__demo_plant__cost_calc__cost
 
+  # toy_plant.DemoPlantAffordableConstraintModule
+  toy_plant__demo_plant__affordable__c122240f4b148939:
+    module_type: toy_plant.DemoPlantAffordableConstraintModule
+    inputs:
+      budget: float toy_plant_params.toy_plant__Toy_Plant__plant_budget
+      cost: float toy_plant__demo_plant__cost_calc__cost.root
+    outputs:
+      evaluation: ConstraintEvaluation toy_plant__demo_plant__affordable__c122240f4b148939__evaluation
+
+  # constraints.ConstraintReportAggregatorModule
+  constraint_report_aggregator:
+    module_type: constraints.ConstraintReportAggregatorModule
+    inputs:
+      toy_plant_demo_plant_affordable_c122240f4b148939: ConstraintEvaluation toy_plant__demo_plant__affordable__c122240f4b148939__evaluation
+    outputs:
+      constraint_report: ConstraintReport constraint_report
+
 
   # Exit point - capture all results
   exit_point:
@@ -40,3 +57,5 @@ modules:
     outputs:
       toy_plant__demo_plant__area_calc__area: RootModel[float] toy_plant__demo_plant__area_calc__area.json
       toy_plant__demo_plant__cost_calc__cost: RootModel[float] demo_plant__total_cost.json
+      toy_plant__demo_plant__affordable__c122240f4b148939__evaluation: ConstraintEvaluation toy_plant__demo_plant__affordable__c122240f4b148939__evaluation.json
+      constraint_report: ConstraintReport constraint_report.json

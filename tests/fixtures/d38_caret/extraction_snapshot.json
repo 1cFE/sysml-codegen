@@ -1,7 +1,83 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "d38_caret",
-  "captured_at": "2026-07-06T22:57:06.532051+00:00",
+  "captured_at": "2026-07-20T15:57:44.344871+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "D38Lib::Pack"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "pack",
+          "qualified_name": "D38Design::plant::pack"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "D38Lib::Pack",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "D38Lib::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Cell",
+          "qualified_name": "D38Lib::Cell"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "D38Lib::'Costed Item'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Pack",
+          "qualified_name": "D38Lib::Pack"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "D38Lib::Cell"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "cell",
+          "qualified_name": "D38Lib::Pack::cell"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "D38Lib::Cell",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "NoopCalc": {
       "calc_def_name": "NoopCalc",
@@ -63,7 +139,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 32,
       "source_hash": "234eddecd234248032e37be7224822575aded7cb3166a5e326eff30caeaa179d",
       "output_expression_asts": null,
@@ -91,13 +167,13 @@
           "source_attribute_elem": null,
           "literal_value": 1.0,
           "expression_ast": null,
-          "unhandled": false,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 11,
       "parent_part_path": "",
       "qualified_name": "D38Design__plant__noop",
@@ -113,7 +189,7 @@
         "sysml_type": "Integer",
         "default_value": "4",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 19,
         "parent_part": "",
         "qualified_name": "D38Lib__Pack__count"
@@ -123,7 +199,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 20,
         "parent_part": "",
         "qualified_name": "D38Lib__Pack__exponent"
@@ -133,7 +209,7 @@
         "sysml_type": "Real",
         "default_value": "x",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 34,
         "parent_part": "",
         "qualified_name": "D38Probe__NoopCalc__result"
@@ -242,6 +318,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

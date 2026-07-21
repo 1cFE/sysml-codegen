@@ -14,6 +14,7 @@ import pytest
 from sysml_codegen.cli import GenerationConfig, run_codegen
 from sysml_codegen.generation.initialization import PipelineContext
 from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
+from sysml_codegen.resolution.models import ModuleKind
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
@@ -210,7 +211,7 @@ class TestHierarchyWiringE2E:
         """
         graph = pipeline_context.computation_graph
 
-        agg_modules = [m for m in graph.modules if m.is_aggregation]
+        agg_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
         assert len(agg_modules) > 0, (
             "Expected at least one aggregation module in computation graph"
         )
@@ -259,7 +260,7 @@ class TestHierarchyCodegenE2E:
         return {
             m.calc_def_name.lower() + ".py"
             for m in ctx.computation_graph.modules
-            if m.is_aggregation
+            if m.module_kind == ModuleKind.AGGREGATION
         }
 
     def test_bf3_aggregation_wrappers_have_inputs(
@@ -414,7 +415,7 @@ class TestAggregationFCEOrdering:
         self, pipeline_context: PipelineContext,
     ):
         """Bug A2: FCE nodes must not produce 'unsupported operator: .' diagnostic.
-        This happens when FCE enters the OE handler in build_expression_ast()."""
+        This happens when FCE enters the OE handler in syside->IR dispatch."""
         for calc_name, comp_result in pipeline_context.compilation_results.items():
             for output_result in comp_result.output_results:
                 if output_result.unsupported_reason:
@@ -473,11 +474,11 @@ class TestAggregationLiteralAndAlias:
         # Find site_infra aggregation modules (they reference permitting sub-costs)
         site_infra_aggs = [
             m for m in graph.modules
-            if m.is_aggregation and "site_infra" in m.name.lower()
+            if m.module_kind == ModuleKind.AGGREGATION and "site_infra" in m.name.lower()
         ]
         assert site_infra_aggs, (
             f"Expected site_infra aggregation modules. "
-            f"Aggregation modules: {[m.name for m in graph.modules if m.is_aggregation]}"
+            f"Aggregation modules: {[m.name for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]}"
         )
 
         # Collect entry point qualified names from site_infra aggregation inputs
@@ -522,13 +523,13 @@ class TestAggregationLiteralAndAlias:
         # Find the solar_array capital_cost aggregation module
         solar_array_capital = [
             m for m in graph.modules
-            if m.is_aggregation
+            if m.module_kind == ModuleKind.AGGREGATION
             and "solar_array" in m.name.lower()
             and "capital_cost" in m.name.lower()
         ]
         assert solar_array_capital, (
             f"Expected solar_array capital_cost aggregation module. "
-            f"Aggregation modules: {[m.name for m in graph.modules if m.is_aggregation]}"
+            f"Aggregation modules: {[m.name for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]}"
         )
 
         module = solar_array_capital[0]
@@ -578,7 +579,7 @@ class TestAggregationLiteralAndAlias:
                               "string_count", "cell_count"}
 
         for module in graph.modules:
-            if not module.is_aggregation:
+            if module.module_kind != ModuleKind.AGGREGATION:
                 continue
             for inp in module.inputs:
                 if inp.source.source_type != "entry_point":

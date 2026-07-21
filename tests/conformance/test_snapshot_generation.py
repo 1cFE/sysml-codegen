@@ -164,10 +164,18 @@ def test_chain_spike_autoimpl_from_snapshot(tmp_path):
 # REQ-SNAP-19 (SC-1): live generation is byte-identical to snapshot generation.
 # License-gated; skips cleanly with no license.
 # ===========================================================================
-# Shape-bearing fixtures the parity gate covers (SC-D). Each has a committed v2 snapshot.
-# solar_battery is the baseline; the rest carry the wiring shapes a full-emission mis-wire
-# would hide: retyped parts, quoted owners, aliased aggregations, and the two IFE plant
-# idioms (the whole-plant value-fill and the plant-values headline).
+# Shape-bearing fixtures the parity gate covers (SC-D). Each has a committed
+# v3 snapshot. solar_battery is the baseline; the rest carry the wiring shapes
+# a full-emission mis-wire would hide: retyped parts, quoted owners, aliased
+# aggregations, and ife_plant (an IFE plant idiom).
+#
+# `plant_values`/`fusion_tea` joined this list in Item 14 Phase 1: they were
+# constraint-lowering grandfathered (Item 8, D3) because the `gain`
+# hierarchy-extraction gap blocked lowering and the live CLI leg halted. Item 14
+# closes that gap, so both fixtures now generate lowered, live and offline alike
+# (the old halt-and-skip-byte-diff special case,
+# test_fusion_tea_snapshot_generates_grandfathered_and_live_halts_on_gain, is
+# retired — this parametrization supersedes it).
 _SNAP19_FIXTURES = [
     "solar_battery_model",
     "retype_model",
@@ -175,6 +183,7 @@ _SNAP19_FIXTURES = [
     "alias_agg_probe",
     "ife_plant",
     "plant_values",
+    "fusion_tea",
 ]
 
 
@@ -209,35 +218,6 @@ def test_live_vs_snapshot_byte_identical(fixture, tmp_path):
     # offline mis-wire that still empties fallback_entry_points changes a channel token in
     # the YAML and fails here (the multi-hop EXPOSE precedent). Do NOT narrow this to a
     # metadata-only or graph-only diff — the full tree IS the channel-identity assertion.
-    assert _tree_diff(live_out, snap_out) == []
-
-
-@requires_license
-@pytest.mark.req("REQ-SNAP-19")
-def test_fusion_tea_live_vs_snapshot(tmp_path):
-    """SC-D one-time leg: fusion-tea's real plant is byte-identical live vs snapshot.
-
-    The vendored whole-plant fixture (multi-file designs + library, the value-fill materializer
-    wiring the Meier chain) generates the same package from the live models and from the
-    committed v2 snapshot. Full-tree diff = channel identity: a whole-plant mis-wire (the
-    offline precedent abort-level checks miss) would change a wired channel in the YAML and
-    fail here. Absolute --models so the parser's source_file re-absolutizes to the snapshot dir.
-    """
-    models = REPO_ROOT / "tests/fixtures/fusion_tea"
-    live_out, snap_out = tmp_path / "live", tmp_path / "snap"
-
-    live = _run_cli(
-        "generate", "--models", str(models),
-        "--output", str(live_out), "--package-name", "fusion_tea", "--overwrite",
-    )
-    assert live.returncode == 0, live.stderr
-
-    snap = _run_cli(
-        "generate", "--from-snapshot", str(models / "extraction_snapshot.json"),
-        "--output", str(snap_out), "--package-name", "fusion_tea", "--overwrite",
-    )
-    assert snap.returncode == 0, snap.stderr
-
     assert _tree_diff(live_out, snap_out) == []
 
 

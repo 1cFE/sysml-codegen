@@ -30,8 +30,8 @@
       "execution_order": 0,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -49,7 +49,7 @@
       "calc_expressions": [
         "cost = rate * 100.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 54
     },
     {
@@ -82,8 +82,8 @@
       "execution_order": 1,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -101,7 +101,7 @@
       "calc_expressions": [
         "net_cost = revenue * 0.5"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 35
     },
     {
@@ -142,8 +142,8 @@
       "execution_order": 2,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -166,7 +166,7 @@
         "doubled = base * 2.0",
         "tripled = base * 3.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 41
     },
     {
@@ -199,8 +199,8 @@
       "execution_order": 3,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -218,7 +218,7 @@
       "calc_expressions": [
         "scaled = amount * 1.5"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 48
     },
     {
@@ -251,8 +251,8 @@
       "execution_order": 4,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -270,7 +270,7 @@
       "calc_expressions": [
         "total = flow_rate * 10.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 76
     },
     {
@@ -315,8 +315,8 @@
       "execution_order": 5,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -334,7 +334,7 @@
       "calc_expressions": [
         "rating = footprint * 2.0"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 91
     }
   ],
@@ -351,7 +351,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__net_cost_calc__revenue",
@@ -360,7 +362,9 @@
           "default_value": 200.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__quoted_return__amount",
@@ -369,7 +373,9 @@
           "default_value": 6.0,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__rated_cost__rate",
@@ -378,7 +384,9 @@
           "default_value": null,
           "source_calc_usage": null,
           "param_group": "design_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     },
@@ -394,7 +402,9 @@
           "default_value": 12.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesDesign__shapes_design__chamber_unit__select__wall",
@@ -403,7 +413,9 @@
           "default_value": null,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "PlantValueShapesLib__Flow_Sub__throughput",
@@ -412,7 +424,9 @@
           "default_value": 8.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

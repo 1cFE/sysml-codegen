@@ -1,0 +1,1 @@
+<!-- REFERENCE COPIES of agentic-mbse landed Item 1/2 modules @ constraint-exec-epic (post e352fd8). Canonical: ~/1cfe/agentic-mbse/src/agentic_mbse/sysml/. Do not edit; re-sync if upstream changes. -->

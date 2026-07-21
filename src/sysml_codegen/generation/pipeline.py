@@ -15,6 +15,7 @@ from jinja2 import Environment
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     OutputAlias,
     ParameterGroup,
@@ -26,6 +27,8 @@ def generate_pipeline_yaml(
     graph: ComputationGraph,
     package_name: str,
     template_env: Environment,
+    *,
+    selected_channels: set[str] | None = None,
 ) -> str:
     """Generate pipeline YAML from ComputationGraph.
 
@@ -40,15 +43,20 @@ def generate_pipeline_yaml(
         graph: ComputationGraph from build_computation_graph()
         package_name: Package name for metadata (parameterized)
         template_env: Jinja2 Environment with pipeline template
+        selected_channels: Test-only exit-membership narrowing (Item 7 / D1),
+            forwarded to ``_build_exit_points``. ``None`` (production default)
+            reproduces today's capture-everything exit list byte-for-byte.
 
     Returns:
         Generated YAML as string
     """
+    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+
+    validate_constraint_graph_or_raise(graph)
+
     # Build channel -> field_name map from module outputs (single source of truth)
     channel_field_map = {
-        out.channel_name: out.field_name
-        for module in graph.modules
-        for out in module.outputs
+        out.channel_name: out.field_name for module in graph.modules for out in module.outputs
     }
 
     # Item 11 (REQ-PY-08): an aliased channel's exit line renders the modeler's
@@ -61,7 +69,9 @@ def generate_pipeline_yaml(
         "package_name": package_name,
         "entry_points": _build_entry_points(graph.entry_point_groups),
         "modules": _build_module_contexts(graph.modules, channel_field_map),
-        "exit_points": _build_exit_points(graph.modules, alias_filenames),
+        "exit_points": _build_exit_points(
+            graph.modules, alias_filenames, selected_channels=selected_channels
+        ),
     }
 
     # Render template
@@ -124,12 +134,14 @@ def _module_to_context(
     Returns:
         Dict with name, instance_name, type, inputs, outputs
     """
+    from sysml_codegen.resolution.models import ModuleKind
+
     return {
         "name": (
             f"source: aggregation ({module.module_type})"
-            if module.is_aggregation
+            if module.module_kind == ModuleKind.AGGREGATION
             else f"source: computed_attribute ({module.module_type})"
-            if module.is_computed_attribute
+            if module.module_kind == ModuleKind.FORMULA
             else module.module_type
         ),
         "instance_name": module.name,
@@ -222,6 +234,9 @@ def _build_alias_filename_map(output_aliases: list[OutputAlias]) -> dict[str, st
 def _build_exit_points(
     modules: list[PipelineModule],
     alias_filenames: dict[str, str],
+    *,
+    selected_channels: set[str] | None = None,
+    pin_report_channels: bool = True,
 ) -> list[dict]:
     """Build exit point context for template.
 
@@ -237,17 +252,44 @@ def _build_exit_points(
     today's ``{channel}.json``. The exit **key** stays the canonical channel
     either way (simkit requires it — REQ-PY-06 unchanged).
 
+    Membership rule (Item 7 / D1): production defaults (``selected_channels=None``,
+    ``pin_report_channels=True``) reproduce today's capture-everything output
+    byte-for-byte (INV-7) — every channel passes the ``selected_channels is None``
+    clause, so the pin is a no-op. The two keyword parameters exist only so a test
+    can drive a *narrowed* ``selected_channels`` and prove the ``REPORT_AGGREGATOR``
+    channel's membership is structural (INV-5), not incidental capture-everything:
+    a channel is included iff it is in ``selected_channels`` (or nothing was
+    supplied), or it is a pinned report channel and ``pin_report_channels`` is
+    ``True``. There is no production exit-narrowing feature — narrowing is
+    exercised only by the kept test's seam (Non-Goals).
+
     Args:
         modules: List of PipelineModule from ComputationGraph
         alias_filenames: Canonical-channel → alias filename overrides
             (``_build_alias_filename_map``); empty when no channel is aliased.
+        selected_channels: Test-only membership narrowing; ``None`` (production
+            default) keeps every channel.
+        pin_report_channels: Whether ``REPORT_AGGREGATOR`` outputs are always
+            kept regardless of ``selected_channels`` (INV-5). Defaults ``True``.
 
     Returns:
         List of dicts with name, type, filename for exit point outputs
     """
+    pinned = {
+        out.channel_name
+        for module in modules
+        if module.module_kind is ModuleKind.REPORT_AGGREGATOR
+        for out in module.outputs
+    }
     exit_points = []
     for module in modules:
         for out in module.outputs:
+            channel = out.channel_name
+            included = (selected_channels is None or channel in selected_channels) or (
+                pin_report_channels and channel in pinned
+            )
+            if not included:
+                continue
             # Single-output: channel stores RootModel[T]
             # Multi-output: channel stores T (unwrapped primitive)
             if out.field_name == "root":
@@ -256,11 +298,9 @@ def _build_exit_points(
                 output_type = out.python_type
             exit_points.append(
                 {
-                    "name": out.channel_name,
+                    "name": channel,
                     "type": output_type,
-                    "filename": alias_filenames.get(
-                        out.channel_name, f"{out.channel_name}.json"
-                    ),
+                    "filename": alias_filenames.get(channel, f"{channel}.json"),
                 }
             )
     return exit_points

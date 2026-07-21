@@ -204,6 +204,51 @@ def _extract_single_attribute(elem: Any) -> DesignAttributeData | None:
 # ============== Value Extraction Helpers ==============
 
 
+def design_attribute_float_default(attr: DesignAttributeData | None) -> float | None:
+    """A captured design attribute's numeric literal default, if it has one.
+
+    One home for what were two identical bare-`float()` lanes over two different
+    QN-keyed indexes (DD-R23): `ParameterGroupDeriver.design_attribute_default_value`
+    reads the deriver's own index and `producer_resolution._modeled_default` reads the
+    resolver context's. The indexes differ legitimately; the parsing did not, and the
+    duplicate is deleted rather than wrapped.
+
+    **The kept-lane boundary is NOT "different input", and saying so was wrong**
+    (audit F4). The original justification claimed this reads "a captured string for
+    which no expression IR exists". This item's own fixture falsifies that: for
+    `ModeledDefaultFidelity__Derived_Bound__limit` an IR *does* exist — the operator
+    node the IR lane deliberately refuses under DD-R25 — while the AST lane folded it
+    and captured `'5.0'`. The two lanes hold contradictory answers for one modeled
+    default: `5.0` here, explicitly unresolved there.
+
+    The honest statement of the boundary is: **the same input under two policies.**
+    The IR lane refuses to fold; this lane inherits a value already folded upstream by
+    `evaluate_true_static_expression` (see `_extract_default_value` below). It is not
+    observable today, because the design-attribute route does not mint an entry point
+    for a constraint-definition formal — the IR lane owns those.
+
+    Root cause, measured and deliberately not fixed here: **8 constraint-definition
+    formals across 4 fixtures are captured as design attributes**, which is what gives
+    two lanes the same input. Removing that double-ownership is the correct fix and is
+    out of remediation scope — it moves entry-point identity across `shared_producer`,
+    `plant_values`, `fusion_tea` and `gate_a`, so it needs its own forced-difference
+    table. Recorded in evidence as an open item with its blast radius rather than
+    deferred silently. `tests/conformance/test_default_lane_disagreement.py` pins the
+    disagreement so this justification cannot go stale again unnoticed.
+
+    A second correction: the earlier "zero carry a sign" claim went stale in the same
+    commit that measured it. The 35-snapshot corpus now carries one — `drift`, at
+    `-0.1`. The measurement that still stands, and that this lane's plain `float()`
+    genuinely rests on, is that no captured string carries a **unit**.
+    """
+    if attr is None or attr.default_value is None:
+        return None
+    try:
+        return float(attr.default_value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _extract_default_value(expr: Any) -> str | None:
     """Extract default value from a feature value expression."""
     if expr is None:
@@ -500,6 +545,22 @@ class ParameterGroupDeriver:
             return file_path
 
         return None
+
+    def design_attribute_default_value(self, qualified_name: str) -> float | None:
+        """The design attribute's own literal default, if it has one and it's numeric.
+
+        Mirrors the `DesignAttributeData.default_value` -> `float` conversion already used
+        for calc-referenced DESIGN_ATTRIBUTE entry points (`graph_builder.py`); a
+        constraint-only design attribute (referenced by an assert's actual but no calc)
+        needs the same real default, not a hardcoded `None` (Item 7 / D6 fix, surfaced —
+        `extend_graph_with_constraints` minted every DESIGN_ATTRIBUTE entry point with
+        `default_value=None` regardless of the attribute's actual literal).
+        """
+        entry = self._attr_index.get(qualified_name)
+        if entry is None:
+            return None
+        _file_path, attr = entry
+        return design_attribute_float_default(attr)
 
     def derive_groups(self) -> list[DerivedParameterGroup]:
         """Derive all parameter groups from model data."""

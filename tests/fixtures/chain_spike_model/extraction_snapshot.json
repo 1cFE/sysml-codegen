@@ -1,7 +1,16 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "chain_spike_model",
-  "captured_at": "2026-07-06T19:03:24.448306+00:00",
+  "captured_at": "2026-07-20T15:57:44.092887+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "AreaCalc": {
       "calc_def_name": "AreaCalc",
@@ -119,7 +128,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 4,
       "source_hash": "86d86e71dca05f28085954ff79467a06ccc03de66d843091ad241cd30722e8cb",
       "output_expression_asts": null,
@@ -181,7 +190,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11,
       "source_hash": "86d86e71dca05f28085954ff79467a06ccc03de66d843091ad241cd30722e8cb",
       "output_expression_asts": null,
@@ -243,7 +252,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 18,
       "source_hash": "86d86e71dca05f28085954ff79467a06ccc03de66d843091ad241cd30722e8cb",
       "output_expression_asts": null,
@@ -273,7 +282,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "length"
+          "source_attribute_name": "length",
+          "source_written_qualifier": null
         },
         {
           "param_name": "width",
@@ -286,11 +296,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "width"
+          "source_attribute_name": "width",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 12,
       "parent_part_path": "",
       "qualified_name": "ChainSpikeDesign__spike_design__area_calc",
@@ -315,7 +326,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "area_calc",
-          "source_attribute_name": "area"
+          "source_attribute_name": "area",
+          "source_written_qualifier": null
         },
         {
           "param_name": "rate",
@@ -328,11 +340,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "rate"
+          "source_attribute_name": "rate",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 18,
       "parent_part_path": "",
       "qualified_name": "ChainSpikeDesign__spike_design__cost_calc",
@@ -357,7 +370,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "area_calc",
-          "source_attribute_name": "area"
+          "source_attribute_name": "area",
+          "source_written_qualifier": null
         },
         {
           "param_name": "cost",
@@ -370,11 +384,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "cost_calc",
-          "source_attribute_name": "total_cost"
+          "source_attribute_name": "total_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 24,
       "parent_part_path": "",
       "qualified_name": "ChainSpikeDesign__spike_design__summary",
@@ -390,7 +405,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 7,
         "parent_part": "spike_design",
         "qualified_name": "ChainSpikeDesign__spike_design__length"
@@ -400,7 +415,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 8,
         "parent_part": "spike_design",
         "qualified_name": "ChainSpikeDesign__spike_design__width"
@@ -410,7 +425,7 @@
         "sysml_type": "Real",
         "default_value": "12.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 9,
         "parent_part": "spike_design",
         "qualified_name": "ChainSpikeDesign__spike_design__rate"
@@ -422,7 +437,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 8,
         "parent_part": "",
         "qualified_name": "ChainSpikeLibrary__AreaCalc__area"
@@ -432,7 +447,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 15,
         "parent_part": "",
         "qualified_name": "ChainSpikeLibrary__CostCalc__total_cost"
@@ -442,7 +457,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 22,
         "parent_part": "",
         "qualified_name": "ChainSpikeLibrary__SummaryCalc__cost_per_area"
@@ -460,6 +475,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

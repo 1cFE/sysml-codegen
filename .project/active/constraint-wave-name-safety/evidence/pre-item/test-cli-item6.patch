@@ -1,0 +1,43 @@
+diff --git a/tests/unit/test_cli_generation.py b/tests/unit/test_cli_generation.py
+index ee8e247..207081e 100644
+--- a/tests/unit/test_cli_generation.py
++++ b/tests/unit/test_cli_generation.py
+@@ -16,6 +16,9 @@ from sysml_codegen.cli import GenerationConfig, run_codegen
+ from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+ from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
+ 
++REPO_ROOT = Path(__file__).resolve().parents[2]
++CHAIN_SNAPSHOT = REPO_ROOT / "tests/fixtures/chain_spike_model/extraction_snapshot.json"
++
+ 
+ class TestEnsurePackageInitFiles:
+     """Bug 7: Intermediate __init__.py creation."""
+@@ -185,3 +188,28 @@ def test_collision_rejection_preserves_populated_tree(tmp_path, monkeypatch):
+     config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
+     assert run_codegen(config) is False
+     assert _complete_tree_manifest(output) == before
++
++
++def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkeypatch):
++    target = tmp_path / "target"
++    target.mkdir()
++    marker = target / "marker.txt"
++    marker.write_text("unchanged\n")
++    output = tmp_path / "out"
++    output.symlink_to(target, target_is_directory=True)
++    clear_reached = False
++
++    def record_clear(config):
++        nonlocal clear_reached
++        clear_reached = True
++
++    monkeypatch.setattr("sysml_codegen.cli._clear_output_directory", record_clear)
++    config = GenerationConfig(
++        output_path=output,
++        from_snapshot=CHAIN_SNAPSHOT,
++        package_name="chain_spike",
++        overwrite=True,
++    )
++    assert run_codegen(config) is False
++    assert clear_reached is False
++    assert marker.read_text() == "unchanged\n"

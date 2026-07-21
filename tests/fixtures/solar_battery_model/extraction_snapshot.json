@@ -1,7 +1,506 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "solar_battery_model",
-  "captured_at": "2026-07-06T19:03:24.237788+00:00",
+  "captured_at": "2026-07-20T15:57:39.490545+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Solar Battery Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "solar_battery_plant",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Solar Battery Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery System'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_system",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant::battery_system"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery System'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Site Infrastructure'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "site_infra",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant::site_infra"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Site Infrastructure'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Solar Array'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "solar_array",
+          "qualified_name": "SolarBatteryDesign::solar_battery_plant::solar_array"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Solar Array'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Array BOS",
+          "qualified_name": "SolarBatteryLibrary::'Array BOS'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Battery BOS",
+          "qualified_name": "SolarBatteryLibrary::'Battery BOS'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Battery Pack",
+          "qualified_name": "SolarBatteryLibrary::'Battery Pack'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Battery System",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery BOS'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_bos",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'::battery_bos"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery BOS'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery Pack'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_pack",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'::battery_pack"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery Pack'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Hybrid Inverter'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hybrid_inverter",
+          "qualified_name": "SolarBatteryLibrary::'Battery System'::hybrid_inverter"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Hybrid Inverter'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Electrical Panel",
+          "qualified_name": "SolarBatteryLibrary::'Electrical Panel'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hybrid Inverter",
+          "qualified_name": "SolarBatteryLibrary::'Hybrid Inverter'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "PV Module",
+          "qualified_name": "SolarBatteryLibrary::'PV Module'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Permitting & Interconnect",
+          "qualified_name": "SolarBatteryLibrary::'Permitting & Interconnect'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Racking & Mounting",
+          "qualified_name": "SolarBatteryLibrary::'Racking & Mounting'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Site Infrastructure",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Electrical Panel'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "electrical_panel",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'::electrical_panel"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Electrical Panel'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Permitting & Interconnect'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "permitting",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'::permitting"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Permitting & Interconnect'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Racking & Mounting'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "racking",
+          "qualified_name": "SolarBatteryLibrary::'Site Infrastructure'::racking"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Racking & Mounting'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Solar Array",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Array BOS'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "array_bos",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'::array_bos"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Array BOS'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'String Inverter'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "inverter",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'::inverter"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'String Inverter'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'PV Module'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "pv_module",
+          "qualified_name": "SolarBatteryLibrary::'Solar Array'::pv_module"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'PV Module'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Solar Battery Plant",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Battery System'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "battery_system",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'::battery_system"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Battery System'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Site Infrastructure'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "site_infra",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'::site_infra"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Site Infrastructure'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "SolarBatteryLibrary::'Solar Array'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "solar_array",
+          "qualified_name": "SolarBatteryLibrary::'Solar Battery Plant'::solar_array"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "SolarBatteryLibrary::'Solar Array'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "Costing::'Costed Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "String Inverter",
+          "qualified_name": "SolarBatteryLibrary::'String Inverter'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "PVModuleCostCalc": {
       "calc_def_name": "PVModuleCostCalc",
@@ -1025,7 +1524,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 27,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1180,7 +1679,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 50,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1361,7 +1860,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 72,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1530,7 +2029,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 96,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1685,7 +2184,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 119,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -1839,7 +2338,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 141,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2006,7 +2505,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 163,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2175,7 +2674,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 187,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2302,7 +2801,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 210,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2467,7 +2966,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 235,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2550,7 +3049,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 267,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2614,7 +3113,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 283,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2677,7 +3176,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 298,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2767,7 +3266,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 314,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2884,7 +3383,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 335,
       "source_hash": "3124e1cf56c45848df48dc46885b151115ebf66c8a4a5b8beb095c5429fbcf4f",
       "output_expression_asts": null,
@@ -2918,7 +3417,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_net_mw"
+          "source_attribute_name": "p_net_mw",
+          "source_written_qualifier": null
         },
         {
           "param_name": "n_mod",
@@ -2931,7 +3431,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "n_mod"
+          "source_attribute_name": "n_mod",
+          "source_written_qualifier": null
         },
         {
           "param_name": "plant_availability",
@@ -2944,11 +3445,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "plant_availability"
+          "source_attribute_name": "plant_availability",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 68,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__energy_production",
@@ -2973,7 +3475,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "om_rate_per_kw_year"
+          "source_attribute_name": "om_rate_per_kw_year",
+          "source_written_qualifier": null
         },
         {
           "param_name": "p_net_kw",
@@ -2986,11 +3489,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "p_net_kw"
+          "source_attribute_name": "p_net_kw",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 74,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_om",
@@ -3015,7 +3519,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "fuel_unit_cost"
+          "source_attribute_name": "fuel_unit_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "fuel_consumption",
@@ -3028,11 +3533,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "fuel_consumption"
+          "source_attribute_name": "fuel_consumption",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 79,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_fuel",
@@ -3057,7 +3563,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "capital_cost"
+          "source_attribute_name": "capital_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "discount_rate",
@@ -3070,7 +3577,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "discount_rate"
+          "source_attribute_name": "discount_rate",
+          "source_written_qualifier": null
         },
         {
           "param_name": "plant_lifetime",
@@ -3083,11 +3591,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "plant_lifetime"
+          "source_attribute_name": "plant_lifetime",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 84,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__annualized_financial",
@@ -3112,7 +3621,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "annualized_financial",
-          "source_attribute_name": "annualized_capital_cost"
+          "source_attribute_name": "annualized_capital_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "annual_om_cost",
@@ -3125,7 +3635,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "annualized_om",
-          "source_attribute_name": "annual_om_cost"
+          "source_attribute_name": "annual_om_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "annual_fuel_cost",
@@ -3138,7 +3649,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "annualized_fuel",
-          "source_attribute_name": "annual_fuel_cost"
+          "source_attribute_name": "annual_fuel_cost",
+          "source_written_qualifier": null
         },
         {
           "param_name": "yearly_inflation",
@@ -3151,7 +3663,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "yearly_inflation"
+          "source_attribute_name": "yearly_inflation",
+          "source_written_qualifier": null
         },
         {
           "param_name": "plant_lifetime",
@@ -3164,7 +3677,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "plant_lifetime"
+          "source_attribute_name": "plant_lifetime",
+          "source_written_qualifier": null
         },
         {
           "param_name": "annual_energy_mwh",
@@ -3177,11 +3691,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "energy_production",
-          "source_attribute_name": "annual_energy_mwh"
+          "source_attribute_name": "annual_energy_mwh",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 90,
       "parent_part_path": "",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__lcoe",
@@ -3206,7 +3721,8 @@
           "literal_value": 400.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "wattage"
+          "source_attribute_name": "wattage",
+          "source_written_qualifier": null
         },
         {
           "param_name": "efficiency",
@@ -3219,7 +3735,8 @@
           "literal_value": 0.21,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3227,7 +3744,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 378,
       "parent_part_path": "solar_battery_plant.solar_array.pv_module",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__pv_module__cost_model",
@@ -3252,7 +3769,8 @@
           "literal_value": 2000.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "power_rating"
+          "source_attribute_name": "power_rating",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3260,7 +3778,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 403,
       "parent_part_path": "solar_battery_plant.solar_array.inverter",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__inverter__cost_model",
@@ -3285,7 +3803,8 @@
           "literal_value": 4.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "string_count"
+          "source_attribute_name": "string_count",
+          "source_written_qualifier": null
         },
         {
           "param_name": "panel_count",
@@ -3298,7 +3817,8 @@
           "literal_value": 20.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "panel_count"
+          "source_attribute_name": "panel_count",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3307,7 +3827,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 427,
       "parent_part_path": "solar_battery_plant.solar_array.array_bos",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__array_bos__cost_model",
@@ -3332,7 +3852,8 @@
           "literal_value": 5.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "capacity_kwh"
+          "source_attribute_name": "capacity_kwh",
+          "source_written_qualifier": null
         },
         {
           "param_name": "chemistry_factor",
@@ -3345,7 +3866,8 @@
           "literal_value": 1.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "chemistry_factor"
+          "source_attribute_name": "chemistry_factor",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3353,7 +3875,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 452,
       "parent_part_path": "solar_battery_plant.battery_system.battery_pack",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_pack__cost_model",
@@ -3378,7 +3900,8 @@
           "literal_value": 10000.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "power_rating"
+          "source_attribute_name": "power_rating",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3386,7 +3909,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 476,
       "parent_part_path": "solar_battery_plant.battery_system.hybrid_inverter",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__hybrid_inverter__cost_model",
@@ -3411,7 +3934,8 @@
           "literal_value": 8.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "pack_count"
+          "source_attribute_name": "pack_count",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3419,7 +3943,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 499,
       "parent_part_path": "solar_battery_plant.battery_system.battery_bos",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__battery_system__battery_bos__cost_model",
@@ -3444,7 +3968,8 @@
           "literal_value": 20.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "panel_count"
+          "source_attribute_name": "panel_count",
+          "source_written_qualifier": null
         },
         {
           "param_name": "tilt_angle",
@@ -3457,7 +3982,8 @@
           "literal_value": 30.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "tilt_angle"
+          "source_attribute_name": "tilt_angle",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3465,7 +3991,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 523,
       "parent_part_path": "solar_battery_plant.site_infra.racking",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__racking__cost_model",
@@ -3490,7 +4016,8 @@
           "literal_value": 4.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "circuit_count"
+          "source_attribute_name": "circuit_count",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3499,7 +4026,7 @@
         "fab_factor",
         "install_factor"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 547,
       "parent_part_path": "solar_battery_plant.site_infra.electrical_panel",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__electrical_panel__cost_model",
@@ -3524,13 +4051,14 @@
           "literal_value": 8.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "system_capacity_kw"
+          "source_attribute_name": "system_capacity_kw",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
         "cost_per_kw"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 571,
       "parent_part_path": "solar_battery_plant.site_infra.permitting",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__site_infra__permitting__cost_model",
@@ -3555,7 +4083,8 @@
           "literal_value": 25.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         },
         {
           "param_name": "total_child_mass",
@@ -3568,7 +4097,8 @@
           "literal_value": 50.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [
@@ -3576,7 +4106,7 @@
         "seal_cost_per_child",
         "wiring_cost_per_kg"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 607,
       "parent_part_path": "solar_battery_plant.solar_array",
       "qualified_name": "SolarBatteryDesign__solar_battery_plant__solar_array__allocation_model",
@@ -3592,7 +4122,7 @@
         "sysml_type": "Real",
         "default_value": "0.008",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 53,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__p_net_mw"
@@ -3602,7 +4132,7 @@
         "sysml_type": "Real",
         "default_value": "1.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 54,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__n_mod"
@@ -3612,7 +4142,7 @@
         "sysml_type": "Real",
         "default_value": "0.159",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 55,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_availability"
@@ -3622,7 +4152,7 @@
         "sysml_type": "Real",
         "default_value": "25.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 56,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__plant_lifetime"
@@ -3632,7 +4162,7 @@
         "sysml_type": "Real",
         "default_value": "0.0245",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 57,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__yearly_inflation"
@@ -3642,7 +4172,7 @@
         "sysml_type": "Real",
         "default_value": "0.05",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 58,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__discount_rate"
@@ -3652,7 +4182,7 @@
         "sysml_type": "Real",
         "default_value": "20.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 59,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__om_rate_per_kw_year"
@@ -3662,7 +4192,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 61,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_unit_cost"
@@ -3672,7 +4202,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 62,
         "parent_part": "solar_battery_plant",
         "qualified_name": "SolarBatteryDesign__solar_battery_plant__fuel_consumption"
@@ -3684,7 +4214,7 @@
         "sysml_type": "Real",
         "default_value": "1.07",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 39,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__cost_per_watt"
@@ -3694,7 +4224,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 40,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__fab_factor"
@@ -3704,7 +4234,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 41,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__install_factor"
@@ -3714,7 +4244,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 43,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__material_cost"
@@ -3724,7 +4254,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 44,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__fab_cost"
@@ -3734,7 +4264,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 45,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__install_cost"
@@ -3744,7 +4274,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 46,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__total_cost"
@@ -3754,7 +4284,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 47,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PVModuleCostCalc__idiot_index"
@@ -3764,7 +4294,7 @@
         "sysml_type": "Real",
         "default_value": "0.286",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 61,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__cost_per_watt"
@@ -3774,7 +4304,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 62,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__fab_factor"
@@ -3784,7 +4314,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 63,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__install_factor"
@@ -3794,7 +4324,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 65,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__material_cost"
@@ -3804,7 +4334,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 66,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__fab_cost"
@@ -3814,7 +4344,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 67,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__install_cost"
@@ -3824,7 +4354,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 68,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__total_cost"
@@ -3834,7 +4364,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 69,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__InverterCostCalc__idiot_index"
@@ -3844,7 +4374,7 @@
         "sysml_type": "Real",
         "default_value": "150.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 84,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__cost_per_string"
@@ -3854,7 +4384,7 @@
         "sysml_type": "Real",
         "default_value": "30.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 85,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__cost_per_panel_bos"
@@ -3864,7 +4394,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 86,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__fab_factor"
@@ -3874,7 +4404,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 87,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__install_factor"
@@ -3884,7 +4414,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 89,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__material_cost"
@@ -3894,7 +4424,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 90,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__fab_cost"
@@ -3904,7 +4434,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 91,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__install_cost"
@@ -3914,7 +4444,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 92,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__total_cost"
@@ -3924,7 +4454,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 93,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ArrayBOSCostCalc__idiot_index"
@@ -3934,7 +4464,7 @@
         "sysml_type": "Real",
         "default_value": "171.5",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 108,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__cost_per_kwh"
@@ -3944,7 +4474,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 109,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__fab_factor"
@@ -3954,7 +4484,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 110,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__install_factor"
@@ -3964,7 +4494,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 112,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__material_cost"
@@ -3974,7 +4504,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 113,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__fab_cost"
@@ -3984,7 +4514,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 114,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__install_cost"
@@ -3994,7 +4524,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 115,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__total_cost"
@@ -4004,7 +4534,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 116,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryPackCostCalc__idiot_index"
@@ -4014,7 +4544,7 @@
         "sysml_type": "Real",
         "default_value": "0.1714",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 130,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__cost_per_watt"
@@ -4024,7 +4554,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 131,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__fab_factor"
@@ -4034,7 +4564,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 132,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__install_factor"
@@ -4044,7 +4574,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 134,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__material_cost"
@@ -4054,7 +4584,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 135,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__fab_cost"
@@ -4064,7 +4594,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 136,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__install_cost"
@@ -4074,7 +4604,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 137,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__total_cost"
@@ -4084,7 +4614,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 138,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__HybridInverterCostCalc__idiot_index"
@@ -4094,7 +4624,7 @@
         "sysml_type": "Real",
         "default_value": "71.5",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 152,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__cost_per_pack_bos"
@@ -4104,7 +4634,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 153,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__fab_factor"
@@ -4114,7 +4644,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 154,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__install_factor"
@@ -4124,7 +4654,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 156,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__material_cost"
@@ -4134,7 +4664,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 157,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__fab_cost"
@@ -4144,7 +4674,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 158,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__install_cost"
@@ -4154,7 +4684,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 159,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__total_cost"
@@ -4164,7 +4694,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 160,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__BatteryBOSCostCalc__idiot_index"
@@ -4174,7 +4704,7 @@
         "sysml_type": "Real",
         "default_value": "57.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 176,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__cost_per_panel_rack"
@@ -4184,7 +4714,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 177,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__fab_factor"
@@ -4194,7 +4724,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 178,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__install_factor"
@@ -4204,7 +4734,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 180,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__material_cost"
@@ -4214,7 +4744,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 181,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__fab_cost"
@@ -4224,7 +4754,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 182,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__install_cost"
@@ -4234,7 +4764,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 183,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__total_cost"
@@ -4244,7 +4774,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 184,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__RackingCostCalc__idiot_index"
@@ -4254,7 +4784,7 @@
         "sysml_type": "Real",
         "default_value": "150.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 198,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__base_cost"
@@ -4264,7 +4794,7 @@
         "sysml_type": "Real",
         "default_value": "34.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 199,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__cost_per_circuit"
@@ -4274,7 +4804,7 @@
         "sysml_type": "Real",
         "default_value": "0.45",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 200,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__fab_factor"
@@ -4284,7 +4814,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 201,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__install_factor"
@@ -4294,7 +4824,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 203,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__material_cost"
@@ -4304,7 +4834,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 204,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__fab_cost"
@@ -4314,7 +4844,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 205,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__install_cost"
@@ -4324,7 +4854,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 206,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__total_cost"
@@ -4334,7 +4864,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 207,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__ElectricalPanelCostCalc__idiot_index"
@@ -4344,7 +4874,7 @@
         "sysml_type": "Real",
         "default_value": "187.5",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 222,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__cost_per_kw"
@@ -4354,7 +4884,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 224,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__material_cost"
@@ -4364,7 +4894,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 225,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__fab_cost"
@@ -4374,7 +4904,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 226,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__install_cost"
@@ -4384,7 +4914,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 227,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__total_cost"
@@ -4394,7 +4924,7 @@
         "sysml_type": "Real",
         "default_value": "0.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 228,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__PermittingCostCalc__idiot_index"
@@ -4404,7 +4934,7 @@
         "sysml_type": "Real",
         "default_value": "0.5",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 251,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__fastener_cost_per_child"
@@ -4414,7 +4944,7 @@
         "sysml_type": "Real",
         "default_value": "0.3",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 252,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__seal_cost_per_child"
@@ -4424,7 +4954,7 @@
         "sysml_type": "Real",
         "default_value": "2.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 253,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__wiring_cost_per_kg"
@@ -4434,7 +4964,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 255,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__fastener_cost"
@@ -4444,7 +4974,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 256,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__seal_cost"
@@ -4454,7 +4984,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 257,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__wiring_cost"
@@ -4464,7 +4994,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 258,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__total_allocation"
@@ -4474,7 +5004,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 260,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AllocationCostCalc__material_portion"
@@ -4484,7 +5014,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 280,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__EnergyProductionCalc__annual_energy_mwh"
@@ -4494,7 +5024,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 295,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AnnualizedOMCalc__annual_om_cost"
@@ -4504,7 +5034,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 311,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AnnualizedFuelCalc__annual_fuel_cost"
@@ -4514,7 +5044,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 329,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AnnualizedFinancialCalc__capital_recovery_factor"
@@ -4524,7 +5054,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 332,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__AnnualizedFinancialCalc__annualized_capital_cost"
@@ -4534,7 +5064,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 352,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__LCOECalc__lcoe_per_mwh"
@@ -4544,7 +5074,7 @@
         "sysml_type": "Integer",
         "default_value": "20",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 598,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__Solar_Array__module_count"
@@ -4554,7 +5084,7 @@
         "sysml_type": "Integer",
         "default_value": "4",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 599,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__Solar_Array__inverter_count"
@@ -4564,7 +5094,7 @@
         "sysml_type": "Real",
         "default_value": "allocation_model.total_allocation",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 612,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__Solar_Array__misc_hardware_cost"
@@ -4574,7 +5104,7 @@
         "sysml_type": "Integer",
         "default_value": "8",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 651,
         "parent_part": "",
         "qualified_name": "SolarBatteryLibrary__Battery_System__pack_count"
@@ -7562,6 +8092,5 @@
       "owning_part_qn": "SolarBatteryLibrary__Permitting_Interconnect",
       "source": "redefinition"
     }
-  ],
-  "dropped_constraints": []
+  ]
 }

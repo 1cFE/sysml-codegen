@@ -19,7 +19,7 @@ These requirements span the entire pipeline. Each is verifiable.
 | REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a canonical channel in the [OutputRegistry](10-output-registry.md). | Step 8 validation: `_validate_channel_references()` asserts all `producer_channel` values exist |
 | REQ-PIPE-04 | `execution_order` SHALL be a valid topological sort -- no module reads from a module that executes later. | `for m in modules: for i in m.inputs: if i.source.source_type == "module_output": assert producer.execution_order < m.execution_order` |
 | REQ-PIPE-05 | Every [EntryPoint](06-entry-point-classifier.md) SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIBUTE`, `USAGE_LITERAL`}. | `all(ep.entry_type in EntryPointType for g in graph.entry_point_groups for ep in g.parameters)` |
-| REQ-PIPE-06 | The graph SHALL include all three module types: CalcUsage, FORMULA, and Aggregation. | Type flags: `is_computed_attribute`, `is_aggregation`, and neither (CalcUsage) |
+| REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules. | `PipelineModule.module_kind` (`resolution/models.py`), checked per family. The two constraint-execution families `CONSTRAINT` / `REPORT_AGGREGATOR` appear when constraints are lowered (see [28](28-constraint-lowering-and-catalog.md)) |
 | REQ-PIPE-07 | Generation SHALL produce output exclusively from `ComputationGraph` -- no back-references to extraction models. Requires PipelineModule expansion (see [26](26-pipeline-module-migration.md)). | All templates receive only `ComputationGraph` fields |
 
 ## The 7-step pipeline
@@ -129,10 +129,20 @@ building because CalcUsage modules need classified entry points as inputs.
 ### Step 5: Build PipelineModules ([factory](05-module-factory.md) | [resolver](04-input-resolver.md))
 
 A [PipelineModule](09-data-models.md#resolution-models) is constructed as pure
-data -- no I/O, no side effects. There are [3 module types](05-module-factory.md):
-CalcUsage, FORMULA ([computed attributes](16-computed-attributes.md)), and
-Aggregation ([scoping rules](13-aggregation-scoping.md)). FORMULA and Aggregation
+data -- no I/O, no side effects. The three calc [module kinds](05-module-factory.md)
+are CalcUsage (`CALCULATION`), FORMULA ([computed attributes](16-computed-attributes.md)),
+and Aggregation ([scoping rules](13-aggregation-scoping.md)). FORMULA and Aggregation
 factories call the [consolidated resolver](04-input-resolver.md) to wire their inputs.
+
+**Constraint lowering ([P1 RESOLVE], Step 5.7).** After the output registry and the
+supplied-value materializer are final, `lower_constraints`
+([`analysis/constraint_lowering.py`](28-constraint-lowering-and-catalog.md)) turns eligible
+modeled assertions into two further `module_kind` families — `CONSTRAINT` (a lowered
+predicate) and `REPORT_AGGREGATOR` (the run-report roll-up) — and assembles the
+`ConstraintCatalog` embedded on the graph. A constraint-free model produces neither family and
+a byte-identical graph. Lowering is default-on; the `lower_constraints_enabled` flag is landed
+history (its GRANDFATHERED carve-out is now empty), not a live drop path. See
+[28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md).
 
 ### Step 6: Sort modules ([detail](07-graph-assembly.md))
 
@@ -198,7 +208,7 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [02-orchestration](02-orchestration.md) | Pipeline builder: coordinating extract, resolve, generate | `PipelineContext` |
 | [03-resolution-overview](03-resolution-overview.md) | Why input resolution is hard (270 combinations) | `BindingResolution` |
 | [04-input-resolver](04-input-resolver.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
-| [05-module-factory](05-module-factory.md) | 3 module types as pure data transformers | `PipelineModule` |
+| [05-module-factory](05-module-factory.md) | The three calc module kinds as pure data transformers (constraint kinds: [28](28-constraint-lowering-and-catalog.md)) | `PipelineModule`, `ModuleKind` |
 | [06-entry-point-classifier](06-entry-point-classifier.md) | Entry point classification: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL | `EntryPoint`, `EntryPointType` |
 | [07-graph-assembly](07-graph-assembly.md) | Topological sort, validation, ComputationGraph assembly | `ComputationGraph` |
 | [08-generation](08-generation.md) | Jinja2 rendering: Python, YAML, JSON | Templates |

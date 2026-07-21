@@ -39,12 +39,17 @@ def _get_module_sysml_qn(module) -> str:
     - FORMULA: owning part QN only → append "::calc_def_name"
     - Aggregation: owning part QN with __ separator → use module.name with :: separator
     """
-    if module.is_computed_attribute:
+    from sysml_codegen.generation.errors import unrenderable_module_kind_error
+    from sysml_codegen.resolution.models import ModuleKind
+
+    if module.module_kind == ModuleKind.FORMULA:
         return f"{module.calc_def_qualified_name}::{module.calc_def_name}"
-    elif module.is_aggregation:
+    elif module.module_kind == ModuleKind.AGGREGATION:
         return module.name.replace("__", "::")
-    else:
+    elif module.module_kind == ModuleKind.CALCULATION:
         return module.calc_def_qualified_name
+    else:
+        raise unrenderable_module_kind_error(module, "stencil")
 
 
 def _build_stub_docstring_from_graph(module) -> str:
@@ -201,18 +206,23 @@ def generate_backlog_report(
     Returns:
         Generated markdown string
     """
+    from sysml_codegen.resolution.models import ModuleKind
+
     items = []
     auto_formula_count = 0
     auto_agg_count = 0
 
     for module in graph.modules:
-        if module.is_computed_attribute:
+        if module.module_kind == ModuleKind.FORMULA:
             if module.auto_impl_context is not None:
                 auto_formula_count += 1
             continue
-        if module.is_aggregation:
+        elif module.module_kind == ModuleKind.AGGREGATION:
             if module.auto_impl_context is not None:
                 auto_agg_count += 1
+            continue
+        elif module.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR):
+            # D8: fully generated, no handwritten implementation to backlog.
             continue
 
         # Skip FULLY_COMPILABLE CalcUsage modules
@@ -230,13 +240,11 @@ def generate_backlog_report(
         else:
             complexity = "High"
 
-        source_file = module.source_file or "unknown"
+        # source_file is already the portable root-N/ referent (Item 5 D1); render
+        # it directly. The obsolete "models/"-strip / basename fallback (Branch C)
+        # is deleted — the referent carries the directory structure it recovered.
+        source_path = str(module.source_file or "unknown")
         source_line = module.source_line or 0
-        source_path = str(source_file)
-        if "models/" in source_path:
-            source_path = "models/" + source_path.split("models/", 1)[1]
-        else:
-            source_path = Path(source_path).name
 
         items.append({
             "module": module.calc_def_name,

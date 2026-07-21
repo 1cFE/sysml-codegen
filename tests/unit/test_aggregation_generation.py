@@ -26,6 +26,7 @@ from sysml_codegen.resolution.models import (
     ComputationGraph,
     InputSource,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     ParameterGroup,
     PipelineModule,
@@ -65,8 +66,7 @@ def _make_scoped_agg(
 def _make_pipeline_module(
     name: str = "test_module",
     module_type: str = "TestModule",
-    is_computed_attribute: bool = False,
-    is_aggregation: bool = False,
+    module_kind: ModuleKind = ModuleKind.CALCULATION,
 ) -> PipelineModule:
     return PipelineModule(
         name=name,
@@ -77,8 +77,7 @@ def _make_pipeline_module(
             channel_name=f"{name}__out",
         )],
         execution_order=0,
-        is_computed_attribute=is_computed_attribute,
-        is_aggregation=is_aggregation,
+        module_kind=module_kind,
     )
 
 
@@ -100,7 +99,7 @@ def _make_aggregation_module(
             channel_name=f"{name}__out",
         )],
         execution_order=0,
-        is_aggregation=True,
+        module_kind=ModuleKind.AGGREGATION,
         calc_def_name=attribute_name,
         calc_def_qualified_name=owning_part_qn,
         auto_impl_context={"execution_steps": [], "output_expressions": [{"name": attribute_name, "expression": "sum(...)"}], "output_count": 1, "single_output_expression": "sum(...)"} if auto_impl else None,
@@ -143,7 +142,7 @@ class TestPipelineYamlAggregationComment:
         module = _make_pipeline_module(
             name="design__plant__solar_array__capital_cost",
             module_type="solar_array.capital_costModule",
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
         channel_field_map = {
             "design__plant__solar_array__capital_cost__out": "root",
@@ -153,21 +152,6 @@ class TestPipelineYamlAggregationComment:
 
         assert "source: aggregation" in ctx["name"]
         assert "solar_array.capital_costModule" in ctx["name"]
-
-    def test_aggregation_takes_priority_over_computed_attr(self):
-        """If both is_aggregation and is_computed_attribute, aggregation wins."""
-        module = _make_pipeline_module(
-            name="test",
-            module_type="TestModule",
-            is_aggregation=True,
-            is_computed_attribute=True,
-        )
-        channel_field_map = {"test__out": "root"}
-
-        ctx = _module_to_context(module, channel_field_map)
-
-        assert "source: aggregation" in ctx["name"]
-        assert "computed_attribute" not in ctx["name"]
 
     def test_regular_module_no_aggregation_comment(self):
         """Regular CalcUsage module has plain module_type."""
@@ -187,7 +171,7 @@ class TestPipelineYamlAggregationComment:
         module = _make_pipeline_module(
             name="agg_mod",
             module_type="solar_array.capital_costModule",
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
         channel_field_map = {"agg_mod__out": "root"}
 
@@ -520,7 +504,7 @@ class TestAggregationModuleLookupCaseMatch:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
         agg_modules_by_name = {module.name: module}
 
@@ -543,7 +527,7 @@ class TestAggregationModuleLookupCaseMatch:
             )],
             outputs=[],
             execution_order=0,
-            is_aggregation=True,
+            module_kind=ModuleKind.AGGREGATION,
         )
         agg_modules_by_name = {module.name: module}
 

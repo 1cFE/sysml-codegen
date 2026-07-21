@@ -1,7 +1,116 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "unresolvable_attr_probe",
-  "captured_at": "2026-07-06T19:03:24.578129+00:00",
+  "captured_at": "2026-07-20T15:57:44.570788+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Base Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Design Derived",
+          "qualified_name": "UnresolvableAttrProbeDesign::'Design Derived'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Derived Component'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "derived_instance",
+          "qualified_name": "UnresolvableAttrProbeDesign::derived_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "UnresolvableAttrProbeLibrary::'Derived Component'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeDesign::'Design Derived'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "design_derived_instance",
+          "qualified_name": "UnresolvableAttrProbeDesign::design_derived_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "UnresolvableAttrProbeDesign::'Design Derived'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::Grandchild"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "grandchild_instance",
+          "qualified_name": "UnresolvableAttrProbeDesign::grandchild_instance"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "UnresolvableAttrProbeLibrary::Grandchild",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Base Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Derived Component",
+          "qualified_name": "UnresolvableAttrProbeLibrary::'Derived Component'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "UnresolvableAttrProbeLibrary::'Derived Component'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Grandchild",
+          "qualified_name": "UnresolvableAttrProbeLibrary::Grandchild"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [
     {
@@ -42,7 +151,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 5,
       "source_hash": "1910eda7ad7606f8404c2bd35e6c120b8500bac5a7f7c85f2e5a5c01b08427d8",
       "output_expression_asts": null,
@@ -71,11 +180,12 @@
           "literal_value": 5.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "local_val"
+          "source_attribute_name": "local_val",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 20,
       "parent_part_path": "design_derived_instance",
       "qualified_name": "UnresolvableAttrProbeDesign__design_derived_instance__my_calc",
@@ -91,7 +201,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 33,
         "parent_part": "",
         "qualified_name": "UnresolvableAttrProbeDesign__Design_Derived__mixed_expose"
@@ -103,7 +213,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 7,
         "parent_part": "",
         "qualified_name": "UnresolvableAttrProbeLibrary__SimpleCalc__result"
@@ -439,6 +549,5 @@
       "reference_chain": null
     }
   ],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

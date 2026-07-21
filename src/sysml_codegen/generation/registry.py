@@ -97,8 +97,7 @@ def _resolve_class_name_collisions(
     # Report collisions (REQ-REG-07)
     collision_names = sorted(collisions.keys())
     logger.warning(
-        "Module class name collisions detected: %s. "
-        "Generating aliased imports for %d modules.",
+        "Module class name collisions detected: %s. Generating aliased imports for %d modules.",
         collision_names,
         sum(len(indices) for indices in collisions.values()),
     )
@@ -117,9 +116,7 @@ def _resolve_class_name_collisions(
                 parent_segment = segments[0] if segments else "unknown"
 
             # PascalCase the parent segment
-            pascal_parent = "".join(
-                word.capitalize() for word in parent_segment.split("_")
-            )
+            pascal_parent = "".join(word.capitalize() for word in parent_segment.split("_"))
 
             alias = f"{pascal_parent}_{class_name}"
             module["class_name"] = alias
@@ -205,6 +202,10 @@ def generate_registry(
     Returns:
         Generated Python code
     """
+    from sysml_codegen.generation.errors import validate_constraint_graph_or_raise
+
+    validate_constraint_graph_or_raise(graph)
+
     schema_imports = _generate_schema_imports_from_entry_points(
         package_name, graph.entry_point_groups
     )
@@ -217,13 +218,17 @@ def generate_registry(
         "",
     ]
 
+    from sysml_codegen.resolution.models import ModuleKind
+
     # Split modules by type (same processing order as original)
-    calcusage_modules = [
-        m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
+    calcusage_modules = [m for m in graph.modules if m.module_kind == ModuleKind.CALCULATION]
+    formula_modules = [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
+    aggregation_modules = [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
+    constraint_modules = [
+        m
+        for m in graph.modules
+        if m.module_kind in (ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR)
     ]
-    formula_modules = [m for m in graph.modules if m.is_computed_attribute]
-    aggregation_modules = [m for m in graph.modules if m.is_aggregation]
 
     # 1. CalcUsage modules (sorted imports, deduplicated by calc_def_name)
     seen_names: set[str] = set()
@@ -231,10 +236,12 @@ def generate_registry(
     for module in calcusage_modules:
         if module.calc_def_name not in seen_names:
             class_name = f"{module.calc_def_name}Module"
-            all_modules.append({
-                "class_name": class_name,
-                "module_type": module.module_type,
-            })
+            all_modules.append(
+                {
+                    "class_name": class_name,
+                    "module_type": module.module_type,
+                }
+            )
             sqn = SysMLQualifiedName(module.calc_def_qualified_name)
             python_path = PythonModulePath.from_sysml(sqn)
             import_module = f"{package_name}.modules.{python_path.import_path}"
@@ -253,10 +260,12 @@ def generate_registry(
         module_type_full = module.module_type
         class_name = module_type_full.split(".")[-1]
 
-        all_modules.append({
-            "class_name": class_name,
-            "module_type": module_type_full,
-        })
+        all_modules.append(
+            {
+                "class_name": class_name,
+                "module_type": module_type_full,
+            }
+        )
         import_module = f"{package_name}.modules.{python_path.import_path}"
         formula_imports.append(f"from {import_module} import {class_name}")
     formula_imports.sort()
@@ -271,14 +280,48 @@ def generate_registry(
         module_type_full = module.module_type
         class_name = module_type_full.split(".")[-1]
 
-        all_modules.append({
-            "class_name": class_name,
-            "module_type": module_type_full,
-        })
+        all_modules.append(
+            {
+                "class_name": class_name,
+                "module_type": module_type_full,
+            }
+        )
         import_module = f"{package_name}.modules.{python_path.import_path}"
         aggregation_imports.append(f"from {import_module} import {class_name}")
     aggregation_imports.sort()
     imports.extend(aggregation_imports)
+
+    # 4. Constraint + report-aggregator modules (Item 7 / D9). module_type is already a
+    # Python-dotted path (not a SysML "::" qualified name) — derive directly, matching
+    # cli._get_python_path's constraint-kind branch. Sorted for deterministic output.
+    constraint_imports: list[str] = []
+    for module in constraint_modules:
+        module_type_full = module.module_type
+        class_name = module_type_full.split(".")[-1]
+        parts = module_type_full.split(".")
+        directory = "/".join(parts[:-1])
+        filename = parts[-1].lower()
+        import_path = f"{directory}.{filename}" if directory else filename
+
+        all_modules.append(
+            {
+                "class_name": class_name,
+                "module_type": module_type_full,
+            }
+        )
+        import_module = f"{package_name}.modules.{import_path}"
+        constraint_imports.append(f"from {import_module} import {class_name}")
+    constraint_imports.sort()
+    imports.extend(constraint_imports)
+
+    if graph.constraint_catalog is not None:
+        schema_imports.append(
+            f"from {package_name}.schemas.constraint_types "
+            "import ConstraintEvaluation as ConstraintEvaluation, "
+            "ConstraintReport as ConstraintReport"
+        )
+        schema_imports.sort()
+        group_names = [*group_names, "ConstraintEvaluation", "ConstraintReport"]
 
     # Resolve class name collisions
     all_modules, imports = _resolve_class_name_collisions(all_modules, imports)
@@ -299,8 +342,8 @@ def generate_registry(
     template = template_env.get_template("registry_function.py.jinja2")
     code = template.render(**context)
 
-    if not code.endswith('\n'):
-        code += '\n'
+    if not code.endswith("\n"):
+        code += "\n"
 
     return code
 

@@ -23,6 +23,14 @@ from sysml_codegen.extraction.data_models import (
 )
 from sysml_codegen.resolution.graph_builder import _build_aggregation_module
 
+def _probe_ctx(registry):
+    """These probes carry no design attributes; the shared table sees an empty tier 2."""
+    from sysml_codegen.resolution.producer_resolution import ProducerContext
+
+    return ProducerContext(output_registry=registry)
+
+
+
 
 def _build(refs_expr: str, source_paths: list[str]) -> str | None:
     expr = AggregationExpressionData(
@@ -39,7 +47,7 @@ def _build(refs_expr: str, source_paths: list[str]) -> str | None:
         has_unsupported_nodes=False,
     )
     agg = ScopedAggregationData(expression=expr, instance_path="Design__plant__widget")
-    module, _ = _build_aggregation_module(agg, [], OutputRegistry(), {}, None)
+    module, _ = _build_aggregation_module(agg, [], OutputRegistry(), {}, None, producer_ctx=_probe_ctx(OutputRegistry()))
     return module.compiled_expression
 
 

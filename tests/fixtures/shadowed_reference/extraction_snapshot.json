@@ -1,0 +1,184 @@
+{
+  "snapshot_format_version": 5,
+  "model_name": "shadowed_reference",
+  "captured_at": "2026-07-20T15:57:44.598365+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "ShadowedReference::Outer"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "the_outer",
+          "qualified_name": "ShadowedReference::the_outer"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ShadowedReference::Outer",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ShadowedReference::Inner"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "inner",
+          "qualified_name": "ShadowedReference::the_outer::inner"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ShadowedReference::Inner",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
+  "compilation_results": {},
+  "calc_defs": [
+    {
+      "name": "Scale",
+      "qualified_name": "ShadowedReference::Scale",
+      "doc_comment": "",
+      "calc_expressions": [
+        "scaled = factor * 10.0"
+      ],
+      "input_attributes": [
+        {
+          "name": "factor",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "output_attributes": [
+        {
+          "name": "scaled",
+          "sysml_type": "Real",
+          "default_value": null,
+          "binding_type": "unbound",
+          "is_input": false,
+          "is_output": false,
+          "python_type": "float",
+          "description": "",
+          "unit": null,
+          "source_line": 0,
+          "is_optional": false
+        }
+      ],
+      "references": [],
+      "source_file": "root-0/model.sysml",
+      "source_line": 18,
+      "source_hash": "e4fac1dba07f2442271dc8734afbf68d4b64dba7ecd865b1c41ed0955b405f13",
+      "output_expression_asts": null,
+      "all_member_names": [
+        "factor",
+        "scaled"
+      ],
+      "member_expressions": null
+    }
+  ],
+  "calc_usages": [
+    {
+      "instance_name": "shadowed_calc",
+      "calc_def_name": "Scale",
+      "calc_def_qualified_name": "ShadowedReference::Scale",
+      "module_type": "shadowedreference.ScaleModule",
+      "bindings": [
+        {
+          "param_name": "factor",
+          "source_path": "ShadowedReference::the_outer::scale",
+          "binding_type": "reference",
+          "is_cross_file": false,
+          "raw_expression": "FeatureReferenceExpression -> ShadowedReference::the_outer::scale",
+          "source_instance_elem": null,
+          "source_attribute_elem": null,
+          "literal_value": null,
+          "expression_ast": null,
+          "source_instance_name": null,
+          "source_attribute_name": "scale",
+          "source_written_qualifier": "ShadowedReference::the_outer"
+        }
+      ],
+      "unbound_params": [],
+      "source_file": "root-0/model.sysml",
+      "source_line": 36,
+      "parent_part_path": "",
+      "qualified_name": "ShadowedReference__the_outer__inner__shadowed_calc",
+      "is_template": false,
+      "owning_part_def_qn": null,
+      "raw_element": null
+    }
+  ],
+  "design_attributes": {
+    "/home/reid/1cfe/sysml-codegen/tests/fixtures/shadowed_reference/model.sysml": [
+      {
+        "name": "scaled",
+        "sysml_type": "Real",
+        "default_value": null,
+        "unit": null,
+        "source_file": "root-0/model.sysml",
+        "source_line": 20,
+        "parent_part": "",
+        "qualified_name": "ShadowedReference__Scale__scaled"
+      },
+      {
+        "name": "scale",
+        "sysml_type": "Real",
+        "default_value": "2.0",
+        "unit": null,
+        "source_file": "root-0/model.sysml",
+        "source_line": 27,
+        "parent_part": "the_outer",
+        "qualified_name": "ShadowedReference__the_outer__scale"
+      },
+      {
+        "name": "scale",
+        "sysml_type": "Real",
+        "default_value": "7.0",
+        "unit": null,
+        "source_file": "root-0/model.sysml",
+        "source_line": 31,
+        "parent_part": "inner",
+        "qualified_name": "ShadowedReference__the_outer__inner__scale"
+      }
+    ]
+  },
+  "hierarchy_data": {
+    "redefinitions": [],
+    "design_overrides": [],
+    "multiplicities": [],
+    "aggregation_expressions": [],
+    "warnings": [],
+    "part_usage_names": {},
+    "usage_type_map": {}
+  },
+  "aggregation_expressions": [],
+  "computed_attributes": [],
+  "channel_aliases": []
+}

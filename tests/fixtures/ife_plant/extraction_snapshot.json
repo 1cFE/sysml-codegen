@@ -1,7 +1,217 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "ife_plant",
-  "captured_at": "2026-07-06T19:03:24.501904+00:00",
+  "captured_at": "2026-07-20T15:57:44.204121+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "IfePlantLib::'Ife Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hif Plant",
+          "qualified_name": "IfePlantDesign::'Hif Plant'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Hif Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "IfePlantDesign::'Hif Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Base Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything",
+          "IfePlantLib::'Hif Driver'"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Ife Power Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "baseline_plant",
+          "qualified_name": "IfePlantDesign::baseline_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Ife Power Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantDesign::'Hif Plant'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "hif_plant",
+          "qualified_name": "IfePlantDesign::hif_plant"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantDesign::'Hif Plant'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Base Driver'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Hif Driver",
+          "qualified_name": "IfePlantLib::'Hif Driver'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Reaction Chamber'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_a",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::chamber_a"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Reaction Chamber'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Reaction Chamber'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "chamber_b",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::chamber_b"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Reaction Chamber'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Shielded Core'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "core",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::core"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Shielded Core'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Base Driver'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "driver",
+          "qualified_name": "IfePlantLib::'Ife Power Plant'::driver"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::'Base Driver'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "IfePlantLib::'Power Core'"
+        ],
+        "identity": {
+          "kind": "PartDefinition",
+          "name": "Shielded Core",
+          "qualified_name": "IfePlantLib::'Shielded Core'"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": []
+      },
+      {
+        "general_types": [
+          "IfePlantLib::Coil"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "tf_coil",
+          "qualified_name": "IfePlantSubsystems::radial_build::tf_coil"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "IfePlantLib::Coil",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "PlantLcoe": {
       "calc_def_name": "PlantLcoe",
@@ -342,7 +552,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11,
       "source_hash": "0b6bd3ac344d010ab84b9b6b4ca569739a91eef8915cfab43e023542ea6d8ede",
       "output_expression_asts": null,
@@ -417,7 +627,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 42,
       "source_hash": "0b6bd3ac344d010ab84b9b6b4ca569739a91eef8915cfab43e023542ea6d8ede",
       "output_expression_asts": null,
@@ -480,7 +690,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 55,
       "source_hash": "0b6bd3ac344d010ab84b9b6b4ca569739a91eef8915cfab43e023542ea6d8ede",
       "output_expression_asts": null,
@@ -543,7 +753,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 68,
       "source_hash": "0b6bd3ac344d010ab84b9b6b4ca569739a91eef8915cfab43e023542ea6d8ede",
       "output_expression_asts": null,
@@ -593,7 +803,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 81,
       "source_hash": "0b6bd3ac344d010ab84b9b6b4ca569739a91eef8915cfab43e023542ea6d8ede",
       "output_expression_asts": null,
@@ -642,7 +852,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 97,
       "source_hash": "0b6bd3ac344d010ab84b9b6b4ca569739a91eef8915cfab43e023542ea6d8ede",
       "output_expression_asts": null,
@@ -671,11 +881,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": "radial_build",
-          "source_attribute_name": "magnet_volume_total"
+          "source_attribute_name": "magnet_volume_total",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "design.sysml",
+      "source_file": "root-0/design.sysml",
       "source_line": 38,
       "parent_part_path": "",
       "qualified_name": "IfePlantDesign__magnet_system__cryo_load",
@@ -700,11 +911,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "radius"
+          "source_attribute_name": "radius",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 151,
       "parent_part_path": "radial_build.tf_coil",
       "qualified_name": "IfePlantSubsystems__radial_build__tf_coil__volume_calc",
@@ -729,7 +941,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "bank_energy",
@@ -742,11 +955,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "bank_energy"
+          "source_attribute_name": "bank_energy",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 169,
       "parent_part_path": "hif_plant.driver",
       "qualified_name": "IfePlantDesign__hif_plant__driver__base_power_calc",
@@ -771,7 +985,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "efficiency"
+          "source_attribute_name": "efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "bank_energy",
@@ -784,11 +999,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "bank_energy"
+          "source_attribute_name": "bank_energy",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 169,
       "parent_part_path": "baseline_plant.driver",
       "qualified_name": "IfePlantDesign__baseline_plant__driver__base_power_calc",
@@ -813,7 +1029,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "cost_per_joule"
+          "source_attribute_name": "cost_per_joule",
+          "source_written_qualifier": null
         },
         {
           "param_name": "bank_energy",
@@ -826,11 +1043,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "bank_energy"
+          "source_attribute_name": "bank_energy",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 189,
       "parent_part_path": "hif_plant.driver",
       "qualified_name": "IfePlantDesign__hif_plant__driver__hif_cost_calc",
@@ -855,7 +1073,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "blanket_multiple"
+          "source_attribute_name": "blanket_multiple",
+          "source_written_qualifier": null
         },
         {
           "param_name": "yield_constant",
@@ -868,11 +1087,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "yield_constant"
+          "source_attribute_name": "yield_constant",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 209,
       "parent_part_path": "baseline_plant.chamber_a",
       "qualified_name": "IfePlantDesign__baseline_plant__chamber_a__yield_calc",
@@ -897,7 +1117,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "blanket_multiple"
+          "source_attribute_name": "blanket_multiple",
+          "source_written_qualifier": null
         },
         {
           "param_name": "yield_constant",
@@ -910,11 +1131,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "yield_constant"
+          "source_attribute_name": "yield_constant",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 209,
       "parent_part_path": "baseline_plant.chamber_b",
       "qualified_name": "IfePlantDesign__baseline_plant__chamber_b__yield_calc",
@@ -939,7 +1161,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "availability"
+          "source_attribute_name": "availability",
+          "source_written_qualifier": null
         },
         {
           "param_name": "frequency",
@@ -952,7 +1175,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "frequency"
+          "source_attribute_name": "frequency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "gain",
@@ -965,7 +1189,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "gain"
+          "source_attribute_name": "gain",
+          "source_written_qualifier": null
         },
         {
           "param_name": "thermal_efficiency",
@@ -978,7 +1203,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "thermal_efficiency"
+          "source_attribute_name": "thermal_efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "discount_rate",
@@ -991,7 +1217,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "discount_rate"
+          "source_attribute_name": "discount_rate",
+          "source_written_qualifier": null
         },
         {
           "param_name": "plant_cost_constant",
@@ -1004,7 +1231,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "plant_cost_constant"
+          "source_attribute_name": "plant_cost_constant",
+          "source_written_qualifier": null
         },
         {
           "param_name": "om_cost_constant",
@@ -1017,7 +1245,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "om_cost_constant"
+          "source_attribute_name": "om_cost_constant",
+          "source_written_qualifier": null
         },
         {
           "param_name": "blanket_energy_multiple",
@@ -1030,7 +1259,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "blanket_energy_multiple"
+          "source_attribute_name": "blanket_energy_multiple",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_cost_constant",
@@ -1043,7 +1273,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "driver_cost_constant"
+          "source_attribute_name": "driver_cost_constant",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_efficiency",
@@ -1056,7 +1287,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "driver_efficiency"
+          "source_attribute_name": "driver_efficiency",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_energy",
@@ -1069,7 +1301,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "driver_energy"
+          "source_attribute_name": "driver_energy",
+          "source_written_qualifier": null
         },
         {
           "param_name": "driver_lifetime_shots",
@@ -1082,7 +1315,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "driver_lifetime_shots"
+          "source_attribute_name": "driver_lifetime_shots",
+          "source_written_qualifier": null
         },
         {
           "param_name": "target_cost_constant",
@@ -1095,7 +1329,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "target_cost_constant"
+          "source_attribute_name": "target_cost_constant",
+          "source_written_qualifier": null
         },
         {
           "param_name": "yield_cost_constant",
@@ -1108,11 +1343,12 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "yield_cost_constant"
+          "source_attribute_name": "yield_cost_constant",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 261,
       "parent_part_path": "baseline_plant",
       "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc",
@@ -1128,7 +1364,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 36,
         "parent_part": "",
         "qualified_name": "IfePlantLib__PlantLcoe__lcoe"
@@ -1138,7 +1374,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 51,
         "parent_part": "",
         "qualified_name": "IfePlantLib__DriverPowerCalc__driver_power"
@@ -1148,7 +1384,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 64,
         "parent_part": "",
         "qualified_name": "IfePlantLib__HifCostCalc__driver_cost"
@@ -1158,7 +1394,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 77,
         "parent_part": "",
         "qualified_name": "IfePlantLib__ChamberYieldCalc__chamber_yield"
@@ -1168,7 +1404,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 90,
         "parent_part": "",
         "qualified_name": "IfePlantLib__CoilVolume__volume"
@@ -1178,7 +1414,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 107,
         "parent_part": "",
         "qualified_name": "IfePlantLib__CryoLoad__cooling_power"
@@ -1188,7 +1424,7 @@
         "sysml_type": "Real",
         "default_value": "4.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 150,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Coil__radius"
@@ -1198,7 +1434,7 @@
         "sysml_type": "Real",
         "default_value": "volume_calc.volume",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 154,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Coil__volume"
@@ -1208,7 +1444,7 @@
         "sysml_type": "Real",
         "default_value": "0.1",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 166,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Base_Driver__efficiency"
@@ -1218,7 +1454,7 @@
         "sysml_type": "Real",
         "default_value": "10000000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 167,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Base_Driver__bank_energy"
@@ -1228,7 +1464,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 187,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Hif_Driver__cost_per_joule"
@@ -1238,7 +1474,7 @@
         "sysml_type": "Real",
         "default_value": "1.2",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 206,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Reaction_Chamber__blanket_multiple"
@@ -1248,7 +1484,7 @@
         "sysml_type": "Real",
         "default_value": "5000000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 207,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Reaction_Chamber__yield_constant"
@@ -1258,7 +1494,7 @@
         "sysml_type": "Real",
         "default_value": "0.7",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 234,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__availability"
@@ -1268,7 +1504,7 @@
         "sysml_type": "Real",
         "default_value": "0.2",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 235,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__frequency"
@@ -1278,7 +1514,7 @@
         "sysml_type": "Real",
         "default_value": "500.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 236,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__gain"
@@ -1288,7 +1524,7 @@
         "sysml_type": "Real",
         "default_value": "0.4",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 237,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__thermal_efficiency"
@@ -1298,7 +1534,7 @@
         "sysml_type": "Real",
         "default_value": "0.08",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 238,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__discount_rate"
@@ -1308,7 +1544,7 @@
         "sysml_type": "Real",
         "default_value": "3000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 239,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__plant_cost_constant"
@@ -1318,7 +1554,7 @@
         "sysml_type": "Real",
         "default_value": "30.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 240,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__om_cost_constant"
@@ -1328,7 +1564,7 @@
         "sysml_type": "Real",
         "default_value": "1.2",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 241,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__blanket_energy_multiple"
@@ -1338,7 +1574,7 @@
         "sysml_type": "Real",
         "default_value": "5.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 242,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__driver_cost_constant"
@@ -1348,7 +1584,7 @@
         "sysml_type": "Real",
         "default_value": "0.1",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 243,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__driver_efficiency"
@@ -1358,7 +1594,7 @@
         "sysml_type": "Real",
         "default_value": "10000000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 244,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__driver_energy"
@@ -1368,7 +1604,7 @@
         "sysml_type": "Real",
         "default_value": "50000000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 245,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__driver_lifetime_shots"
@@ -1378,7 +1614,7 @@
         "sysml_type": "Real",
         "default_value": "10.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 246,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__target_cost_constant"
@@ -1388,7 +1624,7 @@
         "sysml_type": "Real",
         "default_value": "5000000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 247,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__yield_cost_constant"
@@ -1398,7 +1634,7 @@
         "sysml_type": "Real",
         "default_value": "1000.0",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 250,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__net_power_target"
@@ -1408,7 +1644,7 @@
         "sysml_type": "Real",
         "default_value": "0.9",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 251,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__capacity_factor"
@@ -1418,7 +1654,7 @@
         "sysml_type": "Real",
         "default_value": "lcoe_calc.lcoe",
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 278,
         "parent_part": "",
         "qualified_name": "IfePlantLib__Ife_Power_Plant__lcoe"
@@ -1430,7 +1666,7 @@
         "sysml_type": "Real",
         "default_value": "tf_coil",
         "unit": null,
-        "source_file": "subsystems.sysml",
+        "source_file": "root-0/subsystems.sysml",
         "source_line": 12,
         "parent_part": "radial_build",
         "qualified_name": "IfePlantSubsystems__radial_build__magnet_volume_total"
@@ -1579,6 +1815,5 @@
       ]
     }
   ],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

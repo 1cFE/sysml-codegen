@@ -39,23 +39,27 @@ def generate_test_implementations(
     Returns:
         Generated Python test code string
     """
+    from sysml_codegen.resolution.models import ModuleKind
+
     modules = []
     calc_count = 0
 
     for module in graph.modules:
-        # Skip FORMULA and aggregation modules
-        if module.is_computed_attribute or module.is_aggregation:
+        # Skip FORMULA, aggregation, and constraint/report-aggregator modules (D8:
+        # fully generated, no handwritten implementation to test).
+        if module.module_kind in (
+            ModuleKind.FORMULA,
+            ModuleKind.AGGREGATION,
+            ModuleKind.CONSTRAINT,
+            ModuleKind.REPORT_AGGREGATOR,
+        ):
             continue
 
         calc_count += 1
 
-        # Source path extraction
-        source_file = module.source_file or "unknown"
-        source_path = str(source_file)
-        if "models/" in source_path:
-            source_path = "models/" + source_path.split("models/", 1)[1]
-        else:
-            source_path = Path(source_path).name
+        # source_file is already the portable root-N/ referent (Item 5 D1); render
+        # it directly. Branch C's "models/"-strip / basename fallback is deleted.
+        source_path = str(module.source_file or "unknown")
 
         is_multi = len(module.outputs) >= 2
         output_count = len(module.outputs)

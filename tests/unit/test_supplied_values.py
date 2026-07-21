@@ -1,8 +1,10 @@
 """Supplied-value materializer seams (REQ-SVM-01..04): precedence, 0.0-carry (F2),
 collision guard (F3), non-literal loud skip (F5).
 
-These pin the mechanism's sharp behaviors directly on `materialize_supplied_values`,
-independent of any fixture snapshot.
+These pin the mechanism's sharp behaviors directly on the enrichment seam,
+independent of any fixture snapshot. `_enrich` returns only the newly synthesized
+attributes so each behavioral assertion below reads exactly as it did against the
+route-based materializer it replaced.
 """
 
 from __future__ import annotations
@@ -13,9 +15,10 @@ from pathlib import Path
 from sysml_codegen.analysis.parameter_groups import DesignAttributeData
 from sysml_codegen.extraction.data_models import RedefinitionData, RedefinitionType
 from sysml_codegen.extraction.usage_extractor import BindingInfo, BindingType, CalcUsageData
-from sysml_codegen.resolution.supplied_values import materialize_supplied_values
+from sysml_codegen.resolution.supplied_values import enrich_graph_design_attributes
 
 _SCOPE = "Scope__plant"
+_SOURCE = Path("design.sysml")
 
 
 def _usage(source_path: str, owning_part_def_qn: str | None = None) -> CalcUsageData:
@@ -29,6 +32,7 @@ def _usage(source_path: str, owning_part_def_qn: str | None = None) -> CalcUsage
         ],
         qualified_name=f"{_SCOPE}__cost_calc",
         owning_part_def_qn=owning_part_def_qn,
+        source_file=_SOURCE,
     )
 
 
@@ -42,16 +46,45 @@ def _override(owner: str, attr: str, value, target_path=None, kind=RedefinitionT
     )
 
 
+def _enrich(
+    calc_usages,
+    *,
+    redefinitions,
+    design_overrides,
+    usage_type_map,
+    real_design_attrs,
+) -> list[DesignAttributeData]:
+    """Run the enrichment seam and return only what it synthesized.
+
+    The seam is copy-on-write and returns real plus synthetic attributes together;
+    these tests assert on the synthetic set, so the real inputs are subtracted back out.
+    """
+    before = {id(attr) for attrs in real_design_attrs.values() for attr in attrs}
+    enriched = enrich_graph_design_attributes(
+        real_design_attrs,
+        calc_usages=calc_usages,
+        prepared=None,
+        redefinitions=redefinitions,
+        design_overrides=design_overrides,
+        usage_type_map=usage_type_map,
+    )
+    return [
+        attr for attrs in enriched.values() for attr in attrs if id(attr) not in before
+    ]
+
+
 def _synth_by_qn(attrs: list[DesignAttributeData]) -> dict[str, DesignAttributeData]:
     return {a.qualified_name: a for a in attrs}
 
 
 def test_dotted_override_synthesizes_source_qn():
     """(c) dotted override → one synth attr keyed by the source QN."""
-    out = materialize_supplied_values(
+    out = _enrich(
         [_usage("driver.efficiency")],
         redefinitions=[],
-        design_overrides=[_override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])],
+        design_overrides=[
+            _override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])
+        ],
         usage_type_map={},
         real_design_attrs={},
     )
@@ -69,6 +102,7 @@ def test_renamed_consumers_dedup_to_one_synth_attr():
         bindings=[BindingInfo(param_name="driver_efficiency", source_path="driver.efficiency",
                               binding_type=BindingType.CHAIN)],
         qualified_name=f"{_SCOPE}__lcoe",
+        source_file=_SOURCE,
     )
     u2 = CalcUsageData(
         instance_name="recirc", calc_def_name="C", calc_def_qualified_name="Lib::C",
@@ -76,11 +110,14 @@ def test_renamed_consumers_dedup_to_one_synth_attr():
         bindings=[BindingInfo(param_name="eta", source_path="driver.efficiency",
                               binding_type=BindingType.CHAIN)],
         qualified_name=f"{_SCOPE}__recirc",
+        source_file=_SOURCE,
     )
-    out = materialize_supplied_values(
+    out = _enrich(
         [u1, u2],
         redefinitions=[],
-        design_overrides=[_override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])],
+        design_overrides=[
+            _override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])
+        ],
         usage_type_map={},
         real_design_attrs={},
     )
@@ -90,10 +127,12 @@ def test_renamed_consumers_dedup_to_one_synth_attr():
 
 def test_zero_literal_carries_as_string_zero_not_dropped():
     """F2/INV-6: a supplied 0.0 materializes as `"0.0"`, never dropped."""
-    out = materialize_supplied_values(
+    out = _enrich(
         [_usage("driver.efficiency")],
         redefinitions=[],
-        design_overrides=[_override(_SCOPE, "efficiency", 0.0, target_path=["driver", "efficiency"])],
+        design_overrides=[
+            _override(_SCOPE, "efficiency", 0.0, target_path=["driver", "efficiency"])
+        ],
         usage_type_map={},
         real_design_attrs={},
     )
@@ -102,10 +141,12 @@ def test_zero_literal_carries_as_string_zero_not_dropped():
 
 def test_precedence_usage_override_beats_specialized_def():
     """INV-3 / SC-2: tier 1 (usage override 0.99) beats tier 2a (spec-def :>> 0.35)."""
-    out = materialize_supplied_values(
+    out = _enrich(
         [_usage("driver.efficiency")],
         redefinitions=[_override("Lib__Hif_Driver", "efficiency", 0.35)],
-        design_overrides=[_override(_SCOPE, "efficiency", 0.99, target_path=["driver", "efficiency"])],
+        design_overrides=[
+            _override(_SCOPE, "efficiency", 0.99, target_path=["driver", "efficiency"])
+        ],
         usage_type_map={(_SCOPE, "driver"): "Lib__Hif_Driver"},
         real_design_attrs={},
     )
@@ -121,8 +162,12 @@ def test_three_tier_precedence_ladder():
     utm = {(_SCOPE, "driver"): "Lib__Hif_Driver"}
 
     def resolve(redefs, overrides):
-        out = materialize_supplied_values(
-            [_usage("driver.efficiency")], redefs, overrides, utm, {}
+        out = _enrich(
+            [_usage("driver.efficiency")],
+            redefinitions=redefs,
+            design_overrides=overrides,
+            usage_type_map=utm,
+            real_design_attrs={},
         )
         return out[0].default_value if out else None
 
@@ -133,7 +178,7 @@ def test_three_tier_precedence_ladder():
 
 def test_specialized_def_resolves_when_no_override():
     """Tier 2a alone: spec-def :>> via usage_type_map (Strategy 1)."""
-    out = materialize_supplied_values(
+    out = _enrich(
         [_usage("driver.efficiency")],
         redefinitions=[_override("Lib__Hif_Driver", "efficiency", 0.35)],
         design_overrides=[],
@@ -147,7 +192,7 @@ def test_in_part_direct_owner_leg_resolves_bare_name():
     """(d)/F4: a bare in-part binding resolves via tier-2b direct-owner match on the
     consuming calc's own part def."""
     usage = _usage("throughput", owning_part_def_qn="Lib__Flow_Sub")
-    out = materialize_supplied_values(
+    out = _enrich(
         [usage],
         redefinitions=[_override("Lib__Flow_Sub", "throughput", 8.0)],
         design_overrides=[],
@@ -161,7 +206,7 @@ def test_in_part_leg_scoped_by_owner_no_cross_wire():
     """INV-4: tier-2b matches only the consuming calc's OWN part def. A same-named
     redefinition owned by an unrelated part def does not cross-wire."""
     usage = _usage("throughput", owning_part_def_qn="Lib__Flow_Sub")
-    out = materialize_supplied_values(
+    out = _enrich(
         [usage],
         redefinitions=[_override("Lib__Other_Part", "throughput", 99.0)],
         design_overrides=[],
@@ -169,6 +214,52 @@ def test_in_part_leg_scoped_by_owner_no_cross_wire():
         real_design_attrs={},
     )
     assert out == []  # unrelated owner → no synthesis, no cross-wire
+
+
+def test_gain_self_redef_materializes():
+    """D2: an instance self-redefinition (`:>> gain = 80.0` owned by the instance
+    itself, empty target_path) synthesizes for a bare-name binding (`in gain = gain`),
+    the tier fusion_tea's `hif_plant.sysml:87` needs to lower 'Viability Threshold'."""
+    usage = _usage("gain")
+    out = _enrich(
+        [usage],
+        redefinitions=[],
+        design_overrides=[_override(_SCOPE, "gain", 80.0)],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)[f"{_SCOPE}__gain"].default_value == "80.0"
+
+
+def test_gain_self_redef_does_not_shadow_tier1_bare_override():
+    """R2: the self-redef tier sits below tier 1 — a genuine bare override block on a
+    sub-part instance (`owning_part_qn == f'{instance_scope}__{part_usage}'`) still
+    wins when both are present."""
+    usage = _usage("gain")
+    tier1_override = _override(f"{_SCOPE}__gain", "gain", 1.0)  # bare override block
+    self_redef_override = _override(_SCOPE, "gain", 80.0)  # instance self-redef
+    out = _enrich(
+        [usage],
+        redefinitions=[],
+        design_overrides=[tier1_override, self_redef_override],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)[f"{_SCOPE}__gain"].default_value == "1.0"
+
+
+def test_gain_self_redef_scoped_to_bare_name_binding_only():
+    """The self-redef tier is demand-scoped to bare-name bindings (part_usage ==
+    attr); a dotted binding to the same instance/attr shape must not match it."""
+    usage = _usage("driver.gain")
+    out = _enrich(
+        [usage],
+        redefinitions=[],
+        design_overrides=[_override(_SCOPE, "gain", 80.0)],
+        usage_type_map={},
+        real_design_attrs={},
+    )
+    assert out == []
 
 
 def test_collision_guard_real_attr_wins_and_warns(caplog):
@@ -180,10 +271,12 @@ def test_collision_guard_real_attr_wins_and_warns(caplog):
         qualified_name="Scope__plant__driver__efficiency",
     )
     with caplog.at_level(logging.WARNING):
-        out = materialize_supplied_values(
+        out = _enrich(
             [_usage("driver.efficiency")],
             redefinitions=[],
-            design_overrides=[_override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])],
+            design_overrides=[
+                _override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])
+            ],
             usage_type_map={},
             real_design_attrs={Path("d.sysml"): [real]},
         )
@@ -195,7 +288,7 @@ def test_non_literal_override_skips_loudly_with_count_summary(caplog):
     """F5/REQ-SVM-04/INV-7: a referenced binding whose only supplied value is non-literal
     (CHAIN) is not synthesized and a count-summary WARN names the deferred shape."""
     with caplog.at_level(logging.WARNING):
-        out = materialize_supplied_values(
+        out = _enrich(
             [_usage("driver.efficiency")],
             redefinitions=[],
             design_overrides=[
@@ -213,11 +306,99 @@ def test_non_literal_override_skips_loudly_with_count_summary(caplog):
 def test_clean_run_is_silent_no_warning(caplog):
     """Silent-on-clean (INV-6 conformance): zero non-literal skips → no WARNING."""
     with caplog.at_level(logging.WARNING):
-        materialize_supplied_values(
+        _enrich(
             [_usage("driver.efficiency")],
             redefinitions=[],
-            design_overrides=[_override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])],
+            design_overrides=[
+                _override(_SCOPE, "efficiency", 0.35, target_path=["driver", "efficiency"])
+            ],
             usage_type_map={},
             real_design_attrs={},
         )
     assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []
+
+
+def test_malformed_type_def_literal_does_not_suppress_part_def_literal():
+    """Regression (audit F1): a malformed literal at one tier must not consume the tiers
+    below it.
+
+    Merging tiers 2a and 2b into a single owner loop made a bad literal on the
+    specialized/type def exit the whole loop, so a perfectly good literal on the
+    consuming part def was lost — silently, with the seam reporting `0 literal applied,
+    0 non-literal skipped`. The predecessor fell through and resolved 42.0.
+    """
+    out = _enrich(
+        [_usage("driver.efficiency", owning_part_def_qn="Design__Plant")],
+        redefinitions=[
+            _override("Lib__Hif_Driver", "efficiency", "true"),  # malformed, type def
+            _override("Design__Plant", "efficiency", 42.0),  # valid, consuming part def
+        ],
+        design_overrides=[],
+        usage_type_map={(_SCOPE, "driver"): "Lib__Hif_Driver"},
+        real_design_attrs={},
+    )
+    assert _synth_by_qn(out)["Scope__plant__driver__efficiency"].default_value == "42.0"
+
+
+def test_wholly_malformed_tier2_target_is_visible(caplog):
+    """DD-A17 (Item 1 residual, DD-R32): a wholly-malformed tier-2 target is diagnosed.
+
+    Tier 1 sets `saw_non_literal` on an unparseable literal and the caller reports it
+    as a loud deferred skip. Tier 2 `continue`s past the same input and returns
+    `saw_non_literal=False`, so the caller's `resolved.value is None` branch drops the
+    target with **no diagnostic at all**. The value is correctly not applied either
+    way; only the silence is the defect.
+
+    Item 1's tier fall-through is preserved — see
+    `test_malformed_type_def_literal_does_not_suppress_part_def_literal`, which stays
+    green: a malformed literal must still not suppress a valid one below it.
+    """
+    with caplog.at_level(logging.WARNING):
+        out = _enrich(
+            [_usage("driver.efficiency", owning_part_def_qn="Design__Plant")],
+            redefinitions=[
+                # Malformed at BOTH tier-2 owners, so nothing resolves and there is
+                # no valid literal below to fall through to.
+                _override("Lib__Hif_Driver", "efficiency", "true"),
+                _override("Design__Plant", "efficiency", "not-a-number"),
+            ],
+            design_overrides=[],
+            usage_type_map={(_SCOPE, "driver"): "Lib__Hif_Driver"},
+            real_design_attrs={},
+        )
+
+    # No value invented.
+    assert out == []
+
+    warnings = [r for r in caplog.records if r.levelno >= logging.WARNING]
+    assert warnings, "a wholly-malformed tier-2 target must not be dropped silently"
+    text = " ".join(r.getMessage() for r in warnings)
+    assert "driver.efficiency" in text
+    assert "malformed" in text.lower()
+
+
+def test_tier1_malformed_literal_message_bytes_are_unchanged(caplog):
+    """DD-R32 lands as a NEW record: the tier-1 aggregate string must not move.
+
+    `supplied_values.py`'s tier-1 aggregate is byte-frozen by the Phase-0 acceptance
+    overlay SHA-256 (design Phase 3). The tier-2 diagnostic is therefore a separate
+    log record, not an edit to this one.
+    """
+    with caplog.at_level(logging.WARNING):
+        _enrich(
+            [_usage("driver.efficiency")],
+            redefinitions=[],
+            design_overrides=[
+                _override(_SCOPE, "efficiency", "true", target_path=["driver", "efficiency"])
+            ],
+            usage_type_map={},
+            real_design_attrs={},
+        )
+    messages = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
+    assert any(
+        m == (
+            "supplied-value materializer scanned 1 referenced bindings: 0 literal "
+            "applied, 1 non-literal skipped (deferred: ['driver.efficiency'])."
+        )
+        for m in messages
+    ), messages

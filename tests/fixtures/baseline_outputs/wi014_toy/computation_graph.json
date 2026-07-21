@@ -42,8 +42,8 @@
       "execution_order": 0,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -62,7 +62,7 @@
         "area = length * width",
         "\nDocumentation:\nToy geometry calc: rectangular panel area = length * width.\nFirst stage of a two-calc chain used to validate usage-level\ncalc chaining for the WI-010 plant idiom.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
       ],
-      "source_file": "toy_library.sysml",
+      "source_file": "root-0/toy_library.sysml",
       "source_line": 4
     },
     {
@@ -107,8 +107,8 @@
       "execution_order": 1,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -127,8 +127,100 @@
         "cost = area * unit_cost",
         "\nDocumentation:\nToy cost calc: cost = area * unit_cost. Second stage of the\nchain — its `area` input is bound to `'Panel Area'.area` at\nthe usage level inside the part def.\n\n*Source**: work/backlog/epic-pipeline-derisk-demo.md (Item 2)\n*Ref**: WI-009 design.md \"Structure ↔ behavior binding\"\n*Basis**: Synthetic validation fixture — no domain content"
       ],
-      "source_file": "toy_library.sysml",
+      "source_file": "root-0/toy_library.sysml",
       "source_line": 26
+    },
+    {
+      "name": "toy_plant__demo_plant__affordable__c122240f4b148939",
+      "module_type": "toy_plant.DemoPlantAffordableConstraintModule",
+      "inputs": [
+        {
+          "param_name": "budget",
+          "python_type": "float",
+          "source": {
+            "source_type": "entry_point",
+            "param_group": "toy_plant_params",
+            "qualified_name": "toy_plant__Toy_Plant__plant_budget",
+            "producer_channel": null
+          },
+          "description": null,
+          "default_value": null
+        },
+        {
+          "param_name": "cost",
+          "python_type": "float",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "toy_plant__demo_plant__cost_calc__cost"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "evaluation",
+          "python_type": "ConstraintEvaluation",
+          "channel_name": "toy_plant__demo_plant__affordable__c122240f4b148939__evaluation",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 2,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "constraint",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
+    },
+    {
+      "name": "constraint_report_aggregator",
+      "module_type": "constraints.ConstraintReportAggregatorModule",
+      "inputs": [
+        {
+          "param_name": "toy_plant_demo_plant_affordable_c122240f4b148939",
+          "python_type": "ConstraintEvaluation",
+          "source": {
+            "source_type": "module_output",
+            "param_group": null,
+            "qualified_name": null,
+            "producer_channel": "toy_plant__demo_plant__affordable__c122240f4b148939__evaluation"
+          },
+          "description": null,
+          "default_value": null
+        }
+      ],
+      "outputs": [
+        {
+          "field_name": "constraint_report",
+          "python_type": "ConstraintReport",
+          "channel_name": "constraint_report",
+          "description": null,
+          "default_value": null,
+          "unit": null
+        }
+      ],
+      "execution_order": 3,
+      "compilability": "unknown",
+      "compiled_expression": null,
+      "module_kind": "report_aggregator",
+      "output_schema_type": null,
+      "auto_impl_context": null,
+      "calc_def_name": null,
+      "calc_def_qualified_name": null,
+      "doc_comment": null,
+      "calc_expressions": null,
+      "source_file": null,
+      "source_line": null
     }
   ],
   "entry_point_groups": [
@@ -138,13 +230,26 @@
       "source_file": "toy_plant.sysml",
       "parameters": [
         {
+          "qualified_name": "toy_plant__Toy_Plant__plant_budget",
+          "simple_name": "plant_budget",
+          "entry_type": "design_attribute",
+          "default_value": 5000.0,
+          "source_calc_usage": null,
+          "param_group": "toy_plant_params",
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
+        },
+        {
           "qualified_name": "toy_plant__Toy_Plant__plant_length",
           "simple_name": "plant_length",
           "entry_type": "design_attribute",
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "toy_plant__Toy_Plant__plant_unit_cost",
@@ -153,7 +258,9 @@
           "default_value": 250.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "toy_plant__Toy_Plant__plant_width",
@@ -162,14 +269,18 @@
           "default_value": 3.0,
           "source_calc_usage": null,
           "param_group": "toy_plant_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }
   ],
   "execution_order": [
     "toy_plant__demo_plant__area_calc",
-    "toy_plant__demo_plant__cost_calc"
+    "toy_plant__demo_plant__cost_calc",
+    "toy_plant__demo_plant__affordable__c122240f4b148939",
+    "constraint_report_aggregator"
   ],
   "output_aliases": [
     {

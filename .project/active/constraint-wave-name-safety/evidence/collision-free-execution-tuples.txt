@@ -1,0 +1,37 @@
+Collision-free control — exact real-simkit execution evidence tuples
+=====================================================================
+
+Captured: 2026-07-19
+Item: CONSTRAINT-WAVE Item 2 / R-3, spec SC-9, execution gate (plan.md:572-573,609-611)
+Package: name_safety_exec  (predicate: x <= limit)
+Tree: current working tree (= byte-identity candidate; see one-tree deviation note below)
+
+Environment (fresh subprocess, not mocked):
+  interpreter : /home/reid/1cfe/agentic-mbse/.venv/bin/python  (CPython 3.12.3, pandas 2.3.3)
+  PYTHONPATH  : /home/reid/1cfe/sysml-codegen/src
+  TEAX_SIMKIT_PATH : /home/reid/1cfe/teax/packages/teax-simkit
+  teax-simkit : /home/reid/1cfe/teax/packages/teax-simkit (sibling discovery)
+
+Tuple shape: (actual_value, status, margin, observed)
+
+SATISFIED  (x=2.0, limit=3.0):
+  (True, 'satisfied', 1.0, {'x': 2.0, 'limit': 3.0})
+
+VIOLATED   (x=4.0, limit=3.0):
+  (False, 'violated', -1.0, {'x': 4.0, 'limit': 3.0})
+
+Both tuples equal the values asserted by the pinned execution-gate node
+tests/execution/test_constraint_execution.py::test_name_safety_collision_free_exact_evidence.
+
+Generated-module check: predicates.py contains exactly one `def constraint_pred_`; no
+colliding-name mapping/alias emitted (the collision-free control never reserves value/status/
+self/verdict).
+
+One-tree deviation note:
+  The plan phase (plan.md:572-573) ran the control against the baseline AND candidate worktrees.
+  Those temporary worktrees were removed after the byte-identity evidence step
+  (collision-free-baseline.sha256 vs collision-free-candidate.sha256: 27 files each, no path,
+  kind, symlink-target, or byte difference). The control was therefore run once against the
+  current working tree, which the byte-identity manifests tie to the candidate. Because the two
+  trees generate byte-identical packages, the baseline tree's execution result is the identical
+  bytes executed here; the byte-identity manifests are the bridge for the removed second tree.

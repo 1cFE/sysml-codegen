@@ -1,7 +1,16 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "sample_model",
-  "captured_at": "2026-07-06T19:05:19.823191+00:00",
+  "captured_at": "2026-07-20T16:14:26.595372+00:00",
+  "constraint_lowering_mode": "applied",
+  "constraint_facts": {
+    "contexts": [],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {
     "MultiOutputCalc": {
       "calc_def_name": "MultiOutputCalc",
@@ -214,7 +223,7 @@
         }
       ],
       "references": [],
-      "source_file": "multi_output.sysml",
+      "source_file": "root-0/multi_output.sysml",
       "source_line": 9,
       "source_hash": "0bf64e028dfa425b78c879d84d41b54aef5f978ecd4d88da11e81292b48b6770",
       "output_expression_asts": null,
@@ -266,7 +275,7 @@
         }
       ],
       "references": [],
-      "source_file": "dependencies.sysml",
+      "source_file": "root-0/dependencies.sysml",
       "source_line": 7,
       "source_hash": "19dbf8d208a4c4d95e4a9064acd49ea4b5c540497f3d1102ec222668d732f260",
       "output_expression_asts": null,
@@ -315,7 +324,7 @@
         }
       ],
       "references": [],
-      "source_file": "dependencies.sysml",
+      "source_file": "root-0/dependencies.sysml",
       "source_line": 15,
       "source_hash": "19dbf8d208a4c4d95e4a9064acd49ea4b5c540497f3d1102ec222668d732f260",
       "output_expression_asts": null,
@@ -377,7 +386,7 @@
         }
       ],
       "references": [],
-      "source_file": "dependencies.sysml",
+      "source_file": "root-0/dependencies.sysml",
       "source_line": 23,
       "source_hash": "19dbf8d208a4c4d95e4a9064acd49ea4b5c540497f3d1102ec222668d732f260",
       "output_expression_asts": null,
@@ -440,7 +449,7 @@
         }
       ],
       "references": [],
-      "source_file": "simple_calc.sysml",
+      "source_file": "root-0/simple_calc.sysml",
       "source_line": 11,
       "source_hash": "623d859ecbf37cc2d07539ce3bf1ec07bb16458f243a795a9678f1d7fdb65b6b",
       "output_expression_asts": null,
@@ -460,7 +469,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "multi_output.sysml",
+        "source_file": "root-0/multi_output.sysml",
         "source_line": 12,
         "parent_part": "",
         "qualified_name": "TestModels__MultiOutputCalc__sum"
@@ -470,7 +479,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "multi_output.sysml",
+        "source_file": "root-0/multi_output.sysml",
         "source_line": 13,
         "parent_part": "",
         "qualified_name": "TestModels__MultiOutputCalc__diff"
@@ -480,7 +489,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "multi_output.sysml",
+        "source_file": "root-0/multi_output.sysml",
         "source_line": 14,
         "parent_part": "",
         "qualified_name": "TestModels__MultiOutputCalc__product"
@@ -492,7 +501,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "dependencies.sysml",
+        "source_file": "root-0/dependencies.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "TestModels__FirstCalc__doubled"
@@ -502,7 +511,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "dependencies.sysml",
+        "source_file": "root-0/dependencies.sysml",
         "source_line": 17,
         "parent_part": "",
         "qualified_name": "TestModels__SecondCalc__squared"
@@ -512,7 +521,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "dependencies.sysml",
+        "source_file": "root-0/dependencies.sysml",
         "source_line": 26,
         "parent_part": "",
         "qualified_name": "TestModels__FinalCalc__total"
@@ -524,7 +533,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "simple_calc.sysml",
+        "source_file": "root-0/simple_calc.sysml",
         "source_line": 14,
         "parent_part": "",
         "qualified_name": "TestModels__SimpleCalc__result"
@@ -542,6 +551,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

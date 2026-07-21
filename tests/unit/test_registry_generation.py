@@ -8,7 +8,7 @@ class TestCollectExitPointTypes:
     def test_single_output_modules_produce_float(self):
         """Single-output modules with python_type='float' should produce 'Float'."""
         from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-        from sysml_codegen.resolution.models import PipelineModule, ModuleOutput
+        from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
 
         modules = [
             PipelineModule(
@@ -19,6 +19,7 @@ class TestCollectExitPointTypes:
                     ModuleOutput(field_name="root", python_type="float", channel_name="test__result")
                 ],
                 execution_order=0,
+                module_kind=ModuleKind.CALCULATION,
             )
         ]
 
@@ -28,7 +29,7 @@ class TestCollectExitPointTypes:
     def test_multi_output_modules_excluded(self):
         """Multi-output modules (field_name != 'root') should not add primitive types."""
         from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-        from sysml_codegen.resolution.models import PipelineModule, ModuleOutput
+        from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
 
         modules = [
             PipelineModule(
@@ -40,6 +41,7 @@ class TestCollectExitPointTypes:
                     ModuleOutput(field_name="cost", python_type="float", channel_name="test__cost"),
                 ],
                 execution_order=0,
+                module_kind=ModuleKind.CALCULATION,
             )
         ]
 
@@ -49,7 +51,7 @@ class TestCollectExitPointTypes:
     def test_deduplication(self):
         """Multiple single-output float modules should produce only one 'Float'."""
         from sysml_codegen.generation.registry import _collect_exit_point_primitive_types
-        from sysml_codegen.resolution.models import PipelineModule, ModuleOutput
+        from sysml_codegen.resolution.models import ModuleKind, ModuleOutput, PipelineModule
 
         modules = [
             PipelineModule(
@@ -60,6 +62,7 @@ class TestCollectExitPointTypes:
                     ModuleOutput(field_name="root", python_type="float", channel_name=f"mod{i}__out")
                 ],
                 execution_order=i,
+                module_kind=ModuleKind.CALCULATION,
             )
             for i in range(3)
         ]

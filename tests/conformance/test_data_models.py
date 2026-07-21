@@ -219,12 +219,6 @@ ENUM_SPECS = [
         id="Compilability",
     ),
     pytest.param(
-        "sysml_codegen.extraction.expression_compiler",
-        "ExpressionNodeType",
-        {"BINARY_OP", "UNARY_OP", "LITERAL", "INPUT_REF", "INTERMEDIATE_REF", "UNSUPPORTED"},
-        id="ExpressionNodeType",
-    ),
-    pytest.param(
         "sysml_codegen.core.models",
         "BindingResolutionType",
         {"ENTRY_POINT", "MODULE_OUTPUT"},
@@ -320,6 +314,11 @@ def test_req_dm_03_fields_calc_usage_data():
 def test_req_dm_03_fields_binding_info():
     from sysml_codegen.extraction.usage_extractor import BindingInfo
 
+    # The two `stored_*` fields carry the reference as written when it comes
+    # from a snapshot rather than the AST, which is what makes the occurrence-
+    # materialized key form reachable from the calculation consumer (DD-R27).
+    # They are marked `snapshot_exclude`, so the serialized wire form is
+    # unchanged and all 34 committed snapshots stay byte-identical.
     expected = {
         "param_name",
         "source_path",
@@ -330,6 +329,14 @@ def test_req_dm_03_fields_binding_info():
         "source_attribute_elem",
         "literal_value",
         "expression_ast",
+        "stored_source_attribute_name",
+        "stored_source_instance_name",
+        # The scope qualifier as WRITTEN, captured at extraction from the CST
+        # (audit F2). Resolution destroys it -- `source_path` holds the resolved QN,
+        # which is `::`-qualified for a bare self-named leaf too -- so this is the
+        # only field that can tell an owner-relative reference from a scope-qualified
+        # one. Row 16 keys on that distinction.
+        "stored_source_written_qualifier",
     }
     actual = _dataclass_field_names(BindingInfo)
     assert actual == expected
@@ -537,12 +544,13 @@ def test_req_dm_03_fields_channel_alias():
 
 @pytest.mark.req("REQ-DM-03")
 def test_req_dm_03_fields_computation_graph():
-    """ComputationGraph has exactly 5 fields.
+    """ComputationGraph has exactly 6 fields.
 
     Item 7 (REQ-GA-08) adds ``fallback_entry_points`` (in-memory analysis
     artifact, ``exclude=True`` — not serialized) for the V11 collector.
     Item 11 (REQ-DM-09) adds ``output_aliases`` (serialized) for the surfaced
-    EXPOSE_PURE names.
+    EXPOSE_PURE names. CONSTRAINT-EXEC Item 7 (D6) adds ``constraint_catalog``
+    (in-memory generation-boundary artifact, ``exclude=True`` — not serialized).
     """
     from sysml_codegen.resolution.models import ComputationGraph
 
@@ -552,10 +560,11 @@ def test_req_dm_03_fields_computation_graph():
         "execution_order",
         "fallback_entry_points",
         "output_aliases",
+        "constraint_catalog",
     }
     actual = _pydantic_field_names(ComputationGraph)
     assert actual == expected
-    assert len(actual) == 5
+    assert len(actual) == 6
 
 
 @pytest.mark.req("REQ-DM-09")
@@ -581,8 +590,8 @@ def test_req_dm_03_fields_pipeline_module():
         "execution_order",
         "compilability",
         "compiled_expression",
-        "is_computed_attribute",
-        "is_aggregation",
+        "module_kind",
+        "output_schema_type",
         "auto_impl_context",
         "calc_def_name",
         "calc_def_qualified_name",
@@ -600,10 +609,17 @@ def test_req_dm_03_fields_pipeline_module():
 def test_req_dm_03_fields_module_input():
     from sysml_codegen.resolution.models import ModuleInput
 
-    expected = {"param_name", "python_type", "source", "description", "default_value"}
+    expected = {
+        "param_name",
+        "python_type",
+        "source",
+        "description",
+        "default_value",
+        "formal_identity",
+    }
     actual = _pydantic_field_names(ModuleInput)
     assert actual == expected
-    assert len(actual) == 5
+    assert len(actual) == 6
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -638,10 +654,16 @@ def test_req_dm_03_fields_entry_point():
         "source_calc_usage",
         "param_group",
         "python_type",
+        # Item 4 Phase 3: a modeled default's unit, carried never converted
+        # (DD-R25), and the IR node kind that stopped resolution, which is what
+        # makes "explicitly unresolved" observable rather than indistinguishable
+        # from "no default at all" (DD-R22).
+        "unit_text",
+        "unresolved_default_kind",
     }
     actual = _pydantic_field_names(EntryPoint)
     assert actual == expected
-    assert len(actual) == 7
+    assert len(actual) == 9
 
 
 @pytest.mark.req("REQ-DM-03")
@@ -687,7 +709,6 @@ SOURCE_FILE_SPECS = [
     (_UE, "CalcUsageData", "extraction/usage_extractor.py"),
     (_UE, "BindingInfo", "extraction/usage_extractor.py"),
     (_EC, "Compilability", "extraction/expression_compiler.py"),
-    (_EC, "ExpressionNodeType", "extraction/expression_compiler.py"),
     (_CM, "BindingResolution", "core/models.py"),
     (_CM, "BindingResolutionType", "core/models.py"),
     (_CM, "ChannelAlias", "core/models.py"),
@@ -735,6 +756,7 @@ def test_req_dm_05_computation_graph_example_constructs():
         EntryPointType,
         InputSource,
         ModuleInput,
+        ModuleKind,
         ModuleOutput,
         ParameterGroup,
         PipelineModule,
@@ -775,6 +797,7 @@ def test_req_dm_05_computation_graph_example_constructs():
                 execution_order=0,
                 compilability=Compilability.FULLY_COMPILABLE,
                 compiled_expression="capacity_kwh * cost_per_kwh",
+                module_kind=ModuleKind.CALCULATION,
             ),
             PipelineModule(
                 name="battery_system__total_cost",
@@ -797,7 +820,7 @@ def test_req_dm_05_computation_graph_example_constructs():
                     ),
                 ],
                 execution_order=1,
-                is_aggregation=True,
+                module_kind=ModuleKind.AGGREGATION,
             ),
         ],
         entry_point_groups=[

@@ -762,69 +762,37 @@ class TestC11bNoResolveInBacktracker:
     """FR-4, REQ-BT-08: Backtracker SHALL use typed dispatch, not resolve()."""
 
     @pytest.mark.req("REQ-BT-08")
-    def test_c11b_no_resolve_calls_in_backtracker(self):
-        """Static analysis: _resolve_binding_via_registry() and
-        _resolve_reference_via_registry() do NOT call self._output_registry.resolve().
-        Must call scoped_lookup, sysml_qn_lookup, or alias_lookup instead."""
+    def test_no_untyped_resolve_calls_in_the_producer_table(self):
+        """Static analysis, re-pointed: every registry lookup now lives in the shared
+        producer-resolution table, so that is where this guard belongs. The untyped
+        ``resolve()`` must never be used — typed accessors only."""
         import ast
         import inspect
         import textwrap
 
-        for method_name in ("_resolve_binding_via_registry", "_resolve_reference_via_registry"):
-            method = getattr(DependencyBacktracker, method_name)
-            source = textwrap.dedent(inspect.getsource(method))
-            tree = ast.parse(source)
-            resolve_calls = []
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call):
-                    func = node.func
-                    if isinstance(func, ast.Attribute) and func.attr == "resolve":
-                        resolve_calls.append(node.lineno)
-            assert not resolve_calls, (
-                f"{method_name} still calls resolve() at line(s) {resolve_calls}. "
-                f"Must use scoped_lookup/sysml_qn_lookup/alias_lookup instead."
-            )
+        from sysml_codegen.resolution import producer_resolution
 
-    @pytest.mark.req("REQ-BT-08")
-    def test_c11b_typed_lookups_present_in_backtracker(self):
-        """Static analysis: typed dispatch methods use at least one typed
-        lookup method (scoped_lookup, sysml_qn_lookup, alias_lookup).
-
-        C11a split dispatch into _resolve_chain_dispatch and
-        _resolve_reference_dispatch — check both."""
-        import ast
-        import inspect
-        import textwrap
-
-        typed_methods = {"scoped_lookup", "sysml_qn_lookup", "alias_lookup"}
-        dispatch_methods = [
-            "_resolve_chain_dispatch",
-            "_resolve_reference_dispatch",
-            "_resolve_reference_via_registry",
+        source = textwrap.dedent(inspect.getsource(producer_resolution))
+        resolve_calls = [
+            node.lineno
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "resolve"
         ]
-        found_typed = set()
-        for method_name in dispatch_methods:
-            method = getattr(DependencyBacktracker, method_name)
-            source = textwrap.dedent(inspect.getsource(method))
-            tree = ast.parse(source)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call):
-                    func = node.func
-                    if isinstance(func, ast.Attribute) and func.attr in typed_methods:
-                        found_typed.add(func.attr)
-        assert found_typed, (
-            "Typed dispatch methods have no typed lookup calls. "
-            f"Expected at least one of: {typed_methods}"
-        )
+        assert not resolve_calls, f"untyped resolve() at lines {resolve_calls}"
 
+    def test_typed_lookups_present_in_the_producer_table(self):
+        """The table's key forms use the typed registry accessors."""
+        import inspect
 
-# ===================================================================
-# C11b: Static analysis — no resolve() in build_output_registry
-# ===================================================================
-class TestC11bNoResolveInBuildRegistry:
-    """FR-4: build_output_registry() SHALL NOT call registry.resolve()."""
+        from sysml_codegen.resolution import producer_resolution
 
-    @pytest.mark.req("REQ-BT-08")
+        source = inspect.getsource(producer_resolution)
+        for accessor in ("scoped_lookup", "sysml_qn_lookup", "alias_lookup",
+                         "scoped_alias_lookup"):
+            assert accessor in source, f"{accessor} absent from the key-form table"
+
     def test_c11b_no_resolve_calls_in_build_registry(self):
         """Static analysis: build_output_registry() does NOT call registry.resolve()."""
         import ast

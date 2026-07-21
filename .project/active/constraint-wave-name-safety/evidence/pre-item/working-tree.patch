@@ -1,0 +1,1194 @@
+diff --git a/.project/CURRENT_WORK.md b/.project/CURRENT_WORK.md
+index b50360d..cace518 100644
+--- a/.project/CURRENT_WORK.md
++++ b/.project/CURRENT_WORK.md
+@@ -6,6 +6,50 @@
+ 
+ ## Active Work
+ 
++### CONSTRAINT-WAVE Item 4 — Snapshot Portability and Shape Gates — SPEC IN PROGRESS (2026-07-18)
++
++Epic Item 4 (R-6, R-11). Draft contract:
++`.project/active/constraint-wave-snapshot-portability/spec.md`.
++
++### CONSTRAINT-WAVE Item 6 — Seal and Verify Symlink Symmetry — IMPLEMENTATION COMPLETE (2026-07-18)
++
++Epic Item 6 (R-10). All five phases in
++`.project/active/constraint-wave-seal-symmetry/plan.md` are complete. Seal, canonical/emitted
++verification, generation, Step 9, and re-seal now reject every symlink before target use. Focused,
++optimized, package, byte-identity, fingerprint, fixture, and isolated-overlay gates are recorded in
++`evidence.md`; licensed live nodes remain unclaimed. Ready for independent `$my-audit`.
++
++### CONSTRAINT-WAVE Item 2 — Generated Constraint Name Safety — SPEC IN PROGRESS (2026-07-18)
++
++Epic Item 2 (R-3). Draft contract: `.project/active/constraint-wave-name-safety/spec.md`.
++
++### Independent GAP-CLOSE completion audit + PR-wave code review (2026-07-18, evening)
++
++Two deliverables, both agent-fan-out verified:
++
++1. **Independent audit of GAP-CLOSE completion** (`.project/backlog/epic_gap_close_audit_independent.md`):
++   the certified-partial status HOLDS. Items 1–4 re-confirmed against code with fresh test runs;
++   pushed companion `54a95d2` byte-identical to the local gap-close worktree, no orchestrator
++   contamination. Corrections: Item 5's "diff --check clean on both branch ranges" box was false of
++   the pushed companion range (one archived-plan EOF blank line; cure uncommitted) — annotated in the
++   epic; the partial pre-PR has in fact been EXECUTED (`512786c` pushed + both PRs commented
++   2026-07-19T00:59/01:10Z), so the epic's old Next Action was stale — corrected. Still genuinely
++   open: F1 external leg, and licensed full suites at the final commits (2,516-pass evidence is from
++   the pre-cure candidate; the companion "1,506 passed" run exists only in the PR comment).
++
++2. **PR-wave code review** (`.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md`):
++   four NEW High findings, all reproduced, all outside prior review coverage — PR #11 profile:
++   ordering comparisons ADMIT string/boolean/enum operands (live-reproduced); `is_negated` never
++   consulted → negated asserts admit inverted semantics (live-reproduced). PR #9: model formals named
++   `value`/`status`/`verdict`/`self` shadow generated locals → silent margin corruption incl. sign
++   inversion / runtime TypeError / SyntaxError; nullable-QN ADMIT filter in
++   `collect_bare_actual_demand` crashes from-snapshot rebuild on a valid snapshot. Plus 8 Medium
++   (named-excluded path leak into fingerprints, recursive-part silent truncation, demand overwrite,
++   warning-pre-pass masking, seal/dangling-symlink gaps, loader raw KeyError, lost signed/unit
++   defaults, TEAX_SIMKIT_PATH silent fallback) and a Low/latent tail. Recommendation: fix the four
++   Highs before the wave merges (it is already held on F1); R-1/R-2 need an owner call on BLOCK vs
++   IR-fold semantics. Nothing committed or pushed this session.
++
+ ### GAP-CLOSE epic — LOCAL SCOPE CERTIFIED; PARTIAL PRE-PR MAY PROCEED (2026-07-18)
+ 
+ The final focused re-audit certifies all local and in-scope GAP-CLOSE work. F2 through F9 remain
+diff --git a/.project/backlog/BACKLOG.md b/.project/backlog/BACKLOG.md
+index ed356fa..ece58b3 100644
+--- a/.project/backlog/BACKLOG.md
++++ b/.project/backlog/BACKLOG.md
+@@ -30,6 +30,17 @@ Prioritized list of epics and features.
+ | Epic | Status | Notes |
+ |------|--------|-------|
+ | [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
++| [CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation | Draft (8 items, 9–12 days) | Four reproduced Highs gate the local wave; eight Mediums and the Low/latent tail are dependency-ordered by seam. Item 1 carries the unresolved R-1/R-2 owner semantics decision. #11 remains before #9; external F1 stays separate. See `epic_constraint_pr_wave_remediation.md`. |
++
++CONSTRAINT-WAVE-REMEDIATION items:
++- [ ] Item 1 — Profile semantics and wrong-verdict closure (R-1, R-2) — agentic-mbse; owner decision gate
++- [ ] Item 2 — Generated constraint name-safety boundary (R-3) — sysml-codegen
++- [ ] Item 3 — Occurrence and demand identity integrity (R-4, R-5, R-7) — sysml-codegen
++- [ ] Item 4 — Snapshot portability and shape gates (R-6, R-11) — sysml-codegen
++- [ ] Item 5 — Lowering diagnostic and modeled-default fidelity (R-8, R-9) — sysml-codegen
++- [ ] Item 6 — Seal and verify symlink symmetry (R-10) — sysml-codegen
++- [ ] Item 7 — Dependency discovery and review-tail disposition (R-12 + Low/latent tail)
++- [ ] Item 8 — Cross-repo compatibility and release-readiness evidence (no PR interaction)
+ 
+ GAP-CLOSE items:
+ - [ ] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+diff --git a/.project/backlog/epic_gap_close.md b/.project/backlog/epic_gap_close.md
+index 910065e..a6b2f6f 100644
+--- a/.project/backlog/epic_gap_close.md
++++ b/.project/backlog/epic_gap_close.md
+@@ -311,7 +311,9 @@ is clean, and the wave gates re-run green with both PRs updated.
+       recorded.
+ - [x] All cited doc lines teach v3 (spot-grep assertions in the item record).
+ - [x] Codegen non-numerical warnings include the actionable message text (D5 satisfied).
+-- [x] `git diff --check` clean on both repos' branch ranges.
++- [x] `git diff --check` clean on both repos' branch ranges. *(Correction, independent audit
++      2026-07-18: false of the pushed companion range — `main...54a95d2` fails on one archived-plan
++      EOF blank line; the cure is uncommitted-local-only. See `epic_gap_close_audit_independent.md`.)*
+ - [ ] Both full suites green; both PRs re-pushed and commented; merge-order note intact.
+ 
+ **Required Reading**: both research docs (F3 correction — runtime-incompatibility not
+@@ -370,4 +372,9 @@ Item 4 (companion: profile)    ─┘
+ ---
+ 
+ **Last Updated**: 2026-07-18
+-**Next Action**: Run `my-pre-pr` as an explicitly partial wave. Keep F1 and epic completion open.
++**Next Action**: ~~Run `my-pre-pr` as an explicitly partial wave~~ — DONE (executed as `512786c` /
++companion `54a95d2`; both pushed and PR-commented with the F1-open caveat). Remaining: external
++`[GAP-CLOSE-F1-TEAX-NORMALIZATION]`; licensed full suites at the final commits; and the new PR-wave
++review findings (`.project/research/20260718-192048_constraint-exec-pr-wave-code-review.md` — two
++High profile defects + reserved-name generation family recommended fixed before merge). Independent
++completion audit: `epic_gap_close_audit_independent.md`.
+diff --git a/src/sysml_codegen/cli/__init__.py b/src/sysml_codegen/cli/__init__.py
+index b70db9e..7706b05 100644
+--- a/src/sysml_codegen/cli/__init__.py
++++ b/src/sysml_codegen/cli/__init__.py
+@@ -41,6 +41,7 @@ def _ensure_package_init_files(
+         if not init_file.exists():
+             init_file.write_text(docstring)
+ 
++
+ # Commands available for installation
+ CODEGEN_COMMANDS = [
+     "teax-completion.md",
+@@ -269,7 +270,8 @@ def _reconcile_params_coverage(graph: ComputationGraph) -> None:
+         logger.warning(
+             "Unresolved after assembly: %d entry point(s) fell through and still "
+             "lack a value (unwired): %s",
+-            len(unwired), unwired,
++            len(unwired),
++            unwired,
+         )
+ 
+     uncovered = collect_uncovered_params(graph)
+@@ -356,7 +358,9 @@ def _generate_modules(
+         namespace_dir = modules_dir / "constraints"
+         namespace_dir.mkdir(parents=True, exist_ok=True)
+         _ensure_package_init_files(
+-            modules_dir, "constraints", '"""Namespace package for generated modules."""\n',
++            modules_dir,
++            "constraints",
++            '"""Namespace package for generated modules."""\n',
+         )
+         predicates_code = render_constraint_predicates_module(compiled_predicates, template_env)
+         (namespace_dir / "predicates.py").write_text(predicates_code)
+@@ -370,7 +374,8 @@ def _generate_modules(
+             namespace_dir = modules_dir / python_path.directory
+             namespace_dir.mkdir(parents=True, exist_ok=True)
+             _ensure_package_init_files(
+-                modules_dir, python_path.directory,
++                modules_dir,
++                python_path.directory,
+                 '"""Namespace package for generated modules."""\n',
+             )
+ 
+@@ -428,7 +433,8 @@ def _generate_stencils(
+             namespace_dir = handwritten_dir / python_path.directory
+             namespace_dir.mkdir(parents=True, exist_ok=True)
+             _ensure_package_init_files(
+-                handwritten_dir, python_path.directory,
++                handwritten_dir,
++                python_path.directory,
+                 '"""Handwritten implementations."""\n',
+             )
+             output_path = namespace_dir / f"{python_path.filename}_impl.py"
+@@ -441,7 +447,10 @@ def _generate_stencils(
+             if should_regen:
+                 backup_implementation(output_path, backup_dir)
+                 code = generate_implementation(
+-                    module, template_env, output_path, config.package_name,
++                    module,
++                    template_env,
++                    output_path,
++                    config.package_name,
+                 )
+                 if code:
+                     output_path.write_text(code)
+@@ -455,7 +464,10 @@ def _generate_stencils(
+                 if is_stub and has_auto_impl:
+                     backup_implementation(output_path, backup_dir)
+                     code = generate_implementation(
+-                        module, template_env, output_path, config.package_name,
++                        module,
++                        template_env,
++                        output_path,
++                        config.package_name,
+                     )
+                     if code:
+                         output_path.write_text(code)
+@@ -469,7 +481,10 @@ def _generate_stencils(
+             logger.debug(f"Preserved existing stencil: {output_path.name}")
+         else:
+             code = generate_implementation(
+-                module, template_env, output_path, config.package_name,
++                module,
++                template_env,
++                output_path,
++                config.package_name,
+             )
+             if code:
+                 output_path.write_text(code)
+@@ -617,9 +632,15 @@ def _seal_package(
+     final on disk before ``seal_package`` runs, and ``package_contract.json`` is written
+     last, never in its own coverage.
+     """
+-    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, build_model_contract, seal_package
++    from sysml_codegen.contracts import (
++        DEFAULT_COVERAGE_POLICY,
++        build_model_contract,
++        ensure_package_tree_is_link_free,
++        seal_package,
++    )
+     from sysml_codegen.contracts.serialize import write_contract_json
+ 
++    ensure_package_tree_is_link_free(config.output_path)
+     contracts_dir = config.output_path / "contracts"
+     contracts_dir.mkdir(parents=True, exist_ok=True)
+ 
+@@ -648,6 +669,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
+     # Validate agentic-mbse is installed
+     try:
+         import agentic_mbse
++
+         logger.debug(f"agentic-mbse version: {agentic_mbse.__version__}")
+     except ImportError:
+         logger.error("agentic-mbse is not installed. Please install it first.")
+@@ -694,9 +716,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
+ 
+     models_path: Path = args.models
+     output_path: Path = args.output or (models_path / "extraction_snapshot.json")
+-    out = capture_snapshot(
+-        [models_path], output_path, design_path_filter=args.design_path_filter
+-    )
++    out = capture_snapshot([models_path], output_path, design_path_filter=args.design_path_filter)
+     logger.info(f"Wrote snapshot to {out}")
+     return 0
+ 
+@@ -711,10 +731,21 @@ def cmd_seal(args: argparse.Namespace) -> int:
+     level = logging.DEBUG if args.verbose else logging.INFO
+     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+ 
+-    from sysml_codegen.contracts import DEFAULT_COVERAGE_POLICY, seal_package
++    from sysml_codegen.contracts import (
++        DEFAULT_COVERAGE_POLICY,
++        PackageSealError,
++        ensure_package_tree_is_link_free,
++        seal_package,
++    )
+     from sysml_codegen.contracts.serialize import write_contract_json
+ 
+     package_dir: Path = args.package_dir
++    try:
++        ensure_package_tree_is_link_free(package_dir)
++    except (PackageSealError, OSError) as error:
++        logger.error(f"Package sealing failed: {error}")
++        return 1
++
+     model_contract_path = package_dir / "contracts" / "model_contract.json"
+     if not model_contract_path.is_file():
+         logger.error(
+@@ -723,7 +754,11 @@ def cmd_seal(args: argparse.Namespace) -> int:
+         )
+         return 1
+ 
+-    package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
++    try:
++        package_contract = seal_package(package_dir, args.package_name, DEFAULT_COVERAGE_POLICY)
++    except (PackageSealError, OSError) as error:
++        logger.error(f"Package sealing failed: {error}")
++        return 1
+     write_contract_json(package_dir / "contracts" / "package_contract.json", package_contract)
+     logger.info(f"Re-sealed {package_dir} as {args.package_name!r}")
+     return 0
+@@ -766,155 +801,108 @@ def cmd_install_commands(args: argparse.Namespace) -> int:
+ 
+ def main() -> None:
+     """Main CLI entry point."""
+-    parser = argparse.ArgumentParser(
+-        description="SysML v2 code generation tools"
+-    )
++    parser = argparse.ArgumentParser(description="SysML v2 code generation tools")
+     subparsers = parser.add_subparsers(dest="command", help="Available commands")
+ 
+     # Generate subcommand
+-    gen_parser = subparsers.add_parser(
+-        "generate",
+-        help="Generate Python code from SysML v2 models"
+-    )
++    gen_parser = subparsers.add_parser("generate", help="Generate Python code from SysML v2 models")
+     # Exactly one extraction input: live --models or a captured --from-snapshot
+     # (both-forbidden / neither-forbidden come free from a required group — INV-7).
+     gen_input = gen_parser.add_mutually_exclusive_group(required=True)
+     gen_input.add_argument(
+-        "--models", "-m",
+-        type=Path,
+-        help="Path to SysML model directory or file (live extraction)"
++        "--models", "-m", type=Path, help="Path to SysML model directory or file (live extraction)"
+     )
+     gen_input.add_argument(
+         "--from-snapshot",
+         type=Path,
+-        help="Path to a captured extraction snapshot (license-free generation)"
++        help="Path to a captured extraction snapshot (license-free generation)",
+     )
+     gen_parser.add_argument(
+-        "--output", "-o",
+-        type=Path,
+-        required=True,
+-        help="Output directory for generated code"
++        "--output", "-o", type=Path, required=True, help="Output directory for generated code"
+     )
+     gen_parser.add_argument(
+         "--package-name",
+         type=str,
+         default="generated_code",
+-        help="Python package name for generated code (default: generated_code)"
++        help="Python package name for generated code (default: generated_code)",
+     )
+     gen_parser.add_argument(
+         "--schema-class",
+         type=str,
+         default="Params",
+-        help="Name for the main schema class (default: Params)"
++        help="Name for the main schema class (default: Params)",
+     )
+     gen_parser.add_argument(
+         "--pipeline-name",
+         type=str,
+         default="pipeline",
+-        help="Name for the pipeline configuration (default: pipeline)"
+-    )
+-    gen_parser.add_argument(
+-        "--overwrite",
+-        action="store_true",
+-        help="Overwrite existing files"
++        help="Name for the pipeline configuration (default: pipeline)",
+     )
++    gen_parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files")
+     gen_parser.add_argument(
+         "--preserve-handwritten",
+         action="store_true",
+-        help="Preserve handwritten implementations during regeneration"
++        help="Preserve handwritten implementations during regeneration",
+     )
+     gen_parser.add_argument(
+-        "--smart-regen",
+-        action="store_true",
+-        help="Smart regeneration with signature comparison"
+-    )
+-    gen_parser.add_argument(
+-        "--verbose", "-v",
+-        action="store_true",
+-        help="Enable verbose logging"
++        "--smart-regen", action="store_true", help="Smart regeneration with signature comparison"
+     )
++    gen_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+     gen_parser.add_argument(
+         "--design-path-filter",
+         type=str,
+         default="",
+-        help="Substring filter for design file paths (default: accept all files)"
++        help="Substring filter for design file paths (default: accept all files)",
+     )
+     gen_parser.set_defaults(func=cmd_generate)
+ 
+     # Snapshot subcommand — capture a versioned snapshot from live models (D5)
+     snap_parser = subparsers.add_parser(
+-        "snapshot",
+-        help="Capture a versioned extraction snapshot from live models"
++        "snapshot", help="Capture a versioned extraction snapshot from live models"
+     )
+     snap_parser.add_argument(
+-        "--models", "-m",
+-        type=Path,
+-        required=True,
+-        help="Path to SysML model directory or file"
++        "--models", "-m", type=Path, required=True, help="Path to SysML model directory or file"
+     )
+     snap_parser.add_argument(
+-        "--output", "-o",
++        "--output",
++        "-o",
+         type=Path,
+         default=None,
+-        help="Snapshot output path (default: <models>/extraction_snapshot.json)"
++        help="Snapshot output path (default: <models>/extraction_snapshot.json)",
+     )
+     snap_parser.add_argument(
+         "--design-path-filter",
+         type=str,
+         default="",
+-        help="Substring filter for design file paths (baked into the snapshot)"
+-    )
+-    snap_parser.add_argument(
+-        "--verbose", "-v",
+-        action="store_true",
+-        help="Enable verbose logging"
++        help="Substring filter for design file paths (baked into the snapshot)",
+     )
++    snap_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+     snap_parser.set_defaults(func=cmd_snapshot)
+ 
+     # Seal subcommand — re-seal a generated package in place (D1/D2)
+     seal_parser = subparsers.add_parser(
+-        "seal",
+-        help="Re-seal a generated package (recomputes the PackageContract only)"
+-    )
+-    seal_parser.add_argument(
+-        "package_dir",
+-        type=Path,
+-        help="Path to the generated package directory"
++        "seal", help="Re-seal a generated package (recomputes the PackageContract only)"
+     )
+     seal_parser.add_argument(
+-        "--package-name",
+-        type=str,
+-        required=True,
+-        help="Package name to record in the seal"
++        "package_dir", type=Path, help="Path to the generated package directory"
+     )
+     seal_parser.add_argument(
+-        "--verbose", "-v",
+-        action="store_true",
+-        help="Enable verbose logging"
++        "--package-name", type=str, required=True, help="Package name to record in the seal"
+     )
++    seal_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+     seal_parser.set_defaults(func=cmd_seal)
+ 
+     # Install-commands subcommand
+     install_parser = subparsers.add_parser(
+-        "install-commands",
+-        help="Install teax-completion helper command"
+-    )
+-    install_parser.add_argument(
+-        "directory",
+-        nargs="?",
+-        default=".",
+-        help="Target directory (default: current directory)"
++        "install-commands", help="Install teax-completion helper command"
+     )
+     install_parser.add_argument(
+-        "--list",
+-        action="store_true",
+-        help="List available commands without installing"
++        "directory", nargs="?", default=".", help="Target directory (default: current directory)"
+     )
+     install_parser.add_argument(
+-        "--force",
+-        action="store_true",
+-        help="Overwrite existing files"
++        "--list", action="store_true", help="List available commands without installing"
+     )
++    install_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
+     install_parser.set_defaults(func=cmd_install_commands)
+ 
+     args = parser.parse_args()
+@@ -935,6 +923,7 @@ def run_codegen(config: GenerationConfig) -> bool:
+     Returns:
+         True if generation succeeded, False otherwise.
+     """
++    from sysml_codegen.contracts import PackageSealError, ensure_package_tree_is_link_free
+     from sysml_codegen.generation import (
+         CodeGenerationError,
+         SysMLParsingError,
+@@ -984,6 +973,12 @@ def run_codegen(config: GenerationConfig) -> bool:
+         # wired fell-through-valueless input. Before output clear, like 1.5.
+         _reconcile_params_coverage(ctx.computation_graph)
+ 
++        try:
++            ensure_package_tree_is_link_free(config.output_path)
++        except (PackageSealError, OSError) as error:
++            logger.error(f"Package sealing failed: {error}")
++            return False
++
+         # Step 2: Clear and setup output directories
+         if config.overwrite:
+             logger.info("Clearing existing output directory...")
+@@ -1029,7 +1024,11 @@ def run_codegen(config: GenerationConfig) -> bool:
+         # Step 9: Seal the package (D1) — over final on-disk state, both live and
+         # from-snapshot paths alike (D8).
+         logger.info("Sealing package...")
+-        _seal_package(ctx, config)
++        try:
++            _seal_package(ctx, config)
++        except (PackageSealError, OSError) as error:
++            logger.error(f"Package sealing failed: {error}")
++            return False
+ 
+         logger.info("Code generation complete")
+         return True
+@@ -1042,6 +1041,7 @@ def run_codegen(config: GenerationConfig) -> bool:
+         return False
+     except Exception as e:
+         import traceback
++
+         logger.error(f"Unexpected error: {e}")
+         logger.debug(traceback.format_exc())
+         return False
+diff --git a/src/sysml_codegen/contracts/__init__.py b/src/sysml_codegen/contracts/__init__.py
+index d4d2436..baa5ebd 100644
+--- a/src/sysml_codegen/contracts/__init__.py
++++ b/src/sysml_codegen/contracts/__init__.py
+@@ -16,7 +16,12 @@ from sysml_codegen.contracts.models import (
+     ModelContract,
+     PackageContract,
+ )
+-from sysml_codegen.contracts.seal import DEFAULT_COVERAGE_POLICY, seal_package
++from sysml_codegen.contracts.seal import (
++    DEFAULT_COVERAGE_POLICY,
++    PackageSealError,
++    ensure_package_tree_is_link_free,
++    seal_package,
++)
+ from sysml_codegen.contracts.verify import (
+     Diagnostic,
+     VerificationResult,
+@@ -35,9 +40,11 @@ __all__ = [
+     "Diagnostic",
+     "ModelContract",
+     "PackageContract",
++    "PackageSealError",
+     "VerificationResult",
+     "build_model_contract",
+     "generator_version",
++    "ensure_package_tree_is_link_free",
+     "seal_package",
+     "verify_package",
+     "verify_package_or_raise",
+diff --git a/src/sysml_codegen/contracts/seal.py b/src/sysml_codegen/contracts/seal.py
+index 43966ad..2ca9368 100644
+--- a/src/sysml_codegen/contracts/seal.py
++++ b/src/sysml_codegen/contracts/seal.py
+@@ -20,6 +20,42 @@ DEFAULT_COVERAGE_POLICY = CoveragePolicy(
+     runtime_output_globs=[],
+ )
+ 
++FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
++
++
++class PackageSealError(ValueError):
++    """A package tree violates a sealing policy before hashing can begin."""
++
++    def __init__(self, *, kind: str, path: str, message: str) -> None:
++        self.kind = kind
++        self.path = path
++        self.message = message
++        super().__init__(f"{kind}({path}): {message}")
++
++
++def _inspect_package_tree(root: Path) -> tuple[str | None, list[tuple[str, Path]]]:
++    """Return the first forbidden symlink and a sorted clean descendant list."""
++    if root.is_symlink():
++        return ".", []
++    paths = list(root.rglob("*"))
++    entries = sorted((path.relative_to(root).as_posix(), path) for path in paths)
++    for rel_path, path in entries:
++        if path.is_symlink():
++            return rel_path, []
++    return None, entries
++
++
++def ensure_package_tree_is_link_free(package_dir: Path) -> list[tuple[str, Path]]:
++    """Reject any package-root or descendant symlink and return clean entries."""
++    forbidden_path, entries = _inspect_package_tree(package_dir)
++    if forbidden_path is not None:
++        raise PackageSealError(
++            kind="INVALID_PATH",
++            path=forbidden_path,
++            message=FORBIDDEN_SYMLINK_MESSAGE,
++        )
++    return entries
++
+ 
+ def _glob_to_regex(pattern: str) -> re.Pattern[str]:
+     """Translate a ``/``-separated glob (``*``, ``?``, ``**``) to an anchored regex.
+@@ -64,11 +100,11 @@ def seal_package(
+     Pure over the directory: walks and hashes whatever is on disk *now* (stubs or
+     preserved handwritten code alike), so the identical call re-seals after an edit.
+     """
++    entries = ensure_package_tree_is_link_free(package_dir)
+     artifact_hashes: dict[str, str] = {}
+-    for path in sorted(package_dir.rglob("*")):
++    for rel_path, path in entries:
+         if not path.is_file():
+             continue
+-        rel_path = path.relative_to(package_dir).as_posix()
+         if _is_covered(rel_path, policy):
+             artifact_hashes[rel_path] = hashlib.sha256(path.read_bytes()).hexdigest()
+ 
+@@ -86,4 +122,9 @@ def seal_package(
+     )
+ 
+ 
+-__all__ = ["DEFAULT_COVERAGE_POLICY", "seal_package"]
++__all__ = [
++    "DEFAULT_COVERAGE_POLICY",
++    "PackageSealError",
++    "ensure_package_tree_is_link_free",
++    "seal_package",
++]
+diff --git a/src/sysml_codegen/contracts/verify.py b/src/sysml_codegen/contracts/verify.py
+index c11f4ab..3b4306a 100644
+--- a/src/sysml_codegen/contracts/verify.py
++++ b/src/sysml_codegen/contracts/verify.py
+@@ -51,6 +51,19 @@ _INTEGRITY_KINDS = frozenset(
+ )
+ 
+ _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
++_FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
++
++
++def _inspect_package_tree(root: Path) -> tuple[str | None, list[tuple[str, Path]]]:
++    """Return the first forbidden symlink and a sorted clean descendant list."""
++    if root.is_symlink():
++        return ".", []
++    paths = list(root.rglob("*"))
++    entries = sorted((path.relative_to(root).as_posix(), path) for path in paths)
++    for rel_path, path in entries:
++        if path.is_symlink():
++            return rel_path, []
++    return None, entries
+ 
+ 
+ def _artifact_path_error(path: str) -> str | None:
+@@ -215,7 +228,7 @@ def _recorded_artifact_diagnostics(
+                 message=f"package root cannot be resolved: {error}",
+             )
+         ]
+-    for rel_path, expected_hash in recorded_hashes.items():
++    for rel_path, expected_hash in sorted(recorded_hashes.items()):
+         file_path = package_dir / rel_path
+         try:
+             resolved_path = file_path.resolve()
+@@ -261,23 +274,11 @@ def _recorded_artifact_diagnostics(
+ 
+ 
+ def _extra_artifact_diagnostics(
+-    package_dir: Path, recorded_hashes: dict[str, str], policy: dict
++    entries: list[tuple[str, Path]], recorded_hashes: dict[str, str], policy: dict
+ ) -> list[Diagnostic]:
+     diagnostics: list[Diagnostic] = []
+-    try:
+-        paths = sorted(package_dir.rglob("*"))
+-    except OSError as error:
+-        return [
+-            Diagnostic(
+-                kind=ARTIFACT_UNREADABLE,
+-                path=None,
+-                message=f"package artifact walk failed: {error}",
+-            )
+-        ]
+-    for path in paths:
+-        rel_path = path.relative_to(package_dir).as_posix()
++    for rel_path, path in entries:
+         try:
+-            is_directory_symlink = path.is_symlink() and path.is_dir()
+             is_file = path.is_file()
+         except OSError as error:
+             diagnostics.append(
+@@ -288,15 +289,6 @@ def _extra_artifact_diagnostics(
+                 )
+             )
+             continue
+-        if is_directory_symlink:
+-            diagnostics.append(
+-                Diagnostic(
+-                    kind=INVALID_PATH,
+-                    path=rel_path,
+-                    message="directory symlinks are not permitted beneath the package root",
+-                )
+-            )
+-            continue
+         if not is_file:
+             continue
+         if rel_path == "contracts/package_contract.json" or not _is_covered(rel_path, policy):
+@@ -358,6 +350,31 @@ def verify_package(
+         mismatch) are always fatal; env-compat mismatches are advisory unless
+         ``strict``.
+     """
++    try:
++        forbidden_path, entries = _inspect_package_tree(package_dir)
++    except OSError as error:
++        return VerificationResult(
++            ok=False,
++            diagnostics=[
++                Diagnostic(
++                    kind=ARTIFACT_UNREADABLE,
++                    path=None,
++                    message=f"package artifact preflight failed: {error}",
++                )
++            ],
++        )
++    if forbidden_path is not None:
++        return VerificationResult(
++            ok=False,
++            diagnostics=[
++                Diagnostic(
++                    kind=INVALID_PATH,
++                    path=forbidden_path,
++                    message=_FORBIDDEN_SYMLINK_MESSAGE,
++                )
++            ],
++        )
++
+     seal_path = package_dir / "contracts" / "package_contract.json"
+     seal, failure = _load_seal(seal_path)
+     if failure is not None:
+@@ -385,7 +402,7 @@ def verify_package(
+         diagnostics.append(fingerprint_diagnostic)
+     diagnostics.extend(_recorded_artifact_diagnostics(package_dir, recorded_hashes))
+     diagnostics.extend(
+-        _extra_artifact_diagnostics(package_dir, recorded_hashes, seal["coverage_policy"])
++        _extra_artifact_diagnostics(entries, recorded_hashes, seal["coverage_policy"])
+     )
+     runtime_diagnostic = _runtime_diagnostic(seal, runtime_version)
+     if runtime_diagnostic is not None:
+diff --git a/tests/conformance/test_fingerprint_stability.py b/tests/conformance/test_fingerprint_stability.py
+index 368b84d..6ac4f29 100644
+--- a/tests/conformance/test_fingerprint_stability.py
++++ b/tests/conformance/test_fingerprint_stability.py
+@@ -9,7 +9,11 @@ layer (design.md:382-385).
+ 
+ from __future__ import annotations
+ 
++import hashlib
+ import json
++import os
++import subprocess
++import sys
+ from pathlib import Path
+ 
+ import pytest
+@@ -18,6 +22,9 @@ from sysml_codegen.cli import GenerationConfig, run_codegen
+ from tests.conftest import FIXTURES_DIR, requires_license
+ 
+ CHAIN_SNAPSHOT = FIXTURES_DIR / "chain_spike_model" / "extraction_snapshot.json"
++REPO_ROOT = Path(__file__).resolve().parents[2]
++REVIEWED_REVISION = "512786c7dfab44fba7a0185d09e845b7494c702d"
++REVIEWED_VERIFY_SHA256 = "24eb3565b0a7a682cf8a2510c871d7af9baa938fdaac6b5e826f88045a400276"
+ 
+ 
+ def _exec_fp(package_dir: Path) -> str:
+@@ -30,6 +37,10 @@ def _sem_fp(package_dir: Path) -> str:
+     return mc["semantic_fingerprint"]
+ 
+ 
++def _seal(package_dir: Path) -> dict:
++    return json.loads((package_dir / "contracts/package_contract.json").read_text())
++
++
+ def test_fingerprints_stable_across_independent_generation(tmp_path):
+     out_a = tmp_path / "a"
+     out_b = tmp_path / "b"
+@@ -44,6 +55,85 @@ def test_fingerprints_stable_across_independent_generation(tmp_path):
+ 
+     assert _exec_fp(out_a) == _exec_fp(out_b)
+     assert _sem_fp(out_a) == _sem_fp(out_b)
++    first = _seal(out_a)
++    second = _seal(out_b)
++    assert first["artifact_hashes"] == second["artifact_hashes"]
++    fingerprint_input = "\n".join(
++        f"{path}:{digest}" for path, digest in sorted(first["artifact_hashes"].items())
++    ).encode()
++    assert first["executable_fingerprint"] == hashlib.sha256(fingerprint_input).hexdigest()
++
++
++def _generate_with_source(source_root: Path, output: Path) -> None:
++    script = """
++import sys
++from pathlib import Path
++from sysml_codegen.cli import GenerationConfig, run_codegen
++
++output = Path(sys.argv[1])
++snapshot = Path(sys.argv[2])
++config = GenerationConfig(
++    output_path=output,
++    from_snapshot=snapshot,
++    package_name="chain_spike",
++    overwrite=True,
++)
++if not run_codegen(config):
++    raise SystemExit(1)
++"""
++    environment = os.environ.copy()
++    environment.update(
++        {
++            "PYTHONNOUSERSITE": "1",
++            "PYTHONDONTWRITEBYTECODE": "1",
++            "PYTHONPATH": str(source_root / "src"),
++        }
++    )
++    subprocess.run(
++        [sys.executable, "-c", script, str(output), str(CHAIN_SNAPSHOT)],
++        check=True,
++        cwd=REPO_ROOT,
++        env=environment,
++    )
++
++
++def test_policy_update_changes_only_verifier_hash_and_derived_fingerprint(tmp_path):
++    archive = tmp_path / "reviewed.tar"
++    reviewed_source = tmp_path / "reviewed"
++    reviewed_source.mkdir()
++    subprocess.run(
++        ["git", "archive", "--format=tar", f"--output={archive}", REVIEWED_REVISION],
++        check=True,
++        cwd=REPO_ROOT,
++    )
++    subprocess.run(["tar", "-xf", archive, "-C", reviewed_source], check=True)
++
++    reviewed_output = tmp_path / "reviewed-output"
++    candidate_output = tmp_path / "candidate-output"
++    _generate_with_source(reviewed_source, reviewed_output)
++    _generate_with_source(REPO_ROOT, candidate_output)
++
++    reviewed_seal = _seal(reviewed_output)
++    candidate_seal = _seal(candidate_output)
++    reviewed_hashes = dict(reviewed_seal["artifact_hashes"])
++    candidate_hashes = dict(candidate_seal["artifact_hashes"])
++    reviewed_verifier_hash = reviewed_hashes.pop("contracts/verify.py")
++    candidate_verifier_hash = candidate_hashes.pop("contracts/verify.py")
++
++    assert reviewed_hashes == candidate_hashes
++    assert reviewed_verifier_hash == REVIEWED_VERIFY_SHA256
++    canonical_candidate = (REPO_ROOT / "src/sysml_codegen/contracts/verify.py").read_bytes()
++    emitted_candidate = (candidate_output / "contracts/verify.py").read_bytes()
++    assert emitted_candidate == canonical_candidate
++    assert candidate_verifier_hash == hashlib.sha256(canonical_candidate).hexdigest()
++    assert candidate_verifier_hash != reviewed_verifier_hash
++
++    for seal in (reviewed_seal, candidate_seal):
++        fingerprint_input = "\n".join(
++            f"{path}:{digest}" for path, digest in sorted(seal["artifact_hashes"].items())
++        ).encode()
++        assert seal["executable_fingerprint"] == hashlib.sha256(fingerprint_input).hexdigest()
++    assert reviewed_seal["executable_fingerprint"] != candidate_seal["executable_fingerprint"]
+ 
+ 
+ @requires_license
+diff --git a/tests/conformance/test_seal_step9.py b/tests/conformance/test_seal_step9.py
+index 5f38f3d..584139d 100644
+--- a/tests/conformance/test_seal_step9.py
++++ b/tests/conformance/test_seal_step9.py
+@@ -9,6 +9,8 @@ byte-identical to the in-repo source (INV-8), and re-seal recomputes only the
+ from __future__ import annotations
+ 
+ import argparse
++import hashlib
++import json
+ import runpy
+ from pathlib import Path
+ 
+@@ -52,6 +54,8 @@ def test_emitted_verifier_is_verbatim(tmp_path):
+     emitted = (output / "contracts" / "verify.py").read_bytes()
+     canonical = SRC_VERIFY.read_bytes()
+     assert emitted == canonical
++    seal = json.loads((output / "contracts/package_contract.json").read_text())
++    assert seal["artifact_hashes"]["contracts/verify.py"] == hashlib.sha256(canonical).hexdigest()
+ 
+ 
+ def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
+@@ -69,6 +73,23 @@ def test_emitted_verifier_rejects_internal_directory_symlink(tmp_path):
+     )
+ 
+ 
++def test_emitted_verifier_rejects_dangling_file_symlink(tmp_path):
++    output = tmp_path / "out"
++    assert run_codegen(_snapshot_config(output))
++    (output / "dangling.py").symlink_to(tmp_path / "missing.py")
++
++    emitted_namespace = runpy.run_path(str(output / "contracts" / "verify.py"))
++    result = emitted_namespace["verify_package"](output, "chain_spike")
++
++    assert [(item.kind, item.path, item.message) for item in result.diagnostics] == [
++        (
++            "INVALID_PATH",
++            "dangling.py",
++            "symlinks are forbidden beneath the package root",
++        )
++    ]
++
++
+ def test_seal_ordering_excludes_itself_from_coverage(tmp_path):
+     """INV-3: package_contract.json is written last and never in its own coverage set."""
+     import json
+@@ -109,3 +130,50 @@ def test_seal_subcommand_requires_existing_model_contract(tmp_path):
+     empty_dir = tmp_path / "not_a_package"
+     empty_dir.mkdir()
+     assert cmd_seal(_seal_args(empty_dir, "chain_spike")) == 1
++
++
++def test_reseal_rejects_linked_contracts_before_model_contract_check(tmp_path):
++    package = tmp_path / "pkg"
++    package.mkdir()
++    outside = tmp_path / "outside"
++    outside.mkdir()
++    (outside / "model_contract.json").write_text("{}\n")
++    prior_seal = outside / "package_contract.json"
++    prior_seal.write_bytes(b"prior seal bytes\n")
++    (package / "contracts").symlink_to(outside, target_is_directory=True)
++
++    assert cmd_seal(_seal_args(package, "chain_spike")) == 1
++    assert prior_seal.read_bytes() == b"prior seal bytes\n"
++
++
++def test_step9_rejects_linked_contracts_without_writing_contract(tmp_path):
++    from sysml_codegen.cli import _seal_package
++    from sysml_codegen.contracts.seal import PackageSealError
++    from sysml_codegen.resolution.models import ComputationGraph
++
++    output = tmp_path / "out"
++    output.mkdir()
++    outside = tmp_path / "outside"
++    outside.mkdir()
++    marker = outside / "marker.txt"
++    marker.write_text("unchanged\n")
++    (output / "contracts").symlink_to(outside, target_is_directory=True)
++    config = _snapshot_config(output, package_name="chain_spike")
++    context = type(
++        "Context",
++        (),
++        {
++            "computation_graph": ComputationGraph(
++                modules=[], entry_point_groups=[], execution_order=[]
++            )
++        },
++    )()
++
++    try:
++        _seal_package(context, config)
++    except PackageSealError as error:
++        assert error.path == "contracts"
++    else:
++        raise AssertionError("Step 9 accepted linked contracts directory")
++    assert marker.read_text() == "unchanged\n"
++    assert not (outside / "package_contract.json").exists()
+diff --git a/tests/unit/test_cli_generation.py b/tests/unit/test_cli_generation.py
+index ee8e247..207081e 100644
+--- a/tests/unit/test_cli_generation.py
++++ b/tests/unit/test_cli_generation.py
+@@ -16,6 +16,9 @@ from sysml_codegen.cli import GenerationConfig, run_codegen
+ from sysml_codegen.generation.constraint_catalog import assemble_constraint_catalog
+ from sysml_codegen.resolution.models import ComputationGraph, ConcreteConstraint
+ 
++REPO_ROOT = Path(__file__).resolve().parents[2]
++CHAIN_SNAPSHOT = REPO_ROOT / "tests/fixtures/chain_spike_model/extraction_snapshot.json"
++
+ 
+ class TestEnsurePackageInitFiles:
+     """Bug 7: Intermediate __init__.py creation."""
+@@ -185,3 +188,28 @@ def test_collision_rejection_preserves_populated_tree(tmp_path, monkeypatch):
+     config = GenerationConfig(output_path=output, models_path=tmp_path, overwrite=True)
+     assert run_codegen(config) is False
+     assert _complete_tree_manifest(output) == before
++
++
++def test_generation_rejects_symlink_root_before_output_mutation(tmp_path, monkeypatch):
++    target = tmp_path / "target"
++    target.mkdir()
++    marker = target / "marker.txt"
++    marker.write_text("unchanged\n")
++    output = tmp_path / "out"
++    output.symlink_to(target, target_is_directory=True)
++    clear_reached = False
++
++    def record_clear(config):
++        nonlocal clear_reached
++        clear_reached = True
++
++    monkeypatch.setattr("sysml_codegen.cli._clear_output_directory", record_clear)
++    config = GenerationConfig(
++        output_path=output,
++        from_snapshot=CHAIN_SNAPSHOT,
++        package_name="chain_spike",
++        overwrite=True,
++    )
++    assert run_codegen(config) is False
++    assert clear_reached is False
++    assert marker.read_text() == "unchanged\n"
+diff --git a/tests/unit/test_contract_models.py b/tests/unit/test_contract_models.py
+index c208458..ab43a62 100644
+--- a/tests/unit/test_contract_models.py
++++ b/tests/unit/test_contract_models.py
+@@ -8,6 +8,7 @@ pipeline wiring exists.
+ from __future__ import annotations
+ 
+ import json
++from pathlib import Path
+ 
+ import pytest
+ 
+@@ -117,9 +118,82 @@ def test_fingerprints_are_deterministic(tmp_path):
+     _write_fixture(tmp_path / "b")
+     seal1 = seal_package(tmp_path / "a", "pkg", DEFAULT_COVERAGE_POLICY)
+     seal2 = seal_package(tmp_path / "b", "pkg", DEFAULT_COVERAGE_POLICY)
++    assert list(seal1.artifact_hashes) == list(seal2.artifact_hashes)
++    assert seal1.artifact_hashes == seal2.artifact_hashes
+     assert seal1.executable_fingerprint == seal2.executable_fingerprint
+ 
+ 
++FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
++
++
++def _link_target(tmp_path: Path, package: Path, target_kind: str, entry_kind: str) -> Path:
++    if target_kind == "internal":
++        return package / ("modules/calc.py" if entry_kind == "file" else "modules")
++    target = tmp_path / f"{target_kind}-{entry_kind}"
++    if target_kind == "escaping":
++        if entry_kind == "file":
++            target.write_text("outside\n")
++        else:
++            target.mkdir()
++    return target
++
++
++@pytest.mark.parametrize("entry_kind", ["file", "directory"])
++@pytest.mark.parametrize("target_kind", ["internal", "escaping", "dangling"])
++def test_direct_seal_rejects_every_symlink(tmp_path, entry_kind, target_kind):
++    from sysml_codegen.contracts import seal as seal_module
++
++    package = tmp_path / "pkg"
++    _write_fixture(package)
++    link = package / "alias"
++    link.symlink_to(
++        _link_target(tmp_path, package, target_kind, entry_kind),
++        target_is_directory=entry_kind == "directory",
++    )
++
++    with pytest.raises(seal_module.PackageSealError) as caught:
++        seal_package(package, "pkg")
++
++    assert caught.value.kind == "INVALID_PATH"
++    assert caught.value.path == "alias"
++    assert caught.value.message == FORBIDDEN_SYMLINK_MESSAGE
++    assert str(caught.value) == f"INVALID_PATH(alias): {FORBIDDEN_SYMLINK_MESSAGE}"
++
++
++def test_direct_seal_rejects_symlink_root_and_excluded_link(tmp_path):
++    from sysml_codegen.contracts import seal as seal_module
++
++    target = tmp_path / "target"
++    _write_fixture(target)
++    root_link = tmp_path / "root"
++    root_link.symlink_to(target, target_is_directory=True)
++    with pytest.raises(seal_module.PackageSealError) as root_error:
++        seal_package(root_link, "pkg")
++    assert root_error.value.path == "."
++
++    excluded = target / "contracts/package_contract.json"
++    excluded.parent.mkdir()
++    excluded.symlink_to(tmp_path / "missing-seal")
++    with pytest.raises(seal_module.PackageSealError) as excluded_error:
++        seal_package(target, "pkg")
++    assert excluded_error.value.path == "contracts/package_contract.json"
++
++
++def test_direct_seal_propagates_preflight_walk_failure(tmp_path, monkeypatch):
++    package = tmp_path / "pkg"
++    _write_fixture(package)
++    original_rglob = Path.rglob
++
++    def deny_walk(path, pattern):
++        if path == package:
++            raise PermissionError("walk denied")
++        return original_rglob(path, pattern)
++
++    monkeypatch.setattr(Path, "rglob", deny_walk)
++    with pytest.raises(PermissionError, match="walk denied"):
++        seal_package(package, "pkg")
++
++
+ def test_zero_constraint_graph_seals():
+     """SC-6 / INV-7: a constraint-free graph yields a well-formed, stable contract."""
+     mc = build_model_contract(_graph_without_constraints())
+@@ -175,10 +249,26 @@ def test_glob_matcher_bodies_identical_across_seal_and_verify():
+         fdef = tree.body[0]
+         # drop a leading docstring expression if present
+         body = fdef.body
+-        if body and isinstance(body[0], ast.Expr) and isinstance(
+-            getattr(body[0], "value", None), ast.Constant
++        if (
++            body
++            and isinstance(body[0], ast.Expr)
++            and isinstance(getattr(body[0], "value", None), ast.Constant)
+         ):
+             body = body[1:]
+         return [ast.dump(node) for node in body]
+ 
+     assert code_body(seal._glob_to_regex) == code_body(verify._glob_to_regex)
++
++
++def test_package_tree_inspector_bodies_identical_across_seal_and_verify():
++    import ast
++    import inspect
++    import textwrap
++
++    from sysml_codegen.contracts import seal, verify
++
++    def code_body(function):
++        tree = ast.parse(textwrap.dedent(inspect.getsource(function)))
++        return [ast.dump(node) for node in tree.body[0].body]
++
++    assert code_body(seal._inspect_package_tree) == code_body(verify._inspect_package_tree)
+diff --git a/tests/unit/test_verify_package.py b/tests/unit/test_verify_package.py
+index d31ba18..d18d1fc 100644
+--- a/tests/unit/test_verify_package.py
++++ b/tests/unit/test_verify_package.py
+@@ -32,6 +32,7 @@ from sysml_codegen.contracts.verify import (
+ )
+ 
+ CONTRACTS_DIR = Path(__file__).resolve().parents[2] / "src" / "sysml_codegen" / "contracts"
++FORBIDDEN_SYMLINK_MESSAGE = "symlinks are forbidden beneath the package root"
+ 
+ 
+ def _sealed(package_dir: Path, package_name: str = "pkg") -> Path:
+@@ -224,10 +225,67 @@ def test_directory_symlink_is_fatal_at_link_path(tmp_path, target_kind):
+     result = verify_package(d, "pkg")
+ 
+     assert result.ok is False
+-    assert any(
+-        diagnostic.kind == INVALID_PATH and diagnostic.path == link.name
+-        for diagnostic in result.diagnostics
+-    )
++    assert [(item.kind, item.path, item.message) for item in result.diagnostics] == [
++        (INVALID_PATH, link.name, FORBIDDEN_SYMLINK_MESSAGE)
++    ]
++
++
++@pytest.mark.parametrize("entry_kind", ["file", "directory"])
++@pytest.mark.parametrize("target_kind", ["internal", "escaping", "dangling"])
++def test_verifier_rejects_every_symlink_before_integrity_work(tmp_path, entry_kind, target_kind):
++    package = _sealed(tmp_path / "pkg")
++    if target_kind == "internal":
++        target = package / ("modules/calc.py" if entry_kind == "file" else "modules")
++    else:
++        target = tmp_path / f"{target_kind}-{entry_kind}"
++        if target_kind == "escaping":
++            if entry_kind == "file":
++                target.write_text("outside\n")
++            else:
++                target.mkdir()
++    link = package / "alias"
++    link.symlink_to(target, target_is_directory=entry_kind == "directory")
++
++    result = verify_package(package, "pkg")
++
++    assert [(item.kind, item.path, item.message) for item in result.diagnostics] == [
++        (INVALID_PATH, "alias", FORBIDDEN_SYMLINK_MESSAGE)
++    ]
++
++
++def test_verifier_rejects_root_contracts_and_seal_links_before_seal_load(tmp_path):
++    target = _sealed(tmp_path / "target")
++    root_link = tmp_path / "root"
++    root_link.symlink_to(target, target_is_directory=True)
++    root_result = verify_package(root_link, "pkg")
++    assert [(item.kind, item.path) for item in root_result.diagnostics] == [(INVALID_PATH, ".")]
++
++    seal_path = target / "contracts/package_contract.json"
++    outside_seal = tmp_path / "outside-seal.json"
++    outside_seal.write_bytes(seal_path.read_bytes())
++    seal_path.unlink()
++    seal_path.symlink_to(outside_seal)
++    seal_result = verify_package(target, "pkg")
++    assert [(item.kind, item.path) for item in seal_result.diagnostics] == [
++        (INVALID_PATH, "contracts/package_contract.json")
++    ]
++
++
++def test_verifier_reports_only_lexical_first_link(tmp_path):
++    package = _sealed(tmp_path / "pkg")
++    for name in ("z-link", "a-link"):
++        (package / name).symlink_to(tmp_path / f"missing-{name}")
++    result = verify_package(package, "pkg")
++    assert [(item.kind, item.path) for item in result.diagnostics] == [(INVALID_PATH, "a-link")]
++
++
++def test_link_preflight_precedes_missing_extra_and_tamper(tmp_path):
++    package = _sealed(tmp_path / "pkg")
++    (package / "modules/calc.py").write_text("tampered\n")
++    (package / "extra.py").write_text("extra\n")
++    (package / "a-link").symlink_to(tmp_path / "missing")
++    result = verify_package(package, "pkg")
++    assert [(item.kind, item.path) for item in result.diagnostics] == [(INVALID_PATH, "a-link")]
+ 
+ 
+ def test_unrecorded_real_directory_keeps_existing_behavior(tmp_path):
+@@ -268,12 +326,8 @@ def test_package_walk_failure_returns_diagnostic(tmp_path, monkeypatch):
+     monkeypatch.setattr(Path, "rglob", _deny_walk)
+     result = verify_package(d, "pkg")
+     assert result.ok is False
+-    assert any(
+-        diagnostic.kind == ARTIFACT_UNREADABLE
+-        and diagnostic.path is None
+-        and "walk denied" in diagnostic.message
+-        for diagnostic in result.diagnostics
+-    )
++    assert [(item.kind, item.path) for item in result.diagnostics] == [(ARTIFACT_UNREADABLE, None)]
++    assert result.diagnostics[0].message == "package artifact preflight failed: walk denied"
+ 
+ 
+ def test_env_compat_advisory_then_strict(tmp_path):

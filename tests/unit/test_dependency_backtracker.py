@@ -18,6 +18,34 @@ import logging
 
 from agentic_mbse.sysml.types import BindingType
 
+from sysml_codegen.resolution.producer_resolution import (
+    Outcome,
+    ProducerRequest,
+    TerminalPolicy,
+    resolve_producer,
+)
+
+def _channel(bt, source_path, usage):
+    """The observable outcome the deleted `_resolve_chain_dispatch` produced, read
+    through the shared table (SR-R43). The climb is now the tier-1 terminal search,
+    running after every tier-1 row rather than mid-sequence; it keeps its
+    collect-then-require-unique ambiguity guard.
+    """
+    resolution = resolve_producer(
+        ProducerRequest(
+            consumer_eqn=usage.qualified_name,
+            reference=source_path,
+            param_name="probe",
+            consumer_scope=bt._consumer_scope_dotted(usage),
+            parent_scope=bt._get_parent_part_for_usage(usage),
+            policy=TerminalPolicy.LENIENT,
+            diagnostic_context="climb probe",
+        ),
+        bt._producer_context(),
+    )
+    return resolution.identity if resolution.outcome is Outcome.MODULE_OUTPUT else None
+
+
 from sysml_codegen.analysis.dependency_backtracker import DependencyBacktracker
 from sysml_codegen.core.identifier_types import CanonicalChannel, ScopedKey
 from sysml_codegen.core.models import BindingResolutionType
@@ -67,8 +95,7 @@ def test_climb_resolves_one_level_up_data_point_shape():
     )
     usage = _usage("Design__measurement_system__analyzer__chain_analysis")
     bt = _backtracker(usage, reg)
-    ch = bt._resolve_chain_dispatch(
-        "station.array.derived_calc.derived_value", usage
+    ch = _channel(bt, "station.array.derived_calc.derived_value", usage
     )
     assert ch == _CHANNEL_D
 
@@ -81,7 +108,7 @@ def test_base_metric_shape_hits_step1_no_climb():
     )
     usage = _usage("Design__measurement_system__station__array__derived_calc")
     bt = _backtracker(usage, reg)
-    ch = bt._resolve_chain_dispatch("sensor.core.metric_value", usage)
+    ch = _channel(bt, "sensor.core.metric_value", usage)
     assert ch == _CHANNEL_M
 
 
@@ -98,7 +125,7 @@ def test_climb_refuses_on_two_distinct_channels():
     )
     usage = _usage("Design__a__b__c__consumer")  # consumer scope = a.b.c
     bt = _backtracker(usage, reg)
-    assert bt._resolve_chain_dispatch("x.y.z", usage) is None
+    assert _channel(bt, "x.y.z", usage) is None
 
 
 def test_two_segment_chain_never_enters_climb():
@@ -110,7 +137,7 @@ def test_two_segment_chain_never_enters_climb():
     bt = _backtracker(usage, reg)
     # Step 1 tries `measurement_system.analyzer.calc.out` (miss); Step 1b tries
     # `calc.out` (miss). The climb — which would find it — must not run for 2 segments.
-    assert bt._resolve_chain_dispatch("calc.out", usage) is None
+    assert _channel(bt, "calc.out", usage) is None
 
 
 # ---------------------------------------------------------------------------

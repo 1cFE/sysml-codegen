@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 259 |
-| PASS (test exists and passes) | 258 |
+| Total requirements | 274 |
+| PASS (test exists and passes) | 273 |
 | UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
-| REQ families | 30 |
-| Distinct test files cited | 66 |
+| REQ families | 32 |
+| Distinct test files cited | 73 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -36,6 +36,8 @@ the documentation rather than executable code.
 - [BASE — Baseline Conformance](#base) (6/6 pass)
 - [BT — Backtracker](#bt) (13/13 pass)
 - [CA — Computed Attributes](#ca) (12/12 pass)
+- [CL — Constraint Lowering & Catalog](#cl) (5/5 pass)
+- [CON — Contracts & Sealing](#con) (10/10 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
 - [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
@@ -92,7 +94,7 @@ the documentation rather than executable code.
 | REQ-AST-03 | Among reference/operator branches, dispatch ordering SHALL be FCE, OE, FRE (the cited test pins this ordering clause only; literal-before-catch-all is REQ-AST-08's row) | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-04 | New dispatch sites SHALL follow REQ-AST-03 ordering | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-05 | `hierarchy_resolver._walk_aggregation_ast()` SHALL classify FCE nodes as `SingletonTerm` ... | `test_ast_dispatch_invariant.py` | PASS |
-| REQ-AST-06 | `expression_compiler.build_expression_ast()` SHALL return `unsupported` for FCE (not "uns... | `test_ast_dispatch_invariant.py` | PASS |
+| REQ-AST-06 | A feature-chain reference in a CalcDef output SHALL be rejected as unsupported by the renderer (`calc_compat_renderer._render_reference`), not misread as an operator | `test_expression_compiler.py::TestRenderCalcExpression::test_feature_chain_raises_compilation_error` | PASS |
 | REQ-AST-07 | `expression_utils.reconstruct_expression()` SHALL return `"name.attr"` for FCE (not `".(n... | `test_ast_dispatch_invariant.py` | PASS |
 | REQ-AST-08 | `reconstruct_expression` SHALL dispatch all literal/`NullExpression` branches (via `is_instance`) before the invocation catch-all | `test_expression_reconstruction_fidelity.py`, offline totality guard | PASS |
 | REQ-AST-09 | `reconstruct_operator_expression` SHALL parenthesize a child operand iff it binds looser than its parent, or equal and on the associativity-unfavored side | `test_expression_reconstruction_fidelity.py`, `test_expression_paren_helper.py` | PASS |
@@ -140,7 +142,7 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-CA-01 | Classification SHALL assign each attribute expression exactly one enum member | `test_computed_attributes.py` | PASS |
-| REQ-CA-02 | FORMULA attributes SHALL compile to Python via `build_expression_ast()` + `compile_expres... | `test_computed_attributes.py` | PASS |
+| REQ-CA-02 | FORMULA attributes SHALL compile to Python via the ExpressionIR render path (`extract_expression_ir()` + `render_calc_expression()`) | `test_computed_attributes.py` | PASS |
 | REQ-CA-03 | EXPOSE_PURE SHALL produce a `ChannelAlias` for a PartUsage-level derived attribute; a PartDef-level EXPOSE (shape A) SHALL be expanded per design instance path into the structured `_scoped_alias` namespace (`_register_partdef_expose_scoped_aliases`, Item 10 #4) rather than emitting a template alias | `test_computed_attributes.py`, `test_wi014_toy.py` | PASS |
 | REQ-CA-10 | A pure `FeatureChainExpression` whose `reference_chain` is a part-rooted ≥2-segment single-terminal chain (INV-E) SHALL be tagged `EXPOSE_CHAIN_TENTATIVE`, then the Phase-3b confirm walk over `reference_chain` SHALL finalize it to EXPOSE_PURE (+register the transitive channel) or revert to FORMULA; no tentative SHALL survive to any reader (INV-F raises) | `test_computed_attribute_extraction.py`, `test_ife_plant.py` | PASS |
 | REQ-CA-04 | LITERAL attributes SHALL be excluded from computed attributes | `test_computed_attributes.py` | PASS |
@@ -151,6 +153,47 @@ the documentation rather than executable code.
 | REQ-CA-09 | Shape-A resolution (part-def EXPOSE): the wi014_toy `demo_plant.total_cost` consumer SHALL resolve via `_scoped_alias` to the `cost_calc__cost` channel (the Item-1 malformed-refs deferral, discharged by Item 10 #4/#1) | `test_wi014_toy.py` | PASS |
 | REQ-CA-11 | Shape-A EXPOSE_PURE (part def) in the attribute resolution map SHALL route by `is_on_part_definition` to a LITERAL fallback (not the refs-parser) and consult `_scoped_alias` to decide the warning: a registered leaf is silent (the name resolves via Item 10 and surfaces via Item 11), an unregistered one warns naming the real cause — retiring the Item-1 malformed-refs warning (`_resolve_expose_pure` in `graph_builder.py`) for the resolvable case | `test_wi014_toy.py` | PASS |
 | REQ-CA-12 | A reference whose QN sits under the owning part OR any **ancestor PartDef** namespace SHALL be treated as a sibling (Step-2b widened via `_ancestor_part_qns`, transitive), so an attribute referencing only inherited/local attributes classifies FORMULA — not EXPOSE_COMPUTED; a reference under a top-level CalcDef namespace SHALL stay a `calc_ref` (D3 over-correction control, `mixed_expose`). A FORMULA computed attribute that reaches graph-build without being FULLY_COMPILABLE SHALL emit a WARN and produce no module (D5 — the no-module outcome is loud, never a silent drop) | `test_computed_attributes.py`, `test_computed_attribute_extraction.py`, `test_graph_builder_computed_attrs.py` | PASS |
+
+### CL
+
+**Constraint Lowering & Catalog** — Items 5-9, Item 14 — [reference/28-constraint-lowering-and-catalog.md](reference/28-constraint-lowering-and-catalog.md)
+
+Partial register (Item 14 docs pass): these five rows cover the mechanisms Item 14
+directly touched or verified test-first; the full Items 5-9 surface (module wiring
+detail, occurrence expansion, tracking-key correlation) is broader than this pass
+re-derives from scratch and is named here as a known gap, not silently covered.
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-CL-01 | `resolve_actual`'s strict ladder SHALL resolve a bound actual through, in order: registry scoped/alias/scoped-alias lookup, occurrence-scoped design attribute, definition-scoped target QN, definition-scoped base-literal-default (Item 14 D2-twin) — before the shared terminal-disposition switch (`strict=True`, never synthesizes) | `test_constraint_resolver.py` | PASS |
+| REQ-CL-02 | Every concrete entry expanded from one `ConstraintUsageFact` SHALL share one compile-once predicate (grouped by `usage_qualified_name`), even across N owner-instance occurrences | `test_constraint_emission.py` | PASS |
+| REQ-CL-03 | `assemble_constraint_catalog` SHALL build `source_records` from every `ConstraintDefinition` in the model's facts (visible even with zero eligible entries) and `concrete_entries` from eligible concrete constraints only, fingerprinted deterministically | `test_constraint_emission.py` | PASS |
+| REQ-CL-04 | The manifest->catalog mapping SHALL be total and silent-drop-free: every usage `collect_constraint_manifest` sweeps has a catalog carrier (eligible or unassessed) or is a named, justified requirement/satisfy exclusion | `test_constraint_migration_mapping.py` | PASS |
+| REQ-CL-05 | A constraint input resolved to a design attribute SHALL mint a deduped entry point (reused, not re-minted, if already present); a resolved module-output input SHALL wire the producer channel with no mint; a resolved modeled-default input SHALL mint a `LIBRARY_DEFAULT` entry point scoped to its constraint | `test_constraint_graph_extension.py` | PASS |
+
+### CON
+
+**Contracts & Sealing** — Item 9 — [reference/29-contracts-and-sealing.md](reference/29-contracts-and-sealing.md)
+
+Register covering the two contracts (`ModelContract` semantic identity,
+`PackageContract` physical seal), fingerprint determinism, seal/verify parity, and the
+emit/re-seal/subcommand wiring. The `contract INV-*` labels are the contracts
+machinery's own numbering (a distinct namespace from the matrix REQ IDs). The
+`verify_package` diagnostic surface beyond the verbatim-emission guard is exercised
+indirectly via the emitted verifier.
+
+| REQ ID | Requirement | Test File | Status |
+|--------|-------------|-----------|--------|
+| REQ-CON-01 | `build_model_contract` SHALL be a pure function of the `ComputationGraph` — no filesystem, no templates (contract INV-1) | `test_contract_models.py` | PASS |
+| REQ-CON-02 | Both fingerprints SHALL be deterministic; `semantic_fingerprint` SHALL exclude itself from its own payload (contract INV-2, no circularity) | `test_contract_models.py` | PASS |
+| REQ-CON-03 | A constraint-free graph SHALL still seal into a well-formed, stable contract (contract INV-7) | `test_contract_models.py` | PASS |
+| REQ-CON-04 | On-disk `ModelContract` JSON bytes SHALL be a deterministic function of the graph (contract INV-6) | `test_contract_models.py` | PASS |
+| REQ-CON-05 | The `seal.py` and `verify.py` glob-matcher bodies SHALL stay byte-identical (drift guard) | `test_contract_models.py` | PASS |
+| REQ-CON-06 | `generate` SHALL emit three `contracts/` files (`model_contract.json`, `package_contract.json`, `verify.py`) and the result SHALL verify on load | `test_seal_step9.py` | PASS |
+| REQ-CON-07 | The emitted `contracts/verify.py` SHALL be byte-identical to the canonical verifier (contract INV-8 drift guard) | `test_seal_step9.py` | PASS |
+| REQ-CON-08 | The seal SHALL exclude its own `package_contract.json` from coverage | `test_seal_step9.py` | PASS |
+| REQ-CON-09 | Re-sealing after a stencil edit SHALL recompute only the `PackageContract` (graph-free) | `test_seal_step9.py` | PASS |
+| REQ-CON-10 | The `seal` subcommand SHALL require an already-sealed package (an existing `ModelContract`) | `test_seal_step9.py` | PASS |
 
 ### DM
 
@@ -189,7 +232,7 @@ the documentation rather than executable code.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-EC-01 | `FeatureChainExpression` SHALL be checked BEFORE `OperatorExpression` (FCE is OE subtype ... | `test_expression_compiler.py` | PASS |
-| REQ-EC-02 | N-ary operands SHALL be left-folded into binary `BINARY_OP` nodes | `test_expression_compiler.py` | PASS |
+| REQ-EC-02 | N-ary operands SHALL be left-folded into nested binary operations | `test_expression_compiler.py` | PASS |
 | REQ-EC-03 | Unit annotations (`[` operator) SHALL be stripped; only the value operand is retained | `test_expression_compiler.py` | PASS |
 | REQ-EC-04 | Every compiled expression SHALL be validated via `python_ast.parse(result, mode="eval")` | `test_expression_compiler.py` | PASS |
 | REQ-EC-05 | Cycle detection in dependency graph SHALL mark ALL outputs as `MANUAL_REQUIRED` | `test_expression_compiler.py` | PASS |
@@ -225,7 +268,7 @@ the documentation rather than executable code.
 | REQ-EXT-06 | Extraction SHALL NOT import from `analysis/`, `resolution/`, or `generation/`. | `test_extractor.py` | PASS |
 | REQ-EXT-07 | The `CalculationDefinitionData.output_expression_asts` field SHALL exist as `dict[str, Any]` and be nullified at the snapshot serialization boundary (raw-AST content is exercised via REQ-EXT-10's live-extraction population check, not here) | `test_extractor.py` | PASS |
 | REQ-EXT-08 | A `calc def` extracting with zero output attributes SHALL raise `ValueError` at extraction (V7), never reaching generation | `test_extractor.py` | PASS |
-| REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) SHALL be reported dropped: one INFO each + one summary WARN with the model-wide total | `test_extractor.py` | PASS |
+| REQ-EXT-09 | Every `ConstraintUsage` (calc-def, part-def, part-usage owners) swept by `collect_constraint_manifest` SHALL have a catalog carrier — an eligible concrete entry or an explicit unassessed record — with nothing silently absent (Item 14 re-anchor; the drop-manifest report this row originally pinned is retired) | `test_extractor.py`, `test_constraint_migration_mapping.py` | PASS |
 | REQ-EXT-10 | A direction-carrying `ReferenceUsage` member (named `return`, bare `in`) SHALL extract as a parameter; a named inline `return y : Real = expr` SHALL auto-implement | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-11 | A calc def with an anonymous `return` (empty `declared_name`) SHALL raise the V8 diagnostic before V7 | `test_return_style_extraction.py` | PASS |
 | REQ-EXT-12 | The `return attribute y; y = expr` form SHALL extract `y` once with no double-ingestion (direction-None body ref excluded) | `test_return_style_extraction.py` | PASS |
@@ -410,7 +453,7 @@ the documentation rather than executable code.
 | REQ-PIPE-03 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 | REQ-PIPE-04 | `execution_order` SHALL be a valid topological sort -- no module reads from a module that... | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 | REQ-PIPE-05 | Every EntryPoint SHALL be classified as exactly one of {`LIBRARY_DEFAULT`, `DESIGN_ATTRIB... | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
-| REQ-PIPE-06 | The graph SHALL include all three module types: CalcUsage, FORMULA, and Aggregation. | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
+| REQ-PIPE-06 | The graph SHALL tag each module with its `module_kind`; a calc-bearing model includes `CALCULATION`, `FORMULA`, and `AGGREGATION` modules (the `CONSTRAINT` / `REPORT_AGGREGATOR` families appear when constraints are lowered) | `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 | REQ-PIPE-07 | Generation SHALL produce output exclusively from `ComputationGraph` -- no back-references... | `test_gen_module_wrappers.py`, `test_generation_boundary.py`, `test_orchestrator.py`, `test_pipeline_e2e.py` | PASS |
 
 ### PMM
@@ -485,7 +528,7 @@ the documentation rather than executable code.
 | REQ-SNAP-06 | Path fields are Path instances, not strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-07 | Enum fields are typed enum instances, not raw strings | `test_extraction_snapshots.py` | PASS |
 | REQ-SNAP-08 | Promoted snapshot helpers live only in `src`; no second copy (INV-3) | `test_snapshot_contract.py` | PASS |
-| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` is a hard error before deserialization (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
+| REQ-SNAP-09 | Missing/mismatched `snapshot_format_version` (current: 5) is a hard error before deserialization — no cross-version coexistence (INV-2, V1/V2) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-10 | Re-captured expression-bearing snapshot carries `compilation_results` (INV-5) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-11 | Version-current snapshot missing `compilation_results` degrades with a warning (V4) | `test_snapshot_contract.py` | PASS |
 | REQ-SNAP-12 | Stale source hash warns; run continues (V3) | `test_snapshot_contract.py` | PASS |
@@ -559,4 +602,4 @@ REQ-RES-05 via `TestInnerStepOrdering`, REQ-RES-08 via
 - [Architecture Overview](overview.md)
 - [Modeling Assumptions](modeling-assumptions.md)
 - Design docs: [reference/](reference/) (28 documents)
-- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (66 distinct test files cited by matrix rows)
+- Conformance tests: `tests/conformance/`, `tests/unit/`, `tests/integration/` (71 distinct test files cited by matrix rows)

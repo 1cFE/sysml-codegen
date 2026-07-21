@@ -1,0 +1,325 @@
+{
+  "algorithm_sha256": "70fddc980bfd49cb46248fa4fcd2735d7879f118675b64f3bcb993217e4c4a0c",
+  "baseline": {
+    "src/sysml_codegen/analysis/constraint_lowering.py": {
+      "branch_points": 223,
+      "callable_complexity": {
+        "_actuals_by_formal_target": 7,
+        "_constraint_module_type": 2,
+        "_decide_definition_formals": 8,
+        "_definition_formal_bindings": 2,
+        "_definition_formal_identity": 4,
+        "_definition_formal_index": 4,
+        "_deindexed_scope": 5,
+        "_design_attr_index": 4,
+        "_exclusion_for": 4,
+        "_expand_owner_instances": 11,
+        "_formal_default_index": 5,
+        "_formal_name": 3,
+        "_generation_error": 1,
+        "_group_for_qn": 7,
+        "_inline_reference_leaves": 9,
+        "_inline_reference_leaves.visit": 9,
+        "_leaf_formal_identity": 3,
+        "_literal_float": 4,
+        "_omitted_default_targets": 4,
+        "_pascal": 3,
+        "_project_excluded_location": 7,
+        "_reference_dotted": 2,
+        "_referenced_definition": 6,
+        "_report_non_numerical_warnings": 5,
+        "_resolve_formal": 3,
+        "_source_local_identity": 4,
+        "_verified_effective_predicate_source": 7,
+        "assert_unique_constraint_ids": 4,
+        "assert_unique_constraint_ids.describe": 2,
+        "collect_bare_actual_demand": 12,
+        "excluded_usage_indices": 5,
+        "extend_graph_with_constraints": 21,
+        "extend_graph_with_constraints.mint": 5,
+        "guard_polarity": 2,
+        "lower_constraints": 56,
+        "lower_constraints._describe": 4,
+        "lower_constraints.projected_location": 3,
+        "mint_constraint_id": 3,
+        "occurrence_scope": 1,
+        "resolve_actual": 29
+      },
+      "executable_lines": 1083,
+      "raw_lines": 1454,
+      "statements": 567
+    },
+    "src/sysml_codegen/analysis/part_instance_index.py": {
+      "branch_points": 42,
+      "callable_complexity": {
+        "FrozenOccurrenceIndex.__init__": 1,
+        "FrozenOccurrenceIndex.occurrences_of": 2,
+        "InstanceOccurrence.instance_path": 3,
+        "NonFiniteCardinalityError.__init__": 1,
+        "OccurrenceIndex.occurrences_of": 1,
+        "PartInstanceIndex.__init__": 1,
+        "PartInstanceIndex._leaf_part_def_qn": 4,
+        "PartInstanceIndex.all_occurrences": 3,
+        "PartInstanceIndex.all_source_owners": 3,
+        "PartInstanceIndex.occurrences_of": 5,
+        "RecordingOccurrenceIndex.occurrences_of": 1,
+        "_cardinality_indices": 3,
+        "_occurrence_sort_key": 5,
+        "_structured_paths": 12,
+        "build_part_instance_index": 1,
+        "classify_cardinality": 9,
+        "deserialize_part_occurrences": 4
+      },
+      "executable_lines": 229,
+      "raw_lines": 447,
+      "statements": 180
+    },
+    "src/sysml_codegen/orchestration/pipeline_builder.py": {
+      "branch_points": 132,
+      "callable_complexity": {
+        "_build_chain_aliases": 10,
+        "_extract_and_filter_computed_attributes": 7,
+        "_extract_hierarchy_and_rewrite_bindings": 1,
+        "_register_partdef_expose_scoped_aliases": 13,
+        "_remove_formula_from_design_attrs": 7,
+        "_render_extraction_report": 2,
+        "_rescue_self_named_bindings": 12,
+        "_rewrite_specialized_chain": 11,
+        "_rewrite_virtual_bindings": 20,
+        "_scope_aggregation_expressions": 14,
+        "build_pipeline_context": 31,
+        "find_instance_paths_for_partdef": 16
+      },
+      "executable_lines": 645,
+      "raw_lines": 1051,
+      "statements": 351
+    },
+    "src/sysml_codegen/orchestration/pipeline_context.py": {
+      "branch_points": 1,
+      "callable_complexity": {
+        "CodeGenerationError.__init__": 1
+      },
+      "executable_lines": 63,
+      "raw_lines": 152,
+      "statements": 46
+    },
+    "src/sysml_codegen/resolution/supplied_values.py": {
+      "branch_points": 54,
+      "callable_complexity": {
+        "_binding_target": 9,
+        "_is_number": 2,
+        "_match_override": 12,
+        "_resolve_value": 12,
+        "materialize_supplied_values": 24,
+        "materialize_supplied_values._demand": 9
+      },
+      "executable_lines": 213,
+      "raw_lines": 332,
+      "statements": 129
+    },
+    "src/sysml_codegen/snapshot/graph_rebuild.py": {
+      "branch_points": 15,
+      "callable_complexity": {
+        "build_classifier_inputs_from_snapshot": 11,
+        "build_full_graph_from_snapshot": 6
+      },
+      "executable_lines": 156,
+      "raw_lines": 243,
+      "statements": 63
+    },
+    "src/sysml_codegen/snapshot/serializer.py": {
+      "branch_points": 46,
+      "callable_complexity": {
+        "_constraint_facts_for_snapshot": 7,
+        "_serialize_dataclass": 7,
+        "_serialize_value": 24,
+        "serialize_extraction_snapshot": 11,
+        "snapshot_to_json": 1
+      },
+      "executable_lines": 157,
+      "raw_lines": 251,
+      "statements": 95
+    }
+  },
+  "baseline_revision": "ecdc7285be1508c08e82830c93072306f40e6b34",
+  "baseline_totals": {
+    "branch_points": 513,
+    "executable_lines": 2546,
+    "raw_lines": 3930,
+    "statements": 1431
+  },
+  "candidate": {
+    "src/sysml_codegen/analysis/constraint_lowering.py": {
+      "branch_points": 224,
+      "callable_complexity": {
+        "_actuals_by_formal_target": 7,
+        "_constraint_module_type": 2,
+        "_decide_definition_formals": 8,
+        "_definition_formal_bindings": 2,
+        "_definition_formal_identity": 4,
+        "_definition_formal_index": 4,
+        "_deindexed_scope": 5,
+        "_design_attr_index": 4,
+        "_exclusion_for": 4,
+        "_expand_calc_owner": 5,
+        "_expand_package_owner": 2,
+        "_expand_part_owner": 9,
+        "_formal_default_index": 5,
+        "_formal_name": 3,
+        "_generation_error": 1,
+        "_group_for_qn": 7,
+        "_inline_reference_leaves": 9,
+        "_inline_reference_leaves.visit": 9,
+        "_leaf_formal_identity": 3,
+        "_literal_float": 4,
+        "_omitted_default_targets": 4,
+        "_pascal": 3,
+        "_project_excluded_location": 7,
+        "_raise_on_blocking": 9,
+        "_raise_on_blocking.describe": 4,
+        "_reference_dotted": 2,
+        "_referenced_definition": 6,
+        "_report_non_numerical_warnings": 5,
+        "_resolve_formal": 3,
+        "_source_local_identity": 4,
+        "_verified_effective_predicate_source": 7,
+        "_verified_predicate_source_key": 17,
+        "assert_unique_constraint_ids": 4,
+        "assert_unique_constraint_ids.describe": 2,
+        "associate_usage_decisions": 6,
+        "extend_graph_with_constraints": 21,
+        "extend_graph_with_constraints.mint": 5,
+        "guard_polarity": 2,
+        "is_excluded_usage": 2,
+        "lower_constraints": 29,
+        "mint_constraint_id": 3,
+        "occurrence_scope": 1,
+        "prepare_constraint_usages": 8,
+        "prepare_constraint_usages.projected_location": 2,
+        "reference_dotted": 4,
+        "resolve_actual": 29
+      },
+      "executable_lines": 1159,
+      "raw_lines": 1560,
+      "statements": 606
+    },
+    "src/sysml_codegen/analysis/part_instance_index.py": {
+      "branch_points": 43,
+      "callable_complexity": {
+        "FrozenOccurrenceIndex.__init__": 1,
+        "FrozenOccurrenceIndex.occurrences_of": 2,
+        "InstanceOccurrence.instance_path": 3,
+        "NonFiniteCardinalityError.__init__": 1,
+        "OccurrenceIndex.occurrences_of": 1,
+        "PartInstanceIndex.__init__": 1,
+        "PartInstanceIndex._leaf_part_def_qn": 4,
+        "PartInstanceIndex.all_occurrences": 3,
+        "PartInstanceIndex.all_source_owners": 3,
+        "PartInstanceIndex.occurrences_of": 5,
+        "RecursiveContainmentError.__init__": 1,
+        "_canonical_walk_entries": 4,
+        "_cardinality_indices": 3,
+        "_occurrence_sort_key": 5,
+        "_structured_paths": 10,
+        "build_part_instance_index": 1,
+        "classify_cardinality": 9,
+        "deserialize_part_occurrences": 4
+      },
+      "executable_lines": 256,
+      "raw_lines": 485,
+      "statements": 187
+    },
+    "src/sysml_codegen/orchestration/pipeline_builder.py": {
+      "branch_points": 131,
+      "callable_complexity": {
+        "_build_chain_aliases": 10,
+        "_extract_and_filter_computed_attributes": 7,
+        "_extract_hierarchy_and_rewrite_bindings": 1,
+        "_register_partdef_expose_scoped_aliases": 13,
+        "_remove_formula_from_design_attrs": 7,
+        "_render_extraction_report": 2,
+        "_rescue_self_named_bindings": 12,
+        "_rewrite_specialized_chain": 11,
+        "_rewrite_virtual_bindings": 20,
+        "_scope_aggregation_expressions": 14,
+        "build_pipeline_context": 30,
+        "find_instance_paths_for_partdef": 16
+      },
+      "executable_lines": 645,
+      "raw_lines": 1046,
+      "statements": 350
+    },
+    "src/sysml_codegen/orchestration/pipeline_context.py": {
+      "branch_points": 1,
+      "callable_complexity": {
+        "CodeGenerationError.__init__": 1
+      },
+      "executable_lines": 63,
+      "raw_lines": 153,
+      "statements": 46
+    },
+    "src/sysml_codegen/resolution/supplied_values.py": {
+      "branch_points": 94,
+      "callable_complexity": {
+        "_binding_target": 9,
+        "_calc_origins": 8,
+        "_constraint_origins": 11,
+        "_generation_error": 1,
+        "_is_number": 2,
+        "_logical_demands": 3,
+        "_match_override": 12,
+        "_origin_sort_key": 3,
+        "_owner_source": 6,
+        "_resolve_value": 11,
+        "_unique_source": 5,
+        "_usable_source": 4,
+        "enrich_graph_design_attributes": 15,
+        "resolve_logical_demand": 8,
+        "resolve_logical_demand.rendered_outcome": 2,
+        "select_group_source": 10
+      },
+      "executable_lines": 376,
+      "raw_lines": 586,
+      "statements": 244
+    },
+    "src/sysml_codegen/snapshot/graph_rebuild.py": {
+      "branch_points": 12,
+      "callable_complexity": {
+        "build_classifier_inputs_from_snapshot": 9,
+        "build_full_graph_from_snapshot": 5
+      },
+      "executable_lines": 153,
+      "raw_lines": 238,
+      "statements": 60
+    },
+    "src/sysml_codegen/snapshot/serializer.py": {
+      "branch_points": 47,
+      "callable_complexity": {
+        "_constraint_facts_for_snapshot": 8,
+        "_serialize_dataclass": 7,
+        "_serialize_value": 24,
+        "serialize_extraction_snapshot": 11,
+        "snapshot_to_json": 1
+      },
+      "executable_lines": 160,
+      "raw_lines": 257,
+      "statements": 95
+    }
+  },
+  "candidate_revision": "28bc8b0fc22ba85cbed94febf0963bebf7cd600e",
+  "candidate_totals": {
+    "branch_points": 552,
+    "executable_lines": 2812,
+    "raw_lines": 4325,
+    "statements": 1588
+  },
+  "production_union": [
+    "src/sysml_codegen/analysis/constraint_lowering.py",
+    "src/sysml_codegen/analysis/part_instance_index.py",
+    "src/sysml_codegen/orchestration/pipeline_builder.py",
+    "src/sysml_codegen/orchestration/pipeline_context.py",
+    "src/sysml_codegen/resolution/supplied_values.py",
+    "src/sysml_codegen/snapshot/graph_rebuild.py",
+    "src/sysml_codegen/snapshot/serializer.py"
+  ]
+}

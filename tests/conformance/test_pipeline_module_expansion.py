@@ -33,6 +33,7 @@ from sysml_codegen.generation.registry import generate_registry
 from sysml_codegen.resolution.models import (
     ComputationGraph,
     ModuleInput,
+    ModuleKind,
     ModuleOutput,
     PipelineModule,
 )
@@ -106,18 +107,18 @@ def _calcusage_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Filter to CalcUsage modules (not FORMULA, not aggregation)."""
     return [
         m for m in graph.modules
-        if not m.is_computed_attribute and not m.is_aggregation
+        if m.module_kind == ModuleKind.CALCULATION
     ]
 
 
 def _formula_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Filter to FORMULA modules."""
-    return [m for m in graph.modules if m.is_computed_attribute]
+    return [m for m in graph.modules if m.module_kind == ModuleKind.FORMULA]
 
 
 def _aggregation_modules(graph: ComputationGraph) -> list[PipelineModule]:
     """Filter to aggregation modules."""
-    return [m for m in graph.modules if m.is_aggregation]
+    return [m for m in graph.modules if m.module_kind == ModuleKind.AGGREGATION]
 
 
 def _build_calcusage_module_to_calcdef_map(
@@ -422,11 +423,19 @@ class TestCrossModelMetadata:
     @pytest.mark.req("REQ-PMM-01")
     @pytest.mark.parametrize("model_name", PARAMETRIZED_MODELS)
     def test_all_modules_have_metadata_fields(self, all_graph_data, model_name):
-        """All modules in graph have calc_def_name and source_file populated."""
+        """All modules in graph have calc_def_name and source_file populated.
+
+        CONSTRAINT and REPORT_AGGREGATOR modules (Item 8) are exempt — they are
+        not derived from any calc_def or source location, so both fields are
+        structurally None for them, by design.
+        """
         graph, inputs = all_graph_data[model_name]
         assert len(graph.modules) > 0, f"No modules in {model_name}"
+        exempt_kinds = {ModuleKind.CONSTRAINT, ModuleKind.REPORT_AGGREGATOR}
 
         for module in graph.modules:
+            if module.module_kind in exempt_kinds:
+                continue
             assert module.calc_def_name is not None, (
                 f"Model {model_name}, module {module.name}: calc_def_name is None"
             )
@@ -576,8 +585,7 @@ class TestMigrationCoexistence:
             assert isinstance(module.outputs, list)
             assert isinstance(module.execution_order, int)
             assert isinstance(module.compilability, Compilability)
-            assert isinstance(module.is_computed_attribute, bool)
-            assert isinstance(module.is_aggregation, bool)
+            assert isinstance(module.module_kind, ModuleKind)
 
             for inp in module.inputs:
                 assert isinstance(inp.param_name, str)

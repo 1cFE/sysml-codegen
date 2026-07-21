@@ -24,6 +24,12 @@ def capture_snapshot(
 ) -> Path:
     """Capture a versioned snapshot from live models and write it to output_path.
 
+    Always captures with constraint lowering applied: a captured snapshot must be
+    able to produce a certifying package, so ``constraint_lowering_mode`` is always
+    ``"applied"`` (Item 12 closed the capture-time opt-out — the only honest
+    ``grandfathered_off`` producer left is the extraction-only path, for models
+    that cannot build a pipeline at all).
+
     Args:
         model_paths: SysML model directories/files to extract.
         output_path: Where to write the snapshot JSON. ``source_file`` fields are
@@ -39,7 +45,12 @@ def capture_snapshot(
     # Local import: build_pipeline_context is the syside-invoking entry point.
     from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
-    ctx = build_pipeline_context(model_paths, design_path_filter=design_path_filter)
+    ctx = build_pipeline_context(
+        model_paths,
+        design_path_filter=design_path_filter,
+    )
+    if ctx.constraint_facts is None:  # build_pipeline_context always populates it
+        raise RuntimeError("build_pipeline_context returned no constraint_facts")
 
     snapshot = serialize_extraction_snapshot(
         model_name=model_paths[0].name,
@@ -50,8 +61,11 @@ def capture_snapshot(
         aggregation_expressions=ctx.aggregation_expressions,
         computed_attributes=ctx.computed_attributes,
         channel_aliases=ctx.channel_aliases,
+        constraint_facts=ctx.constraint_facts,
+        part_occurrences=ctx.part_occurrences,
+        constraint_lowering_mode=ctx.constraint_lowering_mode,
+        model_paths=model_paths,
         compilation_results=ctx.compilation_results,
-        constraint_manifest=ctx.constraint_manifest,
         output_dir=output_path.parent,
     )
 

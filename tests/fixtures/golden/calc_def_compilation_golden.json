@@ -1,0 +1,3254 @@
+{
+  "alias_agg_probe": {
+    "Margin_Calc": {
+      "calc_def_name": "Margin_Calc",
+      "execution_order": [
+        "margin"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cost_basis",
+            "margin_rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "margin",
+          "python_expression": "(inputs.cost_basis * inputs.margin_rate)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Report_Calc": {
+      "calc_def_name": "Report_Calc",
+      "execution_order": [
+        "report_value"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cost_input"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "report_value",
+          "python_expression": "inputs.cost_input",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Unit_Cost_Calc": {
+      "calc_def_name": "Unit_Cost_Calc",
+      "execution_order": [
+        "unit_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base_cost",
+            "markup"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "unit_cost",
+          "python_expression": "(inputs.base_cost * inputs.markup)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "attr_expr_probe": {
+    "ScaleCalc": {
+      "calc_def_name": "ScaleCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "value",
+            "factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "(inputs.value * inputs.factor)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SplitCalc": {
+      "calc_def_name": "SplitCalc",
+      "execution_order": [
+        "half",
+        "quarter"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "total"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "half",
+          "python_expression": "(inputs.total / 2.0)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "total"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "quarter",
+          "python_expression": "(inputs.total / 4.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "catf_mfe_model": {
+    "AlphaNeutronSplit": {
+      "calc_def_name": "AlphaNeutronSplit",
+      "execution_order": [
+        "p_alpha",
+        "p_neutron"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_fusion"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_alpha",
+          "python_expression": "((inputs.p_fusion * 3.52) / 17.58)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_fusion"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_neutron",
+          "python_expression": "((inputs.p_fusion * 14.06) / 17.58)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "AuxiliarySystemsPower": {
+      "calc_def_name": "AuxiliarySystemsPower",
+      "execution_order": [
+        "auxiliary_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "gross_electric",
+            "auxiliary_fraction"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "auxiliary_power",
+          "python_expression": "(inputs.gross_electric * inputs.auxiliary_fraction)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "BlanketThermalPower": {
+      "calc_def_name": "BlanketThermalPower",
+      "execution_order": [
+        "p_thermal"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "m_neutron",
+            "p_neutron",
+            "p_input",
+            "eta_thermal",
+            "f_pump",
+            "eta_pump",
+            "f_subsystem"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_thermal",
+          "python_expression": "(((inputs.m_neutron * inputs.p_neutron) + inputs.p_input) + ((inputs.eta_thermal * ((inputs.f_pump * inputs.eta_pump) + inputs.f_subsystem)) * (inputs.m_neutron * inputs.p_neutron)))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "CoolantPumpPower": {
+      "calc_def_name": "CoolantPumpPower",
+      "execution_order": [
+        "pump_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "f_pcppf",
+            "p_thermal_electric",
+            "pump_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "pump_power",
+          "python_expression": "((inputs.f_pcppf * inputs.p_thermal_electric) / inputs.pump_efficiency)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "CryoPumpRefrigeration": {
+      "calc_def_name": "CryoPumpRefrigeration",
+      "execution_order": [
+        "thermal_load",
+        "refrigeration_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cryo_pump_count",
+            "pump_capacity",
+            "load_factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "thermal_load",
+          "python_expression": "((inputs.cryo_pump_count * inputs.pump_capacity) * inputs.load_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "operating_temp",
+            "carnot_efficiency"
+          ],
+          "intermediate_refs": [
+            "thermal_load"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "refrigeration_power",
+          "python_expression": "((thermal_load * (300.0 / inputs.operating_temp)) / inputs.carnot_efficiency)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "EngineeringQFactor": {
+      "calc_def_name": "EngineeringQFactor",
+      "execution_order": [
+        "q_eng",
+        "f_recirculating",
+        "p_net"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_electric_gross",
+            "p_auxiliary_total"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "q_eng",
+          "python_expression": "(inputs.p_electric_gross / inputs.p_auxiliary_total)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "q_eng"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "f_recirculating",
+          "python_expression": "(1.0 / q_eng)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_electric_gross"
+          ],
+          "intermediate_refs": [
+            "f_recirculating"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_net",
+          "python_expression": "(inputs.p_electric_gross * (1.0 - f_recirculating))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "GrossElectricPower": {
+      "calc_def_name": "GrossElectricPower",
+      "execution_order": [
+        "p_electric_gross"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "eta_thermal",
+            "p_thermal",
+            "eta_direct",
+            "p_alpha"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_electric_gross",
+          "python_expression": "((inputs.eta_thermal * inputs.p_thermal) + (inputs.eta_direct * inputs.p_alpha))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "HeatingWallPlugPower": {
+      "calc_def_name": "HeatingWallPlugPower",
+      "execution_order": [
+        "wall_plug_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "delivered_power",
+            "heating_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "wall_plug_power",
+          "python_expression": "(inputs.delivered_power / inputs.heating_efficiency)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "MagnetCryogenicLoad": {
+      "calc_def_name": "MagnetCryogenicLoad",
+      "execution_order": [
+        "ac_losses",
+        "heat_leak",
+        "nuclear_heating",
+        "thermal_load_cryo",
+        "cooling_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "ac_losses",
+          "python_expression": "0.0",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "magnet_volume"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "heat_leak",
+          "python_expression": "(inputs.magnet_volume * 0.05)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_neutron",
+            "magnet_surface_area",
+            "first_wall_area"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "nuclear_heating",
+          "python_expression": "((0.05 * inputs.p_neutron) * (inputs.magnet_surface_area / inputs.first_wall_area))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "nuclear_heating",
+            "ac_losses",
+            "heat_leak"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "thermal_load_cryo",
+          "python_expression": "((nuclear_heating + ac_losses) + heat_leak)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "operating_temp",
+            "carnot_efficiency"
+          ],
+          "intermediate_refs": [
+            "thermal_load_cryo"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "cooling_power",
+          "python_expression": "((thermal_load_cryo / inputs.operating_temp) * (300.0 / inputs.carnot_efficiency))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "MagnetSurfaceArea": {
+      "calc_def_name": "MagnetSurfaceArea",
+      "execution_order": [
+        "area"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "r_inner",
+            "thickness",
+            "kappa",
+            "f_exposed"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "area",
+          "python_expression": "(((((2.0 * 3.14159265359) * inputs.r_inner) * inputs.thickness) * inputs.kappa) * inputs.f_exposed)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "NetElectricPower": {
+      "calc_def_name": "NetElectricPower",
+      "execution_order": [
+        "p_parasitic_total",
+        "p_net"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_coils",
+            "p_heating",
+            "p_pumps",
+            "p_cryo",
+            "p_vacuum",
+            "p_tritium",
+            "p_auxiliary"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_parasitic_total",
+          "python_expression": "((((((inputs.p_coils + inputs.p_heating) + inputs.p_pumps) + inputs.p_cryo) + inputs.p_vacuum) + inputs.p_tritium) + inputs.p_auxiliary)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_electric_gross"
+          ],
+          "intermediate_refs": [
+            "p_parasitic_total"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_net",
+          "python_expression": "(inputs.p_electric_gross - p_parasitic_total)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PlantEfficiency": {
+      "calc_def_name": "PlantEfficiency",
+      "execution_order": [
+        "eta_plant"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_net",
+            "p_fusion"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "eta_plant",
+          "python_expression": "(inputs.p_net / inputs.p_fusion)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PlasmaConfinement": {
+      "calc_def_name": "PlasmaConfinement",
+      "execution_order": [
+        "aspect_ratio",
+        "p_fusion",
+        "tau_energy"
+      ],
+      "output_results": [
+        {
+          "compilability": "manual_required",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "aspect_ratio",
+          "python_expression": null,
+          "unsupported_reason": "no expression AST"
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_fusion_input"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p_fusion",
+          "python_expression": "inputs.p_fusion_input",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "manual_required",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "tau_energy",
+          "python_expression": null,
+          "unsupported_reason": "no expression AST"
+        }
+      ],
+      "overall_compilability": "manual_required"
+    },
+    "ScientificQFactor": {
+      "calc_def_name": "ScientificQFactor",
+      "execution_order": [
+        "q_sci"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_fusion",
+            "p_input"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "q_sci",
+          "python_expression": "(inputs.p_fusion / inputs.p_input)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "ThermalCycleEfficiency": {
+      "calc_def_name": "ThermalCycleEfficiency",
+      "execution_order": [
+        "eta_carnot",
+        "eta_thermal"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "t_hot",
+            "t_cold"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "eta_carnot",
+          "python_expression": "((inputs.t_hot - inputs.t_cold) / inputs.t_hot)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "eta_real"
+          ],
+          "intermediate_refs": [
+            "eta_carnot"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "eta_thermal",
+          "python_expression": "(eta_carnot * inputs.eta_real)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "TorusMinorRadius": {
+      "calc_def_name": "TorusMinorRadius",
+      "execution_order": [
+        "a"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "r_inner",
+            "r_outer",
+            "r_major"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "a",
+          "python_expression": "(((inputs.r_inner + inputs.r_outer) / 2.0) - inputs.r_major)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "TorusSurfaceArea": {
+      "calc_def_name": "TorusSurfaceArea",
+      "execution_order": [
+        "area"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "r_major",
+            "a",
+            "kappa"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "area",
+          "python_expression": "((((2.0 * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.kappa)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "TorusVolume": {
+      "calc_def_name": "TorusVolume",
+      "execution_order": [
+        "volume"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "r_major",
+            "a",
+            "kappa"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "volume",
+          "python_expression": "((((((2.0 * 3.14159265359) * 3.14159265359) * inputs.r_major) * inputs.a) * inputs.a) * inputs.kappa)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "TritiumBreedingRatio": {
+      "calc_def_name": "TritiumBreedingRatio",
+      "execution_order": [
+        "breeding_rate",
+        "neutron_flux_profile",
+        "tbr"
+      ],
+      "output_results": [
+        {
+          "compilability": "manual_required",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "breeding_rate",
+          "python_expression": null,
+          "unsupported_reason": "no expression AST"
+        },
+        {
+          "compilability": "manual_required",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "neutron_flux_profile",
+          "python_expression": null,
+          "unsupported_reason": "no expression AST"
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "tbr_assumed"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "tbr",
+          "python_expression": "inputs.tbr_assumed",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "manual_required"
+    },
+    "TritiumProcessingPower": {
+      "calc_def_name": "TritiumProcessingPower",
+      "execution_order": [
+        "processing_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fusion_power",
+            "processing_factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "processing_power",
+          "python_expression": "(inputs.fusion_power * inputs.processing_factor)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "VacuumPumpPower": {
+      "calc_def_name": "VacuumPumpPower",
+      "execution_order": [
+        "pump_power_per_unit",
+        "pump_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "pumping_speed_total",
+            "base_pressure"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "pump_power_per_unit",
+          "python_expression": "((inputs.pumping_speed_total * inputs.base_pressure) / 1000000.0)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "pump_count",
+            "pump_efficiency"
+          ],
+          "intermediate_refs": [
+            "pump_power_per_unit"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "pump_power",
+          "python_expression": "((pump_power_per_unit * inputs.pump_count) / inputs.pump_efficiency)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "chain_override_probe": {
+    "CalibrationCalc": {
+      "calc_def_name": "CalibrationCalc",
+      "execution_order": [
+        "calibrated_factor"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "raw_factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "calibrated_factor",
+          "python_expression": "(inputs.raw_factor * 1.1)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SensorCostCalc": {
+      "calc_def_name": "SensorCostCalc",
+      "execution_order": [
+        "total_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base_cost",
+            "sensitivity"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "(inputs.base_cost * inputs.sensitivity)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "chain_spike_model": {
+    "AreaCalc": {
+      "calc_def_name": "AreaCalc",
+      "execution_order": [
+        "area"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "length",
+            "width"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "area",
+          "python_expression": "(inputs.length * inputs.width)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "CostCalc": {
+      "calc_def_name": "CostCalc",
+      "execution_order": [
+        "total_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "area",
+            "rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "(inputs.area * inputs.rate)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SummaryCalc": {
+      "calc_def_name": "SummaryCalc",
+      "execution_order": [
+        "cost_per_area"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cost",
+            "area"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "cost_per_area",
+          "python_expression": "(inputs.cost / inputs.area)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "constraint_inline": {
+    "Noop": {
+      "calc_def_name": "Noop",
+      "execution_order": [
+        "y"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "y",
+          "python_expression": "inputs.x",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "constraint_multi_instance": {
+    "Power_Calc": {
+      "calc_def_name": "Power_Calc",
+      "execution_order": [
+        "p"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "r"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "p",
+          "python_expression": "(inputs.r * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "d38_caret": {
+    "NoopCalc": {
+      "calc_def_name": "NoopCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "inputs.x",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "deep_cross_scope_probe": {
+    "Analysis_Calc": {
+      "calc_def_name": "Analysis_Calc",
+      "execution_order": [
+        "analysis_result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "data_point",
+            "baseline"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "analysis_result",
+          "python_expression": "(inputs.data_point - inputs.baseline)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Core_Metric": {
+      "calc_def_name": "Core_Metric",
+      "execution_order": [
+        "metric_value"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "input_val"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "metric_value",
+          "python_expression": "(inputs.input_val * 1.5)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Derived_Metric": {
+      "calc_def_name": "Derived_Metric",
+      "execution_order": [
+        "derived_value"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base_metric",
+            "factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "derived_value",
+          "python_expression": "(inputs.base_metric * inputs.factor)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "expression_binding_probe": {
+    "CombinedCostCalc": {
+      "calc_def_name": "CombinedCostCalc",
+      "execution_order": [
+        "total_with_tax"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "combined_input",
+            "tax_rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_with_tax",
+          "python_expression": "(inputs.combined_input * (1.0 + inputs.tax_rate))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "DeltaCalc": {
+      "calc_def_name": "DeltaCalc",
+      "execution_order": [
+        "delta"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "value_a",
+            "value_b"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "delta",
+          "python_expression": "(inputs.value_a - inputs.value_b)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PassthroughCalc": {
+      "calc_def_name": "PassthroughCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "inputs.x",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "fusion_tea": {
+    "IFE_LCOE": {
+      "calc_def_name": "IFE_LCOE",
+      "execution_order": [
+        "discount_factor_con",
+        "discount_factor_op",
+        "energy_on_target",
+        "fusion_energy_per_shot",
+        "net_electric_power",
+        "net_electric_kw",
+        "annual_capital_cost",
+        "annual_energy",
+        "pvf_construction",
+        "pvf_operation",
+        "shots_per_year",
+        "driver_lifetime_years",
+        "annual_operating_cost",
+        "lcoe"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "discount_rate",
+            "construction_years"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "discount_factor_con",
+          "python_expression": "((1.0 + inputs.discount_rate) ** inputs.construction_years)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "discount_rate",
+            "operational_years"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "discount_factor_op",
+          "python_expression": "((1.0 + inputs.discount_rate) ** inputs.operational_years)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "driver_efficiency",
+            "driver_energy"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "energy_on_target",
+          "python_expression": "(inputs.driver_efficiency * inputs.driver_energy)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "gain"
+          ],
+          "intermediate_refs": [
+            "energy_on_target"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "fusion_energy_per_shot",
+          "python_expression": "(inputs.gain * energy_on_target)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "driver_energy",
+            "frequency",
+            "thermal_efficiency",
+            "blanket_energy_multiple",
+            "gain",
+            "driver_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "net_electric_power",
+          "python_expression": "((inputs.driver_energy * inputs.frequency) * ((((inputs.thermal_efficiency * inputs.blanket_energy_multiple) * inputs.gain) * inputs.driver_efficiency) - 2.0))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "net_electric_power"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "net_electric_kw",
+          "python_expression": "(net_electric_power / 1000.0)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "plant_cost_constant",
+            "yield_cost_constant",
+            "driver_cost_constant",
+            "driver_energy",
+            "construction_years"
+          ],
+          "intermediate_refs": [
+            "net_electric_kw",
+            "fusion_energy_per_shot"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "annual_capital_cost",
+          "python_expression": "((((inputs.plant_cost_constant * net_electric_kw) + ((inputs.yield_cost_constant * fusion_energy_per_shot) / 1000000000.0)) + (inputs.driver_cost_constant * inputs.driver_energy)) / inputs.construction_years)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "availability"
+          ],
+          "intermediate_refs": [
+            "net_electric_kw"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "annual_energy",
+          "python_expression": "(((8760.0 * net_electric_kw) * inputs.availability) / 1000.0)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "discount_rate"
+          ],
+          "intermediate_refs": [
+            "discount_factor_con"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "pvf_construction",
+          "python_expression": "((1.0 - (1.0 / discount_factor_con)) / inputs.discount_rate)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "discount_rate"
+          ],
+          "intermediate_refs": [
+            "discount_factor_con",
+            "discount_factor_op"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "pvf_operation",
+          "python_expression": "(((1.0 / discount_factor_con) * (1.0 - (1.0 / discount_factor_op))) / inputs.discount_rate)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "frequency",
+            "availability"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "shots_per_year",
+          "python_expression": "((31557600.0 * inputs.frequency) * inputs.availability)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "driver_lifetime_shots"
+          ],
+          "intermediate_refs": [
+            "shots_per_year"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "driver_lifetime_years",
+          "python_expression": "(inputs.driver_lifetime_shots / shots_per_year)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "target_cost_constant",
+            "om_cost_constant",
+            "driver_cost_constant",
+            "driver_energy"
+          ],
+          "intermediate_refs": [
+            "shots_per_year",
+            "net_electric_kw",
+            "driver_lifetime_years"
+          ],
+          "is_undeclared_intermediate": true,
+          "output_name": "annual_operating_cost",
+          "python_expression": "(((inputs.target_cost_constant * shots_per_year) + (inputs.om_cost_constant * net_electric_kw)) + ((inputs.driver_cost_constant * inputs.driver_energy) / driver_lifetime_years))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "annual_capital_cost",
+            "pvf_construction",
+            "annual_operating_cost",
+            "pvf_operation",
+            "annual_energy"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "lcoe",
+          "python_expression": "(((annual_capital_cost * pvf_construction) + (annual_operating_cost * pvf_operation)) / (annual_energy * pvf_operation))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Meier_COE": {
+      "calc_def_name": "Meier_COE",
+      "execution_order": [
+        "coe_cents_kwh"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "total_capital_billions",
+            "availability",
+            "net_electric_power_gw"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "coe_cents_kwh",
+          "python_expression": "((0.113 * inputs.total_capital_billions) / ((0.0876 * inputs.availability) * inputs.net_electric_power_gw))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Meier_HIF_Driver_Cost": {
+      "calc_def_name": "Meier_HIF_Driver_Cost",
+      "execution_order": [
+        "bank_energy_joules",
+        "cost_billions",
+        "gamma"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "beam_energy_mj",
+            "driver_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "bank_energy_joules",
+          "python_expression": "((inputs.beam_energy_mj * 1000000.0) / inputs.driver_efficiency)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "beam_energy_mj",
+            "num_chambers",
+            "rep_rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "cost_billions",
+          "python_expression": "(((0.32 + (0.088 * inputs.beam_energy_mj)) * (1.25 + (0.05 * inputs.num_chambers))) * (1.0 + (0.0088 * (inputs.rep_rate - 5.0))))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "cost_billions",
+            "bank_energy_joules"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "gamma",
+          "python_expression": "((cost_billions * 1000000000.0) / bank_energy_joules)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Meier_Reactor_Cost": {
+      "calc_def_name": "Meier_Reactor_Cost",
+      "execution_order": [
+        "reactor_cost_billions"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "thermal_power_gw",
+            "num_units"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "reactor_cost_billions",
+          "python_expression": "((0.66 * ((inputs.thermal_power_gw / 1.67) ** 0.49)) * ((0.72 * inputs.num_units) + 0.28))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Meier_Total_Capital_Cost": {
+      "calc_def_name": "Meier_Total_Capital_Cost",
+      "execution_order": [
+        "total_capital_billions"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "reactor_cost",
+            "driver_cost",
+            "target_factory_cost"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_capital_billions",
+          "python_expression": "(1.83 * ((inputs.reactor_cost + inputs.driver_cost) + inputs.target_factory_cost))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Recirculating_Power_Fraction": {
+      "calc_def_name": "Recirculating_Power_Fraction",
+      "execution_order": [
+        "fusion_cycle_gain",
+        "f_recirc"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "eta",
+            "gain",
+            "blanket_multiplier",
+            "thermal_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": true,
+          "output_name": "fusion_cycle_gain",
+          "python_expression": "(((inputs.eta * inputs.gain) * inputs.blanket_multiplier) * inputs.thermal_efficiency)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "fusion_cycle_gain"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "f_recirc",
+          "python_expression": "(1.0 / fusion_cycle_gain)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "ife_plant": {
+    "ChamberYieldCalc": {
+      "calc_def_name": "ChamberYieldCalc",
+      "execution_order": [
+        "chamber_yield"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "blanket_multiple",
+            "yield_constant"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "chamber_yield",
+          "python_expression": "(inputs.blanket_multiple * inputs.yield_constant)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "CoilVolume": {
+      "calc_def_name": "CoilVolume",
+      "execution_order": [
+        "volume"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "radius"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "volume",
+          "python_expression": "((inputs.radius * inputs.radius) * 3.14159)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "CryoLoad": {
+      "calc_def_name": "CryoLoad",
+      "execution_order": [
+        "cooling_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "magnet_volume"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "cooling_power",
+          "python_expression": "(inputs.magnet_volume * 0.05)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "DriverPowerCalc": {
+      "calc_def_name": "DriverPowerCalc",
+      "execution_order": [
+        "driver_power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "efficiency",
+            "bank_energy"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "driver_power",
+          "python_expression": "(inputs.efficiency * inputs.bank_energy)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "HifCostCalc": {
+      "calc_def_name": "HifCostCalc",
+      "execution_order": [
+        "driver_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cost_per_joule",
+            "bank_energy"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "driver_cost",
+          "python_expression": "(inputs.cost_per_joule * inputs.bank_energy)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PlantLcoe": {
+      "calc_def_name": "PlantLcoe",
+      "execution_order": [
+        "lcoe"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "plant_cost_constant",
+            "om_cost_constant",
+            "target_cost_constant",
+            "availability",
+            "gain",
+            "driver_efficiency",
+            "thermal_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "lcoe",
+          "python_expression": "(((inputs.plant_cost_constant + inputs.om_cost_constant) + inputs.target_cost_constant) / (((inputs.availability * inputs.gain) * inputs.driver_efficiency) * inputs.thermal_efficiency))",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "invocation_binding_probe": {
+    "Doubler": {
+      "calc_def_name": "Doubler",
+      "execution_order": [
+        "dbl"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "v"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "dbl",
+          "python_expression": "(inputs.v * 2)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PassthroughCalc": {
+      "calc_def_name": "PassthroughCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "inputs.x",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "issue22_model": {
+    "MarginCalc": {
+      "calc_def_name": "MarginCalc",
+      "execution_order": [
+        "margin"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "component_total",
+            "margin_rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "margin",
+          "python_expression": "(inputs.component_total * inputs.margin_rate)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "WidgetCostCalc": {
+      "calc_def_name": "WidgetCostCalc",
+      "execution_order": [
+        "cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base_cost",
+            "markup_factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "cost",
+          "python_expression": "(inputs.base_cost * inputs.markup_factor)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "plant_value_shapes": {
+    "ChamberSelectCalc": {
+      "calc_def_name": "ChamberSelectCalc",
+      "execution_order": [
+        "rating"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "footprint"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "rating",
+          "python_expression": "(inputs.footprint * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "FlowCalc": {
+      "calc_def_name": "FlowCalc",
+      "execution_order": [
+        "total"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "flow_rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total",
+          "python_expression": "(inputs.flow_rate * 10.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Mixed_Output_Style": {
+      "calc_def_name": "Mixed_Output_Style",
+      "execution_order": [
+        "doubled",
+        "tripled"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "doubled",
+          "python_expression": "(inputs.base * 2.0)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "tripled",
+          "python_expression": "(inputs.base * 3.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "NetCostCalc": {
+      "calc_def_name": "NetCostCalc",
+      "execution_order": [
+        "net_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "revenue"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "net_cost",
+          "python_expression": "(inputs.revenue * 0.5)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Quoted_Return_Calc": {
+      "calc_def_name": "Quoted_Return_Calc",
+      "execution_order": [
+        "scaled"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "amount"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "scaled",
+          "python_expression": "(inputs.amount * 1.5)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "RatedCostCalc": {
+      "calc_def_name": "RatedCostCalc",
+      "execution_order": [
+        "cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "cost",
+          "python_expression": "(inputs.rate * 100.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "plant_values": {
+    "PlantCostCalc": {
+      "calc_def_name": "PlantCostCalc",
+      "execution_order": [
+        "plant_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "target_cost",
+            "chamber_cost",
+            "driver_efficiency"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "plant_cost",
+          "python_expression": "((inputs.target_cost + inputs.chamber_cost) / inputs.driver_efficiency)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "quoted_owner_formula": {
+    "ScaleCalc": {
+      "calc_def_name": "ScaleCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "value"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "(inputs.value * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "return_styles": {
+    "BareInC": {
+      "calc_def_name": "BareInC",
+      "execution_order": [
+        "y"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "y",
+          "python_expression": "(inputs.x * 4)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "ControlA": {
+      "calc_def_name": "ControlA",
+      "execution_order": [
+        "y"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "a"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "y",
+          "python_expression": "(inputs.a * 2)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "NamedReturnB": {
+      "calc_def_name": "NamedReturnB",
+      "execution_order": [
+        "y"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "b"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "y",
+          "python_expression": "(inputs.b * 3)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "retype_model": {
+    "HifCalc": {
+      "calc_def_name": "HifCalc",
+      "execution_order": [
+        "hif_out"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "q"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "hif_out",
+          "python_expression": "(inputs.q * 3.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "IfeCalc": {
+      "calc_def_name": "IfeCalc",
+      "execution_order": [
+        "ife_out"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "ife_out",
+          "python_expression": "(inputs.p * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SharedCalc": {
+      "calc_def_name": "SharedCalc",
+      "execution_order": [
+        "shared_out"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "s"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "shared_out",
+          "python_expression": "(inputs.s + 1.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "sample_model": {
+    "FinalCalc": {
+      "calc_def_name": "FinalCalc",
+      "execution_order": [
+        "total"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "val_a",
+            "val_b"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total",
+          "python_expression": "(inputs.val_a + inputs.val_b)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "FirstCalc": {
+      "calc_def_name": "FirstCalc",
+      "execution_order": [
+        "doubled"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base_value"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "doubled",
+          "python_expression": "(inputs.base_value * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "MultiOutputCalc": {
+      "calc_def_name": "MultiOutputCalc",
+      "execution_order": [
+        "diff",
+        "product",
+        "sum"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x",
+            "y"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "diff",
+          "python_expression": "(inputs.x - inputs.y)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x",
+            "y"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "product",
+          "python_expression": "(inputs.x * inputs.y)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x",
+            "y"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "sum",
+          "python_expression": "(inputs.x + inputs.y)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SecondCalc": {
+      "calc_def_name": "SecondCalc",
+      "execution_order": [
+        "squared"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "input_val"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "squared",
+          "python_expression": "(inputs.input_val * inputs.input_val)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SimpleCalc": {
+      "calc_def_name": "SimpleCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "input_a",
+            "input_b"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "(inputs.input_a + inputs.input_b)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "self_named_binding_trap": {
+    "AvailabilityCalc": {
+      "calc_def_name": "AvailabilityCalc",
+      "execution_order": [
+        "derated"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "availability"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "derated",
+          "python_expression": "(inputs.availability * 0.9)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "self_named_rescue": {
+    "SinkCalc": {
+      "calc_def_name": "SinkCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "throughput"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "(inputs.throughput * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "SourceCalc": {
+      "calc_def_name": "SourceCalc",
+      "execution_order": [
+        "throughput"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "raw"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "throughput",
+          "python_expression": "(inputs.raw * 1.5)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "sibling_channel_ambiguity": {
+    "PowerCalc": {
+      "calc_def_name": "PowerCalc",
+      "execution_order": [
+        "power"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fuel"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "power",
+          "python_expression": "(inputs.fuel * 10.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "TotalCalc": {
+      "calc_def_name": "TotalCalc",
+      "execution_order": [
+        "total"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "chamber_power"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total",
+          "python_expression": "(inputs.chamber_power + 1.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "solar_battery_model": {
+    "AllocationCostCalc": {
+      "calc_def_name": "AllocationCostCalc",
+      "execution_order": [
+        "fastener_cost",
+        "seal_cost",
+        "wiring_cost",
+        "total_allocation",
+        "material_portion"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "child_count",
+            "fastener_cost_per_child"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "fastener_cost",
+          "python_expression": "(inputs.child_count * inputs.fastener_cost_per_child)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "child_count",
+            "seal_cost_per_child"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "seal_cost",
+          "python_expression": "(inputs.child_count * inputs.seal_cost_per_child)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "total_child_mass",
+            "wiring_cost_per_kg"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "wiring_cost",
+          "python_expression": "(inputs.total_child_mass * inputs.wiring_cost_per_kg)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "fastener_cost",
+            "seal_cost",
+            "wiring_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_allocation",
+          "python_expression": "((fastener_cost + seal_cost) + wiring_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_allocation"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_portion",
+          "python_expression": "(total_allocation * 0.8)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "AnnualizedFinancialCalc": {
+      "calc_def_name": "AnnualizedFinancialCalc",
+      "execution_order": [
+        "capital_recovery_factor",
+        "annualized_capital_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "discount_rate",
+            "plant_lifetime"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "capital_recovery_factor",
+          "python_expression": "((inputs.discount_rate * ((1.0 + inputs.discount_rate) ** inputs.plant_lifetime)) / (((1.0 + inputs.discount_rate) ** inputs.plant_lifetime) - 1.0))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "total_capex"
+          ],
+          "intermediate_refs": [
+            "capital_recovery_factor"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "annualized_capital_cost",
+          "python_expression": "(capital_recovery_factor * inputs.total_capex)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "AnnualizedFuelCalc": {
+      "calc_def_name": "AnnualizedFuelCalc",
+      "execution_order": [
+        "annual_fuel_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fuel_unit_cost",
+            "fuel_consumption"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "annual_fuel_cost",
+          "python_expression": "(inputs.fuel_unit_cost * inputs.fuel_consumption)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "AnnualizedOMCalc": {
+      "calc_def_name": "AnnualizedOMCalc",
+      "execution_order": [
+        "annual_om_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "om_rate_per_kw_year",
+            "p_net_kw"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "annual_om_cost",
+          "python_expression": "(inputs.om_rate_per_kw_year * inputs.p_net_kw)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "ArrayBOSCostCalc": {
+      "calc_def_name": "ArrayBOSCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "string_count",
+            "cost_per_string",
+            "panel_count",
+            "cost_per_panel_bos"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "((inputs.string_count * inputs.cost_per_string) + (inputs.panel_count * inputs.cost_per_panel_bos))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "BatteryBOSCostCalc": {
+      "calc_def_name": "BatteryBOSCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "pack_count",
+            "cost_per_pack_bos"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "(inputs.pack_count * inputs.cost_per_pack_bos)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "BatteryPackCostCalc": {
+      "calc_def_name": "BatteryPackCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "capacity_kwh",
+            "cost_per_kwh",
+            "chemistry_factor"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "((inputs.capacity_kwh * inputs.cost_per_kwh) * inputs.chemistry_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "ElectricalPanelCostCalc": {
+      "calc_def_name": "ElectricalPanelCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "base_cost",
+            "circuit_count",
+            "cost_per_circuit"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "(inputs.base_cost + (inputs.circuit_count * inputs.cost_per_circuit))",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "EnergyProductionCalc": {
+      "calc_def_name": "EnergyProductionCalc",
+      "execution_order": [
+        "annual_energy_mwh"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "p_net_mw",
+            "n_mod",
+            "plant_availability"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "annual_energy_mwh",
+          "python_expression": "(((8760.0 * inputs.p_net_mw) * inputs.n_mod) * inputs.plant_availability)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "HybridInverterCostCalc": {
+      "calc_def_name": "HybridInverterCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "power_rating",
+            "cost_per_watt"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "(inputs.power_rating * inputs.cost_per_watt)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "InverterCostCalc": {
+      "calc_def_name": "InverterCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "power_rating",
+            "cost_per_watt"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "(inputs.power_rating * inputs.cost_per_watt)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "LCOECalc": {
+      "calc_def_name": "LCOECalc",
+      "execution_order": [
+        "lcoe_per_mwh"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "annualized_capital_cost",
+            "annual_om_cost",
+            "annual_fuel_cost",
+            "yearly_inflation",
+            "plant_lifetime",
+            "annual_energy_mwh"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "lcoe_per_mwh",
+          "python_expression": "((inputs.annualized_capital_cost + ((inputs.annual_om_cost + inputs.annual_fuel_cost) * ((1.0 + inputs.yearly_inflation) ** inputs.plant_lifetime))) / inputs.annual_energy_mwh)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PVModuleCostCalc": {
+      "calc_def_name": "PVModuleCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "wattage",
+            "cost_per_watt"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "(inputs.wattage * inputs.cost_per_watt)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "PermittingCostCalc": {
+      "calc_def_name": "PermittingCostCalc",
+      "execution_order": [
+        "fab_cost",
+        "idiot_index",
+        "install_cost",
+        "material_cost",
+        "total_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "0.0",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "0.0",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "0.0",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "0.0",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "system_capacity_kw",
+            "cost_per_kw"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "(inputs.system_capacity_kw * inputs.cost_per_kw)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "RackingCostCalc": {
+      "calc_def_name": "RackingCostCalc",
+      "execution_order": [
+        "material_cost",
+        "fab_cost",
+        "install_cost",
+        "total_cost",
+        "idiot_index"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "panel_count",
+            "cost_per_panel_rack"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "material_cost",
+          "python_expression": "(inputs.panel_count * inputs.cost_per_panel_rack)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "fab_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "fab_cost",
+          "python_expression": "(material_cost * inputs.fab_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "install_factor"
+          ],
+          "intermediate_refs": [
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "install_cost",
+          "python_expression": "(material_cost * inputs.install_factor)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "material_cost",
+            "fab_cost",
+            "install_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "total_cost",
+          "python_expression": "((material_cost + fab_cost) + install_cost)",
+          "unsupported_reason": null
+        },
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [],
+          "intermediate_refs": [
+            "total_cost",
+            "material_cost"
+          ],
+          "is_undeclared_intermediate": false,
+          "output_name": "idiot_index",
+          "python_expression": "(total_cost / material_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "spec_chain_channel": {
+    "LcoeCalc": {
+      "calc_def_name": "LcoeCalc",
+      "execution_order": [
+        "lcoe"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cost_per_joule"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "lcoe",
+          "python_expression": "(inputs.cost_per_joule * 100.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "MeierCost": {
+      "calc_def_name": "MeierCost",
+      "execution_order": [
+        "gamma"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "drive_power"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "gamma",
+          "python_expression": "(inputs.drive_power * 0.02)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "spec_chain_twolevel": {
+    "LcoeCalc": {
+      "calc_def_name": "LcoeCalc",
+      "execution_order": [
+        "lcoe"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "cost_per_joule"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "lcoe",
+          "python_expression": "(inputs.cost_per_joule * 100.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "MaintCalc": {
+      "calc_def_name": "MaintCalc",
+      "execution_order": [
+        "maint_cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "rate"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "maint_cost",
+          "python_expression": "(inputs.rate * 4.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "MeierCost": {
+      "calc_def_name": "MeierCost",
+      "execution_order": [
+        "gamma"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "drive_power"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "gamma",
+          "python_expression": "(inputs.drive_power * 0.02)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "ScaleCalc": {
+      "calc_def_name": "ScaleCalc",
+      "execution_order": [
+        "scaled"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "s"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "scaled",
+          "python_expression": "(inputs.s * 10.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "unresolvable_attr_probe": {
+    "SimpleCalc": {
+      "calc_def_name": "SimpleCalc",
+      "execution_order": [
+        "result"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "x"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "result",
+          "python_expression": "(inputs.x * 2.0)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  },
+  "wi014_toy": {
+    "Panel_Area": {
+      "calc_def_name": "Panel_Area",
+      "execution_order": [
+        "area"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "length",
+            "width"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "area",
+          "python_expression": "(inputs.length * inputs.width)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    },
+    "Panel_Cost": {
+      "calc_def_name": "Panel_Cost",
+      "execution_order": [
+        "cost"
+      ],
+      "output_results": [
+        {
+          "compilability": "fully_compilable",
+          "input_refs": [
+            "area",
+            "unit_cost"
+          ],
+          "intermediate_refs": [],
+          "is_undeclared_intermediate": false,
+          "output_name": "cost",
+          "python_expression": "(inputs.area * inputs.unit_cost)",
+          "unsupported_reason": null
+        }
+      ],
+      "overall_compilability": "fully_compilable"
+    }
+  }
+}

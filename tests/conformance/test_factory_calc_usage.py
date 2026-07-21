@@ -31,6 +31,7 @@ from sysml_codegen.orchestration.output_registry_builder import build_output_reg
 from sysml_codegen.resolution.graph_builder import _build_pipeline_module, _classify_entry_points
 from sysml_codegen.resolution.models import (
     EntryPoint,
+    ModuleKind,
     PipelineModule,
 )
 from sysml_codegen.snapshot import load_extraction_snapshot
@@ -255,16 +256,13 @@ class TestPureDataTransformer:
             assert module.execution_order == idx
 
     def test_default_flags(self, factory_inputs):
-        """CalcUsage modules: is_computed_attribute=False, is_aggregation=False, compilability=UNKNOWN."""
+        """CalcUsage modules: module_kind=CALCULATION, compilability=UNKNOWN."""
         result, entry_points, calc_def_map, snap = factory_inputs
         modules = _build_all_modules(result, entry_points, calc_def_map)
 
         for module, usage, calc_def in modules:
-            assert module.is_computed_attribute is False, (
-                f"CalcUsage module {module.name} should not be computed_attribute"
-            )
-            assert module.is_aggregation is False, (
-                f"CalcUsage module {module.name} should not be aggregation"
+            assert module.module_kind == ModuleKind.CALCULATION, (
+                f"CalcUsage module {module.name} should be module_kind=CALCULATION"
             )
             assert module.compilability == Compilability.UNKNOWN, (
                 f"CalcUsage module {module.name} compilability should be UNKNOWN, "

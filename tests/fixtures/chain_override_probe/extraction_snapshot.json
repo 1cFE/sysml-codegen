@@ -1,7 +1,77 @@
 {
-  "snapshot_format_version": 2,
+  "snapshot_format_version": 5,
   "model_name": "chain_override_probe",
-  "captured_at": "2026-07-06T19:03:24.572784+00:00",
+  "captured_at": "2026-07-20T15:57:44.556563+00:00",
+  "constraint_lowering_mode": "grandfathered_off",
+  "constraint_facts": {
+    "contexts": [
+      {
+        "general_types": [
+          "ChainOverrideLibrary::'Instrument Package'"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "instrument_design",
+          "qualified_name": "ChainOverrideDesign::instrument_design"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ChainOverrideLibrary::'Instrument Package'",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ChainOverrideLibrary::Sensor"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "sensor",
+          "qualified_name": "ChainOverrideDesign::instrument_design::sensor"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ChainOverrideLibrary::Sensor",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      },
+      {
+        "general_types": [
+          "ChainOverrideLibrary::Sensor"
+        ],
+        "identity": {
+          "kind": "PartUsage",
+          "name": "sensor",
+          "qualified_name": "ChainOverrideLibrary::'Instrument Package'::sensor"
+        },
+        "inherited_constraints": [],
+        "redefinitions": [],
+        "types": [
+          "ChainOverrideLibrary::Sensor",
+          "Parts::Part",
+          "Items::Item",
+          "Objects::Object",
+          "Occurrences::Occurrence",
+          "Base::Anything"
+        ]
+      }
+    ],
+    "definitions": [],
+    "diagnostics": [],
+    "schema_version": "constraint-facts/v2",
+    "usages": []
+  },
+  "part_occurrences": {},
   "compilation_results": {},
   "calc_defs": [
     {
@@ -55,7 +125,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 5,
       "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
       "output_expression_asts": null,
@@ -104,7 +174,7 @@
         }
       ],
       "references": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 13,
       "source_hash": "9e2aa78915292bc5aef01627dc8afae4f5b856e6f9adb78d3d7deee2944eef16",
       "output_expression_asts": null,
@@ -133,7 +203,8 @@
           "literal_value": null,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "sensitivity"
+          "source_attribute_name": "sensitivity",
+          "source_written_qualifier": null
         },
         {
           "param_name": "base_cost",
@@ -146,11 +217,12 @@
           "literal_value": 100.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": "base_cost"
+          "source_attribute_name": "base_cost",
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 26,
       "parent_part_path": "instrument_design.sensor",
       "qualified_name": "ChainOverrideDesign__instrument_design__sensor__cost_model",
@@ -175,11 +247,12 @@
           "literal_value": 1.0,
           "expression_ast": null,
           "source_instance_name": null,
-          "source_attribute_name": null
+          "source_attribute_name": null,
+          "source_written_qualifier": null
         }
       ],
       "unbound_params": [],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 37,
       "parent_part_path": "instrument_design",
       "qualified_name": "ChainOverrideDesign__instrument_design__calibration",
@@ -195,7 +268,7 @@
         "sysml_type": "Real",
         "default_value": "100.0",
         "unit": null,
-        "source_file": "design.sysml",
+        "source_file": "root-0/design.sysml",
         "source_line": 8,
         "parent_part": "instrument_design",
         "qualified_name": "ChainOverrideDesign__instrument_design__sensor_base_cost"
@@ -207,7 +280,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 9,
         "parent_part": "",
         "qualified_name": "ChainOverrideLibrary__SensorCostCalc__total_cost"
@@ -217,7 +290,7 @@
         "sysml_type": "Real",
         "default_value": null,
         "unit": null,
-        "source_file": "library.sysml",
+        "source_file": "root-0/library.sysml",
         "source_line": 16,
         "parent_part": "",
         "qualified_name": "ChainOverrideLibrary__CalibrationCalc__calibrated_factor"
@@ -268,6 +341,5 @@
   },
   "aggregation_expressions": [],
   "computed_attributes": [],
-  "channel_aliases": [],
-  "dropped_constraints": []
+  "channel_aliases": []
 }

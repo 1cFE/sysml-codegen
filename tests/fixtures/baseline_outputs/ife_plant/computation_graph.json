@@ -30,8 +30,8 @@
       "execution_order": 0,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -50,7 +50,7 @@
         "volume = radius * radius * 3.14159",
         "\nDocumentation:\nCoil volume from radius — the calc output that the shape-4 cross-part\nchain reaches through the nested tf_coil part.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain target)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 81
     },
     {
@@ -95,8 +95,8 @@
       "execution_order": 1,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -115,7 +115,7 @@
         "driver_power = efficiency * bank_energy",
         "\nDocumentation:\nDriver electrical power from wall-plug efficiency and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (supertype-preserved template)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 42
     },
     {
@@ -160,8 +160,8 @@
       "execution_order": 2,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -180,7 +180,7 @@
         "driver_power = efficiency * bank_energy",
         "\nDocumentation:\nDriver electrical power from wall-plug efficiency and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (supertype-preserved template)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 42
     },
     {
@@ -225,8 +225,8 @@
       "execution_order": 3,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -245,7 +245,7 @@
         "driver_cost = cost_per_joule * bank_energy",
         "\nDocumentation:\nHIF driver capital cost from cost-per-joule and bank energy.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 3 (subtype template instantiates)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 55
     },
     {
@@ -290,8 +290,8 @@
       "execution_order": 4,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -310,7 +310,7 @@
         "chamber_yield = blanket_multiple * yield_constant",
         "\nDocumentation:\nChamber yield cost from blanket multiple and yield constant.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 7 (per-instance sibling calc)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 68
     },
     {
@@ -355,8 +355,8 @@
       "execution_order": 5,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -375,7 +375,7 @@
         "chamber_yield = blanket_multiple * yield_constant",
         "\nDocumentation:\nChamber yield cost from blanket multiple and yield constant.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 7 (per-instance sibling calc)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 68
     },
     {
@@ -564,8 +564,8 @@
       "execution_order": 6,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -584,7 +584,7 @@
         "lcoe = (plant_cost_constant + om_cost_constant + target_cost_constant) / (availability * gain * driver_efficiency * thermal_efficiency)",
         "\nDocumentation:\nRepresentative plant LCOE-style calc consuming the 14 technology-agnostic\nparameters. Simplified formula — the modeling shape (14 def literals wired\nto a calc) is what Item 9 measures, not the economics.\n\n*Source**: authored fixture (Item 8, UPSTREAM-FINDINGS)\n*Reference**: spec.md Fixture 2, shape 1 (richness floor)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 11
     },
     {
@@ -617,8 +617,8 @@
       "execution_order": 7,
       "compilability": "fully_compilable",
       "compiled_expression": null,
-      "is_computed_attribute": false,
-      "is_aggregation": false,
+      "module_kind": "calculation",
+      "output_schema_type": null,
       "auto_impl_context": {
         "execution_steps": [],
         "output_expressions": [
@@ -637,7 +637,7 @@
         "cooling_power = magnet_volume * 0.05",
         "\nDocumentation:\nCryogenic cooling load from magnet volume. Its input is wired cross-part\n(mechanism B) and deliberately left unresolvable — the known-incomplete\nbaseline Items 9-10 later wire.\n*Source**: authored fixture (Item 8)\n*Reference**: spec.md Fixture 2, shape 4 (cross-part chain, unwired)\n*Last Updated**: 2026-07-05"
       ],
-      "source_file": "library.sysml",
+      "source_file": "root-0/library.sysml",
       "source_line": 97
     }
   ],
@@ -654,7 +654,9 @@
           "default_value": 1.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__chamber_a__yield_calc__yield_constant",
@@ -663,7 +665,9 @@
           "default_value": 5000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__chamber_b__yield_calc__blanket_multiple",
@@ -672,7 +676,9 @@
           "default_value": 1.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__chamber_b__yield_calc__yield_constant",
@@ -681,7 +687,9 @@
           "default_value": 5000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__driver__base_power_calc__bank_energy",
@@ -690,7 +698,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__driver__base_power_calc__efficiency",
@@ -699,7 +709,9 @@
           "default_value": 0.1,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__availability",
@@ -708,7 +720,9 @@
           "default_value": 0.7,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__blanket_energy_multiple",
@@ -717,7 +731,9 @@
           "default_value": 1.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__discount_rate",
@@ -726,7 +742,9 @@
           "default_value": 0.08,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_cost_constant",
@@ -735,7 +753,9 @@
           "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_efficiency",
@@ -744,7 +764,9 @@
           "default_value": 0.1,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_energy",
@@ -753,7 +775,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__driver_lifetime_shots",
@@ -762,7 +786,9 @@
           "default_value": 50000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__frequency",
@@ -771,7 +797,9 @@
           "default_value": 0.2,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__gain",
@@ -780,7 +808,9 @@
           "default_value": 500.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__om_cost_constant",
@@ -789,7 +819,9 @@
           "default_value": 30.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__plant_cost_constant",
@@ -798,7 +830,9 @@
           "default_value": 3000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__target_cost_constant",
@@ -807,7 +841,9 @@
           "default_value": 10.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__thermal_efficiency",
@@ -816,7 +852,9 @@
           "default_value": 0.4,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__baseline_plant__lcoe_calc__yield_cost_constant",
@@ -825,7 +863,9 @@
           "default_value": 5000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__base_power_calc__bank_energy",
@@ -834,7 +874,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__base_power_calc__efficiency",
@@ -843,7 +885,9 @@
           "default_value": 0.1,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__hif_cost_calc__bank_energy",
@@ -852,7 +896,9 @@
           "default_value": 10000000.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantDesign__hif_plant__driver__hif_cost_calc__cost_per_joule",
@@ -861,7 +907,9 @@
           "default_value": 5.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         },
         {
           "qualified_name": "IfePlantSubsystems__radial_build__tf_coil__volume_calc__radius",
@@ -870,7 +918,9 @@
           "default_value": 4.0,
           "source_calc_usage": null,
           "param_group": "library_params",
-          "python_type": "float"
+          "python_type": "float",
+          "unit_text": null,
+          "unresolved_default_kind": null
         }
       ]
     }

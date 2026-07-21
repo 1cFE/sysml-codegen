@@ -12,7 +12,6 @@ Requirements: REQ-EXT-01 through REQ-EXT-09.
 from __future__ import annotations
 
 import dataclasses
-import logging
 from pathlib import Path
 
 import pytest
@@ -29,6 +28,7 @@ from sysml_codegen.extraction.data_models import (
     SumTerm,
 )
 from sysml_codegen.extraction.extractor import SysMLDataExtractor
+from sysml_codegen.orchestration.pipeline_builder import build_pipeline_context
 
 # ---------------------------------------------------------------------------
 # Expected counts from Phase 0 snapshot capture
@@ -891,13 +891,16 @@ class TestReqExt08ZeroOutputFailFast:
 
 @pytest.mark.req("REQ-EXT-09")
 class TestReqExt09ConstraintDropDiagnostic:
-    """The constraint drop report fires on every dropped predicate — including
-    subtype shapes like ``assert`` — with counts anchored independently of the
-    production query.
+    """Every dropped predicate the manifest sweep sees — including subtype shapes
+    like ``assert`` — has a catalog carrier, with counts anchored independently
+    of the production query.
 
-    This class replaces the REQ-EXT-09 anti-pattern: the old test computed its
-    expected count with the same exact-type query the implementation used, so it
-    was structurally unable to detect the subtype blindness it claimed to cover.
+    Re-anchored for Item 14 W2: the drop-manifest report/render surface these
+    tests originally pinned is retired (the catalog is now the proven single
+    source of truth, `test_constraint_migration_mapping.py`); what survives here
+    is the manifest sweep itself (still live, still load-bearing for the mapping
+    test) and its catalog/unassessed-carrier counterpart, replacing the report's
+    log-line assertions.
     """
 
     # Independent anchor for catf_mfe_model, transcribed from the fixture source
@@ -908,62 +911,43 @@ class TestReqExt09ConstraintDropDiagnostic:
     # (51), part-def (5), and part-usage (9) owners — all droppable.
     CATF_DROPPABLE = 65
 
-    def test_dropped_constraints_reported(self, caplog):
+    def test_dropped_constraints_land_unassessed_spanning_owner_kinds(self):
+        # I4 + part-usage leg: catf_mfe's 65 droppable usages span all three
+        # owner kinds and all land as unassessed carriers (R1, confirmed
+        # empirically — see test_constraint_migration_mapping.py).
         extractor = _load_live_extractor("catf_mfe_model")
+        manifest = extractor.collect_constraint_manifest()
+        assert len(manifest) == self.CATF_DROPPABLE
+        owner_kinds = {e.owner_kind.value for e in manifest}
+        assert "calc_def" in owner_kinds, "no calc-def-owned constraint swept"
+        assert "part_def" in owner_kinds, "no part-def-owned constraint swept"
+        assert "part_usage" in owner_kinds, "no part-usage-owned constraint swept"
 
-        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
-            extractor.report_dropped_constraints()
-
-        warns = [
-            r for r in caplog.records
-            if r.levelno == logging.WARNING and "constraint usage" in r.getMessage()
-        ]
-        infos = [
-            r for r in caplog.records
-            if r.levelno == logging.INFO and "is not executable" in r.getMessage()
-        ]
-        assert len(warns) == 1, f"expected exactly one summary WARN, got {len(warns)}"
-        assert len(infos) == self.CATF_DROPPABLE, (
-            f"expected one INFO per droppable constraint ({self.CATF_DROPPABLE}), "
-            f"got {len(infos)}"
+        ctx = build_pipeline_context([FIXTURES_DIR / "catf_mfe_model"])
+        assert len(ctx.concrete_constraints) == self.CATF_DROPPABLE
+        assert all(not c.eligible for c in ctx.concrete_constraints), (
+            "every one of the 65 must land unassessed, not eligible"
         )
-        # I4 + part-usage leg: the report spans all three owner kinds.
-        info_text = "\n".join(r.getMessage() for r in infos)
-        assert "calc def" in info_text, "no calc-def-owned constraint reported"
-        assert "part def" in info_text, "no part-def-owned constraint reported"
-        assert "part usage" in info_text, "no part-usage-owned constraint reported"
 
-    def test_zero_found_sentinel_always_emits(self, caplog):
-        # The scanned/reported/excluded sentinel is emitted even when droppable
-        # > 0, so an empty result is distinguishable from a blind query (row 1).
-        extractor = _load_live_extractor("catf_mfe_model")
-        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
-            extractor.report_dropped_constraints()
-        sentinels = [
-            r for r in caplog.records
-            if "scanned" in r.getMessage() and "droppable" in r.getMessage()
-        ]
-        assert len(sentinels) == 1, "the sentinel line must always emit exactly once"
-        assert f"scanned {self.CATF_DROPPABLE}" in sentinels[0].getMessage()
-
-    def test_wi014_assert_is_reported(self, caplog):
+    def test_wi014_assert_is_reported(self):
         # wi014_toy's only constraint is `assert constraint affordable` at
         # toy_plant.sysml:51 — an AssertConstraintUsage, invisible to the old
-        # exact-type query. Independent literal: exactly 1 droppable assert.
+        # exact-type query. Independent literal: exactly 1 droppable assert,
+        # carried as an ELIGIBLE catalog entry (lowering succeeds for this shape).
         extractor = _load_live_extractor("wi014_toy")
         manifest = extractor.collect_constraint_manifest()
         asserts = [e for e in manifest if e.constraint_kind is ConstraintKind.ASSERT]
         assert len(asserts) == 1, "wi014_toy must carry exactly one assert constraint"
         assert asserts[0].constraint_name == "affordable"
 
-        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
-            extractor.report_dropped_constraints()
-        infos = [
-            r for r in caplog.records
-            if r.levelno == logging.INFO and "is not executable" in r.getMessage()
-        ]
-        assert any("affordable" in r.getMessage() for r in infos), (
-            "the assert constraint must be reported as a dropped predicate"
+        ctx = build_pipeline_context([FIXTURES_DIR / "wi014_toy"])
+        usage_qn = f"{asserts[0].owner_qualified_name}::{asserts[0].constraint_name}"
+        eligible_usage_qns = {
+            e.usage_qualified_name
+            for e in (ctx.computation_graph.constraint_catalog.concrete_entries or [])
+        }
+        assert usage_qn in eligible_usage_qns, (
+            "the assert constraint must be carried as an eligible catalog entry"
         )
 
     def test_mutation_check_discriminates(self):
@@ -1003,21 +987,17 @@ class TestConstraintRequireAndExclusion:
         assert req_entries[0].constraint_kind is ConstraintKind.REQUIREMENT
         assert req_entries[0].constraint_kind not in DROPPABLE_KINDS
 
-    def test_sentinel_reports_excluded_and_require(self, caplog):
+    def test_scanned_and_excluded_counts(self):
         # scanned 2, reported 1 (the require constraint), excluded 1 (the
-        # requirement usage) — the exclusion is observable, not silent.
+        # requirement usage) — the exclusion is observable in the manifest's own
+        # kind tags, not only a retired report's log line.
         extractor = _load_live_extractor("item4_require")
-        with caplog.at_level(logging.INFO, logger="sysml_codegen.extraction.extractor"):
-            extractor.report_dropped_constraints()
-        sentinels = [
-            r for r in caplog.records
-            if "scanned" in r.getMessage() and "excluded" in r.getMessage()
-        ]
-        assert len(sentinels) == 1
-        msg = sentinels[0].getMessage()
-        assert "scanned 2" in msg
-        assert "reported 1" in msg
-        assert "excluded 1" in msg
+        manifest = extractor.collect_constraint_manifest()
+        assert len(manifest) == 2
+        droppable = [e for e in manifest if e.constraint_kind in DROPPABLE_KINDS]
+        excluded = [e for e in manifest if e.constraint_kind not in DROPPABLE_KINDS]
+        assert len(droppable) == 1
+        assert len(excluded) == 1
 
 
 @pytest.mark.req("REQ-EXT-09")
