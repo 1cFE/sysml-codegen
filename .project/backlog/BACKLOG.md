@@ -161,6 +161,40 @@ Compounding factors the fix must address, not just the query:
 
 ## P2 - Medium Priority
 
+### [NESTED-OCCURRENCE-OVERRIDE] `:>>` override on a usage nested in an instantiated part def is lost (calc + constraint)
+
+**Owner: the Item-10 occurrence-materialization family** (CONSTRAINT-LIFECYCLE-REMEDIATION
+Item 10 / producer-completeness + occurrence rollup). **Filed 2026-07-20** by Item 13 composed
+proof, case-18 addendum (owner ruling Option A). General gap — affects both the calc binding and
+the constraint actual paths; not constraint-specific.
+
+**Symptom.** A `:>>` design-override on a usage nested inside an *instantiated* part def is
+captured **definition-relative**, while demand resolves **occurrence-relative**, so the
+supplied-value materializer never matches the literal (0 applied). Calc bindings fall to a
+manual-required entry point that silently drops the modeled value; constraint actuals halt
+generation under strict INV-2. The redefined value is lost either way.
+
+**Reproducible coordinate.** `tests/fixtures/nested_occurrence_override_probe/` (expected to
+halt; PROVENANCE.md pins the full coordinate). Its flat sibling
+`tests/fixtures/constraint_def_owned_redefining/` (package-level redefining usage) resolves
+correctly through the same shared machinery, isolating the nesting as the sole trigger.
+
+**Root cause (verbatim, pin `7526665`).** Override:
+`owning_part_qn = 'nested_occurrence_override_probe__Design__panel'`, `attribute_name='reading'`,
+`LITERAL`, `target_path=['source','reading']`, `literal_value=80.0`. Demand:
+`_binding_target('source.reading', '..._the_design__panel')` →
+`qn='..._the_design__panel__source__reading'`, `part_usage='source'`, `attr='reading'`.
+`supplied_values._match_override` tier-1 requires `ov.owning_part_qn == instance_scope`
+(`Design__panel` != `the_design__panel`); tier 2a misses because `usage_type_map` is
+definition-keyed and carries no entry for the occurrence `the_design`. There is no
+occurrence → definition bridge available to the materializer. Fixing it requires threading
+occurrence-type resolution (the occurrence index) into `enrich_graph_design_attributes` — an
+Item-10-scope change with a calc-path blast radius, deliberately NOT forced into the byte-clean
+Item-2 case-18 addendum. Contract row 18 does not mandate this shape (the flat form satisfies it).
+
+Related: [SYNC-F4] (design-override name surfacing) and the "Two-level specialization —
+`attribute :>>` extraction gap" note under Ideas / Future Considerations.
+
 ### ~~[TRUTH-DEBT] Truth-Debt Retirement — the PIPELINE-TRUTH follow-on ledger~~ ✅
 
 **Filed 2026-07-06** as `epic_truth_debt.md`. **Status: Complete (2026-07-08).**

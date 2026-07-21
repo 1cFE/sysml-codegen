@@ -318,6 +318,8 @@ one deterministic demand identity.
 
 ### Item 2: Shared Producer Resolution and Gate A ✅
 
+> **Addendum (2026-07-20, Item 13 composed proof):** case-18 finding resolved to fixture shape, not a product defect — Item 2's resolver was correct; a `:>>`-redefined actual resolves at exact identity (row 16) and passes end-to-end. Fixture flattened, nested-occurrence override gap filed to Item 10 (`[NESTED-OCCURRENCE-OVERRIDE]`). No new rev; pin stays `7526665`. See Item 2 `evidence.md` addendum.
+
 **Register row**: 2
 **Type**: Code/Integration (sysml-codegen)
 **Effort**: 2 days (spec 1.5h, design 2.5h, plan 1h, execute/evidence 10–12h)

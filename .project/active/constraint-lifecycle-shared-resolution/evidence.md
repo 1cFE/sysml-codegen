@@ -316,3 +316,30 @@ case-folding papered over. Refusal on a case-folded match is pinned separately.
 | `gate_a_package_owner` | The genuinely package-owned control — no fixture covered this shape before (M6) |
 | `agg_localterm_probe` | The only model that reaches the aggregation LocalTerm mint |
 | `shared_producer` | **Recorded known-incomplete** — two consumers, two entry points. See its `PROVENANCE.md` |
+
+---
+
+## Addendum — Item 13 composed proof, case-18 coordinate (2026-07-20)
+
+Item 13's composed run added a new row-18 coordinate ("definition-owned assert through
+redefining usage") that surfaced through Item 2's strict resolver. **Item 2's machinery was
+correct throughout** — this addendum only extends its evidence scope; the audit certification
+above stands unchanged, and no `src` moved (`git diff 7526665 -- src` empty).
+
+A `:>>`-redefined design attribute feeding a constraint actual **does** resolve under exact
+identity like any design attribute — the supplied-value materializer synthesizes it and the
+shared strict resolver returns it at row 16 (`occurrence_materialized_qn`), no leniency, no
+constraint-specific shim. Verified end-to-end at the pin on
+`tests/fixtures/constraint_def_owned_redefining/`: generate → execute → **satisfied** verdict
+(`reading = 80.0` vs `v <= 100.0`), flip to `120.0` → **violated**
+(`tests/execution/test_constraint_def_owned_redefining_execution.py`, 1 passed).
+
+The Stage-2-authored fixture had over-built the row with an extra `part def Design` / `part
+the_design : Design` layer, which tripped a **general** supplied-value gap (an override on a
+usage nested inside an *instantiated* part def is captured definition-relative while demand
+resolves occurrence-relative → 0 applied on **both** calc and constraint paths). Per owner
+ruling (Option A) the fixture was flattened to the canonical shape; the nested shape is
+preserved as `tests/fixtures/nested_occurrence_override_probe/` and the general gap filed to
+the Item-10 occurrence-materialization family (`.project/backlog/BACKLOG.md`
+`[NESTED-OCCURRENCE-OVERRIDE]`). This dovetails with the "Item 4/10 territory" line under
+**What stays open** above.

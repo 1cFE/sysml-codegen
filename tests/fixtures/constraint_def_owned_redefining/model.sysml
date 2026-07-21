@@ -29,14 +29,14 @@ package constraint_def_owned_redefining {
         }
     }
 
-    // Redefining usage: the occurrence redefines the actual via `:>>`. The
-    // definition-owned assert SOURCE and this redefining occurrence's actual
-    // identity remain distinct (invariant 27); reading = 80.0 satisfies
-    // `v <= 100.0`, so the expected verdict is satisfied.
-    part def Design {
-        part panel : Panel {
-            :>> source.reading = 80.0;
-        }
+    // Redefining usage: this package-level occurrence of Panel redefines the
+    // actual via `:>>`. The definition-owned assert SOURCE (Panel::within, typed
+    // by 'Within Limit') and this redefining occurrence's actual identity
+    // (constraint_def_owned_redefining__panel__source__reading) remain distinct
+    // (invariant 27); reading = 80.0 satisfies `v <= 100.0`, so the expected
+    // verdict is satisfied. The redefined attribute resolves under exact identity
+    // like any design attribute (shared resolver row 16, occurrence_materialized_qn).
+    part panel : Panel {
+        :>> source.reading = 80.0;
     }
-    part the_design : Design;
 }
