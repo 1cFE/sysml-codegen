@@ -125,16 +125,16 @@ That Item 4's archived artifacts contain everything the doc needs (they were aud
 if projection surfaces a contradiction with merged code, surface it — don't silently pick).
 
 ### Changes Required
-- [ ] New doc: constraint-facts/v2 `DiagnosticSeverity`, the `screen_extraction_diagnostics`
+- [x] New doc: constraint-facts/v2 `DiagnosticSeverity`, the `screen_extraction_diagnostics`
       sink, fail-closed skew both directions, BLOCK/warning ordering. Project from
       `20260720_constraint-lifecycle-diagnostics-defaults/` artifacts; cite
       `analysis/diagnostic_screen.py`, `_upstream_pins.py:24-27`, `snapshot/loader.py:588-591`
       at their merged-main line numbers.
-- [ ] Link from doc 27/28 neighbors and any doc index.
+- [x] Link from doc 27/28 neighbors and any doc index.
 
 ### Validation
-- [ ] Every behavioral claim in the new doc carries a merged-main citation.
-- [ ] A reader can answer "what happens on severity skew in each direction" from the doc alone.
+- [x] Every behavioral claim in the new doc carries a merged-main citation.
+- [x] A reader can answer "what happens on severity skew in each direction" from the doc alone.
 
 **What We Know Works After This Phase:** G1 closed — the severity system is publicly documented.
 
@@ -263,3 +263,40 @@ is surfaced, not hidden. No merged-code contradiction found against Item 2's des
 history block, the matrix DRA deletion note, and doc 09's accurate retirement narrative (register C9).
 
 **Status**: Draft → In Progress → Complete
+
+---
+
+### Phase 3 Completion
+**Completed:** 2026-07-24 · **Baseline:** merged main `936315c` (codegen), `f4ebdce` (agentic-mbse)
+
+**Changes made:**
+- New doc `docs/architecture/reference/30-diagnostic-severity.md` — the extraction-diagnostic
+  severity contract: `DiagnosticSeverity` (BLOCKING|ADVISORY), severity set by the writer at
+  construction from the closed `EXTRACTION_DIAGNOSTIC_SEVERITY` table (no reader-side lookup), the
+  `screen_extraction_diagnostics` sink at both routes, advisory-before-block ordering, and the
+  three stacked fail-closed guards for skew in both directions. Cited merged-main lines throughout
+  (codegen `diagnostic_screen.py`, `pipeline_builder.py:898`, `snapshot_context.py:48`,
+  `snapshot/loader.py`, `_upstream_pins.py:24-27`; agentic-mbse `constraint_facts.py`).
+- Linked from doc 27:86 (severity-field changelog mention → cross-ref to doc 30 — the judgment-call
+  edit the brief flagged; taken, it improves discoverability without disrupting the migration
+  narrative), doc 28's opening (extraction diagnostics screened before lowering), and the nav index
+  in `00-pipeline-overview.md`. Added rows 28/29/30 to that index's Deep-dive table — 28/29 were
+  absent (pre-existing index gap); completing the trio while adding 30 keeps the index honest.
+
+**Deviation surfaced (brief vs code — resolved by documenting both, not silently picking):** the
+brief pins "where the gate runs on the snapshot path" to `snapshot/loader.py:588-591`. Code shows
+that range is the severity-field **shape** validation (`_validate_diagnostic`), a complementary
+mechanism; the actual **screen gate** on the snapshot path is `orchestration/snapshot_context.py:48`
+(before `build_full_graph_from_snapshot`). Doc 30 documents both accurately and distinguishes them.
+
+**Fuller-than-brief finding (code wins, recorded):** the design's I2 framed fail-closed skew as the
+version gate alone. Merged code also carries a per-diagnostic **severity cross-check** at
+reconstruction (`agentic-mbse constraint_facts.py:374-385`): severity is re-derived from the
+reader's writer-table and refused if it disagrees with the stored value, in either direction. This
+catches a reclassification that skipped a version bump. Doc 30 documents all three guards (version
+gate → severity cross-check → unknown-kind refusal), which is what lets a reader answer the
+skew question from the doc alone. Writer table currently has one kind (`non_finite_literal` →
+BLOCKING) — documented as-is.
+
+**Validation:** every behavioral claim in doc 30 carries a merged-main citation; the "what happens
+on severity skew in each direction" question is answerable from the doc's dedicated section. G1 closed.

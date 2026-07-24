@@ -229,3 +229,6 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [18-literal-value-propagation](18-literal-value-propagation.md) | Carrying `:>>` literal values into JSON templates |
 | [26-pipeline-module-migration](26-pipeline-module-migration.md) | REQ-PIPE-07 migration: PipelineModule field expansion |
 | [27-snapshot-generation](27-snapshot-generation.md) | License-free generation from captured extraction snapshots |
+| [28-constraint-lowering-and-catalog](28-constraint-lowering-and-catalog.md) | Lowering eligible modeled assertions to constraint modules and assembling the catalog |
+| [29-contracts-and-sealing](29-contracts-and-sealing.md) | Package integrity: semantic `ModelContract`, physical seal, emitted verifier |
+| [30-diagnostic-severity](30-diagnostic-severity.md) | Extraction-diagnostic severity: writer-set field, blocking vs advisory, fail-closed skew |

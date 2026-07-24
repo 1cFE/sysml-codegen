@@ -12,7 +12,9 @@ classifies each constraint usage as `ADMIT`, `BLOCK`, `NON_NUMERICAL`, or `UNASS
 `ADMIT` usage **lowers**: every formal is strictly resolved to a real value and the constraint
 becomes a pipeline module. This doc covers the sysml-codegen side of that path —
 the profile itself, and the study layer that drives it in production, live in
-`agentic-mbse` and `teax` respectively (see those repos' own docs).
+`agentic-mbse` and `teax` respectively (see those repos' own docs). Before lowering
+runs at all, extraction diagnostics are screened and a blocking one halts generation
+with an actionable message — see [30-diagnostic-severity](30-diagnostic-severity.md).
 
 ## Lowering phase (`analysis/constraint_lowering.py`)
 

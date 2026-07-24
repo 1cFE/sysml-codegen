@@ -84,7 +84,9 @@ real paths and pass through untouched (`serializer.py:55-56`).
 above (`constraint_facts`, `part_occurrences`, `constraint_lowering_mode`) so the
 offline path can re-lower modeled assertions without a license (CONSTRAINT-EXEC
 Item 8). The format has since advanced twice: v4 carried the diagnostic-severity
-field through the wire shape (constraint-lifecycle Item 4), and v5 replaced the
+field through the wire shape (constraint-lifecycle Item 4; the severity contract
+that field carries is [30-diagnostic-severity](30-diagnostic-severity.md)), and v5
+replaced the
 snapshot-relative `source_file` with the portable `root-N/<relpath>` referent
 behind a load-time shape gate (constraint-lifecycle Item 5). The authoritative
 history is `snapshot/__init__.py:12-28`. The version gate is a hard cutover, not a
