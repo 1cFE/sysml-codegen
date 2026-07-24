@@ -203,3 +203,48 @@ filing decision, not required by this item):**
 | MG1 | Producer resolution / completeness — no `REQ-PR-*` family; the shared `resolve_producer` table is re-projected onto kept REQ-IR/REQ-DRA IDs (Phase 2 D6) rather than given its own family | `resolve_producer` (`resolution/producer_resolution.py:616`), `KEY_FORMS` (`:527`), `check_producer_completeness` (`resolution/producer_completeness.py:98`) | Candidate dedicated family; Phase-2 banner already flags it |
 | MG2 | Catalog schema `2.0.0` — no matrix row asserts the pinned catalog-schema version | `CATALOG_SCHEMA_VERSION = "2.0.0"` (`contracts/versions.py:18`) | Pairs with B1 (no stale doc claim; owed coverage) |
 | MG3 | Trust manifest / anchor / reseal provenance — no matrix row | `build_generation_manifest` (`contracts/manifest.py:31`), `check_reseal_provenance` (`:56`) | Pairs with B3 (owed doc + matrix coverage) |
+
+---
+
+## Phase 5 dispositions — EXPLAINER_PROMPT re-anchor (closed 2026-07-24)
+
+Swept every checkable claim in `.project/active/EXPLAINER_PROMPT.md` against merged main
+`936315c`. Amended in place, preserving the prompt's structure and buildability apparatus
+(responsibility map, reading-list data sources, reuse guidance). The eight constraint-exec
+content areas stay; lifecycle-epic deltas were woven into the existing narrative, not bolted on.
+
+| # | Claim (EXPLAINER_PROMPT.md) | Disposition | Citation / fix |
+|---|---|---|---|
+| E1 | Title + banner "post-CONSTRAINT-EXEC", branch `constraint-exec-epic`, "two epics since Gen-1" | STALE | Wave merged (`936315c`/`f4ebdce`/`fa0e06a`); three epics now — added CONSTRAINT-LIFECYCLE with its six deltas. Branch → `main`. |
+| E2 | Build para "current as of `constraint-exec-epic` HEAD" | STALE | → merged main `936315c`; appended the lifecycle composed-proof anchor (41/41, stellarator 5 verdicts/6 anchors, IFE 2,301). |
+| E3 | L1 "snapshot path … now format v3" | STALE | → v5 (`snapshot/__init__.py:30`; doc 27 changelog v3→v4→v5). |
+| E4 | L3 mechanism list (no producer-resolution) | GAP | Added the unified `resolve_producer` table (`resolution/producer_resolution.py`, doc 04). |
+| E5 | Responsibility map: snapshot row "now v3 …" | STALE | → v5 with the v3/v4/v5 changelog; "old snapshot is a hard error". |
+| E6 | Responsibility map: contracts row (no trust manifest) | GAP | Added generation manifest (`build_generation_manifest`/`check_reseal_provenance`, `contracts/manifest.py`), runtime-owned verification trust (Item 7). |
+| E7 | Responsibility map: no producer-resolution/completeness row | GAP | Added `producer_resolution.py` (doc 04) + `producer_completeness.py` row (Item 2 unification; `input_resolver.py` deleted). |
+| E8 | §2 Diagnostics — no severity contract | GAP | Added the extraction-diagnostic severity bullet (doc 30; `DiagnosticSeverity`, fail-closed skew both directions). |
+| E9 | §4 value-resolution — four SVM shapes, no nested-occurrence exception | STALE (implies all capture) | `supplied_values.py` + REQ-SVM survive; added the `[NESTED-OCCURRENCE-OVERRIDE]` exception clause pointing to §7 (aligns with R5a note in `modeling-assumptions.md`). |
+| E10 | §7 caveat "embedded catalog / single-channel bridge; CE-F1/CE-F2 filed follow-ons" | STALE | CE-F2 landed (Item 9 multi-entry bridge); CE-F1 out-of-scope-by-design (embedded catalog sole authority, D-3). |
+| E11 | §7 — no nested-occurrence caveat | GAP | Added `[NESTED-OCCURRENCE-OVERRIDE]` as a live honest caveat (probe fixture cited). |
+| E12 | §7 retired list header "PIPELINE-TRUTH and CONSTRAINT-EXEC"; resolver bullet says path "calls `resolve_input(AGG_STRATEGIES)`"; "format v3" | STALE | Header → three epics; resolver bullet rewritten (unified `resolve_producer`, `input_resolver.py` deleted — symbol gone); added multi-entry-bridge retirement; v3 → v5. |
+| E13 | §8 lowering "same resolution ladder calc inputs use" (unqualified) | ACCURATE, sharpened | Anchored to `resolve_producer` + strict `TerminalPolicy` fork. |
+| E14 | §8 closing "CE-F1 and CE-F2 open follow-ons; single-channel bridge" | STALE | CE-F2 landed (Item 9); CE-F1 out-of-scope-by-design (D-3); Item 12 `grandfathered_off` fails closed. |
+| E15 | Reading list header "CONSTRAINT-EXEC close / docs-explainer-refresh" | STALE | → CONSTRAINT-LIFECYCLE close / docs-lifecycle-sync. |
+| E16 | Reading list item 4 doc numbers (no 04/30) | GAP | Added 04 (producer resolution) + 30 (severity). |
+| E17 | Reading list item 5 "274 = 273 PASS … 32 families" | STALE | → 276 = 275 PASS + 1 UNTESTED, 32 families; noted REQ-SNAP-21/22 added in place (Phase 4). |
+| E18 | Reading list items 7–8 epic paths (`backlog/…`, no lifecycle epic) | STALE | backlog → completed (`20260720_epic_pipeline_truth.md`, `…_upstream_findings.md`); added the lifecycle epic as the newest authority. |
+| E19 | Prior-art para "predates … CONSTRAINT-EXEC epics … snapshot v3" | STALE | Added CONSTRAINT-LIFECYCLE; rewrite-list updated (unified resolver, generation manifest, severity contract, multi-entry bridge, snapshot v5). |
+
+**Kept as-is (verified still true at `936315c`):** the one-paragraph subject; voice/method
+rules; L4 AST content; the run-C `$270.1211779380445/MWh` anchor (PIPELINE-TRUTH Item-3, not
+disturbed by the lifecycle epic); §3 worked-example fixtures (`solar_battery_model`,
+`wi014_toy`); §4 channel-wiring symbols (`EXPOSE_CHAIN_TENTATIVE`, `ScopedAliasKey`,
+`output_aliases`, `fallback_entry_points` — all still live in `src/`); §6 agentic-mbse frame;
+§9 teax study layer; the reading-list constraint-execution data-source test files (both exist).
+
+**Exit greps (run at `936315c`):** no `constraint-exec-epic`, `post-CONSTRAINT-EXEC`,
+`docs-explainer-refresh`, `backlog/epic_`, `04-input-resolver`, `format v3`, or bare `274`
+remain in the prompt; the only `resolve_input`/`AGG_STRATEGIES`/`input_resolver` mentions are
+in the deleted/retired-history context that names them as gone. Scope guard held: no HTML
+build (`[V2-HTML-BUILD]` stays owner-assigned; spec Non-Goal); docs-only, no code/test/fixture
+edits.

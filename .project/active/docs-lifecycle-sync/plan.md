@@ -174,10 +174,10 @@ That the Gen-1 banner / pipeline claims drifted during the epic (carried, unveri
 sweep register from Phase 1 tells us exactly which claims to re-anchor).
 
 ### Changes Required
-- [ ] Re-anchor stale claims against the Phase 1 register and merged main; amend in place.
+- [x] Re-anchor stale claims against the Phase 1 register and merged main; amend in place.
 
 ### Validation
-- [ ] Spot-check the prompt's pipeline/version claims against the register — zero contradictions.
+- [x] Spot-check the prompt's pipeline/version claims against the register — zero contradictions.
 
 **What We Know Works After This Phase:** the V2 HTML build has a truthful input.
 
@@ -331,3 +331,38 @@ the actual table rows are all PASS (DM 9/9, RES 8/8); the only real UNTESTED row
 Three rows had flipped to PASS without the index following. Corrected DM→`(9/9)` and RES→`(8/8)` so
 the index reconciles with the summary; this predates and is independent of the two new rows.
 Recorded in `inventory.md` Phase 4 dispositions. G2 closed.
+
+---
+
+### Phase 5 Completion
+**Completed:** 2026-07-24 · **Baseline:** merged main `936315c`
+
+**Changes made** (`.project/active/EXPLAINER_PROMPT.md`, re-anchored in place; 19-row register
+E1–E19 in `inventory.md`):
+- Title/banner: "post-CONSTRAINT-EXEC" → "post-CONSTRAINT-LIFECYCLE, merged main"; branch
+  `constraint-exec-epic` → `main` (`936315c`/`f4ebdce`/`fa0e06a`); "two epics" → three, with
+  the six lifecycle deltas (resolver unification, severity contract, snapshot v5, package
+  trust, sole-authority catalog 2.0.0, multi-entry bridge) named. Build para → merged main +
+  the composed-proof anchor (41/41, stellarator 5 verdicts/6 anchors, IFE 2,301).
+- Snapshot claims v3 → v5 (L1, responsibility row, retired list, prior-art); doc-27 changelog
+  cited. Added a producer-resolution/completeness responsibility row (doc 04) and the
+  generation-manifest/trusted-bootstrap surface to the contracts row.
+- §2 gained the extraction-diagnostic severity contract (doc 30). §4 gained the
+  `[NESTED-OCCURRENCE-OVERRIDE]` exception clause; §7 gained it as a live caveat and reframed
+  the catalog/bridge caveat (CE-F2 landed, CE-F1 out-of-scope-by-design D-3). §8 anchored
+  lowering to `resolve_producer` and corrected the CE-F1/CE-F2 history.
+- Reading list: header → docs-lifecycle-sync; added docs 04/30; counts 274/273 → 276/275;
+  epic paths backlog → completed; added the lifecycle epic as the newest authority.
+
+**Deviation surfaced:** none material. The prompt's run-C `$270.12/MWh` anchor and all §3/§4
+symbol/fixture citations were re-verified live against `src/` and `936315c` and kept (still
+true — the lifecycle epic did not disturb them). No brief citation needed correcting this phase.
+
+**Scope guard held:** no HTML build (`[V2-HTML-BUILD]` stays owner-assigned; spec Non-Goal);
+docs-only, no code/test/fixture edits.
+
+**Validation:** exit greps clean — no `constraint-exec-epic` / `post-CONSTRAINT-EXEC` /
+`docs-explainer-refresh` / `backlog/epic_` / `04-input-resolver` / `format v3` / bare `274`
+remain; the only `resolve_input`/`AGG_STRATEGIES`/`input_resolver` mentions are the
+deleted/retired-history ones that name them as gone. Every re-anchored claim carries a
+merged-main citation. R4 complete; all five phases done.
