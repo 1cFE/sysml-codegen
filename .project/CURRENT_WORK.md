@@ -27,11 +27,18 @@ The superseded PR-wave epic is archived alongside
 - 41/41 register: `.project/completed/20260720_constraint-lifecycle-composed-proof/evidence-coordinate-register.md`
 - Ratified authority (unchanged home): `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
 
-### Documentation debt — next planned work (deferred by the epic)
+### docs-lifecycle-sync — IMPLEMENTED + AUDITED on branch `docs-lifecycle-sync` (2026-07-24)
 
-**Planned as `docs-lifecycle-sync`** — light spec + 4-phase plan (Draft, awaiting owner
-approval) in `.project/active/docs-lifecycle-sync/`. The epic deliberately deferred public-doc
-reconciliation of its late changes. Known owed items (all verified at epic close):
+All 5 phases done in an orchestrated run (Opus stages, briefs committed); final audit **Pass
+with notes → N1 closed by orchestrator** (no open findings) — see
+`.project/active/docs-lifecycle-sync/audit.md` + `inventory.md` (the full claim register).
+Highlights: `04-input-resolver.md` → `04-producer-resolution.md` (unified-ladder reference),
+doc 24 rewritten, new `30-diagnostic-severity.md` (three stacked fail-closed guards),
+REQ-SNAP-21/22 added (matrix 274→276, index reconciled + pre-existing DM/RES drift fixed),
+module_kind sweep, R5 honesty note, EXPLAINER_PROMPT re-anchored to merged main. Three
+matrix-row candidates filed (producer resolution, catalog 2.0.0, trust manifest) — owner
+decision. **Branch awaits owner review/merge; `/_my_close` after.** The original owed-items
+list (kept for the record):
 
 1. **Item 4 severity system has ZERO public doc coverage** (Item 6 gap G1 — no stale claim
    existed to amend, so nothing was written). The diagnostics severity contract
