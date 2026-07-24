@@ -58,7 +58,7 @@ confirms they survived Items 7–13's landings. The only residue is the A1 line-
 | B3 | Trust manifest / anchor / reseal provenance — no doc coverage | GAP | `build_generation_manifest` (`contracts/manifest.py:31`), `check_reseal_provenance` (`:56`), `MANIFEST_REL_PATH` (`:19`) | GAP-filed |
 | B4 | Diagnostics severity **contract** — no public doc beyond one changelog line | GAP (Item 6 G1) | `screen_extraction_diagnostics` (`analysis/diagnostic_screen.py:51`), BLOCKING/ADVISORY skew (`:59,:64`), `_upstream_pins.py:24-27`, `snapshot/loader.py:588-591` | **Phase-3 DONE** → new doc `reference/30-diagnostic-severity.md`; gate on snapshot path is `snapshot_context.py:48` (loader `:588-591` is the shape gate — both documented) |
 | B5 | `27-snapshot-generation.md:86` — "v4 carried the diagnostic-severity field … v5 replaced `source_file` with the portable `root-N/<relpath>` referent" | ACCURATE (changelog) | matches `snapshot/__init__.py:30` + Item 6 S2 referent rewrite | none |
-| B6 | Portability referent-shape gate + whole-tree portability — **no** verification-matrix REQ-SNAP row (family stops at REQ-SNAP-20) | GAP (Item 6 G2) | `_validate_source_referents` (`snapshot/loader.py:912`, called `:837`); portability tests `tests/conformance/test_constraint_snapshot_portability.py` | **Phase-4** (matrix row + recount) |
+| B6 | Portability referent-shape gate + whole-tree portability — **no** verification-matrix REQ-SNAP row (family stops at REQ-SNAP-20) | GAP (Item 6 G2) | `_validate_source_referents` (`snapshot/loader.py:912`, called `:837`); whole-tree portability | **Phase-4 DONE** → REQ-SNAP-21 (referent shape gate) + REQ-SNAP-22 (whole-tree portability). ⚠ **Brief's test citation corrected:** the brief named `test_constraint_snapshot_portability.py`, but that file pins the exclusion-**relocation manifest** (3 tests), not the gate. Verified real pins: gate = `test_source_referent_shape_gate.py` + envelope `test_snapshot_v5_gate.py`; whole-tree = `test_whole_tree_portability.py`. No aspirational citation used. |
 
 ## Sweep C — semantics (module_kind bool flags, doc-19 dispatch table)
 
@@ -167,3 +167,39 @@ replaced). Inbound `04-input-resolver` links across all of `docs/` repointed.
   matrix DRA deletion note (`:218`).
 - `grep -rn 'is_computed_attribute|is_aggregation' docs/architecture/` — zero LIVE claims.
   Residual = `09-data-models.md:71,301` (ACCURATE retirement narrative, register C9).
+
+---
+
+## Phase 4 dispositions (closed 2026-07-24)
+
+**Matrix rows added (B6, spec R2 required):** `REQ-SNAP-21` (v5 referent shape gate —
+`_validate_source_referents`, `snapshot/loader.py:912`, called `:837`) and `REQ-SNAP-22`
+(whole-tree portability, Item 5 Axis 1), both after REQ-SNAP-20, both PASS. Citations verified at
+`936315c` against the *real* pinning tests (see B6 note on the corrected brief citation).
+
+**Recount (memory `verification-matrix-drift-modes` — index totals + per-family, not just the
+summary):**
+- Summary block: Total requirements 274 → **276**; PASS 273 → **275**; UNTESTED **1** (unchanged —
+  only REQ-PGD-06); DEFERRED 0; REQ families **32** (no new family — REQ-SNAP extended in place);
+  Distinct test files cited 73 → **77** (three genuinely new files cited: `test_source_referent_shape_gate.py`,
+  `test_snapshot_v5_gate.py`, `test_whole_tree_portability.py` — each 0 prior matrix hits).
+- SNAP index line: `(20/20 pass)` → `(22/22 pass)`.
+- **⚠ Pre-existing index drift found and corrected during the mandated recount (surfaced, not
+  silently fixed):** the per-family index annotations for **DM** `(8/9 pass, 1 untested)` and
+  **RES** `(6/8 pass, 2 untested)` were stale — the actual table rows are all PASS (DM 9/9, RES 8/8;
+  the single real UNTESTED row is REQ-PGD-06). Three rows had flipped to PASS without the index
+  annotation following. Corrected to `(9/9 pass)` and `(8/8 pass)` so the index sum-of-pass (275)
+  reconciles with the summary PASS (275); this predates and is independent of the two new rows. The
+  `Distinct test files cited` baseline of 73 was likewise understated (74 pre-change by a column-only
+  recount); set to the recounted 77.
+- Reconciliation confirmed: Σ index total = 276 = Total requirements; Σ index pass = 275 = PASS;
+  32 families.
+
+**Matrix-GAP-row candidates filed (spec R2 — recorded here, NOT added to the matrix; a later owner
+filing decision, not required by this item):**
+
+| GAP # | Uncovered surface | Citation | Note |
+|---|---|---|---|
+| MG1 | Producer resolution / completeness — no `REQ-PR-*` family; the shared `resolve_producer` table is re-projected onto kept REQ-IR/REQ-DRA IDs (Phase 2 D6) rather than given its own family | `resolve_producer` (`resolution/producer_resolution.py:616`), `KEY_FORMS` (`:527`), `check_producer_completeness` (`resolution/producer_completeness.py:98`) | Candidate dedicated family; Phase-2 banner already flags it |
+| MG2 | Catalog schema `2.0.0` — no matrix row asserts the pinned catalog-schema version | `CATALOG_SCHEMA_VERSION = "2.0.0"` (`contracts/versions.py:18`) | Pairs with B1 (no stale doc claim; owed coverage) |
+| MG3 | Trust manifest / anchor / reseal provenance — no matrix row | `build_generation_manifest` (`contracts/manifest.py:31`), `check_reseal_provenance` (`:56`) | Pairs with B3 (owed doc + matrix coverage) |

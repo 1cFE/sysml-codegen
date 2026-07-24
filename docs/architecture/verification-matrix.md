@@ -6,12 +6,12 @@ Traceability matrix mapping every REQ-\* tag to its conformance test file and st
 
 | Metric | Count |
 |--------|-------|
-| Total requirements | 274 |
-| PASS (test exists and passes) | 273 |
+| Total requirements | 276 |
+| PASS (test exists and passes) | 275 |
 | UNTESTED (no dedicated test) | 1 |
 | DEFERRED | 0 |
 | REQ families | 32 |
-| Distinct test files cited | 73 |
+| Distinct test files cited | 77 |
 
 **Status definitions:**
 - **PASS**: At least one conformance test references this requirement and passes
@@ -38,7 +38,7 @@ the documentation rather than executable code.
 - [CA — Computed Attributes](#ca) (12/12 pass)
 - [CL — Constraint Lowering & Catalog](#cl) (5/5 pass)
 - [CON — Contracts & Sealing](#con) (10/10 pass)
-- [DM — Data Models](#dm) (8/9 pass, 1 untested)
+- [DM — Data Models](#dm) (9/9 pass)
 - [DRA — Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
@@ -58,8 +58,8 @@ the documentation rather than executable code.
 - [PMM — PipelineModule Migration](#pmm) (5/5 pass)
 - [PY — Pipeline YAML](#py) (8/8 pass)
 - [REG — Module Registry](#reg) (9/9 pass)
-- [RES — Resolution Overview](#res) (6/8 pass, 2 untested)
-- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (20/20 pass)
+- [RES — Resolution Overview](#res) (8/8 pass)
+- [SNAP — Snapshots: Extraction Format & Snapshot-Driven Generation](#snap) (22/22 pass)
 - [SR — Smart Regen / Preservation](#sr) (7/7 pass)
 - [SVM — Supplied-Value Materializer](#svm) (4/4 pass)
 - [VBR — Virtual Binding Rewrite](#vbr) (11/11 pass)
@@ -540,6 +540,8 @@ indirectly via the emitted verifier.
 | REQ-SNAP-18 | Regression guard: no production render site under `src/sysml_codegen` SHALL pass `generation_timestamp` -- the template that once carried it (`pydantic_schema.py.jinja2`) is deleted; the token still appears in the test itself, this row, and `.project/` history, so "the token exists nowhere in the repo" is not the claim | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-19 | Live generation is byte-identical to snapshot generation, incl. symlinked models (license-gated; skips cleanly without a license, verified live during Item 2) | `test_snapshot_generation.py` | PASS |
 | REQ-SNAP-20 | A missing load-bearing field on a deserialized dict is loud (V7): `python_type`/`binding_type`/`parent_part_path`/`owning_part_def_qn` warn and degrade to their defaults; `qualified_name` (keying) raises `SnapshotFormatError`; benign fields keep their `.get(default)` silently (TRUTH-DEBT Item 6, Site 1) | `test_hygiene_tail_loader.py` | PASS |
+| REQ-SNAP-21 | v5 referent shape gate: every real `source_file` in a loaded snapshot SHALL be a portable `root-N/<relpath>` referent — `_validate_source_referents` (`snapshot/loader.py:912`, called at `:837`) rejects an absolute, snapshot-dir-relative, or blank/missing value with `SnapshotFormatError` (the `unknown`/`hierarchy` sentinels pass through), closing Item 4 note N1 that a version bump alone would leave the checkout-absolute leak open (Item 5) | `test_source_referent_shape_gate.py` (clean v5 load + absolute/dir-relative/stale rejects); envelope-version half `test_snapshot_v5_gate.py` (v5, both skew directions, every committed snapshot loads at v5) | PASS |
+| REQ-SNAP-22 | Whole-tree portability (Item 5, Axis 1): the same semantic input captured under two different checkout roots SHALL produce a byte-identical output tree with no checkout-absolute path anywhere in it — a completeness gate that does not depend on enumerating leaking fields by hand | `test_whole_tree_portability.py` (`test_catf_mfe_whole_tree_two_root_portable`, license-free primary; `test_anonymous_admitted_relocated_graph_portable`, licensed relocated-anonymous leg) | PASS |
 
 ### SR
 

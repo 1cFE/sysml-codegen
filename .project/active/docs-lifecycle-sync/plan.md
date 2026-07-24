@@ -151,13 +151,13 @@ That the matrix recount discipline (memory `verification-matrix-drift-modes`) ca
 index-count changes the row addition causes.
 
 ### Changes Required
-- [ ] Add row(s) after REQ-SNAP-20 citing `_validate_source_referents` (`snapshot/loader.py`)
-      and the portability tests (`tests/conformance/test_constraint_snapshot_portability.py`).
-- [ ] Recount: index totals + per-family counts, not just the summary block.
+- [x] Add row(s) after REQ-SNAP-20 citing `_validate_source_referents` (`snapshot/loader.py`)
+      and the portability tests. (Brief's suggested test file was corrected — see notes.)
+- [x] Recount: index totals + per-family counts, not just the summary block.
 
 ### Validation
-- [ ] Matrix index counts reconcile after the recount pattern.
-- [ ] Row citations point at merged-main lines that exist.
+- [x] Matrix index counts reconcile after the recount pattern.
+- [x] Row citations point at merged-main lines that exist.
 
 **What We Know Works After This Phase:** G2 closed — portability is matrix-tracked.
 
@@ -300,3 +300,34 @@ BLOCKING) — documented as-is.
 
 **Validation:** every behavioral claim in doc 30 carries a merged-main citation; the "what happens
 on severity skew in each direction" question is answerable from the doc's dedicated section. G1 closed.
+
+---
+
+### Phase 4 Completion
+**Completed:** 2026-07-24 · **Baseline:** merged main `936315c`
+
+**Changes made:**
+- `verification-matrix.md`: added `REQ-SNAP-21` (v5 referent shape gate —
+  `_validate_source_referents`, `snapshot/loader.py:912`, called `:837`; rejects absolute /
+  snapshot-dir-relative / stale, sentinels pass) and `REQ-SNAP-22` (whole-tree portability, Item 5
+  Axis 1: two roots → byte-identical output, no checkout-absolute path). Both PASS.
+- Recounted per memory `verification-matrix-drift-modes` (index totals + per-family, not just the
+  summary): Total 274→276, PASS 273→275, UNTESTED 1, families 32, distinct test files 73→77; SNAP
+  index `(20/20)`→`(22/22)`. Reconciliation verified: Σ index total = 276, Σ index pass = 275.
+- Filed three matrix-GAP-row candidates in `inventory.md` (MG1 producer resolution/completeness,
+  MG2 catalog 2.0.0, MG3 trust manifest) — recorded, not added to the matrix (spec R2: a later
+  owner filing decision, not required by this item).
+
+**Deviation surfaced (brief citation corrected — verified, no aspirational citation):** the brief
+told me to cite `test_constraint_snapshot_portability.py` for whole-tree portability. That file
+actually pins the exclusion-**relocation manifest** (3 tests: replay-manifest equality,
+distinct-route collectors, live-capture relocation). The real pins are
+`test_source_referent_shape_gate.py` + `test_snapshot_v5_gate.py` (the gate) and
+`test_whole_tree_portability.py` (whole-tree). Cited the verified files.
+
+**Pre-existing drift surfaced and corrected during the mandated recount (capture-fidelity rule 4):**
+the index annotations for DM `(8/9 pass, 1 untested)` and RES `(6/8 pass, 2 untested)` were stale —
+the actual table rows are all PASS (DM 9/9, RES 8/8); the only real UNTESTED row is REQ-PGD-06.
+Three rows had flipped to PASS without the index following. Corrected DM→`(9/9)` and RES→`(8/8)` so
+the index reconciles with the summary; this predates and is independent of the two new rows.
+Recorded in `inventory.md` Phase 4 dispositions. G2 closed.
