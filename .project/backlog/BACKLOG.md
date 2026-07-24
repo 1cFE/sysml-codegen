@@ -260,6 +260,38 @@ silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
 
 ## P3 - Low Priority
 
+### [MATRIX-EPIC-SURFACE-ROWS] Add verification-matrix rows for the three uncovered lifecycle surfaces — P3 `[OWNER]` (ticketed 2026-07-24)
+
+Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic
+added tested behaviors with no matrix rows; docs-lifecycle-sync Phase 4 added only the
+required portability pair (REQ-SNAP-21/22) and registered these three as candidates
+(`docs-lifecycle-sync/inventory.md`, MG1–MG3; archived with the item when it closes):
+
+1. **Producer resolution / completeness** — the unified ladder (`resolution/producer_resolution.py`,
+   `resolve_producer`, KEY_FORMS, TerminalPolicy) and `producer_completeness.py`. Reference
+   doc exists (`04-producer-resolution.md`); pinning tests exist (Item 2's suite, e.g.
+   `test_producer_completeness_acceptance.py`) — verify which tests pin which claim before
+   citing (no aspirational citations).
+2. **Catalog schema 2.0.0** — `CATALOG_SCHEMA_VERSION` (`contracts/versions.py:18`) and the
+   catalog contract (`test_catalog_schema_version.py`, `test_catalog_definition_join.py`).
+3. **Trust manifest / bootstrap** — `contracts/manifest.py` and the trust-anchor behavior
+   (Item 7's tests).
+
+Discipline: matrix recount per memory `verification-matrix-drift-modes` (index totals +
+per-family counts, not just the summary block); current baseline 276 rows / 275 PASS / 32
+families after REQ-SNAP-21/22.
+
+### [STALE-BASELINE-CLASS] Four committed fixtures latently stale vs live extraction — P3 (owner: leave filed, 2026-07-24)
+
+Owner ruling 2026-07-24: leave filed; no assignee. The class (documented in project memory
+`deep-cross-scope-stale-baseline`, verified during the lifecycle epic): `deep_cross_scope`,
+`plant_values`, `constraint_inline`, plus the `dropped_constraints` capture drift. All
+pre-existing (reproduce on parent commits); suites stay green because tests read the
+committed bytes; a future re-capture surfaces the diffs. Never block a byte-identity gate on
+this class. Scope when picked up: re-capture each, review the diff deliberately (classifier
+shifts included), land as a reviewed R3-style diff. Related (single-fixture precursor):
+`[TRUTH-DEBT-IFE-PLANT-CHAIN-STALE]` below.
+
 ### [DOCS-SCRUB-F1] Delete the two dead templates (+ dead-code candidates nearby)
 
 **Absorbed into PIPELINE-TRUTH Item 8** (`.project/active/cleanup-debt/`), 2026-07-06. Both dead

@@ -56,29 +56,36 @@ list (kept for the record):
 5. If docs describe override capture, state the def-relative limitation honestly
    (`[NESTED-OCCURRENCE-OVERRIDE]`, probe fixture `tests/fixtures/nested_occurrence_override_probe/`).
 
-### Open decisions (owner input needed)
+### Open decisions — owner rulings recorded 2026-07-24
 
-1. **fusion-tea + stellarator local branches** — deliver or hold? fusion-tea
-   `item8-fusion-embedded-catalog` (`be1ee7c0`) and stellarator `feat/stellarator-mbse-demo`
-   are local-only; epic evidence pinned at immutable `342cc799`/`c2f10960`. The stellarator tip
-   moves from EXTERNAL concurrent processes — check `git log origin/<branch>..HEAD` before touching.
-2. **Local `constraint-exec-epic` branches** in the three merged repos — delete or keep (left in place).
-3. **Stale-baseline class owner** — four members (`deep_cross_scope`, `plant_values`,
-   `constraint_inline`, `dropped_constraints` capture drift); pre-existing, reproduces on parent
-   commits; never blocks a byte-identity gate (memory `deep-cross-scope-stale-baseline`).
-4. **`[NESTED-OCCURRENCE-OVERRIDE]`** (BACKLOG P2) — schedule the occurrence-materialization fix
-   or leave filed; probe fixture keeps it reproducible.
-5. **Item-10 completeness-check guarantee gap** — the producer-completeness check exempts all
-   `MODULE_OUTPUT`, so a qualifier-drop collapse via channel-tier rows is uncaught (diagnostic,
-   no fixture trips it today). Owner ruling pending (memory `completeness-check-channeltier-leaf-gap`).
+1. **fusion-tea + stellarator local branches — HOLD [OWNER 2026-07-24].** Stay local until
+   the owner says otherwise. Epic evidence pinned at immutable `342cc799`/`c2f10960`; the
+   stellarator tip moves from EXTERNAL processes — check `git log origin/<branch>..HEAD`
+   before touching.
+2. **Local `constraint-exec-epic` branches — DELETED [OWNER 2026-07-24]** in all three merged
+   repos (teax needed `-D`: PR #3 was squash-merged; tree verified byte-identical to main
+   before deletion).
+3. **Stale-baseline class — LEAVE FILED [OWNER 2026-07-24]**, now a proper backlog entry:
+   `[STALE-BASELINE-CLASS]` (P3, no assignee).
+4. **`[NESTED-OCCURRENCE-OVERRIDE]`** (BACKLOG P2) — still open: schedule the
+   occurrence-materialization fix or leave filed. Note the asymmetric defensiveness: the
+   constraint path fails loud (strict INV-2 halt), the calc path loses the value silently
+   (falls to a manual-required entry point).
+5. **Item-10 completeness-check MODULE_OUTPUT exemption — MOOT: already closed in code.**
+   Surfaced at the 2026-07-24 ruling pass: audit Major 1 (`b987869`, pre-merge) removed the
+   exemption — the check flags name-based key forms regardless of outcome
+   (`producer_completeness.py:141`, pinned by
+   `test_qualified_channel_tier_leaf_guess_is_flagged`). The "ruling pending" note in the
+   archived epic lessons/handoff was stale. The check remains a diagnostic, not a hard
+   generation gate — that part is unchanged and by design.
 6. **teax remote is SSH** (`git@github.com:rwestwood89/teax.git`) but sessions have no SSH key —
-   pulls/pushes need explicit HTTPS URLs. Consider switching the remote to HTTPS.
-7. **Archive stragglers in `active/`** — item dirs from already-closed epics remain
-   (e.g. `constraint-wave-*`, `numerical-constraint-profile`, `gap-*`, PIPELINE-TRUTH/
-   UPSTREAM-FINDINGS-era dirs). PUSH-DOWN's four child dirs and ten completed epic docs were
-   archived 2026-07-20 (owner-directed); the rest need a mapping pass first — several are
-   referenced by live BACKLOG entries (e.g. `matrix-truth/probes/`, `hygiene-tail/probes/`),
-   so moving them breaks paths.
+   pulls/pushes need explicit HTTPS URLs. Consider switching the remote to HTTPS. (Still open.)
+7. **Archive stragglers in `active/`** — item dirs from already-closed epics remain; need a
+   mapping pass first (several are referenced by live BACKLOG entries, e.g.
+   `matrix-truth/probes/`, `hygiene-tail/probes/`). (Still open.)
+
+Also ticketed 2026-07-24: `[MATRIX-EPIC-SURFACE-ROWS]` (P3) — the three uncovered lifecycle
+surfaces as matrix-row candidates.
 
 ### Pre-existing accepted baselines (unchanged)
 
