@@ -69,6 +69,12 @@ class _BindingTarget:
     parent_part: str  # owning part-usage / def leaf (for collision + grouping)
     part_usage: str  # part-usage name for tier-1/tier-2a lookup
     attr: str  # attribute name for tier lookups
+    # Which authored shape produced this target. Diagnostics only — no tier reads it.
+    # `dotted` (`chamber.cost`) is instance-relative, so a captured override that never
+    # matched is a real scope mismatch; `reference` (`Lib::'Part'::cost`) names a library
+    # def and `bare` (`in x = x`) collapses part_usage onto the attribute, so for both an
+    # unmatched same-name override is ordinary and must not be reported.
+    form: Literal["dotted", "reference", "bare"]
 
 
 def _is_number(text: str) -> bool:
@@ -97,7 +103,14 @@ def _binding_target(source_path: str, instance_scope: str) -> _BindingTarget | N
             return None
         attr = segs[-1]
         parent = segs[-2]
-        return _BindingTarget(qn=qn, name=attr, parent_part=parent, part_usage=parent, attr=attr)
+        return _BindingTarget(
+            qn=qn,
+            name=attr,
+            parent_part=parent,
+            part_usage=parent,
+            attr=attr,
+            form="reference",
+        )
 
     if "." in source_path:
         parts = source_path.split(".")
@@ -108,7 +121,12 @@ def _binding_target(source_path: str, instance_scope: str) -> _BindingTarget | N
         part_usage, attr = parts
         qn = f"{instance_scope}__{part_usage}__{attr}"
         return _BindingTarget(
-            qn=qn, name=attr, parent_part=part_usage, part_usage=part_usage, attr=attr
+            qn=qn,
+            name=attr,
+            parent_part=part_usage,
+            part_usage=part_usage,
+            attr=attr,
+            form="dotted",
         )
 
     # Bare name: an in-part inherited attribute (shape d authored as `in x = throughput`).
@@ -116,7 +134,12 @@ def _binding_target(source_path: str, instance_scope: str) -> _BindingTarget | N
         return None
     qn = f"{instance_scope}__{source_path}"
     return _BindingTarget(
-        qn=qn, name=source_path, parent_part="", part_usage=source_path, attr=source_path
+        qn=qn,
+        name=source_path,
+        parent_part="",
+        part_usage=source_path,
+        attr=source_path,
+        form="bare",
     )
 
 
