@@ -168,7 +168,7 @@ for module in modules:
 ```
 
 This catches wiring bugs -- misspelled channel names, missing modules,
-transitive [binding resolution](04-input-resolver.md) failures -- before any
+transitive [binding resolution](04-producer-resolution.md) failures -- before any
 code is generated. Without this, bad wiring would surface as mysterious
 runtime errors in TEAx.
 

@@ -49,7 +49,7 @@ a tuple key can never collapse into or collide with a flat string key — the
 scope carries the full instance path, making the key unique by construction.
 
 **The registry has no concept of scope.** It does not know which module is asking.
-Scope-awareness is the [resolver's](04-input-resolver.md) responsibility. The
+Scope-awareness is the [resolver's](04-producer-resolution.md) responsibility. The
 resolver [prepends the consumer's scope](03-resolution-overview.md#the-scope-problem)
 to produce a `ScopedKey` lookup that is unambiguous. The registry just needs to have
 the scoped key registered. The scoped-alias namespace follows the same rule: its
@@ -129,7 +129,7 @@ For each CalcUsage + each output attribute on its CalcDef, two registrations:
 Scoped key is derived by `make_scoped_key()` (REQ-OR-07): split the usage EQN on `__`,
 drop `segments[0]`, join with `.`, append `.{attr}`. This is the most critical key —
 it is the [scoped key](03-resolution-overview.md#the-scope-problem) that the
-[resolver](04-input-resolver.md) constructs to disambiguate cross-scope references.
+[resolver](04-producer-resolution.md) constructs to disambiguate cross-scope references.
 Empirically, ALL Phase 2 CHAIN aliases resolve exclusively via scoped keys.
 
 **Phase 1b: Aggregation outputs** (`build_output_registry`)
@@ -454,7 +454,7 @@ invariants and resolution dispatch design.
 ## Related Documents
 
 - **Upstream**: [02-orchestration](02-orchestration.md) — `build_pipeline_context()` calls `build_output_registry()`
-- **Downstream**: [04-input-resolver](04-input-resolver.md) — uses typed lookups for FORMULA/aggregation resolution
+- **Downstream**: [04-producer-resolution](04-producer-resolution.md) — uses typed lookups for FORMULA/aggregation resolution
 - **Downstream**: [11-analysis-backtracker](11-analysis-backtracker.md) — uses typed lookups for CalcUsage resolution
 - **Sub-processes**: [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — produces `ChannelAlias` inputs for Phases 2-3
 - **Sub-processes**: [13-aggregation-scoping](13-aggregation-scoping.md) — produces `ScopedAggregationData` for Phase 1b

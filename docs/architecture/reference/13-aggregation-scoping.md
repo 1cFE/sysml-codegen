@@ -209,6 +209,6 @@ module binding to `solar_array.total_capex` now resolves correctly.
 ## Related Documents
 
 - **Upstream**: [01-extraction](01-extraction.md) — produces `AggregationExpressionData` and `RedefinitionData`, [12-virtual-binding-rewrite](12-virtual-binding-rewrite.md) — runs just before scoping in Step 3.5
-- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — channel formats- **Downstream**: [05-module-factory](05-module-factory.md) — builds aggregation modules from `ScopedAggregationData`, [04-input-resolver](04-input-resolver.md) — resolves aggregation module inputs
+- **Registry**: [10-output-registry](10-output-registry.md) — Phase 1b/2 consume scoping outputs, [15-naming-conventions](15-naming-conventions.md) — channel formats- **Downstream**: [05-module-factory](05-module-factory.md) — builds aggregation modules from `ScopedAggregationData`, [04-producer-resolution](04-producer-resolution.md) — resolves aggregation module inputs
 - **Architecture**: [00-pipeline-overview](00-pipeline-overview.md) — Step 3.5 placement, [24-dual-resolution-architecture](24-dual-resolution-architecture.md) — aggregation as second resolution path
 - **Data models**: [09-data-models](09-data-models.md) — `AggregationExpressionData`, `ScopedAggregationData`, `ChannelAlias`

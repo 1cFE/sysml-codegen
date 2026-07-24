@@ -95,7 +95,7 @@ Canonical (CanonicalChannel): solar_battery_plant__solar_array__cost_model__tota
 Scoped    (ScopedKey):        solar_battery_plant.solar_array.cost_model.total_cost
 ```
 
-**ScopedKey is the critical key** -- the [resolver](04-input-resolver.md#c-scopedregistrylookup)
+**ScopedKey is the critical key** -- the [resolver](04-producer-resolution.md#c-scopedregistrylookup)
 constructs `ScopedKey` lookups by prepending the consumer's scope to the bare `source_path`.
 
 **Phase 1b -- Aggregation outputs.** Registered with `ScopedKey` (stripped

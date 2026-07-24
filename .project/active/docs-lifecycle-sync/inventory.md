@@ -141,3 +141,29 @@ an *instantiated* part def is captured **definition-relative** while demand reso
 enumerated with dispositions and citations. Remaining phases are additive writing (Phase 3
 severity doc, Phase 4 matrix row, Phase 5 EXPLAINER) and the grouped Phase-2 resolver +
 module_kind rewrite — not fresh discovery.
+
+
+---
+
+## Phase 2 dispositions (closed 2026-07-24)
+
+Sweep-C `module_kind` rows: **C1–C8 → fixed** (`05-module-factory.md` field decl, REQ-MF-03,
+flag mentions, concrete-example blocks; `22-output-schema-rules.md:179`; matrix REQ-MF-03 `:362`
+— all `is_computed_attribute`/`is_aggregation` → `module_kind`/`ModuleKind`). **C9** ACCURATE,
+untouched (retirement narrative, correct dated history). **C10 → fixed** (doc 19 dual-check prose
+table reconciled to `DUAL_CHECK_SITES`: three entries — agentic-mbse `_decompose_node` if/if/if,
+`_extract_single_binding` / `_extract_default_value` elif; stale "8 functions across 6 files" count
+dropped; the two promoted elif rows removed from the "Other Sites" table).
+
+Sweep-D resolver rows: **D1 → fixed** (`04-input-resolver.md` renamed to `04-producer-resolution.md`
+and rewritten). **D2 → fixed** (doc 24 rewritten to the unified narrative; dual-path story kept only
+as marked dated history). **D3–D5 → fixed** in place (`03`, `05`, `overview.md` reframed to
+`resolve_producer`). **D6 → fixed** (matrix DRA/IR banners + rows re-projected; dead-test citations
+replaced). Inbound `04-input-resolver` links across all of `docs/` repointed.
+
+**Exit greps (run at `936315c`):**
+- `grep -rn 'input_resolver|resolve_input|AGG_STRATEGIES|DesignAttributeLookup' docs/architecture/`
+  — zero LIVE claims. Residual = dated history only: doc 24 "Dated history" block (`:140,145,146`),
+  matrix DRA deletion note (`:218`).
+- `grep -rn 'is_computed_attribute|is_aggregation' docs/architecture/` — zero LIVE claims.
+  Residual = `09-data-models.md:71,301` (ACCURATE retirement narrative, register C9).

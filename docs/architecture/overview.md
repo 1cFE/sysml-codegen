@@ -56,16 +56,17 @@ SysML bindings reference the same output using different string formats dependin
 
 All four map to `CanonicalChannel` (the unique PQN-format output name). Type-directed dispatch selects the correct registry based on binding type. Multi-hop EXPOSE aliases are registered tentatively and confirmed (or reverted to FORMULA) in a Phase 3b pass of registry build (`orchestration/output_registry_builder.py`). See [10-output-registry](reference/10-output-registry.md) and [15-naming-conventions](reference/15-naming-conventions.md).
 
-### Dual Resolution Architecture
+### Producer Resolution Architecture
 
-Input resolution -- answering "where does this value come from?" for every module input -- uses two well-defined paths:
+Positive input resolution -- answering "which real thing produces this value?" for every consumed input -- runs through one authority, `resolve_producer()` in `resolution/producer_resolution.py` (lifecycle Item 2). Three consumers build a request and read a result:
 
-| Path | Module Type | Location | Rationale |
+| Consumer | Module type | Call site | Policy |
 |------|------------|----------|-----------|
-| Backtracker DFS | CalcUsage | `analysis/dependency_backtracker.py` | Resolution is structurally inseparable from dependency discovery |
-| `resolve_input()` | FORMULA, Aggregation | `resolution/input_resolver.py` | Post-DFS; uses shared strategy chain against typed registries |
+| Calculation binding | CalcUsage | `analysis/dependency_backtracker.py` (during DFS) | LENIENT |
+| Constraint actual | Constraint | `analysis/constraint_lowering.py` | STRICT |
+| Aggregation term | Aggregation | `resolution/graph_builder.py` | LENIENT |
 
-Both paths produce the same answer format: each input resolves to either `module_output` (wire to upstream channel) or `entry_point` (user provides value via JSON). See [03-resolution-overview](reference/03-resolution-overview.md) and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md).
+Each input resolves to `module_output` (wire to upstream channel), `design_attribute`/`entry_point` (user provides value via JSON), or -- under STRICT -- a raise. FORMULA modules are the one exception: they use a pre-computed attribute resolution map, not the resolver. See [04-producer-resolution](reference/04-producer-resolution.md), [03-resolution-overview](reference/03-resolution-overview.md), and [24-dual-resolution-architecture](reference/24-dual-resolution-architecture.md).
 
 ### Test-First with Real SysML Data
 
@@ -108,7 +109,8 @@ sysml_codegen/
 
   resolution/          Steps 4-6 -- Classify entries, build modules, sort
     graph_builder.py             build_computation_graph(), topological sort
-    input_resolver.py            resolve_input() for FORMULA/Aggregation
+    producer_resolution.py       resolve_producer(): the one resolution authority
+    producer_completeness.py     check_producer_completeness(): one-intended-producer check
     models.py                    ComputationGraph, PipelineModule, EntryPoint
 
   generation/          Step 7 -- Render Python, YAML, JSON from the graph
@@ -147,7 +149,7 @@ sysml_codegen/
 | Topic | Documents |
 |-------|-----------|
 | Output registry and naming | [10](reference/10-output-registry.md), [15](reference/15-naming-conventions.md) |
-| Resolution internals | [04](reference/04-input-resolver.md), [24](reference/24-dual-resolution-architecture.md) |
+| Resolution internals | [04](reference/04-producer-resolution.md), [24](reference/24-dual-resolution-architecture.md) |
 | Template instantiation | [12](reference/12-virtual-binding-rewrite.md), [13](reference/13-aggregation-scoping.md) |
 | Computed attributes | [16](reference/16-computed-attributes.md), [14](reference/14-expression-compiler.md) |
 | Literal value propagation | [18](reference/18-literal-value-propagation.md) |
@@ -175,7 +177,7 @@ sysml_codegen/
 | C09 | Virtual Binding Rewrite | [12](reference/12-virtual-binding-rewrite.md) | `orchestration/pipeline_builder.py` |
 | C10 | Aggregation Scoping | [13](reference/13-aggregation-scoping.md) | `orchestration/pipeline_builder.py` |
 | C11 | DependencyBacktracker | [11](reference/11-analysis-backtracker.md) | `analysis/dependency_backtracker.py` |
-| C12 | Input Resolver | [04](reference/04-input-resolver.md) | `resolution/input_resolver.py` |
+| C12 | Producer Resolution | [04](reference/04-producer-resolution.md) | `resolution/producer_resolution.py` |
 | C13 | ParameterGroupDeriver | [17](reference/17-parameter-group-deriver.md) | `analysis/parameter_groups.py` |
 | C14 | Module Factory: CalcUsage | [05](reference/05-module-factory.md) | `resolution/graph_builder.py` |
 | C15 | Module Factory: FORMULA | [05](reference/05-module-factory.md) | `resolution/graph_builder.py` |

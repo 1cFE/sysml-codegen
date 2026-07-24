@@ -4,11 +4,10 @@ Module construction is decoupled from ad-hoc inline resolution. CalcUsage
 factories receive pre-resolved data (from the
 [backtracker](11-analysis-backtracker.md)). FORMULA factories use the
 pre-computed [attribute resolution map](16-computed-attributes.md); Aggregation
-factories resolve SumTerm/SingletonTerm inputs through the consolidated
-[`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`, via the
-`_build_agg_input_source()` choke point. (The old inline
-`_resolve_aggregation_input_channel` is **deleted** — F4 cutover, TRUTH-DEBT
-Item 1.) All three produce a [PipelineModule](09-data-models.md#resolution-models)
+factories resolve SumTerm/SingletonTerm inputs through the shared
+[`resolve_producer()`](04-producer-resolution.md) table, via the
+`_build_agg_input_source()` choke point. All three produce a
+[PipelineModule](09-data-models.md#resolution-models)
 + new [entry points](06-entry-point-classifier.md#two-entry-point-creation-paths).
 
 ## Requirements
@@ -17,9 +16,9 @@ Item 1.) All three produce a [PipelineModule](09-data-models.md#resolution-model
 |----|-------------|-------------|
 | REQ-MF-01 | All three factory functions SHALL be pure data transformers: return `(PipelineModule, dict[str, EntryPoint])`, no mutation of shared state. | Type signatures return tuples; no `entry_points[k] = v` inside factory bodies |
 | REQ-MF-02 | CalcUsage factory SHALL fail-fast (`ValueError`) on missing `binding_resolutions` key -- no fallback resolution. | `if mapping_key not in binding_resolutions: raise ValueError(...)` in `_build_pipeline_module()` |
-| REQ-MF-03 | FORMULA factory SHALL set `is_computed_attribute=True` and `compilability=FULLY_COMPILABLE`. | `assert module.is_computed_attribute and module.compilability == FULLY_COMPILABLE` |
+| REQ-MF-03 | FORMULA factory SHALL set `module_kind=ModuleKind.FORMULA` and `compilability=FULLY_COMPILABLE`. | `assert module.module_kind == ModuleKind.FORMULA and module.compilability == FULLY_COMPILABLE` |
 | REQ-MF-04 | Aggregation factory SHALL handle all three [extraction term types](01-extraction.md#aggregation-data-sumterm-singletonterm-localterm): SumTerm, SingletonTerm, LocalTerm. | Code paths exist for each; missing term type = `AttributeError` |
-| REQ-MF-05 | Every [ModuleInput](09-data-models.md#resolution-models) SHALL have exactly one [InputSource](04-input-resolver.md#inputsource-output-model) with `source_type` in {`module_output`, `entry_point`}. | `all(mi.source.source_type in {"module_output","entry_point"} for mi in module.inputs)` |
+| REQ-MF-05 | Every [ModuleInput](09-data-models.md#resolution-models) SHALL have exactly one [InputSource](04-producer-resolution.md#inputsource-output-model) with `source_type` in {`module_output`, `entry_point`}. | `all(mi.source.source_type in {"module_output","entry_point"} for mi in module.inputs)` |
 | REQ-MF-06 | SumTerm and SingletonTerm LITERAL fallback SHALL use `_find_literal_redefinition()` to propagate `:>>` default values. See [18](18-literal-value-propagation.md). | Entry point `default_value` matches `RedefinitionData.literal_value` when LITERAL redef exists |
 | REQ-MF-07 | LocalTerm resolution SHALL try: (1) sibling aggregation output, (2) [EXPOSE_PURE alias](16-computed-attributes.md), (3) entry point fallback -- in that order. | Three `if/elif/else` branches in LocalTerm loop; order-dependent (Strategy 1 checked first) |
 | REQ-MF-08 | Single-output modules SHALL use `field_name="root"`; multi-output SHALL use attribute names. | `len(outputs)==1 => outputs[0].field_name=="root"`; `len(outputs)>1 => field_name==attr.name` |
@@ -38,13 +37,12 @@ class PipelineModule(BaseModel):
     execution_order: int            # Position in topological sort (07-graph-assembly)
     compilability: Compilability    # FULLY_COMPILABLE | MANUAL_REQUIRED | UNKNOWN
     compiled_expression: str | None # Inlined expression for auto-gen modules
-    is_computed_attribute: bool     # True for FORMULA modules
-    is_aggregation: bool            # True for aggregation modules
+    module_kind: ModuleKind         # CALCULATION | FORMULA | AGGREGATION | CONSTRAINT | REPORT_AGGREGATOR (resolution/models.py)
 
 class ModuleInput(BaseModel):
     param_name: str      # e.g., "capacity"
     python_type: str     # Always "float" for now
-    source: InputSource  # WHERE the value comes from (04-input-resolver)
+    source: InputSource  # WHERE the value comes from (04-producer-resolution)
 
 class ModuleOutput(BaseModel):
     field_name: str    # "root" for single-output (REQ-MF-08), attr name for multi
@@ -107,7 +105,7 @@ All others → `entry_point`. This is PRE-RESOLUTION: channels are known at
 classification time, so no registry lookup is needed.
 
 **Outputs**: Single output, `field_name="root"` (REQ-MF-08).
-**Flags**: `is_computed_attribute=True`, `FULLY_COMPILABLE` (REQ-MF-03).
+**Kind**: `module_kind=ModuleKind.FORMULA`, `FULLY_COMPILABLE` (REQ-MF-03).
 
 ```
 _build_computed_attr_module(
@@ -125,7 +123,7 @@ PipelineModule(
         ModuleInput("labor_cost",    source=entry_point("solarplant__labor_cost")),
     ],
     outputs=[ModuleOutput("root", channel="solarplant__total_cost__total_cost")],
-    is_computed_attribute=True, compilability=FULLY_COMPILABLE,
+    module_kind=ModuleKind.FORMULA, compilability=FULLY_COMPILABLE,
 )
 ```
 
@@ -154,10 +152,10 @@ SumTerm(part_usage_name="pv_module", attribute_name="capital_cost",
         multiplicity_attr="module_count", multiplicity_count=20)
 ```
 
-Resolution chain (live path: `_build_agg_input_source()` → `resolve_input(ref,
-ctx, AGG_STRATEGIES)`, see [input resolver](04-input-resolver.md)):
-1. `resolve_input()` with `AGG_STRATEGIES` -- CHAIN [redefinition](01-extraction.md#redefinitions-redefinitiondata) tracing + [registry](10-output-registry.md) lookup (Strategies A/C/B/E). A `module_output` result wires directly.
-2. **LITERAL fallback** (REQ-MF-06) -- on an `entry_point` result, `_build_agg_input_source()` calls `_find_literal_redefinition()` for `:>> attr = value`
+Resolution chain (live path: `_build_agg_input_source()` → `resolve_producer(request,
+context)` with `policy=LENIENT`, see [producer resolution](04-producer-resolution.md)):
+1. `resolve_producer()` runs the shared `KEY_FORMS` table -- tier-1 channel forms (scoped/alias/`chain_redefinition_follow`/`direct_channel`) then tier-2 design attributes + [registry](10-output-registry.md) lookup. A `module_output` result wires directly.
+2. **LITERAL fallback** (REQ-MF-06) -- on a terminal-miss `entry_point` result, `_build_agg_input_source()` calls `_find_literal_redefinition()` for `:>> attr = value`
    on the child PartDef. If found, the value becomes the entry point's `default_value`
    and the module stays `FULLY_COMPILABLE` (see [doc 18](18-literal-value-propagation.md)).
 3. Entry point (no default) + `MANUAL_REQUIRED` compilability.
@@ -171,9 +169,9 @@ When `multiplicity_attr` is present, adds a second input for the count
 SingletonTerm(source_path="allocation_model.total_allocation")
 ```
 
-Resolution chain (same live path: `_build_agg_input_source()` → `resolve_input(AGG_STRATEGIES)`):
-1. `resolve_input()` with `AGG_STRATEGIES` -- CHAIN redefinition tracing + registry (Strategies A/C/B)
-2. Direct channel construction -- `instance_path__prefix__output_name` (now Strategy E, `DirectChannelConstruction`, inside `resolve_input()`)
+Resolution chain (same live path: `_build_agg_input_source()` → `resolve_producer()`, `policy=LENIENT`):
+1. `resolve_producer()` -- CHAIN redefinition tracing (`chain_redefinition_follow`) + scoped/alias registry forms
+2. Direct channel construction -- `instance_path__prefix__output_name` (the `direct_channel` key form, inside the shared table)
 3. **LITERAL fallback** (REQ-MF-06) -- same as SumTerm, found value becomes EP default
 4. Entry point (no default) + `MANUAL_REQUIRED` compilability.
 
@@ -189,13 +187,14 @@ Tries three strategies in order (REQ-MF-07):
 2. **EXPOSE_PURE alias** -- the `expose_aliases` map (built in Step 6.6b from
    [EXPOSE_PURE ComputedAttributes](16-computed-attributes.md)) provides a dotted
    expression path (e.g., `"allocation_model.total_allocation"`). That path is
-   then resolved through `resolve_input(AGG_STRATEGIES)`, but the channel is taken
-   **only when `resolve_input` returns a `module_output`** (the D5 guard). An
-   `entry_point` result is discarded here and falls through to strategy 3, because
-   `resolve_input` keys its fallback on the alias target, not `attribute_name` —
-   the LocalTerm fallback below keeps the `{module_eqn}__{attribute_name}` key.
+   then resolved through `resolve_producer()`, but the channel is taken
+   **only when the outcome is a `module_output`** (the D5 guard). Any other
+   outcome is discarded here and falls through to strategy 3, because the
+   resolver keys its terminal-miss entry point on the alias target, not
+   `attribute_name` — the LocalTerm fallback below keeps the
+   `{module_eqn}__{attribute_name}` key.
 3. **Entry point fallback** -- user-provided value. LocalTerm keeps its own simpler
-   inline entry-point fallback (it did not move into `_build_agg_input_source()`).
+   inline entry-point fallback for this leg (it did not move into `_build_agg_input_source()`).
 
 After all terms are processed, symbolic references (`pv_module.capital_cost`)
 are replaced with input references (`inputs.pv_module_capital_cost`) to produce
@@ -203,7 +202,7 @@ are replaced with input references (`inputs.pv_module_capital_cost`) to produce
 not a plain substring `.replace()`: a length-sorted `.replace()` still corrupts when
 one ref is a substring of another (`cost` matches inside an already-substituted
 `inputs.cost_total` → `inputs.inputs.cost_total`); the `\b` boundary blocks that
-(REQ-MF-09). **Flags**: `is_aggregation=True`.
+(REQ-MF-09). **Kind**: `module_kind=ModuleKind.AGGREGATION`.
 
 ### Concrete example
 
@@ -225,7 +224,7 @@ PipelineModule(
         ModuleInput("misc_cost",               source=entry_point("...total_cost__misc_cost")),
     ],
     outputs=[ModuleOutput("root", channel="...solar_array__total_cost__total_cost")],
-    is_aggregation=True,
+    module_kind=ModuleKind.AGGREGATION,
     compiled_expression="inputs.pv_module_capital_cost * inputs.module_count
                        + inputs.inverter_install_cost + inputs.misc_cost",
 )
@@ -244,11 +243,11 @@ a shared dict. But the three types differ in HOW they resolve:
 |------|-------------------|-------------|
 | CalcUsage | `binding_resolutions` dict (pre-computed by [backtracker](11-analysis-backtracker.md)) | Backtracker (during DFS) |
 | FORMULA | Pre-computed [attribute resolution map](16-computed-attributes.md) | Factory uses map (no resolver call) |
-| Aggregation | [`resolve_input()`](04-input-resolver.md) with `AGG_STRATEGIES`, via `_build_agg_input_source()` | Factory calls resolve_input |
+| Aggregation | [`resolve_producer()`](04-producer-resolution.md) shared table, via `_build_agg_input_source()` | Factory calls resolve_producer |
 
 CalcUsage factories are truly pure data transformers -- lookup only, no
 resolution logic. FORMULA factories read the pre-computed map; Aggregation
-factories resolve SumTerm/SingletonTerm inputs through `resolve_input(AGG_STRATEGIES)`
+factories resolve SumTerm/SingletonTerm inputs through `resolve_producer()`
 via the `_build_agg_input_source()` choke point. Entry points
 created by FORMULA/Aggregation factories are hardcoded to DESIGN_ATTRIBUTE;
 CalcUsage entry points receive full 3-strategy classification. See
@@ -256,7 +255,7 @@ CalcUsage entry points receive full 3-strategy classification. See
 
 ## Related Documents
 
-- **Upstream**: [03-resolution-overview](03-resolution-overview.md) -- orchestrator that calls factory functions, [04-input-resolver](04-input-resolver.md) -- resolve_input(), the live aggregation resolver
+- **Upstream**: [03-resolution-overview](03-resolution-overview.md) -- orchestrator that calls factory functions, [04-producer-resolution](04-producer-resolution.md) -- `resolve_producer()`, the shared resolution authority
 - **Downstream**: [07-graph-assembly](07-graph-assembly.md) -- topological sort of produced modules, [06-entry-point-classifier](06-entry-point-classifier.md) -- classifies returned entry points
 - **Aggregation**: [13-aggregation-scoping](13-aggregation-scoping.md) -- produces ScopedAggregationData, [18-literal-value-propagation](18-literal-value-propagation.md) -- LITERAL fallback defaults
 - **Computed attrs**: [16-computed-attributes](16-computed-attributes.md) -- FORMULA/EXPOSE_PURE classification

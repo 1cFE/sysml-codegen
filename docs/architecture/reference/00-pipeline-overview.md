@@ -126,13 +126,13 @@ placement and default values. Entry points are grouped into
 [parameter groups](17-parameter-group-deriver.md). Classification runs BEFORE module
 building because CalcUsage modules need classified entry points as inputs.
 
-### Step 5: Build PipelineModules ([factory](05-module-factory.md) | [resolver](04-input-resolver.md))
+### Step 5: Build PipelineModules ([factory](05-module-factory.md) | [resolver](04-producer-resolution.md))
 
 A [PipelineModule](09-data-models.md#resolution-models) is constructed as pure
 data -- no I/O, no side effects. The three calc [module kinds](05-module-factory.md)
 are CalcUsage (`CALCULATION`), FORMULA ([computed attributes](16-computed-attributes.md)),
 and Aggregation ([scoping rules](13-aggregation-scoping.md)). FORMULA and Aggregation
-factories call the [consolidated resolver](04-input-resolver.md) to wire their inputs.
+factories call the [consolidated resolver](04-producer-resolution.md) to wire their inputs.
 
 **Constraint lowering ([P1 RESOLVE], Step 5.7).** After the output registry and the
 supplied-value materializer are final, `lower_constraints`
@@ -207,7 +207,7 @@ See [02-orchestration.md](02-orchestration.md) for orchestration detail.
 | [01-extraction](01-extraction.md) | SysML model parsing: calc defs, usages, bindings, redefinitions | `CalculationDefinitionData`, `CalcUsageData`, `BindingInfo` |
 | [02-orchestration](02-orchestration.md) | Pipeline builder: coordinating extract, resolve, generate | `PipelineContext` |
 | [03-resolution-overview](03-resolution-overview.md) | Why input resolution is hard (270 combinations) | `BindingResolution` |
-| [04-input-resolver](04-input-resolver.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
+| [04-producer-resolution](04-producer-resolution.md) | Unified 5-strategy resolver | `InputSource`, `ResolutionContext` |
 | [05-module-factory](05-module-factory.md) | The three calc module kinds as pure data transformers (constraint kinds: [28](28-constraint-lowering-and-catalog.md)) | `PipelineModule`, `ModuleKind` |
 | [06-entry-point-classifier](06-entry-point-classifier.md) | Entry point classification: LIBRARY_DEFAULT, DESIGN_ATTRIBUTE, USAGE_LITERAL | `EntryPoint`, `EntryPointType` |
 | [07-graph-assembly](07-graph-assembly.md) | Topological sort, validation, ComputationGraph assembly | `ComputationGraph` |

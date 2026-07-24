@@ -42,7 +42,7 @@ Key fields (see [09-data-models](09-data-models.md#extraction-models) for full s
 |-------|---------|-------------|
 | `name` | `"battery_cost_calc"` | [Module factory](05-module-factory.md): module_type derivation |
 | `qualified_name` | `"SolarLib::battery_cost_calc"` | [Naming conventions](15-naming-conventions.md): EQN/PQN |
-| `input_attributes` | `[AttributeInfo(name="capacity", ...)]` | [Input resolver](04-input-resolver.md): what needs wiring |
+| `input_attributes` | `[AttributeInfo(name="capacity", ...)]` | [Input resolver](04-producer-resolution.md): what needs wiring |
 | `output_attributes` | `[AttributeInfo(name="total_cost", ...)]` | [Output registry](10-output-registry.md): channel registration |
 | `output_expression_asts` | `{"total_cost": <raw AST>}` | [Expression compiler](14-expression-compiler.md): Python codegen |
 | `all_member_names` | `{"capacity", "unit_cost", "total_cost"}` | [Expression compiler](14-expression-compiler.md): intermediate detection |

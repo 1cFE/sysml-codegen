@@ -91,23 +91,23 @@ project a public reference doc without re-deriving the ladder from code. If proj
 contradicts merged code, surface it loudly — don't silently harmonize.
 
 ### Changes Required
-- [ ] Replace `04-input-resolver.md` with a producer-resolution reference doc (`KEY_FORMS`
+- [x] Replace `04-input-resolver.md` with a producer-resolution reference doc (`KEY_FORMS`
       table, `resolve_producer` entry point, Tier/`TerminalPolicy` split, the three consumer
       paths, `producer_completeness` check) — default treatment per spec R6; finalize
       replace-vs-retire against the Phase 1 register.
-- [ ] Amend `24-dual-resolution-architecture.md` to the unified-ladder narrative (its
+- [x] Amend `24-dual-resolution-architecture.md` to the unified-ladder narrative (its
       dual-resolution framing is now dated history — mark or rewrite, per register).
-- [ ] Fix in-place references in docs 03, 05, `overview.md`, and matrix rows.
-- [ ] R7 module_kind sweep in the same pass: doc 05's 7 bool-flag claims,
+- [x] Fix in-place references in docs 03, 05, `overview.md`, and matrix rows.
+- [x] R7 module_kind sweep in the same pass: doc 05's 7 bool-flag claims,
       `22-output-schema-rules.md:179`, matrix REQ-MF-03 text (together, so doc 05 and the
       matrix don't split).
-- [ ] Doc 19 prose table reconciled to `DUAL_CHECK_SITES` (R7's second half).
+- [x] Doc 19 prose table reconciled to `DUAL_CHECK_SITES` (R7's second half).
 
 ### Validation
-- [ ] `grep -r 'input_resolver\|resolve_input\|AGG_STRATEGIES\|DesignAttributeLookup' docs/architecture/`
+- [x] `grep -r 'input_resolver\|resolve_input\|AGG_STRATEGIES\|DesignAttributeLookup' docs/architecture/`
       → zero live claims.
-- [ ] `grep -r 'is_computed_attribute\|is_aggregation' docs/architecture/` → zero live claims.
-- [ ] Every behavioral claim in the new/amended docs carries a merged-main citation.
+- [x] `grep -r 'is_computed_attribute\|is_aggregation' docs/architecture/` → zero live claims.
+- [x] Every behavioral claim in the new/amended docs carries a merged-main citation.
 
 **What We Know Works After This Phase:** the largest stale family is gone; later phases cite
 stable resolver docs.
@@ -231,5 +231,35 @@ is a GAP, not a stale literal); no doc implies nested-occurrence override captur
 gates (plan.md:106,108), deferred by design.
 
 ---
+
+
+### Phase 2 Completion
+**Completed:** 2026-07-24 · **Baseline:** merged main `936315c`
+
+**Changes made:**
+- Renamed `04-input-resolver.md` → `04-producer-resolution.md` (rename chosen per spec R6
+  default; all inbound `04-input-resolver` links across `docs/` repointed). Rewrote it as the
+  producer-resolution reference: KEY_FORMS ladder (21 rows, tier/lenient-only), `resolve_producer`
+  as sole entry, TerminalPolicy strict-vs-lenient fork, the three consumer paths, and
+  `check_producer_completeness`. Cited merged-main lines throughout.
+- Rewrote `24-dual-resolution-architecture.md` to "one authority, two pipeline stages"; the
+  pre-unification dual-path story kept only under a clearly-marked "Dated history" block.
+- In-place: `03-resolution-overview.md`, `05-module-factory.md`, `overview.md` reframed to the
+  unified resolver; `22-output-schema-rules.md:179` and doc-05 `module_kind` sweep (C1–C9);
+  matrix REQ-MF-03 (C8). Doc 19 dual-check table reconciled to `DUAL_CHECK_SITES` (R7 second half).
+- Matrix (D6): DRA/IR banners + rows re-projected onto `resolve_producer()`; dead-test citation
+  `test_input_resolver.py` (deleted with the module) replaced by the live producer tests.
+
+**Deviation surfaced (capture-fidelity rule 4):** the matrix REQ-IR family documented the deleted
+`resolve_input()` and cited a deleted test as PASS. Register D6 disposition is "in-place rows," so I
+kept the REQ-IR/REQ-DRA IDs and re-projected each row onto the shared table's successor guarantee
+with its live test (no recount; counts stay 274/32). A dedicated `REQ-PR-*` family for the shared
+table is a filed matrix GAP (spec R2), not required by this item — noted in both banners so the gap
+is surfaced, not hidden. No merged-code contradiction found against Item 2's design/evidence.
+
+**Validation (exit greps at `936315c`):** both Phase-2 greps return zero LIVE claims —
+`input_resolver|resolve_input|AGG_STRATEGIES|DesignAttributeLookup` and
+`is_computed_attribute|is_aggregation`. Residual hits are all clearly-marked dated history: doc 24's
+history block, the matrix DRA deletion note, and doc 09's accurate retirement narrative (register C9).
 
 **Status**: Draft → In Progress → Complete

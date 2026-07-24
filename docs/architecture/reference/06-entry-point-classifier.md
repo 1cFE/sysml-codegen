@@ -3,7 +3,7 @@
 ## What Are Entry Points?
 
 An entry point is a pipeline input that no upstream module produces. When
-the [input resolver](04-input-resolver.md) finishes wiring module-to-module
+the [input resolver](04-producer-resolution.md) finishes wiring module-to-module
 connections, some inputs remain unresolved -- they have
 `source_type == "entry_point"`. These values must come from the user at
 runtime, delivered through JSON files.
@@ -244,7 +244,7 @@ time is final.
 
 ## Related Documents
 
-- **Upstream**: [05-module-factory](05-module-factory.md) -- builds modules that may add entry points; [04-input-resolver](04-input-resolver.md) -- identifies `source_type == "entry_point"` inputs
+- **Upstream**: [05-module-factory](05-module-factory.md) -- builds modules that may add entry points; [04-producer-resolution](04-producer-resolution.md) -- identifies `source_type == "entry_point"` inputs
 - **Downstream**: [07-graph-assembly](07-graph-assembly.md) -- packs entry point groups into [ComputationGraph](09-data-models.md#resolution-models); [08-generation](08-generation.md) -- renders JSON templates and schemas from groups
 - **Sub-processes**: [17-parameter-group-deriver](17-parameter-group-deriver.md) -- grouping logic; [11-analysis-backtracker](11-analysis-backtracker.md) -- provides entry point set
 - **Data models**: [09-data-models](09-data-models.md) -- `EntryPoint`, `EntryPointType`, `ParameterGroup` field definitions

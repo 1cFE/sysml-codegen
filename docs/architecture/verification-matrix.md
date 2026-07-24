@@ -39,14 +39,14 @@ the documentation rather than executable code.
 - [CL — Constraint Lowering & Catalog](#cl) (5/5 pass)
 - [CON — Contracts & Sealing](#con) (10/10 pass)
 - [DM — Data Models](#dm) (8/9 pass, 1 untested)
-- [DRA — Dual Resolution Architecture](#dra) (5/5 pass)
+- [DRA — Resolution Architecture](#dra) (5/5 pass)
 - [EC — Expression Compiler](#ec) (7/7 pass)
 - [EPC — Entry Point Classification](#epc) (8/8 pass)
 - [EXT — Extraction](#ext) (14/14 pass)
 - [GA — Graph Assembly](#ga) (8/8 pass)
 - [GEN — Generation](#gen) (7/7 pass)
 - [HR — Hierarchy Resolver](#hr) (8/8 pass)
-- [IR — Input Resolver](#ir) (7/7 pass)
+- [IR — Producer Resolution (re-projected)](#ir) (7/7 pass)
 - [LVP — Literal Value Propagation](#lvp) (9/9 pass)
 - [MF — Module Factory](#mf) (9/9 pass)
 - [NC — Naming Conventions](#nc) (9/9 pass)
@@ -215,15 +215,15 @@ indirectly via the emitted verifier.
 
 **Dual Resolution Architecture** — Component X02 — [reference/24-dual-resolution-architecture.md](reference/24-dual-resolution-architecture.md)
 
-**Status (F4 cutover LANDED, TRUTH-DEBT Item 1):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is now the **live** aggregation SumTerm/SingletonTerm resolution path — wired through the `_build_agg_input_source()` choke point in `graph_builder._build_aggregation_module`. The channel-only `_resolve_aggregation_input_channel` and the three inline entry-point fallbacks are deleted. These parity checks compare the live path against the **backtracker DFS** (the independent comparand).
+**Status (lifecycle Item 2):** positive resolution is one authority, `resolve_producer()` (`resolution/producer_resolution.py`, [reference/04-producer-resolution.md](reference/04-producer-resolution.md)), called by the calc, constraint, and aggregation consumers; the standalone aggregation resolver (`input_resolver.py`) was deleted. The rows below survive as the DFS-timing and typed-registry contracts; the `test_dual_resolution.py` parity check compares the backtracker and aggregation consumers over the corpus. A dedicated `REQ-PR-*` family for the shared table itself is a filed matrix GAP (spec R2), not added by this item; the resolver is covered today by `test_producer_resolution_table.py` / `test_producer_qn_rule.py` / `test_shared_producer_convergence.py`.
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-DRA-01 | CalcUsage resolution SHALL happen during backtracker DFS; the DFS decision (recurse vs st... | `test_backtracker.py` | PASS |
-| REQ-DRA-02 | FORMULA SHALL use pre-computed attribute resolution map; aggregation SumTerm/SingletonTerm resolution runs live through `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`), parity-checked against the backtracker | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
+| REQ-DRA-02 | Positive resolution runs through the one shared `resolve_producer()` table for calc bindings, constraint actuals, and aggregation terms (via `_build_agg_input_source()`, `graph_builder.py`); FORMULA uses the pre-computed attribute resolution map | `test_producer_resolution_table.py`, `test_dual_resolution.py` | PASS |
 | REQ-DRA-03 | Both paths SHALL use typed registries (10-output-registry): `scoped_lookup(ScopedKey)` fo... | `test_backtracker.py`, `test_dual_resolution.py` | PASS |
-| REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.t... | `test_dual_resolution.py`, `test_input_resolver.py` | PASS |
-| REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; `resolve_input()` SHALL produc... | `test_dual_resolution.py` | PASS |
+| REQ-DRA-04 | Both paths SHALL produce the same wiring for the same reference. A binding `"cost_model.t... | `test_dual_resolution.py`, `test_producer_resolution_table.py` | PASS |
+| REQ-DRA-05 | The backtracker SHALL produce `BindingResolution` objects; the aggregation factory SHALL produc... | `test_dual_resolution.py` | PASS |
 
 ### EC
 
@@ -321,19 +321,19 @@ indirectly via the emitted verifier.
 
 ### IR
 
-**Input Resolver** — Component C12 — [reference/04-input-resolver.md](reference/04-input-resolver.md)
+**Input Resolver** — Component C12 — [reference/04-producer-resolution.md](reference/04-producer-resolution.md)
 
-**Status (F4 cutover LANDED, TRUTH-DEBT Item 1):** `resolve_input()` / `AGG_STRATEGIES` (`input_resolver.py`) is now **live** — the aggregation SumTerm/SingletonTerm path calls it through `_build_agg_input_source()` in `graph_builder._build_aggregation_module`, and the LocalTerm expose-alias reroute takes its channel (D5 `module_output`-only guard). The deleted `_resolve_aggregation_input_channel` and the three inline fallbacks are gone; the cutover proved byte-identical baselines. These rows pin **live code**. Evidence: the skipif-gated `test_input_resolver.py` unit tests (incl. the surviving M3 new-side EP-key guard, the LocalTerm reroute pin, and MANUAL_REQUIRED preservation) and `test_dual_resolution.py::TestResolveInputParityExtended` (backtracker-DFS parity over Item 1's fixtures). Strategy D (`DesignAttributeLookup`) was deleted — zero live surface.
+**Status (lifecycle Item 2 — re-projected):** the standalone input resolver was deleted; this family is re-projected onto the shared `resolve_producer()` table it became ([reference/04-producer-resolution.md](reference/04-producer-resolution.md)). Each row below states the successor guarantee against the shared table and its live test. IDs are kept in place (no recount); a dedicated `REQ-PR-*` family is a filed matrix GAP (spec R2).
 
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
-| REQ-IR-01 | `resolve_input()` SHALL always return an InputSource -- never raise on unresolved refs. | `test_input_resolver.py` | PASS |
-| REQ-IR-02 | Strategies SHALL execute in declared list order; first non-None result wins. | `test_input_resolver.py` | PASS |
-| REQ-IR-03 | Self-reference guard SHALL reject channels where the producing module EQN matches `ctx.mo... | `test_input_resolver.py` | PASS |
-| REQ-IR-04 | ResolutionContext SHALL be immutable (`frozen=True`); no strategy mutates it. | `test_input_resolver.py` | PASS |
-| REQ-IR-05 | `AGG_STRATEGIES` SHALL order `ChainRedefinitionFollow` at position 2 (after `ScopedRegistryLookup`, before `SysMLQNLookup`); the live list is `[A, C, B, E]` — `DirectChannelConstruction` (E) reproduces the SingletonTerm Try-2 channel, Strategy D deleted | `test_input_resolver.py` | PASS |
-| REQ-IR-06 | Fallback SHALL produce an `entry_point` InputSource with qualified name `"{module_eqn}__{... | `test_input_resolver.py` | PASS |
-| REQ-IR-07 | `resolve_input()` with `AGG_STRATEGIES` SHALL resolve a SumTerm/SingletonTerm ref to the same channel the backtracker DFS resolves it to — this is the live aggregation path (F4 cutover landed) | `test_input_resolver.py`, `test_dual_resolution.py` | PASS |
+| REQ-IR-01 | `resolve_producer()` under LENIENT SHALL never raise — a terminal miss mints an ENTRY_POINT; under STRICT a terminal miss raises `CodeGenerationError` (INV-2). | `test_producer_resolution_table.py` | PASS |
+| REQ-IR-02 | `KEY_FORMS` SHALL execute in declared table order, tier 1 before tier 2; the first admissible hit wins. | `test_producer_resolution_table.py` | PASS |
+| REQ-IR-03 | The self-reference guard SHALL reject a channel whose producing-module EQN matches `consumer_eqn`, at every tier-1 hit, skipping the candidate and continuing the table. | `test_producer_resolution_table.py` | PASS |
+| REQ-IR-04 | `ProducerContext` SHALL be immutable (`frozen=True`); no key form mutates it. | `test_producer_resolution_table.py` | PASS |
+| REQ-IR-05 | `KEY_FORMS` SHALL declare each form's tier and `lenient_only` flag as data; name-based forms SHALL be inadmissible under STRICT (`_admissible`). | `test_producer_resolution_table.py` | PASS |
+| REQ-IR-06 | A LENIENT terminal miss SHALL mint an entry point with QN `{consumer_eqn}__{param_name-or-flattened-reference}` (`entry_point_qualified_name`, D9). | `test_producer_qn_rule.py` | PASS |
+| REQ-IR-07 | The same reference SHALL resolve to the same channel across consumers (one shared table); two consumers of one design attribute converge on one producer. | `test_shared_producer_convergence.py`, `test_dual_resolution.py` | PASS |
 
 ### LVP
 
@@ -359,7 +359,7 @@ indirectly via the emitted verifier.
 |--------|-------------|-----------|--------|
 | REQ-MF-01 | All three factory functions SHALL be pure data transformers: return `(PipelineModule, dic... | `test_factory_aggregation.py`, `test_factory_calc_usage.py`, `test_factory_formula.py`, `test_factory_purity.py` | PASS |
 | REQ-MF-02 | CalcUsage factory SHALL fail-fast (`ValueError`) on missing `binding_resolutions` key -- ... | `test_factory_calc_usage.py` | PASS |
-| REQ-MF-03 | FORMULA factory SHALL set `is_computed_attribute=True` and `compilability=FULLY_COMPILABL... | `test_factory_formula.py` | PASS |
+| REQ-MF-03 | FORMULA factory SHALL set `module_kind=ModuleKind.FORMULA` and `compilability=FULLY_COMPILABL... | `test_factory_formula.py` | PASS |
 | REQ-MF-04 | Aggregation factory SHALL handle all three extraction term types: SumTerm, SingletonTerm,... | `test_factory_aggregation.py` | PASS |
 | REQ-MF-05 | Every ModuleInput SHALL have exactly one InputSource with `source_type` in {`module_outpu... | `test_factory_aggregation.py`, `test_factory_calc_usage.py`, `test_factory_formula.py` | PASS |
 | REQ-MF-06 | SumTerm and SingletonTerm LITERAL fallback SHALL use `_find_literal_redefinition()` to pr... | `test_factory_aggregation.py` | PASS |
@@ -506,12 +506,12 @@ indirectly via the emitted verifier.
 | REQ ID | Requirement | Test File | Status |
 |--------|-------------|-----------|--------|
 | REQ-RES-01 | Every ModuleInput SHALL resolve to exactly one of {`module_output`, `entry_point`}. | `test_orchestrator.py` | PASS |
-| REQ-RES-02 | Three live resolution mechanisms: CalcUsage uses backtracker DFS cascade (11); FORMULA uses the pre-computed attribute resolution map (16); aggregation SumTerm/SingletonTerm uses `resolve_input(AGG_STRATEGIES)` via `_build_agg_input_source()` (`graph_builder.py`) — the F4 cutover wired it and deleted `_resolve_aggregation_input_channel` | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
+| REQ-RES-02 | Positive resolution has one authority, `resolve_producer()` (04), called by the CalcUsage (during backtracker DFS, 11), constraint, and aggregation (`_build_agg_input_source()`, `graph_builder.py`) consumers; FORMULA uses the pre-computed attribute resolution map (16) | `test_backtracker.py`, `test_computed_attributes.py`, `test_factory_aggregation.py` | PASS |
 | REQ-RES-03 | Factory functions SHALL return `(PipelineModule, dict[str, EntryPoint])` -- no mutation o... | `test_factory_purity.py` | PASS |
 | REQ-RES-04 | Every `module_output` reference SHALL resolve to a canonical channel in the OutputRegistr... | `test_graph_assembly.py` | PASS |
 | REQ-RES-05 | The orchestrator SHALL be a linear sequence: classify -> build modules -> rebuild groups ... | `test_orchestrator.py` (`TestInnerStepOrdering` — source-order pin of `build_computation_graph`'s five internal milestones, distinct from the outer REQ-ORCH-01 pin; "rebuild groups" = `derive_groups()`) | PASS |
 | REQ-RES-06 | `binding_resolutions` from the backtracker SHALL be the single source of truth for CalcUs... | `test_factory_calc_usage.py` | PASS |
-| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's pa... | `test_input_resolver.py` | PASS |
+| REQ-RES-07 | Resolution of scope-relative references (CHAIN `source_path`) SHALL use the consumer's pa... | `test_producer_resolution_table.py` | PASS |
 | REQ-RES-08 | Consumer-scope application SHALL hold on each live resolution path, per that path's own mechanism: backtracker base leg (`_consumer_scope_dotted`, QN `segments[1:-1]`), backtracker ancestor-scope climb (Step CLIMB, 3+-segment chains), aggregation (`ResolutionContext.consumer_scope` from the module EQN, consumed by Strategy A's primary form), and FORMULA (owner-keyed resolution map — the owner IS the consumer; no dotted scope string). Per-path application over the enumerated paths, not an exhaustiveness proof | `test_res08_consumer_scope_paths.py` (four legs, hand-authored expectations over `plant_values`/`catf_mfe`/`solar_battery`/`deep_cross_scope_probe`) | PASS |
 
 ### SNAP
