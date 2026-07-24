@@ -1,7 +1,7 @@
 # Epic: Constraint Execution Lifecycle Remediation
 
 **Epic ID**: CONSTRAINT-LIFECYCLE-REMEDIATION
-**Status**: **COMPLETE — all 14 items done; composed proof 41/41 at the pinned set; PRs pushed/updated; merge pending human** (2026-07-20)
+**Status**: **COMPLETE AND MERGED — all 14 items done; composed proof 41/41 at the pinned set; owner merged agentic-mbse #11 → sysml-codegen #9 → teax #3** (2026-07-20)
 **Priority**: P0 (gates the open constraint PR wave)
 **Created**: 2026-07-19
 **Estimated Effort**: 19–23 working days
@@ -1009,7 +1009,8 @@ certification critical path remains ordered.
 ---
 
 **Last Updated**: 2026-07-20
-**Next Action (merge handoff):** human merges **agentic-mbse PR #11 (`4c18d61`) FIRST**, then
-**sysml-codegen PR #9 (`d7ad714`)**; **teax PR #3 (`c342b10`)** independent. fusion-tea (`be1ee7c0`)
-+ stellarator (`342cc799`) stay local. Full picture:
-`.project/active/constraint-lifecycle-composed-proof/release-readiness.md`.
+**Merge record (close-out):** owner merged **agentic-mbse PR #11** (main `f4ebdce`), then
+**sysml-codegen PR #9** (main `936315c`), then **teax PR #3** (main `fa0e06a`). Post-merge smoke
+on codegen main: 3115 passed / 47 skipped, zero license-skip lines. fusion-tea (`be1ee7c0`) +
+stellarator (`342cc799`) remain local pending owner delivery decision. Full picture:
+`release-readiness.md` in the archived `constraint-lifecycle-composed-proof` item.

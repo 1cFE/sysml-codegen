@@ -29,25 +29,25 @@ Prioritized list of epics and features.
 
 | Epic | Status | Notes |
 |------|--------|-------|
-| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 open | **Partial pre-PR may proceed for the local #9/#11 wave.** Full epic certification remains blocked by `[GAP-CLOSE-F1-TEAX-NORMALIZATION]`. See `epic_gap_close.md`. |
-| [CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation | In progress (Item 1) | Owner-ratified architecture; implements register rows 0–17 and ends with one 41-case public artifact thread. Items 2–13 require structural simplification and deletion of superseded paths; LOC metrics are not gates. See `epic_constraint_execution_lifecycle_remediation.md`. |
-| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19) | Items 1/2 complete and Items 4/6 certified; all unfinished work is mapped into CONSTRAINT-LIFECYCLE-REMEDIATION. Retained as history; no new work executes here. See `epic_constraint_pr_wave_remediation.md`. |
+| [GAP-CLOSE] Constraint-Expression Gap Closure | Local scope certified; external F1 leg now verified closed (2026-07-20) | The blocking `[GAP-CLOSE-F1-TEAX-NORMALIZATION]` leg is closed in merged teax main (see the closed entry below). Remaining before full certification: Item 5 closeout state and the independent audit's open full-suite wave-gate leg — a certification pass, not new code. See `epic_gap_close.md`. |
+| ~~[CONSTRAINT-LIFECYCLE-REMEDIATION] Constraint Execution Lifecycle Remediation~~ ✅ | Complete (2026-07-20). Archived to: `.project/completed/20260720_epic_constraint_execution_lifecycle_remediation.md` | All 14 items done; composed public proof 41/41 at the pinned set. Merged 2026-07-20: agentic-mbse #11 → sysml-codegen #9 → teax #3. Release record + 41/41 register in `completed/20260720_constraint-lifecycle-composed-proof/`. |
+| ~~[CONSTRAINT-WAVE-REMEDIATION] Constraint PR-Wave Remediation~~ | Superseded — partially completed (2026-07-19). Archived to: `.project/completed/20260720_epic_constraint_pr_wave_remediation.md` | Items 1/2 complete and Items 4/6 certified; all unfinished work was mapped into CONSTRAINT-LIFECYCLE-REMEDIATION (now complete). Retained as history. |
 
-CONSTRAINT-LIFECYCLE-REMEDIATION items:
+CONSTRAINT-LIFECYCLE-REMEDIATION items (all complete 2026-07-20):
 - [x] Item 0 — Compatible candidate landing and pin (register row 0)
-- [ ] Item 1 — Occurrence and demand integrity (row 1)
-- [ ] Item 2 — Shared producer resolution and Gate A (row 2)
-- [ ] Item 3 — Gate B coverage-scope proof and correction (row 3)
-- [ ] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
-- [ ] Item 5 — Whole-tree snapshot portability (row 5)
-- [ ] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
-- [ ] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
-- [ ] Item 8 — Canonical embedded catalog and store transition (row 10)
-- [ ] Item 9 — Multi-entry candidate bridge (row 11)
-- [ ] Item 10 — Producer completeness and stellarator rollup (row 12)
-- [ ] Item 11 — TEAx constraint evidence durability (rows 13–15)
+- [x] Item 1 — Occurrence and demand integrity (row 1)
+- [x] Item 2 — Shared producer resolution and Gate A (row 2)
+- [x] Item 3 — Gate B coverage-scope proof and correction (row 3)
+- [x] Item 4 — Diagnostic severity and modeled-default fidelity (row 4)
+- [x] Item 5 — Whole-tree snapshot portability (row 5)
+- [x] Item 6 — Public documentation and F1 evidence reconciliation (rows 6–7)
+- [x] Item 7 — Trusted package bootstrap and seal provenance (rows 8–9)
+- [x] Item 8 — Canonical embedded catalog and store transition (row 10)
+- [x] Item 9 — Multi-entry candidate bridge (row 11)
+- [x] Item 10 — Producer completeness and stellarator rollup (row 12)
+- [x] Item 11 — TEAx constraint evidence durability (rows 13–15)
 - [x] Item 12 — Legacy snapshot and tracking identity closure (row 16)
-- [ ] Item 13 — Composed public lifecycle proof and release readiness (row 17)
+- [x] Item 13 — Composed public lifecycle proof and release readiness (row 17)
 
 Superseded CONSTRAINT-WAVE-REMEDIATION items:
 - [x] Item 1 — Profile semantics and wrong-verdict closure (R-1, R-2) — complete
@@ -62,19 +62,23 @@ Superseded CONSTRAINT-WAVE-REMEDIATION items:
 - [ ] Item 8 — Cross-repo compatibility and release-readiness evidence (no PR interaction)
 
 GAP-CLOSE items:
-- [ ] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+- [x] Item 1 — Runtime evaluation contract: exceptional arithmetic + predicate naming (F1, F2)
+      — codegen leg complete 2026-07-18; TEAx normalization leg verified closed in merged main
+      2026-07-20 (see the closed F1 entry below)
 - [x] Item 2 — Lowering outcome integrity: warning order + excluded identity (F4, F5)
 - [x] Item 3 — Model and seal boundary guards (F6, F9)
 - [x] Item 4 — Profile default-deny totalization (F7, F8, promoted diagnostics) — agentic-mbse
 - [ ] Item 5 — Packaging, docs, hygiene closeout + wave gates (F3, F10, hygiene)
 
-- **[GAP-CLOSE-F1-TEAX-NORMALIZATION] Attach failed module identity to normalized evaluator
-  failures — P0 `[AGENT]` (booked 2026-07-18 from GAP-CLOSE Item 1 seam review).** This is a
-  separate TEAx leg, not sysml-codegen Item 1. At the serial-executor seam that still knows the
-  `module_key`, preserve the original exception and make both evaluators expose the failed generated
-  constraint module through `EvaluationFailure.module_or_channel`. The normalized record and causal
-  chain must match `.project/active/gap-runtime-contract/spec.md`. GAP-CLOSE F1 is not closed until
-  Item 1's unmangled-raise boundary and this TEAx leg are both green.
+- **~~[GAP-CLOSE-F1-TEAX-NORMALIZATION]~~ ✅ CLOSED in merged teax main** (verified 2026-07-20
+  against `fa0e06a`). The seam stamps `context.failed_module_key`
+  (`packages/teax-simkit/simkit/core/pipeline_executor.py:146-150`), both evaluators route
+  through `_normalize_run_failure` which sets `EvaluationFailure.module_or_channel` and raises
+  `from error` (`simkit/evaluation/evaluator.py:54-76,174-177,258-263`); pinned cross-backend by
+  `simkit/tests/evaluation/test_f1_arithmetic_normalization.py::test_both_backends_normalize_native_arithmetic_failure`.
+  Closed by teax `d545701`, phase-stamp refinement by lifecycle Item 11 (`c342b10`). One
+  certification-record item not re-verified: the spec's saved pre-fix RED evidence artifact
+  (`gap-runtime-contract/spec.md:57`) — confirm on file before ticking that spec box.
 
 - **[ANON-ELIGIBLE-KEY] Anonymous executable assertions share one catalog compile key — P3
   `[AGENT]` (filed 2026-07-18, GAP-CLOSE Item 2 non-goal).** Eligible anonymous assertions all
@@ -90,7 +94,7 @@ GAP-CLOSE items:
 | Epic | Status | Notes |
 |------|--------|-------|
 | ~~[CONSTRAINT-EXEC] Constraint Execution and Design-Space Studies~~ ✅ | Complete (2026-07-13). Archived to: `.project/completed/20260713_epic_constraint_execution.md` (independent findings audit alongside) | Modeled assertions execute as graph modules + exact-schema report aggregator; graph-owned catalog, sealed contracts, crash-safe study layer (lists/grids). De-risked by spikes S1–S6 (all passed, verified re-runs; results + carry-forwards inline in the concept). Acceptance: IFE sweep's hand-coded viability rule replaced by the generated assertion, grid classifications match. All 15 items certified; IFE acceptance ratified [OWNER] (2294/2301 + 7 model-favoring boundary rows); CE-F1/F2 follow-ons registered below, CE-F3 fixed. |
-| [PUSH-DOWN] agentic-mbse Push-Down | Ready (4 items, 6–8 days) | Expression reconstruction; qualified-name split; hierarchy primitives/models; aggregation decomposition/gates. Design overrides, usage-type indexing, Python rewriting, aliases, scoping, and module construction stay in sysml-codegen. See `epic_push_down.md`. |
+| ~~[PUSH-DOWN] agentic-mbse Push-Down~~ ✅ | Complete (2026-07-10). Archived to: `.project/completed/20260720_epic_push_down.md` (+ audit, independent audit, pre-PR reports alongside) | All 4 items certified; independently audited Certify after 2026-07-10 remediation; merged as sysml-codegen PR #8 + agentic-mbse PR #10. Expression reconstruction, qualified-name split, hierarchy primitives/models, aggregation decomposition pushed down; design overrides, usage-type indexing, Python rewriting, aliases, scoping, module construction stayed in sysml-codegen. |
 
 CONSTRAINT-EXEC items:
 - [x] Item 0 — End-to-end integration spike (S6 lifecycle × S5 evaluator × S4 sealed package)
@@ -109,17 +113,17 @@ CONSTRAINT-EXEC items:
 - [x] Item 13 — Calc-seam cutover: retire ExpressionAST (byte-identity gated)
 - [x] Item 14 — Migration, docs, and IFE acceptance
 
-PUSH-DOWN items:
-- [ ] Item 1 — Expression reconstruction push-down
-- [ ] Item 2 — Qualified-name utility split
-- [ ] Item 3 — Hierarchy primitives and data models
-- [ ] Item 4 — Aggregation decomposition and compatibility gates
+PUSH-DOWN items (all certified; archived to `completed/20260720_*`):
+- [x] Item 1 — Expression reconstruction push-down
+- [x] Item 2 — Qualified-name utility split
+- [x] Item 3 — Hierarchy primitives and data models
+- [x] Item 4 — Aggregation decomposition and compatibility gates
 
 ---
 
 ### [CONSTRAINT-SILENCE] `assert constraint` invisible to the drop report — RESOLVED (PIPELINE-TRUTH Item 4)
 
-**RESOLVED by PIPELINE-TRUTH Item 4** (`epic_pipeline_truth.md`), 2026-07-06. The drop report now
+**RESOLVED by PIPELINE-TRUTH Item 4** (`.project/completed/20260720_epic_pipeline_truth.md`), 2026-07-06. The drop report now
 sweeps `ConstraintUsage` subtype-aware (`include_subtypes=True`), so `assert constraint`
 (`AssertConstraintUsage`) is reported; the summary is a scanned/reported/excluded sentinel that never
 goes fully silent. Pinned by the re-anchored REQ-EXT-09 (`tests/conformance/test_extractor.py`, wi014
@@ -622,8 +626,8 @@ the new row and does not treat it as an orphan.
 
 | Epic | Completed | Duration | Notes |
 |------|-----------|----------|-------|
-| [PIPELINE-TRUTH] The Generated Package Is the Truth | 2026-07-06 | ~2 days (orchestrated) | All 10 items landed and audited PASS. **The generated package is the truth**: fusion-tea generates/wires/executes end-to-end at TRUE ZERO V11 offenders (SVM value-fill, Item 2); run-C lcoe reproduces bit-exact ($270.1211779380445) and every workaround deleted upstream (Item 3); constraint drop report subtype-aware incl. `assert` (Item 4); 13 silent-failure findings fixed by family (Item 5); 25 self-referential tests re-anchored (Item 6); matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED, F2/F4 resolved by decision (Item 7); dead code cleared + REQ-AST-10 (Item 8); agentic-mbse taught+checked (Item 9); docs+explainer refreshed (Item 10). Follow-on filings kept below (outlive the epic): `[ITEM7-F4-CUTOVER]`, `[ITEM7-MATRIX-TEST-GAPS]`, `[ITEM7-CLASSIFIER-FIX]`, `[ITEM7-MATRIX-SWEEP-RESIDUE]`, `[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`, `[DOTTED-LEAF-PART-BLIND]`, SYNC-F3/F4. See `epic_pipeline_truth.md` (Lessons Learned). |
-| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into — and now closed by — PIPELINE-TRUTH. See `epic_upstream_findings.md`. |
+| [PIPELINE-TRUTH] The Generated Package Is the Truth | 2026-07-06 | ~2 days (orchestrated) | All 10 items landed and audited PASS. **The generated package is the truth**: fusion-tea generates/wires/executes end-to-end at TRUE ZERO V11 offenders (SVM value-fill, Item 2); run-C lcoe reproduces bit-exact ($270.1211779380445) and every workaround deleted upstream (Item 3); constraint drop report subtype-aware incl. `assert` (Item 4); 13 silent-failure findings fixed by family (Item 5); 25 self-referential tests re-anchored (Item 6); matrix 253 = 249 PASS + 4 UNTESTED-argued + 0 DEFERRED, F2/F4 resolved by decision (Item 7); dead code cleared + REQ-AST-10 (Item 8); agentic-mbse taught+checked (Item 9); docs+explainer refreshed (Item 10). Follow-on filings kept below (outlive the epic): `[ITEM7-F4-CUTOVER]`, `[ITEM7-MATRIX-TEST-GAPS]`, `[ITEM7-CLASSIFIER-FIX]`, `[ITEM7-MATRIX-SWEEP-RESIDUE]`, `[SANITIZER-MERGE]`, `[SC11-IMPORT-REWRITE]`, `[GB-PARAMGROUPS-TYPING]`, `[DOTTED-LEAF-PART-BLIND]`, SYNC-F3/F4. See `.project/completed/20260720_epic_pipeline_truth.md` (Lessons Learned). |
+| [UPSTREAM-FINDINGS] Upstream Findings Remediation & Plant-Idiom Support | 2026-07-06 | ~2 days (orchestrated) | All 12 items landed and audited PASS; merged as PR #3. Fixed SC-1–SC-11 + 6 research defects; staged cross-part wiring; snapshot CLI; agentic-mbse sync. Residue (10 V11 offenders, assert-constraint silence, F2/F4) shaped into — and now closed by — PIPELINE-TRUTH. See `.project/completed/20260720_epic_upstream_findings.md`. |
 | [COST-PATTERN] Costed Component Pattern Support | 2026-02-22 | ~12 days | 41 items completed: full conformance test suite (C01-C27, X01-X02), Phase 7 structural refactors, bug fixes (7, 11), docs consolidation. |
 | [ATTR-EXPR] Attribute Expression Capture | 2026-02-09 | ~2 days (Items 1-5) | FORMULA computed attributes generate synthetic pipeline modules. 5-way classification scheme. ADR-004/005 formalized. 285 tests, 0 failures. |
 | [EXPR-CODEGEN] Expression-Aware Code Generation | 2026-02-08 | ~8.5 days | 15/15 solar_battery, 19/21 CATF auto-implemented. 167 tests, 0 xfail. |
@@ -676,7 +680,7 @@ the new row and does not treat it as an orphan.
 - Non-uniform array instances (flat expansion strategy for arrays with per-element parameters)
 - Body-assignment expression capture (P3, M-lift; deferred from UPSTREAM-FINDINGS Item 3 / SC-2). For the `return attribute y : Real; y = expr;` form, wire the direction-None `member_expressions[y]` (the body assignment) into `output_expression_asts[y]` so `y` auto-implements instead of degrading to a `NotImplementedError` stencil. Inline `return y : Real = expr` already auto-implements, and the A-2 stencil fix steers modelers to the inline form, so this is low value — it restores auto-impl only for the deprecated body-assignment pattern.
 - **fusion-tea whole-plant cross-part wiring — PROMOTED (2026-07-06).** This P1 item was
-  mis-shelved under Ideas; it is now **PIPELINE-TRUTH Items 1–3** (`epic_pipeline_truth.md`):
+  mis-shelved under Ideas; it is now **PIPELINE-TRUTH Items 1–3** (`.project/completed/20260720_epic_pipeline_truth.md`):
   the 10 remaining V11 offenders, the extended `spec_chain_twolevel` acceptance fixture,
   zero-offender fusion-tea generation, and the run-C ($270.12/MWh) reproduction + workaround
   retirement. Mechanism evidence (offenders reconciled 1:1, bridge reproduction bit-exact):
@@ -805,14 +809,16 @@ registered three follow-ons:
   `.project/diagrams/pipeline_explainer_v2.html` (do not overwrite the deprecated Gen-1
   `new_pipeline_explainer.html`). Not built by the refresh item ([OWNER] 2026-07-13: "update the
   EXPLAINER_PROMPT.md. I will have another agent pick this up.").
-- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — P3.** The refresh fixed
+- **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — ABSORBED into
+  `docs-lifecycle-sync` (spec R7, plan Phase 2), 2026-07-24.** The refresh fixed
   the surveyed `build_expression_ast` cite but found the wider `19-ast-dispatch-invariant.md`
   prose table (`reconstruct_expression` now in agentic-mbse `sysml/expression.py`; the audited
   aggregation dispatch is now agentic `_decompose_node`) and the "8 functions / 6 files" claim
   drifted vs the test's current `DUAL_CHECK_SITES`. Out of the refresh's surveyed scope; the table
   now points at the authoritative test inventory. A full doc-19 re-audit reconciles the prose.
 - **[MODULEKIND-DOC-SWEEP] Sweep the retired `is_computed_attribute`/`is_aggregation` → `module_kind`
-  migration through the MF family — P3.** The refresh corrected doc 09 + doc 16, but the retired
+  migration through the MF family — ABSORBED into `docs-lifecycle-sync` (spec R7, plan
+  Phase 2), 2026-07-24.** The refresh corrected doc 09 + doc 16, but the retired
   bool flags survive as live claims in `05-module-factory.md` (pervasive), `22-output-schema-rules.md:179`,
   and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
   `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would
@@ -829,44 +835,44 @@ path-grammar pins — commits `5785055`, `baca960`, `c756fc7`, `05690f0`). The a
 below is the recorded, owned remainder — merging the PR does not bless it as the permanent
 constraint architecture.
 
-- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance/resolution infrastructure — P1 `[AGENT]`
-  (ratified for filing by owner 2026-07-14; priority is agent-graded).** *Complexity evidence
-  (added 2026-07-18, GAP-CLOSE decision 1):* the final gap review measured the semantic center
-  over C901 thresholds — `lower_constraints` 18, `resolve_actual` 19,
-  `extend_graph_with_constraints` 12 (codegen) and four profile walkers 11–19 (agentic-mbse) —
-  and judged that "a mechanical file split would not help; typed walk results and separate
-  preflight/report/lower phases would." See
-  `.project/research/20260718-123558_constraint-expression-final-gap-review.md` (Code Quality
-  and Hygiene Notes) and `.project/research/20260718_gap-review-verification.md` (hygiene item
-  1: numbers confirmed; C901 is in neither repo's configured gate). GAP-CLOSE deliberately
-  excluded these refactors; this row owns them. One refactor design,
-  staged behind the existing byte-identity and parity gates, with these explicitly in scope:
-  1. *Canonical typed paths and resolution requests.* `InstancePath`/`ReferencePath`/
-     `ConstraintDemand` (named type replacing the `(instance_scope, source_path, source_file)`
-     tuples in `supplied_values.py:206-269`) with validated conversions to EQN / dotted scope /
-     de-indexed scope / SysML QN. The `NewType` identifiers validate nothing today
-     (`identifier_types.py`); every consumer does raw string surgery.
-  2. *One resolver ladder.* `resolve_actual` (`constraint_lowering.py:117-276`) and the calc
-     ladder (`dependency_backtracker.py:480-838`) are independently ordered algorithms sharing
-     only `terminal_disposition`; the design-review-predicted drift already happened (climb,
-     self-reference rejection, and SysML-QN rungs exist on one side only). Normalize both into
-     one registry-owned ordered strategy; `strict`/`lenient` differ only at terminal disposition.
-     Precedence pins now exist (`test_constraint_resolver.py`) to protect the migration.
-  3. *One part-structure index.* Collapse the three concrete-instance walkers
-     (`usage_extractor._find_instantiation_paths`, `part_instance_index._structured_paths`
-     — hand-synced by docstring decree — and `pipeline_builder.find_instance_paths_for_partdef`
-     with its first-wins multi-design heuristic) into one index built once per pipeline; project
-     legacy strings at the edges until byte-identity gates permit deleting the old walkers.
-     Also split the snapshot transport adapters out of `part_instance_index.py:363-442`. Before
-     collapsing the walkers, add differential singleton parity and edge characterizations for
-     cycles, diamonds, zero/multiple blocked definitions, and multi-digit occurrence indices.
-  4. *Shared live/offline phases.* `pipeline_builder.py` and `snapshot/graph_rebuild.py`
-     mirror the demand→materialize→lower→extend→catalog sequence by convention and import each
-     other's private helpers; all live-vs-snapshot parity legs are license-gated, so the default
-     environment cannot see drift. Extract callable phase objects both orchestrators consume.
-  5. *Graph extension folded into assembly.* `extend_graph_with_constraints` re-implements
-     entry-point grouping/minting/module construction after the main build (validation it
-     already shares); move constraint module/EP factories into graph assembly and run one
+- **[CONSTRAINT-ARCH-UNIFY] Unified path/instance infrastructure — P2 `[AGENT]`
+  (filed P1 2026-07-14, owner-ratified for filing; re-assessed and re-graded P2 at 2026-07-20
+  against merged main `936315c` — the resolver-ladder sub-scope, which carried the P1 drift
+  risk, was delivered by CONSTRAINT-LIFECYCLE Item 2).** The original five sub-scopes are now
+  four; the resolver unification is recorded as satisfied by
+  `.project/completed/20260720_constraint-lifecycle-shared-resolution/` (one registry-owned
+  ordered table `KEY_FORMS` in `resolution/producer_resolution.py:527`, single entry point
+  `resolve_producer:616`, consumed by constraint/calc/aggregation paths; strict vs lenient
+  differ only at `TerminalPolicy`; old `input_resolver.py` deleted; `resolve_actual` reduced
+  to a ~59-line adapter). Remaining scope, one refactor design staged behind the existing
+  byte-identity and parity gates:
+  1. *Canonical typed paths (re-scoped).* The resolution-request half landed as frozen
+     `ProducerRequest`/`ProducerResolution` (`producer_resolution.py:100-146`). Still open:
+     named path types (`InstancePath`/`ReferencePath`/`ConstraintDemand`) over the raw
+     `(instance_scope, source_path, source_file)` tuples and string surgery in
+     `supplied_values.py:102-119,191-277,397-464`, with validated conversions to EQN / dotted
+     scope / de-indexed scope / SysML QN; the `NewType` identifiers
+     (`core/identifier_types.py:24-46`) still validate nothing — give them validating
+     constructors or drop the claim.
+  2. *One part-structure index.* Collapse the three concrete-instance walkers — still all
+     present: `usage_extractor._find_instantiation_paths` (`extraction/usage_extractor.py:393`),
+     `part_instance_index._structured_paths` (`analysis/part_instance_index.py:190`, hand-synced
+     by docstring decree), `pipeline_builder.find_instance_paths_for_partdef`
+     (`orchestration/pipeline_builder.py:382`) — into one index built once per pipeline;
+     project legacy strings at the edges until byte-identity gates permit deleting the old
+     walkers. Split the snapshot transport adapters (`FrozenOccurrenceIndex:447`,
+     `deserialize_part_occurrences:463`) out of `part_instance_index.py`. Before collapsing,
+     add differential singleton parity and edge characterizations for cycles, diamonds,
+     zero/multiple blocked definitions, multi-digit occurrence indices.
+  3. *Shared live/offline phases.* `snapshot/graph_rebuild.py:65-68` still imports
+     `pipeline_builder` private helpers (`_register_partdef_expose_scoped_aliases`,
+     `_rescue_self_named_bindings`); the demand→lower→extend→catalog sequence is mirrored by
+     convention (`graph_rebuild.py:204-227`). Extract callable phase objects both orchestrators
+     consume. Hazard intact: all live-vs-snapshot parity legs are license-gated, so the default
+     environment cannot see drift between the two orchestrators.
+  4. *Graph extension folded into assembly.* `extend_graph_with_constraints`
+     (`analysis/constraint_lowering.py:1456`) still runs as a distinct post-build phase in both
+     orchestrators; move constraint module/EP factories into graph assembly and run one
      grouping, topological sort, and validation pass across every module kind.
 - **[EXIT-PIN-SEAM] Decide the exit-selection seam — P3.** `generation/pipeline.py:233-288`
   carries `selected_channels`/`pin_report_channels` used only by `test_exit_pin.py` (production
