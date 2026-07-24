@@ -4,6 +4,73 @@ Historical record of completed work.
 
 ---
 
+## [2026-07-24] - [DOCS-LIFECYCLE-SYNC] Post-Epic Documentation Reconciliation
+
+**Type**: Item (orchestrated: Opus implement stages + two independent audits; briefs committed)
+**Duration**: spec 2026-07-20 (re-verified 07-24); implemented + audited in one orchestrated run 2026-07-24
+
+### Summary
+Reconciled `docs/architecture/` and `EXPLAINER_PROMPT.md` with merged main `936315c` after the
+CONSTRAINT-LIFECYCLE epic. Five phases against a four-sweep claim register: replaced
+`04-input-resolver.md` (documented a deleted module) with `04-producer-resolution.md`,
+rewrote doc 24 to the unified-ladder narrative, wrote `30-diagnostic-severity.md` (severity
+contract had zero public coverage; documents three stacked fail-closed guards), added matrix
+rows REQ-SNAP-21/22 (274→276, index reconciled; pre-existing DM/RES drift fixed), swept the
+retired module_kind bool flags, added the nested-override honesty note, re-anchored the
+explainer prompt (19 registered re-anchors). Final audit Pass with notes; the one note
+(agentic-mbse citations unreachable from the audit sandbox) closed by orchestrator
+verification at `f4ebdce` — no open findings.
+
+### Deliverables
+- `20260724_docs-lifecycle-sync/`: spec (R1–R7), 5-phase plan, `inventory.md` (the full
+  per-claim register incl. E1–E19 and matrix-row candidates MG1–MG3), `audit-midrun.md`,
+  `audit.md` (+ N1-closure addendum), stage briefs.
+- Follow-on ticketed: `[MATRIX-EPIC-SURFACE-ROWS]` (P3) for the three surfaces registered
+  but not added to the matrix.
+- NOTE at close: delivered on branch `docs-lifecycle-sync`; owner merge pending.
+
+### Lessons Learned
+- Re-verify a spec written from a close-handoff against the merged diff before implementing:
+  the original spec missed the epic's largest doc casualty (the resolver unification, six
+  stale files) because the handoff's deferred-docs list predated a late refactor.
+- Stage briefs that seed verified facts but demand re-verification pay off: the stages
+  corrected two orchestrator-supplied citations and surfaced a third fail-closed guard no
+  design doc named.
+
+---
+
+## [2026-07-24] - [NESTED-OVERRIDE-TRIPWIRE] Unmatched-Override Warning (interim guard)
+
+**Type**: Item (probe-first; single Opus implement stage; gates re-verified by orchestrator)
+**Duration**: same-day (2026-07-24)
+
+### Summary
+Made the `[NESTED-OCCURRENCE-OVERRIDE]` calc-path value loss loud: the supplied-value
+materializer now warns when a dotted demand falls through silently while the capture carries
+an override for that attribute of that part usage, naming captured vs demanded scopes. The
+naive predicate false-fired 4× on the clean corpus (reference-form aggregation rollups); two
+narrowings (dotted-form gate + part-usage gate) reached 0 fires across all 19 snapshot
+fixtures before any production code was written. No resolution outcome or output byte changes;
+suite 3118/47 licensed, ruff clean. The occurrence→definition-bridge fix remains filed in
+`[NESTED-OCCURRENCE-OVERRIDE]` with an explicit filed-fix scope block.
+
+### Deliverables
+- `src/sysml_codegen/resolution/supplied_values.py`: `_BindingTarget.form` (diagnostics-only),
+  `_unmatched_override_scopes`, collect-then-drain warning.
+- `tests/unit/test_supplied_values.py`: RED-verified positive on the recorded coordinate +
+  two pinned silent-on-clean negatives.
+- `20260724_nested-override-tripwire/`: brief, probe (`unmatched_override_scan.py`),
+  corpus verdict, evidence. No independent audit (orchestrator-verified gates; probe verdict
+  committed as the acceptance record).
+- NOTE at close: delivered on branch `nested-override-tripwire` (stacked on
+  docs-lifecycle-sync); owner merge pending.
+
+### Lessons Learned
+- The corpus false-fire scan earned its gate status: the obvious predicate was wrong in a way
+  only the corpus could show (site-4 precedent repeated exactly).
+
+---
+
 ## [2026-07-20] - [CONSTRAINT-LIFECYCLE] Constraint Execution Lifecycle Remediation
 
 **Type**: Epic (includes the superseded CONSTRAINT-WAVE-REMEDIATION epic doc, archived alongside as frozen history)

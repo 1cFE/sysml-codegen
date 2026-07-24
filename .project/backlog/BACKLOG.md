@@ -200,8 +200,22 @@ Item-2 case-18 addendum. Contract row 18 does not mandate this shape (the flat f
 `enrich_graph_design_attributes` reports a dotted demand that fell through silently while a
 capture carries an override for that attribute of that part usage, naming both the captured and
 the demanded scope. Corpus scan recorded 0 false fires across all 19 `SNAPSHOT_MODELS` fixtures
-(`.project/active/nested-override-tripwire/probes/verdict.md`). The occurrence → definition
-bridge below remains the filed work; the warning changes no resolution outcome or output byte.
+(`.project/completed/20260724_nested-override-tripwire/probes/verdict.md`). The warning changes
+no resolution outcome or output byte.
+
+**The filed fix (the remaining work of this entry).** Build the occurrence → definition bridge:
+thread occurrence-type resolution (the occurrence index, `analysis/part_instance_index.py`) into
+`enrich_graph_design_attributes` so a definition-relative captured override
+(`owning_part_qn = ...__Design__panel`) matches an occurrence-relative demand
+(`instance_scope = ...__the_design__panel`) for the instantiating occurrence(s). Both paths must
+benefit: the calc binding applies the literal (no manual-required fallback), and the constraint
+actual resolves instead of halting under strict INV-2. Acceptance: the probe fixture resolves
+`80.0` on both paths, the tripwire warning goes silent on it (and its RED unit test flips —
+update it deliberately), the flat sibling stays byte-identical, and the corpus byte-identity
+gates stay green. Blast radius is the calc path broadly — schedule as a deliberate item
+(Item-10-family scope), not an opportunistic edit. Overlaps `[CONSTRAINT-ARCH-UNIFY]`
+sub-scope 2 (one part-structure index): doing that consolidation first would hand this fix its
+bridge for free — sequence them consciously.
 
 Related: [SYNC-F4] (design-override name surfacing) and the "Two-level specialization —
 `attribute :>>` extraction gap" note under Ideas / Future Considerations.
@@ -272,7 +286,7 @@ silent-on-clean leg is covered by `tests/unit/test_silent_failure_family2.py`
 Owner directed filing this as a ticket at the docs-lifecycle-sync wrap. The lifecycle epic
 added tested behaviors with no matrix rows; docs-lifecycle-sync Phase 4 added only the
 required portability pair (REQ-SNAP-21/22) and registered these three as candidates
-(`docs-lifecycle-sync/inventory.md`, MG1–MG3; archived with the item when it closes):
+(`.project/completed/20260724_docs-lifecycle-sync/inventory.md`, MG1–MG3):
 
 1. **Producer resolution / completeness** — the unified ladder (`resolution/producer_resolution.py`,
    `resolve_producer`, KEY_FORMS, TerminalPolicy) and `producer_completeness.py`. Reference
@@ -849,7 +863,8 @@ registered three follow-ons:
   `new_pipeline_explainer.html`). Not built by the refresh item ([OWNER] 2026-07-13: "update the
   EXPLAINER_PROMPT.md. I will have another agent pick this up.").
 - **[DOC19-DISPATCH-REAUDIT] Re-audit doc 19's dispatch-site inventory — ABSORBED into
-  `docs-lifecycle-sync` (spec R7, plan Phase 2), 2026-07-24.** The refresh fixed
+  `docs-lifecycle-sync` (spec R7, plan Phase 2) and DELIVERED ✅ (item closed 2026-07-24 to
+  `completed/20260724_docs-lifecycle-sync/`).** The refresh fixed
   the surveyed `build_expression_ast` cite but found the wider `19-ast-dispatch-invariant.md`
   prose table (`reconstruct_expression` now in agentic-mbse `sysml/expression.py`; the audited
   aggregation dispatch is now agentic `_decompose_node`) and the "8 functions / 6 files" claim
@@ -857,7 +872,7 @@ registered three follow-ons:
   now points at the authoritative test inventory. A full doc-19 re-audit reconciles the prose.
 - **[MODULEKIND-DOC-SWEEP] Sweep the retired `is_computed_attribute`/`is_aggregation` → `module_kind`
   migration through the MF family — ABSORBED into `docs-lifecycle-sync` (spec R7, plan
-  Phase 2), 2026-07-24.** The refresh corrected doc 09 + doc 16, but the retired
+  Phase 2) and DELIVERED ✅ (item closed 2026-07-24).** The refresh corrected doc 09 + doc 16, but the retired
   bool flags survive as live claims in `05-module-factory.md` (pervasive), `22-output-schema-rules.md:179`,
   and `verification-matrix.md` REQ-MF-03 (its cited `test_factory_formula.py` now pins
   `module_kind==ModuleKind.FORMULA`). Out of the refresh's surveyed inventory (a partial fix would

@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-07-20 (post-merge close-out)
+**Last Updated**: 2026-07-24 (docs-lifecycle-sync + nested-override-tripwire closed; branches await merge)
 
 ---
 
@@ -27,34 +27,27 @@ The superseded PR-wave epic is archived alongside
 - 41/41 register: `.project/completed/20260720_constraint-lifecycle-composed-proof/evidence-coordinate-register.md`
 - Ratified authority (unchanged home): `.project/concepts/constraint-execution-authoritative-lifecycle-contract.md`
 
-### docs-lifecycle-sync — IMPLEMENTED + AUDITED on branch `docs-lifecycle-sync` (2026-07-24)
+### Unmerged branches awaiting owner (both items CLOSED 2026-07-24, owner-directed)
 
-All 5 phases done in an orchestrated run (Opus stages, briefs committed); final audit **Pass
-with notes → N1 closed by orchestrator** (no open findings) — see
-`.project/active/docs-lifecycle-sync/audit.md` + `inventory.md` (the full claim register).
-Highlights: `04-input-resolver.md` → `04-producer-resolution.md` (unified-ladder reference),
-doc 24 rewritten, new `30-diagnostic-severity.md` (three stacked fail-closed guards),
-REQ-SNAP-21/22 added (matrix 274→276, index reconciled + pre-existing DM/RES drift fixed),
-module_kind sweep, R5 honesty note, EXPLAINER_PROMPT re-anchored to merged main. Three
-matrix-row candidates filed (producer resolution, catalog 2.0.0, trust manifest) — owner
-decision. **Branch awaits owner review/merge; `/_my_close` after.** The original owed-items
-list (kept for the record):
+- **`docs-lifecycle-sync`** — docs + `.project/` only. Item archived to
+  `completed/20260724_docs-lifecycle-sync/` (audit: no open findings).
+- **`nested-override-tripwire`** (stacked on it) — the only `src/` change. Item archived to
+  `completed/20260724_nested-override-tripwire/`.
 
-1. **Item 4 severity system has ZERO public doc coverage** (Item 6 gap G1 — no stale claim
-   existed to amend, so nothing was written). The diagnostics severity contract
-   (constraint-facts/v2, fail-closed skew both directions, BLOCK/warning ordering) needs a home
-   in `docs/architecture/reference/` near docs 27/28.
-2. **Item 5 portability has no verification-matrix row** (Item 6 gap G2; changes index counts —
-   recount discipline in memory `verification-matrix-drift-modes`).
-3. **Full `docs/architecture/` sweep vs merged main** — the epic landed large late changes
-   (v5 snapshot format, written-qualifier fields, catalog schema 2.0.0, producer completeness,
-   trust manifest/anchor) after docs 27/28 were last re-projected. Reuse the three-sweep
-   inventory METHOD from `completed/20260720_constraint-lifecycle-docs-f1/spec.md`.
-4. **`EXPLAINER_PROMPT.md` re-anchoring** (`.project/active/EXPLAINER_PROMPT.md`) — last touched
-   pre-epic; Gen-1 banner may be stale vs merged state. Feeds `[V2-HTML-BUILD]` (owner-assigned
-   elsewhere).
-5. If docs describe override capture, state the def-relative limitation honestly
-   (`[NESTED-OCCURRENCE-OVERRIDE]`, probe fixture `tests/fixtures/nested_occurrence_override_probe/`).
+Merge the first for bookkeeping+docs, the second on top for the tripwire. Both items were
+closed on-branch before merge (owner-directed); their CHANGELOG entries note merge pending.
+
+### pipeline_explainer_v2.html — BUILT (2026-07-24, `[V2-HTML-BUILD]`)
+
+`.project/diagrams/pipeline_explainer_v2.html` (144KB, uncommitted on `docs-lifecycle-sync`)
+built from the re-anchored `EXPLAINER_PROMPT.md`. Self-contained vanilla HTML/SVG/JS,
+light/dark themed, L0–L4 progressive disclosure; interactive stage strip + module_kind-coloured
+solar-battery mini-DAG (13 real modules from the committed baseline YAML); all snippets verbatim
+from committed fixtures except the `attribute :>>` trap counter-example, which is a labeled
+minimal adaptation of `spec_chain_channel` (no committed fixture encodes that form — noted in
+the page). Every cited symbol grep-verified against src/ at merged main; §7 caveats preserved
+as hedged; Gen-1 explainer untouched. Not yet visually smoke-tested in a browser (no browser in
+this session) — open the file once before sharing.
 
 ### Open decisions — owner rulings recorded 2026-07-24
 
@@ -71,9 +64,11 @@ list (kept for the record):
    on branch `nested-override-tripwire` (stacked on docs-lifecycle-sync): the calc path's
    silent value loss now warns, naming captured vs demanded scopes
    (`supplied_values.py` `_unmatched_override_scopes` + drain; probe-first, 0 false fires
-   across all 19 snapshot fixtures — `nested-override-tripwire/probes/verdict.md`; suite
-   3118/47, ruff clean, byte-identical outputs). The full occurrence→definition-bridge fix
-   remains the filed work; scheduling still open.
+   across all 19 snapshot fixtures — `completed/20260724_nested-override-tripwire/probes/verdict.md`;
+   suite 3118/47, ruff clean, byte-identical outputs). The full occurrence→definition-bridge
+   fix is now an explicit filed-fix block in the `[NESTED-OCCURRENCE-OVERRIDE]` BACKLOG entry
+   (scope, acceptance, blast radius, sequencing vs `[CONSTRAINT-ARCH-UNIFY]` sub-scope 2);
+   scheduling still open.
 5. **Item-10 completeness-check MODULE_OUTPUT exemption — MOOT: already closed in code.**
    Surfaced at the 2026-07-24 ruling pass: audit Major 1 (`b987869`, pre-merge) removed the
    exemption — the check flags name-based key forms regardless of outcome
@@ -99,6 +94,14 @@ surfaces as matrix-row candidates.
 ---
 
 ## Recently Completed
+
+### 2026-07-24: docs-lifecycle-sync + nested-override-tripwire (closed on-branch; merge pending)
+- Docs reconciled to merged main `936315c`: new `04-producer-resolution.md` +
+  `30-diagnostic-severity.md`, doc 24 rewritten, REQ-SNAP-21/22 (matrix 276), module_kind
+  sweep, explainer prompt re-anchored. Final audit: no open findings.
+- Tripwire: unmatched-override warning in the supplied-value materializer (0 false fires
+  across 19 fixtures; suite 3118/47). Full bridge fix filed in `[NESTED-OCCURRENCE-OVERRIDE]`.
+- Archived to `completed/20260724_*`; CHANGELOG entries carry the detail.
 
 ### 2026-07-20: CONSTRAINT-LIFECYCLE Epic — Constraint Execution Lifecycle Remediation
 - All 14 items (0–13) done; composed public proof 41/41 at the pinned set (rerun 22 / compose 19;
