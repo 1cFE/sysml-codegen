@@ -57,7 +57,7 @@ Frozen dataclass (`producer_resolution.py:99`). The load-bearing fields:
 
 | Field | Meaning |
 |---|---|
-| `consumer_eqn` | Producing-module [EQN](15-naming-conventions.md) of the asker. Sole input to the self-reference guard and to the entry-point QN rule. |
+| `consumer_eqn` | Producing-module [EQN](15-naming-conventions.md) of the asker. Sole input to the self-reference guard; the entry-point QN rule prefixes it with `param_name` (or the flattened `reference` when no formal exists — `producer_resolution.py:553-565`). |
 | `reference` | The reference the consumer holds, never pre-split. |
 | `param_name` | The consumer's declared formal name, where it has one. Drives the entry-point QN. |
 | `consumer_scope` | Dotted scope the reference is read in. |
