@@ -67,10 +67,13 @@ list (kept for the record):
    before deletion).
 3. **Stale-baseline class — LEAVE FILED [OWNER 2026-07-24]**, now a proper backlog entry:
    `[STALE-BASELINE-CLASS]` (P3, no assignee).
-4. **`[NESTED-OCCURRENCE-OVERRIDE]`** (BACKLOG P2) — still open: schedule the
-   occurrence-materialization fix or leave filed. Note the asymmetric defensiveness: the
-   constraint path fails loud (strict INV-2 halt), the calc path loses the value silently
-   (falls to a manual-required entry point).
+4. **`[NESTED-OCCURRENCE-OVERRIDE]`** (BACKLOG P2) — **tripwire SHIPPED [OWNER 2026-07-24]**
+   on branch `nested-override-tripwire` (stacked on docs-lifecycle-sync): the calc path's
+   silent value loss now warns, naming captured vs demanded scopes
+   (`supplied_values.py` `_unmatched_override_scopes` + drain; probe-first, 0 false fires
+   across all 19 snapshot fixtures — `nested-override-tripwire/probes/verdict.md`; suite
+   3118/47, ruff clean, byte-identical outputs). The full occurrence→definition-bridge fix
+   remains the filed work; scheduling still open.
 5. **Item-10 completeness-check MODULE_OUTPUT exemption — MOOT: already closed in code.**
    Surfaced at the 2026-07-24 ruling pass: audit Major 1 (`b987869`, pre-merge) removed the
    exemption — the check flags name-based key forms regardless of outcome
