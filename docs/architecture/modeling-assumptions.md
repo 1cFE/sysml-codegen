@@ -351,6 +351,17 @@ the **source attribute's QN**, so two differently-named consumers of one source 
 onto one parameter. Only LITERAL values apply; a non-literal supplied value falls through
 to the uncovered-parameter diagnostic (V11) with a WARN, never silently.
 
+**Limitation — nested-occurrence overrides are not captured correctly
+(`[NESTED-OCCURRENCE-OVERRIDE]`, BACKLOG P2).** A `:>>` override on a usage nested inside an
+*instantiated* part def is captured **definition-relative** while demand resolves
+**occurrence-relative**, so the materializer never matches and the model literal is lost — the
+calc binding falls to a silent manual-required entry point (value dropped), and a constraint
+actual halts generation under strict INV-2. Shape (b) above is safe only in its flat,
+non-nested form; do not read this section as promising nested-occurrence override capture. Probe
+fixture: `tests/fixtures/nested_occurrence_override_probe/` (expected to halt; its flat sibling
+`constraint_def_owned_redefining/` resolves through the same machinery, isolating nesting as the
+sole trigger).
+
 ---
 
 ## 6. Uniform-Array Assumption for Aggregation

@@ -34,7 +34,7 @@ path).
 
 Top-level keys of `extraction_snapshot.json`:
 
-- `snapshot_format_version` (int) — gates loading. Current: **5** (`sysml_codegen.snapshot.SNAPSHOT_FORMAT_VERSION`, `snapshot/__init__.py:28`).
+- `snapshot_format_version` (int) — gates loading. Current: **5** (`sysml_codegen.snapshot.SNAPSHOT_FORMAT_VERSION`, `snapshot/__init__.py:30`).
 - `model_name`, `captured_at` (provenance).
 - `constraint_facts` — the neutral `ConstraintFacts` (agentic-mbse Item 1),
   serialized via `agentic_mbse.sysml.constraint_facts.serialize`. Always present

@@ -53,24 +53,25 @@ That Item 6's sweep verdicts survived Items 7–13's landings. Expectation: some
 ```
 
 ### Changes Required
-- [ ] Four sweeps per the method referent: (A) version/format literals, (B) snapshot/catalog/
+- [x] Four sweeps per the method referent: (A) version/format literals, (B) snapshot/catalog/
       trust surfaces, (C) semantics claims (completeness, qualifiers, severity mentions,
       module_kind vs retired bool flags, doc-19 dispatch table — spec R7), (D)
       resolver-architecture claims (`input_resolver`, `resolve_input`, `AGG_STRATEGIES`,
       `DesignAttributeLookup`, dual-resolution narrative — spec R6; known files: docs 03, 04,
       05, 24, overview, verification-matrix).
-- [ ] Write the register to `.project/active/docs-lifecycle-sync/inventory.md`.
-- [ ] Apply small STALE fixes in place (shrink/amend, citation per fix, no "used to say X"
+- [x] Write the register to `.project/active/docs-lifecycle-sync/inventory.md`.
+- [x] Apply small STALE fixes in place (shrink/amend, citation per fix, no "used to say X"
       prose). Whole-doc R6 work is Phase 2, not here — register it, don't fix it inline.
-- [ ] R5 lands here: grep docs for override-capture *correctness* claims; add the
+- [x] R5 lands here: grep docs for override-capture *correctness* claims; add the
       def-relative limitation note where capture is described (8+ docs mention `:>>`; only
       correctness claims need the note).
 
 ### Validation
-- [ ] Every register row has a disposition + citation.
-- [ ] `grep -rn 'snapshot_format_version\|executable-profile/v\|schema.*2\.0\.0' docs/` —
-      every literal matches the pinned constant in `src/`.
-- [ ] No doc claims nested-occurrence override capture works.
+- [x] Every register row has a disposition + citation.
+- [x] `grep -rn 'snapshot_format_version\|executable-profile/v\|schema.*2\.0\.0' docs/` —
+      every live literal matches the pinned constant in `src/` (catalog `2.0.0` has no doc
+      mention → B1 GAP, not a stale literal).
+- [x] No doc claims nested-occurrence override capture works.
 
 **What We Know Works After This Phase:** the full claim surface is enumerated; remaining
 phases are additive writing, not discovery.
@@ -193,7 +194,41 @@ sweep register from Phase 1 tells us exactly which claims to re-anchor).
 
 ## Implementation Notes
 
-[TO BE FILLED DURING IMPLEMENTATION]
+### Phase 1 Completion
+**Completed:** 2026-07-24 · **Baseline:** merged main `936315c`
+
+**Register produced:** `.project/active/docs-lifecycle-sync/inventory.md` — 4 sweeps, every row
+carries disposition + citation re-verified at `936315c`.
+
+**Sweep findings (headline):**
+- Sweep A (version literals): doc 27/matrix already at v5/v4 (Item 6 held through Items 7–13).
+  Only residue: one citation line-drift (A1).
+- Sweep B: catalog schema `2.0.0`, `written_qualifier`, trust manifest, severity contract, and
+  portability all confirmed as **GAPs** (no stale claim; owed writing) → Phase 3/4/GAP-filed.
+- Sweep C: retired `is_computed_attribute`/`is_aggregation` survive as 8 live claims (doc 05,
+  22:179, matrix REQ-MF-03); doc 09 narrative is accurate. Deferred to Phase 2 (see below).
+- Sweep D: `input_resolver.py` deleted, zero live `resolve_input`/`AGG_STRATEGIES` surface in
+  `src/`; 6 doc files still describe it. `producer_resolution`/`producer_completeness` appear in
+  no doc. Whole family → Phase 2.
+
+**Changes made (in-place, this commit):**
+- `docs/architecture/reference/27-snapshot-generation.md:37` — citation `snapshot/__init__.py:28`
+  → `:30` (constant moved since Item 6; value `5` was already correct).
+- `docs/architecture/modeling-assumptions.md` (Cross-Part Supplied Values §) — added the
+  nested-occurrence def-relative limitation note (R5), citing `[NESTED-OCCURRENCE-OVERRIDE]`
+  (BACKLOG.md:168) and the probe fixture.
+
+**Deviation from plan (surfaced, not silently resolved):** the brief lists "sweeps A–C class"
+small fixes as Phase-1 work, but plan Phase 2 explicitly bundles the `module_kind` sweep (doc
+05 + matrix REQ-MF-03, "so they don't split"). Followed the plan's specific assignment: sweep-C
+bool-flag rows are registered STALE with fix = Phase-2, not fixed here. Rationale and full
+citations in `inventory.md` (⚠ surfaced note). The rows are mechanical if the owner wants them
+pulled forward.
+
+**Validation:** register rows all carry citations; version-literal grep clean (catalog `2.0.0`
+is a GAP, not a stale literal); no doc implies nested-occurrence override capture works. The
+`is_computed_attribute`/`resolve_input` greps are **not** yet zero — those are Phase 2's exit
+gates (plan.md:106,108), deferred by design.
 
 ---
 
