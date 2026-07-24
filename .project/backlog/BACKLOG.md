@@ -196,6 +196,13 @@ occurrence-type resolution (the occurrence index) into `enrich_graph_design_attr
 Item-10-scope change with a calc-path blast radius, deliberately NOT forced into the byte-clean
 Item-2 case-18 addendum. Contract row 18 does not mandate this shape (the flat form satisfies it).
 
+**Tripwire shipped 2026-07-24 (interim, not the fix).** The calc-path silent loss now WARNs:
+`enrich_graph_design_attributes` reports a dotted demand that fell through silently while a
+capture carries an override for that attribute of that part usage, naming both the captured and
+the demanded scope. Corpus scan recorded 0 false fires across all 19 `SNAPSHOT_MODELS` fixtures
+(`.project/active/nested-override-tripwire/probes/verdict.md`). The occurrence → definition
+bridge below remains the filed work; the warning changes no resolution outcome or output byte.
+
 Related: [SYNC-F4] (design-override name surfacing) and the "Two-level specialization —
 `attribute :>>` extraction gap" note under Ideas / Future Considerations.
 

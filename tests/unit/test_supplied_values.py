@@ -402,3 +402,89 @@ def test_tier1_malformed_literal_message_bytes_are_unchanged(caplog):
         )
         for m in messages
     ), messages
+
+
+# --- [NESTED-OCCURRENCE-OVERRIDE] tripwire -----------------------------------------
+# The recorded coordinate, verbatim from the BACKLOG entry (pin `7526665`): a `:>>`
+# override on a usage nested in an *instantiated* part def is captured
+# definition-relative (`..._Design__panel`) while demand resolves occurrence-relative
+# (`..._the_design__panel`), so it matches at no tier and the modeled 80.0 is lost.
+# The tripwire does not fix the mismatch — it refuses to lose the value silently.
+
+_PROBE = "nested_occurrence_override_probe"
+_PROBE_SCOPE = f"{_PROBE}__the_design__panel"
+_PROBE_CAPTURED = f"{_PROBE}__Design__panel"
+
+
+def _probe_usage(source_path: str) -> CalcUsageData:
+    return CalcUsageData(
+        instance_name="reading_calc",
+        calc_def_name="ReadingCalc",
+        calc_def_qualified_name=f"{_PROBE}::ReadingCalc",
+        module_type=f"{_PROBE}__ReadingCalc",
+        bindings=[
+            BindingInfo(param_name="r", source_path=source_path, binding_type=BindingType.CHAIN)
+        ],
+        qualified_name=f"{_PROBE_SCOPE}__reading_calc",
+        owning_part_def_qn=None,
+        source_file=_SOURCE,
+    )
+
+
+def test_unmatched_nested_override_warns_with_both_scopes(caplog):
+    """The nested-occurrence coordinate warns, naming captured and demanded scope."""
+    with caplog.at_level(logging.WARNING):
+        out = _enrich(
+            [_probe_usage("source.reading")],
+            redefinitions=[],
+            design_overrides=[
+                _override(
+                    _PROBE_CAPTURED, "reading", 80.0, target_path=["source", "reading"]
+                )
+            ],
+            usage_type_map={},
+            real_design_attrs={},
+        )
+
+    # Diagnostic only: the mismatch is unfixed, so nothing is synthesized.
+    assert out == []
+
+    warnings = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
+    text = " ".join(warnings)
+    assert warnings, "an unmatched captured override must not fall through silently"
+    assert f"{_PROBE_SCOPE}__source__reading" in text
+    assert _PROBE_CAPTURED in text, "the captured scope must be named"
+    assert "NESTED-OCCURRENCE-OVERRIDE" in text
+
+
+def test_silent_fallthrough_with_no_matching_override_stays_silent(caplog):
+    """INV-6: a demand no capture speaks to is ordinary and must stay silent."""
+    with caplog.at_level(logging.WARNING):
+        out = _enrich(
+            [_probe_usage("source.reading")],
+            redefinitions=[],
+            design_overrides=[
+                _override(_PROBE_CAPTURED, "unrelated_attr", 80.0, target_path=["source"])
+            ],
+            usage_type_map={},
+            real_design_attrs={},
+        )
+
+    assert out == []
+    assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []
+
+
+def test_unmatched_override_on_other_part_usage_stays_silent(caplog):
+    """The part-usage gate: a same-named override on a different usage is not this bug."""
+    with caplog.at_level(logging.WARNING):
+        _enrich(
+            [_probe_usage("source.reading")],
+            redefinitions=[],
+            design_overrides=[
+                _override(_PROBE_CAPTURED, "reading", 80.0, target_path=["sink", "reading"])
+            ],
+            usage_type_map={},
+            real_design_attrs={},
+        )
+
+    assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []

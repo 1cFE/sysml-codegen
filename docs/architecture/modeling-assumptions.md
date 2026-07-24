@@ -355,7 +355,8 @@ to the uncovered-parameter diagnostic (V11) with a WARN, never silently.
 (`[NESTED-OCCURRENCE-OVERRIDE]`, BACKLOG P2).** A `:>>` override on a usage nested inside an
 *instantiated* part def is captured **definition-relative** while demand resolves
 **occurrence-relative**, so the materializer never matches and the model literal is lost — the
-calc binding falls to a silent manual-required entry point (value dropped), and a constraint
+calc binding falls to a manual-required entry point (value dropped, with a WARN naming both the
+captured and the demanded scope — a tripwire added 2026-07-24, not a fix), and a constraint
 actual halts generation under strict INV-2. Shape (b) above is safe only in its flat,
 non-nested form; do not read this section as promising nested-occurrence override capture. Probe
 fixture: `tests/fixtures/nested_occurrence_override_probe/` (expected to halt; its flat sibling

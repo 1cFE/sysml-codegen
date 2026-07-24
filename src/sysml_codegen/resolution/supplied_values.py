@@ -324,6 +324,31 @@ def _resolve_value(
     return None, False, None, saw_malformed
 
 
+def _unmatched_override_scopes(
+    target: _BindingTarget, records: Sequence[RedefinitionData]
+) -> list[str]:
+    """The captured scopes of overrides that speak to this target but matched no tier.
+
+    Mechanism only — the caller decides whether an unmatched override is worth
+    reporting. Empty for every shape except a dotted instance-relative demand whose
+    attribute AND part usage a capture names, which is exactly the
+    ``[NESTED-OCCURRENCE-OVERRIDE]`` occurrence-vs-definition mismatch. The corpus scan
+    behind that narrowing is recorded in the tripwire probe verdict: the looser
+    "some capture shares the leaf name" reading false-fires on `::` reference-form
+    aggregation rollups, whose value is not lost at all.
+    """
+    if target.form != "dotted":
+        return []
+    scopes: set[str] = set()
+    for record in records:
+        if record.attribute_name != target.attr or not record.owning_part_qn:
+            continue
+        owner_leaf = record.owning_part_qn.rsplit("__", 1)[-1]
+        if owner_leaf == target.part_usage or target.part_usage in (record.target_path or []):
+            scopes.add(record.owning_part_qn)
+    return sorted(scopes)
+
+
 def _usable_source(path: Path | None) -> bool:
     """Whether a path can name an existing parameter group.
 
@@ -572,6 +597,7 @@ def enrich_graph_design_attributes(
     collisions: list[_BindingTarget] = []
     non_literal_skips: list[str] = []
     malformed_targets: list[str] = []
+    unmatched_overrides: list[tuple[_BindingTarget, list[str], list[str]]] = []
     demands = _logical_demands(calc_usages, prepared)
     applied = 0
     for demand in demands:
@@ -593,6 +619,22 @@ def enrich_graph_design_attributes(
                 # tier 1 is a loud deferred skip. Collected separately and drained as
                 # its own record below.
                 malformed_targets.append(f"{target.part_usage}.{target.attr}")
+            else:
+                # [NESTED-OCCURRENCE-OVERRIDE] tripwire. Most silent fall-throughs are
+                # ordinary: nothing in the model supplies this target. But when a capture
+                # DOES carry an override for this attribute of this part usage and no
+                # tier matched it, a modeled value was just dropped — the capture is
+                # definition-relative and the demand occurrence-relative, and the
+                # materializer has no occurrence -> definition bridge. Report the two
+                # scopes; do not guess a value across them (that is the filed fix).
+                captured_scopes = _unmatched_override_scopes(
+                    target, [*(design_overrides or []), *(redefinitions or [])]
+                )
+                if captured_scopes:
+                    demanded_scopes = sorted(
+                        {origin.lookup_context[0] for origin in demand.origins}
+                    )
+                    unmatched_overrides.append((target, captured_scopes, demanded_scopes))
             continue
         applied += 1
         # REQ-SVM-03 collision guard: a real captured design attribute wins. It still
@@ -625,6 +667,18 @@ def enrich_graph_design_attributes(
             target.qn,
             target.parent_part,
             target.name,
+        )
+    for target, captured_scopes, demanded_scopes in unmatched_overrides:
+        logger.warning(
+            "supplied-value materializer: an override for %s.%s exists in the capture but "
+            "matched at no tier, so its modeled value was dropped from %s; captured scope(s) "
+            "%s vs demanded scope(s) %s. Re-author the override at the demanded scope, or "
+            "track the fix under [NESTED-OCCURRENCE-OVERRIDE].",
+            target.part_usage,
+            target.attr,
+            target.qn,
+            captured_scopes,
+            demanded_scopes,
         )
     if malformed_targets:
         logger.warning(

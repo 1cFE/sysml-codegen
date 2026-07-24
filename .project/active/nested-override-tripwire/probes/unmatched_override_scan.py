@@ -25,6 +25,7 @@ from sysml_codegen.extraction.data_models import RedefinitionData  # noqa: E402
 from sysml_codegen.resolution.supplied_values import (  # noqa: E402
     _BindingTarget,
     _logical_demands,
+    _unmatched_override_scopes,
     resolve_logical_demand,
 )
 from sysml_codegen.snapshot import CONSTRAINT_LOWERING_MODE_APPLIED  # noqa: E402
@@ -63,24 +64,15 @@ def unmatched_override_scopes_tight(
 ) -> list[str]:
     """Narrower variant: the override's captured scope must also mention the part usage.
 
-    Either the override's owning QN ends in the demanded part-usage leaf (the
-    definition-relative capture of `Design__panel` against a demanded
-    `the_design__panel`), or its dotted target_path names the part usage.
+    Two narrowings over `wide`: a shape gate (only an instance-relative dotted demand can
+    suffer the occurrence-vs-definition mismatch — the clean-corpus false fires were all
+    `::` reference-form demands naming library defs) and a part-usage gate (the override's
+    owning-QN leaf equals the demanded part usage, or its dotted target_path names it).
+
+    This IS the shipped predicate: it delegates to the implementation rather than
+    restating it, so a later edit to the warning cannot silently invalidate the verdict.
     """
-    # Shape gate: only an instance-relative dotted demand can suffer the
-    # occurrence-vs-definition scope mismatch. The clean-corpus false-fire set was
-    # entirely `::` reference-form demands naming library defs.
-    if target.form != "dotted":
-        return []
-    scopes: set[str] = set()
-    for record in records:
-        if record.attribute_name != target.attr or not record.owning_part_qn:
-            continue
-        owner_leaf = record.owning_part_qn.rsplit("__", 1)[-1]
-        path = list(record.target_path or [])
-        if owner_leaf == target.part_usage or target.part_usage in path:
-            scopes.add(record.owning_part_qn)
-    return sorted(scopes)
+    return _unmatched_override_scopes(target, records)
 
 
 def scan(model: str) -> dict:
